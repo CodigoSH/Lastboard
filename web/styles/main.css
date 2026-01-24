@@ -77,3 +77,13 @@
         /* Slightly reduced padding */
     }
 }
+
+/* --- Premium Aesthetics: Invisible Scrollbars --- */
+::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}

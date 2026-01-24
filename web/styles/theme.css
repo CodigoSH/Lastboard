@@ -57,23 +57,14 @@ body {
     color: #fff;
 }
 
-/* Minimalist Studio Scrollbars */
+/* --- Premium Aesthetics: Invisible Scrollbars --- */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    display: none;
 }
 
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #444;
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 /* --- Layout Utilities --- */
