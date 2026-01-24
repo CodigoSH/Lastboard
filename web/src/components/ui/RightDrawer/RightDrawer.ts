@@ -7,6 +7,7 @@ class RightDrawer extends HTMLElement {
     isOpen: boolean;
     selectedSection: string | null;
     _unsubscribe: (() => void) | undefined;
+    _keydownHandler: ((e: KeyboardEvent) => void) | undefined;
 
     constructor() {
         super();
@@ -28,6 +29,9 @@ class RightDrawer extends HTMLElement {
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
+        if (this._keydownHandler) {
+            window.removeEventListener('keydown', this._keydownHandler);
+        }
     }
 
     open() {
@@ -70,11 +74,12 @@ class RightDrawer extends HTMLElement {
             }
         });
 
-        window.addEventListener('keydown', (e: KeyboardEvent) => {
+        this._keydownHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && this.isOpen) {
                 this.close();
             }
-        });
+        };
+        window.addEventListener('keydown', this._keydownHandler);
     }
 
     render() {

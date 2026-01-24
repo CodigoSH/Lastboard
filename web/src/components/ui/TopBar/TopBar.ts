@@ -14,6 +14,7 @@ interface TopBarState {
 class TopBar extends HTMLElement {
     state: TopBarState;
     _unsubscribeDashboard: (() => void) | undefined;
+    _windowClickHandler: ((e: Event) => void) | undefined;
 
     constructor() {
         super();
@@ -39,6 +40,9 @@ class TopBar extends HTMLElement {
 
     disconnectedCallback() {
         if (this._unsubscribeDashboard) this._unsubscribeDashboard();
+        if (this._windowClickHandler) {
+            window.removeEventListener('click', this._windowClickHandler);
+        }
     }
 
     setState(newState: Partial<TopBarState>) {
@@ -149,7 +153,7 @@ class TopBar extends HTMLElement {
         });
 
         // Global click to close search/menu
-        window.addEventListener('click', (e: Event) => {
+        this._windowClickHandler = (e: Event) => {
             if (this.state.addMenuActive) {
                 this.setState({ addMenuActive: false });
             }
@@ -163,7 +167,8 @@ class TopBar extends HTMLElement {
                     this.setState({ searchActive: false });
                 }
             }
-        });
+        };
+        window.addEventListener('click', this._windowClickHandler);
     }
 
     render() {

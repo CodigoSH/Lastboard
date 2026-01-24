@@ -85,7 +85,9 @@ class BookmarkGrid extends HTMLElement {
             const gridRect = this.shadowRoot!.host.getBoundingClientRect();
             // Get dynamic grid columns
             const gridStyle = getComputedStyle(this.shadowRoot!.host);
-            const gridCols = parseInt(gridStyle.getPropertyValue('--current-grid-cols').trim()) || 12;
+            const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
+            const gridColsRaw = gridColsStr ? parseInt(gridColsStr, 10) : 12;
+            const gridCols = isNaN(gridColsRaw) ? 12 : gridColsRaw;
 
             const totalWidth = gridRect.width;
             const gap = 16;
@@ -122,7 +124,9 @@ class BookmarkGrid extends HTMLElement {
             const gridRect = this.shadowRoot!.host.getBoundingClientRect();
             // Get dynamic grid columns
             const gridStyle = getComputedStyle(this.shadowRoot!.host);
-            const gridCols = parseInt(gridStyle.getPropertyValue('--current-grid-cols').trim()) || 12;
+            const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
+            const gridColsRaw = gridColsStr ? parseInt(gridColsStr, 10) : 12;
+            const gridCols = isNaN(gridColsRaw) ? 12 : gridColsRaw;
 
             const totalWidth = gridRect.width;
             const gap = 16;

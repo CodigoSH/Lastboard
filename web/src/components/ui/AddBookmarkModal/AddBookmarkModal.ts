@@ -173,7 +173,8 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     initializeIconPicker() {
-        setTimeout(() => {
+        // Ejecutar inmediatamente, el requestAnimationFrame es suficiente
+        requestAnimationFrame(() => {
             const container = this.shadowRoot!.getElementById('icon-picker-container');
             if (!container) {
                 console.error('[Modal] Icon picker container not found');
@@ -192,7 +193,7 @@ class AddBookmarkModal extends HTMLElement {
             container.innerHTML = '';
             container.appendChild(this.iconPicker);
             console.log('[Modal] Icon picker initialized');
-        }, 50);
+        });
     }
 
     render() {
