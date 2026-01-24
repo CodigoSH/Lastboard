@@ -1,4 +1,6 @@
-import { template } from './Avatar.template.js';
+import { template } from './Avatar.template';
+// @ts-ignore
+import css from './Avatar.css' with { type: 'text' };
 
 class AppAvatar extends HTMLElement {
     static get observedAttributes() {
@@ -10,30 +12,24 @@ class AppAvatar extends HTMLElement {
         this.attachShadow({ mode: 'open' });
     }
 
-    async connectedCallback() {
-        if (!this.constructor.cssText) {
-            const cssResponse = await fetch('/src/components/ui/Avatar/Avatar.css');
-            this.constructor.cssText = await cssResponse.text();
-        }
+    connectedCallback() {
         this.render();
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         if (oldValue !== newValue) {
             this.render();
         }
     }
 
     render() {
-        if (!this.constructor.cssText) return;
-
         const src = this.getAttribute('src');
         const initials = this.getAttribute('initials') || '??';
         const alt = this.getAttribute('alt') || 'User Avatar';
 
-        this.shadowRoot.innerHTML = `
-            <style>${this.constructor.cssText}</style>
-            ${template({ src, initials, alt })}
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
+            ${template({ src: src || undefined, initials, alt })}
         `;
     }
 }

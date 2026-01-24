@@ -1,8 +1,12 @@
-import { i18n } from '../../../services/i18n.js';
-import { userStore } from '../../../store/userStore.js';
-import { accountTemplate, themeTemplate, personalizationTemplate } from './SettingsContent.template.js';
+import { i18n } from '../../../services/i18n';
+import { userStore } from '../../../store/userStore';
+import { accountTemplate, themeTemplate, personalizationTemplate } from './SettingsContent.template';
+// @ts-ignore
+import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
+    prefs: { accent_color: string; language: string;[key: string]: any };
+
     static get observedAttributes() {
         return ['section'];
     }
@@ -16,16 +20,13 @@ class SettingsContent extends HTMLElement {
         };
     }
 
-    async connectedCallback() {
-        if (!this.constructor.cssText) {
-            const cssResponse = await fetch('/src/components/ui/SettingsContent/SettingsContent.css');
-            this.constructor.cssText = await cssResponse.text();
-        }
+    connectedCallback() {
         this.fetchPrefs();
         this.render();
     }
 
     async fetchPrefs() {
+        // @ts-ignore
         const u = userStore.getUser();
         if (u) {
             this.prefs = {
@@ -37,7 +38,7 @@ class SettingsContent extends HTMLElement {
         }
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         if (name === 'section' && oldValue !== newValue) {
             this.render();
         }
@@ -45,26 +46,28 @@ class SettingsContent extends HTMLElement {
 
     // --- Logic Layer Delegates ---
 
-    async savePrefs(newPrefs) {
+    async savePrefs(newPrefs: any) {
         this.prefs = { ...this.prefs, ...newPrefs };
 
         if (newPrefs.accent_color) {
             this.applyAccent(newPrefs.accent_color);
         }
         if (newPrefs.language) {
+            // @ts-ignore
             i18n.load(newPrefs.language);
         }
 
+        // @ts-ignore
         await userStore.updatePreferences(newPrefs);
         this.render();
     }
 
-    applyAccent(color) {
+    applyAccent(color: string) {
         if (color && color.startsWith('#')) {
             document.documentElement.style.setProperty('--accent', color);
             return;
         }
-        const colorMap = {
+        const colorMap: Record<string, string> = {
             'blue': '#228be6', 'indigo': '#4c6ef5', 'cyan': '#15aabf',
             'teal': '#12b886', 'orange': '#fd7e14', 'red': '#fa5252', 'grape': '#be4bdb'
         };
@@ -72,11 +75,11 @@ class SettingsContent extends HTMLElement {
         document.documentElement.style.setProperty('--accent', hex);
     }
 
-    updateGridPref(key, value) {
-        const valSpan = this.shadowRoot.getElementById(`val-${key}`);
+    updateGridPref(key: string, value: string) {
+        const valSpan = this.shadowRoot!.getElementById(`val-${key}`);
         if (valSpan) valSpan.textContent = value;
 
-        const cssVarMap = {
+        const cssVarMap: Record<string, string> = {
             'grid_columns_pc': '--grid-columns-pc',
             'grid_columns_tablet': '--grid-columns-tablet',
             'grid_columns_mobile': '--grid-columns-mobile'
@@ -86,23 +89,28 @@ class SettingsContent extends HTMLElement {
         }
     }
 
-    commitGridPref(key, value) {
+    commitGridPref(key: string, value: string) {
+        // @ts-ignore
         userStore.updatePreferences({ [key]: parseInt(value) });
     }
 
-    async updateUsername(newUsername) {
+    async updateUsername(newUsername: string) {
+        // @ts-ignore
         await userStore.updateProfile({ username: newUsername });
+        // @ts-ignore
         if (window.notifier) window.notifier.show('Username updated');
     }
 
-    updatePassword(newPassword) {
+    updatePassword(newPassword: string) {
         // Logic moved to service/store in future phases
+        // @ts-ignore
         if (window.notifier) window.notifier.show('Password update initiated');
     }
 
     // --- Rendering ---
 
-    getContent(section) {
+    getContent(section: string) {
+        // @ts-ignore
         const user = userStore.getUser() || { preferences: {} };
 
         switch (section) {
@@ -110,7 +118,7 @@ class SettingsContent extends HTMLElement {
                 return accountTemplate(user);
 
             case 'theme': {
-                const colorMap = {
+                const colorMap: Record<string, string> = {
                     'blue': '#228be6', 'indigo': '#4c6ef5', 'cyan': '#15aabf',
                     'teal': '#12b886', 'orange': '#fd7e14', 'red': '#fa5252', 'grape': '#be4bdb'
                 };
@@ -139,16 +147,15 @@ class SettingsContent extends HTMLElement {
     }
 
     render() {
-        if (!this.constructor.cssText) return;
-
-        this.shadowRoot.innerHTML = `
-        <style>${this.constructor.cssText}</style>
+        // CSS is already safely available as string via import
+        this.shadowRoot!.innerHTML = `
+        <style>${css}</style>
         <div class="fade-in">
             ${this.getContent(this.getAttribute('section') || 'account')}
         </div>
     `;
 
-        this.shadowRoot.querySelectorAll('.settings-content__checkbox').forEach(cb => {
+        this.shadowRoot!.querySelectorAll('.settings-content__checkbox').forEach(cb => {
             cb.addEventListener('click', () => cb.classList.toggle('settings-content__checkbox--checked'));
         });
     }

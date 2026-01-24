@@ -1,15 +1,28 @@
-import { userService } from '../services/userService.js';
+import { userService } from '../services/userService';
+
+interface User {
+    username?: string;
+    initials?: string;
+    role?: string;
+    preferences?: any;
+    avatar_url?: string;
+}
+
+type Listener = (user: User | null) => void;
 
 class UserStore {
+    user: User | null;
+    listeners: Listener[];
+
     constructor() {
         this.user = null;
         this.listeners = [];
     }
 
-    subscribe(listener) {
+    subscribe(listener: Listener) {
         this.listeners.push(listener);
         return () => {
-            this.listeners = this.listeners.filter(l !== listener);
+            this.listeners = this.listeners.filter(l => l !== listener);
         };
     }
 
@@ -17,7 +30,7 @@ class UserStore {
         this.listeners.forEach(listener => listener(this.user));
     }
 
-    setUser(user) {
+    setUser(user: User) {
         if (!user) return;
 
         // Ensure default grid prefs
@@ -45,7 +58,7 @@ class UserStore {
         root.style.setProperty('--grid-columns-mobile', prefs.grid_columns_mobile);
     }
 
-    async updatePreferences(newPrefs) {
+    async updatePreferences(newPrefs: any) {
         if (!this.user) return;
 
         // Optimistic update
@@ -61,7 +74,7 @@ class UserStore {
         }
     }
 
-    async updateProfile(data) {
+    async updateProfile(data: Partial<User>) {
         if (!this.user) return;
         try {
             const updatedUser = await userService.updateProfile(data);

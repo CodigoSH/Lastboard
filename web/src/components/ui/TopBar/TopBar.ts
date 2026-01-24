@@ -1,6 +1,18 @@
-import { template } from './TopBar.template.js';
+import { template } from './TopBar.template';
+// @ts-ignore
+import css from './TopBar.css' with { type: 'text' };
+
+interface TopBarState {
+    editMode: boolean;
+    searchActive: boolean;
+    addMenuActive: boolean;
+    drawerOpen: boolean;
+    searchQuery: string;
+}
 
 class TopBar extends HTMLElement {
+    state: TopBarState;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -13,27 +25,25 @@ class TopBar extends HTMLElement {
         };
     }
 
-    async connectedCallback() {
-        if (!this.constructor.cssText) {
-            const cssResponse = await fetch('/src/components/ui/TopBar/TopBar.css');
-            this.constructor.cssText = await cssResponse.text();
-        }
+    connectedCallback() {
         this.render();
         this.setupListeners();
     }
 
-    setState(newState) {
+    setState(newState: Partial<TopBarState>) {
         this.state = { ...this.state, ...newState };
         this.render();
     }
 
     setupListeners() {
-        this.shadowRoot.addEventListener('click', (e) => {
-            const searchClear = e.target.closest('#search-clear');
+        this.shadowRoot!.addEventListener('click', (e: Event) => {
+            const target = e.target as HTMLElement;
+
+            const searchClear = target.closest('#search-clear');
             if (searchClear) {
                 e.stopPropagation();
                 this.state.searchQuery = '';
-                const input = this.shadowRoot.getElementById('search-input');
+                const input = this.shadowRoot!.getElementById('search-input') as HTMLInputElement;
                 if (input) {
                     input.value = '';
                     input.focus();
@@ -47,14 +57,14 @@ class TopBar extends HTMLElement {
                 return;
             }
 
-            const searchWrapper = e.target.closest('#search-wrapper');
+            const searchWrapper = target.closest('#search-wrapper');
             if (searchWrapper && !this.state.searchActive) {
                 e.stopPropagation();
                 this.setState({ searchActive: true });
-                this.shadowRoot.getElementById('search-input').focus();
+                this.shadowRoot!.getElementById('search-input')?.focus();
             }
 
-            const editToggle = e.target.closest('#edit-toggle');
+            const editToggle = target.closest('#edit-toggle');
             if (editToggle) {
                 this.setState({ editMode: !this.state.editMode });
                 this.dispatchEvent(new CustomEvent('edit-mode-change', {
@@ -64,13 +74,13 @@ class TopBar extends HTMLElement {
                 }));
             }
 
-            const addToggle = e.target.closest('#add-toggle');
+            const addToggle = target.closest('#add-toggle');
             if (addToggle) {
                 e.stopPropagation();
                 this.setState({ addMenuActive: !this.state.addMenuActive });
             }
 
-            const drawerToggle = e.target.closest('#drawer-toggle');
+            const drawerToggle = target.closest('#drawer-toggle');
             if (drawerToggle) {
                 const action = this.state.drawerOpen ? 'close' : 'open';
                 this.dispatchEvent(new CustomEvent('drawer-toggle', {
@@ -78,18 +88,20 @@ class TopBar extends HTMLElement {
                     bubbles: true,
                     composed: true
                 }));
+                // We'll let the event handler in index.html call back if needed
                 return;
             }
         });
 
         // Search Input Logic
-        this.shadowRoot.addEventListener('input', (e) => {
-            if (e.target.id === 'search-input') {
-                const val = e.target.value;
+        this.shadowRoot!.addEventListener('input', (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            if (target.id === 'search-input') {
+                const val = target.value;
                 this.state.searchQuery = val;
 
                 // Manually toggle visibility to avoid full re-render (focus loss)
-                const clearBtn = this.shadowRoot.getElementById('search-clear');
+                const clearBtn = this.shadowRoot!.getElementById('search-clear');
                 if (clearBtn) {
                     clearBtn.style.display = val ? 'flex' : 'none';
                 }
@@ -102,31 +114,33 @@ class TopBar extends HTMLElement {
             }
         });
 
-        this.shadowRoot.addEventListener('keydown', (e) => {
-            if (e.target.id === 'search-input' && e.key === 'Escape') {
-                e.target.value = '';
+        this.shadowRoot!.addEventListener('keydown', (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            const keyEvent = e as KeyboardEvent;
+            if (target.id === 'search-input' && keyEvent.key === 'Escape') {
+                target.value = '';
                 this.setState({ searchActive: false });
                 this.dispatchEvent(new CustomEvent('search-input', {
                     detail: { query: '' },
                     bubbles: true,
                     composed: true
                 }));
-                e.target.blur();
+                target.blur();
             }
         });
 
         // Global click to close search/menu
-        window.addEventListener('click', (e) => {
+        window.addEventListener('click', (e: Event) => {
             if (this.state.addMenuActive) {
                 this.setState({ addMenuActive: false });
             }
 
             const path = e.composedPath();
-            const searchWrapper = this.shadowRoot.getElementById('search-wrapper');
+            const searchWrapper = this.shadowRoot!.getElementById('search-wrapper');
 
-            if (this.state.searchActive && !path.includes(searchWrapper)) {
+            if (this.state.searchActive && searchWrapper && !path.includes(searchWrapper)) {
                 // Only close if click is truly outside the wrapper
-                const input = this.shadowRoot.getElementById('search-input');
+                const input = this.shadowRoot!.getElementById('search-input') as HTMLInputElement;
                 if (input && input.value === '') {
                     this.setState({ searchActive: false });
                 }
@@ -135,12 +149,11 @@ class TopBar extends HTMLElement {
     }
 
     render() {
-        if (!this.constructor.cssText) return;
-
+        // CSS import is string
         const title = this.getAttribute('title') || 'CSH Dashboard';
 
-        this.shadowRoot.innerHTML = `
-            <style>${this.constructor.cssText}</style>
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
             ${template({
             title,
             editMode: this.state.editMode,

@@ -1,9 +1,17 @@
 /**
  * TopBar Component Template
- * @param {Object} props { title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery }
- * @returns {string} HTML Template
  */
-export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery }) => `
+
+interface TopBarData {
+    title: string;
+    editMode: boolean;
+    searchActive: boolean;
+    addMenuActive: boolean;
+    drawerOpen: boolean;
+    searchQuery: string;
+}
+
+export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery }: TopBarData) => `
     <div class="top-bar">
         <div class="top-bar__title">${title}</div>
         <div class="top-bar__actions">

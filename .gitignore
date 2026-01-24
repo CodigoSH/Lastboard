@@ -23,6 +23,7 @@ bin/
 *.swo
 
 # Web dependencies and build folders
+node_modules/
 web/node_modules/
 web/dist/
 web/.next/

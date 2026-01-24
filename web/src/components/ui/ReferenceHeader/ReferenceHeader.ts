@@ -1,6 +1,10 @@
-import { template } from './ReferenceHeader.template.js';
+import { template } from './ReferenceHeader.template';
+// @ts-ignore
+import css from './ReferenceHeader.css' with { type: 'text' };
 
 class ReferenceHeader extends HTMLElement {
+    dropdownOpen: boolean;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -12,20 +16,21 @@ class ReferenceHeader extends HTMLElement {
         this.setupListeners();
     }
 
-    toggleDropdown(state) {
+    toggleDropdown(state?: boolean) {
         this.dropdownOpen = typeof state === 'boolean' ? state : !this.dropdownOpen;
         this.render();
     }
 
     setupListeners() {
-        this.shadowRoot.addEventListener('click', (e) => {
-            const changelogBtn = e.target.closest('.header__btn-changelog');
+        this.shadowRoot!.addEventListener('click', (e: Event) => {
+            const target = e.target as HTMLElement;
+            const changelogBtn = target.closest('.header__btn-changelog') as HTMLElement;
             if (changelogBtn) {
                 console.log('Changelog closed');
                 changelogBtn.style.display = 'none';
             }
 
-            const profileBtn = e.target.closest('#profile-trigger');
+            const profileBtn = target.closest('#profile-trigger');
             if (profileBtn) {
                 e.stopPropagation();
                 this.toggleDropdown();
@@ -39,15 +44,11 @@ class ReferenceHeader extends HTMLElement {
         });
     }
 
-    async render() {
+    render() {
         const title = this.getAttribute('title') || 'Task';
 
-        // Load external styles
-        const cssResponse = await fetch('/src/components/ui/ReferenceHeader/ReferenceHeader.css');
-        const cssText = await cssResponse.text();
-
-        this.shadowRoot.innerHTML = `
-            <style>${cssText}</style>
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
             ${template({ title, dropdownOpen: this.dropdownOpen })}
         `;
     }

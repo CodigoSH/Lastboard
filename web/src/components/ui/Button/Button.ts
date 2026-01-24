@@ -1,4 +1,6 @@
-import { template } from './Button.template.js';
+import { template } from './Button.template';
+// @ts-ignore
+import css from './Button.css' with { type: 'text' };
 
 class AppButton extends HTMLElement {
     static get observedAttributes() {
@@ -18,15 +20,11 @@ class AppButton extends HTMLElement {
         this.render();
     }
 
-    async render() {
+    render() {
         const variant = this.getAttribute('variant') || 'ghost';
 
-        // Load external styles
-        const cssResponse = await fetch('/src/components/ui/Button/Button.css');
-        const cssText = await cssResponse.text();
-
-        this.shadowRoot.innerHTML = `
-            <style>${cssText}</style>
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
             ${template({ variant })}
         `;
     }
