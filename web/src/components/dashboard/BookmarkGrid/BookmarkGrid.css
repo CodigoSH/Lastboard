@@ -1,28 +1,25 @@
 :host {
     /* Grid columns from user preferences */
     --current-grid-cols: var(--grid-columns-pc, 9);
-    /* Cell dimensions */
-    --cell-size: 100px;
     --grid-gap: 16px;
-    /* Calculate total grid width: (columns * cell-size) + ((columns - 1) * gap) */
-    --grid-width: calc(
-        (var(--current-grid-cols) * var(--cell-size)) +
-        ((var(--current-grid-cols) - 1) * var(--grid-gap))
-    );
 
     display: grid;
-    grid-template-columns: repeat(var(--current-grid-cols), var(--cell-size));
-    grid-auto-rows: minmax(var(--cell-size), auto);
+    /* 1. Use 1fr to fill available width dynamically */
+    grid-template-columns: repeat(var(--current-grid-cols), 1fr);
+    /* 2. Enforce minimum row height, but allow expansion */
+    grid-auto-rows: minmax(100px, auto);
     gap: var(--grid-gap);
-    width: var(--grid-width);
+
+    /* 3. Force full width */
+    width: 100%;
     max-width: 100%;
     margin: 0 auto;
+
     /* Ensure drop zone covers screen minus header/padding */
     min-height: calc(100vh - 120px);
     position: relative;
     align-content: start;
     padding-bottom: 200px;
-    /* Extra drag space at bottom */
 }
 
 @media (max-width: 1024px) {
@@ -44,6 +41,11 @@
 .bookmark-grid__card {
     grid-column: var(--x) / span var(--w);
     grid-row: var(--y) / span var(--h);
+
+    /* Restore Square Ratio as per engineering requirement */
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    /* Fill the grid cell */
 
     background: var(--surface);
     border: 1px solid var(--border);
@@ -73,6 +75,31 @@
     background: rgba(0, 120, 212, 0.05);
     cursor: grab;
     animation: pulse 2s infinite;
+    position: relative;
+    /* Ensure handle positioning context */
+}
+
+/* Resize Handle */
+.resize-handle {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+    /* Diagonal resize cursor */
+    z-index: 20;
+
+    /* Visual indicator: Corner bracket style */
+    border-bottom: 2px solid var(--accent);
+    border-right: 2px solid var(--accent);
+    border-bottom-right-radius: 2px;
+    transition: transform 0.2s;
+}
+
+.resize-handle:hover {
+    transform: scale(1.2);
+    border-color: #fff;
 }
 
 :host(.edit-mode) .bookmark-grid__card:active {
@@ -172,6 +199,10 @@
     pointer-events: none;
     transition: all 0.1s;
     z-index: 10;
+
+    /* Ensure Ghost mimics Card geometry to force row expansion */
+    aspect-ratio: 1 / 1;
+    width: 100%;
 }
 
 .bookmark-grid__ghost.invalid {

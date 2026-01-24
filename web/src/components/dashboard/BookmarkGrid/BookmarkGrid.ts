@@ -14,6 +14,15 @@ class BookmarkGrid extends HTMLElement {
     private dragTargetId: number | null = null;
     private ghostEl: HTMLElement | null = null;
 
+    // Resize State
+    private isResizing: boolean = false;
+    private resizeTargetId: number | null = null;
+    private initialResizeX: number = 0;
+    private initialResizeY: number = 0;
+    private initialResizeW: number = 0;
+    private initialResizeH: number = 0;
+    private currentColWidth: number = 0;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -45,15 +54,124 @@ class BookmarkGrid extends HTMLElement {
         });
 
         this.setupDragListeners();
+        this.setupResizeListeners();
     }
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
     }
 
+    setupResizeListeners() {
+        // Global listeners for drag/release outside the component
+        window.addEventListener('mousemove', this.handleWindowMouseMove.bind(this));
+        window.addEventListener('mouseup', this.handleWindowMouseUp.bind(this));
+
+        // Start resize on handle mousedown
+        this.shadowRoot!.addEventListener('mousedown', (ev) => {
+            const e = ev as MouseEvent;
+            if (!this.isEditing) return;
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('resize-handle')) {
+                e.preventDefault(); // Prevent text selection
+                e.stopPropagation(); // Prevent dragstart of card to trigger
+
+                const card = target.closest('.bookmark-grid__card') as HTMLElement;
+                if (!card || !card.dataset.id) return;
+
+                const id = parseInt(card.dataset.id);
+                const item = this.bookmarks.find(b => b.id === id);
+                if (!item) return;
+
+                this.isResizing = true;
+                this.resizeTargetId = id;
+                this.initialResizeX = e.clientX;
+                this.initialResizeY = e.clientY;
+                this.initialResizeW = item.w;
+                this.initialResizeH = item.h;
+
+                // Calculate current column width
+                const host = this;
+                const gridRect = host.getBoundingClientRect();
+                const gridStyle = getComputedStyle(host);
+                const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
+                const gridColsRaw = gridColsStr ? parseInt(gridColsStr, 10) : 9;
+                const gridCols = isNaN(gridColsRaw) ? 9 : gridColsRaw;
+                const gap = 16;
+                this.currentColWidth = (gridRect.width - ((gridCols - 1) * gap)) / gridCols;
+
+                // Initial ghost feedback
+                this.updateGhost({ x: item.x, y: item.y, w: item.w, h: item.h }, true);
+            }
+        });
+    }
+
+    handleWindowMouseMove(e: MouseEvent) {
+        if (!this.isResizing || !this.resizeTargetId) return;
+
+        const deltaX = e.clientX - this.initialResizeX;
+        const deltaY = e.clientY - this.initialResizeY;
+
+        // Calculate delta in grid units
+        // Add 50% threshold for snapping
+        const unitDeltaW = Math.round(deltaX / (this.currentColWidth + 16));
+        const unitDeltaH = Math.round(deltaY / (this.currentColWidth + 16)); // Assuming square cells
+
+        let newW = this.initialResizeW + unitDeltaW;
+        let newH = this.initialResizeH + unitDeltaH;
+
+        // Constraints: 1x1, 1x2, 2x1, 2x2
+        // Min size 1
+        newW = Math.max(1, newW);
+        newH = Math.max(1, newH);
+
+        // Max size 2 (per user request)
+        newW = Math.min(2, newW);
+        newH = Math.min(2, newH);
+
+        // Update Ghost
+        const item = this.bookmarks.find(b => b.id === this.resizeTargetId);
+        if (item) {
+            this.updateGhost({ x: item.x, y: item.y, w: newW, h: newH }, true);
+        }
+    }
+
+    async handleWindowMouseUp(e: MouseEvent) {
+        if (!this.isResizing || !this.resizeTargetId) return;
+
+        // Final calculation
+        const deltaX = e.clientX - this.initialResizeX;
+        const deltaY = e.clientY - this.initialResizeY;
+        const unitDeltaW = Math.round(deltaX / (this.currentColWidth + 16));
+        const unitDeltaH = Math.round(deltaY / (this.currentColWidth + 16));
+
+        let newW = this.initialResizeW + unitDeltaW;
+        let newH = this.initialResizeH + unitDeltaH;
+
+        // Constraints
+        newW = Math.max(1, Math.min(2, newW));
+        newH = Math.max(1, Math.min(2, newH));
+
+        // Commit Update
+        const item = this.bookmarks.find(b => b.id === this.resizeTargetId);
+        if (item && (item.w !== newW || item.h !== newH)) {
+            await dashboardStore.updateItem({
+                id: item.id,
+                w: newW,
+                h: newH
+            });
+        }
+
+        // Reset State
+        this.isResizing = false;
+        this.resizeTargetId = null;
+        if (this.ghostEl) this.ghostEl.style.display = 'none';
+    }
+
     setupDragListeners() {
         const root = this.shadowRoot!;
+        const host = this;
 
+        // 1. Drag Start/End must be caught inside Shadow DOM to see the specific card
         root.addEventListener('dragstart', (ev) => {
             const e = ev as DragEvent;
             if (!this.isEditing) {
@@ -64,7 +182,6 @@ class BookmarkGrid extends HTMLElement {
             if (target && target.dataset.id) {
                 this.dragTargetId = parseInt(target.dataset.id);
                 e.dataTransfer!.effectAllowed = 'move';
-                // Slight delay to adding 'dragging' class or opacity
                 target.style.opacity = '0.5';
             }
         });
@@ -76,13 +193,14 @@ class BookmarkGrid extends HTMLElement {
             if (this.ghostEl) this.ghostEl.style.display = 'none';
         });
 
-        root.addEventListener('dragover', (ev) => {
+        // 2. Drag Over/Drop must be caught on the Host to support empty background areas
+        host.addEventListener('dragover', (ev) => {
             const e = ev as DragEvent;
             if (!this.isEditing || !this.dragTargetId) return;
             e.preventDefault();
             e.dataTransfer!.dropEffect = 'move';
 
-            const gridRect = this.shadowRoot!.host.getBoundingClientRect();
+            const gridRect = host.getBoundingClientRect();
             // Get dynamic grid columns
             const gridStyle = getComputedStyle(this.shadowRoot!.host);
             const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
@@ -115,15 +233,15 @@ class BookmarkGrid extends HTMLElement {
             this.updateGhost(potentialRect, check.valid);
         });
 
-        root.addEventListener('drop', async (ev) => {
+        host.addEventListener('drop', async (ev) => {
             const e = ev as DragEvent;
             if (!this.isEditing || !this.dragTargetId) return;
             e.preventDefault();
 
             // Re-calculate correctness final time (or store from dragover)
-            const gridRect = this.shadowRoot!.host.getBoundingClientRect();
+            const gridRect = host.getBoundingClientRect();
             // Get dynamic grid columns
-            const gridStyle = getComputedStyle(this.shadowRoot!.host);
+            const gridStyle = getComputedStyle(host);
             const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
             const gridColsRaw = gridColsStr ? parseInt(gridColsStr, 10) : 12;
             const gridCols = isNaN(gridColsRaw) ? 12 : gridColsRaw;

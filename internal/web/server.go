@@ -37,8 +37,17 @@ func (s *Server) routes() {
 	s.Router.Handle("/", setupMiddleware(fs))
 
 	// Dashboard API
-	dashHandler := api.NewDashboardHandler()
+	dashHandler := api.NewDashboardHandler(s.DB)
 	s.Router.Handle("/api/dashboard", setupMiddleware(http.HandlerFunc(dashHandler.GetDashboard)))
+	s.Router.Handle("POST /api/dashboard/item", setupMiddleware(http.HandlerFunc(dashHandler.CreateItem)))
+	// Note: PATCH and DELETE URLs contain ID at end. We use prefix matching or explicit method matching logic?
+	// Go 1.22 mux supports "METHOD /path/{id}", but existing code uses "METHOD /path".
+	// Since we are using standard library mux (presumably 1.22 or wrapped), we can check.
+	// If not 1.22, we might need a wrapper or manual dispatch.
+	// Current server uses `s.Router.Handle`.
+	// For simplicity with basic mux:
+	s.Router.Handle("PATCH /api/dashboard/item/", setupMiddleware(http.HandlerFunc(dashHandler.UpdateItem)))
+	s.Router.Handle("DELETE /api/dashboard/item/", setupMiddleware(http.HandlerFunc(dashHandler.DeleteItem)))
 
 	// User API
 	userHandler := api.NewUserHandler(s.DB)

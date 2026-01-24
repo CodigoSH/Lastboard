@@ -68,5 +68,36 @@ func runMigrations(db *sql.DB) error {
 		}
 	}
 	log.Println("Migrations completed successfully.")
+
+	if err := seedItems(db); err != nil {
+		log.Printf("Seeding warning: %v", err)
+	}
+
 	return nil
+}
+
+func seedItems(db *sql.DB) error {
+	var count int
+	if err := db.QueryRow("SELECT COUNT(*) FROM items").Scan(&count); err != nil {
+		return err
+	}
+
+	if count > 0 {
+		return nil
+	}
+
+	log.Println("Seeding initial dashboard items...")
+	// IDs must match the frontend mock data to avoid sync mismatch on fresh load
+	// Frontend uses IDs 1-6. We can't easily force ID in INSERT with AUTOINCREMENT in SQLite unless we explicit set it.
+	// SQLite allows inserting into INTEGER PRIMARY KEY.
+	query := `INSERT INTO items (id, type, x, y, w, h, content) VALUES 
+		(1, 'bookmark', 1, 1, 1, 1, '{"label": "Proxmox", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/proxmox.png", "iconName": "proxmox"}'),
+		(2, 'bookmark', 2, 1, 1, 1, '{"label": "TrueNAS", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/truenas.png", "iconName": "truenas"}'),
+		(3, 'bookmark', 3, 1, 1, 1, '{"label": "Cloudflare", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cloudflare.png", "iconName": "cloudflare"}'),
+		(4, 'bookmark', 1, 2, 1, 1, '{"label": "GitHub", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/github.png", "iconName": "github"}'),
+		(5, 'bookmark', 2, 2, 1, 1, '{"label": "VS Code", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/vscode.png", "iconName": "vscode"}'),
+		(6, 'bookmark', 3, 2, 1, 1, '{"label": "Documentation", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/docs.png", "iconName": "docs"}');`
+
+	_, err := db.Exec(query)
+	return err
 }
