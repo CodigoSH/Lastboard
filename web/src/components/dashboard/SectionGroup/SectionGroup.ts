@@ -1,4 +1,6 @@
-import { template } from './SectionGroup.template.js';
+import { template } from './SectionGroup.template';
+// @ts-ignore
+import css from './SectionGroup.css' with { type: 'text' };
 
 class SectionGroup extends HTMLElement {
     constructor() {
@@ -6,11 +8,7 @@ class SectionGroup extends HTMLElement {
         this.attachShadow({ mode: 'open' });
     }
 
-    async connectedCallback() {
-        if (!this.constructor.cssText) {
-            const cssResponse = await fetch('/src/components/dashboard/SectionGroup/SectionGroup.css');
-            this.constructor.cssText = await cssResponse.text();
-        }
+    connectedCallback() {
         this.render();
     }
 
@@ -23,12 +21,10 @@ class SectionGroup extends HTMLElement {
     }
 
     render() {
-        if (!this.constructor.cssText) return;
-
         const title = this.getAttribute('title') || 'Section';
 
-        this.shadowRoot.innerHTML = `
-            <style>${this.constructor.cssText}</style>
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
             ${template({ title })}
         `;
     }

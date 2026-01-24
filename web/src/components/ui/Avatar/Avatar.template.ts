@@ -1,9 +1,8 @@
 /**
  * Avatar Component Template
- * @param {Object} props { src, initials, alt }
- * @returns {string} HTML Template
  */
-export const template = ({ src, initials, alt }) => `
+
+export const template = ({ src, initials, alt }: { src?: string, initials: string, alt: string }) => `
     <div class="avatar" title="${alt}">
         ${src
         ? `<img src="${src}" alt="${alt}" class="avatar__img">`

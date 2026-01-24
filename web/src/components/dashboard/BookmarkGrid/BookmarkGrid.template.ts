@@ -1,9 +1,15 @@
 /**
  * BookmarkGrid Component Template
- * @param {Object} props { bookmarks }
- * @returns {string} HTML Template
  */
-export const template = ({ bookmarks }) => `
+
+interface Bookmark {
+    url: string;
+    icon?: string;
+    label: string;
+    [key: string]: any;
+}
+
+export const template = ({ bookmarks }: { bookmarks: Bookmark[] }) => `
     ${bookmarks.map(b => `
         <a href="${b.url}" class="bookmark-grid__card" target="_blank">
             <div class="bookmark-grid__icon-container">

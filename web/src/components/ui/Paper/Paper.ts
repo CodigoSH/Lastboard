@@ -1,4 +1,6 @@
-import { template } from './Paper.template.js';
+import { template } from './Paper.template';
+// @ts-ignore
+import css from './Paper.css' with { type: 'text' };
 
 class AppPaper extends HTMLElement {
     constructor() {
@@ -10,13 +12,9 @@ class AppPaper extends HTMLElement {
         this.render();
     }
 
-    async render() {
-        // Load external styles
-        const cssResponse = await fetch('/src/components/ui/Paper/Paper.css');
-        const cssText = await cssResponse.text();
-
-        this.shadowRoot.innerHTML = `
-            <style>${cssText}</style>
+    render() {
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
             ${template()}
         `;
     }

@@ -1,9 +1,8 @@
 /**
  * Button Component Template
- * @param {Object} props { variant }
- * @returns {string} HTML Template
  */
-export const template = ({ variant }) => `
+
+export const template = ({ variant }: { variant: string }) => `
     <button class="btn btn--${variant}">
         <slot></slot>
     </button>

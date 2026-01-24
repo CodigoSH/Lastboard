@@ -1,4 +1,6 @@
-import { template } from './Notifier.template.js';
+import { template } from './Notifier.template';
+// @ts-ignore
+import css from './Notifier.css' with { type: 'text' };
 
 class AppNotifier extends HTMLElement {
     constructor() {
@@ -8,11 +10,12 @@ class AppNotifier extends HTMLElement {
 
     connectedCallback() {
         this.render();
+        // @ts-ignore
         window.notifier = this;
     }
 
-    show(message, type = 'success') {
-        const container = this.shadowRoot.querySelector('.toast-container');
+    show(message: string, type = 'success') {
+        const container = this.shadowRoot!.querySelector('.toast-container');
         if (!container) return;
 
         const toast = document.createElement('div');
@@ -35,13 +38,9 @@ class AppNotifier extends HTMLElement {
         }, 3000);
     }
 
-    async render() {
-        // Load external styles
-        const cssResponse = await fetch('/src/components/ui/Notifier/Notifier.css');
-        const cssText = await cssResponse.text();
-
-        this.shadowRoot.innerHTML = `
-            <style>${cssText}</style>
+    render() {
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
             ${template()}
         `;
     }

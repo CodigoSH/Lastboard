@@ -1,7 +1,13 @@
-import { userStore } from '../../../store/userStore.js';
-import { template } from './RightDrawer.template.js';
+import { userStore } from '../../../store/userStore';
+import { template } from './RightDrawer.template';
+// @ts-ignore
+import css from './RightDrawer.css' with { type: 'text' };
 
 class RightDrawer extends HTMLElement {
+    isOpen: boolean;
+    selectedSection: string | null;
+    _unsubscribe: (() => void) | undefined;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -9,15 +15,12 @@ class RightDrawer extends HTMLElement {
         this.selectedSection = null;
     }
 
-    async connectedCallback() {
-        if (!this.constructor.cssText) {
-            const cssResponse = await fetch('/src/components/ui/RightDrawer/RightDrawer.css');
-            this.constructor.cssText = await cssResponse.text();
-        }
+    connectedCallback() {
         this.render();
         this.setupListeners();
 
         // Subscribe to user changes
+        // @ts-ignore
         this._unsubscribe = userStore.subscribe((user) => {
             if (this.isOpen) this.render();
         });
@@ -44,7 +47,7 @@ class RightDrawer extends HTMLElement {
         this.dispatchEvent(new CustomEvent('drawer-close', { bubbles: true, composed: true }));
     }
 
-    selectSection(section) {
+    selectSection(section: string) {
         if (this.selectedSection === section) {
             this.selectedSection = null;
         } else {
@@ -54,19 +57,20 @@ class RightDrawer extends HTMLElement {
     }
 
     setupListeners() {
-        this.shadowRoot.addEventListener('click', (e) => {
-            if (e.target.classList.contains('right-drawer__overlay')) {
+        this.shadowRoot!.addEventListener('click', (e: Event) => {
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('right-drawer__overlay')) {
                 this.close();
             }
 
-            const menuItem = e.target.closest('.right-drawer__menu-item');
+            const menuItem = target.closest('.right-drawer__menu-item') as HTMLElement;
             if (menuItem && menuItem.dataset.section) {
                 e.preventDefault();
                 this.selectSection(menuItem.dataset.section);
             }
         });
 
-        window.addEventListener('keydown', (e) => {
+        window.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.key === 'Escape' && this.isOpen) {
                 this.close();
             }
@@ -74,12 +78,11 @@ class RightDrawer extends HTMLElement {
     }
 
     render() {
-        if (!this.constructor.cssText) return;
-
+        // @ts-ignore
         const user = userStore.getUser() || { username: 'Guest', initials: '??', role: 'Viewer' };
 
-        this.shadowRoot.innerHTML = `
-            <style>${this.constructor.cssText}</style>
+        this.shadowRoot!.innerHTML = `
+            <style>${css}</style>
             ${template({ user, isOpen: this.isOpen, selectedSection: this.selectedSection })}
         `;
     }

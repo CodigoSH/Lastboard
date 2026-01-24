@@ -1,0 +1,12 @@
+{
+  "name": "csh-dashboard",
+  "version": "1.0.0",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bun run web/build.ts"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}

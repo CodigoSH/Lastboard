@@ -2,7 +2,20 @@
  * Settings Content Templates
  */
 
-export const accountTemplate = (user) => `
+interface User {
+    initials?: string;
+    avatar_url?: string;
+    username?: string;
+    role?: string;
+}
+
+interface Prefs {
+    accent_color: string;
+    language: string;
+    [key: string]: any;
+}
+
+export const accountTemplate = (user: User) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
             <div class="mono-tag" style="margin-bottom: 12px;">Profile / Identity</div>
@@ -47,7 +60,7 @@ export const accountTemplate = (user) => `
     </div>
 `;
 
-export const themeTemplate = (prefs, colorMap, colors, languages) => `
+export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, colors: string[], languages: { code: string, name: string }[]) => `
     <div class="bento-grid">
         <div class="bento-card">
              <div class="mono-tag" style="margin-bottom: 8px;">Hardware/Colors</div>
@@ -84,7 +97,7 @@ export const themeTemplate = (prefs, colorMap, colors, languages) => `
     </div>
 `;
 
-export const personalizationTemplate = (prefs, sliderConfigs) => `
+export const personalizationTemplate = (prefs: Prefs, sliderConfigs: { label: string, key: string, min: number, max: number }[]) => `
     <div class="bento-grid">
         <div class="bento-card" style="grid-column: span 2;">
             <div class="mono-tag" style="margin-bottom: 12px;">Interface / Grid Architecture</div>

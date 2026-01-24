@@ -1,9 +1,21 @@
 /**
  * RightDrawer Component Template
- * @param {Object} props { user, isOpen, selectedSection }
- * @returns {string} HTML Template
  */
-export const template = ({ user, isOpen, selectedSection }) => `
+
+interface User {
+    initials?: string;
+    avatar_url?: string;
+    username?: string;
+    role?: string;
+}
+
+interface RightDrawerProps {
+    user: User;
+    isOpen: boolean;
+    selectedSection: string | null;
+}
+
+export const template = ({ user, isOpen, selectedSection }: RightDrawerProps) => `
     <div class="right-drawer__overlay"></div>
     
     <div class="right-drawer__content-panel ${selectedSection ? '' : 'right-drawer__content-panel--closed'}">
