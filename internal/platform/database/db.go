@@ -58,6 +58,7 @@ func runMigrations(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12;`,
 		`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4;`,
 		`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2;`,
+		`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT '';`,
 	}
 
 	for _, query := range queries {
