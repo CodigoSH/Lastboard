@@ -34,7 +34,7 @@ export const template = ({ bookmarks, isEditing }: { bookmarks: GridItem[], isEd
         <a href="${data.url || '#'}" class="bookmark-grid__card" target="_blank"
            draggable="${isEditing}"
            data-id="${b.id}"
-           style="--x: ${b.x || 'auto'}; --y: ${b.y || 'auto'}; --w: ${b.w || 1}; --h: ${b.h || 1};">
+           style="--x: ${b.x || 'auto'}; --y: ${b.y || 'auto'}; --w: ${b.w || 1}; --h: ${b.h || 1}; aspect-ratio: ${b.w || 1} / ${b.h || 1};">
             <div class="bookmark-grid__icon-container">
                 ${iconHtml}
             </div>
