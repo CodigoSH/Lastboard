@@ -13,6 +13,7 @@ type User struct {
 	GridColumnsPC     int       `json:"grid_columns_pc"`
 	GridColumnsTablet int       `json:"grid_columns_tablet"`
 	GridColumnsMobile int       `json:"grid_columns_mobile"`
+	AvatarUrl         string    `json:"avatar_url"`
 	CreatedAt         time.Time `json:"created_at"`
 }
 

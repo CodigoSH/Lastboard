@@ -23,20 +23,23 @@ class UserStore {
     setUser(userData: User) {
         if (!userData) return;
 
-        // Ensure default grid prefs are layered on
+        // Default constraints
         const defaultGridPrefs = {
             grid_columns_pc: 9,
             grid_columns_tablet: 4,
             grid_columns_mobile: 2
         };
 
+        // Map server response to store structure
+        // The server sends flattened fields (accent_color, grid_columns_pc, etc.)
         this.user = {
             ...userData,
             preferences: {
-                ...defaultGridPrefs,
-                accent_color: userData.accent_color,
-                language: userData.language,
-                // In a production app, we would also load saved grid columns from API
+                accent_color: userData.accent_color || 'blue',
+                language: userData.language || 'en',
+                grid_columns_pc: userData.grid_columns_pc || defaultGridPrefs.grid_columns_pc,
+                grid_columns_tablet: userData.grid_columns_tablet || defaultGridPrefs.grid_columns_tablet,
+                grid_columns_mobile: userData.grid_columns_mobile || defaultGridPrefs.grid_columns_mobile
             }
         };
 
@@ -119,6 +122,15 @@ class UserStore {
             console.error('[UserStore] Update profile failed', e);
             // @ts-ignore
             if (window.notifier) window.notifier.show('Failed to update profile', 'error');
+        }
+    }
+
+    async changePassword(data: any) {
+        try {
+            await userService.changePassword(data);
+        } catch (e) {
+            console.error('[UserStore] Change password failed', e);
+            throw e;
         }
     }
 

@@ -24,7 +24,7 @@ export const accountTemplate = (user: User) => `
                     <app-avatar initials="${user.initials || '??'}" src="${user.avatar_url || ''}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
                     <div class="settings-content__edit-overlay">Change Image</div>
                 </div>
-                <input type="file" id="avatar-upload" style="display: none;" accept="image/*">
+                <input type="file" id="avatar-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleAvatarChange(event)">
                 <div class="settings-content__profile-info">
                     <span class="settings-content__profile-name">${user.username || 'User'}</span>
                     <span class="mono-tag">${user.role || 'Administrator'}</span>

@@ -10,6 +10,7 @@ export interface UserPreferences {
     grid_columns_pc?: number;
     grid_columns_tablet?: number;
     grid_columns_mobile?: number;
+    avatar_url?: string;
 }
 
 export interface User {
@@ -19,7 +20,10 @@ export interface User {
     avatar_url: string;
     accent_color: string;
     language: string;
-    preferences?: UserPreferences; // Derived on client or from separate table
+    grid_columns_pc?: number;
+    grid_columns_tablet?: number;
+    grid_columns_mobile?: number;
+    preferences?: UserPreferences; // Derived on client
 }
 
 export interface GridItem {
