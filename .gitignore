@@ -1,0 +1,36 @@
+# Go binaries and build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE specialized files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Web dependencies and build folders
+web/node_modules/
+web/dist/
+web/.next/
+web/out/
+
+# OS specialized files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

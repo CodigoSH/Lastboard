@@ -1,0 +1,88 @@
+:host {
+    --grid-columns-pc: 6;
+    --grid-columns-tablet: 4;
+    --grid-columns-mobile: 2;
+
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns-pc), 1fr);
+    gap: 16px;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    :host {
+        grid-template-columns: repeat(var(--grid-columns-tablet), 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    :host {
+        grid-template-columns: repeat(var(--grid-columns-mobile), 1fr);
+    }
+}
+
+.bookmark-grid__card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    aspect-ratio: 1;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.bookmark-grid__card:hover {
+    border-color: var(--border-bright);
+    background: #1a1a1a;
+    transform: translateY(-2px);
+}
+
+:host-context(.edit-mode) .bookmark-grid__card {
+    border-style: dashed;
+    border-color: var(--accent);
+    cursor: grab;
+    opacity: 0.8;
+}
+
+:host-context(.edit-mode) .bookmark-grid__card:hover {
+    opacity: 1;
+    transform: scale(1.02);
+    background: rgba(0, 120, 212, 0.05);
+    /* Using primary blue var shade */
+}
+
+.bookmark-grid__icon-container {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    transition: color 0.2s;
+}
+
+.bookmark-grid__card:hover .bookmark-grid__icon-container {
+    color: var(--accent);
+}
+
+.bookmark-grid__label {
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-sans);
+}
+
+.bookmark-grid__icon-svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 1.5px;
+    fill: none;
+}

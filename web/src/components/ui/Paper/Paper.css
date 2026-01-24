@@ -1,0 +1,12 @@
+:host {
+    display: block;
+}
+
+.paper {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--spacing-md);
+    color: var(--text-main);
+    box-sizing: border-box;
+}

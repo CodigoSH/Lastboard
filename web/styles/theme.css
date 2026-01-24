@@ -1,0 +1,141 @@
+:root {
+    /* --- Antigravity Design System --- */
+
+    /* Core Colors */
+    --canvas: #121212;
+    /* Primary void background */
+    --panel: #1a1a1a;
+    /* Sidebar/Header background */
+    --surface: rgba(36, 36, 36, 0.5);
+    /* Translucent Bento background */
+    --surface-solid: #242424;
+    /* Solid fallback */
+    --glass-blur: blur(12px);
+
+    /* Accents & States */
+    --accent: #0078D4;
+    /* Primary Action Blue */
+    --accent-alt: #00f5a0;
+    /* Legacy Emerald / Detail accent */
+    --border: #333333;
+    /* Subtle borders */
+    --border-bright: #444444;
+    /* Interactive borders */
+
+    /* Typography */
+    --text-main: #ffffff;
+    --text-dim: #a0a0a0;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Geometry */
+    --radius: 8px;
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 20px;
+    --spacing-lg: 32px;
+    --spacing-xl: 48px;
+}
+
+/* Global Aesthetics */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--canvas);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
+
+::selection {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* Minimalist Studio Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
+/* --- Layout Utilities --- */
+
+.top-bar {
+    height: 48px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background-color: var(--panel);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    z-index: 1100;
+}
+
+.top-bar-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.main-content {
+    padding: 64px 24px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Bento Architecture */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.bento-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+}
+
+.mono-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
