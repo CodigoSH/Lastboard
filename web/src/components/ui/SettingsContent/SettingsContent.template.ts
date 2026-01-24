@@ -85,7 +85,7 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 8px;">System/Locale</div>
+            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">System/Locale</div>
             <h3 class="settings-content__title">Localization</h3>
             <div class="settings-content__form-group">
                 <label class="settings-content__label">Interface Language</label>

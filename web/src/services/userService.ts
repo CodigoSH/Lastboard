@@ -1,27 +1,24 @@
-import { api } from './api';
-
-interface User {
-    username?: string;
-    initials?: string;
-    role?: string;
-    preferences?: any;
-    avatar_url?: string;
-}
+import { apiService } from './apiService';
+import { User, MessageResponse } from '../types';
 
 /**
  * User Service
- * Isolates user-related API interactions and business logic.
+ * Bridges the backend Go logic with the frontend state.
  */
 export const userService = {
     async getCurrentUser(): Promise<User> {
-        return api.get('/api/me');
+        return apiService.get<User>('/api/me');
     },
 
-    async updateProfile(data: Partial<User>): Promise<User> {
-        return api.patch('/api/user/me', data);
+    async updateProfile(data: Partial<User>): Promise<MessageResponse> {
+        return apiService.post<MessageResponse>('/api/user/update-profile', data);
     },
 
-    async syncPreferences(preferences: any): Promise<any> {
-        return api.post('/api/user/preferences', preferences);
+    async updatePreferences(preferences: { accent_color: string, language: string }): Promise<MessageResponse> {
+        return apiService.post<MessageResponse>('/api/user/preferences', preferences);
+    },
+
+    async changePassword(data: any): Promise<MessageResponse> {
+        return apiService.post<MessageResponse>('/api/user/change-password', data);
     }
 };

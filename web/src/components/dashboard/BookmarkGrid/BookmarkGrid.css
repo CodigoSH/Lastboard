@@ -86,3 +86,17 @@
     stroke-width: 1.5px;
     fill: none;
 }
+
+/* Ensure all injected SVGs inherit hover colors */
+.bookmark-grid__icon-container svg,
+.bookmark-grid__icon-container svg path {
+    fill: currentColor;
+    stroke: none;
+    /* Default to fill-based for custom icons */
+    transition: all 0.2s;
+}
+
+.bookmark-grid__card:hover .bookmark-grid__icon-container svg,
+.bookmark-grid__card:hover .bookmark-grid__icon-container svg path {
+    fill: var(--accent);
+}

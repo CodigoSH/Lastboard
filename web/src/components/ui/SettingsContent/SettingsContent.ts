@@ -1,11 +1,12 @@
 import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
 import { accountTemplate, themeTemplate, personalizationTemplate } from './SettingsContent.template';
+import { User, UserPreferences } from '../../../types';
 // @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
-    prefs: { accent_color: string; language: string;[key: string]: any };
+    private prefs: UserPreferences;
 
     static get observedAttributes() {
         return ['section'];
@@ -26,7 +27,6 @@ class SettingsContent extends HTMLElement {
     }
 
     async fetchPrefs() {
-        // @ts-ignore
         const u = userStore.getUser();
         if (u) {
             this.prefs = {
@@ -46,18 +46,17 @@ class SettingsContent extends HTMLElement {
 
     // --- Logic Layer Delegates ---
 
-    async savePrefs(newPrefs: any) {
+    async savePrefs(newPrefs: Partial<UserPreferences>) {
+        // Optimistic UI state update
         this.prefs = { ...this.prefs, ...newPrefs };
 
         if (newPrefs.accent_color) {
             this.applyAccent(newPrefs.accent_color);
         }
         if (newPrefs.language) {
-            // @ts-ignore
             i18n.load(newPrefs.language);
         }
 
-        // @ts-ignore
         await userStore.updatePreferences(newPrefs);
         this.render();
     }
@@ -95,23 +94,27 @@ class SettingsContent extends HTMLElement {
     }
 
     async updateUsername(newUsername: string) {
-        // @ts-ignore
         await userStore.updateProfile({ username: newUsername });
-        // @ts-ignore
         if (window.notifier) window.notifier.show('Username updated');
     }
 
     updatePassword(newPassword: string) {
         // Logic moved to service/store in future phases
-        // @ts-ignore
         if (window.notifier) window.notifier.show('Password update initiated');
     }
 
     // --- Rendering ---
 
     getContent(section: string) {
-        // @ts-ignore
-        const user = userStore.getUser() || { preferences: {} };
+        const user = userStore.getUser() || {
+            username: 'Guest',
+            initials: '??',
+            role: 'View Only',
+            avatar_url: '',
+            accent_color: '#0078D4',
+            language: 'en',
+            preferences: {}
+        } as User;
 
         switch (section) {
             case 'account':
