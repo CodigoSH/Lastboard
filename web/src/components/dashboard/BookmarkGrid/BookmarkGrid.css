@@ -1,31 +1,54 @@
 :host {
-    --grid-columns-pc: 6;
-    --grid-columns-tablet: 4;
-    --grid-columns-mobile: 2;
+    /* Grid columns from user preferences */
+    --current-grid-cols: var(--grid-columns-pc, 9);
+    /* Cell dimensions */
+    --cell-size: 100px;
+    --grid-gap: 16px;
+    /* Calculate total grid width: (columns * cell-size) + ((columns - 1) * gap) */
+    --grid-width: calc(
+        (var(--current-grid-cols) * var(--cell-size)) +
+        ((var(--current-grid-cols) - 1) * var(--grid-gap))
+    );
 
     display: grid;
-    grid-template-columns: repeat(var(--grid-columns-pc), 1fr);
-    gap: 16px;
-    width: 100%;
+    grid-template-columns: repeat(var(--current-grid-cols), var(--cell-size));
+    grid-auto-rows: minmax(var(--cell-size), auto);
+    gap: var(--grid-gap);
+    width: var(--grid-width);
+    max-width: 100%;
+    margin: 0 auto;
+    /* Ensure drop zone covers screen minus header/padding */
+    min-height: calc(100vh - 120px);
+    position: relative;
+    align-content: start;
+    padding-bottom: 200px;
+    /* Extra drag space at bottom */
 }
 
 @media (max-width: 1024px) {
     :host {
-        grid-template-columns: repeat(var(--grid-columns-tablet), 1fr);
+        --current-grid-cols: var(--grid-columns-tablet, 4);
+        --cell-size: 90px;
     }
 }
 
 @media (max-width: 640px) {
     :host {
-        grid-template-columns: repeat(var(--grid-columns-mobile), 1fr);
+        --current-grid-cols: var(--grid-columns-mobile, 2);
+        --cell-size: 80px;
+        --grid-gap: 12px;
     }
 }
 
+/* Items positioned by coordinates */
 .bookmark-grid__card {
+    grid-column: var(--x) / span var(--w);
+    grid-row: var(--y) / span var(--h);
+
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -33,10 +56,9 @@
     gap: 12px;
     text-decoration: none;
     color: var(--text-main);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    aspect-ratio: 1;
-    text-align: center;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .bookmark-grid__card:hover {
@@ -45,18 +67,36 @@
     transform: translateY(-2px);
 }
 
-:host-context(.edit-mode) .bookmark-grid__card {
-    border-style: dashed;
-    border-color: var(--accent);
+/* Edit Mode Styles */
+:host(.edit-mode) .bookmark-grid__card {
+    border: 1px dashed var(--accent);
+    background: rgba(0, 120, 212, 0.05);
     cursor: grab;
-    opacity: 0.8;
+    animation: pulse 2s infinite;
 }
 
-:host-context(.edit-mode) .bookmark-grid__card:hover {
-    opacity: 1;
-    transform: scale(1.02);
-    background: rgba(0, 120, 212, 0.05);
-    /* Using primary blue var shade */
+:host(.edit-mode) .bookmark-grid__card:active {
+    cursor: grabbing;
+    opacity: 0.6;
+}
+
+/* Edit Mode Grid Guide - Removed background lines */
+:host(.edit-mode) {
+    /* No visual grid guide */
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 120, 212, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 4px rgba(0, 120, 212, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 120, 212, 0);
+    }
 }
 
 .bookmark-grid__icon-container {
@@ -67,10 +107,6 @@
     justify-content: center;
     color: var(--text-dim);
     transition: color 0.2s;
-}
-
-.bookmark-grid__card:hover .bookmark-grid__icon-container {
-    color: var(--accent);
 }
 
 .bookmark-grid__label {
@@ -87,16 +123,58 @@
     fill: none;
 }
 
+.bookmark-grid__icon-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
 /* Ensure all injected SVGs inherit hover colors */
 .bookmark-grid__icon-container svg,
 .bookmark-grid__icon-container svg path {
     fill: currentColor;
     stroke: none;
-    /* Default to fill-based for custom icons */
     transition: all 0.2s;
 }
 
 .bookmark-grid__card:hover .bookmark-grid__icon-container svg,
 .bookmark-grid__card:hover .bookmark-grid__icon-container svg path {
     fill: var(--accent);
+}
+
+/* Group Styles */
+.bookmark-grid__group {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    grid-column: var(--x) / span var(--w);
+    grid-row: var(--y) / span var(--h);
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.bookmark-grid__group-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Ghost Styles */
+.bookmark-grid__ghost {
+    background: rgba(0, 255, 0, 0.1);
+    border: 2px dashed #00ff00;
+    border-radius: var(--radius);
+    grid-column: var(--x) / span var(--w);
+    grid-row: var(--y) / span var(--h);
+    pointer-events: none;
+    transition: all 0.1s;
+    z-index: 10;
+}
+
+.bookmark-grid__ghost.invalid {
+    background: rgba(255, 0, 0, 0.1);
+    border-color: #ff0000;
 }

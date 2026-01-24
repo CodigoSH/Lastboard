@@ -55,6 +55,9 @@ func runMigrations(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system';`,
 		`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'blue';`,
 		`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en';`,
+		`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12;`,
+		`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4;`,
+		`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2;`,
 	}
 
 	for _, query := range queries {

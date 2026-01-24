@@ -14,7 +14,13 @@ export const userService = {
         return apiService.post<MessageResponse>('/api/user/update-profile', data);
     },
 
-    async updatePreferences(preferences: { accent_color: string, language: string }): Promise<MessageResponse> {
+    async updatePreferences(preferences: {
+        accent_color?: string,
+        language?: string,
+        grid_columns_pc?: number,
+        grid_columns_tablet?: number,
+        grid_columns_mobile?: number
+    }): Promise<MessageResponse> {
         return apiService.post<MessageResponse>('/api/user/preferences', preferences);
     },
 
