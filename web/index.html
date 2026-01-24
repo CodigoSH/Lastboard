@@ -6,11 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSH Dashboard</title>
     <link rel="stylesheet" href="/styles/theme.css">
+    <script>
+        window.CSH_CONFIG = {
+            API_BASE_URL: '', // Root-relative for local Go server
+            DEBUG_MODE: true
+        };
+    </script>
 
     <!-- Utility Components -->
     <script type="module" src="dist/bundle.js"></script>
     <app-topbar id="main-topbar" title="CSH Dashboard"></app-topbar>
     <app-right-drawer id="right-drawer"></app-right-drawer>
+    <app-notifier></app-notifier>
 
     <div class="main-content">
         <div id="dashboard-root">
