@@ -301,6 +301,9 @@ class BookmarkGrid extends HTMLElement {
         this.ghostEl.style.setProperty('--w', String(rect.w));
         this.ghostEl.style.setProperty('--h', String(rect.h));
 
+        // Dynamic Aspect Ratio to support 1x2 and 2x1 while maintaining row stability
+        this.ghostEl.style.aspectRatio = `${rect.w} / ${rect.h}`;
+
         if (isValid) {
             this.ghostEl.classList.remove('invalid');
         } else {
