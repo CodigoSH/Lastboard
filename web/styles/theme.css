@@ -50,6 +50,8 @@ body {
     padding: 0;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    overflow-x: hidden;
+    /* Prevent horizontal jitter */
 }
 
 ::selection {
@@ -57,14 +59,22 @@ body {
     color: #fff;
 }
 
-/* --- Premium Aesthetics: Invisible Scrollbars --- */
+/* --- Premium Aesthetics: Invisible Scrollbars (Forced) --- */
+html,
+body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
 ::-webkit-scrollbar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 * {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
 }
 
 /* --- Layout Utilities --- */

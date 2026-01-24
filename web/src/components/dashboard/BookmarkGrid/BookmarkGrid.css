@@ -15,11 +15,18 @@
     max-width: 100%;
     margin: 0 auto;
 
-    /* Ensure drop zone covers screen minus header/padding */
-    min-height: calc(100vh - 120px);
+    /* Ensure drop zone covers screen minus header/padding (Precise math: 48px header + 96px total padding) */
+    min-height: calc(100vh - 144px);
     position: relative;
     align-content: start;
-    padding-bottom: 200px;
+    padding-bottom: 20px;
+
+    /* Hide scrollbars on component level */
+    scrollbar-width: none !important;
+}
+
+:host::-webkit-scrollbar {
+    display: none !important;
 }
 
 @media (max-width: 1024px) {
