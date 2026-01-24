@@ -105,10 +105,12 @@ body {
     gap: 12px;
 }
 
+/* Main Content Area */
 .main-content {
-    padding: 64px 24px 24px;
-    max-width: 1400px;
-    margin: 0 auto;
+    /* Full width with balanced padding */
+    padding: 64px 32px 32px;
+    max-width: 100%;
+    margin: 0;
 }
 
 /* Bento Architecture */

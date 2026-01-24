@@ -25,7 +25,7 @@ class UserStore {
 
         // Ensure default grid prefs are layered on
         const defaultGridPrefs = {
-            grid_columns_pc: 6,
+            grid_columns_pc: 9,
             grid_columns_tablet: 4,
             grid_columns_mobile: 2
         };
@@ -88,7 +88,10 @@ class UserStore {
             // 2. Sync with Backend
             await userService.updatePreferences({
                 accent_color: this.user.accent_color,
-                language: this.user.language
+                language: this.user.language,
+                grid_columns_pc: this.user.preferences.grid_columns_pc,
+                grid_columns_tablet: this.user.preferences.grid_columns_tablet,
+                grid_columns_mobile: this.user.preferences.grid_columns_mobile
             });
 
             // @ts-ignore

@@ -22,6 +22,18 @@ export interface User {
     preferences?: UserPreferences; // Derived on client or from separate table
 }
 
+export interface GridItem {
+    id: number;
+    parent_id?: number;
+    type: string; // 'container' | 'widget' | 'bookmark'
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    content: any; // JSON string or object depending on context
+    created_at?: string;
+}
+
 export interface ApiResponse<T> {
     success: boolean;
     data?: T;

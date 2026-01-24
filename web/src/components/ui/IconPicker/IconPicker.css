@@ -1,0 +1,146 @@
+:host {
+    display: block;
+}
+
+.icon-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.icon-picker__selected {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    min-height: 64px;
+}
+
+.icon-picker__preview {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.icon-picker__placeholder {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    opacity: 0.3;
+}
+
+.icon-picker__placeholder svg {
+    width: 32px;
+    height: 32px;
+}
+
+.icon-picker__selected-name {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+}
+
+.icon-picker__search {
+    position: relative;
+}
+
+.icon-picker__search-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.icon-picker__search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.icon-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.icon-picker__grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.icon-picker__grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.icon-picker__grid::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.icon-picker__item {
+    aspect-ratio: 1;
+    padding: 8px;
+    background: var(--surface);
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-picker__item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-bright);
+    transform: scale(1.05);
+}
+
+.icon-picker__item--selected {
+    border-color: var(--accent);
+    background: rgba(0, 120, 212, 0.1);
+}
+
+.icon-picker__item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.icon-picker__loading,
+.icon-picker__empty {
+    grid-column: 1 / -1;
+    padding: 32px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+}
+
+.icon-picker__loading {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
