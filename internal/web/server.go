@@ -61,6 +61,10 @@ func (s *Server) routes() {
 	s.Router.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/setup.html")
 	})
+
+	// Setup API (Open, but self-protecting via count check)
+	setupHandler := api.NewSetupHandler(s.DB)
+	s.Router.Handle("POST /api/setup", http.HandlerFunc(setupHandler.SetupSystem))
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
