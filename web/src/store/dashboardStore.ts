@@ -6,6 +6,7 @@ type Listener = (state: DashboardState) => void;
 interface DashboardState {
     isEditing: boolean;
     items: GridItem[];
+    searchQuery: string;
 }
 
 const STORAGE_KEY = 'csh-dashboard-items';
@@ -23,7 +24,8 @@ const INITIAL_ITEMS: GridItem[] = [
 class DashboardStore {
     private state: DashboardState = {
         isEditing: false,
-        items: [...INITIAL_ITEMS] // Initialize with mock data
+        items: [...INITIAL_ITEMS], // Initialize with mock data
+        searchQuery: ''
     };
     private listeners: Listener[] = [];
 
@@ -94,6 +96,11 @@ class DashboardStore {
 
     toggleEditMode() {
         this.setEditMode(!this.state.isEditing);
+    }
+
+    setSearchQuery(query: string) {
+        this.state.searchQuery = query.toLowerCase().trim();
+        this.notify();
     }
 
     async fetchItems() {
