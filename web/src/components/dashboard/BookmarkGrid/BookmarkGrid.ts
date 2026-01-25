@@ -7,7 +7,9 @@ import css from './BookmarkGrid.css' with { type: 'text' };
 
 class BookmarkGrid extends HTMLElement {
     private bookmarks: GridItem[] = [];
+    private allItems: GridItem[] = []; // Store all items for filtering
     private isEditing: boolean = false;
+    private searchQuery: string = '';
     private _unsubscribe: (() => void) | undefined;
 
     // Drag State
@@ -29,7 +31,6 @@ class BookmarkGrid extends HTMLElement {
     }
 
     connectedCallback() {
-        // console.log('BookmarkGrid v7 loaded'); // Debug log
         this.render();
 
         // Subscribe to dashboard store for all state changes
@@ -41,14 +42,32 @@ class BookmarkGrid extends HTMLElement {
                 shouldRerender = true;
             }
 
-            // Ensure items is always an array
-            const newItems = Array.isArray(state.items) ? state.items : [];
+            if (this.searchQuery !== state.searchQuery) {
+                this.searchQuery = state.searchQuery;
+                shouldRerender = true;
+            }
 
-            // console.log('[BookmarkGrid] State Update. Items:', newItems.length, 'Editing:', state.isEditing);
+            const newAllItems = Array.isArray(state.items) ? state.items : [];
 
-            if (this.bookmarks !== newItems) {
-                // console.log('[BookmarkGrid] Items reference changed, rerendering');
-                this.bookmarks = newItems;
+            if (this.allItems !== newAllItems || shouldRerender) {
+                this.allItems = newAllItems;
+
+                // Filter items based on search query
+                if (this.searchQuery) {
+                    this.classList.add('search-active');
+                    this.bookmarks = this.allItems.filter(item => {
+                        // Only show bookmarks during search for a cleaner result grid
+                        if (item.type !== 'bookmark') return false;
+
+                        const content = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+                        const searchText = (content.label || '').toLowerCase();
+                        return searchText.includes(this.searchQuery);
+                    });
+                } else {
+                    this.classList.remove('search-active');
+                    this.bookmarks = this.allItems;
+                }
+
                 shouldRerender = true;
             }
 

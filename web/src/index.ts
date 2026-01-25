@@ -65,10 +65,8 @@ if (topbar) {
     });
 
     topbar.addEventListener('search-input', (e: CustomEvent) => {
-        const query = e.detail.query.toLowerCase().trim();
-        // TODO: Implement search filtering through dashboardStore
-        // For now, search is disabled until proper store filtering is implemented
-        console.log('[Search] Query:', query);
+        const query = e.detail.query;
+        dashboardStore.setSearchQuery(query);
     });
 
     topbar.addEventListener('add-item', (e: CustomEvent) => {

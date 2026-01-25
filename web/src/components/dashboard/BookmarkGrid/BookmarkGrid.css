@@ -49,9 +49,6 @@
     grid-column: var(--x) / span var(--w);
     grid-row: var(--y) / span var(--h);
 
-    grid-column: var(--x) / span var(--w);
-    grid-row: var(--y) / span var(--h);
-
     width: 100%;
     /* Fill the grid cell */
 
@@ -71,6 +68,16 @@
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     box-sizing: border-box;
     overflow: hidden;
+}
+
+/* SEARCH OVERRIDE: Remove fixed positions during search to pack items at top */
+:host(.search-active) .bookmark-grid__card {
+    grid-column: auto / span 1 !important;
+    grid-row: auto / span 1 !important;
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    /* Reset height override */
 }
 
 .bookmark-grid__card:hover {
