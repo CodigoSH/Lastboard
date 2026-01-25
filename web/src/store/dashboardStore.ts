@@ -7,6 +7,7 @@ interface DashboardState {
     isEditing: boolean;
     items: GridItem[];
     searchQuery: string;
+    isOffline: boolean;
 }
 
 const STORAGE_KEY = 'csh-dashboard-items';
@@ -25,7 +26,8 @@ class DashboardStore {
     private state: DashboardState = {
         isEditing: false,
         items: [...INITIAL_ITEMS], // Initialize with mock data
-        searchQuery: ''
+        searchQuery: '',
+        isOffline: false
     };
     private listeners: Listener[] = [];
 
@@ -110,6 +112,7 @@ class DashboardStore {
                 const items = await dashboardService.getItems();
                 if (Array.isArray(items) && items.length > 0) {
                     this.state.items = items;
+                    this.state.isOffline = false;
                     this.saveToLocalStorage();
                     console.log('[DashboardStore] Loaded from backend, count:', items.length);
                 } else {
@@ -117,6 +120,7 @@ class DashboardStore {
                 }
             } catch (apiError) {
                 console.log('[DashboardStore] Backend not available, checking localStorage');
+                this.state.isOffline = true;
 
                 // Try localStorage next
                 const serialized = localStorage.getItem(STORAGE_KEY);
@@ -169,10 +173,13 @@ class DashboardStore {
             // Sync with backend
             try {
                 await dashboardService.updateItem(updatedItem);
+                this.state.isOffline = false;
+                this.notify(); // Notify connectivity restore
                 console.log('[DashboardStore] Item sync successful');
             } catch (apiError) {
                 // Rollback on failure
                 console.error('[DashboardStore] Failed to sync item update, rolling back', apiError);
+                this.state.isOffline = true;
                 this.state.items[itemIndex] = previousItem;
                 this.saveToLocalStorage();
                 this.notify();
@@ -205,6 +212,7 @@ class DashboardStore {
             // Sync with backend
             try {
                 const createdItem = await dashboardService.createItem(newItem);
+                this.state.isOffline = false;
                 // Replace temporary item with real item from backend
                 const itemIndex = this.state.items.findIndex(item => item.id === tempId);
                 if (itemIndex !== -1) {
@@ -215,6 +223,8 @@ class DashboardStore {
             } catch (apiError) {
                 // Backend not available, keep optimistic item with temp ID
                 console.log('[DashboardStore] Backend not available, using client-side ID');
+                this.state.isOffline = true;
+                this.notify();
             }
         } catch (error) {
             console.error('[DashboardStore] Error adding item', error);

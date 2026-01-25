@@ -23,6 +23,22 @@ func NewDashboardHandler(db *sql.DB) *DashboardHandler {
 	return &DashboardHandler{DB: db}
 }
 
+// Structs for Content Validation
+type BookmarkContent struct {
+	Label    string `json:"label"`
+	Url      string `json:"url"`
+	Icon     string `json:"icon"`
+	IconName string `json:"iconName"`
+}
+
+type GroupContent struct {
+	Name string `json:"name"`
+}
+
+type SectionContent struct {
+	Name string `json:"name"`
+}
+
 // GetDashboard returns the list of items
 func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.DB.Query("SELECT id, type, x, y, w, h, content FROM items")
@@ -58,12 +74,11 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Content might be a JSON object, but stored as string.
-	// We trust the frontend sends valid JSON matching our model or we need custom unmarshaler.
-	// Assuming `item.Content` comes in as string or we adjust struct.
-	// Dashboard struct says Content string. If frontend sends object, json decode fails?
-	// We might need a DTO. But for speed, let's assume valid mapping or fix struct.
-	// Actually, `dashboard.Item` defined earlier might be flexible.
+	// Validate Content
+	if err := validateContent(item.Type, item.Content); err != nil {
+		http.Error(w, "Invalid content: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	res, err := h.DB.Exec("INSERT INTO items (type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?)",
 		item.Type, item.X, item.Y, item.W, item.H, item.Content)
@@ -132,6 +147,18 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		args = append(args, *input.ParentID)
 	}
 	if input.Content != nil {
+		// If content is being updated, valid it based on existing type or new type (if type were updatable, but it's not here)
+		// We need to fetch the item's type to validate content properly.
+		var itemType string
+		if err := h.DB.QueryRow("SELECT type FROM items WHERE id=?", id).Scan(&itemType); err != nil {
+			http.Error(w, "Item not found", http.StatusNotFound)
+			return
+		}
+		if err := validateContent(itemType, *input.Content); err != nil {
+			http.Error(w, "Invalid content: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
 		sets = append(sets, "content=?")
 		args = append(args, *input.Content)
 	}
@@ -239,8 +266,42 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	h.respondJson(w, map[string]interface{}{"status": "down", "error": err.Error()})
 }
 
-// Helper for JSON responses
 func (h *DashboardHandler) respondJson(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
+}
+
+func validateContent(itemType string, contentJson string) error {
+	if contentJson == "" {
+		return nil // Allow empty content? Maybe strict: return errors.New("empty content")
+	}
+	switch itemType {
+	case "bookmark":
+		var c BookmarkContent
+		if err := json.Unmarshal([]byte(contentJson), &c); err != nil {
+			return err
+		}
+		if c.Label == "" {
+			return logError("label required")
+		}
+		// Url optional? Usually yes.
+	case "group", "section":
+		var c GroupContent // Same as SectionContent
+		if err := json.Unmarshal([]byte(contentJson), &c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func logError(msg string) error {
+	return &ValidationError{Msg: msg}
+}
+
+type ValidationError struct {
+	Msg string
+}
+
+func (e *ValidationError) Error() string {
+	return e.Msg
 }

@@ -15,6 +15,7 @@ import './components/ui/Notifier/Notifier';
 import './components/ui/IconPicker/IconPicker';
 import './components/ui/AddBookmarkModal/AddBookmarkModal';
 import './components/ui/ConfirmationModal/ConfirmationModal';
+import './components/ui/OfflineBadge/OfflineBadge';
 
 const topbar = document.getElementById('main-topbar') as any;
 const drawer = document.getElementById('right-drawer') as any;

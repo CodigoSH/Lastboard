@@ -15,6 +15,9 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
     <div class="top-bar">
         <div class="top-bar__title">${title}</div>
         <div class="top-bar__actions">
+            <!-- Offline Indicator -->
+            <offline-badge></offline-badge>
+
             <!-- Search Bar -->
             <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''}">
                 <input type="text" id="search-input" class="search-input" placeholder="SEARCH..." 
