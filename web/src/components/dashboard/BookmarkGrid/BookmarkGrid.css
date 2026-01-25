@@ -7,7 +7,7 @@
     /* 1. Use 1fr to fill available width dynamically */
     grid-template-columns: repeat(var(--current-grid-cols), 1fr);
     /* 2. Enforce minimum row height, but allow expansion */
-    grid-auto-rows: minmax(100px, auto);
+    grid-auto-rows: var(--row-height, minmax(100px, auto));
     gap: var(--grid-gap);
 
     /* 3. Force full width */
@@ -57,6 +57,8 @@
     border-radius: var(--radius);
     padding: 12px;
     position: relative;
+    /* CRITICAL: Enforce square aspect ratio */
+    aspect-ratio: 1 / 1;
     /* CRITICAL: Required for status-indicator positioning */
     display: flex;
     flex-direction: column;
@@ -296,14 +298,17 @@
     background: rgba(0, 255, 0, 0.1);
     border: 2px dashed #00ff00;
     border-radius: var(--radius);
-    grid-column: var(--x) / span var(--w);
-    grid-row: var(--y) / span var(--h);
+    position: absolute;
+    /* Move out of grid flow to prevent layout thrashing */
+    top: calc(var(--y-px, 0) * 1px);
+    left: calc(var(--x-px, 0) * 1px);
+    width: calc(var(--w-px, 0) * 1px);
+    height: calc(var(--h-px, 0) * 1px);
+
     pointer-events: none;
     transition: all 0.1s;
     z-index: 10;
 
-    /* Ensure Ghost mimics Card geometry to force row expansion */
-    width: 100%;
 }
 
 .bookmark-grid__ghost.invalid {
