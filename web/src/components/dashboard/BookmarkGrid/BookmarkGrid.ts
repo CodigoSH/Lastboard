@@ -11,6 +11,7 @@ class BookmarkGrid extends HTMLElement {
     private isEditing: boolean = false;
     private searchQuery: string = '';
     private _unsubscribe: (() => void) | undefined;
+    private _resizeObserver: ResizeObserver | undefined;
 
     // Drag State
     private dragTargetId: number | null = null;
@@ -32,6 +33,13 @@ class BookmarkGrid extends HTMLElement {
 
     connectedCallback() {
         this.render();
+        this.updateGridMetrics();
+
+        // Use ResizeObserver to keep metrics in sync
+        this._resizeObserver = new ResizeObserver(() => {
+            this.updateGridMetrics();
+        });
+        this._resizeObserver.observe(this);
 
         // Subscribe to dashboard store for all state changes
         this._unsubscribe = dashboardStore.subscribe((state) => {
@@ -149,6 +157,23 @@ class BookmarkGrid extends HTMLElement {
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
+        if (this._resizeObserver) this._resizeObserver.disconnect();
+    }
+
+    updateGridMetrics() {
+        // Calculate and set --row-height
+        const gridRect = this.getBoundingClientRect();
+        const gridStyle = getComputedStyle(this);
+        const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
+        const gridCols = gridColsStr ? parseInt(gridColsStr, 10) : 12;
+        const gapStr = gridStyle.getPropertyValue('--grid-gap').trim();
+        const gap = gapStr ? parseInt(gapStr, 10) : 16;
+
+        const colWidth = (gridRect.width - ((gridCols - 1) * gap)) / gridCols;
+
+        // Update Internal State & CSS Variable
+        this.currentColWidth = colWidth;
+        this.style.setProperty('--row-height', `${colWidth}px`);
     }
 
     setupResizeListeners() {
@@ -385,14 +410,34 @@ class BookmarkGrid extends HTMLElement {
         }
         if (!this.ghostEl) return;
 
-        this.ghostEl.style.display = 'block';
-        this.ghostEl.style.setProperty('--x', String(rect.x));
-        this.ghostEl.style.setProperty('--y', String(rect.y));
-        this.ghostEl.style.setProperty('--w', String(rect.w));
-        this.ghostEl.style.setProperty('--h', String(rect.h));
+        // Calculate Pixel Dimensions
+        const gridStyle = getComputedStyle(this);
+        const gapStr = gridStyle.getPropertyValue('--grid-gap').trim();
+        const gap = gapStr ? parseInt(gapStr, 10) : 16;
 
-        // Dynamic Aspect Ratio to support 1x2 and 2x1 while maintaining row stability
-        this.ghostEl.style.aspectRatio = `${rect.w} / ${rect.h}`;
+        const gridRect = this.getBoundingClientRect();
+        const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
+        const gridCols = gridColsStr ? parseInt(gridColsStr, 10) : 12;
+
+        const totalWidth = gridRect.width;
+        // Calculation must match snap-logic
+        const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
+
+        // User reported ghost is too short (rectangular). 
+        // We set height = colWidth, creating a square cell logic which usually looks better for icons.
+        // This matches the visual expectation of "square" drop zones.
+        const ROW_HEIGHT = colWidth;
+
+        const xPx = (rect.x - 1) * (colWidth + gap);
+        const yPx = (rect.y - 1) * (ROW_HEIGHT + gap);
+        const wPx = (rect.w * colWidth) + ((rect.w - 1) * gap);
+        const hPx = (rect.h * ROW_HEIGHT) + ((rect.h - 1) * gap);
+
+        this.ghostEl.style.display = 'block';
+        this.ghostEl.style.setProperty('--x-px', String(xPx));
+        this.ghostEl.style.setProperty('--y-px', String(yPx));
+        this.ghostEl.style.setProperty('--w-px', String(wPx));
+        this.ghostEl.style.setProperty('--h-px', String(hPx));
 
         if (isValid) {
             this.ghostEl.classList.remove('invalid');
