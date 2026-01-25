@@ -25,12 +25,18 @@
     font-size: 14px;
     font-weight: 600;
     letter-spacing: -0.01em;
+    flex-shrink: 0;
+    /* Guard the title from shrinking */
+    margin-right: 16px;
 }
 
 .top-bar__actions {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex: 1;
+    /* Take remaining space */
+    justify-content: flex-end;
 }
 
 .top-bar__toggle {
@@ -43,6 +49,7 @@
     color: #fff;
     transition: opacity 0.2s;
     position: relative;
+    flex-shrink: 0;
 }
 
 .top-bar__toggle:hover {
@@ -84,17 +91,21 @@
     width: 32px;
     overflow: hidden;
     cursor: pointer;
-    margin-right: -4px;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .search-wrapper--active {
-    width: 200px;
+    flex: 1;
+    /* Allow to grow into available space */
+    max-width: 300px;
+    /* But don't go too wide on desktop */
     background: rgba(255, 255, 255, 0.05);
     border-color: var(--border);
     cursor: default;
     padding: 0 4px 0 12px;
-    justify-content: flex-start;
+    justify-content: space-between;
+    /* Icon to the right */
 }
 
 .search-input {
@@ -103,15 +114,22 @@
     color: var(--text-main);
     font-family: var(--font-mono);
     font-size: 11px;
-    width: 0;
     outline: none;
     padding: 0;
-    transition: width 0.3s;
+    /* Clean state when closed */
+    width: 0;
+    flex: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .search-wrapper--active .search-input {
-    width: 140px;
-    margin-right: 0;
+    flex: 1;
+    width: auto;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .search-clear {
@@ -126,8 +144,9 @@
     font-size: 14px;
     line-height: 1;
     cursor: pointer;
-    margin-right: 8px;
+    margin: 0 8px;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .search-clear:hover {
@@ -143,6 +162,8 @@
     stroke: currentColor;
     stroke-width: 1.5px;
     transition: color 0.2s;
+    order: 2;
+    /* Ensure icon is visually after everything */
 }
 
 .search-wrapper:hover .search-icon,
@@ -187,4 +208,18 @@
     background: rgba(255, 255, 255, 0.05);
     color: var(--accent);
     padding-left: 14px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+
+    #edit-toggle,
+    #add-toggle,
+    #drawer-toggle {
+        display: none !important;
+    }
+
+    .top-bar__title {
+        margin-right: 8px;
+    }
 }
