@@ -46,8 +46,17 @@ class TopBar extends HTMLElement {
     }
 
     setState(newState: Partial<TopBarState>) {
+        const oldEditMode = this.state.editMode;
         this.state = { ...this.state, ...newState };
         this.render();
+
+        if (newState.editMode !== undefined && newState.editMode !== oldEditMode) {
+            this.dispatchEvent(new CustomEvent('edit-mode-change', {
+                detail: { active: this.state.editMode },
+                bubbles: true,
+                composed: true
+            }));
+        }
     }
 
     setupListeners() {

@@ -1,12 +1,16 @@
 package api
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kiwinho/CSH-Dashboard/internal/core/dashboard"
 )
@@ -127,7 +131,10 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		sets = append(sets, "parent_id=?")
 		args = append(args, *input.ParentID)
 	}
-	// We skip content update for drag drop, but support it if needed
+	if input.Content != nil {
+		sets = append(sets, "content=?")
+		args = append(args, *input.Content)
+	}
 
 	if len(sets) == 0 {
 		w.WriteHeader(http.StatusOK)
@@ -169,4 +176,71 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+// CheckHealth proxies a head/get request to a URL, allowing self-signed certs.
+// Falls back to TCP ping if HTTP fails.
+func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
+	rawUrl := r.URL.Query().Get("url")
+	if rawUrl == "" {
+		http.Error(w, "Missing url parameter", http.StatusBadRequest)
+		return
+	}
+
+	u, err := url.Parse(rawUrl)
+	if err != nil {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+		return
+	}
+
+	// 1. Primary: HTTP(S) check with certificate bypass
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   time.Second * 3,
+	}
+
+	// Try HEAD first
+	req, _ := http.NewRequest("HEAD", rawUrl, nil)
+	resp, err := client.Do(req)
+
+	// If it worked and returned a success-ish code, we are done
+	if err == nil && resp.StatusCode < 500 {
+		defer resp.Body.Close()
+		log.Printf("[Health] %s is UP (HTTP %d)", rawUrl, resp.StatusCode)
+		h.respondJson(w, map[string]string{"status": "up"})
+		return
+	}
+
+	// 2. Secondary Fallback: TCP Ping (Robust against SSL/Auth/Complex issues)
+	// Extract host and port
+	host := u.Host
+	if !strings.Contains(host, ":") {
+		if u.Scheme == "https" {
+			host += ":443"
+		} else {
+			host += ":80"
+		}
+	}
+
+	conn, err := net.DialTimeout("tcp", host, time.Second*2)
+	if err == nil {
+		defer conn.Close()
+		log.Printf("[Health] %s is UP (TCP Open)", rawUrl)
+		h.respondJson(w, map[string]string{"status": "up"})
+		return
+	}
+
+	// 3. Definitely Down
+	log.Printf("[Health] %s is DOWN (%v)", rawUrl, err)
+	w.WriteHeader(http.StatusServiceUnavailable)
+	h.respondJson(w, map[string]interface{}{"status": "down", "error": err.Error()})
+}
+
+// Helper for JSON responses
+func (h *DashboardHandler) respondJson(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
 }

@@ -1,5 +1,6 @@
 import { userStore } from './store/userStore';
 import { dashboardStore } from './store/dashboardStore';
+import { statusService } from './services/StatusService';
 
 // Import components to register them
 import './components/ui/Paper/Paper';
@@ -13,11 +14,13 @@ import './components/dashboard/BookmarkGrid/BookmarkGrid';
 import './components/ui/Notifier/Notifier';
 import './components/ui/IconPicker/IconPicker';
 import './components/ui/AddBookmarkModal/AddBookmarkModal';
+import './components/ui/ConfirmationModal/ConfirmationModal';
 
 const topbar = document.getElementById('main-topbar') as any;
 const drawer = document.getElementById('right-drawer') as any;
 const dashboardRoot = document.getElementById('dashboard-root') as HTMLElement;
 let addBookmarkModal: any;
+let confirmationModal: any;
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -28,9 +31,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Render dashboard components
     renderDashboard();
 
-    // Create and append modal
+    // Start status monitoring
+    statusService.start();
+
+    // Create and append modals
     addBookmarkModal = document.createElement('add-bookmark-modal');
     document.body.appendChild(addBookmarkModal);
+
+    confirmationModal = document.createElement('confirmation-modal');
+    document.body.appendChild(confirmationModal);
 });
 
 // 2. Handle Component Events (TopBar)
@@ -46,7 +55,13 @@ if (topbar) {
     });
 
     topbar.addEventListener('edit-mode-change', (e: CustomEvent) => {
-        dashboardRoot.classList.toggle('edit-mode', e.detail.active);
+        const isActive = e.detail.active;
+        dashboardRoot.classList.toggle('edit-mode', isActive);
+
+        // If exiting edit mode, refresh the page to ensure a clean state
+        if (!isActive) {
+            window.location.reload();
+        }
     });
 
     topbar.addEventListener('search-input', (e: CustomEvent) => {
@@ -64,11 +79,27 @@ if (topbar) {
                 addBookmarkModal.open();
             }
         } else if (action === 'add-group') {
+            const newItem = {
+                type: 'group',
+                x: 0,
+                y: 0,
+                w: 2,
+                h: 2,
+                content: JSON.stringify({ name: 'New Group' })
+            };
             // @ts-ignore
-            if (window.notifier) window.notifier.show('Groups not yet implemented', 'info');
+            dashboardStore.addItem(newItem);
         } else if (action === 'add-section') {
+            const newItem = {
+                type: 'section',
+                x: 0,
+                y: 0,
+                w: 12, // Full width by default
+                h: 1,
+                content: JSON.stringify({ name: 'New Section' })
+            };
             // @ts-ignore
-            if (window.notifier) window.notifier.show('Sections not yet implemented', 'info');
+            dashboardStore.addItem(newItem);
         }
     });
 }

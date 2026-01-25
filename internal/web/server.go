@@ -48,6 +48,7 @@ func (s *Server) routes() {
 	// For simplicity with basic mux:
 	s.Router.Handle("PATCH /api/dashboard/item/", setupMiddleware(http.HandlerFunc(dashHandler.UpdateItem)))
 	s.Router.Handle("DELETE /api/dashboard/item/", setupMiddleware(http.HandlerFunc(dashHandler.DeleteItem)))
+	s.Router.Handle("/api/dashboard/health", setupMiddleware(http.HandlerFunc(dashHandler.CheckHealth)))
 
 	// User API
 	userHandler := api.NewUserHandler(s.DB)

@@ -29,7 +29,9 @@ class ApiService {
                 throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
             }
 
-            return await response.json();
+            // Handle empty responses (like 204 No Content) or empty bodies
+            const text = await response.text();
+            return text ? JSON.parse(text) : {} as T;
         } catch (error) {
             console.error(`[ApiService] Request failed: ${fullUrl}`, error);
             // Re-throw to be handled by store/component

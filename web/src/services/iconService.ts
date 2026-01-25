@@ -43,11 +43,13 @@ class IconService {
             const data = await response.json();
 
             // Parse tree.json structure
-            // The tree.json contains an array of icon filenames
-            if (Array.isArray(data)) {
-                this.icons = data
-                    .filter(item => item.endsWith('.png') || item.endsWith('.svg'))
-                    .map(filename => {
+            // The tree.json might be an array or an object with a 'png' property
+            const iconList = Array.isArray(data) ? data : (data.png || []);
+
+            if (Array.isArray(iconList) && iconList.length > 0) {
+                this.icons = iconList
+                    .filter((item: string) => item.endsWith('.png') || item.endsWith('.svg'))
+                    .map((filename: string) => {
                         const name = filename.replace(/\.(png|svg)$/, '');
                         return {
                             name,
@@ -57,7 +59,7 @@ class IconService {
                     .sort((a, b) => a.name.localeCompare(b.name));
             } else {
                 // If tree.json has a different structure, try to parse it
-                console.warn('[IconService] Unexpected tree.json structure, using fallback');
+                console.warn('[IconService] Unexpected tree.json structure, using fallback', data);
                 this.icons = this.getFallbackIcons();
             }
 

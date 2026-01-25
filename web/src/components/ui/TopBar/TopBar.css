@@ -30,7 +30,7 @@
 .top-bar__actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 4px;
 }
 
 .top-bar__toggle {
@@ -53,7 +53,7 @@
     width: 20px;
     height: 20px;
     stroke: currentColor;
-    stroke-width: 1.2px;
+    stroke-width: 1.5px;
 }
 
 .top-bar__indicator {
@@ -136,10 +136,12 @@
 }
 
 .search-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
-    color: var(--text-dim);
+    color: #fff;
+    stroke: currentColor;
+    stroke-width: 1.5px;
     transition: color 0.2s;
 }
 

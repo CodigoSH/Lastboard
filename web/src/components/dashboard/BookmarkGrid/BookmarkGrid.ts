@@ -29,6 +29,7 @@ class BookmarkGrid extends HTMLElement {
     }
 
     connectedCallback() {
+        // console.log('BookmarkGrid v7 loaded'); // Debug log
         this.render();
 
         // Subscribe to dashboard store for all state changes
@@ -43,7 +44,10 @@ class BookmarkGrid extends HTMLElement {
             // Ensure items is always an array
             const newItems = Array.isArray(state.items) ? state.items : [];
 
+            // console.log('[BookmarkGrid] State Update. Items:', newItems.length, 'Editing:', state.isEditing);
+
             if (this.bookmarks !== newItems) {
+                // console.log('[BookmarkGrid] Items reference changed, rerendering');
                 this.bookmarks = newItems;
                 shouldRerender = true;
             }
@@ -55,6 +59,73 @@ class BookmarkGrid extends HTMLElement {
 
         this.setupDragListeners();
         this.setupResizeListeners();
+        this.setupActionListeners();
+    }
+
+    setupActionListeners() {
+        const root = this.shadowRoot!;
+        root.addEventListener('click', async (e) => {
+            if (!this.isEditing) return;
+
+            // Stop ANY default navigation in edit mode
+            const anchor = (e.target as HTMLElement).closest('a');
+            if (anchor) {
+                e.preventDefault();
+            }
+
+            const target = e.target as HTMLElement;
+
+            // Delete Button
+            const deleteBtn = target.closest('.btn-delete');
+            if (deleteBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const card = deleteBtn.closest('.bookmark-grid__card') as HTMLElement;
+                const id = parseInt(card.dataset.id || '0');
+
+                // Try to find the confirmation modal in the main document
+                const confirmationModal = document.querySelector('confirmation-modal') as any;
+
+                if (confirmationModal && typeof confirmationModal.confirm === 'function') {
+                    const confirmed = await confirmationModal.confirm(
+                        'Delete Bookmark',
+                        'Are you sure you want to delete this bookmark? This action cannot be undone.'
+                    );
+                    if (confirmed) {
+                        await dashboardStore.deleteItem(id);
+                    }
+                } else {
+                    // Fallback to native confirm if modal fails/missing
+                    if (confirm('Are you sure you want to delete this bookmark?')) {
+                        await dashboardStore.deleteItem(id);
+                    }
+                }
+                return;
+            }
+
+            // Edit Button
+            const editBtn = target.closest('.btn-edit');
+            if (editBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const card = editBtn.closest('.bookmark-grid__card') as HTMLElement;
+                const id = parseInt(card.dataset.id || '0');
+                const item = this.bookmarks.find(b => b.id == id);
+
+                if (item) {
+                    // Cast to any to access openForEdit
+                    const modal = document.querySelector('add-bookmark-modal') as any;
+                    if (modal && typeof modal.openForEdit === 'function') {
+                        modal.openForEdit(item);
+                    } else {
+                        console.error('[BookmarkGrid] Edit modal not found or invalid', modal);
+                    }
+                }
+                return;
+            }
+        });
     }
 
     disconnectedCallback() {
@@ -79,7 +150,7 @@ class BookmarkGrid extends HTMLElement {
                 if (!card || !card.dataset.id) return;
 
                 const id = parseInt(card.dataset.id);
-                const item = this.bookmarks.find(b => b.id === id);
+                const item = this.bookmarks.find(b => b.id == id);
                 if (!item) return;
 
                 this.isResizing = true;

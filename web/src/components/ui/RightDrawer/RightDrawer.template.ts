@@ -24,7 +24,7 @@ export const template = ({ user, isOpen, selectedSection }: RightDrawerProps) =>
         </div>
     </div>
 
-    <div class="right-drawer__panel ${isOpen ? '' : 'right-drawer__panel--closed'}">
+    <div class="right-drawer__panel">
         <div class="right-drawer__header">
             <app-avatar class="right-drawer__avatar" initials="${user.initials}" src="${user.avatar_url || ''}"></app-avatar>
             <div class="right-drawer__user-info">

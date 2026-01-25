@@ -59,6 +59,8 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 12px;
+    position: relative;
+    /* CRITICAL: Required for status-indicator positioning */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -77,12 +79,106 @@
     /* Removed card lift, moved to icon */
 }
 
+/* Status Indicator */
+.status-indicator {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 6px;
+    /* Slightly smaller for a more refined look */
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--text-dim);
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    /* Light effect border */
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    transition: all 0.3s ease;
+}
+
+.status-up {
+    background-color: #2ecc71;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.8), 0 0 0 0px rgba(46, 204, 113, 0.4);
+    animation: status-pulse-up 2s infinite;
+}
+
+.status-down {
+    background-color: #e74c3c;
+    box-shadow: 0 0 8px rgba(231, 76, 60, 0.8), 0 0 0 0px rgba(231, 76, 60, 0.4);
+    animation: status-pulse-down 2s infinite;
+}
+
+@keyframes status-pulse-up {
+    0% {
+        box-shadow: 0 0 0 0px rgba(46, 204, 113, 0.7), 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, 0), 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0px rgba(46, 204, 113, 0), 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+}
+
+@keyframes status-pulse-down {
+    0% {
+        box-shadow: 0 0 0 0px rgba(231, 76, 60, 0.7), 0 0 8px rgba(231, 76, 60, 0.8);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(231, 76, 60, 0), 0 0 8px rgba(231, 76, 60, 0.8);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0px rgba(231, 76, 60, 0), 0 0 8px rgba(231, 76, 60, 0.8);
+    }
+}
+
+/* Action Buttons (Edit Mode) */
+.bookmark-actions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 4px;
+    z-index: 25;
+    /* Above resize handle and content */
+}
+
+.action-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-main);
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.action-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.btn-delete:hover {
+    background: #e74c3c;
+    border-color: #e74c3c;
+}
+
 /* Edit Mode Styles */
 :host(.edit-mode) .bookmark-grid__card {
     border: 1px dashed var(--accent);
     background: rgba(0, 120, 212, 0.05);
     cursor: grab;
-    animation: pulse 2s infinite;
     position: relative;
     /* Ensure handle positioning context */
 }
@@ -90,46 +186,33 @@
 /* Resize Handle */
 .resize-handle {
     position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 12px;
-    height: 12px;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
     cursor: nwse-resize;
-    /* Diagonal resize cursor */
     z-index: 20;
 
-    /* Visual indicator: Corner bracket style */
-    border-bottom: 2px solid var(--accent);
-    border-right: 2px solid var(--accent);
-    border-bottom-right-radius: 2px;
-    transition: transform 0.2s;
+    /* Visual indicator: Solid technical triangle */
+    border-style: solid;
+    border-width: 0 0 12px 12px;
+    border-color: transparent transparent var(--accent) transparent;
+    opacity: 0.8;
+    transition: all 0.2s;
 }
 
 .resize-handle:hover {
-    transform: scale(1.2);
-    border-color: #fff;
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 :host(.edit-mode) .bookmark-grid__card:active {
     cursor: grabbing;
-    opacity: 0.6;
+    background: rgba(0, 120, 212, 0.1);
+    border-style: solid;
 }
 
 /* Edit Mode Grid Guide - (Visuals removed for cleanliness) */
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(0, 120, 212, 0.4);
-    }
-
-    70% {
-        box-shadow: 0 0 0 4px rgba(0, 120, 212, 0);
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(0, 120, 212, 0);
-    }
-}
 
 .bookmark-grid__icon-container {
     width: 32px;

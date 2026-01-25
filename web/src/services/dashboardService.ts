@@ -20,5 +20,9 @@ export const dashboardService = {
 
     async deleteItem(id: number): Promise<MessageResponse> {
         return apiService.delete<MessageResponse>(`/api/dashboard/item/${id}`);
+    },
+
+    async checkHealth(url: string): Promise<{ status: string }> {
+        return apiService.get<{ status: string }>(`/api/dashboard/health?url=${encodeURIComponent(url)}`);
     }
 };

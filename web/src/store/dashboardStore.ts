@@ -144,8 +144,15 @@ class DashboardStore {
             this.ensureItemsIsArray();
 
             // Optimistic update
-            const itemIndex = this.state.items.findIndex(item => item.id === updatedItem.id);
-            if (itemIndex === -1) return;
+            // Use loose equality to handle potential string/number mismatches
+            const itemIndex = this.state.items.findIndex(item => item.id == updatedItem.id);
+
+            console.log('[DashboardStore] Updating item', updatedItem.id, 'Found index:', itemIndex);
+
+            if (itemIndex === -1) {
+                console.warn('[DashboardStore] Item not found for update:', updatedItem.id);
+                return;
+            }
 
             const previousItem = { ...this.state.items[itemIndex] };
             this.state.items[itemIndex] = { ...this.state.items[itemIndex], ...updatedItem };
@@ -155,6 +162,7 @@ class DashboardStore {
             // Sync with backend
             try {
                 await dashboardService.updateItem(updatedItem);
+                console.log('[DashboardStore] Item sync successful');
             } catch (apiError) {
                 // Rollback on failure
                 console.error('[DashboardStore] Failed to sync item update, rolling back', apiError);
@@ -211,8 +219,15 @@ class DashboardStore {
             this.ensureItemsIsArray();
 
             // Optimistic delete
-            const itemIndex = this.state.items.findIndex(item => item.id === id);
-            if (itemIndex === -1) return;
+            // Use loose equality to handle potential string/number mismatches from API
+            const itemIndex = this.state.items.findIndex(item => item.id == id);
+
+            console.log('[DashboardStore] Deleting item', id, 'Found index:', itemIndex);
+
+            if (itemIndex === -1) {
+                console.warn('[DashboardStore] Item not found for deletion:', id);
+                return;
+            }
 
             const deletedItem = this.state.items[itemIndex];
             this.state.items.splice(itemIndex, 1);

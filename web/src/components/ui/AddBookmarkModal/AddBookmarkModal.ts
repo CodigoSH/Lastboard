@@ -12,6 +12,10 @@ class AddBookmarkModal extends HTMLElement {
     private submitHandler: any = null;
     private escapeHandler: any = null;
 
+    // Edit Mode State
+    private isEditMode: boolean = false;
+    private currentItemId: number | null = null;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -51,8 +55,9 @@ class AddBookmarkModal extends HTMLElement {
 
             const label = formData.get('label') as string;
             const url = formData.get('url') as string;
+            const statusCheck = formData.get('statusCheck') === 'on';
 
-            console.log('[Modal] Label:', label, 'URL:', url);
+            console.log('[Modal] Label:', label, 'URL:', url, 'Status:', statusCheck);
 
             // Get selected icon
             const iconName = this.iconPicker ? this.iconPicker.getSelectedIcon() : '';
@@ -62,43 +67,47 @@ class AddBookmarkModal extends HTMLElement {
                 ? `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${iconName}.png`
                 : '';
 
-            // Find next available position
-            const state = dashboardStore.getState();
-
-            // Ensure items is an array
-            const items = Array.isArray(state.items) ? state.items : [];
-            console.log('[Modal] Current items count:', items.length);
-
-            const maxY = items.length > 0
-                ? Math.max(0, ...items.map(item => item.y + item.h - 1))
-                : 0;
-
-            console.log('[Modal] Creating bookmark at position y:', maxY + 1);
-
             try {
-                await dashboardStore.addItem({
-                    type: 'bookmark',
-                    x: 1,
-                    y: maxY + 1,
-                    w: 1,
-                    h: 1,
-                    content: {
-                        label,
-                        url,
-                        icon: iconUrl,
-                        iconName: iconName
-                    }
+                const content = JSON.stringify({
+                    label,
+                    url,
+                    icon: iconUrl,
+                    iconName: iconName,
+                    statusCheck
                 });
 
-                console.log('[Modal] Bookmark added successfully!');
-                this.close();
+                if (this.isEditMode && this.currentItemId) {
+                    await dashboardStore.updateItem({
+                        id: this.currentItemId,
+                        content: content
+                    });
+                    // @ts-ignore
+                    if (window.notifier) window.notifier.show('Bookmark updated successfully');
+                } else {
+                    const state = dashboardStore.getState();
+                    const items = Array.isArray(state.items) ? state.items : [];
+                    const maxY = items.length > 0
+                        ? Math.max(0, ...items.map(item => item.y + item.h - 1))
+                        : 0;
 
-                // @ts-ignore
-                if (window.notifier) window.notifier.show('Bookmark added successfully');
+                    await dashboardStore.addItem({
+                        type: 'bookmark',
+                        x: 1,
+                        y: maxY + 1,
+                        w: 1,
+                        h: 1,
+                        content: content
+                    });
+                    // @ts-ignore
+                    if (window.notifier) window.notifier.show('Bookmark added successfully');
+                }
+
+                console.log('[Modal] Operation successful!');
+                this.close();
             } catch (error) {
-                console.error('[Modal] Error adding bookmark:', error);
+                console.error('[Modal] Error:', error);
                 // @ts-ignore
-                if (window.notifier) window.notifier.show('Error adding bookmark', 'error');
+                if (window.notifier) window.notifier.show('Error saving bookmark', 'error');
             }
         };
 
@@ -141,15 +150,49 @@ class AddBookmarkModal extends HTMLElement {
     open() {
         console.log('[Modal] Opening modal');
         this.isOpen = true;
+        this.isEditMode = false;
+        this.currentItemId = null;
         this.render();
         this.initializeIconPicker();
-
         // Focus first input
         setTimeout(() => {
             const input = this.shadowRoot!.getElementById('bookmark-label') as HTMLInputElement;
-            if (input) {
-                input.focus();
-                console.log('[Modal] Focused on label input');
+            if (input) input.focus();
+        }, 100);
+    }
+
+    openForEdit(item: any) {
+        console.log('[Modal] Opening for edit', item);
+        this.isOpen = true;
+        this.isEditMode = true;
+        this.currentItemId = item.id;
+
+        // Parse content
+        let content = item.content;
+        if (typeof content === 'string') {
+            try {
+                content = JSON.parse(content);
+            } catch (e) { console.error('Failed to parse item content', e); }
+        }
+
+        this.selectedIconName = content.iconName || '';
+        this.render();
+        this.initializeIconPicker();
+
+        // Populate Form
+        setTimeout(() => {
+            const form = this.shadowRoot!.getElementById('bookmark-form') as HTMLFormElement;
+            if (form) {
+                const labelInput = form.elements.namedItem('label') as HTMLInputElement;
+                const urlInput = form.elements.namedItem('url') as HTMLInputElement;
+                const statusInput = form.elements.namedItem('statusCheck') as HTMLInputElement;
+
+                if (labelInput) labelInput.value = content.label || '';
+                if (urlInput) urlInput.value = content.url || '';
+                if (statusInput) statusInput.checked = !!content.statusCheck;
+            }
+            if (this.iconPicker) {
+                this.iconPicker.setSelectedIcon(this.selectedIconName);
             }
         }, 100);
     }
@@ -199,7 +242,7 @@ class AddBookmarkModal extends HTMLElement {
     render() {
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
-            ${template({ isOpen: this.isOpen })}
+            ${template({ isOpen: this.isOpen, isEditMode: this.isEditMode })}
         `;
     }
 }
