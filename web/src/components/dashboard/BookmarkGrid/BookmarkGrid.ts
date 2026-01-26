@@ -364,11 +364,7 @@ class BookmarkGrid extends HTMLElement {
                 }
             }
 
-            await dashboardStore.updateItem({
-                id: item.id,
-                w: newW,
-                h: newH
-            });
+            await dashboardStore.resizeItem(item.id, newW, newH);
         }
 
         // Reset State
