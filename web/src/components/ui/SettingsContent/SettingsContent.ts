@@ -1,7 +1,7 @@
 import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 // @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
@@ -302,11 +302,74 @@ class SettingsContent extends HTMLElement {
                 return personalizationTemplate(this.prefs, sliderConfigs);
             }
 
+            case 'advanced':
+                return advancedTemplate();
+
             case 'users':
                 return usersTemplate(this.users);
 
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">Configuration module.</p></div>`;
+        }
+    }
+
+    // --- System Logic ---
+
+    downloadBackup() {
+        window.location.href = '/api/system/backup';
+    }
+
+    async restoreBackup(file: File) {
+        if (!file) return;
+        if (!confirm('WARNING: restoring a backup will overwrite all current data. Do you want to continue?')) return;
+
+        const formData = new FormData();
+        formData.append('backup_file', file);
+
+        try {
+            const res = await fetch('/api/system/restore', {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                if (window.notifier) window.notifier.show('Backup restored. Reloading...');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                if (window.notifier) window.notifier.show('Restore failed', 'error');
+            }
+        } catch (e) {
+            console.error('Restore error', e);
+            if (window.notifier) window.notifier.show('Restore failed', 'error');
+        }
+    }
+
+    openResetModal() {
+        const modal = this.shadowRoot!.getElementById('reset-confirm-modal') as HTMLDialogElement;
+        const input = this.shadowRoot!.getElementById('reset-confirm-input') as HTMLInputElement;
+        if (modal) {
+            if (input) input.value = '';
+            modal.showModal();
+        }
+    }
+
+    async executeFactoryReset() {
+        const input = (this.shadowRoot!.getElementById('reset-confirm-input') as HTMLInputElement);
+        if (!input || input.value.trim() !== 'delete') {
+            if (window.notifier) window.notifier.show('Please type "delete" to confirm', 'error');
+            input.focus();
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/system/reset', { method: 'POST' });
+            if (res.ok) {
+                window.location.href = '/setup';
+            } else {
+                if (window.notifier) window.notifier.show('Reset failed', 'error');
+            }
+        } catch (e) {
+            console.error('Reset error', e);
+            if (window.notifier) window.notifier.show('Reset failed network error', 'error');
         }
     }
 

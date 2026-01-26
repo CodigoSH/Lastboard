@@ -222,3 +222,80 @@ export const usersTemplate = (users: any[]) => `
         </div>
     </dialog>
 `;
+
+export const advancedTemplate = () => `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <!-- System Migration Section -->
+        <div class="bento-card">
+            <div class="mono-tag" style="margin-bottom: 24px;">System Data & Migration</div>
+            
+            <div class="settings-content__action-group">
+                <!-- Export -->
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>Export Database</h3>
+                        <p>Create a complete JSON snapshot of all users, bookmarks, sections, and system preferences. Ideal for backups or migration.</p>
+                    </div>
+                    <app-button variant="primary" onclick="this.getRootNode().host.downloadBackup()">
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        Download Backup
+                    </app-button>
+                </div>
+
+                <!-- Import -->
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>Import Database</h3>
+                        <p>Restore system state from a previous backup file. <br><span style="color: var(--accent); font-weight: 500;">Note: This will strictly match the backup file, removing any newer data.</span></p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                         <input type="file" id="backup-upload" accept=".json" style="display: none;" onchange="this.getRootNode().host.restoreBackup(this.files[0])">
+                         <app-button variant="primary" onclick="this.getRootNode().getElementById('backup-upload').click()">
+                            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                            Select File...
+                         </app-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-content__danger-zone">
+             <div>
+                <div class="settings-content__danger-title">
+                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fa5252;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    Factory Reset
+                </div>
+                <p class="settings-content__text-dim" style="font-size: 13px; color: rgba(250, 82, 82, 0.8);">
+                    Irrevocably wipe all data and return to initial setup state.
+                </p>
+             </div>
+             <app-button onclick="this.getRootNode().host.openResetModal()" style="border-color: rgba(250, 82, 82, 0.4); color: #fa5252; background: transparent; transition: all 0.2s;">
+                Reset System
+             </app-button>
+        </div>
+    </div>
+
+    <!-- Factory Reset Confirmation Modal -->
+    <dialog id="reset-confirm-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 440px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: #fa5252; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+            <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: #fa5252;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            Confirm Factory Reset
+        </h3>
+        <p class="settings-content__text-dim" style="font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
+            This action is <b>final</b>. All users, bookmarks, themes, and configuration will be deleted immediately.
+            To confirm, please type <span style="font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;">delete</span> below.
+        </p>
+
+        <div class="settings-content__form-group">
+            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="Type 'delete'" style="border-color: rgba(250, 82, 82, 0.3); font-family: monospace;">
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 32px; width: 100%;">
+            <app-button onclick="this.getRootNode().getElementById('reset-confirm-modal').close()" style="width: auto;">Cancel</app-button>
+            <button class="settings-content__reset-btn" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1;">
+                Erase Everything
+            </button>
+        </div>
+    </dialog>
+`;
