@@ -27,6 +27,12 @@ let confirmationModal: any;
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize stores
     await userStore.fetchUser();
+
+    // Inject user into topbar for permission handling
+    if (topbar) {
+        topbar.setState({ user: userStore.getUser() });
+    }
+
     await dashboardStore.fetchItems();
 
     // Render dashboard components

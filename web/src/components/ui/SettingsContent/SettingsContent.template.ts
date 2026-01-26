@@ -137,9 +137,88 @@ export const personalizationTemplate = (prefs: Prefs, sliderConfigs: { label: st
                     </div>
                 `).join('')}
             </div>
+            </div>
             <p class="settings-content__text-dim" style="font-size: 11px; margin-top: 24px; font-family: var(--font-mono);">
                 > Adaptive hardware acceleration active. Changes apply globally.
             </p>
         </div>
     </div>
+`;
+
+export const usersTemplate = (users: any[]) => `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
+            <div class="mono-tag" style="margin-bottom: 12px;">Administration / Access Control</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 class="settings-content__title" style="margin: 0;">User Management</h3>
+                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ Add User</app-button>
+            </div>
+
+            <div class="settings-content__user-list">
+                ${users.map(u => `
+                    <div class="settings-content__user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <app-avatar initials="${u.username.substring(0, 2).toUpperCase()}" src="${u.avatar_url}" style="width: 32px; height: 32px; font-size: 12px;"></app-avatar>
+                            <div>
+                                <div style="font-weight: 500; font-size: 14px;">${u.username}</div>
+                                <div class="mono-tag" style="font-size: 10px;">${u.role}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}', '${u.role}')">Edit</app-button>
+                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${u.id})">Delete</app-button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+             ${users.length === 0 ? '<p class="settings-content__text-dim">No users found.</p>' : ''}
+        </div>
+    </div>
+    
+     <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
+        <h3 style="margin-top: 0; margin-bottom: 16px;">Add New User</h3>
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">Username</label>
+            <input type="text" id="new-user-username" class="settings-content__input">
+        </div>
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">Password</label>
+            <input type="password" id="new-user-password" class="settings-content__input">
+        </div>
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">Role</label>
+            <select id="new-user-role" class="settings-content__select">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
+            <app-button onclick="this.getRootNode().getElementById('add-user-modal').close()">Cancel</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">Create</app-button>
+        </div>
+    </dialog>
+
+    <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
+        <h3 style="margin-top: 0; margin-bottom: 16px;">Edit User</h3>
+        <input type="hidden" id="edit-user-id">
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">Username</label>
+            <input type="text" id="edit-user-username" class="settings-content__input">
+        </div>
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">New Password (Optional)</label>
+            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="Leave blank to keep current">
+        </div>
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">Role</label>
+            <select id="edit-user-role" class="settings-content__select">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
+            <app-button onclick="this.getRootNode().getElementById('edit-user-modal').close()">Cancel</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">Save Changes</app-button>
+        </div>
+    </dialog>
 `;

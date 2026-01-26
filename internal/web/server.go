@@ -66,6 +66,12 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/user/change-password", protect(http.HandlerFunc(userHandler.ChangePassword)))
 	s.Router.Handle("POST /api/user/preferences", protect(http.HandlerFunc(userHandler.UpdatePreferences)))
 
+	// Admin User Management
+	s.Router.Handle("GET /api/users", protect(http.HandlerFunc(userHandler.GetUsers)))
+	s.Router.Handle("POST /api/users", protect(http.HandlerFunc(userHandler.CreateUser)))
+	s.Router.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
+	s.Router.Handle("DELETE /api/users", protect(http.HandlerFunc(userHandler.DeleteUser)))
+
 	// Setup Page
 	s.Router.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/setup.html")

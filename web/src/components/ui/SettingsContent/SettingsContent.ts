@@ -1,12 +1,14 @@
 import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
-import { accountTemplate, themeTemplate, personalizationTemplate } from './SettingsContent.template';
+import { userService } from '../../../services/userService';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 // @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
+    private users: User[] = []; // Users list for admin
 
     static get observedAttributes() {
         return ['section'];
@@ -28,6 +30,9 @@ class SettingsContent extends HTMLElement {
     connectedCallback() {
         // Trigger fetch which performs the actual state sync
         this.fetchPrefs();
+        if (this.getAttribute('section') === 'users') {
+            this.fetchUsers();
+        }
         this.render();
     }
 
@@ -41,8 +46,20 @@ class SettingsContent extends HTMLElement {
         }
     }
 
+    async fetchUsers() {
+        try {
+            this.users = await userService.getUsers();
+            this.render();
+        } catch (e) {
+            console.error("Failed to fetch users", e);
+        }
+    }
+
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         if (name === 'section' && oldValue !== newValue) {
+            if (newValue === 'users') {
+                this.fetchUsers();
+            }
             this.render();
         }
     }
@@ -166,6 +183,84 @@ class SettingsContent extends HTMLElement {
         reader.readAsDataURL(file);
     }
 
+    // --- User Management Logic ---
+
+    openAddUserModal() {
+        const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
+        if (modal) modal.showModal();
+    }
+
+    async createUser() {
+        const username = (this.shadowRoot!.getElementById('new-user-username') as HTMLInputElement).value;
+        const password = (this.shadowRoot!.getElementById('new-user-password') as HTMLInputElement).value;
+        const role = (this.shadowRoot!.getElementById('new-user-role') as HTMLSelectElement).value;
+
+        if (!username || !password) {
+            if (window.notifier) window.notifier.show('Username and Password required', 'error');
+            return;
+        }
+
+        try {
+            await userService.createUser({ username, password, role });
+            if (window.notifier) window.notifier.show('User created successfully');
+            const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
+            if (modal) modal.close();
+            this.fetchUsers(); // Refresh list
+        } catch (e) {
+            if (window.notifier) window.notifier.show('Failed to create user', 'error');
+        }
+    }
+
+    openEditUserModal(id: number, username: string, role: string) {
+        const modal = this.shadowRoot!.getElementById('edit-user-modal') as HTMLDialogElement;
+        if (modal) {
+            (this.shadowRoot!.getElementById('edit-user-id') as HTMLInputElement).value = id.toString();
+            (this.shadowRoot!.getElementById('edit-user-username') as HTMLInputElement).value = username;
+            (this.shadowRoot!.getElementById('edit-user-role') as HTMLSelectElement).value = role;
+            (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value = ''; // Reset
+            modal.showModal();
+        }
+    }
+
+    async updateAdminUser() {
+        const id = parseInt((this.shadowRoot!.getElementById('edit-user-id') as HTMLInputElement).value);
+        const username = (this.shadowRoot!.getElementById('edit-user-username') as HTMLInputElement).value;
+        const password = (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value;
+        const role = (this.shadowRoot!.getElementById('edit-user-role') as HTMLSelectElement).value;
+
+        if (!username) {
+            if (window.notifier) window.notifier.show('Username required', 'error');
+            return;
+        }
+
+        try {
+            await userService.adminUpdateUser({
+                id,
+                username,
+                role,
+                password: password || undefined // Only send if set
+            });
+            if (window.notifier) window.notifier.show('User updated successfully');
+            const modal = this.shadowRoot!.getElementById('edit-user-modal') as HTMLDialogElement;
+            if (modal) modal.close();
+            this.fetchUsers(); // Refresh list
+        } catch (e) {
+            if (window.notifier) window.notifier.show('Failed to update user', 'error');
+        }
+    }
+
+    async deleteUser(id: number) {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+        try {
+            await userService.deleteUser(id);
+            if (window.notifier) window.notifier.show('User deleted');
+            this.fetchUsers();
+        } catch (e) {
+            if (window.notifier) window.notifier.show('Failed to delete user', 'error');
+        }
+    }
+
+
     // --- Rendering ---
 
     getContent(section: string) {
@@ -207,6 +302,9 @@ class SettingsContent extends HTMLElement {
                 return personalizationTemplate(this.prefs, sliderConfigs);
             }
 
+            case 'users':
+                return usersTemplate(this.users);
+
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">Configuration module.</p></div>`;
         }
@@ -230,3 +328,4 @@ class SettingsContent extends HTMLElement {
 if (!customElements.get('settings-content')) {
     customElements.define('settings-content', SettingsContent);
 }
+

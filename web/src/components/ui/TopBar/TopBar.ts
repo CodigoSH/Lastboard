@@ -9,6 +9,7 @@ interface TopBarState {
     addMenuActive: boolean;
     drawerOpen: boolean;
     searchQuery: string;
+    user?: { role?: string };
 }
 
 class TopBar extends HTMLElement {
@@ -191,7 +192,8 @@ class TopBar extends HTMLElement {
             searchActive: this.state.searchActive,
             addMenuActive: this.state.addMenuActive,
             drawerOpen: this.state.drawerOpen,
-            searchQuery: this.state.searchQuery
+            searchQuery: this.state.searchQuery,
+            user: this.state.user
         })}
         `;
     }
