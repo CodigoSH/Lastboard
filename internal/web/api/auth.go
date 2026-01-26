@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -47,11 +48,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Set Cookie
-	// In production, use a secure random token and store it in DB (sessions table).
-	// For this implementation, we set a flag.
+	// Store username in cookie (Base64 encoded)
+	// In production, use a signed session token.
+	token := base64.StdEncoding.EncodeToString([]byte(input.Username))
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
-		Value:    "authenticated_user_token", // Placeholder for actual token
+		Value:    token,
 		Path:     "/",
 		Expires:  time.Now().Add(24 * time.Hour),
 		HttpOnly: true,

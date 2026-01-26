@@ -27,5 +27,22 @@ export const userService = {
 
     async changePassword(data: any): Promise<MessageResponse> {
         return apiService.post<MessageResponse>('/api/user/change-password', data);
+    },
+
+    // Admin Methods
+    async getUsers(): Promise<User[]> {
+        return apiService.get<User[]>('/api/users');
+    },
+
+    async createUser(data: any): Promise<MessageResponse> {
+        return apiService.post<MessageResponse>('/api/users', data);
+    },
+
+    async adminUpdateUser(data: any): Promise<MessageResponse> {
+        return apiService.put<MessageResponse>('/api/users', data);
+    },
+
+    async deleteUser(id: number): Promise<MessageResponse> {
+        return apiService.delete<MessageResponse>(`/api/users?id=${id}`);
     }
 };

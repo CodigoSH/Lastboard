@@ -15,6 +15,7 @@ export interface UserPreferences {
 }
 
 export interface User {
+    id?: number;
     username: string;
     initials: string;
     role: string;
