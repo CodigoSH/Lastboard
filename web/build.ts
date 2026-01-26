@@ -20,9 +20,18 @@ const resultSetup = await build({
     naming: "setup.js",
 });
 
-if (result.success && resultSetup.success) {
+const resultLogin = await build({
+    entrypoints: ["./web/src/login.ts"],
+    outdir: "./web/dist",
+    minify: true,
+    sourcemap: "external",
+    target: "browser",
+    naming: "login.js",
+});
+
+if (result.success && resultSetup.success && resultLogin.success) {
     console.log("✅ Build Complete!");
-    console.log("📂 Output: web/dist/bundle.js & web/dist/setup.js");
+    console.log("📂 Output: web/dist/bundle.js, web/dist/setup.js & web/dist/login.js");
 } else {
     // Combine logs
     const logs = [...result.logs, ...resultSetup.logs];
