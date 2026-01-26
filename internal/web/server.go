@@ -80,6 +80,12 @@ func (s *Server) routes() {
 	// Setup API (Open, but self-protecting via count check)
 	setupHandler := api.NewSetupHandler(s.DB)
 	s.Router.Handle("POST /api/setup", http.HandlerFunc(setupHandler.SetupSystem))
+
+	// System API (Backup & Reset)
+	systemHandler := api.NewSystemHandler(s.DB)
+	s.Router.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
+	s.Router.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
+	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
