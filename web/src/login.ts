@@ -10,6 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!form) return;
 
+    // Enable implicit submission via Enter key
+    form.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            // Use requestSubmit to properly trigger the 'submit' event we listen to below
+            if (form.requestSubmit) form.requestSubmit();
+            else form.submit();
+        }
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 

@@ -106,24 +106,39 @@ class SettingsContent extends HTMLElement {
         if (window.notifier) window.notifier.show('Username updated');
     }
 
-    async updatePassword(newPassword: string) {
+    async updatePassword() {
+        const currentPw = (this.shadowRoot!.getElementById('current-password') as HTMLInputElement)?.value;
+        const newPw = (this.shadowRoot!.getElementById('new-password') as HTMLInputElement)?.value;
         const confirmPw = (this.shadowRoot!.getElementById('confirm-password') as HTMLInputElement)?.value;
-        if (newPassword !== confirmPw) {
-            if (window.notifier) window.notifier.show('Passwords do not match', 'error');
+
+        if (!currentPw) {
+            if (window.notifier) window.notifier.show('Current password is required', 'error');
+            return;
+        }
+
+        if (newPw !== confirmPw) {
+            if (window.notifier) window.notifier.show('New passwords do not match', 'error');
+            return;
+        }
+
+        if (!newPw) {
+            if (window.notifier) window.notifier.show('New password cannot be empty', 'error');
             return;
         }
 
         try {
-            // Fetch current password from user (or just pass empty if backend doesn't check for this demo)
-            // Ideally we need a current password input. 
-            // For now, assume a simple update or mock the current one.
             await userStore.changePassword({
-                current_password: 'password', // Default/Mock current
-                new_password: newPassword
+                current_password: currentPw,
+                new_password: newPw
             });
-            if (window.notifier) window.notifier.show('Password changed');
+            if (window.notifier) window.notifier.show('Password changed successfully');
+
+            // Clear inputs
+            (this.shadowRoot!.getElementById('current-password') as HTMLInputElement).value = '';
+            (this.shadowRoot!.getElementById('new-password') as HTMLInputElement).value = '';
+            (this.shadowRoot!.getElementById('confirm-password') as HTMLInputElement).value = '';
         } catch (e) {
-            if (window.notifier) window.notifier.show('Failed to change password', 'error');
+            if (window.notifier) window.notifier.show('Failed: Incorrect current password', 'error');
         }
     }
 
