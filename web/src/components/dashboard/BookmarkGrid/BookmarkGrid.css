@@ -105,12 +105,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: clamp(8px, 4cqmin, 24px);
     text-decoration: none;
     color: var(--text-main);
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     box-sizing: border-box;
     overflow: hidden;
+    container-type: size;
 }
 
 /* SEARCH OVERRIDE: Remove fixed positions during search to pack items at top */
@@ -134,11 +135,10 @@
 /* Status Indicator */
 .status-indicator {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 6px;
-    /* Slightly smaller for a more refined look */
-    height: 6px;
+    bottom: clamp(10px, 6cqmin, 24px);
+    right: clamp(10px, 6cqmin, 24px);
+    width: clamp(10px, 5cqmin, 20px);
+    height: clamp(10px, 5cqmin, 20px);
     border-radius: 50%;
     background-color: var(--text-dim);
     border: 1.5px solid var(--panel);
@@ -271,8 +271,8 @@
 /* Edit Mode Grid Guide - (Visuals removed for cleanliness) */
 
 .bookmark-grid__icon-container {
-    width: 32px;
-    height: 32px;
+    width: clamp(48px, 50cqmin, 180px);
+    height: clamp(48px, 50cqmin, 180px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -288,22 +288,25 @@
 }
 
 .bookmark-grid__label {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: clamp(14px, 10cqmin, 32px);
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+    padding: 0 8px;
     font-family: var(--font-sans);
 }
 
 .bookmark-grid__icon-svg {
-    width: 24px;
-    height: 24px;
+    width: 100%;
+    height: 100%;
     stroke: currentColor;
     stroke-width: 1.5px;
     fill: none;
 }
 
 .bookmark-grid__icon-img {
-    width: 32px;
-    height: 32px;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 
