@@ -86,6 +86,11 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
 	s.Router.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
+
+	// Update API (Atomic Binary Updates)
+	updateHandler := api.NewUpdateHandler()
+	s.Router.Handle("GET /api/system/update/check", protect(http.HandlerFunc(updateHandler.CheckUpdate)))
+	s.Router.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,7 @@
 import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 // @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
@@ -59,6 +59,9 @@ class SettingsContent extends HTMLElement {
         if (name === 'section' && oldValue !== newValue) {
             if (newValue === 'users') {
                 this.fetchUsers();
+            }
+            if (newValue === 'about') {
+                this.checkForUpdates();
             }
             this.render();
         }
@@ -308,8 +311,70 @@ class SettingsContent extends HTMLElement {
             case 'users':
                 return usersTemplate(this.users);
 
+            case 'about':
+                return aboutTemplate(this.version, this.updateInfo);
+
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">Configuration module.</p></div>`;
+        }
+    }
+
+    // --- Update System Logic ---
+    private version = 'v0.0.1'; // Should be sync with backend or injected
+    private updateInfo: any = null;
+
+    async checkForUpdates() {
+        try {
+            const res = await fetch('/api/system/update/check');
+            if (res.ok) {
+                this.updateInfo = await res.json();
+                this.version = this.updateInfo.current_version;
+                this.render();
+            }
+        } catch (e) {
+            console.error("Check update failed", e);
+        }
+    }
+
+    async performUpdate(assetUrl: string) {
+        if (!confirm('Start update process? The server will restart automatically.')) return;
+
+        const btn = this.shadowRoot!.getElementById('btn-update-now') as any;
+        const status = this.shadowRoot!.getElementById('update-status');
+        if (btn) btn.loading = true;
+
+        if (status) {
+            status.style.display = 'block';
+            status.textContent = 'Downloading binary & verifying checksum...';
+        }
+
+        try {
+            const res = await fetch('/api/system/update/perform', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ asset_url: assetUrl })
+            });
+
+            if (res.ok) {
+                if (status) status.textContent = 'Update verified. Swapping binary & restarting...';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
+            } else {
+                const err = await res.text();
+                if (status) {
+                    status.style.color = '#fa5252';
+                    status.textContent = 'Update failed: ' + err;
+                }
+                if (btn) btn.loading = false;
+            }
+        } catch (e) {
+            console.error("Update failed", e);
+            if (status) {
+                status.style.color = '#fa5252';
+                status.textContent = 'Network error during update.';
+            }
+            if (btn) btn.loading = false;
         }
     }
 
