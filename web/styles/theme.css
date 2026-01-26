@@ -35,6 +35,31 @@
     --spacing-md: 20px;
     --spacing-lg: 32px;
     --spacing-xl: 48px;
+    --spacing-xl: 48px;
+}
+
+/* --- Light Mode Overrides --- */
+:root.light-theme {
+    /* Bright, clean canvas */
+    --canvas: #f0f2f5;
+
+    /* White panels */
+    --panel: #ffffff;
+
+    /* Frosted glass surface for cards */
+    --surface: rgba(255, 255, 255, 0.7);
+    --surface-solid: #ffffff;
+
+    /* Dark text for contrast */
+    --text-main: #1a202c;
+    --text-dim: #64748b;
+
+    /* Borders need to be visible but subtle against light bg */
+    --border: #e2e8f0;
+    --border-bright: #cbd5e1;
+
+    /* Adjust glass blur for light mode if needed, keep same for consistency */
+    --glass-blur: blur(16px);
 }
 
 /* Global Aesthetics */

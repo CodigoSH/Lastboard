@@ -9,6 +9,7 @@ type User struct {
 	Role        string `json:"role"`
 	AccentColor string `json:"accent_color"`
 	Language    string `json:"language"`
+	Theme       string `json:"theme"`
 	// Grid Preferences
 	GridColumnsPC     int       `json:"grid_columns_pc"`
 	GridColumnsTablet int       `json:"grid_columns_tablet"`

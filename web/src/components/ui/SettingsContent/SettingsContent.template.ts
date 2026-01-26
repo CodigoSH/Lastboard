@@ -36,7 +36,7 @@ export const accountTemplate = (user: User) => `
                     <label class="settings-content__label">Display Username</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="Enter new username">
-                        <app-button onclick="this.getRootNode().host.updateUsername(document.getElementById('username-input').value)">Update</app-button>
+                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(document.getElementById('username-input').value)">Update</app-button>
                     </div>
                 </div>
             </div>
@@ -92,10 +92,27 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
             <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">System/Locale</div>
             <h3 class="settings-content__title">Localization</h3>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">Interface Language</label>
-                <select class="settings-content__select" onchange="this.getRootNode().host.savePrefs({language: this.value})">
-                    ${languages.map(l => `<option value="${l.code}" ${prefs.language === l.code ? 'selected' : ''}>${l.name}</option>`).join('')}
-                </select>
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1;">
+                        <label class="settings-content__label">Interface Language</label>
+                        <select class="settings-content__select" onchange="this.getRootNode().host.savePrefs({language: this.value})">
+                            ${languages.map(l => `<option value="${l.code}" ${prefs.language === l.code ? 'selected' : ''}>${l.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="settings-content__label">Theme Mode</label>
+                         <div class="settings-content__segmented-control">
+                            <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'dark' ? 'active' : ''}" 
+                                    onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
+                                🌙 Dark
+                            </button>
+                            <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}" 
+                                    onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
+                                ☀️ Light
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

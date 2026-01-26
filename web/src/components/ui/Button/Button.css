@@ -30,20 +30,21 @@
 }
 
 .btn--ghost:hover {
-    color: #fff;
+    color: var(--text-main);
     border-color: var(--border-bright);
-    background: #111111;
+    background: var(--panel);
 }
 
 /* Variant: Primary */
 .btn--primary {
-    background: #000000;
+    background: var(--surface-solid);
     color: var(--accent);
     border: 1px solid var(--accent);
 }
 
 .btn--primary:hover {
-    background: #000000;
+    background: var(--surface-solid);
+    /* Maintain solid background */
     box-shadow: 0 0 12px rgba(0, 120, 212, 0.2);
     /* Using primary blue var shade */
     border-color: var(--accent);

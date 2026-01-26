@@ -81,13 +81,39 @@ export const collisionService = {
             }
 
             const rect1 = { x: draggedItem.x, y: draggedItem.y, w: draggedItem.w, h: draggedItem.h };
-            const rect2 = { x: item.x, y: item.y, w: item.w, h: item.h };
+
+            // COLLISION LOGIC FIX:
+            // If we are comparing two nested items (siblings), 'item' has LOCAL coords,
+            // but 'draggedItem' (rect1) likely comes from mouse input as GLOBAL coords.
+            // We need to convert 'item' to global to compare apples to apples.
+            let rect2 = { x: item.x, y: item.y, w: item.w, h: item.h };
+
+            if (item.parent_id) {
+                const parent = allItems.find(p => p.id === item.parent_id);
+                if (parent) {
+                    rect2.x = parent.x + item.x - 1;
+                    rect2.y = parent.y + item.y - 1;
+                }
+            }
 
             if (this.isOverlap(rect1, rect2)) {
                 // If we are dragging a bookmark and it overlaps a section AT THE SAME LEVEL
                 // (This shouldn't happen usually as sections are usually root and nested are nested,
                 // but let's be safe)
                 if (item.type === 'section' && !isDraggingSection) {
+                    // Start Nesting Logic...
+                    const localX = draggedItem.x - item.x + 1;
+                    const localY = draggedItem.y - item.y + 1;
+
+                    // Check for overlap with EXISTING children of this target section
+                    const children = allItems.filter(i => i.parent_id === item.id);
+                    for (const child of children) {
+                        if (this.isOverlap({ x: localX, y: localY, w: draggedItem.w, h: draggedItem.h }, child)) {
+                            // Collision inside the target section
+                            return { valid: false, x: draggedItem.x, y: draggedItem.y };
+                        }
+                    }
+
                     return { valid: true, x: draggedItem.x, y: draggedItem.y, targetGroup: item };
                 }
 
