@@ -4,15 +4,16 @@
 
 import { GridItem } from '../../../types';
 
-export const template = ({ bookmarks, isEditing, isSearching }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean }) => {
+export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean, isTouchDevice?: boolean }) => {
     // Ensure bookmarks is always an array
     const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];
 
     // Helper to find children
     const getChildren = (parentId: number) => safeBookmarks.filter(b => b.parent_id === parentId);
 
-    // Root items only (unless searching, then show EVERYTHING flat)
-    const rootItems = isSearching
+    // Root items only (unless searching OR touch device, then show EVERYTHING flat)
+    const showFlatList = isSearching || isTouchDevice;
+    const rootItems = showFlatList
         ? safeBookmarks
         : safeBookmarks.filter(b => !b.parent_id);
 

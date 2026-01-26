@@ -29,10 +29,41 @@
     display: none !important;
 }
 
-@media (max-width: 1024px) {
+@media (pointer: coarse),
+(max-width: 1024px) {
+
+    /* Trigger on Touch Devices OR Small Screens (as backup if detection fails) */
     :host {
         --current-grid-cols: var(--grid-columns-tablet, 4);
         --cell-size: 90px;
+    }
+
+    /* FORCE STACK LAYOUT */
+    .bookmark-grid__card,
+    .bookmark-grid__section {
+        grid-column: auto / span 1 !important;
+        grid-row: auto / span 1 !important;
+        width: 100% !important;
+    }
+
+    /* Ensure aspect ratio is maintained but width fills column */
+    .bookmark-grid__card {
+        aspect-ratio: 1 / 1;
+        height: auto;
+    }
+
+    /* Sections should just flow naturally, height auto */
+    .bookmark-grid__section {
+        height: auto !important;
+        min-height: 100px;
+        /* Disable dragging in this mode to prevent confusion/bugs? 
+           Or allow sorting but it won't save positions accurately relative to PC.
+           For now, visual fix is priority. */
+    }
+
+    /* Hide resize handles on touch/tablet */
+    .resize-handle {
+        display: none !important;
     }
 }
 

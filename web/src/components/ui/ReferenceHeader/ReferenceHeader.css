@@ -102,3 +102,21 @@
     background-color: var(--hover-bg, rgba(255, 255, 255, 0.05));
     color: var(--text-main);
 }
+
+@media (pointer: coarse),
+(max-width: 1024px) {
+
+    /* Hide Changelog Button */
+    .header__btn-changelog,
+    /* Hide Specific Icons by Title Attribute Selector */
+    .header__action[title="Layouts"],
+    .header__action[title="Chrome"],
+    .header__action[title="Settings"],
+    .header__action[title="Profile"],
+    /* Hide Separator */
+    .header__separator,
+    /* Hide Profile Container entirely just in case */
+    .header__profile-container {
+        display: none !important;
+    }
+}

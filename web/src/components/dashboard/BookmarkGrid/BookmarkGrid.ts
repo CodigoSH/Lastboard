@@ -30,9 +30,22 @@ class BookmarkGrid extends HTMLElement {
     private currentColWidth: number = 0;
     private currentGridCols: number = 12;
 
+    // Responsive State
+    private isTouchDevice: boolean = false;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+
+        // Detect Touch Device
+        const mediaQuery = window.matchMedia('(pointer: coarse)');
+        this.isTouchDevice = mediaQuery.matches;
+
+        // Listen for changes (e.g. docking/undocking on hybrids)
+        mediaQuery.addEventListener('change', (e) => {
+            this.isTouchDevice = e.matches;
+            this.render();
+        });
     }
 
     connectedCallback() {
@@ -586,7 +599,8 @@ class BookmarkGrid extends HTMLElement {
             ${template({
             bookmarks: this.bookmarks,
             isEditing: this.isEditing,
-            isSearching: !!this.searchQuery
+            isSearching: !!this.searchQuery,
+            isTouchDevice: this.isTouchDevice
         })}
         `;
         // Re-acquire ghost ref after render
