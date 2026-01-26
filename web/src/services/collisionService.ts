@@ -141,5 +141,33 @@ export const collisionService = {
             // Safety break to prevent infinite loops in weird cases, though unlikely
             if (y > 100) return { x: 1, y: 100 };
         }
+    },
+
+    /**
+     * Finds the first available slot for any item in a container of obstacles.
+     * Pure geometry, no parent_id logic.
+     */
+    findAvailableSlot(w: number, h: number, obstacles: { x: number, y: number, w: number, h: number }[], containerCols: number): { x: number, y: number } {
+        let y = 1;
+        while (true) {
+            for (let x = 1; x <= containerCols - w + 1; x++) {
+                const potentialRect = { x, y, w, h };
+                let collision = false;
+
+                for (const obstacle of obstacles) {
+                    if (this.isOverlap(potentialRect, obstacle)) {
+                        collision = true;
+                        break;
+                    }
+                }
+
+                if (!collision) {
+                    return { x, y };
+                }
+            }
+            y++;
+            if (y > 100) return { x: 1, y: 100 };
+        }
     }
 };
+

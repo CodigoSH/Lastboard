@@ -63,9 +63,14 @@ func runMigrations(db *sql.DB) error {
 
 	for _, query := range queries {
 		_, err := db.Exec(query)
-		// Ignore error for duplicate column (hacky but effective for simplistic SQLite migrations without tool)
 		if err != nil {
-			log.Printf("Migration notice (expected if re-running): %v", err)
+			// Check if error is about duplicate column
+			errStr := err.Error()
+			if contains(errStr, "duplicate column name") {
+				// Silently ignore
+				continue
+			}
+			log.Printf("Migration notice: %v", err)
 		}
 	}
 	log.Println("Migrations completed successfully.")

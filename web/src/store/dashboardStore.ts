@@ -189,7 +189,7 @@ class DashboardStore {
                 return;
             }
 
-            console.log('[DashboardStore] Updating item Payload:', JSON.stringify(updatedItem));
+            // console.log('[DashboardStore] Updating item Payload:', JSON.stringify(updatedItem));
 
             const previousItem = { ...this.state.items[itemIndex] };
             this.state.items[itemIndex] = { ...this.state.items[itemIndex], ...updatedItem };
@@ -206,13 +206,63 @@ class DashboardStore {
                 // Rollback on failure
                 console.error('[DashboardStore] Failed to sync item update (offline?), keeping local state', apiError);
                 this.state.isOffline = true;
-                // this.state.items[itemIndex] = previousItem; // DISABLED ROLLBACK
                 this.saveToLocalStorage();
                 this.notify();
             }
         } catch (error) {
             console.error('[DashboardStore] Error updating item', error);
         }
+    }
+
+    /**
+     * Specialized action for resizing items.
+     * Handles complex logic like reflowing children for sections.
+     */
+    async resizeItem(id: number, w: number, h: number) {
+        const item = this.state.items.find(i => i.id === id);
+        if (!item) return;
+
+        console.log(`[DashboardStore] Resizing item ${id} to ${w}x${h}`);
+
+        // 1. Update the Container First
+        await this.updateItem({ id, w, h });
+
+        // 2. If it's a section, we MUST reflow children to fit new width
+        if (item.type === 'section') {
+            // We use 'w' (new width) as the container width
+            await this.reflowChildren(id, w);
+        }
+    }
+
+    private async reflowChildren(parentId: number, containerWidth: number) {
+        // Get fresh state
+        import('../services/collisionService').then(async ({ collisionService }) => {
+            const children = this.state.items
+                .filter(b => b.parent_id === parentId)
+                .sort((a, b) => (a.y - b.y) || (a.x - b.x));
+
+            if (children.length === 0) return;
+
+            console.log(`[DashboardStore] Reflowing ${children.length} children for parent ${parentId}`);
+
+            const placedItems: { x: number, y: number, w: number, h: number }[] = [];
+
+            for (const child of children) {
+                const slot = collisionService.findAvailableSlot(child.w, child.h, placedItems, containerWidth);
+
+                placedItems.push({ x: slot.x, y: slot.y, w: child.w, h: child.h });
+
+                if (child.x !== slot.x || child.y !== slot.y) {
+                    console.log(`[DashboardStore] Reflow moving child ${child.id} to ${slot.x},${slot.y}`);
+                    // Await each update to ensure sequence (though parallel works too usually)
+                    await this.updateItem({
+                        id: child.id,
+                        x: slot.x,
+                        y: slot.y
+                    });
+                }
+            }
+        });
     }
 
     async addItem(newItem: Omit<GridItem, 'id' | 'created_at'>) {
