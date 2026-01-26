@@ -306,3 +306,11 @@ button {
     border: 1px solid var(--border);
     border-radius: var(--radius);
 }
+
+/* Range Input Styling */
+.settings-content__slider-group input[type="range"] {
+    accent-color: var(--accent);
+    width: 100%;
+    cursor: pointer;
+    margin-top: 4px;
+}
