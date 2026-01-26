@@ -11,7 +11,17 @@ export const dashboardService = {
     },
 
     async updateItem(item: Partial<GridItem> & { id: number }): Promise<MessageResponse> {
-        return apiService.patch<MessageResponse>(`/api/dashboard/item/${item.id}`, item);
+        // Fix for un-nesting: If parent_id is explicitly undefined (meaning set to null/root),
+        // we need to signal the backend because JSON.stringify strips undefined fields.
+        const payload: any = { ...item };
+        if (item.parent_id === undefined && 'parent_id' in item) {
+            // Logic: Check if it's REALLY undefined (missing) or explicitly set to undefined/null.
+            // TS makes this hard. Use a sentinel or just check logic.
+            // But actually, updateItem is usually called with Partial<GridItem>.
+            // If caller passed { parent_id: undefined }, it exists in object.
+            payload.clear_parent = true;
+        }
+        return apiService.patch<MessageResponse>(`/api/dashboard/item/${item.id}`, payload);
     },
 
     async createItem(item: Omit<GridItem, 'id' | 'created_at'>): Promise<GridItem> {

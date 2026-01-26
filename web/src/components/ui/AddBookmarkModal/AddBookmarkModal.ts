@@ -84,24 +84,26 @@ class AddBookmarkModal extends HTMLElement {
                     // @ts-ignore
                     if (window.notifier) window.notifier.show('Bookmark updated successfully');
                 } else {
+                    // Logic for Adding New Bookmarks
                     const state = dashboardStore.getState();
                     const items = Array.isArray(state.items) ? state.items : [];
-                    const maxY = items.length > 0
-                        ? Math.max(0, ...items.map(item => item.y + item.h - 1))
-                        : 0;
 
-                    await dashboardStore.addItem({
-                        type: 'bookmark',
-                        x: 1,
-                        y: maxY + 1,
-                        w: 1,
-                        h: 1,
-                        content: content
-                    });
                     // @ts-ignore
-                    if (window.notifier) window.notifier.show('Bookmark added successfully');
-                }
+                    import('../../../services/collisionService').then(async ({ collisionService }) => {
+                        const slot = collisionService.findFirstAvailableSlot(1, 1, items);
 
+                        await dashboardStore.addItem({
+                            type: 'bookmark',
+                            x: slot.x,
+                            y: slot.y,
+                            w: 1,
+                            h: 1,
+                            content: content
+                        });
+                        // @ts-ignore
+                        if (window.notifier) window.notifier.show('Bookmark added successfully');
+                    });
+                }
                 console.log('[Modal] Operation successful!');
                 this.close();
             } catch (error) {

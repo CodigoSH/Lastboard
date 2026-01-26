@@ -41,7 +41,7 @@ type SectionContent struct {
 
 // GetDashboard returns the list of items
 func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.DB.Query("SELECT id, type, x, y, w, h, content FROM items")
+	rows, err := h.DB.Query("SELECT id, parent_id, type, x, y, w, h, content FROM items")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -53,7 +53,8 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 		var i dashboard.Item
 		// Scan content as string for now, but client expects object?
 		// User struct has Content string.
-		if err := rows.Scan(&i.ID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
+		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
+			log.Printf("Scan error: %v", err)
 			continue
 		}
 		items = append(items, i)
@@ -80,8 +81,8 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.DB.Exec("INSERT INTO items (type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?)",
-		item.Type, item.X, item.Y, item.W, item.H, item.Content)
+	res, err := h.DB.Exec("INSERT INTO items (parent_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content)
 	if err != nil {
 		http.Error(w, "Failed to create", http.StatusInternalServerError)
 		return
@@ -109,12 +110,13 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input struct {
-		X        *int    `json:"x"`
-		Y        *int    `json:"y"`
-		W        *int    `json:"w"`
-		H        *int    `json:"h"`
-		ParentID *int    `json:"parent_id"`
-		Content  *string `json:"content"`
+		X           *int    `json:"x"`
+		Y           *int    `json:"y"`
+		W           *int    `json:"w"`
+		H           *int    `json:"h"`
+		ParentID    *int    `json:"parent_id"`
+		ClearParent bool    `json:"clear_parent"`
+		Content     *string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid body", http.StatusBadRequest)
@@ -145,6 +147,10 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	if input.ParentID != nil {
 		sets = append(sets, "parent_id=?")
 		args = append(args, *input.ParentID)
+	} else if input.ClearParent {
+		// Explicit request to clear parent (move to root)
+		sets = append(sets, "parent_id=NULL")
+		// No arg needed for NULL constant
 	}
 	if input.Content != nil {
 		// If content is being updated, valid it based on existing type or new type (if type were updatable, but it's not here)

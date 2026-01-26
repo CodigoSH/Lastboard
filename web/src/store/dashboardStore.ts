@@ -38,6 +38,14 @@ class DashboardStore {
 
     private saveToLocalStorage() {
         try {
+            // DEBUG: Check for parent_id presence
+            const parented = this.state.items.filter(i => i.parent_id !== undefined);
+            if (parented.length > 0) {
+                console.log('[DashboardStore] Saving items with parent_id:', parented.map(p => ({ id: p.id, parent_id: p.parent_id })));
+            } else {
+                console.log('[DashboardStore] Saving items: NO PARENT_ID FOUND');
+            }
+
             const serialized = JSON.stringify(this.state.items);
             localStorage.setItem(STORAGE_KEY, serialized);
             console.log('[DashboardStore] Saved to localStorage, count:', this.state.items.length);
@@ -111,10 +119,26 @@ class DashboardStore {
             try {
                 const items = await dashboardService.getItems();
                 if (Array.isArray(items) && items.length > 0) {
+                    // CSH-FIX: Backend might strip parent_id (Go struct missing field?).
+                    // We merge local parent_id if backend one is missing.
+                    const serializedLocal = localStorage.getItem(STORAGE_KEY);
+                    if (serializedLocal) {
+                        const localItems = JSON.parse(serializedLocal) as GridItem[];
+                        items.forEach(backendItem => {
+                            if (backendItem.parent_id === undefined) {
+                                const localMatch = localItems.find(l => l.id === backendItem.id);
+                                if (localMatch && localMatch.parent_id !== undefined) {
+                                    backendItem.parent_id = localMatch.parent_id;
+                                    console.log('[DashboardStore] Restored parent_id from local storage for item:', backendItem.id);
+                                }
+                            }
+                        });
+                    }
+
                     this.state.items = items;
                     this.state.isOffline = false;
                     this.saveToLocalStorage();
-                    console.log('[DashboardStore] Loaded from backend, count:', items.length);
+                    console.log('[DashboardStore] Loaded from backend (merged local parent_id), count:', items.length);
                 } else {
                     throw new Error('Backend returned empty or invalid data');
                 }
@@ -165,6 +189,8 @@ class DashboardStore {
                 return;
             }
 
+            console.log('[DashboardStore] Updating item Payload:', JSON.stringify(updatedItem));
+
             const previousItem = { ...this.state.items[itemIndex] };
             this.state.items[itemIndex] = { ...this.state.items[itemIndex], ...updatedItem };
             this.saveToLocalStorage();
@@ -178,9 +204,9 @@ class DashboardStore {
                 console.log('[DashboardStore] Item sync successful');
             } catch (apiError) {
                 // Rollback on failure
-                console.error('[DashboardStore] Failed to sync item update, rolling back', apiError);
+                console.error('[DashboardStore] Failed to sync item update (offline?), keeping local state', apiError);
                 this.state.isOffline = true;
-                this.state.items[itemIndex] = previousItem;
+                // this.state.items[itemIndex] = previousItem; // DISABLED ROLLBACK
                 this.saveToLocalStorage();
                 this.notify();
             }

@@ -77,28 +77,27 @@ if (topbar) {
             if (addBookmarkModal) {
                 addBookmarkModal.open();
             }
-        } else if (action === 'add-group') {
-            const newItem = {
-                type: 'group',
-                x: 0,
-                y: 0,
-                w: 2,
-                h: 2,
-                content: JSON.stringify({ name: 'New Group' })
-            };
-            // @ts-ignore
-            dashboardStore.addItem(newItem);
         } else if (action === 'add-section') {
-            const newItem = {
-                type: 'section',
-                x: 0,
-                y: 0,
-                w: 12, // Full width by default
-                h: 1,
-                content: JSON.stringify({ name: 'New Section' })
-            };
+            // "Section" -> Resizable Box, No Name
+            // Smart Placement
+            const currentState = dashboardStore.getState();
             // @ts-ignore
-            dashboardStore.addItem(newItem);
+            const items = currentState.items || [];
+            // @ts-ignore
+            import('./services/collisionService').then(({ collisionService }) => {
+                const slot = collisionService.findFirstAvailableSlot(1, 1, items);
+
+                const newItem = {
+                    type: 'section',
+                    x: slot.x,
+                    y: slot.y,
+                    w: 1,
+                    h: 1,
+                    content: JSON.stringify({ name: '' })
+                };
+                // @ts-ignore
+                dashboardStore.addItem(newItem);
+            });
         }
     });
 }
