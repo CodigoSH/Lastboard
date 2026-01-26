@@ -583,7 +583,11 @@ class BookmarkGrid extends HTMLElement {
 
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
-            ${template({ bookmarks: this.bookmarks, isEditing: this.isEditing })}
+            ${template({
+            bookmarks: this.bookmarks,
+            isEditing: this.isEditing,
+            isSearching: !!this.searchQuery
+        })}
         `;
         // Re-acquire ghost ref after render
         this.ghostEl = this.shadowRoot!.getElementById('ghost-element');

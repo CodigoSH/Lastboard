@@ -4,15 +4,17 @@
 
 import { GridItem } from '../../../types';
 
-export const template = ({ bookmarks, isEditing }: { bookmarks: GridItem[], isEditing: boolean }) => {
+export const template = ({ bookmarks, isEditing, isSearching }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean }) => {
     // Ensure bookmarks is always an array
     const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];
 
     // Helper to find children
     const getChildren = (parentId: number) => safeBookmarks.filter(b => b.parent_id === parentId);
 
-    // Root items only
-    const rootItems = safeBookmarks.filter(b => !b.parent_id);
+    // Root items only (unless searching, then show EVERYTHING flat)
+    const rootItems = isSearching
+        ? safeBookmarks
+        : safeBookmarks.filter(b => !b.parent_id);
 
     return `
     ${rootItems.map(b => {
