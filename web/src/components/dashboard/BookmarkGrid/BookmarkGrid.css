@@ -59,6 +59,16 @@
     position: relative;
     /* CRITICAL: Enforce square aspect ratio */
     aspect-ratio: 1 / 1;
+    height: auto;
+
+    /* CRITICAL: Prevent overflow in tight sections (like 1x4) */
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    justify-self: center;
+    align-self: center;
+    /* Allow aspect-ratio to drive height */
+
     /* CRITICAL: Required for status-indicator positioning */
     display: flex;
     flex-direction: column;
@@ -74,6 +84,8 @@
 
 /* SEARCH OVERRIDE: Remove fixed positions during search to pack items at top */
 :host(.search-active) .bookmark-grid__card {
+    grid-column: auto / span 1 !important;
+    grid-row: auto / span 1 !important;
     grid-column: auto / span 1 !important;
     grid-row: auto / span 1 !important;
     aspect-ratio: 1 / 1 !important;
@@ -184,7 +196,8 @@
 }
 
 /* Edit Mode Styles */
-:host(.edit-mode) .bookmark-grid__card {
+:host(.edit-mode) .bookmark-grid__card,
+:host(.edit-mode) .bookmark-grid__section {
     border: 1px dashed var(--accent);
     background: rgba(0, 120, 212, 0.05);
     cursor: grab;
@@ -215,7 +228,8 @@
     transform: scale(1.1);
 }
 
-:host(.edit-mode) .bookmark-grid__card:active {
+:host(.edit-mode) .bookmark-grid__card:active,
+:host(.edit-mode) .bookmark-grid__section:active {
     cursor: grabbing;
     background: rgba(0, 120, 212, 0.1);
     border-style: solid;
@@ -274,14 +288,35 @@
 }
 
 /* Group Styles */
-.bookmark-grid__group {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
+/* Section (Resizable Box) */
+/* Section (Resizable Box) - Premium Glassmorphism */
+.bookmark-grid__section {
+    background: rgba(30, 30, 30, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
     grid-column: var(--x) / span var(--w);
     grid-row: var(--y) / span var(--h);
     padding: 12px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.bookmark-grid__section:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.bookmark-grid__section.drop-target {
+    background: rgba(0, 120, 212, 0.15);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 15px rgba(0, 120, 212, 0.3);
 }
 
 .bookmark-grid__group-header {
@@ -315,3 +350,22 @@
     background: rgba(255, 0, 0, 0.1);
     border-color: #ff0000;
 }
+
+/* Group Content Layout */
+/* Nested Content Layout */
+/* Nested Content Layout - Large & Responsive */
+
+.bookmark-grid__nested-content {
+    display: grid;
+    /* Use the section's width and height for local grid */
+    grid-template-columns: repeat(var(--w), 1fr);
+    grid-template-rows: repeat(var(--h), 1fr);
+    gap: 12px;
+    width: 100%;
+    height: 100%;
+    align-content: start;
+}
+
+/* Premium Nested Card Style */
+/* Nested Card Style - Removed to enforce consistency with root cards */
+/* They will now inherit .bookmark-grid__card styles */

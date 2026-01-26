@@ -40,7 +40,6 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             <!-- Add Menu Dropdown -->
             <div id="add-menu" class="add-menu ${addMenuActive ? 'add-menu--active' : ''}">
                 <div class="add-menu-item" data-action="add-bookmark">+ Bookmark</div>
-                <div class="add-menu-item" data-action="add-group">+ Group</div>
                 <div class="add-menu-item" data-action="add-section">+ Section</div>
             </div>
 
