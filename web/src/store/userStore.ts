@@ -37,6 +37,7 @@ class UserStore {
             preferences: {
                 accent_color: userData.accent_color || 'blue',
                 language: userData.language || 'en',
+                theme: userData.theme, // Map theme from backend!
                 grid_columns_pc: userData.grid_columns_pc || defaultGridPrefs.grid_columns_pc,
                 grid_columns_tablet: userData.grid_columns_tablet || defaultGridPrefs.grid_columns_tablet,
                 grid_columns_mobile: userData.grid_columns_mobile || defaultGridPrefs.grid_columns_mobile
@@ -62,6 +63,13 @@ class UserStore {
             const hex = this.getAccentHex(prefs.accent_color);
             root.style.setProperty('--accent', hex);
         }
+
+        // Apply Theme (Light/Dark)
+        if (prefs.theme === 'light') {
+            root.classList.add('light-theme');
+        } else {
+            root.classList.remove('light-theme');
+        }
     }
 
     private getAccentHex(color: string): string {
@@ -83,6 +91,7 @@ class UserStore {
         // Sync flat fields back to main user object if they changed
         if (newPrefs.accent_color) this.user.accent_color = newPrefs.accent_color;
         if (newPrefs.language) this.user.language = newPrefs.language;
+        if (newPrefs.theme) this.user.preferences.theme = newPrefs.theme; // Ensure nested pref is updated for immediate effect
 
         this.applyAesthetics();
         this.notify();
@@ -92,6 +101,7 @@ class UserStore {
             await userService.updatePreferences({
                 accent_color: this.user.accent_color,
                 language: this.user.language,
+                theme: this.user.preferences.theme,
                 grid_columns_pc: this.user.preferences.grid_columns_pc,
                 grid_columns_tablet: this.user.preferences.grid_columns_tablet,
                 grid_columns_mobile: this.user.preferences.grid_columns_mobile

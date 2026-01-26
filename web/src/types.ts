@@ -6,6 +6,7 @@
 export interface UserPreferences {
     accent_color: string;
     language: string;
+    theme?: string; // 'light' | 'dark' | 'system'
     // Client-only preferences (synced if backend supports)
     grid_columns_pc?: number;
     grid_columns_tablet?: number;
@@ -20,6 +21,7 @@ export interface User {
     avatar_url: string;
     accent_color: string;
     language: string;
+    theme?: string; // Sync with backend response
     grid_columns_pc?: number;
     grid_columns_tablet?: number;
     grid_columns_mobile?: number;

@@ -127,7 +127,7 @@
 
 .bookmark-grid__card:hover {
     border-color: var(--border-bright);
-    background: #1a1a1a;
+    background: var(--surface-solid);
     /* Removed card lift, moved to icon */
 }
 
@@ -141,7 +141,8 @@
     height: 6px;
     border-radius: 50%;
     background-color: var(--text-dim);
-    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    border: 1.5px solid var(--panel);
+    /* Use panel color instead of fixed white for ring */
     /* Light effect border */
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
     z-index: 5;
@@ -230,7 +231,8 @@
 :host(.edit-mode) .bookmark-grid__card,
 :host(.edit-mode) .bookmark-grid__section {
     border: 1px dashed var(--accent);
-    background: rgba(0, 120, 212, 0.05);
+    background: rgba(0, 120, 212, 0.1);
+    /* Increased opacity for light mode visibility */
     cursor: grab;
     position: relative;
     /* Ensure handle positioning context */
@@ -262,7 +264,7 @@
 :host(.edit-mode) .bookmark-grid__card:active,
 :host(.edit-mode) .bookmark-grid__section:active {
     cursor: grabbing;
-    background: rgba(0, 120, 212, 0.1);
+    background: rgba(0, 120, 212, 0.2);
     border-style: solid;
 }
 
@@ -322,10 +324,12 @@
 /* Section (Resizable Box) */
 /* Section (Resizable Box) - Premium Glassmorphism */
 .bookmark-grid__section {
-    background: rgba(30, 30, 30, 0.4);
+    background: var(--surface);
+    /* Use theme surface instead of fixed dark rgba */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
+    /* Use theme border */
     border-radius: var(--radius);
     grid-column: var(--x) / span var(--w);
     grid-row: var(--y) / span var(--h);
@@ -336,12 +340,13 @@
     overflow: visible;
     position: relative;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    /* Lighter shadow */
 }
 
 .bookmark-grid__section:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-color: var(--border-bright);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .bookmark-grid__section.drop-target {

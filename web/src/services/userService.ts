@@ -17,6 +17,7 @@ export const userService = {
     async updatePreferences(preferences: {
         accent_color?: string,
         language?: string,
+        theme?: string,
         grid_columns_pc?: number,
         grid_columns_tablet?: number,
         grid_columns_mobile?: number
