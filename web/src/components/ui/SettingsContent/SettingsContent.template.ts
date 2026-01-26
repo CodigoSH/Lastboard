@@ -46,6 +46,10 @@ export const accountTemplate = (user: User) => `
             <div class="mono-tag" style="margin-bottom: 12px;">Security / Authentication</div>
             <h3 class="settings-content__title">System Password</h3>
             <div class="settings-content__form-group">
+                <label class="settings-content__label">Current Password</label>
+                <input type="password" id="current-password" class="settings-content__input" placeholder="Required to authorize changes">
+            </div>
+            <div class="settings-content__form-group">
                 <label class="settings-content__label">New Password</label>
                 <input type="password" id="new-password" class="settings-content__input" placeholder="••••••••">
             </div>
@@ -54,7 +58,7 @@ export const accountTemplate = (user: User) => `
                 <input type="password" id="confirm-password" class="settings-content__input" placeholder="••••••••">
             </div>
             <div style="margin-top: 32px;">
-                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword(document.getElementById('new-password').value)">Reset Password</app-button>
+                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">Reset Password</app-button>
             </div>
         </div>
     </div>
