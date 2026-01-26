@@ -204,13 +204,13 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 16px;
     color: var(--text-main);
     transition: all 0.2s;
     padding: 0;
