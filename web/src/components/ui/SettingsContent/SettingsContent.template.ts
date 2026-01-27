@@ -1,7 +1,7 @@
 /**
  * Settings Content Templates
  */
-
+import { i18n } from '../../../services/i18n';
 interface User {
     initials?: string;
     avatar_url?: string;
@@ -18,57 +18,64 @@ interface Prefs {
 export const accountTemplate = (user: User) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">Profile / Identity</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.profile')}</div>
             <div class="settings-content__profile-header">
                 <div class="settings-content__avatar-container" style="cursor: pointer;" onclick="this.nextElementSibling.click()">
                     <app-avatar initials="${user.initials || '??'}" src="${user.avatar_url || ''}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
-                    <div class="settings-content__edit-overlay">Change Image</div>
+                    <div class="settings-content__edit-overlay">${i18n.t('action.change_image')}</div>
                 </div>
                 <input type="file" id="avatar-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleAvatarChange(event)">
                 <div class="settings-content__profile-info">
-                    <span class="settings-content__profile-name">${user.username || 'User'}</span>
-                    <span class="mono-tag">${user.role || 'Administrator'}</span>
+                    <span class="settings-content__profile-name">${user.username || i18n.t('settings.default_user')}</span>
+                    <span class="mono-tag">
+                        ${(() => {
+        const r = (user.role || '').toLowerCase();
+        if (r === 'admin' || r === 'administrator') return i18n.t('settings.role_admin');
+        if (r === 'user') return i18n.t('settings.role_user');
+        return user.role || i18n.t('settings.default_role');
+    })()}
+                    </span>
                 </div>
             </div>
             
             <div class="settings-content__form-container" style="margin-top: 32px;">
                 <div class="settings-content__form-group">
-                    <label class="settings-content__label">Display Username</label>
+                    <label class="settings-content__label">${i18n.t('settings.display_username')}</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="Enter new username">
-                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(document.getElementById('username-input').value)">Update</app-button>
+                        <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('settings.display_username')}">
+                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(document.getElementById('username-input').value)">${i18n.t('action.update')}</app-button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">Security / Authentication</div>
-            <h3 class="settings-content__title">System Password</h3>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('auth.password')}</div>
+            <h3 class="settings-content__title">${i18n.t('settings.system_password')}</h3>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">Current Password</label>
-                <input type="password" id="current-password" class="settings-content__input" placeholder="Required to authorize changes">
+                <label class="settings-content__label">${i18n.t('settings.current_password')}</label>
+                <input type="password" id="current-password" class="settings-content__input" placeholder="${i18n.t('settings.password_placeholder')}">
             </div>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">New Password</label>
+                <label class="settings-content__label">${i18n.t('settings.new_password')}</label>
                 <input type="password" id="new-password" class="settings-content__input" placeholder="••••••••">
             </div>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">Confirm Password</label>
+                <label class="settings-content__label">${i18n.t('settings.confirm_password')}</label>
                 <input type="password" id="confirm-password" class="settings-content__input" placeholder="••••••••">
             </div>
             <div style="margin-top: 32px;">
-                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">Reset Password</app-button>
+                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">${i18n.t('general.save')}</app-button>
             </div>
         </div>
     </div>
 `;
 
-export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, colors: string[], languages: { code: string, name: string }[]) => `
+export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, colors: string[]) => `
     <div class="bento-grid">
         <div class="bento-card">
-             <div class="mono-tag" style="margin-bottom: 8px;">Hardware/Colors</div>
-             <h3 class="settings-content__title">Studio Accent</h3>
+             <div class="mono-tag" style="margin-bottom: 8px;">${i18n.t('settings.appearance')}</div>
+             <h3 class="settings-content__title">${i18n.t('settings.studio_accent')}</h3>
              <div class="settings-content__color-grid">
                 ${colors.map(c => `
                     <div class="settings-content__color-swatch ${prefs.accent_color === c ? 'settings-content__color-swatch--active' : ''}" 
@@ -89,26 +96,26 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">System/Locale</div>
-            <h3 class="settings-content__title">Localization</h3>
+            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${i18n.t('settings.system_locale')}</div>
+            <h3 class="settings-content__title">${i18n.t('settings.localization')}</h3>
             <div class="settings-content__form-group">
                 <div style="display: flex; gap: 16px;">
                     <div style="flex: 1;">
-                        <label class="settings-content__label">Interface Language</label>
+                        <label class="settings-content__label">${i18n.t('settings.language')}</label>
                         <select class="settings-content__select" onchange="this.getRootNode().host.savePrefs({language: this.value})">
-                            ${languages.map(l => `<option value="${l.code}" ${prefs.language === l.code ? 'selected' : ''}>${l.name}</option>`).join('')}
+                            ${i18n.getAvailableLocales().map(l => `<option value="${l.code}" ${prefs.language === l.code ? 'selected' : ''}>${l.flag} ${l.name}</option>`).join('')}
                         </select>
                     </div>
                     <div style="flex: 1;">
-                        <label class="settings-content__label">Theme Mode</label>
+                        <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
                          <div class="settings-content__segmented-control">
                             <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'dark' ? 'active' : ''}" 
                                     onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
-                                🌙 Dark
+                                🌙 ${i18n.t('settings.dark')}
                             </button>
                             <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}" 
                                     onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
-                                ☀️ Light
+                                ☀️ ${i18n.t('settings.light')}
                             </button>
                         </div>
                     </div>
@@ -121,7 +128,7 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
 export const personalizationTemplate = (prefs: Prefs, sliderConfigs: { label: string, key: string, min: number, max: number }[]) => `
     <div class="bento-grid">
         <div class="bento-card" style="grid-column: span 2;">
-            <div class="mono-tag" style="margin-bottom: 12px;">Interface / Grid Architecture</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.interface_title')}</div>
             <div class="settings-content__personalization-grid">
                 ${sliderConfigs.map(cfg => `
                     <div class="settings-content__slider-group">
@@ -139,7 +146,7 @@ export const personalizationTemplate = (prefs: Prefs, sliderConfigs: { label: st
             </div>
             </div>
             <p class="settings-content__text-dim" style="font-size: 11px; margin-top: 24px; font-family: var(--font-mono);">
-                > Adaptive hardware acceleration active. Changes apply globally.
+                ${i18n.t('settings.adaptive_msg')}
             </p>
         </div>
     </div>
@@ -148,10 +155,10 @@ export const personalizationTemplate = (prefs: Prefs, sliderConfigs: { label: st
 export const usersTemplate = (users: any[]) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">Administration / Access Control</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.admin_section')}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h3 class="settings-content__title" style="margin: 0;">User Management</h3>
-                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ Add User</app-button>
+                <h3 class="settings-content__title" style="margin: 0;">${i18n.t('settings.user_management')}</h3>
+                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ ${i18n.t('action.add_user')}</app-button>
             </div>
 
             <div class="settings-content__user-list">
@@ -161,64 +168,71 @@ export const usersTemplate = (users: any[]) => `
                             <app-avatar initials="${u.username.substring(0, 2).toUpperCase()}" src="${u.avatar_url}" style="width: 32px; height: 32px; font-size: 12px;"></app-avatar>
                             <div>
                                 <div style="font-weight: 500; font-size: 14px;">${u.username}</div>
-                                <div class="mono-tag" style="font-size: 10px;">${u.role}</div>
+                                <div class="mono-tag" style="font-size: 10px;">
+                                    ${(() => {
+        const r = (u.role || '').toLowerCase();
+        if (r === 'admin' || r === 'administrator') return i18n.t('settings.role_admin');
+        if (r === 'user') return i18n.t('settings.role_user');
+        return u.role;
+    })()}
+                                </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}', '${u.role}')">Edit</app-button>
-                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${u.id})">Delete</app-button>
+                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}', '${u.role}')">${i18n.t('general.edit')}</app-button>
+                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${u.id})">${i18n.t('general.delete')}</app-button>
                         </div>
                     </div>
                 `).join('')}
             </div>
-             ${users.length === 0 ? '<p class="settings-content__text-dim">No users found.</p>' : ''}
+             ${users.length === 0 ? `<p class="settings-content__text-dim">${i18n.t('settings.no_users')}</p>` : ''}
         </div>
     </div>
     
      <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
-        <h3 style="margin-top: 0; margin-bottom: 16px;">Add New User</h3>
+        <h3 style="margin-top: 0; margin-bottom: 16px;">${i18n.t('action.add_new_user')}</h3>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">Username</label>
+            <label class="settings-content__label">${i18n.t('auth.username')}</label>
             <input type="text" id="new-user-username" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">Password</label>
+            <label class="settings-content__label">${i18n.t('auth.password')}</label>
             <input type="password" id="new-user-password" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">Role</label>
+            <label class="settings-content__label">${i18n.t('settings.role')}</label>
             <select id="new-user-role" class="settings-content__select">
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
+                <option value="user">${i18n.t('settings.role_user')}</option>
+                <option value="admin">${i18n.t('settings.role_admin')}</option>
             </select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button onclick="this.getRootNode().getElementById('add-user-modal').close()">Cancel</app-button>
-            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">Create</app-button>
+            <app-button onclick="this.getRootNode().getElementById('add-user-modal').close()">${i18n.t('general.cancel')}</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${i18n.t('general.save')}</app-button>
         </div>
     </dialog>
 
     <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
-        <h3 style="margin-top: 0; margin-bottom: 16px;">Edit User</h3>
+        <h3 style="margin-top: 0; margin-bottom: 16px;">${i18n.t('action.edit_user')}</h3>
         <input type="hidden" id="edit-user-id">
         <div class="settings-content__form-group">
-            <label class="settings-content__label">Username</label>
+            <label class="settings-content__label">${i18n.t('auth.username')}</label>
             <input type="text" id="edit-user-username" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">New Password (Optional)</label>
-            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="Leave blank to keep current">
+            <label class="settings-content__label">${i18n.t('settings.new_password')}</label>
+            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${i18n.t('settings.password_leave_blank')}">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">Role</label>
+            <label class="settings-content__label">${i18n.t('settings.role')}</label>
             <select id="edit-user-role" class="settings-content__select">
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
+                <option value="user">${i18n.t('settings.role_user')}</option>
+                <option value="admin">${i18n.t('settings.role_admin')}</option>
             </select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button onclick="this.getRootNode().getElementById('edit-user-modal').close()">Cancel</app-button>
-            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">Save Changes</app-button>
+            <app-button onclick="this.getRootNode().getElementById('edit-user-modal').close()">${i18n.t('general.cancel')}</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${i18n.t('action.save_changes')}</app-button>
         </div>
     </dialog>
 `;
@@ -227,32 +241,32 @@ export const advancedTemplate = () => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <!-- System Migration Section -->
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 24px;">System Data & Migration</div>
+            <div class="mono-tag" style="margin-bottom: 24px;">${i18n.t('settings.system_data')}</div>
             
             <div class="settings-content__action-group">
                 <!-- Export -->
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>Export Database</h3>
-                        <p>Create a complete JSON snapshot of all users, bookmarks, sections, and system preferences. Ideal for backups or migration.</p>
+                        <h3>${i18n.t('settings.export_db')}</h3>
+                        <p>${i18n.t('settings.export_desc')}</p>
                     </div>
                     <app-button variant="primary" onclick="this.getRootNode().host.downloadBackup()">
                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                        Download Backup
+                        ${i18n.t('action.download_backup')}
                     </app-button>
                 </div>
 
                 <!-- Import -->
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>Import Database</h3>
-                        <p>Restore system state from a previous backup file. <br><span style="color: var(--accent); font-weight: 500;">Note: This will strictly match the backup file, removing any newer data.</span></p>
+                        <h3>${i18n.t('settings.import_db')}</h3>
+                        <p>${i18n.t('settings.import_desc')} <br><span style="color: var(--accent); font-weight: 500;">${i18n.t('settings.import_warn')}</span></p>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                          <input type="file" id="backup-upload" accept=".json" style="display: none;" onchange="this.getRootNode().host.restoreBackup(this.files[0])">
                          <app-button variant="primary" onclick="this.getRootNode().getElementById('backup-upload').click()">
                             <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
-                            Select File...
+                            ${i18n.t('action.select_file')}
                          </app-button>
                     </div>
                 </div>
@@ -264,14 +278,14 @@ export const advancedTemplate = () => `
              <div>
                 <div class="settings-content__danger-title">
                     <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fa5252;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                    Factory Reset
+                    ${i18n.t('settings.factory_reset')}
                 </div>
                 <p class="settings-content__text-dim" style="font-size: 13px; color: rgba(250, 82, 82, 0.8);">
-                    Irrevocably wipe all data and return to initial setup state.
+                    ${i18n.t('settings.reset_desc')}
                 </p>
              </div>
              <app-button onclick="this.getRootNode().host.openResetModal()" style="border-color: rgba(250, 82, 82, 0.4); color: #fa5252; background: transparent; transition: all 0.2s;">
-                Reset System
+                ${i18n.t('action.reset_system')}
              </app-button>
         </div>
     </div>
@@ -280,11 +294,11 @@ export const advancedTemplate = () => `
     <dialog id="reset-confirm-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 440px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
         <h3 style="margin-top: 0; margin-bottom: 16px; color: #fa5252; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
             <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: #fa5252;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-            Confirm Factory Reset
+            ${i18n.t('settings.confirm_reset_title')}
         </h3>
         <p class="settings-content__text-dim" style="font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
-            This action is <b>final</b>. All users, bookmarks, themes, and configuration will be deleted immediately.
-            To confirm, please type <span style="font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;">delete</span> below.
+            ${i18n.t('settings.confirm_reset_msg')}
+            ${i18n.t('settings.type_delete')}
         </p>
 
         <div class="settings-content__form-group">
@@ -292,9 +306,9 @@ export const advancedTemplate = () => `
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 32px; width: 100%;">
-            <app-button onclick="this.getRootNode().getElementById('reset-confirm-modal').close()" style="width: auto;">Cancel</app-button>
+            <app-button onclick="this.getRootNode().getElementById('reset-confirm-modal').close()" style="width: auto;">${i18n.t('general.cancel')}</app-button>
             <button class="settings-content__reset-btn" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1;">
-                Erase Everything
+                ${i18n.t('action.erase_everything')}
             </button>
         </div>
     </dialog>
@@ -308,8 +322,8 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
                 CSH
              </div>
              
-             <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">CSH Dashboard</h2>
-             <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">Version ${version}</p>
+             <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
+             <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">${i18n.t('settings.version')} ${version}</p>
 
              <div style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px;">
                 ${updateInfo ? `
@@ -318,9 +332,9 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
                              <div style="display: flex; gap: 12px; align-items: flex-start;">
                                 <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--accent); flex-shrink: 0;"><path d="M21 12l-4.37-6.16c-.37-.52-.98-.84-1.63-.84h-3V4c0-1.1-.9-2-2-2s-2 .9-2 2v1H5c-.65 0-1.26.32-1.63.84L-1 12v3h2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h2v-3zm-11 7H7v-3h3v3zm-5 0H2v-3h3v3zm12 0h-3v-3h3v3z"/></svg>
                                 <div>
-                                    <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">Running in Docker</h4>
+                                    <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${i18n.t('settings.docker_mode')}</h4>
                                     <p style="margin: 0; font-size: 13px; color: var(--text-dim);">
-                                        Updates are managed via image tags. Pull the latest image to update.<br>
+                                        ${i18n.t('settings.docker_desc')}<br>
                                         ${updateInfo.available ? `<strong style="color: var(--accent);">New version ${updateInfo.latest_version} available!</strong>` : 'You are strictly up to date.'}
                                     </p>
                                 </div>
@@ -330,24 +344,24 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
                         <!-- Native Update Logic -->
                         ${updateInfo.available ? `
                              <div style="background: rgba(18, 184, 134, 0.1); border: 1px solid rgba(18, 184, 134, 0.3); padding: 24px; border-radius: var(--radius); width: 100%;">
-                                <h3 style="margin: 0 0 12px 0; color: #12b886; font-size: 16px;">Update Available: ${updateInfo.latest_version}</h3>
+                                <h3 style="margin: 0 0 12px 0; color: #12b886; font-size: 16px;">${i18n.t('settings.update_available')}: ${updateInfo.latest_version}</h3>
                                 <div style="text-align: left; background: var(--surface); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; color: var(--text-dim); margin-bottom: 24px; max-height: 150px; overflow-y: auto; white-space: pre-wrap;">${updateInfo.release_notes}</div>
                                 
                                 <app-button variant="primary" id="btn-update-now" style="width: 100%; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${updateInfo.asset_url}')">
-                                    Download & Install ${updateInfo.latest_version}
+                                    ${i18n.t('action.download_install')} ${updateInfo.latest_version}
                                 </app-button>
                                 <p id="update-status" style="margin-top: 12px; font-size: 12px; color: var(--text-dim); display: none;">Starting secure download...</p>
                             </div>
                         ` : `
                             <div style="color: var(--text-dim); font-size: 14px; display: flex; align-items: center; gap: 8px;">
                                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #12b886;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                                You are up to date!
+                                ${i18n.t('settings.up_to_date')}
                             </div>
-                            <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">Check again</app-button>
+                            <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">${i18n.t('action.check_again')}</app-button>
                         `}
                     `}
                 ` : `
-                    <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">Check for Updates</app-button>
+                    <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">${i18n.t('action.check_updates')}</app-button>
                 `}
              </div>
              
@@ -358,7 +372,7 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
                 </a>
                 <a href="https://github.com/codigosh/CSH-Dashboard/issues" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
                     <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-                    Report Issue
+                    ${i18n.t('action.report_issue')}
                 </a>
              </div>
         </div>

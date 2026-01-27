@@ -1,5 +1,6 @@
 import { template } from './AddBookmarkModal.template';
 import { dashboardStore } from '../../../store/dashboardStore';
+import { i18n } from '../../../services/i18n';
 import '../IconPicker/IconPicker';
 // @ts-ignore
 import css from './AddBookmarkModal.css' with { type: 'text' };
@@ -11,6 +12,7 @@ class AddBookmarkModal extends HTMLElement {
     private clickHandler: any = null;
     private submitHandler: any = null;
     private escapeHandler: any = null;
+    private _unsubscribeI18n: (() => void) | undefined;
 
     // Edit Mode State
     private isEditMode: boolean = false;
@@ -82,7 +84,7 @@ class AddBookmarkModal extends HTMLElement {
                         content: content
                     });
                     // @ts-ignore
-                    if (window.notifier) window.notifier.show('Bookmark updated successfully');
+                    if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_updated'));
                 } else {
                     // Logic for Adding New Bookmarks
                     const state = dashboardStore.getState();
@@ -101,7 +103,7 @@ class AddBookmarkModal extends HTMLElement {
                             content: content
                         });
                         // @ts-ignore
-                        if (window.notifier) window.notifier.show('Bookmark added successfully');
+                        if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_added'));
                     });
                 }
                 console.log('[Modal] Operation successful!');
@@ -109,7 +111,7 @@ class AddBookmarkModal extends HTMLElement {
             } catch (error) {
                 console.error('[Modal] Error:', error);
                 // @ts-ignore
-                if (window.notifier) window.notifier.show('Error saving bookmark', 'error');
+                if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_error'), 'error');
             }
         };
 
@@ -124,10 +126,15 @@ class AddBookmarkModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupListeners();
+        // Subscribe to language changes
+        this._unsubscribeI18n = i18n.subscribe(() => {
+            if (this.isOpen) this.render();
+        });
     }
 
     disconnectedCallback() {
         // Clean up listeners
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
         const root = this.shadowRoot!;
         if (this.clickHandler) {
             root.removeEventListener('click', this.clickHandler);

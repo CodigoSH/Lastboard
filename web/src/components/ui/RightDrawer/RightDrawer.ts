@@ -1,5 +1,6 @@
 import { userStore } from '../../../store/userStore';
 import { template } from './RightDrawer.template';
+import { i18n } from '../../../services/i18n';
 // @ts-ignore
 import css from './RightDrawer.css' with { type: 'text' };
 
@@ -7,6 +8,7 @@ class RightDrawer extends HTMLElement {
     isOpen: boolean;
     selectedSection: string | null;
     _unsubscribe: (() => void) | undefined;
+    _unsubscribeI18n: (() => void) | undefined;
     _keydownHandler: ((e: KeyboardEvent) => void) | undefined;
 
     constructor() {
@@ -25,10 +27,16 @@ class RightDrawer extends HTMLElement {
         this._unsubscribe = userStore.subscribe((user) => {
             if (this.isOpen) this.render();
         });
+
+        // Subscribe to i18n changes
+        this._unsubscribeI18n = i18n.subscribe(() => {
+            this.render();
+        });
     }
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._keydownHandler) {
             window.removeEventListener('keydown', this._keydownHandler);
         }

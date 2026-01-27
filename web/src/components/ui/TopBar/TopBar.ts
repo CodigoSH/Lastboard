@@ -1,5 +1,6 @@
 import { template } from './TopBar.template';
 import { dashboardStore } from '../../../store/dashboardStore';
+import { i18n } from '../../../services/i18n';
 // @ts-ignore
 import css from './TopBar.css' with { type: 'text' };
 
@@ -15,6 +16,7 @@ interface TopBarState {
 class TopBar extends HTMLElement {
     state: TopBarState;
     _unsubscribeDashboard: (() => void) | undefined;
+    _unsubscribeI18n: (() => void) | undefined;
     _windowClickHandler: ((e: Event) => void) | undefined;
 
     constructor() {
@@ -37,10 +39,16 @@ class TopBar extends HTMLElement {
                 this.setState({ editMode: state.isEditing });
             }
         });
+
+        // Listen to language changes
+        this._unsubscribeI18n = i18n.subscribe(() => {
+            this.render();
+        });
     }
 
     disconnectedCallback() {
         if (this._unsubscribeDashboard) this._unsubscribeDashboard();
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._windowClickHandler) {
             window.removeEventListener('click', this._windowClickHandler);
         }

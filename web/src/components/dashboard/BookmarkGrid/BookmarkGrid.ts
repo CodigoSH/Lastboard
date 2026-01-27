@@ -3,6 +3,7 @@ import { GridItem } from '../../../types';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { collisionService } from '../../../services/collisionService';
 import { statusService } from '../../../services/StatusService';
+import { i18n } from '../../../services/i18n';
 // @ts-ignore
 import css from './BookmarkGrid.css' with { type: 'text' };
 
@@ -12,6 +13,7 @@ class BookmarkGrid extends HTMLElement {
     private isEditing: boolean = false;
     private searchQuery: string = '';
     private _unsubscribe: (() => void) | undefined;
+    private _unsubscribeI18n: (() => void) | undefined;
     private _resizeObserver: ResizeObserver | undefined;
 
     // Drag State
@@ -107,6 +109,9 @@ class BookmarkGrid extends HTMLElement {
 
         // Start Status Monitoring
         statusService.start();
+
+        // Subscribe to I18n
+        this._unsubscribeI18n = i18n.subscribe(() => this.render());
     }
 
     setupActionListeners() {
@@ -136,22 +141,22 @@ class BookmarkGrid extends HTMLElement {
                 const item = this.bookmarks.find(b => b.id == id);
                 if (!item) return;
 
-                const typeLabel = item.type === 'group' ? 'Group' : (item.type === 'section' ? 'Section' : 'Bookmark');
+                const typeLabel = item.type === 'group' ? i18n.t('type.group') : (item.type === 'section' ? i18n.t('type.section') : i18n.t('type.bookmark'));
 
                 // Try to find the confirmation modal in the main document
                 const confirmationModal = document.querySelector('confirmation-modal') as any;
 
                 if (confirmationModal && typeof confirmationModal.confirm === 'function') {
                     const confirmed = await confirmationModal.confirm(
-                        `Delete ${typeLabel}`,
-                        `Are you sure you want to delete this ${typeLabel}? This action cannot be undone.`
+                        `${i18n.t('general.delete')} ${typeLabel}`,
+                        i18n.t('bookmark.delete_confirm_message')
                     );
                     if (confirmed) {
                         await dashboardStore.deleteItem(id);
                     }
                 } else {
                     // Fallback to native confirm if modal fails/missing
-                    if (confirm(`Are you sure you want to delete this ${typeLabel}?`)) {
+                    if (confirm(`${i18n.t('bookmark.delete_confirm_message')} (${typeLabel})`)) {
                         await dashboardStore.deleteItem(id);
                     }
                 }
@@ -185,6 +190,7 @@ class BookmarkGrid extends HTMLElement {
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._resizeObserver) this._resizeObserver.disconnect();
         statusService.stop();
     }

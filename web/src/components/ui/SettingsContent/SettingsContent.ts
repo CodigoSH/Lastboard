@@ -77,7 +77,7 @@ class SettingsContent extends HTMLElement {
             this.applyAccent(newPrefs.accent_color);
         }
         if (newPrefs.language) {
-            i18n.load(newPrefs.language);
+            i18n.setLanguage(newPrefs.language);
         }
 
         await userStore.updatePreferences(newPrefs);
@@ -123,7 +123,7 @@ class SettingsContent extends HTMLElement {
             username: newUsername,
             avatar_url: this.prefs.avatar_url || u.avatar_url
         });
-        if (window.notifier) window.notifier.show('Username updated');
+        if (window.notifier) window.notifier.show(i18n.t('notifier.username_updated'));
     }
 
     async updatePassword() {
@@ -132,17 +132,17 @@ class SettingsContent extends HTMLElement {
         const confirmPw = (this.shadowRoot!.getElementById('confirm-password') as HTMLInputElement)?.value;
 
         if (!currentPw) {
-            if (window.notifier) window.notifier.show('Current password is required', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.password_required'), 'error');
             return;
         }
 
         if (newPw !== confirmPw) {
-            if (window.notifier) window.notifier.show('New passwords do not match', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.password_mismatch'), 'error');
             return;
         }
 
         if (!newPw) {
-            if (window.notifier) window.notifier.show('New password cannot be empty', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.password_empty'), 'error');
             return;
         }
 
@@ -151,14 +151,14 @@ class SettingsContent extends HTMLElement {
                 current_password: currentPw,
                 new_password: newPw
             });
-            if (window.notifier) window.notifier.show('Password changed successfully');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.password_changed'));
 
             // Clear inputs
             (this.shadowRoot!.getElementById('current-password') as HTMLInputElement).value = '';
             (this.shadowRoot!.getElementById('new-password') as HTMLInputElement).value = '';
             (this.shadowRoot!.getElementById('confirm-password') as HTMLInputElement).value = '';
         } catch (e) {
-            if (window.notifier) window.notifier.show('Failed: Incorrect current password', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.password_incorrect'), 'error');
         }
     }
 
@@ -181,7 +181,7 @@ class SettingsContent extends HTMLElement {
             });
 
             this.render();
-            if (window.notifier) window.notifier.show('Avatar updated');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.avatar_updated'));
         };
         reader.readAsDataURL(file);
     }
@@ -199,18 +199,18 @@ class SettingsContent extends HTMLElement {
         const role = (this.shadowRoot!.getElementById('new-user-role') as HTMLSelectElement).value;
 
         if (!username || !password) {
-            if (window.notifier) window.notifier.show('Username and Password required', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.fields_required'), 'error');
             return;
         }
 
         try {
             await userService.createUser({ username, password, role });
-            if (window.notifier) window.notifier.show('User created successfully');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.user_created'));
             const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
             if (modal) modal.close();
             this.fetchUsers(); // Refresh list
         } catch (e) {
-            if (window.notifier) window.notifier.show('Failed to create user', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.user_create_error'), 'error');
         }
     }
 
@@ -243,23 +243,23 @@ class SettingsContent extends HTMLElement {
                 role,
                 password: password || undefined // Only send if set
             });
-            if (window.notifier) window.notifier.show('User updated successfully');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.user_updated'));
             const modal = this.shadowRoot!.getElementById('edit-user-modal') as HTMLDialogElement;
             if (modal) modal.close();
             this.fetchUsers(); // Refresh list
         } catch (e) {
-            if (window.notifier) window.notifier.show('Failed to update user', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.user_update_error'), 'error');
         }
     }
 
     async deleteUser(id: number) {
-        if (!confirm('Are you sure you want to delete this user?')) return;
+        if (!confirm(i18n.t('notifier.user_delete_confirm'))) return;
         try {
             await userService.deleteUser(id);
-            if (window.notifier) window.notifier.show('User deleted');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.user_deleted'));
             this.fetchUsers();
         } catch (e) {
-            if (window.notifier) window.notifier.show('Failed to delete user', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.user_delete_error'), 'error');
         }
     }
 
@@ -287,20 +287,14 @@ class SettingsContent extends HTMLElement {
                     'teal': '#12b886', 'orange': '#fd7e14', 'red': '#fa5252', 'grape': '#be4bdb'
                 };
                 const colors = Object.keys(colorMap);
-                const languages = [
-                    { code: 'en', name: 'English' }, { code: 'es', name: 'Español' }, { code: 'fr', name: 'Français' },
-                    { code: 'de', name: 'Deutsch' }, { code: 'it', name: 'Italiano' }, { code: 'pt', name: 'Português' },
-                    { code: 'ru', name: 'Русский' }, { code: 'ja', name: '日本語' }, { code: 'zh', name: '中文' },
-                    { code: 'ko', name: '한국어' }
-                ];
-                return themeTemplate(this.prefs, colorMap, colors, languages);
+                return themeTemplate(this.prefs, colorMap, colors);
             }
 
             case 'personalization': {
                 const sliderConfigs = [
-                    { label: 'PC Columns', key: 'grid_columns_pc', min: 4, max: 12 },
-                    { label: 'Tablet Columns', key: 'grid_columns_tablet', min: 2, max: 6 },
-                    { label: 'Mobile Columns', key: 'grid_columns_mobile', min: 1, max: 3 }
+                    { label: i18n.t('settings.grid_pc'), key: 'grid_columns_pc', min: 4, max: 12 },
+                    { label: i18n.t('settings.grid_tablet'), key: 'grid_columns_tablet', min: 2, max: 6 },
+                    { label: i18n.t('settings.grid_mobile'), key: 'grid_columns_mobile', min: 1, max: 3 }
                 ];
                 return personalizationTemplate(this.prefs, sliderConfigs);
             }
@@ -315,7 +309,7 @@ class SettingsContent extends HTMLElement {
                 return aboutTemplate(this.version, this.updateInfo);
 
             default:
-                return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">Configuration module.</p></div>`;
+                return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">${i18n.t('settings.default_module_desc')}</p></div>`;
         }
     }
 
@@ -337,7 +331,7 @@ class SettingsContent extends HTMLElement {
     }
 
     async performUpdate(assetUrl: string) {
-        if (!confirm('Start update process? The server will restart automatically.')) return;
+        if (!confirm(i18n.t('notifier.update_start_confirm'))) return;
 
         const btn = this.shadowRoot!.getElementById('btn-update-now') as any;
         const status = this.shadowRoot!.getElementById('update-status');
@@ -345,7 +339,7 @@ class SettingsContent extends HTMLElement {
 
         if (status) {
             status.style.display = 'block';
-            status.textContent = 'Downloading binary & verifying checksum...';
+            status.textContent = i18n.t('notifier.update_downloading');
         }
 
         try {
@@ -356,7 +350,7 @@ class SettingsContent extends HTMLElement {
             });
 
             if (res.ok) {
-                if (status) status.textContent = 'Update verified. Swapping binary & restarting...';
+                if (status) status.textContent = i18n.t('notifier.update_verified');
                 setTimeout(() => {
                     window.location.reload();
                 }, 5000);
@@ -364,7 +358,7 @@ class SettingsContent extends HTMLElement {
                 const err = await res.text();
                 if (status) {
                     status.style.color = '#fa5252';
-                    status.textContent = 'Update failed: ' + err;
+                    status.textContent = i18n.t('notifier.update_failed') + err;
                 }
                 if (btn) btn.loading = false;
             }
@@ -372,7 +366,7 @@ class SettingsContent extends HTMLElement {
             console.error("Update failed", e);
             if (status) {
                 status.style.color = '#fa5252';
-                status.textContent = 'Network error during update.';
+                status.textContent = i18n.t('notifier.update_error');
             }
             if (btn) btn.loading = false;
         }
@@ -386,7 +380,7 @@ class SettingsContent extends HTMLElement {
 
     async restoreBackup(file: File) {
         if (!file) return;
-        if (!confirm('WARNING: restoring a backup will overwrite all current data. Do you want to continue?')) return;
+        if (!confirm(i18n.t('notifier.restore_confirm'))) return;
 
         const formData = new FormData();
         formData.append('backup_file', file);
@@ -397,14 +391,14 @@ class SettingsContent extends HTMLElement {
                 body: formData
             });
             if (res.ok) {
-                if (window.notifier) window.notifier.show('Backup restored. Reloading...');
+                if (window.notifier) window.notifier.show(i18n.t('notifier.restore_success'));
                 setTimeout(() => window.location.reload(), 2000);
             } else {
-                if (window.notifier) window.notifier.show('Restore failed', 'error');
+                if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');
             }
         } catch (e) {
             console.error('Restore error', e);
-            if (window.notifier) window.notifier.show('Restore failed', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');
         }
     }
 
@@ -420,7 +414,7 @@ class SettingsContent extends HTMLElement {
     async executeFactoryReset() {
         const input = (this.shadowRoot!.getElementById('reset-confirm-input') as HTMLInputElement);
         if (!input || input.value.trim() !== 'delete') {
-            if (window.notifier) window.notifier.show('Please type "delete" to confirm', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.reset_confirm_text'), 'error');
             input.focus();
             return;
         }
@@ -430,11 +424,11 @@ class SettingsContent extends HTMLElement {
             if (res.ok) {
                 window.location.href = '/setup';
             } else {
-                if (window.notifier) window.notifier.show('Reset failed', 'error');
+                if (window.notifier) window.notifier.show(i18n.t('notifier.reset_failed'), 'error');
             }
         } catch (e) {
             console.error('Reset error', e);
-            if (window.notifier) window.notifier.show('Reset failed network error', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.reset_error'), 'error');
         }
     }
 

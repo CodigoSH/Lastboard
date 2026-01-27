@@ -1,4 +1,5 @@
 import { template } from './ConfirmationModal.template';
+import { i18n } from '../../../services/i18n';
 // @ts-ignore
 import css from './ConfirmationModal.css' with { type: 'text' };
 
@@ -7,6 +8,7 @@ export class ConfirmationModal extends HTMLElement {
     private titleText: string = 'Confirm Action';
     private messageText: string = 'Are you sure?';
     private resolvePromise: ((value: boolean) => void) | null = null;
+    private _unsubscribeI18n: (() => void) | undefined;
 
     constructor() {
         super();
@@ -16,6 +18,13 @@ export class ConfirmationModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupListeners();
+        this._unsubscribeI18n = i18n.subscribe(() => {
+            if (this.isOpen) this.render();
+        });
+    }
+
+    disconnectedCallback() {
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
 
     setupListeners() {
