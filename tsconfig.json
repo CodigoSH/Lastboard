@@ -24,7 +24,8 @@
     },
     "include": [
         "web/src/**/*",
-        "scripts/**/*"
+        "scripts/**/*",
+        "web/build.ts"
     ],
     "exclude": [
         "node_modules",
