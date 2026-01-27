@@ -14,23 +14,45 @@ import './components/dashboard/BookmarkGrid/BookmarkGrid';
 import './components/ui/Notifier/Notifier';
 import './components/ui/IconPicker/IconPicker';
 import './components/ui/AddBookmarkModal/AddBookmarkModal';
-import './components/ui/ConfirmationModal/ConfirmationModal';
-import './components/ui/OfflineBadge/OfflineBadge';
+import './components/ui/AddWidgetModal/AddWidgetModal';
+import './components/ui/WidgetConfigModal/WidgetConfigModal';
+// Widget Components
+import './widgets/core/NotepadWidget';
+import './widgets/core/ClockWidget';
+import './widgets/core/TelemetryWidget';
 
 const topbar = document.getElementById('main-topbar') as any;
 const drawer = document.getElementById('right-drawer') as any;
 const dashboardRoot = document.getElementById('dashboard-root') as HTMLElement;
 let addBookmarkModal: any;
+let addWidgetModal: any;
 let confirmationModal: any;
 
+import { bootstrap } from './core/bootstrap';
+
 // Initialize Application
-document.addEventListener('DOMContentLoaded', async () => {
+bootstrap(async () => {
     // Initialize stores
     await userStore.fetchUser();
 
     // Inject user into topbar for permission handling
     if (topbar) {
-        topbar.setState({ user: userStore.getUser() });
+        // Initial set
+        const u = userStore.getUser();
+        topbar.setState({ user: u });
+        if (u && u.project_name) {
+            topbar.setAttribute('title', u.project_name);
+        }
+
+        // Dynamic update
+        userStore.subscribe((user) => {
+            if (user) {
+                topbar.setState({ user });
+                if (user.project_name) {
+                    topbar.setAttribute('title', user.project_name);
+                }
+            }
+        });
     }
 
     await dashboardStore.fetchItems();
@@ -45,8 +67,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     addBookmarkModal = document.createElement('add-bookmark-modal');
     document.body.appendChild(addBookmarkModal);
 
+    addWidgetModal = document.createElement('add-widget-modal');
+    document.body.appendChild(addWidgetModal);
+
     confirmationModal = document.createElement('confirmation-modal');
     document.body.appendChild(confirmationModal);
+
+    const widgetConfigModal = document.createElement('widget-config-modal');
+    document.body.appendChild(widgetConfigModal);
 });
 
 // 2. Handle Component Events (TopBar)
@@ -83,6 +111,10 @@ if (topbar) {
             if (addBookmarkModal) {
                 addBookmarkModal.open();
             }
+        } else if (action === 'add-widget') {
+            if (addWidgetModal) {
+                addWidgetModal.open();
+            }
         } else if (action === 'add-section') {
             // "Section" -> Resizable Box, No Name
             // Smart Placement
@@ -107,6 +139,39 @@ if (topbar) {
         }
     });
 }
+
+// Widget Selection Handler
+window.addEventListener('widget-selected', (e: Event) => {
+    const customEvent = e as CustomEvent;
+    const widgetDef = customEvent.detail;
+
+    const currentState = dashboardStore.getState();
+    // @ts-ignore
+    const items = currentState.items || [];
+
+    // @ts-ignore
+    import('./services/collisionService').then(({ collisionService }) => {
+        const slot = collisionService.findFirstAvailableSlot(widgetDef.defaultW, widgetDef.defaultH, items);
+
+        const newItem = {
+            type: 'widget',
+            x: slot.x,
+            y: slot.y,
+            w: widgetDef.defaultW,
+            h: widgetDef.defaultH,
+            // Content stores specific widget config
+            // We use 'widgetId' to identify the type of widget renderer to use
+            // MUST be stringified for backend compatibility
+            content: JSON.stringify({
+                widgetId: widgetDef.id,
+                // Default props for specific widgets could go here
+                text: widgetDef.id === 'notepad' ? '' : undefined
+            })
+        };
+        // @ts-ignore
+        dashboardStore.addItem(newItem);
+    });
+});
 
 window.addEventListener('drawer-close', () => {
     if (topbar) topbar.setState({ drawerOpen: false });

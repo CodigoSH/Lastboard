@@ -67,6 +67,8 @@
   "settings.personalization": "パーソナライズ",
   "settings.users": "ユーザー",
   "settings.advanced": "詳細設定",
+  "settings.project_name": "プロジェクト名",
+  "settings.project_name_desc": "トップバーに表示されるアプリケーション名をカスタマイズします。",
   "settings.interface_title": "インターフェイス / グリッドアーキテクチャ",
   "settings.grid_pc": "PC列数",
   "settings.grid_tablet": "タブレット列数",
@@ -147,5 +149,12 @@
   "settings.role_admin": "管理者",
   "settings.default_user": "ユーザー",
   "settings.default_role": "管理者",
-  "general.no_icons": "アイコンが見つかりません"
+  "general.no_icons": "アイコンが見つかりません",
+  "header.view_changelog": "変更履歴を表示",
+  "header.view_profile": "プロフィールを表示",
+  "header.preferences": "設定",
+  "auth.sign_out": "サインアウト",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "安全なダウンロードを開始しています...",
+  "status.offline": "オフライン"
 }

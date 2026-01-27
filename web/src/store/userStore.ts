@@ -1,4 +1,5 @@
 import { userService } from '../services/userService';
+import { i18n } from '../services/i18n';
 import { User, UserPreferences } from '../types';
 
 type Listener = (user: User | null) => void;
@@ -7,10 +8,33 @@ class UserStore {
     private user: User | null = null;
     private listeners: Listener[] = [];
 
-    constructor() { }
+    constructor() {
+        this.loadFromStorage();
+    }
+
+    private loadFromStorage() {
+        const cached = localStorage.getItem('csh_user_cache');
+        if (cached) {
+            try {
+                this.user = JSON.parse(cached);
+                this.applyAesthetics();
+                this.notify();
+            } catch (e) {
+                console.error('Failed to parse user cache', e);
+            }
+        }
+    }
+
+    private saveToStorage() {
+        if (this.user) {
+            localStorage.setItem('csh_user_cache', JSON.stringify(this.user));
+        }
+    }
 
     subscribe(listener: Listener) {
         this.listeners.push(listener);
+        // Notify immediately if we have data
+        if (this.user) listener(this.user);
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
@@ -18,6 +42,7 @@ class UserStore {
 
     private notify() {
         this.listeners.forEach(listener => listener(this.user));
+        this.saveToStorage();
     }
 
     setUser(userData: User) {
@@ -40,8 +65,10 @@ class UserStore {
                 theme: userData.theme, // Map theme from backend!
                 grid_columns_pc: userData.grid_columns_pc || defaultGridPrefs.grid_columns_pc,
                 grid_columns_tablet: userData.grid_columns_tablet || defaultGridPrefs.grid_columns_tablet,
-                grid_columns_mobile: userData.grid_columns_mobile || defaultGridPrefs.grid_columns_mobile
-            }
+                grid_columns_mobile: userData.grid_columns_mobile || defaultGridPrefs.grid_columns_mobile,
+                project_name: userData.project_name || 'CSH Dashboard'
+            },
+            project_name: userData.project_name || 'CSH Dashboard'
         };
 
         this.applyAesthetics();
@@ -91,6 +118,7 @@ class UserStore {
         // Sync flat fields back to main user object if they changed
         if (newPrefs.accent_color) this.user.accent_color = newPrefs.accent_color;
         if (newPrefs.language) this.user.language = newPrefs.language;
+        if (newPrefs.project_name) this.user.project_name = newPrefs.project_name;
         if (newPrefs.theme) this.user.preferences.theme = newPrefs.theme; // Ensure nested pref is updated for immediate effect
 
         this.applyAesthetics();
@@ -104,11 +132,12 @@ class UserStore {
                 theme: this.user.preferences.theme,
                 grid_columns_pc: this.user.preferences.grid_columns_pc,
                 grid_columns_tablet: this.user.preferences.grid_columns_tablet,
-                grid_columns_mobile: this.user.preferences.grid_columns_mobile
+                grid_columns_mobile: this.user.preferences.grid_columns_mobile,
+                project_name: this.user.project_name
             });
 
             // @ts-ignore
-            if (window.notifier) window.notifier.show('Preferences saved');
+            if (window.notifier) window.notifier.show(i18n.t('general.success') || 'Preferences saved');
         } catch (e) {
             console.error('[UserStore] Failed to sync preferences, rolling back', e);
             // 3. Rollback on failure
@@ -154,8 +183,11 @@ class UserStore {
             this.setUser(user);
         } catch (error) {
             console.error('[UserStore] Error fetching user', error);
-            // @ts-ignore
-            if (window.notifier) window.notifier.show('Session expired or server unreachable', 'error');
+            // Don't show error immediately on fetch fail if we have cached data
+            if (!this.user) {
+                // @ts-ignore
+                if (window.notifier) window.notifier.show('Session expired or server unreachable', 'error');
+            }
         }
     }
 }

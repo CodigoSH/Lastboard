@@ -28,7 +28,7 @@
   "auth.connection_error": "Verbindungsfehler. Bitte versuchen Sie es erneut.",
   "setup.subtitle": "Initialisieren Sie Ihre Umgebung",
   "setup.root_user": "Root-Benutzer",
-  "setup.passkey": "Passkey",
+  "setup.passkey": "Zugangsschlüssel",
   "setup.create_admin": "Administrator erstellen",
   "setup.creating": "Umgebung wird erstellt...",
   "setup.welcome_admin": "Willkommen, Admin",
@@ -67,6 +67,8 @@
   "settings.personalization": "Personalisierung",
   "settings.users": "Benutzer",
   "settings.advanced": "Erweitert",
+  "settings.project_name": "Projektnamen",
+  "settings.project_name_desc": "Passen Sie den Namen der Anwendung an, der in der oberen Leiste angezeigt wird.",
   "settings.interface_title": "Oberfläche / Raster-Architektur",
   "settings.grid_pc": "PC-Spalten",
   "settings.grid_tablet": "Tablet-Spalten",
@@ -147,5 +149,12 @@
   "settings.role_admin": "Admin",
   "settings.default_user": "Benutzer",
   "settings.default_role": "Administrator",
-  "general.no_icons": "Keine Icons gefunden"
+  "general.no_icons": "Keine Icons gefunden",
+  "header.view_changelog": "Änderungsprotokoll anzeigen",
+  "header.view_profile": "Profil anzeigen",
+  "header.preferences": "Einstellungen",
+  "auth.sign_out": "Abmelden",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "Sicherer Download wird gestartet...",
+  "status.offline": "Offline"
 }

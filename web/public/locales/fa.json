@@ -67,6 +67,8 @@
   "settings.personalization": "شخصی سازی",
   "settings.users": "کاربران",
   "settings.advanced": "پیشرفته",
+  "settings.project_name": "نام پروژه",
+  "settings.project_name_desc": "نام برنامه نمایش داده شده در نوار بالا را سفارشی کنید.",
   "settings.interface_title": "رابط کاربری / معماری شبکه",
   "settings.grid_pc": "ستون‌های PC",
   "settings.grid_tablet": "ستون‌های تبلت",
@@ -147,5 +149,12 @@
   "settings.role_admin": "ادمین",
   "settings.default_user": "کاربر",
   "settings.default_role": "مدیر",
-  "general.no_icons": "آیکونی یافت نشد"
+  "general.no_icons": "آیکونی یافت نشد",
+  "header.view_changelog": "مشاهده گزارش تغییرات",
+  "header.view_profile": "مشاهده پروفایل",
+  "header.preferences": "ترجیحات",
+  "auth.sign_out": "xروج",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "شروع دانلود امن...",
+  "status.offline": "آفلاین"
 }

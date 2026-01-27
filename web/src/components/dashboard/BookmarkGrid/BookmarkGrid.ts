@@ -4,6 +4,10 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { collisionService } from '../../../services/collisionService';
 import { statusService } from '../../../services/StatusService';
 import { i18n } from '../../../services/i18n';
+// Widgets
+import '../../../widgets/core/ClockWidget';
+import '../../../widgets/core/NotepadWidget';
+import '../../../widgets/core/TelemetryWidget';
 // @ts-ignore
 import css from './BookmarkGrid.css' with { type: 'text' };
 
@@ -50,18 +54,28 @@ class BookmarkGrid extends HTMLElement {
         });
     }
 
+    private _widgetModal: any; // widget-config-modal
+
     connectedCallback() {
         this.render();
         this.updateGridMetrics();
 
-        // Use ResizeObserver to keep metrics in sync
+        // Ensure modal exists in main DOM (index.ts creates it usually, but let's check or create)
+        // Check index.ts - we need to create it there or here. 
+        // Best Practice: index.ts created global modals. We'll find it.
+        // But for safety, let's create it if missing in index.ts later.
+        // Actually, we should add it to index.ts to match pattern.
+        // For now, let's find it.
+
+        // ... (rest of observers) ...
+
         this._resizeObserver = new ResizeObserver(() => {
             this.updateGridMetrics();
         });
         this._resizeObserver.observe(this);
 
-        // Subscribe to dashboard store for all state changes
         this._unsubscribe = dashboardStore.subscribe((state) => {
+            // ... (existing subscribe logic) ...
             let shouldRerender = false;
 
             if (this.isEditing !== state.isEditing) {
@@ -78,14 +92,10 @@ class BookmarkGrid extends HTMLElement {
 
             if (this.allItems !== newAllItems || shouldRerender) {
                 this.allItems = newAllItems;
-
-                // Filter items based on search query
                 if (this.searchQuery) {
                     this.classList.add('search-active');
                     this.bookmarks = this.allItems.filter(item => {
-                        // Only show bookmarks during search for a cleaner result grid
                         if (item.type !== 'bookmark') return false;
-
                         const content = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
                         const searchText = (content.label || '').toLowerCase();
                         return searchText.includes(this.searchQuery);
@@ -94,7 +104,6 @@ class BookmarkGrid extends HTMLElement {
                     this.classList.remove('search-active');
                     this.bookmarks = this.allItems;
                 }
-
                 shouldRerender = true;
             }
 
@@ -107,10 +116,7 @@ class BookmarkGrid extends HTMLElement {
         this.setupResizeListeners();
         this.setupActionListeners();
 
-        // Start Status Monitoring
         statusService.start();
-
-        // Subscribe to I18n
         this._unsubscribeI18n = i18n.subscribe(() => this.render());
     }
 
@@ -176,11 +182,22 @@ class BookmarkGrid extends HTMLElement {
                 const item = this.bookmarks.find(b => b.id == id);
 
                 if (item) {
-                    const modal = document.querySelector('add-bookmark-modal') as any;
-                    if (modal && typeof modal.openForEdit === 'function') {
-                        modal.openForEdit(item);
+                    if (item.type === 'widget') {
+                        // Open Widget Config
+                        const wModal = document.querySelector('widget-config-modal') as any;
+                        if (wModal && typeof wModal.open === 'function') {
+                            wModal.open(item);
+                        } else {
+                            console.error('Widget Config Modal not found');
+                        }
                     } else {
-                        console.error('[BookmarkGrid] Edit modal not found or invalid', modal);
+                        // Open Bookmark Edit
+                        const modal = document.querySelector('add-bookmark-modal') as any;
+                        if (modal && typeof modal.openForEdit === 'function') {
+                            modal.openForEdit(item);
+                        } else {
+                            console.error('[BookmarkGrid] Edit modal not found or invalid', modal);
+                        }
                     }
                 }
                 return;
@@ -298,6 +315,10 @@ class BookmarkGrid extends HTMLElement {
 
         if (type === 'section') {
             // Sections: 1x1 to 12x12
+            finalW = Math.min(12, finalW);
+            finalH = Math.min(12, finalH);
+        } else if (type === 'widget') {
+            // Widgets: Flexible, but maybe cap at reasonable max
             finalW = Math.min(12, finalW);
             finalH = Math.min(12, finalH);
         } else {

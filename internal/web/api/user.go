@@ -31,10 +31,11 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		SELECT id, username, role, accent_color, language,
 		       COALESCE(avatar_url, ''),
 		       COALESCE(grid_columns_pc, 12), COALESCE(grid_columns_tablet, 4), COALESCE(grid_columns_mobile, 2),
-               COALESCE(theme, 'system')
+               COALESCE(theme, 'system'),
+               COALESCE(project_name, 'CSH Dashboard')
 		FROM users WHERE username=?`, username).Scan(
 		&u.ID, &u.Username, &u.Role, &u.AccentColor, &u.Language, &u.AvatarUrl,
-		&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.Theme,
+		&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.Theme, &u.ProjectName,
 	)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -53,6 +54,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"grid_columns_pc":     u.GridColumnsPC,
 		"grid_columns_tablet": u.GridColumnsTablet,
 		"grid_columns_mobile": u.GridColumnsMobile,
+		"project_name":        u.ProjectName,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -69,6 +71,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		GridColumnsPC     int    `json:"grid_columns_pc"`
 		GridColumnsTablet int    `json:"grid_columns_tablet"`
 		GridColumnsMobile int    `json:"grid_columns_mobile"`
+		ProjectName       string `json:"project_name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -76,9 +79,9 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, grid_columns_pc, grid_columns_tablet, grid_columns_mobile, COALESCE(theme, 'system')
+	err := h.DB.QueryRow(`SELECT accent_color, language, grid_columns_pc, grid_columns_tablet, grid_columns_mobile, COALESCE(theme, 'system'), COALESCE(project_name, 'CSH Dashboard')
 		FROM users WHERE username=?`, username).Scan(
-		&current.AccentColor, &current.Language, &current.GridColumnsPC, &current.GridColumnsTablet, &current.GridColumnsMobile, &current.Theme)
+		&current.AccentColor, &current.Language, &current.GridColumnsPC, &current.GridColumnsTablet, &current.GridColumnsMobile, &current.Theme, &current.ProjectName)
 
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
@@ -103,12 +106,15 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	if input.GridColumnsMobile > 0 {
 		current.GridColumnsMobile = input.GridColumnsMobile
 	}
+	if input.ProjectName != "" {
+		current.ProjectName = input.ProjectName
+	}
 
 	_, err = h.DB.Exec(`UPDATE users SET accent_color=?, language=?, theme=?,
-		grid_columns_pc=?, grid_columns_tablet=?, grid_columns_mobile=? 
+		grid_columns_pc=?, grid_columns_tablet=?, grid_columns_mobile=?, project_name=?
 		WHERE username=?`,
 		current.AccentColor, current.Language, current.Theme,
-		current.GridColumnsPC, current.GridColumnsTablet, current.GridColumnsMobile, username)
+		current.GridColumnsPC, current.GridColumnsTablet, current.GridColumnsMobile, current.ProjectName, username)
 
 	if err != nil {
 		http.Error(w, "Failed to update preferences", http.StatusInternalServerError)

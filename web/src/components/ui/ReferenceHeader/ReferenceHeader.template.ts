@@ -1,6 +1,7 @@
 /**
  * ReferenceHeader Component Template
  */
+import { i18n } from '../../../services/i18n';
 
 export const template = ({ title, dropdownOpen }: { title: string, dropdownOpen: boolean }) => `
     <header class="header">
@@ -10,7 +11,7 @@ export const template = ({ title, dropdownOpen }: { title: string, dropdownOpen:
 
         <div class="header__group">
             <button class="header__btn-changelog">
-                <span>View Changelog</span>
+                <span>${i18n.t('header.view_changelog')}</span>
                 <svg class="header__icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -60,9 +61,9 @@ export const template = ({ title, dropdownOpen }: { title: string, dropdownOpen:
                     </svg>
                 </div>
                 <div class="header__dropdown ${dropdownOpen ? 'header__dropdown--active' : ''}" id="profile-dropdown">
-                    <div class="header__dropdown-item">View Profile</div>
-                    <div class="header__dropdown-item">Preferences</div>
-                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: #ff4d4d;">Sign Out</div>
+                    <div class="header__dropdown-item">${i18n.t('header.view_profile')}</div>
+                    <div class="header__dropdown-item">${i18n.t('header.preferences')}</div>
+                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: #ff4d4d;">${i18n.t('auth.sign_out')}</div>
                 </div>
             </div>
         </div>

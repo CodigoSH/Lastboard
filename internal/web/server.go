@@ -2,7 +2,9 @@ package web
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
+	"text/template"
 
 	"github.com/kiwinho/CSH-Dashboard/internal/web/api"
 	"github.com/kiwinho/CSH-Dashboard/internal/web/middleware"
@@ -39,7 +41,17 @@ func (s *Server) routes() {
 
 	// File Server for static assets
 	fs := http.FileServer(http.Dir("./web"))
-	s.Router.Handle("/", protect(fs))
+
+	// Dynamic Index Handler
+	indexHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+			s.serveIndex(w, r)
+		} else {
+			fs.ServeHTTP(w, r)
+		}
+	})
+
+	s.Router.Handle("/", protect(indexHandler))
 
 	// Login Page (Public)
 	s.Router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +98,7 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
 	s.Router.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
+	s.Router.Handle("GET /api/system/stats", protect(http.HandlerFunc(systemHandler.GetStats)))
 
 	// Update API (Atomic Binary Updates)
 	updateHandler := api.NewUpdateHandler()
@@ -95,4 +108,45 @@ func (s *Server) routes() {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.Router.ServeHTTP(w, r)
+}
+
+func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
+	username := middleware.GetUserFromContext(r)
+	var projectName string
+
+	// Default
+	projectName = "CSH Dashboard"
+
+	if username != "" {
+		// Query users table for project_name
+		// Note: project_name column must exist (we ensured this via migration)
+		err := s.DB.QueryRow("SELECT project_name FROM users WHERE username = ?", username).Scan(&projectName)
+		if err != nil {
+			// If error (e.g. no column or no user found), stick to default
+			// In production, we might log only critical DB errors
+			if err != sql.ErrNoRows {
+				log.Printf("Error fetching project name for %s: %v", username, err)
+			}
+		}
+	}
+
+	// Parse template
+	// In production, templates should be parsed once at startup for performance,
+	// but for this task/scale, parsing per request allows hot-reload of HTML.
+	tmpl, err := template.ParseFiles("./web/index.html")
+	if err != nil {
+		log.Printf("Error loading template: %v", err)
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		ProjectName string
+	}{
+		ProjectName: projectName,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing template: %v", err)
+	}
 }

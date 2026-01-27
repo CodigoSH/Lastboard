@@ -1,0 +1,190 @@
+
+import { i18n } from '../../services/i18n';
+import { dashboardStore } from '../../store/dashboardStore';
+
+class ClockWidget extends HTMLElement {
+    private timer: any;
+    private timeEl: HTMLElement | null = null;
+    private dateEl: HTMLElement | null = null;
+    private _unsubscribe: (() => void) | null = null;
+
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+    }
+
+    /* old methods removed, replaced below */
+
+    private isEditing: boolean = false;
+    private configMode: boolean = false;
+    private _config: { timezone: string, hour12: boolean, showDate: boolean } = { timezone: 'local', hour12: false, showDate: true };
+    private _itemId: number = 0;
+
+    static get observedAttributes() {
+        return ['item-id', 'content', 'mode']; // 'mode' for checking edit state if passed, or we subscribe
+    }
+
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+        if (name === 'item-id') this._itemId = parseInt(newValue);
+        if (name === 'content') {
+            try {
+                const data = typeof newValue === 'string' ? JSON.parse(newValue) : newValue;
+                if (data && typeof data === 'object') {
+                    // Merge defaults
+                    this._config = { ...this._config, ...data };
+                    this.updateTime();
+                }
+            } catch (e) { }
+        }
+    }
+
+    connectedCallback() {
+        this.render();
+        this.updateTime();
+
+        // 1. Time Update Interval
+        this.timer = setInterval(() => {
+            this.updateTime();
+        }, 1000);
+
+        // 2. Store Subscription (Reactivity)
+        this._unsubscribe = dashboardStore.subscribe((state) => {
+            // Edit Mode Sync
+            if (this.isEditing !== state.isEditing) {
+                this.isEditing = state.isEditing;
+                this.render();
+            }
+
+            // Content Sync
+            if (this._itemId) {
+                const item = state.items.find(i => i.id === this._itemId);
+                if (item && item.content) {
+                    try {
+                        const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+                        if (data.widgetId === 'clock') {
+                            this._config = { ...this._config, ...data };
+                            // Force immediate update of display
+                            this.updateTime();
+                        }
+                    } catch (e) { }
+                }
+            }
+        });
+    }
+
+    disconnectedCallback() {
+        if (this._unsubscribe) this._unsubscribe();
+        if (this.timer) clearInterval(this.timer);
+    }
+
+    updateTime() {
+        if (!this.timeEl || !this.dateEl) return;
+        const now = new Date();
+
+        // Time Options
+        const opts: Intl.DateTimeFormatOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: this._config.hour12
+        };
+
+        let timeZone = undefined;
+        if (this._config.timezone && this._config.timezone !== 'local') {
+            timeZone = this._config.timezone;
+        }
+
+        // Use 'en-US' for Time to ensure clean "AM/PM" output when 12h is active,
+        // otherwise system locale might give "a. m."
+        const timeLocale = this._config.hour12 ? 'en-US' : undefined;
+
+        try {
+            const formatter = new Intl.DateTimeFormat(timeLocale, {
+                ...opts,
+                timeZone
+            });
+
+            const parts = formatter.formatToParts(now);
+
+            const timeHTML = parts.map(p => {
+                if (p.type === 'dayPeriod') {
+                    // Clean up just in case (uppercase, remove dots)
+                    const val = p.value.toUpperCase().replace(/\./g, '').trim();
+                    return `<span class="ampm">${val}</span>`;
+                }
+                return p.value;
+            }).join('');
+
+            this.timeEl.innerHTML = timeHTML;
+
+        } catch (e) {
+            // Fallback
+            this.timeEl.textContent = now.toLocaleTimeString();
+        }
+
+        // Date Logic (Keep existing, but ensure timezone)
+        if (this._config.showDate) {
+            const dateOpts: Intl.DateTimeFormatOptions = {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                timeZone
+            };
+            this.dateEl.textContent = now.toLocaleDateString(undefined, dateOpts);
+            this.dateEl.style.display = 'block';
+        } else {
+            this.dateEl.style.display = 'none';
+        }
+    }
+
+    render() {
+        if (!this.shadowRoot) return;
+
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(30, 30, 35, 0.6);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    
+                    color: var(--text-main);
+                    border-radius: var(--radius);
+                    box-sizing: border-box;
+                    padding: 16px;
+                    user-select: none;
+                    position: relative;
+                }
+                .time {
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    letter-spacing: -0.05em;
+                    line-height: 1;
+                    font-variant-numeric: tabular-nums;
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .date {
+                    font-size: 0.9rem;
+                    color: var(--text-dim);
+                    margin-top: 4px;
+                    font-weight: 500;
+                }
+            </style>
+            
+            <div class="time">--:--:--</div>
+            <div class="date">-- --</div>
+        `;
+
+        this.timeEl = this.shadowRoot.querySelector('.time');
+        this.dateEl = this.shadowRoot.querySelector('.date');
+    }
+}
+
+customElements.define('widget-clock', ClockWidget);

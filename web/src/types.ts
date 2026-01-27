@@ -12,6 +12,7 @@ export interface UserPreferences {
     grid_columns_tablet?: number;
     grid_columns_mobile?: number;
     avatar_url?: string;
+    project_name?: string;
 }
 
 export interface User {
@@ -26,6 +27,7 @@ export interface User {
     grid_columns_pc?: number;
     grid_columns_tablet?: number;
     grid_columns_mobile?: number;
+    project_name?: string;
     preferences?: UserPreferences; // Derived on client
 }
 
@@ -37,6 +39,7 @@ export interface GridItem {
     y: number;
     w: number;
     h: number;
+    url?: string; // Added for widget compatibility
     content: any; // JSON string or object depending on context
     created_at?: string;
 }

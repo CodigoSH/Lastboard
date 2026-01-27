@@ -53,6 +53,57 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: {
 
 // ... renderBookmarkCard stays mostly the same ...
 function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
+    // Check for Widget Type
+    if (b.type === 'widget') {
+        // Data should look like { widgetId: 'clock', ... } or similar.
+        // Actually, if we follow the creation logic, we'll store the widget registry ID in 'content.widgetId' 
+        // OR we just set b.type = 'widget' but we need to know WHICH widget.
+        // Let's assume content: { widgetId: 'clock', ...otherProps }
+
+        // Fix: If no widgetId in content, fallback or error?
+        // We might use a helper to look it up.
+
+        const widgetId = data.widgetId;
+        // Dynamic tag mapping
+        const tagMap: Record<string, string> = {
+            'clock': 'widget-clock',
+            'notepad': 'widget-notepad',
+            'telemetry': 'widget-telemetry'
+        };
+
+        // Fallback or Registry Lookup (we could import registry here too, but simple map is safer for now? 
+        // No, imports are cheap).
+        // Let's assume we mapped it.
+        const tagName = tagMap[widgetId] || 'div';
+
+        // For Notepad, we pass 'content' attribute. For others, maybe specific props.
+        // We serialize `content` (which includes widgetId and other data) back to string 
+        // or pass specific properties.
+        // Provide item-id for persisting
+        const dataContent = data.text || ''; // Specific for Notepad?
+
+        return `
+            <div class="bookmark-grid__card"
+                draggable="${isEditing}"
+                data-id="${b.id}"
+                style="--x: ${b.x}; --y: ${b.y}; --w: ${b.w}; --h: ${b.h}; cursor: ${isEditing ? 'move' : 'default'};">
+                
+                <${tagName} 
+                    item-id="${b.id}"
+                    ${widgetId === 'notepad' ? `content="${dataContent}"` : ''}
+                ></${tagName}>
+
+                ${isEditing ? `
+                <div class="bookmark-actions">
+                     ${widgetId === 'clock' ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
+                     <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
+                </div>
+                <div class="resize-handle"></div>
+                ` : ''}
+            </div>
+         `;
+    }
+
     const icon = data.icon || '';
     const isIconUrl = icon.startsWith('http') || icon.startsWith('/');
     const iconHtml = isIconUrl

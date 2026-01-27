@@ -269,38 +269,36 @@ class DashboardStore {
         try {
             console.log('[DashboardStore] Adding item:', newItem);
             this.ensureItemsIsArray();
-            console.log('[DashboardStore] Items is array:', Array.isArray(this.state.items), 'Length:', this.state.items.length);
 
-            // Generate temporary ID for optimistic update
-            const tempId = Date.now();
-            const optimisticItem: GridItem = {
-                ...newItem,
-                id: tempId,
-                created_at: new Date().toISOString()
-            };
-
-            // Optimistic update
-            this.state.items.push(optimisticItem);
-            console.log('[DashboardStore] Item added, new length:', this.state.items.length);
-            this.saveToLocalStorage();
-            this.notify();
-
-            // Sync with backend
+            // Sync with backend FIRST
+            // We wait for the backend to return the real ID to ensure consistency.
             try {
-                const createdItem = await dashboardService.createItem(newItem);
-                this.state.isOffline = false;
-                // Replace temporary item with real item from backend
-                const itemIndex = this.state.items.findIndex(item => item.id === tempId);
-                if (itemIndex !== -1) {
-                    this.state.items[itemIndex] = createdItem;
-                    this.saveToLocalStorage();
-                    this.notify();
+                // Compatibility Fix: Ensure URL is empty string for widgets
+                const payload: any = { ...newItem };
+                if (payload.type === 'widget' && !payload.url) {
+                    payload.url = '';
                 }
-            } catch (apiError) {
-                // Backend not available, keep optimistic item with temp ID
-                console.log('[DashboardStore] Backend not available, using client-side ID');
-                this.state.isOffline = true;
+
+                const createdItem = await dashboardService.createItem(payload);
+                this.state.isOffline = false;
+
+                // Add the REAL item from backend
+                this.state.items.push(createdItem);
+                console.log('[DashboardStore] Item added (Synced), new length:', this.state.items.length);
+                this.saveToLocalStorage();
                 this.notify();
+            } catch (apiError) {
+                // If backend fails, we do NOT add it optimistically for widgets/new items to avoid "ghost" items
+                // that can't be saved. Or we can fallback to offline mode if truly offline.
+                console.error('[DashboardStore] Failed to add item to backend', apiError);
+
+                // Optional: Show error notification here
+                // For now, we fall back to offline mode for robustness ONLY if network error,
+                // but if 400 Bad Request, we should abort.
+                // Since apiService throws generic errors, we can check message or type if available.
+                // For safety in this "Fix" task, we will NOT add it if it fails validation (400).
+                // If it's a network error (isOffline usually true), we could allow it,
+                // but let's stick to "wait for success" as requested.
             }
         } catch (error) {
             console.error('[DashboardStore] Error adding item', error);

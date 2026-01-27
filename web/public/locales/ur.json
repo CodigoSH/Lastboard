@@ -67,6 +67,8 @@
   "settings.personalization": "ذاتی بنانا",
   "settings.users": "صارفین",
   "settings.advanced": "اعلی درجے کی",
+  "settings.project_name": "پروجیکٹ کا نام",
+  "settings.project_name_desc": "اوپری بار میں دکھائے جانے والے ایپلیکیشن کا نام حسب ضرورت بنائیں۔",
   "settings.interface_title": "انٹرفیس / گرڈ ڈھانچہ",
   "settings.grid_pc": "پی سی کالم",
   "settings.grid_tablet": "ٹیبلٹ کالم",
@@ -147,5 +149,12 @@
   "settings.role_admin": "ایڈمن",
   "settings.default_user": "صارف",
   "settings.default_role": "ایڈمنسٹریٹر",
-  "general.no_icons": "کوئی آئیکون نہیں ملا"
+  "general.no_icons": "کوئی آئیکون نہیں ملا",
+  "header.view_changelog": "تبدیلی لاگ دیکھیں",
+  "header.view_profile": "پروفائل دیکھئے",
+  "header.preferences": "ترجیحات",
+  "auth.sign_out": "سائن آؤٹ",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "محفوظ ڈاؤن لوڈ شروع ہو رہا ہے...",
+  "status.offline": "آف لائن"
 }

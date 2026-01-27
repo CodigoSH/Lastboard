@@ -67,6 +67,8 @@
   "settings.personalization": "Εξατομίκευση",
   "settings.users": "Χρήστες",
   "settings.advanced": "Προχωρημένα",
+  "settings.project_name": "Όνομα Έργου",
+  "settings.project_name_desc": "Προσαρμόστε το όνομα της εφαρμογής που εμφανίζεται στην επάνω γραμμή.",
   "settings.interface_title": "Διεπαφή / Αρχιτεκτονική πλέγματος",
   "settings.grid_pc": "Στήλες PC",
   "settings.grid_tablet": "Στήλες Tablet",
@@ -147,5 +149,12 @@
   "settings.role_admin": "Διαχειριστής",
   "settings.default_user": "Χρήστης",
   "settings.default_role": "Διαχειριστής",
-  "general.no_icons": "Δεν βρέθηκαν εικονίδια"
+  "general.no_icons": "Δεν βρέθηκαν εικονίδια",
+  "header.view_changelog": "Προβολή αρχείου αλλαγών",
+  "header.view_profile": "Προβολή προφίλ",
+  "header.preferences": "Προτιμήσεις",
+  "auth.sign_out": "Αποσύνδεση",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "Έναρξη ασφαλούς λήψης...",
+  "status.offline": "Εκτός σύνδεσης"
 }

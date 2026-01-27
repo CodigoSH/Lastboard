@@ -1,9 +1,11 @@
 package api
 
 import (
+	"bytes"
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -41,7 +43,8 @@ type SectionContent struct {
 
 // GetDashboard returns the list of items
 func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.DB.Query("SELECT id, parent_id, type, x, y, w, h, content FROM items")
+	// Include url in selection
+	rows, err := h.DB.Query("SELECT id, parent_id, type, x, y, w, h, content, url FROM items")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -51,17 +54,24 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 	var items []dashboard.Item
 	for rows.Next() {
 		var i dashboard.Item
-		// Scan content as string for now, but client expects object?
-		// User struct has Content string.
-		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
+		// Scan url as well (it may be null in DB, so we scan into sql.NullString if we wanted to be safe,
+		// but Scan handles NULL to *string or string differently.
+		// Let's assume standard behavior: if NULL, string becomes "".
+		// Actually, `Scan` into `string` fails on NULL. We need a workaround or sql.NullString.
+		// For simplicity/speed in this legacy fix, let's use a temporary pointer or sql.NullString.
+		var urlSql sql.NullString
+
+		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &urlSql); err != nil {
 			log.Printf("Scan error: %v", err)
 			continue
+		}
+		if urlSql.Valid {
+			i.Url = urlSql.String
 		}
 		items = append(items, i)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	// If empty, return empty array, not null
 	if items == nil {
 		items = []dashboard.Item{}
 	}
@@ -70,10 +80,24 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 
 func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	var item dashboard.Item
+
+	// Read full body for debugging
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	log.Printf("[CreateItem] Raw JSON received: %s", string(bodyBytes))
+
 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+		log.Printf("[CreateItem] JSON Decode Error: %v", err)
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("[CreateItem] Received item: %+v", item)
 
 	// Validate Content
 	if err := validateContent(item.Type, item.Content); err != nil {
@@ -81,9 +105,11 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.DB.Exec("INSERT INTO items (parent_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content)
+	// Insert including URL
+	res, err := h.DB.Exec("INSERT INTO items (parent_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url)
 	if err != nil {
+		log.Printf("[CreateItem] DB Insert Error: %v", err)
 		http.Error(w, "Failed to create", http.StatusInternalServerError)
 		return
 	}
@@ -119,6 +145,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		Content     *string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		log.Printf("[UpdateItem] JSON Decode Error: %v", err)
 		http.Error(w, "Invalid body", http.StatusBadRequest)
 		return
 	}
@@ -296,6 +323,8 @@ func validateContent(itemType string, contentJson string) error {
 		if err := json.Unmarshal([]byte(contentJson), &c); err != nil {
 			return err
 		}
+	case "widget":
+		return nil // Explicitly allow widgets without further validation per user request
 	}
 	return nil
 }

@@ -40,7 +40,8 @@ class SettingsContent extends HTMLElement {
         const u = userStore.getUser();
         if (u && u.preferences) {
             this.prefs = {
-                ...u.preferences
+                ...u.preferences,
+                project_name: u.project_name || u.preferences.project_name || 'CSH Dashboard'
             };
             this.render();
         }

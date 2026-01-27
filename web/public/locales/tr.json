@@ -67,6 +67,8 @@
   "settings.personalization": "Kişiselleştirme",
   "settings.users": "Kullanıcılar",
   "settings.advanced": "Gelişmiş",
+  "settings.project_name": "Proje Adı",
+  "settings.project_name_desc": "Üst çubukta görüntülenen uygulama adını özelleştirin.",
   "settings.interface_title": "Arayüz / Izgara Mimarisi",
   "settings.grid_pc": "PC Sütunları",
   "settings.grid_tablet": "Tablet Sütunları",
@@ -147,5 +149,12 @@
   "settings.role_admin": "Admin",
   "settings.default_user": "Kullanıcı",
   "settings.default_role": "Yönetici",
-  "general.no_icons": "Simge bulunamadı"
+  "general.no_icons": "Simge bulunamadı",
+  "header.view_changelog": "Değişiklik Günlüğünü Görüntüle",
+  "header.view_profile": "Profili Görüntüle",
+  "header.preferences": "Tercihler",
+  "auth.sign_out": "Çıkış Yap",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "Güvenli indirme başlatılıyor...",
+  "status.offline": "Çevrimdışı"
 }

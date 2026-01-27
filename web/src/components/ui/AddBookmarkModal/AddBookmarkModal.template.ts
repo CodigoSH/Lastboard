@@ -15,7 +15,9 @@ export const template = ({ isOpen, isEditMode }: AddBookmarkModalData) => `
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">${isEditMode ? i18n.t('bookmark.edit') : i18n.t('bookmark.add')}</h2>
-                <button class="modal-close" id="modal-close">×</button>
+                <button class="modal-close" id="modal-close">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
             </div>
             <form class="modal-form" id="bookmark-form">
                 <div class="form-group">
@@ -35,7 +37,6 @@ export const template = ({ isOpen, isEditMode }: AddBookmarkModalData) => `
                     <label for="bookmark-status" style="margin: 0; cursor: pointer;">${i18n.t('bookmark.monitor_status')}</label>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-cancel" id="btn-cancel">${i18n.t('general.cancel')}</button>
                     <button type="submit" class="btn-submit">${i18n.t('general.save')}</button>
                 </div>
             </form>

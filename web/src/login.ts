@@ -2,9 +2,10 @@
 import './components/ui/Paper/Paper';
 import './components/ui/Button/Button';
 import { i18n } from './services/i18n';
+import { bootstrap } from './core/bootstrap';
 
 // Logic
-document.addEventListener('DOMContentLoaded', () => {
+bootstrap(async () => {
     const form = document.getElementById('loginForm') as HTMLFormElement;
     const feedback = document.getElementById('feedback') as HTMLElement;
     const submitBtn = document.getElementById('submitBtn') as any;

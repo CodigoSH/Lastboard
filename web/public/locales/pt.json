@@ -67,6 +67,8 @@
   "settings.personalization": "Personalização",
   "settings.users": "Usuários",
   "settings.advanced": "Avançado",
+  "settings.project_name": "Nome do Projeto",
+  "settings.project_name_desc": "Personalize o nome do aplicativo exibido na barra superior.",
   "settings.interface_title": "Interface / Arquitetura de Grade",
   "settings.grid_pc": "Colunas PC",
   "settings.grid_tablet": "Colunas Tablet",
@@ -147,5 +149,12 @@
   "settings.role_admin": "Admin",
   "settings.default_user": "Usuário",
   "settings.default_role": "Administrador",
-  "general.no_icons": "Nenhum ícone encontrado"
+  "general.no_icons": "Nenhum ícone encontrado",
+  "header.view_changelog": "Ver Registro de Alterações",
+  "header.view_profile": "Ver Perfil",
+  "header.preferences": "Preferências",
+  "auth.sign_out": "Sair",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "Iniciando download seguro...",
+  "status.offline": "Offline"
 }

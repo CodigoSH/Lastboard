@@ -67,6 +67,8 @@
   "settings.personalization": "个性化",
   "settings.users": "用户",
   "settings.advanced": "高级",
+  "settings.project_name": "项目名称",
+  "settings.project_name_desc": "自定义顶部栏中显示的应用程序名称。",
   "settings.interface_title": "界面 / 网格架构",
   "settings.grid_pc": "PC 列数",
   "settings.grid_tablet": "平板列数",
@@ -147,5 +149,12 @@
   "settings.role_admin": "管理员",
   "settings.default_user": "用户",
   "settings.default_role": "管理员",
-  "general.no_icons": "未找到图标"
+  "general.no_icons": "未找到图标",
+  "header.view_changelog": "查看更新日志",
+  "header.view_profile": "查看个人资料",
+  "header.preferences": "首选项",
+  "auth.sign_out": "退出",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "正在开始安全下载...",
+  "status.offline": "离线"
 }

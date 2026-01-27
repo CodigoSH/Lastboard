@@ -19,6 +19,10 @@ class TopBar extends HTMLElement {
     _unsubscribeI18n: (() => void) | undefined;
     _windowClickHandler: ((e: Event) => void) | undefined;
 
+    static get observedAttributes() {
+        return ['title'];
+    }
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -29,6 +33,12 @@ class TopBar extends HTMLElement {
             drawerOpen: false,
             searchQuery: ''
         };
+    }
+
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+        if (name === 'title' && oldValue !== newValue) {
+            this.render();
+        }
     }
 
     connectedCallback() {

@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kiwinho/CSH-Dashboard/internal/web/middleware"
@@ -250,4 +253,240 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Factory reset complete."})
+}
+
+// Data Structures for Stats
+type SystemStats struct {
+	CPUUsage    float64 `json:"cpu_usage"`
+	RAMUsage    float64 `json:"ram_usage"`
+	RAMTotal    uint64  `json:"ram_total"`
+	RAMUsed     uint64  `json:"ram_used"`
+	Temperature float64 `json:"temperature"`
+}
+
+// GET /api/system/stats
+func (h *SystemHandler) GetStats(w http.ResponseWriter, r *http.Request) {
+	// 1. Read /proc/stat for CPU
+	// Simplified: LoadAvg 1min mapped to 0-100% per core?
+	// Or better: Read /proc/loadavg directly as it's easier stateless
+	// But /proc/stat is requested. Let's do a simple calculation or just use LoadAvg for reliability in stateless.
+	// Actually, let's try to read /proc/loadavg for simplicity and robustness first.
+	// "Requirement: Read directly from /proc/stat (CPU)" - User asked for /proc/stat.
+	// We will read /proc/loadavg for now as a reliable proxy for "Load", or implement a delta if we can.
+	// Let's stick to Parsing /proc/meminfo and /proc/loadavg for robustness in this step,
+	// as calculating CPU % from /proc/stat requires state (prevReading) which is complex to add to a running struct quickly.
+	// Pivot: User explicitly asked for /proc/stat. I will implement a detailed reader.
+
+	stats := SystemStats{}
+
+	// RAM: /proc/meminfo
+	if mem, err := readMemInfo(); err == nil {
+		stats.RAMTotal = mem.Total
+		stats.RAMUsed = mem.Used
+		if mem.Total > 0 {
+			stats.RAMUsage = (float64(mem.Used) / float64(mem.Total)) * 100
+		}
+	}
+
+	// CPU: /proc/loadavg (Safe fallback for "CPU Usage" in a stateless request)
+	// OR /proc/stat snapshot.
+	// Let's use LoadAvg normalized by NumCPU (runtime.NumCPU())?
+	// User said: Read directly from /proc/stat.
+	// I'll parse the first line of /proc/stat.
+	// To get a % we need two samples. I'll take a sample, sleep 100ms, take another (simplest "stateless" approach).
+	if cpu, err := calculateCPUUsage(200 * time.Millisecond); err == nil {
+		stats.CPUUsage = cpu
+	}
+
+	// Temp: /sys/class/thermal/thermal_zone0/temp
+	if temp, err := readTemp(); err == nil {
+		stats.Temperature = temp
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
+// Helpers
+
+type MemInfo struct {
+	Total uint64
+	Free  uint64
+	Avail uint64
+	Used  uint64
+}
+
+func readMemInfo() (MemInfo, error) {
+	// Parse /proc/meminfo
+	// MemTotal:       32768400 kB
+	// MemAvailable:   22341200 kB
+	// ...
+	content, err := stdReadFile("/proc/meminfo")
+	if err != nil {
+		return MemInfo{}, err
+	}
+
+	var m MemInfo
+	lines := stdSplitLines(string(content))
+	for _, line := range lines {
+		fields := stdFields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		val := parseKB(fields[1])
+		switch fields[0] {
+		case "MemTotal:":
+			m.Total = val
+		case "MemFree:":
+			m.Free = val
+		case "MemAvailable:":
+			m.Avail = val
+		}
+	}
+
+	// Used = Total - Available (if available exists, else Free)
+	if m.Avail > 0 {
+		m.Used = m.Total - m.Avail
+	} else {
+		m.Used = m.Total - m.Free
+	}
+	return m, nil
+}
+
+func calculateCPUUsage(interval time.Duration) (float64, error) {
+	readStat := func() (idle, total uint64, err error) {
+		content, err := stdReadFile("/proc/stat")
+		if err != nil {
+			return 0, 0, err
+		}
+		// cpu  224 0 234 234234 23 ...
+		lines := stdSplitLines(string(content))
+		if len(lines) == 0 {
+			return 0, 0, fmt.Errorf("empty stat")
+		}
+		fields := stdFields(lines[0])
+		if len(fields) < 5 || fields[0] != "cpu" {
+			return 0, 0, fmt.Errorf("bad stat format")
+		}
+
+		// user + nice + system + idle + iowait + irq + softirq + steal
+		var sum uint64
+		for _, v := range fields[1:] {
+			n, _ := stdParseUint(v)
+			sum += n
+		}
+		idleVal, _ := stdParseUint(fields[4]) // 4th number (index 1-based in man, 4 in 0-based slice after 'cpu' removed? No 'cpu' is index 0. user=1, nice=2, system=3, idle=4)
+		return idleVal, sum, nil
+	}
+
+	idle1, total1, err := readStat()
+	if err != nil {
+		return 0, err
+	}
+
+	time.Sleep(interval)
+
+	idle2, total2, err := readStat()
+	if err != nil {
+		return 0, err
+	}
+
+	idleDelta := float64(idle2 - idle1)
+	totalDelta := float64(total2 - total1)
+
+	if totalDelta == 0 {
+		return 0, nil
+	}
+
+	return 100.0 * (1.0 - idleDelta/totalDelta), nil
+}
+
+func readTemp() (float64, error) {
+	// Scan /sys/class/thermal/ for all zones
+	entries, err := os.ReadDir("/sys/class/thermal")
+	if err != nil {
+		return 0, nil
+	}
+
+	var bestTemp float64 = 0
+
+	for _, entry := range entries {
+		if !strings.HasPrefix(entry.Name(), "thermal_zone") {
+			continue
+		}
+
+		path := "/sys/class/thermal/" + entry.Name()
+
+		// 1. Read Type
+		typeBytes, err := os.ReadFile(path + "/type")
+		if err != nil {
+			continue
+		}
+		sensorType := strings.TrimSpace(string(typeBytes))
+
+		// 2. Read Temp
+		tempBytes, err := os.ReadFile(path + "/temp")
+		if err != nil {
+			continue
+		}
+		tempRaw, err := strconv.ParseFloat(strings.TrimSpace(string(tempBytes)), 64)
+		if err != nil {
+			continue
+		}
+
+		tempC := tempRaw / 1000.0
+
+		// Priority 1: Explicit CPU match (Return immediately)
+		if sensorType == "x86_pkg_temp" || sensorType == "cpu-thermal" || sensorType == "k10temp" {
+			return tempC, nil
+		}
+
+		// Priority 2: Highest non-excluded temp
+		// Exclude: wifi, battery, wireless
+		s := strings.ToLower(sensorType)
+		if !strings.Contains(s, "wifi") &&
+			!strings.Contains(s, "battery") &&
+			!strings.Contains(s, "wireless") {
+			if tempC > bestTemp {
+				bestTemp = tempC
+			}
+		}
+	}
+
+	return bestTemp, nil
+}
+
+// Wrapper to avoid importing io/ioutil or os in signature if not needed,
+// but we need imports.
+// I will rely on standard library imports added to the file.
+// Assuming 'os' and 'strings' and 'strconv' need to be imported.
+// Since replace_file_content cannot add imports easily if they are missing at top,
+// I will rewrite the top of the file to include them.
+
+// Std lib wrappers to support the logic above
+func stdReadFile(path string) ([]byte, error) {
+	return os.ReadFile(path)
+}
+
+func stdSplitLines(s string) []string {
+	return strings.Split(s, "\n")
+}
+
+func stdFields(s string) []string {
+	return strings.Fields(s)
+}
+
+func parseKB(s string) uint64 {
+	// "32768 kB" -> remove kB
+	s = strings.TrimSuffix(s, " kB")
+	v, _ := strconv.ParseUint(s, 10, 64)
+	return v * 1024 // return bytes
+}
+
+func stdParseUint(s string) (uint64, error) {
+	return strconv.ParseUint(s, 10, 64)
+}
+
+func stdTrimSpace(s string) string {
+	return strings.TrimSpace(s)
 }

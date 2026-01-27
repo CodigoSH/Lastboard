@@ -67,6 +67,8 @@
   "settings.personalization": "ব্যক্তিগতকরণ",
   "settings.users": "ইউজার",
   "settings.advanced": "অ্যাডভান্সড",
+  "settings.project_name": "প্রজেক্টের নাম",
+  "settings.project_name_desc": "শীर्ष বারে প্রদর্শিত অ্যাপ্লিকেশনটির নাম কাস্টমাইজ করুন।",
   "settings.interface_title": "ইন্টারফেস / গ্রিড আর্কিটেকচার",
   "settings.grid_pc": "পিসি কলাম (PC Columns)",
   "settings.grid_tablet": "ট্যাবলেট কলাম",
@@ -147,5 +149,12 @@
   "settings.role_admin": "অ্যাডমিন",
   "settings.default_user": "ব্যবহারকারী",
   "settings.default_role": "প্রশাসক",
-  "general.no_icons": "কোনো আইকন পাওয়া যায়নি"
+  "general.no_icons": "কোনো আইকন পাওয়া যায়নি",
+  "header.view_changelog": "পরিবর্তন লগ দেখুন",
+  "header.view_profile": "প্রোফাইল দেখুন",
+  "header.preferences": "পছন্দসমূহ",
+  "auth.sign_out": "সাইন আউট",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "নিরাপদ ডাউনলোড শুরু হচ্ছে...",
+  "status.offline": "অফলাইন"
 }

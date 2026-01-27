@@ -55,23 +55,25 @@
 }
 
 .modal-close {
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-dim);
-    font-size: 28px;
-    line-height: 1;
+    padding: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s;
+    width: 36px;
+    height: 36px;
 }
 
 .modal-close:hover {
-    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+    color: #ff4757;
+    border-color: rgba(255, 71, 87, 0.3);
 }
 
 .modal-form {

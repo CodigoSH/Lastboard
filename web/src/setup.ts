@@ -1,9 +1,10 @@
 import './components/ui/Paper/Paper';
 import './components/ui/Button/Button';
 import { i18n } from './services/i18n';
+import { bootstrap } from './core/bootstrap';
 
 // Wait for DOM
-document.addEventListener('DOMContentLoaded', () => {
+bootstrap(async () => {
     const form = document.getElementById('setupForm') as HTMLFormElement;
     const btn = document.getElementById('submitBtn') as HTMLElement;
     const usernameInput = document.getElementById('username') as HTMLInputElement;

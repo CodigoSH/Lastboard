@@ -67,6 +67,8 @@
   "settings.personalization": "वैयक्तिकरण",
   "settings.users": "उपयोगकर्ता",
   "settings.advanced": "उन्नत",
+  "settings.project_name": "प्रोजेक्ट का नाम",
+  "settings.project_name_desc": "शीर्ष पट्टी में प्रदर्शित एप्लिकेशन नाम को अनुकूलित करें।",
   "settings.interface_title": "इंटरफ़ेस / ग्रिड वास्तुकला",
   "settings.grid_pc": "PC कॉलम",
   "settings.grid_tablet": "टैबलेट कॉलम",
@@ -147,5 +149,12 @@
   "settings.role_admin": "एडमिन",
   "settings.default_user": "उपयोगकर्ता",
   "settings.default_role": "व्यवस्थापक",
-  "general.no_icons": "कोई आइकन नहीं मिला"
+  "general.no_icons": "कोई आइकन नहीं मिला",
+  "header.view_changelog": "परिवर्तन लॉग देखें",
+  "header.view_profile": "प्रोफ़ाइल देखें",
+  "header.preferences": "प्राथमिकताएं",
+  "auth.sign_out": "साइन आउट",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "सुरक्षित डाउनलोड शुरू हो रहा है...",
+  "status.offline": "ऑफ़लाइन"
 }

@@ -67,6 +67,8 @@
   "settings.personalization": "Персонализация",
   "settings.users": "Пользователи",
   "settings.advanced": "Дополнительно",
+  "settings.project_name": "Название проекта",
+  "settings.project_name_desc": "Настройте имя приложения, отображаемое в верхней панели.",
   "settings.interface_title": "Интерфейс / Архитектура сетки",
   "settings.grid_pc": "Столбцы ПК",
   "settings.grid_tablet": "Столбцы планшета",
@@ -147,5 +149,12 @@
   "settings.role_admin": "Админ",
   "settings.default_user": "Пользователь",
   "settings.default_role": "Администратор",
-  "general.no_icons": "Иконки не найдены"
+  "general.no_icons": "Иконки не найдены",
+  "header.view_changelog": "Просмотреть список изменений",
+  "header.view_profile": "Просмотреть профиль",
+  "header.preferences": "Настройки",
+  "auth.sign_out": "Выйти",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "Запуск безопасной загрузки...",
+  "status.offline": "Оффлайн"
 }

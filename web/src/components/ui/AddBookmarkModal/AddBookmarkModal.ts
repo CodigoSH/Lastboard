@@ -36,9 +36,9 @@ class AddBookmarkModal extends HTMLElement {
                 return;
             }
 
-            // Close button
-            if (target.id === 'modal-close' || target.id === 'btn-cancel') {
-                console.log('[Modal] Cancel/Close clicked');
+            // Close button (X)
+            if (target.closest('#modal-close')) {
+                console.log('[Modal] Close button clicked');
                 e.preventDefault();
                 e.stopPropagation();
                 this.close();

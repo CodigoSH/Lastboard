@@ -67,6 +67,8 @@
   "settings.personalization": "التخصيص",
   "settings.users": "المستخدمين",
   "settings.advanced": "متقدم",
+  "settings.project_name": "اسم المشروع",
+  "settings.project_name_desc": "تخصيص اسم التطبيق المعروض في الشريط العلوي.",
   "settings.interface_title": "الواجهة ومعمارية الشبكة",
   "settings.grid_pc": "أعمدة الكمبيوتر",
   "settings.grid_tablet": "أعمدة التابلت",
@@ -147,5 +149,12 @@
   "settings.role_admin": "مسؤول",
   "settings.default_user": "مستخدم",
   "settings.default_role": "مدير النظام",
-  "general.no_icons": "لم يتم العثور على أيقونات"
+  "general.no_icons": "لم يتم العثور على أيقونات",
+  "header.view_changelog": "عرض سجل التغييرات",
+  "header.view_profile": "عرض الملف الشخصي",
+  "header.preferences": "تفضيلات",
+  "auth.sign_out": "خروج",
+  "settings.github": "GitHub",
+  "notifier.downloading_secure": "بدء التنزيل الآمن...",
+  "status.offline": "غير متصل"
 }
