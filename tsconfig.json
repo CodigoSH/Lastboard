@@ -21,5 +21,13 @@
         "types": [
             "bun-types" // add other types if needed
         ]
-    }
+    },
+    "include": [
+        "web/src/**/*",
+        "scripts/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
 }

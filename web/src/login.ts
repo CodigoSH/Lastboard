@@ -1,6 +1,7 @@
 // Import necessary UI components
 import './components/ui/Paper/Paper';
 import './components/ui/Button/Button';
+import { i18n } from './services/i18n';
 
 // Logic
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,6 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submitBtn') as any;
 
     if (!form) return;
+
+    // Localize UI
+    const localize = () => {
+        document.querySelector('h1')!.textContent = i18n.t('auth.welcome');
+        document.querySelector('.subtitle')!.textContent = i18n.t('auth.subtitle');
+        document.querySelector('label[for="username"]')!.textContent = i18n.t('auth.username');
+        document.querySelector('label[for="password"]')!.textContent = i18n.t('auth.password');
+        if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
+    };
+    localize();
 
     // Enable implicit submission via Enter key
     form.addEventListener('keydown', (e) => {
@@ -46,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Login Failed
                 const errorText = await response.text();
-                feedback.textContent = errorText || 'Invalid credentials';
+                feedback.textContent = errorText || i18n.t('auth.invalid_credentials');
                 feedback.style.display = 'block';
                 if (submitBtn) submitBtn.loading = false;
 
@@ -65,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            feedback.textContent = 'Connection error. Please try again.';
+            feedback.textContent = i18n.t('auth.connection_error');
             feedback.style.display = 'block';
             if (submitBtn) submitBtn.loading = false;
         }

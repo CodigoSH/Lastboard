@@ -11,6 +11,8 @@ interface TopBarData {
     searchQuery: string;
 }
 
+import { i18n } from '../../../services/i18n';
+
 export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user }: TopBarData & { user?: { role?: string } }) => {
     const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'Administrator';
     return `
@@ -22,7 +24,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
 
             <!-- Search Bar -->
             <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''}">
-                <input type="text" id="search-input" class="search-input" placeholder="SEARCH..." 
+                <input type="text" id="search-input" class="search-input" placeholder="${i18n.t('general.search')}" 
                        value="${searchQuery || ''}" onclick="event.stopPropagation()">
                 <div id="search-clear" class="search-clear" style="display: ${searchQuery ? 'flex' : 'none'};">×</div>
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -33,7 +35,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
 
             <!-- Add Item Toggle -->
             ${isAdmin ? `
-            <div id="add-toggle" class="top-bar__toggle" title="Add Section or Bookmark" 
+            <div id="add-toggle" class="top-bar__toggle" title="${i18n.t('topbar.add_tooltip')}" 
                  style="${editMode ? 'display: flex;' : 'display: none;'} margin-right: -6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M12 5v14M5 12h14" stroke-width="1.5" stroke-linecap="round" />
@@ -42,12 +44,12 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
 
             <!-- Add Menu Dropdown -->
             <div id="add-menu" class="add-menu ${addMenuActive ? 'add-menu--active' : ''}">
-                <div class="add-menu-item" data-action="add-bookmark">+ Bookmark</div>
-                <div class="add-menu-item" data-action="add-section">+ Section</div>
+                <div class="add-menu-item" data-action="add-bookmark">+ ${i18n.t('action.add_bookmark')}</div>
+                <div class="add-menu-item" data-action="add-section">+ ${i18n.t('action.add_section')}</div>
             </div>
 
             <!-- Edit Mode Toggle -->
-            <div id="edit-toggle" class="top-bar__toggle" title="Toggle Edit Mode" 
+            <div id="edit-toggle" class="top-bar__toggle" title="${i18n.t('topbar.edit_tooltip')}" 
                  style="margin-right: -6px; ${editMode ? 'color: var(--accent);' : ''}">
                 <svg id="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     ${editMode ? `

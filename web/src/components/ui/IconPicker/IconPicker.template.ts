@@ -3,6 +3,7 @@
  */
 
 import { IconInfo } from '../../../services/iconService';
+import { i18n } from '../../../services/i18n';
 
 interface IconPickerData {
     icons: IconInfo[];
@@ -20,7 +21,7 @@ export const layoutContainer = () => `
             <input type="text"
                    id="icon-search"
                    class="icon-picker__search-input"
-                   placeholder="Search icons..." />
+                   placeholder="${i18n.t('general.search')}" />
         </div>
 
         <div id="grid-container" class="icon-picker__grid"></div>
@@ -39,11 +40,11 @@ export const selectedIconTemplate = (selectedIcon: string) => selectedIcon ? `
 
 export const gridTemplate = (icons: IconInfo[], selectedIcon: string, isLoading: boolean) => {
     if (isLoading) {
-        return `<div class="icon-picker__loading">Loading icons...</div>`;
+        return `<div class="icon-picker__loading">${i18n.t('general.loading')}</div>`;
     }
 
     if (icons.length === 0) {
-        return `<div class="icon-picker__empty">No icons found</div>`;
+        return `<div class="icon-picker__empty">${i18n.t('general.no_icons')}</div>`;
     }
 
     return icons.map(icon => `

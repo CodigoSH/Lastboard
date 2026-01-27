@@ -3,6 +3,7 @@
  */
 
 import { GridItem } from '../../../types';
+import { i18n } from '../../../services/i18n';
 
 export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean, isTouchDevice?: boolean }) => {
     // Ensure bookmarks is always an array
@@ -35,7 +36,7 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: {
                </div>
                ${isEditing ? `
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-delete" title="Delete">🗑</button>
+                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
                 </div>
                 <div class="resize-handle"></div>
                ` : ''}
@@ -68,8 +69,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
             
             ${isEditing ? `
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-edit" title="Edit">✎</button>
-                    <button class="action-btn btn-delete" title="Delete">🗑</button>
+                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>
+                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
                 </div>
             ` : ''}
 
@@ -81,7 +82,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
             ${isEditing && b.type === 'section' ? '<div class="resize-handle"></div>' : ''}
             
             ${data.statusCheck ? `
-                <div class="status-indicator" title="Pinging..."></div>
+                <div class="status-indicator" title="${i18n.t('general.pinging')}"></div>
             ` : ''}
         </a>
     `;

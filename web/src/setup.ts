@@ -1,5 +1,6 @@
 import './components/ui/Paper/Paper';
 import './components/ui/Button/Button';
+import { i18n } from './services/i18n';
 
 // Wait for DOM
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,6 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedback = document.getElementById('feedback') as HTMLElement;
 
     if (!form || !btn) return;
+
+    // Localize UI
+    const localize = () => {
+        document.querySelector('h1')!.textContent = i18n.t('app.title');
+        document.querySelector('.subtitle')!.textContent = i18n.t('setup.subtitle');
+        document.querySelector('label[for="username"]')!.textContent = i18n.t('setup.root_user');
+        document.querySelector('label[for="password"]')!.textContent = i18n.t('setup.passkey');
+        if (btn) btn.textContent = i18n.t('setup.create_admin');
+    };
+    localize();
 
     // Shadow DOM Button Fix: Manually trigger form submit
     btn.addEventListener('click', () => {
@@ -26,20 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset state
         feedback.style.display = 'none';
         feedback.textContent = '';
-        btn.textContent = 'Creating Environment...';
+        btn.textContent = i18n.t('setup.creating');
         btn.setAttribute('disabled', 'true');
 
         const username = usernameInput.value.trim();
         const password = passwordInput.value;
 
         if (username.length < 3) {
-            showError('Username must be at least 3 characters');
+            showError(i18n.t('setup.error_username'));
             resetBtn();
             return;
         }
 
         if (password.length < 8) {
-            showError('Password must be at least 8 characters');
+            showError(i18n.t('setup.error_password'));
             resetBtn();
             return;
         }
@@ -54,19 +65,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.ok) {
-                btn.textContent = 'Welcome, Admin';
+                btn.textContent = i18n.t('setup.welcome_admin');
                 btn.style.backgroundColor = 'var(--accent-alt, #00f5a0)';
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 1000);
             } else {
                 const text = await response.text();
-                showError(`Setup Failed: ${text}`);
+                showError(`${i18n.t('setup.failed')}: ${text}`);
                 resetBtn();
             }
         } catch (err) {
             console.error(err);
-            showError('Connection Error. Please check the server logs.');
+            showError(i18n.t('setup.error_connection'));
             resetBtn();
         }
     });
@@ -78,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetBtn() {
-        btn.textContent = 'Create Administrator';
+        btn.textContent = i18n.t('setup.create_admin');
         btn.removeAttribute('disabled');
     }
 });
