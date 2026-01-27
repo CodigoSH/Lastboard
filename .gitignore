@@ -1,15 +1,18 @@
 # Go binaries and build artifacts
 bin/
+dist/
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+vendor/
 
 # Database files
 *.db
 *.sqlite
 *.sqlite3
+!example.db
 
 # Environment variables
 .env
@@ -21,6 +24,8 @@ bin/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
 # Web dependencies and build folders
 node_modules/
@@ -28,10 +33,20 @@ web/node_modules/
 web/dist/
 web/.next/
 web/out/
+.bun/
+.bun-build/
 
 # OS specialized files
 .DS_Store
 Thumbs.db
+*.icloud
 
-# Logs
+# Logs and coverage
 *.log
+*.out
+*.prof
+coverage/
+
+# Temporary files
+tmp/
+.temp/

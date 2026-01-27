@@ -112,6 +112,8 @@
     box-sizing: border-box;
     overflow: hidden;
     container-type: size;
+    /* CRITICAL FIX: Ensure Bookmarks always float above Sections */
+    z-index: 10;
 }
 
 /* SEARCH OVERRIDE: Remove fixed positions during search to pack items at top */
@@ -345,6 +347,8 @@
     transition: all 0.3s ease;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
     /* Lighter shadow */
+    /* CRITICAL FIX: Sections are containers/backgrounds, should be below cards */
+    z-index: 1;
 }
 
 .bookmark-grid__section:hover {

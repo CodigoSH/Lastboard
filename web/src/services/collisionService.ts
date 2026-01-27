@@ -35,94 +35,83 @@ export const collisionService = {
         allItems: GridItem[],
         gridWidth: number = 12
     ): DragResult {
+        // Enforce Numbers for inputs
+        const dX = Number(draggedItem.x);
+        const dY = Number(draggedItem.y);
+        const dW = Number(draggedItem.w);
+        const dH = Number(draggedItem.h);
+
         // 1. Boundary Check
-        if (draggedItem.x < 1 || draggedItem.x + draggedItem.w - 1 > gridWidth || draggedItem.y < 1) {
-            return { valid: false, x: draggedItem.x, y: draggedItem.y };
+        if (dX < 1 || dX + dW - 1 > gridWidth || dY < 1) {
+            return { valid: false, x: dX, y: dY };
         }
 
         const realDraggedItem = allItems.find(i => i.id === draggedItem.id);
         const isDraggingSection = realDraggedItem?.type === 'section';
+        const rect1 = { x: dX, y: dY, w: dW, h: dH };
 
         // 2. Collision Check
         for (const item of allItems) {
             if (item.id === draggedItem.id) continue;
 
-            // Only check collisions with items in the same hierarchy level
-            // Root items collide with root items, nested collide with nested in same section
-            if (item.parent_id !== draggedItem.parent_id) {
-                // EXCEPTION: Root bookmarks can overlap sections/groups to nest
-                if (!draggedItem.parent_id && !isDraggingSection && item.type === 'section') {
-                    const rect1 = { x: draggedItem.x, y: draggedItem.y, w: draggedItem.w, h: draggedItem.h };
-                    const rect2 = { x: item.x, y: item.y, w: item.w, h: item.h };
-                    if (this.isOverlap(rect1, rect2)) {
-                        // Check if it overlaps any EXISTING children of this section
-                        const localX = draggedItem.x - item.x + 1;
-                        const localY = draggedItem.y - item.y + 1;
+            // Enforce Numbers for item
+            const iX = Number(item.x);
+            const iY = Number(item.y);
+            const iW = Number(item.w || 1);
+            const iH = Number(item.h || 1);
 
-                        // Bounds check within section
-                        if (localX < 1 || localX + draggedItem.w - 1 > item.w ||
-                            localY < 1 || localY + draggedItem.h - 1 > item.h) {
-                            // Partially outside section boundary -> technically invalid if we want strict containment
-                            // But usually we allow dropping as long as it's over the section.
-                            // Let's at least check for overlaps with other children.
-                        }
-
-                        const children = allItems.filter(i => i.parent_id === item.id);
-                        for (const child of children) {
-                            if (this.isOverlap({ x: localX, y: localY, w: draggedItem.w, h: draggedItem.h }, child)) {
-                                return { valid: false, x: draggedItem.x, y: draggedItem.y };
-                            }
-                        }
-
-                        return { valid: true, x: draggedItem.x, y: draggedItem.y, targetGroup: item };
-                    }
-                }
-                continue;
-            }
-
-            const rect1 = { x: draggedItem.x, y: draggedItem.y, w: draggedItem.w, h: draggedItem.h };
-
-            // COLLISION LOGIC FIX:
-            // If we are comparing two nested items (siblings), 'item' has LOCAL coords,
-            // but 'draggedItem' (rect1) likely comes from mouse input as GLOBAL coords.
-            // We need to convert 'item' to global to compare apples to apples.
-            let rect2 = { x: item.x, y: item.y, w: item.w, h: item.h };
+            let rect2 = { x: iX, y: iY, w: iW, h: iH };
 
             if (item.parent_id) {
                 const parent = allItems.find(p => p.id === item.parent_id);
                 if (parent) {
-                    rect2.x = parent.x + item.x - 1;
-                    rect2.y = parent.y + item.y - 1;
+                    // Convert local to global
+                    rect2.x = Number(parent.x) + iX - 1;
+                    rect2.y = Number(parent.y) + iY - 1;
+                } else {
+                    // Orphaned item - ignore
+                    continue;
                 }
             }
 
+            // Check Collision in Global Space
             if (this.isOverlap(rect1, rect2)) {
-                // If we are dragging a bookmark and it overlaps a section AT THE SAME LEVEL
-                // (This shouldn't happen usually as sections are usually root and nested are nested,
-                // but let's be safe)
-                if (item.type === 'section' && !isDraggingSection) {
-                    // Start Nesting Logic...
-                    const localX = draggedItem.x - item.x + 1;
-                    const localY = draggedItem.y - item.y + 1;
+
+                // Nesting Scenario: Dragging a NON-Section onto a Section (Nest)
+                if (!isDraggingSection && item.type === 'section') {
+                    // Calculate Local Coords relative to this section
+                    const localX = dX - Number(item.x) + 1;
+                    const localY = dY - Number(item.y) + 1;
 
                     // Check for overlap with EXISTING children of this target section
                     const children = allItems.filter(i => i.parent_id === item.id);
+                    let childCollision = false;
                     for (const child of children) {
-                        if (this.isOverlap({ x: localX, y: localY, w: draggedItem.w, h: draggedItem.h }, child)) {
-                            // Collision inside the target section
-                            return { valid: false, x: draggedItem.x, y: draggedItem.y };
+                        const childRect = {
+                            x: Number(child.x),
+                            y: Number(child.y),
+                            w: Number(child.w || 1),
+                            h: Number(child.h || 1)
+                        };
+                        const draggedLocalRect = { x: localX, y: localY, w: dW, h: dH };
+
+                        if (this.isOverlap(draggedLocalRect, childRect)) {
+                            childCollision = true;
+                            break;
                         }
                     }
 
-                    return { valid: true, x: draggedItem.x, y: draggedItem.y, targetGroup: item };
+                    if (!childCollision) {
+                        return { valid: true, x: dX, y: dY, targetGroup: item };
+                    }
                 }
 
                 // Any other overlap is invalid
-                return { valid: false, x: draggedItem.x, y: draggedItem.y };
+                return { valid: false, x: dX, y: dY };
             }
         }
 
-        return { valid: true, x: draggedItem.x, y: draggedItem.y };
+        return { valid: true, x: dX, y: dY };
     },
 
     /**
@@ -149,10 +138,24 @@ export const collisionService = {
                 let collision = false;
 
                 for (const item of allItems) {
-                    // Only check top-level items for collision (parent_id undefined)
-                    if (item.parent_id !== undefined) continue;
+                    // Collision check with potentially nested items using global coordinates
+                    let itemGlobalX = item.x;
+                    let itemGlobalY = item.y;
+                    let itemW = item.w || 1;
+                    let itemH = item.h || 1;
 
-                    const itemRect = { x: item.x, y: item.y, w: item.w, h: item.h };
+                    if (item.parent_id) {
+                        const parent = allItems.find(p => p.id === item.parent_id);
+                        if (parent) {
+                            itemGlobalX = parent.x + item.x - 1;
+                            itemGlobalY = parent.y + item.y - 1;
+                        } else {
+                            continue; // Orphan
+                        }
+                    }
+
+                    const itemRect = { x: itemGlobalX, y: itemGlobalY, w: itemW, h: itemH };
+
                     if (this.isOverlap(potentialRect, itemRect)) {
                         collision = true;
                         break;
