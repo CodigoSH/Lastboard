@@ -61,7 +61,7 @@ jobs:
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
 
-          go build -ldflags "-s -w -extldflags '-static' -X github.com/codigosh/CSH-Dashboard/internal/version.Current=$VERSION" -o dashboard-${{ matrix.goos }}-${{ matrix.goarch }} cmd/dashboard/main.go
+          go build -ldflags "-s -w -extldflags '-static' -X github.com/codigosh/Kashboard/internal/version.Current=$VERSION" -o dashboard-${{ matrix.goos }}-${{ matrix.goarch }} cmd/dashboard/main.go
 
       - name: Package
         run: |

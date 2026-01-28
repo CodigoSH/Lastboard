@@ -41,7 +41,7 @@ class SettingsContent extends HTMLElement {
         if (u && u.preferences) {
             this.prefs = {
                 ...u.preferences,
-                project_name: u.project_name || u.preferences.project_name || 'CSH Dashboard'
+                project_name: u.project_name || u.preferences.project_name || 'Kashboard'
             };
             this.render();
         }
@@ -254,7 +254,15 @@ class SettingsContent extends HTMLElement {
     }
 
     async deleteUser(id: number) {
-        if (!confirm(i18n.t('notifier.user_delete_confirm'))) return;
+        const confirmationModal = document.querySelector('confirmation-modal') as any;
+        if (confirmationModal) {
+            const confirmed = await confirmationModal.confirm(
+                i18n.t('general.delete'),
+                i18n.t('notifier.user_delete_confirm')
+            );
+            if (!confirmed) return;
+        }
+
         try {
             await userService.deleteUser(id);
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_deleted'));
@@ -263,7 +271,6 @@ class SettingsContent extends HTMLElement {
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_delete_error'), 'error');
         }
     }
-
 
     // --- Rendering ---
 
@@ -332,7 +339,14 @@ class SettingsContent extends HTMLElement {
     }
 
     async performUpdate(assetUrl: string) {
-        if (!confirm(i18n.t('notifier.update_start_confirm'))) return;
+        const confirmationModal = document.querySelector('confirmation-modal') as any;
+        if (confirmationModal) {
+            const confirmed = await confirmationModal.confirm(
+                i18n.t('settings.update_available'),
+                i18n.t('notifier.update_start_confirm')
+            );
+            if (!confirmed) return;
+        }
 
         const btn = this.shadowRoot!.getElementById('btn-update-now') as any;
         const status = this.shadowRoot!.getElementById('update-status');
@@ -381,7 +395,15 @@ class SettingsContent extends HTMLElement {
 
     async restoreBackup(file: File) {
         if (!file) return;
-        if (!confirm(i18n.t('notifier.restore_confirm'))) return;
+
+        const confirmationModal = document.querySelector('confirmation-modal') as any;
+        if (confirmationModal) {
+            const confirmed = await confirmationModal.confirm(
+                i18n.t('general.restore'),
+                i18n.t('notifier.restore_confirm')
+            );
+            if (!confirmed) return;
+        }
 
         const formData = new FormData();
         formData.append('backup_file', file);
@@ -434,13 +456,12 @@ class SettingsContent extends HTMLElement {
     }
 
     render() {
-        // CSS is already safely available as string via import
         this.shadowRoot!.innerHTML = `
-        <style>${css}</style>
-        <div class="fade-in">
-            ${this.getContent(this.getAttribute('section') || 'account')}
-        </div>
-    `;
+            <style>${css}</style>
+            <div class="fade-in">
+                ${this.getContent(this.getAttribute('section') || 'account')}
+            </div>
+        `;
 
         this.shadowRoot!.querySelectorAll('.settings-content__checkbox').forEach(cb => {
             cb.addEventListener('click', () => cb.classList.toggle('settings-content__checkbox--checked'));
@@ -451,4 +472,3 @@ class SettingsContent extends HTMLElement {
 if (!customElements.get('settings-content')) {
     customElements.define('settings-content', SettingsContent);
 }
-

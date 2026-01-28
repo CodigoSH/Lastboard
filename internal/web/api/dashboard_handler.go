@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kiwinho/CSH-Dashboard/internal/core/dashboard"
+	"github.com/codigosh/Kashboard/internal/core/dashboard"
 )
 
 type DashboardHandler struct {
@@ -324,7 +324,7 @@ func validateContent(itemType string, contentJson string) error {
 			return err
 		}
 	case "widget":
-		return nil // Explicitly allow widgets without further validation per user request
+		return nil // Explicitly allow widgets without further validation per user request (Fixes Notepad PATCH 400)
 	}
 	return nil
 }

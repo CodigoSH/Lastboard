@@ -16,6 +16,7 @@ import './components/ui/IconPicker/IconPicker';
 import './components/ui/AddBookmarkModal/AddBookmarkModal';
 import './components/ui/AddWidgetModal/AddWidgetModal';
 import './components/ui/WidgetConfigModal/WidgetConfigModal';
+import './components/ui/ConfirmationModal/ConfirmationModal';
 // Widget Components
 import './widgets/core/NotepadWidget';
 import './widgets/core/ClockWidget';

@@ -8,9 +8,14 @@ interface DashboardState {
     items: GridItem[];
     searchQuery: string;
     isOffline: boolean;
+    stats: {
+        cpu_usage: number;
+        ram_usage: number;
+        temperature: number;
+    } | null;
 }
 
-const STORAGE_KEY = 'csh-dashboard-items';
+const STORAGE_KEY = 'kashboard-items';
 
 // Mock data for initial dashboard state
 const INITIAL_ITEMS: GridItem[] = [
@@ -27,13 +32,29 @@ class DashboardStore {
         isEditing: false,
         items: [...INITIAL_ITEMS], // Initialize with mock data
         searchQuery: '',
-        isOffline: false
+        isOffline: false,
+        stats: null
     };
     private listeners: Listener[] = [];
 
     constructor() {
         // Try to load from localStorage on initialization
         this.loadFromLocalStorage();
+        this.initSocket();
+    }
+
+    private initSocket() {
+        // Import socketService dynamically to avoid circular dependencies if any
+        import('../services/socketService').then(({ socketService }) => {
+            socketService.subscribe((stats) => {
+                this.state.stats = {
+                    cpu_usage: stats.cpu_usage,
+                    ram_usage: stats.ram_usage,
+                    temperature: stats.temperature
+                };
+                this.notify();
+            });
+        });
     }
 
     private saveToLocalStorage() {

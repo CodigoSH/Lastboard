@@ -36,7 +36,7 @@ export class ConfirmationModal extends HTMLElement {
     }
 
     private setupDynamicListeners() {
-        const cancelBtn = this.shadowRoot!.getElementById('btn-cancel');
+        const closeBtn = this.shadowRoot!.getElementById('modal-close');
         const confirmBtn = this.shadowRoot!.getElementById('btn-confirm');
         const overlay = this.shadowRoot!.getElementById('modal-overlay');
 
@@ -49,7 +49,7 @@ export class ConfirmationModal extends HTMLElement {
             this.render();
         };
 
-        if (cancelBtn) cancelBtn.onclick = () => close(false);
+        if (closeBtn) closeBtn.onclick = () => close(false);
         if (overlay) overlay.onclick = (e) => {
             if (e.target === overlay) close(false);
         };

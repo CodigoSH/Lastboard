@@ -55,6 +55,7 @@ class BookmarkGrid extends HTMLElement {
     }
 
     private _widgetModal: any; // widget-config-modal
+    private _boundActionClick = this.handleActionClick.bind(this);
 
     connectedCallback() {
         this.render();
@@ -122,87 +123,108 @@ class BookmarkGrid extends HTMLElement {
 
     setupActionListeners() {
         const root = this.shadowRoot!;
-        root.addEventListener('click', async (e) => {
-            if (!this.isEditing) return;
+        console.log('[BookmarkGrid] Setting up action listeners on shadowRoot', root);
+        // Ensure we don't double-attach by using a bound method reference
+        root.removeEventListener('click', this._boundActionClick);
+        root.addEventListener('click', this._boundActionClick);
+    }
 
-            // Stop ANY default navigation in edit mode
-            const anchor = (e.target as HTMLElement).closest('a');
+    private async handleActionClick(e: Event) {
+        if (!this.isEditing) return;
+
+        const target = e.target as HTMLElement;
+        if (!target) return;
+
+        console.log('[BookmarkGrid] Click target:', target.tagName, target.className);
+
+        const deleteBtn = target.closest('.btn-delete');
+        const editBtn = target.closest('.btn-edit');
+
+        // Requested: stop propagation and prevent default for buttons
+        if (deleteBtn || editBtn) {
+            console.log('[BookmarkGrid] Action button clicked:', deleteBtn ? 'DELETE' : 'EDIT');
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            // Still stop navigation for anchors in Edit Mode
+            const anchor = target.closest('a');
             if (anchor) {
+                console.log('[BookmarkGrid] Preventing anchor click in Edit Mode');
                 e.preventDefault();
             }
+        }
 
-            const target = e.target as HTMLElement;
+        // Delete Button Logic
+        if (deleteBtn) {
+            // Find container (card, group, or section)
+            const container = deleteBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
+            if (!container) {
+                console.warn('[BookmarkGrid] Could not find container for delete button');
+                return;
+            }
 
-            // Delete Button
-            const deleteBtn = target.closest('.btn-delete');
-            if (deleteBtn) {
-                e.preventDefault();
-                e.stopPropagation();
+            const id = parseInt(container.dataset.id || '0');
+            // Requested Debug Log
+            console.log('[BookmarkGrid] Internal Delete ID:', id);
 
-                // Find container (card, group, or section)
-                const container = deleteBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
-                if (!container) return;
+            const item = (this as any).allItems.find((b: any) => b.id == id);
+            if (!item) {
+                console.error('[BookmarkGrid] Item not found in allItems for ID:', id);
+                return;
+            }
 
-                const id = parseInt(container.dataset.id || '0');
-                const item = this.bookmarks.find(b => b.id == id);
-                if (!item) return;
+            const typeLabel = item.type === 'group' ? i18n.t('type.group') : (item.type === 'section' ? i18n.t('type.section') : i18n.t('type.bookmark'));
 
-                const typeLabel = item.type === 'group' ? i18n.t('type.group') : (item.type === 'section' ? i18n.t('type.section') : i18n.t('type.bookmark'));
+            // Try to find the confirmation modal in the main document
+            const confirmationModal = document.querySelector('confirmation-modal') as any;
 
-                // Try to find the confirmation modal in the main document
-                const confirmationModal = document.querySelector('confirmation-modal') as any;
+            if (!confirmationModal) {
+                console.error('[BookmarkGrid] Global confirmation-modal NOT FOUND in DOM');
+                return;
+            }
 
-                if (confirmationModal && typeof confirmationModal.confirm === 'function') {
-                    const confirmed = await confirmationModal.confirm(
-                        `${i18n.t('general.delete')} ${typeLabel}`,
-                        i18n.t('bookmark.delete_confirm_message')
-                    );
-                    if (confirmed) {
-                        await dashboardStore.deleteItem(id);
+            console.log('[BookmarkGrid] Triggering modal for:', item.type, id);
+            try {
+                const confirmed = await confirmationModal.confirm(
+                    `${i18n.t('general.delete')} ${typeLabel}`,
+                    i18n.t('bookmark.delete_confirm_message')
+                );
+                console.log('[BookmarkGrid] Modal result:', confirmed);
+                if (confirmed) {
+                    await dashboardStore.deleteItem(id);
+                }
+            } catch (err) {
+                console.error('[BookmarkGrid] Error during confirmation:', err);
+            }
+            return;
+        }
+
+        // Edit Button (Preserved logic)
+        if (editBtn) {
+            const container = editBtn.closest('.bookmark-grid__card, .bookmark-grid__group') as HTMLElement;
+            if (!container) return;
+
+            const id = parseInt(container.dataset.id || '0');
+            const item = (this as any).allItems.find((b: any) => b.id == id);
+
+            if (item) {
+                console.log('[BookmarkGrid] Editing item:', id);
+                if (item.type === 'widget') {
+                    // Open Widget Config
+                    const wModal = document.querySelector('widget-config-modal') as any;
+                    if (wModal && typeof wModal.open === 'function') {
+                        wModal.open(item);
                     }
                 } else {
-                    // Fallback to native confirm if modal fails/missing
-                    if (confirm(`${i18n.t('bookmark.delete_confirm_message')} (${typeLabel})`)) {
-                        await dashboardStore.deleteItem(id);
+                    // Open Bookmark Edit
+                    const modal = document.querySelector('add-bookmark-modal') as any;
+                    if (modal && typeof modal.openForEdit === 'function') {
+                        modal.openForEdit(item);
                     }
                 }
-                return;
             }
-
-            // Edit Button
-            const editBtn = target.closest('.btn-edit');
-            if (editBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const container = editBtn.closest('.bookmark-grid__card, .bookmark-grid__group') as HTMLElement;
-                if (!container) return;
-
-                const id = parseInt(container.dataset.id || '0');
-                const item = this.bookmarks.find(b => b.id == id);
-
-                if (item) {
-                    if (item.type === 'widget') {
-                        // Open Widget Config
-                        const wModal = document.querySelector('widget-config-modal') as any;
-                        if (wModal && typeof wModal.open === 'function') {
-                            wModal.open(item);
-                        } else {
-                            console.error('Widget Config Modal not found');
-                        }
-                    } else {
-                        // Open Bookmark Edit
-                        const modal = document.querySelector('add-bookmark-modal') as any;
-                        if (modal && typeof modal.openForEdit === 'function') {
-                            modal.openForEdit(item);
-                        } else {
-                            console.error('[BookmarkGrid] Edit modal not found or invalid', modal);
-                        }
-                    }
-                }
-                return;
-            }
-        });
+            return;
+        }
     }
 
     disconnectedCallback() {
@@ -630,6 +652,10 @@ class BookmarkGrid extends HTMLElement {
             isTouchDevice: this.isTouchDevice
         })}
         `;
+
+        // RE-ATTACH LISTENERS after content replacement
+        this.setupActionListeners();
+
         // Re-acquire ghost ref after render
         this.ghostEl = this.shadowRoot!.getElementById('ghost-element');
     }

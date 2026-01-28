@@ -16,8 +16,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kiwinho/CSH-Dashboard/internal/version"
-	"github.com/kiwinho/CSH-Dashboard/internal/web/middleware"
+	"github.com/codigosh/Kashboard/internal/version"
+	"github.com/codigosh/Kashboard/internal/web/middleware"
 )
 
 type UpdateHandler struct{}
@@ -55,7 +55,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Fetch Latest Release from GitHub
-	resp, err := http.Get("https://api.github.com/repos/codigosh/CSH-Dashboard/releases/latest")
+	resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases/latest")
 	if err != nil {
 		http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
 		return
@@ -300,7 +300,7 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath string) error {
 			return err
 		}
 
-		// We look for the main binary. Usually named 'dashboard' or 'csh-dashboard'.
+		// We look for the main binary. Usually named 'dashboard' or 'kashboard'.
 		// We'll extract the first executable regular file we find.
 		if header.Typeflag == tar.TypeReg {
 			// Extract

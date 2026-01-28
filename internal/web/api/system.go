@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kiwinho/CSH-Dashboard/internal/web/middleware"
+	"github.com/codigosh/Kashboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -253,58 +253,6 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Factory reset complete."})
-}
-
-// Data Structures for Stats
-type SystemStats struct {
-	CPUUsage    float64 `json:"cpu_usage"`
-	RAMUsage    float64 `json:"ram_usage"`
-	RAMTotal    uint64  `json:"ram_total"`
-	RAMUsed     uint64  `json:"ram_used"`
-	Temperature float64 `json:"temperature"`
-}
-
-// GET /api/system/stats
-func (h *SystemHandler) GetStats(w http.ResponseWriter, r *http.Request) {
-	// 1. Read /proc/stat for CPU
-	// Simplified: LoadAvg 1min mapped to 0-100% per core?
-	// Or better: Read /proc/loadavg directly as it's easier stateless
-	// But /proc/stat is requested. Let's do a simple calculation or just use LoadAvg for reliability in stateless.
-	// Actually, let's try to read /proc/loadavg for simplicity and robustness first.
-	// "Requirement: Read directly from /proc/stat (CPU)" - User asked for /proc/stat.
-	// We will read /proc/loadavg for now as a reliable proxy for "Load", or implement a delta if we can.
-	// Let's stick to Parsing /proc/meminfo and /proc/loadavg for robustness in this step,
-	// as calculating CPU % from /proc/stat requires state (prevReading) which is complex to add to a running struct quickly.
-	// Pivot: User explicitly asked for /proc/stat. I will implement a detailed reader.
-
-	stats := SystemStats{}
-
-	// RAM: /proc/meminfo
-	if mem, err := readMemInfo(); err == nil {
-		stats.RAMTotal = mem.Total
-		stats.RAMUsed = mem.Used
-		if mem.Total > 0 {
-			stats.RAMUsage = (float64(mem.Used) / float64(mem.Total)) * 100
-		}
-	}
-
-	// CPU: /proc/loadavg (Safe fallback for "CPU Usage" in a stateless request)
-	// OR /proc/stat snapshot.
-	// Let's use LoadAvg normalized by NumCPU (runtime.NumCPU())?
-	// User said: Read directly from /proc/stat.
-	// I'll parse the first line of /proc/stat.
-	// To get a % we need two samples. I'll take a sample, sleep 100ms, take another (simplest "stateless" approach).
-	if cpu, err := calculateCPUUsage(200 * time.Millisecond); err == nil {
-		stats.CPUUsage = cpu
-	}
-
-	// Temp: /sys/class/thermal/thermal_zone0/temp
-	if temp, err := readTemp(); err == nil {
-		stats.Temperature = temp
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stats)
 }
 
 // Helpers

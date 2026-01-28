@@ -1,4 +1,4 @@
-module github.com/kiwinho/CSH-Dashboard
+module github.com/codigosh/Kashboard
 
 go 1.24.0
 
@@ -6,6 +6,7 @@ toolchain go1.24.12
 
 require (
 	golang.org/x/crypto v0.47.0
+	golang.org/x/net v0.49.0
 	modernc.org/sqlite v1.44.3
 )
 

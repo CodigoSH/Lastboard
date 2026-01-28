@@ -13,7 +13,6 @@ class ClockWidget extends HTMLElement {
         this.attachShadow({ mode: 'open' });
     }
 
-    /* old methods removed, replaced below */
 
     private isEditing: boolean = false;
     private configMode: boolean = false;
@@ -21,7 +20,7 @@ class ClockWidget extends HTMLElement {
     private _itemId: number = 0;
 
     static get observedAttributes() {
-        return ['item-id', 'content', 'mode']; // 'mode' for checking edit state if passed, or we subscribe
+        return ['item-id', 'content', 'mode'];
     }
 
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
