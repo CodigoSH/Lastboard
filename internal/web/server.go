@@ -5,21 +5,29 @@ import (
 	"log"
 	"net/http"
 	"text/template"
+	"time"
 
-	"github.com/kiwinho/CSH-Dashboard/internal/web/api"
-	"github.com/kiwinho/CSH-Dashboard/internal/web/middleware"
+	"github.com/codigosh/Kashboard/internal/web/api"
+	"github.com/codigosh/Kashboard/internal/web/middleware"
 )
 
 type Server struct {
 	DB     *sql.DB
 	Router *http.ServeMux
+	WSHub  *api.Hub
 }
 
 func NewServer(db *sql.DB) *Server {
 	s := &Server{
 		DB:     db,
 		Router: http.NewServeMux(),
+		WSHub:  api.NewHub(),
 	}
+
+	// Start WebSocket Hub
+	go s.WSHub.Run()
+	// Start broadcasting stats every 3 seconds
+	go s.WSHub.StartBroadcasting(3 * time.Second)
 
 	s.routes()
 	return s
@@ -98,12 +106,14 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
 	s.Router.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
-	s.Router.Handle("GET /api/system/stats", protect(http.HandlerFunc(systemHandler.GetStats)))
 
 	// Update API (Atomic Binary Updates)
 	updateHandler := api.NewUpdateHandler()
 	s.Router.Handle("GET /api/system/update/check", protect(http.HandlerFunc(updateHandler.CheckUpdate)))
 	s.Router.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
+
+	// WebSocket Endpoint
+	s.Router.HandleFunc("/ws", s.WSHub.HandleWebSocket)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

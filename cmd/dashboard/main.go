@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/kiwinho/CSH-Dashboard/internal/platform/database"
-	"github.com/kiwinho/CSH-Dashboard/internal/web"
+	"github.com/codigosh/Kashboard/internal/platform/database"
+	"github.com/codigosh/Kashboard/internal/web"
 )
 
 func main() {

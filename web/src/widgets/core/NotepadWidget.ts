@@ -22,8 +22,6 @@ class NotepadWidget extends HTMLElement {
         if (name === 'item-id') {
             this._itemId = parseInt(newValue, 10);
         } else if (name === 'content') {
-            // Only update from prop if it breaks sync? 
-            // Usually we trust internal state for inputs, but initial load needs this.
             if (this.textarea && this.textarea.value !== newValue) {
                 this.textarea.value = newValue || '';
             }
@@ -37,9 +35,6 @@ class NotepadWidget extends HTMLElement {
         if (this.textarea) this.textarea.value = this._content;
     }
 
-    /* handleInput removed in favor of explicit save */
-
-    /* save method moved to end of class */
 
     private isEditing: boolean = false;
     private editor: HTMLElement | null = null;

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kiwinho/CSH-Dashboard/internal/core/user"
-	"github.com/kiwinho/CSH-Dashboard/internal/web/middleware"
+	"github.com/codigosh/Kashboard/internal/core/user"
+	"github.com/codigosh/Kashboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 

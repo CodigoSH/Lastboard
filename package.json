@@ -1,5 +1,5 @@
 {
-  "name": "csh-dashboard",
+  "name": "kashboard",
   "version": "1.0.0",
   "module": "index.ts",
   "type": "module",

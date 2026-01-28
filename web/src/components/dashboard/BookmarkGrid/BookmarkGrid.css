@@ -198,8 +198,9 @@
     right: 4px;
     display: flex;
     gap: 4px;
-    z-index: 25;
-    /* Above resize handle and content */
+    z-index: 999;
+    /* Above everything else in the card */
+    pointer-events: auto;
 }
 
 .action-btn {
@@ -216,6 +217,7 @@
     color: var(--text-main);
     transition: all 0.2s;
     padding: 0;
+    pointer-events: auto;
 }
 
 .action-btn:hover {

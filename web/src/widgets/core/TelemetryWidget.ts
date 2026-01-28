@@ -1,14 +1,15 @@
 
 import { i18n } from '../../services/i18n';
+import { dashboardStore } from '../../store/dashboardStore';
 
 class TelemetryWidget extends HTMLElement {
-    private interval: any;
     private cpuBar: HTMLElement | null = null;
     private ramBar: HTMLElement | null = null;
     private tempBar: HTMLElement | null = null;
     private cpuText: HTMLElement | null = null;
     private ramText: HTMLElement | null = null;
     private tempText: HTMLElement | null = null;
+    private _unsubscribe: (() => void) | undefined;
 
     constructor() {
         super();
@@ -17,24 +18,15 @@ class TelemetryWidget extends HTMLElement {
 
     connectedCallback() {
         this.render();
-        this.fetchStats();
-        this.interval = setInterval(() => this.fetchStats(), 3000);
+        this._unsubscribe = dashboardStore.subscribe((state) => {
+            if (state.stats) {
+                this.update(state.stats);
+            }
+        });
     }
 
     disconnectedCallback() {
-        if (this.interval) clearInterval(this.interval);
-    }
-
-    async fetchStats() {
-        try {
-            const res = await fetch('/api/system/stats');
-            if (res.ok) {
-                const data = await res.json();
-                this.update(data);
-            }
-        } catch (e) {
-            console.error('Stats fetch failed', e);
-        }
+        if (this._unsubscribe) this._unsubscribe();
     }
 
     update(data: any) {
@@ -52,15 +44,16 @@ class TelemetryWidget extends HTMLElement {
 
         // Temp
         const temp = Math.round(data.temperature || 0);
-        const hasTemp = temp > 0;
-        // Map temp 0-100 to stroke
+        // Map temp 0-100 to stroke (as per user request: scale 0-100C)
         const displayTemp = Math.min(100, Math.max(0, temp));
 
         if (this.tempBar) {
-            this.tempBar.style.strokeDasharray = `${hasTemp ? displayTemp : 0}, 100`;
+            this.tempBar.style.strokeDasharray = `${displayTemp}, 100`;
+            // Dynamic color handling via gradient is handled by CSS, 
+            // but we could also tweak stroke colors here if needed.
         }
         if (this.tempText) {
-            this.tempText.textContent = hasTemp ? `${temp}°C` : 'N/A';
+            this.tempText.textContent = `${temp}°C`;
         }
     }
 
@@ -75,42 +68,50 @@ class TelemetryWidget extends HTMLElement {
                     justify-content: space-around;
                     width: 100%;
                     height: 100%;
-                    background: rgba(30, 30, 35, 0.5);
-                    backdrop-filter: blur(12px);
-                    -webkit-backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: var(--radius);
+                    background: rgba(40, 44, 52, 0.4);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 16px;
                     box-sizing: border-box;
                     padding: 12px;
                     color: white;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                :host(:hover) {
+                    background: rgba(40, 44, 52, 0.5);
+                    border-color: rgba(255, 255, 255, 0.15);
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
                 }
                 .gauge-container {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 6px;
+                    gap: 8px;
                     flex: 1;
                 }
                 .wrapper {
                     position: relative;
-                    width: 54px;
-                    height: 54px;
+                    width: 64px;
+                    height: 64px;
                 }
                 .circular-chart {
                     width: 100%;
                     height: 100%;
                     display: block;
+                    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.2));
                 }
                 .circle-bg {
                     fill: none;
                     stroke: rgba(255, 255, 255, 0.05);
-                    stroke-width: 3.5;
+                    stroke-width: 3;
                 }
                 .circle {
                     fill: none;
-                    stroke-width: 3.5;
+                    stroke-width: 3;
                     stroke-linecap: round;
-                    transition: stroke-dasharray 0.5s ease;
+                    transition: stroke-dasharray 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
                 .cpu-bar { stroke: url(#grad-cpu); }
                 .ram-bar { stroke: url(#grad-ram); }
@@ -121,34 +122,36 @@ class TelemetryWidget extends HTMLElement {
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
-                    font-family: var(--font-mono, monospace);
-                    font-size: 11px;
-                    font-weight: 700;
+                    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+                    font-size: 13px;
+                    font-weight: 800;
                     text-align: center;
+                    text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+                    user-select: none;
                 }
                 .sub {
-                    font-size: 10px;
+                    font-size: 11px;
                     color: rgba(255, 255, 255, 0.4);
-                    font-weight: 600;
+                    font-weight: 800;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    letter-spacing: 0.15em;
                 }
             </style>
 
             <svg style="width:0;height:0;position:absolute;">
                 <defs>
                     <linearGradient id="grad-cpu" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#4caf50" />
-                        <stop offset="100%" stop-color="#ff9800" />
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#4facfe" />
                     </linearGradient>
                     <linearGradient id="grad-ram" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#2196f3" />
-                        <stop offset="100%" stop-color="#9c27b0" />
+                        <stop offset="0%" stop-color="#f093fb" />
+                        <stop offset="100%" stop-color="#f5576c" />
                     </linearGradient>
                     <linearGradient id="grad-temp" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#2196f3" />
-                        <stop offset="50%" stop-color="#ffeb3b" />
-                        <stop offset="100%" stop-color="#f44336" />
+                        <stop offset="0%" stop-color="#2196f3" /> <!-- Blue -->
+                        <stop offset="50%" stop-color="#ffeb3b" /> <!-- Yellow -->
+                        <stop offset="100%" stop-color="#f44336" /> <!-- Red -->
                     </linearGradient>
                 </defs>
             </svg>
@@ -184,7 +187,7 @@ class TelemetryWidget extends HTMLElement {
                         <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         <path class="circle temp-bar" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
-                    <div class="value-overlay temp-text">N/A</div>
+                    <div class="value-overlay temp-text">0°C</div>
                 </div>
                 <div class="sub">TEMP</div>
             </div>
