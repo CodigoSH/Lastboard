@@ -91,7 +91,11 @@ class BookmarkGrid extends HTMLElement {
 
             const newAllItems = Array.isArray(state.items) ? state.items : [];
 
-            if (this.allItems !== newAllItems || shouldRerender) {
+            // Deep compare items to avoid re-rendering on reference change (e.g. stats update)
+            // This prevents the grid from flickering when telemetry data arrives every second
+            const itemsChanged = JSON.stringify(this.allItems) !== JSON.stringify(newAllItems);
+
+            if (itemsChanged || shouldRerender) {
                 this.allItems = newAllItems;
                 if (this.searchQuery) {
                     this.classList.add('search-active');
@@ -135,21 +139,17 @@ class BookmarkGrid extends HTMLElement {
         const target = e.target as HTMLElement;
         if (!target) return;
 
-
-
         const deleteBtn = target.closest('.btn-delete');
         const editBtn = target.closest('.btn-edit');
 
         // Requested: stop propagation and prevent default for buttons
         if (deleteBtn || editBtn) {
-
             e.preventDefault();
             e.stopPropagation();
         } else {
             // Still stop navigation for anchors in Edit Mode
             const anchor = target.closest('a');
             if (anchor) {
-
                 e.preventDefault();
             }
         }
@@ -158,48 +158,27 @@ class BookmarkGrid extends HTMLElement {
         if (deleteBtn) {
             // Find container (card, group, or section)
             const container = deleteBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
-            if (!container) {
-                console.warn('[BookmarkGrid] Could not find container for delete button');
-                return;
-            }
+            if (!container) return;
 
             const id = parseInt(container.dataset.id || '0');
-            // Requested Debug Log
-
-
             const item = (this as any).allItems.find((b: any) => b.id == id);
-            if (!item) {
-                console.error('[BookmarkGrid] Item not found in allItems for ID:', id);
-                return;
-            }
+            if (!item) return;
 
             const typeLabel = item.type === 'group' ? i18n.t('type.group') : (item.type === 'section' ? i18n.t('type.section') : i18n.t('type.bookmark'));
 
-            // Try to find the confirmation modal in the main document
-            const confirmationModal = document.querySelector('confirmation-modal') as any;
-
-            if (!confirmationModal) {
-                console.error('[BookmarkGrid] Global confirmation-modal NOT FOUND in DOM');
-                return;
-            }
-
-
-            try {
-                const confirmed = await confirmationModal.confirm(
-                    `${i18n.t('general.delete')} ${typeLabel}`,
-                    i18n.t('bookmark.delete_confirm_message')
-                );
-
-                if (confirmed) {
-                    await dashboardStore.deleteItem(id);
+            // Dispatch Event via EventBus
+            const { eventBus, EVENTS } = await import('../../../services/EventBus');
+            eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+                title: `${i18n.t('general.delete')} ${typeLabel}`,
+                message: i18n.t('bookmark.delete_confirm_message'),
+                onConfirm: () => {
+                    dashboardStore.deleteItem(id);
                 }
-            } catch (err) {
-                console.error('[BookmarkGrid] Error during confirmation:', err);
-            }
+            });
             return;
         }
 
-        // Edit Button (Preserved logic)
+        // Edit Button Logic
         if (editBtn) {
             const container = editBtn.closest('.bookmark-grid__card, .bookmark-grid__group') as HTMLElement;
             if (!container) return;
@@ -208,19 +187,11 @@ class BookmarkGrid extends HTMLElement {
             const item = (this as any).allItems.find((b: any) => b.id == id);
 
             if (item) {
-
+                const { eventBus, EVENTS } = await import('../../../services/EventBus');
                 if (item.type === 'widget') {
-                    // Open Widget Config
-                    const wModal = document.querySelector('widget-config-modal') as any;
-                    if (wModal && typeof wModal.open === 'function') {
-                        wModal.open(item);
-                    }
+                    eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'widget' });
                 } else {
-                    // Open Bookmark Edit
-                    const modal = document.querySelector('add-bookmark-modal') as any;
-                    if (modal && typeof modal.openForEdit === 'function') {
-                        modal.openForEdit(item);
-                    }
+                    eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'bookmark' });
                 }
             }
             return;

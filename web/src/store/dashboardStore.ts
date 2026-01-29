@@ -62,14 +62,14 @@ class DashboardStore {
             // DEBUG: Check for parent_id presence
             const parented = this.state.items.filter(i => i.parent_id !== undefined);
             if (parented.length > 0) {
-                console.log('[DashboardStore] Saving items with parent_id:', parented.map(p => ({ id: p.id, parent_id: p.parent_id })));
+                // console.log('[DashboardStore] Saving items with parent_id:', parented.map(p => ({ id: p.id, parent_id: p.parent_id })));
             } else {
-                console.log('[DashboardStore] Saving items: NO PARENT_ID FOUND');
+                // console.log('[DashboardStore] Saving items: NO PARENT_ID FOUND');
             }
 
             const serialized = JSON.stringify(this.state.items);
             localStorage.setItem(STORAGE_KEY, serialized);
-            console.log('[DashboardStore] Saved to localStorage, count:', this.state.items.length);
+            // console.log('[DashboardStore] Saved to localStorage, count:', this.state.items.length);
         } catch (error) {
             console.error('[DashboardStore] Failed to save to localStorage', error);
         }
@@ -159,12 +159,12 @@ class DashboardStore {
                     this.state.items = items;
                     this.state.isOffline = false;
                     this.saveToLocalStorage();
-                    console.log('[DashboardStore] Loaded from backend (merged local parent_id), count:', items.length);
+                    // console.log('[DashboardStore] Loaded from backend (merged local parent_id), count:', items.length);
                 } else {
                     throw new Error('Backend returned empty or invalid data');
                 }
             } catch (apiError) {
-                console.log('[DashboardStore] Backend not available, checking localStorage');
+                // console.log('[DashboardStore] Backend not available, checking localStorage');
                 this.state.isOffline = true;
 
                 // Try localStorage next
@@ -173,18 +173,18 @@ class DashboardStore {
                     const storedItems = JSON.parse(serialized);
                     if (Array.isArray(storedItems) && storedItems.length > 0) {
                         this.state.items = storedItems;
-                        console.log('[DashboardStore] Loaded from localStorage, count:', storedItems.length);
+                        // console.log('[DashboardStore] Loaded from localStorage, count:', storedItems.length);
                     } else {
                         // Last resort: use initial mock data
                         this.state.items = [...INITIAL_ITEMS];
                         this.saveToLocalStorage();
-                        console.log('[DashboardStore] Using initial mock data');
+                        // console.log('[DashboardStore] Using initial mock data');
                     }
                 } else {
                     // No localStorage, use initial mock data
                     this.state.items = [...INITIAL_ITEMS];
                     this.saveToLocalStorage();
-                    console.log('[DashboardStore] First run, using initial mock data');
+                    // console.log('[DashboardStore] First run, using initial mock data');
                 }
             }
             this.ensureItemsIsArray();
@@ -203,7 +203,7 @@ class DashboardStore {
             // Use loose equality to handle potential string/number mismatches
             const itemIndex = this.state.items.findIndex(item => item.id == updatedItem.id);
 
-            console.log('[DashboardStore] Updating item', updatedItem.id, 'Found index:', itemIndex);
+            // console.log('[DashboardStore] Updating item', updatedItem.id, 'Found index:', itemIndex);
 
             if (itemIndex === -1) {
                 console.warn('[DashboardStore] Item not found for update:', updatedItem.id);

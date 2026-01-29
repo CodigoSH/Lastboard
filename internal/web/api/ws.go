@@ -110,6 +110,8 @@ func gatherStats() (SystemStats, error) {
 	// Temp
 	if temp, err := readTemp(); err == nil {
 		stats.Temperature = temp
+	} else {
+		stats.Temperature = -1
 	}
 
 	return stats, nil

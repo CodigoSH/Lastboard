@@ -26,8 +26,8 @@ func NewServer(db *sql.DB) *Server {
 
 	// Start WebSocket Hub
 	go s.WSHub.Run()
-	// Start broadcasting stats every 3 seconds
-	go s.WSHub.StartBroadcasting(3 * time.Second)
+	// Start broadcasting stats every 1 second
+	go s.WSHub.StartBroadcasting(1 * time.Second)
 
 	s.routes()
 	return s
