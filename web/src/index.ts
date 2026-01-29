@@ -79,6 +79,41 @@ bootstrap(async () => {
 });
 
 // 2. Handle Component Events (TopBar)
+import { eventBus, EVENTS } from './services/EventBus';
+
+// Centralized Event Listeners
+eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: any) => {
+    const { title, message, onConfirm } = e.detail;
+    if (confirmationModal) {
+        const confirmed = await confirmationModal.confirm(title, message);
+        if (confirmed && onConfirm) {
+            onConfirm();
+        }
+    }
+});
+
+eventBus.on(EVENTS.SHOW_WIDGET_CONFIG, (e: any) => {
+    const { item, type } = e.detail;
+    if (type === 'bookmark') {
+        if (addBookmarkModal) addBookmarkModal.openForEdit(item);
+    } else {
+        const widgetConfigModal = document.querySelector('widget-config-modal') as any;
+        if (widgetConfigModal) widgetConfigModal.open(item);
+    }
+});
+
+eventBus.on(EVENTS.NOTIFY, (e: any) => {
+    // Assuming Notifier component listens or we trigger it here if it's singleton
+    // For now, if Notifier is web-component based and self-contained, 
+    // we might need to find it and call .show().
+    // Looking at index.ts imports: './components/ui/Notifier/Notifier';
+    // If it's a singleton appended to body? It's not in the append list in bootstrap.
+    // Let's assume there is a global notifier or we find it.
+    // If not found, we can standard console log or check if 'notifier' ID exists.
+    const notifier = document.querySelector('app-notifier') as any; // Guessing tag
+    if (notifier) notifier.show(e.detail.message, e.detail.type);
+});
+
 if (topbar) {
     topbar.addEventListener('drawer-toggle', (e: CustomEvent) => {
         if (e.detail.action === 'open') {

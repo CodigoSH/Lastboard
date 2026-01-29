@@ -39,7 +39,12 @@ class TelemetryWidget extends HTMLElement {
     }
 
     connectedCallback() {
-        this.render();
+        if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+        if (!this.cpuBar) this.render(); // Ensure elements exist
+
+        // Prevent multiple subscriptions
+        if (this._unsubscribe) return;
+
         this._unsubscribe = dashboardStore.subscribe((state) => {
             // Check for config updates
             if (this._itemId) {
@@ -60,12 +65,14 @@ class TelemetryWidget extends HTMLElement {
         });
 
         // i18n Subscription
-        this._unsubscribeI18n = i18n.subscribe(() => {
-            this.render();
-            // Re-apply latest stats if available
-            const state = dashboardStore.getState();
-            if (state.stats) this.update(state.stats);
-        });
+        if (!this._unsubscribeI18n) {
+            this._unsubscribeI18n = i18n.subscribe(() => {
+                this.render();
+                // Re-apply latest stats if available
+                const state = dashboardStore.getState();
+                if (state.stats) this.update(state.stats);
+            });
+        }
     }
 
     disconnectedCallback() {
@@ -73,32 +80,59 @@ class TelemetryWidget extends HTMLElement {
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
 
+    private lastKnownStats: any = { cpu_usage: 0, ram_usage: 0, temperature: 0 };
+
     update(data: any) {
         if (!this.shadowRoot) return;
 
-        // console.log('[TelemetryWidget] Updating with:', data); 
+        // console.log('[WS Data Received]', data);
 
-        // CPU
-        const cpu = Math.round(data.cpu_usage || 0);
-        if (this.cpuBar) this.cpuBar.style.strokeDasharray = `${cpu}, 100`;
-        if (this.cpuText) this.cpuText.textContent = `${cpu}%`;
-
-        // RAM
-        const ram = Math.round(data.ram_usage || 0);
-        if (this.ramBar) this.ramBar.style.strokeDasharray = `${ram}, 100`;
-        if (this.ramText) this.ramText.textContent = `${ram}%`;
-
-        // Temp
-        const temp = Math.round(data.temperature || 0);
-        // Map temp 0-100 to stroke (as per user request: scale 0-100C)
-        const displayTemp = Math.min(100, Math.max(0, temp));
-
-        if (this.tempBar) {
-            this.tempBar.style.strokeDasharray = `${displayTemp}, 100`;
+        // Throttle check
+        const now = Date.now();
+        // Allow for small jitter (100ms grace) if the user selected 1s and backend sends 1s
+        const jitter = 100;
+        if (now - this.lastUpdate < (this._interval - jitter)) {
+            return;
         }
-        if (this.tempText) {
-            this.tempText.textContent = `${temp}°C`;
-        }
+        this.lastUpdate = now;
+
+        // Fallback to last known if data is partial or missing, but update last known if data is valid
+        // Check if data has actual numeric values (0 is valid)
+        if (typeof data.cpu_usage === 'number') this.lastKnownStats.cpu_usage = data.cpu_usage;
+        if (typeof data.ram_usage === 'number') this.lastKnownStats.ram_usage = data.ram_usage;
+        if (typeof data.temperature === 'number') this.lastKnownStats.temperature = data.temperature;
+
+        // Use current data if valid, else last known
+        const cpuVal = typeof data.cpu_usage === 'number' ? data.cpu_usage : this.lastKnownStats.cpu_usage;
+        const ramVal = typeof data.ram_usage === 'number' ? data.ram_usage : this.lastKnownStats.ram_usage;
+        const tempVal = typeof data.temperature === 'number' ? data.temperature : this.lastKnownStats.temperature;
+
+        // Force visual update in next frame to ensure DOM is ready
+        requestAnimationFrame(() => {
+            // CPU
+            const cpu = Math.min(100, Math.max(0, Math.round(cpuVal)));
+            if (this.cpuBar) {
+                this.cpuBar.style.strokeDasharray = `${cpu}, 100`;
+                // console.log(`[TelemetryWidget] Applied CPU: ${cpu}`);
+            }
+            if (this.cpuText) this.cpuText.textContent = `${cpu}%`;
+
+            // RAM
+            const ram = Math.min(100, Math.max(0, Math.round(ramVal)));
+            if (this.ramBar) this.ramBar.style.strokeDasharray = `${ram}, 100`;
+            if (this.ramText) this.ramText.textContent = `${ram}%`;
+
+            // Temp
+            const temp = Math.round(tempVal);
+            const displayTemp = Math.min(100, Math.max(0, temp));
+
+            if (this.tempBar) {
+                this.tempBar.style.strokeDasharray = `${displayTemp}, 100`;
+            }
+            if (this.tempText) {
+                this.tempText.textContent = `${temp}°C`;
+            }
+        });
     }
 
     render() {
@@ -155,7 +189,7 @@ class TelemetryWidget extends HTMLElement {
                     fill: none;
                     stroke-width: 3;
                     stroke-linecap: round;
-                    transition: stroke-dasharray 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transition: stroke-dasharray 0.5s ease-in-out, stroke 0.5s ease;
                 }
                 .cpu-bar { stroke: url(#grad-cpu); }
                 .ram-bar { stroke: url(#grad-ram); }
