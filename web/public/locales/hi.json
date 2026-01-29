@@ -156,5 +156,15 @@
   "auth.sign_out": "साइन आउट",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "सुरक्षित डाउनलोड शुरू हो रहा है...",
-  "status.offline": "ऑफ़लाइन"
+  "status.offline": "ऑफ़लाइन",
+  "widget.telemetry.update_interval": "अद्यतन अंतराल",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "तापमान",
+  "widget.config.title": "विजेट कॉन्फ़िगर करें",
+  "widget.clock.timezone": "समय क्षेत्र",
+  "widget.clock.auto_detect": "स्वतः पता लगाएँ",
+  "widget.clock.timezone_desc": "e.g. UTC, 'local'",
+  "widget.clock.use_12h": "12-घंटे का प्रारूप",
+  "widget.clock.show_date": "तिथि दिखाएं"
 }

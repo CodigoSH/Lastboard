@@ -58,7 +58,7 @@ class I18nService {
         if (this.cache.has(code)) return;
 
         try {
-            const res = await fetch(`/dist/locales/${code}.json`);
+            const res = await fetch(`/dist/locales/${code}.json?v=${new Date().getTime()}`);
             if (!res.ok) throw new Error(`Failed to load locale ${code}`);
             const translations = await res.json();
             this.cache.set(code, translations);

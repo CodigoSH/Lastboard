@@ -156,5 +156,15 @@
   "auth.sign_out": "سائن آؤٹ",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "محفوظ ڈاؤن لوڈ شروع ہو رہا ہے...",
-  "status.offline": "آف لائن"
+  "status.offline": "آف لائن",
+  "widget.telemetry.update_interval": "اپ ڈیٹ کا وقفہ",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "درجہ حرارت",
+  "widget.config.title": "ویجیٹ کنفیگر کریں",
+  "widget.clock.timezone": "ٹائم زون",
+  "widget.clock.auto_detect": "خودکار شناخت",
+  "widget.clock.timezone_desc": "e.g. UTC, 'local'",
+  "widget.clock.use_12h": "12 گھنٹے کی شکل",
+  "widget.clock.show_date": "تاریخ دکھائیں"
 }

@@ -18,14 +18,14 @@ class IconPicker extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        console.log(`[IconPicker:${this.id_debug}] Constructor`);
+
     }
 
     async connectedCallback() {
-        console.log(`[IconPicker:${this.id_debug}] Connected`);
+
         // Robust check: if shadowRoot has children, we are already initialized
         if (this.shadowRoot!.childElementCount > 0) {
-            console.log(`[IconPicker:${this.id_debug}] Already initialized, skipping renderBase`);
+
             return;
         }
 
@@ -40,12 +40,12 @@ class IconPicker extends HTMLElement {
 
     async loadIcons() {
         try {
-            console.log(`[IconPicker:${this.id_debug}] Loading icons...`);
+
             this.icons = await iconService.loadIcons();
             this.filteredIcons = this.icons.slice(0, 50);
             this.isLoading = false;
             this.updateGrid();
-            console.log(`[IconPicker:${this.id_debug}] Icons loaded: ${this.icons.length}`);
+
         } catch (error) {
             console.error(`[IconPicker:${this.id_debug}] Failed to load icons`, error);
             this.isLoading = false;
@@ -54,7 +54,7 @@ class IconPicker extends HTMLElement {
     }
 
     setupListeners() {
-        console.log(`[IconPicker:${this.id_debug}] Setup listeners`);
+
         const root = this.shadowRoot!;
         this.inputElement = root.getElementById('icon-search') as HTMLInputElement;
 
@@ -66,7 +66,7 @@ class IconPicker extends HTMLElement {
             if (this.debounceTimer) window.clearTimeout(this.debounceTimer);
 
             this.debounceTimer = window.setTimeout(() => {
-                console.log(`[IconPicker:${this.id_debug}] Searching for: ${this.searchQuery}`);
+
                 this.performSearch();
             }, 100);
         });
@@ -106,7 +106,7 @@ class IconPicker extends HTMLElement {
     }
 
     renderBase() {
-        console.log(`[IconPicker:${this.id_debug}] Rendering base structure`);
+
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
             ${layoutContainer()}

@@ -156,5 +156,15 @@
   "auth.sign_out": "로그아웃",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "보안 다운로드 시작 중...",
-  "status.offline": "오프라인"
+  "status.offline": "오프라인",
+  "widget.telemetry.update_interval": "업데이트 간격",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "온도",
+  "widget.config.title": "위젯 구성",
+  "widget.clock.timezone": "시간대",
+  "widget.clock.auto_detect": "자동 감지",
+  "widget.clock.timezone_desc": "e.g. UTC, 'local'",
+  "widget.clock.use_12h": "12시간 형식 사용",
+  "widget.clock.show_date": "날짜 표시"
 }

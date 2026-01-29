@@ -123,7 +123,7 @@ class BookmarkGrid extends HTMLElement {
 
     setupActionListeners() {
         const root = this.shadowRoot!;
-        console.log('[BookmarkGrid] Setting up action listeners on shadowRoot', root);
+
         // Ensure we don't double-attach by using a bound method reference
         root.removeEventListener('click', this._boundActionClick);
         root.addEventListener('click', this._boundActionClick);
@@ -135,21 +135,21 @@ class BookmarkGrid extends HTMLElement {
         const target = e.target as HTMLElement;
         if (!target) return;
 
-        console.log('[BookmarkGrid] Click target:', target.tagName, target.className);
+
 
         const deleteBtn = target.closest('.btn-delete');
         const editBtn = target.closest('.btn-edit');
 
         // Requested: stop propagation and prevent default for buttons
         if (deleteBtn || editBtn) {
-            console.log('[BookmarkGrid] Action button clicked:', deleteBtn ? 'DELETE' : 'EDIT');
+
             e.preventDefault();
             e.stopPropagation();
         } else {
             // Still stop navigation for anchors in Edit Mode
             const anchor = target.closest('a');
             if (anchor) {
-                console.log('[BookmarkGrid] Preventing anchor click in Edit Mode');
+
                 e.preventDefault();
             }
         }
@@ -165,7 +165,7 @@ class BookmarkGrid extends HTMLElement {
 
             const id = parseInt(container.dataset.id || '0');
             // Requested Debug Log
-            console.log('[BookmarkGrid] Internal Delete ID:', id);
+
 
             const item = (this as any).allItems.find((b: any) => b.id == id);
             if (!item) {
@@ -183,13 +183,13 @@ class BookmarkGrid extends HTMLElement {
                 return;
             }
 
-            console.log('[BookmarkGrid] Triggering modal for:', item.type, id);
+
             try {
                 const confirmed = await confirmationModal.confirm(
                     `${i18n.t('general.delete')} ${typeLabel}`,
                     i18n.t('bookmark.delete_confirm_message')
                 );
-                console.log('[BookmarkGrid] Modal result:', confirmed);
+
                 if (confirmed) {
                     await dashboardStore.deleteItem(id);
                 }
@@ -208,7 +208,7 @@ class BookmarkGrid extends HTMLElement {
             const item = (this as any).allItems.find((b: any) => b.id == id);
 
             if (item) {
-                console.log('[BookmarkGrid] Editing item:', id);
+
                 if (item.type === 'widget') {
                     // Open Widget Config
                     const wModal = document.querySelector('widget-config-modal') as any;
@@ -393,7 +393,7 @@ class BookmarkGrid extends HTMLElement {
                 children.sort((a, b) => (a.y - b.y) || (a.x - b.x));
 
                 if (children.length > capacity) {
-                    console.log(`[BookmarkGrid] Resizing section caused overflow. Ejecting ${children.length - capacity} items.`);
+
                     const toEject = children.slice(capacity);
 
                     // Create a simulation of grid state to prevent stacking ejected items
@@ -404,7 +404,7 @@ class BookmarkGrid extends HTMLElement {
                         // Find slot in root
                         const slot = collisionService.findFirstAvailableSlot(child.w, child.h, simulatedItems, this.currentGridCols);
 
-                        console.log(`[BookmarkGrid] Ejecting item ${child.id} to ${slot.x}, ${slot.y}`);
+
 
                         // Update real store
                         await dashboardStore.updateItem({
@@ -456,7 +456,7 @@ class BookmarkGrid extends HTMLElement {
                 const rect = target.getBoundingClientRect();
                 this.dragOffsetX = e.clientX - rect.left;
                 this.dragOffsetY = e.clientY - rect.top;
-                console.log('[BookmarkGrid] DragStart Offset:', this.dragOffsetX, this.dragOffsetY);
+
             }
         });
 
@@ -508,7 +508,7 @@ class BookmarkGrid extends HTMLElement {
             };
 
             const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
-            if (check.valid && check.targetGroup) console.log('[BookmarkGrid] DragOver Nesting Candidate:', check.targetGroup.id);
+
 
             this.updateGhost(potentialRect, check.valid);
 
@@ -558,7 +558,7 @@ class BookmarkGrid extends HTMLElement {
             };
 
             const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
-            console.log('[BookmarkGrid] DROP Check:', check, 'PotentialRect:', potentialRect, 'DragOffset:', this.dragOffsetX, this.dragOffsetY);
+
 
             if (check.valid) {
                 // Update item through store (handles optimistic update + backend sync)
@@ -574,15 +574,15 @@ class BookmarkGrid extends HTMLElement {
                     // convert TO local coordinates
                     updateData.x = check.x - check.targetGroup.x + 1;
                     updateData.y = check.y - check.targetGroup.y + 1;
-                    console.log('[BookmarkGrid] DROP NESTING: Setting parent_id to', check.targetGroup.id, 'Local X/Y:', updateData.x, updateData.y);
+
                 } else {
                     // It's a root drop
                     updateData.parent_id = undefined;
                     // check.x/y are already global
-                    console.log('[BookmarkGrid] DROP: No nesting (parent_id undefined), Global X/Y:', updateData.x, updateData.y);
+
                 }
 
-                console.log('[BookmarkGrid] Sending updateData:', updateData);
+
                 await dashboardStore.updateItem(updateData);
             }
 

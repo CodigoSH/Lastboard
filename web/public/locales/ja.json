@@ -156,5 +156,15 @@
   "auth.sign_out": "サインアウト",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "安全なダウンロードを開始しています...",
-  "status.offline": "オフライン"
+  "status.offline": "オフライン",
+  "widget.telemetry.update_interval": "更新間隔",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "温度",
+  "widget.config.title": "ウィジェットの設定",
+  "widget.clock.timezone": "タイムゾーン",
+  "widget.clock.auto_detect": "自動検出",
+  "widget.clock.timezone_desc": "e.g. UTC, 'local'",
+  "widget.clock.use_12h": "12時間形式を使用",
+  "widget.clock.show_date": "日付を表示"
 }

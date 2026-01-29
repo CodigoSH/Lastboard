@@ -95,7 +95,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
 
                 ${isEditing ? `
                 <div class="bookmark-actions">
-                     ${widgetId === 'clock' ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
+                     ${['clock', 'telemetry'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
                      <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
                 </div>
                 <div class="resize-handle"></div>
