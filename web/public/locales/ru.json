@@ -156,5 +156,15 @@
   "auth.sign_out": "Выйти",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "Запуск безопасной загрузки...",
-  "status.offline": "Оффлайн"
+  "status.offline": "Оффлайн",
+  "widget.telemetry.update_interval": "Интервал обновления",
+  "widget.telemetry.cpu": "ЦП",
+  "widget.telemetry.ram": "ОЗУ",
+  "widget.telemetry.temp": "ТЕМП",
+  "widget.config.title": "Настроить виджет",
+  "widget.clock.timezone": "Часовой пояс",
+  "widget.clock.auto_detect": "Автоопределение",
+  "widget.clock.timezone_desc": "например, Europe/Moscow, UTC или 'local'",
+  "widget.clock.use_12h": "12-часовой формат",
+  "widget.clock.show_date": "Показывать дату"
 }

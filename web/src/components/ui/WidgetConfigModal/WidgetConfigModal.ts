@@ -1,6 +1,7 @@
 
 import { dashboardStore } from '../../../store/dashboardStore';
 import { GridItem } from '../../../types';
+import { i18n } from '../../../services/i18n';
 
 class WidgetConfigModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
@@ -45,6 +46,12 @@ class WidgetConfigModal extends HTMLElement {
             newContent.timezone = tzInput?.value || 'local';
             newContent.hour12 = h12Input?.checked || false;
             newContent.showDate = dateInput?.checked || false;
+            newContent.timezone = tzInput?.value || 'local';
+            newContent.hour12 = h12Input?.checked || false;
+            newContent.showDate = dateInput?.checked || false;
+        } else if (widgetId === 'telemetry') {
+            const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
+            newContent.interval = intervalInput ? parseInt(intervalInput.value) : 1000;
         }
 
         // TODO: Add other widget forms here (e.g. Telemetry settings?)
@@ -80,27 +87,42 @@ class WidgetConfigModal extends HTMLElement {
 
                 return `
                     <div class="field-group">
-                        <label>Timezone</label>
+                        <label>${i18n.t('widget.clock.timezone')}</label>
                         <div class="input-row">
                             <input type="text" id="clock-tz" value="${tz}" placeholder="local"/>
-                            <button id="clock-auto-tz" class="btn-ghost">Auto Detect</button>
+                            <button id="clock-auto-tz" class="btn-ghost">${i18n.t('widget.clock.auto_detect')}</button>
                         </div>
-                        <small>e.g. America/New_York, UTC, or 'local'</small>
+                        <small>${i18n.t('widget.clock.timezone_desc')}</small>
                     </div>
                     
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-12h" ${h12 ? 'checked' : ''} />
-                        <label for="clock-12h">Use 12-Hour Format</label>
+                        <label for="clock-12h">${i18n.t('widget.clock.use_12h')}</label>
                     </div>
-
+        
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-date" ${showDate ? 'checked' : ''} />
-                        <label for="clock-date">Show Date</label>
+                        <label for="clock-date">${i18n.t('widget.clock.show_date')}</label>
+                    </div>
+                `;
+            } else if (widgetId === 'telemetry') {
+                const interval = content.interval || 1000;
+
+                return `
+                    <div class="field-group row-aligned">
+                        <label>${i18n.t('widget.telemetry.update_interval')}</label>
+                        <select id="telemetry-interval" class="select-input">
+                            <option value="1000" ${interval === 1000 ? 'selected' : ''}>1s</option>
+                            <option value="2000" ${interval === 2000 ? 'selected' : ''}>2s</option>
+                            <option value="5000" ${interval === 5000 ? 'selected' : ''}>5s</option>
+                            <option value="10000" ${interval === 10000 ? 'selected' : ''}>10s</option>
+                        </select>
                     </div>
                 `;
             }
             return '<p>No configuration available for this widget.</p>';
         };
+
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -120,20 +142,78 @@ class WidgetConfigModal extends HTMLElement {
                     background: rgba(0, 0, 0, 0.5);
                     backdrop-filter: blur(4px);
                 }
-                h3 { margin: 0 0 20px 0; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom:12px; }
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid var(--border);
+                    margin-bottom: 20px;
+                    padding-bottom: 12px;
+                }
+                .modal-title {
+                    margin: 0;
+                    font-size: 1.25rem;
+                }
+                .modal-close {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: var(--text-dim);
+                    padding: 8px;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 36px;
+                    height: 36px;
+                }
+                .modal-close:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    transform: rotate(90deg);
+                    color: #ff4757;
+                    border-color: rgba(255, 71, 87, 0.3);
+                }
                 
                 .field-group { margin-bottom: 16px; }
+                .field-group.row-aligned {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 20px;
+                }
                 .field-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; }
+                .field-group.row-aligned label { margin-bottom: 0; }
                 .field-group small { display: block; margin-top: 4px; color: var(--text-dim); font-size: 0.8rem; }
                 
                 .input-row { display: flex; gap: 8px; }
-                input[type="text"] {
+                input[type="text"], .select-input {
                     flex: 1;
                     background: rgba(0,0,0,0.2);
                     border: 1px solid var(--border);
                     color: white;
                     padding: 8px 12px;
                     border-radius: 6px;
+                }
+                .select-input {
+                    cursor: pointer;
+                    appearance: none;
+                    background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+                    background-repeat: no-repeat;
+                    background-position: right 8px center;
+                    padding-right: 32px;
+                    width: 120px;
+                    background-color: rgba(255, 255, 255, 0.05);
+                }
+                .select-input option {
+                    background: var(--surface-solid, #1e1e23);
+                    color: white;
+                    padding: 8px;
+                }
+                .select-input:focus, input[type="text"]:focus {
+                    border-color: var(--accent);
+                    outline: none;
+                    background-color: rgba(255, 255, 255, 0.1);
                 }
                 
                 .check-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
@@ -163,23 +243,20 @@ class WidgetConfigModal extends HTMLElement {
                     cursor: pointer;
                     font-weight: 600;
                 }
-                .btn-cancel {
-                    background: transparent;
-                    color: var(--text-dim);
-                    border: none;
-                    cursor: pointer;
-                    padding: 8px 12px;
-                }
-                .btn-cancel:hover { color: white; }
+
             </style>
             <dialog id="modal">
-                <h3>Configure Widget</h3>
+                <div class="modal-header">
+                    <h3 class="modal-title">${i18n.t('widget.config.title')}</h3>
+                    <button class="modal-close" id="close-btn">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                </div>
                 <div class="content">
                     ${renderForm()}
                 </div>
                 <div class="actions">
-                    <button class="btn-cancel" id="cancel-btn">Cancel</button>
-                    ${widgetId === 'clock' ? '<button class="btn-save" id="save-btn">Save</button>' : ''}
+                    ${['clock', 'telemetry'].includes(widgetId) ? `<button class="btn-save" id="save-btn">${i18n.t('general.save')}</button>` : ''}
                 </div>
             </dialog>
         `;
@@ -187,7 +264,7 @@ class WidgetConfigModal extends HTMLElement {
         this.dialog = this.shadowRoot.querySelector('dialog');
 
         // Bindings
-        this.shadowRoot.getElementById('cancel-btn')?.addEventListener('click', () => this.close());
+        this.shadowRoot.getElementById('close-btn')?.addEventListener('click', () => this.close());
         this.shadowRoot.getElementById('save-btn')?.addEventListener('click', () => this.save());
 
         // Auto-TZ Logic

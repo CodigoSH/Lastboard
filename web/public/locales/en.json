@@ -157,5 +157,15 @@
   "general.no_icons": "No icons found",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "Starting secure download...",
-  "status.offline": "Offline"
+  "status.offline": "Offline",
+  "widget.config.title": "Configure Widget",
+  "widget.clock.timezone": "Timezone",
+  "widget.clock.auto_detect": "Auto Detect",
+  "widget.clock.timezone_desc": "e.g. America/New_York, UTC, or 'local'",
+  "widget.clock.use_12h": "Use 12-Hour Format",
+  "widget.clock.show_date": "Show Date",
+  "widget.telemetry.update_interval": "Update Interval",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "TEMP"
 }

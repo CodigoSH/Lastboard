@@ -7,6 +7,7 @@ class ClockWidget extends HTMLElement {
     private timeEl: HTMLElement | null = null;
     private dateEl: HTMLElement | null = null;
     private _unsubscribe: (() => void) | null = null;
+    private _unsubscribeI18n: (() => void) | undefined;
 
     constructor() {
         super();
@@ -69,10 +70,16 @@ class ClockWidget extends HTMLElement {
                 }
             }
         });
+
+        // 3. i18n Subscription
+        this._unsubscribeI18n = i18n.subscribe(() => {
+            this.updateTime();
+        });
     }
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this.timer) clearInterval(this.timer);
     }
 
@@ -94,11 +101,19 @@ class ClockWidget extends HTMLElement {
         }
 
         // Use 'en-US' for Time to ensure clean "AM/PM" output when 12h is active,
-        // otherwise system locale might give "a. m."
-        const timeLocale = this._config.hour12 ? 'en-US' : undefined;
+        // unless user prefers system locale? Actually user request implies full localization.
+        // But 12h formats are tricky. 'en-US' gives AM/PM. 'es-ES' might give 'p. m.'.
+        // Let's rely on the requested logic: if 12h is forced, maybe we prefer AM/PM?
+        // Or honestly, just use the current locale.
+        // The original code forced 'en-US' for 12h.
+        // "Using modern typography... instead of browser defaults".
+        // Let's use the current locale, BUT if 12h is true, we let the locale decide how to show it.
+        // However, standard digital clocks often use AM/PM regardless of language.
+        // Let's respect the current Locale from i18n.
+        const currentLocale = i18n.getLocale().code;
 
         try {
-            const formatter = new Intl.DateTimeFormat(timeLocale, {
+            const formatter = new Intl.DateTimeFormat(currentLocale, {
                 ...opts,
                 timeZone
             });
@@ -129,7 +144,7 @@ class ClockWidget extends HTMLElement {
                 month: 'long',
                 timeZone
             };
-            this.dateEl.textContent = now.toLocaleDateString(undefined, dateOpts);
+            this.dateEl.textContent = now.toLocaleDateString(currentLocale, dateOpts);
             this.dateEl.style.display = 'block';
         } else {
             this.dateEl.style.display = 'none';

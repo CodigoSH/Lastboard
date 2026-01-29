@@ -156,5 +156,15 @@
   "auth.sign_out": "Sair",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "Iniciando download seguro...",
-  "status.offline": "Offline"
+  "status.offline": "Offline",
+  "widget.telemetry.update_interval": "Intervalo de Atualização",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "TEMP",
+  "widget.config.title": "Configurar Widget",
+  "widget.clock.timezone": "Fuso Horário",
+  "widget.clock.auto_detect": "Auto Detectar",
+  "widget.clock.timezone_desc": "ex. America/Sao_Paulo, UTC, ou 'local'",
+  "widget.clock.use_12h": "Usar formato 12h",
+  "widget.clock.show_date": "Mostrar Data"
 }

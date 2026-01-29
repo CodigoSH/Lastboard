@@ -156,5 +156,15 @@
   "auth.sign_out": "সাইন আউট",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "নিরাপদ ডাউনলোড শুরু হচ্ছে...",
-  "status.offline": "অফলাইন"
+  "status.offline": "অফলাইন",
+  "widget.telemetry.update_interval": "আপডেট বিরতি",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "তাপমাত্রা",
+  "widget.config.title": "উইজেট কনফিগার করুন",
+  "widget.clock.timezone": "সময় অঞ্চল",
+  "widget.clock.auto_detect": "স্বয়ংক্রিয় সনাক্তকরণ",
+  "widget.clock.timezone_desc": "e.g. UTC, 'local'",
+  "widget.clock.use_12h": "১২-ঘণ্টার বিন্যাস",
+  "widget.clock.show_date": "তারিখ দেখান"
 }

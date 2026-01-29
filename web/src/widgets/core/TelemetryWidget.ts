@@ -6,10 +6,32 @@ class TelemetryWidget extends HTMLElement {
     private cpuBar: HTMLElement | null = null;
     private ramBar: HTMLElement | null = null;
     private tempBar: HTMLElement | null = null;
+
     private cpuText: HTMLElement | null = null;
     private ramText: HTMLElement | null = null;
     private tempText: HTMLElement | null = null;
     private _unsubscribe: (() => void) | undefined;
+    private _unsubscribeI18n: (() => void) | undefined;
+
+    private _itemId: number = 0;
+    private _interval: number = 1000;
+    private lastUpdate: number = 0;
+
+    static get observedAttributes() {
+        return ['item-id', 'content'];
+    }
+
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+        if (name === 'item-id') this._itemId = parseInt(newValue);
+        if (name === 'content') {
+            try {
+                const data = typeof newValue === 'string' ? JSON.parse(newValue) : newValue;
+                if (data && data.interval) {
+                    this._interval = parseInt(data.interval);
+                }
+            } catch (e) { }
+        }
+    }
 
     constructor() {
         super();
@@ -19,18 +41,42 @@ class TelemetryWidget extends HTMLElement {
     connectedCallback() {
         this.render();
         this._unsubscribe = dashboardStore.subscribe((state) => {
+            // Check for config updates
+            if (this._itemId) {
+                const item = state.items.find((i: any) => i.id === this._itemId);
+                if (item && item.content) {
+                    try {
+                        const content = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+                        if (content.interval && content.interval !== this._interval) {
+                            this._interval = parseInt(content.interval);
+                        }
+                    } catch (e) { }
+                }
+            }
+
             if (state.stats) {
                 this.update(state.stats);
             }
+        });
+
+        // i18n Subscription
+        this._unsubscribeI18n = i18n.subscribe(() => {
+            this.render();
+            // Re-apply latest stats if available
+            const state = dashboardStore.getState();
+            if (state.stats) this.update(state.stats);
         });
     }
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
 
     update(data: any) {
         if (!this.shadowRoot) return;
+
+        // console.log('[TelemetryWidget] Updating with:', data); 
 
         // CPU
         const cpu = Math.round(data.cpu_usage || 0);
@@ -49,8 +95,6 @@ class TelemetryWidget extends HTMLElement {
 
         if (this.tempBar) {
             this.tempBar.style.strokeDasharray = `${displayTemp}, 100`;
-            // Dynamic color handling via gradient is handled by CSS, 
-            // but we could also tweak stroke colors here if needed.
         }
         if (this.tempText) {
             this.tempText.textContent = `${temp}°C`;
@@ -165,7 +209,7 @@ class TelemetryWidget extends HTMLElement {
                     </svg>
                     <div class="value-overlay cpu-text">0%</div>
                 </div>
-                <div class="sub">CPU</div>
+                <div class="sub">${i18n.t('widget.telemetry.cpu')}</div>
             </div>
 
             <!-- RAM -->
@@ -177,7 +221,7 @@ class TelemetryWidget extends HTMLElement {
                     </svg>
                     <div class="value-overlay ram-text">0%</div>
                 </div>
-                <div class="sub">RAM</div>
+                <div class="sub">${i18n.t('widget.telemetry.ram')}</div>
             </div>
 
             <!-- TEMP -->
@@ -189,7 +233,7 @@ class TelemetryWidget extends HTMLElement {
                     </svg>
                     <div class="value-overlay temp-text">0°C</div>
                 </div>
-                <div class="sub">TEMP</div>
+                <div class="sub">${i18n.t('widget.telemetry.temp')}</div>
             </div>
         `;
 

@@ -156,5 +156,15 @@
   "auth.sign_out": "خروج",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "بدء التنزيل الآمن...",
-  "status.offline": "غير متصل"
+  "status.offline": "غير متصل",
+  "widget.telemetry.update_interval": "فاصل التحديث",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "حرارة",
+  "widget.config.title": "تكوين الأداة",
+  "widget.clock.timezone": "المنطقة الزمنية",
+  "widget.clock.auto_detect": "كشف تلقائي",
+  "widget.clock.timezone_desc": "e.g. UTC, 'local'",
+  "widget.clock.use_12h": "استخدم تنسيق 12 ساعة",
+  "widget.clock.show_date": "اظهار التاريخ"
 }

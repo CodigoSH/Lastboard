@@ -31,14 +31,14 @@ class AddBookmarkModal extends HTMLElement {
 
             // Close on overlay click
             if (target.id === 'modal-overlay') {
-                console.log('[Modal] Overlay clicked - closing');
+
                 this.close();
                 return;
             }
 
             // Close button (X)
             if (target.closest('#modal-close')) {
-                console.log('[Modal] Close button clicked');
+
                 e.preventDefault();
                 e.stopPropagation();
                 this.close();
@@ -50,7 +50,7 @@ class AddBookmarkModal extends HTMLElement {
             e.preventDefault();
             e.stopPropagation();
 
-            console.log('[Modal] Form submitted!');
+
 
             const form = e.target as HTMLFormElement;
             const formData = new FormData(form);
@@ -59,11 +59,11 @@ class AddBookmarkModal extends HTMLElement {
             const url = formData.get('url') as string;
             const statusCheck = formData.get('statusCheck') === 'on';
 
-            console.log('[Modal] Label:', label, 'URL:', url, 'Status:', statusCheck);
+
 
             // Get selected icon
             const iconName = this.iconPicker ? this.iconPicker.getSelectedIcon() : '';
-            console.log('[Modal] Selected icon:', iconName);
+
 
             const iconUrl = iconName
                 ? `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${iconName}.png`
@@ -106,7 +106,7 @@ class AddBookmarkModal extends HTMLElement {
                         if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_added'));
                     });
                 }
-                console.log('[Modal] Operation successful!');
+
                 this.close();
             } catch (error) {
                 console.error('[Modal] Error:', error);
@@ -117,7 +117,7 @@ class AddBookmarkModal extends HTMLElement {
 
         this.escapeHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && this.isOpen) {
-                console.log('[Modal] Escape pressed - closing');
+
                 this.close();
             }
         };
@@ -157,7 +157,7 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     open() {
-        console.log('[Modal] Opening modal');
+
         this.isOpen = true;
         this.isEditMode = false;
         this.currentItemId = null;
@@ -171,7 +171,7 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     openForEdit(item: any) {
-        console.log('[Modal] Opening for edit', item);
+
         this.isOpen = true;
         this.isEditMode = true;
         this.currentItemId = item.id;
@@ -207,7 +207,7 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     close() {
-        console.log('[Modal] Closing modal');
+
         this.isOpen = false;
         this.selectedIconName = '';
         this.resetForm();
@@ -238,13 +238,13 @@ class AddBookmarkModal extends HTMLElement {
                 this.iconPicker = document.createElement('icon-picker');
                 this.iconPicker.addEventListener('icon-selected', (e: CustomEvent) => {
                     this.selectedIconName = e.detail.iconName;
-                    console.log('[Modal] Icon selected:', this.selectedIconName);
+
                 });
             }
 
             container.innerHTML = '';
             container.appendChild(this.iconPicker);
-            console.log('[Modal] Icon picker initialized');
+
         });
     }
 

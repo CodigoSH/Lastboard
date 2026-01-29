@@ -156,5 +156,15 @@
   "auth.sign_out": "Çıkış Yap",
   "settings.github": "GitHub",
   "notifier.downloading_secure": "Güvenli indirme başlatılıyor...",
-  "status.offline": "Çevrimdışı"
+  "status.offline": "Çevrimdışı",
+  "widget.telemetry.update_interval": "Güncelleme Aralığı",
+  "widget.telemetry.cpu": "CPU",
+  "widget.telemetry.ram": "RAM",
+  "widget.telemetry.temp": "SICAKLIK",
+  "widget.config.title": "Widget'ı Yapılandır",
+  "widget.clock.timezone": "Saat Dilimi",
+  "widget.clock.auto_detect": "Otomatik Algıla",
+  "widget.clock.timezone_desc": "e.g. UTC, 'local'",
+  "widget.clock.use_12h": "12 Saat Formatı",
+  "widget.clock.show_date": "Tarihi Göster"
 }
