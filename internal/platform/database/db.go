@@ -46,6 +46,7 @@ func runMigrations(db *sql.DB) error {
 			w INTEGER NOT NULL,
 			h INTEGER NOT NULL,
 			content TEXT,
+			url TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY(parent_id) REFERENCES items(id) ON DELETE CASCADE
 		);`,
@@ -59,7 +60,7 @@ func runMigrations(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4;`,
 		`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2;`,
 		`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT '';`,
-		`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'CSH Dashboard';`,
+		`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Kashboard';`,
 		// Add url column for direct access (required for some strict persistence modes)
 		`ALTER TABLE items ADD COLUMN url TEXT;`,
 	}
@@ -99,13 +100,8 @@ func seedItems(db *sql.DB) error {
 	// IDs must match the frontend mock data to avoid sync mismatch on fresh load
 	// Frontend uses IDs 1-6. We can't easily force ID in INSERT with AUTOINCREMENT in SQLite unless we explicit set it.
 	// SQLite allows inserting into INTEGER PRIMARY KEY.
-	query := `INSERT INTO items (id, type, x, y, w, h, content) VALUES 
-		(1, 'bookmark', 1, 1, 1, 1, '{"label": "Proxmox", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/proxmox.png", "iconName": "proxmox"}'),
-		(2, 'bookmark', 2, 1, 1, 1, '{"label": "TrueNAS", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/truenas.png", "iconName": "truenas"}'),
-		(3, 'bookmark', 3, 1, 1, 1, '{"label": "Cloudflare", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cloudflare.png", "iconName": "cloudflare"}'),
-		(4, 'bookmark', 1, 2, 1, 1, '{"label": "GitHub", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/github.png", "iconName": "github"}'),
-		(5, 'bookmark', 2, 2, 1, 1, '{"label": "VS Code", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/vscode.png", "iconName": "vscode"}'),
-		(6, 'bookmark', 3, 2, 1, 1, '{"label": "Documentation", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/docs.png", "iconName": "docs"}');`
+	query := `INSERT INTO items (id, type, x, y, w, h, content, url) VALUES 
+		(1, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/codigosh/Kashboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/codigosh/Kashboard');`
 
 	_, err := db.Exec(query)
 	return err
