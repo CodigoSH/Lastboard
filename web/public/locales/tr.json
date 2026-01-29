@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "Otomatik Algıla",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "12 Saat Formatı",
-  "widget.clock.show_date": "Tarihi Göster"
+  "widget.clock.show_date": "Tarihi Göster",
+  "widget.add_title": "Widget Ekle",
+  "widget.add_subtitle": "Eklemek için bir widget seçin",
+  "general.restore": "Geri Yükle",
+  "action.add_widget": "Widget Ekle"
 }

@@ -8,5 +8,8 @@
   },
   "devDependencies": {
     "bun-types": "latest"
+  },
+  "dependencies": {
+    "lit": "^3.3.2"
   }
 }

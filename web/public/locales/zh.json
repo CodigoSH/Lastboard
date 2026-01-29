@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "自动检测",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "使用 12 小时制",
-  "widget.clock.show_date": "显示日期"
+  "widget.clock.show_date": "显示日期",
+  "widget.add_title": "添加小部件",
+  "widget.add_subtitle": "选择要添加的小部件",
+  "general.restore": "恢复",
+  "action.add_widget": "添加小部件"
 }

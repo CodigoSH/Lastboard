@@ -19,8 +19,10 @@
         "forceConsistentCasingInFileNames": true,
         "allowJs": true,
         "types": [
-            "bun-types" // add other types if needed
-        ]
+            "bun-types"
+        ],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
     },
     "include": [
         "web/src/**/*",

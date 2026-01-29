@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "Αυτόματος εντοπισμός",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "Μορφή 12 ωρών",
-  "widget.clock.show_date": "Εμφάνιση ημερομηνίας"
+  "widget.clock.show_date": "Εμφάνιση ημερομηνίας",
+  "widget.add_title": "Προσθήκη στοιχείου",
+  "widget.add_subtitle": "Επιλέξτε γραφικό στοιχείο",
+  "general.restore": "Επαναφορά",
+  "action.add_widget": "Προσθήκη στοιχείου"
 }

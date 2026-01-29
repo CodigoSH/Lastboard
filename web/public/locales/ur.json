@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "خودکار شناخت",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "12 گھنٹے کی شکل",
-  "widget.clock.show_date": "تاریخ دکھائیں"
+  "widget.clock.show_date": "تاریخ دکھائیں",
+  "widget.add_title": "ویجیٹ شامل کریں",
+  "widget.add_subtitle": "شامل کرنے کے لیے ایک ویجیٹ منتخب کریں",
+  "general.restore": "بحال کریں",
+  "action.add_widget": "ویجیٹ شامل کریں"
 }

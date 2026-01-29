@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "تشخیص خودکار",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "فرمت 12 ساعته",
-  "widget.clock.show_date": "نمایش تاریخ"
+  "widget.clock.show_date": "نمایش تاریخ",
+  "widget.add_title": "افزودن ویجت",
+  "widget.add_subtitle": "یک ویجت برای افزودن انتخاب کنید",
+  "general.restore": "بازیابی",
+  "action.add_widget": "افزودن ویجت"
 }

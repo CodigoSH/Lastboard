@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "Wykryj automatycznie",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "Format 12-godzinny",
-  "widget.clock.show_date": "Pokaż datę"
+  "widget.clock.show_date": "Pokaż datę",
+  "widget.add_title": "Dodaj widżet",
+  "widget.add_subtitle": "Wybierz widżet do dodania",
+  "general.restore": "Przywróć",
+  "action.add_widget": "Dodaj widżet"
 }

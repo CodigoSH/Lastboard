@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "স্বয়ংক্রিয় সনাক্তকরণ",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "১২-ঘণ্টার বিন্যাস",
-  "widget.clock.show_date": "তারিখ দেখান"
+  "widget.clock.show_date": "তারিখ দেখান",
+  "widget.add_title": "উইজেট যোগ করুন",
+  "widget.add_subtitle": "যোগ করার জন্য একটি উইজেট নির্বাচন করুন",
+  "general.restore": "পুনরুদ্ধার",
+  "action.add_widget": "উইজেট যোগ করুন"
 }

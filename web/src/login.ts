@@ -10,6 +10,12 @@ bootstrap(async () => {
     const feedback = document.getElementById('feedback') as HTMLElement;
     const submitBtn = document.getElementById('submitBtn') as any;
 
+    const container = document.querySelector('.login-container, .setup-container') as HTMLElement;
+    if (container) {
+        container.style.opacity = '0';
+        container.style.transition = 'opacity 0.3s ease';
+    }
+
     if (!form) return;
 
     // Localize UI
@@ -19,6 +25,11 @@ bootstrap(async () => {
         document.querySelector('label[for="username"]')!.textContent = i18n.t('auth.username');
         document.querySelector('label[for="password"]')!.textContent = i18n.t('auth.password');
         if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
+
+        // Show UI after text update
+        requestAnimationFrame(() => {
+            if (container) container.style.opacity = '1';
+        });
     };
     localize();
 

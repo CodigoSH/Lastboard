@@ -283,7 +283,7 @@ class BookmarkGrid extends HTMLElement {
         // Apply Constraints based on type
         const item = this.bookmarks.find(b => b.id === this.resizeTargetId);
         if (item) {
-            const size = this.applyResizeConstraints(newW, newH, item.type);
+            const size = this.applyResizeConstraints(newW, newH, item);
 
             const potentialRect = {
                 x: item.x,
@@ -301,26 +301,41 @@ class BookmarkGrid extends HTMLElement {
         }
     }
 
-    applyResizeConstraints(w: number, h: number, type: string) {
-        // Common min size
-        let finalW = Math.max(1, w);
-        let finalH = Math.max(1, h);
+    applyResizeConstraints(w: number, h: number, item: GridItem) {
+        let minW = 1;
+        let minH = 1;
 
-        if (type === 'section') {
+        if (item.type === 'widget') {
+            const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+            const widgetId = (data.widgetId || '').toLowerCase();
+
+            if (widgetId === 'notepad') {
+                minW = 2;
+                minH = 2;
+            } else if (widgetId === 'clock') {
+                // Fixed 2x1
+                return { w: 2, h: 1 };
+            } else if (widgetId === 'telemetry') {
+                // Fixed 2x1
+                return { w: 2, h: 1 };
+            }
+
+            // Widgets: 12x12 Max
+            let finalW = Math.max(minW, Math.min(12, w));
+            let finalH = Math.max(minH, Math.min(12, h));
+            return { w: finalW, h: finalH };
+
+        } else if (item.type === 'section') {
             // Sections: 1x1 to 12x12
-            finalW = Math.min(12, finalW);
-            finalH = Math.min(12, finalH);
-        } else if (type === 'widget') {
-            // Widgets: Flexible, but maybe cap at reasonable max
-            finalW = Math.min(12, finalW);
-            finalH = Math.min(12, finalH);
+            let finalW = Math.max(1, Math.min(12, w));
+            let finalH = Math.max(1, Math.min(12, h));
+            return { w: finalW, h: finalH };
         } else {
-            // Bookmarks: 1x1, 1x2, 2x1, 2x2 ONLY
-            // Means both dims max 2
-            finalW = Math.min(2, finalW);
-            finalH = Math.min(2, finalH);
+            // Bookmarks: Max 2x2
+            let finalW = Math.max(1, Math.min(2, w));
+            let finalH = Math.max(1, Math.min(2, h));
+            return { w: finalW, h: finalH };
         }
-        return { w: finalW, h: finalH };
     }
 
     async handleWindowMouseUp(e: MouseEvent) {
@@ -339,7 +354,7 @@ class BookmarkGrid extends HTMLElement {
         const item = this.bookmarks.find(b => b.id === this.resizeTargetId);
         if (!item) return;
 
-        const size = this.applyResizeConstraints(newW, newH, item.type);
+        const size = this.applyResizeConstraints(newW, newH, item);
         newW = size.w;
         newH = size.h;
 
@@ -428,6 +443,10 @@ class BookmarkGrid extends HTMLElement {
                 this.dragOffsetX = e.clientX - rect.left;
                 this.dragOffsetY = e.clientY - rect.top;
 
+                // FORCE Drag Image to be the whole card, not just the icon/text
+                if (e.dataTransfer) {
+                    e.dataTransfer.setDragImage(target, this.dragOffsetX, this.dragOffsetY);
+                }
             }
         });
 

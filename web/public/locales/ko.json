@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "자동 감지",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "12시간 형식 사용",
-  "widget.clock.show_date": "날짜 표시"
+  "widget.clock.show_date": "날짜 표시",
+  "widget.add_title": "위젯 추가",
+  "widget.add_subtitle": "추가할 위젯 선택",
+  "general.restore": "복원",
+  "action.add_widget": "위젯 추가"
 }

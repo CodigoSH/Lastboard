@@ -119,6 +119,42 @@ const newKeys = {
         ru: "ТЕМП", zh: "温度", ja: "温度", ko: "온도", nl: "TEMP",
         pl: "TEMP", tr: "SICAKLIK", id: "SUHU", ar: "حرارة", fa: "دما",
         hi: "तापमान", bn: "তাপমাত্রা", ur: "درجہ حرارت", el: "ΘΕΡΜ"
+    },
+    // --- MISSING KEYS FIXED ---
+    "widget.add_title": {
+        es: "Añadir Widget", fr: "Ajouter Widget", de: "Widget hinzufügen", it: "Aggiungi Widget", pt: "Adicionar Widget",
+        ru: "Добавить виджет", zh: "添加小部件", ja: "ウィジェットを追加", ko: "위젯 추가", nl: "Widget toevoegen",
+        pl: "Dodaj widżet", tr: "Widget Ekle", id: "Tambah Widget", ar: "أضف أداة", fa: "افزودن ویجت",
+        hi: "विजेट जोड़ें", bn: "উইজেট যোগ করুন", ur: "ویجیٹ شامل کریں", el: "Προσθήκη στοιχείου",
+        all: "Add Widget"
+    },
+    "widget.add_subtitle": {
+        es: "Selecciona un widget para añadir", fr: "Sélectionnez un widget à ajouter",
+        de: "Wählen Sie ein Widget zum Hinzufügen", it: "Seleziona un widget da aggiungere",
+        pt: "Selecione um widget para adicionar", ru: "Выберите виджет для добавления",
+        zh: "选择要添加的小部件", ja: "追加するウィジェットを選択",
+        ko: "추가할 위젯 선택", nl: "Selecteer een widget om toe te voegen",
+        pl: "Wybierz widżet do dodania", tr: "Eklemek için bir widget seçin",
+        id: "Pilih widget untuk ditambahkan", ar: "اختر أداة لإضافتها",
+        fa: "یک ویجت برای افزودن انتخاب کنید", hi: "जोड़ने के लिए एक विजेट चुनें",
+        bn: "যোগ করার জন্য একটি উইজেট নির্বাচন করুন", ur: "شامل کرنے کے لیے ایک ویجیٹ منتخب کریں",
+        el: "Επιλέξτε γραφικό στοιχείο",
+        all: "Select a widget to add"
+    },
+    "general.restore": {
+        es: "Restaurar", fr: "Restaurer", de: "Wiederherstellen", it: "Ripristina", pt: "Restaurar",
+        ru: "Восстановить", zh: "恢复", ja: "復元", ko: "복원", nl: "Herstellen",
+        pl: "Przywróć", tr: "Geri Yükle", id: "Pulihkan", ar: "استعادة", fa: "بازیابی",
+        hi: "पुनर्स्थापित करें", bn: "পুনরুদ্ধার", ur: "بحال کریں", el: "Επαναφορά",
+        all: "Restore"
+    },
+    // --- LINGERING MISSING KEYS ---
+    "action.add_widget": {
+        es: "Añadir Widget", fr: "Ajouter Widget", de: "Widget hinzufügen", it: "Aggiungi Widget", pt: "Adicionar Widget",
+        ru: "Добавить виджет", zh: "添加小部件", ja: "ウィジェットを追加", ko: "위젯 추가", nl: "Widget toevoegen",
+        pl: "Dodaj widżet", tr: "Widget Ekle", id: "Tambah Widget", ar: "أضف أداة", fa: "افزودن ویجت",
+        hi: "विजेट जोड़ें", bn: "উইজেট যোগ করুন", ur: "ویجیٹ شامل کریں", el: "Προσθήκη στοιχείου",
+        all: "Add Widget"
     }
 };
 

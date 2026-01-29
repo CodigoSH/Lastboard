@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "स्वतः पता लगाएँ",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
   "widget.clock.use_12h": "12-घंटे का प्रारूप",
-  "widget.clock.show_date": "तिथि दिखाएं"
+  "widget.clock.show_date": "तिथि दिखाएं",
+  "widget.add_title": "विजेट जोड़ें",
+  "widget.add_subtitle": "जोड़ने के लिए एक विजेट चुनें",
+  "general.restore": "पुनर्स्थापित करें",
+  "action.add_widget": "विजेट जोड़ें"
 }
