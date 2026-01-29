@@ -49,6 +49,9 @@
             max-width: 420px;
             padding: 20px;
             z-index: 10;
+            opacity: 0;
+            /* Hidden by default to prevent FOUT (Flash of Untranslated Text) */
+            transition: opacity 0.3s ease;
         }
 
         /* Override Paper for Login/Setup context */

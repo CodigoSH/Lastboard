@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "Automatisch erkennen",
   "widget.clock.timezone_desc": "z.B. Europe/Berlin, UTC oder 'local'",
   "widget.clock.use_12h": "12-Stunden-Format",
-  "widget.clock.show_date": "Datum anzeigen"
+  "widget.clock.show_date": "Datum anzeigen",
+  "widget.add_title": "Widget hinzufügen",
+  "widget.add_subtitle": "Wählen Sie ein Widget zum Hinzufügen",
+  "general.restore": "Wiederherstellen",
+  "action.add_widget": "Widget hinzufügen"
 }

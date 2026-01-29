@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "Auto Detectar",
   "widget.clock.timezone_desc": "ex. America/Sao_Paulo, UTC, ou 'local'",
   "widget.clock.use_12h": "Usar formato 12h",
-  "widget.clock.show_date": "Mostrar Data"
+  "widget.clock.show_date": "Mostrar Data",
+  "widget.add_title": "Adicionar Widget",
+  "widget.add_subtitle": "Selecione um widget para adicionar",
+  "general.restore": "Restaurar",
+  "action.add_widget": "Adicionar Widget"
 }

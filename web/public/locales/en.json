@@ -167,5 +167,8 @@
   "widget.telemetry.update_interval": "Update Interval",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.ram": "RAM",
-  "widget.telemetry.temp": "TEMP"
+  "widget.telemetry.temp": "TEMP",
+  "widget.add_title": "Add Widget",
+  "widget.add_subtitle": "Select a widget to add",
+  "general.restore": "Restore"
 }

@@ -80,7 +80,9 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
         // We serialize `content` (which includes widgetId and other data) back to string 
         // or pass specific properties.
         // Provide item-id for persisting
-        const dataContent = data.text || ''; // Specific for Notepad?
+        const rawContent = data.text || '';
+        // ESCAPE DOUBLE QUOTES to prevent breaking the HTML attribute
+        const dataContent = rawContent.replace(/"/g, '&quot;');
 
         return `
             <div class="bookmark-grid__card"
@@ -98,7 +100,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
                      ${['clock', 'telemetry'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
                      <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
                 </div>
-                <div class="resize-handle"></div>
+                ${['clock', 'telemetry'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}
                 ` : ''}
             </div>
          `;
@@ -107,7 +109,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
     const icon = data.icon || '';
     const isIconUrl = icon.startsWith('http') || icon.startsWith('/');
     const iconHtml = isIconUrl
-        ? `<img src="${icon}" alt="${data.label}" class="bookmark-grid__icon-img" />`
+        ? `<img src="${icon}" alt="${data.label}" class="bookmark-grid__icon-img" draggable="false" />`
         : (icon || `<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`);
 
     const hrefAttr = isEditing ? 'role="button"' : `href="${data.url || '#'}" target="_blank"`;

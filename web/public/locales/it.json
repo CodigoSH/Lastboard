@@ -166,5 +166,9 @@
   "widget.clock.auto_detect": "Rilevamento auto",
   "widget.clock.timezone_desc": "es. Europe/Rome, UTC, o 'local'",
   "widget.clock.use_12h": "Usa formato 12h",
-  "widget.clock.show_date": "Mostra data"
+  "widget.clock.show_date": "Mostra data",
+  "widget.add_title": "Aggiungi Widget",
+  "widget.add_subtitle": "Seleziona un widget da aggiungere",
+  "general.restore": "Ripristina",
+  "action.add_widget": "Aggiungi Widget"
 }

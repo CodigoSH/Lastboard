@@ -83,6 +83,14 @@ export const collisionService = {
                     const localX = dX - Number(item.x) + 1;
                     const localY = dY - Number(item.y) + 1;
 
+                    // 1. BOUNDS CHECK: Ensure the item FITS inside the section
+                    // If localX < 1 or localX + dW - 1 > item.w, it's sticking out
+                    if (localX < 1 || localX + dW - 1 > Number(item.w || 1) ||
+                        localY < 1 || localY + dH - 1 > Number(item.h || 1)) {
+                        // Item is partially outside the section -> Treat as collision (Invalid)
+                        return { valid: false, x: dX, y: dY };
+                    }
+
                     // Check for overlap with EXISTING children of this target section
                     const children = allItems.filter(i => i.parent_id === item.id);
                     let childCollision = false;
