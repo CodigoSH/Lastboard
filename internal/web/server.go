@@ -125,7 +125,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	var projectName string
 
 	// Default
-	projectName = "CSH Dashboard"
+	projectName = "Kashboard"
 
 	if username != "" {
 		// Query users table for project_name

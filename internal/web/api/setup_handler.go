@@ -30,9 +30,11 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Parse Input
+	// 2. Parse Input
 	var input struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
+		Language string `json:"language"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -44,6 +46,11 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Default to 'en' if not provided
+	if input.Language == "" {
+		input.Language = "en"
+	}
+
 	// 3. Hash Password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -53,8 +60,8 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 
 	// 4. Create Admin User
 	_, err = h.DB.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language, grid_columns_pc, grid_columns_tablet, grid_columns_mobile) 
-		VALUES (?, ?, ?, 'system', '#0078D4', 'en', 12, 4, 2)`,
-		input.Username, string(hashedPassword), "admin")
+		VALUES (?, ?, ?, 'system', '#f97316', ?, 12, 4, 2)`,
+		input.Username, string(hashedPassword), "admin", input.Language)
 
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)

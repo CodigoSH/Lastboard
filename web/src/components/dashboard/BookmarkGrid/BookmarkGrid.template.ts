@@ -20,7 +20,12 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: {
 
     return `
     ${rootItems.map(b => {
-        const data = typeof b.content === 'string' ? JSON.parse(b.content) : b.content;
+        let data: any = {};
+        try {
+            data = typeof b.content === 'string' ? JSON.parse(b.content) : b.content;
+        } catch (e) {
+            console.error('Failed to parse content for item', b.id, e);
+        }
         const isSection = b.type === 'section'; // RESIZABLE BOX
 
         if (isSection) {
@@ -143,7 +148,12 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
 
 function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: boolean = false) {
     return bookmarks.map(b => {
-        const data = typeof b.content === 'string' ? JSON.parse(b.content) : b.content;
+        let data: any = {};
+        try {
+            data = typeof b.content === 'string' ? JSON.parse(b.content) : b.content;
+        } catch (e) {
+            console.error('Failed to parse content for item (nested)', b.id, e);
+        }
         return renderBookmarkCard(b, data, isEditing);
     }).join('');
 }
