@@ -195,6 +195,7 @@
   "widget.notepad.prompt.new_item": "New Item",
   "widget.notepad.prompt.code_block": "Code Block",
   "widget.notepad.error.save": "Save Failed: ",
+  "widget.notepad.tool.scroll_hint": "Scroll horizontally with mouse wheel to see more tools",
   "widget.clock.name": "Clock",
   "widget.clock.description": "Digital clock with date",
   "widget.notepad.name": "Notepad",

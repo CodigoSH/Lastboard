@@ -38,8 +38,6 @@ class StatusService {
             return content && content.statusCheck === true;
         });
 
-        console.log(`[StatusService] Checking status for ${items.length} bookmarks via Backend Proxy (Insecure TLS + TCP Fallback)`);
-
         for (const item of items) {
             this.checkItem(item);
         }

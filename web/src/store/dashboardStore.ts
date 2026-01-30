@@ -82,7 +82,6 @@ class DashboardStore {
                 const items = JSON.parse(serialized);
                 if (Array.isArray(items) && items.length > 0) {
                     this.state.items = items;
-                    console.log('[DashboardStore] Loaded from localStorage, count:', items.length);
                 }
             }
         } catch (error) {
@@ -222,7 +221,6 @@ class DashboardStore {
                 await dashboardService.updateItem(updatedItem);
                 this.state.isOffline = false;
                 this.notify(); // Notify connectivity restore
-                console.log('[DashboardStore] Item sync successful');
             } catch (apiError) {
                 // Rollback on failure
                 console.error('[DashboardStore] Failed to sync item update (offline?), keeping local state', apiError);
