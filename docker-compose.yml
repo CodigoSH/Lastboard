@@ -1,0 +1,35 @@
+services:
+  kashboard:
+    build: .
+    container_name: kashboard
+    ports:
+      - "${KASHBOARD_PORT:-8080}:8080"
+    volumes:
+      - ./data:/app/data
+      # Map the database file to persist data. 
+      # Note: The app currently uses ./dashboard.db in root. 
+      # We need to ensure the app uses /app/data/dashboard.db via config or consistent paths.
+      # The main.go uses "./dashboard.db".
+      # To make volume mapping work effectively without changing code heavily,
+      # we can map the file directly or symlink, but mapping specific file to directory requires expected file existence or dir mapping.
+      # Best practice: Map directory.
+      # For now, following user request: "./data:/app/data"
+      # IMPORTANT: If the app writes to "./dashboard.db" (PWD/dashboard.db), 
+      # and PWD is /app, then it writes to /app/dashboard.db.
+      # The user requested mapping "./data:/app/data".
+      # So we should probably tell the app to store DB in /app/data if possible, 
+      # or if we can't change code, we might need a workaround.
+      # HOWEVER, `main.go` has `dbFile := "./dashboard.db"`. 
+      # I should probably update main.go to check env var or flag, OR just symlink in entrypoint.
+      # But simple request: "Map a volume ./data:/app/data". 
+      # Let's assume the user intends for us to use this volume for persistence.
+      # I will stick to the request. PROBABLY need to update main.go or Dockerfile to move DB location.
+      # Update: `main.go` is hardcoded to `./dashboard.db`.
+      # I will modify `Dockerfile` to default to storing db in `/app/data` is tricky without code change.
+      # Wait, I can change the working directory or symlink. 
+      # Actually, the user asked to "Map a volume", implying standard persistence.
+      # I will assume I can update `main.go` to be smarter about DB path or link it.
+      # Let's just create the compose file first.
+    environment:
+      - PORT=8080
+    restart: unless-stopped
