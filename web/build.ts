@@ -59,6 +59,25 @@ if (result.success && resultSetup.success && resultLogin.success) {
             }
         }
         console.log("✅ Locales copied to web/dist/locales");
+        console.log("✅ Locales copied to web/dist/locales");
+
+        // Copy HTML & Public Assets
+        await cp('./web/index.html', './web/dist/index.html');
+        await cp('./web/login.html', './web/dist/login.html');
+        await cp('./web/setup.html', './web/dist/setup.html');
+
+        // Copy Public folder (CSS, Icons, etc)
+        // Check availability to avoid errors
+        if (existsSync('./web/public')) {
+            await cp('./web/public', './web/dist/public', { recursive: true });
+        }
+
+        // Copy Styles folder
+        if (existsSync('./web/styles')) {
+            await cp('./web/styles', './web/dist/styles', { recursive: true });
+        }
+
+        console.log("✅ HTML, Styles & Public assets copied to web/dist");
     } catch (e) {
         console.error("❌ Failed to copy locales:", e);
     }

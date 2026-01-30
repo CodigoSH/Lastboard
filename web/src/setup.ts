@@ -84,6 +84,15 @@ bootstrap(async () => {
     // AppButton component already handles 'type="submit"' click by calling form.requestSubmit() internally.
     // Having both caused a double-submission race condition (Success + Error).
 
+    // Enable implicit submission via Enter key
+    form.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (form.requestSubmit) form.requestSubmit();
+            else form.submit(); // Fallback
+        }
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 

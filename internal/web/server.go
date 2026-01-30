@@ -71,42 +71,48 @@ func (s *Server) routes() {
 	// Since we are using a Single Page App (SPA) / or hybrid, we serve assets.
 	fileServer := http.FileServer(http.FS(s.assets))
 
-	// Dynamic Index Handler
+	// Dynamic Index Handler (UNPROTECTED wrapper to check for static files first)
+	// We need 'protect' middleware available for the fallback
+	protectedIndex := protect(http.HandlerFunc(s.serveIndex))
+
 	indexHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		// Serve API or specific files directly?
-		if path == "/" || path == "/index.html" {
-			s.serveIndex(w, r)
-			return
-		}
 
-		// Setup and Login pages are distinct HTML files in dist
+		// 1. Explicit Public Pages
 		if path == "/login" || path == "/login.html" {
 			s.serveFile(w, r, "login.html")
 			return
 		}
+		// Setup page is now handled by explicit handler below to ensure security check precedence
 		if path == "/setup" || path == "/setup.html" {
-			s.serveFile(w, r, "setup.html")
-			return
+			// Fallthrough to standard handler which will be caught by router exact match?
+			// No, ServeMux might route /setup to here if registered as "/"?
+			// Actually, if we register "/setup", ServeMux prefers looking for most specific pattern.
+			// But if main handler is "/", and we request "/setup", does it go to "/" or "/setup"?
+			// It goes to "/setup" if exact match exists.
+			// However, explicit specific handlers take precedence in standard ServeMux.
+			// So we can safely remove this block.
 		}
 
-		// Try to serve static file
-		// If it's a file that exists, serve it.
-		f, err := s.assets.Open(strings.TrimPrefix(path, "/"))
-		if err == nil {
-			f.Close()
-			fileServer.ServeHTTP(w, r)
-			return
+		// 2. Try to serve static file (Public)
+		// If it's a file that exists in assets, serve it.
+		if path != "/" && path != "/index.html" {
+			f, err := s.assets.Open(strings.TrimPrefix(path, "/"))
+			if err == nil {
+				f.Close()
+				fileServer.ServeHTTP(w, r)
+				return
+			}
 		}
 
-		// If 404 and not API, default to index (SPA routing)
-		// But Kashboard seems to be widget based.
-		// For now, let standard file server handle 404s or fall through?
-		// Existing logic just served file server.
-		fileServer.ServeHTTP(w, r)
+		// 3. Fallback to Protected Index (SPA Root)
+		// If we got here, it's either "/" or a client-side route, OR a real 404.
+		// We treat it as SPA root which requires Auth.
+		protectedIndex.ServeHTTP(w, r)
 	})
 
-	s.Router.Handle("/", protect(indexHandler))
+	// Mount UNPROTECTED handler because it handles its own static file exemption
+	s.Router.Handle("/", indexHandler)
 
 	// Public Routes requiring explicit handlers to bypass 'protect' wrapper if needed?
 	// The previous logic used specific handlers.
@@ -143,8 +149,23 @@ func (s *Server) routes() {
 	s.Router.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
 	s.Router.Handle("DELETE /api/users", protect(http.HandlerFunc(userHandler.DeleteUser)))
 
-	// Setup Page
+	// Setup Page (Secured)
 	s.Router.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
+		// Security Check: If users exist, redirect to login
+		var exists bool
+		err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists)
+		if err != nil {
+			log.Printf("Error checking system state: %v", err)
+			http.Error(w, "Internal System Error", http.StatusInternalServerError)
+			return
+		}
+
+		if exists {
+			// CRITICAL: Prevent access to HTML
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
 		s.serveFile(w, r, "setup.html")
 	})
 
