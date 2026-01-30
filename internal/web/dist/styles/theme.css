@@ -1,0 +1,169 @@
+:root {
+    /* --- Antigravity Design System --- */
+
+    /* Core Colors */
+    --canvas: #121212;
+    /* Primary void background */
+    --panel: #1a1a1a;
+    /* Sidebar/Header background */
+    --surface: rgba(36, 36, 36, 0.5);
+    /* Translucent Bento background */
+    --surface-solid: #242424;
+    /* Solid fallback */
+    --glass-blur: blur(12px);
+
+    /* Accents & States */
+    --accent: #0078D4;
+    /* Primary Action Blue */
+    --accent-alt: #00f5a0;
+    /* Legacy Emerald / Detail accent */
+    --border: #333333;
+    /* Subtle borders */
+    --border-bright: #444444;
+    /* Interactive borders */
+
+    /* Typography */
+    --text-main: #ffffff;
+    --text-dim: #a0a0a0;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Geometry */
+    --radius: 8px;
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 20px;
+    --spacing-lg: 32px;
+    --spacing-xl: 48px;
+    --spacing-xl: 48px;
+}
+
+/* --- Light Mode Overrides --- */
+:root.light-theme {
+    /* Bright, clean canvas */
+    --canvas: #f0f2f5;
+
+    /* White panels */
+    --panel: #ffffff;
+
+    /* Frosted glass surface for cards */
+    --surface: rgba(255, 255, 255, 0.7);
+    --surface-solid: #ffffff;
+
+    /* Dark text for contrast */
+    --text-main: #1a202c;
+    --text-dim: #64748b;
+
+    /* Borders need to be visible but subtle against light bg */
+    --border: #e2e8f0;
+    --border-bright: #cbd5e1;
+
+    /* Adjust glass blur for light mode if needed, keep same for consistency */
+    --glass-blur: blur(16px);
+}
+
+/* Global Aesthetics */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--canvas);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+    /* Prevent horizontal jitter */
+}
+
+::selection {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* --- Premium Aesthetics: Invisible Scrollbars (Forced) --- */
+html,
+body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+* {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+/* --- Layout Utilities --- */
+
+.top-bar {
+    height: 48px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background-color: var(--panel);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    z-index: 1100;
+}
+
+.top-bar-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Main Content Area */
+.main-content {
+    /* Full width with balanced padding */
+    padding: 64px 32px 32px;
+    max-width: 100%;
+    margin: 0;
+}
+
+/* Bento Architecture */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.bento-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+}
+
+.mono-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}

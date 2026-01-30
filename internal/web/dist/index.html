@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .ProjectName}}{{.ProjectName}}{{else}}Kashboard{{end}}</title>
+    <link rel="stylesheet" href="/styles/theme.css?v=2">
+    <script>
+        window.CSH_CONFIG = {
+            API_BASE_URL: '', // Root-relative for local Go server
+            DEBUG_MODE: true
+        };
+    </script>
+    <script type="module" src="bundle.js?v=52"></script>
+</head>
+
+<body>
+    <!-- Utility Components -->
+    <app-topbar id="main-topbar" title="{{if .ProjectName}}{{.ProjectName}}{{else}}Kashboard{{end}}"></app-topbar>
+    <app-right-drawer id="right-drawer"></app-right-drawer>
+    <app-notifier></app-notifier>
+
+    <div class="main-content">
+        <div id="dashboard-root">
+            <!-- Modular Bookmark and Section components injected here -->
+        </div>
+    </div>
+</body>
+
+</html>

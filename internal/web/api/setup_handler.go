@@ -18,14 +18,14 @@ func NewSetupHandler(db *sql.DB) *SetupHandler {
 
 func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	// 1. Security Check: Only allow setup if NO users exist
-	var count int
-	if err := h.DB.QueryRow("SELECT COUNT(*) FROM users").Scan(&count); err != nil {
+	var exists bool
+	if err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	if count > 0 {
-		http.Error(w, "Setup already completed", http.StatusForbidden)
+	if exists {
+		http.Error(w, "System already initialized", http.StatusForbidden)
 		return
 	}
 

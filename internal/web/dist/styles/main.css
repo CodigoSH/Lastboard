@@ -1,0 +1,89 @@
+/* Preferences Split Layout */
+
+.settings-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--mantine-body-bg);
+    transition: background-color 0.2s ease;
+}
+
+.settings-sidebar {
+    width: 260px;
+    height: 100%;
+    border-right: 1px solid var(--mantine-color-dark-4);
+    background-color: var(--mantine-color-dark-7);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--mantine-spacing-xl);
+    background-color: var(--mantine-color-dark-8);
+    position: relative;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Responsive Sidebar (Collapsed Mode) */
+@media (max-width: 768px) {
+
+    /* Collapse Sidebar Width */
+    .settings-sidebar {
+        width: 70px;
+        /* Reduced width */
+        transition: width 0.3s ease;
+        align-items: center;
+        /* Center items horizontally */
+    }
+
+    /* Adjust Deep Elements inside Shadow DOM 
+       Note: Since we can't style shadow DOM from here without proper parts,
+       we rely on the component reusing inherited styles or global variables, 
+       BUT here we have a challenge: the component styles are encapsulated.
+       
+       Solution: We must update the Web Component's internal styles to be responsive
+       OR passing a class. Since the prompt asked for CSS logic primarily, 
+       and we are "Lead CSS Engineer", we should ideally have the component listen to 
+       layout changes or use :host-context if supported, or media queries INSIDE the component.
+       
+       Wait, the component has its own <style>. I must update THAT for the internal layout changes
+       (hiding text, centering icons).
+       
+       The `main.css` controls the container sizing (width of .settings-sidebar).
+    */
+
+    /* Content Area expands */
+    .settings-content {
+        padding: var(--mantine-spacing-md);
+        /* Slightly reduced padding */
+    }
+}
+
+/* --- Premium Aesthetics: Invisible Scrollbars --- */
+::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
