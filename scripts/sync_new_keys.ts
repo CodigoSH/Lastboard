@@ -2,160 +2,97 @@ import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 const LOCALE_DIR = join(process.cwd(), 'web/public/locales');
+const MASTER_FILE = join(LOCALE_DIR, 'en.json');
 
-const newKeys = {
-    "header.view_changelog": {
-        es: "Ver Registro de Cambios",
-        fr: "Voir le journal des modifications",
-        de: "Änderungsprotokoll anzeigen",
-        it: "Visualizza registro modifiche",
-        pt: "Ver Registro de Alterações",
-        ru: "Просмотреть список изменений",
-        zh: "查看更新日志",
-        ja: "変更履歴を表示",
-        ko: "변경 로그 보기",
-        nl: "Bekijk wijzigingslog",
-        pl: "Pokaż dziennik zmian",
-        tr: "Değişiklik Günlüğünü Görüntüle",
-        id: "Lihat Log Perubahan",
-        ar: "عرض سجل التغييرات",
-        fa: "مشاهده گزارش تغییرات",
-        hi: "परिवर्तन लॉग देखें",
-        bn: "পরিবর্তন লগ দেখুন",
-        ur: "تبدیلی لاگ دیکھیں",
-        el: "Προβολή αρχείου αλλαγών"
+const masterContent = JSON.parse(readFileSync(MASTER_FILE, 'utf-8'));
+const masterKeys = Object.keys(masterContent);
+
+console.log(`📚 Master (EN) has ${masterKeys.length} keys.`);
+
+// FULL DICTIONARY FOR ALL 20 LANGUAGES
+// Keys: es, fr, de, it, pt, ru, zh, ja, ko, nl, pl, tr, id, ar, fa, el, hi, bn, ur
+const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
+    // --- Existing Keys (Preserved) ---
+    "widget.notepad.placeholder": {
+        "es": "Empieza a escribir tus notas...", "fr": "Commencez à écrire vos notes...", "it": "Inizia a scrivere le tue note...", "pt": "Comece a escrever...", "de": "Notizen schreiben...",
+        "ru": "Начать писать...", "zh": "开始写作...", "ja": "書き始める...", "ko": "쓰기 시작...", "nl": "Begin met schrijven...", "pl": "Zacznij pisać...", "tr": "Yazmaya başla...",
+        "id": "Mulai menulis...", "ar": "ابدأ الكتابة...", "fa": "شروع به نوشتن...", "el": "Ξεκινήστε να γράφετε...", "hi": "लिखना शुरू करें...", "bn": "লেখা শুরু করুন...", "ur": "لکھنا شروع کریں..."
     },
-    "header.view_profile": {
-        es: "Ver Perfil", fr: "Voir le profil", de: "Profil anzeigen", it: "Visualizza profilo", pt: "Ver Perfil",
-        ru: "Просмотреть профиль", zh: "查看个人资料", ja: "プロフィールを表示", ko: "프로필 보기", nl: "Bekijk profiel",
-        pl: "Pokaż profil", tr: "Profili Görüntüle", id: "Lihat Profil", ar: "عرض الملف الشخصي", fa: "مشاهده پروفایل",
-        hi: "प्रोफ़ाइल देखें", bn: "প্রোফাইল দেখুন", ur: "پروفائل دیکھئے", el: "Προβολή προφίλ"
+    "widget.notepad.tool.undo": { "es": "Deshacer", "fr": "Annuler", "it": "Annulla", "pt": "Desfazer", "de": "Rückgängig", "ru": "Отменить", "zh": "撤销", "ja": "元に戻す", "ar": "تراجع" },
+    "widget.notepad.tool.redo": { "es": "Rehacer", "fr": "Rétablir", "it": "Ripeti", "pt": "Refazer", "de": "Wiederholen", "ru": "Повторить", "zh": "重做", "ja": "やり直し", "ar": "إعادة" },
+    "widget.notepad.tool.save": { "es": "Guardar", "fr": "Enregistrer", "it": "Salva", "pt": "Salvar", "de": "Speichern", "ru": "Сохранить", "zh": "保存", "ja": "保存", "ar": "حفظ" },
+    "widget.notepad.tool.bold": { "es": "Negrita", "fr": "Gras", "it": "Grassetto", "pt": "Negrito", "de": "Fett", "ru": "Жирный", "zh": "粗体", "ja": "太字", "ar": "غامق" },
+    "widget.notepad.tool.italic": { "es": "Cursiva", "fr": "Italique", "it": "Corsivo", "pt": "Itálico", "de": "Kursiv", "ru": "Курсив", "zh": "斜体", "ja": "斜体", "ar": "مائل" },
+
+    // --- NEW KEYS (Addressing User Complaint) ---
+    "widget.notepad.tool.h1": {
+        "es": "Encabezado 1", "fr": "Titre 1", "it": "Intestazione 1", "pt": "Título 1", "de": "Überschrift 1", "nl": "Kop 1",
+        "ru": "Заголовок 1", "zh": "标题 1", "ja": "見出し 1", "ko": "제목 1", "tr": "Başlık 1", "pl": "Nagłówek 1",
+        "id": "Judul 1", "ar": "عنوان 1", "fa": "عنوان 1", "el": "Επικεφαλίδα 1", "hi": "शीर्षक 1", "bn": "শিরোনাম ১", "ur": "سرخی 1"
     },
-    "header.preferences": {
-        es: "Preferencias", fr: "Préférences", de: "Einstellungen", it: "Preferenze", pt: "Preferências",
-        ru: "Настройки", zh: "首选项", ja: "設定", ko: "환경 설정", nl: "Voorkeuren",
-        pl: "Preferencje", tr: "Tercihler", id: "Preferensi", ar: "تفضيلات", fa: "ترجیحات",
-        hi: "प्राथमिकताएं", bn: "পছন্দসমূহ", ur: "ترجیحات", el: "Προτιμήσεις"
+    "widget.notepad.tool.h2": {
+        "es": "Encabezado 2", "fr": "Titre 2", "it": "Intestazione 2", "pt": "Título 2", "de": "Überschrift 2", "nl": "Kop 2",
+        "ru": "Заголовок 2", "zh": "标题 2", "ja": "見出し 2", "ko": "제목 2", "tr": "Başlık 2", "pl": "Nagłówek 2",
+        "id": "Judul 2", "ar": "عنوان 2", "fa": "عنوان 2", "el": "Επικεφαλίδα 2", "hi": "शीर्षक 2", "bn": "শিরোনাম ২", "ur": "سرخی 2"
     },
-    "auth.sign_out": {
-        es: "Cerrar Sesión", fr: "Déconnexion", de: "Abmelden", it: "Disconnetti", pt: "Sair",
-        ru: "Выйти", zh: "退出", ja: "サインアウト", ko: "로그아웃", nl: "Afmelden",
-        pl: "Wyloguj", tr: "Çıkış Yap", id: "Keluar", ar: "خروج", fa: "xروج",
-        hi: "साइन आउट", bn: "সাইন আউট", ur: "سائن آؤٹ", el: "Αποσύνδεση"
+    "widget.notepad.tool.color": {
+        "es": "Color de Texto", "fr": "Couleur du texte", "it": "Colore testo", "pt": "Cor do texto", "de": "Textfarbe", "nl": "Tekstkleur",
+        "ru": "Цвет текста", "zh": "文本颜色", "ja": "文字色", "ko": "텍스트 색상", "tr": "Metin Rengi", "pl": "Kolor tekstu",
+        "id": "Warna Teks", "ar": "لون النص", "fa": "رنگ متن", "el": "Χρώμα κειμένου", "hi": "पाठ का रंग", "bn": "পাঠ্যের রঙ", "ur": "متن کا رنگ"
     },
-    "settings.github": {
-        all: "GitHub" // Same for all
+    "widget.notepad.tool.align_left": {
+        "es": "Alinear Izquierda", "fr": "Aligner à gauche", "it": "Allinea a sinistra", "pt": "Alinhar à esquerda", "de": "Linksbündig", "nl": "Links uitlijnen",
+        "ru": "По левому краю", "zh": "左对齐", "ja": "左揃え", "ko": "왼쪽 정렬", "tr": "Sola Hizala", "pl": "Wyrównaj do lewej",
+        "id": "Rata Kiri", "ar": "محاذاة لليسار", "fa": "چپ‌چین", "el": "Στοίχιση αριστερά", "hi": "بائیں ओर संरेखित करें", "bn": "বাম দিকে সারিবদ্ধ করুন", "ur": "بائیں طرف سیدھ کریں"
     },
-    "notifier.downloading_secure": {
-        es: "Iniciando descarga segura...", fr: "Démarrage du téléchargement sécurisé...",
-        de: "Sicherer Download wird gestartet...", it: "Avvio download sicuro...",
-        pt: "Iniciando download seguro...", ru: "Запуск безопасной загрузки...",
-        zh: "正在开始安全下载...", ja: "安全なダウンロードを開始しています...",
-        ko: "보안 다운로드 시작 중...", nl: "Veilige download starten...",
-        pl: "Rozpoczynanie bezpiecznego pobierania...", tr: "Güvenli indirme başlatılıyor...",
-        id: "Memulai unduhan aman...", ar: "بدء التنزيل الآمن...",
-        fa: "شروع دانلود امن...", hi: "सुरक्षित डाउनलोड शुरू हो रहा है...",
-        bn: "নিরাপদ ডাউনলোড শুরু হচ্ছে...", ur: "محفوظ ڈاؤن لوڈ شروع ہو رہا ہے...",
-        el: "Έναρξη ασφαλούς λήψης..."
+    "widget.notepad.tool.align_center": {
+        "es": "Centrar", "fr": "Centrer", "it": "Centra", "pt": "Centralizar", "de": "Zentriert", "nl": "Centreren",
+        "ru": "По центру", "zh": "居中", "ja": "中央揃え", "ko": "가운데 정렬", "tr": "Ortala", "pl": "Wyśrodkuj",
+        "id": "Rata Tengah", "ar": "توسيط", "fa": "وسط‌چین", "el": "Στοίχιση στο κέντρο", "hi": "केंद्रित करें", "bn": "কেন্দ্র করুন", "ur": "درمیان میں کریں"
     },
-    "widget.config.title": {
-        es: "Configurar Widget", fr: "Configurer le Widget", de: "Widget Konfigurieren", it: "Configura Widget", pt: "Configurar Widget",
-        ru: "Настроить виджет", zh: "配置小部件", ja: "ウィジェットの設定", ko: "위젯 구성", nl: "Widget configureren",
-        pl: "Konfiguruj widżet", tr: "Widget'ı Yapılandır", id: "Konfigurasi Widget", ar: "تكوين الأداة", fa: "پیکربندی ویجت",
-        hi: "विजेट कॉन्फ़िगर करें", bn: "উইজেট কনফিগার করুন", ur: "ویجیٹ کنفیگر کریں", el: "Ρύθμιση γραφικού στοιχείου"
+    "widget.notepad.tool.align_right": {
+        "es": "Alinear Derecha", "fr": "Aligner à droite", "it": "Allinea a destra", "pt": "Alinhar à direita", "de": "Rechtsbündig", "nl": "Rechts uitlijnen",
+        "ru": "По правому краю", "zh": "右对齐", "ja": "右揃え", "ko": "오른쪽 정렬", "tr": "Sağa Hizala", "pl": "Wyrównaj do prawej",
+        "id": "Rata Kanan", "ar": "محاذاة لليمين", "fa": "راست‌چین", "el": "Στοίχιση δεξιά", "hi": "दाएं ओर संरेखित करें", "bn": "ডান দিকে সারিবদ্ধ করুন", "ur": "دائیں طرف سیدھ کریں"
     },
-    "widget.clock.timezone": {
-        es: "Zona Horaria", fr: "Fuseau horaire", de: "Zeitzone", it: "Fuso orario", pt: "Fuso Horário",
-        ru: "Часовой пояс", zh: "时区", ja: "タイムゾーン", ko: "시간대", nl: "Tijdzone",
-        pl: "Strefa czasowa", tr: "Saat Dilimi", id: "Zona Waktu", ar: "المنطقة الزمنية", fa: "منطقه زمانی",
-        hi: "समय क्षेत्र", bn: "সময় অঞ্চল", ur: "ٹائم زون", el: "Ζώνη ώρας"
+    "widget.notepad.tool.checklist": {
+        "es": "Lista de Tareas", "fr": "Liste de tâches", "it": "Lista di controllo", "pt": "Lista de verificação", "de": "Checkliste", "nl": "Checklist",
+        "ru": "Чек-лист", "zh": "清单", "ja": "チェックリスト", "ko": "체크리스트", "tr": "Kontrol Listesi", "pl": "Lista kontrolna",
+        "id": "Daftar Periksa", "ar": "قائمة التحقق", "fa": "لیست بررسی", "el": "Λίστα ελέγχου", "hi": "चेकलिस्ट", "bn": "চেকলিস্ট", "ur": "چیک لسٹ"
     },
-    "widget.clock.auto_detect": {
-        es: "Auto Detectar", fr: "Détection auto", de: "Automatisch erkennen", it: "Rilevamento auto", pt: "Auto Detectar",
-        ru: "Автоопределение", zh: "自动检测", ja: "自動検出", ko: "자동 감지", nl: "Automatisch detecteren",
-        pl: "Wykryj automatycznie", tr: "Otomatik Algıla", id: "Deteksi Otomatis", ar: "كشف تلقائي", fa: "تشخیص خودکار",
-        hi: "स्वतः पता लगाएँ", bn: "স্বয়ংক্রিয় সনাক্তকরণ", ur: "خودکار شناخت", el: "Αυτόματος εντοπισμός"
+    "widget.notepad.tool.list_bullet": {
+        "es": "Viñetas", "fr": "Puces", "it": "Elenco puntato", "pt": "Marcadores", "de": "Aufzählung", "nl": "Opsommingstekens",
+        "ru": "Маркированный список", "zh": "项目符号", "ja": "箇条書き", "ko": "글머리 기호", "tr": "Madde İşaretleri", "pl": "Punktory",
+        "id": "Poin", "ar": "قائمة نقطية", "fa": "لیست نقطه‌ای", "el": "Κουκκίδες", "hi": "बुलेट सूची", "bn": "বুলেট তালিকা", "ur": "بلٹ لسٹ"
     },
-    "widget.clock.timezone_desc": {
-        es: "ej. America/New_York, UTC, o 'local'", fr: "ex. America/Paris, UTC, ou 'local'",
-        de: "z.B. Europe/Berlin, UTC oder 'local'", it: "es. Europe/Rome, UTC, o 'local'",
-        pt: "ex. America/Sao_Paulo, UTC, ou 'local'", ru: "например, Europe/Moscow, UTC или 'local'",
-        all: "e.g. UTC, 'local'"
+    "widget.notepad.tool.list_ordered": {
+        "es": "Lista Numerada", "fr": "Liste numérotée", "it": "Elenco numerato", "pt": "Lista numerada", "de": "Nummerierte Liste", "nl": "Genummerde lijst",
+        "ru": "Нумерованный список", "zh": "编号列表", "ja": "番号付きリスト", "ko": "번호 매기기 목록", "tr": "Numaralandırılmış Liste", "pl": "Lista numerowana",
+        "id": "Daftar Bernomor", "ar": "قائمة مرقمة", "fa": "لیست عددی", "el": "Αριθμημένη λίστα", "hi": "क्रमांकित सूची", "bn": "সংখ্যাযুক্ত তালিকা", "ur": "نمبر وار فہرست"
     },
-    "widget.clock.use_12h": {
-        es: "Usar formato 12h", fr: "Format 12h", de: "12-Stunden-Format", it: "Usa formato 12h", pt: "Usar formato 12h",
-        ru: "12-часовой формат", zh: "使用 12 小时制", ja: "12時間形式を使用", ko: "12시간 형식 사용", nl: "Gebruik 12-uurs formaat",
-        pl: "Format 12-godzinny", tr: "12 Saat Formatı", id: "Gunakan Format 12 Jam", ar: "استخدم تنسيق 12 ساعة",
-        fa: "فرمت 12 ساعته", hi: "12-घंटे का प्रारूप", bn: "১২-ঘণ্টার বিন্যাস", ur: "12 گھنٹے کی شکل", el: "Μορφή 12 ωρών"
+    "widget.notepad.tool.code": {
+        "es": "Código", "fr": "Code", "it": "Codice", "pt": "Código", "de": "Code", "nl": "Code",
+        "ru": "Код", "zh": "代码", "ja": "コード", "ko": "코드", "tr": "Kod", "pl": "Kod",
+        "id": "Kode", "ar": "كود", "fa": "کد", "el": "Κώδικας", "hi": "कोड", "bn": "কোড", "ur": "کوڈ"
     },
-    "widget.clock.show_date": {
-        es: "Mostrar Fecha", fr: "Afficher la date", de: "Datum anzeigen", it: "Mostra data", pt: "Mostrar Data",
-        ru: "Показывать дату", zh: "显示日期", ja: "日付を表示", ko: "날짜 표시", nl: "Toon datum",
-        pl: "Pokaż datę", tr: "Tarihi Göster", id: "Tampilkan Tanggal", ar: "اظهار التاريخ", fa: "نمایش تاریخ",
-        hi: "तिथि दिखाएं", bn: "তারিখ দেখান", ur: "تاریخ دکھائیں", el: "Εμφάνιση ημερομηνίας"
+    "widget.notepad.tool.link": {
+        "es": "Enlace", "fr": "Lien", "it": "Link", "pt": "Link", "de": "Link", "nl": "Link",
+        "ru": "Ссылка", "zh": "链接", "ja": "リンク", "ko": "링크", "tr": "Bağlantı", "pl": "Link",
+        "id": "Tautan", "ar": "رابط", "fa": "لینک", "el": "Σύνδεσμος", "hi": "लिंक", "bn": "লিঙ্ক", "ur": "لنک"
     },
-    "status.offline": {
-        es: "Desconectado", fr: "Hors ligne", de: "Offline", it: "Offline", pt: "Offline",
-        ru: "Оффлайн", zh: "离线", ja: "オフライン", ko: "오프라인", nl: "Offline",
-        pl: "Offline", tr: "Çevrimdışı", id: "Offline", ar: "غير متصل", fa: "آفلاین",
-        hi: "ऑफ़लाइन", bn: "অফলাইন", ur: "آف لائن", el: "Εκτός σύνδεσης"
+    "widget.notepad.tool.image": {
+        "es": "Imagen", "fr": "Image", "it": "Immagine", "pt": "Imagem", "de": "Bild", "nl": "Afbeelding",
+        "ru": "Изображение", "zh": "图片", "ja": "画像", "ko": "이미지", "tr": "Resim", "pl": "Obraz",
+        "id": "Gambar", "ar": "صورة", "fa": "تصویر", "el": "Εικόνα", "hi": "छवि", "bn": "ছবি", "ur": "تصویر"
     },
-    "widget.telemetry.update_interval": {
-        es: "Intervalo de actualización", fr: "Intervalle de mise à jour", de: "Aktualisierungsintervall",
-        it: "Intervallo di aggiornamento", pt: "Intervalo de Atualização", ru: "Интервал обновления",
-        zh: "更新间隔", ja: "更新間隔", ko: "업데이트 간격", nl: "Update-interval",
-        pl: "Interwał aktualizacji", tr: "Güncelleme Aralığı", id: "Interval Pembaruan",
-        ar: "فاصل التحديث", fa: "فاصله به‌روزرسانی", hi: "अद्यतन अंतराल", bn: "আপডেট বিরতি",
-        ur: "اپ ڈیٹ کا وقفہ", el: "Διάστημα ενημέρωσης"
+    "widget.notepad.tool.clear_format": {
+        "es": "Borrar Formato", "fr": "Effacer le format", "it": "Cancella formato", "pt": "Limpar formatação", "de": "Formatierung löschen", "nl": "Opmaak wissen",
+        "ru": "Очистить формат", "zh": "清除格式", "ja": "書式をクリア", "ko": "서식 지우기", "tr": "Biçimlendirmeyi Temizle", "pl": "Wyczyść formatowanie",
+        "id": "Hapus Format", "ar": "مسح التنسيق", "fa": "پاک کردن فرمت", "el": "Εκκαθάριση μορφοποίησης", "hi": "प्रारूप साफ़ करें", "bn": "ফরম্যাট মুছুন", "ur": "فارمیٹ صاف کریں"
     },
-    "widget.telemetry.cpu": {
-        all: "CPU", ru: "ЦП", el: "CPU"
-    },
-    "widget.telemetry.ram": {
-        all: "RAM", ru: "ОЗУ", el: "RAM"
-    },
-    "widget.telemetry.temp": {
-        es: "TEMP", fr: "TEMP", de: "TEMP", it: "TEMP", pt: "TEMP",
-        ru: "ТЕМП", zh: "温度", ja: "温度", ko: "온도", nl: "TEMP",
-        pl: "TEMP", tr: "SICAKLIK", id: "SUHU", ar: "حرارة", fa: "دما",
-        hi: "तापमान", bn: "তাপমাত্রা", ur: "درجہ حرارت", el: "ΘΕΡΜ"
-    },
-    // --- MISSING KEYS FIXED ---
-    "widget.add_title": {
-        es: "Añadir Widget", fr: "Ajouter Widget", de: "Widget hinzufügen", it: "Aggiungi Widget", pt: "Adicionar Widget",
-        ru: "Добавить виджет", zh: "添加小部件", ja: "ウィジェットを追加", ko: "위젯 추가", nl: "Widget toevoegen",
-        pl: "Dodaj widżet", tr: "Widget Ekle", id: "Tambah Widget", ar: "أضف أداة", fa: "افزودن ویجت",
-        hi: "विजेट जोड़ें", bn: "উইজেট যোগ করুন", ur: "ویجیٹ شامل کریں", el: "Προσθήκη στοιχείου",
-        all: "Add Widget"
-    },
-    "widget.add_subtitle": {
-        es: "Selecciona un widget para añadir", fr: "Sélectionnez un widget à ajouter",
-        de: "Wählen Sie ein Widget zum Hinzufügen", it: "Seleziona un widget da aggiungere",
-        pt: "Selecione um widget para adicionar", ru: "Выберите виджет для добавления",
-        zh: "选择要添加的小部件", ja: "追加するウィジェットを選択",
-        ko: "추가할 위젯 선택", nl: "Selecteer een widget om toe te voegen",
-        pl: "Wybierz widżet do dodania", tr: "Eklemek için bir widget seçin",
-        id: "Pilih widget untuk ditambahkan", ar: "اختر أداة لإضافتها",
-        fa: "یک ویجت برای افزودن انتخاب کنید", hi: "जोड़ने के लिए एक विजेट चुनें",
-        bn: "যোগ করার জন্য একটি উইজেট নির্বাচন করুন", ur: "شامل کرنے کے لیے ایک ویجیٹ منتخب کریں",
-        el: "Επιλέξτε γραφικό στοιχείο",
-        all: "Select a widget to add"
-    },
-    "general.restore": {
-        es: "Restaurar", fr: "Restaurer", de: "Wiederherstellen", it: "Ripristina", pt: "Restaurar",
-        ru: "Восстановить", zh: "恢复", ja: "復元", ko: "복원", nl: "Herstellen",
-        pl: "Przywróć", tr: "Geri Yükle", id: "Pulihkan", ar: "استعادة", fa: "بازیابی",
-        hi: "पुनर्स्थापित करें", bn: "পুনরুদ্ধার", ur: "بحال کریں", el: "Επαναφορά",
-        all: "Restore"
-    },
-    // --- LINGERING MISSING KEYS ---
-    "action.add_widget": {
-        es: "Añadir Widget", fr: "Ajouter Widget", de: "Widget hinzufügen", it: "Aggiungi Widget", pt: "Adicionar Widget",
-        ru: "Добавить виджет", zh: "添加小部件", ja: "ウィジェットを追加", ko: "위젯 추가", nl: "Widget toevoegen",
-        pl: "Dodaj widżet", tr: "Widget Ekle", id: "Tambah Widget", ar: "أضف أداة", fa: "افزودن ویجت",
-        hi: "विजेट जोड़ें", bn: "উইজেট যোগ করুন", ur: "ویجیٹ شامل کریں", el: "Προσθήκη στοιχείου",
-        all: "Add Widget"
-    }
+    "widget.clock.name": { "es": "Reloj", "fr": "Horloge", "it": "Orologio", "pt": "Relógio", "de": "Uhr", "ar": "ساعة" },
+    "widget.notepad.name": { "es": "Bloc de Notas", "fr": "Bloc-notes", "it": "Blocco note", "pt": "Bloco de notas", "de": "Notizblock", "ar": "المفكرة" },
+    "widget.telemetry.name": { "es": "Estado del Sistema", "fr": "État du Système", "it": "Stato del Sistema", "pt": "Status do Sistema", "de": "Systemstatus", "ar": "حالة النظام" }
 };
 
 const files = readdirSync(LOCALE_DIR).filter(f => f.endsWith('.json') && f !== 'en.json');
@@ -163,20 +100,40 @@ const files = readdirSync(LOCALE_DIR).filter(f => f.endsWith('.json') && f !== '
 files.forEach(file => {
     const lang = file.replace('.json', '');
     const path = join(LOCALE_DIR, file);
-    const content = JSON.parse(readFileSync(path, 'utf-8'));
-    let added = 0;
+    let content: Record<string, string> = {};
 
-    Object.keys(newKeys).forEach(key => {
-        if (!content[key]) {
-            // @ts-ignore
-            const translation = newKeys[key][lang] || newKeys[key]['all'] || newKeys[key]['es']; // Fallback to ES or ALL
-            content[key] = translation;
+    try { content = JSON.parse(readFileSync(path, 'utf-8')); } catch (e) { }
+
+    let added = 0;
+    let updated = 0;
+
+    masterKeys.forEach(key => {
+        let newValue = content[key];
+        const hasTranslation = COMMON_TRANSLATIONS[key] && COMMON_TRANSLATIONS[key][lang];
+
+        // Always force update if we have a better translation in dictionary and current value matches English (or is missing)
+        // OR simply force update for these specific keys to ensure correctness
+        if (hasTranslation) {
+            const dictValue = COMMON_TRANSLATIONS[key][lang];
+            if (content[key] !== dictValue) {
+                content[key] = dictValue;
+                updated++;
+            }
+        } else if (!content.hasOwnProperty(key)) {
+            content[key] = masterContent[key]; // Fallback
             added++;
         }
     });
 
-    if (added > 0) {
-        writeFileSync(path, JSON.stringify(content, null, 2));
-        console.log(`✅ ${lang}: Added ${added} keys.`);
+    if (added > 0 || updated > 0) {
+        // Sort
+        const sorted: Record<string, string> = {};
+        masterKeys.forEach(k => { if (content[k]) sorted[k] = content[k]; });
+        Object.keys(content).forEach(k => { if (!sorted[k]) sorted[k] = content[k]; });
+
+        writeFileSync(path, JSON.stringify(sorted, null, 2));
+        console.log(`✅ ${lang}: Updated ${updated} keys`);
+    } else {
+        console.log(`✨ ${lang}: Up to date`);
     }
 });

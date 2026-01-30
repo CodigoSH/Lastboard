@@ -183,8 +183,8 @@ class AddWidgetModal extends HTMLElement {
                     ${WIDGET_REGISTRY.map(w => `
                         <div class="card" data-id="${w.id}">
                             <div class="icon-container">${w.icon}</div>
-                            <div class="name">${w.name}</div>
-                            <div class="desc">${w.description}</div>
+                            <div class="name">${i18n.t(`widget.${w.id}.name`) || w.name}</div>
+                            <div class="desc">${i18n.t(`widget.${w.id}.description`) || w.description}</div>
                         </div>
                     `).join('')}
                 </div>

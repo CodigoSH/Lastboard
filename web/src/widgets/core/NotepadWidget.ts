@@ -3,6 +3,7 @@ import { LitElement, html, css, PropertyValueMap } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 
 import { dashboardStore } from '../../store/dashboardStore';
+import { i18n } from '../../services/i18n';
 
 // --- Icons (Lucide-style) ---
 const ICONS = {
@@ -150,7 +151,7 @@ export class NotepadWidget extends LitElement {
         }
         
         .content-area:empty::before {
-            content: 'Start writing your notes...';
+            content: attr(data-placeholder);
             color: rgba(255, 255, 255, 0.3);
             font-style: italic;
             pointer-events: none;
@@ -326,9 +327,10 @@ export class NotepadWidget extends LitElement {
 
         } catch (err) {
             console.error('[Notepad Save Error]', err);
-            alert('Save Failed: ' + err);
+            alert(i18n.t('widget.notepad.error.save') + err);
         }
     }
+
 
     private startEditing() {
         if (this.isDashboardEditing) return; // Locked
@@ -359,12 +361,14 @@ export class NotepadWidget extends LitElement {
     private insertChecklist() {
         // Simple HTML checklist implementation
         const id = 'chk-' + Math.random().toString(36).substr(2, 9);
-        const html = `<div style="display:flex; align-items:center; margin: 4px 0;"><input type="checkbox" id="${id}" style="margin-right:8px;"><label for="${id}">New Item</label></div>`;
+        const html = `<div style="display:flex; align-items:center; margin: 4px 0;"><input type="checkbox" id="${id}" style="margin-right:8px;"><label for="${id}">${i18n.t('widget.notepad.prompt.new_item')}</label></div>`;
         this.exec('insertHTML', html);
     }
 
     private insertCode() {
-        const html = `<pre style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; font-family:monospace; margin:8px 0;"><code>Code Block</code></pre><p><br></p>`;
+        // Use translation for default code content "Code Block"
+        const defaultCode = i18n.t('widget.notepad.prompt.code_block');
+        const html = `<pre style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; font-family:monospace; margin:8px 0;"><code>${defaultCode}</code></pre><p><br></p>`;
         this.exec('insertHTML', html);
     }
 
@@ -377,7 +381,7 @@ export class NotepadWidget extends LitElement {
                     <div 
                         class="viewer" 
                         style="flex: 1; width: 100%; height: 100%; min-height: 100px; color: #ffffff !important; overflow-y: auto; padding: 16px; word-wrap: break-word;"
-                        .innerHTML="${this.content || '<span style=\'opacity:0.5; font-style:italic\'>Start writing...</span>'}"
+                        .innerHTML="${this.content || `<span style='opacity:0.5; font-style:italic'>${i18n.t('widget.notepad.placeholder')}</span>`}"
                     ></div>
 
                     <button class="fab-btn" @click="${() => this.isInternalEditing = true}" style="position: absolute; bottom: 10px; right: 10px; z-index: 10;">
@@ -389,46 +393,46 @@ export class NotepadWidget extends LitElement {
             // --- EDIT MODE ---
             return html`
                 <div class="container">
-                    <div class="toolbar" @wheel="${this.handleToolbarWheel}" title="Scroll horizontally with mouse wheel to see more tools">
+                    <div class="toolbar" @wheel="${this.handleToolbarWheel}" title="Scroll horizontally...">
                         <!-- History Group -->
                         <div class="group">
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('undo'); }}" title="Undo">${ICONS.undo}</button>
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('redo'); }}" title="Redo">${ICONS.redo}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('undo'); }}" title="${i18n.t('widget.notepad.tool.undo')}">${ICONS.undo}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('redo'); }}" title="${i18n.t('widget.notepad.tool.redo')}">${ICONS.redo}</button>
                         </div>
                         
                         <!-- Text Group -->
                         <div class="group">
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('formatBlock', 'H1'); }}" title="Heading 1">${ICONS.h1}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('formatBlock', 'H2'); }}" title="Heading 2">${ICONS.h2}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('bold'); }}" title="Bold">${ICONS.bold}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('italic'); }}" title="Italic">${ICONS.italic}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('formatBlock', 'H1'); }}" title="${i18n.t('widget.notepad.tool.h1')}">${ICONS.h1}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('formatBlock', 'H2'); }}" title="${i18n.t('widget.notepad.tool.h2')}">${ICONS.h2}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('bold'); }}" title="${i18n.t('widget.notepad.tool.bold')}">${ICONS.bold}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('italic'); }}" title="${i18n.t('widget.notepad.tool.italic')}">${ICONS.italic}</button>
                             
                             <!-- Color Picker -->
                             <div class="color-wrapper">
-                                <button title="Text Color">${ICONS.color}</button>
-                                <input type="color" class="color-input" @change="${this.handleColor}" title="Text Color" />
+                                <button title="${i18n.t('widget.notepad.tool.color')}">${ICONS.color}</button>
+                                <input type="color" class="color-input" @change="${this.handleColor}" title="${i18n.t('widget.notepad.tool.color')}" />
                             </div>
                         </div>
 
                         <!-- Paragraph Group -->
                         <div class="group">
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyLeft'); }}" title="Align Left">${ICONS.alignLeft}</button>
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyCenter'); }}" title="Align Center">${ICONS.alignCenter}</button>
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyRight'); }}" title="Align Right">${ICONS.alignRight}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyLeft'); }}" title="${i18n.t('widget.notepad.tool.align_left')}">${ICONS.alignLeft}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyCenter'); }}" title="${i18n.t('widget.notepad.tool.align_center')}">${ICONS.alignCenter}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyRight'); }}" title="${i18n.t('widget.notepad.tool.align_right')}">${ICONS.alignRight}</button>
                         </div>
                         
                         <div class="group">
-                            <button @click="${(e: Event) => { e.preventDefault(); this.insertChecklist(); }}" title="Insert Checklist">${ICONS.checklist}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('insertUnorderedList'); }}" title="Bullet List">${ICONS.list}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('insertOrderedList'); }}" title="Numbered List">${ICONS.listOrdered}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.insertChecklist(); }}" title="${i18n.t('widget.notepad.tool.checklist')}">${ICONS.checklist}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('insertUnorderedList'); }}" title="${i18n.t('widget.notepad.tool.list_bullet')}">${ICONS.list}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('insertOrderedList'); }}" title="${i18n.t('widget.notepad.tool.list_ordered')}">${ICONS.listOrdered}</button>
                         </div>
 
                         <!-- Insert Group -->
                         <div class="group">
-                            <button @click="${(e: Event) => { e.preventDefault(); this.insertCode(); }}" title="Code Block">${ICONS.code}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); const u = prompt('URL:'); if (u) this.exec('createLink', u); }}" title="Insert Link">${ICONS.link}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); const u = prompt('Image URL:'); if (u) this.exec('insertImage', u); }}" title="Insert Image">${ICONS.image}</button>
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('removeFormat'); }}" title="Clear Formatting">${ICONS.clear}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.insertCode(); }}" title="${i18n.t('widget.notepad.tool.code')}">${ICONS.code}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); const u = prompt(i18n.t('widget.notepad.prompt.url')); if (u) this.exec('createLink', u); }}" title="${i18n.t('widget.notepad.tool.link')}">${ICONS.link}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); const u = prompt(i18n.t('widget.notepad.prompt.image_url')); if (u) this.exec('insertImage', u); }}" title="${i18n.t('widget.notepad.tool.image')}">${ICONS.image}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('removeFormat'); }}" title="${i18n.t('widget.notepad.tool.clear_format')}">${ICONS.clear}</button>
                         </div>
                     </div>
 
@@ -436,10 +440,11 @@ export class NotepadWidget extends LitElement {
                     <div class="content-area editor" 
                          contenteditable="true" 
                          spellcheck="false"
+                         data-placeholder="${i18n.t('widget.notepad.placeholder')}"
                          .innerHTML="${this.content}">
                     </div>
 
-                    <button class="fab-btn save-btn" @click="${this.saveContent}" title="Save">${ICONS.save}</button>
+                    <button class="fab-btn save-btn" @click="${this.saveContent}" title="${i18n.t('widget.notepad.tool.save')}">${ICONS.save}</button>
                 </div>
             `;
         } catch (e: any) {
