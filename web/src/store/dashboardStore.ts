@@ -149,7 +149,6 @@ class DashboardStore {
                                 const localMatch = localItems.find(l => l.id === backendItem.id);
                                 if (localMatch && localMatch.parent_id !== undefined) {
                                     backendItem.parent_id = localMatch.parent_id;
-                                    console.log('[DashboardStore] Restored parent_id from local storage for item:', backendItem.id);
                                 }
                             }
                         });

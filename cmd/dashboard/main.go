@@ -11,7 +11,10 @@ import (
 
 func main() {
 	// 1. Initialize Database
-	dbFile := "./dashboard.db"
+	dbFile := os.Getenv("DB_FILE")
+	if dbFile == "" {
+		dbFile = "./dashboard.db"
+	}
 	db, err := database.InitDB(dbFile)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)

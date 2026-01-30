@@ -2,8 +2,13 @@ package web
 
 import (
 	"database/sql"
+	"embed"
+	"io"
+	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"text/template"
 	"time"
 
@@ -11,17 +16,30 @@ import (
 	"github.com/codigosh/Kashboard/internal/web/middleware"
 )
 
+//go:embed dist
+var content embed.FS
+
 type Server struct {
 	DB     *sql.DB
 	Router *http.ServeMux
 	WSHub  *api.Hub
+	assets fs.FS
 }
 
 func NewServer(db *sql.DB) *Server {
+	// Root the assets to the 'dist' folder
+	assets, err := fs.Sub(content, "dist")
+	if err != nil {
+		// Fallback for local dev or build failure (won't happen if strict embed but good safety)
+		log.Printf("Warning: Embed 'dist' failed: %v. Using local file system.", err)
+		assets = osDir("./web/dist")
+	}
+
 	s := &Server{
 		DB:     db,
 		Router: http.NewServeMux(),
 		WSHub:  api.NewHub(),
+		assets: assets,
 	}
 
 	// Start WebSocket Hub
@@ -33,37 +51,70 @@ func NewServer(db *sql.DB) *Server {
 	return s
 }
 
+// Simple wrapper to implement fs.FS for os directories if needed
+type osDir string
+
+func (d osDir) Open(name string) (fs.File, error) {
+	return os.Open(string(d) + "/" + name)
+}
+
 func (s *Server) routes() {
 	// Middleware wrapping
-	// 1. First check if system needs setup
 	setupCheck := middleware.SetupRequired(s.DB)
-	// 2. Then check if user is authenticated
 	authCheck := middleware.AuthRequired(s.DB)
 
-	// Chain: setupCheck -> authCheck -> handler
-	// If setup needed, setupCheck takes over.
-	// If setup done, authCheck verifies login.
 	protect := func(h http.Handler) http.Handler {
 		return setupCheck(authCheck(h))
 	}
 
 	// File Server for static assets
-	fs := http.FileServer(http.Dir("./web"))
+	// Since we are using a Single Page App (SPA) / or hybrid, we serve assets.
+	fileServer := http.FileServer(http.FS(s.assets))
 
 	// Dynamic Index Handler
 	indexHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+		path := r.URL.Path
+		// Serve API or specific files directly?
+		if path == "/" || path == "/index.html" {
 			s.serveIndex(w, r)
-		} else {
-			fs.ServeHTTP(w, r)
+			return
 		}
+
+		// Setup and Login pages are distinct HTML files in dist
+		if path == "/login" || path == "/login.html" {
+			s.serveFile(w, r, "login.html")
+			return
+		}
+		if path == "/setup" || path == "/setup.html" {
+			s.serveFile(w, r, "setup.html")
+			return
+		}
+
+		// Try to serve static file
+		// If it's a file that exists, serve it.
+		f, err := s.assets.Open(strings.TrimPrefix(path, "/"))
+		if err == nil {
+			f.Close()
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+
+		// If 404 and not API, default to index (SPA routing)
+		// But Kashboard seems to be widget based.
+		// For now, let standard file server handle 404s or fall through?
+		// Existing logic just served file server.
+		fileServer.ServeHTTP(w, r)
 	})
 
 	s.Router.Handle("/", protect(indexHandler))
 
+	// Public Routes requiring explicit handlers to bypass 'protect' wrapper if needed?
+	// The previous logic used specific handlers.
+	// We need to keep the explicit handlers from strict server.go but updated for FS.
+
 	// Login Page (Public)
 	s.Router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./web/login.html")
+		s.serveFile(w, r, "login.html")
 	})
 
 	// Auth API
@@ -94,20 +145,20 @@ func (s *Server) routes() {
 
 	// Setup Page
 	s.Router.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./web/setup.html")
+		s.serveFile(w, r, "setup.html")
 	})
 
-	// Setup API (Open, but self-protecting via count check)
+	// Setup API
 	setupHandler := api.NewSetupHandler(s.DB)
 	s.Router.Handle("POST /api/setup", http.HandlerFunc(setupHandler.SetupSystem))
 
-	// System API (Backup & Reset)
+	// System API
 	systemHandler := api.NewSystemHandler(s.DB)
 	s.Router.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
 	s.Router.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
 
-	// Update API (Atomic Binary Updates)
+	// Update API
 	updateHandler := api.NewUpdateHandler()
 	s.Router.Handle("GET /api/system/update/check", protect(http.HandlerFunc(updateHandler.CheckUpdate)))
 	s.Router.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
@@ -120,30 +171,36 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.Router.ServeHTTP(w, r)
 }
 
+func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename string) {
+	// Serve static HTML files from embed
+	f, err := s.assets.Open(filename)
+	if err != nil {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+	defer f.Close()
+
+	stat, _ := f.Stat()
+	http.ServeContent(w, r, filename, stat.ModTime(), f.(io.ReadSeeker))
+}
+
+// Need to inject http.Request into serveFile or pass it?
+// Go's http.ServeContent needs ReadSeeker which embed.file implements.
+// Oops, serveFile signature above is missing *http.Request.
+// Fixed below in re-implementation.
+
 func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
-	var projectName string
-
-	// Default
-	projectName = "Kashboard"
+	var projectName string = "Kashboard"
 
 	if username != "" {
-		// Query users table for project_name
-		// Note: project_name column must exist (we ensured this via migration)
 		err := s.DB.QueryRow("SELECT project_name FROM users WHERE username = ?", username).Scan(&projectName)
-		if err != nil {
-			// If error (e.g. no column or no user found), stick to default
-			// In production, we might log only critical DB errors
-			if err != sql.ErrNoRows {
-				log.Printf("Error fetching project name for %s: %v", username, err)
-			}
+		if err != nil && err != sql.ErrNoRows {
+			log.Printf("Error fetching project name for %s: %v", username, err)
 		}
 	}
 
-	// Parse template
-	// In production, templates should be parsed once at startup for performance,
-	// but for this task/scale, parsing per request allows hot-reload of HTML.
-	tmpl, err := template.ParseFiles("./web/index.html")
+	tmpl, err := template.ParseFS(s.assets, "index.html")
 	if err != nil {
 		log.Printf("Error loading template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
