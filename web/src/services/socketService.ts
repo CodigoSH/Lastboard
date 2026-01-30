@@ -21,7 +21,6 @@ class SocketService {
         const host = window.location.host;
         const url = `${protocol}//${host}/ws`;
 
-        console.log('[SocketService] Connecting to', url);
         this.socket = new WebSocket(url);
 
         this.socket.onmessage = (event) => {

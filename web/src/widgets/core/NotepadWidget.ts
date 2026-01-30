@@ -86,8 +86,8 @@ export class NotepadWidget extends LitElement {
             flex-shrink: 0;
             min-height: 44px;
             /* Visual Continuity Hint */
-            mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
-            -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+            mask-image: linear-gradient(to right, black 92%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black 92%, transparent 100%);
             transition: background 0.2s ease;
         }
         .toolbar:hover {
@@ -176,9 +176,18 @@ export class NotepadWidget extends LitElement {
             border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0; /* Hidden by default */
+            transform: translateY(10px); /* Slide up effect */
         }
+        
+        :host(:hover) .fab-btn,
+        .fab-btn:focus-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         .fab-btn:hover {
-            transform: translateY(-2px) scale(1.05);
+            transform: translateY(-2px) scale(1.05); /* Override the :host hover transform */
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             filter: brightness(1.1);
         }
@@ -237,8 +246,6 @@ export class NotepadWidget extends LitElement {
 
     // Ensure content prop is respected
     updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
-        console.log('[Notepad Lifecycle] Updated:', changedProperties, 'Current Content:', this.content);
-
         if (changedProperties.has('content') && !this.isInternalEditing && this.editorElement) {
             // If receiving prop update from outside, sync view if not typing
             // Note: using innerHTML is safe here because we are targeting the specific content div
@@ -289,7 +296,6 @@ export class NotepadWidget extends LitElement {
             if (!editor) throw new Error("Critical: Editor div missing");
 
             const newContent = editor.innerHTML;
-            console.log('[Notepad] Saving:', newContent);
 
             // 1. Update Local State (Visual feedback)
             this.content = newContent;
@@ -393,7 +399,7 @@ export class NotepadWidget extends LitElement {
             // --- EDIT MODE ---
             return html`
                 <div class="container">
-                    <div class="toolbar" @wheel="${this.handleToolbarWheel}" title="Scroll horizontally...">
+                    <div class="toolbar" @wheel="${this.handleToolbarWheel}" title="${i18n.t('widget.notepad.tool.scroll_hint')}">
                         <!-- History Group -->
                         <div class="group">
                              <button @click="${(e: Event) => { e.preventDefault(); this.exec('undo'); }}" title="${i18n.t('widget.notepad.tool.undo')}">${ICONS.undo}</button>

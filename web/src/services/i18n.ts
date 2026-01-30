@@ -62,7 +62,6 @@ class I18nService {
             if (!res.ok) throw new Error(`Failed to load locale ${code}`);
             const translations = await res.json();
             this.cache.set(code, translations);
-            console.log(`[I18n] Loaded ${code}`);
         } catch (e) {
             console.error(e);
             // Fallback: if loading fails, ensured 'en' is loaded in init.
@@ -75,7 +74,6 @@ class I18nService {
             this.currentLanguage = code;
             localStorage.setItem('csh_lang', code);
             this.notifyListeners();
-            console.log(`[I18n] Switched to ${code}`);
         } else {
             console.warn(`[I18n] Language ${code} not supported`);
         }

@@ -6,27 +6,36 @@ const result = await build({
     entrypoints: ["./web/src/index.ts"],
     outdir: "./web/dist",
     minify: true,
-    sourcemap: "external",
+    sourcemap: "none",
     target: "browser",
     naming: "bundle.js",
+    define: {
+        "process.env.NODE_ENV": JSON.stringify("production"),
+    },
 });
 
 const resultSetup = await build({
     entrypoints: ["./web/src/setup.ts"],
     outdir: "./web/dist",
     minify: true,
-    sourcemap: "external",
+    sourcemap: "none",
     target: "browser",
     naming: "setup.js",
+    define: {
+        "process.env.NODE_ENV": JSON.stringify("production"),
+    },
 });
 
 const resultLogin = await build({
     entrypoints: ["./web/src/login.ts"],
     outdir: "./web/dist",
     minify: true,
-    sourcemap: "external",
+    sourcemap: "none",
     target: "browser",
     naming: "login.js",
+    define: {
+        "process.env.NODE_ENV": JSON.stringify("production"),
+    },
 });
 
 if (result.success && resultSetup.success && resultLogin.success) {
