@@ -16,7 +16,7 @@ import (
 	"github.com/codigosh/Kashboard/internal/web/middleware"
 )
 
-//go:embed dist
+//go:embed dist/*
 var content embed.FS
 
 type Server struct {
