@@ -11,6 +11,7 @@
   "general.error": "Fehler",
   "general.success": "Erfolg",
   "general.pinging": "Pingen...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Lesezeichen erfolgreich aktualisiert",
   "notifier.bookmark_added": "Lesezeichen erfolgreich hinzugefügt",
   "notifier.bookmark_error": "Fehler beim Speichern des Lesezeichens",

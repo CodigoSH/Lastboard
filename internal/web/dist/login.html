@@ -6,123 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Kashboard</title>
     <!-- Core Themes -->
-    <link rel="stylesheet" href="/styles/theme.css?v=2">
+    <link rel="stylesheet" href="/styles/theme.css?v=99">
+    <link rel="stylesheet" href="/styles/components.css?v=99">
 
-    <!-- Reusing Setup Styles for Consistency -->
     <style>
         body {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: radial-gradient(circle at 50% 10%, #1a202c 0%, var(--canvas) 100%);
+            background: var(--canvas);
             margin: 0;
             overflow: hidden;
             font-family: var(--font-sans);
-        }
-
-        .background-glow {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            opacity: 0.1;
-            filter: blur(80px);
-            z-index: -1;
-            animation: pulse 10s infinite alternate;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(0.8);
-                opacity: 0.05;
-            }
-
-            100% {
-                transform: scale(1.2);
-                opacity: 0.15;
-            }
-        }
-
-        .setup-container {
-            width: 100%;
-            max-width: 420px;
-            padding: 20px;
-            z-index: 10;
-            opacity: 0;
-            /* Hidden by default to prevent FOUT (Flash of Untranslated Text) */
-            transition: opacity 0.3s ease;
-        }
-
-        /* Override Paper for Login/Setup context */
-        app-paper {
-            --paper-bg: rgba(20, 20, 20, 0.6);
-            --paper-border: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            padding: 40px !important;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
             color: var(--text-main);
-            margin: 0 0 8px 0;
-            letter-spacing: -0.02em;
-        }
-
-        p.subtitle {
-            font-size: 14px;
-            color: var(--text-dim);
-            margin: 0;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        label {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-dim);
-            font-weight: 600;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            color: var(--text-main);
-            font-size: 15px;
-            transition: all 0.2s ease;
-            font-family: var(--font-mono);
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: rgba(0, 0, 0, 0.5);
-            box-shadow: 0 0 0 1px var(--accent);
-        }
-
-        input::placeholder {
-            color: rgba(255, 255, 255, 0.2);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .feedback {
@@ -132,49 +30,51 @@
             margin-top: 10px;
             display: none;
             color: #ff6b6b;
-        }
-
-        app-button {
-            width: 100%;
-            margin-top: 10px;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 107, 107, 0.2);
         }
     </style>
 </head>
 
 <body>
-    <div class="background-glow"></div>
+    <!-- Shared Atmospheric Background -->
+    <div class="ambient-light"></div>
 
     <div class="setup-container">
         <app-paper>
-            <header>
+            <header class="auth-header">
                 <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/proxmox.png"
                     style="width: 48px; opacity: 0.8; margin-bottom: 20px;" alt="Logo" />
-                <h1>Welcome Back</h1>
-                <p class="subtitle">Enter your credentials to continue</p>
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Enter your credentials to continue</p>
             </header>
 
             <form id="loginForm">
                 <div class="input-group">
+                    <input type="text" id="username" name="username" placeholder=" " required autocomplete="username"
+                        autofocus>
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="admin" required
-                        autocomplete="username" autofocus>
                 </div>
 
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••••••" required
+                <div class="input-group" style="margin-top: 12px;">
+                    <input type="password" id="password" name="password" placeholder=" " required
                         autocomplete="current-password">
+                    <label for="password">Password</label>
                 </div>
 
                 <div id="feedback" class="feedback"></div>
 
-                <app-button type="submit" id="submitBtn" variant="filled">Sign In</app-button>
+                <div style="margin-top: 32px;">
+                    <button type="submit" id="submitBtn" class="premium-btn filled">Sign In</button>
+                </div>
             </form>
         </app-paper>
     </div>
 
     <!-- Compile to dist/login.js -->
-    <script type="module" src="/login.js?v=52"></script>
+    <script type="module" src="/login.js?v=53"></script>
 </body>
 
 </html>

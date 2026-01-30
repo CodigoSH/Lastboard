@@ -1,6 +1,7 @@
 import { userStore } from './store/userStore';
 import { dashboardStore } from './store/dashboardStore';
 import { statusService } from './services/StatusService';
+import { ThemeService } from './services/ThemeService';
 
 // Import components to register them
 import './components/ui/Paper/Paper';
@@ -33,6 +34,9 @@ import { bootstrap } from './core/bootstrap';
 
 // Initialize Application
 bootstrap(async () => {
+    // Initialize Theme
+    ThemeService.init();
+
     // Initialize stores
     await userStore.fetchUser();
 

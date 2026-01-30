@@ -1,68 +1,128 @@
 :root {
     /* --- Antigravity Design System --- */
+    /* DEFAULT: Light Mode (:root) */
 
     /* Core Colors */
-    --canvas: #121212;
-    /* Primary void background */
-    --panel: #1a1a1a;
-    /* Sidebar/Header background */
-    --surface: rgba(36, 36, 36, 0.5);
-    /* Translucent Bento background */
-    --surface-solid: #242424;
-    /* Solid fallback */
-    --glass-blur: blur(12px);
-
-    /* Accents & States */
-    --accent: #0078D4;
-    /* Primary Action Blue */
-    --accent-alt: #00f5a0;
-    /* Legacy Emerald / Detail accent */
-    --border: #333333;
-    /* Subtle borders */
-    --border-bright: #444444;
-    /* Interactive borders */
-
-    /* Typography */
-    --text-main: #ffffff;
-    --text-dim: #a0a0a0;
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-
-    /* Geometry */
-    --radius: 8px;
-    --spacing-xs: 8px;
-    --spacing-sm: 12px;
-    --spacing-md: 20px;
-    --spacing-lg: 32px;
-    --spacing-xl: 48px;
-    --spacing-xl: 48px;
-}
-
-/* --- Light Mode Overrides --- */
-:root.light-theme {
-    /* Bright, clean canvas */
     --canvas: #f0f2f5;
-
-    /* White panels */
     --panel: #ffffff;
-
-    /* Frosted glass surface for cards */
     --surface: rgba(255, 255, 255, 0.7);
     --surface-solid: #ffffff;
+    --glass-blur: blur(16px);
 
-    /* Dark text for contrast */
+    /* Accents */
+    --accent: #0078D4;
+    /* Primary Blue */
+    --accent-alt: #4338ca;
+    /* Secondary Indigo */
+    --accent-rgb: 0, 120, 212;
+
+    /* Borders & Text */
+    --border: #e2e8f0;
+    --border-bright: #cbd5e1;
     --text-main: #1a202c;
     --text-dim: #64748b;
 
-    /* Borders need to be visible but subtle against light bg */
-    --border: #e2e8f0;
-    --border-bright: #cbd5e1;
+    /* Semantic Components */
 
-    /* Adjust glass blur for light mode if needed, keep same for consistency */
-    --glass-blur: blur(16px);
+    /* Paper */
+    --paper-bg: rgba(255, 255, 255, 0.8);
+    --paper-border: rgba(0, 0, 0, 0.05);
+    --paper-border-top: rgba(255, 255, 255, 0.5);
+    --paper-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+
+    /* Inputs */
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --input-text: #0f172a;
+    --input-placeholder: #94a3b8;
+    --input-focus-border: var(--accent);
+    --input-focus-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+
+    /* Text Specificity */
+    --label-text: var(--text-dim);
+    --subtitle-text: var(--text-dim);
+
+    /* Interactive Elements */
+    --card-bg-inactive: rgba(0, 0, 0, 0.03);
+    --card-border-inactive: rgba(0, 0, 0, 0.1);
+    --icon-inactive: rgba(0, 0, 0, 0.4);
+
+    /* Wizard Components */
+    --stepper-track: rgba(0, 0, 0, 0.05);
+    --stepper-dot-bg: #ffffff;
+    --stepper-dot-border: rgba(0, 0, 0, 0.1);
+    --avatar-wrapper-bg: rgba(0, 0, 0, 0.05);
+    --summary-bg: rgba(0, 0, 0, 0.02);
+    --summary-border: rgba(0, 0, 0, 0.05);
+    --summary-label: var(--text-dim);
+    --summary-value: var(--text-main);
+
+    /* Atmosphere */
+    --bg-gradient: radial-gradient(circle at 50% 10%, #eef2ff 0%, var(--canvas) 100%);
+    --glow-color: var(--accent);
+    --glow-opacity: 0.05;
+
+    /* Geometry */
+    --radius: 8px;
+    --spacing-sm: 12px;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Global Aesthetics */
+/* --- Dark Mode Overrides (.dark-mode) --- */
+.dark-mode {
+    /* Core Colors */
+    --canvas: #121212;
+    --panel: #1a1a1a;
+    --surface: rgba(36, 36, 36, 0.5);
+    --surface-solid: #242424;
+    --glass-blur: blur(12px);
+
+    /* Borders & Text */
+    --border: #333333;
+    --border-bright: #444444;
+    --text-main: #ffffff;
+    --text-dim: #a0a0a0;
+
+    /* Semantic Components */
+
+    /* Paper */
+    --paper-bg: rgba(36, 36, 36, 0.5);
+    --paper-border: rgba(255, 255, 255, 0.06);
+    --paper-border-top: rgba(255, 255, 255, 0.1);
+    --paper-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+
+    /* Inputs */
+    --input-bg: rgba(0, 0, 0, 0.2);
+    --input-border: var(--border);
+    --input-text: var(--text-main);
+    --input-placeholder: rgba(255, 255, 255, 0.2);
+    --input-focus-border: var(--accent);
+    --input-focus-shadow: 0 10px 20px -10px rgba(var(--accent-rgb), 0.2);
+
+    /* Interactive Elements */
+    --card-bg-inactive: rgba(255, 255, 255, 0.03);
+    --card-border-inactive: rgba(255, 255, 255, 0.1);
+    --icon-inactive: rgba(255, 255, 255, 0.3);
+
+    /* Wizard Components */
+    --stepper-track: rgba(255, 255, 255, 0.2);
+    /* Increased from 0.05 */
+    --stepper-dot-bg: #1a1a1a;
+    --stepper-dot-border: rgba(255, 255, 255, 0.2);
+    --avatar-wrapper-bg: rgba(255, 255, 255, 0.1);
+    --summary-bg: rgba(255, 255, 255, 0.05);
+    --summary-border: rgba(255, 255, 255, 0.1);
+    --summary-label: var(--text-dim);
+    --summary-value: #ffffff;
+
+    /* Atmosphere */
+    --bg-gradient: radial-gradient(circle at 50% 10%, #1a202c 0%, var(--canvas) 100%);
+    --glow-color: var(--accent);
+    --glow-opacity: 0.1;
+}
+
+/* Global Reset & Base */
 * {
     box-sizing: border-box;
 }
@@ -73,97 +133,16 @@ body {
     font-family: var(--font-sans);
     margin: 0;
     padding: 0;
-    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-    overflow-x: hidden;
-    /* Prevent horizontal jitter */
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
-::selection {
-    background: var(--accent);
-    color: #fff;
+/* Utilities */
+.hidden-scrollbar::-webkit-scrollbar {
+    display: none;
 }
 
-/* --- Premium Aesthetics: Invisible Scrollbars (Forced) --- */
-html,
-body {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-}
-
-::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-}
-
-* {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-}
-
-/* --- Layout Utilities --- */
-
-.top-bar {
-    height: 48px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
-    background-color: var(--panel);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-    position: fixed;
-    top: 0;
-    z-index: 1100;
-}
-
-.top-bar-title {
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-}
-
-.top-bar-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Main Content Area */
-.main-content {
-    /* Full width with balanced padding */
-    padding: 64px 32px 32px;
-    max-width: 100%;
-    margin: 0;
-}
-
-/* Bento Architecture */
-.bento-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
-}
-
-.bento-card {
-    background: var(--surface);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.bento-card:hover {
-    border-color: var(--border-bright);
-    transform: translateY(-2px);
-}
-
-.mono-tag {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+.hidden-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

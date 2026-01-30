@@ -1,6 +1,7 @@
 import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
+import { ThemeService } from '../../../services/ThemeService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 // @ts-ignore
@@ -79,6 +80,13 @@ class SettingsContent extends HTMLElement {
         }
         if (newPrefs.language) {
             i18n.setLanguage(newPrefs.language);
+        }
+        if (newPrefs.theme) {
+            if (newPrefs.theme === 'dark') {
+                ThemeService.enableDark();
+            } else {
+                ThemeService.enableLight();
+            }
         }
 
         await userStore.updatePreferences(newPrefs);

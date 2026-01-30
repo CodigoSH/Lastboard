@@ -11,6 +11,7 @@
   "general.error": "Hata",
   "general.success": "Başarılı",
   "general.pinging": "Pingleniyor...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Yer imi başarıyla güncellendi",
   "notifier.bookmark_added": "Yer imi başarıyla eklendi",
   "notifier.bookmark_error": "Yer imi kaydedilirken hata oluştu",

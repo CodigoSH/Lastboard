@@ -11,6 +11,7 @@
   "general.error": "Errore",
   "general.success": "Successo",
   "general.pinging": "Ping in corso...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Segnalibro aggiornato con successo",
   "notifier.bookmark_added": "Segnalibro aggiunto con successo",
   "notifier.bookmark_error": "Errore nel salvataggio del segnalibro",

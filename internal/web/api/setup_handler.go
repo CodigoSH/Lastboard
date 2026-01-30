@@ -30,11 +30,13 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Parse Input
-	// 2. Parse Input
 	var input struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-		Language string `json:"language"`
+		Username    string `json:"username"`
+		Password    string `json:"password"`
+		Language    string `json:"language"`
+		AvatarUrl   string `json:"avatar_url"`
+		Theme       string `json:"theme"`
+		AccentColor string `json:"accent_color"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -46,9 +48,15 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Default to 'en' if not provided
+	// Defaults
 	if input.Language == "" {
 		input.Language = "en"
+	}
+	if input.Theme == "" {
+		input.Theme = "dark"
+	}
+	if input.AccentColor == "" {
+		input.AccentColor = "#f97316"
 	}
 
 	// 3. Hash Password
@@ -59,9 +67,9 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. Create Admin User
-	_, err = h.DB.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language, grid_columns_pc, grid_columns_tablet, grid_columns_mobile) 
-		VALUES (?, ?, ?, 'system', '#f97316', ?, 12, 4, 2)`,
-		input.Username, string(hashedPassword), "admin", input.Language)
+	_, err = h.DB.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language, avatar_url, grid_columns_pc, grid_columns_tablet, grid_columns_mobile) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, 12, 6, 3)`,
+		input.Username, string(hashedPassword), "admin", input.Theme, input.AccentColor, input.Language, input.AvatarUrl)
 
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)

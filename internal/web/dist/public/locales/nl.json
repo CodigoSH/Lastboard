@@ -11,6 +11,7 @@
   "general.error": "Fout",
   "general.success": "Succes",
   "general.pinging": "Pingen...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Bladwijzer succesvol bijgewerkt",
   "notifier.bookmark_added": "Bladwijzer succesvol toegevoegd",
   "notifier.bookmark_error": "Fout bij opslaan bladwijzer",

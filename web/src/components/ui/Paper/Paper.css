@@ -3,10 +3,12 @@
 }
 
 .paper {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--spacing-md);
-    color: var(--text-main);
+    /* Neutralized to allow components.css to control styling via Host */
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    color: inherit;
     box-sizing: border-box;
+    height: 100%;
 }

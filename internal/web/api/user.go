@@ -243,7 +243,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at) VALUES (?, ?, ?, ?)")
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, grid_columns_pc, grid_columns_tablet, grid_columns_mobile) VALUES (?, ?, ?, ?, 12, 6, 3)")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

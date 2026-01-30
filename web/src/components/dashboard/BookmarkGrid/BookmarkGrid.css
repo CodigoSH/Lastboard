@@ -1,7 +1,7 @@
 :host {
     /* Grid columns from user preferences */
     --current-grid-cols: var(--grid-columns-pc, 9);
-    --grid-gap: 16px;
+    --grid-gap: 12px;
 
     display: grid;
     /* 1. Use 1fr to fill available width dynamically */
@@ -15,8 +15,8 @@
     max-width: 100%;
     margin: 0 auto;
 
-    /* Ensure drop zone covers screen minus header/padding (Precise math: 48px header + 96px total padding) */
-    min-height: calc(100vh - 144px);
+    /* Ensure drop zone covers screen minus header/padding (Math: 48px Header + 16px Padding * 2 = ~80px) */
+    min-height: calc(100vh - 80px);
     position: relative;
     align-content: start;
     padding-bottom: 20px;
@@ -86,7 +86,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 12px;
+    padding: 20px;
     position: relative;
     /* CRITICAL: Enforce square aspect ratio */
     aspect-ratio: 1 / 1;

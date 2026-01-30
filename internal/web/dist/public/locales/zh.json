@@ -11,6 +11,7 @@
   "general.error": "错误",
   "general.success": "成功",
   "general.pinging": "正在 Ping...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "书签更新成功",
   "notifier.bookmark_added": "书签添加成功",
   "notifier.bookmark_error": "保存书签时出错",

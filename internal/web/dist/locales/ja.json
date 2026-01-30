@@ -11,6 +11,7 @@
   "general.error": "エラー",
   "general.success": "成功",
   "general.pinging": "Ping送信中...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "ブックマークを更新しました",
   "notifier.bookmark_added": "ブックマークを追加しました",
   "notifier.bookmark_error": "ブックマークの保存中にエラーが発生しました",
