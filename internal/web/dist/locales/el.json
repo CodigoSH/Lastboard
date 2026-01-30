@@ -11,6 +11,7 @@
   "general.error": "Σφάλμα",
   "general.success": "Επιτυχία",
   "general.pinging": "Έλεγχος σύνδεσης...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Ο σελιδοδείκτης ενημερώθηκε με επιτυχία",
   "notifier.bookmark_added": "Ο σελιδοδείκτης προστέθηκε με επιτυχία",
   "notifier.bookmark_error": "Σφάλμα κατά την αποθήκευση του σελιδοδείκτη",

@@ -3,6 +3,7 @@ package web
 import (
 	"database/sql"
 	"embed"
+	"encoding/base64"
 	"io"
 	"io/fs"
 	"log"
@@ -120,6 +121,15 @@ func (s *Server) routes() {
 
 	// Login Page (Public)
 	s.Router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		// Smart Redirect: If already logged in, go to dashboard
+		cookie, err := r.Cookie("session_token")
+		if err == nil && cookie.Value != "" {
+			// Basic Validation to prevent loops
+			if _, err := base64.StdEncoding.DecodeString(cookie.Value); err == nil {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+				return
+			}
+		}
 		s.serveFile(w, r, "login.html")
 	})
 
@@ -161,6 +171,15 @@ func (s *Server) routes() {
 		}
 
 		if exists {
+			// Smart Redirect: If already logged in, go to dashboard
+			cookie, err := r.Cookie("session_token")
+			if err == nil && cookie.Value != "" {
+				if _, err := base64.StdEncoding.DecodeString(cookie.Value); err == nil {
+					http.Redirect(w, r, "/", http.StatusSeeOther)
+					return
+				}
+			}
+
 			// CRITICAL: Prevent access to HTML
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
@@ -213,11 +232,35 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
 	var projectName string = "Kashboard"
+	var dbTheme string = ""
 
 	if username != "" {
-		err := s.DB.QueryRow("SELECT project_name FROM users WHERE username = ?", username).Scan(&projectName)
+		// Fetch Project Name AND Theme
+		err := s.DB.QueryRow("SELECT project_name, COALESCE(theme, '') FROM users WHERE username = ?", username).Scan(&projectName, &dbTheme)
 		if err != nil && err != sql.ErrNoRows {
-			log.Printf("Error fetching project name for %s: %v", username, err)
+			log.Printf("Error fetching user data for %s: %v", username, err)
+		}
+	}
+
+	var themeClass string = ""
+	// 1. Priority: Cookie (Most recent client state)
+	cookie, err := r.Cookie("kashboard_theme")
+	if err == nil {
+		if cookie.Value == "dark" {
+			themeClass = "dark-mode"
+		} else if cookie.Value == "light" {
+			themeClass = ""
+		}
+	} else {
+		// 2. Fallback: Database (Saved preference)
+		if dbTheme == "dark" {
+			themeClass = "dark-mode"
+		} else if dbTheme == "light" {
+			themeClass = "" // Explicit light
+		} else {
+			// 3. System Default (e.g. if db is empty or 'system')
+			// We can default to dark-mode if we want a dark-first app
+			themeClass = "dark-mode"
 		}
 	}
 
@@ -230,8 +273,10 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		ProjectName string
+		ThemeClass  string
 	}{
 		ProjectName: projectName,
+		ThemeClass:  themeClass,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {

@@ -11,6 +11,7 @@
   "general.error": "خطأ",
   "general.success": "نجاح",
   "general.pinging": "جاري الفحص...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "تم تحديث الإشارة المرجعية بنجاح",
   "notifier.bookmark_added": "تم إضافة الإشارة المرجعية بنجاح",
   "notifier.bookmark_error": "خطأ في حفظ الإشارة المرجعية",

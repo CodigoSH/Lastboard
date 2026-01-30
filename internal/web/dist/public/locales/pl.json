@@ -11,6 +11,7 @@
   "general.error": "Błąd",
   "general.success": "Sukces",
   "general.pinging": "Pingowanie...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Zakładka zaktualizowana pomyślnie",
   "notifier.bookmark_added": "Zakładka dodana pomyślnie",
   "notifier.bookmark_error": "Błąd podczas zapisywania zakładki",

@@ -11,6 +11,7 @@
   "general.error": "त्रुटि",
   "general.success": "सफलता",
   "general.pinging": "पिंग किया जा रहा है...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "बुकमार्क सफलतापूर्वक अपडेट किया गया",
   "notifier.bookmark_added": "बुकमार्क सफलतापूर्वक जोड़ा गया",
   "notifier.bookmark_error": "बुकमार्क सहेजने में त्रुटि",

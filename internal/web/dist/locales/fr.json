@@ -11,6 +11,7 @@
   "general.error": "Erreur",
   "general.success": "Succès",
   "general.pinging": "Ping en cours...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Favori mis à jour avec succès",
   "notifier.bookmark_added": "Favori ajouté avec succès",
   "notifier.bookmark_error": "Erreur lors de l'enregistrement du favori",

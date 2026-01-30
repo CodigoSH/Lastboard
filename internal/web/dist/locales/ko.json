@@ -11,6 +11,7 @@
   "general.error": "오류",
   "general.success": "성공",
   "general.pinging": "핑 확인 중...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "북마크가 성공적으로 업데이트되었습니다",
   "notifier.bookmark_added": "북마크가 성공적으로 추가되었습니다",
   "notifier.bookmark_error": "북마크 저장 중 오류 발생",

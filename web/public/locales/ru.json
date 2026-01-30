@@ -11,6 +11,7 @@
   "general.error": "Ошибка",
   "general.success": "Успех",
   "general.pinging": "Пинг...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Закладка успешно обновлена",
   "notifier.bookmark_added": "Закладка успешно добавлена",
   "notifier.bookmark_error": "Ошибка при сохранении закладки",

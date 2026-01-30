@@ -1,6 +1,5 @@
-// Import necessary UI components
-import './components/ui/Paper/Paper';
-import './components/ui/Button/Button';
+// Import necessary logic
+import { ThemeService } from './services/ThemeService';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
 
@@ -8,9 +7,9 @@ import { bootstrap } from './core/bootstrap';
 bootstrap(async () => {
     const form = document.getElementById('loginForm') as HTMLFormElement;
     const feedback = document.getElementById('feedback') as HTMLElement;
-    const submitBtn = document.getElementById('submitBtn') as any;
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
 
-    const container = document.querySelector('.login-container, .setup-container') as HTMLElement;
+    const container = document.querySelector('.setup-container') as HTMLElement;
     if (container) {
         container.style.opacity = '0';
         container.style.transition = 'opacity 0.3s ease';
@@ -18,12 +17,20 @@ bootstrap(async () => {
 
     if (!form) return;
 
+    // Apply Theme
+    ThemeService.init();
+
     // Localize UI
     const localize = () => {
-        document.querySelector('h1')!.textContent = i18n.t('auth.welcome');
-        document.querySelector('.subtitle')!.textContent = i18n.t('auth.subtitle');
-        document.querySelector('label[for="username"]')!.textContent = i18n.t('auth.username');
-        document.querySelector('label[for="password"]')!.textContent = i18n.t('auth.password');
+        const titleEl = document.querySelector('.auth-title');
+        const subtitleEl = document.querySelector('.auth-subtitle');
+        const userLabel = document.querySelector('label[for="username"]');
+        const passLabel = document.querySelector('label[for="password"]');
+
+        if (titleEl) titleEl.textContent = i18n.t('auth.welcome');
+        if (subtitleEl) subtitleEl.textContent = i18n.t('auth.subtitle');
+        if (userLabel) userLabel.textContent = i18n.t('auth.username');
+        if (passLabel) passLabel.textContent = i18n.t('auth.password');
         if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
 
         // Show UI after text update
@@ -36,10 +43,9 @@ bootstrap(async () => {
     // Enable implicit submission via Enter key
     form.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            e.preventDefault();
-            // Use requestSubmit to properly trigger the 'submit' event we listen to below
-            if (form.requestSubmit) form.requestSubmit();
-            else form.submit();
+            // Native forms handle enter automatically, but if we need custom logic:
+            // e.preventDefault();
+            // form.dispatchEvent(new Event('submit'));
         }
     });
 
@@ -49,7 +55,12 @@ bootstrap(async () => {
         // Reset state
         feedback.style.display = 'none';
         feedback.textContent = '';
-        if (submitBtn) submitBtn.loading = true;
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = i18n.t('general.pinging') || "Signing in...";
+        }
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
@@ -71,26 +82,33 @@ bootstrap(async () => {
                 const errorText = await response.text();
                 feedback.textContent = errorText || i18n.t('auth.invalid_credentials');
                 feedback.style.display = 'block';
-                if (submitBtn) submitBtn.loading = false;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = i18n.t('auth.sign_in');
+                }
 
                 // Shake effect for feedback
-                const container = document.querySelector('.setup-container') as HTMLElement;
-                container.animate([
-                    { transform: 'translateX(0)' },
-                    { transform: 'translateX(-10px)' },
-                    { transform: 'translateX(10px)' },
-                    { transform: 'translateX(-10px)' },
-                    { transform: 'translateX(0)' }
-                ], {
-                    duration: 400,
-                    easing: 'ease-in-out'
-                });
+                if (container) {
+                    container.animate([
+                        { transform: 'translateX(0)' },
+                        { transform: 'translateX(-10px)' },
+                        { transform: 'translateX(10px)' },
+                        { transform: 'translateX(-10px)' },
+                        { transform: 'translateX(0)' }
+                    ], {
+                        duration: 400,
+                        easing: 'ease-in-out'
+                    });
+                }
             }
         } catch (error) {
             console.error('Login error:', error);
             feedback.textContent = i18n.t('auth.connection_error');
             feedback.style.display = 'block';
-            if (submitBtn) submitBtn.loading = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = i18n.t('auth.sign_in');
+            }
         }
     });
 });

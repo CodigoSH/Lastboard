@@ -11,6 +11,7 @@
   "general.error": "Kesalahan",
   "general.success": "Berhasil",
   "general.pinging": "Memeriksa koneksi...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "Bookmark berhasil diperbarui",
   "notifier.bookmark_added": "Bookmark berhasil ditambah",
   "notifier.bookmark_error": "Gagal menyimpan bookmark",

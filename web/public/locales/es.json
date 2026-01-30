@@ -11,6 +11,7 @@
   "general.error": "Error",
   "general.success": "Éxito",
   "general.pinging": "Haciendo ping...",
+  "general.next": "Siguiente",
   "notifier.bookmark_updated": "Marcador actualizado con éxito",
   "notifier.bookmark_added": "Marcador añadido con éxito",
   "notifier.bookmark_error": "Error al guardar el marcador",

@@ -11,6 +11,7 @@
   "general.error": "خطا",
   "general.success": "موفقیت",
   "general.pinging": "در حال بررسی اتصال...",
+  "general.next": "Next",
   "notifier.bookmark_updated": "نشانه با موفقیت بروزرسانی شد",
   "notifier.bookmark_added": "نشانه با موفقیت اضافه شد",
   "notifier.bookmark_error": "خطا در ذخیره نشانه",

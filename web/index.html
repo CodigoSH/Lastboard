@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="{{.ThemeClass}}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{if .ProjectName}}{{.ProjectName}}{{else}}Kashboard{{end}}</title>
-    <link rel="stylesheet" href="/styles/theme.css?v=2">
+    <link rel="stylesheet" href="/styles/theme.css?v=54">
+    <link rel="stylesheet" href="/styles/components.css?v=54">
     <script>
         window.CSH_CONFIG = {
             API_BASE_URL: '', // Root-relative for local Go server
             DEBUG_MODE: true
         };
     </script>
-    <script type="module" src="bundle.js?v=52"></script>
+    <script type="module" src="bundle.js?v=54"></script>
 </head>
 
 <body>
