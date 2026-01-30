@@ -175,8 +175,8 @@ export const collisionService = {
                 }
             }
             y++;
-            // Safety break to prevent infinite loops in weird cases, though unlikely
-            if (y > 100) return { x: 1, y: 100 };
+            // Safety break to prevent infinite loops in weird cases
+            if (y > 1000) return { x: 1, y: 1000 };
         }
     },
 
@@ -203,7 +203,7 @@ export const collisionService = {
                 }
             }
             y++;
-            if (y > 100) return { x: 1, y: 100 };
+            if (y > 1000) return { x: 1, y: 1000 };
         }
     }
 };

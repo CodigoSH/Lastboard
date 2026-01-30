@@ -127,13 +127,19 @@
     box-sizing: border-box;
 }
 
+html,
+body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Lock the Shell */
+}
+
 body {
     background-color: var(--canvas);
     color: var(--text-main);
     font-family: var(--font-sans);
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
     transition: background 0.3s ease, color 0.3s ease;
 }
 

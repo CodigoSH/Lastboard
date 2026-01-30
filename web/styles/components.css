@@ -240,11 +240,24 @@ app-avatar img {
 }
 
 /* 6. Dashboard Layout (Premium Spacing) */
+/* 6. Dashboard Layout (Premium Spacing) */
 .main-content {
     margin-top: 0px !important;
-    /* Managed by Sticky Header */
     padding: 20px !important;
-    /* Uniform 20px Padding */
-    min-height: 100vh;
+    height: calc(100vh - 48px);
+    /* Full height minus header */
+    overflow-y: auto;
+    /* Internal Scroll */
     box-sizing: border-box;
+
+    /* Stealth Scroll */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+}
+
+.main-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
 }

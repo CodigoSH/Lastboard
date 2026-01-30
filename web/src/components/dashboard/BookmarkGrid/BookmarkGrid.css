@@ -15,11 +15,14 @@
     max-width: 100%;
     margin: 0 auto;
 
-    /* Ensure drop zone covers screen minus header/padding (Math: 48px Header + 16px Padding * 2 = ~80px) */
-    min-height: calc(100vh - 80px);
+    /* Ensure drop zone covers screen minus header/padding */
+    min-height: 100%;
+    height: auto !important;
+    /* Elastic Growth */
     position: relative;
     align-content: start;
-    padding-bottom: 20px;
+    padding-bottom: 100px;
+    /* Always keep some buffer at the bottom for easy dropping */
 
     /* Hide scrollbars on component level */
     scrollbar-width: none !important;

@@ -468,6 +468,38 @@ class BookmarkGrid extends HTMLElement {
             e.preventDefault();
             e.dataTransfer!.dropEffect = 'move';
 
+            // Auto-Scroll Logic
+            const SCROLL_THRESHOLD = 100; // px from edge
+            const SCROLL_SPEED = 15;
+
+            // Find scroll container (main-content)
+            // We cache this or find it dynamically
+            const scrollContainer = document.querySelector('.main-content');
+
+            if (scrollContainer) {
+                const rect = scrollContainer.getBoundingClientRect();
+                const mouseY = e.clientY;
+
+                // Scroll Down
+                if (mouseY > rect.bottom - SCROLL_THRESHOLD) {
+                    scrollContainer.scrollBy(0, SCROLL_SPEED);
+                }
+                // Scroll Up
+                else if (mouseY < rect.top + SCROLL_THRESHOLD) {
+                    scrollContainer.scrollBy(0, -SCROLL_SPEED);
+                }
+
+                // Dynamic Grid Expansion (Elastic Bottom)
+                // If dragging near bottom of the grid HOST explicitly
+                const gridRect = host.getBoundingClientRect();
+                if (mouseY > gridRect.bottom - 100) {
+                    // Add phantom space to allow dropping "below" current content
+                    const currentMin = parseFloat(host.style.minHeight) || gridRect.height;
+                    // Only expand if we are actually at the bottom of the visible area
+                    host.style.minHeight = `${currentMin + 50}px`;
+                }
+            }
+
             const gridRect = host.getBoundingClientRect();
             // Get dynamic grid columns
             const gridStyle = getComputedStyle(this.shadowRoot!.host);
