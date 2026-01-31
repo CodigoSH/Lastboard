@@ -2246,7 +2246,7 @@ button {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 12px !important;
     position: relative;
     /* CRITICAL: Enforce square aspect ratio */
     aspect-ratio: 1 / 1;
