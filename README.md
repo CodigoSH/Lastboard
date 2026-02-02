@@ -106,5 +106,7 @@ curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh 
   - Homarr Labs Dashboard Icons (Apache 2.0 - https://github.com/homarr-labs/dashboard-icons)
 - **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
 
-~Built with ❤️ by codigosh~
+<div align="center">
+  <sub>Built with ❤️ by codigosh</sub>
+</div>
 
