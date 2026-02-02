@@ -93,6 +93,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
             <div class="bookmark-grid__card"
                 draggable="${isEditing}"
                 data-id="${b.id}"
+                data-type="${b.type}"
                 style="--x: ${b.x}; --y: ${b.y}; --w: ${b.w}; --h: ${b.h}; cursor: ${isEditing ? 'move' : 'default'};">
                 
                 <${tagName} 
@@ -123,6 +124,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
         <a ${hrefAttr} class="bookmark-grid__card"
            draggable="${isEditing}"
            data-id="${b.id}"
+           data-type="${b.type}"
            style="--x: ${b.x || 'auto'}; --y: ${b.y || 'auto'}; --w: ${b.w || 1}; --h: ${b.h || 1};">
             
             ${isEditing ? `
