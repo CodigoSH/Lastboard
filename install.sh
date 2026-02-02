@@ -93,21 +93,35 @@ echo -e "${GREEN}✓ Environment ready${NC}"
 
 # 5. Download Binary
 echo -e "${CYAN}[4/6] Downloading Kashboard Binary...${NC}"
-URL="https://github.com/codigosh/Kashboard/releases/latest/download/kashboard-linux-$ARCH_TAG"
+URL="https://github.com/codigosh/Kashboard/releases/latest/download/kashboard-linux-$ARCH_TAG.tar.gz"
 
 echo -e "  > Fetching: $URL"
-# Use -f to fail on 404/server errors
-if curl -fL -o kashboard "$URL"; then
-    chmod +x kashboard
-    mv kashboard "$INSTALL_DIR/$BINARY_NAME"
-    echo -e "${GREEN}✓ Download successful${NC}"
+# Download tar.gz to a temporary file
+if curl -fL -o kashboard.tar.gz "$URL"; then
+    echo -e "  > Extracting..."
+    # Extract the tarball. 
+    # We assume the archive contains a binary named 'kashboard' or we find it after extraction.
+    tar -xzf kashboard.tar.gz
+    rm kashboard.tar.gz
+    
+    # Verify extraction (find the binary, usually named 'kashboard' inside)
+    if [ -f "kashboard" ]; then
+        chmod +x kashboard
+        mv kashboard "$INSTALL_DIR/$BINARY_NAME"
+        echo -e "${GREEN}✓ Download and extraction successful${NC}"
+    else
+        echo -e "${RED}[ERROR] Expected binary 'kashboard' not found in archive!${NC}"
+        # Cleanup
+        rm -f kashboard
+        exit 1
+    fi
 else
     echo -e "${RED}[ERROR] Download failed!${NC}"
     echo -e "${YELLOW}Possible reasons:${NC}"
     echo -e "  1. The release for '$ARCH_TAG' does not exist yet on GitHub."
     echo -e "  2. Network connectivity issues."
     echo -e "  3. Invalid URL: $URL"
-    rm -f kashboard
+    rm -f kashboard.tar.gz
     exit 1
 fi
 
