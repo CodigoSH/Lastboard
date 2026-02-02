@@ -77,6 +77,27 @@ export const collisionService = {
             // Check Collision in Global Space
             if (this.isOverlap(rect1, rect2)) {
 
+                // SPECIAL CASE: Resizing a Section dealing with its own children
+                if (isDraggingSection && item.parent_id === draggedItem.id) {
+                    // We are overlapping with our own child. This is expected.
+                    // BUT we must ensure the child is still FULLY CONTAINED within the new section bounds.
+                    // rect1 = new global section bounds
+                    // rect2 = global child bounds
+
+                    const childFits = (
+                        rect2.x >= rect1.x &&
+                        rect2.y >= rect1.y &&
+                        (rect2.x + rect2.w) <= (rect1.x + rect1.w) &&
+                        (rect2.y + rect2.h) <= (rect1.y + rect1.h)
+                    );
+
+                    if (childFits) {
+                        continue; // Valid containment, ignore "collision"
+                    } else {
+                        return { valid: false, x: dX, y: dY }; // Invalid, child would be clipped
+                    }
+                }
+
                 // Nesting Scenario: Dragging a NON-Section onto a Section (Nest)
                 if (!isDraggingSection && item.type === 'section') {
                     // Calculate Local Coords relative to this section
