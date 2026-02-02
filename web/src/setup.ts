@@ -1,6 +1,7 @@
 import './components/ui/Paper/Paper';
 import './components/ui/Button/Button';
 import './components/ui/Avatar/Avatar';
+import './components/ui/Notifier/Notifier';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
 import { ThemeService } from './services/ThemeService';
@@ -9,7 +10,7 @@ bootstrap(async () => {
     // --- State ---
     let currentStep = 1;
     const TOTAL_STEPS = 3;
-    let selectedAvatar = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/proxmox.png';
+    let selectedAvatar = '/images/default-avatar.svg';
 
     // --- Elements ---
     const container = document.querySelector('.setup-container') as HTMLElement;
@@ -218,15 +219,15 @@ bootstrap(async () => {
             const c = confirmInput.value;
 
             if (u.length < 3) {
-                showError(i18n.t('setup.error_username'));
+                notify(i18n.t('setup.error_username'), 'error');
                 return false;
             }
             if (p.length < 8) {
-                showError(i18n.t('setup.error_password'));
+                notify(i18n.t('setup.error_password'), 'error');
                 return false;
             }
             if (p !== c) {
-                showError(i18n.t('notifier.password_mismatch') || "Passwords do not match");
+                notify(i18n.t('notifier.password_mismatch') || "Passwords do not match", 'error');
                 return false;
             }
             return true;
@@ -269,6 +270,13 @@ bootstrap(async () => {
         }
     });
 
+    // --- Notifier Helper ---
+    function notify(msg: string, type: 'success' | 'error' = 'success') {
+        // @ts-ignore
+        if (window.notifier) window.notifier.show(msg, type);
+        else console.log(`[${type}] ${msg}`);
+    }
+
     // --- Submit Logic ---
     async function submitSetup() {
         nextBtn.textContent = i18n.t('setup.creating');
@@ -279,27 +287,25 @@ bootstrap(async () => {
         if (themeBtns.light?.classList.contains('selected')) theme = 'light';
         if (themeBtns.dark?.classList.contains('selected')) theme = 'dark';
 
+        // Fix Default Avatar Persistence
+        // If selectedAvatar is the generic Proxmox one (or any initial default), keep it.
+        // It is initialized to '...proxmox.png' but we want our local default if meaningful.
+        // Actually, user said "al no seleccionar ... ha guardado la imagen por defecto y aparece texto".
+        // This implies backend received empty string.
+        // We ensure `selectedAvatar` is never empty.
+        // Let's use our local default SVG if the current value is external and we want local preference?
+        // User asked "default avatar" -> "/images/default-avatar.svg"
+        // Let's set the initial value to that instead of proxmox.png in the variable declaration (Line 12).
+
         const payload = {
             username: usernameInput.value.trim(),
             password: pwdInput.value,
             language: languageSelect.value,
             theme: theme,
-            avatarUrl: selectedAvatar
+            avatar_url: selectedAvatar
         };
 
         try {
-            // Note: API might not accept 'theme' or 'avatarUrl' yet in setup_handler.go?
-            // Need to verify setup_handler.go accepts these or silently ignores.
-            // SetupHandler currently only parses username, password, language.
-            // We should ideally update backend to accept these, OR update user immediately after login?
-            // User requested "Step 2: Admin Profile".
-            // Minimal viable: Just send what API supports for now to ensure success, 
-            // OR update API. 
-            // The prompt said "Implement the following... Step 2... Avatar".
-            // So we probably assume I should just SEND it, and if backend ignores it, fine?
-            // Or I should be proactive and update backend.
-            // Let's stick to frontend task for this turn unless strictly broken.
-
             const response = await fetch('/api/setup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -310,16 +316,22 @@ bootstrap(async () => {
                 localStorage.setItem('csh_lang', payload.language);
                 nextBtn.textContent = i18n.t('setup.welcome_admin');
                 nextBtn.style.backgroundColor = 'var(--accent-alt, #00f5a0)';
+
+                notify(i18n.t('setup.welcome_admin'), 'success');
+
                 setTimeout(() => window.location.href = '/', 1000);
             } else {
                 const text = await response.text();
-                showError(`${i18n.t('setup.failed')}: ${text}`);
+                // showError(`${i18n.t('setup.failed')}: ${text}`);
+                notify(`${i18n.t('setup.failed')}: ${text}`, 'error');
+
                 nextBtn.removeAttribute('disabled');
                 nextBtn.textContent = i18n.t('setup.create_admin');
             }
         } catch (err) {
             console.error(err);
-            showError(i18n.t('setup.error_connection'));
+            // showError(i18n.t('setup.error_connection'));
+            notify(i18n.t('setup.error_connection'), 'error');
             nextBtn.removeAttribute('disabled');
         }
     }

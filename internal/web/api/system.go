@@ -8,12 +8,64 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/codigosh/Kashboard/internal/version"
 	"github.com/codigosh/Kashboard/internal/web/middleware"
-	"golang.org/x/crypto/bcrypt"
 )
+
+// ... existing code ...
+
+// POST /api/system/reset
+func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
+	if !h.isAdmin(r) {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// 1. Close DB Connection
+	if err := h.DB.Close(); err != nil {
+		fmt.Println("Error closing DB during reset:", err)
+	}
+
+	// 2. Delete DB File
+	dbPath := "./dashboard.db"
+	if err := os.Remove(dbPath); err != nil {
+		if !os.IsNotExist(err) {
+			http.Error(w, "Failed to delete database file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// 3. Respond
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Factory reset complete. System is restarting."})
+
+	// 4. Self-Restart (Re-Exec)
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+
+		// Get current binary path
+		binary, err := os.Executable()
+		if err != nil {
+			fmt.Println("Failed to get executable path, falling back to exit:", err)
+			os.Exit(1)
+		}
+
+		// Re-exec using syscall.Exec (replaces process)
+		// We pass the same environment and args
+		env := os.Environ()
+		args := os.Args
+
+		// On Linux, syscall.Exec is the standard way to replace the process image
+		if err := syscall.Exec(binary, args, env); err != nil {
+			fmt.Println("Failed to re-exec, falling back to exit:", err)
+			os.Exit(1)
+		}
+	}()
+}
 
 type SystemHandler struct {
 	DB *sql.DB
@@ -194,66 +246,6 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Backup restored successfully. Please log in again."})
-}
-
-// POST /api/system/reset
-func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	tx, err := h.DB.Begin()
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback()
-
-	// 1. Clear Data
-	if _, err := tx.Exec("DELETE FROM items"); err != nil {
-		http.Error(w, "Failed to clear items", http.StatusInternalServerError)
-		return
-	}
-	if _, err := tx.Exec("DELETE FROM users"); err != nil {
-		http.Error(w, "Failed to clear users", http.StatusInternalServerError)
-		return
-	}
-
-	// 2. Re-create Default Admin
-	hashed, _ := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
-	_, err = tx.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language) 
-		VALUES (?, ?, ?, ?, ?, ?)`, "admin", string(hashed), "admin", "system", "blue", "en")
-
-	if err != nil {
-		http.Error(w, "Failed to create default admin", http.StatusInternalServerError)
-		return
-	}
-
-	// 3. Seed Default Items
-	// (Reusing the same seed logic as db.go, but inline for simplicity or we should define it in core)
-	// For now, let's keep it empty or minimal. DB Init will seed if empty? No, DB init runs on startup.
-	// Reset should probably leave it empty or restore default bookmarks.
-	// Let's restore defaults to be "Factory Reset" truly.
-
-	defaultItemsVals := `
-		('bookmark', 1, 1, 1, 1, '{"label": "Proxmox", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/proxmox.png", "iconName": "proxmox"}'),
-		('bookmark', 2, 1, 1, 1, '{"label": "TrueNAS", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/truenas.png", "iconName": "truenas"}'),
-		('bookmark', 3, 1, 1, 1, '{"label": "Cloudflare", "url": "#", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cloudflare.png", "iconName": "cloudflare"}')`
-
-	_, err = tx.Exec("INSERT INTO items (type, x, y, w, h, content) VALUES " + defaultItemsVals)
-	if err != nil {
-		http.Error(w, "Failed to seed items", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tx.Commit(); err != nil {
-		http.Error(w, "Commit failed", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Factory reset complete."})
 }
 
 // Helpers

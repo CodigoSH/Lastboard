@@ -56,4 +56,19 @@ export class ThemeService {
         }
         document.cookie = name + "=" + (value || "") + expires + "; path=/";
     }
+
+    static async sync() {
+        try {
+            const res = await fetch('/api/me');
+            if (res.ok) {
+                const user = await res.json();
+                if (user.theme === 'dark') this.enableDark();
+                else if (user.theme === 'light') this.enableLight();
+                // If 'system', we leave it to init() logic or re-run init logic?
+                // For now, explicit dark/light is what we care about preserving.
+            }
+        } catch (e) {
+            // Not logged in or error
+        }
+    }
 }

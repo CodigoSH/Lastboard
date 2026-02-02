@@ -2,12 +2,20 @@
 import { ThemeService } from './services/ThemeService';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
+import './components/ui/Notifier/Notifier';
 
 // Logic
 bootstrap(async () => {
     const form = document.getElementById('loginForm') as HTMLFormElement;
-    const feedback = document.getElementById('feedback') as HTMLElement;
+    // const feedback = document.getElementById('feedback') as HTMLElement; // No longer used for text
     const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+
+    // Helper for Toast
+    function notify(msg: string, type: 'success' | 'error' = 'success') {
+        // @ts-ignore
+        if (window.notifier) window.notifier.show(msg, type);
+        else console.log(`[${type}] ${msg}`);
+    }
 
     const container = document.querySelector('.setup-container') as HTMLElement;
     if (container) {
@@ -43,9 +51,7 @@ bootstrap(async () => {
     // Enable implicit submission via Enter key
     form.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            // Native forms handle enter automatically, but if we need custom logic:
-            // e.preventDefault();
-            // form.dispatchEvent(new Event('submit'));
+            // No custom logic needed, native submit works or we catch 'submit' event
         }
     });
 
@@ -53,8 +59,7 @@ bootstrap(async () => {
         e.preventDefault();
 
         // Reset state
-        feedback.style.display = 'none';
-        feedback.textContent = '';
+        // feedback.style.display = 'none';
 
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -76,12 +81,14 @@ bootstrap(async () => {
 
             if (response.ok) {
                 // Login Success
-                window.location.href = '/';
+                notify(i18n.t('auth.welcome'), 'success');
+                setTimeout(() => window.location.href = '/', 500);
             } else {
                 // Login Failed
                 const errorText = await response.text();
-                feedback.textContent = errorText || i18n.t('auth.invalid_credentials');
-                feedback.style.display = 'block';
+                const msg = errorText || i18n.t('auth.invalid_credentials');
+                notify(msg, 'error');
+
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = i18n.t('auth.sign_in');
@@ -103,8 +110,8 @@ bootstrap(async () => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            feedback.textContent = i18n.t('auth.connection_error');
-            feedback.style.display = 'block';
+            notify(i18n.t('auth.connection_error'), 'error');
+
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = i18n.t('auth.sign_in');

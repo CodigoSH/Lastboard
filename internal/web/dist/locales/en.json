@@ -98,6 +98,7 @@
   "settings.confirm_reset_title": "Confirm Factory Reset",
   "settings.confirm_reset_msg": "This action is <b>final</b>. All users, bookmarks, themes, and configuration will be deleted immediately.",
   "settings.type_delete": "To confirm, please type <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> below.",
+  "settings.restoring": "Restoring...",
   "settings.display_username": "Display Username",
   "settings.system_password": "System Password",
   "settings.current_password": "Current Password",
