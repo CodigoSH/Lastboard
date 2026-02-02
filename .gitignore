@@ -54,3 +54,5 @@ tmp/
 
 # Root binary
 kashboard
+*.old
+*.tar.gz
