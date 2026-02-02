@@ -332,9 +332,7 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card" style="text-align: center; padding: 48px 24px;">
              <!-- Logo Placeholder -->
-             <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--accent), #888); border-radius: 16px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                KB
-             </div>
+             <img src="/images/logo.png" alt="Kashboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block; box-shadow: 0 8px 24px rgba(0,0,0,0.12);">
              
              <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
              <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">${i18n.t('settings.version')} ${version}</p>

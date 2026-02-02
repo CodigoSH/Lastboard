@@ -43,7 +43,7 @@ if (result.success && resultSetup.success && resultLogin.success) {
     console.log("📂 Output: web/dist/bundle.js, web/dist/setup.js & web/dist/login.js");
 
     // Copy Locales
-    const { cp, mkdir } = await import('fs/promises');
+    const { cp, mkdir, readFile, writeFile } = await import('fs/promises');
     const { existsSync } = await import('fs');
     const path = await import('path');
 
@@ -61,10 +61,23 @@ if (result.success && resultSetup.success && resultLogin.success) {
         console.log("✅ Locales copied to web/dist/locales");
         console.log("✅ Locales copied to web/dist/locales");
 
-        // Copy HTML & Public Assets
-        await cp('./web/index.html', './web/dist/index.html');
-        await cp('./web/login.html', './web/dist/login.html');
-        await cp('./web/setup.html', './web/dist/setup.html');
+        // Copy HTML & Public Assets with Cache Busting
+        const copyWithVersion = async (src: string, dest: string) => {
+            let content = await readFile(src, 'utf-8');
+            const version = Math.floor(Date.now() / 1000);
+            content = content.replace(/(\?v=)[0-9]+/g, `$1${version}`);
+            await writeFile(dest, content);
+        };
+
+        await copyWithVersion('./web/index.html', './web/dist/index.html');
+        await copyWithVersion('./web/login.html', './web/dist/login.html');
+        await copyWithVersion('./web/setup.html', './web/dist/setup.html');
+
+        // Copy Images explicitly to root for cleaner URLs (/images/...)
+        if (existsSync('./web/public/images')) {
+            await cp('./web/public/images', './web/dist/images', { recursive: true });
+            console.log("✅ Images copied to web/dist/images");
+        }
 
         // Copy Public folder (CSS, Icons, etc)
         // Check availability to avoid errors
@@ -78,6 +91,13 @@ if (result.success && resultSetup.success && resultLogin.success) {
         }
 
         console.log("✅ HTML, Styles & Public assets copied to web/dist");
+
+        // SYNC TO INTERNAL GO EMBED DIRECTORY
+        console.log("🔄 Syncing to internal/web/dist...");
+        const internalDist = './internal/web/dist';
+        await mkdir(internalDist, { recursive: true });
+        await cp('./web/dist', internalDist, { recursive: true });
+        console.log("✅ Synced to internal/web/dist");
     } catch (e) {
         console.error("❌ Failed to copy locales:", e);
     }
