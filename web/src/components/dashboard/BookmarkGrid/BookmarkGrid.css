@@ -76,6 +76,28 @@
         --cell-size: 80px;
         --grid-gap: 12px;
     }
+
+    /* 1. FLATTEN SECTIONS: Remove visual container so children join the main grid */
+    .bookmark-grid__section,
+    .bookmark-grid__nested-content {
+        display: contents !important;
+    }
+
+    /* 2. WIDGETS: Span full width (2 columns) */
+    .bookmark-grid__card[data-type="widget"] {
+        grid-column: span 2 !important;
+        width: 100% !important;
+        aspect-ratio: auto !important;
+        /* Allow widget to determine its height or use default */
+        min-height: 140px;
+        /* Ensure 2x1 widgets have height */
+    }
+
+    /* 3. BOOKMARKS: Standard 1x1 */
+    .bookmark-grid__card:not([data-type="widget"]) {
+        grid-column: span 1 !important;
+        aspect-ratio: 1 / 1 !important;
+    }
 }
 
 /* Items positioned by coordinates */
