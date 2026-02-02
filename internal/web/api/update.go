@@ -16,14 +16,18 @@ import (
 	"syscall"
 	"time"
 
+	"database/sql"
+
 	"github.com/codigosh/Kashboard/internal/version"
 	"github.com/codigosh/Kashboard/internal/web/middleware"
 )
 
-type UpdateHandler struct{}
+type UpdateHandler struct {
+	DB *sql.DB
+}
 
-func NewUpdateHandler() *UpdateHandler {
-	return &UpdateHandler{}
+func NewUpdateHandler(db *sql.DB) *UpdateHandler {
+	return &UpdateHandler{DB: db}
 }
 
 type ReleaseAsset struct {
@@ -211,17 +215,20 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 // Helpers
 
 func (h *UpdateHandler) isAdmin(r *http.Request) bool {
-	// Re-implement or import user verification.
-	// Since api package structure is flat, we might need to grab it from middleware context
-	// assuming it's populating the username.
-	user := middleware.GetUserFromContext(r)
-	// We'll trust the middleware auth text for now, assuming "admin" role check is done
-	// or we query DB. Since we don't have easy DB access in this isolated struct without
-	// passing it in constructor, let's assume if they hit this endpoint via 'protect' middleware
-	// AND we are in admin section...
-	// Ideally we check DB against userStore.
-	// For this snippet, assuming strict internal usage.
-	return user == "admin" // Simplification. In production pass DB to Handler.
+	username := middleware.GetUserFromContext(r)
+	if username == "" {
+		return false
+	}
+
+	var role string
+	err := h.DB.QueryRow("SELECT role FROM users WHERE username = ?", username).Scan(&role)
+	if err != nil {
+		fmt.Printf("Error checking role for %s: %v\n", username, err)
+		return false
+	}
+
+	rLower := strings.ToLower(role)
+	return rLower == "admin" || rLower == "administrator"
 }
 
 func (h *UpdateHandler) downloadFile(url string, dest string) error {

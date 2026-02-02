@@ -354,22 +354,34 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
                         </div>
                     ` : `
                         <!-- Native Update Logic -->
+                        <!-- Native Update Logic -->
                         ${updateInfo.available ? `
-                             <div style="background: rgba(18, 184, 134, 0.1); border: 1px solid rgba(18, 184, 134, 0.3); padding: 24px; border-radius: var(--radius); width: 100%;">
-                                <h3 style="margin: 0 0 12px 0; color: #12b886; font-size: 16px;">${i18n.t('settings.update_available')}: ${updateInfo.latest_version}</h3>
-                                <div style="text-align: left; background: var(--surface); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; color: var(--text-dim); margin-bottom: 24px; max-height: 150px; overflow-y: auto; white-space: pre-wrap;">${updateInfo.release_notes}</div>
+                             <div class="update-modal">
+                                <div class="update-modal__glow"></div>
                                 
-                                <app-button variant="primary" id="btn-update-now" style="width: 100%; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${updateInfo.asset_url}')">
-                                    ${i18n.t('action.download_install')} ${updateInfo.latest_version}
-                                </app-button>
-                                <p id="update-status" style="margin-top: 12px; font-size: 12px; color: var(--text-dim); display: none;">${i18n.t('notifier.downloading_secure')}</p>
+                                <div class="update-modal__content">
+                                    <div class="update-modal__header">
+                                        <div class="update-modal__badge">${i18n.t('settings.update_available')}</div>
+                                        <h3 class="update-modal__version">${updateInfo.latest_version}</h3>
+                                    </div>
+                                    
+                                    <div class="update-modal__footer">
+                                        <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${updateInfo.asset_url}')">
+                                            ${i18n.t('action.download_install')}
+                                        </app-button>
+                                        <a href="https://github.com/codigosh/Kashboard/releases" target="_blank" style="text-decoration: none;">
+                                            <app-button variant="ghost" style="height: 100%;">ChangeLog</app-button>
+                                        </a>
+                                    </div>
+                                    <p id="update-status" style="margin: 0; font-size: 12px; color: var(--text-dim); display: none; text-align: center;">${i18n.t('notifier.downloading_secure')}</p>
+                                </div>
                             </div>
                         ` : `
-                            <div style="color: var(--text-dim); font-size: 14px; display: flex; align-items: center; gap: 8px;">
-                                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #12b886;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                                ${i18n.t('settings.up_to_date')}
+                            <div style="color: var(--text-dim); font-size: 14px; display: flex; align-items: center; gap: 8px; opacity: 0.6;">
+                                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                <span>${i18n.t('settings.up_to_date')}</span>
                             </div>
-                            <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">${i18n.t('action.check_again')}</app-button>
+                            <!-- <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">${i18n.t('action.check_again')}</app-button> -->
                         `}
                     `}
                 ` : `

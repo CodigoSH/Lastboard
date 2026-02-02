@@ -8,6 +8,7 @@ interface DashboardState {
     items: GridItem[];
     searchQuery: string;
     isOffline: boolean;
+    updateAvailable: boolean;
     stats: {
         cpu_usage: number;
         ram_usage: number;
@@ -33,6 +34,7 @@ class DashboardStore {
         items: [...INITIAL_ITEMS], // Initialize with mock data
         searchQuery: '',
         isOffline: false,
+        updateAvailable: false,
         stats: null
     };
     private listeners: Listener[] = [];
@@ -41,6 +43,7 @@ class DashboardStore {
         // Try to load from localStorage on initialization
         this.loadFromLocalStorage();
         this.initSocket();
+        this.checkSystemUpdate();
     }
 
     private initSocket() {
@@ -55,6 +58,21 @@ class DashboardStore {
                 this.notify();
             });
         });
+    }
+
+    private async checkSystemUpdate() {
+        try {
+            const res = await fetch('/api/system/update/check');
+            if (res.ok) {
+                const info = await res.json();
+                if (info.available) {
+                    this.state.updateAvailable = true;
+                    this.notify();
+                }
+            }
+        } catch (e) {
+            // fail silently
+        }
     }
 
     private saveToLocalStorage() {

@@ -11,6 +11,7 @@ interface TopBarState {
     drawerOpen: boolean;
     searchQuery: string;
     user?: { role?: string };
+    updateAvailable?: boolean;
 }
 
 class TopBar extends HTMLElement {
@@ -45,8 +46,11 @@ class TopBar extends HTMLElement {
         this.render();
         this.setupListeners();
         this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
-            if (this.state.editMode !== state.isEditing) {
-                this.setState({ editMode: state.isEditing });
+            if (this.state.editMode !== state.isEditing || this.state.updateAvailable !== state.updateAvailable) {
+                this.setState({
+                    editMode: state.isEditing,
+                    updateAvailable: state.updateAvailable
+                });
             }
         });
 
@@ -211,7 +215,8 @@ class TopBar extends HTMLElement {
             addMenuActive: this.state.addMenuActive,
             drawerOpen: this.state.drawerOpen,
             searchQuery: this.state.searchQuery,
-            user: this.state.user
+            user: this.state.user,
+            updateAvailable: this.state.updateAvailable // Pass it
         })}
         `;
     }

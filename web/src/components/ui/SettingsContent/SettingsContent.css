@@ -407,7 +407,127 @@ button {
     font-weight: 600;
     font-size: 15px;
     margin-bottom: 4px;
-    display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/* --- PREMIUM UPDATE MODAL STYLES --- */
+
+.update-modal {
+    position: relative;
+    overflow: hidden;
+    background: rgba(30, 30, 35, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    width: 100%;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+
+.update-modal__glow {
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(18, 184, 134, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.5s ease;
+}
+
+.update-modal__content {
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.update-modal__header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.update-modal__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(18, 184, 134, 0.1);
+    color: #12b886;
+    border: 1px solid rgba(18, 184, 134, 0.2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+    box-shadow: 0 4px 12px rgba(18, 184, 134, 0.1);
+}
+
+.update-modal__badge::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    background: #12b886;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #12b886;
+    animation: pulse 2s infinite;
+}
+
+.update-modal__version {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    background: linear-gradient(135deg, var(--text-main) 0%, var(--text-dim) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.update-modal__footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+}
+
+/* Spinner for update button */
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
 }

@@ -13,7 +13,7 @@ interface TopBarData {
 
 import { i18n } from '../../../services/i18n';
 
-export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user }: TopBarData & { user?: { role?: string } }) => {
+export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
     const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'Administrator';
     return `
     <div class="top-bar">
@@ -75,7 +75,8 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             ` : ''}
 
             <!-- Sidebar Toggle Icon -->
-            <div id="drawer-toggle" class="top-bar__toggle">
+            <div id="drawer-toggle" class="top-bar__toggle" style="position: relative;">
+                ${updateAvailable ? '<div class="notification-dot"></div>' : ''}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5" />
                     <rect class="top-bar__indicator ${drawerOpen ? 'top-bar__indicator--active' : ''}" 

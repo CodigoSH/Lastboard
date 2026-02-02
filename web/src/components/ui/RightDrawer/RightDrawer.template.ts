@@ -11,9 +11,10 @@ interface RightDrawerProps {
     user: User;
     isOpen: boolean;
     selectedSection: string | null;
+    updateAvailable?: boolean;
 }
 
-export const template = ({ user, isOpen, selectedSection }: RightDrawerProps) => `
+export const template = ({ user, isOpen, selectedSection, updateAvailable }: RightDrawerProps) => `
     <div class="right-drawer__overlay"></div>
     
     <div class="right-drawer__content-panel ${selectedSection ? '' : 'right-drawer__content-panel--closed'}">
@@ -65,9 +66,15 @@ export const template = ({ user, isOpen, selectedSection }: RightDrawerProps) =>
                         <span>${i18n.t('settings.advanced')}</span>
                     </div>
                 ` : ''}
-                <div class="right-drawer__menu-item ${selectedSection === 'about' ? 'right-drawer__menu-item--active' : ''}" data-section="about">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                    <span>${i18n.t('settings.about')}</span>
+                <div class="right-drawer__menu-item ${selectedSection === 'about' ? 'right-drawer__menu-item--active' : ''}" data-section="about" style="justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <span>${i18n.t('settings.about')}</span>
+                    </div>
+                    ${updateAvailable ? `
+                        <span style="font-size: 10px; font-weight: 600; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(250, 82, 82, 0.2); animation: blink-badge 2s infinite;">${i18n.t('settings.update_available')}</span>
+                        <style>@keyframes blink-badge { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }</style>
+                    ` : ''}
                 </div>
             </nav>
         </div>
