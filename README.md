@@ -102,10 +102,9 @@ curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh 
 ## Credits
 
 - **Icons**: 
-  - [Tabler Icons](https://tabler-icons.io/) (System UI)
-  - [Homarr Labs Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) (Service Logos)
-- **Design Inspiration**: Theme inspired by [Homarr](https://github.com/homarr-labs/homarr) and Glassmorphism.
+  - Tabler Icons (MIT License - https://github.com/tabler/tabler-icons)
+  - Homarr Labs Dashboard Icons (Apache 2.0 - https://github.com/homarr-labs/dashboard-icons)
+- **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
 
-<div align="center">
-  <sub>Built with ❤️ by the Kashboard Team</sub>
-</div>
+~Built with ❤️ by codigosh~
+
