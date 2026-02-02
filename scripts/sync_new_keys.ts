@@ -53,6 +53,11 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Система", "zh": "系统", "ja": "システム", "ko": "시스템", "tr": "Sistem", "pl": "System",
         "id": "Sistem", "ar": "النظام", "fa": "سیستم", "el": "Σύστημα", "hi": "सिस्टम", "bn": "সিস্টেম", "ur": "سسٹم"
     },
+    "general.pinging": {
+        "es": "Cargando...", "fr": "Chargement...", "it": "Caricamento...", "pt": "Carregando...", "de": "Laden...", "nl": "Laden...",
+        "ru": "Загрузка...", "zh": "加载中...", "ja": "読み込み中...", "ko": "로딩 중...", "tr": "Yükleniyor...", "pl": "Ładowanie...",
+        "id": "Memuat...", "ar": "جار التحميل...", "fa": "در حال بارگذاری...", "el": "Φόρτωση...", "hi": "लोड हो रहा है...", "bn": "লোড হচ্ছে...", "ur": "لوڈ ہو رہا ہے..."
+    },
 
     // --- Existing & Notepad Tools ---
     "widget.notepad.placeholder": {
@@ -230,6 +235,12 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "CPU, RAM y Temp", "fr": "CPU, RAM et Temp", "it": "CPU, RAM e Temp", "pt": "CPU, RAM e Temp", "de": "CPU, RAM und Temp", "nl": "CPU, RAM en Temp",
         "ru": "CPU, RAM и Темп", "zh": "CPU, 内存和温度", "ja": "CPU, RAM, 温度", "ko": "CPU, RAM 및 온도", "tr": "CPU, RAM ve Sıcaklık", "pl": "CPU, RAM i Temp",
         "id": "CPU, RAM, dan Suhu", "ar": "المعالج والذاكرة والحرارة", "fa": "پردازنده، حافظه و دما", "el": "CPU, RAM και Θερμ", "hi": "सीपीयू, रैम और तापमान", "bn": "CPU, RAM এবং তাপমাত্রা", "ur": "سی پی یو، ریم اور درجہ حرارت"
+    },
+    // --- Reset ---
+    "settings.restoring": {
+        "es": "Restaurando...", "fr": "Restauration...", "it": "Ripristino...", "pt": "Restaurando...", "de": "Wiederherstellung...", "nl": "Herstellen...",
+        "ru": "Восстановление...", "zh": "正在恢复...", "ja": "復元中...", "ko": "복원 중...", "tr": "Geri yükleniyor...", "pl": "Przywracanie...",
+        "id": "Memulihkan...", "ar": "استعادة...", "fa": "بازیابی...", "el": "Επαναφορά...", "hi": "पुनर्स्थापना...", "bn": "পুনরুদ্ধার করা হচ্ছে...", "ur": "بحال کیا جا رہا ہے..."
     }
 };
 

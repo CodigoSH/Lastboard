@@ -321,7 +321,7 @@ export const advancedTemplate = () => `
 
         <div style="display: flex; gap: 12px; margin-top: 32px; width: 100%;">
             <app-button onclick="this.getRootNode().getElementById('reset-confirm-modal').close()" style="width: auto;">${i18n.t('general.cancel')}</app-button>
-            <button class="settings-content__reset-btn" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1;">
+            <button id="btn-reset-confirm" class="settings-content__reset-btn" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1;">
                 ${i18n.t('action.erase_everything')}
             </button>
         </div>
@@ -332,7 +332,7 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card" style="text-align: center; padding: 48px 24px;">
              <!-- Logo Placeholder -->
-             <img src="/images/logo.png" alt="Kashboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block; box-shadow: 0 8px 24px rgba(0,0,0,0.12);">
+             <img src="/images/logo.png" alt="Kashboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
              
              <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
              <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">${i18n.t('settings.version')} ${version}</p>

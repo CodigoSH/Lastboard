@@ -36,6 +36,7 @@ import { bootstrap } from './core/bootstrap';
 bootstrap(async () => {
     // Initialize Theme
     ThemeService.init();
+    ThemeService.sync(); // Sync with backend preference
 
     // Initialize stores
     await userStore.fetchUser();

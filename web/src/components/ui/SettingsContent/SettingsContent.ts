@@ -450,10 +450,53 @@ class SettingsContent extends HTMLElement {
             return;
         }
 
+        const btn = this.shadowRoot!.getElementById('btn-reset-confirm') as HTMLButtonElement;
+
         try {
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = i18n.t('settings.restoring') || "Restoring...";
+            }
+
             const res = await fetch('/api/system/reset', { method: 'POST' });
             if (res.ok) {
-                window.location.href = '/setup';
+                // Show Overlay
+                const overlay = document.createElement('div');
+                Object.assign(overlay.style, {
+                    position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.9)', zIndex: '9999',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', fontFamily: 'var(--font-main, sans-serif)'
+                });
+
+                overlay.innerHTML = `
+                    <div style="border: 4px solid #333; border-top: 4px solid var(--accent, #0078d4); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
+                    <h2 style="margin: 0; font-weight: 500;">${i18n.t('notifier.system_restarting') || 'System Restarting...'}</h2>
+                    <p style="opacity: 0.7; margin-top: 8px;">${i18n.t('notifier.please_wait') || 'Please wait while the system resets...'}</p>
+                    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+                `;
+                document.body.appendChild(overlay);
+
+                // Poll for recovery
+                let attempts = 0;
+                const poll = async () => {
+                    attempts++;
+                    try {
+                        const check = await fetch('/', { method: 'HEAD', cache: 'no-store' });
+                        if (check.ok) {
+                            window.location.href = '/setup';
+                            return;
+                        }
+                    } catch (e) {
+                        // Still down
+                    }
+                    if (attempts < 60) setTimeout(poll, 1000);
+                    else window.location.href = '/setup'; // Fallback after 60s
+                };
+
+                // Wait 2s for shutdown, then start polling
+                setTimeout(poll, 2000);
+
             } else {
                 if (window.notifier) window.notifier.show(i18n.t('notifier.reset_failed'), 'error');
             }
