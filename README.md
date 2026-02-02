@@ -107,6 +107,6 @@ curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh 
 - **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
 
 <div align="center">
-  <sub>Built with ❤️ by codigosh</sub>
+  <sub>Built with ❤️ by the Kashboard Team</sub>
 </div>
 
