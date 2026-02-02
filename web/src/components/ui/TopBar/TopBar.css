@@ -177,7 +177,7 @@
     position: absolute;
     top: 42px;
     right: 80px;
-    background: var(--surface);
+    background: var(--surface-solid, #1a1b1e);
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 4px;
@@ -186,8 +186,8 @@
     gap: 2px;
     min-width: 140px;
     z-index: 2000;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
 }
 
 .add-menu--active {
