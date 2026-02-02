@@ -47,13 +47,28 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# 2. Configuration (The only question)
+# 2. Configuration
 PORT="8080"
-if [ -c /dev/tty ]; then
-    echo -n "  Desired Port [8080]: "
-    read -r INPUT_PORT < /dev/tty
-    if [[ -n "$INPUT_PORT" ]]; then
-        PORT="$INPUT_PORT"
+IS_UPDATE=false
+
+if [ -f "$SERVICE_FILE" ]; then
+    # Start detection
+    DETECTED_PORT=$(grep 'Environment="PORT=' "$SERVICE_FILE" | cut -d'=' -f3 | tr -d '"')
+    
+    if [ -n "$DETECTED_PORT" ]; then
+        PORT="$DETECTED_PORT"
+        IS_UPDATE=true
+        status_msg "Existing installation found. Updating version on port ${BOLD}${PORT}${NC}..."
+    fi
+fi
+
+if [ "$IS_UPDATE" = false ]; then
+    if [ -c /dev/tty ]; then
+        echo -n "  Desired Port [8080]: "
+        read -r INPUT_PORT < /dev/tty
+        if [[ -n "$INPUT_PORT" ]]; then
+            PORT="$INPUT_PORT"
+        fi
     fi
 fi
 echo "" # Spacer
