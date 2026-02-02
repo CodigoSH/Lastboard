@@ -63,14 +63,11 @@ Kashboard is built on a "Performance First" philosophy, selecting the best tools
 - **Go 1.21+**
 - **Bun** (for building frontend assets)
 
-### ⚡ Automated Installation (Recommended)
-We provide a convenient bash script that automates the deployment on purely Systemd-based distributions (Debian, Ubuntu, CentOS, etc.). This script sets up the user, directories, and a systemd service for you.
+### ⚡ Automated Installation (One-Liner)
+Install Kashboard with a single command. This script automates everything: user creation, directory setup, and systemd service registration.
 
 ```bash
-# Download and run the installer
-curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh -o install.sh
-chmod +x install.sh
-sudo ./install.sh
+curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh | sudo bash
 ```
 
 ### Build from Source
@@ -103,7 +100,9 @@ sudo ./install.sh
 
 ## Credits
 
-- **Icons**: [Tabler Icons](https://tabler-icons.io/) - A beautiful, open-source icon set that powers the Kashboard interface.
+- **Icons**: 
+  - [Tabler Icons](https://tabler-icons.io/) (System UI)
+  - [Homarr Labs Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) (Service Logos)
 - **Design Inspiration**: Modern glassmorphism principles.
 
 <div align="center">

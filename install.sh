@@ -30,8 +30,16 @@ echo "🚀 Installing Kashboard ($ARCH_TAG)..."
 # Download Binary
 URL="https://github.com/codigosh/Kashboard/releases/latest/download/kashboard-linux-$ARCH_TAG"
 
-echo "Please verify this is a fresh install. This script assumes no existing data."
-read -p "Did you download the binary manually? If not, we will try to download from placeholder. (y/n) " MANUAL
+if [ -t 0 ]; then
+    read -p "Did you download the binary manually? If not, we will try to download from placeholder. (y/n) " MANUAL
+else
+    # If not running interactively (e.g. piped), assume automatic download (Not Manual)
+    MANUAL="n"
+    # Try to read from tty if available for critical prompts, otherwise rely on defaults or args if we were to expand this script
+    if [ -c /dev/tty ]; then
+        read -p "Did you download the binary manually? If not, we will default to 'n'. (y/n) " MANUAL < /dev/tty
+    fi
+fi
 
 if [ "$MANUAL" != "y" ]; then
     echo "⬇️  Downloading Kashboard..."
@@ -57,7 +65,12 @@ chown kashboard:kashboard $DATA_DIR
 chmod 750 $DATA_DIR
 
 # Initial Configuration
-read -p "Enter port for Kashboard [8080]: " PORT
+# Try to obtain port from TTY if possible
+if [ -c /dev/tty ]; then
+    read -p "Enter port for Kashboard [8080]: " PORT < /dev/tty
+else
+    PORT="8080"
+fi
 PORT=${PORT:-8080}
 
 echo "Configuring service on port $PORT..."
