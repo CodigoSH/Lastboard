@@ -31,7 +31,7 @@ jobs:
           go-version: '1.23'
 
       - name: Setup Bun (Frontend)
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -39,6 +39,7 @@ jobs:
         run: |
           bun install
           bun run web/build.ts
+          ls -R internal/web/dist
 
       - name: Build Backend
         run: |
