@@ -61,17 +61,14 @@ jobs:
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
 
-          go build -ldflags "-s -w -extldflags '-static' -X github.com/codigosh/Kashboard/internal/version.Current=$VERSION" -o dashboard-${{ matrix.goos }}-${{ matrix.goarch }} cmd/dashboard/main.go
-
-      - name: Package
-        run: |
-          tar -czvf dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
+          # Build raw binary with name matching install.sh expectation
+          go build -ldflags "-s -w -extldflags '-static' -X github.com/codigosh/Kashboard/internal/version.Current=$VERSION" -o kashboard-${{ matrix.goos }}-${{ matrix.goarch }} cmd/dashboard/main.go
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          path: kashboard-${{ matrix.goos }}-${{ matrix.goarch }}
 
   release:
     needs: build-and-release
@@ -85,13 +82,13 @@ jobs:
       - name: Generate Checksums
         run: |
           cd artifacts
-          # Recursive sha256
-          sha256sum */*.tar.gz | sed 's/.*\///' > checksums.txt
+          # Checksum the binaries
+          sha256sum */kashboard* | sed 's/.*\///' > checksums.txt
           cat checksums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/*/*.tar.gz
+            artifacts/*/kashboard*
             artifacts/checksums.txt
