@@ -27,22 +27,15 @@ esac
 
 echo "🚀 Installing Kashboard ($ARCH_TAG)..."
 
-# Download Binary (Placeholder URL as requested, usually from GitHub Releases)
-# In a real scenario: URL="https://github.com/$REPO/releases/latest/download/kashboard-linux-$ARCH_TAG"
-URL="https://example.com/placeholder-url/kashboard-linux-$ARCH_TAG"
+# Download Binary
+URL="https://github.com/codigosh/Kashboard/releases/latest/download/kashboard-linux-$ARCH_TAG"
 
 echo "Please verify this is a fresh install. This script assumes no existing data."
 read -p "Did you download the binary manually? If not, we will try to download from placeholder. (y/n) " MANUAL
 
 if [ "$MANUAL" != "y" ]; then
-    echo "This is a placeholder installer. In production, uncomment the download line."
-    # curl -L -o kashboard $URL
-    # For now, we assume the binary is present or this is a template script.
-    echo "⚠️  Download skipped (Placeholder Mode). Please place 'kashboard' binary in current folder."
-    if [ ! -f "./kashboard" ]; then
-        echo "Error: ./kashboard binary not found."
-        exit 1
-    fi
+    echo "⬇️  Downloading Kashboard..."
+    curl -L -o kashboard $URL
     chmod +x kashboard
     mv kashboard $INSTALL_DIR/$BINARY_NAME
 else
