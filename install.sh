@@ -2,18 +2,16 @@
 set -e
 
 # ==========================================
-# 🎨 Kashboard Installer
-# Professional Deployment Script
+# 💎 Kashboard Installer
+# Elegant. Fast. Private.
 # ==========================================
 
 # Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
+GREEN='\033[1;32m'
+BLUE='\033[1;34m'
 CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+GRAY='\033[0;90m'
+NC='\033[0m'
 
 # Configuration
 REPO="codigosh/Kashboard"
@@ -22,112 +20,85 @@ INSTALL_DIR="/usr/local/bin"
 DATA_DIR="/var/lib/kashboard"
 SERVICE_FILE="/etc/systemd/system/kashboard.service"
 
+# Helper for friendly status
+function status_msg() {
+    echo -e "${BLUE}  • ${NC}$1"
+}
+
+function success_msg() {
+    echo -e "${GREEN}  ✓ ${NC}$1"
+}
+
 # Banner
 clear
-echo -e "${CYAN}"
-echo "██╗  ██╗ █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ "
-echo "██║ ██╔╝██╔══██╗██╔════╝██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗"
-echo "█████╔╝ ███████║███████╗███████║██████╔╝██║   ██║███████║██████╔╝██║  ██║"
-echo "██╔═██╗ ██╔══██║╚════██║██╔══██║██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║"
-echo "██║  ██╗██║  ██║███████║██║  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝"
-echo "╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
+echo -e "${BLUE}"
+echo "   __ __           _   _                    _ "
+echo "  / //_/ __ _  ___| |_| |__   ___  __ _ _ _(_)"
+echo " / ,<   / _\` |/ __| '_| '_ \ / _ \/ _\` | '_| |"
+echo " \_\_\ \__,_|\__ \_|_| |_.__|\___/\__,_|_| |_|"
+echo "                                              "
 echo -e "${NC}"
-echo -e "${BLUE}${BOLD}>>> Kashboard Deployment Installer${NC}"
-echo -e "${BLUE}>>> Systemd | Linux | Native Performance${NC}\n"
+echo -e "  Welcome to Kashboard. Let's get you started.\n"
 
 # 1. Check Root
 if [ "$EUID" -ne 0 ]; then
-  echo -e "${RED}[ERROR] Please run this script as root (sudo).${NC}"
+  echo -e "${GRAY}  [Info] This script needs admin privileges to set up the service.${NC}"
+  echo -e "${RED}  Please run with sudo.${NC}"
   exit 1
 fi
 
-# 2. Detect Architecture
-echo -e "${CYAN}[1/6] Detecting System Architecture...${NC}"
-ARCH=$(uname -m)
-case $ARCH in
-    x86_64)
-        ARCH_TAG="amd64"
-        ;;
-    aarch64|arm64)
-        ARCH_TAG="arm64"
-        ;;
-    *)
-        echo -e "${RED}[ERROR] Unsupported architecture: $ARCH${NC}"
-        exit 1
-        ;;
-esac
-echo -e "${GREEN}✓ Detected: $ARCH ($ARCH_TAG)${NC}"
-
-# 3. Configure Port (Interactive or Default)
-echo -e "${CYAN}[2/6] Configuration...${NC}"
+# 2. Configuration (The only question)
 PORT="8080"
-
-# Check if running interactively or via pipe
 if [ -c /dev/tty ]; then
-    echo -n "Select Port for Kashboard [default: 8080]: "
+    echo -n "  Desired Port [8080]: "
     read -r INPUT_PORT < /dev/tty
     if [[ -n "$INPUT_PORT" ]]; then
         PORT="$INPUT_PORT"
     fi
-else
-    echo -e "${YELLOW}! Non-interactive mode detected. Using default port: $PORT${NC}"
 fi
-echo -e "${GREEN}✓ Port selected: $PORT${NC}"
+echo "" # Spacer
 
-# 4. Prepare Environment
-echo -e "${CYAN}[3/6] Setting up Environment...${NC}"
+# 3. Installation Process (Simplified UI)
+status_msg "Checking system compatibility..."
+ARCH=$(uname -m)
+case $ARCH in
+    x86_64) ARCH_TAG="amd64" ;;
+    aarch64|arm64) ARCH_TAG="arm64" ;;
+    *) echo -e "${RED}  Sorry, your architecture ($ARCH) is not supported yet.${NC}"; exit 1 ;;
+esac
 
-# Create User
+status_msg "Preparing environment..."
 if ! id "kashboard" &>/dev/null; then
     useradd -r -s /bin/false kashboard
-    echo -e "  > Created user 'kashboard'"
-else
-    echo -e "  > User 'kashboard' already exists"
 fi
-
-# Create Directories
 mkdir -p "$DATA_DIR"
 chown -R kashboard:kashboard "$DATA_DIR"
 chmod 750 "$DATA_DIR"
-echo -e "${GREEN}✓ Environment ready${NC}"
 
-# 5. Download Binary
-echo -e "${CYAN}[4/6] Downloading Kashboard Binary...${NC}"
+status_msg "Downloading latest version..."
 URL="https://github.com/codigosh/Kashboard/releases/latest/download/kashboard-linux-$ARCH_TAG.tar.gz"
 
-echo -e "  > Fetching: $URL"
-# Download tar.gz to a temporary file
-if curl -fL -o kashboard.tar.gz "$URL"; then
-    echo -e "  > Extracting..."
-    # Extract the tarball. 
-    # We assume the archive contains a binary named 'kashboard' or we find it after extraction.
+# Silent curl, fail fast
+if curl -fL -s -o kashboard.tar.gz "$URL"; then
     tar -xzf kashboard.tar.gz
     rm kashboard.tar.gz
     
-    # Verify extraction (find the binary, usually named 'kashboard' inside)
     if [ -f "kashboard" ]; then
         chmod +x kashboard
         mv kashboard "$INSTALL_DIR/$BINARY_NAME"
-        echo -e "${GREEN}✓ Download and extraction successful${NC}"
     else
-        echo -e "${RED}[ERROR] Expected binary 'kashboard' not found in archive!${NC}"
-        # Cleanup
+        echo -e "${RED}  Installation failed (binary missing). check logs.${NC}"
         rm -f kashboard
         exit 1
     fi
 else
-    echo -e "${RED}[ERROR] Download failed!${NC}"
-    echo -e "${YELLOW}Possible reasons:${NC}"
-    echo -e "  1. The release for '$ARCH_TAG' does not exist yet on GitHub."
-    echo -e "  2. Network connectivity issues."
-    echo -e "  3. Invalid URL: $URL"
+    echo -e "${RED}  Download failed.${NC}"
+    echo -e "${GRAY}  Please check your internet connection or if the release exists.${NC}"
     rm -f kashboard.tar.gz
     exit 1
 fi
 
-# 6. Install Service
-echo -e "${CYAN}[5/6] Creating Systemd Service...${NC}"
-
+status_msg "Configuring system service..."
 cat > "$SERVICE_FILE" <<EOF
 [Unit]
 Description=Kashboard Dashboard Service
@@ -155,26 +126,20 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 EOF
 
-echo -e "${GREEN}✓ Service defined at $SERVICE_FILE${NC}"
-
-# 7. Start Service
-echo -e "${CYAN}[6/6] Starting Kashboard...${NC}"
-systemctl daemon-reload
-systemctl enable kashboard
-systemctl restart kashboard
+systemctl daemon-reload &>/dev/null
+systemctl enable kashboard &>/dev/null
+systemctl restart kashboard &>/dev/null
 
 # Verification
 sleep 2
 if systemctl is-active --quiet kashboard; then
     IP=$(hostname -I | awk '{print $1}')
-    echo -e "\n${GREEN}${BOLD}🎉 Installation Complete!${NC}"
-    echo -e "-----------------------------------------------------"
-    echo -e "🌍 Dashboard URL:   ${CYAN}http://$IP:$PORT${NC}"
-    echo -e "📊 Service Status:  ${CYAN}systemctl status kashboard${NC}"
-    echo -e "📝 Logs:            ${CYAN}journalctl -u kashboard -f${NC}"
-    echo -e "-----------------------------------------------------"
+    echo ""
+    success_msg "Installation complete!"
+    echo -e ""
+    echo -e "  🚀 Open your dashboard at: ${BLUE}${BOLD}http://$IP:$PORT${NC}"
+    echo -e ""
 else
-    echo -e "\n${RED}[ERROR] Service failed to start.${NC}"
-    echo -e "please check logs with: ${YELLOW}journalctl -u kashboard -n 50${NC}"
+    echo -e "${RED}  Service failed to start.${NC}"
     exit 1
 fi
