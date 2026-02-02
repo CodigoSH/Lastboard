@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/codigosh/Kashboard/internal/version"
 	"github.com/codigosh/Kashboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -67,7 +68,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	backup := BackupData{
-		Version:   "1.0",
+		Version:   version.Current,
 		Timestamp: time.Now(),
 		Users:     []BackupUser{},
 		Items:     []BackupItem{},

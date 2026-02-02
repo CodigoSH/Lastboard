@@ -12,6 +12,48 @@ console.log(`📚 Master (EN) has ${masterKeys.length} keys.`);
 // FULL DICTIONARY FOR ALL 20 LANGUAGES
 // Keys: es, fr, de, it, pt, ru, zh, ja, ko, nl, pl, tr, id, ar, fa, el, hi, bn, ur
 const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
+    // --- Auth Updates (New) ---
+    "auth.welcome": {
+        "es": "Bienvenido", "fr": "Bienvenue", "it": "Benvenuto", "pt": "Bem-vindo", "de": "Willkommen", "nl": "Welkom",
+        "ru": "Добро пожаловать", "zh": "欢迎", "ja": "ようこそ", "ko": "환영합니다", "tr": "Hoşgeldiniz", "pl": "Witaj",
+        "id": "Selamat Datang", "ar": "مرحبًا", "fa": "خوش آمدید", "el": "Καλώς ήρθατε", "hi": "स्वागत है", "bn": "স্বাগতম", "ur": "خوش آمدید"
+    },
+    "auth.subtitle": {
+        "es": "Ingresa tus credenciales", "fr": "Entrez vos identifiants", "it": "Inserisci le tue credenziali", "pt": "Insira suas credenciais", "de": "Geben Sie Ihre Zugangsdaten ein", "nl": "Voer uw inloggegevens in",
+        "ru": "Введите учетные данные", "zh": "输入您的凭据", "ja": "資格情報を入力", "ko": "자격 증명 입력", "tr": "Kimlik bilgilerinizi girin", "pl": "Wprowadź dane logowania",
+        "id": "Masukkan kredensial Anda", "ar": "أدخل بيانات الاعتماد", "fa": "اطلاعات ورود را وارد کنید", "el": "Εισάγετε τα διαπιστευτήριά σας", "hi": "अपनी साख दर्ज करें", "bn": "আপনার শংসাপত্র লিখুন", "ur": "اپنی سندیں درج کریں"
+    },
+    "setup.ready_msg": {
+        "es": "¿Listo para inicializar el sistema?", "fr": "Prêt à initialiser le système ?", "it": "Pronto per inizializzare il sistema?", "pt": "Pronto para inicializar o sistema?", "de": "Bereit zum Initialisieren?",
+        "ru": "Готовы к инициализации?", "zh": "准备好初始化了吗？", "ja": "システムを初期化しますか？", "ko": "시스템을 초기화하시겠습니까?", "nl": "Klaar om te initialiseren?",
+        "tr": "Sistemi başlatmaya hazır mısınız?", "pl": "Gotowy do inicjalizacji?", "id": "Siap menginisialisasi sistem?", "ar": "جاهز لتهيئة النظام؟"
+    },
+    "setup.interface_theme": {
+        "es": "Tema de la interfaz", "fr": "Thème de l'interface", "it": "Tema dell'interfaccia", "pt": "Tema da interface", "de": "Oberflächendesign", "nl": "Interfacethema",
+        "ru": "Тема интерфейса", "zh": "界面主题", "ja": "インターフェースのテーマ", "ko": "인터페이스 테마", "tr": "Arayüz Teması", "pl": "Motyw interfejsu",
+        "id": "Tema Antarmuka", "ar": "موضوع الواجهة", "fa": "تم رابط کاربری", "el": "Θέμα διεπαφής", "hi": "इंटरफ़ेस थीम", "bn": "ইন্টারফেস থিম", "ur": "انٹرفیس تھیم"
+    },
+    "setup.summary_admin": {
+        "es": "Usuario", "fr": "Utilisateur", "it": "Utente", "pt": "Usuário", "de": "Benutzer", "nl": "Gebruiker",
+        "ru": "Пользователь", "zh": "用户", "ja": "ユーザー", "ko": "사용자", "tr": "Kullanıcı", "pl": "Użytkownik",
+        "id": "Pengguna", "ar": "مستخدم", "fa": "کاربر", "el": "Χρήστης", "hi": "उपयोगकर्ता", "bn": "ব্যবহারকারী", "ur": "صارف"
+    },
+    "general.back": {
+        "es": "Atrás", "fr": "Retour", "it": "Indietro", "pt": "Voltar", "de": "Zurück", "nl": "Terug",
+        "ru": "Назад", "zh": "返回", "ja": "戻る", "ko": "뒤로", "tr": "Geri", "pl": "Wstecz",
+        "id": "Kembali", "ar": "رجوع", "fa": "برگشت", "el": "Πίσω", "hi": "पीछे", "bn": "ফিরে", "ur": "واپس"
+    },
+    "general.next": {
+        "es": "Siguiente", "fr": "Suivant", "it": "Avanti", "pt": "Próximo", "de": "Weiter", "nl": "Volgende",
+        "ru": "Далее", "zh": "下一步", "ja": "次へ", "ko": "다음", "tr": "İleri", "pl": "Dalej",
+        "id": "Lanjut", "ar": "التالي", "fa": "بعدی", "el": "Επόμενο", "hi": "अगला", "bn": "পরবর্তী", "ur": "اگلا"
+    },
+    "settings.system": {
+        "es": "Sistema", "fr": "Système", "it": "Sistema", "pt": "Sistema", "de": "System", "nl": "Systeem",
+        "ru": "Система", "zh": "系统", "ja": "システム", "ko": "시스템", "tr": "Sistem", "pl": "System",
+        "id": "Sistem", "ar": "النظام", "fa": "سیستم", "el": "Σύστημα", "hi": "सिस्टम", "bn": "সিস্টেম", "ur": "سسٹم"
+    },
+
     // --- Existing & Notepad Tools ---
     "widget.notepad.placeholder": {
         "es": "Empieza a escribir...", "fr": "Commencez à écrire...", "it": "Inizia a scrivere...", "pt": "Comece a escrever...", "de": "Schreiben Sie hier...",

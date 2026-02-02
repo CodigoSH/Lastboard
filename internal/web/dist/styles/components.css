@@ -3,7 +3,7 @@
 /* 1. Containers & Layout */
 .setup-container {
     width: 100%;
-    max-width: 500px;
+    max-width: 380px;
     padding: 20px;
     z-index: 10;
     opacity: 0;
@@ -32,7 +32,7 @@ app-paper {
     border-top: 1px solid var(--paper-border-top);
     box-shadow: var(--paper-shadow);
     border-radius: 24px !important;
-    padding: 32px 40px !important;
+    padding: 24px 32px !important;
     /* Compact vertical, Wide horizontal */
     box-sizing: border-box;
     position: relative;
@@ -62,12 +62,12 @@ app-paper>* {
 /* 3. Typography Helpers */
 .auth-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     /* Reduced from 48px */
 }
 
 .auth-title {
-    font-size: 32px;
+    font-size: 24px;
     /* Slightly smaller title for compactness */
     font-weight: 800;
     margin: 0 0 4px 0;
@@ -92,8 +92,8 @@ app-paper>* {
     /* Force Label on top */
     gap: 6px;
     /* Reduced from 12px */
-    margin-bottom: 20px;
-    /* Reduced from 32px */
+    margin-bottom: 10px;
+    /* Reduced from 16px */
     width: 100%;
 }
 
@@ -114,7 +114,7 @@ input,
 select {
     width: 100%;
     box-sizing: border-box;
-    padding: 14px 16px;
+    padding: 10px 14px;
     /* Slightly taller */
     background: rgba(255, 255, 255, 0.03);
     /* Default for visibility */
@@ -190,9 +190,9 @@ app-avatar img {
 
 /* 5. Buttons (Premium) */
 .premium-btn {
-    padding: 14px 24px;
+    padding: 10px 20px;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.05em;
     cursor: pointer;

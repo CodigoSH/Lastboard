@@ -121,12 +121,15 @@ bootstrap(async () => {
 
     // --- Localize Function ---
     const localize = () => {
-        document.getElementById('pageTitle')!.textContent = i18n.t('app.title');
-        document.getElementById('pageSubtitle')!.textContent = i18n.t('setup.subtitle');
+        // setText helper handles null checks automatically
+        const setText = (id: string, key: string) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = i18n.t(key);
+        };
+
+        setText('pageSubtitle', 'setup.subtitle');
 
         // Inputs labels
-        const labels = document.querySelectorAll('label');
-        // Simple mapping based on index or ID? ID is better but labels use 'for'.
         const setLabel = (id: string, key: string) => {
             const l = document.querySelector(`label[for="${id}"]`);
             if (l) l.textContent = i18n.t(key);
@@ -134,17 +137,26 @@ bootstrap(async () => {
 
         setLabel('language', 'settings.language');
         setLabel('username', 'setup.root_user');
-        setLabel('password', 'settings.new_password'); // Reusing settings keys
+        setLabel('password', 'settings.new_password');
         setLabel('confirmPassword', 'settings.confirm_password');
+
+        setText('lblInterfaceTheme', 'setup.interface_theme');
+        setText('lblThemeLight', 'settings.light');
+        setText('lblThemeDark', 'settings.dark');
+
+        setText('summaryKeyLang', 'settings.language');
+        setText('summaryKeyTheme', 'settings.theme');
+        setText('summaryKeyAdmin', 'setup.summary_admin');
 
         // Buttons
         if (currentStep === 3) nextBtn.textContent = i18n.t('setup.create_admin');
-        else {
-            const t = i18n.t('general.next');
-            nextBtn.textContent = (t && !t.toUpperCase().includes('GENERAL') && !t.includes('.')) ? t : "Next";
-        }
+        else nextBtn.textContent = i18n.t('general.next');
 
-        if (backBtn) backBtn.textContent = "Back";
+        if (backBtn) backBtn.textContent = i18n.t('general.back');
+
+        // Dynamic Texts
+        setText('changeImageText', 'action.change_image');
+        setText('readyMsg', 'setup.ready_msg');
     };
     i18n.subscribe(localize);
     localize();
@@ -170,18 +182,21 @@ bootstrap(async () => {
 
         // 4. Buttons
         if (backBtn) backBtn.style.display = currentStep === 1 ? 'none' : 'block';
+        // Ensure Back button text is always correct when switching steps
+        backBtn.textContent = i18n.t('general.back');
+
         const nextText = i18n.t('general.next');
         nextBtn.textContent = currentStep === TOTAL_STEPS
             ? i18n.t('setup.create_admin')
-            : (nextText && !nextText.includes('GENERAL') ? nextText : "Next");
+            : nextText;
 
         // 5. Populate Summary (if Step 3)
         if (currentStep === 3) {
             document.getElementById('summaryLang')!.textContent = languageSelect.options[languageSelect.selectedIndex].text;
 
-            let theme = 'System';
-            if (themeBtns.light?.classList.contains('selected')) theme = 'Light';
-            if (themeBtns.dark?.classList.contains('selected')) theme = 'Dark';
+            let theme = i18n.t('settings.system') || 'System';
+            if (themeBtns.light?.classList.contains('selected')) theme = i18n.t('settings.light');
+            if (themeBtns.dark?.classList.contains('selected')) theme = i18n.t('settings.dark');
             document.getElementById('summaryTheme')!.textContent = theme;
 
             document.getElementById('summaryUser')!.textContent = usernameInput.value;
@@ -247,7 +262,7 @@ bootstrap(async () => {
     });
 
     // Enter Key Support (Global)
-    form.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             nextBtn.click();
