@@ -79,6 +79,12 @@ if (result.success && resultSetup.success && resultLogin.success) {
             console.log("✅ Images copied to web/dist/images");
         }
 
+        // Copy Favicon explicitly to root
+        if (existsSync('./web/public/favicon.png')) {
+            await cp('./web/public/favicon.png', './web/dist/favicon.png');
+            console.log("✅ Favicon copied to web/dist/favicon.png");
+        }
+
         // Copy Public folder (CSS, Icons, etc)
         // Check availability to avoid errors
         if (existsSync('./web/public')) {
