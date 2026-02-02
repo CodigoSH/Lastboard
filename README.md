@@ -7,10 +7,11 @@
   </p>
 
   <p>
+    <img src="https://img.shields.io/github/v/release/codigosh/Kashboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
     <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
     <img src="https://img.shields.io/badge/Bun-%26_TypeScript-000000?style=for-the-badge&logo=bun&logoColor=white" alt="Bun & TypeScript" />
     <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
-    <img src="https://img.shields.io/badge/Platform-Linux%20|%20macOS%20|%20Windows-lightgrey?style=for-the-badge" alt="Platform" />
+    <img src="https://img.shields.io/badge/Platform-Linux%20-lightgrey?style=for-the-badge" alt="Platform" />
   </p>
 </div>
 
