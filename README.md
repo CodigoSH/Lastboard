@@ -104,7 +104,7 @@ curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh 
 - **Icons**: 
   - [Tabler Icons](https://tabler-icons.io/) (System UI)
   - [Homarr Labs Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) (Service Logos)
-- **Design Inspiration**: Modern glassmorphism principles.
+- **Design Inspiration**: Theme inspired by [Homarr](https://homarr.dev) and Glassmorphism.
 
 <div align="center">
   <sub>Built with ❤️ by the Kashboard Team</sub>
