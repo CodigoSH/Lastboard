@@ -70,7 +70,7 @@ Install Kashboard with a single command. This script automates everything: user 
 curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh | sudo bash
 ```
 
-### Build from Source
+### 🛠️ Build from Source
 
 1. **Clone the repository**
    ```bash
