@@ -40,25 +40,11 @@ jobs:
           bun install
           bun run web/build.ts
 
-      - name: Setup Zig (for CGO Cross-Compile)
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.13.0
-
       - name: Build Backend
         run: |
           VERSION=${{ github.ref_name }}
           
-          # Configure CC based on target
-          if [ "${{ matrix.goarch }}" = "amd64" ]; then
-            export CC="zig cc -target x86_64-linux-musl"
-            export CXX="zig c++ -target x86_64-linux-musl"
-          elif [ "${{ matrix.goarch }}" = "arm64" ]; then
-            export CC="zig cc -target aarch64-linux-musl"
-            export CXX="zig c++ -target aarch64-linux-musl"
-          fi
-          
-          export CGO_ENABLED=1
+          export CGO_ENABLED=0
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
 
