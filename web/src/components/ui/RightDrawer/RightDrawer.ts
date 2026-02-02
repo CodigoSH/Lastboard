@@ -11,11 +11,15 @@ class RightDrawer extends HTMLElement {
     _unsubscribeI18n: (() => void) | undefined;
     _keydownHandler: ((e: KeyboardEvent) => void) | undefined;
 
+    updateAvailable: boolean;
+    _unsubscribeDashboard: (() => void) | undefined;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.isOpen = false;
         this.selectedSection = null;
+        this.updateAvailable = false;
     }
 
     connectedCallback() {
@@ -28,6 +32,16 @@ class RightDrawer extends HTMLElement {
             if (this.isOpen) this.render();
         });
 
+        // Subscribe to dashboard changes (for updates)
+        import('../../../store/dashboardStore').then(({ dashboardStore }) => {
+            this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
+                if (this.updateAvailable !== state.updateAvailable) {
+                    this.updateAvailable = state.updateAvailable;
+                    this.render();
+                }
+            });
+        });
+
         // Subscribe to i18n changes
         this._unsubscribeI18n = i18n.subscribe(() => {
             this.render();
@@ -36,6 +50,7 @@ class RightDrawer extends HTMLElement {
 
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
+        if (this._unsubscribeDashboard) this._unsubscribeDashboard();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._keydownHandler) {
             window.removeEventListener('keydown', this._keydownHandler);
@@ -96,7 +111,7 @@ class RightDrawer extends HTMLElement {
 
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
-            ${template({ user, isOpen: this.isOpen, selectedSection: this.selectedSection })}
+            ${template({ user, isOpen: this.isOpen, selectedSection: this.selectedSection, updateAvailable: this.updateAvailable })}
         `;
     }
 }

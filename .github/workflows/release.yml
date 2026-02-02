@@ -13,6 +13,7 @@ jobs:
     name: Build & Release
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - goos: linux

@@ -199,7 +199,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
 
 	// Update API
-	updateHandler := api.NewUpdateHandler()
+	updateHandler := api.NewUpdateHandler(s.DB)
 	s.Router.Handle("GET /api/system/update/check", protect(http.HandlerFunc(updateHandler.CheckUpdate)))
 	s.Router.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
 

@@ -58,6 +58,27 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Загрузка...", "zh": "加载中...", "ja": "読み込み中...", "ko": "로딩 중...", "tr": "Yükleniyor...", "pl": "Ładowanie...",
         "id": "Memuat...", "ar": "جار التحميل...", "fa": "در حال بارگذاری...", "el": "Φόρτωση...", "hi": "लोड हो रहा है...", "bn": "লোড হচ্ছে...", "ur": "لوڈ ہو رہا ہے..."
     },
+    "settings.about": {
+        "es": "Info", // Spanish
+        "fr": "Info", // French
+        "it": "Info", // Italian
+        "pt": "Info", // Portuguese
+        "de": "Info", // German
+        "nl": "Info", // Dutch
+        "pl": "Info", // Polish
+        "ru": "Инфо", // Russian
+        "zh": "信息", // Chinese
+        "ja": "情報", // Japanese
+        "ko": "정보", // Korean
+        "tr": "Bilgi", // Turkish
+        "id": "Info", // Indonesian
+        "ar": "معلومات", // Arabic
+        "fa": "اطلاعات", // Persian
+        "el": "Πληροφορίες", // Greek
+        "hi": "जानकारी", // Hindi
+        "bn": "তথ্য", // Bengali
+        "ur": "معلومات" // Urdu
+    },
 
     // --- Existing & Notepad Tools ---
     "widget.notepad.placeholder": {

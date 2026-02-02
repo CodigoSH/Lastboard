@@ -209,7 +209,6 @@
 .add-menu-item:hover {
     background: rgba(255, 255, 255, 0.05);
     color: var(--accent);
-    padding-left: 14px;
 }
 
 .add-menu-icon {
@@ -236,5 +235,35 @@
 
     .top-bar__title {
         margin-right: 8px;
+    }
+}
+
+/* Notification Dot */
+.notification-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background-color: #fa5252;
+    border-radius: 50%;
+    border: 2px solid var(--panel);
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
 }
