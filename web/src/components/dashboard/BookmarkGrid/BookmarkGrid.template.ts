@@ -12,11 +12,13 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: {
     // Helper to find children
     const getChildren = (parentId: number) => safeBookmarks.filter(b => b.parent_id === parentId);
 
-    // Root items only (unless searching OR touch device, then show EVERYTHING flat)
-    const showFlatList = isSearching || isTouchDevice;
-    const rootItems = showFlatList
-        ? safeBookmarks
-        : safeBookmarks.filter(b => !b.parent_id);
+    // Root items: 
+    // - Mobile: Show only leaves (bookmarks/widgets), ignore sections to prevent duplication (since sections render children too, or we just want flat leaves)
+    // - Search: Show everything (flat)
+    // - Desktop: Hierarchy (Roots only)
+    const rootItems = isTouchDevice
+        ? safeBookmarks.filter(b => b.type !== 'section')
+        : (isSearching ? safeBookmarks : safeBookmarks.filter(b => !b.parent_id));
 
     return `
     ${rootItems.map(b => {
