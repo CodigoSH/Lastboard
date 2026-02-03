@@ -33,6 +33,12 @@ function success_msg() {
     echo -e "${GREEN}  ✓ ${NC}$1"
 }
 
+# Fetch latest version for banner (Fail gracefully)
+LATEST_VERSION=$(curl -s https://api.github.com/repos/codigosh/Kashboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -z "$LATEST_VERSION" ]; then
+    LATEST_VERSION="latest"
+fi
+
 # Banner
 clear
 echo -e "${BLUE}"
@@ -41,7 +47,7 @@ echo " | |/ /__ _ ___ | |__ | |__   ___   __ _ _ __ __| |"
 echo " | ' // _\` / __|| '_ \| '_ \ / _ \ / _\` | '__/ _\` |"
 echo " | . \ (_| \__ \| | | | |_) | (_) | (_| | | | (_| |"
 echo " |_|\_\__,_|___/|_| |_|_.__/ \___/ \__,_|_|  \__,_|"
-echo "                                              v1.0.4"
+echo "                                              $LATEST_VERSION"
 echo -e "${NC}"
 echo -e "  Welcome to Kashboard. Let's get you started.\n"
 
