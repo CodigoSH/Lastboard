@@ -14,11 +14,15 @@ GRAY='\033[0;90m'
 NC='\033[0m'
 
 # Configuration
+# Configuration
 REPO="codigosh/Kashboard"
+INSTALL_DIR="/opt/kashboard"
+BIN_DIR="/usr/local/bin"
 BINARY_NAME="kashboard"
-INSTALL_DIR="/usr/local/bin"
 DATA_DIR="/var/lib/kashboard"
 SERVICE_FILE="/etc/systemd/system/kashboard.service"
+
+# ... (Helper functions omitted for brevity in diff, keeping existing code if possible or rewriting the changed parts)
 
 # Helper for friendly status
 function status_msg() {
@@ -37,6 +41,7 @@ echo " | |/ /__ _ ___ | |__ | |__   ___   __ _ _ __ __| |"
 echo " | ' // _\` / __|| '_ \| '_ \ / _ \ / _\` | '__/ _\` |"
 echo " | . \ (_| \__ \| | | | |_) | (_) | (_| | | | (_| |"
 echo " |_|\_\__,_|___/|_| |_|_.__/ \___/ \__,_|_|  \__,_|"
+echo "                                              v1.0.4"
 echo -e "${NC}"
 echo -e "  Welcome to Kashboard. Let's get you started.\n"
 
@@ -73,7 +78,7 @@ if [ "$IS_UPDATE" = false ]; then
 fi
 echo "" # Spacer
 
-# 3. Installation Process (Simplified UI)
+# 3. Installation Process
 status_msg "Checking system compatibility..."
 ARCH=$(uname -m)
 case $ARCH in
@@ -83,12 +88,20 @@ case $ARCH in
 esac
 
 status_msg "Preparing environment..."
+# Create User
 if ! id "kashboard" &>/dev/null; then
     useradd -r -s /bin/false kashboard
 fi
+
+# Create Directories
 mkdir -p "$DATA_DIR"
+mkdir -p "$INSTALL_DIR"
+
+# Set Permissions (CRITICAL FOR SELF-UPDATE)
 chown -R kashboard:kashboard "$DATA_DIR"
+chown -R kashboard:kashboard "$INSTALL_DIR"
 chmod 750 "$DATA_DIR"
+chmod 755 "$INSTALL_DIR"
 
 status_msg "Downloading latest version..."
 URL="https://github.com/codigosh/Kashboard/releases/latest/download/kashboard-linux-$ARCH_TAG.tar.gz"
@@ -100,7 +113,12 @@ if curl -fL -s -o kashboard.tar.gz "$URL"; then
     
     if [ -f "kashboard" ]; then
         chmod +x kashboard
+        # Move to /opt (Owned by kashboard)
         mv kashboard "$INSTALL_DIR/$BINARY_NAME"
+        chown kashboard:kashboard "$INSTALL_DIR/$BINARY_NAME"
+        
+        # Symlink for convenience (CLI)
+        ln -sf "$INSTALL_DIR/$BINARY_NAME" "$BIN_DIR/$BINARY_NAME"
     else
         echo -e "${RED}  Installation failed (binary missing). check logs.${NC}"
         rm -f kashboard
@@ -134,7 +152,8 @@ Environment="DB_FILE=$DATA_DIR/dashboard.db"
 
 # Security Hardening
 ProtectSystem=full
-PrivateTmp=true
+# PrivateTmp=true (Disabled to allow updates in /tmp)
+PrivateTmp=false
 NoNewPrivileges=true
 
 [Install]
