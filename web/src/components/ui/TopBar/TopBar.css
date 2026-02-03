@@ -224,8 +224,9 @@
     color: var(--accent);
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 640px) {
+/* Mobile & Tablet Responsiveness (Touch or Small Screen) */
+@media (pointer: coarse),
+(max-width: 1024px) {
 
     #edit-toggle,
     #add-toggle,
