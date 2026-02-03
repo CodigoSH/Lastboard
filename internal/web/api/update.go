@@ -175,25 +175,33 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 6. Atomic Swap
+	// 6. Atomic Swap (Robust)
 	currentExe, err := os.Executable()
 	if err != nil {
 		http.Error(w, "Could not determine executable path", http.StatusInternalServerError)
 		return
 	}
 
+	// Resolve symlinks just in case
+	realCurrentExe, err := filepath.EvalSymlinks(currentExe)
+	if err == nil {
+		currentExe = realCurrentExe
+	}
+
 	oldExe := currentExe + ".old"
 	os.Remove(oldExe) // clear previous backup if any
 
-	if err := os.Rename(currentExe, oldExe); err != nil {
-		http.Error(w, "Failed to move current binary", http.StatusInternalServerError)
+	// Move current to old
+	if err := h.moveFile(currentExe, oldExe); err != nil {
+		http.Error(w, "Failed to backup current binary: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := os.Rename(binaryPath, currentExe); err != nil {
-		// Rollback
-		os.Rename(oldExe, currentExe)
-		http.Error(w, "Failed to install new binary", http.StatusInternalServerError)
+	// Move new to current
+	if err := h.moveFile(binaryPath, currentExe); err != nil {
+		// Rollback attempt
+		h.moveFile(oldExe, currentExe)
+		http.Error(w, "Failed to install new binary: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -209,7 +217,49 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Restarting..."})
+	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Update installed. Restarting..."})
+}
+
+// moveFile tries os.Rename, falls back to Copy+Delete for cross-device
+func (h *UpdateHandler) moveFile(src, dst string) error {
+	err := os.Rename(src, dst)
+	if err == nil {
+		return nil
+	}
+
+	// Check if cross-device error (syscall.EXDEV)
+	// Or just try copy anyway if rename failed
+
+	// Open Source
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	// Create Dest
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Copy
+	if _, err = io.Copy(out, in); err != nil {
+		return err
+	}
+
+	// Persist Permissions
+	si, err := os.Stat(src)
+	if err == nil {
+		os.Chmod(dst, si.Mode())
+	}
+
+	// Close files before removing source
+	in.Close()
+	out.Close()
+
+	return os.Remove(src)
 }
 
 // Helpers
