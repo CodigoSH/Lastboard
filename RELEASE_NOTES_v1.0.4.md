@@ -1,22 +1,18 @@
 # Kashboard v1.0.4 Release Notes
 
-This release polishes the update process and ensures release notes are correctly displayed.
+This cumulative update brings significant improvements to the mobile experience, installation process, and system stability, incorporating fixes from v1.0.2 and v1.0.3.
 
-## 🚀 Improvements
+## 🚀 Features & Improvements
 
-*   **Verified Updates:** The automatic update system has been fortified with robust checksum generation, fixing the "Checksum Check Failed" errors from previous versions.
-*   **Release Automation:** Release notes are now automatically populated in GitHub Releases from the repository.
+*   **Mobile Experience Overhaul:**
+    *   **Flattened View:** Sections are now visually removed on mobile devices, allowing bookmarks to flow in a single, space-efficient grid.
+    *   **Smart Widget Sizing:** Widgets now automatically span the full width (2 columns) on mobile for better readability.
+*   **Smart Installation:** The update script now detects existing installations and preserves the configured port automatically.
+*   **UI Polish:** Restored the vibrant **Green** status indicator for valid updates in the Settings menu.
 
 ## 🐛 Bug Fixes
 
-*   Fixed a critical issue where the checksum verification failed during updates.
-*   Fixed missing release notes in the v1.0.3 release.
-*   Cleaned up temporary build artifacts from the repository.
-
-## 📦 Installation / Update
-
-To install or update:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh | sudo bash
-```
+*   **Critical:** Fixed a "Checksum Check Failed" error that prevented automatic updates in previous versions.
+*   **Critical:** Fixed missing release notes integration in the release pipeline.
+*   **Fix:** Resolved an issue where the update modal icon appeared dimmed instead of green.
+*   **Fix:** Cleaned up temporary build artifacts and improved repository hygiene.
