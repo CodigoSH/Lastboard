@@ -249,11 +249,11 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SSRF: validate all resolved IPs
+	// Kashboard is designed to monitor local services, so we ALLOW private IPs.
+	// We logged them before, but blocking them breaks the feature "Monitor Status" for local labs.
 	for _, ip := range ips {
 		if isPrivateIP(ip) {
-			log.Printf("[Health] Blocked SSRF attempt to %s (%s)", hostname, ip.String())
-			http.Error(w, "Access to private resources is denied", http.StatusForbidden)
-			return
+			log.Printf("[Health] Allowing local access to %s (%s)", hostname, ip.String())
 		}
 	}
 
