@@ -30,7 +30,10 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Delete DB File
-	dbPath := "./dashboard.db"
+	dbPath := os.Getenv("DB_FILE")
+	if dbPath == "" {
+		dbPath = "./dashboard.db"
+	}
 	if err := os.Remove(dbPath); err != nil {
 		if !os.IsNotExist(err) {
 			http.Error(w, "Failed to delete database file: "+err.Error(), http.StatusInternalServerError)
@@ -109,7 +112,7 @@ func (h *SystemHandler) isAdmin(r *http.Request) bool {
 	username := middleware.GetUserFromContext(r)
 	var role string
 	err := h.DB.QueryRow("SELECT role FROM users WHERE username=?", username).Scan(&role)
-	return err == nil && (role == "admin" || role == "Administrator")
+	return err == nil && strings.ToLower(role) == "admin"
 }
 
 // GET /api/system/backup
@@ -173,6 +176,9 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Limit upload size to 10 MB
+	r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
+
 	// Parse Upload
 	file, _, err := r.FormFile("backup_file")
 	if err != nil {
@@ -185,6 +191,19 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(file).Decode(&backup); err != nil {
 		http.Error(w, "Invalid backup format", http.StatusBadRequest)
 		return
+	}
+
+	// Validate users before writing to DB
+	for _, u := range backup.Users {
+		if !strings.HasPrefix(u.Password, "$2a$") && !strings.HasPrefix(u.Password, "$2b$") {
+			http.Error(w, "Invalid backup data", http.StatusBadRequest)
+			return
+		}
+		role := strings.ToLower(u.Role)
+		if role != "admin" && role != "user" {
+			http.Error(w, "Invalid backup data", http.StatusBadRequest)
+			return
+		}
 	}
 
 	// Transaction
@@ -206,7 +225,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Insert Users
-	userStmt, err := tx.Prepare(`INSERT INTO users (username, password, role, theme, accent_color, language, 
+	userStmt, err := tx.Prepare(`INSERT INTO users (username, password, role, theme, accent_color, language,
 		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
@@ -218,7 +237,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		_, err := userStmt.Exec(u.Username, u.Password, u.Role, u.Theme, u.AccentColor, u.Language,
 			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl)
 		if err != nil {
-			http.Error(w, "Failed to restore user: "+u.Username, http.StatusInternalServerError)
+			http.Error(w, "Failed to restore backup", http.StatusInternalServerError)
 			return
 		}
 	}

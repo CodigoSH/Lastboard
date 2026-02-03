@@ -1,11 +1,11 @@
 package api
 
 import (
-	"bytes"
+	"context"
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
-	"io"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -81,23 +81,10 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	var item dashboard.Item
 
-	// Read full body for debugging
-	bodyBytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-		return
-	}
-	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-	log.Printf("[CreateItem] Raw JSON received: %s", string(bodyBytes))
-
 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-		log.Printf("[CreateItem] JSON Decode Error: %v", err)
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
-
-	log.Printf("[CreateItem] Received item: %+v", item)
 
 	// Validate Content
 	if err := validateContent(item.Type, item.Content); err != nil {
@@ -238,8 +225,9 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// CheckHealth proxies a head/get request to a URL, allowing self-signed certs.
-// Falls back to TCP ping if HTTP fails.
+// CheckHealth proxies a HEAD request to a URL, allowing self-signed certs.
+// Falls back to TCP ping if HTTP fails. Pins connections to pre-resolved IPs
+// to prevent DNS rebinding attacks.
 func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	rawUrl := r.URL.Query().Get("url")
 	if rawUrl == "" {
@@ -248,25 +236,55 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u, err := url.Parse(rawUrl)
-	if err != nil {
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
 
-	// 1. Primary: HTTP(S) check with certificate bypass
+	hostname := u.Hostname()
+	ips, err := net.LookupIP(hostname)
+	if err != nil || len(ips) == 0 {
+		http.Error(w, "Could not resolve host", http.StatusBadRequest)
+		return
+	}
+
+	// SSRF: validate all resolved IPs
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			log.Printf("[Health] Blocked SSRF attempt to %s (%s)", hostname, ip.String())
+			http.Error(w, "Access to private resources is denied", http.StatusForbidden)
+			return
+		}
+	}
+
+	// Pick first valid IP and pin all connections to it
+	pinnedIP := ips[0].String()
+	port := u.Port()
+	if port == "" {
+		if u.Scheme == "https" {
+			port = "443"
+		} else {
+			port = "80"
+		}
+	}
+
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         hostname,
+		},
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			// Ignore addr (which would re-resolve hostname); connect to pinned IP
+			return net.DialTimeout(network, net.JoinHostPort(pinnedIP, port), time.Second*3)
+		},
 	}
 	client := &http.Client{
 		Transport: tr,
 		Timeout:   time.Second * 3,
 	}
 
-	// Try HEAD first
 	req, _ := http.NewRequest("HEAD", rawUrl, nil)
 	resp, err := client.Do(req)
-
-	// If it worked and returned a success-ish code, we are done
 	if err == nil && resp.StatusCode < 500 {
 		defer resp.Body.Close()
 		log.Printf("[Health] %s is UP (HTTP %d)", rawUrl, resp.StatusCode)
@@ -274,18 +292,8 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Secondary Fallback: TCP Ping (Robust against SSL/Auth/Complex issues)
-	// Extract host and port
-	host := u.Host
-	if !strings.Contains(host, ":") {
-		if u.Scheme == "https" {
-			host += ":443"
-		} else {
-			host += ":80"
-		}
-	}
-
-	conn, err := net.DialTimeout("tcp", host, time.Second*2)
+	// TCP fallback using the same pinned IP
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", pinnedIP, port), time.Second*2)
 	if err == nil {
 		defer conn.Close()
 		log.Printf("[Health] %s is UP (TCP Open)", rawUrl)
@@ -293,10 +301,44 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Definitely Down
-	log.Printf("[Health] %s is DOWN (%v)", rawUrl, err)
+	log.Printf("[Health] %s is DOWN", rawUrl)
 	w.WriteHeader(http.StatusServiceUnavailable)
-	h.respondJson(w, map[string]interface{}{"status": "down", "error": err.Error()})
+	h.respondJson(w, map[string]string{"status": "down"})
+}
+
+func isPrivateIP(ip net.IP) bool {
+	if ip.IsLoopback() || ip.IsUnspecified() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		return true
+	}
+
+	// IPv6 unique local (fc00::/7)
+	if ip.To4() == nil && len(ip) == net.IPv6len && (ip[0]&0xfe) == 0xfc {
+		return true
+	}
+
+	ip4 := ip.To4()
+	if ip4 == nil {
+		return false
+	}
+
+	// 10.0.0.0/8
+	if ip4[0] == 10 {
+		return true
+	}
+	// 172.16.0.0/12
+	if ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31 {
+		return true
+	}
+	// 192.168.0.0/16
+	if ip4[0] == 192 && ip4[1] == 168 {
+		return true
+	}
+	// 169.254.0.0/16 (link-local, already caught above but explicit)
+	if ip4[0] == 169 && ip4[1] == 254 {
+		return true
+	}
+
+	return false
 }
 
 func (h *DashboardHandler) respondJson(w http.ResponseWriter, data interface{}) {

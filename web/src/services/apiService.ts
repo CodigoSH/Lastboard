@@ -12,16 +12,31 @@ class ApiService {
         this.baseUrl = window.CSH_CONFIG?.API_BASE_URL || '';
     }
 
+    private getCsrfToken(): string {
+        const match = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
+        return match ? decodeURIComponent(match.split('=')[1]) : '';
+    }
+
     private async request<T>(url: string, options: RequestInit): Promise<T> {
         const fullUrl = `${this.baseUrl}${url}`;
+        const method = (options.method || 'GET').toUpperCase();
+
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...(options.headers as Record<string, string>),
+        };
+
+        if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+            const token = this.getCsrfToken();
+            if (token) {
+                headers['X-CSRF-Token'] = token;
+            }
+        }
 
         try {
             const response = await fetch(fullUrl, {
                 ...options,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers,
-                },
+                headers,
             });
 
             if (!response.ok) {

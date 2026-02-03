@@ -9,7 +9,12 @@ import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
-    private users: User[] = []; // Users list for admin
+    private users: User[] = [];
+
+    private getCsrfToken(): string {
+        const match = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
+        return match ? decodeURIComponent(match.split('=')[1]) : '';
+    }
 
     static get observedAttributes() {
         return ['section'];
@@ -368,7 +373,7 @@ class SettingsContent extends HTMLElement {
         try {
             const res = await fetch('/api/system/update/perform', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': this.getCsrfToken() },
                 body: JSON.stringify({ asset_url: assetUrl })
             });
 
@@ -419,6 +424,7 @@ class SettingsContent extends HTMLElement {
         try {
             const res = await fetch('/api/system/restore', {
                 method: 'POST',
+                headers: { 'X-CSRF-Token': this.getCsrfToken() },
                 body: formData
             });
             if (res.ok) {
@@ -458,7 +464,7 @@ class SettingsContent extends HTMLElement {
                 btn.textContent = i18n.t('settings.restoring') || "Restoring...";
             }
 
-            const res = await fetch('/api/system/reset', { method: 'POST' });
+            const res = await fetch('/api/system/reset', { method: 'POST', headers: { 'X-CSRF-Token': this.getCsrfToken() } });
             if (res.ok) {
                 // Show Overlay
                 const overlay = document.createElement('div');

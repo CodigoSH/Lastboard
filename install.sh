@@ -110,30 +110,52 @@ chmod 750 "$DATA_DIR"
 chmod 755 "$INSTALL_DIR"
 
 status_msg "Downloading latest version..."
-URL="https://github.com/codigosh/Kashboard/releases/latest/download/kashboard-linux-$ARCH_TAG.tar.gz"
+BASE_URL="https://github.com/codigosh/Kashboard/releases/latest/download"
+ARCHIVE_NAME="kashboard-linux-$ARCH_TAG.tar.gz"
+URL="$BASE_URL/$ARCHIVE_NAME"
+CHECKSUM_URL="$BASE_URL/checksums.txt"
 
-# Silent curl, fail fast
-if curl -fL -s -o kashboard.tar.gz "$URL"; then
-    tar -xzf kashboard.tar.gz
-    rm kashboard.tar.gz
-    
-    if [ -f "kashboard" ]; then
-        chmod +x kashboard
-        # Move to /opt (Owned by kashboard)
-        mv kashboard "$INSTALL_DIR/$BINARY_NAME"
-        chown kashboard:kashboard "$INSTALL_DIR/$BINARY_NAME"
-        
-        # Symlink for convenience (CLI)
-        ln -sf "$INSTALL_DIR/$BINARY_NAME" "$BIN_DIR/$BINARY_NAME"
-    else
-        echo -e "${RED}  Installation failed (binary missing). check logs.${NC}"
-        rm -f kashboard
-        exit 1
-    fi
-else
+# Download archive and checksums
+if ! curl -fL -s -o kashboard.tar.gz "$URL"; then
     echo -e "${RED}  Download failed.${NC}"
     echo -e "${GRAY}  Please check your internet connection or if the release exists.${NC}"
     rm -f kashboard.tar.gz
+    exit 1
+fi
+
+status_msg "Verifying checksum..."
+if ! curl -fL -s -o checksums.txt "$CHECKSUM_URL"; then
+    echo -e "${RED}  Failed to download checksums.txt. Aborting for security.${NC}"
+    rm -f kashboard.tar.gz
+    exit 1
+fi
+
+EXPECTED_HASH=$(grep "$ARCHIVE_NAME" checksums.txt | awk '{print $1}')
+if [ -z "$EXPECTED_HASH" ]; then
+    echo -e "${RED}  Archive not found in checksums.txt. Aborting.${NC}"
+    rm -f kashboard.tar.gz checksums.txt
+    exit 1
+fi
+
+ACTUAL_HASH=$(sha256sum kashboard.tar.gz | awk '{print $1}')
+if [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then
+    echo -e "${RED}  Checksum mismatch! Download may be tampered. Aborting.${NC}"
+    rm -f kashboard.tar.gz checksums.txt
+    exit 1
+fi
+rm -f checksums.txt
+success_msg "Checksum verified."
+
+tar -xzf kashboard.tar.gz
+rm kashboard.tar.gz
+
+if [ -f "kashboard" ]; then
+    chmod +x kashboard
+    mv kashboard "$INSTALL_DIR/$BINARY_NAME"
+    chown kashboard:kashboard "$INSTALL_DIR/$BINARY_NAME"
+    ln -sf "$INSTALL_DIR/$BINARY_NAME" "$BIN_DIR/$BINARY_NAME"
+else
+    echo -e "${RED}  Installation failed (binary missing). Check logs.${NC}"
     exit 1
 fi
 
@@ -153,13 +175,11 @@ ExecStart=$INSTALL_DIR/$BINARY_NAME
 Restart=always
 RestartSec=5
 Environment="PORT=$PORT"
-Environment="GIN_MODE=release"
 Environment="DB_FILE=$DATA_DIR/dashboard.db"
 
 # Security Hardening
 ProtectSystem=full
-# PrivateTmp=true (Disabled to allow updates in /tmp)
-PrivateTmp=false
+PrivateTmp=true
 NoNewPrivileges=true
 
 [Install]

@@ -3,32 +3,35 @@ package middleware
 import (
 	"context"
 	"database/sql"
-	"encoding/base64"
 	"net/http"
 	"strings"
+
+	"github.com/codigosh/Kashboard/internal/web/util"
 )
+
+type contextKey string
+
+const userContextKey contextKey = "user"
 
 // AuthRequired checks for a valid session cookie.
 // If valid, it allows the request.
 // If invalid, it redirects to /login for page requests, or returns 401 for API requests.
-func AuthRequired(db *sql.DB) func(http.Handler) http.Handler {
+func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			// 1. Skip check for Login page and static assets (and Setup)
+			// Skip check for Login page and static assets (and Setup)
 			if r.URL.Path == "/login" || r.URL.Path == "/setup" ||
 				strings.HasPrefix(r.URL.Path, "/dist/") ||
 				strings.HasPrefix(r.URL.Path, "/styles/") ||
 				strings.HasPrefix(r.URL.Path, "/src/") ||
-				// Allow Login API
 				r.URL.Path == "/api/login" ||
-				// Allow Setup API
 				r.URL.Path == "/api/setup" {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// 2. Check for Session Cookie
+			// Check for Session Cookie
 			cookie, err := r.Cookie("session_token")
 
 			if err != nil || cookie.Value == "" {
@@ -40,24 +43,35 @@ func AuthRequired(db *sql.DB) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Decode Username
-			usernameBytes, err := base64.StdEncoding.DecodeString(cookie.Value)
+			username, err := util.VerifyToken(cookie.Value, secret)
 			if err != nil {
-				// Invalid cookie
+				if strings.HasPrefix(r.URL.Path, "/api/") {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 				http.Redirect(w, r, "/login", http.StatusFound)
 				return
 			}
-			username := string(usernameBytes)
 
-			// Inject into Context
-			ctx := context.WithValue(r.Context(), "user", username)
+			// CSRF check for state-changing methods
+			if r.Method == http.MethodPost || r.Method == http.MethodPut ||
+				r.Method == http.MethodPatch || r.Method == http.MethodDelete {
+				csrfCookie, err := r.Cookie("csrf_token")
+				csrfHeader := r.Header.Get("X-CSRF-Token")
+				if err != nil || csrfCookie.Value == "" || csrfHeader == "" || csrfCookie.Value != csrfHeader {
+					http.Error(w, "Forbidden", http.StatusForbidden)
+					return
+				}
+			}
+
+			ctx := context.WithValue(r.Context(), userContextKey, username)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
 func GetUserFromContext(r *http.Request) string {
-	if u, ok := r.Context().Value("user").(string); ok {
+	if u, ok := r.Context().Value(userContextKey).(string); ok {
 		return u
 	}
 	return ""
