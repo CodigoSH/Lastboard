@@ -1,6 +1,6 @@
 {
   "name": "kashboard",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "module": "index.ts",
   "type": "module",
   "scripts": {
