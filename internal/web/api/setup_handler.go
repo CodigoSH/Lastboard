@@ -48,6 +48,11 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(input.Password) > 72 {
+		http.Error(w, "Password too long", http.StatusBadRequest)
+		return
+	}
+
 	// Defaults
 	if input.Language == "" {
 		input.Language = "en"

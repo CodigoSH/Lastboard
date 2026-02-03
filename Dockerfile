@@ -42,7 +42,6 @@ COPY --from=builder /app/kashboard /app/kashboard
 
 # Environment
 ENV PORT=8080
-ENV GIN_MODE=release
 ENV DB_FILE=/app/data/dashboard.db
 
 # Expose internal port

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/codigosh/Kashboard/internal/core/user"
@@ -137,8 +138,10 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// In real app, updating username requires checking uniqueness and updating session cookie
-	// For now, simpler to just allow avatar update or require relogin if username changes.
+	if input.AvatarUrl != "" && !strings.HasPrefix(input.AvatarUrl, "http://") && !strings.HasPrefix(input.AvatarUrl, "https://") {
+		http.Error(w, "Invalid avatar URL", http.StatusBadRequest)
+		return
+	}
 
 	_, err := h.DB.Exec("UPDATE users SET username=?, avatar_url=? WHERE username=?", input.Username, input.AvatarUrl, username)
 	if err != nil {
@@ -174,6 +177,11 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(input.NewPassword) > 72 {
+		http.Error(w, "Password too long", http.StatusBadRequest)
+		return
+	}
+
 	newHash, _ := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
 
 	_, err = h.DB.Exec("UPDATE users SET password=? WHERE username=?", string(newHash), username)
@@ -192,7 +200,7 @@ func (h *UserHandler) isAdmin(r *http.Request) bool {
 	username := middleware.GetUserFromContext(r)
 	var role string
 	err := h.DB.QueryRow("SELECT role FROM users WHERE username=?", username).Scan(&role)
-	return err == nil && (role == "admin" || role == "Administrator")
+	return err == nil && strings.ToLower(role) == "admin"
 }
 
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -240,6 +248,16 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if input.Role == "" {
 		input.Role = "user"
 	}
+	role := strings.ToLower(input.Role)
+	if role != "admin" && role != "user" {
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
+
+	if len(input.Password) > 72 {
+		http.Error(w, "Password too long", http.StatusBadRequest)
+		return
+	}
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 
@@ -250,9 +268,9 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(input.Username, string(hashedPassword), input.Role, time.Now())
+	_, err = stmt.Exec(input.Username, string(hashedPassword), role, time.Now())
 	if err != nil {
-		http.Error(w, "Failed to create user (username might be taken)", http.StatusConflict)
+		http.Error(w, "Failed to create user", http.StatusConflict)
 		return
 	}
 
@@ -282,13 +300,22 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update fields
+	role := strings.ToLower(input.Role)
+	if role != "admin" && role != "user" {
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
+
 	var err error
 	if input.Password != "" {
+		if len(input.Password) > 72 {
+			http.Error(w, "Password too long", http.StatusBadRequest)
+			return
+		}
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-		_, err = h.DB.Exec("UPDATE users SET username=?, role=?, password=? WHERE id=?", input.Username, input.Role, string(hashedPassword), input.ID)
+		_, err = h.DB.Exec("UPDATE users SET username=?, role=?, password=? WHERE id=?", input.Username, role, string(hashedPassword), input.ID)
 	} else {
-		_, err = h.DB.Exec("UPDATE users SET username=?, role=? WHERE id=?", input.Username, input.Role, input.ID)
+		_, err = h.DB.Exec("UPDATE users SET username=?, role=? WHERE id=?", input.Username, role, input.ID)
 	}
 
 	if err != nil {

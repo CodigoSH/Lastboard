@@ -37,6 +37,10 @@ func runMigrations(db *sql.DB) error {
 			role TEXT NOT NULL DEFAULT 'user',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);`,
+		`CREATE TABLE IF NOT EXISTS system_settings (
+			key TEXT PRIMARY KEY,
+			value TEXT
+		);`,
 		`CREATE TABLE IF NOT EXISTS items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			parent_id INTEGER,

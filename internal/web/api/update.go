@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -83,7 +84,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Compare Versions
-	updateAvailable := release.TagName != version.Current // Simple string compare for now
+	updateAvailable := isNewerVersion(release.TagName, version.Current)
 
 	// 4. Find matching asset
 	targetAsset := ""
@@ -126,15 +127,11 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Start SSE (Server Sent Events) for progress? Or just a long-polling POST?
-	// User requested "Progress bar". Standard POST waits, so we can't easily stream percentages
-	// without SSE or a separate progress endpoint.
-	// For simplicity and robustness (as requested "production grade"), we will DO THE UPDATE synchronously
-	// but efficiently. Typically binary downloads are fast.
-	// Real-time progress would require a more complex WebSocket/SSE setup which might be overkill for this turn.
-	// I'll stick to a blocking call that returns success/fail, frontend shows "Updating...".
+	if !strings.HasPrefix(req.AssetUrl, "https://github.com/codigosh/Kashboard/releases/") {
+		http.Error(w, "Invalid asset URL", http.StatusBadRequest)
+		return
+	}
 
-	// Create Temp Dir
 	tmpFile := filepath.Join(os.TempDir(), "dashboard_update.tar.gz")
 
 	// 2. Download Binary
@@ -143,28 +140,18 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Download Checksum (Assuming standard github release structure checksums.txt)
-	// Usually located at releases/download/{tag}/checksums.txt
-	// We need to infer the checksum URL from the asset URL or fetch it explicitly.
-	// Simpler: Fetch the release again to find checksum file, or blindly construct it.
-	// Let's rely on finding 'checksums.txt' in the assets list logic if we had scanning,
-	// for now let's construct it by stripping the filename and adding checksums.txt if possible,
-	// or assume it's provided.
-	// OPTION B: Skip strict remote checksum file fetching if complicated url parsing is needed
-	// and rely on a hash provided in the initial check response?
-	// To comply with "Download a checksums.txt file", let's try to fetch it.
+	// 3. Download and verify checksum (mandatory)
 	checksumUrl := strings.ReplaceAll(req.AssetUrl, filepath.Base(req.AssetUrl), "checksums.txt")
 	checksumFile := filepath.Join(os.TempDir(), "checksums.txt")
 
 	if err := h.downloadFile(checksumUrl, checksumFile); err != nil {
-		// Log warning, might not exist for all releases
-		fmt.Println("Warning: Could not download checksums.txt", err)
-	} else {
-		// 4. Verify Checksum
-		if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
-			http.Error(w, "Checksum Check Failed: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
+		http.Error(w, "Failed to download checksums.txt", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
+		http.Error(w, "Checksum verification failed", http.StatusInternalServerError)
+		return
 	}
 
 	// 5. Extract (if tar.gz)
@@ -377,12 +364,38 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath string) error {
 }
 
 func (h *UpdateHandler) restartSelf(exePath string) {
-	// Windows does not support Exec, but we are on Linux.
-	// Exec replaces the process.
 	env := os.Environ()
 	args := os.Args
 
 	if err := syscall.Exec(exePath, args, env); err != nil {
 		fmt.Printf("Failed to restart: %v\n", err)
 	}
+}
+
+// isNewerVersion returns true if candidate is strictly newer than current.
+// Versions may be v-prefixed (e.g. "v1.2.3").
+func isNewerVersion(candidate, current string) bool {
+	parse := func(v string) (int, int, int) {
+		v = strings.TrimPrefix(v, "v")
+		parts := strings.SplitN(v, ".", 3)
+		get := func(i int) int {
+			if i >= len(parts) {
+				return 0
+			}
+			n, _ := strconv.Atoi(parts[i])
+			return n
+		}
+		return get(0), get(1), get(2)
+	}
+
+	cMaj, cMin, cPat := parse(candidate)
+	curMaj, curMin, curPat := parse(current)
+
+	if cMaj != curMaj {
+		return cMaj > curMaj
+	}
+	if cMin != curMin {
+		return cMin > curMin
+	}
+	return cPat > curPat
 }

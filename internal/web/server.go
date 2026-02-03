@@ -1,33 +1,40 @@
 package web
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"embed"
-	"encoding/base64"
+	"encoding/hex"
+	"html/template"
 	"io"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/codigosh/Kashboard/internal/web/api"
 	"github.com/codigosh/Kashboard/internal/web/middleware"
+	"github.com/codigosh/Kashboard/internal/web/util"
 )
 
 //go:embed dist/*
 var content embed.FS
 
 type Server struct {
-	DB     *sql.DB
-	Router *http.ServeMux
-	WSHub  *api.Hub
-	assets fs.FS
+	DB            *sql.DB
+	Router        *http.ServeMux
+	WSHub         *api.Hub
+	assets        fs.FS
+	sessionSecret []byte
 }
 
 func NewServer(db *sql.DB) *Server {
+	// Initialize Session Secret
+	secret := initSessionSecret(db)
+
 	// Root the assets to the 'dist' folder
 	assets, err := fs.Sub(content, "dist")
 	if err != nil {
@@ -37,10 +44,11 @@ func NewServer(db *sql.DB) *Server {
 	}
 
 	s := &Server{
-		DB:     db,
-		Router: http.NewServeMux(),
-		WSHub:  api.NewHub(),
-		assets: assets,
+		DB:            db,
+		Router:        http.NewServeMux(),
+		WSHub:         api.NewHub(),
+		assets:        assets,
+		sessionSecret: secret,
 	}
 
 	// Start WebSocket Hub
@@ -52,17 +60,43 @@ func NewServer(db *sql.DB) *Server {
 	return s
 }
 
+func initSessionSecret(db *sql.DB) []byte {
+	var secretHex string
+	err := db.QueryRow("SELECT value FROM system_settings WHERE key = 'session_secret'").Scan(&secretHex)
+	if err == sql.ErrNoRows {
+		// Generate new secret
+		bytes := make([]byte, 32)
+		if _, err := rand.Read(bytes); err != nil {
+			log.Fatalf("Failed to generate session secret: %v", err)
+		}
+		secretHex = hex.EncodeToString(bytes)
+		_, err := db.Exec("INSERT INTO system_settings (key, value) VALUES ('session_secret', ?)", secretHex)
+		if err != nil {
+			log.Printf("Warning: Failed to persist session secret: %v", err)
+		}
+	} else if err != nil {
+		log.Fatalf("Failed to load session secret: %v", err)
+	}
+
+	secret, err := hex.DecodeString(secretHex)
+	if err != nil {
+		log.Fatalf("Invalid session secret in DB: %v", err)
+	}
+	return secret
+}
+
 // Simple wrapper to implement fs.FS for os directories if needed
 type osDir string
 
 func (d osDir) Open(name string) (fs.File, error) {
-	return os.Open(string(d) + "/" + name)
+	cleaned := filepath.Clean("/" + name)
+	return os.Open(filepath.Join(string(d), cleaned))
 }
 
 func (s *Server) routes() {
 	// Middleware wrapping
 	setupCheck := middleware.SetupRequired(s.DB)
-	authCheck := middleware.AuthRequired(s.DB)
+	authCheck := middleware.AuthRequired(s.DB, s.sessionSecret)
 
 	protect := func(h http.Handler) http.Handler {
 		return setupCheck(authCheck(h))
@@ -125,7 +159,7 @@ func (s *Server) routes() {
 		cookie, err := r.Cookie("session_token")
 		if err == nil && cookie.Value != "" {
 			// Basic Validation to prevent loops
-			if _, err := base64.StdEncoding.DecodeString(cookie.Value); err == nil {
+			if _, err := util.VerifyToken(cookie.Value, s.sessionSecret); err == nil {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 				return
 			}
@@ -134,7 +168,7 @@ func (s *Server) routes() {
 	})
 
 	// Auth API
-	authHandler := api.NewAuthHandler(s.DB)
+	authHandler := api.NewAuthHandler(s.DB, s.sessionSecret)
 	s.Router.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
 	s.Router.Handle("/logout", http.HandlerFunc(authHandler.Logout))
 
@@ -174,7 +208,7 @@ func (s *Server) routes() {
 			// Smart Redirect: If already logged in, go to dashboard
 			cookie, err := r.Cookie("session_token")
 			if err == nil && cookie.Value != "" {
-				if _, err := base64.StdEncoding.DecodeString(cookie.Value); err == nil {
+				if _, err := util.VerifyToken(cookie.Value, s.sessionSecret); err == nil {
 					http.Redirect(w, r, "/", http.StatusSeeOther)
 					return
 				}
@@ -204,10 +238,13 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
 
 	// WebSocket Endpoint
-	s.Router.HandleFunc("/ws", s.WSHub.HandleWebSocket)
+	s.Router.Handle("/ws", protect(http.HandlerFunc(s.WSHub.HandleWebSocket)))
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 	s.Router.ServeHTTP(w, r)
 }
 
