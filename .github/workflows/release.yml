@@ -74,7 +74,8 @@ jobs:
         run: |
           cd artifacts
           # Checksum the compressed archives
-          sha256sum */*.tar.gz | sed 's/.*\///' > checksums.txt
+          # We use find to be safer about paths and avoid glob issues
+          find . -name "*.tar.gz" -exec sha256sum {} \; > checksums.txt
           cat checksums.txt
 
       - name: Create Release
