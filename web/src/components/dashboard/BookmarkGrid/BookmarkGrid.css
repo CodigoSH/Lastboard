@@ -68,6 +68,11 @@
     .resize-handle {
         display: none !important;
     }
+
+    /* HIDE WIDGETS on Mobile/Tablet */
+    .bookmark-grid__card[data-type="widget"] {
+        display: none !important;
+    }
 }
 
 @media (max-width: 640px) {
