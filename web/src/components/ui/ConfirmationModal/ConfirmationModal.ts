@@ -4,7 +4,7 @@ import { i18n } from '../../../services/i18n';
 import css from './ConfirmationModal.css' with { type: 'text' };
 
 export class ConfirmationModal extends HTMLElement {
-    private isOpen: boolean = false;
+    private dialog: HTMLDialogElement | null = null;
     private titleText: string = 'Confirm Action';
     private messageText: string = 'Are you sure?';
     private resolvePromise: ((value: boolean) => void) | null = null;
@@ -17,9 +17,8 @@ export class ConfirmationModal extends HTMLElement {
 
     connectedCallback() {
         this.render();
-        this.setupListeners();
         this._unsubscribeI18n = i18n.subscribe(() => {
-            if (this.isOpen) this.render();
+            if (this.dialog?.open) this.render();
         });
     }
 
@@ -27,33 +26,28 @@ export class ConfirmationModal extends HTMLElement {
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
 
-    setupListeners() {
-        // We re-render on open, so we need to re-attach listeners or attach to shadow root
-        // But shadow root contents are replaced.
-        // Better to attach to shadow root once and use delegation?
-        // Or re-attach after render. 
-        // Let's use simple delegation on shadowRoot.
-    }
-
     private setupDynamicListeners() {
         const closeBtn = this.shadowRoot!.getElementById('modal-close');
         const confirmBtn = this.shadowRoot!.getElementById('btn-confirm');
-        const overlay = this.shadowRoot!.getElementById('modal-overlay');
+        this.dialog = this.shadowRoot!.getElementById('modal') as HTMLDialogElement;
 
         const close = (result: boolean) => {
             if (this.resolvePromise) {
                 this.resolvePromise(result);
                 this.resolvePromise = null;
             }
-            this.isOpen = false;
-            this.render();
+            this.dialog?.close();
         };
 
         if (closeBtn) closeBtn.onclick = () => close(false);
-        if (overlay) overlay.onclick = (e) => {
-            if (e.target === overlay) close(false);
-        };
         if (confirmBtn) confirmBtn.onclick = () => close(true);
+
+        // Close on backdrop click
+        if (this.dialog) {
+            this.dialog.onclick = (e) => {
+                if (e.target === this.dialog) close(false);
+            };
+        }
     }
 
     /**
@@ -62,8 +56,8 @@ export class ConfirmationModal extends HTMLElement {
     async confirm(title: string, message: string): Promise<boolean> {
         this.titleText = title;
         this.messageText = message;
-        this.isOpen = true;
         this.render();
+        this.dialog?.showModal();
 
         return new Promise<boolean>((resolve) => {
             this.resolvePromise = resolve;
@@ -74,7 +68,7 @@ export class ConfirmationModal extends HTMLElement {
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
             ${template({
-            isOpen: this.isOpen,
+            isOpen: true,
             title: this.titleText,
             message: this.messageText
         })}

@@ -14,7 +14,6 @@ interface TopBarData {
 import { i18n } from '../../../services/i18n';
 
 export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
-    const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'Administrator';
     return `
     <div class="top-bar">
         <div class="top-bar__title">${title}</div>
@@ -34,7 +33,6 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             </div>
 
             <!-- Add Item Toggle -->
-            ${isAdmin ? `
             <div id="add-toggle" class="top-bar__toggle" title="${i18n.t('topbar.add_tooltip')}" 
                  style="${editMode ? 'display: flex;' : 'display: none;'} margin-right: -6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -72,7 +70,6 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
                     `}
                 </svg>
             </div>
-            ` : ''}
 
             <!-- Sidebar Toggle Icon -->
             <div id="drawer-toggle" class="top-bar__toggle" style="position: relative;">

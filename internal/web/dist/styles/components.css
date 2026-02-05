@@ -114,31 +114,59 @@ input,
 select {
     width: 100%;
     box-sizing: border-box;
-    padding: 10px 14px;
-    /* Slightly taller */
-    background: rgba(255, 255, 255, 0.03);
-    /* Default for visibility */
+    padding: 12px 16px;
+    background: var(--input-bg);
     border: 1px solid var(--input-border);
     border-bottom: 2px solid var(--input-border);
-    /* Thicker bottom */
     color: var(--input-text);
-    font-size: 16px;
+    font-size: 15px;
     font-family: inherit;
-    transition: all 0.3s ease;
-    border-radius: 6px;
-    /* Slightly more rounded */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 10px;
+}
+
+select {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='var(--icon-inactive)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
 }
 
 select option {
     background: var(--panel);
     color: var(--text-main);
+    padding: 10px;
 }
 
 input:focus,
 select:focus {
     outline: none;
-    border-color: var(--input-focus-border);
-    box-shadow: var(--input-focus-shadow);
+    border-color: var(--accent);
+    background: var(--input-bg);
+    box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1), var(--input-focus-shadow);
+    transform: translateY(-1px);
+}
+
+/* Autofill Dark Mode Fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #242424 inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Light mode adjustment if needed, but #242424 is dark-only optimization. 
+   Ideally we match theme. For now, solid dark is better than bright white in dark mode. */
+.dark-mode input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #242424 inset !important;
+}
+
+:not(.dark-mode) input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
 }
 
 /* 5. Avatar Components */
@@ -216,7 +244,7 @@ app-avatar img {
 }
 
 .premium-btn.filled {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-alt) 100%);
+    background: var(--accent);
     color: white;
     box-shadow: 0 10px 20px -5px rgba(var(--accent-rgb), 0.5);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);

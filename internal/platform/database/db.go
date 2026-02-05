@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -19,6 +20,13 @@ func InitDB(dsn string) (*DB, error) {
 
 	if err := db.Ping(); err != nil {
 		return nil, err
+	}
+
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		return nil, err
+	}
+	if _, err := db.Exec("PRAGMA journal_mode = WAL"); err != nil {
+		log.Printf("Warning: failed to set WAL mode: %v", err)
 	}
 
 	if err := runMigrations(db); err != nil {
@@ -44,6 +52,7 @@ func runMigrations(db *sql.DB) error {
 		`CREATE TABLE IF NOT EXISTS items (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			parent_id INTEGER,
+			user_id INTEGER NOT NULL DEFAULT 0,
 			type TEXT NOT NULL,
 			x INTEGER NOT NULL,
 			y INTEGER NOT NULL,
@@ -52,7 +61,8 @@ func runMigrations(db *sql.DB) error {
 			content TEXT,
 			url TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY(parent_id) REFERENCES items(id) ON DELETE CASCADE
+			FOREIGN KEY(parent_id) REFERENCES items(id) ON DELETE CASCADE,
+			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 		);`,
 		// Add new columns if they don't exist (SQLite ignores ADD COLUMN if exists usually, but modernc might strict.
 		// We'll wrap in try-catch block style or just append.
@@ -67,6 +77,8 @@ func runMigrations(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Kashboard';`,
 		// Add url column for direct access (required for some strict persistence modes)
 		`ALTER TABLE items ADD COLUMN url TEXT;`,
+		// M5: per-user dashboard isolation — backfill column on existing tables
+		`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
 	}
 
 	for _, query := range queries {
@@ -74,7 +86,7 @@ func runMigrations(db *sql.DB) error {
 		if err != nil {
 			// Check if error is about duplicate column
 			errStr := err.Error()
-			if contains(errStr, "duplicate column name") {
+			if strings.Contains(errStr, "duplicate column name") {
 				// Silently ignore
 				continue
 			}
@@ -83,30 +95,37 @@ func runMigrations(db *sql.DB) error {
 	}
 	log.Println("Migrations completed successfully.")
 
-	if err := seedItems(db); err != nil {
-		log.Printf("Seeding warning: %v", err)
+	// M5: assign any items still at user_id = 0 to the first admin.
+	// On a fresh install the admin does not exist yet; that path is
+	// handled by SetupHandler after the account is created.
+	if err := migrateOrphanedItems(db); err != nil {
+		log.Printf("Orphan migration warning: %v", err)
 	}
 
 	return nil
 }
 
-func seedItems(db *sql.DB) error {
-	var count int
-	if err := db.QueryRow("SELECT COUNT(*) FROM items").Scan(&count); err != nil {
-		return err
-	}
-
-	if count > 0 {
+// migrateOrphanedItems assigns dashboard items with user_id = 0 to the first
+// admin user.  This covers two scenarios:
+//   - Existing installs upgrading to per-user isolation (items predate the column).
+//   - Fresh installs where seedItems ran before the admin account was created;
+//     SetupHandler calls the same UPDATE, but this is the safety net if that path
+//     is ever bypassed.
+func migrateOrphanedItems(db *sql.DB) error {
+	var adminID int
+	err := db.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&adminID)
+	if err != nil {
+		// No admin yet (fresh install, pre-setup). SetupHandler will handle it.
 		return nil
 	}
 
-	log.Println("Seeding initial dashboard items...")
-	// IDs must match the frontend mock data to avoid sync mismatch on fresh load
-	// Frontend uses IDs 1-6. We can't easily force ID in INSERT with AUTOINCREMENT in SQLite unless we explicit set it.
-	// SQLite allows inserting into INTEGER PRIMARY KEY.
-	query := `INSERT INTO items (id, type, x, y, w, h, content, url) VALUES 
-		(1, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/codigosh/Kashboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/codigosh/Kashboard');`
+	result, err := db.Exec("UPDATE items SET user_id = ? WHERE user_id = 0", adminID)
+	if err != nil {
+		return err
+	}
 
-	_, err := db.Exec(query)
-	return err
+	if rows, _ := result.RowsAffected(); rows > 0 {
+		log.Printf("Legacy migration: assigned %d orphaned item(s) to admin user id=%d", rows, adminID)
+	}
+	return nil
 }

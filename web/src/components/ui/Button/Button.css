@@ -38,19 +38,30 @@
 
 /* Variant: Primary */
 .btn--primary {
-    background: var(--surface-solid);
+    background: transparent;
     color: var(--accent);
-    border: 1px solid var(--accent);
+    border: 2px solid var(--accent);
 }
 
 .btn--primary:hover {
-    background: var(--surface-solid);
-    /* Maintain solid background */
-    box-shadow: 0 0 12px rgba(0, 120, 212, 0.2);
-    /* Using primary blue var shade */
+    background: rgba(var(--accent-rgb), 0.1);
+    color: var(--accent);
     border-color: var(--accent);
 }
 
 .btn:active {
     transform: translateY(1px);
+}
+
+/* Variant: Danger (same style as Primary for consistency) */
+.btn--danger {
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+}
+
+.btn--danger:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    color: var(--accent);
+    border-color: var(--accent);
 }

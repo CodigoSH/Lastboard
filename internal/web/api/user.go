@@ -3,7 +3,9 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,7 +35,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(avatar_url, ''),
 		       COALESCE(grid_columns_pc, 12), COALESCE(grid_columns_tablet, 4), COALESCE(grid_columns_mobile, 2),
                COALESCE(theme, 'system'),
-               COALESCE(project_name, 'CSH Dashboard')
+               COALESCE(project_name, 'Kashboard')
 		FROM users WHERE username=?`, username).Scan(
 		&u.ID, &u.Username, &u.Role, &u.AccentColor, &u.Language, &u.AvatarUrl,
 		&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.Theme, &u.ProjectName,
@@ -43,12 +45,17 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Determine if this is the Super Admin (First admin created)
+	var firstAdminID int
+	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
+
 	resp := map[string]interface{}{
-		"id":                  u.ID, // Important for updates
+		"id":                  u.ID,
 		"username":            u.Username,
-		"initials":            u.Username[0:2],
+		"initials":            safeInitials(u.Username),
 		"avatar_url":          u.AvatarUrl,
 		"role":                u.Role,
+		"is_superadmin":       (u.ID > 0 && u.ID == firstAdminID),
 		"accent_color":        u.AccentColor,
 		"language":            u.Language,
 		"theme":               u.Theme,
@@ -80,7 +87,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, grid_columns_pc, grid_columns_tablet, grid_columns_mobile, COALESCE(theme, 'system'), COALESCE(project_name, 'CSH Dashboard')
+	err := h.DB.QueryRow(`SELECT accent_color, language, grid_columns_pc, grid_columns_tablet, grid_columns_mobile, COALESCE(theme, 'system'), COALESCE(project_name, 'Kashboard')
 		FROM users WHERE username=?`, username).Scan(
 		&current.AccentColor, &current.Language, &current.GridColumnsPC, &current.GridColumnsTablet, &current.GridColumnsMobile, &current.Theme, &current.ProjectName)
 
@@ -90,24 +97,52 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if input.AccentColor != "" {
+		if len(input.AccentColor) > 32 {
+			http.Error(w, "Invalid accent color", http.StatusBadRequest)
+			return
+		}
 		current.AccentColor = input.AccentColor
 	}
 	if input.Language != "" {
+		if len(input.Language) > 10 {
+			http.Error(w, "Invalid language", http.StatusBadRequest)
+			return
+		}
 		current.Language = input.Language
 	}
 	if input.Theme != "" {
+		if input.Theme != "dark" && input.Theme != "light" && input.Theme != "system" {
+			http.Error(w, "Invalid theme value", http.StatusBadRequest)
+			return
+		}
 		current.Theme = input.Theme
 	}
 	if input.GridColumnsPC > 0 {
+		if input.GridColumnsPC > 12 {
+			http.Error(w, "Invalid grid columns (PC)", http.StatusBadRequest)
+			return
+		}
 		current.GridColumnsPC = input.GridColumnsPC
 	}
 	if input.GridColumnsTablet > 0 {
+		if input.GridColumnsTablet > 6 {
+			http.Error(w, "Invalid grid columns (Tablet)", http.StatusBadRequest)
+			return
+		}
 		current.GridColumnsTablet = input.GridColumnsTablet
 	}
 	if input.GridColumnsMobile > 0 {
+		if input.GridColumnsMobile > 3 {
+			http.Error(w, "Invalid grid columns (Mobile)", http.StatusBadRequest)
+			return
+		}
 		current.GridColumnsMobile = input.GridColumnsMobile
 	}
 	if input.ProjectName != "" {
+		if len(input.ProjectName) > 64 {
+			http.Error(w, "Project name too long", http.StatusBadRequest)
+			return
+		}
 		current.ProjectName = input.ProjectName
 	}
 
@@ -138,13 +173,32 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.AvatarUrl != "" && !strings.HasPrefix(input.AvatarUrl, "http://") && !strings.HasPrefix(input.AvatarUrl, "https://") {
+	// Validate new username only if it changed
+	if input.Username != "" && input.Username != username {
+		if err := validateUsername(input.Username); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+	if input.Username == "" {
+		input.Username = username
+	}
+
+	// Allow HTTP, HTTPS, or Base64 Image Data
+	if input.AvatarUrl != "" &&
+		!strings.HasPrefix(input.AvatarUrl, "http://") &&
+		!strings.HasPrefix(input.AvatarUrl, "https://") &&
+		!strings.HasPrefix(input.AvatarUrl, "data:image/") {
 		http.Error(w, "Invalid avatar URL", http.StatusBadRequest)
 		return
 	}
 
 	_, err := h.DB.Exec("UPDATE users SET username=?, avatar_url=? WHERE username=?", input.Username, input.AvatarUrl, username)
 	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			http.Error(w, "error.username_taken", http.StatusConflict)
+			return
+		}
 		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
 		return
 	}
@@ -177,12 +231,16 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(input.NewPassword) > 72 {
-		http.Error(w, "Password too long", http.StatusBadRequest)
+	if err := validatePassword(input.NewPassword); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	newHash, _ := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	newHash, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Encryption failed", http.StatusInternalServerError)
+		return
+	}
 
 	_, err = h.DB.Exec("UPDATE users SET password=? WHERE username=?", string(newHash), username)
 	if err != nil {
@@ -209,20 +267,30 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := h.DB.Query("SELECT id, username, role, created_at FROM users")
+	currentUserID := middleware.GetUserIDFromContext(r)
+	rows, err := h.DB.Query("SELECT id, username, role, created_at, COALESCE(avatar_url, '') FROM users WHERE id != ?", currentUserID)
 	if err != nil {
 		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var users []user.User
+	var firstAdminID int
+	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
+
+	var users []map[string]interface{}
 	for rows.Next() {
 		var u user.User
-		if err := rows.Scan(&u.ID, &u.Username, &u.Role, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.Username, &u.Role, &u.CreatedAt, &u.AvatarUrl); err != nil {
 			continue
 		}
-		users = append(users, u)
+		users = append(users, map[string]interface{}{
+			"id":            u.ID,
+			"username":      u.Username,
+			"role":          u.Role,
+			"avatar_url":    u.AvatarUrl,
+			"is_superadmin": (u.ID == firstAdminID),
+		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -254,24 +322,45 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(input.Password) > 72 {
-		http.Error(w, "Password too long", http.StatusBadRequest)
+	if err := validateUsername(input.Username); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validatePassword(input.Password); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Encryption failed", http.StatusInternalServerError)
+		return
+	}
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, grid_columns_pc, grid_columns_tablet, grid_columns_mobile) VALUES (?, ?, ?, ?, 12, 6, 3)")
+	// Default Avatar Logic
+	defaultAvatar := "/images/default-avatar.svg"
+
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, accent_color, language, project_name, grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url) VALUES (?, ?, ?, ?, 'system', '#2563eb', 'en', 'Kashboard', 12, 6, 3, ?)")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(input.Username, string(hashedPassword), role, time.Now())
+	result, err := stmt.Exec(input.Username, string(hashedPassword), role, time.Now(), defaultAvatar)
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusConflict)
 		return
+	}
+
+	// Seed Default Bookmark for New User
+	newUserID, err := result.LastInsertId()
+	if err != nil {
+		newUserID = 0
+	}
+	if newUserID > 0 {
+		_, _ = h.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
+		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/codigosh/Kashboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/codigosh/Kashboard')`, newUserID)
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -306,13 +395,22 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validateUsername(input.Username); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	var err error
 	if input.Password != "" {
-		if len(input.Password) > 72 {
-			http.Error(w, "Password too long", http.StatusBadRequest)
+		if err := validatePassword(input.Password); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		if hashErr != nil {
+			http.Error(w, "Encryption failed", http.StatusInternalServerError)
+			return
+		}
 		_, err = h.DB.Exec("UPDATE users SET username=?, role=?, password=? WHERE id=?", input.Username, role, string(hashedPassword), input.ID)
 	} else {
 		_, err = h.DB.Exec("UPDATE users SET username=?, role=? WHERE id=?", input.Username, role, input.ID)
@@ -339,12 +437,84 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.DB.Exec("DELETE FROM users WHERE id = ?", id)
+	targetID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Prevent self-deletion
+	if targetID == middleware.GetUserIDFromContext(r) {
+		http.Error(w, "Cannot delete your own account", http.StatusBadRequest)
+		return
+	}
+
+	// Prevent deleting the last admin
+	var targetRole string
+	if err := h.DB.QueryRow("SELECT role FROM users WHERE id = ?", targetID).Scan(&targetRole); err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	if strings.ToLower(targetRole) == "admin" {
+		var adminCount int
+		if err := h.DB.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'admin'").Scan(&adminCount); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		if adminCount <= 1 {
+			http.Error(w, "Cannot delete the last admin", http.StatusBadRequest)
+			return
+		}
+
+		// Protect the First Admin (Superadmin)
+		var firstAdminID int
+		if err := h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID); err == nil {
+			if targetID == firstAdminID {
+				http.Error(w, "error.cannot_delete_superadmin", http.StatusForbidden)
+				return
+			}
+		}
+	}
+
+	_, err = h.DB.Exec("DELETE FROM users WHERE id = ?", targetID)
+	if err != nil {
+		http.Error(w, "notifier.user_delete_error", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.user_deleted"})
+}
+
+func safeInitials(name string) string {
+	runes := []rune(name)
+	if len(runes) > 2 {
+		return string(runes[:2])
+	}
+	return string(runes)
+}
+
+func validateUsername(username string) error {
+	if len(username) < 2 {
+		return fmt.Errorf("error.username_min_length")
+	}
+	if len(username) > 32 {
+		return fmt.Errorf("error.username_max_length")
+	}
+	for _, r := range username {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-') {
+			return fmt.Errorf("error.username_invalid_chars")
+		}
+	}
+	return nil
+}
+
+func validatePassword(password string) error {
+	if len(password) < 4 {
+		return fmt.Errorf("error.password_min_length")
+	}
+	if len(password) > 72 {
+		return fmt.Errorf("error.password_max_length")
+	}
+	return nil
 }

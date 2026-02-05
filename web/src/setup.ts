@@ -2,6 +2,7 @@ import './components/ui/Paper/Paper';
 import './components/ui/Button/Button';
 import './components/ui/Avatar/Avatar';
 import './components/ui/Notifier/Notifier';
+import './components/ui/Select/Select';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
 import { ThemeService } from './services/ThemeService';
@@ -37,24 +38,24 @@ bootstrap(async () => {
 
     // Populate Lang Dropdown
     if (languageSelect) {
-        availableLocales.forEach(loc => {
-            const opt = document.createElement('option');
-            opt.value = loc.code;
-            opt.textContent = `${loc.flag} ${loc.name}`;
-            if (loc.code === browserLang) opt.selected = true;
-            languageSelect.appendChild(opt);
-        });
+        // Cast to any to access custom properties since we don't have global types set up perfectly here yet
+        const appSelect = languageSelect as any;
+
+        appSelect.options = availableLocales.map(loc => ({
+            value: loc.code,
+            label: `${loc.flag} ${loc.name}`
+        }));
+
+        appSelect.value = browserLang;
         i18n.setLanguage(browserLang);
 
         languageSelect.addEventListener('change', (e: Event) => {
-            const val = (e.target as HTMLSelectElement).value;
+            // AppSelect emits custom event with detail, but also updates .value
+            const val = (e.target as any).value;
             i18n.setLanguage(val);
             localize();
         });
     }
-
-    // Init Theme Logic
-    // ...
 
     // Init Theme Logic
     ThemeService.init();
@@ -193,14 +194,24 @@ bootstrap(async () => {
 
         // 5. Populate Summary (if Step 3)
         if (currentStep === 3) {
-            document.getElementById('summaryLang')!.textContent = languageSelect.options[languageSelect.selectedIndex].text;
+            try {
+                // Language
+                const currentLocale = i18n.getLocale();
+                if (currentLocale) {
+                    document.getElementById('summaryLang')!.textContent = `${currentLocale.flag} ${currentLocale.name}`;
+                }
 
-            let theme = i18n.t('settings.system') || 'System';
-            if (themeBtns.light?.classList.contains('selected')) theme = i18n.t('settings.light');
-            if (themeBtns.dark?.classList.contains('selected')) theme = i18n.t('settings.dark');
-            document.getElementById('summaryTheme')!.textContent = theme;
+                // Theme
+                let theme = i18n.t('settings.system');
+                if (themeBtns.light?.classList.contains('selected')) theme = i18n.t('settings.light');
+                if (themeBtns.dark?.classList.contains('selected')) theme = i18n.t('settings.dark');
+                document.getElementById('summaryTheme')!.textContent = theme;
 
-            document.getElementById('summaryUser')!.textContent = usernameInput.value;
+                // Username
+                document.getElementById('summaryUser')!.textContent = usernameInput.value || 'admin';
+            } catch (e) {
+                console.error("Error updating summary:", e);
+            }
         }
 
         // Clear errors
@@ -218,11 +229,11 @@ bootstrap(async () => {
             const p = pwdInput.value;
             const c = confirmInput.value;
 
-            if (u.length < 3) {
+            if (u.length < 2) {
                 notify(i18n.t('setup.error_username'), 'error');
                 return false;
             }
-            if (p.length < 8) {
+            if (p.length < 4) {
                 notify(i18n.t('setup.error_password'), 'error');
                 return false;
             }
@@ -313,7 +324,7 @@ bootstrap(async () => {
             });
 
             if (response.ok) {
-                localStorage.setItem('csh_lang', payload.language);
+                localStorage.setItem('kashboard_lang', payload.language);
                 nextBtn.textContent = i18n.t('setup.welcome_admin');
                 nextBtn.style.backgroundColor = 'var(--accent-alt, #00f5a0)';
 
@@ -321,9 +332,8 @@ bootstrap(async () => {
 
                 setTimeout(() => window.location.href = '/', 1000);
             } else {
-                const text = await response.text();
-                // showError(`${i18n.t('setup.failed')}: ${text}`);
-                notify(`${i18n.t('setup.failed')}: ${text}`, 'error');
+                const errorKey = (await response.text()).trim();
+                notify(`${i18n.t('setup.failed')}: ${i18n.t(errorKey) || errorKey}`, 'error');
 
                 nextBtn.removeAttribute('disabled');
                 nextBtn.textContent = i18n.t('setup.create_admin');

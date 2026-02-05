@@ -17,7 +17,7 @@ class I18nService {
         await this.loadLocale('en');
 
         // Detect language
-        const saved = localStorage.getItem('csh_lang');
+        const saved = localStorage.getItem('kashboard_lang');
         const browserLang = navigator.language.split('-')[0];
         let targetLang = 'en';
 
@@ -51,7 +51,20 @@ class I18nService {
     }
 
     public getAvailableLocales() {
-        return availableLocales;
+        // Sort locales: Latin first (alphabetical), then Non-Latin (alphabetical)
+        const isLatin = (str: string) => /^[a-zA-Z]/.test(str);
+
+        const sorted = [...availableLocales].sort((a, b) => {
+            const aIsLatin = isLatin(a.name);
+            const bIsLatin = isLatin(b.name);
+
+            if (aIsLatin && !bIsLatin) return -1;
+            if (!aIsLatin && bIsLatin) return 1;
+
+            return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+        });
+
+        return sorted;
     }
 
     public async loadLocale(code: string): Promise<void> {
@@ -72,7 +85,7 @@ class I18nService {
         if (availableLocales.find(l => l.code === code)) {
             await this.loadLocale(code);
             this.currentLanguage = code;
-            localStorage.setItem('csh_lang', code);
+            localStorage.setItem('kashboard_lang', code);
             this.notifyListeners();
         } else {
             console.warn(`[I18n] Language ${code} not supported`);

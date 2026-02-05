@@ -5,6 +5,14 @@
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
 
+const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+const safeUrl = (url: string): string => {
+    if (!url) return '#';
+    const trimmed = url.trim().toLowerCase();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed === '#') return esc(url);
+    return '#';
+};
+
 export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean, isTouchDevice?: boolean }) => {
     // Ensure bookmarks is always an array
     const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];
@@ -31,23 +39,27 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: {
         const isSection = b.type === 'section'; // RESIZABLE BOX
 
         if (isSection) {
-            // SECTION: Resizable Box, No Title, Container
+            // SECTION: Resizable Box, Fieldset-style
             const children = getChildren(b.id);
+            const title = (data.title || '').trim();
+
             return `
-            <div class="bookmark-grid__section"
+            <fieldset class="bookmark-grid__section"
                data-id="${b.id}"
                draggable="${isEditing}"
                style="--x: ${b.x}; --y: ${b.y}; --w: ${b.w}; --h: ${b.h};">
+               ${title ? `<legend class="section-title">${esc(title)}</legend>` : ''}
                <div class="bookmark-grid__nested-content">
                    ${renderBookmarks(children, isEditing, true)}
                </div>
                ${isEditing ? `
                 <div class="bookmark-actions">
+                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>
                     <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
                 </div>
                 <div class="resize-handle"></div>
                ` : ''}
-            </div>`;
+            </fieldset>`;
         }
 
         // Standard Bookmark
@@ -117,10 +129,10 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
     const icon = data.icon || '';
     const isIconUrl = icon.startsWith('http') || icon.startsWith('/');
     const iconHtml = isIconUrl
-        ? `<img src="${icon}" alt="${data.label}" class="bookmark-grid__icon-img" draggable="false" />`
-        : (icon || `<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`);
+        ? `<img src="${esc(icon)}" alt="${esc(data.label)}" class="bookmark-grid__icon-img" draggable="false" />`
+        : (icon ? esc(icon) : `<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`);
 
-    const hrefAttr = isEditing ? 'role="button"' : `href="${data.url || '#'}" target="_blank"`;
+    const hrefAttr = isEditing ? 'role="button"' : `href="${safeUrl(data.url)}" target="_blank"`;
 
     return `
         <a ${hrefAttr} class="bookmark-grid__card"
@@ -139,7 +151,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
             <div class="bookmark-grid__icon-container">
                 ${iconHtml}
             </div>
-            <span class="bookmark-grid__label">${data.label || 'Bookmark'}</span>
+            <span class="bookmark-grid__label">${esc(data.label) || 'Bookmark'}</span>
             
             ${isEditing && b.type === 'section' ? '<div class="resize-handle"></div>' : ''}
             

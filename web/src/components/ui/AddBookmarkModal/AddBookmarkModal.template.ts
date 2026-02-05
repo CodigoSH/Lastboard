@@ -11,35 +11,54 @@ interface AddBookmarkModalData {
 import { i18n } from '../../../services/i18n';
 
 export const template = ({ isOpen, isEditMode }: AddBookmarkModalData) => `
-    <div class="modal-overlay ${isOpen ? 'modal-overlay--active' : ''}" id="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">${isEditMode ? i18n.t('bookmark.edit') : i18n.t('bookmark.add')}</h2>
-                <button class="modal-close" id="modal-close">
-                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                </button>
-            </div>
-            <form class="modal-form" id="bookmark-form">
-                <div class="form-group">
-                    <label for="bookmark-label">${i18n.t('bookmark.label')}</label>
-                    <input type="text" id="bookmark-label" name="label" placeholder="${i18n.t('bookmark.placeholder_label')}" required />
-                </div>
-                <div class="form-group">
-                    <label for="bookmark-url">${i18n.t('bookmark.url')}</label>
-                    <input type="url" id="bookmark-url" name="url" placeholder="${i18n.t('bookmark.placeholder_url')}" required />
-                </div>
-                <div class="form-group">
-                    <label>${i18n.t('bookmark.icon')}</label>
-                    <div id="icon-picker-container"></div>
-                </div>
-                <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="bookmark-status" name="statusCheck" />
-                    <label for="bookmark-status" style="margin: 0; cursor: pointer;">${i18n.t('bookmark.monitor_status')}</label>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-submit">${i18n.t('general.save')}</button>
-                </div>
-            </form>
+    <dialog id="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">${isEditMode ? i18n.t('bookmark.edit') : i18n.t('bookmark.add')}</h2>
+            <button class="modal-close" id="modal-close">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
         </div>
-    </div>
+        <form class="modal-form" id="bookmark-form">
+            <div class="form-group">
+                <label for="bookmark-label">${i18n.t('bookmark.label')}</label>
+                <input type="text" id="bookmark-label" name="label" placeholder="${i18n.t('bookmark.placeholder_label')}" required />
+            </div>
+            <div class="form-group">
+                <label for="bookmark-url">${i18n.t('bookmark.url')}</label>
+                <input type="url" id="bookmark-url" name="url" placeholder="${i18n.t('bookmark.placeholder_url')}" required />
+            </div>
+            <div class="form-group">
+                <label>${i18n.t('bookmark.icon')}</label>
+                <div id="icon-picker-container"></div>
+            </div>
+            <div class="form-group checkbox-group">
+                <label for="bookmark-status">${i18n.t('bookmark.monitor_status')}</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="bookmark-status" name="statusCheck" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="visibility-row">
+                <div class="checkbox-group">
+                    <label for="bookmark-mobile">${i18n.t('bookmark.visible_mobile')}</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="bookmark-mobile" name="visibleMobile" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <label for="bookmark-tablet">${i18n.t('bookmark.visible_tablet')}</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="bookmark-tablet" name="visibleTablet" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-actions">
+                <app-button type="submit" variant="primary" class="btn-submit">${i18n.t('general.save')}</app-button>
+            </div>
+        </form>
+    </dialog>
 `;

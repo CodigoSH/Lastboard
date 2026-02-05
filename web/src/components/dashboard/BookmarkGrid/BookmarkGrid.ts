@@ -56,6 +56,8 @@ class BookmarkGrid extends HTMLElement {
 
     private _widgetModal: any; // widget-config-modal
     private _boundActionClick = this.handleActionClick.bind(this);
+    private _boundMouseMove = this.handleWindowMouseMove.bind(this);
+    private _boundMouseUp = this.handleWindowMouseUp.bind(this);
 
     connectedCallback() {
         this.render();
@@ -101,7 +103,10 @@ class BookmarkGrid extends HTMLElement {
                     this.classList.add('search-active');
                     this.bookmarks = this.allItems.filter(item => {
                         if (item.type !== 'bookmark') return false;
-                        const content = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+                        let content: any = item.content;
+                        if (typeof item.content === 'string') {
+                            try { content = JSON.parse(item.content); } catch { return false; }
+                        }
                         const searchText = (content.label || '').toLowerCase();
                         return searchText.includes(this.searchQuery);
                     });
@@ -161,10 +166,12 @@ class BookmarkGrid extends HTMLElement {
             if (!container) return;
 
             const id = parseInt(container.dataset.id || '0');
-            const item = (this as any).allItems.find((b: any) => b.id == id);
+            const item = (this as any).allItems.find((b: any) => b.id === id);
             if (!item) return;
 
-            const typeLabel = item.type === 'group' ? i18n.t('type.group') : (item.type === 'section' ? i18n.t('type.section') : i18n.t('type.bookmark'));
+            const typeLabel = item.type === 'section'
+                ? i18n.t('type.section')
+                : (item.type === 'widget' ? i18n.t('type.widget') : i18n.t('type.bookmark'));
 
             // Dispatch Event via EventBus
             const { eventBus, EVENTS } = await import('../../../services/EventBus');
@@ -180,16 +187,18 @@ class BookmarkGrid extends HTMLElement {
 
         // Edit Button Logic
         if (editBtn) {
-            const container = editBtn.closest('.bookmark-grid__card, .bookmark-grid__group') as HTMLElement;
+            const container = editBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
             if (!container) return;
 
             const id = parseInt(container.dataset.id || '0');
-            const item = (this as any).allItems.find((b: any) => b.id == id);
+            const item = (this as any).allItems.find((b: any) => b.id === id);
 
             if (item) {
                 const { eventBus, EVENTS } = await import('../../../services/EventBus');
                 if (item.type === 'widget') {
                     eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'widget' });
+                } else if (item.type === 'section') {
+                    eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'section' }); // Re-use widget config for now
                 } else {
                     eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'bookmark' });
                 }
@@ -202,6 +211,8 @@ class BookmarkGrid extends HTMLElement {
         if (this._unsubscribe) this._unsubscribe();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._resizeObserver) this._resizeObserver.disconnect();
+        window.removeEventListener('mousemove', this._boundMouseMove);
+        window.removeEventListener('mouseup', this._boundMouseUp);
         statusService.stop();
     }
 
@@ -224,8 +235,8 @@ class BookmarkGrid extends HTMLElement {
 
     setupResizeListeners() {
         // Global listeners for drag/release outside the component
-        window.addEventListener('mousemove', this.handleWindowMouseMove.bind(this));
-        window.addEventListener('mouseup', this.handleWindowMouseUp.bind(this));
+        window.addEventListener('mousemove', this._boundMouseMove);
+        window.addEventListener('mouseup', this._boundMouseUp);
 
         // Start resize on handle mousedown
         this.shadowRoot!.addEventListener('mousedown', (ev) => {
@@ -240,7 +251,7 @@ class BookmarkGrid extends HTMLElement {
                 if (!card || !card.dataset.id) return;
 
                 const id = parseInt(card.dataset.id);
-                const item = this.bookmarks.find(b => b.id == id);
+                const item = this.bookmarks.find(b => b.id === id);
                 if (!item) return;
 
                 this.isResizing = true;
@@ -306,7 +317,10 @@ class BookmarkGrid extends HTMLElement {
         let minH = 1;
 
         if (item.type === 'widget') {
-            const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+            let data: any = item.content;
+            if (typeof item.content === 'string') {
+                try { data = JSON.parse(item.content); } catch { return { w: Math.max(1, Math.min(12, w)), h: Math.max(1, Math.min(12, h)) }; }
+            }
             const widgetId = (data.widgetId || '').toLowerCase();
 
             if (widgetId === 'notepad') {

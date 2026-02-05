@@ -4,6 +4,7 @@ import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
+import '../Select/Select';
 // @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
 
@@ -77,6 +78,8 @@ class SettingsContent extends HTMLElement {
     // --- Logic Layer Delegates ---
 
     async savePrefs(newPrefs: Partial<UserPreferences>) {
+        const previousPrefs = { ...this.prefs };
+
         // Optimistic UI state update
         this.prefs = { ...this.prefs, ...newPrefs };
 
@@ -94,21 +97,38 @@ class SettingsContent extends HTMLElement {
             }
         }
 
-        await userStore.updatePreferences(newPrefs);
+        try {
+            await userStore.updatePreferences(newPrefs);
+        } catch {
+            // userStore already rolled back aesthetics; restore local state and language
+            this.prefs = previousPrefs;
+            if (newPrefs.language && previousPrefs.language) {
+                i18n.setLanguage(previousPrefs.language);
+            }
+        }
         this.render();
     }
 
     applyAccent(color: string) {
-        if (color && color.startsWith('#')) {
-            document.documentElement.style.setProperty('--accent', color);
-            return;
-        }
+        let hex = color;
         const colorMap: Record<string, string> = {
             'blue': '#228be6', 'indigo': '#4c6ef5', 'cyan': '#15aabf',
             'teal': '#12b886', 'orange': '#fd7e14', 'red': '#fa5252', 'grape': '#be4bdb'
         };
-        const hex = colorMap[color] || '#0078D4';
+
+        if (!color.startsWith('#')) {
+            hex = colorMap[color] || '#0078D4';
+        }
+
         document.documentElement.style.setProperty('--accent', hex);
+
+        // Update RGB variable for transparency effects
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+            document.documentElement.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
+        }
     }
 
     updateGridPref(key: string, value: string) {
@@ -171,6 +191,15 @@ class SettingsContent extends HTMLElement {
             (this.shadowRoot!.getElementById('current-password') as HTMLInputElement).value = '';
             (this.shadowRoot!.getElementById('new-password') as HTMLInputElement).value = '';
             (this.shadowRoot!.getElementById('confirm-password') as HTMLInputElement).value = '';
+
+            // Force logout to re-authenticate
+            setTimeout(async () => {
+                try {
+                    await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-Token': this.getCsrfToken() } });
+                } catch (e) { /* ignore */ }
+                document.body.style.opacity = '0';
+                window.location.href = '/login';
+            }, 1500);
         } catch (e) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.password_incorrect'), 'error');
         }
@@ -204,7 +233,18 @@ class SettingsContent extends HTMLElement {
 
     openAddUserModal() {
         const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
-        if (modal) modal.showModal();
+        if (modal) {
+            modal.showModal();
+
+            // Initialize role select options
+            const roleSelect = this.shadowRoot!.getElementById('new-user-role') as any;
+            if (roleSelect) {
+                roleSelect.options = [
+                    { value: 'user', label: i18n.t('settings.role_user') },
+                    { value: 'admin', label: i18n.t('settings.role_admin') }
+                ];
+            }
+        }
     }
 
     async createUser() {
@@ -233,9 +273,19 @@ class SettingsContent extends HTMLElement {
         if (modal) {
             (this.shadowRoot!.getElementById('edit-user-id') as HTMLInputElement).value = id.toString();
             (this.shadowRoot!.getElementById('edit-user-username') as HTMLInputElement).value = username;
-            (this.shadowRoot!.getElementById('edit-user-role') as HTMLSelectElement).value = role;
-            (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value = ''; // Reset
+            (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value = '';
+
             modal.showModal();
+
+            // Initialize role select options and value
+            const roleSelect = this.shadowRoot!.getElementById('edit-user-role') as any;
+            if (roleSelect) {
+                roleSelect.options = [
+                    { value: 'user', label: i18n.t('settings.role_user') },
+                    { value: 'admin', label: i18n.t('settings.role_admin') }
+                ];
+                roleSelect.value = role;
+            }
         }
     }
 
@@ -246,7 +296,7 @@ class SettingsContent extends HTMLElement {
         const role = (this.shadowRoot!.getElementById('edit-user-role') as HTMLSelectElement).value;
 
         if (!username) {
-            if (window.notifier) window.notifier.show('Username required', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.username_required'), 'error');
             return;
         }
 
@@ -277,11 +327,18 @@ class SettingsContent extends HTMLElement {
         }
 
         try {
-            await userService.deleteUser(id);
+            const res = await userService.deleteUser(id);
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_deleted'));
             this.fetchUsers();
-        } catch (e) {
-            if (window.notifier) window.notifier.show(i18n.t('notifier.user_delete_error'), 'error');
+        } catch (e: any) {
+            let msg = i18n.t('notifier.user_delete_error');
+
+            // If we have a specific error token from backend
+            if (e.message && e.message.includes('error.cannot_delete_superadmin')) {
+                msg = i18n.t('notifier.user_delete_superadmin');
+            }
+
+            if (window.notifier) window.notifier.show(msg, 'error');
         }
     }
 
@@ -327,7 +384,7 @@ class SettingsContent extends HTMLElement {
                 return usersTemplate(this.users);
 
             case 'about':
-                return aboutTemplate(this.version, this.updateInfo);
+                return aboutTemplate(this.version, this.updateInfo, user.role || '');
 
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">${i18n.t('settings.default_module_desc')}</p></div>`;
@@ -335,7 +392,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v0.0.1'; // Should be sync with backend or injected
+    private version = 'v1.1.0'; // Should be sync with backend or injected
     private updateInfo: any = null;
 
     async checkForUpdates() {
@@ -385,7 +442,7 @@ class SettingsContent extends HTMLElement {
             } else {
                 const err = await res.text();
                 if (status) {
-                    status.style.color = '#fa5252';
+                    status.style.color = 'var(--danger-color)';
                     status.textContent = i18n.t('notifier.update_failed') + err;
                 }
                 if (btn) btn.loading = false;
@@ -393,7 +450,7 @@ class SettingsContent extends HTMLElement {
         } catch (e) {
             console.error("Update failed", e);
             if (status) {
-                status.style.color = '#fa5252';
+                status.style.color = 'var(--danger-color)';
                 status.textContent = i18n.t('notifier.update_error');
             }
             if (btn) btn.loading = false;
@@ -477,8 +534,8 @@ class SettingsContent extends HTMLElement {
 
                 overlay.innerHTML = `
                     <div style="border: 4px solid #333; border-top: 4px solid var(--accent, #0078d4); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
-                    <h2 style="margin: 0; font-weight: 500;">${i18n.t('notifier.system_restarting') || 'System Restarting...'}</h2>
-                    <p style="opacity: 0.7; margin-top: 8px;">${i18n.t('notifier.please_wait') || 'Please wait while the system resets...'}</p>
+                    <h2 style="margin: 0; font-weight: 500;">${i18n.t('notifier.system_restarting')}</h2>
+                    <p style="opacity: 0.7; margin-top: 8px;">${i18n.t('notifier.please_wait')}</p>
                     <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
                 `;
                 document.body.appendChild(overlay);
@@ -523,6 +580,36 @@ class SettingsContent extends HTMLElement {
         this.shadowRoot!.querySelectorAll('.settings-content__checkbox').forEach(cb => {
             cb.addEventListener('click', () => cb.classList.toggle('settings-content__checkbox--checked'));
         });
+
+        this.initSelects();
+    }
+
+    initSelects() {
+        const langSelect = this.shadowRoot!.getElementById('language-select') as any;
+        if (langSelect) {
+            const locales = i18n.getAvailableLocales();
+            // Map to format expected by AppSelect
+            langSelect.options = locales.map(l => ({
+                value: l.code,
+                label: `${l.flag} ${l.name}`
+            }));
+
+            langSelect.addEventListener('change', (e: CustomEvent) => {
+                this.savePrefs({ language: e.detail });
+            });
+        }
+
+        // Init Role Selects
+        const roleOptions = [
+            { value: 'user', label: i18n.t('settings.role_user') },
+            { value: 'admin', label: i18n.t('settings.role_admin') }
+        ];
+
+        const newUserRole = this.shadowRoot!.getElementById('new-user-role') as any;
+        if (newUserRole) newUserRole.options = roleOptions;
+
+        const editUserRole = this.shadowRoot!.getElementById('edit-user-role') as any;
+        if (editUserRole) editUserRole.options = roleOptions;
     }
 }
 

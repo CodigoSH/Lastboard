@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,13 +21,13 @@ import (
 // POST /api/system/reset
 func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	if !h.isAdmin(r) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
 
 	// 1. Close DB Connection
 	if err := h.DB.Close(); err != nil {
-		fmt.Println("Error closing DB during reset:", err)
+		log.Printf("Error closing DB during reset: %v", err)
 	}
 
 	// 2. Delete DB File
@@ -44,7 +45,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	// 3. Respond
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Factory reset complete. System is restarting."})
+	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.system_restarting"})
 
 	// 4. Self-Restart (Re-Exec)
 	go func() {
@@ -53,18 +54,15 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		// Get current binary path
 		binary, err := os.Executable()
 		if err != nil {
-			fmt.Println("Failed to get executable path, falling back to exit:", err)
+			log.Printf("Failed to get executable path, falling back to exit: %v", err)
 			os.Exit(1)
 		}
 
-		// Re-exec using syscall.Exec (replaces process)
-		// We pass the same environment and args
 		env := os.Environ()
 		args := os.Args
 
-		// On Linux, syscall.Exec is the standard way to replace the process image
 		if err := syscall.Exec(binary, args, env); err != nil {
-			fmt.Println("Failed to re-exec, falling back to exit:", err)
+			log.Printf("Failed to re-exec, falling back to exit: %v", err)
 			os.Exit(1)
 		}
 	}()
@@ -97,9 +95,11 @@ type BackupUser struct {
 	GridColumnsTablet *int    `json:"grid_columns_tablet"`
 	GridColumnsMobile *int    `json:"grid_columns_mobile"`
 	AvatarUrl         *string `json:"avatar_url"`
+	ProjectName       *string `json:"project_name"`
 }
 
 type BackupItem struct {
+	Owner   string  `json:"owner"`
 	Type    string  `json:"type"`
 	X       int     `json:"x"`
 	Y       int     `json:"y"`
@@ -130,8 +130,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Fetch Users
-	rows, err := h.DB.Query(`SELECT username, password, role, theme, accent_color, language, 
-		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url FROM users`)
+	rows, err := h.DB.Query(`SELECT username, password, role, theme, accent_color, language,
+		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name FROM users`)
 	if err != nil {
 		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
 		return
@@ -141,14 +141,20 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var u BackupUser
 		if err := rows.Scan(&u.Username, &u.Password, &u.Role, &u.Theme, &u.AccentColor, &u.Language,
-			&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl); err != nil {
+			&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl, &u.ProjectName); err != nil {
 			continue
 		}
 		backup.Users = append(backup.Users, u)
 	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
-	// 2. Fetch Items
-	itemRows, err := h.DB.Query("SELECT type, x, y, w, h, content FROM items")
+	// 2. Fetch Items — join users to store owner username; backups must be
+	// portable across restores where numeric IDs will differ.
+	itemRows, err := h.DB.Query(`SELECT COALESCE(u.username, ''), i.type, i.x, i.y, i.w, i.h, i.content
+		FROM items i LEFT JOIN users u ON i.user_id = u.id`)
 	if err != nil {
 		http.Error(w, "Failed to fetch items", http.StatusInternalServerError)
 		return
@@ -157,15 +163,19 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	for itemRows.Next() {
 		var i BackupItem
-		if err := itemRows.Scan(&i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
+		if err := itemRows.Scan(&i.Owner, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
 			continue
 		}
 		backup.Items = append(backup.Items, i)
 	}
+	if err := itemRows.Err(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
 	// Send JSON
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"csh-backup-%s.json\"", time.Now().Format("2006-01-02-1504")))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"kashboard-backup-%s.json\"", time.Now().Format("2006-01-02-1504")))
 	json.NewEncoder(w).Encode(backup)
 }
 
@@ -226,7 +236,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Insert Users
 	userStmt, err := tx.Prepare(`INSERT INTO users (username, password, role, theme, accent_color, language,
-		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
 		return
@@ -235,15 +245,30 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 
 	for _, u := range backup.Users {
 		_, err := userStmt.Exec(u.Username, u.Password, u.Role, u.Theme, u.AccentColor, u.Language,
-			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl)
+			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName)
 		if err != nil {
 			http.Error(w, "Failed to restore backup", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	// 3. Insert Items
-	itemStmt, err := tx.Prepare(`INSERT INTO items (type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?)`)
+	// 3. Build username → restored-id map so item ownership survives the restore.
+	ownerMap := make(map[string]int)
+	for _, u := range backup.Users {
+		var uid int
+		if err := tx.QueryRow("SELECT id FROM users WHERE username = ?", u.Username).Scan(&uid); err == nil {
+			ownerMap[u.Username] = uid
+		}
+	}
+	// Fallback for items from old backups that have no owner field.
+	var fallbackOwner int
+	if err := tx.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&fallbackOwner); err != nil {
+		http.Error(w, "No admin found for item assignment", http.StatusInternalServerError)
+		return
+	}
+
+	// 4. Insert Items with resolved user_id
+	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
 		return
@@ -251,7 +276,11 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	defer itemStmt.Close()
 
 	for _, i := range backup.Items {
-		_, err := itemStmt.Exec(i.Type, i.X, i.Y, i.W, i.H, i.Content)
+		uid := ownerMap[i.Owner]
+		if uid == 0 {
+			uid = fallbackOwner
+		}
+		_, err := itemStmt.Exec(uid, i.Type, i.X, i.Y, i.W, i.H, i.Content)
 		if err != nil {
 			http.Error(w, "Failed to restore item", http.StatusInternalServerError)
 			return
@@ -264,7 +293,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Backup restored successfully. Please log in again."})
+	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.restore_success"})
 }
 
 // Helpers
@@ -281,15 +310,15 @@ func readMemInfo() (MemInfo, error) {
 	// MemTotal:       32768400 kB
 	// MemAvailable:   22341200 kB
 	// ...
-	content, err := stdReadFile("/proc/meminfo")
+	content, err := os.ReadFile("/proc/meminfo")
 	if err != nil {
 		return MemInfo{}, err
 	}
 
 	var m MemInfo
-	lines := stdSplitLines(string(content))
+	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
-		fields := stdFields(line)
+		fields := strings.Fields(line)
 		if len(fields) < 2 {
 			continue
 		}
@@ -315,16 +344,15 @@ func readMemInfo() (MemInfo, error) {
 
 func calculateCPUUsage(interval time.Duration) (float64, error) {
 	readStat := func() (idle, total uint64, err error) {
-		content, err := stdReadFile("/proc/stat")
+		content, err := os.ReadFile("/proc/stat")
 		if err != nil {
 			return 0, 0, err
 		}
-		// cpu  224 0 234 234234 23 ...
-		lines := stdSplitLines(string(content))
+		lines := strings.Split(string(content), "\n")
 		if len(lines) == 0 {
 			return 0, 0, fmt.Errorf("empty stat")
 		}
-		fields := stdFields(lines[0])
+		fields := strings.Fields(lines[0])
 		if len(fields) < 5 || fields[0] != "cpu" {
 			return 0, 0, fmt.Errorf("bad stat format")
 		}
@@ -332,10 +360,10 @@ func calculateCPUUsage(interval time.Duration) (float64, error) {
 		// user + nice + system + idle + iowait + irq + softirq + steal
 		var sum uint64
 		for _, v := range fields[1:] {
-			n, _ := stdParseUint(v)
+			n, _ := strconv.ParseUint(v, 10, 64)
 			sum += n
 		}
-		idleVal, _ := stdParseUint(fields[4]) // 4th number (index 1-based in man, 4 in 0-based slice after 'cpu' removed? No 'cpu' is index 0. user=1, nice=2, system=3, idle=4)
+		idleVal, _ := strconv.ParseUint(fields[4], 10, 64)
 		return idleVal, sum, nil
 	}
 
@@ -365,7 +393,7 @@ func readTemp() (float64, error) {
 	// Scan /sys/class/thermal/ for all zones
 	entries, err := os.ReadDir("/sys/class/thermal")
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	var bestTemp float64 = 0
@@ -416,37 +444,8 @@ func readTemp() (float64, error) {
 	return bestTemp, nil
 }
 
-// Wrapper to avoid importing io/ioutil or os in signature if not needed,
-// but we need imports.
-// I will rely on standard library imports added to the file.
-// Assuming 'os' and 'strings' and 'strconv' need to be imported.
-// Since replace_file_content cannot add imports easily if they are missing at top,
-// I will rewrite the top of the file to include them.
-
-// Std lib wrappers to support the logic above
-func stdReadFile(path string) ([]byte, error) {
-	return os.ReadFile(path)
-}
-
-func stdSplitLines(s string) []string {
-	return strings.Split(s, "\n")
-}
-
-func stdFields(s string) []string {
-	return strings.Fields(s)
-}
-
 func parseKB(s string) uint64 {
-	// "32768 kB" -> remove kB
 	s = strings.TrimSuffix(s, " kB")
 	v, _ := strconv.ParseUint(s, 10, 64)
-	return v * 1024 // return bytes
-}
-
-func stdParseUint(s string) (uint64, error) {
-	return strconv.ParseUint(s, 10, 64)
-}
-
-func stdTrimSpace(s string) string {
-	return strings.TrimSpace(s)
+	return v * 1024
 }

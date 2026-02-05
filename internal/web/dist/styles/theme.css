@@ -3,64 +3,86 @@
     /* DEFAULT: Light Mode (:root) */
 
     /* Core Colors */
-    --canvas: #f0f2f5;
+    --canvas: #f3f4f6;
     --panel: #ffffff;
-    --surface: rgba(255, 255, 255, 0.7);
+    --surface: rgba(255, 255, 255, 0.65);
     --surface-solid: #ffffff;
-    --glass-blur: blur(16px);
+    --surface-hover: rgba(255, 255, 255, 0.8);
+    --surface-active: rgba(0, 0, 0, 0.05);
+    --surface-dim: rgba(255, 255, 255, 0.4);
+    --glass-blur: blur(20px);
 
     /* Accents */
-    --accent: #0078D4;
-    /* Primary Blue */
-    --accent-alt: #4338ca;
-    /* Secondary Indigo */
-    --accent-rgb: 0, 120, 212;
+    --accent: #2563eb;
+    /* More vibrant blue */
+    --accent-alt: #4f46e5;
+    --accent-rgb: 37, 99, 235;
 
     /* Borders & Text */
-    --border: #e2e8f0;
-    --border-bright: #cbd5e1;
-    --text-main: #1a202c;
-    --text-dim: #64748b;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-bright: rgba(0, 0, 0, 0.12);
+    --text-main: #0f172a;
+    --text-dim: #475569;
 
     /* Semantic Components */
 
     /* Paper */
-    --paper-bg: rgba(255, 255, 255, 0.8);
-    --paper-border: rgba(0, 0, 0, 0.05);
-    --paper-border-top: rgba(255, 255, 255, 0.5);
-    --paper-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    --paper-bg: rgba(255, 255, 255, 0.7);
+    --paper-border: rgba(255, 255, 255, 0.4);
+    --paper-border-top: rgba(255, 255, 255, 0.8);
+    --paper-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 10px 15px -3px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset;
 
     /* Inputs */
-    --input-bg: #ffffff;
-    --input-border: #cbd5e1;
+    --input-bg: rgba(255, 255, 255, 0.6);
+    --input-border: rgba(0, 0, 0, 0.1);
     --input-text: #0f172a;
     --input-placeholder: #94a3b8;
     --input-focus-border: var(--accent);
-    --input-focus-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+    --input-focus-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1);
 
     /* Text Specificity */
     --label-text: var(--text-dim);
     --subtitle-text: var(--text-dim);
 
     /* Interactive Elements */
-    --card-bg-inactive: rgba(0, 0, 0, 0.03);
-    --card-border-inactive: rgba(0, 0, 0, 0.1);
-    --icon-inactive: rgba(0, 0, 0, 0.4);
+    --card-bg-inactive: rgba(255, 255, 255, 0.4);
+    --card-border-inactive: rgba(0, 0, 0, 0.06);
+    --icon-inactive: rgba(0, 0, 0, 0.3);
 
     /* Wizard Components */
     --stepper-track: rgba(0, 0, 0, 0.05);
     --stepper-dot-bg: #ffffff;
     --stepper-dot-border: rgba(0, 0, 0, 0.1);
-    --avatar-wrapper-bg: rgba(0, 0, 0, 0.05);
-    --summary-bg: rgba(0, 0, 0, 0.02);
-    --summary-border: rgba(0, 0, 0, 0.05);
+    --avatar-wrapper-bg: rgba(255, 255, 255, 0.5);
+    --summary-bg: rgba(255, 255, 255, 0.3);
+    --summary-border: rgba(0, 0, 0, 0.06);
     --summary-label: var(--text-dim);
     --summary-value: var(--text-main);
 
     /* Atmosphere */
-    --bg-gradient: radial-gradient(circle at 50% 10%, #eef2ff 0%, var(--canvas) 100%);
+    --bg-gradient: radial-gradient(circle at 50% 0%, #e0e7ff 0%, #f3f4f6 100%);
     --glow-color: var(--accent);
-    --glow-opacity: 0.05;
+    --glow-opacity: 0.1;
+
+    /* Semantic Colors */
+    --danger-color: #dc2626;
+    --danger-rgb: 220, 38, 38;
+    --success-color: #16a34a;
+    --success-rgb: 22, 163, 74;
+    --warning-color: #ea580c;
+    --warning-rgb: 234, 88, 12;
+    --info-color: #0284c7;
+    --info-rgb: 2, 132, 199;
+
+    /* Overlays & Shadows */
+    --overlay-bg: rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.15);
 
     /* Geometry */
     --radius: 8px;
@@ -76,7 +98,13 @@
     --panel: #1a1a1a;
     --surface: rgba(36, 36, 36, 0.5);
     --surface-solid: #242424;
+    --surface-hover: rgba(var(--accent-rgb), 0.1);
+    --surface-active: rgba(var(--accent-rgb), 0.2);
     --glass-blur: blur(12px);
+
+    /* Accents */
+    --accent-rgb: 37, 99, 235;
+    /* Default fallback, overridden by JS */
 
     /* Borders & Text */
     --border: #333333;
@@ -120,6 +148,23 @@
     --bg-gradient: radial-gradient(circle at 50% 10%, #1a202c 0%, var(--canvas) 100%);
     --glow-color: var(--accent);
     --glow-opacity: 0.1;
+
+    /* Semantic Colors - Brighter in dark mode */
+    --danger-color: #f87171;
+    --danger-rgb: 248, 113, 113;
+    --success-color: #4ade80;
+    --success-rgb: 74, 222, 128;
+    --warning-color: #fb923c;
+    --warning-rgb: 251, 146, 60;
+    --info-color: #38bdf8;
+    --info-rgb: 56, 189, 248;
+
+    /* Overlays & Shadows - Darker in dark mode */
+    --overlay-bg: rgba(0, 0, 0, 0.6);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 /* Global Reset & Base */

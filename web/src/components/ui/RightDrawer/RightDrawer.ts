@@ -83,11 +83,27 @@ class RightDrawer extends HTMLElement {
         this.render();
     }
 
+    async performLogout() {
+        const csrfMatch = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
+        const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch.split('=')[1]) : '';
+        try {
+            await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken } });
+        } catch (e) { /* ignore */ }
+        document.body.style.opacity = '0';
+        window.location.href = '/login';
+    }
+
     setupListeners() {
         this.shadowRoot!.addEventListener('click', (e: Event) => {
             const target = e.target as HTMLElement;
             if (target.classList.contains('right-drawer__overlay')) {
                 this.close();
+            }
+
+            if (target.closest('#logout-btn')) {
+                e.preventDefault();
+                this.performLogout();
+                return;
             }
 
             const menuItem = target.closest('.right-drawer__menu-item') as HTMLElement;

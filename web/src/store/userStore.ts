@@ -13,7 +13,7 @@ class UserStore {
     }
 
     private loadFromStorage() {
-        const cached = localStorage.getItem('csh_user_cache');
+        const cached = localStorage.getItem('kashboard_user_cache');
         if (cached) {
             try {
                 this.user = JSON.parse(cached);
@@ -27,7 +27,7 @@ class UserStore {
 
     private saveToStorage() {
         if (this.user) {
-            localStorage.setItem('csh_user_cache', JSON.stringify(this.user));
+            localStorage.setItem('kashboard_user_cache', JSON.stringify(this.user));
         }
     }
 
@@ -66,9 +66,9 @@ class UserStore {
                 grid_columns_pc: userData.grid_columns_pc || defaultGridPrefs.grid_columns_pc,
                 grid_columns_tablet: userData.grid_columns_tablet || defaultGridPrefs.grid_columns_tablet,
                 grid_columns_mobile: userData.grid_columns_mobile || defaultGridPrefs.grid_columns_mobile,
-                project_name: userData.project_name || 'CSH Dashboard'
+                project_name: userData.project_name || 'Kashboard'
             },
-            project_name: userData.project_name || 'CSH Dashboard'
+            project_name: userData.project_name || 'Kashboard'
         };
 
         this.applyAesthetics();
@@ -89,6 +89,8 @@ class UserStore {
         if (prefs.accent_color) {
             const hex = this.getAccentHex(prefs.accent_color);
             root.style.setProperty('--accent', hex);
+            // Persist for Login Page
+            localStorage.setItem('kashboard_accent', hex);
         }
 
         // Apply Theme (Light/Dark)
@@ -145,7 +147,8 @@ class UserStore {
             this.applyAesthetics();
             this.notify();
             // @ts-ignore
-            if (window.notifier) window.notifier.show('Failed to save settings', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.save_error'), 'error');
+            throw e;
         }
     }
 
@@ -156,11 +159,11 @@ class UserStore {
             this.user = { ...this.user, ...data };
             this.notify();
             // @ts-ignore
-            if (window.notifier) window.notifier.show('Profile updated');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.profile_updated'));
         } catch (e) {
             console.error('[UserStore] Update profile failed', e);
             // @ts-ignore
-            if (window.notifier) window.notifier.show('Failed to update profile', 'error');
+            if (window.notifier) window.notifier.show(i18n.t('notifier.profile_error'), 'error');
         }
     }
 
@@ -186,7 +189,7 @@ class UserStore {
             // Don't show error immediately on fetch fail if we have cached data
             if (!this.user) {
                 // @ts-ignore
-                if (window.notifier) window.notifier.show('Session expired or server unreachable', 'error');
+                if (window.notifier) window.notifier.show(i18n.t('auth.session_expired'), 'error');
             }
         }
     }

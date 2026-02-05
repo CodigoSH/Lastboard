@@ -16,32 +16,51 @@ interface DashboardState {
     } | null;
 }
 
-const STORAGE_KEY = 'kashboard-items';
-
-// Mock data for initial dashboard state
+// Mock data used only as a last-resort offline fallback when no user-scoped
+// cache exists AND the backend is unreachable.
 const INITIAL_ITEMS: GridItem[] = [
-    { id: 1, type: 'bookmark', x: 1, y: 1, w: 1, h: 1, content: { label: 'Proxmox', url: '#', icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/proxmox.png', iconName: 'proxmox' } },
-    { id: 2, type: 'bookmark', x: 2, y: 1, w: 1, h: 1, content: { label: 'TrueNAS', url: '#', icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/truenas.png', iconName: 'truenas' } },
-    { id: 3, type: 'bookmark', x: 3, y: 1, w: 1, h: 1, content: { label: 'Cloudflare', url: '#', icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cloudflare.png', iconName: 'cloudflare' } },
-    { id: 4, type: 'bookmark', x: 1, y: 2, w: 1, h: 1, content: { label: 'GitHub', url: '#', icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/github.png', iconName: 'github' } },
-    { id: 5, type: 'bookmark', x: 2, y: 2, w: 1, h: 1, content: { label: 'VS Code', url: '#', icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/vscode.png', iconName: 'vscode' } },
-    { id: 6, type: 'bookmark', x: 3, y: 2, w: 1, h: 1, content: { label: 'Documentation', url: '#', icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/docs.png', iconName: 'docs' } }
+    {
+        id: 1,
+        type: 'bookmark',
+        x: 1, y: 1, w: 1, h: 1,
+        content: {
+            label: 'CodigoSH',
+            url: 'https://github.com/codigosh/Kashboard',
+            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png',
+            iconName: 'git'
+        }
+    }
 ];
 
 class DashboardStore {
     private state: DashboardState = {
         isEditing: false,
-        items: [...INITIAL_ITEMS], // Initialize with mock data
+        items: [],
         searchQuery: '',
         isOffline: false,
         updateAvailable: false,
         stats: null
     };
     private listeners: Listener[] = [];
+    private userId: number = 0;
+
+    // Returns a cache key scoped to the authenticated user.  Falls back to
+    // the legacy unscoped key before setUserId() is called (edge case).
+    private getStorageKey(): string {
+        return this.userId ? `kashboard-items-${this.userId}` : 'kashboard-items';
+    }
+
+    // Called from index.ts after userStore.fetchUser() resolves.  Scopes the
+    // localStorage cache to this user so that a different user logging into
+    // the same browser never sees stale items.
+    setUserId(id: number) {
+        this.userId = id;
+    }
 
     constructor() {
-        // Try to load from localStorage on initialization
-        this.loadFromLocalStorage();
+        // Item cache is NOT pre-loaded here — it may contain another user's
+        // data.  fetchItems() loads the correct set from the backend and uses
+        // a user-scoped cache key for the offline fallback.
         this.initSocket();
         this.checkSystemUpdate();
     }
@@ -86,7 +105,7 @@ class DashboardStore {
             }
 
             const serialized = JSON.stringify(this.state.items);
-            localStorage.setItem(STORAGE_KEY, serialized);
+            localStorage.setItem(this.getStorageKey(), serialized);
             // console.log('[DashboardStore] Saved to localStorage, count:', this.state.items.length);
         } catch (error) {
             console.error('[DashboardStore] Failed to save to localStorage', error);
@@ -95,7 +114,7 @@ class DashboardStore {
 
     private loadFromLocalStorage() {
         try {
-            const serialized = localStorage.getItem(STORAGE_KEY);
+            const serialized = localStorage.getItem(this.getStorageKey());
             if (serialized) {
                 const items = JSON.parse(serialized);
                 if (Array.isArray(items) && items.length > 0) {
@@ -156,10 +175,10 @@ class DashboardStore {
             // Try to fetch from backend first
             try {
                 const items = await dashboardService.getItems();
-                if (Array.isArray(items) && items.length > 0) {
-                    // CSH-FIX: Backend might strip parent_id (Go struct missing field?).
+                if (Array.isArray(items)) {
+                    // KASHBOARD-FIX: Backend might strip parent_id (Go struct missing field?).
                     // We merge local parent_id if backend one is missing.
-                    const serializedLocal = localStorage.getItem(STORAGE_KEY);
+                    const serializedLocal = localStorage.getItem(this.getStorageKey());
                     if (serializedLocal) {
                         const localItems = JSON.parse(serializedLocal) as GridItem[];
                         items.forEach(backendItem => {
@@ -177,14 +196,14 @@ class DashboardStore {
                     this.saveToLocalStorage();
                     // console.log('[DashboardStore] Loaded from backend (merged local parent_id), count:', items.length);
                 } else {
-                    throw new Error('Backend returned empty or invalid data');
+                    throw new Error('Backend returned invalid data');
                 }
             } catch (apiError) {
                 // console.log('[DashboardStore] Backend not available, checking localStorage');
                 this.state.isOffline = true;
 
                 // Try localStorage next
-                const serialized = localStorage.getItem(STORAGE_KEY);
+                const serialized = localStorage.getItem(this.getStorageKey());
                 if (serialized) {
                     const storedItems = JSON.parse(serialized);
                     if (Array.isArray(storedItems) && storedItems.length > 0) {
@@ -216,8 +235,7 @@ class DashboardStore {
             this.ensureItemsIsArray();
 
             // Optimistic update
-            // Use loose equality to handle potential string/number mismatches
-            const itemIndex = this.state.items.findIndex(item => item.id == updatedItem.id);
+            const itemIndex = this.state.items.findIndex(item => item.id === updatedItem.id);
 
             // console.log('[DashboardStore] Updating item', updatedItem.id, 'Found index:', itemIndex);
 
@@ -271,37 +289,35 @@ class DashboardStore {
     }
 
     private async reflowChildren(parentId: number, containerWidth: number) {
-        // Get fresh state
-        import('../services/collisionService').then(async ({ collisionService }) => {
-            const children = this.state.items
-                .filter(b => b.parent_id === parentId)
-                .sort((a, b) => (a.y - b.y) || (a.x - b.x));
+        const { collisionService } = await import('../services/collisionService');
 
-            if (children.length === 0) return;
+        const children = this.state.items
+            .filter(b => b.parent_id === parentId)
+            .sort((a, b) => (a.y - b.y) || (a.x - b.x));
 
-            console.log(`[DashboardStore] Reflowing ${children.length} children for parent ${parentId}`);
+        if (children.length === 0) return;
 
-            const placedItems: { x: number, y: number, w: number, h: number }[] = [];
+        console.log(`[DashboardStore] Reflowing ${children.length} children for parent ${parentId}`);
 
-            for (const child of children) {
-                const slot = collisionService.findAvailableSlot(child.w, child.h, placedItems, containerWidth);
+        const placedItems: { x: number, y: number, w: number, h: number }[] = [];
 
-                placedItems.push({ x: slot.x, y: slot.y, w: child.w, h: child.h });
+        for (const child of children) {
+            const slot = collisionService.findAvailableSlot(child.w, child.h, placedItems, containerWidth);
 
-                if (child.x !== slot.x || child.y !== slot.y) {
-                    console.log(`[DashboardStore] Reflow moving child ${child.id} to ${slot.x},${slot.y}`);
-                    // Await each update to ensure sequence (though parallel works too usually)
-                    await this.updateItem({
-                        id: child.id,
-                        x: slot.x,
-                        y: slot.y
-                    });
-                }
+            placedItems.push({ x: slot.x, y: slot.y, w: child.w, h: child.h });
+
+            if (child.x !== slot.x || child.y !== slot.y) {
+                console.log(`[DashboardStore] Reflow moving child ${child.id} to ${slot.x},${slot.y}`);
+                await this.updateItem({
+                    id: child.id,
+                    x: slot.x,
+                    y: slot.y
+                });
             }
-        });
+        }
     }
 
-    async addItem(newItem: Omit<GridItem, 'id' | 'created_at'>) {
+    async addItem(newItem: Omit<GridItem, 'id' | 'created_at'>): Promise<GridItem | undefined> {
         try {
             console.log('[DashboardStore] Adding item:', newItem);
             this.ensureItemsIsArray();
@@ -323,6 +339,7 @@ class DashboardStore {
                 console.log('[DashboardStore] Item added (Synced), new length:', this.state.items.length);
                 this.saveToLocalStorage();
                 this.notify();
+                return createdItem;
             } catch (apiError) {
                 // If backend fails, we do NOT add it optimistically for widgets/new items to avoid "ghost" items
                 // that can't be saved. Or we can fallback to offline mode if truly offline.
@@ -335,9 +352,11 @@ class DashboardStore {
                 // For safety in this "Fix" task, we will NOT add it if it fails validation (400).
                 // If it's a network error (isOffline usually true), we could allow it,
                 // but let's stick to "wait for success" as requested.
+                return undefined;
             }
         } catch (error) {
             console.error('[DashboardStore] Error adding item', error);
+            return undefined;
         }
     }
 
@@ -346,8 +365,7 @@ class DashboardStore {
             this.ensureItemsIsArray();
 
             // Optimistic delete
-            // Use loose equality to handle potential string/number mismatches from API
-            const itemIndex = this.state.items.findIndex(item => item.id == id);
+            const itemIndex = this.state.items.findIndex(item => item.id === id);
 
             console.log('[DashboardStore] Deleting item', id, 'Found index:', itemIndex);
 

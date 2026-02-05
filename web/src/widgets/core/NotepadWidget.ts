@@ -52,14 +52,14 @@ export class NotepadWidget extends LitElement {
             flex-direction: column;
             width: 100%;
             height: 100%;
-            background: rgba(30, 30, 35, 0.7);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             overflow: hidden;
-            color: #fff;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
             position: relative;
         }
@@ -109,7 +109,7 @@ export class NotepadWidget extends LitElement {
         button {
             background: transparent;
             border: none;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-dim);
             cursor: pointer;
             padding: 4px;
             border-radius: 4px;
@@ -119,7 +119,7 @@ export class NotepadWidget extends LitElement {
             min-width: 24px;
             height: 24px;
         }
-        button:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        button:hover { background: var(--surface-hover); color: var(--text-main); }
         button svg { width: 16px; height: 16px; }
         button.text-icon { font-weight: 700; font-size: 11px; width: auto; padding: 0 6px;}
 
@@ -141,7 +141,7 @@ export class NotepadWidget extends LitElement {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 14px;
             line-height: 1.6;
-            color: #ffffff !important;
+            color: var(--text-main) !important;
             word-break: break-word;
             outline: none;
             display: block;
@@ -364,11 +364,96 @@ export class NotepadWidget extends LitElement {
         toolbar.scrollLeft += e.deltaY;
     }
 
-    private insertChecklist() {
+    private insertChecklist(text: string | null = null) {
         // Simple HTML checklist implementation
         const id = 'chk-' + Math.random().toString(36).substr(2, 9);
-        const html = `<div style="display:flex; align-items:center; margin: 4px 0;"><input type="checkbox" id="${id}" style="margin-right:8px;"><label for="${id}">${i18n.t('widget.notepad.prompt.new_item')}</label></div>`;
+        const labelText = text !== null ? text : i18n.t('widget.notepad.prompt.new_item');
+        // Use non-breaking space if empty to ensure cursor focusability? 
+        // Actually empty label is fine if we type immediately.
+        const html = `<div style="display:flex; align-items:center; margin: 4px 0;"><input type="checkbox" id="${id}" style="margin-right:8px;"><label for="${id}">${labelText}</label></div>`;
         this.exec('insertHTML', html);
+    }
+
+    private handleEditorKeydown(e: KeyboardEvent) {
+        if (e.key === 'Enter') {
+            const selection = window.getSelection();
+            if (!selection || !selection.rangeCount) return;
+
+            let currentNode: Node | null = selection.getRangeAt(0).commonAncestorContainer;
+            if (currentNode.nodeType === Node.TEXT_NODE) currentNode = currentNode.parentNode;
+
+            // Traverse up to find the checklist row
+            let checklistRow: HTMLElement | null = null;
+            while (currentNode && currentNode !== this.editorElement) {
+                if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                    const el = currentNode as HTMLElement;
+                    // Detect our specific checklist structure: div with flex + checkbox
+                    if (el.tagName === 'DIV' && el.querySelector('input[type="checkbox"]')) {
+                        checklistRow = el;
+                        break;
+                    }
+                }
+                currentNode = currentNode.parentNode;
+            }
+
+            if (checklistRow) {
+                // Check if the current line is empty (excluding the checkbox)
+                const textContent = checklistRow.innerText.trim();
+
+                if (!textContent) {
+                    // Empty item: Exit checklist mode
+                    e.preventDefault();
+                    // We want to remove this empty row and insert a standard paragraph after it
+                    const p = document.createElement('div'); // Div acts as paragraph in contenteditable usually
+                    p.innerHTML = '<br>'; // Placeholder to allow focus
+
+                    if (checklistRow.parentNode) {
+                        checklistRow.parentNode.insertBefore(p, checklistRow.nextSibling);
+                        checklistRow.remove();
+                    }
+
+                    // Focus the new paragraph
+                    const range = document.createRange();
+                    range.selectNodeContents(p);
+                    range.collapse(true); // Start of line
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+
+                } else {
+                    // Non-empty item: Insert new checkbox below
+                    e.preventDefault();
+
+                    // Create new structure per insertChecklist logic
+                    const id = 'chk-' + Math.random().toString(36).substr(2, 9);
+                    const newRow = document.createElement('div');
+                    Object.assign(newRow.style, { display: 'flex', alignItems: 'center', margin: '4px 0' });
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = id;
+                    checkbox.style.marginRight = '8px';
+
+                    const label = document.createElement('label');
+                    label.htmlFor = id;
+                    label.textContent = '\u200B'; // Zero-width space to ensure caret has a place to live
+
+                    newRow.appendChild(checkbox);
+                    newRow.appendChild(label);
+
+                    // Insert After current row
+                    if (checklistRow.parentNode) {
+                        checklistRow.parentNode.insertBefore(newRow, checklistRow.nextSibling);
+                    }
+
+                    // Move Caret to new label
+                    const range = document.createRange();
+                    range.selectNodeContents(label);
+                    range.collapse(false); // End of text (which is just zero-width space)
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }
+        }
     }
 
     private insertCode() {
@@ -381,13 +466,12 @@ export class NotepadWidget extends LitElement {
     render() {
         try {
             // --- VIEW MODE ---
-            // --- VIEW MODE ---
             if (!this.isInternalEditing) {
                 return html`
                     <div 
                         class="viewer" 
-                        style="flex: 1; width: 100%; height: 100%; min-height: 100px; color: #ffffff !important; overflow-y: auto; padding: 16px; word-wrap: break-word;"
-                        .innerHTML="${this.content || `<span style='opacity:0.5; font-style:italic'>${i18n.t('widget.notepad.placeholder')}</span>`}"
+                        style="flex: 1; width: 100%; height: 100%; min-height: 100px; color: var(--text-main) !important; overflow-y: auto; padding: 16px; word-wrap: break-word;"
+                        .innerHTML="${this.content || `<span style='opacity:0.5; font-style:italic; color: var(--text-dim);'>${i18n.t('widget.notepad.placeholder')}</span>`}"
                     ></div>
 
                     <button class="fab-btn" @click="${() => this.isInternalEditing = true}" style="position: absolute; bottom: 10px; right: 10px; z-index: 10;">
@@ -444,6 +528,7 @@ export class NotepadWidget extends LitElement {
 
                     <!-- Note: using .innerHTML binding for initial content, contenteditable will manage changes -->
                     <div class="content-area editor" 
+                         @keydown="${this.handleEditorKeydown}"
                          contenteditable="true" 
                          spellcheck="false"
                          data-placeholder="${i18n.t('widget.notepad.placeholder')}"

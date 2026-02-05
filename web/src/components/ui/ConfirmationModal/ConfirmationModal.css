@@ -1,51 +1,39 @@
 :host {
-    display: block;
-    z-index: 9999;
+    display: contents;
 }
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-}
-
-.modal-overlay--active {
-    opacity: 1;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    pointer-events: auto;
-}
-
-.modal-content {
-    background: rgba(30, 30, 35, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 32px;
+dialog {
+    background: var(--surface-solid);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
     width: 90%;
     max-width: 420px;
-    box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.5),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-    transform: scale(0.9) translateY(20px);
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--paper-shadow);
 }
 
-.modal-overlay--active .modal-content {
-    transform: scale(1) translateY(0);
+dialog::backdrop {
+    background: var(--overlay-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+dialog[open] {
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .modal-header {
@@ -53,22 +41,23 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
 }
 
 .modal-title {
     margin: 0;
-    font-size: 22px;
-    font-weight: 800;
+    font-size: 18px;
+    font-weight: 600;
     color: var(--text-main);
-    letter-spacing: -0.02em;
 }
 
 .modal-close {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border: 1px solid var(--border);
     color: var(--text-dim);
     padding: 8px;
-    border-radius: 12px;
+    border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
@@ -79,73 +68,21 @@
 }
 
 .modal-close:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(var(--accent-rgb), 0.1);
     transform: rotate(90deg);
-    color: #ff4757;
-    border-color: rgba(255, 71, 87, 0.3);
+    color: var(--accent);
+    border-color: rgba(var(--accent-rgb), 0.3);
 }
 
 .modal-message {
-    margin: 0 0 32px 0;
-    font-size: 15px;
+    margin: 0 0 28px 0;
+    font-size: 14px;
     color: var(--text-dim);
     line-height: 1.6;
-    font-weight: 500;
-    text-align: left;
 }
 
 .modal-actions {
     display: flex;
     gap: 12px;
-}
-
-.modal-actions button {
-    flex: 1;
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid transparent;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.modal-actions .btn-confirm {
-    flex: 1;
-    padding: 14px 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: linear-gradient(135deg, #ff4757, #ff6b81);
-    color: white;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-}
-
-.modal-actions .btn-confirm:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
-    filter: brightness(1.1);
-}
-
-.btn-confirm {
-    background: linear-gradient(135deg, #ff4757, #ff6b81);
-    color: white;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-}
-
-.btn-confirm:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
-    filter: brightness(1.1);
-}
-
-.btn-confirm:active {
-    transform: translateY(0);
+    justify-content: flex-end;
 }

@@ -11,6 +11,8 @@ class SocketService {
     private socket: WebSocket | null = null;
     private listeners: ((stats: SystemStats) => void)[] = [];
     private reconnectTimeout: any;
+    private reconnectDelay: number = 1000;
+    private static readonly MAX_DELAY = 30000;
 
     constructor() {
         this.connect();
@@ -22,6 +24,11 @@ class SocketService {
         const url = `${protocol}//${host}/ws`;
 
         this.socket = new WebSocket(url);
+
+        this.socket.onopen = () => {
+            // Reset backoff on successful connection
+            this.reconnectDelay = 1000;
+        };
 
         this.socket.onmessage = (event) => {
             try {
@@ -45,7 +52,18 @@ class SocketService {
 
     private scheduleReconnect() {
         if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
-        this.reconnectTimeout = setTimeout(() => this.connect(), 5000);
+        const jitter = Math.random() * this.reconnectDelay * 0.5;
+        this.reconnectTimeout = setTimeout(() => this.connect(), this.reconnectDelay + jitter);
+        this.reconnectDelay = Math.min(this.reconnectDelay * 2, SocketService.MAX_DELAY);
+    }
+
+    destroy() {
+        if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+        if (this.socket) {
+            this.socket.onclose = null;
+            this.socket.close();
+            this.socket = null;
+        }
     }
 
     subscribe(listener: (stats: SystemStats) => void) {

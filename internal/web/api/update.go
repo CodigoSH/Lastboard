@@ -8,8 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -114,7 +117,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	// Verify Admin
 	if !h.isAdmin(r) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
 
@@ -127,22 +130,27 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !strings.HasPrefix(req.AssetUrl, "https://github.com/codigosh/Kashboard/releases/") {
+	parsedURL, err := url.Parse(req.AssetUrl)
+	if err != nil || parsedURL.Host != "github.com" || !strings.HasPrefix(path.Clean(parsedURL.Path), "/codigosh/Kashboard/releases/") {
 		http.Error(w, "Invalid asset URL", http.StatusBadRequest)
 		return
 	}
 
 	tmpFile := filepath.Join(os.TempDir(), "dashboard_update.tar.gz")
+	defer os.Remove(tmpFile)
 
 	// 2. Download Binary
 	if err := h.downloadFile(req.AssetUrl, tmpFile); err != nil {
-		http.Error(w, "Download failed: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "notifier.update_failed", http.StatusInternalServerError)
 		return
 	}
 
 	// 3. Download and verify checksum (mandatory)
-	checksumUrl := strings.ReplaceAll(req.AssetUrl, filepath.Base(req.AssetUrl), "checksums.txt")
+	checksumCopy := *parsedURL
+	checksumCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt"
+	checksumUrl := checksumCopy.String()
 	checksumFile := filepath.Join(os.TempDir(), "checksums.txt")
+	defer os.Remove(checksumFile)
 
 	if err := h.downloadFile(checksumUrl, checksumFile); err != nil {
 		http.Error(w, "Failed to download checksums.txt", http.StatusInternalServerError)
@@ -150,31 +158,29 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
-		http.Error(w, "Checksum verification failed", http.StatusInternalServerError)
+		http.Error(w, "notifier.update_failed", http.StatusInternalServerError)
 		return
 	}
 
-	// 5. Extract (if tar.gz)
-	binaryPath := filepath.Join(os.TempDir(), "dashboard_new")
-	if err := h.extractTarGz(tmpFile, binaryPath); err != nil {
-		// Attempt direct binary fallback if not tar.gz? No, follow strict requirement.
-		http.Error(w, "Extraction failed: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// 6. Atomic Swap (Robust)
+	// Resolve current executable path (needed for binary name matching and atomic swap)
 	currentExe, err := os.Executable()
 	if err != nil {
 		http.Error(w, "Could not determine executable path", http.StatusInternalServerError)
 		return
 	}
-
-	// Resolve symlinks just in case
-	realCurrentExe, err := filepath.EvalSymlinks(currentExe)
-	if err == nil {
-		currentExe = realCurrentExe
+	if realExe, err := filepath.EvalSymlinks(currentExe); err == nil {
+		currentExe = realExe
 	}
 
+	// 5. Extract
+	binaryPath := filepath.Join(os.TempDir(), "dashboard_new")
+	defer os.Remove(binaryPath)
+	if err := h.extractTarGz(tmpFile, binaryPath, filepath.Base(currentExe)); err != nil {
+		http.Error(w, "Extraction failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 6. Atomic Swap
 	oldExe := currentExe + ".old"
 	os.Remove(oldExe) // clear previous backup if any
 
@@ -204,7 +210,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Update installed. Restarting..."})
+	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "notifier.update_verified"})
 }
 
 // moveFile tries os.Rename, falls back to Copy+Delete for cross-device
@@ -236,6 +242,11 @@ func (h *UpdateHandler) moveFile(src, dst string) error {
 		return err
 	}
 
+	// Persist to disk before closing
+	if err = out.Sync(); err != nil {
+		return err
+	}
+
 	// Persist Permissions
 	si, err := os.Stat(src)
 	if err == nil {
@@ -260,12 +271,11 @@ func (h *UpdateHandler) isAdmin(r *http.Request) bool {
 	var role string
 	err := h.DB.QueryRow("SELECT role FROM users WHERE username = ?", username).Scan(&role)
 	if err != nil {
-		fmt.Printf("Error checking role for %s: %v\n", username, err)
+		log.Printf("Error checking role for %s: %v", username, err)
 		return false
 	}
 
-	rLower := strings.ToLower(role)
-	return rLower == "admin" || rLower == "administrator"
+	return strings.ToLower(role) == "admin"
 }
 
 func (h *UpdateHandler) downloadFile(url string, dest string) error {
@@ -285,7 +295,7 @@ func (h *UpdateHandler) downloadFile(url string, dest string) error {
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(out, io.LimitReader(resp.Body, 200*1024*1024))
 	return err
 }
 
@@ -309,18 +319,18 @@ func (h *UpdateHandler) verifyChecksum(binaryPath, checksumPath string) error {
 		return err
 	}
 
-	// Search for the checksum in the checksum file
-	// We rely on the fact that we trust the GitHub release URL.
-	// If the hash of our download exists in the trusted checksums.txt, it's valid.
-
-	if strings.Contains(string(content), localHash) {
-		return nil
+	// Verify by exact match against one of the lines in the trusted checksums.txt
+	for _, line := range strings.Split(strings.TrimSpace(string(content)), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) >= 1 && fields[0] == localHash {
+			return nil
+		}
 	}
 
 	return fmt.Errorf("checksum mismatch. Local: %s", localHash)
 }
 
-func (h *UpdateHandler) extractTarGz(archivePath, destPath string) error {
+func (h *UpdateHandler) extractTarGz(archivePath, destPath, expectedName string) error {
 	file, err := os.Open(archivePath)
 	if err != nil {
 		return err
@@ -344,23 +354,26 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath string) error {
 			return err
 		}
 
-		// We look for the main binary. Usually named 'dashboard' or 'kashboard'.
-		// We'll extract the first executable regular file we find.
-		if header.Typeflag == tar.TypeReg {
-			// Extract
-			out, err := os.Create(destPath)
-			if err != nil {
-				return err
-			}
-			if _, err := io.Copy(out, tr); err != nil {
-				out.Close()
-				return err
-			}
-			out.Close()
-			return nil // Found and extracted one file.
+		if header.Typeflag != tar.TypeReg {
+			continue
 		}
+		// Match the expected binary name; skip other files in the archive
+		if expectedName != "" && filepath.Base(header.Name) != expectedName {
+			continue
+		}
+
+		out, err := os.Create(destPath)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(out, tr); err != nil {
+			out.Close()
+			return err
+		}
+		out.Close()
+		return nil
 	}
-	return fmt.Errorf("no binary found in archive")
+	return fmt.Errorf("binary '%s' not found in archive", expectedName)
 }
 
 func (h *UpdateHandler) restartSelf(exePath string) {
@@ -368,7 +381,7 @@ func (h *UpdateHandler) restartSelf(exePath string) {
 	args := os.Args
 
 	if err := syscall.Exec(exePath, args, env); err != nil {
-		fmt.Printf("Failed to restart: %v\n", err)
+		log.Printf("Failed to restart: %v", err)
 	}
 }
 
