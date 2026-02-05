@@ -128,7 +128,22 @@ class BookmarkGrid extends HTMLElement {
 
         statusService.start();
         this._unsubscribeI18n = i18n.subscribe(() => this.render());
+
+        // FIX: Subscribe to UserStore to react to Grid Column changes
+        // ResizeObserver doesn't fire when CSS variables change, so we need to
+        // manually trigger metric updates when preferences change.
+        import('../../../store/userStore').then(({ userStore }) => {
+            this._unsubscribeUser = userStore.subscribe(() => {
+                // Wait for the DOM to update styles from UserStore application
+                requestAnimationFrame(() => {
+                    this.updateGridMetrics();
+                    this.render(); // Re-render to apply new grid positions/sizes if logic depends on cols
+                });
+            });
+        });
     }
+
+    private _unsubscribeUser: (() => void) | null = null;
 
     setupActionListeners() {
         const root = this.shadowRoot!;
@@ -210,6 +225,7 @@ class BookmarkGrid extends HTMLElement {
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
+        if (this._unsubscribeUser) this._unsubscribeUser();
         if (this._resizeObserver) this._resizeObserver.disconnect();
         window.removeEventListener('mousemove', this._boundMouseMove);
         window.removeEventListener('mouseup', this._boundMouseUp);
@@ -222,8 +238,11 @@ class BookmarkGrid extends HTMLElement {
         const gridStyle = getComputedStyle(this);
         const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
         const gridCols = gridColsStr ? parseInt(gridColsStr, 10) : 12;
-        const gapStr = gridStyle.getPropertyValue('--grid-gap').trim();
-        const gap = gapStr ? parseInt(gapStr, 10) : 16;
+
+        // FIX: Read computed gap property instead of raw variable to handle clamp()
+        // getComputedStyle returns resolved px values for 'gap'/'column-gap'
+        const gapStr = gridStyle.columnGap || gridStyle.gap || '16px';
+        const gap = parseFloat(gapStr) || 16;
 
         const colWidth = (gridRect.width - ((gridCols - 1) * gap)) / gridCols;
 
@@ -638,8 +657,9 @@ class BookmarkGrid extends HTMLElement {
 
         // Calculate Pixel Dimensions
         const gridStyle = getComputedStyle(this);
-        const gapStr = gridStyle.getPropertyValue('--grid-gap').trim();
-        const gap = gapStr ? parseInt(gapStr, 10) : 16;
+        // FIX: Read computed gap property instead of raw variable to handle clamp()
+        const gapStr = gridStyle.columnGap || gridStyle.gap || '16px';
+        const gap = parseFloat(gapStr) || 16;
 
         const gridRect = this.getBoundingClientRect();
         const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();

@@ -247,9 +247,10 @@
   "settings.new_version_notif": "نیا ورژن دستیاب ہے!",
   "settings.up_to_date_docker_msg": "آپ مکمل طور پر اپ ٹو ڈیٹ ہیں۔",
   "general.changelog": "تبدیلی لاگ",
+  "section.placeholder_title": "سیکشن کا عنوان",
   "notifier.please_wait": "براہ کرم انتظار کریں جبکہ سسٹم ری سیٹ ہو رہا ہے...",
   "setup.error_username": "صارف کا نام کم از کم 3 حروف کا ہونا چاہیے",
-  "setup.error_password": "پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے",
-  "setup.error_connection": "کنکشن کی خرابی۔ براہ کرم سرور لاگز چیک کریں۔",
+  "setup.error_password": "پاس ورڈ بہت مختصر ہے (کم از کم 4 حروف)",
+  "setup.error_connection": "کنکشن ناکام ہوگیا۔ لاگز چیک کریں۔",
   "widget.notepad.name": "نوٹس"
 }

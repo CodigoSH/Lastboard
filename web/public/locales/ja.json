@@ -247,9 +247,10 @@
   "settings.new_version_notif": "新バージョンが利用可能です！",
   "settings.up_to_date_docker_msg": "最新の状態です。",
   "general.changelog": "変更履歴",
+  "section.placeholder_title": "セクションのタイトル",
   "notifier.please_wait": "システムがリセットされるまでお待ちください...",
   "setup.error_username": "ユーザー名は3文字以上である必要があります",
-  "setup.error_password": "パスワードは8文字以上である必要があります",
-  "setup.error_connection": "接続エラー。サーバーログを確認してください。",
+  "setup.error_password": "パスワードが短すぎます（最低4文字）",
+  "setup.error_connection": "接続に失敗しました。ログを確認してください。",
   "widget.notepad.name": "メモ"
 }

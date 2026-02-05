@@ -196,7 +196,6 @@
   "status.checking": "Checking...",
   "status.unreachable": "Offline / Unreachable",
   "widget.config.title": "Configurar Widget",
-  "widget.add_subtitle": "Selecciona un widget para añadir",
   "widget.config.no_config": "No configuration available for this item.",
   "section.leave_empty": "Dejar vacío para ocultar el título.",
   "section.edit_title": "Editar Sección",
@@ -210,6 +209,7 @@
   "widget.telemetry.ram": "RAM",
   "widget.telemetry.temp": "TEMP",
   "widget.add_title": "Añadir Widget",
+  "widget.add_subtitle": "Selecciona un widget para añadir",
   "general.restore": "Restaurar",
   "widget.notepad.placeholder": "Empieza a escribir...",
   "widget.notepad.tool.undo": "Deshacer",
@@ -247,9 +247,10 @@
   "settings.new_version_notif": "¡Nueva versión disponible!",
   "settings.up_to_date_docker_msg": "Estás estrictamente al día.",
   "general.changelog": "Registro de cambios",
+  "section.placeholder_title": "Título de la Sección",
   "notifier.please_wait": "Por favor espere mientras el sistema se restablece...",
   "setup.error_username": "El usuario debe tener al menos 3 caracteres",
-  "setup.error_password": "La contraseña debe tener al menos 8 caracteres",
-  "setup.error_connection": "Error de conexión. Revisa los registros del servidor.",
+  "setup.error_password": "Contraseña demasiado corta (mín. 4 caracteres)",
+  "setup.error_connection": "Falló la conexión. Revise los registros.",
   "widget.notepad.name": "Notas"
 }

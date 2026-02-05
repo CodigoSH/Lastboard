@@ -331,6 +331,31 @@ class DashboardStore {
                     payload.url = '';
                 }
 
+                // FIX: Use user's current grid preferences to find slot
+                // Dynamic Grid Width Detection
+                const { userStore } = await import('./userStore');
+                const user = userStore.getUser();
+                const prefs = user?.preferences;
+
+                // Simple heuristic: if window width < 640 use mobile, < 1024 use tablet, else PC
+                // This mimics the CSS media queries in logic
+                let gridWidth = 12;
+                if (window.innerWidth <= 640) {
+                    gridWidth = prefs?.grid_columns_mobile || 2;
+                } else if (window.innerWidth <= 1024) {
+                    gridWidth = prefs?.grid_columns_tablet || 4;
+                } else {
+                    gridWidth = prefs?.grid_columns_pc || 12; // Use user's PC pref or default 12
+                }
+
+                if (!payload.x || !payload.y) {
+                    const { collisionService } = await import('../services/collisionService');
+                    // We need to pass the CURRENT items to find a slot
+                    const slot = collisionService.findFirstAvailableSlot(payload.w || 1, payload.h || 1, this.state.items, gridWidth);
+                    payload.x = slot.x;
+                    payload.y = slot.y;
+                }
+
                 const createdItem = await dashboardService.createItem(payload);
                 this.state.isOffline = false;
 

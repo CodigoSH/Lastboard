@@ -1,13 +1,16 @@
 :host {
     /* Grid columns from user preferences */
     --current-grid-cols: var(--grid-columns-pc, 9);
-    --grid-gap: 12px;
+    /* Responsive gap: shrinks on small screens/dense grids */
+    /* clamp(MIN, PREFERRED, MAX) */
+    --grid-gap: clamp(6px, 1.5cqmin, 24px);
 
     display: grid;
     /* 1. Use 1fr to fill available width dynamically */
     grid-template-columns: repeat(var(--current-grid-cols), 1fr);
     /* 2. Enforce minimum row height, but allow expansion */
-    grid-auto-rows: var(--row-height, minmax(100px, auto));
+    grid-auto-rows: var(--row-height, minmax(80px, auto));
+    /* Reduced min-height slightly */
     gap: var(--grid-gap);
 
     /* 3. Force full width */
@@ -116,7 +119,8 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 12px !important;
+    /* Responsive Padding: clamp(MIN, PREFERRED, MAX) */
+    padding: clamp(4px, 2cqmin, 12px) !important;
     position: relative;
     /* CRITICAL: Enforce square aspect ratio */
     aspect-ratio: 1 / 1;
@@ -135,7 +139,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(8px, 4cqmin, 24px);
+    /* Responsive Gap between icon and text */
+    gap: clamp(4px, 3cqmin, 16px);
     text-decoration: none;
     color: var(--text-main);
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
@@ -305,8 +310,9 @@
 /* Edit Mode Grid Guide - (Visuals removed for cleanliness) */
 
 .bookmark-grid__icon-container {
-    width: clamp(48px, 50cqmin, 180px);
-    height: clamp(48px, 50cqmin, 180px);
+    /* Responsive ICON Size: Was 48px MIN, now 32px to allow shrinking */
+    width: clamp(32px, 40cqmin, 180px);
+    height: clamp(32px, 40cqmin, 180px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -322,11 +328,13 @@
 }
 
 .bookmark-grid__label {
-    font-size: clamp(14px, 10cqmin, 32px);
+    /* Responsive Font Size: Was 14px MIN, now 11px */
+    font-size: clamp(11px, 8cqmin, 32px);
     font-weight: 600;
     text-align: center;
     line-height: 1.2;
-    padding: 0 8px;
+    padding: 0 4px;
+    /* Reduced side padding */
     font-family: var(--font-sans);
 }
 
