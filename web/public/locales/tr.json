@@ -247,9 +247,10 @@
   "settings.new_version_notif": "Yeni versiyon mevcut!",
   "settings.up_to_date_docker_msg": "Tamamen güncelsiniz.",
   "general.changelog": "Değişiklik Günlüğü",
+  "section.placeholder_title": "Bölüm Başlığı",
   "notifier.please_wait": "Sistem sıfırlanırken lütfen bekleyin...",
   "setup.error_username": "Kullanıcı adı en az 3 karakter olmalıdır",
-  "setup.error_password": "Şifre en az 8 karakter olmalıdır",
-  "setup.error_connection": "Bağlantı Hatası. Lütfen sunucu günlüklerini kontrol edin.",
+  "setup.error_password": "Şifre çok kısa (min 4 karakter)",
+  "setup.error_connection": "Bağlantı başarısız. Günlükleri kontrol edin.",
   "widget.notepad.name": "Notlar"
 }

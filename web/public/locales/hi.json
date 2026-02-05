@@ -247,9 +247,10 @@
   "settings.new_version_notif": "नया संस्करण उपलब्ध है!",
   "settings.up_to_date_docker_msg": "आप पूरी तरह से अपडेट हैं।",
   "general.changelog": "परिवर्तन लॉग",
+  "section.placeholder_title": "अनुभाग शीर्षक",
   "notifier.please_wait": "कृपया प्रतीक्षा करें जब तक सिस्टम रीसेट हो रहा है...",
   "setup.error_username": "उपयोगकर्ता नाम कम से कम 3 वर्णों का होना चाहिए",
-  "setup.error_password": "पासवर्ड कम से कम 8 वर्णों का होना चाहिए",
-  "setup.error_connection": "कनेक्शन त्रुटि। कृपया सर्वर लॉग की जाँच करें।",
+  "setup.error_password": "पासवर्ड बहुत छोटा है (न्यूनतम 4 वर्ण)",
+  "setup.error_connection": "कनेक्शन विफल। लॉग की जाँच करें।",
   "widget.notepad.name": "नोट्स"
 }

@@ -133,8 +133,15 @@ dialog[open] {
     align-items: center;
 }
 
-.input-row input {
+.input-row input[type="text"] {
     flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.input-row app-button {
+    width: auto;
+    flex: 0 0 auto;
 }
 
 .check-row {

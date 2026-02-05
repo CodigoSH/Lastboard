@@ -247,9 +247,10 @@
   "settings.new_version_notif": "新版本可用！",
   "settings.up_to_date_docker_msg": "您已是最新版本。",
   "general.changelog": "变更日志",
+  "section.placeholder_title": "部分标题",
   "notifier.please_wait": "请稍候，系统正在重置...",
   "setup.error_username": "用户名必须至少 3 个字符",
-  "setup.error_password": "密码必须至少 8 个字符",
-  "setup.error_connection": "连接错误。请检查服务器日志。",
+  "setup.error_password": "密码太短（至少 4 个字符）",
+  "setup.error_connection": "连接失败。请检查日志。",
   "widget.notepad.name": "便签"
 }

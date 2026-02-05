@@ -99,7 +99,7 @@ class WidgetConfigModal extends HTMLElement {
                         <label>${i18n.t('widget.clock.timezone')}</label>
                         <div class="input-row">
                             <input type="text" id="clock-tz" value="${esc(tz)}" placeholder="local"/>
-                            <app-button variant="ghost" id="clock-auto-tz">${i18n.t('widget.clock.auto_detect')}</app-button>
+                            <app-button variant="primary" id="clock-auto-tz">${i18n.t('widget.clock.auto_detect')}</app-button>
                         </div>
                         <small>${i18n.t('widget.clock.timezone_desc')}</small>
                     </div>
@@ -129,7 +129,7 @@ class WidgetConfigModal extends HTMLElement {
                     <div class="field-group">
                         <label>${i18n.t('bookmark.label')}</label>
                         <div class="input-row">
-                            <input type="text" id="section-title" value="${esc(title)}" placeholder="Section Title" />
+                            <input type="text" id="section-title" value="${esc(title)}" placeholder="${i18n.t('section.placeholder_title')}" />
                         </div>
                         <small>${i18n.t('section.leave_empty')}</small>
                     </div>

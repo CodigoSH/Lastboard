@@ -246,5 +246,10 @@
   "settings.type_delete_placeholder": "Type 'delete'",
   "settings.new_version_notif": "New version available!",
   "settings.up_to_date_docker_msg": "You are strictly up to date.",
-  "general.changelog": "ChangeLog"
+  "general.changelog": "ChangeLog",
+  "section.placeholder_title": "Section Title",
+  "notifier.please_wait": "Please wait...",
+  "setup.error_username": "Username too short (min 2 chars)",
+  "setup.error_password": "Password too short (min 4 chars)",
+  "setup.error_connection": "Connection failed. Please check logs."
 }

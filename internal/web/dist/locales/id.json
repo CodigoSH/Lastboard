@@ -247,9 +247,10 @@
   "settings.new_version_notif": "Versi baru tersedia!",
   "settings.up_to_date_docker_msg": "Anda sudah mutakhir.",
   "general.changelog": "Catatan perubahan",
+  "section.placeholder_title": "Judul Bagian",
   "notifier.please_wait": "Harap tunggu saat sistem diatur ulang...",
   "setup.error_username": "Nama pengguna minimal 3 karakter",
-  "setup.error_password": "Kata sandi minimal 8 karakter",
-  "setup.error_connection": "Kesalahan Koneksi. Silakan periksa log server.",
+  "setup.error_password": "Kata sandi terlalu pendek (min 4 karakter)",
+  "setup.error_connection": "Koneksi gagal. Periksa log.",
   "widget.notepad.name": "Catatan"
 }

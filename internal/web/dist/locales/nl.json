@@ -247,9 +247,10 @@
   "settings.new_version_notif": "Nieuwe versie beschikbaar!",
   "settings.up_to_date_docker_msg": "Je bent helemaal bijgewerkt.",
   "general.changelog": "Wijzigingslogboek",
+  "section.placeholder_title": "Sectietitel",
   "notifier.please_wait": "Een ogenblik geduld terwijl het systeem reset...",
   "setup.error_username": "Gebruikersnaam moet minimaal 3 tekens bevatten",
-  "setup.error_password": "Wachtwoord moet minimaal 8 tekens bevatten",
-  "setup.error_connection": "Verbindingsfout. Controleer de serverlogs.",
+  "setup.error_password": "Wachtwoord te kort (min 4 tekens)",
+  "setup.error_connection": "Verbinding mislukt. Controleer logboeken.",
   "widget.notepad.name": "Notities"
 }

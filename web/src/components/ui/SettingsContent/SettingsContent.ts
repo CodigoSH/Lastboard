@@ -327,10 +327,22 @@ class SettingsContent extends HTMLElement {
         }
 
         try {
-            const res = await userService.deleteUser(id);
+            // Optimistic UI Update: Remove locally first for instant feedback
+            const previousUsers = [...this.users];
+            this.users = this.users.filter(u => u.id !== id);
+            this.render();
+
+            await userService.deleteUser(id);
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_deleted'));
+
+            // Re-fetch to ensure consistency with server state
             this.fetchUsers();
         } catch (e: any) {
+            // Rollback if failed
+            // We can't easily rollback without re-fetching or storing previous state.
+            // Since we already re-fetch in try, let's just re-fetch here too to restore the user if delete failed.
+            this.fetchUsers();
+
             let msg = i18n.t('notifier.user_delete_error');
 
             // If we have a specific error token from backend
@@ -392,7 +404,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.0'; // Should be sync with backend or injected
+    private version = 'v1.1.1-beta'; // Should be sync with backend or injected
     private updateInfo: any = null;
 
     async checkForUpdates() {

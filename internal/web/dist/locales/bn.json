@@ -247,9 +247,10 @@
   "settings.new_version_notif": "নতুন সংস্করণ উপলব্ধ!",
   "settings.up_to_date_docker_msg": "আপনি সম্পূর্ণ আপ-টু-ডেট।",
   "general.changelog": "পরিবর্তন লগ",
+  "section.placeholder_title": "বিভাগের শিরোনাম",
   "notifier.please_wait": "সিস্টেম রিসেট করার সময় অনুগ্রহ করে অপেক্ষা করুন...",
   "setup.error_username": "ইউজার নেম কমপক্ষে ৩ অক্ষরের হতে হবে",
-  "setup.error_password": "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে",
-  "setup.error_connection": "সংযোগ ত্রুটি। অনুগ্রহ করে সার্ভার লগ চেক করুন।",
+  "setup.error_password": "পাসওয়ার্ড খুব ছোট (ন্যূনতম ৪ অক্ষর)",
+  "setup.error_connection": "সংযোগ ব্যর্থ হয়েছে। লগ চেক করুন।",
   "widget.notepad.name": "নোট"
 }

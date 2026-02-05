@@ -247,9 +247,10 @@
   "settings.new_version_notif": "Dostępna nowa wersja!",
   "settings.up_to_date_docker_msg": "System jest aktualny.",
   "general.changelog": "Lista zmian",
+  "section.placeholder_title": "Tytuł sekcji",
   "notifier.please_wait": "Proszę czekać, trwa resetowanie systemu...",
   "setup.error_username": "Nazwa użytkownika musi mieć co najmniej 3 znaki",
-  "setup.error_password": "Hasło musi mieć co najmniej 8 znaków",
-  "setup.error_connection": "Błąd połączenia. Sprawdź logi serwera.",
+  "setup.error_password": "Hasło za krótkie (min 4 znaki)",
+  "setup.error_connection": "Połączenie nie powiodło się. Sprawdź logi.",
   "widget.notepad.name": "Notatki"
 }

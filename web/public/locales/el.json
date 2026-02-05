@@ -247,9 +247,10 @@
   "settings.new_version_notif": "Νέα έκδοση διαθέσιμη!",
   "settings.up_to_date_docker_msg": "Είστε πλήρως ενημερωμένοι.",
   "general.changelog": "Αρχείο αλλαγών",
+  "section.placeholder_title": "Τίτλος ενότητας",
   "notifier.please_wait": "Παρακαλώ περιμένετε ενώ το σύστημα επαναφέρεται...",
   "setup.error_username": "Το όνομα χρήστη πρέπει να είναι τουλάχιστον 3 χαρακτήρες",
-  "setup.error_password": "Ο κωδικός πρόσβασης πρέπει να είναι τουλάχιστον 8 χαρακτήρες",
-  "setup.error_connection": "Σφάλμα σύνδεσης. Ελέγξτε τα logs του διακομιστή.",
+  "setup.error_password": "Ο κωδικός είναι πολύ μικρός (τουλάχιστον 4 χαρακτήρες)",
+  "setup.error_connection": "Η σύνδεση απέτυχε. Ελέγξτε τα αρχεία καταγραφής.",
   "widget.notepad.name": "Σημειώσεις"
 }

@@ -247,9 +247,10 @@
   "settings.new_version_notif": "نسخه جدید در دسترس است!",
   "settings.up_to_date_docker_msg": "شما کاملاً بروز هستید.",
   "general.changelog": "تغییرات اخیر",
+  "section.placeholder_title": "عنوان بخش",
   "notifier.please_wait": "لطفاً صبر کنید تا سیستم بازنشانی شود...",
   "setup.error_username": "نام کاربری باید حداقل ۳ کاراکتر باشد",
-  "setup.error_password": "رمز عبور باید حداقل ۸ کاراکتر باشد",
-  "setup.error_connection": "خطای اتصال. لطفاً لاگ‌های سرور را بررسی کنید.",
+  "setup.error_password": "رمز عبور خیلی کوتاه است (حداقل 4 کاراکتر)",
+  "setup.error_connection": "اتصال ناموفق بود. لاگ‌ها را بررسی کنید.",
   "widget.notepad.name": "یادداشت‌ها"
 }

@@ -23,6 +23,9 @@ class ApiService {
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
             ...(options.headers as Record<string, string>),
         };
 
@@ -37,6 +40,7 @@ class ApiService {
             const response = await fetch(fullUrl, {
                 ...options,
                 headers,
+                cache: 'no-store'
             });
 
             if (!response.ok) {

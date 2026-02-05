@@ -300,6 +300,23 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "tr": "Sistem sıfırlanırken lütfen bekleyin...", "pl": "Proszę czekać, trwa resetowanie systemu...", "id": "Harap tunggu saat sistem diatur ulang...", "ar": "يرجى الانتظار بينما يتم إعادة تعيين النظام...",
         "fa": "لطفاً صبر کنید تا سیستم بازنشانی شود...", "el": "Παρακαλώ περιμένετε ενώ το σύστημα επαναφέρεται...", "hi": "कृपया प्रतीक्षा करें जब तक सिस्टम रीसेट हो रहा है...", "bn": "সিস্টেম রিসেট করার সময় অনুগ্রহ করে অপেক্ষা করুন...", "ur": "براہ کرم انتظار کریں جبکہ سسٹم ری سیٹ ہو رہا ہے..."
     },
+    "section.placeholder_title": {
+        "es": "Título de la Sección", "fr": "Titre de la section", "it": "Titolo della sezione", "pt": "Título da seção", "de": "Abschnittstitel", "nl": "Sectietitel",
+        "ru": "Название раздела", "zh": "部分标题", "ja": "セクションのタイトル", "ko": "섹션 제목", "tr": "Bölüm Başlığı", "pl": "Tytuł sekcji", "id": "Judul Bagian",
+        "ar": "عنوان القسم", "fa": "عنوان بخش", "el": "Τίτλος ενότητας", "hi": "अनुभाग शीर्षक", "bn": "বিভাগের শিরোনাম", "ur": "سیکشن کا عنوان"
+    },
+    "setup.error_password": {
+        "es": "Contraseña demasiado corta (mín. 4 caracteres)", "fr": "Mot de passe trop court (min 4 caractères)", "it": "Password troppo corta (min 4 caratteri)", "pt": "Senha muito curta (mín 4 caracteres)", "de": "Passwort zu kurz (min. 4 Zeichen)",
+        "ru": "Пароль слишком короткий (мин. 4 символа)", "zh": "密码太短（至少 4 个字符）", "ja": "パスワードが短すぎます（最低4文字）", "ko": "비밀번호가 너무 짧습니다 (최소 4자)", "nl": "Wachtwoord te kort (min 4 tekens)",
+        "tr": "Şifre çok kısa (min 4 karakter)", "pl": "Hasło za krótkie (min 4 znaki)", "id": "Kata sandi terlalu pendek (min 4 karakter)", "ar": "كلمة المرور قصيرة جدًا (4 أحرف كحد أدنى)",
+        "fa": "رمز عبور خیلی کوتاه است (حداقل 4 کاراکتر)", "el": "Ο κωδικός είναι πολύ μικρός (τουλάχιστον 4 χαρακτήρες)", "hi": "पासवर्ड बहुत छोटा है (न्यूनतम 4 वर्ण)", "bn": "পাসওয়ার্ড খুব ছোট (ন্যূনতম ৪ অক্ষর)", "ur": "پاس ورڈ بہت مختصر ہے (کم از کم 4 حروف)"
+    },
+    "setup.error_connection": {
+        "es": "Falló la conexión. Revise los registros.", "fr": "La connexion a échoué. Vérifiez les journaux.", "it": "Connessione fallita. Controlla i registri.", "pt": "Falha na conexão. Verifique os logs.", "de": "Verbindung fehlgeschlagen. Protokolle prüfen.",
+        "ru": "Ошибка подключения. Проверьте журналы.", "zh": "连接失败。请检查日志。", "ja": "接続に失敗しました。ログを確認してください。", "ko": "연결 실패. 로그를 확인하세요.", "nl": "Verbinding mislukt. Controleer logboeken.",
+        "tr": "Bağlantı başarısız. Günlükleri kontrol edin.", "pl": "Połączenie nie powiodło się. Sprawdź logi.", "id": "Koneksi gagal. Periksa log.", "ar": "فشل الاتصال. تحقق من السجلات.",
+        "fa": "اتصال ناموفق بود. لاگ‌ها را بررسی کنید.", "el": "Η σύνδεση απέτυχε. Ελέγξτε τα αρχεία καταγραφής.", "hi": "कनेक्शन विफल। लॉग की जाँच करें।", "bn": "সংযোগ ব্যর্থ হয়েছে। লগ চেক করুন।", "ur": "کنکشن ناکام ہوگیا۔ لاگز چیک کریں۔"
+    },
     "notifier.username_required": {
         "es": "Usuario requerido", "fr": "Nom d'utilisateur requis", "it": "Nome utente richiesto", "pt": "Nome de usuário obrigatório", "de": "Benutzername erforderlich",
         "ru": "Требуется имя пользователя", "zh": "需要用户名", "ja": "ユーザー名が必要です", "ko": "사용자 이름이 필요합니다", "nl": "Gebruikersnaam vereist",

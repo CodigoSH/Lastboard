@@ -247,9 +247,10 @@
   "settings.new_version_notif": "Nuova versione disponibile!",
   "settings.up_to_date_docker_msg": "Sei rigorosamente actualizado.",
   "general.changelog": "Registro delle modifiche",
-  "notifier.please_wait": "Attendere prego mentre il sistema si ripristina...",
+  "section.placeholder_title": "Titolo della sezione",
+  "notifier.please_wait": "Attendere prego mientras el sistema si ripristina...",
   "setup.error_username": "Il nome utente deve avere almeno 3 caratteri",
-  "setup.error_password": "La password deve avere almeno 8 caratteri",
-  "setup.error_connection": "Errore di connessione. Controlla i log del server.",
+  "setup.error_password": "Password troppo corta (min 4 caratteri)",
+  "setup.error_connection": "Connessione fallita. Controlla i registri.",
   "widget.notepad.name": "Note"
 }
