@@ -33,6 +33,25 @@ var (
 	rateLimiterMu sync.Mutex
 )
 
+func init() {
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			rateLimiterMu.Lock()
+			now := time.Now()
+			for ip, entry := range rateLimiter {
+				if !entry.lockedAt.IsZero() && now.After(entry.lockedAt.Add(lockoutDuration)) {
+					delete(rateLimiter, ip)
+				} else if entry.lockedAt.IsZero() && now.Sub(entry.firstSeen) > attemptWindow {
+					delete(rateLimiter, ip)
+				}
+			}
+			rateLimiterMu.Unlock()
+		}
+	}()
+}
+
 type AuthHandler struct {
 	DB     *sql.DB
 	Secret []byte
@@ -52,7 +71,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		// Check if locked out
 		if !entry.lockedAt.IsZero() && now.Before(entry.lockedAt.Add(lockoutDuration)) {
 			rateLimiterMu.Unlock()
-			http.Error(w, "Too many failed attempts, try again later", http.StatusTooManyRequests)
+			http.Error(w, "auth.too_many_attempts", http.StatusTooManyRequests)
 			return
 		}
 		// Clear stale window
@@ -70,13 +89,15 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
 	if len(input.Password) > 72 {
+		// Dummy bcrypt call to maintain constant timing regardless of failure reason
+		bcrypt.CompareHashAndPassword([]byte("$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01"), []byte(input.Password))
 		h.recordFailedAttempt(ip)
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
@@ -86,13 +107,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		bcrypt.CompareHashAndPassword([]byte("$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01"), []byte(input.Password))
 		h.recordFailedAttempt(ip)
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.Password)); err != nil {
 		h.recordFailedAttempt(ip)
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
@@ -116,7 +137,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// CSRF double-submit cookie (non-HttpOnly so JS can read it)
-	csrfToken, _ := generateCSRFToken()
+	csrfToken, err := generateCSRFToken()
+	if err != nil {
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
+		return
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "csrf_token",
 		Value:    csrfToken,
@@ -128,7 +153,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Login successful"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "auth.welcome"})
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +173,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		Expires:  expired,
 		HttpOnly: false,
 	})
-	http.Redirect(w, r, "/login", http.StatusFound)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *AuthHandler) recordFailedAttempt(ip string) {

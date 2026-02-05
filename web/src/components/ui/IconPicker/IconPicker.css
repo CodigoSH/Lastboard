@@ -8,46 +8,63 @@
     gap: 12px;
 }
 
-.icon-picker__selected {
+.icon-picker__header {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
+}
+
+.icon-picker__selected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    min-height: 64px;
+    height: 42px;
+    /* Match input height roughly */
+    width: 42px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .icon-picker__preview {
-    width: 48px;
-    height: 48px;
+    width: 28px;
+    height: 28px;
     object-fit: contain;
 }
 
 .icon-picker__placeholder {
-    width: 48px;
-    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-dim);
-    opacity: 0.3;
+    opacity: 0.5;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    /* Dashed maybe? or just solid */
+    border-radius: var(--radius);
+    height: 42px;
+    width: 42px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .icon-picker__placeholder svg {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
 }
 
+/* Hide name */
 .icon-picker__selected-name {
-    font-size: 13px;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
+    display: none;
 }
 
 .icon-picker__search {
     position: relative;
+    flex: 1;
+    /* Grow to fill space */
 }
 
 .icon-picker__search-input {
@@ -61,6 +78,8 @@
     font-family: var(--font-sans);
     font-size: 14px;
     transition: border-color 0.2s;
+    height: 42px;
+    /* Force height match */
 }
 
 .icon-picker__search-input:focus {
@@ -75,7 +94,7 @@
     max-height: 200px;
     overflow-y: auto;
     padding: 4px;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
 }
@@ -89,7 +108,7 @@
 }
 
 .icon-picker__grid::-webkit-scrollbar-thumb {
-    background: #333;
+    background: var(--border);
     border-radius: 3px;
 }
 
@@ -107,14 +126,14 @@
 }
 
 .icon-picker__item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-hover);
     border-color: var(--border-bright);
     transform: scale(1.05);
 }
 
 .icon-picker__item--selected {
     border-color: var(--accent);
-    background: rgba(0, 120, 212, 0.1);
+    background: rgba(var(--accent-rgb), 0.15);
 }
 
 .icon-picker__item img {
@@ -137,9 +156,12 @@
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.5;
     }
+
     50% {
         opacity: 1;
     }

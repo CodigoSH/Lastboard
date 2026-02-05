@@ -13,6 +13,31 @@ console.log(`📚 Master (EN) has ${masterKeys.length} keys.`);
 // Keys: es, fr, de, it, pt, ru, zh, ja, ko, nl, pl, tr, id, ar, fa, el, hi, bn, ur
 const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     // --- Auth Updates (New) ---
+    "bookmark.visible_mobile": {
+        "es": "Visible en Móvil", "fr": "Visible sur Mobile", "it": "Visibile su Mobile", "pt": "Visível no Móvel", "de": "Sichtbar auf Mobil", "nl": "Zichtbaar op Mobiel",
+        "ru": "Виден на мобильном", "zh": "移动端可见", "ja": "モバイルで表示", "ko": "모바일에서 표시", "tr": "Mobilde Görünür", "pl": "Widoczne na mobilnym",
+        "id": "Terlihat di Seluler", "ar": "مرئي على الجوال", "fa": "قابل مشاهده در موبایل", "el": "Ορατό σε κινητό", "hi": "मोबाइल पर दृश्य", "bn": "মোবাইলে দৃশ্যমান", "ur": "موبائل پر نظر آنے والا"
+    },
+    "bookmark.visible_tablet": {
+        "es": "Visible en Tablet", "fr": "Visible sur Tablette", "it": "Visibile su Tablet", "pt": "Visível no Tablet", "de": "Sichtbar auf Tablet", "nl": "Zichtbaar op Tablet",
+        "ru": "Виден на планшете", "zh": "平板端可见", "ja": "タブレットで表示", "ko": "태블릿에서 표시", "tr": "Tablette Görünür", "pl": "Widoczne na tablecie",
+        "id": "Terlihat di Tablet", "ar": "مرئي على الجهاز اللوحي", "fa": "قابل مشاهده در تبلت", "el": "Ορατό σε tablet", "hi": "टैबलेट पर दृश्य", "bn": "ট্যাবলেটে দৃশ্যমান", "ur": "ٹیبلیٹ پر نظر آنے والا"
+    },
+    "bookmark.label": {
+        "es": "Título", "fr": "Titre", "it": "Titolo", "pt": "Título", "de": "Titel", "nl": "Titel",
+        "ru": "Название", "zh": "标题", "ja": "タイトル", "ko": "제목", "tr": "Başlık", "pl": "Tytył",
+        "id": "Judul", "ar": "العنوان", "fa": "عنوان", "el": "Τίτλος", "hi": "शीर्षक", "bn": "শিরোনাম", "ur": "عنوان"
+    },
+    "section.edit_title": {
+        "es": "Editar Sección", "fr": "Modifier la section", "it": "Modifica sezione", "pt": "Editar seção", "de": "Abschnitt bearbeiten", "nl": "Sectie bewerken",
+        "ru": "Редактировать раздел", "zh": "编辑部分", "ja": "セクションを編集", "ko": "섹션 편집", "tr": "Bölümü Düzenle", "pl": "Edytuj sekcję",
+        "id": "Edit Bagian", "ar": "تحرير القسم", "fa": "ویرایش بخش", "el": "Επεξεργασία ενότητας", "hi": "अनुभाग संपादित करें", "bn": "বিভাগ সম্পাদনা করুন", "ur": "سیکشن میں ترمیم کریں"
+    },
+    "section.leave_empty": {
+        "es": "Dejar vacío para ocultar el título.", "fr": "Laisser vide pour masquer le titre.", "it": "Lasciare vuoto per nascondere il titolo.", "pt": "Deixe vazio para ocultar o título.", "de": "Leer lassen, um den Titel auszublenden.", "nl": "Laat leeg om de titel te verbergen.",
+        "ru": "Оставьте пустым, чтобы скрыть заголовок.", "zh": "留空以隐藏标题。", "ja": "タイトルを非表示にするには空のままにします。", "ko": "제목을 숨기려면 비워 두세요.", "tr": "Başlığı gizlemek için boş bırakın.", "pl": "Pozostaw puste, aby ukryć tytuł.",
+        "id": "Biarkan kosong untuk menyembunyikan judul.", "ar": "اتركه فارغًا لإخفاء العنوان.", "fa": "برای مخفی کردن عنوان خالی بگذارید.", "el": "Αφήστε κενό για απόκρυψη τίτλου.", "hi": "शीर्षक छिपाने के लिए खाली छोड़ें।", "bn": "শিরোনাম লুকাতে খালি রাখুন।", "ur": "عنوان چھپانے کے لیے خالی چھوڑ دیں۔"
+    },
     "auth.welcome": {
         "es": "Bienvenido", "fr": "Bienvenue", "it": "Benvenuto", "pt": "Bem-vindo", "de": "Willkommen", "nl": "Welkom",
         "ru": "Добро пожаловать", "zh": "欢迎", "ja": "ようこそ", "ko": "환영합니다", "tr": "Hoşgeldiniz", "pl": "Witaj",
@@ -262,6 +287,152 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "Restaurando...", "fr": "Restauration...", "it": "Ripristino...", "pt": "Restaurando...", "de": "Wiederherstellung...", "nl": "Herstellen...",
         "ru": "Восстановление...", "zh": "正在恢复...", "ja": "復元中...", "ko": "복원 중...", "tr": "Geri yükleniyor...", "pl": "Przywracanie...",
         "id": "Memulihkan...", "ar": "استعادة...", "fa": "بازیابی...", "el": "Επαναφορά...", "hi": "पुनर्स्थापना...", "bn": "পুনরুদ্ধার করা হচ্ছে...", "ur": "بحال کیا جا رہا ہے..."
+    },
+    "type.widget": {
+        "es": "Widget", "fr": "Widget", "it": "Widget", "pt": "Widget", "de": "Widget", "nl": "Widget",
+        "ru": "Виджет", "zh": "小部件", "ja": "ウィジェット", "ko": "위젯", "tr": "Bileşen", "pl": "Widget",
+        "id": "Widget", "ar": "أداة", "fa": "ویجت", "el": "Widget", "hi": "विजेट", "bn": "উইজেট", "ur": "ویجیٹ"
+    },
+    // --- New Notifications ---
+    "notifier.please_wait": {
+        "es": "Por favor espere mientras el sistema se restablece...", "fr": "Veuillez patienter pendant la réinitialisation...", "it": "Attendere prego mientras el sistema si ripristina...", "pt": "Aguarde enquanto o sistema é redefinido...", "de": "Bitte warten, während das System zurückgesetzt wird...",
+        "ru": "Пожалуйста, подождите, пока система сбрасывается...", "zh": "请稍候，系统正在重置...", "ja": "システムがリセットされるまでお待ちください...", "ko": "시스템이 초기화되는 동안 잠시 기다려 주십시오...", "nl": "Een ogenblik geduld terwijl het systeem reset...",
+        "tr": "Sistem sıfırlanırken lütfen bekleyin...", "pl": "Proszę czekać, trwa resetowanie systemu...", "id": "Harap tunggu saat sistem diatur ulang...", "ar": "يرجى الانتظار بينما يتم إعادة تعيين النظام...",
+        "fa": "لطفاً صبر کنید تا سیستم بازنشانی شود...", "el": "Παρακαλώ περιμένετε ενώ το σύστημα επαναφέρεται...", "hi": "कृपया प्रतीक्षा करें जब तक सिस्टम रीसेट हो रहा है...", "bn": "সিস্টেম রিসেট করার সময় অনুগ্রহ করে অপেক্ষা করুন...", "ur": "براہ کرم انتظار کریں جبکہ سسٹم ری سیٹ ہو رہا ہے..."
+    },
+    "notifier.username_required": {
+        "es": "Usuario requerido", "fr": "Nom d'utilisateur requis", "it": "Nome utente richiesto", "pt": "Nome de usuário obrigatório", "de": "Benutzername erforderlich",
+        "ru": "Требуется имя пользователя", "zh": "需要用户名", "ja": "ユーザー名が必要です", "ko": "사용자 이름이 필요합니다", "nl": "Gebruikersnaam vereist",
+        "tr": "Kullanıcı adı gerekli", "pl": "Wymagana nazwa użytkownika", "id": "Nama pengguna diperlukan", "ar": "اسم المستخدم مطلوب",
+        "fa": "نام کاربری الزامی است", "el": "Απαιτείται όνομα χρήστη", "hi": "उपयोगकर्ता नाम आवश्यक", "bn": "ব্যবহারকারীর নাম প্রয়োজন", "ur": "صارف نام درکار ہے"
+    },
+    // --- New keys for Audit ---
+    "settings.type_delete_placeholder": {
+        "es": "Escribe 'delete'", "fr": "Tapez 'delete'", "it": "Scrivi 'delete'", "pt": "Digite 'delete'", "de": "Tippen Sie 'delete'",
+        "ru": "Введите 'delete'", "zh": "输入 'delete'", "ja": " 'delete' と入力", "ko": " 'delete' 입력", "nl": "Typ 'delete'",
+        "tr": "'delete' yazın", "pl": "Wpisz 'delete'", "id": "Ketik 'delete'", "ar": "اكتب 'delete'", "fa": "تایپ کنید 'delete'",
+        "el": "Πληκτρολογήστε 'delete'", "hi": "'delete' टाइप करें", "bn": "'delete' লিখুন", "ur": "'delete' لکھیں"
+    },
+    "settings.new_version_notif": {
+        "es": "¡Nueva versión disponible!", "fr": "Nouvelle version disponible !", "it": "Nuova versione disponibile!", "pt": "Nova versão disponible!", "de": "Neue Version verfügbar!",
+        "ru": "Доступна новая версия!", "zh": "新版本可用！", "ja": "新バージョンが利用可能です！", "ko": "새 버전을 사용할 수 있습니다!", "nl": "Nieuwe versie beschikbaar!",
+        "tr": "Yeni versiyon mevcut!", "pl": "Dostępna nowa wersja!", "id": "Versi baru tersedia!", "ar": "نسخة جديدة متاحة!", "fa": "نسخه جدید در دسترس است!",
+        "el": "Νέα έκδοση διαθέσιμη!", "hi": "नया संस्करण उपलब्ध है!", "bn": "নতুন সংস্করণ উপলব্ধ!", "ur": "نیا ورژن دستیاب ہے!"
+    },
+    "settings.up_to_date_docker_msg": {
+        "es": "Estás estrictamente al día.", "fr": "Vous êtes strictement à jour.", "it": "Sei rigorosamente actualizado.", "pt": "Você está rigorosamente atualizado.", "de": "Sie sind auf dem neuesten Stand.",
+        "ru": "Вы полностью обновлены.", "zh": "您已是最新版本。", "ja": "最新の状態です。", "ko": "최신 상태입니다.", "nl": "Je bent helemaal bijgewerkt.",
+        "tr": "Tamamen güncelsiniz.", "pl": "System jest aktualny.", "id": "Anda sudah mutakhir.", "ar": "أنت محدث تمامًا.", "fa": "شما کاملاً بروز هستید.",
+        "el": "Είστε πλήρως ενημερωμένοι.", "hi": "आप पूरी तरह से अपडेट हैं।", "bn": "আপনি সম্পূর্ণ আপ-টু-ডেট।", "ur": "آپ مکمل طور پر اپ ٹو ڈیٹ ہیں۔"
+    },
+    "general.changelog": {
+        "es": "Registro de cambios", "fr": "Journal des modifications", "it": "Registro delle modifiche", "pt": "Registro de alterações", "de": "Änderungsprotokoll",
+        "ru": "Список изменений", "zh": "变更日志", "ja": "変更履歴", "ko": "변경 로그", "nl": "Wijzigingslogboek",
+        "tr": "Değişiklik Günlüğü", "pl": "Lista zmian", "id": "Catatan perubahan", "ar": "سجل التغييرات", "fa": "تغییرات اخیر",
+        "el": "Αρχείο αλλαγών", "hi": "परिवर्तन लॉग", "bn": "পরিবর্তন লগ", "ur": "تبدیلی لاگ"
+    },
+    "notifier.user_delete_superadmin": {
+        "es": "No se puede eliminar al Super Administrador", "fr": "L'administrateur principal ne peut pas être supprimé", "it": "L'amministratore principale non può essere eliminato", "pt": "O Super Administrador não pode ser excluído", "de": "Der Super-Administrator kann nicht gelöscht werden",
+        "ru": "Супер администратор не может быть удален", "zh": "超级管理员无法删除", "ja": "スーパー管理者は削除できません", "ko": "최고 관리자는 삭제할 수 없습니다", "nl": "De superbeheerder kan niet worden verwijderd",
+        "tr": "Süper Yönetici silinemez", "pl": "Nie można usunąć Super Administratora", "id": "Super Administrator tidak dapat dihapus", "ar": "لا يمكن حذف المسؤول العام", "fa": "سوپر ادمین قابل حذف نیست",
+        "el": "Δεν είναι δυνατή η διαγραφή του Super Administrator", "hi": "सुपर एडमिनिस्ट्रेटर को हटाया नहीं जा सकता", "bn": "সুপার অ্যাডমিনিস্ট্রেটর মুছে ফেলা যাবে না", "ur": "سپر ایڈمنسٹریٹر کو حذف نہیں کیا جا सकता"
+    },
+    "settings.role_super_admin": {
+        "es": "Super Admin", "fr": "Super Admin", "it": "Super Admin", "pt": "Super Admin", "de": "Super-Admin",
+        "ru": "Супер-Админ", "zh": "超级管理员", "ja": "スーパー管理者", "ko": "최고 관리자", "nl": "Super-Admin",
+        "tr": "Süper Yönetici", "pl": "Super Admin", "id": "Super Admin", "ar": "مسؤول عام", "fa": "سوپر ادمین",
+        "el": "Super Admin", "hi": "सुपर एडमिन", "bn": "সুপার অ্যাডমিন", "ur": "سپر ایڈمن"
+    },
+    // --- New System & Error Keys ---
+    "general.db_error": {
+        "es": "Error de base de datos", "fr": "Erreur de base de données", "de": "Datenbankfehler", "it": "Errore del database",
+        "pt": "Erro na base de dados", "ru": "Ошибка базы данных", "zh": "数据库错误", "ja": "データベースエラー",
+        "ko": "데이터베이스 오류", "nl": "Databasefout", "pl": "Błąd bazy danych", "tr": "Veritabanı hatası",
+        "id": "Kesalahan basis data", "ar": "خطأ في قاعدة البيانات", "fa": "خطای پایگاه داده", "el": "Σφάλμα βάσης δεδομένων",
+        "hi": "डेटाबेस त्रुटि", "bn": "ডেটাবেस ত্রুটি", "ur": "ڈیٹا بیس کی غلطی"
+    },
+    "general.internal_error": {
+        "es": "Error interno del servidor", "fr": "Erreur interne du serveur", "de": "Interner Serverfehler", "it": "Errore interno del server",
+        "pt": "Erro interno do servidor", "ru": "Внутренняя ошибка сервера", "zh": "服务器内部错误", "ja": "サーバー内部エラー",
+        "ko": "서버 내부 오류", "nl": "Interne serverfout", "pl": "Wewnętrzny błąd serwera", "tr": "Dahili sunucu hatası",
+        "id": "Kesalahan server internal", "ar": "خطأ داخلي في الخادم", "fa": "خطای داخلی سرور", "el": "Εσωτερικό σφάλμα διακομιστή",
+        "hi": "आंतरिक सर्वर त्रुटि", "bn": "অভ্যন্তরীণ সার্ভার ত্রুটি", "ur": "اندرونی سرور की غلطی"
+    },
+    "general.invalid_input": {
+        "es": "Entrada no válida", "fr": "Entrée invalide", "de": "Ungültige Eingabe", "it": "Input non valido",
+        "pt": "Entrada inválida", "ru": "Недопустимый ввод", "zh": "无效输入", "ja": "無効な入力",
+        "ko": "유효하지 않은 입력", "nl": "Ongeldige invoer", "pl": "Nieprawidłowe dane", "tr": "Geçersiz giriş",
+        "id": "Input tidak valid", "ar": "مدخلات غير صالحة", "fa": "ورودی نامعتبر", "el": "Μη έγκυρη είσοδος",
+        "hi": "अमान्य इनपुट", "bn": "অকার্যকর ইনপুট", "ur": "غلط ان پٹ"
+    },
+    "auth.too_many_attempts": {
+        "es": "Demasiados intentos fallidos, inténtalo de nuevo más tarde", "fr": "Trop de tentatives échouées, réessayez plus tard", "de": "Zu viele fehlgeschlagene Versuche, versuchen Sie es später noch einmal", "it": "Troppi tentativi falliti, riprova più tardi",
+        "pt": "Muitas tentativas falhadas, tente novamente mais tarde", "ru": "Слишком много неудачных попыток, попробуйте позже", "zh": "尝试次数过多，请稍后再试", "ja": "試行回数が多すぎます。後で再試行してください",
+        "ko": "실패한 시도가 너무 많습니다. 나중에 다시 시도하십시오", "nl": "Te veel mislukte pogingen, probeer het later opnieuw", "pl": "Zbyt wiele nieudanych prób, spróbuj ponownie później", "tr": "Çok fazla başarısız deneme, lütfen daha sonra tekrar deneyin",
+        "id": "Terlalu banyak percobaan gagal, coba lagi nanti", "ar": "محاولات فاشلة كثيرة جدًا ، حاول مرة أخرى لاحقًا", "fa": "تلاش‌های ناموفق بیش از حد، لطفاً بعداً دوباره امتحان کنید", "el": "Πολλές αποτυχημένες προσπάθειες, δοκιμάστε ξανά αργότερα",
+        "hi": "बहुत अधिक विफल प्रयास, बाद में पुनः प्रयास करें", "bn": "অনেক ব্যর্থ প্রচেষ্টা, পরে আবার চেষ্টা করুন", "ur": "بہت زیادہ ناکام کوششیں، بعد میں دوبارہ کوشش کریں"
+    },
+    "error.username_min_length": {
+        "es": "El usuario debe tener al menos 2 caracteres", "fr": "Le nom d'utilisateur doit contenir au moins 2 caracteres", "de": "Benutzername muss mindestens 2 Zeichen lang sein",
+        "ru": "Имя пользователя должно быть не менее 2 символов", "zh": "用户名必须至少包含 2 个字符", "ja": "ユーザー名は2文字以上である必要があります", "ko": "사용자 이름은 2자 이상이어야 합니다", "ar": "يجب أن يتكون اسم المستخدم من حرفين على الأقل"
+    },
+    "error.password_min_length": {
+        "es": "La contraseña debe tener al menos 4 caracteres", "fr": "Le mot de passe doit contenir au moins 4 caracteres", "de": "Passwort muss mindestens 4 Zeichen lang sein",
+        "ru": "Пароль должен быть не менее 4 символов", "zh": "密码必须至少包含 4 个字符", "ja": "パスワードは4文字以上である必要があります", "ko": "비밀번호는 4자 이상이어야 합니다", "ar": "يجب أن تتكون كلمة المرور من 4 أحرف على الأقل"
+    },
+    "setup.already_initialized": {
+        "es": "El sistema ya ha sido inicializado", "fr": "Le sistema est déjà initialisé", "de": "System ist bereits initialisiert", "it": "Sistema già inizializzato",
+        "pt": "Sistema já inicializado", "ru": "Система уже инициализирована", "zh": "系统已初始化", "ja": "システムはすでに初期化されています",
+        "ko": "시스템이 이미 초기화되었습니다", "nl": "Systeem is al geïnitialiseerd", "pl": "System został już zainicjowany", "tr": "Sistem zaten başlatıldı",
+        "id": "Sistem sudah diinisialisasi", "ar": "تم تهيئة النظام بالفعل", "fa": "سیستم قبلاً راه اندازی شده است", "el": "Το σύστημα έχει ήδη αρχικοποιηθεί",
+        "hi": "सिस्टम पहले से ही आरंभीकृत है", "bn": "सისტেম ইতিমধ্যে शुरू হয়েছে", "ur": "نظام پہلے ہی शुरू हो चुका है"
+    },
+    "notifier.system_restarting": {
+        "es": "El sistema se está reiniciando...", "fr": "Le système redémarre...", "de": "System wird neu gestartet...", "it": "Il sistema si sta riavviando...",
+        "pt": "O sistema está a reiniciar...", "ru": "Система перезагружается...", "zh": "系统正在重启...", "ja": "システムを再起動しています...",
+        "ko": "시스템을 재시작하는 중입니다...", "ar": "النظام يعيد التشغيل..."
+    },
+    "error.missing_url": { "es": "Falta la URL", "fr": "URL manquante", "de": "URL fehlt" },
+    "error.could_not_resolve_host": { "es": "No se pudo resolver el host", "fr": "Impossible de résoudre l'hôte", "de": "Host konnte nicht aufgelöst werden" },
+    "section.hide_title_hint": {
+        "es": "Dejar vacío para ocultar el título.", "fr": "Laisser vide pour masquer le titre.", "de": "Leer lassen, um den Titel auszublenden.",
+        "it": "Lasciare vuoto per nascondere il titolo.", "pt": "Deixe em blanco para ocultar o título.", "ru": "Оставьте пустым, чтобы скрыть заголовок."
+    },
+    "widget.no_config": {
+        "es": "No hay configuración disponible para este elemento.", "fr": "Aucune configuration disponible pour cet élément.", "de": "Keine Konfiguration für dieses Element verfügbar."
+    },
+    "auth.unauthorized": {
+        "es": "No autorizado", "fr": "Accès non autorisé", "de": "Nicht autorisiert", "it": "Non autorizzato",
+        "pt": "Não autorizado", "ru": "Не авторизован", "zh": "未授权", "ja": "権限がありません",
+        "ko": "권한이 없습니다", "ar": "غير مصرح"
+    },
+    "notifier.user_deleted": {
+        "es": "Usuario eliminado", "fr": "Utilisateur supprimé", "de": "Benutzer gelöscht", "it": "Utente eliminato",
+        "pt": "Utilizador eliminado", "ru": "Пользователь удален", "zh": "用户已删除", "ja": "ユーザーを削除しました"
+    },
+    "notifier.user_delete_error": {
+        "es": "Error al eliminar usuario", "fr": "Échec de la suppression de l'utilisateur", "de": "Fehler beim Löschen des Benutzers"
+    },
+    "notifier.restore_success": {
+        "es": "Copia de seguridad restaurada. Recargando...", "fr": "Sauvegarde restaurée. Rechargement...", "de": "Backup wiederhergestellt. Wird neu geladen..."
+    },
+    "notifier.update_verified": {
+        "es": "Actualización verificada. Reiniciando...", "fr": "Mise à jour vérifiée. Redémarrage...", "de": "Update verifiziert. Neustart..."
+    },
+    "notifier.update_failed": {
+        "es": "Error en la actualización", "fr": "Échec de la mise à jour", "de": "Update fehlgeschlagen"
+    },
+    "notifier.save_error": {
+        "es": "Error al guardar los ajustes", "fr": "Échec de l'enregistrement des paramètres", "de": "Fehler beim Speichern der Einstellungen"
+    },
+    "notifier.profile_updated": {
+        "es": "Perfil actualizado", "fr": "Profil mis à jour", "de": "Profil aktualisiert"
+    },
+    "notifier.profile_error": {
+        "es": "Error al actualizar el perfil", "fr": "Échec de la mise à jour du profil", "de": "Fehler beim Aktualisieren des Profils"
+    },
+    "auth.session_expired": {
+        "es": "Sesión expirada o servidor inalcanzable", "fr": "Session expirée ou serveur inalcanzable", "de": "Sitzung abgelaufen oder Server nicht erreichbar"
     }
 };
 
@@ -276,6 +447,12 @@ files.forEach(file => {
 
     let added = 0;
     let updated = 0;
+
+    // cleanup legacy
+    if (content['type.group']) {
+        delete content['type.group'];
+        updated++;
+    }
 
     masterKeys.forEach(key => {
         let newValue = content[key];

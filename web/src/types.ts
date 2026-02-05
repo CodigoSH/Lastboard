@@ -1,5 +1,5 @@
 /**
- * Core Types for CSH Dashboard
+ * Core Types for Kashboard
  * These interfaces mirror the Go backend structures and API responses.
  */
 
@@ -28,6 +28,7 @@ export interface User {
     grid_columns_tablet?: number;
     grid_columns_mobile?: number;
     project_name?: string;
+    is_superadmin?: boolean;
     preferences?: UserPreferences; // Derived on client
 }
 
@@ -56,7 +57,7 @@ export interface MessageResponse {
 
 declare global {
     interface Window {
-        CSH_CONFIG?: {
+        KASHBOARD_CONFIG?: {
             API_BASE_URL: string;
             DEBUG_MODE: boolean;
         };

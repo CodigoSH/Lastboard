@@ -360,6 +360,7 @@
 /* Group Styles */
 /* Section (Resizable Box) */
 /* Section (Resizable Box) - Premium Glassmorphism */
+/* Section (Resizable Box) - Premium Glassmorphism */
 .bookmark-grid__section {
     background: var(--surface);
     /* Use theme surface instead of fixed dark rgba */
@@ -377,30 +378,66 @@
     overflow: visible;
     position: relative;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
     /* Lighter shadow */
     /* CRITICAL FIX: Sections are containers/backgrounds, should be below cards */
     z-index: 1;
+
+    /* Reset margins & Force Fill */
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
 }
 
 .bookmark-grid__section:hover {
     border-color: var(--border-bright);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.bookmark-grid__section.drop-target {
-    background: rgba(0, 120, 212, 0.15);
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 15px rgba(0, 120, 212, 0.3);
-}
+.section-title {
+    position: absolute;
+    top: 0;
+    transform: translateY(-50%);
+    /* Lift half-way up to interrupt border */
+    left: 12px;
+    z-index: 2;
 
-.bookmark-grid__group-header {
-    font-size: 14px;
-    font-weight: 600;
     color: var(--text-dim);
-    margin-bottom: 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    /* Pill padding */
+    font-family: var(--font-mono, monospace);
+    opacity: 0.9;
+
+    /* Premium "Button/Pill" Look */
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-solid);
+    /* Opaque match to hide border line behind */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    line-height: 1.4;
+    width: fit-content;
+    white-space: nowrap;
+
+    transition: all 0.3s ease;
+}
+
+/* Hover state for title to match section consistency */
+.bookmark-grid__section:hover .section-title {
+    border-color: var(--border-bright);
+    color: var(--text-dim);
+    background: var(--surface-solid);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.bookmark-grid__section:hover .section-title:hover {
+    /* Allow individual highlight if interacting directly */
+    color: var(--text-main);
+    border-color: var(--border-bright);
 }
 
 /* Ghost Styles */

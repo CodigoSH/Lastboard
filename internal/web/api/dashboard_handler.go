@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/codigosh/Kashboard/internal/core/dashboard"
+	"github.com/codigosh/Kashboard/internal/web/middleware"
 )
 
 type DashboardHandler struct {
@@ -41,12 +42,12 @@ type SectionContent struct {
 	Name string `json:"name"`
 }
 
-// GetDashboard returns the list of items
+// GetDashboard returns the list of items owned by the authenticated user.
 func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
-	// Include url in selection
-	rows, err := h.DB.Query("SELECT id, parent_id, type, x, y, w, h, content, url FROM items")
+	userID := middleware.GetUserIDFromContext(r)
+	rows, err := h.DB.Query("SELECT id, parent_id, type, x, y, w, h, content, url FROM items WHERE user_id = ?", userID)
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -70,6 +71,10 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 		}
 		items = append(items, i)
 	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if items == nil {
@@ -82,26 +87,30 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	var item dashboard.Item
 
 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
 	// Validate Content
 	if err := validateContent(item.Type, item.Content); err != nil {
-		http.Error(w, "Invalid content: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Insert including URL
-	res, err := h.DB.Exec("INSERT INTO items (parent_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url)
+	userID := middleware.GetUserIDFromContext(r)
+	res, err := h.DB.Exec("INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		userID, item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url)
 	if err != nil {
 		log.Printf("[CreateItem] DB Insert Error: %v", err)
-		http.Error(w, "Failed to create", http.StatusInternalServerError)
+		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)
 		return
 	}
 
-	id, _ := res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)
+		return
+	}
 	item.ID = int(id)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -109,16 +118,17 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserIDFromContext(r)
 	// Extract ID from URL path (e.g. /api/dashboard/item/3)
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 5 {
-		http.Error(w, "Invalid URL", http.StatusBadRequest)
+		http.Error(w, "error.invalid_url", http.StatusBadRequest)
 		return
 	}
 	idStr := parts[len(parts)-1]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		http.Error(w, "error.invalid_id", http.StatusBadRequest)
 		return
 	}
 
@@ -133,7 +143,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Printf("[UpdateItem] JSON Decode Error: %v", err)
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -170,12 +180,12 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		// If content is being updated, valid it based on existing type or new type (if type were updatable, but it's not here)
 		// We need to fetch the item's type to validate content properly.
 		var itemType string
-		if err := h.DB.QueryRow("SELECT type FROM items WHERE id=?", id).Scan(&itemType); err != nil {
-			http.Error(w, "Item not found", http.StatusNotFound)
+		if err := h.DB.QueryRow("SELECT type FROM items WHERE id=? AND user_id=?", id, userID).Scan(&itemType); err != nil {
+			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}
 		if err := validateContent(itemType, *input.Content); err != nil {
-			http.Error(w, "Invalid content: "+err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -188,19 +198,24 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	args = append(args, id)
-	query := "UPDATE items SET " + strings.Join(sets, ", ") + " WHERE id=?"
+	args = append(args, id, userID)
+	query := "UPDATE items SET " + strings.Join(sets, ", ") + " WHERE id=? AND user_id=?"
 
 	result, err := h.DB.Exec(query, args...)
 	if err != nil {
 		log.Printf("Update error: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
-	rows, _ := result.RowsAffected()
+	rows, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("[UpdateItem] RowsAffected error: %v", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
 	if rows == 0 {
-		http.Error(w, "Item not found", http.StatusNotFound)
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 
@@ -209,17 +224,18 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserIDFromContext(r)
 	parts := strings.Split(r.URL.Path, "/")
 	idStr := parts[len(parts)-1]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		http.Error(w, "error.invalid_id", http.StatusBadRequest)
 		return
 	}
 
-	_, err = h.DB.Exec("DELETE FROM items WHERE id=?", id)
+	_, err = h.DB.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID)
 	if err != nil {
-		http.Error(w, "Delete failed", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -231,20 +247,20 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	rawUrl := r.URL.Query().Get("url")
 	if rawUrl == "" {
-		http.Error(w, "Missing url parameter", http.StatusBadRequest)
+		http.Error(w, "error.missing_url", http.StatusBadRequest)
 		return
 	}
 
 	u, err := url.Parse(rawUrl)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
-		http.Error(w, "Invalid URL", http.StatusBadRequest)
+		http.Error(w, "error.invalid_url", http.StatusBadRequest)
 		return
 	}
 
 	hostname := u.Hostname()
 	ips, err := net.LookupIP(hostname)
 	if err != nil || len(ips) == 0 {
-		http.Error(w, "Could not resolve host", http.StatusBadRequest)
+		http.Error(w, "error.could_not_resolve_host", http.StatusBadRequest)
 		return
 	}
 
@@ -357,9 +373,11 @@ func validateContent(itemType string, contentJson string) error {
 			return err
 		}
 		if c.Label == "" {
-			return logError("label required")
+			return logError("error.label_required")
 		}
-		// Url optional? Usually yes.
+		if c.Url != "" && !strings.HasPrefix(c.Url, "http://") && !strings.HasPrefix(c.Url, "https://") {
+			return logError("error.invalid_url")
+		}
 	case "group", "section":
 		var c GroupContent // Same as SectionContent
 		if err := json.Unmarshal([]byte(contentJson), &c); err != nil {

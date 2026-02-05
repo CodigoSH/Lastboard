@@ -12,6 +12,20 @@ class AppNotifier extends HTMLElement {
         this.render();
         // @ts-ignore
         window.notifier = this;
+
+        window.addEventListener('drawer-open', () => this.shift(true));
+        window.addEventListener('drawer-close', () => this.shift(false));
+    }
+
+    shift(isOpen: boolean) {
+        const container = this.shadowRoot!.querySelector('.toast-container');
+        if (container) {
+            if (isOpen) {
+                container.classList.add('toast-container--shifted');
+            } else {
+                container.classList.remove('toast-container--shifted');
+            }
+        }
     }
 
     show(message: string, type = 'success') {

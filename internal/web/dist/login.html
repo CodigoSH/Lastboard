@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Prevent FOUC: set dark-mode class before CSS parses so variables resolve correctly -->
+<script>
+    if (localStorage.getItem('kashboard_theme') === 'dark') document.documentElement.classList.add('dark-mode');
+    const accent = localStorage.getItem('kashboard_accent');
+    if (accent) document.documentElement.style.setProperty('--accent', accent);
+</script>
 
 <head>
     <meta charset="UTF-8">
@@ -7,8 +13,8 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <title>Login - Kashboard</title>
     <!-- Core Themes -->
-    <link rel="stylesheet" href="/styles/theme.css?v=1770153650">
-    <link rel="stylesheet" href="/styles/components.css?v=1770153650">
+    <link rel="stylesheet" href="/styles/theme.css?v=1770253274">
+    <link rel="stylesheet" href="/styles/components.css?v=1770253274">
 
     <style>
         body {
@@ -74,7 +80,7 @@
 
     <!-- Compile to dist/login.js -->
     <app-notifier></app-notifier>
-    <script type="module" src="/login.js?v=1770153650"></script>
+    <script type="module" src="/login.js?v=1770253274"></script>
 </body>
 
 </html>

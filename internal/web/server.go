@@ -155,6 +155,17 @@ func (s *Server) routes() {
 
 	// Login Page (Public)
 	s.Router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		// Check if setup is needed (Clean Install)
+		var exists bool
+		if err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		if !exists {
+			http.Redirect(w, r, "/setup", http.StatusSeeOther)
+			return
+		}
+
 		// Smart Redirect: If already logged in, go to dashboard
 		cookie, err := r.Cookie("session_token")
 		if err == nil && cookie.Value != "" {
@@ -170,7 +181,7 @@ func (s *Server) routes() {
 	// Auth API
 	authHandler := api.NewAuthHandler(s.DB, s.sessionSecret)
 	s.Router.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
-	s.Router.Handle("/logout", http.HandlerFunc(authHandler.Logout))
+	s.Router.Handle("POST /logout", protect(http.HandlerFunc(authHandler.Logout)))
 
 	// Dashboard API
 	dashHandler := api.NewDashboardHandler(s.DB)
@@ -249,7 +260,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename string) {
-	// Serve static HTML files from embed
 	f, err := s.assets.Open(filename)
 	if err != nil {
 		http.Error(w, "File not found", http.StatusNotFound)
@@ -257,14 +267,18 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 	}
 	defer f.Close()
 
-	stat, _ := f.Stat()
-	http.ServeContent(w, r, filename, stat.ModTime(), f.(io.ReadSeeker))
+	stat, err := f.Stat()
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+	rs, ok := f.(io.ReadSeeker)
+	if !ok {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+	http.ServeContent(w, r, filename, stat.ModTime(), rs)
 }
-
-// Need to inject http.Request into serveFile or pass it?
-// Go's http.ServeContent needs ReadSeeker which embed.file implements.
-// Oops, serveFile signature above is missing *http.Request.
-// Fixed below in re-implementation.
 
 func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
@@ -280,25 +294,17 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var themeClass string = ""
-	// 1. Priority: Cookie (Most recent client state)
-	cookie, err := r.Cookie("kashboard_theme")
-	if err == nil {
-		if cookie.Value == "dark" {
-			themeClass = "dark-mode"
-		} else if cookie.Value == "light" {
-			themeClass = ""
-		}
+	// Use the per-user database value directly.  A shared cookie would leak
+	// the previous user's preference to the next user on the same browser;
+	// the DB row is already scoped to the authenticated session.
+	// "system" or empty → dark-mode default; the client-side ThemeService
+	// corrects this to the real OS preference after the page loads.
+	if dbTheme == "dark" {
+		themeClass = "dark-mode"
+	} else if dbTheme == "light" {
+		themeClass = ""
 	} else {
-		// 2. Fallback: Database (Saved preference)
-		if dbTheme == "dark" {
-			themeClass = "dark-mode"
-		} else if dbTheme == "light" {
-			themeClass = "" // Explicit light
-		} else {
-			// 3. System Default (e.g. if db is empty or 'system')
-			// We can default to dark-mode if we want a dark-first app
-			themeClass = "dark-mode"
-		}
+		themeClass = "dark-mode"
 	}
 
 	tmpl, err := template.ParseFS(s.assets, "index.html")

@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Prevent FOUC: set dark-mode class before CSS parses so variables resolve correctly -->
+<script>
+    if (localStorage.getItem('kashboard_theme') === 'dark') document.documentElement.classList.add('dark-mode');
+    const accent = localStorage.getItem('kashboard_accent');
+    if (accent) document.documentElement.style.setProperty('--accent', accent);
+</script>
 
 <head>
     <meta charset="UTF-8">

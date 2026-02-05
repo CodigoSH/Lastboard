@@ -2,6 +2,7 @@ import { userStore } from './store/userStore';
 import { dashboardStore } from './store/dashboardStore';
 import { statusService } from './services/StatusService';
 import { ThemeService } from './services/ThemeService';
+import { i18n } from './services/i18n';
 
 // Import components to register them
 import './components/ui/Paper/Paper';
@@ -34,17 +35,52 @@ import { bootstrap } from './core/bootstrap';
 
 // Initialize Application
 bootstrap(async () => {
-    // Initialize Theme
+    // Flash-prevention: apply a theme before the user record arrives so the
+    // page does not flicker.  serveIndex already injects the correct class
+    // from the DB; this call only matters for the 'system' edge case.
     ThemeService.init();
-    ThemeService.sync(); // Sync with backend preference
 
     // Initialize stores
     await userStore.fetchUser();
 
+    // ── Per-user sync ──────────────────────────────────────────────
+    // After the authenticated user is fetched, every preference that lives in
+    // browser-local storage (language, theme, item cache) must be overwritten
+    // with the backend value.  Without this a second user logging into the
+    // same browser would inherit the first user's language, theme and cached
+    // dashboard items.
+    const u = userStore.getUser();
+    if (u) {
+        // Language: overwrite i18n with the backend preference.
+        if (u.language) {
+            await i18n.setLanguage(u.language);
+        }
+
+        // Theme: apply from backend and update the cookie that serveIndex
+        // reads, so the next page-load renders the correct class server-side.
+        if (u.theme === 'dark') {
+            ThemeService.enableDark();
+        } else if (u.theme === 'light') {
+            ThemeService.enableLight();
+        } else {
+            // 'system' — honour OS preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                ThemeService.enableDark();
+            } else {
+                ThemeService.enableLight();
+            }
+        }
+
+        // Dashboard items: scope the localStorage cache to this user so a
+        // different user logging into the same browser never sees stale items.
+        if (u.id) {
+            dashboardStore.setUserId(u.id);
+        }
+    }
+    // ── end per-user sync ──────────────────────────────────────────
+
     // Inject user into topbar for permission handling
     if (topbar) {
-        // Initial set
-        const u = userStore.getUser();
         topbar.setState({ user: u });
         if (u && u.project_name) {
             topbar.setAttribute('title', u.project_name);
@@ -145,7 +181,7 @@ if (topbar) {
         dashboardStore.setSearchQuery(query);
     });
 
-    topbar.addEventListener('add-item', (e: CustomEvent) => {
+    topbar.addEventListener('add-item', async (e: CustomEvent) => {
         const action = e.detail.action;
 
         if (action === 'add-bookmark') {
@@ -162,27 +198,27 @@ if (topbar) {
             const currentState = dashboardStore.getState();
             // @ts-ignore
             const items = currentState.items || [];
-            // @ts-ignore
-            import('./services/collisionService').then(({ collisionService }) => {
-                const slot = collisionService.findFirstAvailableSlot(1, 1, items);
+            const { collisionService } = await import('./services/collisionService');
+            const slot = collisionService.findFirstAvailableSlot(1, 1, items);
 
-                const newItem = {
-                    type: 'section',
-                    x: slot.x,
-                    y: slot.y,
-                    w: 1,
-                    h: 1,
-                    content: JSON.stringify({ name: '' })
-                };
-                // @ts-ignore
-                dashboardStore.addItem(newItem);
-            });
+            const newItem = {
+                type: 'section',
+                x: slot.x,
+                y: slot.y,
+                w: 1,
+                h: 1,
+                content: JSON.stringify({ title: '' })
+            };
+            const createdItem = await dashboardStore.addItem(newItem);
+            if (createdItem) {
+                eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item: createdItem, type: 'section' });
+            }
         }
     });
 }
 
 // Widget Selection Handler
-window.addEventListener('widget-selected', (e: Event) => {
+window.addEventListener('widget-selected', async (e: Event) => {
     const customEvent = e as CustomEvent;
     const widgetDef = customEvent.detail;
 
@@ -190,28 +226,25 @@ window.addEventListener('widget-selected', (e: Event) => {
     // @ts-ignore
     const items = currentState.items || [];
 
-    // @ts-ignore
-    import('./services/collisionService').then(({ collisionService }) => {
-        const slot = collisionService.findFirstAvailableSlot(widgetDef.defaultW, widgetDef.defaultH, items);
+    const { collisionService } = await import('./services/collisionService');
+    const slot = collisionService.findFirstAvailableSlot(widgetDef.defaultW, widgetDef.defaultH, items);
 
-        const newItem = {
-            type: 'widget',
-            x: slot.x,
-            y: slot.y,
-            w: widgetDef.defaultW,
-            h: widgetDef.defaultH,
-            // Content stores specific widget config
-            // We use 'widgetId' to identify the type of widget renderer to use
-            // MUST be stringified for backend compatibility
-            content: JSON.stringify({
-                widgetId: widgetDef.id,
-                // Default props for specific widgets could go here
-                text: widgetDef.id === 'notepad' ? '' : undefined
-            })
-        };
-        // @ts-ignore
-        dashboardStore.addItem(newItem);
-    });
+    const newItem = {
+        type: 'widget',
+        x: slot.x,
+        y: slot.y,
+        w: widgetDef.defaultW,
+        h: widgetDef.defaultH,
+        // Content stores specific widget config
+        // We use 'widgetId' to identify the type of widget renderer to use
+        // MUST be stringified for backend compatibility
+        content: JSON.stringify({
+            widgetId: widgetDef.id,
+            // Default props for specific widgets could go here
+            text: widgetDef.id === 'notepad' ? '' : undefined
+        })
+    };
+    await dashboardStore.addItem(newItem);
 });
 
 window.addEventListener('drawer-close', () => {

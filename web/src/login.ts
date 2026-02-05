@@ -85,8 +85,8 @@ bootstrap(async () => {
                 setTimeout(() => window.location.href = '/', 500);
             } else {
                 // Login Failed
-                const errorText = await response.text();
-                const msg = errorText || i18n.t('auth.invalid_credentials');
+                const errorKey = (await response.text()).trim();
+                const msg = i18n.t(errorKey) || i18n.t('auth.invalid_credentials');
                 notify(msg, 'error');
 
                 if (submitBtn) {

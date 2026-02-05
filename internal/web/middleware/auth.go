@@ -11,7 +11,10 @@ import (
 
 type contextKey string
 
-const userContextKey contextKey = "user"
+const (
+	userContextKey   contextKey = "user"
+	userIDContextKey contextKey = "user_id"
+)
 
 // AuthRequired checks for a valid session cookie.
 // If valid, it allows the request.
@@ -24,7 +27,6 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			if r.URL.Path == "/login" || r.URL.Path == "/setup" ||
 				strings.HasPrefix(r.URL.Path, "/dist/") ||
 				strings.HasPrefix(r.URL.Path, "/styles/") ||
-				strings.HasPrefix(r.URL.Path, "/src/") ||
 				r.URL.Path == "/api/login" ||
 				r.URL.Path == "/api/setup" {
 				next.ServeHTTP(w, r)
@@ -64,7 +66,21 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				}
 			}
 
+			// Resolve the numeric user ID so handlers can scope queries without
+			// an extra round-trip.  A missing row also covers the "account deleted
+			// while session was still live" case.
+			var userID int
+			if err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
+				if strings.HasPrefix(r.URL.Path, "/api/") {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
 			ctx := context.WithValue(r.Context(), userContextKey, username)
+			ctx = context.WithValue(ctx, userIDContextKey, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -75,4 +91,11 @@ func GetUserFromContext(r *http.Request) string {
 		return u
 	}
 	return ""
+}
+
+func GetUserIDFromContext(r *http.Request) int {
+	if id, ok := r.Context().Value(userIDContextKey).(int); ok {
+		return id
+	}
+	return 0
 }

@@ -40,9 +40,9 @@ class AddWidgetModal extends HTMLElement {
                     display: contents;
                 }
                 dialog {
-                    background: rgba(23, 23, 27, 0.85);
-                    color: white;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: var(--surface);
+                    color: var(--text-main);
+                    border: 1px solid var(--border);
                     border-radius: 20px;
                     padding: 32px;
                     width: 720px;
@@ -71,19 +71,19 @@ class AddWidgetModal extends HTMLElement {
                     font-size: 26px;
                     font-weight: 800;
                     letter-spacing: -0.02em;
-                    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+                    background: linear-gradient(135deg, var(--text-main) 0%, var(--text-dim) 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
                 }
                 .title-group p {
                     margin: 4px 0 0 0;
-                    color: rgba(255, 255, 255, 0.5);
+                    color: var(--text-dim);
                     font-size: 14px;
                 }
                 .close-btn {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    color: white;
+                    background: transparent;
+                    border: 1px solid var(--border);
+                    color: var(--text-dim);
                     padding: 8px;
                     border-radius: 12px;
                     cursor: pointer;
@@ -93,9 +93,10 @@ class AddWidgetModal extends HTMLElement {
                     justify-content: center;
                 }
                 .close-btn:hover {
-                    background: rgba(255, 255, 255, 0.1);
+                    background: rgba(var(--accent-rgb), 0.1);
                     transform: rotate(90deg);
-                    color: #ff4757;
+                    color: var(--accent);
+                    border-color: rgba(var(--accent-rgb), 0.3);
                 }
                 .grid {
                     display: grid;
@@ -103,52 +104,60 @@ class AddWidgetModal extends HTMLElement {
                     gap: 20px;
                 }
                 .card {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 16px;
+                    background: var(--card-bg-inactive);
+                    border: 1px solid var(--border);
+                    border-radius: 20px;
                     padding: 24px;
                     cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     text-align: center;
                     position: relative;
                     overflow: hidden;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
                 }
                 .card::before {
                     content: '';
                     position: absolute;
                     top: 0; left: 0; right: 0; bottom: 0;
-                    background: radial-gradient(circle at center, var(--accent, #3b82f6) 0%, transparent 70%);
+                    background: radial-gradient(circle at top right, var(--accent), transparent 70%);
                     opacity: 0;
-                    transition: opacity 0.3s;
+                    transition: opacity 0.5s;
                     z-index: 0;
                 }
                 .card:hover {
-                    background: rgba(255, 255, 255, 0.06);
-                    border-color: rgba(255, 255, 255, 0.2);
-                    transform: translateY(-4px);
-                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+                    background: rgba(var(--accent-rgb), 0.08);
+                    border-color: var(--accent);
+                    transform: translateY(-8px) scale(1.02);
+                    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.2), 0 0 20px rgba(var(--accent-rgb), 0.1);
                 }
                 .card:hover::before {
-                    opacity: 0.05;
+                    opacity: 0.15;
                 }
                 .icon-container {
-                    width: 56px;
-                    height: 56px;
-                    background: rgba(255, 255, 255, 0.05);
-                    border-radius: 14px;
+                    width: 64px;
+                    height: 64px;
+                    background: var(--surface-solid);
+                    border: 1px solid var(--border);
+                    border-radius: 18px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     margin-bottom: 20px;
-                    transition: transform 0.3s;
+                    transition: all 0.3s;
                     z-index: 1;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
                 }
                 .card:hover .icon-container {
-                    transform: scale(1.1);
-                    background: rgba(255, 255, 255, 0.1);
+                    transform: translateY(-4px) rotate(-5deg);
+                    background: var(--accent);
+                    border-color: #fff;
+                    box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.4);
+                }
+                .card:hover .icon-container svg {
+                    fill: #fff;
                 }
                 .icon-container svg {
                     width: 32px;
@@ -160,10 +169,11 @@ class AddWidgetModal extends HTMLElement {
                     font-size: 18px;
                     margin-bottom: 8px;
                     z-index: 1;
+                    color: var(--text-main);
                 }
                 .desc {
                     font-size: 13px;
-                    color: rgba(255, 255, 255, 0.5);
+                    color: var(--text-dim);
                     line-height: 1.5;
                     z-index: 1;
                 }

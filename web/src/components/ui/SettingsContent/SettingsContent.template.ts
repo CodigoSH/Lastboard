@@ -7,6 +7,7 @@ interface User {
     avatar_url?: string;
     username?: string;
     role?: string;
+    is_superadmin?: boolean;
 }
 
 interface Prefs {
@@ -30,6 +31,7 @@ export const accountTemplate = (user: User) => `
                     <span class="mono-tag">
                         ${(() => {
         const r = (user.role || '').toLowerCase();
+        if (user.is_superadmin) return i18n.t('settings.role_super_admin');
         if (r === 'admin' || r === 'administrator') return i18n.t('settings.role_admin');
         if (r === 'user') return i18n.t('settings.role_user');
         return user.role || i18n.t('settings.default_role');
@@ -102,14 +104,12 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                 <div style="display: flex; gap: 16px;">
                     <div style="flex: 1;">
                         <label class="settings-content__label">${i18n.t('settings.language')}</label>
-                        <select class="settings-content__select" onchange="this.getRootNode().host.savePrefs({language: this.value})">
-                            ${i18n.getAvailableLocales().map(l => `<option value="${l.code}" ${prefs.language === l.code ? 'selected' : ''}>${l.flag} ${l.name}</option>`).join('')}
-                        </select>
+                        <app-select id="language-select" value="${prefs.language}"></app-select>
                     </div>
                     <div style="flex: 1;">
                         <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
                          <div class="settings-content__segmented-control">
-                            <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'dark' ? 'active' : ''}" 
+                            <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}" 
                                     onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
                                 🌙 ${i18n.t('settings.dark')}
                             </button>
@@ -179,12 +179,17 @@ export const usersTemplate = (users: any[]) => `
                 ${users.map(u => `
                     <div class="settings-content__user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <app-avatar initials="${u.username.substring(0, 2).toUpperCase()}" src="${u.avatar_url}" style="width: 32px; height: 32px; font-size: 12px;"></app-avatar>
+                            <app-avatar 
+                                initials="${u.username.substring(0, 2).toUpperCase()}" 
+                                src="${u.avatar_url || ''}" 
+                                style="width: 32px; height: 32px; font-size: 12px; border-radius: 50%; object-fit: cover;">
+                            </app-avatar>
                             <div>
                                 <div style="font-weight: 500; font-size: 14px;">${u.username}</div>
                                 <div class="mono-tag" style="font-size: 10px;">
                                     ${(() => {
         const r = (u.role || '').toLowerCase();
+        if (u.is_superadmin) return i18n.t('settings.role_super_admin');
         if (r === 'admin' || r === 'administrator') return i18n.t('settings.role_admin');
         if (r === 'user') return i18n.t('settings.role_user');
         return u.role;
@@ -204,7 +209,12 @@ export const usersTemplate = (users: any[]) => `
     </div>
     
      <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
-        <h3 style="margin-top: 0; margin-bottom: 16px;">${i18n.t('action.add_new_user')}</h3>
+        <div class="modal-header">
+            <h3 class="modal-title">${i18n.t('action.add_new_user')}</h3>
+            <button class="modal-close" onclick="this.getRootNode().getElementById('add-user-modal').close()">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        </div>
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('auth.username')}</label>
             <input type="text" id="new-user-username" class="settings-content__input">
@@ -215,19 +225,20 @@ export const usersTemplate = (users: any[]) => `
         </div>
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('settings.role')}</label>
-            <select id="new-user-role" class="settings-content__select">
-                <option value="user">${i18n.t('settings.role_user')}</option>
-                <option value="admin">${i18n.t('settings.role_admin')}</option>
-            </select>
+            <app-select id="new-user-role" value="user"></app-select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button onclick="this.getRootNode().getElementById('add-user-modal').close()">${i18n.t('general.cancel')}</app-button>
             <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${i18n.t('general.save')}</app-button>
         </div>
     </dialog>
 
     <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
-        <h3 style="margin-top: 0; margin-bottom: 16px;">${i18n.t('action.edit_user')}</h3>
+        <div class="modal-header">
+            <h3 class="modal-title">${i18n.t('action.edit_user')}</h3>
+            <button class="modal-close" onclick="this.getRootNode().getElementById('edit-user-modal').close()">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        </div>
         <input type="hidden" id="edit-user-id">
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('auth.username')}</label>
@@ -239,13 +250,9 @@ export const usersTemplate = (users: any[]) => `
         </div>
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('settings.role')}</label>
-            <select id="edit-user-role" class="settings-content__select">
-                <option value="user">${i18n.t('settings.role_user')}</option>
-                <option value="admin">${i18n.t('settings.role_admin')}</option>
-            </select>
+            <app-select id="edit-user-role"></app-select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button onclick="this.getRootNode().getElementById('edit-user-modal').close()">${i18n.t('general.cancel')}</app-button>
             <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${i18n.t('action.save_changes')}</app-button>
         </div>
     </dialog>
@@ -291,63 +298,69 @@ export const advancedTemplate = () => `
         <div class="settings-content__danger-zone">
              <div>
                 <div class="settings-content__danger-title">
-                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fa5252;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: var(--danger-color);"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
                     ${i18n.t('settings.factory_reset')}
                 </div>
-                <p class="settings-content__text-dim" style="font-size: 13px; color: rgba(250, 82, 82, 0.8);">
+                <p class="settings-content__text-dim" style="font-size: 13px; color: var(--danger-color); opacity: 0.8;">
                     ${i18n.t('settings.reset_desc')}
                 </p>
              </div>
-             <app-button onclick="this.getRootNode().host.openResetModal()" style="border-color: rgba(250, 82, 82, 0.4); color: #fa5252; background: transparent; transition: all 0.2s;">
+             <app-button onclick="this.getRootNode().host.openResetModal()" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent; transition: all 0.2s;">
                 ${i18n.t('action.reset_system')}
              </app-button>
         </div>
     </div>
 
     <!-- Factory Reset Confirmation Modal -->
-    <dialog id="reset-confirm-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 440px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-        <h3 style="margin-top: 0; margin-bottom: 16px; color: #fa5252; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
-            <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: #fa5252;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-            ${i18n.t('settings.confirm_reset_title')}
-        </h3>
+    <dialog id="reset-confirm-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 440px; backdrop-filter: blur(20px); box-shadow: var(--paper-shadow);">
+        <div class="modal-header">
+            <h3 class="modal-title" style="color: var(--danger-color); font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+                <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: var(--danger-color);"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                ${i18n.t('settings.confirm_reset_title')}
+            </h3>
+            <button class="modal-close" onclick="this.getRootNode().getElementById('reset-confirm-modal').close()">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        </div>
         <p class="settings-content__text-dim" style="font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
             ${i18n.t('settings.confirm_reset_msg')}
             ${i18n.t('settings.type_delete')}
         </p>
 
         <div class="settings-content__form-group">
-            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="Type 'delete'" style="border-color: rgba(250, 82, 82, 0.3); font-family: monospace;">
+            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="${i18n.t('settings.type_delete_placeholder')}" style="border-color: var(--danger-color); opacity: 0.6; font-family: monospace;">
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 32px; width: 100%;">
-            <app-button onclick="this.getRootNode().getElementById('reset-confirm-modal').close()" style="width: auto;">${i18n.t('general.cancel')}</app-button>
-            <button id="btn-reset-confirm" class="settings-content__reset-btn" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1;">
+            <app-button id="btn-reset-confirm" variant="danger" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1; justify-content: center;">
                 ${i18n.t('action.erase_everything')}
-            </button>
+            </app-button>
         </div>
     </dialog>
 `;
 
-export const aboutTemplate = (version: string, updateInfo: any) => `
+export const aboutTemplate = (version: string, updateInfo: any, role: string) => {
+    const isAdmin = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'administrator';
+    return `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card" style="text-align: center; padding: 48px 24px;">
              <!-- Logo Placeholder -->
              <img src="/images/logo.png" alt="Kashboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
              
              <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
-             <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">${i18n.t('settings.version')} ${version}</p>
+             <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">${version}</p>
 
              <div style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px;">
-                ${updateInfo ? `
+                ${isAdmin ? (updateInfo ? `
                     ${updateInfo.is_docker ? `
-                        <div style="background: rgba(0, 120, 212, 0.1); border: 1px solid rgba(0, 120, 212, 0.3); padding: 16px; border-radius: var(--radius); width: 100%; text-align: left;">
+                        <div style="background: rgba(var(--info-rgb), 0.1); border: 1px solid rgba(var(--info-rgb), 0.3); padding: 16px; border-radius: var(--radius); width: 100%; text-align: left;">
                              <div style="display: flex; gap: 12px; align-items: flex-start;">
                                 <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--accent); flex-shrink: 0;"><path d="M21 12l-4.37-6.16c-.37-.52-.98-.84-1.63-.84h-3V4c0-1.1-.9-2-2-2s-2 .9-2 2v1H5c-.65 0-1.26.32-1.63.84L-1 12v3h2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h2v-3zm-11 7H7v-3h3v3zm-5 0H2v-3h3v3zm12 0h-3v-3h3v3z"/></svg>
                                 <div>
                                     <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${i18n.t('settings.docker_mode')}</h4>
                                     <p style="margin: 0; font-size: 13px; color: var(--text-dim);">
                                         ${i18n.t('settings.docker_desc')}<br>
-                                        ${updateInfo.available ? `<strong style="color: var(--accent);">New version ${updateInfo.latest_version} available!</strong>` : 'You are strictly up to date.'}
+                                        ${updateInfo.available ? `<strong style="color: var(--accent);">${i18n.t('settings.new_version_notif')} (${updateInfo.latest_version})</strong>` : i18n.t('settings.up_to_date_docker_msg')}
                                     </p>
                                 </div>
                              </div>
@@ -370,14 +383,14 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
                                             ${i18n.t('action.download_install')}
                                         </app-button>
                                         <a href="https://github.com/codigosh/Kashboard/releases" target="_blank" style="text-decoration: none;">
-                                            <app-button variant="ghost" style="height: 100%;">ChangeLog</app-button>
+                                            <app-button variant="ghost" style="height: 100%;">${i18n.t('general.changelog')}</app-button>
                                         </a>
                                     </div>
                                     <p id="update-status" style="margin: 0; font-size: 12px; color: var(--text-dim); display: none; text-align: center;">${i18n.t('notifier.downloading_secure')}</p>
                                 </div>
                             </div>
                         ` : `
-                            <div style="color: #12b886; font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 500;">
+                            <div style="color: var(--success-color); font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 500;">
                                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                                 <span>${i18n.t('settings.up_to_date')}</span>
                             </div>
@@ -386,7 +399,7 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
                     `}
                 ` : `
                     <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">${i18n.t('action.check_updates')}</app-button>
-                `}
+                `) : ''}
              </div>
              
              <div style="margin-top: 64px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: center; gap: 24px;">
@@ -402,3 +415,4 @@ export const aboutTemplate = (version: string, updateInfo: any) => `
         </div>
     </div>
 `;
+};

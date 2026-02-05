@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<script>if (localStorage.getItem('kashboard_theme') === 'dark') document.documentElement.classList.add('dark-mode');</script>
 
 <head>
     <meta charset="UTF-8">
@@ -355,7 +356,7 @@
                 <!-- Step 1: Preferences -->
                 <div class="wizard-step active" id="step1">
                     <div class="input-group">
-                        <select id="language" name="language"></select>
+                        <app-select id="language" name="language"></app-select>
                         <label for="language">Language</label>
                     </div>
 

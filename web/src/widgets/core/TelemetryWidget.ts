@@ -48,7 +48,8 @@ class TelemetryWidget extends HTMLElement {
         this._unsubscribe = dashboardStore.subscribe((state) => {
             // Check for config updates
             if (this._itemId) {
-                const item = state.items.find((i: any) => i.id === this._itemId);
+                const items = Array.isArray(state.items) ? state.items : [];
+                const item = items.find((i: any) => i.id === this._itemId);
                 if (item && item.content) {
                     try {
                         const content = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
@@ -146,22 +147,18 @@ class TelemetryWidget extends HTMLElement {
                     justify-content: space-around;
                     width: 100%;
                     height: 100%;
-                    background: rgba(40, 44, 52, 0.4);
-                    backdrop-filter: blur(20px);
-                    -webkit-backdrop-filter: blur(20px);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 16px;
+                    background: var(--surface);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid var(--border);
+                    border-radius: var(--radius);
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     box-sizing: border-box;
                     padding: 12px;
-                    color: white;
+                    color: var(--text-main);
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
-                :host(:hover) {
-                    background: rgba(40, 44, 52, 0.5);
-                    border-color: rgba(255, 255, 255, 0.15);
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                }
+                /* Combined with container hover, we don't need specific host hover */
                 .gauge-container {
                     display: flex;
                     flex-direction: column;
@@ -182,7 +179,7 @@ class TelemetryWidget extends HTMLElement {
                 }
                 .circle-bg {
                     fill: none;
-                    stroke: rgba(255, 255, 255, 0.05);
+                    stroke: var(--border-bright);
                     stroke-width: 3;
                 }
                 .circle {
@@ -209,7 +206,7 @@ class TelemetryWidget extends HTMLElement {
                 }
                 .sub {
                     font-size: 11px;
-                    color: rgba(255, 255, 255, 0.4);
+                    color: var(--text-dim);
                     font-weight: 800;
                     text-transform: uppercase;
                     letter-spacing: 0.15em;

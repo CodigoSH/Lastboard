@@ -1,5 +1,6 @@
 import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
+import { i18n } from './i18n';
 
 /**
  * StatusService
@@ -80,7 +81,9 @@ class StatusService {
         indicator.classList.remove('status-pending', 'status-up', 'status-down');
         indicator.classList.add(`status-${status}`);
 
-        const title = status === 'up' ? 'Online' : (status === 'down' ? 'Offline / Unreachable' : 'Checking...');
+        const title = status === 'up'
+            ? i18n.t('status.online')
+            : (status === 'down' ? i18n.t('status.unreachable') : i18n.t('status.checking'));
         indicator.setAttribute('title', title);
     }
 }

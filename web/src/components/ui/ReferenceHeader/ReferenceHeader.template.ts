@@ -63,7 +63,7 @@ export const template = ({ title, dropdownOpen }: { title: string, dropdownOpen:
                 <div class="header__dropdown ${dropdownOpen ? 'header__dropdown--active' : ''}" id="profile-dropdown">
                     <div class="header__dropdown-item">${i18n.t('header.view_profile')}</div>
                     <div class="header__dropdown-item">${i18n.t('header.preferences')}</div>
-                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: #ff4d4d;">${i18n.t('auth.sign_out')}</div>
+                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: var(--danger-color);">${i18n.t('auth.sign_out')}</div>
                 </div>
             </div>
         </div>

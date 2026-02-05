@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -17,19 +18,7 @@ func NewSetupHandler(db *sql.DB) *SetupHandler {
 }
 
 func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
-	// 1. Security Check: Only allow setup if NO users exist
-	var exists bool
-	if err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	if exists {
-		http.Error(w, "System already initialized", http.StatusForbidden)
-		return
-	}
-
-	// 2. Parse Input
+	// Parse and validate input before touching the database
 	var input struct {
 		Username    string `json:"username"`
 		Password    string `json:"password"`
@@ -39,17 +28,16 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		AccentColor string `json:"accent_color"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
-	if input.Username == "" || input.Password == "" {
-		http.Error(w, "Username and password required", http.StatusBadRequest)
+	if err := validateUsername(input.Username); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	if len(input.Password) > 72 {
-		http.Error(w, "Password too long", http.StatusBadRequest)
+	if err := validatePassword(input.Password); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -61,23 +49,74 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		input.Theme = "dark"
 	}
 	if input.AccentColor == "" {
-		input.AccentColor = "#f97316"
+		input.AccentColor = "#2563eb"
 	}
 
-	// 3. Hash Password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Encryption failed", http.StatusInternalServerError)
+	// Validate preferences
+	if input.Theme != "dark" && input.Theme != "light" && input.Theme != "system" {
+		http.Error(w, "error.invalid_theme", http.StatusBadRequest)
+		return
+	}
+	if len(input.Language) > 10 {
+		http.Error(w, "error.invalid_language", http.StatusBadRequest)
+		return
+	}
+	if len(input.AccentColor) > 32 {
+		http.Error(w, "error.invalid_accent_color", http.StatusBadRequest)
 		return
 	}
 
-	// 4. Create Admin User
-	_, err = h.DB.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language, avatar_url, grid_columns_pc, grid_columns_tablet, grid_columns_mobile) 
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "setup.encryption_failed", http.StatusInternalServerError)
+		return
+	}
+
+	// Transaction: existence check + user creation are atomic
+	tx, err := h.DB.Begin()
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	var exists bool
+	if err := tx.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if exists {
+		http.Error(w, "setup.already_initialized", http.StatusForbidden)
+		return
+	}
+
+	// Create admin user
+	_, err = tx.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language, avatar_url, grid_columns_pc, grid_columns_tablet, grid_columns_mobile)
 		VALUES (?, ?, ?, ?, ?, ?, ?, 12, 6, 3)`,
 		input.Username, string(hashedPassword), "admin", input.Theme, input.AccentColor, input.Language, input.AvatarUrl)
-
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)
+		return
+	}
+
+	// Assign any seeded dashboard items (user_id = 0) to the new admin
+	var adminID int
+	if err := tx.QueryRow("SELECT id FROM users WHERE username = ?", input.Username).Scan(&adminID); err == nil {
+		// Legacy: Assign any orphan items
+		if res, err := tx.Exec("UPDATE items SET user_id = ? WHERE user_id = 0", adminID); err == nil {
+			if n, _ := res.RowsAffected(); n > 0 {
+				log.Printf("Setup: assigned %d seeded item(s) to new admin id=%d", n, adminID)
+			}
+		}
+
+		// Seed Default Bookmark for First Admin
+		_, _ = tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
+			(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/codigosh/Kashboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/codigosh/Kashboard')`, adminID)
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 

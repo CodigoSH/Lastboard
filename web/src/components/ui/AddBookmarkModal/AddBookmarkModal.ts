@@ -6,7 +6,7 @@ import '../IconPicker/IconPicker';
 import css from './AddBookmarkModal.css' with { type: 'text' };
 
 class AddBookmarkModal extends HTMLElement {
-    private isOpen: boolean = false;
+    private dialog: HTMLDialogElement | null = null;
     private iconPicker: any = null;
     private selectedIconName: string = '';
     private clickHandler: any = null;
@@ -29,18 +29,16 @@ class AddBookmarkModal extends HTMLElement {
         this.clickHandler = (e: Event) => {
             const target = e.target as HTMLElement;
 
-            // Close on overlay click
-            if (target.id === 'modal-overlay') {
-
+            // Close button (X)
+            if (target.closest('#modal-close')) {
+                e.preventDefault();
+                e.stopPropagation();
                 this.close();
                 return;
             }
 
-            // Close button (X)
-            if (target.closest('#modal-close')) {
-
-                e.preventDefault();
-                e.stopPropagation();
+            // Close on backdrop click
+            if (e.target === this.dialog) {
                 this.close();
                 return;
             }
@@ -58,6 +56,8 @@ class AddBookmarkModal extends HTMLElement {
             const label = formData.get('label') as string;
             const url = formData.get('url') as string;
             const statusCheck = formData.get('statusCheck') === 'on';
+            const visibleMobile = formData.get('visibleMobile') === 'on';
+            const visibleTablet = formData.get('visibleTablet') === 'on';
 
 
 
@@ -75,7 +75,9 @@ class AddBookmarkModal extends HTMLElement {
                     url,
                     icon: iconUrl,
                     iconName: iconName,
-                    statusCheck
+                    statusCheck,
+                    visibleMobile,
+                    visibleTablet
                 });
 
                 if (this.isEditMode && this.currentItemId) {
@@ -90,21 +92,19 @@ class AddBookmarkModal extends HTMLElement {
                     const state = dashboardStore.getState();
                     const items = Array.isArray(state.items) ? state.items : [];
 
-                    // @ts-ignore
-                    import('../../../services/collisionService').then(async ({ collisionService }) => {
-                        const slot = collisionService.findFirstAvailableSlot(1, 1, items);
+                    const { collisionService } = await import('../../../services/collisionService');
+                    const slot = collisionService.findFirstAvailableSlot(1, 1, items);
 
-                        await dashboardStore.addItem({
-                            type: 'bookmark',
-                            x: slot.x,
-                            y: slot.y,
-                            w: 1,
-                            h: 1,
-                            content: content
-                        });
-                        // @ts-ignore
-                        if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_added'));
+                    await dashboardStore.addItem({
+                        type: 'bookmark',
+                        x: slot.x,
+                        y: slot.y,
+                        w: 1,
+                        h: 1,
+                        content: content
                     });
+                    // @ts-ignore
+                    if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_added'));
                 }
 
                 this.close();
@@ -116,8 +116,7 @@ class AddBookmarkModal extends HTMLElement {
         };
 
         this.escapeHandler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && this.isOpen) {
-
+            if (e.key === 'Escape' && this.dialog?.open) {
                 this.close();
             }
         };
@@ -128,7 +127,7 @@ class AddBookmarkModal extends HTMLElement {
         this.setupListeners();
         // Subscribe to language changes
         this._unsubscribeI18n = i18n.subscribe(() => {
-            if (this.isOpen) this.render();
+            if (this.dialog?.open) this.render();
         });
     }
 
@@ -157,22 +156,19 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     open() {
-
-        this.isOpen = true;
         this.isEditMode = false;
         this.currentItemId = null;
+        this.selectedIconName = '';
         this.render();
-        this.initializeIconPicker();
-        // Focus first input
-        setTimeout(() => {
-            const input = this.shadowRoot!.getElementById('bookmark-label') as HTMLInputElement;
-            if (input) input.focus();
-        }, 100);
+        this.dialog?.showModal();
+
+        requestAnimationFrame(() => {
+            this.resetForm();
+            this.initializeIconPicker();
+        });
     }
 
     openForEdit(item: any) {
-
-        this.isOpen = true;
         this.isEditMode = true;
         this.currentItemId = item.id;
 
@@ -186,6 +182,7 @@ class AddBookmarkModal extends HTMLElement {
 
         this.selectedIconName = content.iconName || '';
         this.render();
+        this.dialog?.showModal();
         this.initializeIconPicker();
 
         // Populate Form
@@ -195,10 +192,14 @@ class AddBookmarkModal extends HTMLElement {
                 const labelInput = form.elements.namedItem('label') as HTMLInputElement;
                 const urlInput = form.elements.namedItem('url') as HTMLInputElement;
                 const statusInput = form.elements.namedItem('statusCheck') as HTMLInputElement;
+                const mobileInput = form.elements.namedItem('visibleMobile') as HTMLInputElement;
+                const tabletInput = form.elements.namedItem('visibleTablet') as HTMLInputElement;
 
                 if (labelInput) labelInput.value = content.label || '';
                 if (urlInput) urlInput.value = content.url || '';
                 if (statusInput) statusInput.checked = !!content.statusCheck;
+                if (mobileInput) mobileInput.checked = content.visibleMobile !== false;
+                if (tabletInput) tabletInput.checked = content.visibleTablet !== false;
             }
             if (this.iconPicker) {
                 this.iconPicker.setSelectedIcon(this.selectedIconName);
@@ -207,11 +208,9 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     close() {
-
-        this.isOpen = false;
+        this.dialog?.close();
         this.selectedIconName = '';
         this.resetForm();
-        this.render();
     }
 
     resetForm() {
@@ -251,8 +250,10 @@ class AddBookmarkModal extends HTMLElement {
     render() {
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
-            ${template({ isOpen: this.isOpen, isEditMode: this.isEditMode })}
+            ${template({ isOpen: true, isEditMode: this.isEditMode })}
         `;
+        this.dialog = this.shadowRoot!.getElementById('modal') as HTMLDialogElement;
+        this.setupListeners();
     }
 }
 
