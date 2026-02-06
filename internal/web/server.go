@@ -99,7 +99,7 @@ func (s *Server) routes() {
 	authCheck := middleware.AuthRequired(s.DB, s.sessionSecret)
 
 	protect := func(h http.Handler) http.Handler {
-		return setupCheck(authCheck(h))
+		return middleware.RateLimit(setupCheck(authCheck(h)))
 	}
 
 	// File Server for static assets
@@ -180,7 +180,7 @@ func (s *Server) routes() {
 
 	// Auth API
 	authHandler := api.NewAuthHandler(s.DB, s.sessionSecret)
-	s.Router.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
+	s.Router.Handle("POST /api/login", middleware.RateLimit(http.HandlerFunc(authHandler.Login)))
 	s.Router.Handle("POST /logout", protect(http.HandlerFunc(authHandler.Logout)))
 
 	// Dashboard API

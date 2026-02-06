@@ -28,9 +28,8 @@ class SettingsContent extends HTMLElement {
         this.prefs = {
             accent_color: '#0078D4',
             language: 'en',
-            grid_columns_pc: 9,
-            grid_columns_tablet: 4,
-            grid_columns_mobile: 2
+            widget_min_width: 140,
+            beta_updates: false
         };
     }
 
@@ -131,23 +130,34 @@ class SettingsContent extends HTMLElement {
         }
     }
 
-    updateGridPref(key: string, value: string) {
-        const valSpan = this.shadowRoot!.getElementById(`val-${key}`);
-        if (valSpan) valSpan.textContent = value;
+    handleBetaToggle(checked: boolean) {
+        this.savePrefs({ beta_updates: checked });
 
-        const cssVarMap: Record<string, string> = {
-            'grid_columns_pc': '--grid-columns-pc',
-            'grid_columns_tablet': '--grid-columns-tablet',
-            'grid_columns_mobile': '--grid-columns-mobile'
-        };
-        if (cssVarMap[key]) {
-            document.documentElement.style.setProperty(cssVarMap[key], value);
+        // Update visual text state immediately
+        const text = this.shadowRoot!.getElementById('beta-text');
+        if (text) {
+            if (checked) {
+                text.style.color = '#2fb344';
+                text.style.borderColor = '#2fb344';
+                text.style.boxShadow = '0 0 10px rgba(47, 179, 68, 0.2)';
+            } else {
+                text.style.color = 'var(--text-dim)';
+                text.style.borderColor = 'var(--border)';
+                text.style.boxShadow = 'none';
+            }
         }
     }
 
-    commitGridPref(key: string, value: string) {
+    updateDensity(value: string) {
+        const valSpan = this.shadowRoot!.getElementById('val-widget_min_width');
+        if (valSpan) valSpan.textContent = value + 'px';
+        document.documentElement.style.setProperty('--widget-min-size', value + 'px');
+    }
+
+    commitDensity(value: string) {
+        const val = parseInt(value);
         // @ts-ignore
-        userStore.updatePreferences({ [key]: parseInt(value) });
+        userStore.updatePreferences({ widget_min_width: val });
     }
 
     async updateUsername(newUsername: string) {
@@ -381,12 +391,7 @@ class SettingsContent extends HTMLElement {
             }
 
             case 'personalization': {
-                const sliderConfigs = [
-                    { label: i18n.t('settings.grid_pc'), key: 'grid_columns_pc', min: 4, max: 12 },
-                    { label: i18n.t('settings.grid_tablet'), key: 'grid_columns_tablet', min: 2, max: 6 },
-                    { label: i18n.t('settings.grid_mobile'), key: 'grid_columns_mobile', min: 1, max: 3 }
-                ];
-                return personalizationTemplate(this.prefs, sliderConfigs);
+                return personalizationTemplate(this.prefs);
             }
 
             case 'advanced':
@@ -594,6 +599,10 @@ class SettingsContent extends HTMLElement {
         });
 
         this.initSelects();
+
+        if (this.getAttribute('section') === 'about') {
+            this.updateBetaBadgeVisuals();
+        }
     }
 
     initSelects() {
@@ -622,6 +631,29 @@ class SettingsContent extends HTMLElement {
 
         const editUserRole = this.shadowRoot!.getElementById('edit-user-role') as any;
         if (editUserRole) editUserRole.options = roleOptions;
+    }
+
+    updateBetaBadgeVisuals() {
+        setTimeout(() => {
+            const toggle = this.shadowRoot!.getElementById('beta-updates-toggle-badge') as HTMLInputElement;
+            const text = this.shadowRoot!.getElementById('beta-text');
+
+            // Use current prefs
+            const isActive = this.prefs.beta_updates || false;
+
+            if (toggle && text) {
+                toggle.checked = isActive;
+                if (isActive) {
+                    text.style.color = '#2fb344';
+                    text.style.borderColor = '#2fb344';
+                    text.style.boxShadow = '0 0 10px rgba(47, 179, 68, 0.2)';
+                } else {
+                    text.style.color = 'var(--text-dim)';
+                    text.style.borderColor = 'var(--border)';
+                    text.style.boxShadow = 'none';
+                }
+            }
+        }, 0);
     }
 }
 

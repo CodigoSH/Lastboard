@@ -162,45 +162,7 @@ export const collisionService = {
      * Finds the first available slot for an item of given size.
      */
     findFirstAvailableSlot(w: number, h: number, allItems: GridItem[], gridCols: number = 12): { x: number, y: number } {
-        let y = 1;
-        while (true) {
-            for (let x = 1; x <= gridCols - w + 1; x++) {
-                const potentialRect = { x, y, w, h };
-                let collision = false;
-
-                for (const item of allItems) {
-                    // Collision check with potentially nested items using global coordinates
-                    let itemGlobalX = item.x;
-                    let itemGlobalY = item.y;
-                    let itemW = item.w || 1;
-                    let itemH = item.h || 1;
-
-                    if (item.parent_id) {
-                        const parent = allItems.find(p => p.id === item.parent_id);
-                        if (parent) {
-                            itemGlobalX = parent.x + item.x - 1;
-                            itemGlobalY = parent.y + item.y - 1;
-                        } else {
-                            continue; // Orphan
-                        }
-                    }
-
-                    const itemRect = { x: itemGlobalX, y: itemGlobalY, w: itemW, h: itemH };
-
-                    if (this.isOverlap(potentialRect, itemRect)) {
-                        collision = true;
-                        break;
-                    }
-                }
-
-                if (!collision) {
-                    return { x, y };
-                }
-            }
-            y++;
-            // Safety break to prevent infinite loops in weird cases
-            if (y > 1000) return { x: 1, y: 1000 };
-        }
+        return this.findCompactPosition(w, h, allItems, gridCols);
     },
 
     /**
@@ -226,8 +188,57 @@ export const collisionService = {
                 }
             }
             y++;
-            if (y > 1000) return { x: 1, y: 1000 };
+            if (y > 500) {
+                console.warn('[CollisionService] Grid exhausted, no available slot found. Grid may be full.');
+                return { x: 1, y: 500 };
+            }
+        }
+    },
+
+    /**
+     * New Helper: Finds the first available slot in a list of items using Bin Packing Logic.
+     * Can be used for "Ghost Gravity" simulation.
+     */
+    findCompactPosition(w: number, h: number, existingItems: GridItem[], gridCols: number, excludeId?: number): { x: number, y: number } {
+        let y = 1;
+        let x = 1;
+
+        // Loop until we find a spot
+        while (true) {
+            // Reset X
+            for (let tryX = 1; tryX <= gridCols - w + 1; tryX++) {
+                const potentialRect = { x: tryX, y: y, w, h };
+                let collision = false;
+
+                for (const item of existingItems) {
+                    if (excludeId && item.id === excludeId) continue;
+
+                    // Determine global rect of existing item
+                    // Note: We assume "existingItems" are already resolved to the current coordinate space (e.g. root or local)
+                    // If mixed (root + children), we need to be careful.
+                    // But typically finding a compact position is done within a specific container context.
+
+                    let itemRect = { x: item.x, y: item.y, w: item.w || 1, h: item.h || 1 };
+
+                    // If item has parent, and we are looking in root, we should convert?
+                    // BUT usually we call this with a flattened list of items RELEVANT to the context.
+                    // For root layout, we check only root items.
+
+                    if (this.isOverlap(potentialRect, itemRect)) {
+                        collision = true;
+                        break;
+                    }
+                }
+
+                if (!collision) {
+                    return { x: tryX, y: y };
+                }
+            }
+            y++;
+            if (y > 500) {
+                console.warn('[CollisionService] Grid exhausted, no compact position found. Grid may be full.');
+                return { x: 1, y: 500 }; // Safety limit
+            }
         }
     }
 };
-

@@ -28,6 +28,10 @@ func InitDB(dsn string) (*DB, error) {
 	if _, err := db.Exec("PRAGMA journal_mode = WAL"); err != nil {
 		log.Printf("Warning: failed to set WAL mode: %v", err)
 	}
+	// Busy timeout to prevent "database is locked" errors in high concurrency
+	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
+		log.Printf("Warning: failed to set busy_timeout: %v", err)
+	}
 
 	if err := runMigrations(db); err != nil {
 		return nil, err
@@ -79,6 +83,9 @@ func runMigrations(db *sql.DB) error {
 		`ALTER TABLE items ADD COLUMN url TEXT;`,
 		// M5: per-user dashboard isolation — backfill column on existing tables
 		`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
+		`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
+		`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
+		`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
 	}
 
 	for _, query := range queries {

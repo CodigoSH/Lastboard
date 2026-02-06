@@ -13,17 +13,14 @@ const safeUrl = (url: string): string => {
     return '#';
 };
 
-export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean, isTouchDevice?: boolean }) => {
-    // Ensure bookmarks is always an array
-    const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];
+// DEEP CASCADE REMOVED per strict request.
+// Only strict coordinate rendering is used.
 
-    // Helper to find children
+
+export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice, maxCols = 12 }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean, isTouchDevice?: boolean, maxCols?: number }) => {
+    const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];
     const getChildren = (parentId: number) => safeBookmarks.filter(b => b.parent_id === parentId);
 
-    // Root items: 
-    // - Mobile: Show only leaves (bookmarks/widgets), ignore sections to prevent duplication (since sections render children too, or we just want flat leaves)
-    // - Search: Show everything (flat)
-    // - Desktop: Hierarchy (Roots only)
     const rootItems = isTouchDevice
         ? safeBookmarks.filter(b => b.type !== 'section')
         : (isSearching ? safeBookmarks : safeBookmarks.filter(b => !b.parent_id));
@@ -36,21 +33,26 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: {
         } catch (e) {
             console.error('Failed to parse content for item', b.id, e);
         }
-        const isSection = b.type === 'section'; // RESIZABLE BOX
+        const isSection = b.type === 'section';
+
+        // STRICT COORDINATE RENDERING
+        const vPos = { x: b.x || 1, y: b.y || 1 };
+        const clampedW = Math.min(b.w || 1, maxCols);
+        let displayH = b.h || 1;
 
         if (isSection) {
-            // SECTION: Resizable Box, Fieldset-style
             const children = getChildren(b.id);
             const title = (data.title || '').trim();
 
             return `
             <fieldset class="bookmark-grid__section"
                data-id="${b.id}"
+               data-orig-x="${b.x}" data-orig-y="${b.y}"
                draggable="${isEditing}"
-               style="--x: ${b.x}; --y: ${b.y}; --w: ${b.w}; --h: ${b.h};">
+               style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH};">
                ${title ? `<legend class="section-title">${esc(title)}</legend>` : ''}
-               <div class="bookmark-grid__nested-content">
-                   ${renderBookmarks(children, isEditing, true)}
+               <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
+                   ${renderBookmarks(children, isEditing, true, clampedW)}
                </div>
                ${isEditing ? `
                 <div class="bookmark-actions">
@@ -62,68 +64,49 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice }: {
             </fieldset>`;
         }
 
-        // Standard Bookmark
-        return renderBookmarkCard(b, data, isEditing);
+        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH);
     }).join('')}
 
     <div id="ghost-element" class="bookmark-grid__ghost" style="display: none;"></div>
-`;
+    `;
 };
 
-// ... renderBookmarkCard stays mostly the same ...
-function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
-    // Check for Widget Type
+function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { x: number; y: number }, clampedW: number, displayH: number = 0) {
+    const finalH = displayH || b.h || 1;
+
     if (b.type === 'widget') {
-        // Data should look like { widgetId: 'clock', ... } or similar.
-        // Actually, if we follow the creation logic, we'll store the widget registry ID in 'content.widgetId' 
-        // OR we just set b.type = 'widget' but we need to know WHICH widget.
-        // Let's assume content: { widgetId: 'clock', ...otherProps }
-
-        // Fix: If no widgetId in content, fallback or error?
-        // We might use a helper to look it up.
-
         const widgetId = data.widgetId;
-        // Dynamic tag mapping
         const tagMap: Record<string, string> = {
             'clock': 'widget-clock',
             'notepad': 'widget-notepad',
             'telemetry': 'widget-telemetry'
         };
-
-        // Fallback or Registry Lookup (we could import registry here too, but simple map is safer for now? 
-        // No, imports are cheap).
-        // Let's assume we mapped it.
         const tagName = tagMap[widgetId] || 'div';
-
-        // For Notepad, we pass 'content' attribute. For others, maybe specific props.
-        // We serialize `content` (which includes widgetId and other data) back to string 
-        // or pass specific properties.
-        // Provide item-id for persisting
         const rawContent = data.text || '';
-        // ESCAPE DOUBLE QUOTES to prevent breaking the HTML attribute
         const dataContent = rawContent.replace(/"/g, '&quot;');
 
         return `
-            <div class="bookmark-grid__card"
-                draggable="${isEditing}"
-                data-id="${b.id}"
-                data-type="${b.type}"
-                style="--x: ${b.x}; --y: ${b.y}; --w: ${b.w}; --h: ${b.h}; cursor: ${isEditing ? 'move' : 'default'};">
-                
-                <${tagName} 
-                    item-id="${b.id}"
-                    ${widgetId === 'notepad' ? `content="${dataContent}"` : ''}
-                ></${tagName}>
+        <div class="bookmark-grid__card"
+            draggable="${isEditing}"
+            data-id="${b.id}"
+            data-type="${b.type}"
+            data-orig-x="${b.x}" data-orig-y="${b.y}"
+            style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH}; cursor: ${isEditing ? 'move' : 'default'};">
 
-                ${isEditing ? `
-                <div class="bookmark-actions">
-                     ${['clock', 'telemetry'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
-                     <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
-                </div>
-                ${['clock', 'telemetry'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}
-                ` : ''}
+            <${tagName}
+                item-id="${b.id}"
+                ${widgetId === 'notepad' ? `content="${dataContent}"` : ''}
+            ></${tagName}>
+
+            ${isEditing ? `
+            <div class="bookmark-actions">
+                 ${['clock', 'telemetry'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
+                 <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
             </div>
-         `;
+            ${['clock', 'telemetry'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}
+            ` : ''}
+        </div>
+    `;
     }
 
     const icon = data.icon || '';
@@ -139,7 +122,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
            draggable="${isEditing}"
            data-id="${b.id}"
            data-type="${b.type}"
-           style="--x: ${b.x || 'auto'}; --y: ${b.y || 'auto'}; --w: ${b.w || 1}; --h: ${b.h || 1};">
+           data-orig-x="${b.x}" data-orig-y="${b.y}"
+           style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};">
             
             ${isEditing ? `
                 <div class="bookmark-actions">
@@ -162,7 +146,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean) {
     `;
 }
 
-function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: boolean = false) {
+function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: boolean = false, parentCols: number = 12) {
+    // Strictly render children at their relative coordinates
     return bookmarks.map(b => {
         let data: any = {};
         try {
@@ -170,6 +155,11 @@ function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: bo
         } catch (e) {
             console.error('Failed to parse content for item (nested)', b.id, e);
         }
-        return renderBookmarkCard(b, data, isEditing);
+
+        const vPos = { x: b.x || 1, y: b.y || 1 };
+        const displayH = b.h || 1;
+        const clampedW = Math.min(b.w || 1, parentCols);
+
+        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH);
     }).join('');
 }

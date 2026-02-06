@@ -33,12 +33,14 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	err := h.DB.QueryRow(`
 		SELECT id, username, role, accent_color, language,
 		       COALESCE(avatar_url, ''),
-		       COALESCE(grid_columns_pc, 12), COALESCE(grid_columns_tablet, 4), COALESCE(grid_columns_mobile, 2),
+		       COALESCE(widget_min_width, 140),
                COALESCE(theme, 'system'),
-               COALESCE(project_name, 'Kashboard')
+               COALESCE(project_name, 'Kashboard'),
+               COALESCE(beta_updates, 0)
 		FROM users WHERE username=?`, username).Scan(
 		&u.ID, &u.Username, &u.Role, &u.AccentColor, &u.Language, &u.AvatarUrl,
-		&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.Theme, &u.ProjectName,
+		&u.WidgetMinWidth, &u.Theme, &u.ProjectName,
+		&u.BetaUpdates,
 	)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -50,19 +52,18 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
 
 	resp := map[string]interface{}{
-		"id":                  u.ID,
-		"username":            u.Username,
-		"initials":            safeInitials(u.Username),
-		"avatar_url":          u.AvatarUrl,
-		"role":                u.Role,
-		"is_superadmin":       (u.ID > 0 && u.ID == firstAdminID),
-		"accent_color":        u.AccentColor,
-		"language":            u.Language,
-		"theme":               u.Theme,
-		"grid_columns_pc":     u.GridColumnsPC,
-		"grid_columns_tablet": u.GridColumnsTablet,
-		"grid_columns_mobile": u.GridColumnsMobile,
-		"project_name":        u.ProjectName,
+		"id":               u.ID,
+		"username":         u.Username,
+		"initials":         safeInitials(u.Username),
+		"avatar_url":       u.AvatarUrl,
+		"role":             u.Role,
+		"is_superadmin":    (u.ID > 0 && u.ID == firstAdminID),
+		"accent_color":     u.AccentColor,
+		"language":         u.Language,
+		"theme":            u.Theme,
+		"widget_min_width": u.WidgetMinWidth,
+		"project_name":     u.ProjectName,
+		"beta_updates":     u.BetaUpdates,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -73,13 +74,12 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	username := middleware.GetUserFromContext(r)
 
 	var input struct {
-		AccentColor       string `json:"accent_color"`
-		Language          string `json:"language"`
-		Theme             string `json:"theme"`
-		GridColumnsPC     int    `json:"grid_columns_pc"`
-		GridColumnsTablet int    `json:"grid_columns_tablet"`
-		GridColumnsMobile int    `json:"grid_columns_mobile"`
-		ProjectName       string `json:"project_name"`
+		AccentColor    string `json:"accent_color"`
+		Language       string `json:"language"`
+		Theme          string `json:"theme"`
+		WidgetMinWidth int    `json:"widget_min_width"`
+		ProjectName    string `json:"project_name"`
+		BetaUpdates    *bool  `json:"beta_updates"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -87,9 +87,9 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, grid_columns_pc, grid_columns_tablet, grid_columns_mobile, COALESCE(theme, 'system'), COALESCE(project_name, 'Kashboard')
+	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Kashboard'), COALESCE(beta_updates, 0)
 		FROM users WHERE username=?`, username).Scan(
-		&current.AccentColor, &current.Language, &current.GridColumnsPC, &current.GridColumnsTablet, &current.GridColumnsMobile, &current.Theme, &current.ProjectName)
+		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates)
 
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
@@ -117,26 +117,12 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		}
 		current.Theme = input.Theme
 	}
-	if input.GridColumnsPC > 0 {
-		if input.GridColumnsPC > 12 {
-			http.Error(w, "Invalid grid columns (PC)", http.StatusBadRequest)
+	if input.WidgetMinWidth > 0 {
+		if input.WidgetMinWidth < 50 || input.WidgetMinWidth > 500 {
+			http.Error(w, "Invalid widget min width (50-500)", http.StatusBadRequest)
 			return
 		}
-		current.GridColumnsPC = input.GridColumnsPC
-	}
-	if input.GridColumnsTablet > 0 {
-		if input.GridColumnsTablet > 6 {
-			http.Error(w, "Invalid grid columns (Tablet)", http.StatusBadRequest)
-			return
-		}
-		current.GridColumnsTablet = input.GridColumnsTablet
-	}
-	if input.GridColumnsMobile > 0 {
-		if input.GridColumnsMobile > 3 {
-			http.Error(w, "Invalid grid columns (Mobile)", http.StatusBadRequest)
-			return
-		}
-		current.GridColumnsMobile = input.GridColumnsMobile
+		current.WidgetMinWidth = input.WidgetMinWidth
 	}
 	if input.ProjectName != "" {
 		if len(input.ProjectName) > 64 {
@@ -145,12 +131,15 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		}
 		current.ProjectName = input.ProjectName
 	}
+	if input.BetaUpdates != nil {
+		current.BetaUpdates = *input.BetaUpdates
+	}
 
 	_, err = h.DB.Exec(`UPDATE users SET accent_color=?, language=?, theme=?,
-		grid_columns_pc=?, grid_columns_tablet=?, grid_columns_mobile=?, project_name=?
+		widget_min_width=?, project_name=?, beta_updates=?
 		WHERE username=?`,
 		current.AccentColor, current.Language, current.Theme,
-		current.GridColumnsPC, current.GridColumnsTablet, current.GridColumnsMobile, current.ProjectName, username)
+		current.WidgetMinWidth, current.ProjectName, current.BetaUpdates, username)
 
 	if err != nil {
 		http.Error(w, "Failed to update preferences", http.StatusInternalServerError)
@@ -340,7 +329,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Default Avatar Logic
 	defaultAvatar := "/images/default-avatar.svg"
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, accent_color, language, project_name, grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url) VALUES (?, ?, ?, ?, 'system', '#2563eb', 'en', 'Kashboard', 12, 6, 3, ?)")
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, ?, ?, 'system', '#2563eb', 'en', 'Kashboard', 140, ?)")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

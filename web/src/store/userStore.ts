@@ -49,24 +49,19 @@ class UserStore {
         if (!userData) return;
 
         // Default constraints
-        const defaultGridPrefs = {
-            grid_columns_pc: 9,
-            grid_columns_tablet: 4,
-            grid_columns_mobile: 2
-        };
+        // fluid grid defaults to 140px if not set
+
 
         // Map server response to store structure
-        // The server sends flattened fields (accent_color, grid_columns_pc, etc.)
         this.user = {
             ...userData,
             preferences: {
                 accent_color: userData.accent_color || 'blue',
                 language: userData.language || 'en',
                 theme: userData.theme, // Map theme from backend!
-                grid_columns_pc: userData.grid_columns_pc || defaultGridPrefs.grid_columns_pc,
-                grid_columns_tablet: userData.grid_columns_tablet || defaultGridPrefs.grid_columns_tablet,
-                grid_columns_mobile: userData.grid_columns_mobile || defaultGridPrefs.grid_columns_mobile,
-                project_name: userData.project_name || 'Kashboard'
+                widget_min_width: userData.widget_min_width || 140,
+                project_name: userData.project_name || 'Kashboard',
+                beta_updates: userData.beta_updates
             },
             project_name: userData.project_name || 'Kashboard'
         };
@@ -81,9 +76,10 @@ class UserStore {
         const root = document.documentElement;
 
         // Apply grid columns
-        if (prefs.grid_columns_pc) root.style.setProperty('--grid-columns-pc', String(prefs.grid_columns_pc));
-        if (prefs.grid_columns_tablet) root.style.setProperty('--grid-columns-tablet', String(prefs.grid_columns_tablet));
-        if (prefs.grid_columns_mobile) root.style.setProperty('--grid-columns-mobile', String(prefs.grid_columns_mobile));
+        // Apply fluid grid widget min size
+        if (prefs.widget_min_width) {
+            root.style.setProperty('--widget-min-size', `${prefs.widget_min_width}px`);
+        }
 
         // Apply accent color
         if (prefs.accent_color) {
@@ -122,21 +118,25 @@ class UserStore {
         if (newPrefs.language) this.user.language = newPrefs.language;
         if (newPrefs.project_name) this.user.project_name = newPrefs.project_name;
         if (newPrefs.theme) this.user.preferences.theme = newPrefs.theme; // Ensure nested pref is updated for immediate effect
+        if (newPrefs.widget_min_width) this.user.preferences.widget_min_width = newPrefs.widget_min_width;
+        if (newPrefs.beta_updates !== undefined) this.user.preferences.beta_updates = newPrefs.beta_updates;
 
         this.applyAesthetics();
         this.notify();
 
         try {
             // 2. Sync with Backend
-            await userService.updatePreferences({
+            // Explicitly construct payload to avoid sending legacy keys (grid_columns_*)
+            const payload = {
                 accent_color: this.user.accent_color,
                 language: this.user.language,
                 theme: this.user.preferences.theme,
-                grid_columns_pc: this.user.preferences.grid_columns_pc,
-                grid_columns_tablet: this.user.preferences.grid_columns_tablet,
-                grid_columns_mobile: this.user.preferences.grid_columns_mobile,
-                project_name: this.user.project_name
-            });
+                widget_min_width: this.user.preferences.widget_min_width,
+                project_name: this.user.project_name,
+                beta_updates: this.user.preferences.beta_updates
+            };
+
+            await userService.updatePreferences(payload);
 
             // @ts-ignore
             if (window.notifier) window.notifier.show(i18n.t('general.success') || 'Preferences saved');
