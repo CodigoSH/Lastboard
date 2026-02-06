@@ -334,7 +334,7 @@
 .section-title {
     position: absolute;
     top: 0;
-    transform: translateY(-50%);
+    transform: translateY(calc(-50% - 1px));
     /* Lift half-way up to interrupt border */
     left: 12px;
     z-index: 2;
