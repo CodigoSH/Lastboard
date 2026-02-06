@@ -75,7 +75,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	// If Beta Updates enabled: Fetch list of releases (includes pre-releases) and pick first
 	// If Beta Updates disabled: Fetch 'latest' (excludes pre-releases)
 	if betaUpdates {
-		resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases?per_page=1")
+		resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases?per_page=5")
 		if err != nil {
 			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
 			return
@@ -92,7 +92,24 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
 			return
 		}
-		release = releases[0] // Newest release (stable or beta)
+
+		// Iterate through recent releases to find one that is newer
+		// This handles cases where a patched beta might appear 'newer' in the list than a stable release due to timestamps
+		for _, r := range releases {
+			if isNewerVersion(r.TagName, version.Current) {
+				release = r
+				break
+			}
+		}
+
+		// If no newer version found in the list, default to the first one (or handle as no update)
+		// If we didn't find a newer one, we proceed with empty release? No.
+		// If 'release' is zero value, it means no update found.
+		// We should re-check empty state.
+		if release.TagName == "" {
+			// Fallback: If nothing is newer, just show the top one (so logic downstream says available=false)
+			release = releases[0]
+		}
 
 	} else {
 		resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases/latest")
