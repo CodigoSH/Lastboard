@@ -6,6 +6,63 @@ import '../Select/Select';
 // @ts-ignore
 import css from './WidgetConfigModal.css' with { type: 'text' };
 
+// Caché para evitar consultas repetidas
+const timezoneCache = new Map<string, string>();
+
+// Función para obtener zona horaria desde coordenadas usando TimeAPI
+async function getTimezoneFromCoords(lat: number, lon: number): Promise<string> {
+    try {
+        const response = await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lon}`);
+        if (!response.ok) throw new Error('TimeAPI failed');
+        const data = await response.json();
+        return data.timeZone || 'local';
+    } catch (error) {
+        console.error('[Timezone] TimeAPI error:', error);
+        return 'local';
+    }
+}
+
+// Función para obtener zona horaria desde nombre de ciudad
+async function getCityTimezone(city: string): Promise<string> {
+    if (!city || city.trim() === '') return 'local';
+
+    const normalized = city.toLowerCase().trim();
+
+    // Check cache primero
+    if (timezoneCache.has(normalized)) {
+        return timezoneCache.get(normalized)!;
+    }
+
+    try {
+        // 1. Geocoding con Nominatim (OpenStreetMap)
+        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`;
+        const geocodeResponse = await fetch(geocodeUrl, {
+            headers: { 'User-Agent': 'Kashboard/1.0' }
+        });
+
+        if (!geocodeResponse.ok) throw new Error('Geocoding failed');
+
+        const geocodeData = await geocodeResponse.json();
+        if (geocodeData.length === 0) {
+            return 'local';
+        }
+
+        const { lat, lon } = geocodeData[0];
+
+        // 2. Obtener timezone desde coordenadas
+        const timezone = await getTimezoneFromCoords(parseFloat(lat), parseFloat(lon));
+
+        // Guardar en caché
+        timezoneCache.set(normalized, timezone);
+
+        return timezone;
+
+    } catch (error) {
+        console.error('[Timezone] Error resolving city:', city, error);
+        return 'local';
+    }
+}
+
 class WidgetConfigModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
     private currentItem: GridItem | null = null;
@@ -42,13 +99,32 @@ class WidgetConfigModal extends HTMLElement {
         let newContent = { ...oldContent };
 
         if (widgetId === 'clock') {
-            const tzInput = this.shadowRoot?.getElementById('clock-tz') as HTMLInputElement;
+            const cityInput = this.shadowRoot?.getElementById('clock-city') as HTMLInputElement;
             const h12Input = this.shadowRoot?.getElementById('clock-12h') as HTMLInputElement;
             const dateInput = this.shadowRoot?.getElementById('clock-date') as HTMLInputElement;
+            const saveBtn = this.shadowRoot?.getElementById('save-btn') as any;
 
-            newContent.timezone = tzInput?.value || 'local';
+            const city = cityInput?.value || '';
+
+            // Show loading state
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = i18n.t('general.loading');
+            }
+
+            // Consultar zona horaria de forma asíncrona
+            const timezone = await getCityTimezone(city);
+
+            newContent.city = city;
+            newContent.timezone = timezone;
             newContent.hour12 = h12Input?.checked || false;
             newContent.showDate = dateInput?.checked || false;
+
+            // Restore button state
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = i18n.t('general.save');
+            }
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 1000;
@@ -88,25 +164,22 @@ class WidgetConfigModal extends HTMLElement {
         const renderForm = () => {
             if (!this.currentItem) return '';
             if (widgetId === 'clock') {
-                const tz = content.timezone || 'local';
+                const city = content.city || '';
                 const h12 = content.hour12 || false;
                 const showDate = content.showDate !== false; // default true if undefined
 
                 return `
                     <div class="field-group">
-                        <label>${i18n.t('widget.clock.timezone')}</label>
-                        <div class="input-row">
-                            <input type="text" id="clock-tz" value="${esc(tz)}" placeholder="local"/>
-                            <app-button variant="primary" id="clock-auto-tz">${i18n.t('widget.clock.auto_detect')}</app-button>
-                        </div>
-                        <small>${i18n.t('widget.clock.timezone_desc')}</small>
+                        <label>${i18n.t('widget.clock.city')}</label>
+                        <input type="text" id="clock-city" value="${esc(city)}" placeholder="${i18n.t('widget.clock.city_placeholder')}"/>
+                        <small>${i18n.t('widget.clock.city_desc')}</small>
                     </div>
-                    
+
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-12h" ${h12 ? 'checked' : ''} />
                         <label for="clock-12h">${i18n.t('widget.clock.use_12h')}</label>
                     </div>
-        
+
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-date" ${showDate ? 'checked' : ''} />
                         <label for="clock-date">${i18n.t('widget.clock.show_date')}</label>
@@ -178,16 +251,6 @@ class WidgetConfigModal extends HTMLElement {
         // Bindings
         this.shadowRoot.getElementById('close-btn')?.addEventListener('click', () => this.close());
         this.shadowRoot.getElementById('save-btn')?.addEventListener('click', () => this.save());
-
-        // Auto-TZ Logic
-        const autoTz = this.shadowRoot.getElementById('clock-auto-tz');
-        if (autoTz) {
-            autoTz.addEventListener('click', () => {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const input = this.shadowRoot?.getElementById('clock-tz') as HTMLInputElement;
-                if (input) input.value = tz;
-            });
-        }
     }
 }
 

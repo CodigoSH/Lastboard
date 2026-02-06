@@ -100,16 +100,7 @@ class ClockWidget extends HTMLElement {
             timeZone = this._config.timezone;
         }
 
-        // Use 'en-US' for Time to ensure clean "AM/PM" output when 12h is active,
-        // unless user prefers system locale? Actually user request implies full localization.
-        // But 12h formats are tricky. 'en-US' gives AM/PM. 'es-ES' might give 'p. m.'.
-        // Let's rely on the requested logic: if 12h is forced, maybe we prefer AM/PM?
-        // Or honestly, just use the current locale.
-        // The original code forced 'en-US' for 12h.
-        // "Using modern typography... instead of browser defaults".
-        // Let's use the current locale, BUT if 12h is true, we let the locale decide how to show it.
-        // However, standard digital clocks often use AM/PM regardless of language.
-        // Let's respect the current Locale from i18n.
+        // Use current locale for proper localization
         const currentLocale = i18n.getLocale().code;
 
         try {

@@ -19,6 +19,10 @@
 
     /* Hide scrollbars */
     scrollbar-width: none !important;
+
+    /* Optimize dynamic height changes during drag */
+    will-change: min-height;
+    contain: layout style;
 }
 
 :host::-webkit-scrollbar {
@@ -387,8 +391,12 @@
     height: 100%;
 
     pointer-events: none;
-    transition: all 0.1s;
+    /* Removed transition to prevent jitter during rapid resize/drag */
     z-index: 100;
+    will-change: grid-column, grid-row;
+    /* Force GPU acceleration for smoother rendering */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
 }
 
 .bookmark-grid__ghost.invalid {

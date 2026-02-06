@@ -4,6 +4,10 @@ import { customElement, property, state, query } from 'lit/decorators.js';
 
 import { dashboardStore } from '../../store/dashboardStore';
 import { i18n } from '../../services/i18n';
+import { htmlSanitizer } from '../../services/htmlSanitizer';
+import { WidgetContentHelper } from '../../services/widgetContentHelper';
+import './ChecklistBlock';
+import type { ChecklistItem } from './ChecklistBlock';
 
 // --- Icons (Lucide-style) ---
 const ICONS = {
@@ -24,11 +28,19 @@ const ICONS = {
     alignLeft: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="12" x2="3" y2="12"/><line x1="17" y1="18" x2="3" y2="18"/></svg>`,
     alignCenter: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="12" x2="7" y2="12"/><line x1="19" y1="18" x2="5" y2="18"/></svg>`,
     alignRight: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="9" y2="12"/><line x1="21" y1="18" x2="7" y2="18"/></svg>`,
+    alignJustify: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="3" y2="12"/><line x1="21" y1="18" x2="3" y2="18"/></svg>`,
     code: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
     clear: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>`,
     edit: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
     save: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`,
+    loader: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>`,
 };
+
+// Maximum content size (50KB of HTML)
+const MAX_CONTENT_SIZE = 50000;
+
+// Autosave delay (10 seconds - silent background save without interrupting editing)
+const AUTOSAVE_DELAY = 10000;
 
 @customElement('widget-notepad')
 export class NotepadWidget extends LitElement {
@@ -40,11 +52,19 @@ export class NotepadWidget extends LitElement {
     // Internal State
     @state() private isInternalEditing: boolean = false;
     @state() private isDashboardEditing: boolean = false;
+    @state() private isSaving: boolean = false;
+    @state() private characterCount: number = 0;
+    @state() private hasUnsavedChanges: boolean = false;
+    @state() private checklistBlocks: Array<{ id: string; items: ChecklistItem[] }> = [];
 
     // DOM Query
-    @query('.editor-content') editorElement!: HTMLElement;
+    @query('.content-area.editor') editorElement!: HTMLElement;
 
+    // Subscriptions & Cleanup
     private _unsubscribe: (() => void) | undefined;
+    private _autosaveTimeout: ReturnType<typeof setTimeout> | null = null;
+    private _savePromise: Promise<void> | null = null;
+    private _lastSavedContent: string = '';
 
     static styles = css`
         :host {
@@ -68,10 +88,28 @@ export class NotepadWidget extends LitElement {
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
             width: 100%;
             height: 100%;
+            /* Ocultar scrollbar pero mantener funcionalidad */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        .container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        /* Ocultar scrollbars en todos los elementos scrollables */
+        * {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        *::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
         }
 
         /* Toolbar */
@@ -85,7 +123,6 @@ export class NotepadWidget extends LitElement {
             overflow-x: auto;
             flex-shrink: 0;
             min-height: 44px;
-            /* Visual Continuity Hint */
             mask-image: linear-gradient(to right, black 92%, transparent 100%);
             -webkit-mask-image: linear-gradient(to right, black 92%, transparent 100%);
             transition: background 0.2s ease;
@@ -94,7 +131,7 @@ export class NotepadWidget extends LitElement {
             background: rgba(255, 255, 255, 0.06);
         }
         .toolbar::-webkit-scrollbar { height: 0px; }
-        
+
         .group {
             display: flex;
             align-items: center;
@@ -105,7 +142,7 @@ export class NotepadWidget extends LitElement {
             flex-shrink: 0;
         }
         .group:last-child { border-right: none; }
-        
+
         button {
             background: transparent;
             border: none;
@@ -118,18 +155,87 @@ export class NotepadWidget extends LitElement {
             justify-content: center;
             min-width: 24px;
             height: 24px;
+            transition: all 0.15s ease;
         }
-        button:hover { background: var(--surface-hover); color: var(--text-main); }
+        button:hover:not(:disabled) {
+            background: var(--surface-hover);
+            color: var(--text-main);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         button svg { width: 16px; height: 16px; }
         button.text-icon { font-weight: 700; font-size: 11px; width: auto; padding: 0 6px;}
 
         .color-wrapper { position: relative; display: flex; align-items: center; justify-content: center; }
-        .color-input { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            opacity: 0; 
-            cursor: pointer; 
+        .color-input {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Fixed Controls Container */
+        .fixed-controls {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .fixed-controls > * {
+            pointer-events: auto;
+        }
+
+        /* Character Counter (bottom right, below FAB button) */
+        .char-counter-bottom {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--surface);
+            padding: 4px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            z-index: 100;
+        }
+        .char-counter-bottom:hover {
+            opacity: 1;
+        }
+        .char-counter-bottom.warning {
+            color: #ffa500;
+            font-weight: 600;
+        }
+        .char-counter-bottom.error {
+            color: #ff4757;
+            font-weight: 700;
+            opacity: 1;
+        }
+
+        /* Autosave Indicator */
+        .autosave-indicator {
+            font-size: 10px;
+            color: var(--text-dim);
+            padding: 0 6px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .autosave-indicator.visible {
+            opacity: 1;
+        }
+        .autosave-indicator.saving {
+            color: #ffa500;
+        }
+        .autosave-indicator.saved {
+            color: #2ecc71;
         }
 
         /* Content Area */
@@ -147,9 +253,9 @@ export class NotepadWidget extends LitElement {
             display: block;
             width: 100%;
             height: 100%;
-            min-height: 0; /* Flexbox scroll fix */
+            min-height: 0;
         }
-        
+
         .content-area:empty::before {
             content: attr(data-placeholder);
             color: rgba(255, 255, 255, 0.3);
@@ -160,36 +266,40 @@ export class NotepadWidget extends LitElement {
         /* FABs */
         .fab-btn {
             position: absolute;
-            bottom: 15px;
+            bottom: 70px; /* Moved up to make space for counter below */
             right: 15px;
-            z-index: 100; /* Ensure it's on top */
+            z-index: 100;
             width: 40px;
             height: 40px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            /* High Visibility Style */
             background: var(--accent, #0078d4);
             color: #ffffff;
             box-shadow: 0 4px 14px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0; /* Hidden by default */
-            transform: translateY(10px); /* Slide up effect */
+            opacity: 0;
+            transform: translateY(10px);
         }
-        
-        :host(:hover) .fab-btn,
+
+        :host(:hover) .fab-btn:not(:disabled),
         .fab-btn:focus-visible {
             opacity: 1;
             transform: translateY(0);
         }
 
-        .fab-btn:hover {
-            transform: translateY(-2px) scale(1.05); /* Override the :host hover transform */
+        .fab-btn:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.05);
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             filter: brightness(1.1);
+        }
+
+        .fab-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .edit-btn {
@@ -203,7 +313,15 @@ export class NotepadWidget extends LitElement {
             background: var(--accent, #ff4757);
             color: white;
         }
-        .save-btn:hover { background: #ff6b81; }
+        .save-btn:hover:not(:disabled) { background: #ff6b81; }
+
+        /* Spinner Animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .fab-btn.saving svg {
+            animation: spin 1s linear infinite;
+        }
 
         /* Typography Styles */
         h1 { font-size: 1.6em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.2em; margin-top:0;}
@@ -211,6 +329,104 @@ export class NotepadWidget extends LitElement {
         a { color: var(--accent, #ff4757); }
         blockquote { border-left: 3px solid var(--accent, #ff4757); padding-left: 1em; color: rgba(255,255,255,0.6); }
         img { max-width: 100%; border-radius: 8px; }
+
+        /* Code Block Styles */
+        pre {
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 8px 0;
+            width: fit-content;
+            max-width: 100%;
+            overflow-x: auto;
+            display: block;
+        }
+        pre code {
+            background: transparent;
+            padding: 0;
+            display: block;
+            width: fit-content;
+        }
+
+        /* Checklist Styles */
+        .content-area input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        .content-area label {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Error State */
+        .error-state {
+            padding: 20px;
+            color: var(--text-main);
+            text-align: center;
+        }
+        .error-state h3 {
+            color: #ff4757;
+            margin-top: 0;
+        }
+        .error-state button {
+            margin-top: 16px;
+            padding: 8px 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: auto;
+            height: auto;
+        }
+        .error-state details {
+            margin-top: 16px;
+            text-align: left;
+        }
+        .error-state pre {
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 4px;
+            overflow: auto;
+            font-size: 11px;
+        }
+
+        /* Checklist Block Wrapper */
+        .checklist-block-wrapper {
+            position: relative;
+            width: 85%;
+            margin: 12px 0;
+            padding: 0 8px;
+        }
+
+        .delete-block-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s;
+            font-size: 20px;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .checklist-block-wrapper:hover .delete-block-btn {
+            opacity: 1;
+        }
+
+        .delete-block-btn:hover {
+            background: var(--error);
+            color: white;
+        }
     `;
 
     connectedCallback() {
@@ -223,11 +439,27 @@ export class NotepadWidget extends LitElement {
 
             if (wasEditing !== this.isDashboardEditing) {
                 if (this.isDashboardEditing) {
-                    // Just exit internal edit mode without saving to prevent loop
-                    this.isInternalEditing = false;
-                    this.requestUpdate();
+                    // Dashboard entering edit mode
+                    if (this.hasUnsavedChanges && this.isInternalEditing) {
+                        // Warn user about unsaved changes
+                        const confirmDiscard = confirm(i18n.t('widget.notepad.confirm_discard'));
+                        if (confirmDiscard) {
+                            this.isInternalEditing = false;
+                            this.hasUnsavedChanges = false;
+                            this.cancelAutosave();
+                            this.requestUpdate();
+                        } else {
+                            // Cancel dashboard edit mode
+                            setTimeout(() => dashboardStore.toggleEditMode(), 0);
+                        }
+                    } else {
+                        // Just exit internal edit mode
+                        this.isInternalEditing = false;
+                        this.cancelAutosave();
+                        this.requestUpdate();
+                    }
                 } else {
-                    // Reload content when exiting dashboard edit mode
+                    // Dashboard exiting edit mode - reload content
                     this.loadFromStore();
                 }
             }
@@ -241,116 +473,215 @@ export class NotepadWidget extends LitElement {
 
     disconnectedCallback() {
         super.disconnectedCallback();
-        if (this._unsubscribe) this._unsubscribe();
+
+        // Cleanup subscriptions
+        if (this._unsubscribe) {
+            this._unsubscribe();
+        }
+
+        // Cleanup timers
+        this.cancelAutosave();
     }
 
-    // Ensure content prop is respected
     updated(changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>) {
+        super.updated(changedProperties);
+
+        // Sync external content prop to editor
         if (changedProperties.has('content') && !this.isInternalEditing && this.editorElement) {
-            // If receiving prop update from outside, sync view if not typing
-            // Note: using innerHTML is safe here because we are targeting the specific content div
-            // managed by Lit, but simpler to rely on Lit's binding if possible
-            // However, for unsafeHTML-like behavior we use innerHTML on update
-            if (this.editorElement.innerHTML !== this.content) {
-                this.editorElement.innerHTML = this.content || '';
+            const sanitized = htmlSanitizer.sanitize(this.content);
+            if (this.editorElement.innerHTML !== sanitized) {
+                this.editorElement.innerHTML = sanitized;
             }
         }
     }
 
     private loadFromStore() {
         if (!this.itemId) return;
+
         const state = dashboardStore.getState();
         const item = state.items.find((i: any) => i.id === this.itemId);
+
         if (item) {
-            this.parseAndSetContent(item.content);
-        }
-    }
+            // Parse content - supports both old format (string) and new format (object with html + checklists)
+            const rawContent = WidgetContentHelper.getNotepadText(item.content);
 
-    private parseAndSetContent(rawValue: any) {
-        try {
-            let content = rawValue;
-            if (typeof rawValue === 'string') {
-                try {
-                    const parsed = JSON.parse(rawValue);
-                    if (parsed && typeof parsed === 'object') {
-                        content = parsed.text || '';
-                    }
-                } catch (e) { }
-            } else if (typeof rawValue === 'object') {
-                content = rawValue.text || '';
+            try {
+                // Try to parse as new format (JSON with html + checklists)
+                const parsed = JSON.parse(rawContent);
+                if (parsed && typeof parsed === 'object' && 'html' in parsed) {
+                    this.content = parsed.html || '';
+                    this.checklistBlocks = parsed.checklists || [];
+                } else {
+                    // Old format - just HTML string
+                    this.content = rawContent;
+                    this.checklistBlocks = [];
+                }
+            } catch {
+                // Not JSON - treat as plain HTML (old format)
+                this.content = rawContent;
+                this.checklistBlocks = [];
             }
-            this.content = content || '';
-        } catch (e) {
-            this.content = '';
+
+            this.characterCount = this.content.length;
+            this._lastSavedContent = rawContent;
         }
     }
 
+    /**
+     * Native execCommand wrapper
+     * NOTE: execCommand is deprecated but still widely supported.
+     * Migration to native Selection API would require significant refactoring.
+     * Keeping this for now as it's the most practical solution for rich text editing.
+     * TODO: Consider migrating to a native contenteditable solution in the future.
+     */
     private exec(cmd: string, val?: string) {
         document.execCommand(cmd, false, val);
-        if (this.editorElement) this.editorElement.focus();
-    }
-
-    private saveContent() {
-        try {
-            const editor = this.shadowRoot?.querySelector('.editor') || this.shadowRoot?.querySelector('[contenteditable]');
-            if (!editor) throw new Error("Critical: Editor div missing");
-
-            const newContent = editor.innerHTML;
-
-            // 1. Update Local State (Visual feedback)
-            this.content = newContent;
-            this.isInternalEditing = false;
-            this.requestUpdate();
-
-            // 2. Data Persistence (The Fix)
-            setTimeout(() => {
-                if (this.itemId) {
-                    // A. Get current state to preserve 'widgetId' and other props
-                    const currentItem = dashboardStore.getState().items.find((i: any) => i.id === this.itemId);
-
-                    let existingContent = {};
-                    try {
-                        existingContent = typeof currentItem?.content === 'string'
-                            ? JSON.parse(currentItem.content)
-                            : currentItem?.content || {};
-                    } catch (e) {
-                        console.warn('Failed to parse existing content', e);
-                    }
-
-                    // B. Merge existing props (like widgetId) with new text
-                    const finalContent = {
-                        ...existingContent,
-                        text: newContent
-                    };
-
-                    // C. Save the complete object
-                    dashboardStore.updateItem({
-                        id: this.itemId,
-                        content: JSON.stringify(finalContent)
-                    }).catch((err: any) => console.error('[Store Update Failed]', err));
-                }
-            }, 0);
-
-        } catch (err) {
-            console.error('[Notepad Save Error]', err);
-            alert(i18n.t('widget.notepad.error.save') + err);
+        if (this.editorElement) {
+            this.editorElement.focus();
         }
     }
 
+    private cancelAutosave() {
+        if (this._autosaveTimeout) {
+            clearTimeout(this._autosaveTimeout);
+            this._autosaveTimeout = null;
+        }
+    }
+
+    private async saveContent(silent: boolean = false) {
+        // Prevent concurrent saves
+        if (this._savePromise) {
+            await this._savePromise;
+            return;
+        }
+
+        try {
+            const editor = this.shadowRoot?.querySelector('.editor') || this.shadowRoot?.querySelector('[contenteditable]');
+            if (!editor) {
+                throw new Error("Critical: Editor element missing");
+            }
+
+            const rawContent = (editor as HTMLElement).innerHTML;
+
+            // Validate content size
+            if (rawContent.length > MAX_CONTENT_SIZE) {
+                alert(i18n.t('widget.notepad.error.too_large'));
+                return;
+            }
+
+            // Sanitize HTML before saving
+            const sanitizedHTML = htmlSanitizer.sanitize(rawContent);
+
+            // Create combined content: HTML + Checklists
+            const combinedContent = JSON.stringify({
+                html: sanitizedHTML,
+                checklists: this.checklistBlocks
+            });
+
+            // Update local state ONLY if not silent (to avoid re-renders during editing)
+            if (!silent) {
+                this.content = sanitizedHTML;
+                this.characterCount = sanitizedHTML.length;
+                this.isInternalEditing = false;
+                this.hasUnsavedChanges = false;
+                this.requestUpdate();
+            }
+
+            // Persist to backend
+            this._savePromise = (async () => {
+                if (!this.itemId) return;
+
+                // Show saving indicator (causes minimal re-render)
+                if (!silent) {
+                    this.isSaving = true;
+                    this.requestUpdate();
+                }
+
+                try {
+                    const currentItem = dashboardStore.getState().items.find((i: any) => i.id === this.itemId);
+
+                    if (!currentItem) {
+                        console.warn('[NotepadWidget] Item no longer exists');
+                        return;
+                    }
+
+                    // Use helper to preserve other properties
+                    const updatedContent = WidgetContentHelper.setNotepadText(currentItem.content, combinedContent);
+
+                    await dashboardStore.updateItem({
+                        id: this.itemId,
+                        content: updatedContent
+                    });
+
+                    this._lastSavedContent = combinedContent;
+
+                    if (silent) {
+                        // Silent save: just mark as saved, no UI updates
+                        this.hasUnsavedChanges = false;
+                    }
+
+                } catch (err) {
+                    console.error('[NotepadWidget] Save failed:', err);
+                    if (!silent) {
+                        alert(i18n.t('widget.notepad.error.save') + err);
+                    }
+                } finally {
+                    if (!silent) {
+                        this.isSaving = false;
+                        this.requestUpdate();
+                    }
+                }
+            })();
+
+            await this._savePromise;
+
+        } catch (err) {
+            console.error('[NotepadWidget] Save error:', err);
+            if (!silent) {
+                alert(i18n.t('widget.notepad.error.save') + err);
+            }
+        } finally {
+            this._savePromise = null;
+        }
+    }
 
     private startEditing() {
-        if (this.isDashboardEditing) return; // Locked
+        if (this.isDashboardEditing) return; // Locked during dashboard edit mode
+
         this.isInternalEditing = true;
-        // Focus next tick
+
+        // Focus editor next tick
         setTimeout(() => {
             if (this.editorElement) {
                 this.editorElement.focus();
-                // Ensure content is there (Lit might have re-rendered)
-                if (this.editorElement.innerHTML !== this.content) {
-                    this.editorElement.innerHTML = this.content || ''; // Fallback to empty string
+
+                // Ensure content is synced
+                const sanitized = htmlSanitizer.sanitize(this.content);
+                if (this.editorElement.innerHTML !== sanitized) {
+                    this.editorElement.innerHTML = sanitized;
                 }
+
+                // Move cursor to end
+                this.focusEditor(true);
             }
         }, 0);
+    }
+
+    private focusEditor(atEnd: boolean = true) {
+        if (!this.editorElement) return;
+
+        this.editorElement.focus();
+
+        if (atEnd) {
+            const selection = window.getSelection();
+            if (selection) {
+                const range = document.createRange();
+                range.selectNodeContents(this.editorElement);
+                range.collapse(false); // Collapse to end
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
     }
 
     private handleColor(e: Event) {
@@ -364,139 +695,230 @@ export class NotepadWidget extends LitElement {
         toolbar.scrollLeft += e.deltaY;
     }
 
-    private insertChecklist(text: string | null = null) {
-        // Simple HTML checklist implementation
-        const id = 'chk-' + Math.random().toString(36).substr(2, 9);
-        const labelText = text !== null ? text : i18n.t('widget.notepad.prompt.new_item');
-        // Use non-breaking space if empty to ensure cursor focusability? 
-        // Actually empty label is fine if we type immediately.
-        const html = `<div style="display:flex; align-items:center; margin: 4px 0;"><input type="checkbox" id="${id}" style="margin-right:8px;"><label for="${id}">${labelText}</label></div>`;
-        this.exec('insertHTML', html);
-    }
+    /**
+     * Insert a new checklist block
+     */
+    private insertChecklist() {
+        const blockId = 'block-' + Math.random().toString(36).substring(2, 11);
 
-    private handleEditorKeydown(e: KeyboardEvent) {
-        if (e.key === 'Enter') {
-            const selection = window.getSelection();
-            if (!selection || !selection.rangeCount) return;
+        // Create new checklist block with one empty item
+        const newBlock = {
+            id: blockId,
+            items: [{
+                id: 'item-' + Math.random().toString(36).substring(2, 11),
+                checked: false,
+                text: ''
+            }]
+        };
 
-            let currentNode: Node | null = selection.getRangeAt(0).commonAncestorContainer;
-            if (currentNode.nodeType === Node.TEXT_NODE) currentNode = currentNode.parentNode;
+        this.checklistBlocks = [...this.checklistBlocks, newBlock];
+        this.hasUnsavedChanges = true;
+        this.scheduleAutosave();
 
-            // Traverse up to find the checklist row
-            let checklistRow: HTMLElement | null = null;
-            while (currentNode && currentNode !== this.editorElement) {
-                if (currentNode.nodeType === Node.ELEMENT_NODE) {
-                    const el = currentNode as HTMLElement;
-                    // Detect our specific checklist structure: div with flex + checkbox
-                    if (el.tagName === 'DIV' && el.querySelector('input[type="checkbox"]')) {
-                        checklistRow = el;
-                        break;
-                    }
-                }
-                currentNode = currentNode.parentNode;
-            }
-
-            if (checklistRow) {
-                // Check if the current line is empty (excluding the checkbox)
-                const textContent = checklistRow.innerText.trim();
-
-                if (!textContent) {
-                    // Empty item: Exit checklist mode
-                    e.preventDefault();
-                    // We want to remove this empty row and insert a standard paragraph after it
-                    const p = document.createElement('div'); // Div acts as paragraph in contenteditable usually
-                    p.innerHTML = '<br>'; // Placeholder to allow focus
-
-                    if (checklistRow.parentNode) {
-                        checklistRow.parentNode.insertBefore(p, checklistRow.nextSibling);
-                        checklistRow.remove();
-                    }
-
-                    // Focus the new paragraph
-                    const range = document.createRange();
-                    range.selectNodeContents(p);
-                    range.collapse(true); // Start of line
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-
-                } else {
-                    // Non-empty item: Insert new checkbox below
-                    e.preventDefault();
-
-                    // Create new structure per insertChecklist logic
-                    const id = 'chk-' + Math.random().toString(36).substr(2, 9);
-                    const newRow = document.createElement('div');
-                    Object.assign(newRow.style, { display: 'flex', alignItems: 'center', margin: '4px 0' });
-
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = id;
-                    checkbox.style.marginRight = '8px';
-
-                    const label = document.createElement('label');
-                    label.htmlFor = id;
-                    label.textContent = '\u200B'; // Zero-width space to ensure caret has a place to live
-
-                    newRow.appendChild(checkbox);
-                    newRow.appendChild(label);
-
-                    // Insert After current row
-                    if (checklistRow.parentNode) {
-                        checklistRow.parentNode.insertBefore(newRow, checklistRow.nextSibling);
-                    }
-
-                    // Move Caret to new label
-                    const range = document.createRange();
-                    range.selectNodeContents(label);
-                    range.collapse(false); // End of text (which is just zero-width space)
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-            }
-        }
+        // Focus the first item in the new block
+        this.updateComplete.then(() => {
+            const block = this.shadowRoot?.querySelector(`checklist-block[block-id="${blockId}"]`);
+            const firstInput = block?.shadowRoot?.querySelector('input[type="text"]') as HTMLInputElement;
+            firstInput?.focus();
+        });
     }
 
     private insertCode() {
-        // Use translation for default code content "Code Block"
         const defaultCode = i18n.t('widget.notepad.prompt.code_block');
-        const html = `<pre style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; font-family:monospace; margin:8px 0;"><code>${defaultCode}</code></pre><p><br></p>`;
+        const html = `<pre><code>${defaultCode}</code></pre><p><br></p>`;
         this.exec('insertHTML', html);
+
+        // Focus and select the code content
+        setTimeout(() => {
+            const selection = window.getSelection();
+            if (selection && this.editorElement) {
+                const codeElements = this.editorElement.querySelectorAll('code');
+                const lastCode = codeElements[codeElements.length - 1];
+                if (lastCode) {
+                    const range = document.createRange();
+                    range.selectNodeContents(lastCode);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }
+        }, 0);
+    }
+
+    /**
+     * Handle checklist block changes
+     */
+    private handleChecklistChange(e: CustomEvent) {
+        const { blockId, items } = e.detail;
+
+        this.checklistBlocks = this.checklistBlocks.map(block =>
+            block.id === blockId
+                ? { ...block, items }
+                : block
+        );
+
+        this.hasUnsavedChanges = true;
+        this.scheduleAutosave();
+    }
+
+    /**
+     * Delete a checklist block
+     */
+    private deleteChecklistBlock(blockId: string) {
+        this.checklistBlocks = this.checklistBlocks.filter(block => block.id !== blockId);
+        this.hasUnsavedChanges = true;
+        this.scheduleAutosave();
+    }
+
+    private handleEditorInput(e: Event) {
+        const editor = e.target as HTMLElement;
+
+        // Update character count
+        this.characterCount = editor.innerHTML.length;
+
+        // Mark as having unsaved changes
+        this.hasUnsavedChanges = editor.innerHTML !== this._lastSavedContent;
+
+        // Cancel previous autosave timer
+        this.cancelAutosave();
+
+        // Schedule new autosave (only if enabled)
+        if (AUTOSAVE_DELAY > 0) {
+            this._autosaveTimeout = setTimeout(() => {
+                if (this.hasUnsavedChanges) {
+                    this.saveContent(true); // Silent save
+                }
+            }, AUTOSAVE_DELAY);
+        }
+    }
+
+    private handleEditorKeydown(e: KeyboardEvent) {
+        // Keyboard shortcuts
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key.toLowerCase()) {
+                case 'b':
+                    e.preventDefault();
+                    this.exec('bold');
+                    return;
+                case 'i':
+                    e.preventDefault();
+                    this.exec('italic');
+                    return;
+                case 's':
+                    e.preventDefault();
+                    this.saveContent(false); // Explicit save
+                    return;
+                case 'z':
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        this.exec('redo');
+                    } else {
+                        e.preventDefault();
+                        this.exec('undo');
+                    }
+                    return;
+                case 'k':
+                    e.preventDefault();
+                    const url = prompt(i18n.t('widget.notepad.prompt.url'));
+                    if (url) this.exec('createLink', url);
+                    return;
+            }
+        }
+
+        // Note: Checklist Enter handling is now managed by ChecklistBlock component
+        // No custom Enter logic needed here anymore
+    }
+
+    private handlePaste(e: ClipboardEvent) {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        // Check for images in clipboard
+        for (const item of Array.from(items)) {
+            if (item.type.indexOf('image') !== -1) {
+                e.preventDefault();
+
+                const blob = item.getAsFile();
+                if (!blob) continue;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target?.result as string;
+
+                    // Validate size (limit to 1MB for base64 images)
+                    if (base64.length > 1000000) {
+                        alert(i18n.t('widget.notepad.error.image_too_large'));
+                        return;
+                    }
+
+                    this.exec('insertImage', base64);
+                };
+                reader.readAsDataURL(blob);
+
+                return; // Only handle first image
+            }
+        }
     }
 
     render() {
         try {
             // --- VIEW MODE ---
             if (!this.isInternalEditing) {
-                return html`
-                    <div 
-                        class="viewer" 
-                        style="flex: 1; width: 100%; height: 100%; min-height: 100px; color: var(--text-main) !important; overflow-y: auto; padding: 16px; word-wrap: break-word;"
-                        .innerHTML="${this.content || `<span style='opacity:0.5; font-style:italic; color: var(--text-dim);'>${i18n.t('widget.notepad.placeholder')}</span>`}"
-                    ></div>
+                const sanitizedContent = htmlSanitizer.sanitize(this.content);
+                const displayContent = sanitizedContent ||
+                    `<span style='opacity:0.5; font-style:italic; color: var(--text-dim);'>${i18n.t('widget.notepad.placeholder')}</span>`;
 
-                    <button class="fab-btn" @click="${() => this.isInternalEditing = true}" style="position: absolute; bottom: 10px; right: 10px; z-index: 10;">
+                return html`
+                    <div style="flex: 1; width: 100%; height: 100%; min-height: 100px; overflow-y: auto; display: flex; flex-direction: column;">
+                        <div
+                            class="viewer"
+                            style="padding: 16px; color: var(--text-main) !important; word-wrap: break-word;"
+                            .innerHTML="${displayContent}"
+                        ></div>
+
+                        <!-- Render checklist blocks in view mode (read-only) -->
+                        ${this.checklistBlocks.map(block => html`
+                            <div class="checklist-block-wrapper">
+                                <checklist-block
+                                    .blockId="${block.id}"
+                                    .items="${block.items}"
+                                    .readonly="${true}"
+                                    @checklist-change="${() => {}}"
+                                ></checklist-block>
+                            </div>
+                        `)}
+                    </div>
+
+                    <button
+                        class="fab-btn edit-btn"
+                        @click="${this.startEditing}"
+                        ?disabled="${this.isDashboardEditing}"
+                        title="${i18n.t('widget.notepad.tool.edit')}"
+                    >
                         ${ICONS.edit}
                     </button>
                 `;
             }
 
             // --- EDIT MODE ---
+            const charWarning = this.characterCount > MAX_CONTENT_SIZE * 0.9;
+            const charError = this.characterCount > MAX_CONTENT_SIZE;
+
             return html`
                 <div class="container">
                     <div class="toolbar" @wheel="${this.handleToolbarWheel}" title="${i18n.t('widget.notepad.tool.scroll_hint')}">
                         <!-- History Group -->
                         <div class="group">
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('undo'); }}" title="${i18n.t('widget.notepad.tool.undo')}">${ICONS.undo}</button>
-                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('redo'); }}" title="${i18n.t('widget.notepad.tool.redo')}">${ICONS.redo}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('undo'); }}" title="${i18n.t('widget.notepad.tool.undo')} (Ctrl+Z)">${ICONS.undo}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('redo'); }}" title="${i18n.t('widget.notepad.tool.redo')} (Ctrl+Shift+Z)">${ICONS.redo}</button>
                         </div>
-                        
+
                         <!-- Text Group -->
                         <div class="group">
                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('formatBlock', 'H1'); }}" title="${i18n.t('widget.notepad.tool.h1')}">${ICONS.h1}</button>
                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('formatBlock', 'H2'); }}" title="${i18n.t('widget.notepad.tool.h2')}">${ICONS.h2}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('bold'); }}" title="${i18n.t('widget.notepad.tool.bold')}">${ICONS.bold}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('italic'); }}" title="${i18n.t('widget.notepad.tool.italic')}">${ICONS.italic}</button>
-                            
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('bold'); }}" title="${i18n.t('widget.notepad.tool.bold')} (Ctrl+B)">${ICONS.bold}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); this.exec('italic'); }}" title="${i18n.t('widget.notepad.tool.italic')} (Ctrl+I)">${ICONS.italic}</button>
+
                             <!-- Color Picker -->
                             <div class="color-wrapper">
                                 <button title="${i18n.t('widget.notepad.tool.color')}">${ICONS.color}</button>
@@ -509,8 +931,9 @@ export class NotepadWidget extends LitElement {
                              <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyLeft'); }}" title="${i18n.t('widget.notepad.tool.align_left')}">${ICONS.alignLeft}</button>
                              <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyCenter'); }}" title="${i18n.t('widget.notepad.tool.align_center')}">${ICONS.alignCenter}</button>
                              <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyRight'); }}" title="${i18n.t('widget.notepad.tool.align_right')}">${ICONS.alignRight}</button>
+                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('justifyFull'); }}" title="${i18n.t('widget.notepad.tool.align_justify')}">${ICONS.alignJustify}</button>
                         </div>
-                        
+
                         <div class="group">
                             <button @click="${(e: Event) => { e.preventDefault(); this.insertChecklist(); }}" title="${i18n.t('widget.notepad.tool.checklist')}">${ICONS.checklist}</button>
                             <button @click="${(e: Event) => { e.preventDefault(); this.exec('insertUnorderedList'); }}" title="${i18n.t('widget.notepad.tool.list_bullet')}">${ICONS.list}</button>
@@ -520,30 +943,89 @@ export class NotepadWidget extends LitElement {
                         <!-- Insert Group -->
                         <div class="group">
                             <button @click="${(e: Event) => { e.preventDefault(); this.insertCode(); }}" title="${i18n.t('widget.notepad.tool.code')}">${ICONS.code}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); const u = prompt(i18n.t('widget.notepad.prompt.url')); if (u) this.exec('createLink', u); }}" title="${i18n.t('widget.notepad.tool.link')}">${ICONS.link}</button>
+                            <button @click="${(e: Event) => { e.preventDefault(); const u = prompt(i18n.t('widget.notepad.prompt.url')); if (u) this.exec('createLink', u); }}" title="${i18n.t('widget.notepad.tool.link')} (Ctrl+K)">${ICONS.link}</button>
                             <button @click="${(e: Event) => { e.preventDefault(); const u = prompt(i18n.t('widget.notepad.prompt.image_url')); if (u) this.exec('insertImage', u); }}" title="${i18n.t('widget.notepad.tool.image')}">${ICONS.image}</button>
                              <button @click="${(e: Event) => { e.preventDefault(); this.exec('removeFormat'); }}" title="${i18n.t('widget.notepad.tool.clear_format')}">${ICONS.clear}</button>
                         </div>
+
+                        <!-- Status Group -->
+                        <div class="autosave-indicator ${this.isSaving ? 'visible saving' : ''}">
+                            ${this.isSaving ? i18n.t('widget.notepad.status.saving') : ''}
+                        </div>
                     </div>
 
-                    <!-- Note: using .innerHTML binding for initial content, contenteditable will manage changes -->
-                    <div class="content-area editor" 
-                         @keydown="${this.handleEditorKeydown}"
-                         contenteditable="true" 
+                    <div class="content-area editor"
+                         contenteditable="true"
                          spellcheck="false"
                          data-placeholder="${i18n.t('widget.notepad.placeholder')}"
-                         .innerHTML="${this.content}">
+                         @keydown="${this.handleEditorKeydown}"
+                         @input="${this.handleEditorInput}"
+                         @paste="${this.handlePaste}"
+                         .innerHTML="${htmlSanitizer.sanitize(this.content)}">
                     </div>
 
-                    <button class="fab-btn save-btn" @click="${this.saveContent}" title="${i18n.t('widget.notepad.tool.save')}">${ICONS.save}</button>
+                    <!-- Checklist Blocks (independent from contenteditable) -->
+                    ${this.checklistBlocks.map(block => html`
+                        <div class="checklist-block-wrapper">
+                            <checklist-block
+                                .blockId="${block.id}"
+                                .items="${block.items}"
+                                @checklist-change="${this.handleChecklistChange}"
+                            ></checklist-block>
+                            <button
+                                class="delete-block-btn"
+                                @click="${() => this.deleteChecklistBlock(block.id)}"
+                                title="${i18n.t('widget.notepad.checklist.delete_block')}"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    `)}
+                </div>
+
+                <!-- Fixed Controls (outside scrollable container) -->
+                <div class="fixed-controls">
+                    <button
+                        class="fab-btn save-btn ${this.isSaving ? 'saving' : ''}"
+                        @click="${() => this.saveContent(false)}"
+                        ?disabled="${this.isSaving || charError}"
+                        title="${i18n.t('widget.notepad.tool.save')} (Ctrl+S)"
+                    >
+                        ${this.isSaving ? ICONS.loader : ICONS.save}
+                    </button>
+
+                    <!-- Character Counter (bottom right, below save button) -->
+                    <div class="char-counter-bottom ${charWarning ? 'warning' : ''} ${charError ? 'error' : ''}">
+                        ${this.characterCount} / ${MAX_CONTENT_SIZE}
+                    </div>
                 </div>
             `;
         } catch (e: any) {
+            console.error('[NotepadWidget] Render error:', e);
+
+            // Log to backend (fire and forget)
+            fetch('/api/log-error', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    component: 'NotepadWidget',
+                    error: e.toString(),
+                    stack: e.stack,
+                    itemId: this.itemId
+                })
+            }).catch(() => {});
+
             return html`
-                <div style="background: blue; color: white; padding: 20px; height: 100%; overflow:auto;">
-                    <h3>CRITICAL ERROR</h3>
-                    <pre>${e.toString()}</pre>
-                    <pre>${e.stack}</pre>
+                <div class="error-state">
+                    <h3>${i18n.t('general.error')}</h3>
+                    <p>${i18n.t('widget.notepad.error.render')}</p>
+                    <button @click="${() => this.loadFromStore()}">
+                        ${i18n.t('general.restore')}
+                    </button>
+                    <details>
+                        <summary>Technical Details</summary>
+                        <pre>${e.toString()}\n${e.stack}</pre>
+                    </details>
                 </div>
             `;
         }

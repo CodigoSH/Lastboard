@@ -58,3 +58,18 @@ tmp/
 kashboard
 *.old
 *.tar.gz
+
+# Temporary development notes
+/*_FIXED.md
+/*_STATUS.md
+/*_COMPLETE.md
+/*_DONE.md
+CHECKLIST_*.md
+DEBUG_*.md
+IMPLEMENTATION_*.md
+IMPROVEMENTS_*.md
+TEST_*.md
+ANALYSIS_*.md
+REFACTOR_*.md
+BUILD_*.md
+AUTOSAVE_*.md
