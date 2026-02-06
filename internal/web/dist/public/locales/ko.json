@@ -133,6 +133,7 @@
   "settings.docker_desc": "업데이트는 이미지 태그를 통해 관리됩니다. 업데이트하려면 최신 이미지를 가져오세요.",
   "settings.update_available": "업데이트 가능",
   "settings.up_to_date": "최신 상태입니다!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "사용자를 찾을 수 없습니다.",
   "action.add_user": "사용자 추가",
   "action.add_new_user": "새 사용자 추가",

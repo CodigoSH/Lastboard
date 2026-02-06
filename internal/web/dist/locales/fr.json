@@ -133,6 +133,7 @@
   "settings.docker_desc": "Les mises à jour sont gérées via les tags d'image. Téléchargez la dernière image pour mettre à jour.",
   "settings.update_available": "Mise à Jour Disponible",
   "settings.up_to_date": "Vous êtes à jour !",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "Aucun utilisateur trouvé.",
   "action.add_user": "Ajouter un Utilisateur",
   "action.add_new_user": "Ajouter un Nouvel Utilisateur",

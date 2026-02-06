@@ -36,8 +36,12 @@ class SettingsContent extends HTMLElement {
     connectedCallback() {
         // Trigger fetch which performs the actual state sync
         this.fetchPrefs();
-        if (this.getAttribute('section') === 'users') {
+        const section = this.getAttribute('section');
+        if (section === 'users') {
             this.fetchUsers();
+        }
+        if (section === 'about') {
+            this.checkForUpdates();
         }
         this.render();
     }
@@ -411,18 +415,30 @@ class SettingsContent extends HTMLElement {
     // --- Update System Logic ---
     private version = 'v1.1.1-beta'; // Should be sync with backend or injected
     private updateInfo: any = null;
+    private checkUpdatesPromise: Promise<void> | null = null;
 
     async checkForUpdates() {
-        try {
-            const res = await fetch('/api/system/update/check');
-            if (res.ok) {
-                this.updateInfo = await res.json();
-                this.version = this.updateInfo.current_version;
+        // Guard: prevent multiple simultaneous calls
+        if (this.checkUpdatesPromise) {
+            return this.checkUpdatesPromise;
+        }
+
+        this.checkUpdatesPromise = (async () => {
+            try {
+                const res = await fetch('/api/system/update/check');
+                if (res.ok) {
+                    this.updateInfo = await res.json();
+                    this.version = this.updateInfo.current_version;
+                }
+            } catch (e) {
+                console.error("Check update failed", e);
+            } finally {
+                this.checkUpdatesPromise = null;
                 this.render();
             }
-        } catch (e) {
-            console.error("Check update failed", e);
-        }
+        })();
+
+        return this.checkUpdatesPromise;
     }
 
     async performUpdate(assetUrl: string) {

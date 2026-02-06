@@ -133,6 +133,7 @@
   "settings.docker_desc": "يتم إدارة التحديثات عبر وسوم الصور (image tags). اسحب أحدث صورة للتحديث.",
   "settings.update_available": "تحديث متاح",
   "settings.up_to_date": "أنت تستخدم أحدث إصدار!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "لم يتم العثور على مستخدمين.",
   "action.add_user": "إضافة مستخدم",
   "action.add_new_user": "إضافة مستخدم جديد",

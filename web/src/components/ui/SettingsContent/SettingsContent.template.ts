@@ -404,12 +404,9 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string) =>
                                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                                 <span>${i18n.t('settings.up_to_date')}</span>
                             </div>
-                            <!-- <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">${i18n.t('action.check_again')}</app-button> -->
                         `}
                     `}
-                ` : `
-                    <app-button variant="primary" onclick="this.getRootNode().host.checkForUpdates()">${i18n.t('action.check_updates')}</app-button>
-                `) : ''}
+                ` : ``) : ''}
              </div>
 
              <div style="margin-top: 64px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: center; gap: 24px;">

@@ -133,6 +133,7 @@
   "settings.docker_desc": "Pembaruan dikelola melalui tag gambar. Tarik gambar terbaru untuk memperbarui.",
   "settings.update_available": "Pembaruan Tersedia",
   "settings.up_to_date": "Anda sudah menggunakan versi terbaru!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "Pengguna tidak ditemukan.",
   "action.add_user": "Tambah Pengguna",
   "action.add_new_user": "Tambah Pengguna Baru",

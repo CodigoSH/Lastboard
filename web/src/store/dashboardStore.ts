@@ -100,17 +100,8 @@ class DashboardStore {
 
     private saveToLocalStorage() {
         try {
-            // DEBUG: Check for parent_id presence
-            const parented = this.state.items.filter(i => i.parent_id !== undefined);
-            if (parented.length > 0) {
-                // console.log('[DashboardStore] Saving items with parent_id:', parented.map(p => ({ id: p.id, parent_id: p.parent_id })));
-            } else {
-                // console.log('[DashboardStore] Saving items: NO PARENT_ID FOUND');
-            }
-
             const serialized = JSON.stringify(this.state.items);
             localStorage.setItem(this.getStorageKey(), serialized);
-            // console.log('[DashboardStore] Saved to localStorage, count:', this.state.items.length);
         } catch (error) {
             console.error('[DashboardStore] Failed to save to localStorage', error);
         }
@@ -220,12 +211,10 @@ class DashboardStore {
                     this.state.items = items;
                     this.state.isOffline = false;
                     this.saveToLocalStorage();
-                    // console.log('[DashboardStore] Loaded from backend (merged local parent_id), count:', items.length);
                 } else {
                     throw new Error('Backend returned invalid data');
                 }
             } catch (apiError) {
-                // console.log('[DashboardStore] Backend not available, checking localStorage');
                 this.state.isOffline = true;
 
                 // Try localStorage next
@@ -234,18 +223,15 @@ class DashboardStore {
                     const storedItems = JSON.parse(serialized);
                     if (Array.isArray(storedItems) && storedItems.length > 0) {
                         this.state.items = storedItems;
-                        // console.log('[DashboardStore] Loaded from localStorage, count:', storedItems.length);
                     } else {
                         // Last resort: use initial mock data
                         this.state.items = [...INITIAL_ITEMS];
                         this.saveToLocalStorage();
-                        // console.log('[DashboardStore] Using initial mock data');
                     }
                 } else {
                     // No localStorage, use initial mock data
                     this.state.items = [...INITIAL_ITEMS];
                     this.saveToLocalStorage();
-                    // console.log('[DashboardStore] First run, using initial mock data');
                 }
             }
             this.ensureItemsIsArray();
@@ -269,8 +255,6 @@ class DashboardStore {
                 console.warn('[DashboardStore] Item not found for update:', updatedItem.id);
                 return;
             }
-
-            // console.log('[DashboardStore] Updating item Payload:', JSON.stringify(updatedItem));
 
             const previousItem = { ...this.state.items[itemIndex] };
             this.state.items[itemIndex] = { ...this.state.items[itemIndex], ...updatedItem };
@@ -302,7 +286,7 @@ class DashboardStore {
         const item = this.state.items.find(i => i.id === id);
         if (!item) return;
 
-        console.log(`[DashboardStore] Resizing item ${id} to ${w}x${h}`);
+        // console.log(`[DashboardStore] Resizing item ${id} to ${w}x${h}`);
 
         // 1. Update the Container First
         await this.updateItem({ id, w, h });
@@ -323,7 +307,7 @@ class DashboardStore {
 
         if (children.length === 0) return;
 
-        console.log(`[DashboardStore] Reflowing ${children.length} children for parent ${parentId}`);
+        // console.log(`[DashboardStore] Reflowing ${children.length} children for parent ${parentId}`);
 
         const placedItems: { x: number, y: number, w: number, h: number }[] = [];
 
@@ -333,7 +317,7 @@ class DashboardStore {
             placedItems.push({ x: slot.x, y: slot.y, w: child.w, h: child.h });
 
             if (child.x !== slot.x || child.y !== slot.y) {
-                console.log(`[DashboardStore] Reflow moving child ${child.id} to ${slot.x},${slot.y}`);
+                // console.log(`[DashboardStore] Reflow moving child ${child.id} to ${slot.x},${slot.y}`);
                 await this.updateItem({
                     id: child.id,
                     x: slot.x,
@@ -345,7 +329,7 @@ class DashboardStore {
 
     async addItem(newItem: Omit<GridItem, 'id' | 'created_at'>): Promise<GridItem | undefined> {
         try {
-            console.log('[DashboardStore] Adding item:', newItem);
+            // console.log('[DashboardStore] Adding item:', newItem);
             this.ensureItemsIsArray();
 
             // Sync with backend FIRST
@@ -391,7 +375,7 @@ class DashboardStore {
 
                 // Add the REAL item from backend
                 this.state.items.push(createdItem);
-                console.log('[DashboardStore] Item added (Synced), new length:', this.state.items.length);
+                // console.log('[DashboardStore] Item added (Synced), new length:', this.state.items.length);
                 this.saveToLocalStorage();
                 this.notify();
                 return createdItem;
@@ -425,7 +409,7 @@ class DashboardStore {
             // Optimistic delete
             const itemIndex = this.state.items.findIndex(item => item.id === id);
 
-            console.log('[DashboardStore] Deleting item', id, 'Found index:', itemIndex);
+            // console.log('[DashboardStore] Deleting item', id, 'Found index:', itemIndex);
 
             if (itemIndex === -1) {
                 console.warn('[DashboardStore] Item not found for deletion:', id);

@@ -133,6 +133,7 @@
   "settings.docker_desc": "اپ ڈیٹس امیج ٹیگز کے ذریعے منظم کیے جاتے ہیں۔ اپ ڈیٹ کرنے کے لیے تازہ ترین امیج پل کریں۔",
   "settings.update_available": "اپ ڈیٹ دستیاب ہے",
   "settings.up_to_date": "آپ کا سسٹم اپ ٹو ڈیٹ ہے!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "کوئی صارف نہیں ملا۔",
   "action.add_user": "صارف شامل کریں",
   "action.add_new_user": "نیا صارف شامل کریں",

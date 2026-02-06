@@ -86,8 +86,6 @@ class TelemetryWidget extends HTMLElement {
     update(data: any) {
         if (!this.shadowRoot) return;
 
-        // console.log('[WS Data Received]', data);
-
         // Throttle check
         const now = Date.now();
         // Allow for small jitter (100ms grace) if the user selected 1s and backend sends 1s
@@ -114,7 +112,6 @@ class TelemetryWidget extends HTMLElement {
             const cpu = Math.min(100, Math.max(0, Math.round(cpuVal)));
             if (this.cpuBar) {
                 this.cpuBar.style.strokeDasharray = `${cpu}, 100`;
-                // console.log(`[TelemetryWidget] Applied CPU: ${cpu}`);
             }
             if (this.cpuText) this.cpuText.textContent = `${cpu}%`;
 

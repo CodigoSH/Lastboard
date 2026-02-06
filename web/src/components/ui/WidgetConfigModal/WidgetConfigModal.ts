@@ -54,8 +54,6 @@ class WidgetConfigModal extends HTMLElement {
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 1000;
         }
 
-        // TODO: Add other widget forms here (e.g. Telemetry settings?)
-
         if (this.currentItem.type === 'section') {
             const titleInput = this.shadowRoot?.getElementById('section-title') as HTMLInputElement;
             newContent.title = titleInput ? titleInput.value : '';

@@ -133,6 +133,7 @@
   "settings.docker_desc": "Οι ενημερώσεις διαχειρίζονται μέσω ετικετών εικόνας. Λάβετε την πιο πρόσφατη εικόνα για ενημέρωση.",
   "settings.update_available": "Διαθέσιμη ενημέρωση",
   "settings.up_to_date": "Το σύστημα είναι ενημερωμένο!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "Δεν βρέθηκαν χρήστες.",
   "action.add_user": "Προσθήκη χρήστη",
   "action.add_new_user": "Προσθήκη νέου χρήστη",

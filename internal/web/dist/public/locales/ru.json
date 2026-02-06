@@ -133,6 +133,7 @@
   "settings.docker_desc": "Обновления управляются через теги образов. Загрузите последний образ для обновления.",
   "settings.update_available": "Доступно обновление",
   "settings.up_to_date": "У вас установлена последняя версия!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "Пользователи не найдены.",
   "action.add_user": "Добавить пользователя",
   "action.add_new_user": "Добавить нового пользователя",
