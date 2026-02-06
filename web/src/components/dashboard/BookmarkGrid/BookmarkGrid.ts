@@ -278,6 +278,30 @@ class BookmarkGrid extends HTMLElement {
         // Sync to CSS variables for other consumers (and debugging)
         this.style.setProperty('--current-grid-cols', String(calculatedCols));
         this.style.setProperty('--row-height', `${colWidth}px`);
+
+        // Ensure grid always has buffer space (prevents flickering during drag)
+        this.ensureGridBuffer();
+    }
+
+    ensureGridBuffer() {
+        // Find the lowest item (highest y + h value)
+        let maxY = 0;
+        this.bookmarks.forEach(item => {
+            const itemBottom = (item.y || 1) + (item.h || 1);
+            if (itemBottom > maxY) maxY = itemBottom;
+        });
+
+        // Add 1 extra row as buffer for drag & drop (prevents flickering)
+        const bufferRows = 1;
+        const totalRows = maxY + bufferRows;
+
+        // Calculate minimum height needed
+        const rowHeight = this.currentColWidth || 100;
+        const gap = 16;
+        const minHeight = totalRows * rowHeight + (totalRows - 1) * gap;
+
+        // Set minimum height to ensure buffer space always exists
+        this.style.minHeight = `${minHeight}px`;
     }
 
     setupResizeListeners() {
@@ -329,7 +353,7 @@ class BookmarkGrid extends HTMLElement {
     handleWindowMouseMove(e: MouseEvent) {
         if (!this.isResizing || !this.resizeTargetId) return;
 
-        // Throttle updates (Damping)
+        // Throttle updates (Damping) - Reduced to 16ms (~60fps) for smoother resize
         if (this._updateGhostTimeout) {
             return;
         }
@@ -337,7 +361,7 @@ class BookmarkGrid extends HTMLElement {
         this._updateGhostTimeout = setTimeout(() => {
             this._updateGhostTimeout = null;
             this.processResizeMove(e);
-        }, 50); // 50ms damping
+        }, 16); // 16ms = ~60fps for smooth visual feedback
     }
 
     processResizeMove(e: MouseEvent) {
@@ -538,9 +562,6 @@ class BookmarkGrid extends HTMLElement {
             this.dragTargetId = null;
             if (this.ghostEl) this.ghostEl.style.display = 'none';
 
-            // Reset elastic grid expansion
-            this.style.minHeight = '';
-
             // Clear Visual Feedback
             const sections = this.shadowRoot!.querySelectorAll('.bookmark-grid__section');
             sections.forEach(s => s.classList.remove('drop-target'));
@@ -556,12 +577,12 @@ class BookmarkGrid extends HTMLElement {
             e.preventDefault();
             e.dataTransfer!.dropEffect = 'move';
 
-            // Damping / Throttling
+            // Damping / Throttling - Reduced to 16ms for smoother drag
             if (dragOverTimeout) return;
             dragOverTimeout = setTimeout(() => {
                 dragOverTimeout = null;
                 this.processDragOver(e, host);
-            }, 50);
+            }, 16);
         });
 
         host.addEventListener('drop', async (ev) => {
@@ -597,15 +618,8 @@ class BookmarkGrid extends HTMLElement {
                 scrollContainer.scrollBy(0, -SCROLL_SPEED);
             }
 
-            // Dynamic Grid Expansion (Elastic Bottom)
-            // If dragging near bottom of the grid HOST explicitly
-            const gridRect = host.getBoundingClientRect();
-            if (mouseY > gridRect.bottom - 100) {
-                // Add phantom space to allow dropping "below" current content
-                const currentMin = parseFloat(host.style.minHeight) || gridRect.height;
-                // Only expand if we are actually at the bottom of the visible area
-                host.style.minHeight = `${currentMin + 50}px`;
-            }
+            // Auto-scroll handles vertical movement
+            // No dynamic expansion needed - grid has buffer space by default
         }
 
         const gridRect = host.getBoundingClientRect();
@@ -616,31 +630,24 @@ class BookmarkGrid extends HTMLElement {
         const gap = 16;
         const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
 
-        // CENTER-BASED LOGIC (STRICT COORDINATES)
+        // TOP-LEFT BASED LOGIC (More intuitive for large items)
         const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
         if (!draggedItem) return;
-
-        // Pixel width/height of the item being dragged
-        const itemPxW = draggedItem.w * colWidth + (draggedItem.w - 1) * gap;
-        const itemPxH = draggedItem.h * colWidth + (draggedItem.h - 1) * gap;
 
         // Mouse is at e.clientX/Y.
         // TopLeft of floating card = Mouse - Offset.
         const cardTopLeftX = e.clientX - this.dragOffsetX;
         const cardTopLeftY = e.clientY - this.dragOffsetY;
 
-        // Center of floating card
-        const centerX = cardTopLeftX + (itemPxW / 2);
-        const centerY = cardTopLeftY + (itemPxH / 2);
+        // Calculate grid position from top-left corner (more intuitive)
+        const relativeTopLeftX = cardTopLeftX - gridRect.left;
+        const relativeTopLeftY = cardTopLeftY - gridRect.top;
 
-        const relativeCenterX = centerX - gridRect.left;
-        const relativeCenterY = centerY - gridRect.top;
+        // STRICT SNAP: Calculate precise cell under the top-left corner
+        const cellX = Math.floor(relativeTopLeftX / (colWidth + gap));
+        const cellY = Math.floor(relativeTopLeftY / (colWidth + gap));
 
-        // STRICT SNAP: Calculate precise cell under the center
-        const cellX = Math.floor(relativeCenterX / (colWidth + gap));
-        const cellY = Math.floor(relativeCenterY / (colWidth + gap));
-
-        // Convert to 1-based grid coords
+        // Convert to 1-based grid coords with proper boundary constraints
         const gridX = Math.max(1, Math.min(gridCols - draggedItem.w + 1, cellX + 1));
         const gridY = Math.max(1, cellY + 1);
 
@@ -719,25 +726,19 @@ class BookmarkGrid extends HTMLElement {
         const gap = 16;
         const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
 
-        // Calculate item dimensions in pixels
-        const itemPxW = draggedItem.w * colWidth + (draggedItem.w - 1) * gap;
-        const itemPxH = draggedItem.h * colWidth + (draggedItem.h - 1) * gap; // Square cells
-
-        // Top-left of the floating card
+        // Top-left of the floating card (same as processDragOver)
         const cardTopLeftX = e.clientX - this.dragOffsetX;
         const cardTopLeftY = e.clientY - this.dragOffsetY;
 
-        // Center of floating card
-        const centerX = cardTopLeftX + (itemPxW / 2);
-        const centerY = cardTopLeftY + (itemPxH / 2);
+        // Calculate grid position from top-left corner (more intuitive)
+        const relativeTopLeftX = cardTopLeftX - gridRect.left;
+        const relativeTopLeftY = cardTopLeftY - gridRect.top;
 
-        const relativeCenterX = centerX - gridRect.left;
-        const relativeCenterY = centerY - gridRect.top;
+        // STRICT SNAP: Calculate precise cell under the top-left corner
+        const cellX = Math.floor(relativeTopLeftX / (colWidth + gap));
+        const cellY = Math.floor(relativeTopLeftY / (colWidth + gap));
 
-        const cellX = Math.floor(relativeCenterX / (colWidth + gap));
-        const cellY = Math.floor(relativeCenterY / (colWidth + gap));
-
-        // Convert to 1-based grid coords with clamping
+        // Convert to 1-based grid coords with proper boundary constraints
         const gridX = Math.max(1, Math.min(gridCols - draggedItem.w + 1, cellX + 1));
         const gridY = Math.max(1, cellY + 1);
 
