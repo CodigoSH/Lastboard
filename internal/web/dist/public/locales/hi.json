@@ -133,6 +133,7 @@
   "settings.docker_desc": "अपडेट इमेज टैग के माध्यम से प्रबंधित किए जाते हैं। अपडेट करने के लिए नवीनतम इमेज खींचें।",
   "settings.update_available": "अपडेट उपलब्ध है",
   "settings.up_to_date": "आप नवीनतम संस्करण उपयोग कर रहे हैं!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "कोई उपयोगकर्ता नहीं मिला।",
   "action.add_user": "उपयोगकर्ता जोड़ें",
   "action.add_new_user": "नया उपयोगकर्ता जोड़ें",

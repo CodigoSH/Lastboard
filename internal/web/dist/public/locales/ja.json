@@ -133,6 +133,7 @@
   "settings.docker_desc": "更新はイメージタグで管理されます。最新のイメージをプルして更新してください。",
   "settings.update_available": "更新が利用可能です",
   "settings.up_to_date": "最新の状態です！",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "ユーザーが見つかりません。",
   "action.add_user": "ユーザーを追加",
   "action.add_new_user": "新規ユーザーを追加",

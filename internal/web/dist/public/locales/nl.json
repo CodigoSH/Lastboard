@@ -133,6 +133,7 @@
   "settings.docker_desc": "Updates worden beheerd via image tags. Pull de nieuwste image om bij te werken.",
   "settings.update_available": "Update beschikbaar",
   "settings.up_to_date": "U bent up-to-date!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "Geen gebruikers gevonden.",
   "action.add_user": "Gebruiker toevoegen",
   "action.add_new_user": "Nieuwe gebruiker toevoegen",

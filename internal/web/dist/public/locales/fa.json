@@ -133,6 +133,7 @@
   "settings.docker_desc": "بروزرسانی‌ها از طریق تگ‌های ایمیج مدیریت می‌شوند. برای بروزرسانی آخرین ایمیج را دریافت کنید.",
   "settings.update_available": "بروزرسانی در دسترس است",
   "settings.up_to_date": "شما بروز هستید!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "کاربری یافت نشد.",
   "action.add_user": "افزودن کاربر",
   "action.add_new_user": "افزودن کاربر جدید",

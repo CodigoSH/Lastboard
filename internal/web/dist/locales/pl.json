@@ -133,6 +133,7 @@
   "settings.docker_desc": "Aktualizacje są zarządzane przez tagi obrazów. Pobierz najnowszy obraz, aby zaktualizować.",
   "settings.update_available": "Dostępna aktualizacja",
   "settings.up_to_date": "Twoja wersja jest aktualna!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "Nie znaleziono użytkowników.",
   "action.add_user": "Dodaj użytkownika",
   "action.add_new_user": "Dodaj nowego użytkownika",

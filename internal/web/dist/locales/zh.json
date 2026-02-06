@@ -133,6 +133,7 @@
   "settings.docker_desc": "通过镜像标签管理更新。拉取最新镜像以更新。",
   "settings.update_available": "有可用更新",
   "settings.up_to_date": "您已是最新版本！",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "未找到用户。",
   "action.add_user": "添加用户",
   "action.add_new_user": "添加新用户",

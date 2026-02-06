@@ -26,7 +26,6 @@ class ReferenceHeader extends HTMLElement {
             const target = e.target as HTMLElement;
             const changelogBtn = target.closest('.header__btn-changelog') as HTMLElement;
             if (changelogBtn) {
-                console.log('Changelog closed');
                 changelogBtn.style.display = 'none';
             }
 

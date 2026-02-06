@@ -133,6 +133,7 @@
   "settings.docker_desc": "Güncellemeler imaj etiketleri aracılığıyla yönetilir. Güncellemek için en son imajı çekin.",
   "settings.update_available": "Güncelleme Mevcut",
   "settings.up_to_date": "Güncelsiniz!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "Kullanıcı bulunamadı.",
   "action.add_user": "Kullanıcı Ekle",
   "action.add_new_user": "Yeni Kullanıcı Ekle",

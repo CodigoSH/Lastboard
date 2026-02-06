@@ -64,15 +64,6 @@ class BookmarkGrid extends HTMLElement {
         this.render();
         this.updateGridMetrics();
 
-        // Ensure modal exists in main DOM (index.ts creates it usually, but let's check or create)
-        // Check index.ts - we need to create it there or here. 
-        // Best Practice: index.ts created global modals. We'll find it.
-        // But for safety, let's create it if missing in index.ts later.
-        // Actually, we should add it to index.ts to match pattern.
-        // For now, let's find it.
-
-        // ... (rest of observers) ...
-
         this._resizeObserver = new ResizeObserver(() => {
             // Debounce for ~60fps performance (16ms)
             if (this._resizeDebounce) return;
@@ -287,9 +278,6 @@ class BookmarkGrid extends HTMLElement {
         // Sync to CSS variables for other consumers (and debugging)
         this.style.setProperty('--current-grid-cols', String(calculatedCols));
         this.style.setProperty('--row-height', `${colWidth}px`);
-
-        // Debug
-        // console.log('Updated Grid:', calculatedCols, colWidth);
     }
 
     setupResizeListeners() {

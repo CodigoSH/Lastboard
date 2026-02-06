@@ -133,6 +133,7 @@
   "settings.docker_desc": "ইমেজ ট্যাগের মাধ্যমে আপডেট পরিচালনা করা হয়। আপডেট করতে লেটেস্ট ইমেজ পুল করুন।",
   "settings.update_available": "আপডেট উপলব্ধ",
   "settings.up_to_date": "আপনি আপ-টু-ডেট আছেন!",
+  "settings.checking_updates": "Checking for updates...",
   "settings.no_users": "কোন ইউজার পাওয়া যায়নি।",
   "action.add_user": "ইউজার যোগ করুন",
   "action.add_new_user": "নতুন ইউজার যোগ করুন",
