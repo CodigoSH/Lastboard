@@ -423,7 +423,8 @@ func (h *UpdateHandler) restartSelf(exePath string) {
 	args := os.Args
 
 	if err := syscall.Exec(exePath, args, env); err != nil {
-		log.Printf("Failed to restart: %v", err)
+		log.Printf("Failed to restart: %v. Exiting to allow supervisor to restart.", err)
+		os.Exit(0)
 	}
 }
 
