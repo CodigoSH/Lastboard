@@ -14,6 +14,8 @@ interface DashboardState {
         ram_usage: number;
         temperature: number;
     } | null;
+    availableWidth: number;
+    gridColumns: number;
 }
 
 // Mock data used only as a last-resort offline fallback when no user-scoped
@@ -39,7 +41,9 @@ class DashboardStore {
         searchQuery: '',
         isOffline: false,
         updateAvailable: false,
-        stats: null
+        stats: null,
+        availableWidth: 1200, // Default fallback
+        gridColumns: 12
     };
     private listeners: Listener[] = [];
     private userId: number = 0;
@@ -130,8 +134,8 @@ class DashboardStore {
         this.listeners.push(listener);
         // Ensure items is always an array before notifying
         this.ensureItemsIsArray();
-        // Make a safe copy of state for initial call
-        listener({ ...this.state, items: [...this.state.items] });
+        // Make a deep copy of state for initial call
+        listener({ ...this.state, items: this.deepCopyItems(this.state.items) });
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
@@ -145,13 +149,31 @@ class DashboardStore {
         }
     }
 
+    private deepCopyItems(items: GridItem[]): GridItem[] {
+        return items.map(item => {
+            // Deep copy content if it's an object
+            let contentCopy = item.content;
+            if (typeof item.content === 'string') {
+                try {
+                    const parsed = JSON.parse(item.content);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        contentCopy = JSON.stringify(parsed);
+                    }
+                } catch {
+                    // Content is not JSON, keep as is
+                }
+            }
+            return { ...item, content: contentCopy };
+        });
+    }
+
     private notify() {
         // Ensure items is an array before notifying
         this.ensureItemsIsArray();
-        // Always pass a copy with items as array
+        // Always pass a deep copy to prevent mutation
         const safeCopy = {
             ...this.state,
-            items: [...this.state.items]
+            items: this.deepCopyItems(this.state.items)
         };
         this.listeners.forEach(listener => listener(safeCopy));
     }
@@ -170,27 +192,31 @@ class DashboardStore {
         this.notify();
     }
 
+    setGridMetrics(width: number, columns: number) {
+        if (width === this.state.availableWidth && columns === this.state.gridColumns) return;
+        this.state.availableWidth = width;
+        this.state.gridColumns = columns;
+        // Do NOT notify for this? Or strictly for layout reactivity?
+        // Layout reactivity is handled by BookmarkGrid calling render().
+        // Store notification might trigger full framework update which is heavy.
+        // But if other components need it, we should notify.
+        // Let's notify. BookmarkGrid should be smart enough not to loop.
+        // Actually, BookmarkGrid SUBSCRIBES to this. Updating state triggers notify -> triggers BookmarkGrid.
+        // This creates a loop if BookmarkGrid calls setGridMetrics inside its render/resize loop.
+        // CAREFUL.
+        // BookmarkGrid.ts L80: `dashboardStore.subscribe`.
+        // BookmarkGrid updates Metrics on Resize.
+        // If it calls store.setGridMetrics -> Store notifies -> BookmarkGrid receives update -> checks changes -> renders.
+        // This is safe provided `setGridMetrics` has the equality check above.
+        this.notify();
+    }
+
     async fetchItems() {
         try {
             // Try to fetch from backend first
             try {
                 const items = await dashboardService.getItems();
                 if (Array.isArray(items)) {
-                    // KASHBOARD-FIX: Backend might strip parent_id (Go struct missing field?).
-                    // We merge local parent_id if backend one is missing.
-                    const serializedLocal = localStorage.getItem(this.getStorageKey());
-                    if (serializedLocal) {
-                        const localItems = JSON.parse(serializedLocal) as GridItem[];
-                        items.forEach(backendItem => {
-                            if (backendItem.parent_id === undefined) {
-                                const localMatch = localItems.find(l => l.id === backendItem.id);
-                                if (localMatch && localMatch.parent_id !== undefined) {
-                                    backendItem.parent_id = localMatch.parent_id;
-                                }
-                            }
-                        });
-                    }
-
                     this.state.items = items;
                     this.state.isOffline = false;
                     this.saveToLocalStorage();
@@ -331,22 +357,26 @@ class DashboardStore {
                     payload.url = '';
                 }
 
-                // FIX: Use user's current grid preferences to find slot
+                // FIX: Use Store state for grid metrics if available, fallback to DOM/Prefs if not ready
                 // Dynamic Grid Width Detection
                 const { userStore } = await import('./userStore');
                 const user = userStore.getUser();
                 const prefs = user?.preferences;
 
-                // Simple heuristic: if window width < 640 use mobile, < 1024 use tablet, else PC
-                // This mimics the CSS media queries in logic
-                let gridWidth = 12;
-                if (window.innerWidth <= 640) {
-                    gridWidth = prefs?.grid_columns_mobile || 2;
-                } else if (window.innerWidth <= 1024) {
-                    gridWidth = prefs?.grid_columns_tablet || 4;
-                } else {
-                    gridWidth = prefs?.grid_columns_pc || 12; // Use user's PC pref or default 12
+                // Priority: State > DOM > Window
+                let gridWidth = this.state.gridColumns;
+
+                // Fallback (e.g. initial load before ResizeObserver)
+                if (!gridWidth || gridWidth < 1) {
+                    const minWidth = prefs?.widget_min_width || 140;
+                    const gap = 16;
+                    const gridEl = document.querySelector('bookmark-grid');
+                    const availableWidth = this.state.availableWidth || gridEl?.clientWidth || window.innerWidth;
+                    gridWidth = Math.floor((availableWidth + gap) / (minWidth + gap));
                 }
+
+                if (gridWidth < 1) gridWidth = 1;
+                if (gridWidth > 24) gridWidth = 24;
 
                 if (!payload.x || !payload.y) {
                     const { collisionService } = await import('../services/collisionService');
@@ -384,6 +414,9 @@ class DashboardStore {
             return undefined;
         }
     }
+
+    // Legacy reflowGrid removed in favor of CSS Grid auto-fill
+
 
     async deleteItem(id: number) {
         try {

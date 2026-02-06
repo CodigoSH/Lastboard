@@ -18,10 +18,9 @@ export const userService = {
         accent_color?: string,
         language?: string,
         theme?: string,
-        grid_columns_pc?: number,
-        grid_columns_tablet?: number,
-        grid_columns_mobile?: number,
-        project_name?: string
+        widget_min_width?: number,
+        project_name?: string,
+        beta_updates?: boolean
     }): Promise<MessageResponse> {
         return apiService.post<MessageResponse>('/api/user/preferences', preferences);
     },

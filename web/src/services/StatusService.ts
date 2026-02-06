@@ -40,7 +40,9 @@ class StatusService {
         });
 
         for (const item of items) {
-            this.checkItem(item);
+            await this.checkItem(item);
+            // Throttle to prevent 429s
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
     }
 

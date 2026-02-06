@@ -62,39 +62,64 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		isDocker = true
 	}
 
-	// 2. Fetch Latest Release from GitHub
-	resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases/latest")
-	if err != nil {
-		http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// If 404/403 (rate limit), just return current info
-		json.NewEncoder(w).Encode(UpdateResponse{
-			Available:      false,
-			CurrentVersion: version.Current,
-			IsDocker:       isDocker,
-		})
-		return
+	// 2. Check User Preference for Beta Updates
+	username := middleware.GetUserFromContext(r)
+	var betaUpdates bool
+	if username != "" {
+		_ = h.DB.QueryRow("SELECT COALESCE(beta_updates, 0) FROM users WHERE username = ?", username).Scan(&betaUpdates)
 	}
 
 	var release GithubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
-		return
+
+	// 3. Fetch Release Info
+	// If Beta Updates enabled: Fetch list of releases (includes pre-releases) and pick first
+	// If Beta Updates disabled: Fetch 'latest' (excludes pre-releases)
+	if betaUpdates {
+		resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases?per_page=1")
+		if err != nil {
+			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
+			return
+		}
+
+		var releases []GithubRelease
+		if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil || len(releases) == 0 {
+			http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
+			return
+		}
+		release = releases[0] // Newest release (stable or beta)
+
+	} else {
+		resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases/latest")
+		if err != nil {
+			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
+			return
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+			http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
+			return
+		}
 	}
 
-	// 3. Compare Versions
+	// 4. Compare Versions
 	updateAvailable := isNewerVersion(release.TagName, version.Current)
 
-	// 4. Find matching asset
+	// 5. Find matching asset
 	targetAsset := ""
 	osName := runtime.GOOS
 	archName := runtime.GOARCH
-
-	// Expected naming: dashboard-linux-amd64.tar.gz or similar
 	searchSuffix := fmt.Sprintf("%s-%s.tar.gz", osName, archName)
 
 	for _, asset := range release.Assets {
@@ -385,30 +410,64 @@ func (h *UpdateHandler) restartSelf(exePath string) {
 	}
 }
 
-// isNewerVersion returns true if candidate is strictly newer than current.
-// Versions may be v-prefixed (e.g. "v1.2.3").
+// isNewerVersion compares two version strings (SemVer compliantish).
+// Handles:
+// - Standard: v1.0.0 vs v1.0.1
+// - Beta: v1.1.0-beta1 vs v1.1.0-beta2
+// - Stability: v1.1.0-beta vs v1.1.0 (Stable is always newer than its own beta)
 func isNewerVersion(candidate, current string) bool {
-	parse := func(v string) (int, int, int) {
+	// Helper to parse "1.2.3-beta.1" -> (1, 2, 3, "beta.1")
+	parse := func(v string) (int, int, int, string) {
 		v = strings.TrimPrefix(v, "v")
-		parts := strings.SplitN(v, ".", 3)
+		parts := strings.SplitN(v, "-", 2)
+		main := parts[0]
+		suffix := ""
+		if len(parts) > 1 {
+			suffix = parts[1]
+		}
+
+		nums := strings.Split(main, ".")
 		get := func(i int) int {
-			if i >= len(parts) {
+			if i >= len(nums) {
 				return 0
 			}
-			n, _ := strconv.Atoi(parts[i])
+			n, _ := strconv.Atoi(nums[i])
 			return n
 		}
-		return get(0), get(1), get(2)
+		return get(0), get(1), get(2), suffix
 	}
 
-	cMaj, cMin, cPat := parse(candidate)
-	curMaj, curMin, curPat := parse(current)
+	cMaj, cMin, cPat, cSuf := parse(candidate)
+	curMaj, curMin, curPat, curSuf := parse(current)
 
+	// 1. Compare Core Numbers
 	if cMaj != curMaj {
 		return cMaj > curMaj
 	}
 	if cMin != curMin {
 		return cMin > curMin
 	}
-	return cPat > curPat
+	if cPat != curPat {
+		return cPat > curPat
+	}
+
+	// 2. Compare Suffixes (Pre-releases)
+	// If core versions are equal:
+	// - No suffix (Stable) > Suffix (Beta/Alpha)
+	// - Suffix vs Suffix: lexicographical compare (beta2 > beta1)
+
+	if cSuf == "" && curSuf != "" {
+		return true // Candidate is stable, current is beta -> Update!
+	}
+	if cSuf != "" && curSuf == "" {
+		return false // Candidate is beta, current is stable -> Don't update (downgrade)
+	}
+	if cSuf != "" && curSuf != "" {
+		// Both are betas/pre-releases. Compare them.
+		// e.g. "beta2" > "beta1"
+		return cSuf > curSuf
+	}
+
+	// Identical versions
+	return false
 }

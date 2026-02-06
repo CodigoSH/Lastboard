@@ -8,11 +8,10 @@ export interface UserPreferences {
     language: string;
     theme?: string; // 'light' | 'dark' | 'system'
     // Client-only preferences (synced if backend supports)
-    grid_columns_pc?: number;
-    grid_columns_tablet?: number;
-    grid_columns_mobile?: number;
+    widget_min_width?: number; // Replaces fixed column counts
     avatar_url?: string;
     project_name?: string;
+    beta_updates?: boolean;
 }
 
 export interface User {
@@ -24,10 +23,9 @@ export interface User {
     accent_color: string;
     language: string;
     theme?: string; // Sync with backend response
-    grid_columns_pc?: number;
-    grid_columns_tablet?: number;
-    grid_columns_mobile?: number;
+    widget_min_width?: number;
     project_name?: string;
+    beta_updates?: boolean;
     is_superadmin?: boolean;
     preferences?: UserPreferences; // Derived on client
 }

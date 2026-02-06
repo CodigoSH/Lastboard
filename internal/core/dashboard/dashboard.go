@@ -4,7 +4,7 @@ import "time"
 
 type Item struct {
 	ID        int       `json:"id"`
-	ParentID  *int      `json:"parent_id,omitempty"`
+	ParentID  *int      `json:"parent_id"`
 	Type      string    `json:"type"` // e.g., "container", "widget"
 	X         int       `json:"x"`
 	Y         int       `json:"y"`

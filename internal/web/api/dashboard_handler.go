@@ -97,6 +97,12 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate Grid Coordinates
+	if item.X < 1 || item.Y < 1 || item.W < 1 || item.H < 1 {
+		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		return
+	}
+
 	userID := middleware.GetUserIDFromContext(r)
 	res, err := h.DB.Exec("INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		userID, item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url)
@@ -144,6 +150,13 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Printf("[UpdateItem] JSON Decode Error: %v", err)
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+
+	// Validate Grid Coordinates (if being updated)
+	if (input.X != nil && *input.X < 1) || (input.Y != nil && *input.Y < 1) ||
+		(input.W != nil && *input.W < 1) || (input.H != nil && *input.H < 1) {
+		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
 		return
 	}
 

@@ -96,6 +96,7 @@ type BackupUser struct {
 	GridColumnsMobile *int    `json:"grid_columns_mobile"`
 	AvatarUrl         *string `json:"avatar_url"`
 	ProjectName       *string `json:"project_name"`
+	BetaUpdates       *bool   `json:"beta_updates"`
 }
 
 type BackupItem struct {
@@ -131,7 +132,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Fetch Users
 	rows, err := h.DB.Query(`SELECT username, password, role, theme, accent_color, language,
-		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name FROM users`)
+		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, COALESCE(beta_updates, 0) FROM users`)
 	if err != nil {
 		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
 		return
@@ -141,7 +142,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var u BackupUser
 		if err := rows.Scan(&u.Username, &u.Password, &u.Role, &u.Theme, &u.AccentColor, &u.Language,
-			&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl, &u.ProjectName); err != nil {
+			&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl, &u.ProjectName, &u.BetaUpdates); err != nil {
 			continue
 		}
 		backup.Users = append(backup.Users, u)
@@ -236,7 +237,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Insert Users
 	userStmt, err := tx.Prepare(`INSERT INTO users (username, password, role, theme, accent_color, language,
-		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, beta_updates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
 		return
@@ -244,8 +245,14 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	defer userStmt.Close()
 
 	for _, u := range backup.Users {
+		// Handle nil for new fields if restoring from old backup
+		betaUpdates := false
+		if u.BetaUpdates != nil {
+			betaUpdates = *u.BetaUpdates
+		}
+
 		_, err := userStmt.Exec(u.Username, u.Password, u.Role, u.Theme, u.AccentColor, u.Language,
-			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName)
+			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName, betaUpdates)
 		if err != nil {
 			http.Error(w, "Failed to restore backup", http.StatusInternalServerError)
 			return

@@ -19,6 +19,7 @@ class BookmarkGrid extends HTMLElement {
     private _unsubscribe: (() => void) | undefined;
     private _unsubscribeI18n: (() => void) | undefined;
     private _resizeObserver: ResizeObserver | undefined;
+    private _resizeDebounce: any = null;
 
     // Drag State
     private dragTargetId: number | null = null;
@@ -73,7 +74,22 @@ class BookmarkGrid extends HTMLElement {
         // ... (rest of observers) ...
 
         this._resizeObserver = new ResizeObserver(() => {
-            this.updateGridMetrics();
+            // Debounce for ~60fps performance (16ms)
+            if (this._resizeDebounce) return;
+
+            this._resizeDebounce = setTimeout(() => {
+                this._resizeDebounce = null;
+
+                // 1. Update Internal Metrics & CSS
+                this.updateGridMetrics();
+
+                // 2. Sync with Store (Source of Truth)
+                const rect = this.getBoundingClientRect();
+                dashboardStore.setGridMetrics(rect.width, this.currentGridCols);
+
+                // 3. FORCE Render to re-calculate "Deep Cascade" layout
+                this.render();
+            }, 16);
         });
         this._resizeObserver.observe(this);
 
@@ -227,29 +243,53 @@ class BookmarkGrid extends HTMLElement {
         if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._unsubscribeUser) this._unsubscribeUser();
         if (this._resizeObserver) this._resizeObserver.disconnect();
+        if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
+        if (this._updateGhostTimeout) clearTimeout(this._updateGhostTimeout);
         window.removeEventListener('mousemove', this._boundMouseMove);
         window.removeEventListener('mouseup', this._boundMouseUp);
         statusService.stop();
     }
 
     updateGridMetrics() {
-        // Calculate and set --row-height
         const gridRect = this.getBoundingClientRect();
         const gridStyle = getComputedStyle(this);
-        const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
-        const gridCols = gridColsStr ? parseInt(gridColsStr, 10) : 12;
 
-        // FIX: Read computed gap property instead of raw variable to handle clamp()
-        // getComputedStyle returns resolved px values for 'gap'/'column-gap'
+        // Read min-size from CSS variable (set by user preference)
+        const minSizeStr = gridStyle.getPropertyValue('--widget-min-size').trim();
+        const minSize = parseFloat(minSizeStr) || 140;
+
+        // Read gap
         const gapStr = gridStyle.columnGap || gridStyle.gap || '16px';
         const gap = parseFloat(gapStr) || 16;
 
-        const colWidth = (gridRect.width - ((gridCols - 1) * gap)) / gridCols;
+        // Fallback for invisible/unmounted grid
+        if (gridRect.width <= 0) {
+            // Check if we can get width from parent or default
+            // If completely hidden, default to 12 to generate VALID CSS
+            this.currentGridCols = 12;
+            this.currentColWidth = 100; // dummy
+            this.style.setProperty('--current-grid-cols', '12');
+            this.style.setProperty('--row-height', '100px');
+            return;
+        }
 
-        // Update Internal State & CSS Variable
-        this.currentGridCols = gridCols;
+        // Calculate dynamic columns matching fluid logic
+        let calculatedCols = Math.floor((gridRect.width + gap) / (minSize + gap));
+        // Ensure at least 1 column
+        if (calculatedCols < 1) calculatedCols = 1;
+
+        const colWidth = (gridRect.width - ((calculatedCols - 1) * gap)) / calculatedCols;
+
+        // Update Internal State
+        this.currentGridCols = calculatedCols;
         this.currentColWidth = colWidth;
+
+        // Sync to CSS variables for other consumers (and debugging)
+        this.style.setProperty('--current-grid-cols', String(calculatedCols));
         this.style.setProperty('--row-height', `${colWidth}px`);
+
+        // Debug
+        // console.log('Updated Grid:', calculatedCols, colWidth);
     }
 
     setupResizeListeners() {
@@ -296,7 +336,23 @@ class BookmarkGrid extends HTMLElement {
         });
     }
 
+    private _updateGhostTimeout: any = null;
+
     handleWindowMouseMove(e: MouseEvent) {
+        if (!this.isResizing || !this.resizeTargetId) return;
+
+        // Throttle updates (Damping)
+        if (this._updateGhostTimeout) {
+            return;
+        }
+
+        this._updateGhostTimeout = setTimeout(() => {
+            this._updateGhostTimeout = null;
+            this.processResizeMove(e);
+        }, 50); // 50ms damping
+    }
+
+    processResizeMove(e: MouseEvent) {
         if (!this.isResizing || !this.resizeTargetId) return;
 
         const deltaX = e.clientX - this.initialResizeX;
@@ -374,6 +430,12 @@ class BookmarkGrid extends HTMLElement {
     async handleWindowMouseUp(e: MouseEvent) {
         if (!this.isResizing || !this.resizeTargetId) return;
 
+        // Cancel pending throttled update (prevent stale state)
+        if (this._updateGhostTimeout) {
+            clearTimeout(this._updateGhostTimeout);
+            this._updateGhostTimeout = null;
+        }
+
         // Final calculation
         const deltaX = e.clientX - this.initialResizeX;
         const deltaY = e.clientY - this.initialResizeY;
@@ -419,29 +481,28 @@ class BookmarkGrid extends HTMLElement {
                     // We start with current bookmarks
                     const simulatedItems = [...this.bookmarks];
 
-                    for (const child of toEject) {
-                        // Find slot in root
+                    // Calculate all slots FIRST before any updates (prevents race condition)
+                    const ejections = toEject.map(child => {
                         const slot = collisionService.findFirstAvailableSlot(child.w, child.h, simulatedItems, this.currentGridCols);
 
-
-
-                        // Update real store
-                        await dashboardStore.updateItem({
-                            id: child.id,
-                            x: slot.x,
-                            y: slot.y,
-                            parent_id: undefined
-                        });
-
                         // Update simulation so next ejected item finds a different slot
-                        // We add a fake item at this position (or update existing one in copy)
                         simulatedItems.push({
                             ...child,
                             x: slot.x,
                             y: slot.y,
                             parent_id: undefined
                         });
-                    }
+
+                        return {
+                            id: child.id,
+                            x: slot.x,
+                            y: slot.y,
+                            parent_id: undefined
+                        };
+                    });
+
+                    // Now update all items in parallel (no race condition)
+                    await Promise.all(ejections.map(update => dashboardStore.updateItem(update)));
                 }
             }
 
@@ -489,164 +550,279 @@ class BookmarkGrid extends HTMLElement {
             this.dragTargetId = null;
             if (this.ghostEl) this.ghostEl.style.display = 'none';
 
+            // Reset elastic grid expansion
+            this.style.minHeight = '';
+
             // Clear Visual Feedback
             const sections = this.shadowRoot!.querySelectorAll('.bookmark-grid__section');
             sections.forEach(s => s.classList.remove('drop-target'));
         });
 
         // 2. Drag Over/Drop must be caught on the Host to support empty background areas
+        // Throttle variable for dragover
+        let dragOverTimeout: any = null;
+
         host.addEventListener('dragover', (ev) => {
             const e = ev as DragEvent;
             if (!this.isEditing || !this.dragTargetId) return;
             e.preventDefault();
             e.dataTransfer!.dropEffect = 'move';
 
-            // Auto-Scroll Logic
-            const SCROLL_THRESHOLD = 100; // px from edge
-            const SCROLL_SPEED = 15;
-
-            // Find scroll container (main-content)
-            // We cache this or find it dynamically
-            const scrollContainer = document.querySelector('.main-content');
-
-            if (scrollContainer) {
-                const rect = scrollContainer.getBoundingClientRect();
-                const mouseY = e.clientY;
-
-                // Scroll Down
-                if (mouseY > rect.bottom - SCROLL_THRESHOLD) {
-                    scrollContainer.scrollBy(0, SCROLL_SPEED);
-                }
-                // Scroll Up
-                else if (mouseY < rect.top + SCROLL_THRESHOLD) {
-                    scrollContainer.scrollBy(0, -SCROLL_SPEED);
-                }
-
-                // Dynamic Grid Expansion (Elastic Bottom)
-                // If dragging near bottom of the grid HOST explicitly
-                const gridRect = host.getBoundingClientRect();
-                if (mouseY > gridRect.bottom - 100) {
-                    // Add phantom space to allow dropping "below" current content
-                    const currentMin = parseFloat(host.style.minHeight) || gridRect.height;
-                    // Only expand if we are actually at the bottom of the visible area
-                    host.style.minHeight = `${currentMin + 50}px`;
-                }
-            }
-
-            const gridRect = host.getBoundingClientRect();
-            // Get dynamic grid columns
-            const gridStyle = getComputedStyle(this.shadowRoot!.host);
-            const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
-            const gridColsRaw = gridColsStr ? parseInt(gridColsStr, 10) : 12;
-            const gridCols = isNaN(gridColsRaw) ? 12 : gridColsRaw;
-
-            const totalWidth = gridRect.width;
-            const gap = 16;
-            const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
-
-            const relativeX = (e.clientX - this.dragOffsetX) - gridRect.left;
-            const relativeY = (e.clientY - this.dragOffsetY) - gridRect.top;
-            const snapped = collisionService.snapToGrid(relativeX, relativeY, colWidth, gap);
-
-            // Find current item dimensions
-            const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
-            if (!draggedItem) return;
-
-            // Check Validity
-            const potentialRect = {
-                x: snapped.x,
-                y: snapped.y,
-                w: draggedItem.w,
-                h: draggedItem.h,
-                id: draggedItem.id,
-                parent_id: draggedItem.parent_id
-            };
-
-            const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
-
-
-            this.updateGhost(potentialRect, check.valid);
-
-            // Visual Feedback for Nesting
-            const sections = this.shadowRoot!.querySelectorAll('.bookmark-grid__section');
-            sections.forEach(s => s.classList.remove('drop-target'));
-
-            if (check.targetGroup) {
-                const targetSection = this.shadowRoot!.querySelector(`.bookmark-grid__section[data-id="${check.targetGroup.id}"]`);
-                if (targetSection) {
-                    targetSection.classList.add('drop-target');
-                }
-            }
+            // Damping / Throttling
+            if (dragOverTimeout) return;
+            dragOverTimeout = setTimeout(() => {
+                dragOverTimeout = null;
+                this.processDragOver(e, host);
+            }, 50);
         });
 
         host.addEventListener('drop', async (ev) => {
             const e = ev as DragEvent;
-            if (!this.isEditing || !this.dragTargetId) return;
-            e.preventDefault();
+            // Ensure we clear any pending throttle to handle immediate drops
+            if (dragOverTimeout) {
+                clearTimeout(dragOverTimeout);
+                dragOverTimeout = null;
+            }
+            await this.handleDrop(e, host);
+        });
+    }
 
-            // Re-calculate correctness final time (or store from dragover)
-            const gridRect = host.getBoundingClientRect();
-            // Get dynamic grid columns
-            const gridStyle = getComputedStyle(host);
-            const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
-            const gridColsRaw = gridColsStr ? parseInt(gridColsStr, 10) : 12;
-            const gridCols = isNaN(gridColsRaw) ? 12 : gridColsRaw;
+    processDragOver(e: DragEvent, host: HTMLElement) {
+        // Auto-Scroll Logic
+        const SCROLL_THRESHOLD = 100; // px from edge
+        const SCROLL_SPEED = 15;
 
-            const totalWidth = gridRect.width;
-            const gap = 16;
-            const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
+        // Find scroll container (main-content)
+        // We cache this or find it dynamically
+        const scrollContainer = document.querySelector('.main-content');
 
-            const relativeX = (e.clientX - this.dragOffsetX) - gridRect.left;
-            const relativeY = (e.clientY - this.dragOffsetY) - gridRect.top;
-            const snapped = collisionService.snapToGrid(relativeX, relativeY, colWidth, gap);
+        if (scrollContainer) {
+            const rect = scrollContainer.getBoundingClientRect();
+            const mouseY = e.clientY;
 
-            const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
-            if (!draggedItem) return;
-
-            const potentialRect = {
-                x: snapped.x,
-                y: snapped.y,
-                w: draggedItem.w,
-                h: draggedItem.h,
-                id: draggedItem.id,
-                parent_id: draggedItem.parent_id
-            };
-
-            const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
-
-
-            if (check.valid) {
-                // Update item through store (handles optimistic update + backend sync)
-                const updateData: Partial<GridItem> & { id: number } = {
-                    id: draggedItem.id,
-                    x: check.x,
-                    y: check.y
-                };
-
-                if (check.targetGroup) {
-                    // It's a nesting drop (into a new section or staying in current)
-                    updateData.parent_id = check.targetGroup.id;
-                    // convert TO local coordinates
-                    updateData.x = check.x - check.targetGroup.x + 1;
-                    updateData.y = check.y - check.targetGroup.y + 1;
-
-                } else {
-                    // It's a root drop
-                    updateData.parent_id = undefined;
-                    // check.x/y are already global
-
-                }
-
-
-                await dashboardStore.updateItem(updateData);
+            // Scroll Down
+            if (mouseY > rect.bottom - SCROLL_THRESHOLD) {
+                scrollContainer.scrollBy(0, SCROLL_SPEED);
+            }
+            // Scroll Up
+            else if (mouseY < rect.top + SCROLL_THRESHOLD) {
+                scrollContainer.scrollBy(0, -SCROLL_SPEED);
             }
 
-            if (this.ghostEl) this.ghostEl.style.display = 'none';
+            // Dynamic Grid Expansion (Elastic Bottom)
+            // If dragging near bottom of the grid HOST explicitly
+            const gridRect = host.getBoundingClientRect();
+            if (mouseY > gridRect.bottom - 100) {
+                // Add phantom space to allow dropping "below" current content
+                const currentMin = parseFloat(host.style.minHeight) || gridRect.height;
+                // Only expand if we are actually at the bottom of the visible area
+                host.style.minHeight = `${currentMin + 50}px`;
+            }
+        }
 
-            // Clear Visual Feedback
-            const sections = this.shadowRoot!.querySelectorAll('.bookmark-grid__section');
-            sections.forEach(s => s.classList.remove('drop-target'));
+        const gridRect = host.getBoundingClientRect();
+        // Use dynamically calculated instance property
+        const gridCols = this.currentGridCols || 12;
+
+        const totalWidth = gridRect.width;
+        const gap = 16;
+        const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
+
+        // CENTER-BASED LOGIC (STRICT COORDINATES)
+        const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
+        if (!draggedItem) return;
+
+        // Pixel width/height of the item being dragged
+        const itemPxW = draggedItem.w * colWidth + (draggedItem.w - 1) * gap;
+        const itemPxH = draggedItem.h * colWidth + (draggedItem.h - 1) * gap;
+
+        // Mouse is at e.clientX/Y.
+        // TopLeft of floating card = Mouse - Offset.
+        const cardTopLeftX = e.clientX - this.dragOffsetX;
+        const cardTopLeftY = e.clientY - this.dragOffsetY;
+
+        // Center of floating card
+        const centerX = cardTopLeftX + (itemPxW / 2);
+        const centerY = cardTopLeftY + (itemPxH / 2);
+
+        const relativeCenterX = centerX - gridRect.left;
+        const relativeCenterY = centerY - gridRect.top;
+
+        // STRICT SNAP: Calculate precise cell under the center
+        const cellX = Math.floor(relativeCenterX / (colWidth + gap));
+        const cellY = Math.floor(relativeCenterY / (colWidth + gap));
+
+        // Convert to 1-based grid coords
+        const gridX = Math.max(1, Math.min(gridCols - draggedItem.w + 1, cellX + 1));
+        const gridY = Math.max(1, cellY + 1);
+
+        const potentialRect = {
+            x: gridX,
+            y: gridY,
+            w: draggedItem.w,
+            h: draggedItem.h,
+            id: draggedItem.id,
+            parent_id: draggedItem.parent_id
+        };
+
+        // COLLISION CHECK (NO PUSH)
+        // Check valid drops (boundaries)
+        const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
+
+        // Additional Check: Is the spot OCCUPIED by another item (that isn't self)?
+        // collisionService.calculateDropValidity usually handles this but might try to "find" a spot.
+        // We want STRICT: If occupied -> Invalid (Red).
+
+        // We can manually check occupation if calculateDropValidity is too smart.
+        // Assuming calculateDropValidity returns 'valid: false' if overlaps and it can't move? 
+        // Actually, existing logic often tries to "fit".
+        // Let's rely on `check.valid`. If strictly occupied, it hopefully returns invalid or a different position.
+        // BUT user said: "If a spot is occupied, show the red box or swap positions".
+        // Let's implement RED BOX for now.
+
+        // We need to know if it overlaps ANY item (excluding self).
+        const hasOverlap = this.bookmarks.some(b => {
+            if (b.id === draggedItem.id) return false;
+            // Ignore items in other sections if we are root, etc?
+            // Simplified global check for now (or section specific).
+            // Actually, bookmarks have parent_id.
+            if (b.parent_id !== draggedItem.parent_id && !check.targetGroup) return false; // Different scope?
+
+            // Check overlap
+            const bX = b.x || 1; const bY = b.y || 1;
+            const bW = b.w || 1; const bH = b.h || 1;
+
+            // Allow nesting target
+            if (check.targetGroup && b.id === check.targetGroup.id) return false;
+
+            return (
+                gridX < bX + bW &&
+                gridX + draggedItem.w > bX &&
+                gridY < bY + bH &&
+                gridY + draggedItem.h > bY
+            );
         });
+
+        const isValid = !hasOverlap && check.valid;
+
+        this.updateGhost(potentialRect, isValid);
+
+        // Visual Feedback for Nesting
+        const sections = this.shadowRoot!.querySelectorAll('.bookmark-grid__section');
+        sections.forEach(s => s.classList.remove('drop-target'));
+
+        if (check.targetGroup && isValid) {
+            const targetSection = this.shadowRoot!.querySelector(`.bookmark-grid__section[data-id="${check.targetGroup.id}"]`);
+            if (targetSection) targetSection.classList.add('drop-target');
+        }
+    }
+
+    async handleDrop(e: DragEvent, host: HTMLElement) {
+        if (!this.isEditing || !this.dragTargetId) return;
+        e.preventDefault();
+
+        const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
+        if (!draggedItem) return;
+
+        // Use same calculation as processDragOver for consistency
+        const gridRect = host.getBoundingClientRect();
+        const gridCols = this.currentGridCols || 12;
+        const totalWidth = gridRect.width;
+        const gap = 16;
+        const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
+
+        // Calculate item dimensions in pixels
+        const itemPxW = draggedItem.w * colWidth + (draggedItem.w - 1) * gap;
+        const itemPxH = draggedItem.h * colWidth + (draggedItem.h - 1) * gap; // Square cells
+
+        // Top-left of the floating card
+        const cardTopLeftX = e.clientX - this.dragOffsetX;
+        const cardTopLeftY = e.clientY - this.dragOffsetY;
+
+        // Center of floating card
+        const centerX = cardTopLeftX + (itemPxW / 2);
+        const centerY = cardTopLeftY + (itemPxH / 2);
+
+        const relativeCenterX = centerX - gridRect.left;
+        const relativeCenterY = centerY - gridRect.top;
+
+        const cellX = Math.floor(relativeCenterX / (colWidth + gap));
+        const cellY = Math.floor(relativeCenterY / (colWidth + gap));
+
+        // Convert to 1-based grid coords with clamping
+        const gridX = Math.max(1, Math.min(gridCols - draggedItem.w + 1, cellX + 1));
+        const gridY = Math.max(1, cellY + 1);
+
+        const potentialRect = {
+            x: gridX,
+            y: gridY,
+            w: draggedItem.w,
+            h: draggedItem.h,
+            id: draggedItem.id,
+            parent_id: draggedItem.parent_id
+        };
+
+        const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
+
+        // Check for overlaps manually (STRICT mode)
+        const hasOverlap = this.bookmarks.some(b => {
+            if (b.id === draggedItem.id) return false;
+            // Check scope (parent_id)
+            if (b.parent_id !== draggedItem.parent_id && !check.targetGroup) return false;
+
+            const bX = b.x || 1; const bY = b.y || 1;
+            const bW = b.w || 1; const bH = b.h || 1;
+
+            if (check.targetGroup && b.id === check.targetGroup.id) return false;
+
+            return (
+                gridX < bX + bW &&
+                gridX + draggedItem.w > bX &&
+                gridY < bY + bH &&
+                gridY + draggedItem.h > bY
+            );
+        });
+
+        // Block drop if overlapping (unless it's a valid nesting target)
+        if (hasOverlap && !check.targetGroup) {
+            // Invalid Drop. Cancel.
+            // visual feedback will just reset
+            if (this.ghostEl) this.ghostEl.style.display = 'none';
+            this.shadowRoot!.querySelectorAll('.drop-target').forEach(s => s.classList.remove('drop-target'));
+            return;
+        }
+
+        if (check.valid) {
+            // Update item through store (handles optimistic update + backend sync)
+            const updateData: Partial<GridItem> & { id: number } = {
+                id: draggedItem.id,
+                x: check.x,
+                y: check.y
+            };
+
+            if (check.targetGroup) {
+                // It's a nesting drop (into a new section or staying in current)
+                updateData.parent_id = check.targetGroup.id;
+                // convert TO local coordinates
+                updateData.x = check.x - check.targetGroup.x + 1;
+                updateData.y = check.y - check.targetGroup.y + 1;
+
+            } else {
+                // It's a root drop
+                updateData.parent_id = undefined;
+                // check.x/y are already global
+
+            }
+
+
+            await dashboardStore.updateItem(updateData);
+        }
+
+        if (this.ghostEl) this.ghostEl.style.display = 'none';
+
+        // Clear Visual Feedback
+        const sections = this.shadowRoot!.querySelectorAll('.bookmark-grid__section');
+        sections.forEach(s => s.classList.remove('drop-target'));
     }
 
     updateGhost(rect: { x: number, y: number, w: number, h: number }, isValid: boolean) {
@@ -655,35 +831,12 @@ class BookmarkGrid extends HTMLElement {
         }
         if (!this.ghostEl) return;
 
-        // Calculate Pixel Dimensions
-        const gridStyle = getComputedStyle(this);
-        // FIX: Read computed gap property instead of raw variable to handle clamp()
-        const gapStr = gridStyle.columnGap || gridStyle.gap || '16px';
-        const gap = parseFloat(gapStr) || 16;
-
-        const gridRect = this.getBoundingClientRect();
-        const gridColsStr = gridStyle.getPropertyValue('--current-grid-cols').trim();
-        const gridCols = gridColsStr ? parseInt(gridColsStr, 10) : 12;
-
-        const totalWidth = gridRect.width;
-        // Calculation must match snap-logic
-        const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
-
-        // User reported ghost is too short (rectangular). 
-        // We set height = colWidth, creating a square cell logic which usually looks better for icons.
-        // This matches the visual expectation of "square" drop zones.
-        const ROW_HEIGHT = colWidth;
-
-        const xPx = (rect.x - 1) * (colWidth + gap);
-        const yPx = (rect.y - 1) * (ROW_HEIGHT + gap);
-        const wPx = (rect.w * colWidth) + ((rect.w - 1) * gap);
-        const hPx = (rect.h * ROW_HEIGHT) + ((rect.h - 1) * gap);
-
+        // Use CSS Grid positioning variables to align ghost perfectly with grid
         this.ghostEl.style.display = 'block';
-        this.ghostEl.style.setProperty('--x-px', String(xPx));
-        this.ghostEl.style.setProperty('--y-px', String(yPx));
-        this.ghostEl.style.setProperty('--w-px', String(wPx));
-        this.ghostEl.style.setProperty('--h-px', String(hPx));
+        this.ghostEl.style.setProperty('--ghost-x', String(rect.x));
+        this.ghostEl.style.setProperty('--ghost-y', String(rect.y));
+        this.ghostEl.style.setProperty('--ghost-w', String(rect.w));
+        this.ghostEl.style.setProperty('--ghost-h', String(rect.h));
 
         if (isValid) {
             this.ghostEl.classList.remove('invalid');
@@ -705,7 +858,8 @@ class BookmarkGrid extends HTMLElement {
             bookmarks: this.bookmarks,
             isEditing: this.isEditing,
             isSearching: !!this.searchQuery,
-            isTouchDevice: this.isTouchDevice
+            isTouchDevice: this.isTouchDevice,
+            maxCols: this.currentGridCols
         })}
         `;
 

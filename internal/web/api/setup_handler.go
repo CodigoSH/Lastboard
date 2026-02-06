@@ -92,8 +92,8 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create admin user
-	_, err = tx.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language, avatar_url, grid_columns_pc, grid_columns_tablet, grid_columns_mobile)
-		VALUES (?, ?, ?, ?, ?, ?, ?, 12, 6, 3)`,
+	_, err = tx.Exec(`INSERT INTO users (username, password, role, theme, accent_color, language, avatar_url, widget_min_width)
+		VALUES (?, ?, ?, ?, ?, ?, ?, 140)`,
 		input.Username, string(hashedPassword), "admin", input.Theme, input.AccentColor, input.Language, input.AvatarUrl)
 	if err != nil {
 		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)
