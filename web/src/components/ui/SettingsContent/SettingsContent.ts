@@ -183,6 +183,18 @@ class SettingsContent extends HTMLElement {
         userStore.updatePreferences({ widget_min_width: val });
     }
 
+    updateColumns(value: string) {
+        const valSpan = this.shadowRoot!.getElementById('val-grid_columns');
+        if (valSpan) valSpan.textContent = value;
+        document.documentElement.style.setProperty('--user-preferred-columns', value);
+    }
+
+    commitColumns(value: string) {
+        const val = parseInt(value);
+        // @ts-ignore
+        userStore.updatePreferences({ grid_columns: val });
+    }
+
     async updateUsername(newUsername: string) {
         const u = userStore.getUser();
         if (!u) return;
@@ -432,7 +444,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.4-beta.10'; // Should be sync with backend or injected
+    private version = 'v1.1.4'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 

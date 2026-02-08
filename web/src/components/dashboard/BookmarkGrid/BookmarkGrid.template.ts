@@ -140,7 +140,9 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             ${isEditing && b.type === 'section' ? '<div class="resize-handle"></div>' : ''}
             
             ${data.statusCheck ? `
-                <div class="status-indicator" title="${i18n.t('general.pinging')}"></div>
+                <div class="status-indicator ${b.status ? `status-${b.status}` : ''}" 
+                     title="${b.status === 'up' ? i18n.t('status.online') : (b.status === 'down' ? i18n.t('status.unreachable') : (b.status === 'pending' ? i18n.t('status.checking') : i18n.t('general.pinging')))}">
+                </div>
             ` : ''}
         </a>
     `;

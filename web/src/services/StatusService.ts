@@ -85,22 +85,7 @@ class StatusService {
     }
 
     private updateUIStatus(id: number, status: 'up' | 'down' | 'pending') {
-        const grid = document.querySelector('bookmark-grid');
-        if (!grid || !grid.shadowRoot) return;
-
-        const card = grid.shadowRoot.querySelector(`.bookmark-grid__card[data-id="${id}"]`);
-        if (!card) return;
-
-        const indicator = card.querySelector('.status-indicator');
-        if (!indicator) return;
-
-        indicator.classList.remove('status-pending', 'status-up', 'status-down');
-        indicator.classList.add(`status-${status}`);
-
-        const title = status === 'up'
-            ? i18n.t('status.online')
-            : (status === 'down' ? i18n.t('status.unreachable') : i18n.t('status.checking'));
-        indicator.setAttribute('title', title);
+        dashboardStore.setItemStatus(id, status);
     }
 }
 

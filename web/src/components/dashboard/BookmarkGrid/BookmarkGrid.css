@@ -112,19 +112,24 @@
     /* Removed card lift, moved to icon */
 }
 
-/* Status Indicator */
+/* Status Indicator - Responsive Position & Size */
 .status-indicator {
     position: absolute;
-    top: 8%;
-    right: 8%;
-    width: 8%;
-    height: 8%;
+    /* Position scales with card width, but never too close to edge */
+    top: clamp(6px, 6cqi, 12px);
+    right: clamp(6px, 6cqi, 12px);
+
+    /* Size scales with card width */
+    width: clamp(8px, 9cqi, 14px);
+    height: clamp(8px, 9cqi, 14px);
+
     border-radius: 50%;
     background-color: var(--text-dim);
-    border: 1.5px solid var(--panel);
-    /* Use panel color instead of fixed white for ring */
-    /* Light effect border */
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    /* Border scales slightly for visual weight */
+    border: clamp(1px, 1.2cqi, 2px) solid var(--panel);
+
+    /* Light effect shadow scales slightly */
+    box-shadow: 0 0 clamp(2px, 2cqi, 6px) rgba(0, 0, 0, 0.5);
     z-index: 5;
     transition: all 0.3s ease;
 }

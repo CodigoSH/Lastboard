@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Ζώνη ώρας",
   "widget.clock.auto_detect": "Αυτόματος εντοπισμός",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Σημειώσεις"
+  "widget.notepad.name": "Σημειώσεις",
+  "settings.grid_columns": "Αριθμός Στηλών",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

@@ -146,14 +146,14 @@ export const personalizationTemplate = (prefs: Prefs) => `
             <div class="settings-content__personalization-grid">
                 <div class="settings-content__slider-group">
                     <div class="settings-content__slider-header">
-                        <label class="settings-content__slider-label">${i18n.t('settings.widget_min_size')}</label>
-                        <span class="settings-content__slider-value" id="val-widget_min_width">${prefs.widget_min_width || 140}px</span>
+                        <label class="settings-content__slider-label">${i18n.t('settings.grid_columns')}</label>
+                        <span class="settings-content__slider-value" id="val-grid_columns">${prefs.grid_columns || 12}</span>
                     </div>
                     <input type="range" 
-                           min="80" max="300" step="10"
-                           value="${prefs.widget_min_width || 140}"
-                           oninput="this.getRootNode().host.updateDensity(this.value)"
-                           onchange="this.getRootNode().host.commitDensity(this.value)">
+                           min="3" max="16" step="1"
+                           value="${prefs.grid_columns || 12}"
+                           oninput="this.getRootNode().host.updateColumns(this.value)"
+                           onchange="this.getRootNode().host.commitColumns(this.value)">
                 </div>
             </div>
             

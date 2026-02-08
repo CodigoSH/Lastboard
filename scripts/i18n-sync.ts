@@ -125,6 +125,32 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "bn": "তরল গ্রিড স্থাপত্য",
         "ur": "سیال گرڈ فن تعمیر"
     },
+    "settings.grid_columns": {
+        "es": "Número de Columnas", "fr": "Nombre de colonnes", "de": "Spaltenanzahl", "it": "Numero di colonne", "pt": "Número de Colunas", "nl": "Aantal kolommen",
+        "ru": "Количество столбцов", "zh": "列数", "ja": "列数", "ko": "열 수", "tr": "Sütun Sayısı", "pl": "Liczba kolumn",
+        "id": "Jumlah Kolom", "ar": "عدد الأعمدة", "fa": "تعداد ستون‌ها", "el": "Αριθμός Στηλών", "hi": "Column Count", "bn": "Column Count", "ur": "Column Count"
+    },
+    "settings.density_desc": {
+        "es": "Ajusta el número de columnas para controlar la densidad.",
+        "fr": "Adjust the number of columns to control the density of your dashboard.",
+        "de": "Adjust the number of columns to control the density of your dashboard.",
+        "it": "Adjust the number of columns to control the density of your dashboard.",
+        "pt": "Adjust the number of columns to control the density of your dashboard.",
+        "nl": "Adjust the number of columns to control the density of your dashboard.",
+        "ru": "Adjust the number of columns to control the density of your dashboard.",
+        "zh": "Adjust the number of columns to control the density of your dashboard.",
+        "ja": "Adjust the number of columns to control the density of your dashboard.",
+        "ko": "Adjust the number of columns to control the density of your dashboard.",
+        "tr": "Adjust the number of columns to control the density of your dashboard.",
+        "pl": "Adjust the number of columns to control the density of your dashboard.",
+        "id": "Adjust the number of columns to control the density of your dashboard.",
+        "ar": "Adjust the number of columns to control the density of your dashboard.",
+        "fa": "Adjust the number of columns to control the density of your dashboard.",
+        "el": "Adjust the number of columns to control the density of your dashboard.",
+        "hi": "Adjust the number of columns to control the density of your dashboard.",
+        "bn": "Adjust the number of columns to control the density of your dashboard.",
+        "ur": "Adjust the number of columns to control the density of your dashboard."
+    },
 
     // --- Existing & Notepad Tools ---
     "widget.notepad.placeholder": {
@@ -438,6 +464,27 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     },
     "widget.no_config": {
         "es": "No hay configuración disponible para este elemento.", "fr": "Aucune configuration disponible pour cet élément.", "de": "Keine Konfiguration für dieses Element verfügbar."
+    },
+    "widget.config.no_config": {
+        "es": "No hay configuración disponible para este elemento.",
+        "fr": "Aucune configuration disponible pour cet élément.",
+        "de": "Keine Konfiguration für dieses Element verfügbar.",
+        "it": "Nessuna configurazione disponibile per questo elemento.",
+        "pt": "Nenhuma configuração disponível para este item.",
+        "nl": "Geen configuratie beschikbaar voor dit item.",
+        "ru": "Конфигурация для этого элемента недоступна.",
+        "zh": "此项目没有可用的配置。",
+        "ja": "このアイテムには設定がありません。",
+        "ko": "이 항목에 대한 구성이 없습니다.",
+        "tr": "Bu öğe için yapılandırma yok.",
+        "pl": "Brak konfiguracji dla tego elementu.",
+        "id": "Tidak ada konfigurasi untuk item ini.",
+        "ar": "لا يوجد تكوين متاح لهذا العنصر.",
+        "fa": "تنظیماتی برای این مورد وجود ندارد.",
+        "el": "Δεν υπάρχει διαθέσιμη διαμόρφωση για αυτό το στοιχείο.",
+        "hi": "इस आइटम के लिए कोई कॉन्फ़िगरेशन उपलब्ध नहीं है।",
+        "bn": "এই আইটেমের জন্য কোন কনফিগারেশন নেই।",
+        "ur": "اس آئٹم کے لیے کوئی ترتیب دستیاب نہیں ہے۔"
     },
     "auth.unauthorized": {
         "es": "No autorizado", "fr": "Accès non autorisé", "de": "Nicht autorisiert", "it": "Non autorizzato",

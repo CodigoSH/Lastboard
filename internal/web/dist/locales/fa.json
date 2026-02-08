@@ -271,5 +271,7 @@
   "widget.clock.timezone": "منطقه زمانی",
   "widget.clock.auto_detect": "تشخیص خودکار",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "یادداشت‌ها"
+  "widget.notepad.name": "یادداشت‌ها",
+  "settings.grid_columns": "تعداد ستون‌ها",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

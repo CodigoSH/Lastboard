@@ -271,5 +271,7 @@
   "widget.clock.timezone": "সময় অঞ্চল",
   "widget.clock.auto_detect": "স্বয়ংক্রিয় সনাক্তকরণ",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "নোট"
+  "widget.notepad.name": "নোট",
+  "settings.grid_columns": "Column Count",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

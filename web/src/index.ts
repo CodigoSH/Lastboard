@@ -58,6 +58,10 @@ bootstrap(async () => {
 
         // Theme: apply from backend and update the cookie that serveIndex
         // reads, so the next page-load renders the correct class server-side.
+        if (u.preferences && u.preferences.grid_columns) {
+            document.documentElement.style.setProperty('--user-preferred-columns', u.preferences.grid_columns.toString());
+        }
+
         if (u.theme === 'dark') {
             ThemeService.enableDark();
         } else if (u.theme === 'light') {

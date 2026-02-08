@@ -154,8 +154,20 @@ class DashboardStore {
                     // Content is not JSON, keep as is
                 }
             }
-            return { ...item, content: contentCopy };
+            return { ...item, content: contentCopy, status: item.status };
         });
+    }
+
+    // Set item status without syncing to backend (transient state)
+    setItemStatus(id: number, status: 'up' | 'down' | 'pending') {
+        const itemIndex = this.state.items.findIndex(item => item.id === id);
+        if (itemIndex === -1) return;
+
+        // Only notify if status actually changed to prevent excessive re-renders
+        if (this.state.items[itemIndex].status === status) return;
+
+        this.state.items[itemIndex].status = status;
+        this.notify();
     }
 
     private notify() {

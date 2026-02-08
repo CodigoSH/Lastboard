@@ -103,6 +103,8 @@
   "settings.interface_title": "Interface / Grid Architecture",
   "settings.project_name": "Project Name",
   "settings.project_name_desc": "Displayed in the top bar. Changes apply immediately.",
+  "settings.grid_columns": "Column Count",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "PC Columns",
   "settings.grid_tablet": "Tablet Columns",
   "settings.grid_mobile": "Mobile Columns",

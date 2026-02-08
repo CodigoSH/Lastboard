@@ -36,11 +36,12 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(widget_min_width, 140),
                COALESCE(theme, 'system'),
                COALESCE(project_name, 'Lastboard'),
-               COALESCE(beta_updates, 0)
+               COALESCE(beta_updates, 0),
+               COALESCE(grid_columns_pc, 12)
 		FROM users WHERE username=?`, username).Scan(
 		&u.ID, &u.Username, &u.Role, &u.AccentColor, &u.Language, &u.AvatarUrl,
 		&u.WidgetMinWidth, &u.Theme, &u.ProjectName,
-		&u.BetaUpdates,
+		&u.BetaUpdates, &u.GridColumnsPC,
 	)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -64,6 +65,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"widget_min_width": u.WidgetMinWidth,
 		"project_name":     u.ProjectName,
 		"beta_updates":     u.BetaUpdates,
+		"grid_columns":     u.GridColumnsPC,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -80,6 +82,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		WidgetMinWidth int    `json:"widget_min_width"`
 		ProjectName    string `json:"project_name"`
 		BetaUpdates    *bool  `json:"beta_updates"`
+		GridColumns    *int   `json:"grid_columns"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -87,9 +90,9 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0)
+	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12)
 		FROM users WHERE username=?`, username).Scan(
-		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates)
+		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC)
 
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
@@ -134,12 +137,22 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	if input.BetaUpdates != nil {
 		current.BetaUpdates = *input.BetaUpdates
 	}
+	if input.GridColumns != nil {
+		val := *input.GridColumns
+		if val < 3 {
+			val = 3
+		}
+		if val > 16 {
+			val = 16
+		} // Limit 3-16 cols
+		current.GridColumnsPC = val
+	}
 
 	_, err = h.DB.Exec(`UPDATE users SET accent_color=?, language=?, theme=?,
-		widget_min_width=?, project_name=?, beta_updates=?
+		widget_min_width=?, project_name=?, beta_updates=?, grid_columns_pc=?
 		WHERE username=?`,
 		current.AccentColor, current.Language, current.Theme,
-		current.WidgetMinWidth, current.ProjectName, current.BetaUpdates, username)
+		current.WidgetMinWidth, current.ProjectName, current.BetaUpdates, current.GridColumnsPC, username)
 
 	if err != nil {
 		http.Error(w, "Failed to update preferences", http.StatusInternalServerError)

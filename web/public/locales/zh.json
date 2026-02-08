@@ -271,5 +271,7 @@
   "widget.clock.timezone": "时区",
   "widget.clock.auto_detect": "自动检测",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "便签"
+  "widget.notepad.name": "便签",
+  "settings.grid_columns": "列数",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

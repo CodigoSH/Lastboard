@@ -271,5 +271,7 @@
   "widget.clock.timezone": "시간대",
   "widget.clock.auto_detect": "자동 감지",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "메모"
+  "widget.notepad.name": "메모",
+  "settings.grid_columns": "열 수",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }
