@@ -74,6 +74,14 @@ class BookmarkGrid extends HTMLElement {
     private applyFilters() {
         const isTouch = this.isTouchDevice;
 
+        // DEBUG: Log filter state
+        console.log('[BookmarkGrid] applyFilters() called', {
+            isTouch,
+            searchQuery: this.searchQuery,
+            totalItems: this.allItems.length,
+            bookmarkCount: this.allItems.filter(i => i.type === 'bookmark').length
+        });
+
         if (this.searchQuery || isTouch) {
             this.classList.add('search-active');
 
@@ -88,18 +96,39 @@ class BookmarkGrid extends HTMLElement {
 
                 // Touch Visibility Check with Legacy Fallback
                 if (isTouch) {
-                    // NEW: Check if visibleTouch flag exists
-                    if (content.hasOwnProperty('visibleTouch')) {
+                    const hasVisibleTouch = content.hasOwnProperty('visibleTouch');
+                    const visibleTouchValue = content.visibleTouch;
+                    const visibleMobileValue = content.visibleMobile;
+                    const visibleTabletValue = content.visibleTablet;
+                    const width = window.innerWidth;
+                    const isMobileWidth = width < 768;
+
+                    // DEBUG: Log visibility flags for each bookmark
+                    console.log(`[BookmarkGrid] Bookmark "${content.label}"`, {
+                        hasVisibleTouch,
+                        visibleTouch: visibleTouchValue,
+                        visibleMobile: visibleMobileValue,
+                        visibleTablet: visibleTabletValue,
+                        width,
+                        isMobileWidth
+                    });
+
+                    if (hasVisibleTouch) {
                         // Use new unified flag
-                        if (content.visibleTouch === false) return false;
+                        if (visibleTouchValue === false) {
+                            console.log(`[BookmarkGrid] FILTERED OUT "${content.label}" - visibleTouch === false`);
+                            return false;
+                        }
                     } else {
                         // LEGACY FALLBACK: Check old mobile/tablet flags
-                        const width = window.innerWidth;
-                        const isMobile = width < 768;
-                        const isTablet = width >= 768;
-
-                        if (isMobile && content.visibleMobile === false) return false;
-                        if (isTablet && content.visibleTablet === false) return false;
+                        if (isMobileWidth && visibleMobileValue === false) {
+                            console.log(`[BookmarkGrid] FILTERED OUT "${content.label}" - legacy visibleMobile === false`);
+                            return false;
+                        }
+                        if (!isMobileWidth && visibleTabletValue === false) {
+                            console.log(`[BookmarkGrid] FILTERED OUT "${content.label}" - legacy visibleTablet === false`);
+                            return false;
+                        }
                     }
                 }
 
@@ -111,6 +140,8 @@ class BookmarkGrid extends HTMLElement {
 
                 return true;
             });
+
+            console.log('[BookmarkGrid] After filtering:', this.bookmarks.length, 'bookmarks visible');
         } else {
             // Desktop Mode (Non-Touch) -> Show All (Grid)
             this.classList.remove('search-active');

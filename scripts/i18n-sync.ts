@@ -529,10 +529,10 @@ files.forEach(file => {
     let updated = 0;
 
     // cleanup legacy
-    if (content['type.group']) {
-        delete content['type.group'];
-        updated++;
-    }
+    if (content['type.group']) delete content['type.group'];
+    if (content['bookmark.visible_mobile']) delete content['bookmark.visible_mobile'];
+    if (content['bookmark.visible_tablet']) delete content['bookmark.visible_tablet'];
+    updated++;
 
     masterKeys.forEach(key => {
         let newValue = content[key];

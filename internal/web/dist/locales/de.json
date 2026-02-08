@@ -269,8 +269,6 @@
   "setup.error_username": "Benutzername muss mindestens 3 Zeichen lang sein",
   "setup.error_password": "Passwort zu kurz (min. 4 Zeichen)",
   "setup.error_connection": "Verbindung fehlgeschlagen. Protokolle prüfen.",
-  "bookmark.visible_mobile": "Sichtbar auf Mobil",
-  "bookmark.visible_tablet": "Sichtbar auf Tablet",
   "widget.clock.timezone": "Zeitzone",
   "widget.clock.auto_detect": "Automatisch erkennen",
   "widget.clock.timezone_desc": "z.B. Europe/Berlin, UTC oder 'local'",

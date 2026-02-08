@@ -269,8 +269,6 @@
   "setup.error_username": "Имя пользователя должно содержать не менее 3 символов",
   "setup.error_password": "Пароль слишком короткий (мин. 4 символа)",
   "setup.error_connection": "Ошибка подключения. Проверьте журналы.",
-  "bookmark.visible_mobile": "Виден на мобильном",
-  "bookmark.visible_tablet": "Виден на планшете",
   "widget.clock.timezone": "Часовой пояс",
   "widget.clock.auto_detect": "Автоопределение",
   "widget.clock.timezone_desc": "например, Europe/Moscow, UTC или 'local'",

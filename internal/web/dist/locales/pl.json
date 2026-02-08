@@ -269,8 +269,6 @@
   "setup.error_username": "Nazwa użytkownika musi mieć co najmniej 3 znaki",
   "setup.error_password": "Hasło za krótkie (min 4 znaki)",
   "setup.error_connection": "Połączenie nie powiodło się. Sprawdź logi.",
-  "bookmark.visible_mobile": "Widoczne na mobilnym",
-  "bookmark.visible_tablet": "Widoczne na tablecie",
   "widget.clock.timezone": "Strefa czasowa",
   "widget.clock.auto_detect": "Wykryj automatycznie",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

@@ -269,8 +269,6 @@
   "setup.error_username": "ユーザー名は3文字以上である必要があります",
   "setup.error_password": "パスワードが短すぎます（最低4文字）",
   "setup.error_connection": "接続に失敗しました。ログを確認してください。",
-  "bookmark.visible_mobile": "モバイルで表示",
-  "bookmark.visible_tablet": "タブレットで表示",
   "widget.clock.timezone": "タイムゾーン",
   "widget.clock.auto_detect": "自動検出",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

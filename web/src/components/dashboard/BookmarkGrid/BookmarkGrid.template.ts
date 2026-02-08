@@ -22,7 +22,7 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice, max
     const getChildren = (parentId: number) => safeBookmarks.filter(b => b.parent_id === parentId);
 
     const rootItems = isTouchDevice
-        ? safeBookmarks.filter(b => b.type !== 'section')
+        ? safeBookmarks  // Already filtered by applyFilters() to bookmarks only
         : (isSearching ? safeBookmarks : safeBookmarks.filter(b => !b.parent_id));
 
     return `

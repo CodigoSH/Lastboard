@@ -269,8 +269,6 @@
   "setup.error_username": "Kullanıcı adı en az 3 karakter olmalıdır",
   "setup.error_password": "Şifre çok kısa (min 4 karakter)",
   "setup.error_connection": "Bağlantı başarısız. Günlükleri kontrol edin.",
-  "bookmark.visible_mobile": "Mobilde Görünür",
-  "bookmark.visible_tablet": "Tablette Görünür",
   "widget.clock.timezone": "Saat Dilimi",
   "widget.clock.auto_detect": "Otomatik Algıla",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
