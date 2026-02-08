@@ -125,21 +125,32 @@ bootstrap(async () => {
     dbg('✓ fetchItems (' + dashboardStore.getState().items.length + ' items)');
 
     // Render dashboard components
+    // NOTE: renderDashboard() clears dashboardRoot.innerHTML, which destroys
+    // the __dbg div. All dbg() calls AFTER this will create a fresh __dbg div.
     renderDashboard();
     dbg('✓ renderDashboard');
 
     // ── Bridge: let BookmarkGrid report state OUTSIDE its shadow DOM ──
     (window as any).__gridDbg = (msg: string) => dbg('GRID: ' + msg);
 
-    // Also inspect the <bookmark-grid> element from outside
+    // ── CRITICAL DIAGNOSTIC: Check custom element registration ──
+    const ceList = [
+        'bookmark-grid', 'app-topbar', 'app-right-drawer', 'app-notifier',
+        'add-bookmark-modal', 'add-widget-modal', 'widget-config-modal',
+        'confirmation-modal', 'app-paper', 'app-button'
+    ];
+    const registered = ceList.filter(name => !!customElements.get(name));
+    const missing = ceList.filter(name => !customElements.get(name));
+    dbg(`CE: ${registered.length} OK, ${missing.length} MISSING`);
+    if (missing.length > 0) {
+        dbg(`  ✗ MISSING: ${missing.join(', ')}`);
+    }
+
+    // Inspect the <bookmark-grid> element from outside
     const gridEl = dashboardRoot.querySelector('bookmark-grid');
     if (gridEl) {
         const rect = gridEl.getBoundingClientRect();
-        dbg(`✓ gridEl found — ${rect.width}x${rect.height} @ (${rect.left},${rect.top})`);
-        dbg(`  display=${getComputedStyle(gridEl).display}, children=${gridEl.childNodes.length}, shadowRoot=${!!gridEl.shadowRoot}`);
-        if (gridEl.shadowRoot) {
-            dbg(`  shadowRoot.children=${gridEl.shadowRoot.childNodes.length}`);
-        }
+        dbg(`gridEl: ${rect.width}x${rect.height}, display=${getComputedStyle(gridEl).display}, shadowRoot=${!!gridEl.shadowRoot}`);
     } else {
         dbg('✗ gridEl NOT FOUND');
     }
@@ -159,7 +170,7 @@ bootstrap(async () => {
 
     const widgetConfigModal = document.createElement('widget-config-modal');
     document.body.appendChild(widgetConfigModal);
-    dbg('✓ bootstrap COMPLETE — UA: ' + navigator.userAgent.substring(0, 80));
+    dbg('✓ DONE — UA: ' + navigator.userAgent.substring(0, 150));
 
     } catch (err: any) {
         dbg('✗ CRASH: ' + (err.stack || err.message || err));
