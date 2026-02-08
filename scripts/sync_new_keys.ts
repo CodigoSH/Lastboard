@@ -104,6 +104,27 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "bn": "তথ্য", // Bengali
         "ur": "معلومات" // Urdu
     },
+    "settings.fluid_grid_architecture": {
+        "es": "Arquitectura de Rejilla Fluida",
+        "fr": "Architecture de Grille Fluide",
+        "de": "Flüssige Rasterarchitektur",
+        "it": "Architettura a Griglia Fluida",
+        "pt": "Arquitetura de Grade Fluida",
+        "nl": "Vloeibare Rasterarchitectuur",
+        "ru": "Архитектура Изменяемой Сетки",
+        "zh": "流式网格架构",
+        "ja": "流動グリッドアーキテクチャ",
+        "ko": "유동 그리드 아키텍처",
+        "tr": "Akışkan Izgara Mimarisi",
+        "pl": "Architektura Płynnej Siatki",
+        "id": "Arsitektur Grid Cair",
+        "ar": "بنية الشبكة السائلة",
+        "fa": "معماری شبکه سیال",
+        "el": "Αρχιτεκτονική Ρευστού Πλέγματος",
+        "hi": "तरल ग्रिड वास्तुकला",
+        "bn": "তরল গ্রিড স্থাপত্য",
+        "ur": "سیال گرڈ فن تعمیر"
+    },
 
     // --- Existing & Notepad Tools ---
     "widget.notepad.placeholder": {

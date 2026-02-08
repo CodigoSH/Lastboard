@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC 열",
   "settings.grid_tablet": "태블릿 열",
   "settings.grid_mobile": "모바일 열",
+  "settings.fluid_grid_architecture": "유동 그리드 아키텍처",
   "settings.adaptive_msg": "> 적응형 하드웨어 가속 활성화됨. 변경 사항은 전역적으로 적용됩니다.",
   "settings.admin_section": "관리 / 액세스 제어",
   "settings.user_management": "사용자 관리",

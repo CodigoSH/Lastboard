@@ -106,6 +106,7 @@
   "settings.grid_pc": "Столбцы ПК",
   "settings.grid_tablet": "Столбцы планшета",
   "settings.grid_mobile": "Столбцы мобильного",
+  "settings.fluid_grid_architecture": "Архитектура Изменяемой Сетки",
   "settings.adaptive_msg": "> Адаптивное аппаратное ускорение активно. Изменения применяются глобально.",
   "settings.admin_section": "Администрирование / Контроль доступа",
   "settings.user_management": "Управление пользователями",

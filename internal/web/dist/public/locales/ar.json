@@ -106,6 +106,7 @@
   "settings.grid_pc": "أعمدة الكمبيوتر",
   "settings.grid_tablet": "أعمدة التابلت",
   "settings.grid_mobile": "أعمدة الجوال",
+  "settings.fluid_grid_architecture": "بنية الشبكة السائلة",
   "settings.adaptive_msg": "> تسريع الأجهزة التكيفي نشط. يتم تطبيق التغييرات عالمياً.",
   "settings.admin_section": "الإدارة والتحكم في الوصول",
   "settings.user_management": "إدارة المستخدمين",

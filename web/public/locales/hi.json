@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC कॉलम",
   "settings.grid_tablet": "टैबलेट कॉलम",
   "settings.grid_mobile": "मोबाइल कॉलम",
+  "settings.fluid_grid_architecture": "तरल ग्रिड वास्तुकला",
   "settings.adaptive_msg": "> अनुकूली हार्डवेयर त्वरण सक्रिय। परिवर्तन विश्व स्तर पर लागू होते हैं।",
   "settings.admin_section": "प्रशासन / अभिगम नियंत्रण",
   "settings.user_management": "उपयोगकर्ता प्रबंधन",

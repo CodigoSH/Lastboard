@@ -106,6 +106,7 @@
   "settings.grid_pc": "Kolumny PC",
   "settings.grid_tablet": "Kolumny Tablet",
   "settings.grid_mobile": "Kolumny Mobile",
+  "settings.fluid_grid_architecture": "Architektura Płynnej Siatki",
   "settings.adaptive_msg": "> Adaptacyjne przyspieszenie sprzętowe aktywne. Zmiany są stosowane globalnie.",
   "settings.admin_section": "Administracja / Kontrola dostępu",
   "settings.user_management": "Zarządzanie użytkownikami",

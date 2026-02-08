@@ -106,6 +106,7 @@
   "settings.grid_pc": "ستون‌های PC",
   "settings.grid_tablet": "ستون‌های تبلت",
   "settings.grid_mobile": "ستون‌های موبایل",
+  "settings.fluid_grid_architecture": "معماری شبکه سیال",
   "settings.adaptive_msg": "> شتاب دهنده سخت افزاری تطبیقی فعال است. تغییرات به صورت سراسری اعمال می‌شوند.",
   "settings.admin_section": "مدیریت / کنترل دسترسی",
   "settings.user_management": "مدیریت کاربران",

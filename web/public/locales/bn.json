@@ -106,6 +106,7 @@
   "settings.grid_pc": "পিসি কলাম (PC Columns)",
   "settings.grid_tablet": "ট্যাবলেট কলাম",
   "settings.grid_mobile": "মোবাইল কলাম",
+  "settings.fluid_grid_architecture": "তরল গ্রিড স্থাপত্য",
   "settings.adaptive_msg": "> অ্যাডাপটিভ হার্ডওয়্যার এক্সিলারেশন সক্রিয়। পরিবর্তনগুলি বিশ্বব্যাপী প্রয়োগ হবে।",
   "settings.admin_section": "প্রশাসন / অ্যাক্সেস কন্ট্রোল",
   "settings.user_management": "ইউজার ম্যানেজমেন্ট",

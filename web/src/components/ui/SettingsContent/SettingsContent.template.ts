@@ -128,7 +128,7 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
 export const personalizationTemplate = (prefs: Prefs) => `
     <div class="bento-grid">
         <div class="bento-card" style="grid-column: span 2;">
-            <div class="mono-tag" style="margin-bottom: 12px;">Arquitectura de Rejilla Fluida</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.fluid_grid_architecture')}</div>
             
             <!-- Project Name -->
             <div class="settings-content__form-group" style="margin-bottom: 24px;">

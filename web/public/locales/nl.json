@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC Kolommen",
   "settings.grid_tablet": "Tablet Kolommen",
   "settings.grid_mobile": "Mobiele Kolommen",
+  "settings.fluid_grid_architecture": "Vloeibare Rasterarchitectuur",
   "settings.adaptive_msg": "> Adaptieve hardwareversnelling actief. Wijzigingen gelden globaal.",
   "settings.admin_section": "Beheer / Toegangscontrole",
   "settings.user_management": "Gebruikersbeheer",
