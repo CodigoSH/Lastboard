@@ -153,7 +153,7 @@ class SettingsContent extends HTMLElement {
         }
     }
 
-    handleBetaToggle(checked: boolean) {
+    async handleBetaToggle(checked: boolean) {
         this.savePrefs({ beta_updates: checked });
 
         // Update visual text state immediately
@@ -169,6 +169,9 @@ class SettingsContent extends HTMLElement {
                 text.style.boxShadow = 'none';
             }
         }
+
+        // Re-check for updates with new beta preference
+        await this.checkForUpdates();
     }
 
     updateDensity(value: string) {
@@ -444,7 +447,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.7-Beta.1'; // Should be sync with backend or injected
+    private version = 'v1.1.7-Beta.2'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 
