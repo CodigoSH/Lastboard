@@ -43,7 +43,6 @@ fi
 # Banner
 clear
 echo -e "${BLUE}"
-# Escaped ASCII Art - Single line for stability
 echo "  _               _   _                         _"
 echo " | |             | | | |                       | |"
 echo " | |     __ _ ___| |_| |__   ___   __ _ _ __ __| |"
