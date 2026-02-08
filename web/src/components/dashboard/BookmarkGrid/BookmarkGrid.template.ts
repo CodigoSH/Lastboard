@@ -64,14 +64,14 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice, max
             </fieldset>`;
         }
 
-        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH);
+        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice);
     }).join('')}
 
     <div id="ghost-element" class="bookmark-grid__ghost" style="display: none;"></div>
     `;
 };
 
-function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { x: number; y: number }, clampedW: number, displayH: number = 0) {
+function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { x: number; y: number }, clampedW: number, displayH: number = 0, isTouchDevice: boolean = false) {
     const finalH = displayH || b.h || 1;
 
     if (b.type === 'widget') {
@@ -91,7 +91,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             data-id="${b.id}"
             data-type="${b.type}"
             data-orig-x="${b.x}" data-orig-y="${b.y}"
-            style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH}; cursor: ${isEditing ? 'move' : 'default'};">
+            ${!isTouchDevice ? `style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};"` : ''}>
 
             <${tagName}
                 item-id="${b.id}"
@@ -123,7 +123,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
            data-id="${b.id}"
            data-type="${b.type}"
            data-orig-x="${b.x}" data-orig-y="${b.y}"
-           style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};">
+           ${!isTouchDevice ? `style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};"` : ''}>
             
             ${isEditing ? `
                 <div class="bookmark-actions">
