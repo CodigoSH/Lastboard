@@ -50,9 +50,6 @@ cat <<EOF > $NOTES_FILE
 - **Versioning**: Implemented zero-padded RC numbering (.$PADDED_RC) for consistent GitHub sorting.
 - **Stability**: Candidate for final production release.
 - **Updates**: Includes all latest beta channel fixes and core updater patches.
-
-## 🛠 Automated
-- Generated via \`scripts/release_rc.sh\`
 EOF
 
 # 5. Git Operations
