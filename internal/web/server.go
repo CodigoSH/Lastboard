@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CodigoSH/Lashboard/internal/web/api"
-	"github.com/CodigoSH/Lashboard/internal/web/middleware"
-	"github.com/CodigoSH/Lashboard/internal/web/util"
+	"github.com/CodigoSH/Lastboard/internal/web/api"
+	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"github.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 //go:embed dist/*

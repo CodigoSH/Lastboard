@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CodigoSH/Lashboard/internal/core/dashboard"
-	"github.com/CodigoSH/Lashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lastboard/internal/core/dashboard"
+	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 type DashboardHandler struct {

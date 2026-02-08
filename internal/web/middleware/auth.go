@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/CodigoSH/Lashboard/internal/web/util"
+	"github.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 type contextKey string
