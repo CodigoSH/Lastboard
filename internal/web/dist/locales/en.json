@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC Columns",
   "settings.grid_tablet": "Tablet Columns",
   "settings.grid_mobile": "Mobile Columns",
+  "settings.fluid_grid_architecture": "Fluid Grid Architecture",
   "settings.adaptive_msg": "> Adaptive hardware acceleration active. Changes apply globally.",
   "settings.admin_section": "Administration / Access Control",
   "settings.user_management": "User Management",

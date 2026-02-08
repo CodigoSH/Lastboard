@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC Sütunları",
   "settings.grid_tablet": "Tablet Sütunları",
   "settings.grid_mobile": "Mobil Sütunlar",
+  "settings.fluid_grid_architecture": "Akışkan Izgara Mimarisi",
   "settings.adaptive_msg": "> Uyarlanabilir donanım hızlandırma etkin. Değişiklikler genel olarak uygulanır.",
   "settings.admin_section": "Yönetim / Erişim Kontrolü",
   "settings.user_management": "Kullanıcı Yönetimi",

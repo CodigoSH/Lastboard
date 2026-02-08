@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC 列数",
   "settings.grid_tablet": "平板列数",
   "settings.grid_mobile": "手机列数",
+  "settings.fluid_grid_architecture": "流式网格架构",
   "settings.adaptive_msg": "> 自适应硬件加速已激活。更改将全局应用。",
   "settings.admin_section": "管理 / 访问控制",
   "settings.user_management": "用户管理",

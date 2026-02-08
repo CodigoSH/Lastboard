@@ -106,6 +106,7 @@
   "settings.grid_pc": "Στήλες PC",
   "settings.grid_tablet": "Στήλες Tablet",
   "settings.grid_mobile": "Στήλες Mobile",
+  "settings.fluid_grid_architecture": "Αρχιτεκτονική Ρευστού Πλέγματος",
   "settings.adaptive_msg": "> Προσαρμοστική επιτάχυνση υλικού ενεργή. Οι αλλαγές εφαρμόζονται καθολικά.",
   "settings.admin_section": "Διαχείριση / Έλεγχος πρόσβασης",
   "settings.user_management": "Διαχείριση χρηστών",

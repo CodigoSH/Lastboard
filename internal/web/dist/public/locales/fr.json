@@ -106,6 +106,7 @@
   "settings.grid_pc": "Colonnes PC",
   "settings.grid_tablet": "Colonnes Tablette",
   "settings.grid_mobile": "Colonnes Mobile",
+  "settings.fluid_grid_architecture": "Architecture de Grille Fluide",
   "settings.adaptive_msg": "> Accélération matérielle adaptative active. Les modifications s'appliquent globalement.",
   "settings.admin_section": "Administration / Contrôle d'Accès",
   "settings.user_management": "Gestion des Utilisateurs",

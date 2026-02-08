@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC-Spalten",
   "settings.grid_tablet": "Tablet-Spalten",
   "settings.grid_mobile": "Mobile Spalten",
+  "settings.fluid_grid_architecture": "Flüssige Rasterarchitektur",
   "settings.adaptive_msg": "> Adaptive Hardwarebeschleunigung aktiv. Änderungen gelten global.",
   "settings.admin_section": "Verwaltung / Zugriffskontrolle",
   "settings.user_management": "Benutzerverwaltung",

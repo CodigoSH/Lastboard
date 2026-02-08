@@ -106,6 +106,7 @@
   "settings.grid_pc": "Colonne PC",
   "settings.grid_tablet": "Colonne Tablet",
   "settings.grid_mobile": "Colonne Mobile",
+  "settings.fluid_grid_architecture": "Architettura a Griglia Fluida",
   "settings.adaptive_msg": "> Accelerazione hardware adattiva attiva. Le modifiche si applicano globalmente.",
   "settings.admin_section": "Amministrazione / Controllo Accessi",
   "settings.user_management": "Gestione Utenti",

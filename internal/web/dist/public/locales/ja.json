@@ -106,6 +106,7 @@
   "settings.grid_pc": "PC列数",
   "settings.grid_tablet": "タブレット列数",
   "settings.grid_mobile": "モバイル列数",
+  "settings.fluid_grid_architecture": "流動グリッドアーキテクチャ",
   "settings.adaptive_msg": "> アダプティブハードウェアアクセラレーションが有効です。変更はグローバルに適用されます。",
   "settings.admin_section": "管理 / アクセス制御",
   "settings.user_management": "ユーザー管理",

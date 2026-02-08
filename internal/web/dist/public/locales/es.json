@@ -106,6 +106,7 @@
   "settings.grid_pc": "Columnas en PC",
   "settings.grid_tablet": "Columnas en Tablet",
   "settings.grid_mobile": "Columnas en Móvil",
+  "settings.fluid_grid_architecture": "Arquitectura de Rejilla Fluida",
   "settings.adaptive_msg": "> Aceleración de hardware adaptativa activa. Los cambios se aplican globalmente.",
   "settings.admin_section": "Administración / Control de Acceso",
   "settings.user_management": "Gestión de Usuarios",

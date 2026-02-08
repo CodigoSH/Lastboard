@@ -106,6 +106,7 @@
   "settings.grid_pc": "Kolom PC",
   "settings.grid_tablet": "Kolom Tablet",
   "settings.grid_mobile": "Kolom Ponsel",
+  "settings.fluid_grid_architecture": "Arsitektur Grid Cair",
   "settings.adaptive_msg": "> Akselerasi perangkat keras adaptif aktif. Perubahan berlaku secara global.",
   "settings.admin_section": "Administrasi / Kontrol Akses",
   "settings.user_management": "Manajemen Pengguna",
