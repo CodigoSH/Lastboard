@@ -51,6 +51,7 @@ class BookmarkGrid extends HTMLElement {
         // Listen for changes (e.g. docking/undocking on hybrids)
         mediaQuery.addEventListener('change', (e) => {
             this.isTouchDevice = e.matches;
+            this.applyFilters();
             this.render();
         });
     }
@@ -59,6 +60,28 @@ class BookmarkGrid extends HTMLElement {
     private _boundActionClick = this.handleActionClick.bind(this);
     private _boundMouseMove = this.handleWindowMouseMove.bind(this);
     private _boundMouseUp = this.handleWindowMouseUp.bind(this);
+
+    private applyFilters() {
+        if (this.searchQuery || this.isTouchDevice) {
+            this.classList.add('search-active');
+            this.bookmarks = this.allItems.filter(item => {
+                if (item.type !== 'bookmark') return false;
+
+                if (this.searchQuery) {
+                    let content: any = item.content;
+                    if (typeof item.content === 'string') {
+                        try { content = JSON.parse(item.content); } catch { return false; }
+                    }
+                    const searchText = (content.label || '').toLowerCase();
+                    return searchText.includes(this.searchQuery);
+                }
+                return true;
+            });
+        } else {
+            this.classList.remove('search-active');
+            this.bookmarks = this.allItems;
+        }
+    }
 
     connectedCallback() {
         this.render();
@@ -106,21 +129,7 @@ class BookmarkGrid extends HTMLElement {
 
             if (itemsChanged || shouldRerender) {
                 this.allItems = newAllItems;
-                if (this.searchQuery) {
-                    this.classList.add('search-active');
-                    this.bookmarks = this.allItems.filter(item => {
-                        if (item.type !== 'bookmark') return false;
-                        let content: any = item.content;
-                        if (typeof item.content === 'string') {
-                            try { content = JSON.parse(item.content); } catch { return false; }
-                        }
-                        const searchText = (content.label || '').toLowerCase();
-                        return searchText.includes(this.searchQuery);
-                    });
-                } else {
-                    this.classList.remove('search-active');
-                    this.bookmarks = this.allItems;
-                }
+                this.applyFilters();
                 shouldRerender = true;
             }
 

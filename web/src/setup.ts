@@ -324,7 +324,7 @@ bootstrap(async () => {
             });
 
             if (response.ok) {
-                localStorage.setItem('kashboard_lang', payload.language);
+                localStorage.setItem('lastboard_lang', payload.language);
                 nextBtn.textContent = i18n.t('setup.welcome_admin');
                 nextBtn.style.backgroundColor = 'var(--accent-alt, #00f5a0)';
 

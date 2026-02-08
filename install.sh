@@ -2,7 +2,7 @@
 set -e
 
 # ==========================================
-# 💎 Kashboard Installer
+# 💎 Lastboard Installer
 # Elegant. Fast. Private.
 # ==========================================
 
@@ -15,12 +15,12 @@ NC='\033[0m'
 
 # Configuration
 # Configuration
-REPO="codigosh/Kashboard"
-INSTALL_DIR="/opt/kashboard"
+REPO="CodigoSH/Lashboard"
+INSTALL_DIR="/opt/lastboard"
 BIN_DIR="/usr/local/bin"
-BINARY_NAME="kashboard"
-DATA_DIR="/var/lib/kashboard"
-SERVICE_FILE="/etc/systemd/system/kashboard.service"
+BINARY_NAME="lastboard"
+DATA_DIR="/var/lib/lastboard"
+SERVICE_FILE="/etc/systemd/system/lastboard.service"
 
 # ... (Helper functions omitted for brevity in diff, keeping existing code if possible or rewriting the changed parts)
 
@@ -34,7 +34,7 @@ function success_msg() {
 }
 
 # Fetch latest version for banner (Fail gracefully)
-LATEST_VERSION=$(curl -s https://api.github.com/repos/codigosh/Kashboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+LATEST_VERSION=$(curl -s https://api.github.com/repos/CodigoSH/Lashboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 if [ -z "$LATEST_VERSION" ]; then
     LATEST_VERSION="latest"
 fi
@@ -42,14 +42,15 @@ fi
 # Banner
 clear
 echo -e "${BLUE}"
-echo "  _  __          _     _                         _ "
-echo " | |/ /__ _ ___ | |__ | |__   ___   __ _ _ __ __| |"
-echo " | ' // _\` / __|| '_ \| '_ \ / _ \ / _\` | '__/ _\` |"
-echo " | . \ (_| \__ \| | | | |_) | (_) | (_| | | | (_| |"
-echo " |_|\_\__,_|___/|_| |_|_.__/ \___/ \__,_|_|  \__,_|"
+echo "  _                 _   _                         _ "
+echo " | |               | | | |                       | |"
+echo " | |     __ _  ___ | |_| |__   ___   __ _ _ __ __| |"
+echo " | |    / _\` |/ __|| __| '_ \ / _ \ / _\` | '__/ _\` |"
+echo " | |___| (_| \\__ \| |_| |_) | (_) | (_| | | | (_| |"
+echo " |______\__,_|___/ \__|_.__/ \___/ \__,_|_|  \__,_|"
 echo "                                              $LATEST_VERSION"
 echo -e "${NC}"
-echo -e "  Welcome to Kashboard. Let's get you started.\n"
+echo -e "  Welcome to Lastboard. Let's get you started.\n"
 
 # 1. Check Root
 if [ "$EUID" -ne 0 ]; then
@@ -95,8 +96,8 @@ esac
 
 status_msg "Preparing environment..."
 # Create User
-if ! id "kashboard" &>/dev/null; then
-    useradd -r -s /bin/false kashboard
+if ! id "lastboard" &>/dev/null; then
+    useradd -r -s /bin/false lastboard
 fi
 
 # Create Directories
@@ -104,55 +105,55 @@ mkdir -p "$DATA_DIR"
 mkdir -p "$INSTALL_DIR"
 
 # Set Permissions (CRITICAL FOR SELF-UPDATE)
-chown -R kashboard:kashboard "$DATA_DIR"
-chown -R kashboard:kashboard "$INSTALL_DIR"
+chown -R lastboard:lastboard "$DATA_DIR"
+chown -R lastboard:lastboard "$INSTALL_DIR"
 chmod 750 "$DATA_DIR"
 chmod 755 "$INSTALL_DIR"
 
 status_msg "Downloading latest version..."
-BASE_URL="https://github.com/codigosh/Kashboard/releases/latest/download"
-ARCHIVE_NAME="kashboard-linux-$ARCH_TAG.tar.gz"
+BASE_URL="https://github.com/CodigoSH/Lashboard/releases/latest/download"
+ARCHIVE_NAME="lastboard-linux-$ARCH_TAG.tar.gz"
 URL="$BASE_URL/$ARCHIVE_NAME"
 CHECKSUM_URL="$BASE_URL/checksums.txt"
 
 # Download archive and checksums
-if ! curl -fL -s -o kashboard.tar.gz "$URL"; then
+if ! curl -fL -s -o lastboard.tar.gz "$URL"; then
     echo -e "${RED}  Download failed.${NC}"
     echo -e "${GRAY}  Please check your internet connection or if the release exists.${NC}"
-    rm -f kashboard.tar.gz
+    rm -f lastboard.tar.gz
     exit 1
 fi
 
 status_msg "Verifying checksum..."
 if ! curl -fL -s -o checksums.txt "$CHECKSUM_URL"; then
     echo -e "${RED}  Failed to download checksums.txt. Aborting for security.${NC}"
-    rm -f kashboard.tar.gz
+    rm -f lastboard.tar.gz
     exit 1
 fi
 
 EXPECTED_HASH=$(grep "$ARCHIVE_NAME" checksums.txt | awk '{print $1}')
 if [ -z "$EXPECTED_HASH" ]; then
     echo -e "${RED}  Archive not found in checksums.txt. Aborting.${NC}"
-    rm -f kashboard.tar.gz checksums.txt
+    rm -f lastboard.tar.gz checksums.txt
     exit 1
 fi
 
-ACTUAL_HASH=$(sha256sum kashboard.tar.gz | awk '{print $1}')
+ACTUAL_HASH=$(sha256sum lastboard.tar.gz | awk '{print $1}')
 if [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then
     echo -e "${RED}  Checksum mismatch! Download may be tampered. Aborting.${NC}"
-    rm -f kashboard.tar.gz checksums.txt
+    rm -f lastboard.tar.gz checksums.txt
     exit 1
 fi
 rm -f checksums.txt
 success_msg "Checksum verified."
 
-tar -xzf kashboard.tar.gz
-rm kashboard.tar.gz
+tar -xzf lastboard.tar.gz
+rm lastboard.tar.gz
 
-if [ -f "kashboard" ]; then
-    chmod +x kashboard
-    mv kashboard "$INSTALL_DIR/$BINARY_NAME"
-    chown kashboard:kashboard "$INSTALL_DIR/$BINARY_NAME"
+if [ -f "lastboard" ]; then
+    chmod +x lastboard
+    mv lastboard "$INSTALL_DIR/$BINARY_NAME"
+    chown lastboard:lastboard "$INSTALL_DIR/$BINARY_NAME"
     ln -sf "$INSTALL_DIR/$BINARY_NAME" "$BIN_DIR/$BINARY_NAME"
 else
     echo -e "${RED}  Installation failed (binary missing). Check logs.${NC}"
@@ -162,14 +163,14 @@ fi
 status_msg "Configuring system service..."
 cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=Kashboard Dashboard Service
+Description=Lastboard Dashboard Service
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=kashboard
-Group=kashboard
+User=lastboard
+Group=lastboard
 WorkingDirectory=$DATA_DIR
 ExecStart=$INSTALL_DIR/$BINARY_NAME
 Restart=always
@@ -187,12 +188,12 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload &>/dev/null
-systemctl enable kashboard &>/dev/null
-systemctl restart kashboard &>/dev/null
+systemctl enable lastboard &>/dev/null
+systemctl restart lastboard &>/dev/null
 
 # Verification
 sleep 2
-if systemctl is-active --quiet kashboard; then
+if systemctl is-active --quiet lastboard; then
     IP=$(hostname -I | awk '{print $1}')
     echo ""
     success_msg "Installation complete!"

@@ -17,7 +17,7 @@ class I18nService {
         await this.loadLocale('en');
 
         // Detect language
-        const saved = localStorage.getItem('kashboard_lang');
+        const saved = localStorage.getItem('lastboard_lang');
         const browserLang = navigator.language.split('-')[0];
         let targetLang = 'en';
 
@@ -85,7 +85,7 @@ class I18nService {
         if (availableLocales.find(l => l.code === code)) {
             await this.loadLocale(code);
             this.currentLanguage = code;
-            localStorage.setItem('kashboard_lang', code);
+            localStorage.setItem('lastboard_lang', code);
             this.notifyListeners();
         } else {
             console.warn(`[I18n] Language ${code} not supported`);

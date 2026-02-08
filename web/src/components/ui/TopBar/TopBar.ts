@@ -204,7 +204,7 @@ class TopBar extends HTMLElement {
     }
 
     render() {
-        const title = this.getAttribute('title') || 'Kashboard';
+        const title = this.getAttribute('title') || 'Lastboard';
 
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>

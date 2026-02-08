@@ -27,7 +27,7 @@ COPY . .
 COPY --from=frontend-builder /app/web/dist /app/internal/web/dist
 
 # Build the Single Binary
-RUN CGO_ENABLED=1 GOOS=linux go build -o /app/kashboard ./cmd/dashboard
+RUN CGO_ENABLED=1 GOOS=linux go build -o /app/lastboard ./cmd/dashboard
 
 # === Stage 3: Final Runtime ===
 FROM alpine:latest
@@ -38,7 +38,7 @@ WORKDIR /app
 RUN mkdir -p /app/data
 
 # Copy ONLY the static binary
-COPY --from=builder /app/kashboard /app/kashboard
+COPY --from=builder /app/lastboard /app/lastboard
 
 # Environment
 ENV PORT=8080
@@ -48,4 +48,4 @@ ENV DB_FILE=/app/data/dashboard.db
 EXPOSE 8080
 
 # Command
-CMD ["/app/kashboard"]
+CMD ["/app/lastboard"]

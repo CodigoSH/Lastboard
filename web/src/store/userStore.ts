@@ -13,7 +13,7 @@ class UserStore {
     }
 
     private loadFromStorage() {
-        const cached = localStorage.getItem('kashboard_user_cache');
+        const cached = localStorage.getItem('lastboard_user_cache');
         if (cached) {
             try {
                 this.user = JSON.parse(cached);
@@ -27,7 +27,7 @@ class UserStore {
 
     private saveToStorage() {
         if (this.user) {
-            localStorage.setItem('kashboard_user_cache', JSON.stringify(this.user));
+            localStorage.setItem('lastboard_user_cache', JSON.stringify(this.user));
         }
     }
 
@@ -60,10 +60,10 @@ class UserStore {
                 language: userData.language || 'en',
                 theme: userData.theme, // Map theme from backend!
                 widget_min_width: userData.widget_min_width || 140,
-                project_name: userData.project_name || 'Kashboard',
+                project_name: userData.project_name || 'Lastboard',
                 beta_updates: userData.beta_updates
             },
-            project_name: userData.project_name || 'Kashboard'
+            project_name: userData.project_name || 'Lastboard'
         };
 
         this.applyAesthetics();
@@ -86,7 +86,7 @@ class UserStore {
             const hex = this.getAccentHex(prefs.accent_color);
             root.style.setProperty('--accent', hex);
             // Persist for Login Page
-            localStorage.setItem('kashboard_accent', hex);
+            localStorage.setItem('lastboard_accent', hex);
         }
 
         // Apply Theme (Light/Dark)

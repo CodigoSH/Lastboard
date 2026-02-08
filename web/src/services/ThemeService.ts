@@ -3,7 +3,7 @@
  * Persists preference to localStorage and Cookies for backend SSR.
  */
 export class ThemeService {
-    private static readonly STORAGE_KEY = 'kashboard_theme';
+    private static readonly STORAGE_KEY = 'lastboard_theme';
     private static readonly CLASS_NAME = 'dark-mode';
 
     static init() {

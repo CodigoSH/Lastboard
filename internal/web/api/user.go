@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codigosh/Kashboard/internal/core/user"
-	"github.com/codigosh/Kashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lashboard/internal/core/user"
+	"github.com/CodigoSH/Lashboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -35,7 +35,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(avatar_url, ''),
 		       COALESCE(widget_min_width, 140),
                COALESCE(theme, 'system'),
-               COALESCE(project_name, 'Kashboard'),
+               COALESCE(project_name, 'Lastboard'),
                COALESCE(beta_updates, 0)
 		FROM users WHERE username=?`, username).Scan(
 		&u.ID, &u.Username, &u.Role, &u.AccentColor, &u.Language, &u.AvatarUrl,
@@ -87,7 +87,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Kashboard'), COALESCE(beta_updates, 0)
+	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0)
 		FROM users WHERE username=?`, username).Scan(
 		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates)
 
@@ -329,7 +329,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Default Avatar Logic
 	defaultAvatar := "/images/default-avatar.svg"
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, ?, ?, 'system', '#2563eb', 'en', 'Kashboard', 140, ?)")
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, ?, ?, 'system', '#2563eb', 'en', 'Lastboard', 140, ?)")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -349,7 +349,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if newUserID > 0 {
 		_, _ = h.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
-		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/codigosh/Kashboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/codigosh/Kashboard')`, newUserID)
+		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lashboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/CodigoSH/Lashboard')`, newUserID)
 	}
 
 	w.WriteHeader(http.StatusCreated)

@@ -5,21 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/favicon.png">
-    <title>{{if .ProjectName}}{{.ProjectName}}{{else}}Kashboard{{end}}</title>
-    <link rel="stylesheet" href="/styles/theme.css?v=1770408284">
-    <link rel="stylesheet" href="/styles/components.css?v=1770408284">
+    <title>{{if .ProjectName}}{{.ProjectName}}{{else}}Lastboard{{end}}</title>
+    <link rel="stylesheet" href="/styles/theme.css?v=1770508311">
+    <link rel="stylesheet" href="/styles/components.css?v=1770508311">
     <script>
-        window.KASHBOARD_CONFIG = {
+        window.LASTBOARD_CONFIG = {
             API_BASE_URL: '', // Root-relative for local Go server
             DEBUG_MODE: false
         };
     </script>
-    <script type="module" src="bundle.js?v=1770408284"></script>
+    <script type="module" src="bundle.js?v=1770508311"></script>
 </head>
 
 <body>
     <!-- Utility Components -->
-    <app-topbar id="main-topbar" title="{{if .ProjectName}}{{.ProjectName}}{{else}}Kashboard{{end}}"></app-topbar>
+    <app-topbar id="main-topbar" title="{{if .ProjectName}}{{.ProjectName}}{{else}}Lastboard{{end}}"></app-topbar>
     <app-right-drawer id="right-drawer"></app-right-drawer>
     <app-notifier></app-notifier>
 

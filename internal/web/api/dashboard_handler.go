@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codigosh/Kashboard/internal/core/dashboard"
-	"github.com/codigosh/Kashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lashboard/internal/core/dashboard"
+	"github.com/CodigoSH/Lashboard/internal/web/middleware"
 )
 
 type DashboardHandler struct {
@@ -278,7 +278,7 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SSRF: validate all resolved IPs
-	// Kashboard is designed to monitor local services, so we ALLOW private IPs.
+	// Lastboard is designed to monitor local services, so we ALLOW private IPs.
 	// We logged them before, but blocking them breaks the feature "Monitor Status" for local labs.
 	for _, ip := range ips {
 		if isPrivateIP(ip) {

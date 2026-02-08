@@ -78,7 +78,7 @@ func runMigrations(db *sql.DB) error {
 		`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4;`,
 		`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2;`,
 		`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT '';`,
-		`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Kashboard';`,
+		`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Lastboard';`,
 		// Add url column for direct access (required for some strict persistence modes)
 		`ALTER TABLE items ADD COLUMN url TEXT;`,
 		// M5: per-user dashboard isolation — backfill column on existing tables

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/codigosh/Kashboard/internal/platform/database"
-	"github.com/codigosh/Kashboard/internal/web"
+	"github.com/CodigoSH/Lashboard/internal/platform/database"
+	"github.com/CodigoSH/Lashboard/internal/web"
 )
 
 func main() {

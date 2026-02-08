@@ -1,9 +1,9 @@
 services:
-  kashboard:
+  lastboard:
     build: .
-    container_name: kashboard
+    container_name: lastboard
     ports:
-      - "${KASHBOARD_PORT:-8080}:8080"
+      - "${LASTBOARD_PORT:-8080}:8080"
     volumes:
       - ./data:/app/data
       # Map the database file to persist data. 

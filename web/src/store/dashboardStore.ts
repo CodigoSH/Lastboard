@@ -27,7 +27,7 @@ const INITIAL_ITEMS: GridItem[] = [
         x: 1, y: 1, w: 1, h: 1,
         content: {
             label: 'CodigoSH',
-            url: 'https://github.com/codigosh/Kashboard',
+            url: 'https://github.com/CodigoSH/Lashboard',
             icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png',
             iconName: 'git'
         }
@@ -51,7 +51,7 @@ class DashboardStore {
     // Returns a cache key scoped to the authenticated user.  Falls back to
     // the legacy unscoped key before setUserId() is called (edge case).
     private getStorageKey(): string {
-        return this.userId ? `kashboard-items-${this.userId}` : 'kashboard-items';
+        return this.userId ? `lastboard-items-${this.userId}` : 'lastboard-items';
     }
 
     // Called from index.ts after userStore.fetchUser() resolves.  Scopes the

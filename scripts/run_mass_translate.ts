@@ -4,7 +4,7 @@ import { join } from 'path';
 
 const LOCALE_DIR = join(process.cwd(), 'web/public/locales');
 
-const translations = {
+const translations: Record<string, Record<string, string>> = {
     // English (Source)
     "en": {
         "widget.clock.city": "City",
