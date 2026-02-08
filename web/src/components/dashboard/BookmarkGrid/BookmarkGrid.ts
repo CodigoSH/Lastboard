@@ -44,18 +44,33 @@ class BookmarkGrid extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
 
-        // Detect Touch Device
-        const mediaQuery = window.matchMedia('(pointer: coarse)');
-        this.isTouchDevice = mediaQuery.matches;
-        this.updateTouchMode();
+        // Initial Check
+        this.checkMobileMode();
 
-        // Listen for changes (e.g. docking/undocking on hybrids)
-        mediaQuery.addEventListener('change', (e) => {
-            this.isTouchDevice = e.matches;
+        // Listener for changes (e.g. docking/undocking on hybrids)
+        window.matchMedia('(pointer: coarse)').addEventListener('change', () => {
+            this.checkMobileMode();
+        });
+
+        // Listener for width changes (Responsive)
+        window.addEventListener('resize', () => {
+            this.checkMobileMode();
+        });
+    }
+
+    private checkMobileMode() {
+        const isTouch = window.matchMedia('(pointer: coarse)').matches;
+        const isSmall = window.innerWidth < 768;
+
+        const newState = isTouch || isSmall;
+
+        if (this.isTouchDevice !== newState) {
+            console.log('[BookmarkGrid] Mobile Mode Changed:', newState, { isTouch, isSmall, width: window.innerWidth });
+            this.isTouchDevice = newState;
             this.updateTouchMode();
             this.applyFilters();
             this.render();
-        });
+        }
     }
 
     private updateTouchMode() {
