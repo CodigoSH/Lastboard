@@ -28,10 +28,12 @@ func NewDashboardHandler(db *sql.DB) *DashboardHandler {
 
 // Structs for Content Validation
 type BookmarkContent struct {
-	Label    string `json:"label"`
-	Url      string `json:"url"`
-	Icon     string `json:"icon"`
-	IconName string `json:"iconName"`
+	Label        string `json:"label"`
+	Url          string `json:"url"`
+	Icon         string `json:"icon"`
+	IconName     string `json:"iconName"`
+	StatusCheck  bool   `json:"statusCheck,omitempty"`
+	VisibleTouch *bool  `json:"visibleTouch,omitempty"`
 }
 
 type GroupContent struct {

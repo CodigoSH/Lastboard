@@ -362,7 +362,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if newUserID > 0 {
 		_, _ = h.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
-		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/CodigoSH/Lastboard')`, newUserID)
+		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true, "visibleTouch": true}', 'https://github.com/CodigoSH/Lastboard')`, newUserID)
 	}
 
 	w.WriteHeader(http.StatusCreated)

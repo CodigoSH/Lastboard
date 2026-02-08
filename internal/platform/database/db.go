@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"strings"
 
@@ -109,6 +110,11 @@ func runMigrations(db *sql.DB) error {
 		log.Printf("Orphan migration warning: %v", err)
 	}
 
+	// M6: migrate legacy visibility flags (visibleMobile/visibleTablet → visibleTouch)
+	if err := migrateVisibilityFlags(db); err != nil {
+		log.Printf("Visibility migration warning: %v", err)
+	}
+
 	return nil
 }
 
@@ -135,4 +141,70 @@ func migrateOrphanedItems(db *sql.DB) error {
 		log.Printf("Legacy migration: assigned %d orphaned item(s) to admin user id=%d", rows, adminID)
 	}
 	return nil
+}
+
+// migrateVisibilityFlags converts legacy per-device visibility flags
+// (visibleMobile, visibleTablet) into the unified visibleTouch flag.
+// Items that already have visibleTouch are left unchanged (only legacy
+// keys are removed).  The migration is idempotent.
+func migrateVisibilityFlags(db *sql.DB) error {
+	rows, err := db.Query(`SELECT id, content FROM items WHERE content LIKE '%visibleMobile%' OR content LIKE '%visibleTablet%'`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var migrated int
+	for rows.Next() {
+		var id int
+		var content sql.NullString
+		if err := rows.Scan(&id, &content); err != nil {
+			continue
+		}
+		if !content.Valid || content.String == "" {
+			continue
+		}
+
+		var data map[string]interface{}
+		if err := json.Unmarshal([]byte(content.String), &data); err != nil {
+			continue
+		}
+
+		// If visibleTouch is already set, just remove legacy keys
+		if _, exists := data["visibleTouch"]; !exists {
+			// Derive visibleTouch: default true unless a legacy flag was explicitly false
+			visibleTouch := true
+			if vm, ok := data["visibleMobile"]; ok {
+				if vmBool, ok := vm.(bool); ok && !vmBool {
+					visibleTouch = false
+				}
+			}
+			if vt, ok := data["visibleTablet"]; ok {
+				if vtBool, ok := vt.(bool); ok && !vtBool {
+					visibleTouch = false
+				}
+			}
+			data["visibleTouch"] = visibleTouch
+		}
+
+		// Remove legacy keys
+		delete(data, "visibleMobile")
+		delete(data, "visibleTablet")
+
+		newContent, err := json.Marshal(data)
+		if err != nil {
+			continue
+		}
+
+		if _, err := db.Exec("UPDATE items SET content = ? WHERE id = ?", string(newContent), id); err != nil {
+			log.Printf("Visibility migration: failed to update item %d: %v", id, err)
+			continue
+		}
+		migrated++
+	}
+
+	if migrated > 0 {
+		log.Printf("Visibility migration: converted %d item(s) from legacy flags to visibleTouch", migrated)
+	}
+	return rows.Err()
 }

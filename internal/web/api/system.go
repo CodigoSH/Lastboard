@@ -100,13 +100,15 @@ type BackupUser struct {
 }
 
 type BackupItem struct {
-	Owner   string  `json:"owner"`
-	Type    string  `json:"type"`
-	X       int     `json:"x"`
-	Y       int     `json:"y"`
-	W       int     `json:"w"`
-	H       int     `json:"h"`
-	Content *string `json:"content"`
+	ID       int     `json:"id"`
+	Owner    string  `json:"owner"`
+	ParentID *int    `json:"parent_id,omitempty"`
+	Type     string  `json:"type"`
+	X        int     `json:"x"`
+	Y        int     `json:"y"`
+	W        int     `json:"w"`
+	H        int     `json:"h"`
+	Content  *string `json:"content"`
 }
 
 func (h *SystemHandler) isAdmin(r *http.Request) bool {
@@ -154,7 +156,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Fetch Items — join users to store owner username; backups must be
 	// portable across restores where numeric IDs will differ.
-	itemRows, err := h.DB.Query(`SELECT COALESCE(u.username, ''), i.type, i.x, i.y, i.w, i.h, i.content
+	itemRows, err := h.DB.Query(`SELECT i.id, COALESCE(u.username, ''), i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content
 		FROM items i LEFT JOIN users u ON i.user_id = u.id`)
 	if err != nil {
 		http.Error(w, "Failed to fetch items", http.StatusInternalServerError)
@@ -164,7 +166,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	for itemRows.Next() {
 		var i BackupItem
-		if err := itemRows.Scan(&i.Owner, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
+		if err := itemRows.Scan(&i.ID, &i.Owner, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
 			continue
 		}
 		backup.Items = append(backup.Items, i)
@@ -274,7 +276,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Insert Items with resolved user_id
+	// 4. Insert Items with resolved user_id (two-pass for parent_id)
 	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
@@ -282,15 +284,39 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	defer itemStmt.Close()
 
+	// Pass 1: Insert all items without parent_id, build old_id → new_id map
+	oldToNewID := make(map[int]int64)
 	for _, i := range backup.Items {
 		uid := ownerMap[i.Owner]
 		if uid == 0 {
 			uid = fallbackOwner
 		}
-		_, err := itemStmt.Exec(uid, i.Type, i.X, i.Y, i.W, i.H, i.Content)
+		res, err := itemStmt.Exec(uid, i.Type, i.X, i.Y, i.W, i.H, i.Content)
 		if err != nil {
 			http.Error(w, "Failed to restore item", http.StatusInternalServerError)
 			return
+		}
+		if i.ID > 0 {
+			newID, _ := res.LastInsertId()
+			oldToNewID[i.ID] = newID
+		}
+	}
+
+	// Pass 2: Restore parent_id relationships using the old→new ID map
+	for _, i := range backup.Items {
+		if i.ParentID == nil || i.ID == 0 {
+			continue
+		}
+		newParent, ok := oldToNewID[*i.ParentID]
+		if !ok {
+			continue
+		}
+		newID, ok := oldToNewID[i.ID]
+		if !ok {
+			continue
+		}
+		if _, err := tx.Exec("UPDATE items SET parent_id = ? WHERE id = ?", newParent, newID); err != nil {
+			log.Printf("Restore: failed to set parent_id for item %d: %v", newID, err)
 		}
 	}
 
