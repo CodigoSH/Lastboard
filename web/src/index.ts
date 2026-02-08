@@ -128,6 +128,22 @@ bootstrap(async () => {
     renderDashboard();
     dbg('✓ renderDashboard');
 
+    // ── Bridge: let BookmarkGrid report state OUTSIDE its shadow DOM ──
+    (window as any).__gridDbg = (msg: string) => dbg('GRID: ' + msg);
+
+    // Also inspect the <bookmark-grid> element from outside
+    const gridEl = dashboardRoot.querySelector('bookmark-grid');
+    if (gridEl) {
+        const rect = gridEl.getBoundingClientRect();
+        dbg(`✓ gridEl found — ${rect.width}x${rect.height} @ (${rect.left},${rect.top})`);
+        dbg(`  display=${getComputedStyle(gridEl).display}, children=${gridEl.childNodes.length}, shadowRoot=${!!gridEl.shadowRoot}`);
+        if (gridEl.shadowRoot) {
+            dbg(`  shadowRoot.children=${gridEl.shadowRoot.childNodes.length}`);
+        }
+    } else {
+        dbg('✗ gridEl NOT FOUND');
+    }
+
     // Start status monitoring
     statusService.start();
 
