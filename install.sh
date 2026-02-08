@@ -157,15 +157,7 @@ if [ "$RELEASE_CHANNEL" = "beta" ]; then
 else
     # Fetch latest stable release (excludes pre-releases)
     RELEASE_TAG=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-    
-    # FALLBACK: If latest stable is too old (pre v1.1.4), use latest beta instead
-    # This handles the transition period where stable releases don't have new binary names
-    if [[ "$RELEASE_TAG" == "v1.1.3" ]] || [[ "$RELEASE_TAG" < "v1.1.4" ]]; then
-        status_msg "Latest stable ($RELEASE_TAG) predates project rename. Using latest beta instead..."
-        RELEASE_TAG=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=1 | grep '"tag_name":' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
-    fi
-    
-    status_msg "Installing: $RELEASE_TAG"
+    status_msg "Installing latest stable: $RELEASE_TAG"
 fi
 
 if [ -z "$RELEASE_TAG" ]; then
