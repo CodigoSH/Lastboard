@@ -102,13 +102,20 @@ class DashboardStore {
         try {
             const serialized = JSON.stringify(this.state.items);
             localStorage.setItem(this.getStorageKey(), serialized);
-        } catch (error) {
+        } catch (error: any) {
             console.error('[DashboardStore] Failed to save to localStorage', error);
+            // Emergency cleanup if quota exceeded
+            if (error.name === 'QuotaExceededError' || error.code === 22) {
+                this.sanitizeStorage();
+            }
         }
     }
 
     private loadFromLocalStorage() {
         try {
+            // 1. Sanitize first to prevent issues
+            this.sanitizeStorage();
+
             const serialized = localStorage.getItem(this.getStorageKey());
             if (serialized) {
                 const items = JSON.parse(serialized);
@@ -119,6 +126,19 @@ class DashboardStore {
         } catch (error) {
             console.error('[DashboardStore] Failed to load from localStorage', error);
         }
+    }
+
+    private sanitizeStorage() {
+        try {
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.startsWith('kashboard') || key.includes('user_cache'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+        } catch (e) { }
     }
 
     subscribe(listener: Listener) {
