@@ -34,7 +34,8 @@ function success_msg() {
 }
 
 # Fetch latest version for banner (Fail gracefully)
-LATEST_VERSION=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+# This is just for display, actual version choice happens later
+LATEST_VERSION=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=1 | grep '"tag_name":' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
 if [ -z "$LATEST_VERSION" ]; then
     LATEST_VERSION="latest"
 fi
@@ -102,12 +103,20 @@ if [ -f "$SERVICE_FILE" ]; then
     fi
 fi
 
+# Ask for release channel preference (new installations only)
+RELEASE_CHANNEL="stable"
 if [ "$IS_UPDATE" = false ]; then
     if [ -c /dev/tty ]; then
         echo -n "  Desired Port [8080]: "
         read -r INPUT_PORT < /dev/tty
         if [[ -n "$INPUT_PORT" ]]; then
             PORT="$INPUT_PORT"
+        fi
+        
+        echo -n "  Release Channel (stable/beta) [stable]: "
+        read -r INPUT_CHANNEL < /dev/tty
+        if [[ "$INPUT_CHANNEL" == "beta" ]]; then
+            RELEASE_CHANNEL="beta"
         fi
     fi
 fi
@@ -139,7 +148,24 @@ chmod 750 "$DATA_DIR"
 chmod 755 "$INSTALL_DIR"
 
 status_msg "Downloading latest version..."
-BASE_URL="https://github.com/CodigoSH/Lastboard/releases/latest/download"
+
+# Determine release tag based on user preference
+if [ "$RELEASE_CHANNEL" = "beta" ]; then
+    # Fetch latest release (including pre-releases)
+    RELEASE_TAG=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=1 | grep '"tag_name":' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+    status_msg "Installing latest beta: $RELEASE_TAG"
+else
+    # Fetch latest stable release (excludes pre-releases)
+    RELEASE_TAG=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    status_msg "Installing latest stable: $RELEASE_TAG"
+fi
+
+if [ -z "$RELEASE_TAG" ]; then
+    echo -e "${RED}  Failed to fetch release information from GitHub.${NC}"
+    exit 1
+fi
+
+BASE_URL="https://github.com/CodigoSH/Lastboard/releases/download/$RELEASE_TAG"
 ARCHIVE_NAME="lastboard-linux-$ARCH_TAG.tar.gz"
 URL="$BASE_URL/$ARCHIVE_NAME"
 CHECKSUM_URL="$BASE_URL/checksums.txt"
