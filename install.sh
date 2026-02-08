@@ -216,12 +216,20 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 EOF
 
+# Ensure port is free
+if lsof -i ":$PORT" -t >/dev/null 2>&1; then
+    status_msg "Port $PORT is in use. Attempting to free it..."
+    PID=$(lsof -i ":$PORT" -t)
+    kill -9 "$PID" &>/dev/null || true
+    sleep 1
+fi
+
 systemctl daemon-reload &>/dev/null
 systemctl enable lastboard &>/dev/null
 systemctl restart lastboard &>/dev/null
 
 # Verification
-sleep 2
+sleep 5 # Increased sleep for exec type to settle
 if systemctl is-active --quiet lastboard; then
     IP=$(hostname -I | awk '{print $1}')
     echo ""
