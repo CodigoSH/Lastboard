@@ -269,8 +269,6 @@
   "setup.error_username": "O nome de usuário deve ter pelo menos 3 caracteres",
   "setup.error_password": "Senha muito curta (mín 4 caracteres)",
   "setup.error_connection": "Falha na conexão. Verifique os logs.",
-  "bookmark.visible_mobile": "Visível no Móvel",
-  "bookmark.visible_tablet": "Visível no Tablet",
   "widget.clock.timezone": "Fuso Horário",
   "widget.clock.auto_detect": "Auto Detectar",
   "widget.clock.timezone_desc": "ex. America/Sao_Paulo, UTC, ou 'local'",

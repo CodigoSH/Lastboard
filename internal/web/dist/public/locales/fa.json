@@ -269,8 +269,6 @@
   "setup.error_username": "نام کاربری باید حداقل ۳ کاراکتر باشد",
   "setup.error_password": "رمز عبور خیلی کوتاه است (حداقل 4 کاراکتر)",
   "setup.error_connection": "اتصال ناموفق بود. لاگ‌ها را بررسی کنید.",
-  "bookmark.visible_mobile": "قابل مشاهده در موبایل",
-  "bookmark.visible_tablet": "قابل مشاهده در تبلت",
   "widget.clock.timezone": "منطقه زمانی",
   "widget.clock.auto_detect": "تشخیص خودکار",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

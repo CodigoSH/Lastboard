@@ -269,8 +269,6 @@
   "setup.error_username": "ইউজার নেম কমপক্ষে ৩ অক্ষরের হতে হবে",
   "setup.error_password": "পাসওয়ার্ড খুব ছোট (ন্যূনতম ৪ অক্ষর)",
   "setup.error_connection": "সংযোগ ব্যর্থ হয়েছে। লগ চেক করুন।",
-  "bookmark.visible_mobile": "মোবাইলে দৃশ্যমান",
-  "bookmark.visible_tablet": "ট্যাবলেটে দৃশ্যমান",
   "widget.clock.timezone": "সময় অঞ্চল",
   "widget.clock.auto_detect": "স্বয়ংক্রিয় সনাক্তকরণ",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

@@ -269,8 +269,6 @@
   "setup.error_username": "Le nom d'utilisateur doit contenir au moins 3 caractères",
   "setup.error_password": "Mot de passe trop court (min 4 caractères)",
   "setup.error_connection": "La connexion a échoué. Vérifiez les journaux.",
-  "bookmark.visible_mobile": "Visible sur Mobile",
-  "bookmark.visible_tablet": "Visible sur Tablette",
   "widget.clock.timezone": "Fuseau Horaire",
   "widget.clock.auto_detect": "Détection auto",
   "widget.clock.timezone_desc": "ex. America/Paris, UTC, ou 'local'",

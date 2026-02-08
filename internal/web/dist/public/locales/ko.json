@@ -269,8 +269,6 @@
   "setup.error_username": "사용자 이름은 최소 3자 이상이어야 합니다",
   "setup.error_password": "비밀번호가 너무 짧습니다 (최소 4자)",
   "setup.error_connection": "연결 실패. 로그를 확인하세요.",
-  "bookmark.visible_mobile": "모바일에서 표시",
-  "bookmark.visible_tablet": "태블릿에서 표시",
   "widget.clock.timezone": "시간대",
   "widget.clock.auto_detect": "자동 감지",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

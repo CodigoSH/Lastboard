@@ -269,8 +269,6 @@
   "setup.error_username": "Το όνομα χρήστη πρέπει να είναι τουλάχιστον 3 χαρακτήρες",
   "setup.error_password": "Ο κωδικός είναι πολύ μικρός (τουλάχιστον 4 χαρακτήρες)",
   "setup.error_connection": "Η σύνδεση απέτυχε. Ελέγξτε τα αρχεία καταγραφής.",
-  "bookmark.visible_mobile": "Ορατό σε κινητό",
-  "bookmark.visible_tablet": "Ορατό σε tablet",
   "widget.clock.timezone": "Ζώνη ώρας",
   "widget.clock.auto_detect": "Αυτόματος εντοπισμός",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

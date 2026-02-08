@@ -269,8 +269,6 @@
   "setup.error_username": "Nama pengguna minimal 3 karakter",
   "setup.error_password": "Kata sandi terlalu pendek (min 4 karakter)",
   "setup.error_connection": "Koneksi gagal. Periksa log.",
-  "bookmark.visible_mobile": "Terlihat di Seluler",
-  "bookmark.visible_tablet": "Terlihat di Tablet",
   "widget.clock.timezone": "Zona Waktu",
   "widget.clock.auto_detect": "Deteksi Otomatis",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

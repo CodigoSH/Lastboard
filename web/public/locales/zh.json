@@ -269,8 +269,6 @@
   "setup.error_username": "用户名必须至少 3 个字符",
   "setup.error_password": "密码太短（至少 4 个字符）",
   "setup.error_connection": "连接失败。请检查日志。",
-  "bookmark.visible_mobile": "移动端可见",
-  "bookmark.visible_tablet": "平板端可见",
   "widget.clock.timezone": "时区",
   "widget.clock.auto_detect": "自动检测",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

@@ -269,8 +269,6 @@
   "setup.error_username": "Gebruikersnaam moet minimaal 3 tekens bevatten",
   "setup.error_password": "Wachtwoord te kort (min 4 tekens)",
   "setup.error_connection": "Verbinding mislukt. Controleer logboeken.",
-  "bookmark.visible_mobile": "Zichtbaar op Mobiel",
-  "bookmark.visible_tablet": "Zichtbaar op Tablet",
   "widget.clock.timezone": "Tijdzone",
   "widget.clock.auto_detect": "Automatisch detecteren",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",

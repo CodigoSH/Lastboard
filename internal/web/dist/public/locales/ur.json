@@ -269,8 +269,6 @@
   "setup.error_username": "صارف کا نام کم از کم 3 حروف کا ہونا چاہیے",
   "setup.error_password": "پاس ورڈ بہت مختصر ہے (کم از کم 4 حروف)",
   "setup.error_connection": "کنکشن ناکام ہوگیا۔ لاگز چیک کریں۔",
-  "bookmark.visible_mobile": "موبائل پر نظر آنے والا",
-  "bookmark.visible_tablet": "ٹیبلیٹ پر نظر آنے والا",
   "widget.clock.timezone": "ٹائم زون",
   "widget.clock.auto_detect": "خودکار شناخت",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
