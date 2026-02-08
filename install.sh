@@ -196,10 +196,11 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+Type=exec
 User=lastboard
 Group=lastboard
 WorkingDirectory=$DATA_DIR
+ExecStartPre=/usr/bin/chmod +x $INSTALL_DIR/$BINARY_NAME
 ExecStart=$INSTALL_DIR/$BINARY_NAME
 Restart=always
 RestartSec=5
@@ -230,5 +231,7 @@ if systemctl is-active --quiet lastboard; then
     echo -e ""
 else
     echo -e "${RED}  Service failed to start.${NC}"
+    echo -e "${GRAY}  Checking logs...${NC}"
+    journalctl -u lastboard -n 20 --no-pager
     exit 1
 fi
