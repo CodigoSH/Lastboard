@@ -68,6 +68,14 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	if username != "" {
 		_ = h.DB.QueryRow("SELECT COALESCE(beta_updates, 0) FROM users WHERE username = ?", username).Scan(&betaUpdates)
 	}
+
+	// Auto-enable beta updates if currently running a detailed version (Beta/RC/Alpha)
+	currentLower := strings.ToLower(version.Current)
+	if strings.Contains(currentLower, "beta") || strings.Contains(currentLower, "rc") || strings.Contains(currentLower, "alpha") {
+		log.Printf("[Update] Current version is unstable (%s). Forcing beta channel check.", version.Current)
+		betaUpdates = true
+	}
+
 	log.Printf("[Update] Check for user:%s, BetaPref:%v, CurrentVer:%s", username, betaUpdates, version.Current)
 
 	var release GithubRelease
@@ -527,10 +535,14 @@ func isNewerVersion(candidate, current string) bool {
 	curName, curVer := parseSuffix(curSuf)
 
 	// Compare names (alpha < beta < rc)
-	// Simple lexicographical works for alpha/beta/rc usually, but let's be safe?
-	// Actually alpha < beta < rc works lexicographically.
-	if cName != curName {
-		return cName > curName
+	// Normalizing to lowercase is critical for ASCII comparison:
+	// "beta" (98) > "RC" (82) -> WRONG
+	// "beta" (98) > "rc" (114) -> FALSE (Correct, rc is newer)
+	cNameLower := strings.ToLower(cName)
+	curNameLower := strings.ToLower(curName)
+
+	if cNameLower != curNameLower {
+		return cNameLower > curNameLower
 	}
 
 	// Compare versions (8 < 10)
