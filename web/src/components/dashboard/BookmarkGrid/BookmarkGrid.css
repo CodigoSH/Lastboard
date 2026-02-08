@@ -1,7 +1,8 @@
 :host {
     /* Fluid Grid System */
-    /* Use widget-min-size from prefs, default to 140px */
-    --widget-min-size: 140px;
+    /* --widget-min-size now inherits from :root (set by user preference) */
+    /* JS fallback in updateGridMetrics(): parseFloat(minSizeStr) || 140 */
+
 
     display: grid;
     /* Explicit columns calculated by JS */
