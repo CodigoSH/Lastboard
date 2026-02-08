@@ -9,7 +9,7 @@ class ApiService {
 
     constructor() {
         // Fallback to relative path if no CONFIG is present
-        this.baseUrl = window.KASHBOARD_CONFIG?.API_BASE_URL || '';
+        this.baseUrl = window.LASTBOARD_CONFIG?.API_BASE_URL || '';
     }
 
     private getCsrfToken(): string {

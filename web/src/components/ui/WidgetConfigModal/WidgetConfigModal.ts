@@ -37,7 +37,7 @@ async function getCityTimezone(city: string): Promise<string> {
         // 1. Geocoding con Nominatim (OpenStreetMap)
         const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`;
         const geocodeResponse = await fetch(geocodeUrl, {
-            headers: { 'User-Agent': 'Kashboard/1.0' }
+            headers: { 'User-Agent': 'Lastboard/1.0' }
         });
 
         if (!geocodeResponse.ok) throw new Error('Geocoding failed');

@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="web/public/images/logo.png" alt="Kashboard Logo" width="120" style="margin-bottom: 20px;" />
-  <h1>Kashboard</h1>
+  <img src="web/public/images/logo.png" alt="Lastboard Logo" width="120" style="margin-bottom: 20px;" />
+  <h1>Lastboard</h1>
   
   <p>
     <strong>A sleek, high-performance personal dashboard focused on native speed and premium aesthetics.</strong>
   </p>
 
   <p>
-    <img src="https://img.shields.io/github/v/release/codigosh/Kashboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
+    <img src="https://img.shields.io/github/v/release/CodigoSH/Lashboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
     <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
     <img src="https://img.shields.io/badge/Bun-%26_TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="Bun & TypeScript" />
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License" />
@@ -17,14 +17,14 @@
 
 <br />
 
-**Kashboard** is a modern, self-hosted dashboard designed for enthusiasts who demand both beauty and raw performance. Built with a single-binary architecture, it replaces clunky, resource-heavy alternatives with a lightweight, lightning-fast experience.
+**Lastboard** is a modern, self-hosted dashboard designed for enthusiasts who demand both beauty and raw performance. Built with a single-binary architecture, it replaces clunky, resource-heavy alternatives with a lightweight, lightning-fast experience.
 
 ---
 
 ## ✨ Key Features
 
 ### 🚀 Single Binary Architecture
-Forget about complex Docker chains or multi-service dependencies. **Kashboard** compiles the entire frontend (assets, fonts, styles) and backend into a **single, portable executable**. Deployment is as simple as copying one file.
+Forget about complex Docker chains or multi-service dependencies. **Lastboard** compiles the entire frontend (assets, fonts, styles) and backend into a **single, portable executable**. Deployment is as simple as copying one file.
 
 ### ⚡ Native Grid Engine
 We built our own high-performance drag-and-drop grid system using **100% native JavaScript**.
@@ -47,7 +47,7 @@ Designed with **Glassmorphism** principles for a depth-rich, modern aesthetic.
 
 ## 🏗️ Technical Architecture
 
-Kashboard is built on a "Performance First" philosophy, selecting the best tools for speed and developer experience.
+Lastboard is built on a "Performance First" philosophy, selecting the best tools for speed and developer experience.
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
@@ -65,18 +65,18 @@ Kashboard is built on a "Performance First" philosophy, selecting the best tools
 - **Bun** (for building frontend assets)
 
 ### ⚡ Automated Installation (One-Liner)
-Install Kashboard with a single command. This script automates everything: user creation, directory setup, and systemd service registration.
+Install Lastboard with a single command. This script automates everything: user creation, directory setup, and systemd service registration.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lashboard/main/install.sh | sudo bash
 ```
 
 ### 🛠️ Build from Source
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/kashboard.git
-   cd kashboard
+   git clone https://github.com/CodigoSH/Lashboard.git
+   cd Lashboard
    ```
 
 2. **Build the Frontend**
@@ -88,12 +88,12 @@ curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh 
 3. **Build the Binary**
    Generate the final executable with Go:
    ```bash
-   go build -o kashboard ./cmd/dashboard/main.go
+   go build -o lastboard ./cmd/dashboard/main.go
    ```
 
 4. **Run**
    ```bash
-   ./kashboard
+   ./lastboard
    ```
    Open `http://localhost:8080` in your browser to start the Setup Wizard.
 
@@ -107,6 +107,6 @@ curl -fsSL https://raw.githubusercontent.com/codigosh/Kashboard/main/install.sh 
 - **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
 
 <div align="center">
-  <sub>Built with ❤️ by the Kashboard Team</sub>
+  <sub>Built with ❤️ by the Lastboard Team</sub>
 </div>
 

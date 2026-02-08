@@ -55,7 +55,7 @@ tmp/
 .temp/
 
 # Root binary
-kashboard
+lastboard
 *.old
 *.tar.gz
 

@@ -1,5 +1,5 @@
 /**
- * Core Types for Kashboard
+ * Core Types for Lastboard
  * These interfaces mirror the Go backend structures and API responses.
  */
 
@@ -55,7 +55,7 @@ export interface MessageResponse {
 
 declare global {
     interface Window {
-        KASHBOARD_CONFIG?: {
+        LASTBOARD_CONFIG?: {
             API_BASE_URL: string;
             DEBUG_MODE: boolean;
         };

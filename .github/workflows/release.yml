@@ -47,19 +47,19 @@ jobs:
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
 
-          go build -ldflags "-s -w -extldflags '-static' -X github.com/codigosh/Kashboard/internal/version.Current=$VERSION" -o kashboard cmd/dashboard/main.go
+          go build -ldflags "-s -w -extldflags '-static' -X github.com/CodigoSH/Lashboard/internal/version.Current=$VERSION" -o lastboard cmd/dashboard/main.go
 
       - name: Package
         run: |
-          # Create compressed archive with the binary inside named just 'kashboard'
-          # This makes the install script logic simpler (it always looks for 'kashboard')
-          tar -czvf kashboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz kashboard
+          # Create compressed archive with the binary inside named just 'lastboard'
+          # This makes the install script logic simpler (it always looks for 'lastboard')
+          tar -czvf lastboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz lastboard
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: kashboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          path: lastboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
 
   release:
     needs: build-and-release

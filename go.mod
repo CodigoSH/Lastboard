@@ -1,4 +1,4 @@
-module github.com/codigosh/Kashboard
+module github.com/CodigoSH/Lashboard
 
 go 1.24.0
 

@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/codigosh/Kashboard/internal/web/util"
+	"github.com/CodigoSH/Lashboard/internal/web/util"
 )
 
 const (

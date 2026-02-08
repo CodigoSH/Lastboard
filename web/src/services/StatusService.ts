@@ -39,11 +39,25 @@ class StatusService {
             return content && content.statusCheck === true;
         });
 
-        for (const item of items) {
-            await this.checkItem(item);
-            // Throttle to prevent 429s
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
+        // 1. Set ALL to pending immediately for visual feedback
+        items.forEach(item => this.updateUIStatus(item.id, 'pending'));
+
+        // 2. Process in batches to avoid network congestion but remain fast
+        const CONCURRENCY = 5;
+        const queue = [...items];
+
+        const worker = async () => {
+            while (queue.length > 0) {
+                const item = queue.shift();
+                if (item) {
+                    await this.checkItem(item);
+                }
+            }
+        };
+
+        // Start N workers
+        const workers = Array(Math.min(items.length, CONCURRENCY)).fill(null).map(() => worker());
+        await Promise.all(workers);
     }
 
     private async checkItem(item: any) {

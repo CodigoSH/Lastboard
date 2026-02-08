@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/codigosh/Kashboard/internal/version"
-	"github.com/codigosh/Kashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lashboard/internal/version"
+	"github.com/CodigoSH/Lashboard/internal/web/middleware"
 )
 
 // ... existing code ...
@@ -176,7 +176,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	// Send JSON
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"kashboard-backup-%s.json\"", time.Now().Format("2006-01-02-1504")))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"lastboard-backup-%s.json\"", time.Now().Format("2006-01-02-1504")))
 	json.NewEncoder(w).Encode(backup)
 }
 

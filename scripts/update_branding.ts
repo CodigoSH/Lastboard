@@ -26,7 +26,7 @@ const translations: Record<string, string> = {
     el: "Διαχειριστής"
 };
 
-const BRAND_NAME = "Kashboard";
+const BRAND_NAME = "Lastboard";
 
 async function updateBranding() {
     try {

@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codigosh/Kashboard/internal/web/api"
-	"github.com/codigosh/Kashboard/internal/web/middleware"
-	"github.com/codigosh/Kashboard/internal/web/util"
+	"github.com/CodigoSH/Lashboard/internal/web/api"
+	"github.com/CodigoSH/Lashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lashboard/internal/web/util"
 )
 
 //go:embed dist/*
@@ -282,7 +282,7 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 
 func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
-	var projectName string = "Kashboard"
+	var projectName string = "Lastboard"
 	var dbTheme string = ""
 
 	if username != "" {

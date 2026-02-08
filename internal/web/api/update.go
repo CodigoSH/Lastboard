@@ -22,8 +22,8 @@ import (
 
 	"database/sql"
 
-	"github.com/codigosh/Kashboard/internal/version"
-	"github.com/codigosh/Kashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lashboard/internal/version"
+	"github.com/CodigoSH/Lashboard/internal/web/middleware"
 )
 
 type UpdateHandler struct {
@@ -75,7 +75,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	// If Beta Updates enabled: Fetch list of releases (includes pre-releases) and pick first
 	// If Beta Updates disabled: Fetch 'latest' (excludes pre-releases)
 	if betaUpdates {
-		resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases?per_page=5")
+		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lashboard/releases?per_page=5")
 		if err != nil {
 			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
 			return
@@ -112,7 +112,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else {
-		resp, err := http.Get("https://api.github.com/repos/codigosh/Kashboard/releases/latest")
+		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lashboard/releases/latest")
 		if err != nil {
 			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
 			return
@@ -173,7 +173,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parsedURL, err := url.Parse(req.AssetUrl)
-	if err != nil || parsedURL.Host != "github.com" || !strings.HasPrefix(path.Clean(parsedURL.Path), "/codigosh/Kashboard/releases/") {
+	if err != nil || parsedURL.Host != "github.com" || !strings.HasPrefix(path.Clean(parsedURL.Path), "/CodigoSH/Lashboard/releases/") {
 		http.Error(w, "Invalid asset URL", http.StatusBadRequest)
 		return
 	}

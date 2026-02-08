@@ -1,5 +1,5 @@
 {
-  "name": "kashboard",
+  "name": "lastboard",
   "version": "1.1.3",
   "module": "index.ts",
   "type": "module",

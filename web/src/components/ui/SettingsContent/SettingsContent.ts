@@ -51,7 +51,7 @@ class SettingsContent extends HTMLElement {
         if (u && u.preferences) {
             this.prefs = {
                 ...u.preferences,
-                project_name: u.project_name || u.preferences.project_name || 'Kashboard'
+                project_name: u.project_name || u.preferences.project_name || 'Lastboard'
             };
             this.render();
         }

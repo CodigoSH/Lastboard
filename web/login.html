@@ -2,8 +2,8 @@
 <html lang="en">
 <!-- Prevent FOUC: set dark-mode class before CSS parses so variables resolve correctly -->
 <script>
-    if (localStorage.getItem('kashboard_theme') === 'dark') document.documentElement.classList.add('dark-mode');
-    const accent = localStorage.getItem('kashboard_accent');
+    if (localStorage.getItem('lastboard_theme') === 'dark') document.documentElement.classList.add('dark-mode');
+    const accent = localStorage.getItem('lastboard_accent');
     if (accent) document.documentElement.style.setProperty('--accent', accent);
 </script>
 
@@ -11,7 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/favicon.png">
-    <title>Login - Kashboard</title>
+    <title>Login - Lastboard</title>
     <!-- Core Themes -->
     <link rel="stylesheet" href="/styles/theme.css?v=99">
     <link rel="stylesheet" href="/styles/components.css?v=99">
@@ -52,7 +52,7 @@
     <div class="setup-container">
         <app-paper>
             <header class="auth-header" style="margin-bottom: 32px;">
-                <img src="/images/logo.png" alt="Kashboard" style="height: 64px; margin-bottom: 4px;">
+                <img src="/images/logo.png" alt="Lastboard" style="height: 64px; margin-bottom: 4px;">
                 <p id="pageSubtitle" class="auth-subtitle">Enter your credentials</p>
             </header>
 
