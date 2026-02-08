@@ -447,7 +447,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.8-Beta.07'; // Should be sync with backend or injected
+    private version = 'v1.1.8-Beta.08'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 
@@ -459,10 +459,62 @@ class SettingsContent extends HTMLElement {
 
         this.checkUpdatesPromise = (async () => {
             try {
-                const res = await fetch('/api/system/update/check');
-                if (res.ok) {
-                    this.updateInfo = await res.json();
-                    this.version = this.updateInfo.current_version;
+                // 1. Get System Info (Current Version & Docker Status) from Backend
+                const systemRes = await fetch('/api/system/update/check');
+                if (systemRes.ok) {
+                    const systemInfo = await systemRes.json();
+                    this.version = systemInfo.current_version;
+
+                    // If Docker, we trust the backend's check entirely (no binary swap possible)
+                    if (systemInfo.is_docker) {
+                        this.updateInfo = systemInfo;
+                        this.render();
+                        return;
+                    }
+
+                    // 2. Browser-Side Proxy Check (Bypasses GitHub Rate Limits)
+                    try {
+                        const isBeta = this.prefs.beta_updates || false;
+                        const proxyUrl = `https://api-updates.codigosh.com/api/v1/check-update?beta=${isBeta}`;
+
+                        const proxyRes = await fetch(proxyUrl);
+                        if (proxyRes.ok) {
+                            const proxyData = await proxyRes.json();
+
+                            // 3. Compare Versions
+                            const isNewer = this.compareVersions(proxyData.latest_version, this.version);
+
+                            if (isNewer) {
+                                // Construct Asset URL (Defaulting to linux_amd64 for now)
+                                // The proxy returns the tag, we construct the download link to GitHub
+                                // Example: https://github.com/CodigoSH/Lastboard/releases/download/v1.1.8-Beta.07/lastboard_linux_amd64.tar.gz
+                                const assetUrl = `https://github.com/CodigoSH/Lastboard/releases/download/${proxyData.latest_version}/lastboard_linux_amd64.tar.gz`;
+
+                                this.updateInfo = {
+                                    available: true,
+                                    current_version: this.version,
+                                    latest_version: proxyData.latest_version,
+                                    release_notes: "Check Changelog on GitHub", // Proxy might not return body
+                                    asset_url: assetUrl,
+                                    is_docker: false
+                                };
+                            } else {
+                                // Up to date
+                                this.updateInfo = {
+                                    available: false,
+                                    current_version: this.version,
+                                    latest_version: proxyData.latest_version,
+                                    is_docker: false
+                                };
+                            }
+                        } else {
+                            // Proxy failed, fall back to backend's response (which might be rate limited but has system info)
+                            this.updateInfo = systemInfo;
+                        }
+                    } catch (proxyErr) {
+                        console.error("Proxy check failed, using backend info", proxyErr);
+                        this.updateInfo = systemInfo;
+                    }
                 }
             } catch (e) {
                 console.error("Check update failed", e);
@@ -473,6 +525,39 @@ class SettingsContent extends HTMLElement {
         })();
 
         return this.checkUpdatesPromise;
+    }
+
+    // Helper: v1 (candidate) > v2 (current) ?
+    compareVersions(v1: string, v2: string): boolean {
+        // Strip 'v' prefix
+        const clean1 = v1.replace(/^v/, '');
+        const clean2 = v2.replace(/^v/, '');
+
+        // Split into parts (1.1.8-Beta.07 -> [1.1.8, Beta.07])
+        const parts1 = clean1.split('-');
+        const parts2 = clean2.split('-');
+
+        // Compare Core (1.1.8)
+        const core1 = parts1[0].split('.').map(Number);
+        const core2 = parts2[0].split('.').map(Number);
+
+        for (let i = 0; i < 3; i++) {
+            if (core1[i] > core2[i]) return true;
+            if (core1[i] < core2[i]) return false;
+        }
+
+        // Core is equal. Compare suffixes.
+        // No suffix (Stable) > Suffix (Beta/RC)
+        if (!parts1[1] && parts2[1]) return true; // 1.1.8 > 1.1.8-Beta
+        if (parts1[1] && !parts2[1]) return false; // 1.1.8-Beta < 1.1.8
+        if (!parts1[1] && !parts2[1]) return false; // Equal
+
+        // Both have suffixes. Compare Lexicographically (Alpha < Beta < RC)
+        // Beta.07 vs Beta.06
+        const suf1 = parts1[1].toLowerCase();
+        const suf2 = parts2[1].toLowerCase();
+
+        return suf1 > suf2; // 'beta.07' > 'beta.06'
     }
 
     async performUpdate(assetUrl: string) {
