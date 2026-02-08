@@ -81,6 +81,8 @@ class BookmarkGrid extends HTMLElement {
         const isTouch = this.isTouchDevice;
         const isSearching = !!this.searchQuery;
 
+        console.log(`[DEBUG] applyFilters: isTouch=${isTouch}, isSearching=${isSearching}, allItems=${this.allItems.length}`);
+
         // search-active CSS class: ONLY for desktop search (grid → auto-flow)
         // Touch mode has its own layout via .touch-mode class
         if (isSearching && !isTouch) {
@@ -94,17 +96,23 @@ class BookmarkGrid extends HTMLElement {
                 let content: any = item.content;
                 if (typeof item.content === 'string') {
                     try { content = JSON.parse(item.content); } catch {
-                        console.warn('[BookmarkGrid] Skipping item with invalid content:', item.id);
+                        console.warn('[DEBUG] Skipping item with invalid content:', item.id);
                         return false;
                     }
                 }
 
                 // Touch mode: only show bookmarks (widgets/sections are excluded)
                 // Nested bookmarks (parent_id set) have type 'bookmark' so they pass
-                if (isTouch && item.type !== 'bookmark') return false;
+                if (isTouch && item.type !== 'bookmark') {
+                    console.log(`[DEBUG] Filtered out: id=${item.id} type=${item.type} (not bookmark)`);
+                    return false;
+                }
 
                 // Touch visibility: visibleTouch flag (defaults to true if undefined)
-                if (isTouch && content.visibleTouch === false) return false;
+                if (isTouch && content.visibleTouch === false) {
+                    console.log(`[DEBUG] Filtered out: id=${item.id} visibleTouch=false`);
+                    return false;
+                }
 
                 // Search filter (applies on both desktop and touch)
                 if (isSearching) {
@@ -114,6 +122,7 @@ class BookmarkGrid extends HTMLElement {
 
                 return true;
             });
+            console.log(`[DEBUG] After filter: ${this.bookmarks.length} bookmarks visible`);
         } else {
             // Desktop Mode (Non-Touch, Non-Search) -> Show All (Grid)
             this.bookmarks = this.allItems;
@@ -903,8 +912,21 @@ class BookmarkGrid extends HTMLElement {
             this.classList.remove('edit-mode');
         }
 
+        // ── DEBUG: Visible diagnostic for mobile troubleshooting ──
+        const debugInfo = this.isTouchDevice ? `
+            <div style="background:#1a1a2e;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;border-radius:6px;margin-bottom:8px;border:1px solid #333;line-height:1.6;">
+                TOUCH MODE: <b>ON</b> |
+                allItems: <b>${this.allItems.length}</b> |
+                filtered: <b>${this.bookmarks.length}</b> |
+                types: <b>${[...new Set(this.allItems.map(i => i.type))].join(',') || 'none'}</b> |
+                classes: <b>${this.className}</b> |
+                width: <b>${this.clientWidth}px</b>
+            </div>
+        ` : '';
+
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
+            ${debugInfo}
             ${template({
             bookmarks: this.bookmarks,
             isEditing: this.isEditing,
