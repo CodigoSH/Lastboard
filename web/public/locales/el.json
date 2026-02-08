@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Εικονίδιο",
   "bookmark.monitor_status": "Παρακολούθηση κατάστασης (Ping)",
-  "bookmark.visible_mobile": "Ορατό σε κινητό",
-  "bookmark.visible_tablet": "Ορατό σε tablet",
+  "bookmark.visible_touch": "Ορατό σε συσκευές αφής",
   "bookmark.placeholder_label": "Ο υπέροχος ιστότοπός μου",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "Προσθήκη ενότητας",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Διεπαφή / Αρχιτεκτονική πλέγματος",
   "settings.project_name": "Όνομα Έργου",
   "settings.project_name_desc": "Προσαρμόστε το όνομα της εφαρμογής που εμφανίζεται στην επάνω γραμμή.",
+  "settings.grid_columns": "Αριθμός Στηλών",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "Στήλες PC",
   "settings.grid_tablet": "Στήλες Tablet",
   "settings.grid_mobile": "Στήλες Mobile",
@@ -268,10 +269,10 @@
   "setup.error_username": "Το όνομα χρήστη πρέπει να είναι τουλάχιστον 3 χαρακτήρες",
   "setup.error_password": "Ο κωδικός είναι πολύ μικρός (τουλάχιστον 4 χαρακτήρες)",
   "setup.error_connection": "Η σύνδεση απέτυχε. Ελέγξτε τα αρχεία καταγραφής.",
+  "bookmark.visible_mobile": "Ορατό σε κινητό",
+  "bookmark.visible_tablet": "Ορατό σε tablet",
   "widget.clock.timezone": "Ζώνη ώρας",
   "widget.clock.auto_detect": "Αυτόματος εντοπισμός",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Σημειώσεις",
-  "settings.grid_columns": "Αριθμός Στηλών",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Σημειώσεις"
 }

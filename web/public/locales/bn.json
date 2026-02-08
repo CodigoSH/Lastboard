@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "আইকন",
   "bookmark.monitor_status": "স্ট্যাটাস মনিটর করুন (পিং)",
-  "bookmark.visible_mobile": "মোবাইলে দৃশ্যমান",
-  "bookmark.visible_tablet": "ট্যাবলেটে দৃশ্যমান",
+  "bookmark.visible_touch": "টাচ ডিভাইসে দৃশ্যমান",
   "bookmark.placeholder_label": "আমার দুর্দান্ত সাইট",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "সেকশন যোগ করুন",
@@ -103,6 +102,8 @@
   "settings.interface_title": "ইন্টারফেস / গ্রিড আর্কিটেকচার",
   "settings.project_name": "প্রজেক্টের নাম",
   "settings.project_name_desc": "শীर्ष বারে প্রদর্শিত অ্যাপ্লিকেশনটির নাম কাস্টমাইজ করুন।",
+  "settings.grid_columns": "Column Count",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "পিসি কলাম (PC Columns)",
   "settings.grid_tablet": "ট্যাবলেট কলাম",
   "settings.grid_mobile": "মোবাইল কলাম",
@@ -268,10 +269,10 @@
   "setup.error_username": "ইউজার নেম কমপক্ষে ৩ অক্ষরের হতে হবে",
   "setup.error_password": "পাসওয়ার্ড খুব ছোট (ন্যূনতম ৪ অক্ষর)",
   "setup.error_connection": "সংযোগ ব্যর্থ হয়েছে। লগ চেক করুন।",
+  "bookmark.visible_mobile": "মোবাইলে দৃশ্যমান",
+  "bookmark.visible_tablet": "ট্যাবলেটে দৃশ্যমান",
   "widget.clock.timezone": "সময় অঞ্চল",
   "widget.clock.auto_detect": "স্বয়ংক্রিয় সনাক্তকরণ",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "নোট",
-  "settings.grid_columns": "Column Count",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "নোট"
 }

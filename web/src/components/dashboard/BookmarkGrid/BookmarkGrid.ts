@@ -72,18 +72,13 @@ class BookmarkGrid extends HTMLElement {
     private _boundMouseUp = this.handleWindowMouseUp.bind(this);
 
     private applyFilters() {
-        // 1. Determine Device Mode (Touch-Prioritized)
         const isTouch = this.isTouchDevice;
-        const width = window.innerWidth;
-        const isMobile = isTouch && width < 768;
-        const isTablet = isTouch && width >= 768;
 
-        // 2. Filter Items
         if (this.searchQuery || isTouch) {
             this.classList.add('search-active');
 
             this.bookmarks = this.allItems.filter(item => {
-                // Only Bookmarks in Touch Mode
+                // Only Bookmarks in Touch/Search Mode
                 if (item.type !== 'bookmark') return false;
 
                 let content: any = item.content;
@@ -91,9 +86,8 @@ class BookmarkGrid extends HTMLElement {
                     try { content = JSON.parse(item.content); } catch { return false; }
                 }
 
-                // Visibility Check (Mobile/Tablet)
-                if (isMobile && content.visibleMobile === false) return false;
-                if (isTablet && content.visibleTablet === false) return false;
+                // Touch Visibility Check (defaults to true for backward compatibility)
+                if (isTouch && content.visibleTouch === false) return false;
 
                 // Search Filter
                 if (this.searchQuery) {
@@ -111,6 +105,8 @@ class BookmarkGrid extends HTMLElement {
     }
 
     connectedCallback() {
+        // Apply filters BEFORE first render to ensure correct visibility
+        this.applyFilters();
         this.render();
         this.updateGridMetrics();
 

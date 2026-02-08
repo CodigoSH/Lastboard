@@ -56,15 +56,10 @@ class AddBookmarkModal extends HTMLElement {
             const label = formData.get('label') as string;
             const url = formData.get('url') as string;
             const statusCheck = formData.get('statusCheck') === 'on';
-            const visibleMobile = formData.get('visibleMobile') === 'on';
-            const visibleTablet = formData.get('visibleTablet') === 'on';
-
-
+            const visibleTouch = formData.get('visibleTouch') === 'on';
 
             // Get selected icon
             const iconName = this.iconPicker ? this.iconPicker.getSelectedIcon() : '';
-
-
             const iconUrl = iconName
                 ? `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${iconName}.png`
                 : '';
@@ -76,8 +71,7 @@ class AddBookmarkModal extends HTMLElement {
                     icon: iconUrl,
                     iconName: iconName,
                     statusCheck,
-                    visibleMobile,
-                    visibleTablet
+                    visibleTouch
                 });
 
                 if (this.isEditMode && this.currentItemId) {
@@ -192,14 +186,13 @@ class AddBookmarkModal extends HTMLElement {
                 const labelInput = form.elements.namedItem('label') as HTMLInputElement;
                 const urlInput = form.elements.namedItem('url') as HTMLInputElement;
                 const statusInput = form.elements.namedItem('statusCheck') as HTMLInputElement;
-                const mobileInput = form.elements.namedItem('visibleMobile') as HTMLInputElement;
-                const tabletInput = form.elements.namedItem('visibleTablet') as HTMLInputElement;
+                const touchInput = form.elements.namedItem('visibleTouch') as HTMLInputElement;
 
                 if (labelInput) labelInput.value = content.label || '';
                 if (urlInput) urlInput.value = content.url || '';
                 if (statusInput) statusInput.checked = !!content.statusCheck;
-                if (mobileInput) mobileInput.checked = content.visibleMobile !== false;
-                if (tabletInput) tabletInput.checked = content.visibleTablet !== false;
+                // Default to true if not set (backward compatibility)
+                if (touchInput) touchInput.checked = content.visibleTouch !== false;
             }
             if (this.iconPicker) {
                 this.iconPicker.setSelectedIcon(this.selectedIconName);

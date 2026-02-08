@@ -31,31 +31,26 @@ export const template = ({ isOpen, isEditMode }: AddBookmarkModalData) => `
                 <label>${i18n.t('bookmark.icon')}</label>
                 <div id="icon-picker-container"></div>
             </div>
-            <div class="form-group checkbox-group">
-                <label for="bookmark-status">${i18n.t('bookmark.monitor_status')}</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="bookmark-status" name="statusCheck" />
-                    <span class="slider"></span>
-                </label>
-            </div>
 
+            <!-- Status Check & Touch Visibility on same row -->
             <div class="visibility-row">
                 <div class="checkbox-group">
-                    <label for="bookmark-mobile">${i18n.t('bookmark.visible_mobile')}</label>
+                    <label for="bookmark-status">${i18n.t('bookmark.monitor_status')}</label>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="bookmark-mobile" name="visibleMobile" checked />
+                        <input type="checkbox" id="bookmark-status" name="statusCheck" />
                         <span class="slider"></span>
                     </label>
                 </div>
 
                 <div class="checkbox-group">
-                    <label for="bookmark-tablet">${i18n.t('bookmark.visible_tablet')}</label>
+                    <label for="bookmark-touch">${i18n.t('bookmark.visible_touch')}</label>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="bookmark-tablet" name="visibleTablet" checked />
+                        <input type="checkbox" id="bookmark-touch" name="visibleTouch" checked />
                         <span class="slider"></span>
                     </label>
                 </div>
             </div>
+
             <div class="form-actions">
                 <app-button type="submit" variant="primary" class="btn-submit">${i18n.t('general.save')}</app-button>
             </div>

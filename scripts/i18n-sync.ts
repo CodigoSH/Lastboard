@@ -12,16 +12,11 @@ console.log(`📚 Master (EN) has ${masterKeys.length} keys.`);
 // FULL DICTIONARY FOR ALL 20 LANGUAGES
 // Keys: es, fr, de, it, pt, ru, zh, ja, ko, nl, pl, tr, id, ar, fa, el, hi, bn, ur
 const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
-    // --- Auth Updates (New) ---
-    "bookmark.visible_mobile": {
-        "es": "Visible en Móvil", "fr": "Visible sur Mobile", "it": "Visibile su Mobile", "pt": "Visível no Móvel", "de": "Sichtbar auf Mobil", "nl": "Zichtbaar op Mobiel",
-        "ru": "Виден на мобильном", "zh": "移动端可见", "ja": "モバイルで表示", "ko": "모바일에서 표시", "tr": "Mobilde Görünür", "pl": "Widoczne na mobilnym",
-        "id": "Terlihat di Seluler", "ar": "مرئي على الجوال", "fa": "قابل مشاهده در موبایل", "el": "Ορατό σε κινητό", "hi": "मोबाइल पर दृश्य", "bn": "মোবাইলে দৃশ্যমান", "ur": "موبائل پر نظر آنے والا"
-    },
-    "bookmark.visible_tablet": {
-        "es": "Visible en Tablet", "fr": "Visible sur Tablette", "it": "Visibile su Tablet", "pt": "Visível no Tablet", "de": "Sichtbar auf Tablet", "nl": "Zichtbaar op Tablet",
-        "ru": "Виден на планшете", "zh": "平板端可见", "ja": "タブレットで表示", "ko": "태블릿에서 표시", "tr": "Tablette Görünür", "pl": "Widoczne na tablecie",
-        "id": "Terlihat di Tablet", "ar": "مرئي على الجهاز اللوحي", "fa": "قابل مشاهده در تبلت", "el": "Ορατό σε tablet", "hi": "टैबलेट पर दृश्य", "bn": "ট্যাবলেটে দৃশ্যমান", "ur": "ٹیبلیٹ پر نظر آنے والا"
+    // --- Touch Visibility Toggle ---
+    "bookmark.visible_touch": {
+        "es": "Visible en Dispositivos Táctiles", "fr": "Visible sur les appareils tactiles", "it": "Visibile sui dispositivi touch", "pt": "Visível em Dispositivos Touch", "de": "Sichtbar auf Touch-Geräten", "nl": "Zichtbaar op aanraakapparaten",
+        "ru": "Видно на сенсорных устройствах", "zh": "触摸设备可见", "ja": "タッチデバイスで表示", "ko": "터치 기기에서 표시", "tr": "Dokunmatik Cihazlarda Görünür", "pl": "Widoczne na urządzeniach dotykowych",
+        "id": "Terlihat di Perangkat Sentuh", "ar": "مرئي على الأجهزة اللمسية", "fa": "قابل مشاهده در دستگاه‌های لمسی", "el": "Ορατό σε συσκευές αφής", "hi": "टच डिवाइस पर दृश्य", "bn": "টাচ ডিভাইসে দৃশ্যমান", "ur": "ٹچ ڈیوائسز پر نظر آنے والا"
     },
     "bookmark.label": {
         "es": "Título", "fr": "Titre", "it": "Titolo", "pt": "Título", "de": "Titel", "nl": "Titel",
