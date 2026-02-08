@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Ikon",
   "bookmark.monitor_status": "Pantau Status (Ping)",
-  "bookmark.visible_mobile": "Terlihat di Seluler",
-  "bookmark.visible_tablet": "Terlihat di Tablet",
+  "bookmark.visible_touch": "Terlihat di Perangkat Sentuh",
   "bookmark.placeholder_label": "Situs Saya yang Luar Biasa",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "Tambah Bagian",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Antarmuka / Arsitektur Grid",
   "settings.project_name": "Nama Proyek",
   "settings.project_name_desc": "Ditampilkan di bilah atas. Perubahan diterapkan segera.",
+  "settings.grid_columns": "Jumlah Kolom",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "Kolom PC",
   "settings.grid_tablet": "Kolom Tablet",
   "settings.grid_mobile": "Kolom Ponsel",
@@ -268,10 +269,10 @@
   "setup.error_username": "Nama pengguna minimal 3 karakter",
   "setup.error_password": "Kata sandi terlalu pendek (min 4 karakter)",
   "setup.error_connection": "Koneksi gagal. Periksa log.",
+  "bookmark.visible_mobile": "Terlihat di Seluler",
+  "bookmark.visible_tablet": "Terlihat di Tablet",
   "widget.clock.timezone": "Zona Waktu",
   "widget.clock.auto_detect": "Deteksi Otomatis",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Catatan",
-  "settings.grid_columns": "Jumlah Kolom",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Catatan"
 }

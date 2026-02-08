@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "آئیکن",
   "bookmark.monitor_status": "حالت کی نگرانی کریں (Ping)",
-  "bookmark.visible_mobile": "موبائل پر نظر آنے والا",
-  "bookmark.visible_tablet": "ٹیبلیٹ پر نظر آنے والا",
+  "bookmark.visible_touch": "ٹچ ڈیوائسز پر نظر آنے والا",
   "bookmark.placeholder_label": "میری بہترین سائٹ",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "سیکشن شامل کریں",
@@ -103,6 +102,8 @@
   "settings.interface_title": "انٹرفیس / گرڈ ڈھانچہ",
   "settings.project_name": "پروجیکٹ کا نام",
   "settings.project_name_desc": "اوپری بار میں دکھائے جانے والے ایپلیکیشن کا نام حسب ضرورت بنائیں۔",
+  "settings.grid_columns": "Column Count",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "پی سی کالم",
   "settings.grid_tablet": "ٹیبلٹ کالم",
   "settings.grid_mobile": "موبائل کالم",
@@ -268,10 +269,10 @@
   "setup.error_username": "صارف کا نام کم از کم 3 حروف کا ہونا چاہیے",
   "setup.error_password": "پاس ورڈ بہت مختصر ہے (کم از کم 4 حروف)",
   "setup.error_connection": "کنکشن ناکام ہوگیا۔ لاگز چیک کریں۔",
+  "bookmark.visible_mobile": "موبائل پر نظر آنے والا",
+  "bookmark.visible_tablet": "ٹیبلیٹ پر نظر آنے والا",
   "widget.clock.timezone": "ٹائم زون",
   "widget.clock.auto_detect": "خودکار شناخت",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "نوٹس",
-  "settings.grid_columns": "Column Count",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "نوٹس"
 }

@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Иконка",
   "bookmark.monitor_status": "Статус монитора (Пинг)",
-  "bookmark.visible_mobile": "Виден на мобильном",
-  "bookmark.visible_tablet": "Виден на планшете",
+  "bookmark.visible_touch": "Видно на сенсорных устройствах",
   "bookmark.placeholder_label": "Мой отличный сайт",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "Добавить раздел",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Интерфейс / Архитектура сетки",
   "settings.project_name": "Название проекта",
   "settings.project_name_desc": "Настройте имя приложения, отображаемое в верхней панели.",
+  "settings.grid_columns": "Количество столбцов",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "Столбцы ПК",
   "settings.grid_tablet": "Столбцы планшета",
   "settings.grid_mobile": "Столбцы мобильного",
@@ -268,10 +269,10 @@
   "setup.error_username": "Имя пользователя должно содержать не менее 3 символов",
   "setup.error_password": "Пароль слишком короткий (мин. 4 символа)",
   "setup.error_connection": "Ошибка подключения. Проверьте журналы.",
+  "bookmark.visible_mobile": "Виден на мобильном",
+  "bookmark.visible_tablet": "Виден на планшете",
   "widget.clock.timezone": "Часовой пояс",
   "widget.clock.auto_detect": "Автоопределение",
   "widget.clock.timezone_desc": "например, Europe/Moscow, UTC или 'local'",
-  "widget.notepad.name": "Заметки",
-  "settings.grid_columns": "Количество столбцов",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Заметки"
 }

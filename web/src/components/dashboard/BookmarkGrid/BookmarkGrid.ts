@@ -86,8 +86,22 @@ class BookmarkGrid extends HTMLElement {
                     try { content = JSON.parse(item.content); } catch { return false; }
                 }
 
-                // Touch Visibility Check (defaults to true for backward compatibility)
-                if (isTouch && content.visibleTouch === false) return false;
+                // Touch Visibility Check with Legacy Fallback
+                if (isTouch) {
+                    // NEW: Check if visibleTouch flag exists
+                    if (content.hasOwnProperty('visibleTouch')) {
+                        // Use new unified flag
+                        if (content.visibleTouch === false) return false;
+                    } else {
+                        // LEGACY FALLBACK: Check old mobile/tablet flags
+                        const width = window.innerWidth;
+                        const isMobile = width < 768;
+                        const isTablet = width >= 768;
+
+                        if (isMobile && content.visibleMobile === false) return false;
+                        if (isTablet && content.visibleTablet === false) return false;
+                    }
+                }
 
                 // Search Filter
                 if (this.searchQuery) {

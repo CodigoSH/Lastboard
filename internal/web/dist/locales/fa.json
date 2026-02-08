@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "آیکون",
   "bookmark.monitor_status": "نظارت بر وضعیت (پینگ)",
-  "bookmark.visible_mobile": "قابل مشاهده در موبایل",
-  "bookmark.visible_tablet": "قابل مشاهده در تبلت",
+  "bookmark.visible_touch": "قابل مشاهده در دستگاه‌های لمسی",
   "bookmark.placeholder_label": "سایت عالی من",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "افزودن بخش",
@@ -103,6 +102,8 @@
   "settings.interface_title": "رابط کاربری / معماری شبکه",
   "settings.project_name": "نام پروژه",
   "settings.project_name_desc": "نام برنامه نمایش داده شده در نوار بالا را سفارشی کنید.",
+  "settings.grid_columns": "تعداد ستون‌ها",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "ستون‌های PC",
   "settings.grid_tablet": "ستون‌های تبلت",
   "settings.grid_mobile": "ستون‌های موبایل",
@@ -268,10 +269,10 @@
   "setup.error_username": "نام کاربری باید حداقل ۳ کاراکتر باشد",
   "setup.error_password": "رمز عبور خیلی کوتاه است (حداقل 4 کاراکتر)",
   "setup.error_connection": "اتصال ناموفق بود. لاگ‌ها را بررسی کنید.",
+  "bookmark.visible_mobile": "قابل مشاهده در موبایل",
+  "bookmark.visible_tablet": "قابل مشاهده در تبلت",
   "widget.clock.timezone": "منطقه زمانی",
   "widget.clock.auto_detect": "تشخیص خودکار",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "یادداشت‌ها",
-  "settings.grid_columns": "تعداد ستون‌ها",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "یادداشت‌ها"
 }

@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Icoon",
   "bookmark.monitor_status": "Status monitoren (Ping)",
-  "bookmark.visible_mobile": "Zichtbaar op Mobiel",
-  "bookmark.visible_tablet": "Zichtbaar op Tablet",
+  "bookmark.visible_touch": "Zichtbaar op aanraakapparaten",
   "bookmark.placeholder_label": "Mijn geweldige site",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "Sectie toevoegen",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Interface / Grid Architectuur",
   "settings.project_name": "Projectnaam",
   "settings.project_name_desc": "Weergegeven in de bovenbalk. Wijzigingen worden direct toegepast.",
+  "settings.grid_columns": "Aantal kolommen",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "PC Kolommen",
   "settings.grid_tablet": "Tablet Kolommen",
   "settings.grid_mobile": "Mobiele Kolommen",
@@ -268,10 +269,10 @@
   "setup.error_username": "Gebruikersnaam moet minimaal 3 tekens bevatten",
   "setup.error_password": "Wachtwoord te kort (min 4 tekens)",
   "setup.error_connection": "Verbinding mislukt. Controleer logboeken.",
+  "bookmark.visible_mobile": "Zichtbaar op Mobiel",
+  "bookmark.visible_tablet": "Zichtbaar op Tablet",
   "widget.clock.timezone": "Tijdzone",
   "widget.clock.auto_detect": "Automatisch detecteren",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Notities",
-  "settings.grid_columns": "Aantal kolommen",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Notities"
 }
