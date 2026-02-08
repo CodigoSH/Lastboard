@@ -64,8 +64,8 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
 
-    /* Responsive Padding (REM) */
-    padding: clamp(0.25rem, 2cqmin, 0.75rem) !important;
+    /* Responsive Padding (REM) -> CQMIN for true scaling */
+    padding: 6cqmin !important;
 
     position: relative;
     /* aspect-ratio: 1 / 1;  <-- REMOVED: let grid-auto-rows control height */
@@ -82,7 +82,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(0.25rem, 3cqmin, 1rem);
+    gap: 4cqmin;
 
     text-decoration: none;
     color: var(--text-main);
@@ -114,10 +114,10 @@
 /* Status Indicator */
 .status-indicator {
     position: absolute;
-    bottom: clamp(10px, 6cqmin, 24px);
-    right: clamp(10px, 6cqmin, 24px);
-    width: clamp(10px, 5cqmin, 20px);
-    height: clamp(10px, 5cqmin, 20px);
+    bottom: 8cqmin;
+    right: 8cqmin;
+    width: 6cqmin;
+    height: 6cqmin;
     border-radius: 50%;
     background-color: var(--text-dim);
     border: 1.5px solid var(--panel);
@@ -252,9 +252,9 @@
 /* Edit Mode Grid Guide - (Visuals removed for cleanliness) */
 
 .bookmark-grid__icon-container {
-    /* Responsive ICON Size: Was 48px MIN, now 32px to allow shrinking */
-    width: clamp(32px, 40cqmin, 180px);
-    height: clamp(32px, 40cqmin, 180px);
+    /* Responsive ICON Size: 40% of container width/height */
+    width: 45cqmin;
+    height: 45cqmin;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -270,8 +270,8 @@
 }
 
 .bookmark-grid__label {
-    /* Responsive Font Size: Was 14px MIN, now 11px */
-    font-size: clamp(11px, 8cqmin, 32px);
+    /* Responsive Font Size: 11% of container */
+    font-size: 11cqmin;
     font-weight: 600;
     text-align: center;
     line-height: 1.2;
