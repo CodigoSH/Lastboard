@@ -1,6 +1,7 @@
 import { template } from './Button.template';
 // @ts-ignore
 import css from './Button.css' with { type: 'text' };
+import { i18n } from '../../../services/i18n';
 
 class AppButton extends HTMLElement {
     static get observedAttributes() {
@@ -51,7 +52,7 @@ class AppButton extends HTMLElement {
     render() {
         const variant = this.getAttribute('variant') || 'ghost';
         // Simple loading text replacement for now
-        const content = this._loading ? 'Loading...' : '<slot></slot>';
+        const content = this._loading ? i18n.t('general.loading') : '<slot></slot>';
 
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
@@ -65,3 +66,4 @@ class AppButton extends HTMLElement {
 if (!customElements.get('app-button')) {
     customElements.define('app-button', AppButton);
 }
+

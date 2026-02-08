@@ -281,8 +281,6 @@ class DashboardStore {
             // Optimistic update
             const itemIndex = this.state.items.findIndex(item => item.id === updatedItem.id);
 
-            // console.log('[DashboardStore] Updating item', updatedItem.id, 'Found index:', itemIndex);
-
             if (itemIndex === -1) {
                 console.warn('[DashboardStore] Item not found for update:', updatedItem.id);
                 return;
@@ -318,8 +316,6 @@ class DashboardStore {
         const item = this.state.items.find(i => i.id === id);
         if (!item) return;
 
-        // console.log(`[DashboardStore] Resizing item ${id} to ${w}x${h}`);
-
         // 1. Update the Container First
         await this.updateItem({ id, w, h });
 
@@ -339,8 +335,6 @@ class DashboardStore {
 
         if (children.length === 0) return;
 
-        // console.log(`[DashboardStore] Reflowing ${children.length} children for parent ${parentId}`);
-
         const placedItems: { x: number, y: number, w: number, h: number }[] = [];
 
         for (const child of children) {
@@ -349,7 +343,6 @@ class DashboardStore {
             placedItems.push({ x: slot.x, y: slot.y, w: child.w, h: child.h });
 
             if (child.x !== slot.x || child.y !== slot.y) {
-                // console.log(`[DashboardStore] Reflow moving child ${child.id} to ${slot.x},${slot.y}`);
                 await this.updateItem({
                     id: child.id,
                     x: slot.x,
@@ -361,7 +354,6 @@ class DashboardStore {
 
     async addItem(newItem: Omit<GridItem, 'id' | 'created_at'>): Promise<GridItem | undefined> {
         try {
-            // console.log('[DashboardStore] Adding item:', newItem);
             this.ensureItemsIsArray();
 
             // Sync with backend FIRST
@@ -407,7 +399,6 @@ class DashboardStore {
 
                 // Add the REAL item from backend
                 this.state.items.push(createdItem);
-                // console.log('[DashboardStore] Item added (Synced), new length:', this.state.items.length);
                 this.saveToLocalStorage();
                 this.notify();
                 return createdItem;
@@ -440,8 +431,6 @@ class DashboardStore {
 
             // Optimistic delete
             const itemIndex = this.state.items.findIndex(item => item.id === id);
-
-            // console.log('[DashboardStore] Deleting item', id, 'Found index:', itemIndex);
 
             if (itemIndex === -1) {
                 console.warn('[DashboardStore] Item not found for deletion:', id);

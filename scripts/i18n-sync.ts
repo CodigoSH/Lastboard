@@ -486,6 +486,11 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "pt": "Não autorizado", "ru": "Не авторизован", "zh": "未授权", "ja": "権限がありません",
         "ko": "권한이 없습니다", "ar": "غير مصرح"
     },
+    "general.loading": {
+        "es": "Cargando...", "fr": "Chargement...", "it": "Caricamento...", "pt": "Carregando...", "de": "Laden...", "nl": "Laden...",
+        "ru": "Загрузка...", "zh": "加载中...", "ja": "読み込み中...", "ko": "로딩 중...", "tr": "Yükleniyor...", "pl": "Ładowanie...",
+        "id": "Memuat...", "ar": "جار التحميل...", "fa": "در حال بارگذاری...", "el": "Φόρτωση...", "hi": "लोड हो रहा है...", "bn": "লোড হচ্ছে...", "ur": "لوڈ ہو رہا ہے..."
+    },
     "notifier.user_deleted": {
         "es": "Usuario eliminado", "fr": "Utilisateur supprimé", "de": "Benutzer gelöscht", "it": "Utente eliminato",
         "pt": "Utilizador eliminado", "ru": "Пользователь удален", "zh": "用户已删除", "ja": "ユーザーを削除しました"

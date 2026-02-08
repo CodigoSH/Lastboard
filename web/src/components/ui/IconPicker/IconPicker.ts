@@ -12,8 +12,6 @@ class IconPicker extends HTMLElement {
 
     private debounceTimer: number | null = null;
     private inputElement: HTMLInputElement | null = null;
-    // Debug ID
-    private id_debug = Math.random().toString(36).substr(2, 5);
 
     constructor() {
         super();
@@ -47,7 +45,7 @@ class IconPicker extends HTMLElement {
             this.updateGrid();
 
         } catch (error) {
-            console.error(`[IconPicker:${this.id_debug}] Failed to load icons`, error);
+            console.error('[IconPicker] Failed to load icons', error);
             this.isLoading = false;
             this.updateGrid();
         }

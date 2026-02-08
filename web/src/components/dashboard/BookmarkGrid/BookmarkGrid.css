@@ -523,3 +523,23 @@
     height: 100%;
     align-content: start;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Nested Cards — compact layout so label is never clipped
+   ═══════════════════════════════════════════════════════════════ */
+.bookmark-grid__nested-content .bookmark-grid__card {
+    padding: 6% 4% !important;
+}
+
+/* Icon container: shrinkable so label always fits */
+.bookmark-grid__nested-content .bookmark-grid__icon-container {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Label: never shrinks, always visible */
+.bookmark-grid__nested-content .bookmark-grid__label {
+    flex-shrink: 0;
+    font-size: clamp(9px, 9cqi, 14px);
+}
