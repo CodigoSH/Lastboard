@@ -41,45 +41,13 @@ class BookmarkGrid extends HTMLElement {
     private isTouchDevice: boolean = false;
 
     constructor() {
+        // CRITICAL: Custom Element constructors must NOT modify attributes or
+        // children.  Doing so (e.g. classList.add, render) violates the spec
+        // and causes Chrome to silently discard the element on mobile/tablet
+        // where touch detection triggers those calls.
+        // All DOM-touching logic is deferred to connectedCallback().
         super();
         this.attachShadow({ mode: 'open' });
-
-        // ── Robust Mobile/Touch Detection ──
-        // Multiple signals: ANY one being true → touch mode
-        const detectTouch = (): boolean => {
-            const narrowScreen = window.innerWidth < 768;
-            const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-            const hasTouchEvents = 'ontouchstart' in window;
-            const hasTouchPoints = navigator.maxTouchPoints > 0;
-
-            const result = narrowScreen || coarsePointer || hasTouchEvents || hasTouchPoints;
-
-            console.log(`[DEBUG] detectTouch: width=${window.innerWidth}, narrow=${narrowScreen}, coarse=${coarsePointer}, ontouchstart=${hasTouchEvents}, maxTouchPoints=${navigator.maxTouchPoints}, RESULT=${result}`);
-
-            return result;
-        };
-
-        const updateState = () => {
-            const isMobile = detectTouch();
-
-            if (this.isTouchDevice !== isMobile) {
-                this.isTouchDevice = isMobile;
-                if (isMobile) {
-                    this.classList.add('touch-mode');
-                } else {
-                    this.classList.remove('touch-mode');
-                }
-                this.applyFilters();
-                this.render();
-            }
-        };
-
-        // Listen for standard events
-        window.addEventListener('resize', updateState);
-        window.addEventListener('orientationchange', updateState);
-
-        // Initial check
-        updateState();
     }
 
 
@@ -142,22 +110,43 @@ class BookmarkGrid extends HTMLElement {
     }
 
     connectedCallback() {
-        // Apply filters BEFORE first render to ensure correct visibility
+        // ── Touch Detection (moved from constructor) ──
+        // Custom Element spec forbids attribute/child modification in constructor.
+        // On touch devices detectTouch()→true caused classList.add + render in
+        // constructor, which made Chrome silently discard the element.
+        const detectTouch = (): boolean => {
+            const narrowScreen = window.innerWidth < 768;
+            const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+            const hasTouchEvents = 'ontouchstart' in window;
+            const hasTouchPoints = navigator.maxTouchPoints > 0;
+            return narrowScreen || coarsePointer || hasTouchEvents || hasTouchPoints;
+        };
+
+        const updateTouchState = () => {
+            const isMobile = detectTouch();
+            if (this.isTouchDevice !== isMobile) {
+                this.isTouchDevice = isMobile;
+                if (isMobile) {
+                    this.classList.add('touch-mode');
+                } else {
+                    this.classList.remove('touch-mode');
+                }
+                this.applyFilters();
+                this.render();
+            }
+        };
+
+        window.addEventListener('resize', updateTouchState);
+        window.addEventListener('orientationchange', updateTouchState);
+
+        // Initial touch check + first render
+        this.isTouchDevice = detectTouch();
+        if (this.isTouchDevice) {
+            this.classList.add('touch-mode');
+        }
         this.applyFilters();
         this.render();
         this.updateGridMetrics();
-
-        // ── Delayed debug: re-check dimensions after layout settles ──
-        setTimeout(() => {
-            if (typeof (window as any).__gridDbg === 'function') {
-                const rect = this.getBoundingClientRect();
-                (window as any).__gridDbg(
-                    `[AFTER-LAYOUT] hostSize=${Math.round(rect.width)}x${Math.round(rect.height)}, ` +
-                    `parentSize=${this.parentElement ? Math.round(this.parentElement.getBoundingClientRect().width) + 'x' + Math.round(this.parentElement.getBoundingClientRect().height) : 'none'}, ` +
-                    `isTouchDevice=${this.isTouchDevice}, items=${this.allItems.length}, filtered=${this.bookmarks.length}`
-                );
-            }
-        }, 500);
 
         this._resizeObserver = new ResizeObserver(() => {
             // Debounce for ~60fps performance (16ms)
