@@ -413,7 +413,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.4-beta.2'; // Should be sync with backend or injected
+    private version = 'v1.1.4-beta.3'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 
