@@ -22,7 +22,7 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice, max
     const getChildren = (parentId: number) => safeBookmarks.filter(b => b.parent_id === parentId);
 
     const rootItems = isTouchDevice
-        ? safeBookmarks  // Already filtered by applyFilters() to bookmarks only
+        ? safeBookmarks  // Filtered to type=bookmark only by applyFilters()
         : (isSearching ? safeBookmarks : safeBookmarks.filter(b => !b.parent_id));
 
     return `
@@ -52,7 +52,7 @@ export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice, max
                style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH};">
                ${title ? `<legend class="section-title">${esc(title)}</legend>` : ''}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
-                   ${renderBookmarks(children, isEditing, true, clampedW)}
+                   ${renderBookmarks(children, isEditing, true, clampedW, isTouchDevice)}
                </div>
                ${isEditing ? `
                 <div class="bookmark-actions">
@@ -148,7 +148,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
     `;
 }
 
-function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: boolean = false, parentCols: number = 12) {
+function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: boolean = false, parentCols: number = 12, isTouchDevice: boolean = false) {
     // Strictly render children at their relative coordinates
     return bookmarks.map(b => {
         let data: any = {};
@@ -162,6 +162,6 @@ function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: bo
         const displayH = b.h || 1;
         const clampedW = Math.min(b.w || 1, parentCols);
 
-        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH);
+        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice);
     }).join('');
 }

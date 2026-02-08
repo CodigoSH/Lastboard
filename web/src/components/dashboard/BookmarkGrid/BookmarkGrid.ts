@@ -79,48 +79,43 @@ class BookmarkGrid extends HTMLElement {
 
     private applyFilters() {
         const isTouch = this.isTouchDevice;
+        const isSearching = !!this.searchQuery;
 
-        if (this.searchQuery || isTouch) {
+        // search-active CSS class: ONLY for desktop search (grid → auto-flow)
+        // Touch mode has its own layout via .touch-mode class
+        if (isSearching && !isTouch) {
             this.classList.add('search-active');
+        } else {
+            this.classList.remove('search-active');
+        }
 
+        if (isTouch || isSearching) {
             this.bookmarks = this.allItems.filter(item => {
-                // Allow ALL types (Sections/Widgets/Bookmarks) to pass through filter
-                // We rely on CSS to hide sections in 'touch-mode' if desired, 
-                // OR we let them render if the user wants them.
-                // The previous check `if (item.type !== 'bookmark') return false` was too aggressive
-                // and hid everything if the user had nested content.
-
                 let content: any = item.content;
                 if (typeof item.content === 'string') {
-                    try { content = JSON.parse(item.content); } catch { return false; }
-                }
-
-                // Visibility Check
-                if (isTouch) {
-                    // Modern Flag (defaults to true if undefined)
-                    if (content.visibleTouch === false) return false;
-
-                    // Legacy Fallback (only if visibleTouch is undefined)
-                    if (content.visibleTouch === undefined) {
-                        const isMobileWidth = window.innerWidth < 768;
-                        if (isMobileWidth && content.visibleMobile === false) return false;
-                        if (!isMobileWidth && content.visibleTablet === false) return false;
+                    try { content = JSON.parse(item.content); } catch {
+                        console.warn('[BookmarkGrid] Skipping item with invalid content:', item.id);
+                        return false;
                     }
                 }
 
-                // Search Filter
-                if (this.searchQuery) {
+                // Touch mode: only show bookmarks (widgets/sections are excluded)
+                // Nested bookmarks (parent_id set) have type 'bookmark' so they pass
+                if (isTouch && item.type !== 'bookmark') return false;
+
+                // Touch visibility: visibleTouch flag (defaults to true if undefined)
+                if (isTouch && content.visibleTouch === false) return false;
+
+                // Search filter (applies on both desktop and touch)
+                if (isSearching) {
                     const searchText = (content.label || '').toLowerCase();
                     return searchText.includes(this.searchQuery);
                 }
 
                 return true;
             });
-
-            console.log('[BookmarkGrid] After filtering:', this.bookmarks.length, 'bookmarks visible');
         } else {
-            // Desktop Mode (Non-Touch) -> Show All (Grid)
-            this.classList.remove('search-active');
+            // Desktop Mode (Non-Touch, Non-Search) -> Show All (Grid)
             this.bookmarks = this.allItems;
         }
     }
@@ -345,6 +340,12 @@ class BookmarkGrid extends HTMLElement {
     }
 
     ensureGridBuffer() {
+        // Touch mode uses flex layout - no grid buffer needed
+        if (this.isTouchDevice) {
+            this.style.minHeight = '';
+            return;
+        }
+
         // Find the lowest item (highest y + h value)
         let maxY = 0;
         this.bookmarks.forEach(item => {
