@@ -13,6 +13,26 @@
             API_BASE_URL: '', // Root-relative for local Go server
             DEBUG_MODE: false
         };
+        // ── GLOBAL ERROR TRAP: catches ANY JS crash and shows it on screen ──
+        window.__ERRORS = [];
+        window.onerror = function(msg, src, line, col, err) {
+            window.__ERRORS.push(msg + ' at ' + src + ':' + line + ':' + col);
+            showErrors();
+        };
+        window.addEventListener('unhandledrejection', function(e) {
+            window.__ERRORS.push('Promise: ' + (e.reason && e.reason.stack || e.reason));
+            showErrors();
+        });
+        function showErrors() {
+            var d = document.getElementById('error-trap');
+            if (!d) {
+                d = document.createElement('div');
+                d.id = 'error-trap';
+                d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#1a0000;color:#ff4444;font:12px/1.5 monospace;padding:12px;max-height:50vh;overflow:auto;border-bottom:2px solid #ff0000;';
+                document.body.prepend(d);
+            }
+            d.innerHTML = '<b>JS ERRORS (' + window.__ERRORS.length + '):</b><br>' + window.__ERRORS.map(function(e,i){return (i+1)+'. '+e;}).join('<br>');
+        }
     </script>
     <script type="module" src="bundle.js?v=1770565948"></script>
 </head>
