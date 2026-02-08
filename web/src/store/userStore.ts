@@ -59,7 +59,7 @@ class UserStore {
                 accent_color: userData.accent_color || 'blue',
                 language: userData.language || 'en',
                 theme: userData.theme, // Map theme from backend!
-                widget_min_width: userData.widget_min_width || 140,
+                grid_columns: userData.grid_columns || 12, // Default 12
                 project_name: userData.project_name || 'Lastboard',
                 beta_updates: userData.beta_updates
             },
@@ -75,13 +75,12 @@ class UserStore {
         const prefs = this.user.preferences;
         const root = document.documentElement;
 
-        // Apply grid columns
-        // Apply fluid grid widget min size
-        if (prefs.widget_min_width) {
-            root.style.setProperty('--user-preferred-min-size', `${prefs.widget_min_width}px`);
+        // Apply Fixed Grid Columns
+        if (prefs.grid_columns) {
+            root.style.setProperty('--user-preferred-columns', `${prefs.grid_columns}`);
         } else {
             // Fallback default
-            root.style.setProperty('--user-preferred-min-size', '140px');
+            root.style.setProperty('--user-preferred-columns', '12'); // Default 12 columns
         }
 
         // Apply accent color
@@ -121,7 +120,7 @@ class UserStore {
         if (newPrefs.language) this.user.language = newPrefs.language;
         if (newPrefs.project_name) this.user.project_name = newPrefs.project_name;
         if (newPrefs.theme) this.user.preferences.theme = newPrefs.theme; // Ensure nested pref is updated for immediate effect
-        if (newPrefs.widget_min_width) this.user.preferences.widget_min_width = newPrefs.widget_min_width;
+        if (newPrefs.grid_columns) this.user.preferences.grid_columns = newPrefs.grid_columns;
         if (newPrefs.beta_updates !== undefined) this.user.preferences.beta_updates = newPrefs.beta_updates;
 
         this.applyAesthetics();
@@ -134,7 +133,7 @@ class UserStore {
                 accent_color: this.user.accent_color,
                 language: this.user.language,
                 theme: this.user.preferences.theme,
-                widget_min_width: this.user.preferences.widget_min_width,
+                grid_columns: this.user.preferences.grid_columns,
                 project_name: this.user.project_name,
                 beta_updates: this.user.preferences.beta_updates
             };

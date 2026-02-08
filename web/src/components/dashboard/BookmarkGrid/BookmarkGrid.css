@@ -1,33 +1,20 @@
 :host {
-    /* Fluid Grid System */
-    /* --user-preferred-min-size is set by JS on :root */
-    --widget-min-size: var(--user-preferred-min-size, 140px);
-
-    /* Large Screen Scaling: Maintain density by increasing widget size */
-    @media (min-width: 1800px) {
-        --widget-min-size: calc(var(--user-preferred-min-size, 140px) * 1.25);
-    }
-
-    @media (min-width: 2400px) {
-        --widget-min-size: calc(var(--user-preferred-min-size, 140px) * 1.5);
-    }
-
-    /* JS fallback in updateGridMetrics(): parseFloat(minSizeStr) || 140 */
-
+    /* Fixed Grid System */
+    /* --user-preferred-columns is set by JS on :root (Default: 12) */
+    --grid-cols: var(--user-preferred-columns, 12);
 
     display: grid;
-    /* Explicit columns calculated by JS */
-    grid-template-columns: repeat(var(--current-grid-cols, 12), 1fr);
+    /* Fixed columns based on user preference */
+    grid-template-columns: repeat(var(--grid-cols), 1fr);
+
     /* Rows track auto, but generally square via aspect ratio */
     /* FORCE Square cells: row-height is synced to colWidth in JS */
     grid-auto-rows: var(--row-height, 100px);
 
     gap: 16px;
-    /* Fixed gap for reliable DnD coordinate calculations */
     width: 100%;
     margin: 0 auto;
     padding-bottom: 6rem;
-    /* Bottom buffer */
 
     /* Hide scrollbars */
     scrollbar-width: none !important;
@@ -41,13 +28,28 @@
     display: none !important;
 }
 
-/* Base Mobile/Touch Tweaks (Optional overrides, but keep grid fluid) */
-@media (max-width: 640px) {
-    :host {
-        /* On very small screens, allow smaller minimums */
-        --widget-min-size: 100px;
-        gap: 0.75rem;
-    }
+/* Touch Mode / Mobile (Flat List) */
+:host(.touch-mode) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px;
+}
+
+:host(.touch-mode) .bookmark-grid__card {
+    /* Auto-flow on mobile */
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100%;
+    height: auto;
+    aspect-ratio: auto;
+    min-height: 80px;
+    /* Optimize touch targets */
+}
+
+/* Hide sections in touch mode (content is flattened) */
+:host(.touch-mode) .bookmark-grid__section {
+    display: none !important;
 }
 
 /* Items positioned by coordinates */
