@@ -34,8 +34,8 @@ function success_msg() {
 }
 
 # Fetch latest version for banner (Fail gracefully)
-# This is just for display, actual version choice happens later
-LATEST_VERSION=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=1 | grep '"tag_name":' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+# Using Proxy to avoid GitHub Rate Limits
+LATEST_VERSION=$(curl -s "https://api-updates.codigosh.com/api/v1/check-update?beta=true" | sed -n 's/.*"latest_version":"\([^"]*\)".*/\1/p')
 if [ -z "$LATEST_VERSION" ]; then
     LATEST_VERSION="latest"
 fi
@@ -150,12 +150,14 @@ status_msg "Downloading latest version..."
 
 # Determine release tag based on user preference
 if [ "$RELEASE_CHANNEL" = "beta" ]; then
-    # Fetch latest release (including pre-releases)
-    RELEASE_TAG=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=1 | grep '"tag_name":' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+    # Fetch latest beta from Proxy
+    status_msg "Checking for latest beta version via Proxy..."
+    RELEASE_TAG=$(curl -s "https://api-updates.codigosh.com/api/v1/check-update?beta=true" | sed -n 's/.*"latest_version":"\([^"]*\)".*/\1/p')
     status_msg "Installing latest beta: $RELEASE_TAG"
 else
-    # Fetch latest stable release (excludes pre-releases)
-    RELEASE_TAG=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    # Fetch latest stable from Proxy
+    status_msg "Checking for latest stable version via Proxy..."
+    RELEASE_TAG=$(curl -s "https://api-updates.codigosh.com/api/v1/check-update?beta=false" | sed -n 's/.*"latest_version":"\([^"]*\)".*/\1/p')
     status_msg "Installing latest stable: $RELEASE_TAG"
 fi
 
