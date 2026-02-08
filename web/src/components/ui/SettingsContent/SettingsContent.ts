@@ -33,7 +33,19 @@ class SettingsContent extends HTMLElement {
         };
     }
 
+    private unsubscribe: (() => void) | null = null;
+
     connectedCallback() {
+        this.unsubscribe = userStore.subscribe(user => {
+            if (user && user.preferences) {
+                this.prefs = {
+                    ...user.preferences,
+                    project_name: user.project_name || user.preferences.project_name || 'Lastboard'
+                };
+                this.render();
+            }
+        });
+
         // Trigger fetch which performs the actual state sync
         this.fetchPrefs();
         const section = this.getAttribute('section');
@@ -44,6 +56,13 @@ class SettingsContent extends HTMLElement {
             this.checkForUpdates();
         }
         this.render();
+    }
+
+    disconnectedCallback() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+            this.unsubscribe = null;
+        }
     }
 
     async fetchPrefs() {
@@ -413,7 +432,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.4-beta.8'; // Should be sync with backend or injected
+    private version = 'v1.1.4-beta.9'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 
