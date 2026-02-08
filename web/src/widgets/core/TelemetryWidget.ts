@@ -151,22 +151,27 @@ class TelemetryWidget extends HTMLElement {
                     border-radius: var(--radius);
                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     box-sizing: border-box;
-                    padding: 12px;
+                    padding: 4%; /* Proportional padding */
                     color: var(--text-main);
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    container-type: inline-size; /* Enable CQ */
                 }
                 /* Combined with container hover, we don't need specific host hover */
                 .gauge-container {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 8px;
+                    justify-content: center;
+                    gap: 8%;
                     flex: 1;
+                    height: 100%; /* Ensure full height usage */
                 }
                 .wrapper {
                     position: relative;
-                    width: 64px;
-                    height: 64px;
+                    width: 70%;  /* Relative to gauge-container */
+                    height: auto;
+                    aspect-ratio: 1/1; /* Square */
+                    max-height: 80%; /* Don't overflow */
                 }
                 .circular-chart {
                     width: 100%;
@@ -195,14 +200,14 @@ class TelemetryWidget extends HTMLElement {
                     left: 50%;
                     transform: translate(-50%, -50%);
                     font-family: var(--font-mono, 'JetBrains Mono', monospace);
-                    font-size: 13px;
+                    font-size: clamp(10px, 3.5cqi, 16px); /* Proportional Font */
                     font-weight: 800;
                     text-align: center;
                     text-shadow: 0 4px 8px rgba(0,0,0,0.5);
                     user-select: none;
                 }
                 .sub {
-                    font-size: 11px;
+                    font-size: clamp(8px, 2.5cqi, 12px); /* Proportional Font */
                     color: var(--text-dim);
                     font-weight: 800;
                     text-transform: uppercase;
