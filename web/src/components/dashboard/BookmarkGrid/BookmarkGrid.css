@@ -64,8 +64,8 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
 
-    /* Responsive Padding (REM) -> CQMIN for true scaling */
-    padding: 6cqmin !important;
+    /* Responsive Padding */
+    padding: 8% 4% !important;
 
     position: relative;
     /* aspect-ratio: 1 / 1;  <-- REMOVED: let grid-auto-rows control height */
@@ -81,15 +81,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 4cqmin;
+    justify-content: flex-start;
+    /* Start from top, let flex-1 push down */
+    gap: 0;
 
     text-decoration: none;
     color: var(--text-main);
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     box-sizing: border-box;
     overflow: hidden;
-    container-type: size;
+    container-type: inline-size;
     z-index: 10;
 }
 
@@ -114,10 +115,10 @@
 /* Status Indicator */
 .status-indicator {
     position: absolute;
-    bottom: 8cqmin;
-    right: 8cqmin;
-    width: 6cqmin;
-    height: 6cqmin;
+    bottom: 8%;
+    right: 8%;
+    width: 8%;
+    height: 8%;
     border-radius: 50%;
     background-color: var(--text-dim);
     border: 1.5px solid var(--panel);
@@ -252,15 +253,15 @@
 /* Edit Mode Grid Guide - (Visuals removed for cleanliness) */
 
 .bookmark-grid__icon-container {
-    /* Responsive ICON Size: 40% of container width/height */
-    width: 45cqmin;
-    height: 45cqmin;
+    /* Layout: Takes remaining space to center icon vertically */
+    width: 100%;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+
     color: var(--text-dim);
     transition: color 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* Bouncy transition */
 }
 
 .bookmark-grid__card:hover .bookmark-grid__icon-container {
@@ -270,28 +271,56 @@
 }
 
 .bookmark-grid__label {
-    /* Responsive Font Size: 11% of container */
-    font-size: 11cqmin;
-    font-weight: 600;
+    /* wrapper restored */
+    /* Responsive Font Size: Controlled scaling for elegance */
+    /* Never smaller than 11px, never larger than 18px (standard desktop icon size) */
+    font-size: clamp(11px, 11cqi, 18px);
+
+    font-weight: 500;
     text-align: center;
-    line-height: 1.2;
-    padding: 0 4px;
-    /* Reduced side padding */
+    line-height: 1.4;
+    width: 100%;
+
+    /* Spacing */
+    padding: 0 6px;
+    margin-top: 0;
+    /* Handled by flex gap/grow */
+
+    /* Professional Truncation (No multi-line mess) */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* Typography Polish */
     font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    color: var(--text-dim);
+    transition: color 0.2s;
+}
+
+/* Highlight label on hover */
+.bookmark-grid__card:hover .bookmark-grid__label {
+    color: var(--text-main);
 }
 
 .bookmark-grid__icon-svg {
-    width: 100%;
-    height: 100%;
+    /* Icon Size: 45% of CARD width */
+    width: 45%;
+    height: auto;
+    aspect-ratio: 1/1;
     stroke: currentColor;
     stroke-width: 1.5px;
     fill: none;
+    max-height: 80%;
 }
 
 .bookmark-grid__icon-img {
-    width: 100%;
-    height: 100%;
+    /* Icon Size: 45% of CARD width */
+    width: 45%;
+    height: auto;
+    aspect-ratio: 1/1;
     object-fit: contain;
+    max-height: 80%;
 }
 
 /* Ensure all injected SVGs inherit hover colors */
@@ -432,7 +461,3 @@
     height: 100%;
     align-content: start;
 }
-
-/* Premium Nested Card Style */
-/* Nested Card Style - Removed to enforce consistency with root cards */
-/* They will now inherit .bookmark-grid__card styles */

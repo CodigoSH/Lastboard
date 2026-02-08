@@ -163,23 +163,26 @@ class ClockWidget extends HTMLElement {
                     color: var(--text-main);
                     border-radius: var(--radius);
                     box-sizing: border-box;
-                    padding: 16px;
+                    padding: 8%; /* Percentage padding */
                     user-select: none;
                     position: relative;
+                    container-type: inline-size; /* Enable CQ */
                 }
                 .time {
-                    font-size: 2.5rem;
+                    font-size: clamp(1.5rem, 22cqi, 5rem); /* Proportional scaling */
                     font-weight: 700;
                     letter-spacing: -0.05em;
                     line-height: 1;
                     font-variant-numeric: tabular-nums;
                     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    white-space: nowrap;
                 }
                 .date {
-                    font-size: 0.9rem;
+                    font-size: clamp(0.6rem, 7cqi, 1.4rem); /* Proportional scaling */
                     color: var(--text-dim);
-                    margin-top: 4px;
+                    margin-top: 4%;
                     font-weight: 500;
+                    white-space: nowrap;
                 }
             </style>
             
