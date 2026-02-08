@@ -1,6 +1,17 @@
 :host {
     /* Fluid Grid System */
-    /* --widget-min-size now inherits from :root (set by user preference) */
+    /* --user-preferred-min-size is set by JS on :root */
+    --widget-min-size: var(--user-preferred-min-size, 140px);
+
+    /* Large Screen Scaling: Maintain density by increasing widget size */
+    @media (min-width: 1800px) {
+        --widget-min-size: calc(var(--user-preferred-min-size, 140px) * 1.25);
+    }
+
+    @media (min-width: 2400px) {
+        --widget-min-size: calc(var(--user-preferred-min-size, 140px) * 1.5);
+    }
+
     /* JS fallback in updateGridMetrics(): parseFloat(minSizeStr) || 140 */
 
 

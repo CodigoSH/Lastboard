@@ -78,7 +78,10 @@ class UserStore {
         // Apply grid columns
         // Apply fluid grid widget min size
         if (prefs.widget_min_width) {
-            root.style.setProperty('--widget-min-size', `${prefs.widget_min_width}px`);
+            root.style.setProperty('--user-preferred-min-size', `${prefs.widget_min_width}px`);
+        } else {
+            // Fallback default
+            root.style.setProperty('--user-preferred-min-size', '140px');
         }
 
         // Apply accent color
