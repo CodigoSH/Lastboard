@@ -88,7 +88,8 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=10") // Fetch more to be safe
 		if err != nil {
 			log.Printf("[Update] Failed to fetch GitHub releases: %v", err)
-			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
+			// RETURN SYSTEM INFO ANYWAY
+			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
 			return
 		}
 		defer resp.Body.Close()
@@ -102,7 +103,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		var releases []GithubRelease
 		if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil || len(releases) == 0 {
 			log.Printf("[Update] Failed to decode releases or empty list.")
-			http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
 			return
 		}
 
@@ -125,7 +126,8 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		// Beta Updates Disabled: Fetch 'latest' stable release
 		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases/latest")
 		if err != nil {
-			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
+			// RETURN SYSTEM INFO ANYWAY
+			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
 			return
 		}
 		defer resp.Body.Close()
@@ -136,7 +138,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-			http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
 			return
 		}
 
