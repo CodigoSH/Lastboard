@@ -115,7 +115,7 @@
 /* Status Indicator */
 .status-indicator {
     position: absolute;
-    bottom: 8%;
+    top: 8%;
     right: 8%;
     width: 8%;
     height: 8%;
