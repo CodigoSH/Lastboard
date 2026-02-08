@@ -47,13 +47,23 @@ class BookmarkGrid extends HTMLElement {
         // Detect Touch Device
         const mediaQuery = window.matchMedia('(pointer: coarse)');
         this.isTouchDevice = mediaQuery.matches;
+        this.updateTouchMode();
 
         // Listen for changes (e.g. docking/undocking on hybrids)
         mediaQuery.addEventListener('change', (e) => {
             this.isTouchDevice = e.matches;
+            this.updateTouchMode();
             this.applyFilters();
             this.render();
         });
+    }
+
+    private updateTouchMode() {
+        if (this.isTouchDevice) {
+            this.classList.add('touch-mode');
+        } else {
+            this.classList.remove('touch-mode');
+        }
     }
 
     private _widgetModal: any; // widget-config-modal
@@ -254,9 +264,9 @@ class BookmarkGrid extends HTMLElement {
         const gridRect = this.getBoundingClientRect();
         const gridStyle = getComputedStyle(this);
 
-        // Read min-size from CSS variable (set by user preference)
-        const minSizeStr = gridStyle.getPropertyValue('--widget-min-size').trim();
-        const minSize = parseFloat(minSizeStr) || 140;
+        // Read fixed columns from CSS variable (set by user preference, default 12)
+        const colsStr = gridStyle.getPropertyValue('--grid-cols').trim();
+        const cols = parseInt(colsStr) || 12;
 
         // Read gap
         const gapStr = gridStyle.columnGap || gridStyle.gap || '16px';
@@ -264,28 +274,33 @@ class BookmarkGrid extends HTMLElement {
 
         // Fallback for invisible/unmounted grid
         if (gridRect.width <= 0) {
-            // Check if we can get width from parent or default
-            // If completely hidden, default to 12 to generate VALID CSS
-            this.currentGridCols = 12;
+            this.currentGridCols = cols;
             this.currentColWidth = 100; // dummy
-            this.style.setProperty('--current-grid-cols', '12');
+            this.style.setProperty('--current-grid-cols', cols.toString());
             this.style.setProperty('--row-height', '100px');
             return;
         }
 
-        // Calculate dynamic columns matching fluid logic
-        let calculatedCols = Math.floor((gridRect.width + gap) / (minSize + gap));
-        // Ensure at least 1 column
-        if (calculatedCols < 1) calculatedCols = 1;
+        // FIXED GRID LOGIC:
+        // Width is fixed by container. Columns are fixed by preference.
+        // We calculate the exact column width to fill the space.
+        // (ContainerWidth - TotalGapWidth) / NumCols
+        const totalGapWidth = (cols - 1) * gap;
+        let colWidth = (gridRect.width - totalGapWidth) / cols;
 
-        const colWidth = (gridRect.width - ((calculatedCols - 1) * gap)) / calculatedCols;
+        // Safety check to prevent negative width (e.g., if gap > container)
+        if (colWidth < 10) colWidth = 10;
 
         // Update Internal State
-        this.currentGridCols = calculatedCols;
+        this.currentGridCols = cols;
         this.currentColWidth = colWidth;
 
-        // Sync to CSS variables for other consumers (and debugging)
-        this.style.setProperty('--current-grid-cols', String(calculatedCols));
+        // Sync to CSS variables
+        // START CRITICAL: We overwrite --current-grid-cols to match --grid-cols 
+        // incase other logic depends on it, though CSS now uses --grid-cols directly.
+        this.style.setProperty('--current-grid-cols', String(cols));
+
+        // Sync Row Height to match Column Width (Square Aspect Ratio)
         this.style.setProperty('--row-height', `${colWidth}px`);
 
         // Ensure grid always has buffer space (prevents flickering during drag)

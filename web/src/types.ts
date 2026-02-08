@@ -8,7 +8,7 @@ export interface UserPreferences {
     language: string;
     theme?: string; // 'light' | 'dark' | 'system'
     // Client-only preferences (synced if backend supports)
-    widget_min_width?: number; // Replaces fixed column counts
+    grid_columns?: number; // Replaces fixed widget width
     avatar_url?: string;
     project_name?: string;
     beta_updates?: boolean;
@@ -23,7 +23,7 @@ export interface User {
     accent_color: string;
     language: string;
     theme?: string; // Sync with backend response
-    widget_min_width?: number;
+    grid_columns?: number;
     project_name?: string;
     beta_updates?: boolean;
     is_superadmin?: boolean;
