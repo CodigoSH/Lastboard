@@ -10,7 +10,7 @@ if (!newVersion) {
 
 // Validation (Basic SemVer)
 if (!/^\d+\.\d+\.\d+(-[\w\.]+)?$/.test(newVersion)) {
-    console.error("❌ Invalid version format. Use x.y.z or x.y.z-beta.x");
+    console.error("❌ Invalid version format. Use x.y.z or x.y.z-beta.xx or x.y.z-rc.xx");
     process.exit(1);
 }
 
