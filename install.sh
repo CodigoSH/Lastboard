@@ -15,7 +15,7 @@ NC='\033[0m'
 
 # Configuration
 # Configuration
-REPO="CodigoSH/Lashboard"
+REPO="CodigoSH/Lastboard"
 INSTALL_DIR="/opt/lastboard"
 BIN_DIR="/usr/local/bin"
 BINARY_NAME="lastboard"
@@ -34,7 +34,7 @@ function success_msg() {
 }
 
 # Fetch latest version for banner (Fail gracefully)
-LATEST_VERSION=$(curl -s https://api.github.com/repos/CodigoSH/Lashboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+LATEST_VERSION=$(curl -s https://api.github.com/repos/CodigoSH/Lastboard/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 if [ -z "$LATEST_VERSION" ]; then
     LATEST_VERSION="latest"
 fi
@@ -111,7 +111,7 @@ chmod 750 "$DATA_DIR"
 chmod 755 "$INSTALL_DIR"
 
 status_msg "Downloading latest version..."
-BASE_URL="https://github.com/CodigoSH/Lashboard/releases/latest/download"
+BASE_URL="https://github.com/CodigoSH/Lastboard/releases/latest/download"
 ARCHIVE_NAME="lastboard-linux-$ARCH_TAG.tar.gz"
 URL="$BASE_URL/$ARCHIVE_NAME"
 CHECKSUM_URL="$BASE_URL/checksums.txt"

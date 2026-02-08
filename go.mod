@@ -1,4 +1,4 @@
-module github.com/CodigoSH/Lashboard
+module github.com/CodigoSH/Lastboard
 
 go 1.24.0
 

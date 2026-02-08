@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CodigoSH/Lashboard/internal/core/user"
-	"github.com/CodigoSH/Lashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lastboard/internal/core/user"
+	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -349,7 +349,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if newUserID > 0 {
 		_, _ = h.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
-		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lashboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/CodigoSH/Lashboard')`, newUserID)
+		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true}', 'https://github.com/CodigoSH/Lastboard')`, newUserID)
 	}
 
 	w.WriteHeader(http.StatusCreated)

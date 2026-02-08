@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/CodigoSH/Lashboard/internal/version"
-	"github.com/CodigoSH/Lashboard/internal/web/middleware"
+	"github.com/CodigoSH/Lastboard/internal/version"
+	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // ... existing code ...

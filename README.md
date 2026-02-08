@@ -7,7 +7,7 @@
   </p>
 
   <p>
-    <img src="https://img.shields.io/github/v/release/CodigoSH/Lashboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
+    <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
     <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
     <img src="https://img.shields.io/badge/Bun-%26_TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="Bun & TypeScript" />
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License" />
@@ -68,15 +68,15 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 Install Lastboard with a single command. This script automates everything: user creation, directory setup, and systemd service registration.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lashboard/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
 ```
 
 ### 🛠️ Build from Source
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/CodigoSH/Lashboard.git
-   cd Lashboard
+   git clone https://github.com/CodigoSH/Lastboard.git
+   cd Lastboard
    ```
 
 2. **Build the Frontend**

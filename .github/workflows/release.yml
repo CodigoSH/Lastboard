@@ -47,7 +47,7 @@ jobs:
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
 
-          go build -ldflags "-s -w -extldflags '-static' -X github.com/CodigoSH/Lashboard/internal/version.Current=$VERSION" -o lastboard cmd/dashboard/main.go
+          go build -ldflags "-s -w -extldflags '-static' -X github.com/CodigoSH/Lastboard/internal/version.Current=$VERSION" -o lastboard cmd/dashboard/main.go
 
       - name: Package
         run: |
