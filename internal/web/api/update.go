@@ -68,6 +68,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	if username != "" {
 		_ = h.DB.QueryRow("SELECT COALESCE(beta_updates, 0) FROM users WHERE username = ?", username).Scan(&betaUpdates)
 	}
+	log.Printf("[Update] Check for user:%s, BetaPref:%v, CurrentVer:%s", username, betaUpdates, version.Current)
 
 	var release GithubRelease
 
@@ -75,39 +76,40 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	// If Beta Updates enabled: Fetch list of releases (includes pre-releases) and pick first
 	// If Beta Updates disabled: Fetch 'latest' (excludes pre-releases)
 	if betaUpdates {
-		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=5")
+		log.Printf("[Update] Beta channel active. Checking for pre-releases...")
+		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=10") // Fetch more to be safe
 		if err != nil {
+			log.Printf("[Update] Failed to fetch GitHub releases: %v", err)
 			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
+			log.Printf("[Update] GitHub API returned status: %s", resp.Status)
 			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
 			return
 		}
 
 		var releases []GithubRelease
 		if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil || len(releases) == 0 {
+			log.Printf("[Update] Failed to decode releases or empty list.")
 			http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
 			return
 		}
 
 		// Iterate through recent releases to find one that is newer
-		// This handles cases where a patched beta might appear 'newer' in the list than a stable release due to timestamps
 		for _, r := range releases {
+			log.Printf("[Update] Checking candidate: %s vs Current: %s", r.TagName, version.Current)
 			if isNewerVersion(r.TagName, version.Current) {
+				log.Printf("[Update] Found newer version: %s", r.TagName)
 				release = r
 				break
 			}
 		}
 
-		// If no newer version found in the list, default to the first one (or handle as no update)
-		// If we didn't find a newer one, we proceed with empty release? No.
-		// If 'release' is zero value, it means no update found.
-		// We should re-check empty state.
 		if release.TagName == "" {
-			// Fallback: If nothing is newer, just show the top one (so logic downstream says available=false)
+			log.Printf("[Update] No newer version found. Defaulting to latest parsed: %s", releases[0].TagName)
 			release = releases[0]
 		}
 
@@ -495,22 +497,42 @@ func isNewerVersion(candidate, current string) bool {
 	}
 
 	// 2. Compare Suffixes (Pre-releases)
-	// If core versions are equal:
-	// - No suffix (Stable) > Suffix (Beta/Alpha)
-	// - Suffix vs Suffix: lexicographical compare (beta2 > beta1)
+	// SemVer: 1.0.0-beta < 1.0.0 (No suffix is NEWER than Suffix)
 
 	if cSuf == "" && curSuf != "" {
-		return true // Candidate is stable, current is beta -> Update!
+		return true // Candidate is stable (newer), current is beta
 	}
 	if cSuf != "" && curSuf == "" {
-		return false // Candidate is beta, current is stable -> Don't update (downgrade)
+		return false // Candidate is beta, current is stable (older)
 	}
-	if cSuf != "" && curSuf != "" {
-		// Both are betas/pre-releases. Compare them.
-		// e.g. "beta2" > "beta1"
-		return cSuf > curSuf
+	if cSuf == "" && curSuf == "" {
+		return false // Equal
 	}
 
-	// Identical versions
-	return false
+	// Both have suffixes. Compare them semantically.
+	// Format expected: "beta.8", "rc.1", "alpha"
+	// Split by dot or non-numeric
+
+	parseSuffix := func(s string) (string, int) {
+		parts := strings.Split(s, ".")
+		name := parts[0]
+		ver := 0
+		if len(parts) > 1 {
+			ver, _ = strconv.Atoi(parts[1])
+		}
+		return name, ver
+	}
+
+	cName, cVer := parseSuffix(cSuf)
+	curName, curVer := parseSuffix(curSuf)
+
+	// Compare names (alpha < beta < rc)
+	// Simple lexicographical works for alpha/beta/rc usually, but let's be safe?
+	// Actually alpha < beta < rc works lexicographically.
+	if cName != curName {
+		return cName > curName
+	}
+
+	// Compare versions (8 < 10)
+	return cVer > curVer
 }

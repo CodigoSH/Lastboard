@@ -12,6 +12,7 @@ export interface UserPreferences {
     avatar_url?: string;
     project_name?: string;
     beta_updates?: boolean;
+    widget_min_width?: number;
 }
 
 export interface User {
