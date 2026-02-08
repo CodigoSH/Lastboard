@@ -231,7 +231,9 @@ if systemctl is-active --quiet lastboard; then
     echo -e ""
 else
     echo -e "${RED}  Service failed to start.${NC}"
-    echo -e "${GRAY}  Checking logs...${NC}"
-    journalctl -u lastboard -n 20 --no-pager
+    echo -e "${GRAY}  Last 50 log lines:${NC}"
+    echo -e "${GRAY}  ---------------------------------------------------${NC}"
+    journalctl -u lastboard -n 50 --no-pager
+    echo -e "${GRAY}  ---------------------------------------------------${NC}"
     exit 1
 fi
