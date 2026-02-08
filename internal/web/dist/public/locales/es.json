@@ -102,6 +102,8 @@
   "settings.interface_title": "Interfaz / Arquitectura de Rejilla",
   "settings.project_name": "Nombre del Proyecto",
   "settings.project_name_desc": "Personaliza el nombre de la aplicación que se muestra en la barra superior.",
+  "settings.grid_columns": "Número de Columnas",
+  "settings.density_desc": "Ajusta el número de columnas para controlar la densidad.",
   "settings.grid_pc": "Columnas en PC",
   "settings.grid_tablet": "Columnas en Tablet",
   "settings.grid_mobile": "Columnas en Móvil",
@@ -270,7 +272,5 @@
   "widget.clock.timezone": "Zona Horaria",
   "widget.clock.auto_detect": "Auto Detectar",
   "widget.clock.timezone_desc": "ej. America/New_York, UTC, o 'local'",
-  "widget.notepad.name": "Notas",
-  "settings.grid_columns": "Número de Columnas",
-  "settings.density_desc": "Ajusta el número de columnas para controlar la densidad."
+  "widget.notepad.name": "Notas"
 }
