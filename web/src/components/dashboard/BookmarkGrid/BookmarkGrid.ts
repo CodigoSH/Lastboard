@@ -44,42 +44,33 @@ class BookmarkGrid extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
 
-        // Initial Check
-        this.checkMobileMode();
+        // Robust Mobile Detection checks
+        const updateState = () => {
+            // Treat as mobile if screen is small (<768px) OR pointer is coarse (touch)
+            // This ensures Pixel 9a and similar devices always get the mobile layout
+            const isMobile = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
 
-        // Listener for changes (e.g. docking/undocking on hybrids)
-        window.matchMedia('(pointer: coarse)').addEventListener('change', () => {
-            this.checkMobileMode();
-        });
+            if (this.isTouchDevice !== isMobile) {
+                this.isTouchDevice = isMobile;
+                if (isMobile) {
+                    this.classList.add('touch-mode');
+                } else {
+                    this.classList.remove('touch-mode');
+                }
+                this.applyFilters();
+                this.render();
+            }
+        };
 
-        // Listener for width changes (Responsive)
-        window.addEventListener('resize', () => {
-            this.checkMobileMode();
-        });
+        // Listen for standard events
+        window.addEventListener('resize', updateState);
+        window.addEventListener('orientationchange', updateState);
+
+        // Initial check
+        updateState();
     }
 
-    private checkMobileMode() {
-        const isTouch = window.matchMedia('(pointer: coarse)').matches;
-        const isSmall = window.innerWidth < 768;
 
-        const newState = isTouch || isSmall;
-
-        if (this.isTouchDevice !== newState) {
-            console.log('[BookmarkGrid] Mobile Mode Changed:', newState, { isTouch, isSmall, width: window.innerWidth });
-            this.isTouchDevice = newState;
-            this.updateTouchMode();
-            this.applyFilters();
-            this.render();
-        }
-    }
-
-    private updateTouchMode() {
-        if (this.isTouchDevice) {
-            this.classList.add('touch-mode');
-        } else {
-            this.classList.remove('touch-mode');
-        }
-    }
 
     private _widgetModal: any; // widget-config-modal
     private _boundActionClick = this.handleActionClick.bind(this);
@@ -88,14 +79,6 @@ class BookmarkGrid extends HTMLElement {
 
     private applyFilters() {
         const isTouch = this.isTouchDevice;
-
-        // DEBUG: Log filter state
-        console.log('[BookmarkGrid] applyFilters() called', {
-            isTouch,
-            searchQuery: this.searchQuery,
-            totalItems: this.allItems.length,
-            bookmarkCount: this.allItems.filter(i => i.type === 'bookmark').length
-        });
 
         if (this.searchQuery || isTouch) {
             this.classList.add('search-active');
@@ -109,41 +92,16 @@ class BookmarkGrid extends HTMLElement {
                     try { content = JSON.parse(item.content); } catch { return false; }
                 }
 
-                // Touch Visibility Check with Legacy Fallback
+                // Visibility Check
                 if (isTouch) {
-                    const hasVisibleTouch = content.hasOwnProperty('visibleTouch');
-                    const visibleTouchValue = content.visibleTouch;
-                    const visibleMobileValue = content.visibleMobile;
-                    const visibleTabletValue = content.visibleTablet;
-                    const width = window.innerWidth;
-                    const isMobileWidth = width < 768;
+                    // Modern Flag (defaults to true if undefined)
+                    if (content.visibleTouch === false) return false;
 
-                    // DEBUG: Log visibility flags for each bookmark
-                    console.log(`[BookmarkGrid] Bookmark "${content.label}"`, {
-                        hasVisibleTouch,
-                        visibleTouch: visibleTouchValue,
-                        visibleMobile: visibleMobileValue,
-                        visibleTablet: visibleTabletValue,
-                        width,
-                        isMobileWidth
-                    });
-
-                    if (hasVisibleTouch) {
-                        // Use new unified flag
-                        if (visibleTouchValue === false) {
-                            console.log(`[BookmarkGrid] FILTERED OUT "${content.label}" - visibleTouch === false`);
-                            return false;
-                        }
-                    } else {
-                        // LEGACY FALLBACK: Check old mobile/tablet flags
-                        if (isMobileWidth && visibleMobileValue === false) {
-                            console.log(`[BookmarkGrid] FILTERED OUT "${content.label}" - legacy visibleMobile === false`);
-                            return false;
-                        }
-                        if (!isMobileWidth && visibleTabletValue === false) {
-                            console.log(`[BookmarkGrid] FILTERED OUT "${content.label}" - legacy visibleTablet === false`);
-                            return false;
-                        }
+                    // Legacy Fallback (only if visibleTouch is undefined)
+                    if (content.visibleTouch === undefined) {
+                        const isMobileWidth = window.innerWidth < 768;
+                        if (isMobileWidth && content.visibleMobile === false) return false;
+                        if (!isMobileWidth && content.visibleTablet === false) return false;
                     }
                 }
 
