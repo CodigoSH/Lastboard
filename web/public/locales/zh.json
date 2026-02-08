@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "图标",
   "bookmark.monitor_status": "监控状态 (Ping)",
-  "bookmark.visible_mobile": "移动端可见",
-  "bookmark.visible_tablet": "平板端可见",
+  "bookmark.visible_touch": "触摸设备可见",
   "bookmark.placeholder_label": "我的好网站",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "添加分区",
@@ -103,6 +102,8 @@
   "settings.interface_title": "界面 / 网格架构",
   "settings.project_name": "项目名称",
   "settings.project_name_desc": "自定义顶部栏中显示的应用程序名称。",
+  "settings.grid_columns": "列数",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "PC 列数",
   "settings.grid_tablet": "平板列数",
   "settings.grid_mobile": "手机列数",
@@ -268,10 +269,10 @@
   "setup.error_username": "用户名必须至少 3 个字符",
   "setup.error_password": "密码太短（至少 4 个字符）",
   "setup.error_connection": "连接失败。请检查日志。",
+  "bookmark.visible_mobile": "移动端可见",
+  "bookmark.visible_tablet": "平板端可见",
   "widget.clock.timezone": "时区",
   "widget.clock.auto_detect": "自动检测",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "便签",
-  "settings.grid_columns": "列数",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "便签"
 }

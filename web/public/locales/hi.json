@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "आइकन",
   "bookmark.monitor_status": "स्थिति की निगरानी करें (पिंग)",
-  "bookmark.visible_mobile": "मोबाइल पर दृश्य",
-  "bookmark.visible_tablet": "टैबलेट पर दृश्य",
+  "bookmark.visible_touch": "टच डिवाइस पर दृश्य",
   "bookmark.placeholder_label": "मेरी शानदार साइट",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "अनुभाग जोड़ें",
@@ -103,6 +102,8 @@
   "settings.interface_title": "इंटरफ़ेस / ग्रिड वास्तुकला",
   "settings.project_name": "प्रोजेक्ट का नाम",
   "settings.project_name_desc": "शीर्ष पट्टी में प्रदर्शित एप्लिकेशन नाम को अनुकूलित करें।",
+  "settings.grid_columns": "Column Count",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "PC कॉलम",
   "settings.grid_tablet": "टैबलेट कॉलम",
   "settings.grid_mobile": "मोबाइल कॉलम",
@@ -268,10 +269,10 @@
   "setup.error_username": "उपयोगकर्ता नाम कम से कम 3 वर्णों का होना चाहिए",
   "setup.error_password": "पासवर्ड बहुत छोटा है (न्यूनतम 4 वर्ण)",
   "setup.error_connection": "कनेक्शन विफल। लॉग की जाँच करें।",
+  "bookmark.visible_mobile": "मोबाइल पर दृश्य",
+  "bookmark.visible_tablet": "टैबलेट पर दृश्य",
   "widget.clock.timezone": "समय क्षेत्र",
   "widget.clock.auto_detect": "स्वतः पता लगाएँ",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "नोट्स",
-  "settings.grid_columns": "Column Count",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "नोट्स"
 }

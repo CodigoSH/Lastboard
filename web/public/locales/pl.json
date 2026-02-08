@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Ikona",
   "bookmark.monitor_status": "Monitoruj status (Ping)",
-  "bookmark.visible_mobile": "Widoczne na mobilnym",
-  "bookmark.visible_tablet": "Widoczne na tablecie",
+  "bookmark.visible_touch": "Widoczne na urządzeniach dotykowych",
   "bookmark.placeholder_label": "Moja świetna strona",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "Dodaj sekcję",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Interfejs / Architektura siatki",
   "settings.project_name": "Nazwa Projektu",
   "settings.project_name_desc": "Dostosuj nazwę aplikacji wyświetlaną na górnym pasku.",
+  "settings.grid_columns": "Liczba kolumn",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "Kolumny PC",
   "settings.grid_tablet": "Kolumny Tablet",
   "settings.grid_mobile": "Kolumny Mobile",
@@ -268,10 +269,10 @@
   "setup.error_username": "Nazwa użytkownika musi mieć co najmniej 3 znaki",
   "setup.error_password": "Hasło za krótkie (min 4 znaki)",
   "setup.error_connection": "Połączenie nie powiodło się. Sprawdź logi.",
+  "bookmark.visible_mobile": "Widoczne na mobilnym",
+  "bookmark.visible_tablet": "Widoczne na tablecie",
   "widget.clock.timezone": "Strefa czasowa",
   "widget.clock.auto_detect": "Wykryj automatycznie",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Notatki",
-  "settings.grid_columns": "Liczba kolumn",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Notatki"
 }
