@@ -105,11 +105,13 @@ class BookmarkGrid extends HTMLElement {
         // On touch devices detectTouch()→true caused classList.add + render in
         // constructor, which made Chrome silently discard the element.
         const detectTouch = (): boolean => {
+            // Touch mode (horizontal cards) only for narrow screens (phones).
+            // Tablets have touch but enough width for the full grid layout.
             const narrowScreen = window.innerWidth < 768;
-            const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-            const hasTouchEvents = 'ontouchstart' in window;
-            const hasTouchPoints = navigator.maxTouchPoints > 0;
-            return narrowScreen || coarsePointer || hasTouchEvents || hasTouchPoints;
+            const isTouch = window.matchMedia('(pointer: coarse)').matches
+                || 'ontouchstart' in window
+                || navigator.maxTouchPoints > 0;
+            return narrowScreen && isTouch;
         };
 
         const updateTouchState = () => {
