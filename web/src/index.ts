@@ -34,14 +34,32 @@ let confirmationModal: any;
 import { bootstrap } from './core/bootstrap';
 
 // Initialize Application
+// ── DEBUG: Write diagnostic directly into the page (outside Shadow DOM) ──
+function dbg(msg: string) {
+    let el = document.getElementById('__dbg');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = '__dbg';
+        el.style.cssText = 'background:#0a0a1a;color:#0f0;font:11px/1.5 monospace;padding:8px 12px;margin:8px;border:1px solid #333;border-radius:6px;word-break:break-all;';
+        const root = document.getElementById('dashboard-root') || document.body;
+        root.prepend(el);
+    }
+    el.innerHTML += msg + '<br>';
+}
+
 bootstrap(async () => {
+    dbg('▶ bootstrap START');
+    try {
+
     // Flash-prevention: apply a theme before the user record arrives so the
     // page does not flicker.  serveIndex already injects the correct class
     // from the DB; this call only matters for the 'system' edge case.
     ThemeService.init();
+    dbg('✓ ThemeService.init');
 
     // Initialize stores
     await userStore.fetchUser();
+    dbg('✓ userStore.fetchUser');
 
     // ── Per-user sync ──────────────────────────────────────────────
     // After the authenticated user is fetched, every preference that lives in
@@ -101,10 +119,14 @@ bootstrap(async () => {
         });
     }
 
+    dbg('✓ per-user sync done');
+
     await dashboardStore.fetchItems();
+    dbg('✓ fetchItems (' + dashboardStore.getState().items.length + ' items)');
 
     // Render dashboard components
     renderDashboard();
+    dbg('✓ renderDashboard');
 
     // Start status monitoring
     statusService.start();
@@ -121,6 +143,11 @@ bootstrap(async () => {
 
     const widgetConfigModal = document.createElement('widget-config-modal');
     document.body.appendChild(widgetConfigModal);
+    dbg('✓ bootstrap COMPLETE — UA: ' + navigator.userAgent.substring(0, 80));
+
+    } catch (err: any) {
+        dbg('✗ CRASH: ' + (err.stack || err.message || err));
+    }
 });
 
 // 2. Handle Component Events (TopBar)
