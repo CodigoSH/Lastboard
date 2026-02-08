@@ -43,13 +43,13 @@ fi
 # Banner
 clear
 echo -e "${BLUE}"
-echo "  _                 _   _                         _ "
-echo " | |               | | | |                       | |"
-echo " | |     __ _  ___ | |_| |__   ___   __ _ _ __ __| |"
-echo " | |    / _\\\` |/ __|| __| '_ \\ / _ \\ / _\\\` | '__/ _\\\` |"
-echo " | |___| (_| \s__ \\| |_| |_) | (_) | (_| | | | (_| |"
-echo " |______\\__,_|___/ \\__|_.__/ \\___/ \\__,_|_|  \\__,_|"
-echo "                                              $LATEST_VERSION"
+# Escaped ASCII Art - Single line for stability
+echo "  _               _   _                         _"
+echo " | |             | | | |                       | |"
+echo " | |     __ _ ___| |_| |__   ___   __ _ _ __ __| |"
+echo " | |    / _\` / __| __| '_ \ / _ \ / _\` | '__/ _\` |"
+echo " | |___| (_| \__ \ |_| |_) | (_) | (_| | | | (_| |"
+echo " |______\__,_|___/\__|_.__/ \___/ \__,_|_|  \__,_|"
 echo -e "${NC}"
 echo -e "  Welcome to Lastboard. Let's get you started.\n"
 
