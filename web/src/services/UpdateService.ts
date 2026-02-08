@@ -40,10 +40,12 @@ class UpdateService {
             // 1. Get System Info (Version & Context) from Backend
             // The backend NO LONGER checks GitHub, it just returns local info.
             const systemRes = await fetch('/api/system/update/check');
-            let systemInfo = {
+            let systemInfo: any = {
                 current_version: 'v0.0.0',
                 is_docker: false,
-                available: false
+                available: false,
+                os: 'linux',
+                arch: 'amd64'
             };
 
             if (systemRes.ok) {
@@ -71,11 +73,18 @@ class UpdateService {
                     const isNewer = this.compareVersions(proxyData.latest_version, this.version);
 
                     if (isNewer) {
+                        // Construct Dynamic Asset URL
+                        // Standard GoReleaser format: lastboard-linux-amd64.tar.gz
+                        // Backend now returns correct runtime.GOOS and runtime.GOARCH
+                        const os = systemInfo.os || 'linux';
+                        const arch = systemInfo.arch || 'amd64';
+                        const assetName = `lastboard-${os}-${arch}.tar.gz`;
+
                         return {
                             available: true,
                             current_version: this.version,
                             latest_version: proxyData.latest_version,
-                            asset_url: `https://github.com/CodigoSH/Lastboard/releases/download/${proxyData.latest_version}/lastboard_linux_amd64.tar.gz`,
+                            asset_url: `https://github.com/CodigoSH/Lastboard/releases/download/${proxyData.latest_version}/${assetName}`,
                             is_docker: false
                         };
                     }

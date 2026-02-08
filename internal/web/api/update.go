@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -52,6 +53,8 @@ type UpdateResponse struct {
 	ReleaseNotes   string `json:"release_notes"`
 	AssetUrl       string `json:"asset_url"`
 	IsDocker       bool   `json:"is_docker"`
+	Os             string `json:"os"`
+	Arch           string `json:"arch"`
 }
 
 func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +71,8 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		Available:      false, // Always false from backend. Frontend decides.
 		CurrentVersion: version.Current,
 		IsDocker:       isDocker,
+		Os:             runtime.GOOS,
+		Arch:           runtime.GOARCH,
 	})
 }
 
