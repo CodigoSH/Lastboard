@@ -112,6 +112,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else {
+		// Beta Updates Disabled: Fetch 'latest' stable release
 		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases/latest")
 		if err != nil {
 			http.Error(w, "Failed to fetch releases", http.StatusBadGateway)
@@ -127,6 +128,30 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
 			http.Error(w, "Invalid GitHub response", http.StatusInternalServerError)
 			return
+		}
+
+		// DEFENSIVE CHECK: GitHub's /latest might return a beta if it wasn't marked as prerelease
+		// If we detect a beta version, fetch all releases and find first stable
+		tagLower := strings.ToLower(release.TagName)
+		if strings.Contains(tagLower, "beta") || strings.Contains(tagLower, "alpha") || strings.Contains(tagLower, "rc") {
+			// Fallback: Fetch recent releases and find first stable one
+			resp2, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=20")
+			if err == nil {
+				defer resp2.Body.Close()
+				var releases []GithubRelease
+				if json.NewDecoder(resp2.Body).Decode(&releases) == nil {
+					// Find first release that's NOT a pre-release
+					for _, r := range releases {
+						rTagLower := strings.ToLower(r.TagName)
+						if !strings.Contains(rTagLower, "beta") &&
+							!strings.Contains(rTagLower, "alpha") &&
+							!strings.Contains(rTagLower, "rc") {
+							release = r
+							break
+						}
+					}
+				}
+			}
 		}
 	}
 
