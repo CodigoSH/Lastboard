@@ -44,11 +44,23 @@ class BookmarkGrid extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
 
-        // Robust Mobile Detection checks
+        // ── Robust Mobile/Touch Detection ──
+        // Multiple signals: ANY one being true → touch mode
+        const detectTouch = (): boolean => {
+            const narrowScreen = window.innerWidth < 768;
+            const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+            const hasTouchEvents = 'ontouchstart' in window;
+            const hasTouchPoints = navigator.maxTouchPoints > 0;
+
+            const result = narrowScreen || coarsePointer || hasTouchEvents || hasTouchPoints;
+
+            console.log(`[DEBUG] detectTouch: width=${window.innerWidth}, narrow=${narrowScreen}, coarse=${coarsePointer}, ontouchstart=${hasTouchEvents}, maxTouchPoints=${navigator.maxTouchPoints}, RESULT=${result}`);
+
+            return result;
+        };
+
         const updateState = () => {
-            // Treat as mobile if screen is small (<768px) OR pointer is coarse (touch)
-            // This ensures Pixel 9a and similar devices always get the mobile layout
-            const isMobile = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
+            const isMobile = detectTouch();
 
             if (this.isTouchDevice !== isMobile) {
                 this.isTouchDevice = isMobile;
