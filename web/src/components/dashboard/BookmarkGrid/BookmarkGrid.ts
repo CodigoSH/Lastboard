@@ -72,22 +72,39 @@ class BookmarkGrid extends HTMLElement {
     private _boundMouseUp = this.handleWindowMouseUp.bind(this);
 
     private applyFilters() {
-        if (this.searchQuery || this.isTouchDevice) {
+        // 1. Determine Device Mode (Touch-Prioritized)
+        const isTouch = this.isTouchDevice;
+        const width = window.innerWidth;
+        const isMobile = isTouch && width < 768;
+        const isTablet = isTouch && width >= 768;
+
+        // 2. Filter Items
+        if (this.searchQuery || isTouch) {
             this.classList.add('search-active');
+
             this.bookmarks = this.allItems.filter(item => {
+                // Only Bookmarks in Touch Mode
                 if (item.type !== 'bookmark') return false;
 
+                let content: any = item.content;
+                if (typeof item.content === 'string') {
+                    try { content = JSON.parse(item.content); } catch { return false; }
+                }
+
+                // Visibility Check (Mobile/Tablet)
+                if (isMobile && content.visibleMobile === false) return false;
+                if (isTablet && content.visibleTablet === false) return false;
+
+                // Search Filter
                 if (this.searchQuery) {
-                    let content: any = item.content;
-                    if (typeof item.content === 'string') {
-                        try { content = JSON.parse(item.content); } catch { return false; }
-                    }
                     const searchText = (content.label || '').toLowerCase();
                     return searchText.includes(this.searchQuery);
                 }
+
                 return true;
             });
         } else {
+            // Desktop Mode (Non-Touch) -> Show All (Grid)
             this.classList.remove('search-active');
             this.bookmarks = this.allItems;
         }
@@ -111,7 +128,10 @@ class BookmarkGrid extends HTMLElement {
                 const rect = this.getBoundingClientRect();
                 dashboardStore.setGridMetrics(rect.width, this.currentGridCols);
 
-                // 3. FORCE Render to re-calculate "Deep Cascade" layout
+                // 3. Re-Apply Filters (Width might have changed Mobile <-> Tablet)
+                this.applyFilters();
+
+                // 4. FORCE Render to re-calculate "Deep Cascade" layout
                 this.render();
             }, 16);
         });
