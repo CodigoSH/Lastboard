@@ -924,17 +924,24 @@ class BookmarkGrid extends HTMLElement {
             this.classList.remove('edit-mode');
         }
 
-        // ── DEBUG: Visible diagnostic for mobile troubleshooting ──
-        const debugInfo = this.isTouchDevice ? `
-            <div style="background:#1a1a2e;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;border-radius:6px;margin-bottom:8px;border:1px solid #333;line-height:1.6;">
-                TOUCH MODE: <b>ON</b> |
+        // ── DEBUG: ALWAYS visible diagnostic (touch & desktop) ──
+        const w = window.innerWidth;
+        const coarse = window.matchMedia('(pointer: coarse)').matches;
+        const hasTouch = 'ontouchstart' in window;
+        const tp = navigator.maxTouchPoints;
+        const debugInfo = `
+            <div style="background:#1a1a2e;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;border-radius:6px;margin-bottom:8px;border:1px solid #333;line-height:1.6;word-break:break-all;">
+                <b>v2-DEBUG</b> |
+                isTouchDevice: <b style="color:${this.isTouchDevice ? '#0f0' : '#f00'}">${this.isTouchDevice}</b> |
+                width: <b>${w}px</b> |
+                coarse: <b>${coarse}</b> |
+                ontouchstart: <b>${hasTouch}</b> |
+                maxTouchPoints: <b>${tp}</b> |
                 allItems: <b>${this.allItems.length}</b> |
                 filtered: <b>${this.bookmarks.length}</b> |
-                types: <b>${[...new Set(this.allItems.map(i => i.type))].join(',') || 'none'}</b> |
-                classes: <b>${this.className}</b> |
-                width: <b>${this.clientWidth}px</b>
+                classes: <b>${this.className}</b>
             </div>
-        ` : '';
+        `;
 
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>

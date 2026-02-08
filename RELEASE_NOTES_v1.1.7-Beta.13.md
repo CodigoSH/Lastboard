@@ -1,4 +1,4 @@
-# Release Notes: v1.1.7-Beta.12
+# Release Notes: v1.1.7-Beta.13
 
 ## 🚀 Continuous Deployment
 - **Status**: Stable.
