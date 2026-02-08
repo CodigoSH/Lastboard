@@ -147,6 +147,18 @@ class BookmarkGrid extends HTMLElement {
         this.render();
         this.updateGridMetrics();
 
+        // ── Delayed debug: re-check dimensions after layout settles ──
+        setTimeout(() => {
+            if (typeof (window as any).__gridDbg === 'function') {
+                const rect = this.getBoundingClientRect();
+                (window as any).__gridDbg(
+                    `[AFTER-LAYOUT] hostSize=${Math.round(rect.width)}x${Math.round(rect.height)}, ` +
+                    `parentSize=${this.parentElement ? Math.round(this.parentElement.getBoundingClientRect().width) + 'x' + Math.round(this.parentElement.getBoundingClientRect().height) : 'none'}, ` +
+                    `isTouchDevice=${this.isTouchDevice}, items=${this.allItems.length}, filtered=${this.bookmarks.length}`
+                );
+            }
+        }, 500);
+
         this._resizeObserver = new ResizeObserver(() => {
             // Debounce for ~60fps performance (16ms)
             if (this._resizeDebounce) return;
@@ -954,6 +966,19 @@ class BookmarkGrid extends HTMLElement {
             maxCols: this.currentGridCols
         })}
         `;
+
+        // ── Bridge debug state outside shadow DOM ──
+        if (typeof (window as any).__gridDbg === 'function') {
+            const rect = this.getBoundingClientRect();
+            (window as any).__gridDbg(
+                `isTouchDevice=${this.isTouchDevice}, ` +
+                `w=${window.innerWidth}, coarse=${window.matchMedia('(pointer: coarse)').matches}, ` +
+                `ontouchstart=${'ontouchstart' in window}, tp=${navigator.maxTouchPoints}, ` +
+                `allItems=${this.allItems.length}, filtered=${this.bookmarks.length}, ` +
+                `hostSize=${Math.round(rect.width)}x${Math.round(rect.height)}, ` +
+                `classes="${this.className}", display=${getComputedStyle(this).display}`
+            );
+        }
 
         // RE-ATTACH LISTENERS after content replacement
         this.setupActionListeners();
