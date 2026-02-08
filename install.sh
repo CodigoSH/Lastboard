@@ -63,6 +63,34 @@ fi
 PORT="8080"
 IS_UPDATE=false
 
+# --- Migration Logic (Lashboard -> Lastboard) ---
+LEGACY_SERVICE="/etc/systemd/system/lashboard.service"
+LEGACY_DATA="/var/lib/lashboard"
+
+if [ -f "$LEGACY_SERVICE" ]; then
+    status_msg "Legacy 'Lashboard' detected. Migrating to 'Lastboard'..."
+    
+    # 1. Stop Legacy Service (Fixes port conflict)
+    systemctl stop lashboard &>/dev/null || true
+    systemctl disable lashboard &>/dev/null || true
+    
+    # 2. Migrate Port
+    LEGACY_PORT=$(grep 'Environment="PORT=' "$LEGACY_SERVICE" | cut -d'=' -f3 | tr -d '"')
+    if [ -n "$LEGACY_PORT" ]; then
+        PORT="$LEGACY_PORT"
+        IS_UPDATE=true # Treat as update to preserve config
+        status_msg "Preserving port ${BOLD}${PORT}${NC} from legacy installation."
+    fi
+
+    # 3. Migrate Data (Fixes fresh install state)
+    if [ -d "$LEGACY_DATA" ] && [ ! -d "$DATA_DIR" ]; then
+        status_msg "Migrating data from $LEGACY_DATA to $DATA_DIR..."
+        cp -r "$LEGACY_DATA" "$DATA_DIR"
+        # Permissions will be fixed later in the script
+    fi
+fi
+# -----------------------------------------------
+
 if [ -f "$SERVICE_FILE" ]; then
     # Start detection
     DETECTED_PORT=$(grep 'Environment="PORT=' "$SERVICE_FILE" | cut -d'=' -f3 | tr -d '"')
