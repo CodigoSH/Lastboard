@@ -84,8 +84,11 @@ class BookmarkGrid extends HTMLElement {
             this.classList.add('search-active');
 
             this.bookmarks = this.allItems.filter(item => {
-                // Only Bookmarks in Touch/Search Mode
-                if (item.type !== 'bookmark') return false;
+                // Allow ALL types (Sections/Widgets/Bookmarks) to pass through filter
+                // We rely on CSS to hide sections in 'touch-mode' if desired, 
+                // OR we let them render if the user wants them.
+                // The previous check `if (item.type !== 'bookmark') return false` was too aggressive
+                // and hid everything if the user had nested content.
 
                 let content: any = item.content;
                 if (typeof item.content === 'string') {
