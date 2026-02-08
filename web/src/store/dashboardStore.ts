@@ -85,14 +85,20 @@ class DashboardStore {
 
     private async checkSystemUpdate() {
         try {
-            const res = await fetch('/api/system/update/check');
-            if (res.ok) {
-                const info = await res.json();
+            // Delay slightly to ensure user prefs are loaded
+            setTimeout(async () => {
+                const { userStore } = await import('./userStore');
+                const { updateService } = await import('../services/UpdateService');
+
+                const user = userStore.getUser();
+                const betaUpdates = user?.preferences?.beta_updates || false;
+
+                const info = await updateService.check(betaUpdates);
                 if (info.available) {
                     this.state.updateAvailable = true;
                     this.notify();
                 }
-            }
+            }, 2000);
         } catch (e) {
             // fail silently
         }

@@ -447,75 +447,20 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.8-Beta.09'; // Should be sync with backend or injected
+    private version = 'v1.1.8-Beta.10'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 
     async checkForUpdates() {
-        // Guard: prevent multiple simultaneous calls
-        if (this.checkUpdatesPromise) {
-            return this.checkUpdatesPromise;
-        }
+        if (this.checkUpdatesPromise) return this.checkUpdatesPromise;
 
         this.checkUpdatesPromise = (async () => {
             try {
-                // 1. Get System Info (Current Version & Docker Status) from Backend
-                const systemRes = await fetch('/api/system/update/check');
-                if (systemRes.ok) {
-                    const systemInfo = await systemRes.json();
-                    this.version = systemInfo.current_version;
+                const { updateService } = await import('../../../services/UpdateService');
+                const isBeta = this.prefs.beta_updates || false;
 
-                    // If Docker, we trust the backend's check entirely (no binary swap possible)
-                    if (systemInfo.is_docker) {
-                        this.updateInfo = systemInfo;
-                        this.render();
-                        return;
-                    }
-
-                    // 2. Browser-Side Proxy Check (Bypasses GitHub Rate Limits)
-                    try {
-                        const isBeta = this.prefs.beta_updates || false;
-                        const proxyUrl = `https://api-updates.codigosh.com/api/v1/check-update?beta=${isBeta}`;
-
-                        const proxyRes = await fetch(proxyUrl);
-                        if (proxyRes.ok) {
-                            const proxyData = await proxyRes.json();
-
-                            // 3. Compare Versions
-                            const isNewer = this.compareVersions(proxyData.latest_version, this.version);
-
-                            if (isNewer) {
-                                // Construct Asset URL (Defaulting to linux_amd64 for now)
-                                // The proxy returns the tag, we construct the download link to GitHub
-                                // Example: https://github.com/CodigoSH/Lastboard/releases/download/v1.1.8-Beta.07/lastboard_linux_amd64.tar.gz
-                                const assetUrl = `https://github.com/CodigoSH/Lastboard/releases/download/${proxyData.latest_version}/lastboard_linux_amd64.tar.gz`;
-
-                                this.updateInfo = {
-                                    available: true,
-                                    current_version: this.version,
-                                    latest_version: proxyData.latest_version,
-                                    release_notes: "Check Changelog on GitHub", // Proxy might not return body
-                                    asset_url: assetUrl,
-                                    is_docker: false
-                                };
-                            } else {
-                                // Up to date
-                                this.updateInfo = {
-                                    available: false,
-                                    current_version: this.version,
-                                    latest_version: proxyData.latest_version,
-                                    is_docker: false
-                                };
-                            }
-                        } else {
-                            // Proxy failed, fall back to backend's response (which might be rate limited but has system info)
-                            this.updateInfo = systemInfo;
-                        }
-                    } catch (proxyErr) {
-                        console.error("Proxy check failed, using backend info", proxyErr);
-                        this.updateInfo = systemInfo;
-                    }
-                }
+                this.updateInfo = await updateService.check(isBeta);
+                this.version = this.updateInfo.current_version;
             } catch (e) {
                 console.error("Check update failed", e);
             } finally {

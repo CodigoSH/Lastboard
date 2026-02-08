@@ -14,7 +14,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -62,133 +61,12 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		isDocker = true
 	}
 
-	// 2. Check User Preference for Beta Updates
-	username := middleware.GetUserFromContext(r)
-	var betaUpdates bool
-	if username != "" {
-		_ = h.DB.QueryRow("SELECT COALESCE(beta_updates, 0) FROM users WHERE username = ?", username).Scan(&betaUpdates)
-	}
-
-	// Auto-enable beta updates if currently running a detailed version (Beta/RC/Alpha)
-	currentLower := strings.ToLower(version.Current)
-	if strings.Contains(currentLower, "beta") || strings.Contains(currentLower, "rc") || strings.Contains(currentLower, "alpha") {
-		log.Printf("[Update] Current version is unstable (%s). Forcing beta channel check.", version.Current)
-		betaUpdates = true
-	}
-
-	log.Printf("[Update] Check for user:%s, BetaPref:%v, CurrentVer:%s", username, betaUpdates, version.Current)
-
-	var release GithubRelease
-
-	// 3. Fetch Release Info
-	// If Beta Updates enabled: Fetch list of releases (includes pre-releases) and pick first
-	// If Beta Updates disabled: Fetch 'latest' (excludes pre-releases)
-	if betaUpdates {
-		log.Printf("[Update] Beta channel active. Checking for pre-releases...")
-		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=10") // Fetch more to be safe
-		if err != nil {
-			log.Printf("[Update] Failed to fetch GitHub releases: %v", err)
-			// RETURN SYSTEM INFO ANYWAY
-			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			log.Printf("[Update] GitHub API returned status: %s", resp.Status)
-			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
-			return
-		}
-
-		var releases []GithubRelease
-		if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil || len(releases) == 0 {
-			log.Printf("[Update] Failed to decode releases or empty list.")
-			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
-			return
-		}
-
-		// Iterate through recent releases to find one that is newer
-		for _, r := range releases {
-			log.Printf("[Update] Checking candidate: %s vs Current: %s", r.TagName, version.Current)
-			if isNewerVersion(r.TagName, version.Current) {
-				log.Printf("[Update] Found newer version: %s", r.TagName)
-				release = r
-				break
-			}
-		}
-
-		if release.TagName == "" {
-			log.Printf("[Update] No newer version found. Defaulting to latest parsed: %s", releases[0].TagName)
-			release = releases[0]
-		}
-
-	} else {
-		// Beta Updates Disabled: Fetch 'latest' stable release
-		resp, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases/latest")
-		if err != nil {
-			// RETURN SYSTEM INFO ANYWAY
-			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
-			return
-		}
-
-		if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-			json.NewEncoder(w).Encode(UpdateResponse{Available: false, CurrentVersion: version.Current, IsDocker: isDocker})
-			return
-		}
-
-		// DEFENSIVE CHECK: GitHub's /latest might return a beta if it wasn't marked as prerelease
-		// If we detect a beta version, fetch all releases and find first stable
-		tagLower := strings.ToLower(release.TagName)
-		if strings.Contains(tagLower, "beta") || strings.Contains(tagLower, "alpha") || strings.Contains(tagLower, "rc") {
-			// Fallback: Fetch recent releases and find first stable one
-			resp2, err := http.Get("https://api.github.com/repos/CodigoSH/Lastboard/releases?per_page=20")
-			if err == nil {
-				defer resp2.Body.Close()
-				var releases []GithubRelease
-				if json.NewDecoder(resp2.Body).Decode(&releases) == nil {
-					// Find first release that's NOT a pre-release
-					for _, r := range releases {
-						rTagLower := strings.ToLower(r.TagName)
-						if !strings.Contains(rTagLower, "beta") &&
-							!strings.Contains(rTagLower, "alpha") &&
-							!strings.Contains(rTagLower, "rc") {
-							release = r
-							break
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// 4. Compare Versions
-	updateAvailable := isNewerVersion(release.TagName, version.Current)
-
-	// 5. Find matching asset
-	targetAsset := ""
-	osName := runtime.GOOS
-	archName := runtime.GOARCH
-	searchSuffix := fmt.Sprintf("%s-%s.tar.gz", osName, archName)
-
-	for _, asset := range release.Assets {
-		if strings.Contains(strings.ToLower(asset.Name), searchSuffix) {
-			targetAsset = asset.BrowserDownloadUrl
-			break
-		}
-	}
-
+	// 2. Return System Info
+	// The backend is no longer responsible for checking updates to avoid rate limits.
+	// It relies on the Frontend + Proxy to determine version status.
 	json.NewEncoder(w).Encode(UpdateResponse{
-		Available:      updateAvailable,
+		Available:      false, // Always false from backend. Frontend decides.
 		CurrentVersion: version.Current,
-		LatestVersion:  release.TagName,
-		ReleaseNotes:   release.Body,
-		AssetUrl:       targetAsset,
 		IsDocker:       isDocker,
 	})
 }
