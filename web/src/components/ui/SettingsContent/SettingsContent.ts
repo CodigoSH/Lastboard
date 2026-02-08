@@ -447,7 +447,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.1.8-Beta.12'; // Should be sync with backend or injected
+    private version = 'v1.1.8'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 
@@ -472,38 +472,7 @@ class SettingsContent extends HTMLElement {
         return this.checkUpdatesPromise;
     }
 
-    // Helper: v1 (candidate) > v2 (current) ?
-    compareVersions(v1: string, v2: string): boolean {
-        // Strip 'v' prefix
-        const clean1 = v1.replace(/^v/, '');
-        const clean2 = v2.replace(/^v/, '');
 
-        // Split into parts (1.1.8-Beta.07 -> [1.1.8, Beta.07])
-        const parts1 = clean1.split('-');
-        const parts2 = clean2.split('-');
-
-        // Compare Core (1.1.8)
-        const core1 = parts1[0].split('.').map(Number);
-        const core2 = parts2[0].split('.').map(Number);
-
-        for (let i = 0; i < 3; i++) {
-            if (core1[i] > core2[i]) return true;
-            if (core1[i] < core2[i]) return false;
-        }
-
-        // Core is equal. Compare suffixes.
-        // No suffix (Stable) > Suffix (Beta/RC)
-        if (!parts1[1] && parts2[1]) return true; // 1.1.8 > 1.1.8-Beta
-        if (parts1[1] && !parts2[1]) return false; // 1.1.8-Beta < 1.1.8
-        if (!parts1[1] && !parts2[1]) return false; // Equal
-
-        // Both have suffixes. Compare Lexicographically (Alpha < Beta < RC)
-        // Beta.07 vs Beta.06
-        const suf1 = parts1[1].toLowerCase();
-        const suf2 = parts2[1].toLowerCase();
-
-        return suf1 > suf2; // 'beta.07' > 'beta.06'
-    }
 
     async performUpdate(assetUrl: string) {
         const confirmationModal = document.querySelector('confirmation-modal') as any;

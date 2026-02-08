@@ -6,7 +6,11 @@ BUILD_DIR := ./bin
 
 all: build
 
-build:
+frontend:
+	@echo "Building frontend..."
+	@bun run build
+
+build: frontend
 	@echo "Building $(APP_NAME)..."
 	@mkdir -p $(BUILD_DIR)
 	@go build -o $(BUILD_DIR)/$(APP_NAME) $(CMD_PATH)

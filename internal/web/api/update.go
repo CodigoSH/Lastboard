@@ -15,7 +15,6 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -32,18 +31,6 @@ type UpdateHandler struct {
 
 func NewUpdateHandler(db *sql.DB) *UpdateHandler {
 	return &UpdateHandler{DB: db}
-}
-
-type ReleaseAsset struct {
-	Name               string `json:"name"`
-	BrowserDownloadUrl string `json:"browser_download_url"`
-}
-
-type GithubRelease struct {
-	TagName string         `json:"tag_name"`
-	Name    string         `json:"name"`
-	Body    string         `json:"body"`
-	Assets  []ReleaseAsset `json:"assets"`
 }
 
 type UpdateResponse struct {
@@ -346,90 +333,4 @@ func (h *UpdateHandler) restartSelf(exePath string) {
 		log.Printf("Failed to restart: %v. Exiting to allow supervisor to restart.", err)
 		os.Exit(0)
 	}
-}
-
-// isNewerVersion compares two version strings (SemVer compliantish).
-// Handles:
-// - Standard: v1.0.0 vs v1.0.1
-// - Beta: v1.1.0-beta1 vs v1.1.0-beta2
-// - Stability: v1.1.0-beta vs v1.1.0 (Stable is always newer than its own beta)
-func isNewerVersion(candidate, current string) bool {
-	// Helper to parse "1.2.3-beta.1" -> (1, 2, 3, "beta.1")
-	parse := func(v string) (int, int, int, string) {
-		v = strings.TrimPrefix(v, "v")
-		parts := strings.SplitN(v, "-", 2)
-		main := parts[0]
-		suffix := ""
-		if len(parts) > 1 {
-			suffix = parts[1]
-		}
-
-		nums := strings.Split(main, ".")
-		get := func(i int) int {
-			if i >= len(nums) {
-				return 0
-			}
-			n, _ := strconv.Atoi(nums[i])
-			return n
-		}
-		return get(0), get(1), get(2), suffix
-	}
-
-	cMaj, cMin, cPat, cSuf := parse(candidate)
-	curMaj, curMin, curPat, curSuf := parse(current)
-
-	// 1. Compare Core Numbers
-	if cMaj != curMaj {
-		return cMaj > curMaj
-	}
-	if cMin != curMin {
-		return cMin > curMin
-	}
-	if cPat != curPat {
-		return cPat > curPat
-	}
-
-	// 2. Compare Suffixes (Pre-releases)
-	// SemVer: 1.0.0-beta < 1.0.0 (No suffix is NEWER than Suffix)
-
-	if cSuf == "" && curSuf != "" {
-		return true // Candidate is stable (newer), current is beta
-	}
-	if cSuf != "" && curSuf == "" {
-		return false // Candidate is beta, current is stable (older)
-	}
-	if cSuf == "" && curSuf == "" {
-		return false // Equal
-	}
-
-	// Both have suffixes. Compare them semantically.
-	// Format expected: "beta.8", "rc.1", "alpha"
-	// Split by dot or non-numeric
-
-	parseSuffix := func(s string) (string, int) {
-		parts := strings.Split(s, ".")
-		name := parts[0]
-		ver := 0
-		if len(parts) > 1 {
-			ver, _ = strconv.Atoi(parts[1])
-		}
-		return name, ver
-	}
-
-	cName, cVer := parseSuffix(cSuf)
-	curName, curVer := parseSuffix(curSuf)
-
-	// Compare names (alpha < beta < rc)
-	// Normalizing to lowercase is critical for ASCII comparison:
-	// "beta" (98) > "RC" (82) -> WRONG
-	// "beta" (98) > "rc" (114) -> FALSE (Correct, rc is newer)
-	cNameLower := strings.ToLower(cName)
-	curNameLower := strings.ToLower(curName)
-
-	if cNameLower != curNameLower {
-		return cNameLower > curNameLower
-	}
-
-	// Compare versions (8 < 10)
-	return cVer > curVer
 }

@@ -55,6 +55,7 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 | **Frontend** | **TypeScript** | Strongly typed, modern client-side logic ensuring reliability and maintainability. |
 | **Build Tool** | **Bun** | Ultra-fast bundler and runtime used to compile frontend assets lightning-fast. |
 | **Styling** | **CSS Variables** | A centralized design token system allowing for instant theming and high-performance rendering without CSS-in-JS overhead. |
+| **Updates** | **Smart Proxy** | Privacy-focused update system that acts as a shield between your instance and GitHub, enforcing Rate Limits and caching. |
 
 ---
 
