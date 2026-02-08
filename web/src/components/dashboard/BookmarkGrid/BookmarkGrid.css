@@ -28,23 +28,83 @@
     display: none !important;
 }
 
-/* Touch Mode / Mobile (Flat List) */
+/* ═══════════════════════════════════════════════════════════════
+   Touch Mode / Mobile & Tablet — Horizontal Card List
+   ═══════════════════════════════════════════════════════════════
+   On touch devices the grid is replaced by a simple vertical list
+   of full-width horizontal cards.  Each card shows the icon on the
+   left, the label in the centre, and the optional status indicator
+   on the right.  This layout completely avoids the desktop column-
+   flex + percentage-max-height chain that caused cards to collapse
+   on mobile browsers.
+   ═══════════════════════════════════════════════════════════════ */
+
 :host(.touch-mode) {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-direction: column;
+    gap: 10px;
     padding: 12px;
+    /* Remove layout containment — it can interfere with flex height
+       resolution on some mobile browsers */
+    contain: none;
+    will-change: auto;
 }
 
 :host(.touch-mode) .bookmark-grid__card {
-    /* Auto-flow on mobile */
+    /* Reset grid positioning */
     grid-column: auto !important;
     grid-row: auto !important;
+
+    /* Full-width horizontal card */
     width: 100%;
     height: auto;
+    min-height: 52px;
+    max-height: none;
     aspect-ratio: auto;
-    min-height: 80px;
-    /* Optimize touch targets */
+
+    /* Horizontal layout: [Icon] [Label] [Status●] */
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    align-self: stretch;
+    gap: 12px;
+    padding: 12px 16px !important;
+
+    /* Remove container-query context (avoids implicit containment
+       and undefined cqi units in a non-grid context) */
+    container-type: normal;
+}
+
+/* Icon container — fixed size, no flex-grow */
+:host(.touch-mode) .bookmark-grid__icon-container {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+/* Icons — fixed pixel size avoids the max-height:80% circular
+   dependency that collapsed icons on mobile */
+:host(.touch-mode) .bookmark-grid__icon-img,
+:host(.touch-mode) .bookmark-grid__icon-svg {
+    width: 40px;
+    height: 40px;
+    max-height: none;
+}
+
+/* Label — fills remaining space, left-aligned */
+:host(.touch-mode) .bookmark-grid__label {
+    font-size: 14px;
+    text-align: left;
+    padding: 0;
+    flex: 1;
+    min-width: 0; /* allow text-overflow ellipsis in flex */
+}
+
+/* Status indicator — inline at end of card instead of absolute */
+:host(.touch-mode) .status-indicator {
+    position: static;
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
 }
 
 /* Hide sections in touch mode (content is flattened) */
