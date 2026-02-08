@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Saat Dilimi",
   "widget.clock.auto_detect": "Otomatik Algıla",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Notlar"
+  "widget.notepad.name": "Notlar",
+  "settings.grid_columns": "Sütun Sayısı",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

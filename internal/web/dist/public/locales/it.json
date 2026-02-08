@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Fuso orario",
   "widget.clock.auto_detect": "Rilevamento auto",
   "widget.clock.timezone_desc": "es. Europe/Rome, UTC, o 'local'",
-  "widget.notepad.name": "Note"
+  "widget.notepad.name": "Note",
+  "settings.grid_columns": "Numero di colonne",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Zona Horaria",
   "widget.clock.auto_detect": "Auto Detectar",
   "widget.clock.timezone_desc": "ej. America/New_York, UTC, o 'local'",
-  "widget.notepad.name": "Notas"
+  "widget.notepad.name": "Notas",
+  "settings.grid_columns": "Número de Columnas",
+  "settings.density_desc": "Ajusta el número de columnas para controlar la densidad."
 }

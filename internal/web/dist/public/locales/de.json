@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Zeitzone",
   "widget.clock.auto_detect": "Automatisch erkennen",
   "widget.clock.timezone_desc": "z.B. Europe/Berlin, UTC oder 'local'",
-  "widget.notepad.name": "Notizen"
+  "widget.notepad.name": "Notizen",
+  "settings.grid_columns": "Spaltenanzahl",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

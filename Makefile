@@ -1,6 +1,6 @@
 .PHONY: all build run clean
 
-APP_NAME := dashboard
+APP_NAME := lastboard
 CMD_PATH := ./cmd/dashboard/main.go
 BUILD_DIR := ./bin
 

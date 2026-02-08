@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Часовой пояс",
   "widget.clock.auto_detect": "Автоопределение",
   "widget.clock.timezone_desc": "например, Europe/Moscow, UTC или 'local'",
-  "widget.notepad.name": "Заметки"
+  "widget.notepad.name": "Заметки",
+  "settings.grid_columns": "Количество столбцов",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

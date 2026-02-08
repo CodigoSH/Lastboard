@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Zona Waktu",
   "widget.clock.auto_detect": "Deteksi Otomatis",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Catatan"
+  "widget.notepad.name": "Catatan",
+  "settings.grid_columns": "Jumlah Kolom",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }

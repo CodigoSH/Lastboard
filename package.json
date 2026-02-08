@@ -1,10 +1,12 @@
 {
   "name": "lastboard",
-  "version": "1.1.4-beta.10",
+  "version": "1.1.4",
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "translate:check": "bun run scripts/find_untranslated_strings.ts",
+    "i18n:sync": "bun run scripts/i18n-sync.ts",
+    "i18n:audit": "bun run scripts/i18n-audit.ts",
+    "i18n:scan": "bun run scripts/i18n-scan.ts",
     "set-version": "bun run scripts/set_version.ts"
   },
   "devDependencies": {

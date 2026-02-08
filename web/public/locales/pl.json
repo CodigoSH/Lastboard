@@ -271,5 +271,7 @@
   "widget.clock.timezone": "Strefa czasowa",
   "widget.clock.auto_detect": "Wykryj automatycznie",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Notatki"
+  "widget.notepad.name": "Notatki",
+  "settings.grid_columns": "Liczba kolumn",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
 }
