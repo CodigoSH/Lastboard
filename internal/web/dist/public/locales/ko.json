@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "아이콘",
   "bookmark.monitor_status": "상태 모니터링 (Ping)",
-  "bookmark.visible_mobile": "모바일에서 표시",
-  "bookmark.visible_tablet": "태블릿에서 표시",
+  "bookmark.visible_touch": "터치 기기에서 표시",
   "bookmark.placeholder_label": "나의 멋진 사이트",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "섹션 추가",
@@ -103,6 +102,8 @@
   "settings.interface_title": "인터페이스 / 그리드 구조",
   "settings.project_name": "프로젝트 이름",
   "settings.project_name_desc": "상단 표시줄에 표시되는 애플리케이션 이름을 사용자 정의합니다.",
+  "settings.grid_columns": "열 수",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "PC 열",
   "settings.grid_tablet": "태블릿 열",
   "settings.grid_mobile": "모바일 열",
@@ -268,10 +269,10 @@
   "setup.error_username": "사용자 이름은 최소 3자 이상이어야 합니다",
   "setup.error_password": "비밀번호가 너무 짧습니다 (최소 4자)",
   "setup.error_connection": "연결 실패. 로그를 확인하세요.",
+  "bookmark.visible_mobile": "모바일에서 표시",
+  "bookmark.visible_tablet": "태블릿에서 표시",
   "widget.clock.timezone": "시간대",
   "widget.clock.auto_detect": "자동 감지",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "메모",
-  "settings.grid_columns": "열 수",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "메모"
 }

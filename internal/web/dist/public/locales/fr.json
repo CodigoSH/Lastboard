@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Icône",
   "bookmark.monitor_status": "État du Moniteur (Ping)",
-  "bookmark.visible_mobile": "Visible sur Mobile",
-  "bookmark.visible_tablet": "Visible sur Tablette",
+  "bookmark.visible_touch": "Visible sur les appareils tactiles",
   "bookmark.placeholder_label": "Mon Super Site",
   "bookmark.placeholder_url": "https://exemple.com",
   "section.add": "Ajouter une Section",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Interface / Architecture de Grille",
   "settings.project_name": "Nom du Projet",
   "settings.project_name_desc": "Personnalisez le nom de l'application affiché dans la barre supérieure.",
+  "settings.grid_columns": "Nombre de colonnes",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "Colonnes PC",
   "settings.grid_tablet": "Colonnes Tablette",
   "settings.grid_mobile": "Colonnes Mobile",
@@ -268,10 +269,10 @@
   "setup.error_username": "Le nom d'utilisateur doit contenir au moins 3 caractères",
   "setup.error_password": "Mot de passe trop court (min 4 caractères)",
   "setup.error_connection": "La connexion a échoué. Vérifiez les journaux.",
+  "bookmark.visible_mobile": "Visible sur Mobile",
+  "bookmark.visible_tablet": "Visible sur Tablette",
   "widget.clock.timezone": "Fuseau Horaire",
   "widget.clock.auto_detect": "Détection auto",
   "widget.clock.timezone_desc": "ex. America/Paris, UTC, ou 'local'",
-  "widget.notepad.name": "Notes",
-  "settings.grid_columns": "Nombre de colonnes",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Notes"
 }

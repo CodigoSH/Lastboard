@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Icona",
   "bookmark.monitor_status": "Monitora stato (Ping)",
-  "bookmark.visible_mobile": "Visibile su Mobile",
-  "bookmark.visible_tablet": "Visibile su Tablet",
+  "bookmark.visible_touch": "Visibile sui dispositivi touch",
   "bookmark.placeholder_label": "Il mio sito fantastico",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "Aggiungi Sezione",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Interfaccia / Architettura Griglia",
   "settings.project_name": "Nome del Progetto",
   "settings.project_name_desc": "Personalizza il nome dell'applicazione visualizzato nella barra superiore.",
+  "settings.grid_columns": "Numero di colonne",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "Colonne PC",
   "settings.grid_tablet": "Colonne Tablet",
   "settings.grid_mobile": "Colonne Mobile",
@@ -268,10 +269,10 @@
   "setup.error_username": "Il nome utente deve avere almeno 3 caratteri",
   "setup.error_password": "Password troppo corta (min 4 caratteri)",
   "setup.error_connection": "Connessione fallita. Controlla i registri.",
+  "bookmark.visible_mobile": "Visibile su Mobile",
+  "bookmark.visible_tablet": "Visibile su Tablet",
   "widget.clock.timezone": "Fuso orario",
   "widget.clock.auto_detect": "Rilevamento auto",
   "widget.clock.timezone_desc": "es. Europe/Rome, UTC, o 'local'",
-  "widget.notepad.name": "Note",
-  "settings.grid_columns": "Numero di colonne",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Note"
 }

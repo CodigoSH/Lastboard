@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "Simge",
   "bookmark.monitor_status": "Durumu İzle (Ping)",
-  "bookmark.visible_mobile": "Mobilde Görünür",
-  "bookmark.visible_tablet": "Tablette Görünür",
+  "bookmark.visible_touch": "Dokunmatik Cihazlarda Görünür",
   "bookmark.placeholder_label": "Harika Sitem",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "Bölüm Ekle",
@@ -103,6 +102,8 @@
   "settings.interface_title": "Arayüz / Izgara Mimarisi",
   "settings.project_name": "Proje Adı",
   "settings.project_name_desc": "Üst çubukta görüntülenen uygulama adını özelleştirin.",
+  "settings.grid_columns": "Sütun Sayısı",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "PC Sütunları",
   "settings.grid_tablet": "Tablet Sütunları",
   "settings.grid_mobile": "Mobil Sütunlar",
@@ -268,10 +269,10 @@
   "setup.error_username": "Kullanıcı adı en az 3 karakter olmalıdır",
   "setup.error_password": "Şifre çok kısa (min 4 karakter)",
   "setup.error_connection": "Bağlantı başarısız. Günlükleri kontrol edin.",
+  "bookmark.visible_mobile": "Mobilde Görünür",
+  "bookmark.visible_tablet": "Tablette Görünür",
   "widget.clock.timezone": "Saat Dilimi",
   "widget.clock.auto_detect": "Otomatik Algıla",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "Notlar",
-  "settings.grid_columns": "Sütun Sayısı",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "Notlar"
 }

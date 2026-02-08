@@ -80,8 +80,7 @@
   "bookmark.url": "URL",
   "bookmark.icon": "アイコン",
   "bookmark.monitor_status": "監視ステータス (Ping)",
-  "bookmark.visible_mobile": "モバイルで表示",
-  "bookmark.visible_tablet": "タブレットで表示",
+  "bookmark.visible_touch": "タッチデバイスで表示",
   "bookmark.placeholder_label": "私の素敵なサイト",
   "bookmark.placeholder_url": "https://example.com",
   "section.add": "セクションを追加",
@@ -103,6 +102,8 @@
   "settings.interface_title": "インターフェイス / グリッドアーキテクチャ",
   "settings.project_name": "プロジェクト名",
   "settings.project_name_desc": "トップバーに表示されるアプリケーション名をカスタマイズします。",
+  "settings.grid_columns": "列数",
+  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard.",
   "settings.grid_pc": "PC列数",
   "settings.grid_tablet": "タブレット列数",
   "settings.grid_mobile": "モバイル列数",
@@ -268,10 +269,10 @@
   "setup.error_username": "ユーザー名は3文字以上である必要があります",
   "setup.error_password": "パスワードが短すぎます（最低4文字）",
   "setup.error_connection": "接続に失敗しました。ログを確認してください。",
+  "bookmark.visible_mobile": "モバイルで表示",
+  "bookmark.visible_tablet": "タブレットで表示",
   "widget.clock.timezone": "タイムゾーン",
   "widget.clock.auto_detect": "自動検出",
   "widget.clock.timezone_desc": "e.g. UTC, 'local'",
-  "widget.notepad.name": "メモ",
-  "settings.grid_columns": "列数",
-  "settings.density_desc": "Adjust the number of columns to control the density of your dashboard."
+  "widget.notepad.name": "メモ"
 }
