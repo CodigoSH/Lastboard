@@ -204,7 +204,7 @@
   "section.edit_title": "تحرير القسم",
   "widget.clock.city": "المدينة",
   "widget.clock.city_placeholder": "مثال: دبي، القاهرة، الرياض",
-  "widget.clock.city_desc": "أدخل اسم مدينتك لتعيين المنطقة الزمنية تلقائيًا",
+  "widget.clock.city_desc": "أدخل 'المدينة، البلد' للدقة. سيتم تحديد النتيجة الأولى تلقائيًا.",
   "widget.clock.use_12h": "استخدام تنسيق 12 ساعة",
   "widget.clock.show_date": "إظهار التاريخ",
   "widget.telemetry.update_interval": "فاصل التحديث",

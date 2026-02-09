@@ -204,7 +204,7 @@
   "section.edit_title": "Sectie bewerken",
   "widget.clock.city": "Stad",
   "widget.clock.city_placeholder": "bijv. Amsterdam, Rotterdam",
-  "widget.clock.city_desc": "Voer uw stad in om de tijdzone automatisch in te stellen",
+  "widget.clock.city_desc": "Voer 'Stad, Land' in voor precisie. Het eerste resultaat wordt automatisch geselecteerd.",
   "widget.clock.use_12h": "12-uurs formaat",
   "widget.clock.show_date": "Datum tonen",
   "widget.telemetry.update_interval": "Update-interval",

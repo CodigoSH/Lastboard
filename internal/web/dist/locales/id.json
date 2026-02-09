@@ -204,7 +204,7 @@
   "section.edit_title": "Edit Bagian",
   "widget.clock.city": "Kota",
   "widget.clock.city_placeholder": "contoh: Jakarta, Surabaya",
-  "widget.clock.city_desc": "Masukkan nama kota untuk mengatur zona waktu secara otomatis",
+  "widget.clock.city_desc": "Masukkan 'Kota, Negara' untuk presisi. Hasil pertama yang ditemukan akan dipilih otomatis.",
   "widget.clock.use_12h": "Gunakan format 12 jam",
   "widget.clock.show_date": "Tampilkan Tanggal",
   "widget.telemetry.update_interval": "Interval Pembaruan",

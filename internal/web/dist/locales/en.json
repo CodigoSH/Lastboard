@@ -204,7 +204,7 @@
   "section.edit_title": "Edit Section",
   "widget.clock.city": "City",
   "widget.clock.city_placeholder": "e.g. London, Tokyo, New York",
-  "widget.clock.city_desc": "Enter your city name to automatically set the timezone",
+  "widget.clock.city_desc": "Enter 'City, Country' for precision. The first match found will be auto-selected.",
   "widget.clock.use_12h": "Use 12-Hour Format",
   "widget.clock.show_date": "Show Date",
   "widget.telemetry.update_interval": "Update Interval",

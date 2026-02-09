@@ -204,7 +204,7 @@
   "section.edit_title": "섹션 편집",
   "widget.clock.city": "도시",
   "widget.clock.city_placeholder": "예: 서울, 부산, 인천",
-  "widget.clock.city_desc": "도시 이름을 입력하여 시간대를 자동으로 설정하세요",
+  "widget.clock.city_desc": "정확성을 위해 '도시, 국가'를 입력하세요. 첫 번째 검색 결과가 자동으로 선택됩니다.",
   "widget.clock.use_12h": "12시간 형식 사용",
   "widget.clock.show_date": "날짜 표시",
   "widget.telemetry.update_interval": "업데이트 간격",

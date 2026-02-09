@@ -204,7 +204,7 @@
   "section.edit_title": "Modifier la section",
   "widget.clock.city": "Ville",
   "widget.clock.city_placeholder": "ex. Paris, Montréal, Bruxelles",
-  "widget.clock.city_desc": "Entrez votre ville pour définir le fuseau horaire automatiquement",
+  "widget.clock.city_desc": "Entrez 'Ville, Pays' pour plus de précision. Le premier résultat trouvé sera sélectionné.",
   "widget.clock.use_12h": "Format 12h",
   "widget.clock.show_date": "Afficher la date",
   "widget.telemetry.update_interval": "Intervalle de mise à jour",

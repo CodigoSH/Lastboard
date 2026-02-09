@@ -204,7 +204,7 @@
   "section.edit_title": "セクションを編集",
   "widget.clock.city": "都市",
   "widget.clock.city_placeholder": "例：東京、大阪、京都",
-  "widget.clock.city_desc": "都市名を入力してタイムゾーンを自動設定します",
+  "widget.clock.city_desc": "精度を高めるには「都市名, 国名」を入力してください。最初に見つかった結果が自動選択されます。",
   "widget.clock.use_12h": "12時間形式を使用",
   "widget.clock.show_date": "日付を表示",
   "widget.telemetry.update_interval": "更新間隔",

@@ -204,7 +204,7 @@
   "section.edit_title": "Editar seção",
   "widget.clock.city": "Cidade",
   "widget.clock.city_placeholder": "ex. Lisboa, São Paulo, Rio",
-  "widget.clock.city_desc": "Digite o nome da sua cidade para definir o fuso horário automaticamente",
+  "widget.clock.city_desc": "Digite 'Cidade, País' para maior precisão. O primeiro resultado encontrado será selecionado.",
   "widget.clock.use_12h": "Formato 12h",
   "widget.clock.show_date": "Mostrar Data",
   "widget.telemetry.update_interval": "Intervalo de Atualização",
