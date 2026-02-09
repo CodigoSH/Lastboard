@@ -304,6 +304,27 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Цифровые часы с датой", "zh": "带日期的数字时钟", "ja": "日付付きデジタル時計", "ko": "날짜가 있는 디지털 시계", "tr": "Tarihli dijital saat", "pl": "Zegar cyfrowy z datą",
         "id": "Jam digital dengan tanggal", "ar": "ساعة رقمية مع التاريخ", "fa": "ساعت دیجیتال با تاریخ", "el": "Ψηφιακό ρολόι με ημερομηνία", "hi": "तारीख के साथ डिजिटल घड़ी", "bn": "তারিখ সহ ডিজিটাল ঘড়ি", "ur": "تاریخ کے ساتھ ڈیजीٹل گھڑی"
     },
+    "widget.clock.city_desc": {
+        "es": "Introduce 'Ciudad, País' para mayor precisión. Se autoseleccionará el primer resultado encontrado.",
+        "fr": "Entrez 'Ville, Pays' pour plus de précision. Le premier résultat trouvé sera sélectionné.",
+        "it": "Inserisci 'Città, Paese' per maggiore precisione. Verrà selezionato il primo risultato trovato.",
+        "pt": "Digite 'Cidade, País' para maior precisão. O primeiro resultado encontrado será selecionado.",
+        "de": "Geben Sie 'Stadt, Land' für mehr Präzision ein. Das erste gefundene Ergebnis wird ausgewählt.",
+        "nl": "Voer 'Stad, Land' in voor precisie. Het eerste resultaat wordt automatisch geselecteerd.",
+        "ru": "Введите 'Город, Страна' для точности. Будет выбран первый найденный результат.",
+        "zh": "输入“城市，国家”以提高准确性。将自动选择找到的第一个结果。",
+        "ja": "精度を高めるには「都市名, 国名」を入力してください。最初に見つかった結果が自動選択されます。",
+        "ko": "정확성을 위해 '도시, 국가'를 입력하세요. 첫 번째 검색 결과가 자동으로 선택됩니다.",
+        "tr": "Kesinlik için 'Şehir, Ülke' girin. Bulunan ilk sonuç otomatik olarak seçilecektir.",
+        "pl": "Wpisz 'Miasto, Kraj' dla precyzji. Pierwszy znaleziony wynik zostanie wybrany automatycznie.",
+        "id": "Masukkan 'Kota, Negara' untuk presisi. Hasil pertama yang ditemukan akan dipilih otomatis.",
+        "ar": "أدخل 'المدينة، البلد' للدقة. سيتم تحديد النتيجة الأولى تلقائيًا.",
+        "fa": "برای دقت بیشتر 'شهر، کشور' را وارد کنید. اولین نتیجه یافت شده به طور خودکار انتخاب می‌شود.",
+        "el": "Εισάγετε «Πόλη, Χώρα» για ακρίβεια. Θα επιλεγεί αυτόματα το πρώτο αποτέλεσμα που θα βρεθεί.",
+        "hi": "सटीकता के लिए 'शहर, देश' दर्ज करें। जो पहला परिणाम मिलेगा उसे स्वचालित रूप से चुना जाएगा।",
+        "bn": "নির্ভুলতার জন্য 'শহর, দেশ' লিখুন। প্রাপ্ত প্রথম ফলাফলটি স্বয়ংক্রিয়ভাবে নির্বাচিত হবে।",
+        "ur": "درستگی کے لیے 'شہر، ملک' درج کریں۔ ملنے والا پہلا نتیجہ خود بخود منتخب ہو جائے گا۔"
+    },
     "widget.notepad.name": {
         "es": "Notas", "fr": "Notes", "it": "Note", "pt": "Notas", "de": "Notizen", "nl": "Notities",
         "ru": "Заметки", "zh": "便签", "ja": "メモ", "ko": "메모", "tr": "Notlar", "pl": "Notatki",

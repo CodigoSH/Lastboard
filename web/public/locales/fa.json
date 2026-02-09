@@ -204,7 +204,7 @@
   "section.edit_title": "ویرایش بخش",
   "widget.clock.city": "شهر",
   "widget.clock.city_placeholder": "مثال: تهران، مشهد",
-  "widget.clock.city_desc": "نام شهر خود را وارد کنید تا منطقه زمانی به صورت خودکار تنظیم شود",
+  "widget.clock.city_desc": "برای دقت بیشتر 'شهر، کشور' را وارد کنید. اولین نتیجه یافت شده به طور خودکار انتخاب می‌شود.",
   "widget.clock.use_12h": "استفاده از فرمت ۱۲ ساعته",
   "widget.clock.show_date": "نمایش تاریخ",
   "widget.telemetry.update_interval": "فاصله به‌روزرسانی",

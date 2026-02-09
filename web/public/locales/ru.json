@@ -204,7 +204,7 @@
   "section.edit_title": "Редактировать раздел",
   "widget.clock.city": "Город",
   "widget.clock.city_placeholder": "напр. Москва, Санкт-Петербург",
-  "widget.clock.city_desc": "Введите название города для автоматической настройки часового пояса",
+  "widget.clock.city_desc": "Введите 'Город, Страна' для точности. Будет выбран первый найденный результат.",
   "widget.clock.use_12h": "12-часовой формат",
   "widget.clock.show_date": "Показать дату",
   "widget.telemetry.update_interval": "Интервал обновления",

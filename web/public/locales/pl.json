@@ -204,7 +204,7 @@
   "section.edit_title": "Edytuj sekcję",
   "widget.clock.city": "Miasto",
   "widget.clock.city_placeholder": "np. Warszawa, Kraków",
-  "widget.clock.city_desc": "Wpisz nazwę miasta, aby automatycznie ustawić strefę czasową",
+  "widget.clock.city_desc": "Wpisz 'Miasto, Kraj' dla precyzji. Pierwszy znaleziony wynik zostanie wybrany automatycznie.",
   "widget.clock.use_12h": "Format 12-godzinny",
   "widget.clock.show_date": "Pokaż datę",
   "widget.telemetry.update_interval": "Interwał aktualizacji",

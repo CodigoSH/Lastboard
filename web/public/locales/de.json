@@ -204,7 +204,7 @@
   "section.edit_title": "Abschnitt bearbeiten",
   "widget.clock.city": "Stadt",
   "widget.clock.city_placeholder": "z.B. Berlin, Wien, Zürich",
-  "widget.clock.city_desc": "Geben Sie Ihre Stadt ein, um die Zeitzone automatisch festzulegen",
+  "widget.clock.city_desc": "Geben Sie 'Stadt, Land' für mehr Präzision ein. Das erste gefundene Ergebnis wird ausgewählt.",
   "widget.clock.use_12h": "12-Stunden-Format",
   "widget.clock.show_date": "Datum anzeigen",
   "widget.telemetry.update_interval": "Aktualisierungsintervall",

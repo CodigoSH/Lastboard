@@ -204,7 +204,7 @@
   "section.edit_title": "Modifica sezione",
   "widget.clock.city": "Città",
   "widget.clock.city_placeholder": "es. Roma, Milano, Napoli",
-  "widget.clock.city_desc": "Inserisci la tua città per impostare automaticamente il fuso orario",
+  "widget.clock.city_desc": "Inserisci 'Città, Paese' per maggiore precisione. Verrà selezionato il primo risultato trovato.",
   "widget.clock.use_12h": "Formato 12 ore",
   "widget.clock.show_date": "Mostra data",
   "widget.telemetry.update_interval": "Intervallo di aggiornamento",

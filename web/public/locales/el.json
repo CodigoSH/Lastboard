@@ -204,7 +204,7 @@
   "section.edit_title": "Επεξεργασία ενότητας",
   "widget.clock.city": "Πόλη",
   "widget.clock.city_placeholder": "π.χ. Αθήνα, Θεσσαλονίκη",
-  "widget.clock.city_desc": "Εισάγετε την πόλη σας για αυτόματη ρύθμιση ζώνης ώρας",
+  "widget.clock.city_desc": "Εισάγετε «Πόλη, Χώρα» για ακρίβεια. Θα επιλεγεί αυτόματα το πρώτο αποτέλεσμα που θα βρεθεί.",
   "widget.clock.use_12h": "Μορφή 12 ωρών",
   "widget.clock.show_date": "Εμφάνιση ημερομηνίας",
   "widget.telemetry.update_interval": "Διάστημα ενημέρωσης",

@@ -204,7 +204,7 @@
   "section.edit_title": "বিভাগ সম্পাদনা করুন",
   "widget.clock.city": "শহর",
   "widget.clock.city_placeholder": "উদাঃ ঢাকা, চট্টগ্রাম",
-  "widget.clock.city_desc": "স্বয়ংক্রিয়ভাবে সময় অঞ্চল সেট করতে আপনার শহরের নাম লিখুন",
+  "widget.clock.city_desc": "নির্ভুলতার জন্য 'শহর, দেশ' লিখুন। প্রাপ্ত প্রথম ফলাফলটি স্বয়ংক্রিয়ভাবে নির্বাচিত হবে।",
   "widget.clock.use_12h": "১২-ঘন্টা বিন্যাস ব্যবহার করুন",
   "widget.clock.show_date": "তারিখ দেখান",
   "widget.telemetry.update_interval": "আপডেট বিরতি",

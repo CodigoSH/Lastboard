@@ -204,7 +204,7 @@
   "section.edit_title": "Editar Sección",
   "widget.clock.city": "Ciudad",
   "widget.clock.city_placeholder": "ej. Madrid, Buenos Aires, Ciudad de México",
-  "widget.clock.city_desc": "Introduce tu ciudad para autodetectar la zona horaria",
+  "widget.clock.city_desc": "Introduce 'Ciudad, País' para mayor precisión. Se autoseleccionará el primer resultado encontrado.",
   "widget.clock.use_12h": "Usar formato 12h",
   "widget.clock.show_date": "Mostrar Fecha",
   "widget.telemetry.update_interval": "Intervalo de actualización",

@@ -204,7 +204,7 @@
   "section.edit_title": "Bölümü Düzenle",
   "widget.clock.city": "Şehir",
   "widget.clock.city_placeholder": "örn. İstanbul, Ankara",
-  "widget.clock.city_desc": "Saat dilimini otomatik ayarlamak için şehir girin",
+  "widget.clock.city_desc": "Kesinlik için 'Şehir, Ülke' girin. Bulunan ilk sonuç otomatik olarak seçilecektir.",
   "widget.clock.use_12h": "12 Saat Biçimi",
   "widget.clock.show_date": "Tarihi Göster",
   "widget.telemetry.update_interval": "Güncelleme Aralığı",

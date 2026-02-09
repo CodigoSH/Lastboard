@@ -204,7 +204,7 @@
   "section.edit_title": "سیکشن میں ترمیم کریں",
   "widget.clock.city": "شہر",
   "widget.clock.city_placeholder": "مثال: کراچی، لاہور",
-  "widget.clock.city_desc": "ٹائم زون خودکار طور پر سیٹ کرنے کے لیے اپنے شہر کا نام درج کریں",
+  "widget.clock.city_desc": "درستگی کے لیے 'شہر، ملک' درج کریں۔ ملنے والا پہلا نتیجہ خود بخود منتخب ہو جائے گا۔",
   "widget.clock.use_12h": "12 گھنٹے کا فارمیٹ استعمال کریں",
   "widget.clock.show_date": "تاریخ دکھائیں",
   "widget.telemetry.update_interval": "اپ ڈیٹ کا وقفہ",

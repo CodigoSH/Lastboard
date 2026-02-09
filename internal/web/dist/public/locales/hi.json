@@ -204,7 +204,7 @@
   "section.edit_title": "अनुभाग संपादित करें",
   "widget.clock.city": "शहर",
   "widget.clock.city_placeholder": "जैसे दिल्ली, मुंबई, बैंगलोर",
-  "widget.clock.city_desc": "समय क्षेत्र स्वचालित रूप से सेट करने के लिए अपना शहर दर्ज करें",
+  "widget.clock.city_desc": "सटीकता के लिए 'शहर, देश' दर्ज करें। जो पहला परिणाम मिलेगा उसे स्वचालित रूप से चुना जाएगा।",
   "widget.clock.use_12h": "12-घंटे का प्रारूप",
   "widget.clock.show_date": "तारीख दिखाएं",
   "widget.telemetry.update_interval": "अद्यतन अंतराल",
