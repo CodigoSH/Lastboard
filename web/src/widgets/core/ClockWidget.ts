@@ -154,14 +154,7 @@ class ClockWidget extends HTMLElement {
                     justify-content: center;
                     width: 100%;
                     height: 100%;
-                    background: var(--surface);
-                    backdrop-filter: blur(12px);
-                    -webkit-backdrop-filter: blur(12px);
-                    border: 1px solid var(--border);
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                    
                     color: var(--text-main);
-                    border-radius: var(--radius);
                     box-sizing: border-box;
                     padding: 8%; /* Percentage padding */
                     user-select: none;

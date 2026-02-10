@@ -163,6 +163,11 @@
     height: auto !important;
 }
 
+/* Allow widget tooltips to overflow the card */
+.bookmark-grid__card[data-type="widget"] {
+    overflow: visible;
+}
+
 .bookmark-grid__card:hover {
     border-color: var(--border-bright);
     background: var(--surface-solid);

@@ -23,6 +23,7 @@ import './components/ui/ConfirmationModal/ConfirmationModal';
 import './widgets/core/NotepadWidget';
 import './widgets/core/ClockWidget';
 import './widgets/core/TelemetryWidget';
+import './widgets/core/WeatherWidget';
 
 const topbar = document.getElementById('main-topbar') as any;
 const drawer = document.getElementById('right-drawer') as any;

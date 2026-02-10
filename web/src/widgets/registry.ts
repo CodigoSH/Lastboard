@@ -36,5 +36,14 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         defaultW: 2,
         defaultH: 1, // Compact row
         componentTag: 'widget-telemetry'
+    },
+    {
+        id: 'weather',
+        name: 'Weather',
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="14.7" y1="3.3" x2="13.3" y2="4.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><path d="M10 19 Q10 15 14 15 Q14 11 18 11 Q22 11 22 15 Q24 15 24 18 Q24 21 21 21 L12 21 Q10 21 10 19Z"/></svg>',
+        description: 'Current weather & forecast',
+        defaultW: 2,
+        defaultH: 2,
+        componentTag: 'widget-weather'
     }
 ];

@@ -79,7 +79,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
         const tagMap: Record<string, string> = {
             'clock': 'widget-clock',
             'notepad': 'widget-notepad',
-            'telemetry': 'widget-telemetry'
+            'telemetry': 'widget-telemetry',
+            'weather': 'widget-weather'
         };
         const tagName = tagMap[widgetId] || 'div';
         const rawContent = data.text || '';
@@ -100,7 +101,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
 
             ${isEditing ? `
             <div class="bookmark-actions">
-                 ${['clock', 'telemetry'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
+                 ${['clock', 'telemetry', 'weather'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
                  <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
             </div>
             ${['clock', 'telemetry'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}

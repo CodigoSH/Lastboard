@@ -144,12 +144,6 @@ class TelemetryWidget extends HTMLElement {
                     justify-content: space-around;
                     width: 100%;
                     height: 100%;
-                    background: var(--surface);
-                    backdrop-filter: blur(12px);
-                    -webkit-backdrop-filter: blur(12px);
-                    border: 1px solid var(--border);
-                    border-radius: var(--radius);
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     box-sizing: border-box;
                     padding: 4%; /* Proportional padding */
                     color: var(--text-main);
