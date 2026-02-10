@@ -34,6 +34,7 @@ class SettingsContent extends HTMLElement {
     }
 
     private unsubscribe: (() => void) | null = null;
+    private _renderPending = false;
 
     connectedCallback() {
         this.unsubscribe = userStore.subscribe(user => {
@@ -636,6 +637,15 @@ class SettingsContent extends HTMLElement {
     }
 
     render() {
+        if (this._renderPending) return;
+        this._renderPending = true;
+        requestAnimationFrame(() => {
+            this._renderPending = false;
+            this._doRender();
+        });
+    }
+
+    private _doRender() {
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
             <div class="fade-in">

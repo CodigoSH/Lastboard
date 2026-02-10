@@ -8,6 +8,7 @@ import { i18n } from '../../../services/i18n';
 import '../../../widgets/core/ClockWidget';
 import '../../../widgets/core/NotepadWidget';
 import '../../../widgets/core/TelemetryWidget';
+import '../../../widgets/core/WeatherWidget';
 // @ts-ignore
 import css from './BookmarkGrid.css' with { type: 'text' };
 

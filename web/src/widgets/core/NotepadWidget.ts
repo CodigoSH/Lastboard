@@ -72,14 +72,8 @@ export class NotepadWidget extends LitElement {
             flex-direction: column;
             width: 100%;
             height: 100%;
-            background: var(--surface);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
             overflow: hidden;
             color: var(--text-main);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
             position: relative;
         }
@@ -423,7 +417,7 @@ export class NotepadWidget extends LitElement {
             opacity: 1;
         }
 
-        .delete-block-btn:hover {
+    .delete-block-btn:hover {
             background: var(--error);
             color: white;
         }
@@ -545,6 +539,17 @@ export class NotepadWidget extends LitElement {
         if (this._autosaveTimeout) {
             clearTimeout(this._autosaveTimeout);
             this._autosaveTimeout = null;
+        }
+    }
+
+    private scheduleAutosave() {
+        this.cancelAutosave();
+        if (AUTOSAVE_DELAY > 0) {
+            this._autosaveTimeout = setTimeout(() => {
+                if (this.hasUnsavedChanges) {
+                    this.saveContent(true);
+                }
+            }, AUTOSAVE_DELAY);
         }
     }
 
@@ -794,7 +799,7 @@ export class NotepadWidget extends LitElement {
     private handleEditorKeydown(e: KeyboardEvent) {
         // Keyboard shortcuts
         if (e.ctrlKey || e.metaKey) {
-            switch(e.key.toLowerCase()) {
+            switch (e.key.toLowerCase()) {
                 case 'b':
                     e.preventDefault();
                     this.exec('bold');
@@ -859,6 +864,11 @@ export class NotepadWidget extends LitElement {
         }
     }
 
+
+
+
+
+
     render() {
         try {
             // --- VIEW MODE ---
@@ -882,7 +892,7 @@ export class NotepadWidget extends LitElement {
                                     .blockId="${block.id}"
                                     .items="${block.items}"
                                     .readonly="${true}"
-                                    @checklist-change="${() => {}}"
+                                    @checklist-change="${() => { }}"
                                 ></checklist-block>
                             </div>
                         `)}
@@ -944,7 +954,6 @@ export class NotepadWidget extends LitElement {
                         <div class="group">
                             <button @click="${(e: Event) => { e.preventDefault(); this.insertCode(); }}" title="${i18n.t('widget.notepad.tool.code')}">${ICONS.code}</button>
                             <button @click="${(e: Event) => { e.preventDefault(); const u = prompt(i18n.t('widget.notepad.prompt.url')); if (u) this.exec('createLink', u); }}" title="${i18n.t('widget.notepad.tool.link')} (Ctrl+K)">${ICONS.link}</button>
-                            <button @click="${(e: Event) => { e.preventDefault(); const u = prompt(i18n.t('widget.notepad.prompt.image_url')); if (u) this.exec('insertImage', u); }}" title="${i18n.t('widget.notepad.tool.image')}">${ICONS.image}</button>
                              <button @click="${(e: Event) => { e.preventDefault(); this.exec('removeFormat'); }}" title="${i18n.t('widget.notepad.tool.clear_format')}">${ICONS.clear}</button>
                         </div>
 
@@ -999,6 +1008,7 @@ export class NotepadWidget extends LitElement {
                         ${this.characterCount} / ${MAX_CONTENT_SIZE}
                     </div>
                 </div>
+                </div>
             `;
         } catch (e: any) {
             console.error('[NotepadWidget] Render error:', e);
@@ -1013,7 +1023,7 @@ export class NotepadWidget extends LitElement {
                     stack: e.stack,
                     itemId: this.itemId
                 })
-            }).catch(() => {});
+            }).catch(() => { });
 
             return html`
                 <div class="error-state">

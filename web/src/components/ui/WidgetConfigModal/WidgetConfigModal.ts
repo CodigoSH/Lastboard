@@ -66,6 +66,8 @@ async function getCityTimezone(city: string): Promise<string> {
 class WidgetConfigModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
     private currentItem: GridItem | null = null;
+    private _clockSelectedLat: number | null = null;
+    private _clockSelectedLon: number | null = null;
 
     constructor() {
         super();
@@ -112,19 +114,42 @@ class WidgetConfigModal extends HTMLElement {
                 saveBtn.textContent = i18n.t('general.loading');
             }
 
-            // Consultar zona horaria de forma asíncrona
-            const timezone = await getCityTimezone(city);
+            // Use stored coordinates from search, or fall back to Nominatim
+            let timezone = 'local';
+            if (this._clockSelectedLat != null && this._clockSelectedLon != null) {
+                timezone = await getTimezoneFromCoords(this._clockSelectedLat, this._clockSelectedLon);
+            } else if (city) {
+                timezone = await getCityTimezone(city);
+            }
 
             newContent.city = city;
             newContent.timezone = timezone;
             newContent.hour12 = h12Input?.checked || false;
             newContent.showDate = dateInput?.checked || false;
 
+            // Reset stored coords
+            this._clockSelectedLat = null;
+            this._clockSelectedLon = null;
+
             // Restore button state
             if (saveBtn) {
                 saveBtn.disabled = false;
                 saveBtn.textContent = i18n.t('general.save');
             }
+        } else if (widgetId === 'weather') {
+            const cityInput = this.shadowRoot?.getElementById('weather-city') as HTMLInputElement;
+            const latInput = this.shadowRoot?.getElementById('weather-lat') as HTMLInputElement;
+            const lonInput = this.shadowRoot?.getElementById('weather-lon') as HTMLInputElement;
+            const unitInput = this.shadowRoot?.getElementById('weather-fahrenheit') as HTMLInputElement;
+            const forecastInput = this.shadowRoot?.getElementById('weather-forecast') as HTMLInputElement;
+            const daysInput = this.shadowRoot?.getElementById('weather-days') as HTMLInputElement;
+
+            newContent.city = cityInput?.value || '';
+            newContent.latitude = parseFloat(latInput?.value) || 0;
+            newContent.longitude = parseFloat(lonInput?.value) || 0;
+            newContent.unit = unitInput?.checked ? 'fahrenheit' : 'celsius';
+            newContent.showForecast = forecastInput?.checked || false;
+            newContent.forecastDays = parseInt(daysInput?.value) || 5;
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 1000;
@@ -171,8 +196,16 @@ class WidgetConfigModal extends HTMLElement {
                 return `
                     <div class="field-group">
                         <label>${i18n.t('widget.clock.city')}</label>
-                        <input type="text" id="clock-city" value="${esc(city)}" placeholder="${i18n.t('widget.clock.city_placeholder')}"/>
+                        <div class="input-row">
+                            <input type="text" id="clock-city" value="${esc(city)}" placeholder="${i18n.t('widget.clock.city_placeholder')}"/>
+                            <app-button variant="ghost" id="clock-search-btn">${i18n.t('widget.weather.search')}</app-button>
+                        </div>
                         <small>${i18n.t('widget.clock.city_desc')}</small>
+                    </div>
+
+                    <div class="field-group" id="clock-results-container" style="display:none;">
+                        <label>${i18n.t('widget.weather.results')}</label>
+                        <div id="clock-results" class="weather-results"></div>
                     </div>
 
                     <div class="field-group check-row">
@@ -183,6 +216,56 @@ class WidgetConfigModal extends HTMLElement {
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-date" ${showDate ? 'checked' : ''} />
                         <label for="clock-date">${i18n.t('widget.clock.show_date')}</label>
+                    </div>
+                `;
+            } else if (widgetId === 'weather') {
+                const city = content.city || '';
+                const lat = content.latitude || '';
+                const lon = content.longitude || '';
+                const isFahrenheit = content.unit === 'fahrenheit';
+                const showForecast = content.showForecast || false;
+                const forecastDays = content.forecastDays || 5;
+
+                return `
+                    <div class="field-group">
+                        <label>${i18n.t('widget.weather.city')}</label>
+                        <div class="input-row">
+                            <input type="text" id="weather-city" value="${esc(city)}" placeholder="${i18n.t('widget.weather.city_placeholder')}"/>
+                            <app-button variant="ghost" id="weather-search-btn">${i18n.t('widget.weather.search')}</app-button>
+                        </div>
+                        <small>${i18n.t('widget.weather.city_desc')}</small>
+                    </div>
+
+                    <div class="field-group" id="weather-results-container" style="display:none;">
+                        <label>${i18n.t('widget.weather.results')}</label>
+                        <div id="weather-results" class="weather-results"></div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>${i18n.t('widget.weather.coordinates')}</label>
+                        <div class="input-row">
+                            <input type="number" id="weather-lat" value="${lat}" placeholder="Lat" step="0.0001" />
+                            <input type="number" id="weather-lon" value="${lon}" placeholder="Lon" step="0.0001" />
+                        </div>
+                    </div>
+
+                    <div class="field-group check-row">
+                        <input type="checkbox" id="weather-fahrenheit" ${isFahrenheit ? 'checked' : ''} />
+                        <label for="weather-fahrenheit">${i18n.t('widget.weather.use_fahrenheit')}</label>
+                    </div>
+
+                    <div class="field-group check-row">
+                        <input type="checkbox" id="weather-forecast" ${showForecast ? 'checked' : ''} />
+                        <label for="weather-forecast">${i18n.t('widget.weather.show_forecast')}</label>
+                    </div>
+
+                    <div class="field-group row-aligned" id="weather-days-row" ${!showForecast ? 'style="display:none;"' : ''}>
+                        <label>${i18n.t('widget.weather.forecast_days')}</label>
+                        <div class="stepper-wrap">
+                            <button type="button" class="stepper-btn" id="weather-days-dec">&minus;</button>
+                            <input type="number" id="weather-days" value="${forecastDays}" min="1" max="6" />
+                            <button type="button" class="stepper-btn" id="weather-days-inc">+</button>
+                        </div>
                     </div>
                 `;
             } else if (widgetId === 'telemetry') {
@@ -230,7 +313,7 @@ class WidgetConfigModal extends HTMLElement {
                     ${renderForm()}
                 </div>
                 <div class="actions">
-                    ${['clock', 'telemetry'].includes(widgetId) || this.currentItem?.type === 'section' ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
+                    ${['clock', 'telemetry', 'weather'].includes(widgetId) || this.currentItem?.type === 'section' ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
             </dialog>
         `;
@@ -251,6 +334,133 @@ class WidgetConfigModal extends HTMLElement {
         // Bindings
         this.shadowRoot.getElementById('close-btn')?.addEventListener('click', () => this.close());
         this.shadowRoot.getElementById('save-btn')?.addEventListener('click', () => this.save());
+
+        // Clock city search binding
+        const clockSearchBtn = this.shadowRoot.getElementById('clock-search-btn');
+        if (clockSearchBtn) {
+            clockSearchBtn.addEventListener('click', () => this.searchClockCity());
+        }
+
+        // Weather-specific bindings
+        const weatherSearchBtn = this.shadowRoot.getElementById('weather-search-btn');
+        if (weatherSearchBtn) {
+            weatherSearchBtn.addEventListener('click', () => this.searchWeatherCity());
+        }
+
+        const forecastCheck = this.shadowRoot.getElementById('weather-forecast') as HTMLInputElement;
+        const daysRow = this.shadowRoot.getElementById('weather-days-row');
+        if (forecastCheck && daysRow) {
+            forecastCheck.addEventListener('change', () => {
+                daysRow.style.display = forecastCheck.checked ? '' : 'none';
+            });
+        }
+
+        // Stepper buttons
+        const daysInput = this.shadowRoot.getElementById('weather-days') as HTMLInputElement;
+        const decBtn = this.shadowRoot.getElementById('weather-days-dec');
+        const incBtn = this.shadowRoot.getElementById('weather-days-inc');
+        if (daysInput && decBtn && incBtn) {
+            decBtn.addEventListener('click', () => {
+                const v = parseInt(daysInput.value) || 1;
+                if (v > 1) daysInput.value = String(v - 1);
+            });
+            incBtn.addEventListener('click', () => {
+                const v = parseInt(daysInput.value) || 1;
+                if (v < 6) daysInput.value = String(v + 1);
+            });
+        }
+    }
+
+    private async searchClockCity() {
+        const cityInput = this.shadowRoot?.getElementById('clock-city') as HTMLInputElement;
+        const resultsContainer = this.shadowRoot?.getElementById('clock-results-container') as HTMLElement;
+        const resultsEl = this.shadowRoot?.getElementById('clock-results') as HTMLElement;
+        if (!cityInput || !resultsContainer || !resultsEl) return;
+
+        const query = cityInput.value.trim();
+        if (!query) return;
+
+        resultsEl.innerHTML = `<div class="search-loading">${i18n.t('general.loading')}</div>`;
+        resultsContainer.style.display = '';
+
+        try {
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=${i18n.getLocale().code}`);
+            const data = await res.json();
+
+            if (!data.results || data.results.length === 0) {
+                resultsEl.innerHTML = `<div class="search-empty">${i18n.t('general.no_icons')}</div>`;
+                return;
+            }
+
+            resultsEl.innerHTML = data.results.map((r: any) => `
+                <button class="city-result" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${r.name}">
+                    <span class="city-name">${r.name}</span>
+                    <span class="city-detail">${[r.admin1, r.country].filter(Boolean).join(', ')}</span>
+                </button>
+            `).join('');
+
+            resultsEl.querySelectorAll('.city-result').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const lat = parseFloat(btn.getAttribute('data-lat') || '0');
+                    const lon = parseFloat(btn.getAttribute('data-lon') || '0');
+                    const name = btn.getAttribute('data-name') || '';
+
+                    (this.shadowRoot?.getElementById('clock-city') as HTMLInputElement).value = name;
+                    this._clockSelectedLat = lat;
+                    this._clockSelectedLon = lon;
+
+                    resultsContainer.style.display = 'none';
+                });
+            });
+        } catch (_) {
+            resultsEl.innerHTML = `<div class="search-empty">${i18n.t('general.error')}</div>`;
+        }
+    }
+
+    private async searchWeatherCity() {
+        const cityInput = this.shadowRoot?.getElementById('weather-city') as HTMLInputElement;
+        const resultsContainer = this.shadowRoot?.getElementById('weather-results-container') as HTMLElement;
+        const resultsEl = this.shadowRoot?.getElementById('weather-results') as HTMLElement;
+        if (!cityInput || !resultsContainer || !resultsEl) return;
+
+        const query = cityInput.value.trim();
+        if (!query) return;
+
+        resultsEl.innerHTML = `<div class="search-loading">${i18n.t('general.loading')}</div>`;
+        resultsContainer.style.display = '';
+
+        try {
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=${i18n.getLocale().code}`);
+            const data = await res.json();
+
+            if (!data.results || data.results.length === 0) {
+                resultsEl.innerHTML = `<div class="search-empty">${i18n.t('general.no_icons')}</div>`;
+                return;
+            }
+
+            resultsEl.innerHTML = data.results.map((r: any) => `
+                <button class="city-result" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${r.name}">
+                    <span class="city-name">${r.name}</span>
+                    <span class="city-detail">${[r.admin1, r.country].filter(Boolean).join(', ')}</span>
+                </button>
+            `).join('');
+
+            resultsEl.querySelectorAll('.city-result').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const lat = parseFloat(btn.getAttribute('data-lat') || '0');
+                    const lon = parseFloat(btn.getAttribute('data-lon') || '0');
+                    const name = btn.getAttribute('data-name') || '';
+
+                    (this.shadowRoot?.getElementById('weather-lat') as HTMLInputElement).value = lat.toString();
+                    (this.shadowRoot?.getElementById('weather-lon') as HTMLInputElement).value = lon.toString();
+                    (this.shadowRoot?.getElementById('weather-city') as HTMLInputElement).value = name;
+
+                    resultsContainer.style.display = 'none';
+                });
+            });
+        } catch (_) {
+            resultsEl.innerHTML = `<div class="search-empty">${i18n.t('general.error')}</div>`;
+        }
     }
 }
 

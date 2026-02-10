@@ -478,6 +478,93 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "Dejar vacío para ocultar el título.", "fr": "Laisser vide pour masquer le titre.", "de": "Leer lassen, um den Titel auszublenden.",
         "it": "Lasciare vuoto per nascondere il titolo.", "pt": "Deixe em blanco para ocultar o título.", "ru": "Оставьте пустым, чтобы скрыть заголовок."
     },
+    // --- Clock Widget ---
+    "widget.clock.timezone": {
+        "es": "Zona Horaria", "fr": "Fuseau horaire", "it": "Fuso orario", "pt": "Fuso horário", "de": "Zeitzone", "nl": "Tijdzone",
+        "ru": "Часовой пояс", "zh": "时区", "ja": "タイムゾーン", "ko": "표준 시간대", "tr": "Saat Dilimi", "pl": "Strefa czasowa",
+        "id": "Zona Waktu", "ar": "المنطقة الزمنية", "fa": "منطقه زمانی", "el": "Ζώνη ώρας", "hi": "समय क्षेत्र", "bn": "সময় অঞ্চল", "ur": "ٹائم زون"
+    },
+    "widget.clock.auto_detect": {
+        "es": "Auto Detectar", "fr": "Détection automatique", "it": "Rilevamento automatico", "pt": "Detecção automática", "de": "Automatische Erkennung", "nl": "Automatische detectie",
+        "ru": "Автоматическое определение", "zh": "自动检测", "ja": "自動検出", "ko": "자동 감지", "tr": "Otomatik Algılama", "pl": "Wykrywanie automatyczne",
+        "id": "Deteksi Otomatis", "ar": "كشف تلقائي", "fa": "تشخیص خودکار", "el": "Αυτόματος εντοπισμός", "hi": "स्वतः पता लगाएँ", "bn": "স্বয়ংক্রিয় সনাক্তকরণ", "ur": "خودکار پتہ لگائیں"
+    },
+    "widget.clock.timezone_desc": {
+        "es": "ej. America/New_York, UTC, o 'local'", "fr": "ex. America/New_York, UTC, ou 'local'", "it": "es. America/New_York, UTC, o 'local'", "pt": "ex. America/New_York, UTC, ou 'local'", "de": "z.B. America/New_York, UTC oder 'local'", "nl": "bijv. America/New_York, UTC, of 'local'",
+        "ru": "например, America/New_York, UTC или 'local'", "zh": "例如 America/New_York, UTC 或 'local'", "ja": "例: America/New_York, UTC, または 'local'", "ko": "예: America/New_York, UTC 또는 'local'", "tr": "örneğin America/New_York, UTC veya 'local'", "pl": "np. America/New_York, UTC lub 'local'",
+        "id": "cth. America/New_York, UTC, atau 'local'", "ar": "مثال America/New_York, UTC, أو 'local'", "fa": "مانند America/New_York, UTC, یا 'local'", "el": "π.χ. America/New_York, UTC, ή 'local'", "hi": "उदाहरण America/New_York, UTC, या 'local'", "bn": "যেমন America/New_York, UTC, বা 'local'", "ur": "مثال America/New_York, UTC, یا 'local'"
+    },
+    // --- Weather Widget ---
+    "widget.weather.city": {
+        "es": "Ciudad", "fr": "Ville", "it": "Città", "pt": "Cidade", "de": "Stadt", "nl": "Stad",
+        "ru": "Город", "zh": "城市", "ja": "都市", "ko": "도시", "tr": "Şehir", "pl": "Miasto",
+        "id": "Kota", "ar": "مدينة", "fa": "شهر", "el": "Πόλη", "hi": "शहर", "bn": "শহর", "ur": "شہر"
+    },
+    "widget.weather.city_placeholder": {
+        "es": "ej. Madrid, Buenos Aires, Ciudad de México", "fr": "ex. Paris, Lyon, Marseille", "it": "es. Roma, Milano, Napoli", "pt": "ex. Lisboa, Porto, Rio de Janeiro", "de": "z.B. Berlin, München, Hamburg", "nl": "bijv. Amsterdam, Rotterdam, Utrecht",
+        "ru": "например, Москва, Санкт-Петербург, Новосибирск", "zh": "例如 北京, 上海, 广州", "ja": "例: 東京, 大阪, 京都", "ko": "예: 서울, 부산, 인천", "tr": "örneğin İstanbul, Ankara, İzmir", "pl": "np. Warszawa, Kraków, Gdańsk",
+        "id": "cth. Jakarta, Surabaya, Bandung", "ar": "مثال القاهرة، الرياض، دبي", "fa": "مانند تهران، مشهد، اصفهان", "el": "π.χ. Αθήνα, Θεσσαλονίκη, Πάτρα", "hi": "उदाहरण दिल्ली, मुंबई, बैंगलोर", "bn": "যেমন ঢাকা, চট্টগ্রাম, খুলনা", "ur": "مثال کراچی، لاہور، اسلام آباد"
+    },
+    "widget.weather.city_desc": {
+        "es": "Busca una ciudad para autocompletar las coordenadas.", "fr": "Recherchez une ville pour compléter automatiquement les coordonnées.", "it": "Cerca una città per completare automaticamente le coordinate.", "pt": "Pesquise uma cidade para preencher automaticamente as coordenadas.", "de": "Suchen Sie nach einer Stadt, um die Koordinaten automatisch zu vervollständigen.", "nl": "Zoek een stad om de coördinaten automatisch aan te vullen.",
+        "ru": "Найдите город, чтобы автоматически заполнить координаты.", "zh": "搜索城市以自动完成坐标。", "ja": "都市を検索して座標を自動入力します。", "ko": "도시를 검색하여 좌표를 자동 완성합니다.", "tr": "Koordinatları otomatik tamamlamak için bir şehir arayın.", "pl": "Wyszukaj miasto, aby automatycznie uzupełnić współrzędne.",
+        "id": "Cari kota untuk melengkapi koordinat secara otomatis.", "ar": "ابحث عن مدينة لإكمال الإحداثيات تلقائيًا.", "fa": "برای تکمیل خودکار مختصات یک شهر جستجو کنید.", "el": "Αναζητήστε μια πόλη για αυτόματη συμπλήρωση συντεταγμένων.", "hi": "निर्देशांक स्वतः पूर्ण करने के लिए शहर खोजें।", "bn": "স্থানাঙ্ক স্বয়ংক্রিয়ভাবে পূরণ করতে একটি শহর অনুসন্ধান করুন।", "ur": "کوآرڈینیٹس خودکار مکمل کرنے کے لیے شہر تلاش کریں۔"
+    },
+    "widget.weather.search": {
+        "es": "Buscar", "fr": "Rechercher", "it": "Cerca", "pt": "Pesquisar", "de": "Suchen", "nl": "Zoeken",
+        "ru": "Поиск", "zh": "搜索", "ja": "検索", "ko": "검색", "tr": "Ara", "pl": "Szukaj",
+        "id": "Cari", "ar": "بحث", "fa": "جستجو", "el": "Αναζήτηση", "hi": "खोज", "bn": "অনুসন্ধান", "ur": "تلاش کریں"
+    },
+    "widget.weather.results": {
+        "es": "Resultados", "fr": "Résultats", "it": "Risultati", "pt": "Resultados", "de": "Ergebnisse", "nl": "Resultaten",
+        "ru": "Результаты", "zh": "结果", "ja": "結果", "ko": "결과", "tr": "Sonuçlar", "pl": "Wyniki",
+        "id": "Hasil", "ar": "النتائج", "fa": "نتایج", "el": "Αποτελέσματα", "hi": "परिणाम", "bn": "ফলাফল", "ur": "نتائج"
+    },
+    "widget.weather.coordinates": {
+        "es": "Coordenadas", "fr": "Coordonnées", "it": "Coordinate", "pt": "Coordenadas", "de": "Koordinaten", "nl": "Coördinaten",
+        "ru": "Координаты", "zh": "坐标", "ja": "座標", "ko": "좌표", "tr": "Koordinatlar", "pl": "Współrzędne",
+        "id": "Koordinat", "ar": "الإحداثيات", "fa": "مختصات", "el": "Συντεταγμένες", "hi": "निर्देशांक", "bn": "স্থানাঙ্ক", "ur": "کوآرڈینیٹس"
+    },
+    "widget.weather.use_fahrenheit": {
+        "es": "Usar Fahrenheit (°F)", "fr": "Utiliser Fahrenheit (°F)", "it": "Usa Fahrenheit (°F)", "pt": "Usar Fahrenheit (°F)", "de": "Fahrenheit verwenden (°F)", "nl": "Gebruik Fahrenheit (°F)",
+        "ru": "Использовать Фаренгейт (°F)", "zh": "使用华氏度 (°F)", "ja": "華氏 (°F) を使用", "ko": "화씨 (°F) 사용", "tr": "Fahrenheit (°F) kullan", "pl": "Użyj Fahrenheita (°F)",
+        "id": "Gunakan Fahrenheit (°F)", "ar": "استخدم فهرنهايت (°F)", "fa": "استفاده از فارنهایت (°F)", "el": "Χρήση Fahrenheit (°F)", "hi": "फारेनहाइट (°F) का उपयोग करें", "bn": "ফারেনহাইট (°F) ব্যবহার করুন", "ur": "فارن ہائیٹ (°F) استعمال کریں"
+    },
+    "widget.weather.show_forecast": {
+        "es": "Mostrar pronóstico", "fr": "Afficher les prévisions", "it": "Mostra previsioni", "pt": "Mostrar previsão", "de": "Vorhersage anzeigen", "nl": "Voorspelling tonen",
+        "ru": "Показать прогноз", "zh": "显示预报", "ja": "予報を表示", "ko": "예보 표시", "tr": "Tahmini Göster", "pl": "Pokaż prognozę",
+        "id": "Tampilkan Prakiraan", "ar": "عرض التوقعات", "fa": "نمایش پیش‌بینی", "el": "Εμφάνιση πρόβλεψης", "hi": "पूर्वानुमान दिखाएं", "bn": "পূর্বাভাস দেখান", "ur": "پیشین گوئی دکھائیں"
+    },
+    "widget.weather.forecast_days": {
+        "es": "Días de pronóstico", "fr": "Jours de prévision", "it": "Giorni di previsione", "pt": "Dias de previsão", "de": "Vorhersagetage", "nl": "Voorspellingsdagen",
+        "ru": "Дни прогноза", "zh": "预报天数", "ja": "予報日数", "ko": "예보 일수", "tr": "Tahmin Günleri", "pl": "Dni prognozy",
+        "id": "Hari Prakiraan", "ar": "أيام التوقعات", "fa": "روزهای پیش‌بینی", "el": "Ημέρες πρόβλεψης", "hi": "पूर्वानुमान के दिन", "bn": "পূর্বাভাস দিন", "ur": "پیشین گوئی کے دن"
+    },
+    "widget.weather.no_location": {
+        "es": "Configura una ubicación", "fr": "Configurer un emplacement", "it": "Imposta una posizione", "pt": "Configurar uma localização", "de": "Standort einrichten", "nl": "Locatie instellen",
+        "ru": "Настроить местоположение", "zh": "设置位置", "ja": "場所を設定", "ko": "위치 설정", "tr": "Konum Ayarla", "pl": "Ustaw lokalizację",
+        "id": "Atur Lokasi", "ar": "تحديد الموقع", "fa": "تنظیم مکان", "el": "Ορισμός τοποθεσίας", "hi": "स्थान सेटअप करें", "bn": "অবস্থান সেটআপ করুন", "ur": "مقام سیٹ کریں"
+    },
+    "widget.weather.max_min": {
+        "es": "Máx / Mín", "fr": "Max / Min", "it": "Max / Min", "pt": "Máx / Mín", "de": "Max / Min", "nl": "Max / Min",
+        "ru": "Макс / Мин", "zh": "最高 / 最低", "ja": "最高 / 最低", "ko": "최고 / 최저", "tr": "Maks / Min", "pl": "Maks / Min",
+        "id": "Maks / Min", "ar": "الأعلى / الأدنى", "fa": "حداکثر / حداقل", "el": "Μέγ / Ελάχ", "hi": "अधिकतम / न्यूनतम", "bn": "সর্বোচ্চ / সর্বনিম্ন", "ur": "زیادہ سے زیادہ / کم سے کم"
+    },
+    "widget.weather.sunrise": {
+        "es": "Amanecer", "fr": "Lever du soleil", "it": "Alba", "pt": "Nascer do sol", "de": "Sonnenaufgang", "nl": "Zonsopgang",
+        "ru": "Восход", "zh": "日出", "ja": "日の出", "ko": "일출", "tr": "Gün Doğumu", "pl": "Wschód słońca",
+        "id": "Matahari Terbit", "ar": "شروق الشمس", "fa": "طلوع خورشید", "el": "Ανατολή", "hi": "सूर्योदय", "bn": "সূর্যোদয়", "ur": "سورج طلوع"
+    },
+    "widget.weather.sunset": {
+        "es": "Atardecer", "fr": "Coucher du soleil", "it": "Tramonto", "pt": "Pôr do sol", "de": "Sonnenuntergang", "nl": "Zonsondergang",
+        "ru": "Закат", "zh": "日落", "ja": "日の入り", "ko": "일몰", "tr": "Gün Batımı", "pl": "Zachód słońca",
+        "id": "Matahari Terbenam", "ar": "غروب الشمس", "fa": "غروب خورشید", "el": "Δύση", "hi": "सूर्यास्त", "bn": "সূর্যাস্ত", "ur": "سورج غروب"
+    },
+    "widget.weather.wind": {
+        "es": "Viento", "fr": "Vent", "it": "Vento", "pt": "Vento", "de": "Wind", "nl": "Wind",
+        "ru": "Ветер", "zh": "风", "ja": "風", "ko": "바람", "tr": "Rüzgar", "pl": "Wiatr",
+        "id": "Angin", "ar": "رياح", "fa": "باد", "el": "Άνεμος", "hi": "हवा", "bn": "বাতাস", "ur": "ہوا"
+    },
     "widget.no_config": {
         "es": "No hay configuración disponible para este elemento.", "fr": "Aucune configuration disponible pour cet élément.", "de": "Keine Konfiguration für dieses Element verfügbar."
     },

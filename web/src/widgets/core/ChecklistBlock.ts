@@ -88,7 +88,7 @@ export class ChecklistBlock extends LitElement {
             flex-shrink: 0;
             background: transparent;
             border: none;
-            color: var(--text-secondary);
+            color: var(--error, #ff4757);
             cursor: pointer;
             padding: 4px 8px;
             border-radius: 4px;
