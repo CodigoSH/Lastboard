@@ -17,8 +17,13 @@ const safeUrl = (url: string): string => {
 // Only strict coordinate rendering is used.
 
 
-export const template = ({ bookmarks, isEditing, isSearching, isTouchDevice, maxCols = 12 }: { bookmarks: GridItem[], isEditing: boolean, isSearching?: boolean, isTouchDevice?: boolean, maxCols?: number }) => {
+export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouchDevice, maxCols = 12 }: { bookmarks: GridItem[], isEditing: boolean, isLoading: boolean, isSearching?: boolean, isTouchDevice?: boolean, maxCols?: number }) => {
     const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];
+
+    if (isLoading && safeBookmarks.length === 0) {
+        return renderSkeletons(maxCols);
+    }
+
     const getChildren = (parentId: number) => safeBookmarks.filter(b => b.parent_id === parentId);
 
     const rootItems = isTouchDevice
@@ -166,4 +171,47 @@ function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: bo
 
         return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice);
     }).join('');
+}
+
+function renderSkeletons(maxCols: number) {
+    const skeletons = Array(8).fill(null);
+    return `
+        <style>
+            .skeleton {
+                background: var(--surface);
+                pointer-events: none;
+                animation: skeleton-shimmer 1.5s infinite linear;
+                background: linear-gradient(
+                    90deg,
+                    var(--surface) 25%,
+                    var(--border) 50%,
+                    var(--surface) 75%
+                );
+                background-size: 200% 100%;
+            }
+            .skeleton-icon {
+                width: 40px;
+                height: 40px;
+                background: var(--border);
+                border-radius: 50%;
+                margin-bottom: 12px;
+            }
+            .skeleton-text {
+                width: 60%;
+                height: 8px;
+                background: var(--border);
+                border-radius: 4px;
+            }
+            @keyframes skeleton-shimmer {
+                0% { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+            }
+        </style>
+        ${skeletons.map((_, i) => `
+            <div class="bookmark-grid__card skeleton" style="--x: ${(i % maxCols) + 1}; --y: ${Math.floor(i / maxCols) + 1}; --w: 1; --h: 1;">
+                <div class="skeleton-icon"></div>
+                <div class="skeleton-text"></div>
+            </div>
+        `).join('')}
+    `;
 }

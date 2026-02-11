@@ -548,3 +548,40 @@
     flex-shrink: 0;
     font-size: clamp(9px, 9cqi, 14px);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Skeleton Loading Effects
+   ═══════════════════════════════════════════════════════════════ */
+.skeleton {
+    background: var(--surface);
+    pointer-events: none;
+    border: 1px solid var(--border);
+    animation: skeleton-shimmer 1.5s infinite linear;
+    background: linear-gradient(
+        90deg,
+        var(--surface) 25%,
+        var(--border) 50%,
+        var(--surface) 75%
+    );
+    background-size: 200% 100%;
+}
+
+.skeleton-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--border);
+    margin-bottom: 12px;
+}
+
+.skeleton-text {
+    width: 60%;
+    height: 10px;
+    border-radius: 4px;
+    background: var(--border);
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
