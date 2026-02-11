@@ -77,5 +77,8 @@ git tag $NEW_TAG
 git push origin main
 git push origin $NEW_TAG
 rm $NOTES_FILE
+git add .
+git commit -m "chore(release): cleanup release notes for $NEW_TAG"
+git push origin main
 
 echo "✅ Deployed $NEW_TAG successfully!"
