@@ -100,25 +100,23 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
         <div class="bento-card">
             <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${i18n.t('settings.system_locale')}</div>
             <h3 class="settings-content__title">${i18n.t('settings.localization')}</h3>
+
             <div class="settings-content__form-group">
-                <div style="display: flex; gap: 16px;">
-                    <div style="flex: 1;">
-                        <label class="settings-content__label">${i18n.t('settings.language')}</label>
-                        <app-select id="language-select" value="${prefs.language}"></app-select>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
-                         <div class="settings-content__segmented-control">
-                            <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}" 
-                                    onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
-                                🌙 ${i18n.t('settings.dark')}
-                            </button>
-                            <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}" 
-                                    onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
-                                ☀️ ${i18n.t('settings.light')}
-                            </button>
-                        </div>
-                    </div>
+                <label class="settings-content__label">${i18n.t('settings.language')}</label>
+                <app-select id="language-select" value="${prefs.language}"></app-select>
+            </div>
+
+            <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
+                <div class="settings-content__segmented-control">
+                    <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}"
+                            onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
+                        🌙 ${i18n.t('settings.dark')}
+                    </button>
+                    <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}"
+                            onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
+                        ☀️ ${i18n.t('settings.light')}
+                    </button>
                 </div>
             </div>
         </div>
@@ -127,7 +125,7 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
 
 export const personalizationTemplate = (prefs: Prefs) => `
     <div class="bento-grid">
-        <div class="bento-card" style="grid-column: span 2;">
+        <div class="bento-card">
             <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.fluid_grid_architecture')}</div>
             
             <!-- Project Name -->
