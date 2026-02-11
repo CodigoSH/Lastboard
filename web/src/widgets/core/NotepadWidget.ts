@@ -88,15 +88,12 @@ const CSS = `
 /* ── Editor Container ──────────────────────────────────────────────── */
 .editor-container {
     flex: 1;
-    overflow-y: overlay;
+    overflow-y: auto;
     padding: 0 !important;
     margin: 0 !important;
     background: transparent !important;
     outline: none;
     position: relative;
-    
-    /* Balanced Spacing (Enough to not overlap dock, but minimal) */
-    padding-bottom: 24px !important; 
 }
 
 /* ── ContentEditable ───────────────────────────────────────────────── */
@@ -106,9 +103,9 @@ const CSS = `
     outline: none !important;
     box-shadow: none !important;
     
-    padding: 12px 14px !important; 
+    padding: 12px 14px 40px 14px !important; 
     
-    min-height: 100%;
+    min-height: calc(100% - 52px); /* 12px top + 40px bottom */
     line-height: 1.6;
     font-size: 0.95rem;
     color: var(--lb-text);
