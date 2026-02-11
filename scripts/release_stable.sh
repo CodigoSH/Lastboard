@@ -47,26 +47,46 @@ sed -i "s/private version = '.*'/private version = '$NEW_TAG'/" $SETTINGS_FILE
 
 # 4. Handle Pending Changes
 if [ -n "$(git status --porcelain)" ]; then
-    echo "📦 Committing pending changes before generating notes..."
+    echo "⚠️  You have uncommitted changes."
+    echo "Please enter a brief description of these changes for the release notes:"
+    read USER_DESC
+    if [ -z "$USER_DESC" ]; then
+        USER_DESC="minor updates and synchronization"
+    fi
+    echo "📦 Committing changes with message: feat: $USER_DESC"
     git add .
-    git commit -m "chore: pre-release synchronization for $NEW_TAG"
+    git commit -m "feat: $USER_DESC"
 fi
 
-# 5. Generate Release Notes
+# 5. Generate Professional Release Notes
 LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
-if [ -z "$LAST_TAG" ]; then
-    CHANGELOG="- Initial release"
-else
-    CHANGELOG=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s")
-fi
+REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//')
+
+echo "📝 Generating professional changelog..."
+
+# Helper to filter and format log
+get_log() {
+    local pattern=$1
+    git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s" | grep -iE "$pattern" | grep -vE "chore\(release\)|chore: cleanup|pre-release" || echo ""
+}
+
+# Categorization Logic
+FEATS=$(get_log "^feat")
+FIXES=$(get_log "^fix")
+REFACTORS=$(get_log "^refactor|^perf")
+OTHER=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s" | grep -vE "^feat|^fix|^refactor|^perf|^chore\(release\)|^chore: cleanup|pre-release" || echo "")
 
 NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
 cat <<EOF > $NOTES_FILE
 # Official Release: $NEW_TAG
 
-## 🚀 Changes since ${LAST_TAG:-initial}
-$CHANGELOG
+$( [ -n "$FEATS" ] && echo "### ✨ Features" && echo "$FEATS" && echo "" )
+$( [ -n "$FIXES" ] && echo "### 🐛 Bug Fixes" && echo "$FIXES" && echo "" )
+$( [ -n "$REFACTORS" ] && echo "### 🛠️ Refactors & Performance" && echo "$REFACTORS" && echo "" )
+$( [ -n "$OTHER" ] && echo "### 📝 Other Changes" && echo "$OTHER" && echo "" )
 
+---
+**Full Changelog**: [${LAST_TAG:-initial}...$NEW_TAG]($REPO_URL/compare/${LAST_TAG:-main}...$NEW_TAG)
 EOF
 
 # 6. Git Operations (Official Release)
