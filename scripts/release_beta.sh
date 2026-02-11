@@ -50,10 +50,15 @@ NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
 cat <<EOF > $NOTES_FILE
 # Release Notes: $NEW_TAG
 
-## 🔢 Systematic Beta Channel
-- **Versioning**: Implemented zero-padded beta numbering (.$PADDED_BETA) to ensure correct chronological sorting on GitHub Releases.
-- **Update Logic**: Fixed backend bug where 'RC' versions were considered older than 'Beta' due to case sensitivity.
-- **Auto-Detection**: Unstable versions now automatically check the beta channel for updates.
+## 📝 Widget Enhancements
+- **Markdown Widget**: Fixed critical persistence bug (ID type mismatch) and refactored Preview/Lock UI for robust state toggling.
+- **Notepad Widget**: Implemented full internationalization for insert modals and tooltips. Added auto-focus and caret styling refinements.
+- **Manual Save**: Standardized manual saving behavior across both Widgets (save only on Lock).
+
+## 🌐 Internationalization & Audit
+- **Natural Language**: Refined translations across 20 languages to sound more human and realistic (e.g., "All set!", "Oops!").
+- **Script Fix**: Fixed duplicate property errors in the `i18n-sync.ts` utility.
+- **TSConfig Audit**: Verified and confirmed project configuration for modern Bun/Web environment.
 EOF
 
 # 5. Git Operations

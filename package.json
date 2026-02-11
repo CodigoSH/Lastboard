@@ -1,6 +1,6 @@
 {
   "name": "lastboard",
-  "version": "1.2.0-Beta.01",
+  "version": "1.2.0-Beta.02",
   "module": "index.ts",
   "type": "module",
   "scripts": {
@@ -11,8 +11,5 @@
   },
   "devDependencies": {
     "bun-types": "latest"
-  },
-  "dependencies": {
-    "lit": "^3.3.2"
   }
 }

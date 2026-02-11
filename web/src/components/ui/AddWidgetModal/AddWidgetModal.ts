@@ -157,12 +157,17 @@ class AddWidgetModal extends HTMLElement {
                     box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.4);
                 }
                 .card:hover .icon-container svg {
+                    stroke: #fff;
+                    fill: none;
+                }
+                .card:hover .icon-container svg circle[fill="currentColor"] {
                     fill: #fff;
                 }
                 .icon-container svg {
                     width: 32px;
                     height: 32px;
-                    fill: var(--accent, #3b82f6);
+                    stroke: var(--accent, #3b82f6);
+                    fill: none;
                 }
                 .name {
                     font-weight: 700;

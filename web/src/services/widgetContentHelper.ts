@@ -27,7 +27,12 @@ export interface TelemetryWidgetContent extends BaseWidgetContent {
     updateInterval?: number;
 }
 
-export type WidgetContent = NotepadWidgetContent | ClockWidgetContent | TelemetryWidgetContent;
+export interface MarkdownWidgetContent extends BaseWidgetContent {
+    widgetId: 'markdown';
+    text: string;
+}
+
+export type WidgetContent = NotepadWidgetContent | ClockWidgetContent | TelemetryWidgetContent | MarkdownWidgetContent;
 
 export class WidgetContentHelper {
     /**
@@ -104,5 +109,26 @@ export class WidgetContentHelper {
     static validate(raw: any, expectedWidgetId: string): boolean {
         const content = this.parse(raw);
         return content.widgetId === expectedWidgetId;
+    }
+
+    /**
+     * Get text content from markdown widget
+     */
+    static getMarkdownText(raw: any): string {
+        const content = this.parse(raw) as MarkdownWidgetContent;
+        return content.text || '';
+    }
+
+    /**
+     * Set text content for markdown widget, preserving other properties
+     */
+    static setMarkdownText(raw: any, newText: string): string {
+        const content = this.parse(raw);
+        const updated: MarkdownWidgetContent = {
+            ...content,
+            widgetId: 'markdown',
+            text: newText
+        };
+        return this.serialize(updated);
     }
 }
