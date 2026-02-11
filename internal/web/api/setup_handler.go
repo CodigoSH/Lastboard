@@ -112,7 +112,7 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 
 		// Seed Default Bookmark for First Admin
 		_, _ = tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
-			(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true, "visibleTouch": true}', 'https://github.com/CodigoSH/Lastboard')`, adminID)
+			(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true, "visibleTouch": true}', "https://github.com/CodigoSH/Lastboard")`, adminID)
 	}
 
 	if err := tx.Commit(); err != nil {
