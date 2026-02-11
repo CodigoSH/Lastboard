@@ -141,7 +141,8 @@ class DashboardStore {
             const keysToRemove: string[] = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key && (key.startsWith('kashboard') || key.includes('user_cache'))) {
+                // Cleanup legacy/temporary cache keys
+                if (key && (key.includes('user_cache') || key.includes('old_dashboard_'))) {
                     keysToRemove.push(key);
                 }
             }
