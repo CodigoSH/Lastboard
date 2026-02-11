@@ -52,15 +52,72 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Return System Info
-	// The backend is no longer responsible for checking updates to avoid rate limits.
-	// It relies on the Frontend + Proxy to determine version status.
 	json.NewEncoder(w).Encode(UpdateResponse{
-		Available:      false, // Always false from backend. Frontend decides.
+		Available:      false, // Handled by frontend or background ws
 		CurrentVersion: version.Current,
 		IsDocker:       isDocker,
 		Os:             runtime.GOOS,
 		Arch:           runtime.GOARCH,
 	})
+}
+
+// CheckForUpdatesBackground runs a periodic loop to check for updates and notify via WS
+func (h *UpdateHandler) CheckForUpdatesBackground(hub *Hub) {
+	// Initial check after 30s to allow system to settle
+	time.Sleep(30 * time.Second)
+
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	check := func() {
+		// We check for both stable and beta since we don't know user prefs here
+		// We'll notify if ANY newer version is available, frontend will filter based on user prefs.
+		latest, err := h.fetchLatestVersionFromProxy()
+		if err != nil {
+			log.Printf("[Update] Background check failed: %v", err)
+			return
+		}
+
+		if latest != "" && latest != version.Current {
+			log.Printf("[Update] New version detected: %s (Current: %s). Broadcasting...", latest, version.Current)
+			hub.broadcast <- WSMessage{
+				Type: "update_available",
+				Payload: map[string]string{
+					"latest_version": latest,
+				},
+			}
+		}
+	}
+
+	// First run
+	check()
+
+	for range ticker.C {
+		check()
+	}
+}
+
+func (h *UpdateHandler) fetchLatestVersionFromProxy() (string, error) {
+	// Check Stable first
+	proxyUrl := "https://api-updates.codigosh.com/api/v1/check-update?beta=true"
+	resp, err := http.Get(proxyUrl)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("proxy returned status %d", resp.StatusCode)
+	}
+
+	var data struct {
+		LatestVersion string `json:"latest_version"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return "", err
+	}
+
+	return data.LatestVersion, nil
 }
 
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {

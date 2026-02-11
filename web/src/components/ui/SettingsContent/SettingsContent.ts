@@ -2,7 +2,7 @@ import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateStatusTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateStatusTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import '../Select/Select';
 // @ts-ignore
@@ -54,7 +54,7 @@ class SettingsContent extends HTMLElement {
             this.fetchUsers();
         }
         if (section === 'about') {
-            this.checkForUpdates();
+            // No longer checking automatically here. Using background + manual button.
         }
         this.render();
     }
@@ -92,7 +92,7 @@ class SettingsContent extends HTMLElement {
                 this.fetchUsers();
             }
             if (newValue === 'about') {
-                this.checkForUpdates();
+                // No longer checking automatically here.
             }
             this.render();
         }
@@ -156,8 +156,8 @@ class SettingsContent extends HTMLElement {
 
     async handleBetaToggle(checked: boolean) {
         this.savePrefs({ beta_updates: checked });
-        // Logic handled by re-rendering and CSS
-        await this.checkForUpdates();
+        // Force a re-render to update the badge if needed
+        this.render();
     }
 
     updateDensity(value: string) {
@@ -425,7 +425,7 @@ class SettingsContent extends HTMLElement {
                 return usersTemplate(this.users);
 
             case 'about':
-                return aboutTemplate(this.version, this.updateInfo, user.role || '', this.prefs.beta_updates || false);
+                return aboutTemplate(this.version, this.updateInfo, user.role || 'user', user.preferences?.beta_updates || false, this.isCheckingUpdates);
 
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">${i18n.t('settings.default_module_desc')}</p></div>`;
@@ -433,9 +433,26 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.2.0-Beta.14'; // Should be sync with backend or injected
+    private version = 'v1.2.0-Beta.15'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
+    private isCheckingUpdates = false;
+
+    async handleManualCheckUpdates() {
+        if (this.isCheckingUpdates) return;
+        this.isCheckingUpdates = true;
+        this.updateUpdateUI();
+
+        try {
+            await this.checkForUpdates();
+            if (this.updateInfo && !this.updateInfo.available) {
+                if (window.notifier) window.notifier.show(i18n.t('settings.up_to_date'));
+            }
+        } finally {
+            this.isCheckingUpdates = false;
+            this.updateUpdateUI();
+        }
+    }
 
     async checkForUpdates() {
         if (this.checkUpdatesPromise) return this.checkUpdatesPromise;
@@ -690,11 +707,11 @@ class SettingsContent extends HTMLElement {
     }
 
     private updateUpdateUI() {
-        const container = this.shadowRoot!.getElementById('update-status-container');
-        if (container) {
+        const wrapper = this.shadowRoot!.getElementById('update-zone-wrapper');
+        if (wrapper) {
             const user = userStore.getUser();
             const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'administrator';
-            container.innerHTML = updateStatusTemplate(isAdmin, this.updateInfo);
+            wrapper.innerHTML = updateZoneTemplate(isAdmin, this.updateInfo, this.isCheckingUpdates);
         }
     }
 }

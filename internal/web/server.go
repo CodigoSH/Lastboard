@@ -56,6 +56,10 @@ func NewServer(db *sql.DB) *Server {
 	// Start broadcasting stats every 1 second
 	go s.WSHub.StartBroadcasting(1 * time.Second)
 
+	// Start Background Update Check (Gold Standard)
+	updateHandler := api.NewUpdateHandler(db)
+	go updateHandler.CheckForUpdatesBackground(s.WSHub)
+
 	s.routes()
 	return s
 }

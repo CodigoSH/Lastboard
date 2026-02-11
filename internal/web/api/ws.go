@@ -24,10 +24,16 @@ var upgrader = websocket.Server{
 	},
 }
 
+// WSMessage represents a typed message sent over WebSocket
+type WSMessage struct {
+	Type    string      `json:"type"`
+	Payload interface{} `json:"payload"`
+}
+
 // Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
 	clients    map[*websocket.Conn]bool
-	broadcast  chan interface{}
+	broadcast  chan WSMessage
 	register   chan *websocket.Conn
 	unregister chan *websocket.Conn
 	mu         sync.Mutex
@@ -35,7 +41,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan interface{}),
+		broadcast:  make(chan WSMessage),
 		register:   make(chan *websocket.Conn),
 		unregister: make(chan *websocket.Conn),
 		clients:    make(map[*websocket.Conn]bool),
@@ -83,7 +89,10 @@ func (h *Hub) StartBroadcasting(interval time.Duration) {
 	for range ticker.C {
 		stats, err := gatherStats()
 		if err == nil {
-			h.broadcast <- stats
+			h.broadcast <- WSMessage{
+				Type:    "stats",
+				Payload: stats,
+			}
 		} else {
 			log.Printf("Error gathering stats for WS: %v", err)
 		}

@@ -82,6 +82,14 @@ class DashboardStore {
                 };
                 this.notify();
             });
+
+            // GOLD STANDARD: Handle real-time update notifications
+            socketService.subscribeNotification((type, payload) => {
+                if (type === 'update_available') {
+                    console.log('[DashboardStore] Real-time update detected:', payload.latest_version);
+                    this.checkSystemUpdate(); // Re-validate with user preferences (beta toggle)
+                }
+            });
         });
     }
 

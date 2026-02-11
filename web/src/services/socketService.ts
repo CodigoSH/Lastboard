@@ -7,9 +7,17 @@ interface SystemStats {
     temperature: number;
 }
 
+interface WSMessage {
+    type: string;
+    payload: any;
+}
+
+type NotificationListener = (type: string, payload: any) => void;
+
 class SocketService {
     private socket: WebSocket | null = null;
-    private listeners: ((stats: SystemStats) => void)[] = [];
+    private statsListeners: ((stats: SystemStats) => void)[] = [];
+    private notificationListeners: NotificationListener[] = [];
     private reconnectTimeout: any;
     private reconnectDelay: number = 1000;
     private static readonly MAX_DELAY = 30000;
@@ -32,8 +40,12 @@ class SocketService {
 
         this.socket.onmessage = (event) => {
             try {
-                const data = JSON.parse(event.data);
-                this.notify(data);
+                const message: WSMessage = JSON.parse(event.data);
+                if (message.type === 'stats') {
+                    this.notifyStats(message.payload);
+                } else {
+                    this.notifyNotification(message.type, message.payload);
+                }
             } catch (e) {
                 console.error('[SocketService] Failed to parse message', e);
             }
@@ -67,14 +79,25 @@ class SocketService {
     }
 
     subscribe(listener: (stats: SystemStats) => void) {
-        this.listeners.push(listener);
+        this.statsListeners.push(listener);
         return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
+            this.statsListeners = this.statsListeners.filter(l => l !== listener);
         };
     }
 
-    private notify(stats: SystemStats) {
-        this.listeners.forEach(l => l(stats));
+    subscribeNotification(listener: (type: string, payload: any) => void) {
+        this.notificationListeners.push(listener);
+        return () => {
+            this.notificationListeners = this.notificationListeners.filter(l => l !== listener);
+        };
+    }
+
+    private notifyStats(stats: SystemStats) {
+        this.statsListeners.forEach(l => l(stats));
+    }
+
+    private notifyNotification(type: string, payload: any) {
+        this.notificationListeners.forEach(l => l(type, payload));
     }
 }
 

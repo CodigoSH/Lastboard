@@ -248,7 +248,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Ubah gambar", "ar": "تغيير الصورة", "fa": "تغییر تصویر", "el": "Αλλαγή εικόνας", "hi": "छवि बदलें", "bn": "ছবি পরিবর্তন করুন", "ur": "تصویر تبدیل کریں"
     },
     "action.check_again": {
-        "es": "Revisar de nuevo", "fr": "Vérifier à nouveau", "de": "Erneut prüfen", "it": "Controlla di nuovo", "pt": "Verificar novamente", "nl": "Opnieuw controleren",
+        "es": "Comprobar de nuevo", "fr": "Vérifier à nouveau", "de": "Erneut prüfen", "it": "Controlla di nuovo", "pt": "Verificar novamente", "nl": "Opnieuw controleren",
         "ru": "Проверить снова", "zh": "再次检查", "ja": "再確認", "ko": "다시 확인", "tr": "Tekrar kontrol et", "pl": "Sprawdź ponownie",
         "id": "Periksa lagi", "ar": "تحقق مرة أخرى", "fa": "دوباره بررسی کنید", "el": "Ελέγξτε ξανά", "hi": "फिर से जांचें", "bn": "আবার পরীক্ষা করুন", "ur": "دوبارہ چیک کریں"
     },
@@ -258,7 +258,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Periksa pembaruan", "ar": "التحقق من التحديثات", "fa": "بررسی به‌روزرسانی‌ها", "el": "Έλεγχος ενημερώσεων", "hi": "अपडेट जांचें", "bn": "আপডেট পরীক্ষা করুন", "ur": "اپ ڈیٹس چیک کریں"
     },
     "action.download_backup": {
-        "es": "Descargar copia", "fr": "Télécharger la sauvegarde", "de": "Backup herunterladen", "it": "Scarica backup", "pt": "Baixar backup", "nl": "Back-up downloaden",
+        "es": "Descargar Copia de Seguridad", "fr": "Télécharger la sauvegarde", "de": "Backup herunterladen", "it": "Scarica backup", "pt": "Baixar backup", "nl": "Back-up downloaden",
         "ru": "Скачать резервную копию", "zh": "下载备份", "ja": "バックアップをダウンロード", "ko": "백업 다운로드", "tr": "Yedeği indir", "pl": "Pobierz kopię zapasową",
         "id": "Unduh cadangan", "ar": "تنزيل النسخة الاحتياطية", "fa": "دانلود پشتیبان", "el": "Λήψη αντιγράφου ασφαλείας", "hi": "बैकअप डाउनलोड करें", "bn": "ব্যাকআপ ডাউনলোড করুন", "ur": "بیک اپ ڈاؤن لوڈ کریں"
     },
@@ -641,13 +641,6 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Требуется имя пользователя", "zh": "需要用户名", "ja": "ユーザー名が必要です", "ko": "사용자 이름이 필요합니다", "nl": "Gebruikersnaam vereist",
         "tr": "Kullanıcı adı gerekli", "pl": "Wymagana nazwa użytkownika", "id": "Nama pengguna diperlukan", "ar": "اسم المستخدم مطلوب",
         "fa": "نام کاربری الزامی است", "el": "Απαιτείται όνομα χρήστη", "hi": "उपयोगकर्ता नाम आवश्यक", "bn": "ব্যবহারকারীর নাম প্রয়োজন", "ur": "صارف نام درکار ہے"
-    },
-    // --- New keys for Audit ---
-    "settings.type_delete_placeholder": {
-        "es": "Escribe 'delete'", "fr": "Tapez 'delete'", "it": "Scrivi 'delete'", "pt": "Digite 'delete'", "de": "Tippen Sie 'delete'",
-        "ru": "Введите 'delete'", "zh": "输入 'delete'", "ja": " 'delete' と入力", "ko": " 'delete' 입력", "nl": "Typ 'delete'",
-        "tr": "'delete' yazın", "pl": "Wpisz 'delete'", "id": "Ketik 'delete'", "ar": "اكتب 'delete'", "fa": "تایپ کنید 'delete'",
-        "el": "Πληκτρολογήστε 'delete'", "hi": "'delete' टाइप करें", "bn": "'delete' লিখুন", "ur": "'delete' لکھیں"
     },
     "settings.new_version_notif": {
         "es": "¡Nueva versión disponible!", "fr": "Nouvelle version disponible !", "it": "Nuova versione disponibile!", "pt": "Nova versão disponible!", "de": "Neue Version verfügbar!",
