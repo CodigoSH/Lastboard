@@ -174,11 +174,9 @@
 
 html,
 body {
-    height: 100vh; /* Fallback for older browsers */
-    height: 100dvh; /* Dynamic viewport height - adjusts for browser bars */
+    height: 100vh;
     margin: 0;
     padding: 0;
-    padding-bottom: env(safe-area-inset-bottom);
     overflow: hidden;
     /* Lock the Shell */
 }
