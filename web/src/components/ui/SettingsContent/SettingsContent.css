@@ -728,7 +728,7 @@ input:checked+.slider:before {
 }
 
 /* Responsive Overrides */
-@media (max-width: 1400px) {
+@media (max-width: 768px) {
     :host {
         padding: 24px 16px;
     }
