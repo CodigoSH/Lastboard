@@ -24,6 +24,7 @@ import './widgets/core/NotepadWidget';
 import './widgets/core/ClockWidget';
 import './widgets/core/TelemetryWidget';
 import './widgets/core/WeatherWidget';
+import './widgets/core/MarkdownWidget';
 
 const topbar = document.getElementById('main-topbar') as any;
 const drawer = document.getElementById('right-drawer') as any;
@@ -246,7 +247,7 @@ window.addEventListener('widget-selected', async (e: Event) => {
         content: JSON.stringify({
             widgetId: widgetDef.id,
             // Default props for specific widgets could go here
-            text: widgetDef.id === 'notepad' ? '' : undefined
+            text: (widgetDef.id === 'notepad' || widgetDef.id === 'markdown') ? '' : undefined
         })
     };
     await dashboardStore.addItem(newItem);

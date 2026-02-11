@@ -1,8 +1,8 @@
-var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enumerable:!0,configurable:!0,set:(t)=>r[a]=()=>t})};var G=function(o,r,a,t){var i=arguments.length,e=i<3?r:t===null?t=Object.getOwnPropertyDescriptor(r,a):t,s;if(typeof Reflect==="object"&&typeof Reflect.decorate==="function")e=Reflect.decorate(o,r,a,t);else for(var p=o.length-1;p>=0;p--)if(s=o[p])e=(i<3?s(e):i>3?s(r,a,e):s(r,a))||e;return i>3&&e&&Object.defineProperty(r,a,e),e};var L=(o,r)=>{if(typeof Reflect==="object"&&typeof Reflect.metadata==="function")return Reflect.metadata(o,r)},q=(o,r)=>()=>(o&&(r=o(o=0)),r);class er{baseUrl;constructor(){this.baseUrl=window.LASTBOARD_CONFIG?.API_BASE_URL||""}getCsrfToken(){let o=document.cookie.split("; ").find((r)=>r.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}async request(o,r){let a=`${this.baseUrl}${o}`,t=(r.method||"GET").toUpperCase(),i={"Content-Type":"application/json","Cache-Control":"no-cache, no-store, must-revalidate",Pragma:"no-cache",Expires:"0",...r.headers};if(t==="POST"||t==="PUT"||t==="PATCH"||t==="DELETE"){let e=this.getCsrfToken();if(e)i["X-CSRF-Token"]=e}try{let e=await fetch(a,{...r,headers:i,cache:"no-store"});if(!e.ok){let p=await e.json().catch(()=>({}));throw Error(p.error||`HTTP ${e.status}: ${e.statusText}`)}let s=await e.text();return s?JSON.parse(s):{}}catch(e){throw console.error(`[ApiService] Request failed: ${a}`,e),e}}async get(o){return this.request(o,{method:"GET"})}async post(o,r){return this.request(o,{method:"POST",body:JSON.stringify(r)})}async patch(o,r){return this.request(o,{method:"PATCH",body:JSON.stringify(r)})}async put(o,r){return this.request(o,{method:"PUT",body:JSON.stringify(r)})}async delete(o){return this.request(o,{method:"DELETE"})}}var Q;var Zo=q(()=>{Q=new er});var K;var Ao=q(()=>{Zo();K={async getCurrentUser(){return Q.get("/api/me")},async updateProfile(o){return Q.post("/api/user/update-profile",o)},async updatePreferences(o){return Q.post("/api/user/preferences",o)},async changePassword(o){return Q.post("/api/user/change-password",o)},async getUsers(){return Q.get("/api/users")},async createUser(o){return Q.post("/api/users",o)},async adminUpdateUser(o){return Q.put("/api/users",o)},async deleteUser(o){return Q.delete(`/api/users?id=${o}`)}}});var C;var sr=q(()=>{C=[{code:"en",name:"English",flag:"\uD83C\uDDFA\uD83C\uDDF8"},{code:"zh",name:"简体中文",flag:"\uD83C\uDDE8\uD83C\uDDF3"},{code:"hi",name:"हिन्दी",flag:"\uD83C\uDDEE\uD83C\uDDF3"},{code:"es",name:"Español",flag:"\uD83C\uDDEA\uD83C\uDDF8"},{code:"ar",name:"العربية",flag:"\uD83C\uDDF8\uD83C\uDDE6"},{code:"fr",name:"Français",flag:"\uD83C\uDDEB\uD83C\uDDF7"},{code:"bn",name:"Bengali",flag:"\uD83C\uDDE7\uD83C\uDDE9"},{code:"pt",name:"Português",flag:"\uD83C\uDDF5\uD83C\uDDF9"},{code:"ru",name:"Русский",flag:"\uD83C\uDDF7\uD83C\uDDFA"},{code:"de",name:"Deutsch",flag:"\uD83C\uDDE9\uD83C\uDDEA"},{code:"ja",name:"日本語",flag:"\uD83C\uDDEF\uD83C\uDDF5"},{code:"it",name:"Italiano",flag:"\uD83C\uDDEE\uD83C\uDDF9"},{code:"tr",name:"Turkish",flag:"\uD83C\uDDF9\uD83C\uDDF7"},{code:"ko",name:"한국어",flag:"\uD83C\uDDF0\uD83C\uDDF7"},{code:"id",name:"Indonesian",flag:"\uD83C\uDDEE\uD83C\uDDE9"},{code:"pl",name:"Polski",flag:"\uD83C\uDDF5\uD83C\uDDF1"},{code:"ur",name:"Urdu",flag:"\uD83C\uDDF5\uD83C\uDDF0"},{code:"nl",name:"Nederlands",flag:"\uD83C\uDDF3\uD83C\uDDF1"},{code:"fa",name:"Persian",flag:"\uD83C\uDDEE\uD83C\uDDF7"},{code:"el",name:"Greek",flag:"\uD83C\uDDEC\uD83C\uDDF7"}]});class ao{currentLanguage="en";cache=new Map;listeners=[];static instance;initialized;constructor(){this.initialized=this.init()}async init(){await this.loadLocale("en");let o=localStorage.getItem("lastboard_lang"),r=navigator.language.split("-")[0],a="en";if(o&&C.find((t)=>t.code===o))a=o;else if(C.find((t)=>t.code===r))a=r;if(a!=="en")await this.loadLocale(a);this.currentLanguage=a,this.notifyListeners()}static getInstance(){if(!ao.instance)ao.instance=new ao;return ao.instance}getLocale(){return{...C.find((r)=>r.code===this.currentLanguage)||C[0],translations:this.cache.get(this.currentLanguage)||{}}}getAvailableLocales(){let o=(a)=>/^[a-zA-Z]/.test(a);return[...C].sort((a,t)=>{let i=o(a.name),e=o(t.name);if(i&&!e)return-1;if(!i&&e)return 1;return a.name.localeCompare(t.name,void 0,{sensitivity:"base"})})}async loadLocale(o){if(this.cache.has(o))return;try{let r=await fetch(`/locales/${o}.json?v=${new Date().getTime()}`);if(!r.ok)throw Error(`Failed to load locale ${o}`);let a=await r.json();this.cache.set(o,a)}catch(r){console.error(r)}}async setLanguage(o){if(C.find((r)=>r.code===o))await this.loadLocale(o),this.currentLanguage=o,localStorage.setItem("lastboard_lang",o),this.notifyListeners();else console.warn(`[I18n] Language ${o} not supported`)}t(o,r){let a=this.cache.get(this.currentLanguage),t=this.cache.get("en"),i=a?.[o];if(!i&&t)i=t[o];if(!i)return o;if(r)Object.keys(r).forEach((e)=>{i=i.replace(`{${e}}`,r[e])});return i}subscribe(o){return this.listeners.push(o),o(this.getLocale()),()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}notifyListeners(){let o=this.getLocale();this.listeners.forEach((r)=>r(o))}async ensureInitialized(){return this.initialized}}var n;var m=q(()=>{sr();n=ao.getInstance()});var yo={};ro(yo,{userStore:()=>y});class pr{user=null;listeners=[];constructor(){this.loadFromStorage()}loadFromStorage(){let o=localStorage.getItem("lastboard_user_cache");if(o)try{this.user=JSON.parse(o),this.applyAesthetics(),this.notify()}catch(r){console.error("Failed to parse user cache",r)}}saveToStorage(){if(this.user)localStorage.setItem("lastboard_user_cache",JSON.stringify(this.user))}subscribe(o){if(this.listeners.push(o),this.user)o(this.user);return()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}notify(){this.listeners.forEach((o)=>o(this.user)),this.saveToStorage()}setUser(o){if(!o)return;this.user={...o,preferences:{accent_color:o.accent_color||"blue",language:o.language||"en",theme:o.theme,grid_columns:o.grid_columns||12,project_name:o.project_name||"Lastboard",beta_updates:o.beta_updates},project_name:o.project_name||"Lastboard"},this.applyAesthetics(),this.notify()}applyAesthetics(){if(!this.user||!this.user.preferences)return;let o=this.user.preferences,r=document.documentElement;if(o.grid_columns)r.style.setProperty("--user-preferred-columns",`${o.grid_columns}`);else r.style.setProperty("--user-preferred-columns","12");if(o.accent_color){let a=this.getAccentHex(o.accent_color);r.style.setProperty("--accent",a),localStorage.setItem("lastboard_accent",a)}if(o.theme==="light")r.classList.add("light-theme");else r.classList.remove("light-theme")}getAccentHex(o){if(o.startsWith("#"))return o;return{blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"}[o]||"#0078D4"}async updatePreferences(o){if(!this.user||!this.user.preferences)return;let r={...this.user.preferences};if(this.user.preferences={...this.user.preferences,...o},o.accent_color)this.user.accent_color=o.accent_color;if(o.language)this.user.language=o.language;if(o.project_name)this.user.project_name=o.project_name;if(o.theme)this.user.preferences.theme=o.theme;if(o.grid_columns)this.user.preferences.grid_columns=o.grid_columns;if(o.beta_updates!==void 0)this.user.preferences.beta_updates=o.beta_updates;this.applyAesthetics(),this.notify();try{let a={accent_color:this.user.accent_color,language:this.user.language,theme:this.user.preferences.theme,grid_columns:this.user.preferences.grid_columns,project_name:this.user.project_name,beta_updates:this.user.preferences.beta_updates};if(await K.updatePreferences(a),window.notifier)window.notifier.show(n.t("general.success")||"Preferences saved")}catch(a){if(console.error("[UserStore] Failed to sync preferences, rolling back",a),this.user.preferences=r,this.applyAesthetics(),this.notify(),window.notifier)window.notifier.show(n.t("notifier.save_error"),"error");throw a}}async updateProfile(o){if(!this.user)return;try{if(await K.updateProfile(o),this.user={...this.user,...o},this.notify(),window.notifier)window.notifier.show(n.t("notifier.profile_updated"))}catch(r){if(console.error("[UserStore] Update profile failed",r),window.notifier)window.notifier.show(n.t("notifier.profile_error"),"error")}}async changePassword(o){try{await K.changePassword(o)}catch(r){throw console.error("[UserStore] Change password failed",r),r}}getUser(){return this.user}async fetchUser(){try{let o=await K.getCurrentUser();this.setUser(o)}catch(o){if(console.error("[UserStore] Error fetching user",o),!this.user){if(window.notifier)window.notifier.show(n.t("auth.session_expired"),"error")}}}}var y;var X=q(()=>{Ao();m();y=new pr});var Y;var Yo=q(()=>{Zo();Y={async getItems(){return Q.get("/api/dashboard")},async updateItem(o){let r={...o};if(o.parent_id===void 0&&"parent_id"in o)r.clear_parent=!0;return Q.patch(`/api/dashboard/item/${o.id}`,r)},async createItem(o){return Q.post("/api/dashboard/item",o)},async deleteItem(o){return Q.delete(`/api/dashboard/item/${o}`)},async checkHealth(o){return Q.get(`/api/dashboard/health?url=${encodeURIComponent(o)}`)}}});var lr={};ro(lr,{socketService:()=>Ca});class No{socket=null;listeners=[];reconnectTimeout;reconnectDelay=1000;static MAX_DELAY=30000;constructor(){this.connect()}connect(){let o=window.location.protocol==="https:"?"wss:":"ws:",r=window.location.host,a=`${o}//${r}/ws`;this.socket=new WebSocket(a),this.socket.onopen=()=>{this.reconnectDelay=1000},this.socket.onmessage=(t)=>{try{let i=JSON.parse(t.data);this.notify(i)}catch(i){console.error("[SocketService] Failed to parse message",i)}},this.socket.onclose=()=>{console.warn("[SocketService] WebSocket closed. Reconnecting..."),this.scheduleReconnect()},this.socket.onerror=(t)=>{console.error("[SocketService] WebSocket error",t),this.socket?.close()}}scheduleReconnect(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);let o=Math.random()*this.reconnectDelay*0.5;this.reconnectTimeout=setTimeout(()=>this.connect(),this.reconnectDelay+o),this.reconnectDelay=Math.min(this.reconnectDelay*2,No.MAX_DELAY)}destroy(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);if(this.socket)this.socket.onclose=null,this.socket.close(),this.socket=null}subscribe(o){return this.listeners.push(o),()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}notify(o){this.listeners.forEach((r)=>r(o))}}var Ca;var dr=q(()=>{Ca=new No});var Oo={};ro(Oo,{updateService:()=>Xa});class cr{version="";compareVersions(o,r){let a=o.replace(/^v/,""),t=r.replace(/^v/,""),i=a.split("-"),e=t.split("-"),s=i[0].split(".").map(Number),p=e[0].split(".").map(Number);for(let d=0;d<3;d++){if(s[d]>p[d])return!0;if(s[d]<p[d])return!1}if(!i[1]&&e[1])return!0;if(i[1]&&!e[1])return!1;if(!i[1]&&!e[1])return!1;let l=i[1].toLowerCase(),c=e[1].toLowerCase();return l>c}async check(o){try{let r=await fetch("/api/system/update/check"),a={current_version:"v0.0.0",is_docker:!1,available:!1,os:"linux",arch:"amd64"};if(r.ok)a=await r.json(),this.version=a.current_version;if(a.is_docker)return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!0};try{let t=`https://api-updates.codigosh.com/api/v1/check-update?beta=${o}`,i=await fetch(t);if(i.ok){let e=await i.json();if(this.compareVersions(e.latest_version,this.version)){let p=a.os||"linux",l=a.arch||"amd64",c=`lastboard-${p}-${l}.tar.gz`;return{available:!0,current_version:this.version,latest_version:e.latest_version,asset_url:`https://github.com/CodigoSH/Lastboard/releases/download/${e.latest_version}/${c}`,is_docker:!1}}}}catch(t){console.error("[UpdateService] Proxy check failed",t)}return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!1}}catch(r){return console.error("[UpdateService] Failed to check for updates",r),{available:!1,current_version:this.version||"v0.0.0",latest_version:"v0.0.0",is_docker:!1}}}}var Xa;var Vo=q(()=>{Xa=new cr});var to={};ro(to,{collisionService:()=>N});var N;var T=q(()=>{N={isOverlap(o,r){return o.x<r.x+r.w&&o.x+o.w>r.x&&o.y<r.y+r.h&&o.y+o.h>r.y},calculateDropValidity(o,r,a=12){let t=Number(o.x),i=Number(o.y),e=Number(o.w),s=Number(o.h);if(t<1||t+e-1>a||i<1)return{valid:!1,x:t,y:i};let l=r.find((d)=>d.id===o.id)?.type==="section",c={x:t,y:i,w:e,h:s};for(let d of r){if(d.id===o.id)continue;let b=Number(d.x),h=Number(d.y),g=Number(d.w||1),u=Number(d.h||1),w={x:b,y:h,w:g,h:u};if(d.parent_id){let k=r.find((f)=>f.id===d.parent_id);if(k)w.x=Number(k.x)+b-1,w.y=Number(k.y)+h-1;else continue}if(this.isOverlap(c,w)){if(l&&d.parent_id===o.id){let k=Number(d.x),f=Number(d.y),J=Number(d.w||1),A=Number(d.h||1);if(k+J-1>e)return{valid:!1,x:t,y:i};if(f+A-1>s)return{valid:!1,x:t,y:i};continue}if(!l&&d.type==="section"){let k=t-Number(d.x)+1,f=i-Number(d.y)+1;if(k<1||k+e-1>Number(d.w||1)||f<1||f+s-1>Number(d.h||1))return{valid:!1,x:t,y:i};let J=r.filter((_)=>_.parent_id===d.id),A=!1;for(let _ of J){let co={x:Number(_.x),y:Number(_.y),w:Number(_.w||1),h:Number(_.h||1)},U={x:k,y:f,w:e,h:s};if(this.isOverlap(U,co)){A=!0;break}}if(!A)return{valid:!0,x:t,y:i,targetGroup:d}}return{valid:!1,x:t,y:i}}}return{valid:!0,x:t,y:i}},snapToGrid(o,r,a,t){let i=a+t,e=Math.max(1,Math.floor(o/i)+1),s=a+t,p=Math.max(1,Math.floor(r/s)+1);return{x:e,y:p}},findFirstAvailableSlot(o,r,a,t=12){return this.findCompactPosition(o,r,a,t)},findAvailableSlot(o,r,a,t){let i=1;while(!0){for(let e=1;e<=t-o+1;e++){let s={x:e,y:i,w:o,h:r},p=!1;for(let l of a)if(this.isOverlap(s,l)){p=!0;break}if(!p)return{x:e,y:i}}if(i++,i>500)return console.warn("[CollisionService] Grid exhausted, no available slot found. Grid may be full."),{x:1,y:500}}},findCompactPosition(o,r,a,t,i){let e=1,s=1;while(!0){for(let p=1;p<=t-o+1;p++){let l={x:p,y:e,w:o,h:r},c=!1;for(let d of a){if(i&&d.id===i)continue;let b={x:d.x,y:d.y,w:d.w||1,h:d.h||1};if(this.isOverlap(l,b)){c=!0;break}}if(!c)return{x:p,y:e}}if(e++,e>500)return console.warn("[CollisionService] Grid exhausted, no compact position found. Grid may be full."),{x:1,y:500}}}}});var br={};ro(br,{dashboardStore:()=>x});class xr{state={isEditing:!1,items:[],searchQuery:"",isOffline:!1,updateAvailable:!1,stats:null,availableWidth:1200,gridColumns:12};listeners=[];userId=0;getStorageKey(){return this.userId?`lastboard-items-${this.userId}`:"lastboard-items"}setUserId(o){this.userId=o}constructor(){this.initSocket(),this.checkSystemUpdate()}initSocket(){Promise.resolve().then(() => (dr(),lr)).then(({socketService:o})=>{o.subscribe((r)=>{this.state.stats={cpu_usage:r.cpu_usage,ram_usage:r.ram_usage,temperature:r.temperature},this.notify()})})}async checkSystemUpdate(){try{setTimeout(async()=>{let{userStore:o}=await Promise.resolve().then(() => (X(),yo)),{updateService:r}=await Promise.resolve().then(() => (Vo(),Oo)),t=o.getUser()?.preferences?.beta_updates||!1;if((await r.check(t)).available)this.state.updateAvailable=!0,this.notify()},2000)}catch(o){}}saveToLocalStorage(){try{let o=JSON.stringify(this.state.items);localStorage.setItem(this.getStorageKey(),o)}catch(o){if(console.error("[DashboardStore] Failed to save to localStorage",o),o.name==="QuotaExceededError"||o.code===22)this.sanitizeStorage()}}loadFromLocalStorage(){try{this.sanitizeStorage();let o=localStorage.getItem(this.getStorageKey());if(o){let r=JSON.parse(o);if(Array.isArray(r)&&r.length>0)this.state.items=r}}catch(o){console.error("[DashboardStore] Failed to load from localStorage",o)}}sanitizeStorage(){try{let o=[];for(let r=0;r<localStorage.length;r++){let a=localStorage.key(r);if(a&&(a.startsWith("kashboard")||a.includes("user_cache")))o.push(a)}o.forEach((r)=>localStorage.removeItem(r))}catch(o){}}subscribe(o){return this.listeners.push(o),this.ensureItemsIsArray(),o({...this.state,items:this.deepCopyItems(this.state.items)}),()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}ensureItemsIsArray(){if(!Array.isArray(this.state.items))console.error("[DashboardStore] CRITICAL: items is not an array, resetting to empty array",typeof this.state.items),this.state.items=[]}deepCopyItems(o){return o.map((r)=>{let a=r.content;if(typeof r.content==="string")try{let t=JSON.parse(r.content);if(typeof t==="object"&&t!==null)a=JSON.stringify(t)}catch{}return{...r,content:a,status:r.status}})}setItemStatus(o,r){let a=this.state.items.findIndex((t)=>t.id===o);if(a===-1)return;if(this.state.items[a].status===r)return;this.state.items[a].status=r,this.notify()}notify(){this.ensureItemsIsArray();let o={...this.state,items:this.deepCopyItems(this.state.items)};this.listeners.forEach((r)=>r(o))}setEditMode(o){this.state.isEditing=o,this.notify()}toggleEditMode(){this.setEditMode(!this.state.isEditing)}setSearchQuery(o){this.state.searchQuery=o.toLowerCase().trim(),this.notify()}setGridMetrics(o,r){if(o===this.state.availableWidth&&r===this.state.gridColumns)return;this.state.availableWidth=o,this.state.gridColumns=r,this.notify()}async fetchItems(){try{try{let o=await Y.getItems();if(Array.isArray(o))this.state.items=o,this.state.isOffline=!1,this.saveToLocalStorage();else throw Error("Backend returned invalid data")}catch(o){this.state.isOffline=!0;let r=localStorage.getItem(this.getStorageKey());if(r){let a=JSON.parse(r);if(Array.isArray(a)&&a.length>0)this.state.items=a;else this.state.items=[...gr],this.saveToLocalStorage()}else this.state.items=[...gr],this.saveToLocalStorage()}this.ensureItemsIsArray(),this.notify()}catch(o){console.error("[DashboardStore] Failed to fetch dashboard items",o),this.state.items=[]}}async updateItem(o){try{this.ensureItemsIsArray();let r=this.state.items.findIndex((t)=>t.id===o.id);if(r===-1){console.warn("[DashboardStore] Item not found for update:",o.id);return}let a={...this.state.items[r]};this.state.items[r]={...this.state.items[r],...o},this.saveToLocalStorage(),this.notify();try{await Y.updateItem(o),this.state.isOffline=!1,this.notify()}catch(t){console.error("[DashboardStore] Failed to sync item update (offline?), keeping local state",t),this.state.isOffline=!0,this.saveToLocalStorage(),this.notify()}}catch(r){console.error("[DashboardStore] Error updating item",r)}}async resizeItem(o,r,a){let t=this.state.items.find((i)=>i.id===o);if(!t)return;if(await this.updateItem({id:o,w:r,h:a}),t.type==="section")await this.reflowChildren(o,r)}async reflowChildren(o,r){let{collisionService:a}=await Promise.resolve().then(() => (T(),to)),t=this.state.items.filter((e)=>e.parent_id===o).sort((e,s)=>e.y-s.y||e.x-s.x);if(t.length===0)return;let i=[];for(let e of t){let s=a.findAvailableSlot(e.w,e.h,i,r);if(i.push({x:s.x,y:s.y,w:e.w,h:e.h}),e.x!==s.x||e.y!==s.y)await this.updateItem({id:e.id,x:s.x,y:s.y})}}async addItem(o){try{this.ensureItemsIsArray();try{let r={...o};if(r.type==="widget"&&!r.url)r.url="";let{userStore:a}=await Promise.resolve().then(() => (X(),yo)),i=a.getUser()?.preferences,e=this.state.gridColumns;if(!e||e<1){let p=i?.widget_min_width||140,l=16,c=document.querySelector("bookmark-grid"),d=this.state.availableWidth||c?.clientWidth||window.innerWidth;e=Math.floor((d+16)/(p+16))}if(e<1)e=1;if(e>24)e=24;if(!r.x||!r.y){let{collisionService:p}=await Promise.resolve().then(() => (T(),to)),l=p.findFirstAvailableSlot(r.w||1,r.h||1,this.state.items,e);r.x=l.x,r.y=l.y}let s=await Y.createItem(r);return this.state.isOffline=!1,this.state.items.push(s),this.saveToLocalStorage(),this.notify(),s}catch(r){console.error("[DashboardStore] Failed to add item to backend",r);return}}catch(r){console.error("[DashboardStore] Error adding item",r);return}}async deleteItem(o){try{this.ensureItemsIsArray();let r=this.state.items.findIndex((t)=>t.id===o);if(r===-1){console.warn("[DashboardStore] Item not found for deletion:",o);return}let a=this.state.items[r];this.state.items.splice(r,1),this.saveToLocalStorage(),this.notify();try{await Y.deleteItem(o)}catch(t){console.error("[DashboardStore] Failed to delete item, rolling back",t),this.state.items.push(a),this.saveToLocalStorage(),this.notify()}}catch(r){console.error("[DashboardStore] Error deleting item",r)}}getState(){return this.ensureItemsIsArray(),{...this.state,items:[...this.state.items]}}}var gr,x;var H=q(()=>{Yo();gr=[{id:1,type:"bookmark",x:1,y:1,w:1,h:1,content:{label:"CodigoSH",url:"https://github.com/CodigoSH/Lastboard",icon:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png",iconName:"git"}}];x=new xr});var or={};ro(or,{eventBus:()=>po,EVENTS:()=>so});var so,ma,po;var Ko=q(()=>{so={SHOW_CONFIRMATION:"lastboard:show-confirmation",SHOW_WIDGET_CONFIG:"lastboard:show-widget-config",NOTIFY:"lastboard:notify"};ma=class ma extends EventTarget{emit(o,r){this.dispatchEvent(new CustomEvent(o,{detail:r}))}on(o,r){this.addEventListener(o,r)}off(o,r){this.removeEventListener(o,r)}};po=new ma});X();H();H();Yo();class hr{interval=null;checkFrequency=300000;start(){if(this.interval)return;setTimeout(()=>this.checkAll(),2000),this.interval=window.setInterval(()=>{this.checkAll()},this.checkFrequency)}stop(){if(this.interval)clearInterval(this.interval),this.interval=null}async checkAll(){let r=x.getState().items.filter((s)=>{if(s.type!=="bookmark")return!1;let p=s.content;if(typeof p==="string")try{p=JSON.parse(p)}catch(l){return!1}return p&&p.statusCheck===!0});r.forEach((s)=>this.updateUIStatus(s.id,"pending"));let a=5,t=[...r],i=async()=>{while(t.length>0){let s=t.shift();if(s)await this.checkItem(s)}},e=Array(Math.min(r.length,a)).fill(null).map(()=>i());await Promise.all(e)}async checkItem(o){let r=o.content;if(typeof r==="string")try{r=JSON.parse(r)}catch(t){return}let a=r.url;if(!a||a==="#"||a.startsWith("javascript:"))return;try{if((await Y.checkHealth(a)).status==="up")this.updateUIStatus(o.id,"up");else this.updateUIStatus(o.id,"down")}catch(t){console.warn(`[StatusService] ${a} health check failed:`,t),this.updateUIStatus(o.id,"down")}}updateUIStatus(o,r){x.setItemStatus(o,r)}}var xo=new hr;class M{static STORAGE_KEY="lastboard_theme";static CLASS_NAME="dark-mode";static init(){let o=localStorage.getItem(this.STORAGE_KEY);if(o==="dark")this.enableDark();else if(o==="light")this.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)this.enableDark();else this.enableLight()}static enableDark(){document.documentElement.classList.add(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"dark"),this.setCookie(this.STORAGE_KEY,"dark",365)}static enableLight(){document.documentElement.classList.remove(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"light"),this.setCookie(this.STORAGE_KEY,"light",365)}static toggle(){if(document.documentElement.classList.contains(this.CLASS_NAME))this.enableLight();else this.enableDark()}static isDark(){return document.documentElement.classList.contains(this.CLASS_NAME)}static setCookie(o,r,a){let t="";if(a){let i=new Date;i.setTime(i.getTime()+a*24*60*60*1000),t="; expires="+i.toUTCString()}document.cookie=o+"="+(r||"")+t+"; path=/"}static async sync(){try{let o=await fetch("/api/me");if(o.ok){let r=await o.json();if(r.theme==="dark")this.enableDark();else if(r.theme==="light")this.enableLight()}}catch(o){}}}m();var vr=()=>`
+var Zt=Object.defineProperty;var U=(o,t)=>{for(var r in t)Zt(o,r,{get:t[r],enumerable:!0,configurable:!0,set:(a)=>t[r]=()=>a})};var M=(o,t)=>()=>(o&&(t=o(o=0)),t);class mo{baseUrl;constructor(){this.baseUrl=window.LASTBOARD_CONFIG?.API_BASE_URL||""}getCsrfToken(){let o=document.cookie.split("; ").find((t)=>t.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}async request(o,t){let r=`${this.baseUrl}${o}`,a=(t.method||"GET").toUpperCase(),n={"Content-Type":"application/json","Cache-Control":"no-cache, no-store, must-revalidate",Pragma:"no-cache",Expires:"0",...t.headers};if(a==="POST"||a==="PUT"||a==="PATCH"||a==="DELETE"){let e=this.getCsrfToken();if(e)n["X-CSRF-Token"]=e}try{let e=await fetch(r,{...t,headers:n,cache:"no-store"});if(!e.ok){let d=await e.json().catch(()=>({}));throw Error(d.error||`HTTP ${e.status}: ${e.statusText}`)}let s=await e.text();return s?JSON.parse(s):{}}catch(e){throw console.error(`[ApiService] Request failed: ${r}`,e),e}}async get(o){return this.request(o,{method:"GET"})}async post(o,t){return this.request(o,{method:"POST",body:JSON.stringify(t)})}async patch(o,t){return this.request(o,{method:"PATCH",body:JSON.stringify(t)})}async put(o,t){return this.request(o,{method:"PUT",body:JSON.stringify(t)})}async delete(o){return this.request(o,{method:"DELETE"})}}var z;var io=M(()=>{z=new mo});var H;var no=M(()=>{io();H={async getCurrentUser(){return z.get("/api/me")},async updateProfile(o){return z.post("/api/user/update-profile",o)},async updatePreferences(o){return z.post("/api/user/preferences",o)},async changePassword(o){return z.post("/api/user/change-password",o)},async getUsers(){return z.get("/api/users")},async createUser(o){return z.post("/api/users",o)},async adminUpdateUser(o){return z.put("/api/users",o)},async deleteUser(o){return z.delete(`/api/users?id=${o}`)}}});var Z;var ko=M(()=>{Z=[{code:"en",name:"English",flag:"\uD83C\uDDFA\uD83C\uDDF8"},{code:"zh",name:"简体中文",flag:"\uD83C\uDDE8\uD83C\uDDF3"},{code:"hi",name:"हिन्दी",flag:"\uD83C\uDDEE\uD83C\uDDF3"},{code:"es",name:"Español",flag:"\uD83C\uDDEA\uD83C\uDDF8"},{code:"ar",name:"العربية",flag:"\uD83C\uDDF8\uD83C\uDDE6"},{code:"fr",name:"Français",flag:"\uD83C\uDDEB\uD83C\uDDF7"},{code:"bn",name:"Bengali",flag:"\uD83C\uDDE7\uD83C\uDDE9"},{code:"pt",name:"Português",flag:"\uD83C\uDDF5\uD83C\uDDF9"},{code:"ru",name:"Русский",flag:"\uD83C\uDDF7\uD83C\uDDFA"},{code:"de",name:"Deutsch",flag:"\uD83C\uDDE9\uD83C\uDDEA"},{code:"ja",name:"日本語",flag:"\uD83C\uDDEF\uD83C\uDDF5"},{code:"it",name:"Italiano",flag:"\uD83C\uDDEE\uD83C\uDDF9"},{code:"tr",name:"Turkish",flag:"\uD83C\uDDF9\uD83C\uDDF7"},{code:"ko",name:"한국어",flag:"\uD83C\uDDF0\uD83C\uDDF7"},{code:"id",name:"Indonesian",flag:"\uD83C\uDDEE\uD83C\uDDE9"},{code:"pl",name:"Polski",flag:"\uD83C\uDDF5\uD83C\uDDF1"},{code:"ur",name:"Urdu",flag:"\uD83C\uDDF5\uD83C\uDDF0"},{code:"nl",name:"Nederlands",flag:"\uD83C\uDDF3\uD83C\uDDF1"},{code:"fa",name:"Persian",flag:"\uD83C\uDDEE\uD83C\uDDF7"},{code:"el",name:"Greek",flag:"\uD83C\uDDEC\uD83C\uDDF7"}]});class Y{currentLanguage="en";cache=new Map;listeners=[];static instance;initialized;constructor(){this.initialized=this.init()}async init(){await this.loadLocale("en");let o=localStorage.getItem("lastboard_lang"),t=navigator.language.split("-")[0],r="en";if(o&&Z.find((a)=>a.code===o))r=o;else if(Z.find((a)=>a.code===t))r=t;if(r!=="en")await this.loadLocale(r);this.currentLanguage=r,this.notifyListeners()}static getInstance(){if(!Y.instance)Y.instance=new Y;return Y.instance}getLocale(){return{...Z.find((t)=>t.code===this.currentLanguage)||Z[0],translations:this.cache.get(this.currentLanguage)||{}}}getAvailableLocales(){let o=(r)=>/^[a-zA-Z]/.test(r);return[...Z].sort((r,a)=>{let n=o(r.name),e=o(a.name);if(n&&!e)return-1;if(!n&&e)return 1;return r.name.localeCompare(a.name,void 0,{sensitivity:"base"})})}async loadLocale(o){if(this.cache.has(o))return;try{let t=await fetch(`/locales/${o}.json?v=${new Date().getTime()}`);if(!t.ok)throw Error(`Failed to load locale ${o}`);let r=await t.json();this.cache.set(o,r)}catch(t){console.error(t)}}async setLanguage(o){if(Z.find((t)=>t.code===o))await this.loadLocale(o),this.currentLanguage=o,localStorage.setItem("lastboard_lang",o),this.notifyListeners();else console.warn(`[I18n] Language ${o} not supported`)}t(o,t){let r=this.cache.get(this.currentLanguage),a=this.cache.get("en"),n=r?.[o];if(!n&&a)n=a[o];if(!n)return o;if(t)Object.keys(t).forEach((e)=>{n=n.replace(`{${e}}`,t[e])});return n}subscribe(o){return this.listeners.push(o),o(this.getLocale()),()=>{this.listeners=this.listeners.filter((t)=>t!==o)}}notifyListeners(){let o=this.getLocale();this.listeners.forEach((t)=>t(o))}async ensureInitialized(){return this.initialized}}var i;var m=M(()=>{ko();i=Y.getInstance()});var S={};U(S,{userStore:()=>w});class yo{user=null;listeners=[];constructor(){this.loadFromStorage()}loadFromStorage(){let o=localStorage.getItem("lastboard_user_cache");if(o)try{this.user=JSON.parse(o),this.applyAesthetics(),this.notify()}catch(t){console.error("Failed to parse user cache",t)}}saveToStorage(){if(this.user)localStorage.setItem("lastboard_user_cache",JSON.stringify(this.user))}subscribe(o){if(this.listeners.push(o),this.user)o(this.user);return()=>{this.listeners=this.listeners.filter((t)=>t!==o)}}notify(){this.listeners.forEach((o)=>o(this.user)),this.saveToStorage()}setUser(o){if(!o)return;this.user={...o,preferences:{accent_color:o.accent_color||"blue",language:o.language||"en",theme:o.theme,grid_columns:o.grid_columns||12,project_name:o.project_name||"Lastboard",beta_updates:o.beta_updates},project_name:o.project_name||"Lastboard"},this.applyAesthetics(),this.notify()}applyAesthetics(){if(!this.user||!this.user.preferences)return;let o=this.user.preferences,t=document.documentElement;if(o.grid_columns)t.style.setProperty("--user-preferred-columns",`${o.grid_columns}`);else t.style.setProperty("--user-preferred-columns","12");if(o.accent_color){let r=this.getAccentHex(o.accent_color);t.style.setProperty("--accent",r),localStorage.setItem("lastboard_accent",r)}if(o.theme==="light")t.classList.add("light-theme");else t.classList.remove("light-theme")}getAccentHex(o){if(o.startsWith("#"))return o;return{blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"}[o]||"#0078D4"}async updatePreferences(o){if(!this.user||!this.user.preferences)return;let t={...this.user.preferences};if(this.user.preferences={...this.user.preferences,...o},o.accent_color)this.user.accent_color=o.accent_color;if(o.language)this.user.language=o.language;if(o.project_name)this.user.project_name=o.project_name;if(o.theme)this.user.preferences.theme=o.theme;if(o.grid_columns)this.user.preferences.grid_columns=o.grid_columns;if(o.beta_updates!==void 0)this.user.preferences.beta_updates=o.beta_updates;this.applyAesthetics(),this.notify();try{let r={accent_color:this.user.accent_color,language:this.user.language,theme:this.user.preferences.theme,grid_columns:this.user.preferences.grid_columns,project_name:this.user.project_name,beta_updates:this.user.preferences.beta_updates};if(await H.updatePreferences(r),window.notifier)window.notifier.show(i.t("general.success")||"Preferences saved")}catch(r){if(console.error("[UserStore] Failed to sync preferences, rolling back",r),this.user.preferences=t,this.applyAesthetics(),this.notify(),window.notifier)window.notifier.show(i.t("notifier.save_error"),"error");throw r}}async updateProfile(o){if(!this.user)return;try{if(await H.updateProfile(o),this.user={...this.user,...o},this.notify(),window.notifier)window.notifier.show(i.t("notifier.profile_updated"))}catch(t){if(console.error("[UserStore] Update profile failed",t),window.notifier)window.notifier.show(i.t("notifier.profile_error"),"error")}}async changePassword(o){try{await H.changePassword(o)}catch(t){throw console.error("[UserStore] Change password failed",t),t}}getUser(){return this.user}async fetchUser(){try{let o=await H.getCurrentUser();this.setUser(o)}catch(o){if(console.error("[UserStore] Error fetching user",o),!this.user){if(window.notifier)window.notifier.show(i.t("auth.session_expired"),"error")}}}}var w;var K=M(()=>{no();m();w=new yo});var q;var eo=M(()=>{io();q={async getItems(){return z.get("/api/dashboard")},async updateItem(o){let t={...o};if(o.parent_id===void 0&&"parent_id"in o)t.clear_parent=!0;return z.patch(`/api/dashboard/item/${o.id}`,t)},async createItem(o){return z.post("/api/dashboard/item",o)},async deleteItem(o){return z.delete(`/api/dashboard/item/${o}`)},async checkHealth(o){return z.get(`/api/dashboard/health?url=${encodeURIComponent(o)}`)}}});var wo={};U(wo,{socketService:()=>Kt});class so{socket=null;listeners=[];reconnectTimeout;reconnectDelay=1000;static MAX_DELAY=30000;constructor(){this.connect()}connect(){let o=window.location.protocol==="https:"?"wss:":"ws:",t=window.location.host,r=`${o}//${t}/ws`;this.socket=new WebSocket(r),this.socket.onopen=()=>{this.reconnectDelay=1000},this.socket.onmessage=(a)=>{try{let n=JSON.parse(a.data);this.notify(n)}catch(n){console.error("[SocketService] Failed to parse message",n)}},this.socket.onclose=()=>{console.warn("[SocketService] WebSocket closed. Reconnecting..."),this.scheduleReconnect()},this.socket.onerror=(a)=>{console.error("[SocketService] WebSocket error",a),this.socket?.close()}}scheduleReconnect(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);let o=Math.random()*this.reconnectDelay*0.5;this.reconnectTimeout=setTimeout(()=>this.connect(),this.reconnectDelay+o),this.reconnectDelay=Math.min(this.reconnectDelay*2,so.MAX_DELAY)}destroy(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);if(this.socket)this.socket.onclose=null,this.socket.close(),this.socket=null}subscribe(o){return this.listeners.push(o),()=>{this.listeners=this.listeners.filter((t)=>t!==o)}}notify(o){this.listeners.forEach((t)=>t(o))}}var Kt;var $o=M(()=>{Kt=new so});var lo={};U(lo,{updateService:()=>Bt});class zo{version="";compareVersions(o,t){let r=o.replace(/^v/,""),a=t.replace(/^v/,""),n=r.split("-"),e=a.split("-"),s=n[0].split(".").map(Number),d=e[0].split(".").map(Number);for(let p=0;p<3;p++){if(s[p]>d[p])return!0;if(s[p]<d[p])return!1}if(!n[1]&&e[1])return!0;if(n[1]&&!e[1])return!1;if(!n[1]&&!e[1])return!1;let l=n[1].toLowerCase(),c=e[1].toLowerCase();return l>c}async check(o){try{let t=await fetch("/api/system/update/check"),r={current_version:"v0.0.0",is_docker:!1,available:!1,os:"linux",arch:"amd64"};if(t.ok)r=await t.json(),this.version=r.current_version;if(r.is_docker)return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!0};try{let a=`https://api-updates.codigosh.com/api/v1/check-update?beta=${o}`,n=await fetch(a);if(n.ok){let e=await n.json();if(this.compareVersions(e.latest_version,this.version)){let d=r.os||"linux",l=r.arch||"amd64",c=`lastboard-${d}-${l}.tar.gz`;return{available:!0,current_version:this.version,latest_version:e.latest_version,asset_url:`https://github.com/CodigoSH/Lastboard/releases/download/${e.latest_version}/${c}`,is_docker:!1}}}}catch(a){console.error("[UpdateService] Proxy check failed",a)}return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!1}}catch(t){return console.error("[UpdateService] Failed to check for updates",t),{available:!1,current_version:this.version||"v0.0.0",latest_version:"v0.0.0",is_docker:!1}}}}var Bt;var po=M(()=>{Bt=new zo});var N={};U(N,{collisionService:()=>F});var F;var B=M(()=>{F={isOverlap(o,t){return o.x<t.x+t.w&&o.x+o.w>t.x&&o.y<t.y+t.h&&o.y+o.h>t.y},calculateDropValidity(o,t,r=12){let a=Number(o.x),n=Number(o.y),e=Number(o.w),s=Number(o.h);if(a<1||a+e-1>r||n<1)return{valid:!1,x:a,y:n};let l=t.find((p)=>p.id===o.id)?.type==="section",c={x:a,y:n,w:e,h:s};for(let p of t){if(p.id===o.id)continue;let v=Number(p.x),f=Number(p.y),x=Number(p.w||1),u=Number(p.h||1),y={x:v,y:f,w:x,h:u};if(p.parent_id){let k=t.find((b)=>b.id===p.parent_id);if(k)y.x=Number(k.x)+v-1,y.y=Number(k.y)+f-1;else continue}if(this.isOverlap(c,y)){if(l&&p.parent_id===o.id){let k=Number(p.x),b=Number(p.y),A=Number(p.w||1),R=Number(p.h||1);if(k+A-1>e)return{valid:!1,x:a,y:n};if(b+R-1>s)return{valid:!1,x:a,y:n};continue}if(!l&&p.type==="section"){let k=a-Number(p.x)+1,b=n-Number(p.y)+1;if(k<1||k+e-1>Number(p.w||1)||b<1||b+s-1>Number(p.h||1))return{valid:!1,x:a,y:n};let A=t.filter((h)=>h.parent_id===p.id),R=!1;for(let h of A){let P={x:Number(h.x),y:Number(h.y),w:Number(h.w||1),h:Number(h.h||1)},J={x:k,y:b,w:e,h:s};if(this.isOverlap(J,P)){R=!0;break}}if(!R)return{valid:!0,x:a,y:n,targetGroup:p}}return{valid:!1,x:a,y:n}}}return{valid:!0,x:a,y:n}},snapToGrid(o,t,r,a){let n=r+a,e=Math.max(1,Math.floor(o/n)+1),s=r+a,d=Math.max(1,Math.floor(t/s)+1);return{x:e,y:d}},findFirstAvailableSlot(o,t,r,a=12){return this.findCompactPosition(o,t,r,a)},findAvailableSlot(o,t,r,a){let n=1;while(!0){for(let e=1;e<=a-o+1;e++){let s={x:e,y:n,w:o,h:t},d=!1;for(let l of r)if(this.isOverlap(s,l)){d=!0;break}if(!d)return{x:e,y:n}}if(n++,n>500)return console.warn("[CollisionService] Grid exhausted, no available slot found. Grid may be full."),{x:1,y:500}}},findCompactPosition(o,t,r,a,n){let e=1,s=1;while(!0){for(let d=1;d<=a-o+1;d++){let l={x:d,y:e,w:o,h:t},c=!1;for(let p of r){if(n&&p.id===n)continue;let v={x:p.x,y:p.y,w:p.w||1,h:p.h||1};if(this.isOverlap(l,v)){c=!0;break}}if(!c)return{x:d,y:e}}if(e++,e>500)return console.warn("[CollisionService] Grid exhausted, no compact position found. Grid may be full."),{x:1,y:500}}}}});var Mo={};U(Mo,{dashboardStore:()=>g});class Lo{state={isEditing:!1,items:[],searchQuery:"",isOffline:!1,updateAvailable:!1,stats:null,availableWidth:1200,gridColumns:12};listeners=[];userId=0;getStorageKey(){return this.userId?`lastboard-items-${this.userId}`:"lastboard-items"}setUserId(o){this.userId=o}constructor(){this.initSocket(),this.checkSystemUpdate()}initSocket(){Promise.resolve().then(() => ($o(),wo)).then(({socketService:o})=>{o.subscribe((t)=>{this.state.stats={cpu_usage:t.cpu_usage,ram_usage:t.ram_usage,temperature:t.temperature},this.notify()})})}async checkSystemUpdate(){try{setTimeout(async()=>{let{userStore:o}=await Promise.resolve().then(() => (K(),S)),{updateService:t}=await Promise.resolve().then(() => (po(),lo)),a=o.getUser()?.preferences?.beta_updates||!1;if((await t.check(a)).available)this.state.updateAvailable=!0,this.notify()},2000)}catch(o){}}saveToLocalStorage(){try{let o=JSON.stringify(this.state.items);localStorage.setItem(this.getStorageKey(),o)}catch(o){if(console.error("[DashboardStore] Failed to save to localStorage",o),o.name==="QuotaExceededError"||o.code===22)this.sanitizeStorage()}}loadFromLocalStorage(){try{this.sanitizeStorage();let o=localStorage.getItem(this.getStorageKey());if(o){let t=JSON.parse(o);if(Array.isArray(t)&&t.length>0)this.state.items=t}}catch(o){console.error("[DashboardStore] Failed to load from localStorage",o)}}sanitizeStorage(){try{let o=[];for(let t=0;t<localStorage.length;t++){let r=localStorage.key(t);if(r&&(r.startsWith("kashboard")||r.includes("user_cache")))o.push(r)}o.forEach((t)=>localStorage.removeItem(t))}catch(o){}}subscribe(o){return this.listeners.push(o),this.ensureItemsIsArray(),o({...this.state,items:this.deepCopyItems(this.state.items)}),()=>{this.listeners=this.listeners.filter((t)=>t!==o)}}ensureItemsIsArray(){if(!Array.isArray(this.state.items))console.error("[DashboardStore] CRITICAL: items is not an array, resetting to empty array",typeof this.state.items),this.state.items=[]}deepCopyItems(o){return o.map((t)=>{let r=t.content;if(typeof t.content==="string")try{let a=JSON.parse(t.content);if(typeof a==="object"&&a!==null)r=JSON.stringify(a)}catch{}return{...t,content:r,status:t.status}})}setItemStatus(o,t){let r=this.state.items.findIndex((a)=>a.id===o);if(r===-1)return;if(this.state.items[r].status===t)return;this.state.items[r].status=t,this.notify()}notify(){this.ensureItemsIsArray();let o={...this.state,items:this.deepCopyItems(this.state.items)};this.listeners.forEach((t)=>t(o))}setEditMode(o){this.state.isEditing=o,this.notify()}toggleEditMode(){this.setEditMode(!this.state.isEditing)}setSearchQuery(o){this.state.searchQuery=o.toLowerCase().trim(),this.notify()}setGridMetrics(o,t){if(o===this.state.availableWidth&&t===this.state.gridColumns)return;this.state.availableWidth=o,this.state.gridColumns=t,this.notify()}async fetchItems(){try{try{let o=await q.getItems();if(Array.isArray(o))this.state.items=o,this.state.isOffline=!1,this.saveToLocalStorage();else throw Error("Backend returned invalid data")}catch(o){this.state.isOffline=!0;let t=localStorage.getItem(this.getStorageKey());if(t){let r=JSON.parse(t);if(Array.isArray(r)&&r.length>0)this.state.items=r;else this.state.items=[...jo],this.saveToLocalStorage()}else this.state.items=[...jo],this.saveToLocalStorage()}this.ensureItemsIsArray(),this.notify()}catch(o){console.error("[DashboardStore] Failed to fetch dashboard items",o),this.state.items=[]}}async updateItem(o){try{this.ensureItemsIsArray();let t=this.state.items.findIndex((a)=>a.id===o.id);if(t===-1){console.warn("[DashboardStore] Item not found for update:",o.id);return}let r={...this.state.items[t]};this.state.items[t]={...this.state.items[t],...o},this.saveToLocalStorage(),this.notify();try{await q.updateItem(o),this.state.isOffline=!1,this.notify()}catch(a){console.error("[DashboardStore] Failed to sync item update (offline?), keeping local state",a),this.state.isOffline=!0,this.saveToLocalStorage(),this.notify()}}catch(t){console.error("[DashboardStore] Error updating item",t)}}async resizeItem(o,t,r){let a=this.state.items.find((n)=>n.id===o);if(!a)return;if(await this.updateItem({id:o,w:t,h:r}),a.type==="section")await this.reflowChildren(o,t)}async reflowChildren(o,t){let{collisionService:r}=await Promise.resolve().then(() => (B(),N)),a=this.state.items.filter((e)=>e.parent_id===o).sort((e,s)=>e.y-s.y||e.x-s.x);if(a.length===0)return;let n=[];for(let e of a){let s=r.findAvailableSlot(e.w,e.h,n,t);if(n.push({x:s.x,y:s.y,w:e.w,h:e.h}),e.x!==s.x||e.y!==s.y)await this.updateItem({id:e.id,x:s.x,y:s.y})}}async addItem(o){try{this.ensureItemsIsArray();try{let t={...o};if(t.type==="widget"&&!t.url)t.url="";let{userStore:r}=await Promise.resolve().then(() => (K(),S)),n=r.getUser()?.preferences,e=this.state.gridColumns;if(!e||e<1){let d=n?.widget_min_width||140,l=16,c=document.querySelector("bookmark-grid"),p=this.state.availableWidth||c?.clientWidth||window.innerWidth;e=Math.floor((p+16)/(d+16))}if(e<1)e=1;if(e>24)e=24;if(!t.x||!t.y){let{collisionService:d}=await Promise.resolve().then(() => (B(),N)),l=d.findFirstAvailableSlot(t.w||1,t.h||1,this.state.items,e);t.x=l.x,t.y=l.y}let s=await q.createItem(t);return this.state.isOffline=!1,this.state.items.push(s),this.saveToLocalStorage(),this.notify(),s}catch(t){console.error("[DashboardStore] Failed to add item to backend",t);return}}catch(t){console.error("[DashboardStore] Error adding item",t);return}}async deleteItem(o){try{this.ensureItemsIsArray();let t=this.state.items.findIndex((a)=>a.id===o);if(t===-1){console.warn("[DashboardStore] Item not found for deletion:",o);return}let r=this.state.items[t];this.state.items.splice(t,1),this.saveToLocalStorage(),this.notify();try{await q.deleteItem(o)}catch(a){console.error("[DashboardStore] Failed to delete item, rolling back",a),this.state.items.push(r),this.saveToLocalStorage(),this.notify()}}catch(t){console.error("[DashboardStore] Error deleting item",t)}}getState(){return this.ensureItemsIsArray(),{...this.state,items:[...this.state.items]}}}var jo,g;var L=M(()=>{eo();jo=[{id:1,type:"bookmark",x:1,y:1,w:1,h:1,content:{label:"CodigoSH",url:"https://github.com/CodigoSH/Lastboard",icon:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png",iconName:"git"}}];g=new Lo});var xo={};U(xo,{eventBus:()=>X,EVENTS:()=>O});var O,gt,X;var oo=M(()=>{O={SHOW_CONFIRMATION:"lastboard:show-confirmation",SHOW_WIDGET_CONFIG:"lastboard:show-widget-config",NOTIFY:"lastboard:notify"};gt=class gt extends EventTarget{emit(o,t){this.dispatchEvent(new CustomEvent(o,{detail:t}))}on(o,t){this.addEventListener(o,t)}off(o,t){this.removeEventListener(o,t)}};X=new gt});K();L();L();eo();class Ao{interval=null;checkFrequency=300000;start(){if(this.interval)return;setTimeout(()=>this.checkAll(),2000),this.interval=window.setInterval(()=>{this.checkAll()},this.checkFrequency)}stop(){if(this.interval)clearInterval(this.interval),this.interval=null}async checkAll(){let t=g.getState().items.filter((s)=>{if(s.type!=="bookmark")return!1;let d=s.content;if(typeof d==="string")try{d=JSON.parse(d)}catch(l){return!1}return d&&d.statusCheck===!0});t.forEach((s)=>this.updateUIStatus(s.id,"pending"));let r=5,a=[...t],n=async()=>{while(a.length>0){let s=a.shift();if(s)await this.checkItem(s)}},e=Array(Math.min(t.length,r)).fill(null).map(()=>n());await Promise.all(e)}async checkItem(o){let t=o.content;if(typeof t==="string")try{t=JSON.parse(t)}catch(a){return}let r=t.url;if(!r||r==="#"||r.startsWith("javascript:"))return;try{if((await q.checkHealth(r)).status==="up")this.updateUIStatus(o.id,"up");else this.updateUIStatus(o.id,"down")}catch(a){console.warn(`[StatusService] ${r} health check failed:`,a),this.updateUIStatus(o.id,"down")}}updateUIStatus(o,t){g.setItemStatus(o,t)}}var W=new Ao;class G{static STORAGE_KEY="lastboard_theme";static CLASS_NAME="dark-mode";static init(){let o=localStorage.getItem(this.STORAGE_KEY);if(o==="dark")this.enableDark();else if(o==="light")this.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)this.enableDark();else this.enableLight()}static enableDark(){document.documentElement.classList.add(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"dark"),this.setCookie(this.STORAGE_KEY,"dark",365)}static enableLight(){document.documentElement.classList.remove(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"light"),this.setCookie(this.STORAGE_KEY,"light",365)}static toggle(){if(document.documentElement.classList.contains(this.CLASS_NAME))this.enableLight();else this.enableDark()}static isDark(){return document.documentElement.classList.contains(this.CLASS_NAME)}static setCookie(o,t,r){let a="";if(r){let n=new Date;n.setTime(n.getTime()+r*24*60*60*1000),a="; expires="+n.toUTCString()}document.cookie=o+"="+(t||"")+a+"; path=/"}static async sync(){try{let o=await fetch("/api/me");if(o.ok){let t=await o.json();if(t.theme==="dark")this.enableDark();else if(t.theme==="light")this.enableLight()}}catch(o){}}}m();var Ho=()=>`
     <div class="paper">
         <slot></slot>
     </div>
-`;var fr=`:host {
+`;var Go=`:host {
     display: block;
 }
 
@@ -15,10 +15,10 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
     color: inherit;
     box-sizing: border-box;
     height: 100%;
-}`;class _r extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}render(){this.shadowRoot.innerHTML=`
-            <style>${fr}</style>
-            ${vr()}
-        `}}if(!customElements.get("app-paper"))customElements.define("app-paper",_r);var ur=`:host {
+}`;class Ro extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}render(){this.shadowRoot.innerHTML=`
+            <style>${Go}</style>
+            ${Ho()}
+        `}}if(!customElements.get("app-paper"))customElements.define("app-paper",Ro);var qo=`:host {
     display: inline-block;
     width: 100%;
 }
@@ -84,16 +84,16 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
     background: rgba(var(--accent-rgb), 0.1);
     color: var(--accent);
     border-color: var(--accent);
-}`;m();class mr extends HTMLElement{static get observedAttributes(){return["variant"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.addEventListener("click",this.handleClick.bind(this))}handleClick(o){if(this.getAttribute("type")==="submit"){let r=this.closest("form");if(r)if(r.requestSubmit)r.requestSubmit();else r.submit()}}attributeChangedCallback(){this.render()}_loading=!1;set loading(o){this._loading=o,this.render()}get loading(){return this._loading}render(){let o=this.getAttribute("variant")||"ghost",r=this._loading?n.t("general.loading"):"<slot></slot>";this.shadowRoot.innerHTML=`
-            <style>${ur}</style>
+}`;m();class Fo extends HTMLElement{static get observedAttributes(){return["variant"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.addEventListener("click",this.handleClick.bind(this))}handleClick(o){if(this.getAttribute("type")==="submit"){let t=this.closest("form");if(t)if(t.requestSubmit)t.requestSubmit();else t.submit()}}attributeChangedCallback(){this.render()}_loading=!1;set loading(o){this._loading=o,this.render()}get loading(){return this._loading}render(){let o=this.getAttribute("variant")||"ghost",t=this._loading?i.t("general.loading"):"<slot></slot>";this.shadowRoot.innerHTML=`
+            <style>${qo}</style>
             <button class="btn btn--${o}" ${this._loading?"disabled":""}>
-                ${r}
+                ${t}
             </button>
-        `}}if(!customElements.get("app-button"))customElements.define("app-button",mr);var kr=({src:o,initials:r,alt:a})=>`
-    <div class="avatar" title="${a}">
-        ${o?`<img src="${o}" alt="${a}" class="avatar__img">`:`<span class="avatar__initials">${r}</span>`}
+        `}}if(!customElements.get("app-button"))customElements.define("app-button",Fo);var Qo=({src:o,initials:t,alt:r})=>`
+    <div class="avatar" title="${r}">
+        ${o?`<img src="${o}" alt="${r}" class="avatar__img">`:`<span class="avatar__initials">${t}</span>`}
     </div>
-`;var wr=`:host {
+`;var Eo=`:host {
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -129,69 +129,69 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
 
 .avatar__initials {
     user-select: none;
-}`;class yr extends HTMLElement{static get observedAttributes(){return["src","alt","initials"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}attributeChangedCallback(o,r,a){if(r!==a)this.render()}render(){let o=this.getAttribute("src"),r=this.getAttribute("initials")||"??",a=this.getAttribute("alt")||"User Avatar";this.shadowRoot.innerHTML=`
-            <style>${wr}</style>
-            ${kr({src:o||void 0,initials:r,alt:a})}
-        `}}if(!customElements.get("app-avatar"))customElements.define("app-avatar",yr);m();X();Ao();m();var $r=(o)=>`
+}`;class Jo extends HTMLElement{static get observedAttributes(){return["src","alt","initials"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}attributeChangedCallback(o,t,r){if(t!==r)this.render()}render(){let o=this.getAttribute("src"),t=this.getAttribute("initials")||"??",r=this.getAttribute("alt")||"User Avatar";this.shadowRoot.innerHTML=`
+            <style>${Eo}</style>
+            ${Qo({src:o||void 0,initials:t,alt:r})}
+        `}}if(!customElements.get("app-avatar"))customElements.define("app-avatar",Jo);m();K();no();m();var Zo=(o)=>`
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${n.t("settings.profile")}</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("settings.profile")}</div>
             <div class="settings-content__profile-header">
                 <div class="settings-content__avatar-container" style="cursor: pointer;" onclick="this.nextElementSibling.click()">
                     <app-avatar initials="${o.initials||"??"}" src="${o.avatar_url||""}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
-                    <div class="settings-content__edit-overlay">${n.t("action.change_image")}</div>
+                    <div class="settings-content__edit-overlay">${i.t("action.change_image")}</div>
                 </div>
                 <input type="file" id="avatar-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleAvatarChange(event)">
                 <div class="settings-content__profile-info">
-                    <span class="settings-content__profile-name">${o.username||n.t("settings.default_user")}</span>
+                    <span class="settings-content__profile-name">${o.username||i.t("settings.default_user")}</span>
                     <span class="mono-tag">
-                        ${(()=>{let r=(o.role||"").toLowerCase();if(o.is_superadmin)return n.t("settings.role_super_admin");if(r==="admin"||r==="administrator")return n.t("settings.role_admin");if(r==="user")return n.t("settings.role_user");return o.role||n.t("settings.default_role")})()}
+                        ${(()=>{let t=(o.role||"").toLowerCase();if(o.is_superadmin)return i.t("settings.role_super_admin");if(t==="admin"||t==="administrator")return i.t("settings.role_admin");if(t==="user")return i.t("settings.role_user");return o.role||i.t("settings.default_role")})()}
                     </span>
                 </div>
             </div>
             
             <div class="settings-content__form-container" style="margin-top: 32px;">
                 <div class="settings-content__form-group">
-                    <label class="settings-content__label">${n.t("settings.display_username")}</label>
+                    <label class="settings-content__label">${i.t("settings.display_username")}</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="username-input" class="settings-content__input" value="${o.username||""}" placeholder="${n.t("settings.display_username")}">
-                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(document.getElementById('username-input').value)">${n.t("action.update")}</app-button>
+                        <input type="text" id="username-input" class="settings-content__input" value="${o.username||""}" placeholder="${i.t("settings.display_username")}">
+                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(document.getElementById('username-input').value)">${i.t("action.update")}</app-button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${n.t("auth.password")}</div>
-            <h3 class="settings-content__title">${n.t("settings.system_password")}</h3>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("auth.password")}</div>
+            <h3 class="settings-content__title">${i.t("settings.system_password")}</h3>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${n.t("settings.current_password")}</label>
-                <input type="password" id="current-password" class="settings-content__input" placeholder="${n.t("settings.password_placeholder")}">
+                <label class="settings-content__label">${i.t("settings.current_password")}</label>
+                <input type="password" id="current-password" class="settings-content__input" placeholder="${i.t("settings.password_placeholder")}">
             </div>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${n.t("settings.new_password")}</label>
+                <label class="settings-content__label">${i.t("settings.new_password")}</label>
                 <input type="password" id="new-password" class="settings-content__input" placeholder="••••••••">
             </div>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${n.t("settings.confirm_password")}</label>
+                <label class="settings-content__label">${i.t("settings.confirm_password")}</label>
                 <input type="password" id="confirm-password" class="settings-content__input" placeholder="••••••••">
             </div>
             <div style="margin-top: 32px;">
-                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">${n.t("general.save")}</app-button>
+                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">${i.t("general.save")}</app-button>
             </div>
         </div>
     </div>
-`,zr=(o,r,a)=>`
+`,Ko=(o,t,r)=>`
     <div class="bento-grid">
         <div class="bento-card">
-             <div class="mono-tag" style="margin-bottom: 8px;">${n.t("settings.appearance")}</div>
-             <h3 class="settings-content__title">${n.t("settings.studio_accent")}</h3>
+             <div class="mono-tag" style="margin-bottom: 8px;">${i.t("settings.appearance")}</div>
+             <h3 class="settings-content__title">${i.t("settings.studio_accent")}</h3>
              <div class="settings-content__color-grid">
-                ${a.map((t)=>`
-                    <div class="settings-content__color-swatch ${o.accent_color===t?"settings-content__color-swatch--active":""}" 
-                         style="background-color: ${r[t]}"
-                         onclick="this.getRootNode().host.savePrefs({accent_color: '${t}'})">
-                         ${o.accent_color===t?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
+                ${r.map((a)=>`
+                    <div class="settings-content__color-swatch ${o.accent_color===a?"settings-content__color-swatch--active":""}" 
+                         style="background-color: ${t[a]}"
+                         onclick="this.getRootNode().host.savePrefs({accent_color: '${a}'})">
+                         ${o.accent_color===a?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
                     </div>
                 `).join("")}
                 <div class="settings-content__color-swatch settings-content__color-swatch--custom ${o.accent_color.startsWith("#")?"settings-content__color-swatch--active":""}" 
@@ -206,24 +206,24 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${n.t("settings.system_locale")}</div>
-            <h3 class="settings-content__title">${n.t("settings.localization")}</h3>
+            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${i.t("settings.system_locale")}</div>
+            <h3 class="settings-content__title">${i.t("settings.localization")}</h3>
             <div class="settings-content__form-group">
                 <div style="display: flex; gap: 16px;">
                     <div style="flex: 1;">
-                        <label class="settings-content__label">${n.t("settings.language")}</label>
+                        <label class="settings-content__label">${i.t("settings.language")}</label>
                         <app-select id="language-select" value="${o.language}"></app-select>
                     </div>
                     <div style="flex: 1;">
-                        <label class="settings-content__label">${n.t("settings.theme_mode")}</label>
+                        <label class="settings-content__label">${i.t("settings.theme_mode")}</label>
                          <div class="settings-content__segmented-control">
                             <button class="settings-content__segment ${!o.theme||o.theme==="system"||o.theme==="dark"?"active":""}" 
                                     onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
-                                \uD83C\uDF19 ${n.t("settings.dark")}
+                                \uD83C\uDF19 ${i.t("settings.dark")}
                             </button>
                             <button class="settings-content__segment ${o.theme==="light"?"active":""}" 
                                     onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
-                                ☀️ ${n.t("settings.light")}
+                                ☀️ ${i.t("settings.light")}
                             </button>
                         </div>
                     </div>
@@ -231,28 +231,28 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
             </div>
         </div>
     </div>
-`,jr=(o)=>`
+`,Bo=(o)=>`
     <div class="bento-grid">
         <div class="bento-card" style="grid-column: span 2;">
-            <div class="mono-tag" style="margin-bottom: 12px;">${n.t("settings.fluid_grid_architecture")}</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("settings.fluid_grid_architecture")}</div>
             
             <!-- Project Name -->
             <div class="settings-content__form-group" style="margin-bottom: 24px;">
-                <label class="settings-content__label">${n.t("settings.project_name")}</label>
+                <label class="settings-content__label">${i.t("settings.project_name")}</label>
                 <div style="display: flex; gap: 8px;">
                      <input type="text" 
                             id="project-name-input"
                             class="settings-content__input" 
                             value="${o.project_name||"Lastboard"}" 
                             placeholder="Lastboard">
-                     <app-button variant="primary" onclick="this.getRootNode().host.savePrefs({project_name: this.getRootNode().getElementById('project-name-input').value})">${n.t("action.update")}</app-button>
+                     <app-button variant="primary" onclick="this.getRootNode().host.savePrefs({project_name: this.getRootNode().getElementById('project-name-input').value})">${i.t("action.update")}</app-button>
                 </div>
             </div>
 
             <div class="settings-content__personalization-grid">
                 <div class="settings-content__slider-group">
                     <div class="settings-content__slider-header">
-                        <label class="settings-content__slider-label">${n.t("settings.grid_columns")}</label>
+                        <label class="settings-content__slider-label">${i.t("settings.grid_columns")}</label>
                         <span class="settings-content__slider-value" id="val-grid_columns">${o.grid_columns||12}</span>
                     </div>
                     <input type="range" 
@@ -264,124 +264,124 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
             </div>
             
             <p class="settings-content__text-dim" style="font-size: 11px; margin-top: 24px; font-family: var(--font-mono);">
-                ${n.t("settings.density_desc")}
+                ${i.t("settings.density_desc")}
             </p>
         </div>
     </div>
-`,Gr=(o)=>`
+`,Uo=(o)=>`
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${n.t("settings.admin_section")}</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("settings.admin_section")}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h3 class="settings-content__title" style="margin: 0;">${n.t("settings.user_management")}</h3>
-                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ ${n.t("action.add_user")}</app-button>
+                <h3 class="settings-content__title" style="margin: 0;">${i.t("settings.user_management")}</h3>
+                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ ${i.t("action.add_user")}</app-button>
             </div>
 
             <div class="settings-content__user-list">
-                ${(o||[]).map((r)=>`
+                ${(o||[]).map((t)=>`
                     <div class="settings-content__user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <app-avatar 
-                                initials="${r.username.substring(0,2).toUpperCase()}" 
-                                src="${r.avatar_url||""}" 
+                                initials="${t.username.substring(0,2).toUpperCase()}" 
+                                src="${t.avatar_url||""}" 
                                 style="width: 32px; height: 32px; font-size: 12px; border-radius: 50%; object-fit: cover;">
                             </app-avatar>
                             <div>
-                                <div style="font-weight: 500; font-size: 14px;">${r.username}</div>
+                                <div style="font-weight: 500; font-size: 14px;">${t.username}</div>
                                 <div class="mono-tag" style="font-size: 10px;">
-                                    ${(()=>{let a=(r.role||"").toLowerCase();if(r.is_superadmin)return n.t("settings.role_super_admin");if(a==="admin"||a==="administrator")return n.t("settings.role_admin");if(a==="user")return n.t("settings.role_user");return r.role})()}
+                                    ${(()=>{let r=(t.role||"").toLowerCase();if(t.is_superadmin)return i.t("settings.role_super_admin");if(r==="admin"||r==="administrator")return i.t("settings.role_admin");if(r==="user")return i.t("settings.role_user");return t.role})()}
                                 </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${r.id}, '${r.username}', '${r.role}')">${n.t("general.edit")}</app-button>
-                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${r.id})">${n.t("general.delete")}</app-button>
+                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${t.id}, '${t.username}', '${t.role}')">${i.t("general.edit")}</app-button>
+                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${t.id})">${i.t("general.delete")}</app-button>
                         </div>
                     </div>
                 `).join("")}
             </div>
-             ${(o||[]).length===0?`<p class="settings-content__text-dim">${n.t("settings.no_users")}</p>`:""}
+             ${(o||[]).length===0?`<p class="settings-content__text-dim">${i.t("settings.no_users")}</p>`:""}
         </div>
     </div>
     
      <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
-            <h3 class="modal-title">${n.t("action.add_new_user")}</h3>
+            <h3 class="modal-title">${i.t("action.add_new_user")}</h3>
             <button class="modal-close" onclick="this.getRootNode().getElementById('add-user-modal').close()">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${n.t("auth.username")}</label>
+            <label class="settings-content__label">${i.t("auth.username")}</label>
             <input type="text" id="new-user-username" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${n.t("auth.password")}</label>
+            <label class="settings-content__label">${i.t("auth.password")}</label>
             <input type="password" id="new-user-password" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${n.t("settings.role")}</label>
+            <label class="settings-content__label">${i.t("settings.role")}</label>
             <app-select id="new-user-role" value="user"></app-select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${n.t("general.save")}</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${i.t("general.save")}</app-button>
         </div>
     </dialog>
 
     <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
-            <h3 class="modal-title">${n.t("action.edit_user")}</h3>
+            <h3 class="modal-title">${i.t("action.edit_user")}</h3>
             <button class="modal-close" onclick="this.getRootNode().getElementById('edit-user-modal').close()">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
         <input type="hidden" id="edit-user-id">
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${n.t("auth.username")}</label>
+            <label class="settings-content__label">${i.t("auth.username")}</label>
             <input type="text" id="edit-user-username" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${n.t("settings.new_password")}</label>
-            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${n.t("settings.password_leave_blank")}">
+            <label class="settings-content__label">${i.t("settings.new_password")}</label>
+            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${i.t("settings.password_leave_blank")}">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${n.t("settings.role")}</label>
+            <label class="settings-content__label">${i.t("settings.role")}</label>
             <app-select id="edit-user-role"></app-select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${n.t("action.save_changes")}</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${i.t("action.save_changes")}</app-button>
         </div>
     </dialog>
-`,Lr=()=>`
+`,Yo=()=>`
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <!-- System Migration Section -->
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 24px;">${n.t("settings.system_data")}</div>
+            <div class="mono-tag" style="margin-bottom: 24px;">${i.t("settings.system_data")}</div>
             
             <div class="settings-content__action-group">
                 <!-- Export -->
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${n.t("settings.export_db")}</h3>
-                        <p>${n.t("settings.export_desc")}</p>
+                        <h3>${i.t("settings.export_db")}</h3>
+                        <p>${i.t("settings.export_desc")}</p>
                     </div>
                     <app-button variant="primary" onclick="this.getRootNode().host.downloadBackup()">
                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                        ${n.t("action.download_backup")}
+                        ${i.t("action.download_backup")}
                     </app-button>
                 </div>
 
                 <!-- Import -->
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${n.t("settings.import_db")}</h3>
-                        <p>${n.t("settings.import_desc")} <br><span style="color: var(--accent); font-weight: 500;">${n.t("settings.import_warn")}</span></p>
+                        <h3>${i.t("settings.import_db")}</h3>
+                        <p>${i.t("settings.import_desc")} <br><span style="color: var(--accent); font-weight: 500;">${i.t("settings.import_warn")}</span></p>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                          <input type="file" id="backup-upload" accept=".json" style="display: none;" onchange="this.getRootNode().host.restoreBackup(this.files[0])">
                          <app-button variant="primary" onclick="this.getRootNode().getElementById('backup-upload').click()">
                             <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
-                            ${n.t("action.select_file")}
+                            ${i.t("action.select_file")}
                          </app-button>
                     </div>
                 </div>
@@ -393,14 +393,14 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
              <div>
                 <div class="settings-content__danger-title">
                     <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: var(--danger-color);"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                    ${n.t("settings.factory_reset")}
+                    ${i.t("settings.factory_reset")}
                 </div>
                 <p class="settings-content__text-dim" style="font-size: 13px; color: var(--danger-color); opacity: 0.8;">
-                    ${n.t("settings.reset_desc")}
+                    ${i.t("settings.reset_desc")}
                 </p>
              </div>
              <app-button onclick="this.getRootNode().host.openResetModal()" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent; transition: all 0.2s;">
-                ${n.t("action.reset_system")}
+                ${i.t("action.reset_system")}
              </app-button>
         </div>
     </div>
@@ -410,31 +410,31 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
         <div class="modal-header">
             <h3 class="modal-title" style="color: var(--danger-color); font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
                 <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: var(--danger-color);"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                ${n.t("settings.confirm_reset_title")}
+                ${i.t("settings.confirm_reset_title")}
             </h3>
             <button class="modal-close" onclick="this.getRootNode().getElementById('reset-confirm-modal').close()">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
         <p class="settings-content__text-dim" style="font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
-            ${n.t("settings.confirm_reset_msg")}
-            ${n.t("settings.type_delete")}
+            ${i.t("settings.confirm_reset_msg")}
+            ${i.t("settings.type_delete")}
         </p>
 
         <div class="settings-content__form-group">
-            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="${n.t("settings.type_delete_placeholder")}" style="border-color: var(--danger-color); opacity: 0.6; font-family: monospace;">
+            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="${i.t("settings.type_delete_placeholder")}" style="border-color: var(--danger-color); opacity: 0.6; font-family: monospace;">
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 32px; width: 100%;">
             <app-button id="btn-reset-confirm" variant="danger" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1; justify-content: center;">
-                ${n.t("action.erase_everything")}
+                ${i.t("action.erase_everything")}
             </app-button>
         </div>
     </dialog>
-`,Qr=(o,r,a)=>{let t=a?.toLowerCase()==="admin"||a?.toLowerCase()==="administrator";return`
+`,No=(o,t,r)=>{let a=r?.toLowerCase()==="admin"||r?.toLowerCase()==="administrator";return`
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card" style="text-align: center; padding: 48px 24px; position: relative;">
-             ${t?`
+             ${a?`
                 <div style="position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
                     <span id="beta-text" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s; user-select: none; border: 2px solid transparent; padding: 4px 10px; border-radius: 20px;">
                         Beta Tester
@@ -449,20 +449,20 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
              <!-- Logo Placeholder -->
              <img src="/images/logo.png" alt="Lastboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
              
-             <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${n.t("app.title")}</h2>
+             <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i.t("app.title")}</h2>
              <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">${o}</p>
 
              <div style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px;">
-                ${t?r?`
-                    ${r.is_docker?`
+                ${a?t?`
+                    ${t.is_docker?`
                         <div style="background: rgba(var(--info-rgb), 0.1); border: 1px solid rgba(var(--info-rgb), 0.3); padding: 16px; border-radius: var(--radius); width: 100%; text-align: left;">
                              <div style="display: flex; gap: 12px; align-items: flex-start;">
                                 <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--accent); flex-shrink: 0;"><path d="M21 12l-4.37-6.16c-.37-.52-.98-.84-1.63-.84h-3V4c0-1.1-.9-2-2-2s-2 .9-2 2v1H5c-.65 0-1.26.32-1.63.84L-1 12v3h2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h2v-3zm-11 7H7v-3h3v3zm-5 0H2v-3h3v3zm12 0h-3v-3h3v3z"/></svg>
                                 <div>
-                                    <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${n.t("settings.docker_mode")}</h4>
+                                    <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${i.t("settings.docker_mode")}</h4>
                                     <p style="margin: 0; font-size: 13px; color: var(--text-dim);">
-                                        ${n.t("settings.docker_desc")}<br>
-                                        ${r.available?`<strong style="color: var(--accent);">${n.t("settings.new_version_notif")} (${r.latest_version})</strong>`:n.t("settings.up_to_date_docker_msg")}
+                                        ${i.t("settings.docker_desc")}<br>
+                                        ${t.available?`<strong style="color: var(--accent);">${i.t("settings.new_version_notif")} (${t.latest_version})</strong>`:i.t("settings.up_to_date_docker_msg")}
                                     </p>
                                 </div>
                              </div>
@@ -470,31 +470,31 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
                     `:`
                         <!-- Native Update Logic -->
                         <!-- Native Update Logic -->
-                        ${r.available?`
+                        ${t.available?`
                              <div class="update-modal">
                                 <div class="update-modal__glow"></div>
                                 
                                 <div class="update-modal__content">
                                     <div class="update-modal__header">
-                                        <div class="update-modal__badge">${n.t("settings.update_available")}</div>
-                                        <h3 class="update-modal__version">${r.latest_version}</h3>
+                                        <div class="update-modal__badge">${i.t("settings.update_available")}</div>
+                                        <h3 class="update-modal__version">${t.latest_version}</h3>
                                     </div>
                                     
                                     <div class="update-modal__footer">
-                                        <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${r.asset_url}')">
-                                            ${n.t("action.download_install")}
+                                        <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${t.asset_url}')">
+                                            ${i.t("action.download_install")}
                                         </app-button>
                                         <a href="https://github.com/Codigo SH/Lastboard/releases" target="_blank" style="text-decoration: none;">
-                                            <app-button variant="ghost" style="height: 100%;">${n.t("general.changelog")}</app-button>
+                                            <app-button variant="ghost" style="height: 100%;">${i.t("general.changelog")}</app-button>
                                         </a>
                                     </div>
-                                    <p id="update-status" style="margin: 0; font-size: 12px; color: var(--text-dim); display: none; text-align: center;">${n.t("notifier.downloading_secure")}</p>
+                                    <p id="update-status" style="margin: 0; font-size: 12px; color: var(--text-dim); display: none; text-align: center;">${i.t("notifier.downloading_secure")}</p>
                                 </div>
                             </div>
                         `:`
                             <div style="color: var(--success-color); font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 500;">
                                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                                <span>${n.t("settings.up_to_date")}</span>
+                                <span>${i.t("settings.up_to_date")}</span>
                             </div>
                         `}
                     `}
@@ -504,16 +504,16 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
              <div style="margin-top: 64px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: center; gap: 24px;">
                  <a href="https://github.com/Codigo SH/Lastboard" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
                      <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.597 1.028 2.688 0 3.848-2.339 4.685-4.566 4.943.359.309.678.919.678 1.852 0 1.336-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12c0-5.523-4.477-10-10-10z"/></svg>
-                     ${n.t("settings.github")}
+                     ${i.t("settings.github")}
                  </a>
                  <a href="https://github.com/Codigo SH/Lastboard/issues" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
                      <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-                     ${n.t("action.report_issue")}
+                     ${i.t("action.report_issue")}
                  </a>
              </div>
          </div>
      </div>
-        `};var Eo=`:host {
+        `};var co=`:host {
     display: inline-block;
     width: 100%;
     font-family: var(--font-sans);
@@ -654,22 +654,22 @@ var Ua=Object.defineProperty;var ro=(o,r)=>{for(var a in r)Ua(o,a,{get:r[a],enum
 
 .select-option.selected:hover {
     background: rgba(var(--accent-rgb), 0.15);
-}`;class Fr extends HTMLElement{_options=[];_value="";isOpen=!1;_boundOutsideClick;dropdownEl=null;_boundScroll;_boundResize;isInsideDialog=!1;static get observedAttributes(){return["value"]}constructor(){super();this.attachShadow({mode:"open"}),this._boundOutsideClick=this.handleOutsideClick.bind(this),this._boundScroll=(o)=>{if(this.dropdownEl&&this.dropdownEl.contains(o.target))return;this.close()},this._boundResize=this.close.bind(this)}connectedCallback(){this.ensureGlobalStyles(),this.render(),this.isInsideDialog=!!this.closest("dialog"),document.addEventListener("click",this._boundOutsideClick,!0),window.addEventListener("scroll",this._boundScroll,!0),window.addEventListener("resize",this._boundResize)}disconnectedCallback(){this.close(),document.removeEventListener("click",this._boundOutsideClick,!0),window.removeEventListener("scroll",this._boundScroll,!0),window.removeEventListener("resize",this._boundResize)}ensureGlobalStyles(){if(!document.getElementById("app-select-portal-css")){let o=document.createElement("style");o.id="app-select-portal-css",o.textContent=Eo,document.head.appendChild(o)}}get value(){return this._value}set value(o){if(this._value!==o)this._value=o,this.setAttribute("value",o),this.updateTriggerDisplay()}set options(o){this._options=o,this.updateTriggerDisplay()}attributeChangedCallback(o,r,a){if(o==="value"&&r!==a)this._value=a,this.updateTriggerDisplay()}updateTriggerDisplay(){if(!this.shadowRoot)return;let o=this.shadowRoot.querySelector(".select-value");if(o){let r=this._options.find((a)=>a.value===this._value)||this._options[0];o.textContent=r?r.label:"Select..."}}toggle(){if(this.isOpen)this.close();else this.open()}open(){if(this.isOpen)return;if(this.close(),this.isOpen=!0,this.setAttribute("open",""),this.dropdownEl=document.createElement("div"),this.dropdownEl.className="select-dropdown",this.dropdownEl.innerHTML=this._options.map((o)=>`
+}`;class To extends HTMLElement{_options=[];_value="";isOpen=!1;_boundOutsideClick;dropdownEl=null;_boundScroll;_boundResize;isInsideDialog=!1;static get observedAttributes(){return["value"]}constructor(){super();this.attachShadow({mode:"open"}),this._boundOutsideClick=this.handleOutsideClick.bind(this),this._boundScroll=(o)=>{if(this.dropdownEl&&this.dropdownEl.contains(o.target))return;this.close()},this._boundResize=this.close.bind(this)}connectedCallback(){this.ensureGlobalStyles(),this.render(),this.isInsideDialog=!!this.closest("dialog"),document.addEventListener("click",this._boundOutsideClick,!0),window.addEventListener("scroll",this._boundScroll,!0),window.addEventListener("resize",this._boundResize)}disconnectedCallback(){this.close(),document.removeEventListener("click",this._boundOutsideClick,!0),window.removeEventListener("scroll",this._boundScroll,!0),window.removeEventListener("resize",this._boundResize)}ensureGlobalStyles(){if(!document.getElementById("app-select-portal-css")){let o=document.createElement("style");o.id="app-select-portal-css",o.textContent=co,document.head.appendChild(o)}}get value(){return this._value}set value(o){if(this._value!==o)this._value=o,this.setAttribute("value",o),this.updateTriggerDisplay()}set options(o){this._options=o,this.updateTriggerDisplay()}attributeChangedCallback(o,t,r){if(o==="value"&&t!==r)this._value=r,this.updateTriggerDisplay()}updateTriggerDisplay(){if(!this.shadowRoot)return;let o=this.shadowRoot.querySelector(".select-value");if(o){let t=this._options.find((r)=>r.value===this._value)||this._options[0];o.textContent=t?t.label:"Select..."}}toggle(){if(this.isOpen)this.close();else this.open()}open(){if(this.isOpen)return;if(this.close(),this.isOpen=!0,this.setAttribute("open",""),this.dropdownEl=document.createElement("div"),this.dropdownEl.className="select-dropdown",this.dropdownEl.innerHTML=this._options.map((o)=>`
             <div class="select-option ${o.value===this._value?"selected":""}" 
                  data-value="${o.value}">
                  ${o.label}
             </div>
-        `).join(""),this.dropdownEl.querySelectorAll(".select-option").forEach((o)=>{o.addEventListener("click",(r)=>{r.stopPropagation();let a=r.currentTarget.dataset.value;if(a)this.selectOption(a)})}),this.isInsideDialog)this.dropdownEl.style.position="absolute",this.dropdownEl.style.left="0",this.dropdownEl.style.right="0",this.dropdownEl.style.top="100%",this.dropdownEl.style.marginTop="6px",this.shadowRoot.appendChild(this.dropdownEl);else{let o=this.shadowRoot.getElementById("trigger");if(o){let r=o.getBoundingClientRect();this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${r.bottom+6}px`,this.dropdownEl.style.left=`${r.left}px`,this.dropdownEl.style.width=`${r.width}px`,this.dropdownEl.style.zIndex="99999"}document.body.appendChild(this.dropdownEl)}requestAnimationFrame(()=>{if(this.dropdownEl)this.dropdownEl.classList.add("open")})}positionPortal(){if(!this.dropdownEl||!this.shadowRoot)return;let o=this.shadowRoot.getElementById("trigger");if(!o)return;let r=o.getBoundingClientRect(),a=r.bottom+6,t=r.left,i=300;if(a+i>window.innerHeight&&r.top-i>0)a=r.top-6-i;this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${a}px`,this.dropdownEl.style.left=`${t}px`,this.dropdownEl.style.width=`${r.width}px`,this.dropdownEl.style.zIndex="99999"}close(){if(this.dropdownEl)this.dropdownEl.remove(),this.dropdownEl=null;this.isOpen=!1,this.removeAttribute("open")}handleOutsideClick(o){if(!this.isOpen)return;let r=o.composedPath();if(r.includes(this))return;if(this.dropdownEl&&r.includes(this.dropdownEl))return;this.close()}selectOption(o){this._value=o,this.setAttribute("value",o),this.updateTriggerDisplay(),this.dispatchEvent(new CustomEvent("change",{detail:o,bubbles:!0})),this.close()}render(){if(!this.shadowRoot)return;let o=this._options.find((a)=>a.value===this._value)||this._options[0],r=o?o.label:"Select...";this.shadowRoot.innerHTML=`
-            <style>${Eo}</style>
+        `).join(""),this.dropdownEl.querySelectorAll(".select-option").forEach((o)=>{o.addEventListener("click",(t)=>{t.stopPropagation();let r=t.currentTarget.dataset.value;if(r)this.selectOption(r)})}),this.isInsideDialog)this.dropdownEl.style.position="absolute",this.dropdownEl.style.left="0",this.dropdownEl.style.right="0",this.dropdownEl.style.top="100%",this.dropdownEl.style.marginTop="6px",this.shadowRoot.appendChild(this.dropdownEl);else{let o=this.shadowRoot.getElementById("trigger");if(o){let t=o.getBoundingClientRect();this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${t.bottom+6}px`,this.dropdownEl.style.left=`${t.left}px`,this.dropdownEl.style.width=`${t.width}px`,this.dropdownEl.style.zIndex="99999"}document.body.appendChild(this.dropdownEl)}requestAnimationFrame(()=>{if(this.dropdownEl)this.dropdownEl.classList.add("open")})}positionPortal(){if(!this.dropdownEl||!this.shadowRoot)return;let o=this.shadowRoot.getElementById("trigger");if(!o)return;let t=o.getBoundingClientRect(),r=t.bottom+6,a=t.left,n=300;if(r+n>window.innerHeight&&t.top-n>0)r=t.top-6-n;this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${r}px`,this.dropdownEl.style.left=`${a}px`,this.dropdownEl.style.width=`${t.width}px`,this.dropdownEl.style.zIndex="99999"}close(){if(this.dropdownEl)this.dropdownEl.remove(),this.dropdownEl=null;this.isOpen=!1,this.removeAttribute("open")}handleOutsideClick(o){if(!this.isOpen)return;let t=o.composedPath();if(t.includes(this))return;if(this.dropdownEl&&t.includes(this.dropdownEl))return;this.close()}selectOption(o){this._value=o,this.setAttribute("value",o),this.updateTriggerDisplay(),this.dispatchEvent(new CustomEvent("change",{detail:o,bubbles:!0})),this.close()}render(){if(!this.shadowRoot)return;let o=this._options.find((r)=>r.value===this._value)||this._options[0],t=o?o.label:"Select...";this.shadowRoot.innerHTML=`
+            <style>${co}</style>
             <div class="select-wrapper">
                 <div class="select-trigger" id="trigger">
                     <div class="select-value">
-                        ${r}
+                        ${t}
                     </div>
                     <svg class="select-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
             </div>
-        `,this.shadowRoot.getElementById("trigger")?.addEventListener("click",(a)=>{a.stopPropagation(),this.toggle()})}}if(!customElements.get("app-select"))customElements.define("app-select",Fr);var Hr=`:host {
+        `,this.shadowRoot.getElementById("trigger")?.addEventListener("click",(r)=>{r.stopPropagation(),this.toggle()})}}if(!customElements.get("app-select"))customElements.define("app-select",To);var Vo=`:host {
     display: block;
     color: var(--text-main);
     max-width: 900px;
@@ -1329,22 +1329,22 @@ input:checked+.slider {
 input:checked+.slider:before {
     transform: translateX(20px);
     background-color: white;
-}`;class qr extends HTMLElement{prefs;users=[];getCsrfToken(){let o=document.cookie.split("; ").find((r)=>r.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}static get observedAttributes(){return["section"]}constructor(){super();this.attachShadow({mode:"open"}),this.prefs={accent_color:"#0078D4",language:"en",widget_min_width:140,beta_updates:!1}}unsubscribe=null;_renderPending=!1;connectedCallback(){this.unsubscribe=y.subscribe((r)=>{if(r&&r.preferences)this.prefs={...r.preferences,project_name:r.project_name||r.preferences.project_name||"Lastboard"},this.render()}),this.fetchPrefs();let o=this.getAttribute("section");if(o==="users")this.fetchUsers();if(o==="about")this.checkForUpdates();this.render()}disconnectedCallback(){if(this.unsubscribe)this.unsubscribe(),this.unsubscribe=null}async fetchPrefs(){let o=y.getUser();if(o&&o.preferences)this.prefs={...o.preferences,project_name:o.project_name||o.preferences.project_name||"Lastboard"},this.render()}async fetchUsers(){try{this.users=await K.getUsers(),this.render()}catch(o){console.error("Failed to fetch users",o)}}attributeChangedCallback(o,r,a){if(o==="section"&&r!==a){if(a==="users")this.fetchUsers();if(a==="about")this.checkForUpdates();this.render()}}async savePrefs(o){let r={...this.prefs};if(this.prefs={...this.prefs,...o},o.accent_color)this.applyAccent(o.accent_color);if(o.language)n.setLanguage(o.language);if(o.theme)if(o.theme==="dark")M.enableDark();else M.enableLight();try{await y.updatePreferences(o)}catch{if(this.prefs=r,o.language&&r.language)n.setLanguage(r.language)}this.render()}applyAccent(o){let r=o,a={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"};if(!o.startsWith("#"))r=a[o]||"#0078D4";document.documentElement.style.setProperty("--accent",r);let t=parseInt(r.slice(1,3),16),i=parseInt(r.slice(3,5),16),e=parseInt(r.slice(5,7),16);if(!isNaN(t)&&!isNaN(i)&&!isNaN(e))document.documentElement.style.setProperty("--accent-rgb",`${t}, ${i}, ${e}`)}async handleBetaToggle(o){this.savePrefs({beta_updates:o});let r=this.shadowRoot.getElementById("beta-text");if(r)if(o)r.style.color="#2fb344",r.style.borderColor="#2fb344",r.style.boxShadow="0 0 10px rgba(47, 179, 68, 0.2)";else r.style.color="var(--text-dim)",r.style.borderColor="var(--border)",r.style.boxShadow="none";await this.checkForUpdates()}updateDensity(o){let r=this.shadowRoot.getElementById("val-widget_min_width");if(r)r.textContent=o+"px";document.documentElement.style.setProperty("--widget-min-size",o+"px")}commitDensity(o){let r=parseInt(o);y.updatePreferences({widget_min_width:r})}updateColumns(o){let r=this.shadowRoot.getElementById("val-grid_columns");if(r)r.textContent=o;document.documentElement.style.setProperty("--user-preferred-columns",o)}commitColumns(o){let r=parseInt(o);y.updatePreferences({grid_columns:r})}async updateUsername(o){let r=y.getUser();if(!r)return;if(await y.updateProfile({username:o,avatar_url:this.prefs.avatar_url||r.avatar_url}),window.notifier)window.notifier.show(n.t("notifier.username_updated"))}async updatePassword(){let o=this.shadowRoot.getElementById("current-password")?.value,r=this.shadowRoot.getElementById("new-password")?.value,a=this.shadowRoot.getElementById("confirm-password")?.value;if(!o){if(window.notifier)window.notifier.show(n.t("notifier.password_required"),"error");return}if(r!==a){if(window.notifier)window.notifier.show(n.t("notifier.password_mismatch"),"error");return}if(!r){if(window.notifier)window.notifier.show(n.t("notifier.password_empty"),"error");return}try{if(await y.changePassword({current_password:o,new_password:r}),window.notifier)window.notifier.show(n.t("notifier.password_changed"));this.shadowRoot.getElementById("current-password").value="",this.shadowRoot.getElementById("new-password").value="",this.shadowRoot.getElementById("confirm-password").value="",setTimeout(async()=>{try{await fetch("/logout",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()}})}catch(t){}document.body.style.opacity="0",window.location.href="/login"},1500)}catch(t){if(window.notifier)window.notifier.show(n.t("notifier.password_incorrect"),"error")}}async handleAvatarChange(o){let r=o.target.files?.[0];if(!r)return;let a=new FileReader;a.onload=async(t)=>{let i=t.target?.result,e=y.getUser();if(!e)return;if(this.prefs.avatar_url=i,await y.updateProfile({username:e.username,avatar_url:i}),this.render(),window.notifier)window.notifier.show(n.t("notifier.avatar_updated"))},a.readAsDataURL(r)}openAddUserModal(){let o=this.shadowRoot.getElementById("add-user-modal");if(o){o.showModal();let r=this.shadowRoot.getElementById("new-user-role");if(r)r.options=[{value:"user",label:n.t("settings.role_user")},{value:"admin",label:n.t("settings.role_admin")}]}}async createUser(){let o=this.shadowRoot.getElementById("new-user-username").value,r=this.shadowRoot.getElementById("new-user-password").value,a=this.shadowRoot.getElementById("new-user-role").value;if(!o||!r){if(window.notifier)window.notifier.show(n.t("notifier.fields_required"),"error");return}try{if(await K.createUser({username:o,password:r,role:a}),window.notifier)window.notifier.show(n.t("notifier.user_created"));let t=this.shadowRoot.getElementById("add-user-modal");if(t)t.close();this.fetchUsers()}catch(t){if(window.notifier)window.notifier.show(n.t("notifier.user_create_error"),"error")}}openEditUserModal(o,r,a){let t=this.shadowRoot.getElementById("edit-user-modal");if(t){this.shadowRoot.getElementById("edit-user-id").value=o.toString(),this.shadowRoot.getElementById("edit-user-username").value=r,this.shadowRoot.getElementById("edit-user-password").value="",t.showModal();let i=this.shadowRoot.getElementById("edit-user-role");if(i)i.options=[{value:"user",label:n.t("settings.role_user")},{value:"admin",label:n.t("settings.role_admin")}],i.value=a}}async updateAdminUser(){let o=parseInt(this.shadowRoot.getElementById("edit-user-id").value),r=this.shadowRoot.getElementById("edit-user-username").value,a=this.shadowRoot.getElementById("edit-user-password").value,t=this.shadowRoot.getElementById("edit-user-role").value;if(!r){if(window.notifier)window.notifier.show(n.t("notifier.username_required"),"error");return}try{if(await K.adminUpdateUser({id:o,username:r,role:t,password:a||void 0}),window.notifier)window.notifier.show(n.t("notifier.user_updated"));let i=this.shadowRoot.getElementById("edit-user-modal");if(i)i.close();this.fetchUsers()}catch(i){if(window.notifier)window.notifier.show(n.t("notifier.user_update_error"),"error")}}async deleteUser(o){let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(n.t("general.delete"),n.t("notifier.user_delete_confirm")))return}try{let a=[...this.users];if(this.users=this.users.filter((t)=>t.id!==o),this.render(),await K.deleteUser(o),window.notifier)window.notifier.show(n.t("notifier.user_deleted"));this.fetchUsers()}catch(a){this.fetchUsers();let t=n.t("notifier.user_delete_error");if(a.message&&a.message.includes("error.cannot_delete_superadmin"))t=n.t("notifier.user_delete_superadmin");if(window.notifier)window.notifier.show(t,"error")}}getContent(o){let r=y.getUser()||{username:"Guest",initials:"??",role:"View Only",avatar_url:"",accent_color:"#0078D4",language:"en",preferences:{}};switch(o){case"account":return $r(r);case"theme":{let a={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"},t=Object.keys(a);return zr(this.prefs,a,t)}case"personalization":return jr(this.prefs);case"advanced":return Lr();case"users":return Gr(this.users);case"about":return Qr(this.version,this.updateInfo,r.role||"");default:return`<div class="bento-card"><h3>${o}</h3><p class="settings-content__text-dim">${n.t("settings.default_module_desc")}</p></div>`}}version="v1.1.8";updateInfo=null;checkUpdatesPromise=null;async checkForUpdates(){if(this.checkUpdatesPromise)return this.checkUpdatesPromise;return this.checkUpdatesPromise=(async()=>{try{let{updateService:o}=await Promise.resolve().then(() => (Vo(),Oo)),r=this.prefs.beta_updates||!1;this.updateInfo=await o.check(r),this.version=this.updateInfo.current_version}catch(o){console.error("Check update failed",o)}finally{this.checkUpdatesPromise=null,this.render()}})(),this.checkUpdatesPromise}async performUpdate(o){let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(n.t("settings.update_available"),n.t("notifier.update_start_confirm")))return}let a=this.shadowRoot.getElementById("btn-update-now"),t=this.shadowRoot.getElementById("update-status");if(a)a.loading=!0;if(t)t.style.display="block",t.textContent=n.t("notifier.update_downloading");try{let i=await fetch("/api/system/update/perform",{method:"POST",headers:{"Content-Type":"application/json","X-CSRF-Token":this.getCsrfToken()},body:JSON.stringify({asset_url:o})});if(i.ok){if(t)t.textContent=n.t("notifier.update_verified");setTimeout(()=>{window.location.reload()},5000)}else{let e=await i.text();if(t)t.style.color="var(--danger-color)",t.textContent=n.t("notifier.update_failed")+e;if(a)a.loading=!1}}catch(i){if(console.error("Update failed",i),t)t.style.color="var(--danger-color)",t.textContent=n.t("notifier.update_error");if(a)a.loading=!1}}downloadBackup(){window.location.href="/api/system/backup"}async restoreBackup(o){if(!o)return;let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(n.t("general.restore"),n.t("notifier.restore_confirm")))return}let a=new FormData;a.append("backup_file",o);try{if((await fetch("/api/system/restore",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()},body:a})).ok){if(window.notifier)window.notifier.show(n.t("notifier.restore_success"));setTimeout(()=>window.location.reload(),2000)}else if(window.notifier)window.notifier.show(n.t("notifier.restore_failed"),"error")}catch(t){if(console.error("Restore error",t),window.notifier)window.notifier.show(n.t("notifier.restore_failed"),"error")}}openResetModal(){let o=this.shadowRoot.getElementById("reset-confirm-modal"),r=this.shadowRoot.getElementById("reset-confirm-input");if(o){if(r)r.value="";o.showModal()}}async executeFactoryReset(){let o=this.shadowRoot.getElementById("reset-confirm-input");if(!o||o.value.trim()!=="delete"){if(window.notifier)window.notifier.show(n.t("notifier.reset_confirm_text"),"error");o.focus();return}let r=this.shadowRoot.getElementById("btn-reset-confirm");try{if(r)r.disabled=!0,r.textContent=n.t("settings.restoring")||"Restoring...";if((await fetch("/api/system/reset",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()}})).ok){let t=document.createElement("div");Object.assign(t.style,{position:"fixed",top:"0",left:"0",width:"100%",height:"100%",backgroundColor:"rgba(0,0,0,0.9)",zIndex:"9999",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",fontFamily:"var(--font-main, sans-serif)"}),t.innerHTML=`
+}`;class Oo extends HTMLElement{prefs;users=[];getCsrfToken(){let o=document.cookie.split("; ").find((t)=>t.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}static get observedAttributes(){return["section"]}constructor(){super();this.attachShadow({mode:"open"}),this.prefs={accent_color:"#0078D4",language:"en",widget_min_width:140,beta_updates:!1}}unsubscribe=null;_renderPending=!1;connectedCallback(){this.unsubscribe=w.subscribe((t)=>{if(t&&t.preferences)this.prefs={...t.preferences,project_name:t.project_name||t.preferences.project_name||"Lastboard"},this.render()}),this.fetchPrefs();let o=this.getAttribute("section");if(o==="users")this.fetchUsers();if(o==="about")this.checkForUpdates();this.render()}disconnectedCallback(){if(this.unsubscribe)this.unsubscribe(),this.unsubscribe=null}async fetchPrefs(){let o=w.getUser();if(o&&o.preferences)this.prefs={...o.preferences,project_name:o.project_name||o.preferences.project_name||"Lastboard"},this.render()}async fetchUsers(){try{this.users=await H.getUsers(),this.render()}catch(o){console.error("Failed to fetch users",o)}}attributeChangedCallback(o,t,r){if(o==="section"&&t!==r){if(r==="users")this.fetchUsers();if(r==="about")this.checkForUpdates();this.render()}}async savePrefs(o){let t={...this.prefs};if(this.prefs={...this.prefs,...o},o.accent_color)this.applyAccent(o.accent_color);if(o.language)i.setLanguage(o.language);if(o.theme)if(o.theme==="dark")G.enableDark();else G.enableLight();try{await w.updatePreferences(o)}catch{if(this.prefs=t,o.language&&t.language)i.setLanguage(t.language)}this.render()}applyAccent(o){let t=o,r={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"};if(!o.startsWith("#"))t=r[o]||"#0078D4";document.documentElement.style.setProperty("--accent",t);let a=parseInt(t.slice(1,3),16),n=parseInt(t.slice(3,5),16),e=parseInt(t.slice(5,7),16);if(!isNaN(a)&&!isNaN(n)&&!isNaN(e))document.documentElement.style.setProperty("--accent-rgb",`${a}, ${n}, ${e}`)}async handleBetaToggle(o){this.savePrefs({beta_updates:o});let t=this.shadowRoot.getElementById("beta-text");if(t)if(o)t.style.color="#2fb344",t.style.borderColor="#2fb344",t.style.boxShadow="0 0 10px rgba(47, 179, 68, 0.2)";else t.style.color="var(--text-dim)",t.style.borderColor="var(--border)",t.style.boxShadow="none";await this.checkForUpdates()}updateDensity(o){let t=this.shadowRoot.getElementById("val-widget_min_width");if(t)t.textContent=o+"px";document.documentElement.style.setProperty("--widget-min-size",o+"px")}commitDensity(o){let t=parseInt(o);w.updatePreferences({widget_min_width:t})}updateColumns(o){let t=this.shadowRoot.getElementById("val-grid_columns");if(t)t.textContent=o;document.documentElement.style.setProperty("--user-preferred-columns",o)}commitColumns(o){let t=parseInt(o);w.updatePreferences({grid_columns:t})}async updateUsername(o){let t=w.getUser();if(!t)return;if(await w.updateProfile({username:o,avatar_url:this.prefs.avatar_url||t.avatar_url}),window.notifier)window.notifier.show(i.t("notifier.username_updated"))}async updatePassword(){let o=this.shadowRoot.getElementById("current-password")?.value,t=this.shadowRoot.getElementById("new-password")?.value,r=this.shadowRoot.getElementById("confirm-password")?.value;if(!o){if(window.notifier)window.notifier.show(i.t("notifier.password_required"),"error");return}if(t!==r){if(window.notifier)window.notifier.show(i.t("notifier.password_mismatch"),"error");return}if(!t){if(window.notifier)window.notifier.show(i.t("notifier.password_empty"),"error");return}try{if(await w.changePassword({current_password:o,new_password:t}),window.notifier)window.notifier.show(i.t("notifier.password_changed"));this.shadowRoot.getElementById("current-password").value="",this.shadowRoot.getElementById("new-password").value="",this.shadowRoot.getElementById("confirm-password").value="",setTimeout(async()=>{try{await fetch("/logout",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()}})}catch(a){}document.body.style.opacity="0",window.location.href="/login"},1500)}catch(a){if(window.notifier)window.notifier.show(i.t("notifier.password_incorrect"),"error")}}async handleAvatarChange(o){let t=o.target.files?.[0];if(!t)return;let r=new FileReader;r.onload=async(a)=>{let n=a.target?.result,e=w.getUser();if(!e)return;if(this.prefs.avatar_url=n,await w.updateProfile({username:e.username,avatar_url:n}),this.render(),window.notifier)window.notifier.show(i.t("notifier.avatar_updated"))},r.readAsDataURL(t)}openAddUserModal(){let o=this.shadowRoot.getElementById("add-user-modal");if(o){o.showModal();let t=this.shadowRoot.getElementById("new-user-role");if(t)t.options=[{value:"user",label:i.t("settings.role_user")},{value:"admin",label:i.t("settings.role_admin")}]}}async createUser(){let o=this.shadowRoot.getElementById("new-user-username").value,t=this.shadowRoot.getElementById("new-user-password").value,r=this.shadowRoot.getElementById("new-user-role").value;if(!o||!t){if(window.notifier)window.notifier.show(i.t("notifier.fields_required"),"error");return}try{if(await H.createUser({username:o,password:t,role:r}),window.notifier)window.notifier.show(i.t("notifier.user_created"));let a=this.shadowRoot.getElementById("add-user-modal");if(a)a.close();this.fetchUsers()}catch(a){if(window.notifier)window.notifier.show(i.t("notifier.user_create_error"),"error")}}openEditUserModal(o,t,r){let a=this.shadowRoot.getElementById("edit-user-modal");if(a){this.shadowRoot.getElementById("edit-user-id").value=o.toString(),this.shadowRoot.getElementById("edit-user-username").value=t,this.shadowRoot.getElementById("edit-user-password").value="",a.showModal();let n=this.shadowRoot.getElementById("edit-user-role");if(n)n.options=[{value:"user",label:i.t("settings.role_user")},{value:"admin",label:i.t("settings.role_admin")}],n.value=r}}async updateAdminUser(){let o=parseInt(this.shadowRoot.getElementById("edit-user-id").value),t=this.shadowRoot.getElementById("edit-user-username").value,r=this.shadowRoot.getElementById("edit-user-password").value,a=this.shadowRoot.getElementById("edit-user-role").value;if(!t){if(window.notifier)window.notifier.show(i.t("notifier.username_required"),"error");return}try{if(await H.adminUpdateUser({id:o,username:t,role:a,password:r||void 0}),window.notifier)window.notifier.show(i.t("notifier.user_updated"));let n=this.shadowRoot.getElementById("edit-user-modal");if(n)n.close();this.fetchUsers()}catch(n){if(window.notifier)window.notifier.show(i.t("notifier.user_update_error"),"error")}}async deleteUser(o){let t=document.querySelector("confirmation-modal");if(t){if(!await t.confirm(i.t("general.delete"),i.t("notifier.user_delete_confirm")))return}try{let r=[...this.users];if(this.users=this.users.filter((a)=>a.id!==o),this.render(),await H.deleteUser(o),window.notifier)window.notifier.show(i.t("notifier.user_deleted"));this.fetchUsers()}catch(r){this.fetchUsers();let a=i.t("notifier.user_delete_error");if(r.message&&r.message.includes("error.cannot_delete_superadmin"))a=i.t("notifier.user_delete_superadmin");if(window.notifier)window.notifier.show(a,"error")}}getContent(o){let t=w.getUser()||{username:"Guest",initials:"??",role:"View Only",avatar_url:"",accent_color:"#0078D4",language:"en",preferences:{}};switch(o){case"account":return Zo(t);case"theme":{let r={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"},a=Object.keys(r);return Ko(this.prefs,r,a)}case"personalization":return Bo(this.prefs);case"advanced":return Yo();case"users":return Uo(this.users);case"about":return No(this.version,this.updateInfo,t.role||"");default:return`<div class="bento-card"><h3>${o}</h3><p class="settings-content__text-dim">${i.t("settings.default_module_desc")}</p></div>`}}version="v1.2.0-Beta.01";updateInfo=null;checkUpdatesPromise=null;async checkForUpdates(){if(this.checkUpdatesPromise)return this.checkUpdatesPromise;return this.checkUpdatesPromise=(async()=>{try{let{updateService:o}=await Promise.resolve().then(() => (po(),lo)),t=this.prefs.beta_updates||!1;this.updateInfo=await o.check(t),this.version=this.updateInfo.current_version}catch(o){console.error("Check update failed",o)}finally{this.checkUpdatesPromise=null,this.render()}})(),this.checkUpdatesPromise}async performUpdate(o){let t=document.querySelector("confirmation-modal");if(t){if(!await t.confirm(i.t("settings.update_available"),i.t("notifier.update_start_confirm")))return}let r=this.shadowRoot.getElementById("btn-update-now"),a=this.shadowRoot.getElementById("update-status");if(r)r.loading=!0;if(a)a.style.display="block",a.textContent=i.t("notifier.update_downloading");try{let n=await fetch("/api/system/update/perform",{method:"POST",headers:{"Content-Type":"application/json","X-CSRF-Token":this.getCsrfToken()},body:JSON.stringify({asset_url:o})});if(n.ok){if(a)a.textContent=i.t("notifier.update_verified");setTimeout(()=>{window.location.reload()},5000)}else{let e=await n.text();if(a)a.style.color="var(--danger-color)",a.textContent=i.t("notifier.update_failed")+e;if(r)r.loading=!1}}catch(n){if(console.error("Update failed",n),a)a.style.color="var(--danger-color)",a.textContent=i.t("notifier.update_error");if(r)r.loading=!1}}downloadBackup(){window.location.href="/api/system/backup"}async restoreBackup(o){if(!o)return;let t=document.querySelector("confirmation-modal");if(t){if(!await t.confirm(i.t("general.restore"),i.t("notifier.restore_confirm")))return}let r=new FormData;r.append("backup_file",o);try{if((await fetch("/api/system/restore",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()},body:r})).ok){if(window.notifier)window.notifier.show(i.t("notifier.restore_success"));setTimeout(()=>window.location.reload(),2000)}else if(window.notifier)window.notifier.show(i.t("notifier.restore_failed"),"error")}catch(a){if(console.error("Restore error",a),window.notifier)window.notifier.show(i.t("notifier.restore_failed"),"error")}}openResetModal(){let o=this.shadowRoot.getElementById("reset-confirm-modal"),t=this.shadowRoot.getElementById("reset-confirm-input");if(o){if(t)t.value="";o.showModal()}}async executeFactoryReset(){let o=this.shadowRoot.getElementById("reset-confirm-input");if(!o||o.value.trim()!=="delete"){if(window.notifier)window.notifier.show(i.t("notifier.reset_confirm_text"),"error");o.focus();return}let t=this.shadowRoot.getElementById("btn-reset-confirm");try{if(t)t.disabled=!0,t.textContent=i.t("settings.restoring")||"Restoring...";if((await fetch("/api/system/reset",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()}})).ok){let a=document.createElement("div");Object.assign(a.style,{position:"fixed",top:"0",left:"0",width:"100%",height:"100%",backgroundColor:"rgba(0,0,0,0.9)",zIndex:"9999",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",fontFamily:"var(--font-main, sans-serif)"}),a.innerHTML=`
                     <div style="border: 4px solid #333; border-top: 4px solid var(--accent, #0078d4); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
-                    <h2 style="margin: 0; font-weight: 500;">${n.t("notifier.system_restarting")}</h2>
-                    <p style="opacity: 0.7; margin-top: 8px;">${n.t("notifier.please_wait")}</p>
+                    <h2 style="margin: 0; font-weight: 500;">${i.t("notifier.system_restarting")}</h2>
+                    <p style="opacity: 0.7; margin-top: 8px;">${i.t("notifier.please_wait")}</p>
                     <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-                `,document.body.appendChild(t);let i=0,e=async()=>{i++;try{if((await fetch("/",{method:"HEAD",cache:"no-store"})).ok){window.location.href="/setup";return}}catch(s){}if(i<60)setTimeout(e,1000);else window.location.href="/setup"};setTimeout(e,2000)}else if(window.notifier)window.notifier.show(n.t("notifier.reset_failed"),"error")}catch(a){if(console.error("Reset error",a),window.notifier)window.notifier.show(n.t("notifier.reset_error"),"error")}}render(){if(this._renderPending)return;this._renderPending=!0,requestAnimationFrame(()=>{this._renderPending=!1,this._doRender()})}_doRender(){if(this.shadowRoot.innerHTML=`
-            <style>${Hr}</style>
+                `,document.body.appendChild(a);let n=0,e=async()=>{n++;try{if((await fetch("/",{method:"HEAD",cache:"no-store"})).ok){window.location.href="/setup";return}}catch(s){}if(n<60)setTimeout(e,1000);else window.location.href="/setup"};setTimeout(e,2000)}else if(window.notifier)window.notifier.show(i.t("notifier.reset_failed"),"error")}catch(r){if(console.error("Reset error",r),window.notifier)window.notifier.show(i.t("notifier.reset_error"),"error")}}render(){if(this._renderPending)return;this._renderPending=!0,requestAnimationFrame(()=>{this._renderPending=!1,this._doRender()})}_doRender(){if(this.shadowRoot.innerHTML=`
+            <style>${Vo}</style>
             <div class="fade-in">
                 ${this.getContent(this.getAttribute("section")||"account")}
             </div>
-        `,this.shadowRoot.querySelectorAll(".settings-content__checkbox").forEach((o)=>{o.addEventListener("click",()=>o.classList.toggle("settings-content__checkbox--checked"))}),this.initSelects(),this.getAttribute("section")==="about")this.updateBetaBadgeVisuals()}initSelects(){let o=this.shadowRoot.getElementById("language-select");if(o){let i=n.getAvailableLocales();o.options=i.map((e)=>({value:e.code,label:`${e.flag} ${e.name}`})),o.addEventListener("change",(e)=>{this.savePrefs({language:e.detail})})}let r=[{value:"user",label:n.t("settings.role_user")},{value:"admin",label:n.t("settings.role_admin")}],a=this.shadowRoot.getElementById("new-user-role");if(a)a.options=r;let t=this.shadowRoot.getElementById("edit-user-role");if(t)t.options=r}updateBetaBadgeVisuals(){setTimeout(()=>{let o=this.shadowRoot.getElementById("beta-updates-toggle-badge"),r=this.shadowRoot.getElementById("beta-text"),a=this.prefs.beta_updates||!1;if(o&&r)if(o.checked=a,a)r.style.color="#2fb344",r.style.borderColor="#2fb344",r.style.boxShadow="0 0 10px rgba(47, 179, 68, 0.2)";else r.style.color="var(--text-dim)",r.style.borderColor="var(--border)",r.style.boxShadow="none"},0)}}if(!customElements.get("settings-content"))customElements.define("settings-content",qr);X();m();var Jr=({user:o,isOpen:r,selectedSection:a,updateAvailable:t})=>`
+        `,this.shadowRoot.querySelectorAll(".settings-content__checkbox").forEach((o)=>{o.addEventListener("click",()=>o.classList.toggle("settings-content__checkbox--checked"))}),this.initSelects(),this.getAttribute("section")==="about")this.updateBetaBadgeVisuals()}initSelects(){let o=this.shadowRoot.getElementById("language-select");if(o){let n=i.getAvailableLocales();o.options=n.map((e)=>({value:e.code,label:`${e.flag} ${e.name}`})),o.addEventListener("change",(e)=>{this.savePrefs({language:e.detail})})}let t=[{value:"user",label:i.t("settings.role_user")},{value:"admin",label:i.t("settings.role_admin")}],r=this.shadowRoot.getElementById("new-user-role");if(r)r.options=t;let a=this.shadowRoot.getElementById("edit-user-role");if(a)a.options=t}updateBetaBadgeVisuals(){setTimeout(()=>{let o=this.shadowRoot.getElementById("beta-updates-toggle-badge"),t=this.shadowRoot.getElementById("beta-text"),r=this.prefs.beta_updates||!1;if(o&&t)if(o.checked=r,r)t.style.color="#2fb344",t.style.borderColor="#2fb344",t.style.boxShadow="0 0 10px rgba(47, 179, 68, 0.2)";else t.style.color="var(--text-dim)",t.style.borderColor="var(--border)",t.style.boxShadow="none"},0)}}if(!customElements.get("settings-content"))customElements.define("settings-content",Oo);K();m();var Xo=({user:o,isOpen:t,selectedSection:r,updateAvailable:a})=>`
     <div class="right-drawer__overlay"></div>
     
-    <div class="right-drawer__content-panel ${a?"":"right-drawer__content-panel--closed"}">
+    <div class="right-drawer__content-panel ${r?"":"right-drawer__content-panel--closed"}">
         <div class="right-drawer__content-body">
-            ${a?`<settings-content section="${a}"></settings-content>`:""}
+            ${r?`<settings-content section="${r}"></settings-content>`:""}
         </div>
     </div>
 
@@ -1354,45 +1354,45 @@ input:checked+.slider:before {
             <div class="right-drawer__user-info">
                 <span class="right-drawer__username">${o.username}</span>
                 ${o.role?.toLowerCase()==="admin"||o.role?.toLowerCase()==="administrator"?`<span class="right-drawer__role">
-                    ${(()=>{let i=(o.role||"").toLowerCase();if(o.is_superadmin)return n.t("settings.role_super_admin");if(i==="admin"||i==="administrator")return n.t("settings.role_admin");if(i==="user")return n.t("settings.role_user");return o.role||n.t("settings.default_role")})()}
+                    ${(()=>{let n=(o.role||"").toLowerCase();if(o.is_superadmin)return i.t("settings.role_super_admin");if(n==="admin"||n==="administrator")return i.t("settings.role_admin");if(n==="user")return i.t("settings.role_user");return o.role||i.t("settings.default_role")})()}
                 </span>`:""}
             </div>
         </div>
         
         <div class="right-drawer__body">
-            <div class="right-drawer__section-label">${n.t("settings.title")}</div>
+            <div class="right-drawer__section-label">${i.t("settings.title")}</div>
             <nav class="right-drawer__menu">
-                <div class="right-drawer__menu-item ${a==="account"?"right-drawer__menu-item--active":""}" data-section="account">
+                <div class="right-drawer__menu-item ${r==="account"?"right-drawer__menu-item--active":""}" data-section="account">
                     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-                    <span>${n.t("settings.profile")}</span>
+                    <span>${i.t("settings.profile")}</span>
                 </div>
-                <div class="right-drawer__menu-item ${a==="theme"?"right-drawer__menu-item--active":""}" data-section="theme">
+                <div class="right-drawer__menu-item ${r==="theme"?"right-drawer__menu-item--active":""}" data-section="theme">
                     <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z"/></svg>
-                    <span>${n.t("settings.theme")}</span>
+                    <span>${i.t("settings.theme")}</span>
                 </div>
-                <div class="right-drawer__menu-item ${a==="personalization"?"right-drawer__menu-item--active":""}" data-section="personalization">
+                <div class="right-drawer__menu-item ${r==="personalization"?"right-drawer__menu-item--active":""}" data-section="personalization">
                     <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                    <span>${n.t("settings.personalization")}</span>
+                    <span>${i.t("settings.personalization")}</span>
                 </div>
 
                 ${o.role?.toLowerCase()==="admin"||o.role==="Administrator"?`
-                    <div class="right-drawer__menu-item ${a==="users"?"right-drawer__menu-item--active":""}" data-section="users">
+                    <div class="right-drawer__menu-item ${r==="users"?"right-drawer__menu-item--active":""}" data-section="users">
                         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-                        <span>${n.t("settings.users")}</span>
+                        <span>${i.t("settings.users")}</span>
                     </div>
 
-                    <div class="right-drawer__menu-item ${a==="advanced"?"right-drawer__menu-item--active":""}" data-section="advanced">
+                    <div class="right-drawer__menu-item ${r==="advanced"?"right-drawer__menu-item--active":""}" data-section="advanced">
                         <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-                        <span>${n.t("settings.advanced")}</span>
+                        <span>${i.t("settings.advanced")}</span>
                     </div>
                 `:""}
-                <div class="right-drawer__menu-item ${a==="about"?"right-drawer__menu-item--active":""}" data-section="about" style="justify-content: space-between;">
+                <div class="right-drawer__menu-item ${r==="about"?"right-drawer__menu-item--active":""}" data-section="about" style="justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                        <span>${n.t("settings.about")}</span>
+                        <span>${i.t("settings.about")}</span>
                     </div>
-                    ${t&&(o.role?.toLowerCase()==="admin"||o.role==="Administrator")?`
-                        <span style="font-size: 10px; font-weight: 600; color: var(--danger-color); background: rgba(var(--danger-rgb), 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(var(--danger-rgb), 0.2); animation: blink-badge 2s infinite;">${n.t("settings.update_available")}</span>
+                    ${a&&(o.role?.toLowerCase()==="admin"||o.role==="Administrator")?`
+                        <span style="font-size: 10px; font-weight: 600; color: var(--danger-color); background: rgba(var(--danger-rgb), 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(var(--danger-rgb), 0.2); animation: blink-badge 2s infinite;">${i.t("settings.update_available")}</span>
                         <style>@keyframes blink-badge { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }</style>
                     `:""}
                 </div>
@@ -1402,11 +1402,11 @@ input:checked+.slider:before {
         <div class="right-drawer__footer">
             <button type="button" id="logout-btn" class="right-drawer__menu-item right-drawer__menu-item--logout" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;width:100%;padding:0;">
                 <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9"/></svg>
-                <span>${n.t("auth.logout")}</span>
+                <span>${i.t("auth.logout")}</span>
             </button>
         </div>
     </div>
-`;m();var Kr=`:host {
+`;m();var Co=`:host {
     position: fixed;
     top: 48px;
     /* Below top-bar */
@@ -1630,10 +1630,10 @@ input:checked+.slider:before {
 
 .right-drawer__menu-item--logout:hover {
     background: rgba(var(--danger-rgb), 0.05) !important;
-}`;class Mr extends HTMLElement{isOpen;selectedSection;_unsubscribe;_unsubscribeI18n;_keydownHandler;updateAvailable;_unsubscribeDashboard;constructor(){super();this.attachShadow({mode:"open"}),this.isOpen=!1,this.selectedSection=null,this.updateAvailable=!1}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribe=y.subscribe((o)=>{if(this.isOpen)this.render()}),Promise.resolve().then(() => (H(),br)).then(({dashboardStore:o})=>{this._unsubscribeDashboard=o.subscribe((r)=>{if(this.updateAvailable!==r.updateAvailable)this.updateAvailable=r.updateAvailable,this.render()})}),this._unsubscribeI18n=n.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._keydownHandler)window.removeEventListener("keydown",this._keydownHandler)}open(){this.isOpen=!0,this.setAttribute("open",""),this.render(),document.body.style.overflow="hidden",this.dispatchEvent(new CustomEvent("drawer-open",{bubbles:!0,composed:!0}))}close(){this.isOpen=!1,this.removeAttribute("open"),this.selectedSection=null,this.render(),document.body.style.overflow="",this.dispatchEvent(new CustomEvent("drawer-close",{bubbles:!0,composed:!0}))}selectSection(o){if(this.selectedSection===o)this.selectedSection=null;else this.selectedSection=o;this.render()}async performLogout(){let o=document.cookie.split("; ").find((a)=>a.startsWith("csrf_token=")),r=o?decodeURIComponent(o.split("=")[1]):"";try{await fetch("/logout",{method:"POST",headers:{"X-CSRF-Token":r}})}catch(a){}document.body.style.opacity="0",window.location.href="/login"}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target;if(r.classList.contains("right-drawer__overlay"))this.close();if(r.closest("#logout-btn")){o.preventDefault(),this.performLogout();return}let a=r.closest(".right-drawer__menu-item");if(a&&a.dataset.section)o.preventDefault(),this.selectSection(a.dataset.section)}),this._keydownHandler=(o)=>{if(o.key==="Escape"&&this.isOpen)this.close()},window.addEventListener("keydown",this._keydownHandler)}render(){let o=y.getUser()||{username:"Guest",initials:"??",role:"Viewer"};this.shadowRoot.innerHTML=`
-            <style>${Kr}</style>
-            ${Jr({user:o,isOpen:this.isOpen,selectedSection:this.selectedSection,updateAvailable:this.updateAvailable})}
-        `}}if(!customElements.get("app-right-drawer"))customElements.define("app-right-drawer",Mr);m();var Br=({title:o,editMode:r,searchActive:a,addMenuActive:t,drawerOpen:i,searchQuery:e,user:s,updateAvailable:p})=>{return`
+}`;class Po extends HTMLElement{isOpen;selectedSection;_unsubscribe;_unsubscribeI18n;_keydownHandler;updateAvailable;_unsubscribeDashboard;constructor(){super();this.attachShadow({mode:"open"}),this.isOpen=!1,this.selectedSection=null,this.updateAvailable=!1}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribe=w.subscribe((o)=>{if(this.isOpen)this.render()}),Promise.resolve().then(() => (L(),Mo)).then(({dashboardStore:o})=>{this._unsubscribeDashboard=o.subscribe((t)=>{if(this.updateAvailable!==t.updateAvailable)this.updateAvailable=t.updateAvailable,this.render()})}),this._unsubscribeI18n=i.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._keydownHandler)window.removeEventListener("keydown",this._keydownHandler)}open(){this.isOpen=!0,this.setAttribute("open",""),this.render(),document.body.style.overflow="hidden",this.dispatchEvent(new CustomEvent("drawer-open",{bubbles:!0,composed:!0}))}close(){this.isOpen=!1,this.removeAttribute("open"),this.selectedSection=null,this.render(),document.body.style.overflow="",this.dispatchEvent(new CustomEvent("drawer-close",{bubbles:!0,composed:!0}))}selectSection(o){if(this.selectedSection===o)this.selectedSection=null;else this.selectedSection=o;this.render()}async performLogout(){let o=document.cookie.split("; ").find((r)=>r.startsWith("csrf_token=")),t=o?decodeURIComponent(o.split("=")[1]):"";try{await fetch("/logout",{method:"POST",headers:{"X-CSRF-Token":t}})}catch(r){}document.body.style.opacity="0",window.location.href="/login"}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let t=o.target;if(t.classList.contains("right-drawer__overlay"))this.close();if(t.closest("#logout-btn")){o.preventDefault(),this.performLogout();return}let r=t.closest(".right-drawer__menu-item");if(r&&r.dataset.section)o.preventDefault(),this.selectSection(r.dataset.section)}),this._keydownHandler=(o)=>{if(o.key==="Escape"&&this.isOpen)this.close()},window.addEventListener("keydown",this._keydownHandler)}render(){let o=w.getUser()||{username:"Guest",initials:"??",role:"Viewer"};this.shadowRoot.innerHTML=`
+            <style>${Co}</style>
+            ${Xo({user:o,isOpen:this.isOpen,selectedSection:this.selectedSection,updateAvailable:this.updateAvailable})}
+        `}}if(!customElements.get("app-right-drawer"))customElements.define("app-right-drawer",Po);m();var Do=({title:o,editMode:t,searchActive:r,addMenuActive:a,drawerOpen:n,searchQuery:e,user:s,updateAvailable:d})=>{return`
     <div class="top-bar">
         <div class="top-bar__title">${o}</div>
         <div class="top-bar__actions">
@@ -1641,8 +1641,8 @@ input:checked+.slider:before {
             <offline-badge></offline-badge>
 
             <!-- Search Bar -->
-            <div id="search-wrapper" class="search-wrapper ${a?"search-wrapper--active":""}">
-                <input type="text" id="search-input" class="search-input" placeholder="${n.t("general.search")}" 
+            <div id="search-wrapper" class="search-wrapper ${r?"search-wrapper--active":""}">
+                <input type="text" id="search-input" class="search-input" placeholder="${i.t("general.search")}" 
                        value="${e||""}" onclick="event.stopPropagation()">
                 <div id="search-clear" class="search-clear" style="display: ${e?"flex":"none"};">×</div>
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1652,34 +1652,34 @@ input:checked+.slider:before {
             </div>
 
             <!-- Add Item Toggle -->
-            <div id="add-toggle" class="top-bar__toggle" title="${n.t("topbar.add_tooltip")}" 
-                 style="${r?"display: flex;":"display: none;"} margin-right: -6px;">
+            <div id="add-toggle" class="top-bar__toggle" title="${i.t("topbar.add_tooltip")}" 
+                 style="${t?"display: flex;":"display: none;"} margin-right: -6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M12 5v14M5 12h14" stroke-width="1.5" stroke-linecap="round" />
                 </svg>
             </div>
 
             <!-- Add Menu Dropdown -->
-            <div id="add-menu" class="add-menu ${t?"add-menu--active":""}">
+            <div id="add-menu" class="add-menu ${a?"add-menu--active":""}">
                 <div class="add-menu-item" data-action="add-bookmark">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    ${n.t("action.add_bookmark")}
+                    ${i.t("action.add_bookmark")}
                 </div>
                 <div class="add-menu-item" data-action="add-section">
                      <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon" style="stroke-dasharray: 4 2;"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/></svg>
-                    ${n.t("action.add_section")}
+                    ${i.t("action.add_section")}
                 </div>
                 <div class="add-menu-item" data-action="add-widget">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/></svg>
-                    ${n.t("action.add_widget")}
+                    ${i.t("action.add_widget")}
                 </div>
             </div>
 
             <!-- Edit Mode Toggle -->
-            <div id="edit-toggle" class="top-bar__toggle" title="${n.t("topbar.edit_tooltip")}" 
-                 style="margin-right: -6px; ${r?"color: var(--accent);":""}">
+            <div id="edit-toggle" class="top-bar__toggle" title="${i.t("topbar.edit_tooltip")}" 
+                 style="margin-right: -6px; ${t?"color: var(--accent);":""}">
                 <svg id="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    ${r?`
+                    ${t?`
                         <!-- Checkmark Icon -->
                         <path d="M5 13l4 4L19 7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                     `:`
@@ -1692,17 +1692,17 @@ input:checked+.slider:before {
 
             <!-- Sidebar Toggle Icon -->
             <div id="drawer-toggle" class="top-bar__toggle" style="position: relative;">
-                ${p?'<div class="notification-dot"></div>':""}
+                ${d?'<div class="notification-dot"></div>':""}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5" />
-                    <rect class="top-bar__indicator ${i?"top-bar__indicator--active":""}" 
+                    <rect class="top-bar__indicator ${n?"top-bar__indicator--active":""}" 
                           x="15" y="3" width="6" height="18" fill="white" />
                     <path d="M15 3V21" stroke-width="1.5" />
                 </svg>
             </div>
         </div>
     </div>
-`};H();m();var Rr=`:host {
+`};L();m();var Wo=`:host {
     display: block;
     height: 48px;
     width: 100%;
@@ -1971,10 +1971,10 @@ input:checked+.slider:before {
         opacity: 1;
         transform: scale(1);
     }
-}`;class Zr extends HTMLElement{state;_unsubscribeDashboard;_unsubscribeI18n;_windowClickHandler;static get observedAttributes(){return["title"]}constructor(){super();this.attachShadow({mode:"open"}),this.state={editMode:!1,searchActive:!1,addMenuActive:!1,drawerOpen:!1,searchQuery:""}}attributeChangedCallback(o,r,a){if(o==="title"&&r!==a)this.render()}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribeDashboard=x.subscribe((o)=>{if(this.state.editMode!==o.isEditing||this.state.updateAvailable!==o.updateAvailable)this.setState({editMode:o.isEditing,updateAvailable:o.updateAvailable})}),this._unsubscribeI18n=n.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._windowClickHandler)window.removeEventListener("click",this._windowClickHandler)}setState(o){let r=this.state.editMode;if(this.state={...this.state,...o},this.render(),o.editMode!==void 0&&o.editMode!==r)this.dispatchEvent(new CustomEvent("edit-mode-change",{detail:{active:this.state.editMode},bubbles:!0,composed:!0}))}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target;if(r.closest("#search-clear")){o.stopPropagation(),this.state.searchQuery="";let l=this.shadowRoot.getElementById("search-input");if(l)l.value="",l.focus();this.render(),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0}));return}if(r.closest("#search-wrapper")&&!this.state.searchActive)o.stopPropagation(),this.setState({searchActive:!0}),this.shadowRoot.getElementById("search-input")?.focus();if(r.closest("#edit-toggle"))x.toggleEditMode();if(r.closest("#add-toggle"))o.stopPropagation(),this.setState({addMenuActive:!this.state.addMenuActive});let s=r.closest(".add-menu-item");if(s){let l=s.dataset.action;if(l)this.setState({addMenuActive:!1}),this.dispatchEvent(new CustomEvent("add-item",{detail:{action:l},bubbles:!0,composed:!0}));return}if(r.closest("#drawer-toggle")){let l=this.state.drawerOpen?"close":"open";this.dispatchEvent(new CustomEvent("drawer-toggle",{detail:{action:l},bubbles:!0,composed:!0}));return}}),this.shadowRoot.addEventListener("input",(o)=>{let r=o.target;if(r.id==="search-input"){let a=r.value;this.state.searchQuery=a;let t=this.shadowRoot.getElementById("search-clear");if(t)t.style.display=a?"flex":"none";this.dispatchEvent(new CustomEvent("search-input",{detail:{query:a},bubbles:!0,composed:!0}))}}),this.shadowRoot.addEventListener("keydown",(o)=>{let r=o.target,a=o;if(r.id==="search-input"&&a.key==="Escape")r.value="",this.setState({searchActive:!1}),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0})),r.blur()}),this._windowClickHandler=(o)=>{if(this.state.addMenuActive)this.setState({addMenuActive:!1});let r=o.composedPath(),a=this.shadowRoot.getElementById("search-wrapper");if(this.state.searchActive&&a&&!r.includes(a)){let t=this.shadowRoot.getElementById("search-input");if(t&&t.value==="")this.setState({searchActive:!1})}},window.addEventListener("click",this._windowClickHandler)}render(){let o=this.getAttribute("title")||"Lastboard";this.shadowRoot.innerHTML=`
-            <style>${Rr}</style>
-            ${Br({title:o,editMode:this.state.editMode,searchActive:this.state.searchActive,addMenuActive:this.state.addMenuActive,drawerOpen:this.state.drawerOpen,searchQuery:this.state.searchQuery,user:this.state.user,updateAvailable:this.state.updateAvailable})}
-        `}}if(!customElements.get("app-topbar"))customElements.define("app-topbar",Zr);m();var Ar=({title:o,dropdownOpen:r})=>`
+}`;class Io extends HTMLElement{state;_unsubscribeDashboard;_unsubscribeI18n;_windowClickHandler;static get observedAttributes(){return["title"]}constructor(){super();this.attachShadow({mode:"open"}),this.state={editMode:!1,searchActive:!1,addMenuActive:!1,drawerOpen:!1,searchQuery:""}}attributeChangedCallback(o,t,r){if(o==="title"&&t!==r)this.render()}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribeDashboard=g.subscribe((o)=>{if(this.state.editMode!==o.isEditing||this.state.updateAvailable!==o.updateAvailable)this.setState({editMode:o.isEditing,updateAvailable:o.updateAvailable})}),this._unsubscribeI18n=i.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._windowClickHandler)window.removeEventListener("click",this._windowClickHandler)}setState(o){let t=this.state.editMode;if(this.state={...this.state,...o},this.render(),o.editMode!==void 0&&o.editMode!==t)this.dispatchEvent(new CustomEvent("edit-mode-change",{detail:{active:this.state.editMode},bubbles:!0,composed:!0}))}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let t=o.target;if(t.closest("#search-clear")){o.stopPropagation(),this.state.searchQuery="";let l=this.shadowRoot.getElementById("search-input");if(l)l.value="",l.focus();this.render(),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0}));return}if(t.closest("#search-wrapper")&&!this.state.searchActive)o.stopPropagation(),this.setState({searchActive:!0}),this.shadowRoot.getElementById("search-input")?.focus();if(t.closest("#edit-toggle"))g.toggleEditMode();if(t.closest("#add-toggle"))o.stopPropagation(),this.setState({addMenuActive:!this.state.addMenuActive});let s=t.closest(".add-menu-item");if(s){let l=s.dataset.action;if(l)this.setState({addMenuActive:!1}),this.dispatchEvent(new CustomEvent("add-item",{detail:{action:l},bubbles:!0,composed:!0}));return}if(t.closest("#drawer-toggle")){let l=this.state.drawerOpen?"close":"open";this.dispatchEvent(new CustomEvent("drawer-toggle",{detail:{action:l},bubbles:!0,composed:!0}));return}}),this.shadowRoot.addEventListener("input",(o)=>{let t=o.target;if(t.id==="search-input"){let r=t.value;this.state.searchQuery=r;let a=this.shadowRoot.getElementById("search-clear");if(a)a.style.display=r?"flex":"none";this.dispatchEvent(new CustomEvent("search-input",{detail:{query:r},bubbles:!0,composed:!0}))}}),this.shadowRoot.addEventListener("keydown",(o)=>{let t=o.target,r=o;if(t.id==="search-input"&&r.key==="Escape")t.value="",this.setState({searchActive:!1}),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0})),t.blur()}),this._windowClickHandler=(o)=>{if(this.state.addMenuActive)this.setState({addMenuActive:!1});let t=o.composedPath(),r=this.shadowRoot.getElementById("search-wrapper");if(this.state.searchActive&&r&&!t.includes(r)){let a=this.shadowRoot.getElementById("search-input");if(a&&a.value==="")this.setState({searchActive:!1})}},window.addEventListener("click",this._windowClickHandler)}render(){let o=this.getAttribute("title")||"Lastboard";this.shadowRoot.innerHTML=`
+            <style>${Wo}</style>
+            ${Do({title:o,editMode:this.state.editMode,searchActive:this.state.searchActive,addMenuActive:this.state.addMenuActive,drawerOpen:this.state.drawerOpen,searchQuery:this.state.searchQuery,user:this.state.user,updateAvailable:this.state.updateAvailable})}
+        `}}if(!customElements.get("app-topbar"))customElements.define("app-topbar",Io);m();var So=({title:o,dropdownOpen:t})=>`
     <header class="header">
         <div class="header__left">
             ${o}
@@ -1982,7 +1982,7 @@ input:checked+.slider:before {
 
         <div class="header__group">
             <button class="header__btn-changelog">
-                <span>${n.t("header.view_changelog")}</span>
+                <span>${i.t("header.view_changelog")}</span>
                 <svg class="header__icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -2031,15 +2031,15 @@ input:checked+.slider:before {
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                 </div>
-                <div class="header__dropdown ${r?"header__dropdown--active":""}" id="profile-dropdown">
-                    <div class="header__dropdown-item">${n.t("header.view_profile")}</div>
-                    <div class="header__dropdown-item">${n.t("header.preferences")}</div>
-                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: var(--danger-color);">${n.t("auth.sign_out")}</div>
+                <div class="header__dropdown ${t?"header__dropdown--active":""}" id="profile-dropdown">
+                    <div class="header__dropdown-item">${i.t("header.view_profile")}</div>
+                    <div class="header__dropdown-item">${i.t("header.preferences")}</div>
+                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: var(--danger-color);">${i.t("auth.sign_out")}</div>
                 </div>
             </div>
         </div>
     </header>
-`;var Yr=`.header {
+`;var ot=`.header {
     background-color: var(--header-bg, #121212);
     height: 48px;
     display: flex;
@@ -2160,80 +2160,80 @@ input:checked+.slider:before {
     .header__profile-container {
         display: none !important;
     }
-}`;class Nr extends HTMLElement{dropdownOpen;constructor(){super();this.attachShadow({mode:"open"}),this.dropdownOpen=!1}connectedCallback(){this.render(),this.setupListeners()}toggleDropdown(o){this.dropdownOpen=typeof o==="boolean"?o:!this.dropdownOpen,this.render()}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target,a=r.closest(".header__btn-changelog");if(a)a.style.display="none";if(r.closest("#profile-trigger"))o.stopPropagation(),this.toggleDropdown()}),window.addEventListener("click",()=>{if(this.dropdownOpen)this.toggleDropdown(!1)})}render(){let o=this.getAttribute("title")||"Task";this.shadowRoot.innerHTML=`
-            <style>${Yr}</style>
-            ${Ar({title:o,dropdownOpen:this.dropdownOpen})}
-        `}}if(!customElements.get("app-header"))customElements.define("app-header",Nr);m();var io=(o)=>String(o).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"),at=(o)=>{if(!o)return"#";let r=o.trim().toLowerCase();if(r.startsWith("http://")||r.startsWith("https://")||r==="#")return io(o);return"#"},Or=({bookmarks:o,isEditing:r,isSearching:a,isTouchDevice:t,maxCols:i=12})=>{let e=Array.isArray(o)?o:[],s=(l)=>e.filter((c)=>c.parent_id===l);return`
-    ${(t?e:a?e:e.filter((l)=>!l.parent_id)).map((l)=>{let c={};try{c=typeof l.content==="string"?JSON.parse(l.content):l.content}catch(u){console.error("Failed to parse content for item",l.id,u)}let d=l.type==="section",b={x:l.x||1,y:l.y||1},h=Math.min(l.w||1,i),g=l.h||1;if(d){let u=s(l.id),w=(c.title||"").trim();return`
+}`;class tt extends HTMLElement{dropdownOpen;constructor(){super();this.attachShadow({mode:"open"}),this.dropdownOpen=!1}connectedCallback(){this.render(),this.setupListeners()}toggleDropdown(o){this.dropdownOpen=typeof o==="boolean"?o:!this.dropdownOpen,this.render()}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let t=o.target,r=t.closest(".header__btn-changelog");if(r)r.style.display="none";if(t.closest("#profile-trigger"))o.stopPropagation(),this.toggleDropdown()}),window.addEventListener("click",()=>{if(this.dropdownOpen)this.toggleDropdown(!1)})}render(){let o=this.getAttribute("title")||"Task";this.shadowRoot.innerHTML=`
+            <style>${ot}</style>
+            ${So({title:o,dropdownOpen:this.dropdownOpen})}
+        `}}if(!customElements.get("app-header"))customElements.define("app-header",tt);m();var T=(o)=>String(o).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"),Pt=(o)=>{if(!o)return"#";let t=o.trim().toLowerCase();if(t.startsWith("http://")||t.startsWith("https://")||t==="#")return T(o);return"#"},rt=({bookmarks:o,isEditing:t,isSearching:r,isTouchDevice:a,maxCols:n=12})=>{let e=Array.isArray(o)?o:[],s=(l)=>e.filter((c)=>c.parent_id===l);return`
+    ${(a?e:r?e:e.filter((l)=>!l.parent_id)).map((l)=>{let c={};try{c=typeof l.content==="string"?JSON.parse(l.content):l.content}catch(u){console.error("Failed to parse content for item",l.id,u)}let p=l.type==="section",v={x:l.x||1,y:l.y||1},f=Math.min(l.w||1,n),x=l.h||1;if(p){let u=s(l.id),y=(c.title||"").trim();return`
             <fieldset class="bookmark-grid__section"
                data-id="${l.id}"
                data-orig-x="${l.x}" data-orig-y="${l.y}"
-               draggable="${r}"
-               style="--x: ${b.x}; --y: ${b.y}; --w: ${h}; --h: ${g};">
-               ${w?`<legend class="section-title">${io(w)}</legend>`:""}
+               draggable="${t}"
+               style="--x: ${v.x}; --y: ${v.y}; --w: ${f}; --h: ${x};">
+               ${y?`<legend class="section-title">${T(y)}</legend>`:""}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
-                   ${tt(u,r,!0,h,t)}
+                   ${Dt(u,t,!0,f,a)}
                </div>
-               ${r?`
+               ${t?`
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-edit" title="${n.t("general.edit")}">✎</button>
-                    <button class="action-btn btn-delete" title="${n.t("general.delete")}">\uD83D\uDDD1</button>
+                    <button class="action-btn btn-edit" title="${i.t("general.edit")}">✎</button>
+                    <button class="action-btn btn-delete" title="${i.t("general.delete")}">\uD83D\uDDD1</button>
                 </div>
                 <div class="resize-handle"></div>
                `:""}
-            </fieldset>`}return Vr(l,c,r,b,h,g,t)}).join("")}
+            </fieldset>`}return at(l,c,t,v,f,x,a)}).join("")}
 
     <div id="ghost-element" class="bookmark-grid__ghost" style="display: none;"></div>
-    `};function Vr(o,r,a,t,i,e=0,s=!1){let p=e||o.h||1;if(o.type==="widget"){let h=r.widgetId,u={clock:"widget-clock",notepad:"widget-notepad",telemetry:"widget-telemetry",weather:"widget-weather"}[h]||"div",k=(r.text||"").replace(/"/g,"&quot;");return`
+    `};function at(o,t,r,a,n,e=0,s=!1){let d=e||o.h||1;if(o.type==="widget"){let f=t.widgetId,u={clock:"widget-clock",notepad:"widget-notepad",telemetry:"widget-telemetry",weather:"widget-weather",markdown:"widget-markdown"}[f]||"div",k=(t.text||"").replace(/"/g,"&quot;");return`
         <div class="bookmark-grid__card"
-            draggable="${a}"
+            draggable="${r}"
             data-id="${o.id}"
             data-type="${o.type}"
             data-orig-x="${o.x}" data-orig-y="${o.y}"
-            ${!s?`style="--x: ${t.x}; --y: ${t.y}; --w: ${i}; --h: ${p};"`:""}>
+            ${!s?`style="--x: ${a.x}; --y: ${a.y}; --w: ${n}; --h: ${d};"`:""}>
 
             <${u}
                 item-id="${o.id}"
-                ${h==="notepad"?`content="${k}"`:""}
+                ${f==="notepad"?`content="${k}"`:""}
             ></${u}>
 
-            ${a?`
+            ${r?`
             <div class="bookmark-actions">
-                 ${["clock","telemetry","weather"].includes(h)?`<button class="action-btn btn-edit" title="${n.t("general.edit")}">✎</button>`:""}
-                 <button class="action-btn btn-delete" title="${n.t("general.delete")}">\uD83D\uDDD1</button>
+                 ${["clock","telemetry","weather"].includes(f)?`<button class="action-btn btn-edit" title="${i.t("general.edit")}">✎</button>`:""}
+                 <button class="action-btn btn-delete" title="${i.t("general.delete")}">\uD83D\uDDD1</button>
             </div>
-            ${["clock","telemetry"].includes(h)?"":'<div class="resize-handle"></div>'}
+            ${["clock","telemetry"].includes(f)?"":'<div class="resize-handle"></div>'}
             `:""}
         </div>
-    `}let l=r.icon||"",d=l.startsWith("http")||l.startsWith("/")?`<img src="${io(l)}" alt="${io(r.label)}" class="bookmark-grid__icon-img" draggable="false" />`:l?io(l):'<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';return`
-        <a ${a?'role="button"':`href="${at(r.url)}" target="_blank"`} class="bookmark-grid__card"
-           draggable="${a}"
+    `}let l=t.icon||"",p=l.startsWith("http")||l.startsWith("/")?`<img src="${T(l)}" alt="${T(t.label)}" class="bookmark-grid__icon-img" draggable="false" />`:l?T(l):'<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';return`
+        <a ${r?'role="button"':`href="${Pt(t.url)}" target="_blank"`} class="bookmark-grid__card"
+           draggable="${r}"
            data-id="${o.id}"
            data-type="${o.type}"
            data-orig-x="${o.x}" data-orig-y="${o.y}"
-           ${!s?`style="--x: ${t.x}; --y: ${t.y}; --w: ${i}; --h: ${p};"`:""}>
+           ${!s?`style="--x: ${a.x}; --y: ${a.y}; --w: ${n}; --h: ${d};"`:""}>
             
-            ${a?`
+            ${r?`
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-edit" title="${n.t("general.edit")}">✎</button>
-                    <button class="action-btn btn-delete" title="${n.t("general.delete")}">\uD83D\uDDD1</button>
+                    <button class="action-btn btn-edit" title="${i.t("general.edit")}">✎</button>
+                    <button class="action-btn btn-delete" title="${i.t("general.delete")}">\uD83D\uDDD1</button>
                 </div>
             `:""}
 
             <div class="bookmark-grid__icon-container">
-                ${d}
+                ${p}
             </div>
-            <span class="bookmark-grid__label">${io(r.label)||"Bookmark"}</span>
+            <span class="bookmark-grid__label">${T(t.label)||"Bookmark"}</span>
             
-            ${a&&o.type==="section"?'<div class="resize-handle"></div>':""}
+            ${r&&o.type==="section"?'<div class="resize-handle"></div>':""}
             
-            ${r.statusCheck?`
+            ${t.statusCheck?`
                 <div class="status-indicator ${o.status?`status-${o.status}`:""}" 
-                     title="${o.status==="up"?n.t("status.online"):o.status==="down"?n.t("status.unreachable"):o.status==="pending"?n.t("status.checking"):n.t("general.pinging")}">
+                     title="${o.status==="up"?i.t("status.online"):o.status==="down"?i.t("status.unreachable"):o.status==="pending"?i.t("status.checking"):i.t("general.pinging")}">
                 </div>
             `:""}
         </a>
-    `}function tt(o,r,a=!1,t=12,i=!1){return o.map((e)=>{let s={};try{s=typeof e.content==="string"?JSON.parse(e.content):e.content}catch(d){console.error("Failed to parse content for item (nested)",e.id,d)}let p={x:e.x||1,y:e.y||1},l=e.h||1,c=Math.min(e.w||1,t);return Vr(e,s,r,p,c,l,i)}).join("")}H();T();m();m();H();class Er extends HTMLElement{timer;timeEl=null;dateEl=null;_unsubscribe=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}isEditing=!1;configMode=!1;_config={timezone:"local",hour12:!1,showDate:!0};_itemId=0;static get observedAttributes(){return["item-id","content","mode"]}attributeChangedCallback(o,r,a){if(o==="item-id")this._itemId=parseInt(a);if(o==="content")try{let t=typeof a==="string"?JSON.parse(a):a;if(t&&typeof t==="object")this._config={...this._config,...t},this.updateTime()}catch(t){}}connectedCallback(){this.render(),this.updateTime(),this.timer=setInterval(()=>{this.updateTime()},1000),this._unsubscribe=x.subscribe((o)=>{if(this.isEditing!==o.isEditing)this.isEditing=o.isEditing,this.render();if(this._itemId){let r=o.items.find((a)=>a.id===this._itemId);if(r&&r.content)try{let a=typeof r.content==="string"?JSON.parse(r.content):r.content;if(a.widgetId==="clock")this._config={...this._config,...a},this.updateTime()}catch(a){}}}),this._unsubscribeI18n=n.subscribe(()=>{this.updateTime()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this.timer)clearInterval(this.timer)}updateTime(){if(!this.timeEl||!this.dateEl)return;let o=new Date,r={hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:this._config.hour12},a=void 0;if(this._config.timezone&&this._config.timezone!=="local")a=this._config.timezone;let t=n.getLocale().code;try{let s=new Intl.DateTimeFormat(t,{...r,timeZone:a}).formatToParts(o).map((p)=>{if(p.type==="dayPeriod")return`<span class="ampm">${p.value.toUpperCase().replace(/\./g,"").trim()}</span>`;return p.value}).join("");this.timeEl.innerHTML=s}catch(i){this.timeEl.textContent=o.toLocaleTimeString()}if(this._config.showDate){let i={weekday:"long",day:"numeric",month:"long",timeZone:a};this.dateEl.textContent=o.toLocaleDateString(t,i),this.dateEl.style.display="block"}else this.dateEl.style.display="none"}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
+    `}function Dt(o,t,r=!1,a=12,n=!1){return o.map((e)=>{let s={};try{s=typeof e.content==="string"?JSON.parse(e.content):e.content}catch(p){console.error("Failed to parse content for item (nested)",e.id,p)}let d={x:e.x||1,y:e.y||1},l=e.h||1,c=Math.min(e.w||1,a);return at(e,s,t,d,c,l,n)}).join("")}L();B();m();m();L();class it extends HTMLElement{timer;timeEl=null;dateEl=null;_unsubscribe=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}isEditing=!1;configMode=!1;_config={timezone:"local",hour12:!1,showDate:!0};_itemId=0;static get observedAttributes(){return["item-id","content","mode"]}attributeChangedCallback(o,t,r){if(o==="item-id")this._itemId=parseInt(r);if(o==="content")try{let a=typeof r==="string"?JSON.parse(r):r;if(a&&typeof a==="object")this._config={...this._config,...a},this.updateTime()}catch(a){}}connectedCallback(){this.render(),this.updateTime(),this.timer=setInterval(()=>{this.updateTime()},1000),this._unsubscribe=g.subscribe((o)=>{if(this.isEditing!==o.isEditing)this.isEditing=o.isEditing,this.render();if(this._itemId){let t=o.items.find((r)=>r.id===this._itemId);if(t&&t.content)try{let r=typeof t.content==="string"?JSON.parse(t.content):t.content;if(r.widgetId==="clock")this._config={...this._config,...r},this.updateTime()}catch(r){}}}),this._unsubscribeI18n=i.subscribe(()=>{this.updateTime()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this.timer)clearInterval(this.timer)}updateTime(){if(!this.timeEl||!this.dateEl)return;let o=new Date,t={hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:this._config.hour12},r=void 0;if(this._config.timezone&&this._config.timezone!=="local")r=this._config.timezone;let a=i.getLocale().code;try{let s=new Intl.DateTimeFormat(a,{...t,timeZone:r}).formatToParts(o).map((d)=>{if(d.type==="dayPeriod")return`<span class="ampm">${d.value.toUpperCase().replace(/\./g,"").trim()}</span>`;return d.value}).join("");this.timeEl.innerHTML=s}catch(n){this.timeEl.textContent=o.toLocaleTimeString()}if(this._config.showDate){let n={weekday:"long",day:"numeric",month:"long",timeZone:r};this.dateEl.textContent=o.toLocaleDateString(a,n),this.dateEl.style.display="block"}else this.dateEl.style.display="none"}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
             <style>
                 :host {
                     display: flex;
@@ -2269,674 +2269,351 @@ input:checked+.slider:before {
             
             <div class="time">--:--:--</div>
             <div class="date">-- --</div>
-        `,this.timeEl=this.shadowRoot.querySelector(".time"),this.dateEl=this.shadowRoot.querySelector(".date")}}customElements.define("widget-clock",Er);var $o=globalThis,zo=$o.ShadowRoot&&($o.ShadyCSS===void 0||$o.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,Uo=Symbol(),Ur=new WeakMap;class jo{constructor(o,r,a){if(this._$cssResult$=!0,a!==Uo)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=o,this.t=r}get styleSheet(){let o=this.o,r=this.t;if(zo&&o===void 0){let a=r!==void 0&&r.length===1;a&&(o=Ur.get(r)),o===void 0&&((this.o=o=new CSSStyleSheet).replaceSync(this.cssText),a&&Ur.set(r,o))}return o}toString(){return this.cssText}}var Cr=(o)=>new jo(typeof o=="string"?o:o+"",void 0,Uo),bo=(o,...r)=>{let a=o.length===1?o[0]:r.reduce((t,i,e)=>t+((s)=>{if(s._$cssResult$===!0)return s.cssText;if(typeof s=="number")return s;throw Error("Value passed to 'css' function must be a 'css' function result: "+s+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+o[e+1],o[0]);return new jo(a,o,Uo)},Xr=(o,r)=>{if(zo)o.adoptedStyleSheets=r.map((a)=>a instanceof CSSStyleSheet?a:a.styleSheet);else for(let a of r){let t=document.createElement("style"),i=$o.litNonce;i!==void 0&&t.setAttribute("nonce",i),t.textContent=a.cssText,o.appendChild(t)}},Co=zo?(o)=>o:(o)=>o instanceof CSSStyleSheet?((r)=>{let a="";for(let t of r.cssRules)a+=t.cssText;return Cr(a)})(o):o;var{is:it,defineProperty:nt,getOwnPropertyDescriptor:et,getOwnPropertyNames:st,getOwnPropertySymbols:pt,getPrototypeOf:lt}=Object,Go=globalThis,Tr=Go.trustedTypes,dt=Tr?Tr.emptyScript:"",ct=Go.reactiveElementPolyfillSupport,ho=(o,r)=>o,vo={toAttribute(o,r){switch(r){case Boolean:o=o?dt:null;break;case Object:case Array:o=o==null?o:JSON.stringify(o)}return o},fromAttribute(o,r){let a=o;switch(r){case Boolean:a=o!==null;break;case Number:a=o===null?null:Number(o);break;case Object:case Array:try{a=JSON.parse(o)}catch(t){a=null}}return a}},Lo=(o,r)=>!it(o,r),Pr={attribute:!0,type:String,converter:vo,reflect:!1,useDefault:!1,hasChanged:Lo};Symbol.metadata??=Symbol("metadata"),Go.litPropertyMetadata??=new WeakMap;class O extends HTMLElement{static addInitializer(o){this._$Ei(),(this.l??=[]).push(o)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(o,r=Pr){if(r.state&&(r.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(o)&&((r=Object.create(r)).wrapped=!0),this.elementProperties.set(o,r),!r.noAccessor){let a=Symbol(),t=this.getPropertyDescriptor(o,a,r);t!==void 0&&nt(this.prototype,o,t)}}static getPropertyDescriptor(o,r,a){let{get:t,set:i}=et(this.prototype,o)??{get(){return this[r]},set(e){this[r]=e}};return{get:t,set(e){let s=t?.call(this);i?.call(this,e),this.requestUpdate(o,s,a)},configurable:!0,enumerable:!0}}static getPropertyOptions(o){return this.elementProperties.get(o)??Pr}static _$Ei(){if(this.hasOwnProperty(ho("elementProperties")))return;let o=lt(this);o.finalize(),o.l!==void 0&&(this.l=[...o.l]),this.elementProperties=new Map(o.elementProperties)}static finalize(){if(this.hasOwnProperty(ho("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(ho("properties"))){let r=this.properties,a=[...st(r),...pt(r)];for(let t of a)this.createProperty(t,r[t])}let o=this[Symbol.metadata];if(o!==null){let r=litPropertyMetadata.get(o);if(r!==void 0)for(let[a,t]of r)this.elementProperties.set(a,t)}this._$Eh=new Map;for(let[r,a]of this.elementProperties){let t=this._$Eu(r,a);t!==void 0&&this._$Eh.set(t,r)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(o){let r=[];if(Array.isArray(o)){let a=new Set(o.flat(1/0).reverse());for(let t of a)r.unshift(Co(t))}else o!==void 0&&r.push(Co(o));return r}static _$Eu(o,r){let a=r.attribute;return a===!1?void 0:typeof a=="string"?a:typeof o=="string"?o.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise((o)=>this.enableUpdating=o),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach((o)=>o(this))}addController(o){(this._$EO??=new Set).add(o),this.renderRoot!==void 0&&this.isConnected&&o.hostConnected?.()}removeController(o){this._$EO?.delete(o)}_$E_(){let o=new Map,r=this.constructor.elementProperties;for(let a of r.keys())this.hasOwnProperty(a)&&(o.set(a,this[a]),delete this[a]);o.size>0&&(this._$Ep=o)}createRenderRoot(){let o=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return Xr(o,this.constructor.elementStyles),o}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach((o)=>o.hostConnected?.())}enableUpdating(o){}disconnectedCallback(){this._$EO?.forEach((o)=>o.hostDisconnected?.())}attributeChangedCallback(o,r,a){this._$AK(o,a)}_$ET(o,r){let a=this.constructor.elementProperties.get(o),t=this.constructor._$Eu(o,a);if(t!==void 0&&a.reflect===!0){let i=(a.converter?.toAttribute!==void 0?a.converter:vo).toAttribute(r,a.type);this._$Em=o,i==null?this.removeAttribute(t):this.setAttribute(t,i),this._$Em=null}}_$AK(o,r){let a=this.constructor,t=a._$Eh.get(o);if(t!==void 0&&this._$Em!==t){let i=a.getPropertyOptions(t),e=typeof i.converter=="function"?{fromAttribute:i.converter}:i.converter?.fromAttribute!==void 0?i.converter:vo;this._$Em=t;let s=e.fromAttribute(r,i.type);this[t]=s??this._$Ej?.get(t)??s,this._$Em=null}}requestUpdate(o,r,a,t=!1,i){if(o!==void 0){let e=this.constructor;if(t===!1&&(i=this[o]),a??=e.getPropertyOptions(o),!((a.hasChanged??Lo)(i,r)||a.useDefault&&a.reflect&&i===this._$Ej?.get(o)&&!this.hasAttribute(e._$Eu(o,a))))return;this.C(o,r,a)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(o,r,{useDefault:a,reflect:t,wrapped:i},e){a&&!(this._$Ej??=new Map).has(o)&&(this._$Ej.set(o,e??r??this[o]),i!==!0||e!==void 0)||(this._$AL.has(o)||(this.hasUpdated||a||(r=void 0),this._$AL.set(o,r)),t===!0&&this._$Em!==o&&(this._$Eq??=new Set).add(o))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(r){Promise.reject(r)}let o=this.scheduleUpdate();return o!=null&&await o,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[t,i]of this._$Ep)this[t]=i;this._$Ep=void 0}let a=this.constructor.elementProperties;if(a.size>0)for(let[t,i]of a){let{wrapped:e}=i,s=this[t];e!==!0||this._$AL.has(t)||s===void 0||this.C(t,void 0,i,s)}}let o=!1,r=this._$AL;try{o=this.shouldUpdate(r),o?(this.willUpdate(r),this._$EO?.forEach((a)=>a.hostUpdate?.()),this.update(r)):this._$EM()}catch(a){throw o=!1,this._$EM(),a}o&&this._$AE(r)}willUpdate(o){}_$AE(o){this._$EO?.forEach((r)=>r.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(o)),this.updated(o)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(o){return!0}update(o){this._$Eq&&=this._$Eq.forEach((r)=>this._$ET(r,this[r])),this._$EM()}updated(o){}firstUpdated(o){}}O.elementStyles=[],O.shadowRootOptions={mode:"open"},O[ho("elementProperties")]=new Map,O[ho("finalized")]=new Map,ct?.({ReactiveElement:O}),(Go.reactiveElementVersions??=[]).push("2.1.2");var Xo=globalThis,Dr=(o)=>o,Qo=Xo.trustedTypes,Wr=Qo?Qo.createPolicy("lit-html",{createHTML:(o)=>o}):void 0;var V=`lit$${Math.random().toFixed(9).slice(2)}$`,ta="?"+V,gt=`<${ta}>`,W=document,_o=()=>W.createComment(""),uo=(o)=>o===null||typeof o!="object"&&typeof o!="function",To=Array.isArray,xt=(o)=>To(o)||typeof o?.[Symbol.iterator]=="function";var fo=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,Ir=/-->/g,Sr=/>/g,P=RegExp(`>|[ 	
-\f\r](?:([^\\s"'>=/]+)([ 	
-\f\r]*=[ 	
-\f\r]*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`,"g"),oa=/'/g,ra=/"/g,ia=/^(?:script|style|textarea|title)$/i,Po=(o)=>(r,...a)=>({_$litType$:o,strings:r,values:a}),v=Po(1),Vi=Po(2),Ei=Po(3),I=Symbol.for("lit-noChange"),j=Symbol.for("lit-nothing"),aa=new WeakMap,D=W.createTreeWalker(W,129);function na(o,r){if(!To(o)||!o.hasOwnProperty("raw"))throw Error("invalid template strings array");return Wr!==void 0?Wr.createHTML(r):r}var bt=(o,r)=>{let a=o.length-1,t=[],i,e=r===2?"<svg>":r===3?"<math>":"",s=fo;for(let p=0;p<a;p++){let l=o[p],c,d,b=-1,h=0;for(;h<l.length&&(s.lastIndex=h,d=s.exec(l),d!==null);)h=s.lastIndex,s===fo?d[1]==="!--"?s=Ir:d[1]!==void 0?s=Sr:d[2]!==void 0?(ia.test(d[2])&&(i=RegExp("</"+d[2],"g")),s=P):d[3]!==void 0&&(s=P):s===P?d[0]===">"?(s=i??fo,b=-1):d[1]===void 0?b=-2:(b=s.lastIndex-d[2].length,c=d[1],s=d[3]===void 0?P:d[3]==='"'?ra:oa):s===ra||s===oa?s=P:s===Ir||s===Sr?s=fo:(s=P,i=void 0);let g=s===P&&o[p+1].startsWith("/>")?" ":"";e+=s===fo?l+gt:b>=0?(t.push(c),l.slice(0,b)+"$lit$"+l.slice(b)+V+g):l+V+(b===-2?p:g)}return[na(o,e+(o[a]||"<?>")+(r===2?"</svg>":r===3?"</math>":"")),t]};class mo{constructor({strings:o,_$litType$:r},a){let t;this.parts=[];let i=0,e=0,s=o.length-1,p=this.parts,[l,c]=bt(o,r);if(this.el=mo.createElement(l,a),D.currentNode=this.el.content,r===2||r===3){let d=this.el.content.firstChild;d.replaceWith(...d.childNodes)}for(;(t=D.nextNode())!==null&&p.length<s;){if(t.nodeType===1){if(t.hasAttributes())for(let d of t.getAttributeNames())if(d.endsWith("$lit$")){let b=c[e++],h=t.getAttribute(d).split(V),g=/([.?@])?(.*)/.exec(b);p.push({type:1,index:i,name:g[2],strings:h,ctor:g[1]==="."?sa:g[1]==="?"?pa:g[1]==="@"?la:wo}),t.removeAttribute(d)}else d.startsWith(V)&&(p.push({type:6,index:i}),t.removeAttribute(d));if(ia.test(t.tagName)){let d=t.textContent.split(V),b=d.length-1;if(b>0){t.textContent=Qo?Qo.emptyScript:"";for(let h=0;h<b;h++)t.append(d[h],_o()),D.nextNode(),p.push({type:2,index:++i});t.append(d[b],_o())}}}else if(t.nodeType===8)if(t.data===ta)p.push({type:2,index:i});else{let d=-1;for(;(d=t.data.indexOf(V,d+1))!==-1;)p.push({type:7,index:i}),d+=V.length-1}i++}}static createElement(o,r){let a=W.createElement("template");return a.innerHTML=o,a}}function no(o,r,a=o,t){if(r===I)return r;let i=t!==void 0?a._$Co?.[t]:a._$Cl,e=uo(r)?void 0:r._$litDirective$;return i?.constructor!==e&&(i?._$AO?.(!1),e===void 0?i=void 0:(i=new e(o),i._$AT(o,a,t)),t!==void 0?(a._$Co??=[])[t]=i:a._$Cl=i),i!==void 0&&(r=no(o,i._$AS(o,r.values),i,t)),r}class ea{constructor(o,r){this._$AV=[],this._$AN=void 0,this._$AD=o,this._$AM=r}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(o){let{el:{content:r},parts:a}=this._$AD,t=(o?.creationScope??W).importNode(r,!0);D.currentNode=t;let i=D.nextNode(),e=0,s=0,p=a[0];for(;p!==void 0;){if(e===p.index){let l;p.type===2?l=new ko(i,i.nextSibling,this,o):p.type===1?l=new p.ctor(i,p.name,p.strings,this,o):p.type===6&&(l=new da(i,this,o)),this._$AV.push(l),p=a[++s]}e!==p?.index&&(i=D.nextNode(),e++)}return D.currentNode=W,t}p(o){let r=0;for(let a of this._$AV)a!==void 0&&(a.strings!==void 0?(a._$AI(o,a,r),r+=a.strings.length-2):a._$AI(o[r])),r++}}class ko{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(o,r,a,t){this.type=2,this._$AH=j,this._$AN=void 0,this._$AA=o,this._$AB=r,this._$AM=a,this.options=t,this._$Cv=t?.isConnected??!0}get parentNode(){let o=this._$AA.parentNode,r=this._$AM;return r!==void 0&&o?.nodeType===11&&(o=r.parentNode),o}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(o,r=this){o=no(this,o,r),uo(o)?o===j||o==null||o===""?(this._$AH!==j&&this._$AR(),this._$AH=j):o!==this._$AH&&o!==I&&this._(o):o._$litType$!==void 0?this.$(o):o.nodeType!==void 0?this.T(o):xt(o)?this.k(o):this._(o)}O(o){return this._$AA.parentNode.insertBefore(o,this._$AB)}T(o){this._$AH!==o&&(this._$AR(),this._$AH=this.O(o))}_(o){this._$AH!==j&&uo(this._$AH)?this._$AA.nextSibling.data=o:this.T(W.createTextNode(o)),this._$AH=o}$(o){let{values:r,_$litType$:a}=o,t=typeof a=="number"?this._$AC(o):(a.el===void 0&&(a.el=mo.createElement(na(a.h,a.h[0]),this.options)),a);if(this._$AH?._$AD===t)this._$AH.p(r);else{let i=new ea(t,this),e=i.u(this.options);i.p(r),this.T(e),this._$AH=i}}_$AC(o){let r=aa.get(o.strings);return r===void 0&&aa.set(o.strings,r=new mo(o)),r}k(o){To(this._$AH)||(this._$AH=[],this._$AR());let r=this._$AH,a,t=0;for(let i of o)t===r.length?r.push(a=new ko(this.O(_o()),this.O(_o()),this,this.options)):a=r[t],a._$AI(i),t++;t<r.length&&(this._$AR(a&&a._$AB.nextSibling,t),r.length=t)}_$AR(o=this._$AA.nextSibling,r){for(this._$AP?.(!1,!0,r);o!==this._$AB;){let a=Dr(o).nextSibling;Dr(o).remove(),o=a}}setConnected(o){this._$AM===void 0&&(this._$Cv=o,this._$AP?.(o))}}class wo{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(o,r,a,t,i){this.type=1,this._$AH=j,this._$AN=void 0,this.element=o,this.name=r,this._$AM=t,this.options=i,a.length>2||a[0]!==""||a[1]!==""?(this._$AH=Array(a.length-1).fill(new String),this.strings=a):this._$AH=j}_$AI(o,r=this,a,t){let i=this.strings,e=!1;if(i===void 0)o=no(this,o,r,0),e=!uo(o)||o!==this._$AH&&o!==I,e&&(this._$AH=o);else{let s=o,p,l;for(o=i[0],p=0;p<i.length-1;p++)l=no(this,s[a+p],r,p),l===I&&(l=this._$AH[p]),e||=!uo(l)||l!==this._$AH[p],l===j?o=j:o!==j&&(o+=(l??"")+i[p+1]),this._$AH[p]=l}e&&!t&&this.j(o)}j(o){o===j?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,o??"")}}class sa extends wo{constructor(){super(...arguments),this.type=3}j(o){this.element[this.name]=o===j?void 0:o}}class pa extends wo{constructor(){super(...arguments),this.type=4}j(o){this.element.toggleAttribute(this.name,!!o&&o!==j)}}class la extends wo{constructor(o,r,a,t,i){super(o,r,a,t,i),this.type=5}_$AI(o,r=this){if((o=no(this,o,r,0)??j)===I)return;let a=this._$AH,t=o===j&&a!==j||o.capture!==a.capture||o.once!==a.once||o.passive!==a.passive,i=o!==j&&(a===j||t);t&&this.element.removeEventListener(this.name,this,a),i&&this.element.addEventListener(this.name,this,o),this._$AH=o}handleEvent(o){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,o):this._$AH.handleEvent(o)}}class da{constructor(o,r,a){this.element=o,this.type=6,this._$AN=void 0,this._$AM=r,this.options=a}get _$AU(){return this._$AM._$AU}_$AI(o){no(this,o)}}var ht=Xo.litHtmlPolyfillSupport;ht?.(mo,ko),(Xo.litHtmlVersions??=[]).push("3.3.2");var ca=(o,r,a)=>{let t=a?.renderBefore??r,i=t._$litPart$;if(i===void 0){let e=a?.renderBefore??null;t._$litPart$=i=new ko(r.insertBefore(_o(),e),e,void 0,a??{})}return i._$AI(o),i};var Do=globalThis;class B extends O{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let o=super.createRenderRoot();return this.renderOptions.renderBefore??=o.firstChild,o}update(o){let r=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(o),this._$Do=ca(r,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return I}}B._$litElement$=!0,B.finalized=!0,Do.litElementHydrateSupport?.({LitElement:B});var vt=Do.litElementPolyfillSupport;vt?.({LitElement:B});(Do.litElementVersions??=[]).push("4.2.2");var Fo=(o)=>(r,a)=>{a!==void 0?a.addInitializer(()=>{customElements.define(o,r)}):customElements.define(o,r)};var ft={attribute:!0,type:String,converter:vo,reflect:!1,hasChanged:Lo},_t=(o=ft,r,a)=>{let{kind:t,metadata:i}=a,e=globalThis.litPropertyMetadata.get(i);if(e===void 0&&globalThis.litPropertyMetadata.set(i,e=new Map),t==="setter"&&((o=Object.create(o)).wrapped=!0),e.set(a.name,o),t==="accessor"){let{name:s}=a;return{set(p){let l=r.get.call(this);r.set.call(this,p),this.requestUpdate(s,l,o,!0,p)},init(p){return p!==void 0&&this.C(s,void 0,o,p),p}}}if(t==="setter"){let{name:s}=a;return function(p){let l=this[s];r.call(this,p),this.requestUpdate(s,l,o,!0,p)}}throw Error("Unsupported decorator location: "+t)};function R(o){return(r,a)=>typeof a=="object"?_t(o,r,a):((t,i,e)=>{let s=i.hasOwnProperty(e);return i.constructor.createProperty(e,t),s?Object.getOwnPropertyDescriptor(i,e):void 0})(o,r,a)}function Z(o){return R({...o,state:!0,attribute:!1})}var S=(o,r,a)=>(a.configurable=!0,a.enumerable=!0,Reflect.decorate&&typeof r!="object"&&Object.defineProperty(o,r,a),a);function ga(o,r){return(a,t,i)=>{let e=(s)=>s.renderRoot?.querySelector(o)??null;if(r){let{get:s,set:p}=typeof t=="object"?a:i??(()=>{let l=Symbol();return{get(){return this[l]},set(c){this[l]=c}}})();return S(a,t,{get(){let l=s.call(this);return l===void 0&&(l=e(this),(l!==null||this.hasUpdated)&&p.call(this,l)),l}})}return S(a,t,{get(){return e(this)}})}}H();m();var ut={allowedTags:["h1","h2","h3","h4","h5","h6","p","br","div","span","strong","b","em","i","u","s","strike","a","img","ul","ol","li","pre","code","blockquote","label","input"],allowedAttrs:{"*":["style","class"],a:["href","title","target"],img:["src","alt","title","width","height"],input:["type","id","checked"],label:["for"]},allowedSchemes:["http","https","data","mailto"]};class xa{config;constructor(o){this.config={...ut,...o}}sanitize(o){if(!o||typeof o!=="string")return"";let a=new DOMParser().parseFromString(o,"text/html");return this.cleanNode(a.body),a.body.innerHTML}cleanNode(o){let r=Array.from(o.childNodes);for(let a=r.length-1;a>=0;a--){let t=r[a];if(t.nodeType===Node.TEXT_NODE)continue;if(t.nodeType===Node.COMMENT_NODE){o.removeChild(t);continue}if(t.nodeType===Node.ELEMENT_NODE){let i=t,e=i.tagName.toLowerCase();if(!this.config.allowedTags.includes(e)){o.removeChild(t);continue}this.cleanAttributes(i),this.cleanNode(i)}else o.removeChild(t)}}cleanAttributes(o){let r=o.tagName.toLowerCase(),a=[...this.config.allowedAttrs["*"]||[],...this.config.allowedAttrs[r]||[]],t=Array.from(o.attributes);for(let i of t){let e=i.name.toLowerCase();if(!a.includes(e)){o.removeAttribute(i.name);continue}if(e==="href"||e==="src"){let s=i.value.trim();if(this.isDangerousUrl(s)){o.removeAttribute(i.name);continue}}if(e==="style"){let s=this.sanitizeStyle(i.value);if(s!==i.value)o.setAttribute("style",s)}if(r==="input"&&e==="type"){if(i.value.toLowerCase()!=="checkbox")o.setAttribute("type","checkbox")}}}isDangerousUrl(o){let r=o.toLowerCase().trim();if(r.startsWith("javascript:"))return!0;if(r.startsWith("data:")&&r.includes("script"))return!0;if(r.startsWith("vbscript:"))return!0;if(r.includes(":")){let a=r.split(":")[0];if(!this.config.allowedSchemes.includes(a))return!0}return!1}sanitizeStyle(o){let r=["behavior","expression","moz-binding","-o-link","-o-link-source","import","@import"],a=o;for(let t of r){let i=new RegExp(t,"gi");a=a.replace(i,"")}return a=a.replace(/url\s*\(\s*['"]?javascript:/gi,"url(about:blank"),a}}var oo=new xa;class Ho{static parse(o){try{if(typeof o==="object"&&o!==null)return o;if(typeof o==="string"){let r=JSON.parse(o);if(typeof r==="object"&&r!==null)return r}return{widgetId:"unknown"}}catch(r){return console.warn("[WidgetContentHelper] Failed to parse content:",r),{widgetId:"unknown"}}}static serialize(o){try{return JSON.stringify(o)}catch(r){return console.error("[WidgetContentHelper] Failed to serialize content:",r),"{}"}}static getNotepadText(o){return this.parse(o).text||""}static setNotepadText(o,r){let t={...this.parse(o),widgetId:"notepad",text:r};return this.serialize(t)}static merge(o,r){let t={...this.parse(o),...r};return this.serialize(t)}static validate(o,r){return this.parse(o).widgetId===r}}m();class Wo extends B{constructor(){super(...arguments);this.blockId="";this.items=[];this.readonly=!1;this.focusedItemId=null}static styles=bo`
-        :host {
-            display: block;
-            background: var(--surface);
-            border-radius: 8px;
-            padding: 12px;
-            margin: 8px 0;
-            position: relative;
-            isolation: isolate;
-            z-index: 1;
-        }
+        `,this.timeEl=this.shadowRoot.querySelector(".time"),this.dateEl=this.shadowRoot.querySelector(".date")}}customElements.define("widget-clock",it);L();m();class Q{static parse(o){try{if(typeof o==="object"&&o!==null)return o;if(typeof o==="string"){let t=JSON.parse(o);if(typeof t==="object"&&t!==null)return t}return{widgetId:"unknown"}}catch(t){return console.warn("[WidgetContentHelper] Failed to parse content:",t),{widgetId:"unknown"}}}static serialize(o){try{return JSON.stringify(o)}catch(t){return console.error("[WidgetContentHelper] Failed to serialize content:",t),"{}"}}static getNotepadText(o){return this.parse(o).text||""}static setNotepadText(o,t){let a={...this.parse(o),widgetId:"notepad",text:t};return this.serialize(a)}static merge(o,t){let a={...this.parse(o),...t};return this.serialize(a)}static validate(o,t){return this.parse(o).widgetId===t}static getMarkdownText(o){return this.parse(o).text||""}static setMarkdownText(o,t){let a={...this.parse(o),widgetId:"markdown",text:t};return this.serialize(a)}}var _={undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M5 12l6-6"/><path d="M5 12l6 6"/></svg>',redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M19 12l-6-6"/><path d="M19 12l-6 6"/></svg>',h1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M19 18V6l-2 2"/></svg>',h2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M21 18h-4c0-4 4-5 4-8a2 2 0 0 0-4 0"/></svg>',h3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M17.5 18a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 0 0-5H20"/></svg>',bold:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12a4 4 0 0 0 0-8H6v8"/><path d="M15 20a4 4 0 0 0 0-8H6v8Z"/></svg>',italic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>',underline:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',strike:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.3 19c-1.4 1.4-3.5 1.4-5.2-.2-1.9-1.9-1.9-5.2 0-7.2l.6-.6c2.2-2.2 6.6-2.2 9.1.5"/><line x1="4" y1="12" x2="20" y2="12"/><path d="M10.2 6c1.6-1.5 3.9-1.5 5.5.1"/></svg>',color:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',alignLeft:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>',alignCenter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>',alignRight:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>',alignJustify:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',ordered:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>',check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 12l2 2 4-4"/></svg>',quote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/></svg>',code:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',eraser_clean:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"/><path d="M11 3L20 12"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',resize:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 9V6a2 2 0 0 0-2-2h-3"/><path d="M3 15v3a2 2 0 0 0 2 2h3"/><path d="M16 20h3a2 2 0 0 0 2-2v-3"/><path d="M8 4H5a2 2 0 0 0-2 2v3"/></svg>'},Wt=`
+:host {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    /* V10: Allow dock to overlap parent padding */
+    overflow: visible !important;
+    position: relative;
+    
+    --lb-bg: var(--bg-card, #1a1a1a);
+    --lb-text: var(--text-main, #ffffff);
+    --lb-text-dim: var(--text-dim, rgba(255,255,255,0.5));
+    --lb-accent: var(--accent, #0078D4);
+    --lb-accent-rgb: var(--accent-rgb, 0, 120, 212);
+    --lb-border: var(--border, rgba(255,255,255,0.1));
 
-        /* Reset all potential inherited styles */
-        * {
-            box-sizing: border-box;
-        }
+    /* Clean fix - remove redundant host padding hack */
+    color: var(--lb-text);
+    font-family: 'Inter', system-ui, sans-serif;
+}
 
-        .checklist-items {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+/* ── Editor Container ──────────────────────────────────────────────── */
+.editor-container {
+    flex: 1;
+    overflow-y: overlay;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    outline: none;
+    position: relative;
+    
+    /* Balanced Spacing (Enough to not overlap dock, but minimal) */
+    padding-bottom: 24px !important; 
+}
 
-        .checklist-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 0;
-        }
+/* Scrollbar on hover */
+.editor-container::-webkit-scrollbar { width: 4px; }
+.editor-container::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; }
+.editor-container:hover::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.15); }
 
-        .checklist-item input[type="checkbox"] {
-            flex-shrink: 0;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: var(--accent);
-        }
+/* ── ContentEditable ───────────────────────────────────────────────── */
+.editor {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    
+    padding: 12px 14px !important; 
+    
+    min-height: 100%;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: var(--lb-text);
+    caret-color: var(--lb-accent);
+    position: relative; /* Context for absolute placeholder */
+}
 
-        .checklist-item input[type="text"] {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text);
-            font-size: 14px;
-            font-family: inherit;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
+.editor:empty::before,
+.editor.is-empty::before {
+    content: attr(data-placeholder);
+    color: var(--lb-text-dim);
+    opacity: 0.4;
+    pointer-events: none;
+    position: absolute;
+    top: 12px;
+    left: 14px;
+}
 
-        .checklist-item input[type="text"]:focus {
-            background: var(--surface-hover);
-        }
+/* Hide placeholder when locked */
+:host(.locked) .editor::before,
+.editorContext.locked .editor::before,
+.editor-container.locked .editor::before {
+    display: none !important;
+}
 
-        .checklist-item input[type="text"].checked {
-            text-decoration: line-through;
-            opacity: 0.6;
-        }
+.editor[contenteditable="false"] { opacity: 1; cursor: default; }
 
-        .checklist-item .delete-btn {
-            flex-shrink: 0;
-            background: transparent;
-            border: none;
-            color: var(--error, #ff4757);
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            opacity: 0;
-            transition: opacity 0.2s, background 0.2s;
-            font-size: 16px;
-            line-height: 1;
-        }
 
-        .checklist-item:hover .delete-btn {
-            opacity: 1;
-        }
+.editor a { color: var(--lb-accent); text-decoration: underline; cursor: pointer; }
+.editor img { max-width: 100%; height: auto; border-radius: 8px; margin: 4px 0; }
 
-        .checklist-item .delete-btn:hover {
-            background: var(--error);
-            color: white;
-        }
+/* Blocks */
+.editor h1 { font-size: 1.7em; font-weight: 700; margin: 0.6em 0 0.3em 0; color: var(--lb-text); line-height: 1.2; }
+.editor h2 { font-size: 1.4em; font-weight: 600; margin: 0.6em 0 0.3em 0; color: var(--lb-text); opacity: 0.95; }
+.editor h3 { font-size: 1.15em; font-weight: 600; margin: 0.5em 0 0.3em 0; color: var(--lb-text); opacity: 0.9; }
+.editor p { margin: 0.5em 0; }
+.editor ul, .editor ol { margin: 0.5em 0; padding-left: 1.4em; color: var(--lb-text-dim); }
+.editor li { margin-bottom: 0.2em; padding-left: 0.2em; color: var(--lb-text); }
+.editor blockquote {
+    border-left: 3px solid var(--lb-accent);
+    margin: 0.8em 0;
+    padding: 6px 12px;
+    background: linear-gradient(90deg, rgba(var(--lb-accent-rgb), 0.1) 0%, transparent 100%);
+    color: var(--lb-text-dim);
+    font-style: italic;
+    border-radius: 0 6px 6px 0;
+}
+.editor pre {
+    background: rgba(0,0,0,0.3);
+    padding: 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    overflow-x: auto;
+    border: 1px solid var(--lb-border);
+    margin: 0.8em 0;
+    font-size: 0.9em;
+}
 
-        .add-item-btn {
-            all: unset;
-            display: block;
-            box-sizing: border-box;
-            background: transparent;
-            border: 1px dashed var(--border);
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-top: 8px;
-            transition: all 0.2s;
-            width: 100%;
-            text-align: left;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            position: relative;
-            z-index: 2;
-            isolation: isolate;
-        }
+.checkbox-char { cursor: pointer; font-family: 'Inter', sans-serif; margin-right: 6px; user-select: none; display: inline-block; vertical-align: middle; font-size: 1.1em; }
+.checkbox-char.checked { color: var(--lb-accent); }
 
-        .add-item-btn::before,
-        .add-item-btn::after {
-            content: none;
-        }
+/* ── "Dock" (Transparent) ──────────────────────────────────── */
+.glass-dock {
+    position: absolute;
+    /* V11: Extreme Negative bottom to consume parent padding */
+    bottom: -25px; 
+    left: 8px; right: 8px; 
+    margin-bottom: 0 !important;
+    
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: center;
+    align-items: center;
+    gap: 2px; 
+    
+    background: rgba(20, 20, 20, 0.95);
+    /* Reduced border radius so it sits flatter */
+    border-radius: 8px; 
+    border: 1px solid rgba(255,255,255,0.06); 
+    /* Minimal padding */
+    padding: 2px 4px;
+    
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    opacity: 0.95;
+    z-index: 100;
+}
+.glass-dock:hover, .glass-dock:focus-within {
+    opacity: 1;
+    background: rgba(20, 20, 20, 1);
+    /* REMOVED translateY so it doesn't jump up */
+    transform: none; 
+}
+.glass-dock.hidden {
+    opacity: 0; pointer-events: none; transform: translateY(20px);
+}
 
-        .add-item-btn:hover {
-            background: var(--surface-hover);
-            border-color: var(--accent);
-            color: var(--accent);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+.dock-group {
+    display: flex; align-items: center; gap: 0; 
+    padding: 0 2px;
+    border-right: 1px solid rgba(255,255,255,0.08); 
+    flex-shrink: 0; 
+}
+.dock-group:last-child { border-right: none; }
 
-        .add-item-btn:active {
-            transform: scale(0.98);
-        }
+.dock-btn {
+    background: transparent; border: none; color: var(--lb-text-dim);
+    width: 26px; height: 26px; 
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s;
+    flex-shrink: 0;
+    position: relative; 
+}
+.dock-btn svg { width: 14px; height: 14px; }
+.dock-btn:hover { background: rgba(255,255,255,0.08); color: var(--lb-text); }
+.dock-btn input[type="color"] {
+    position: absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;
+}
 
-        .empty-state {
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 13px;
-            padding: 20px;
-        }
-    `;generateId(){return"item-"+Math.random().toString(36).substring(2,11)}addItem(){let o={id:this.generateId(),checked:!1,text:""};this.items=[...this.items,o],this.focusedItemId=o.id,this.dispatchChangeEvent(),this.updateComplete.then(()=>{this.shadowRoot?.querySelector(`input[data-item-id="${o.id}"]`)?.focus()})}addItemAfter(o){let r=this.items.findIndex((i)=>i.id===o);if(r===-1)return;let a={id:this.generateId(),checked:!1,text:""},t=[...this.items];t.splice(r+1,0,a),this.items=t,this.focusedItemId=a.id,this.dispatchChangeEvent(),this.updateComplete.then(()=>{this.shadowRoot?.querySelector(`input[data-item-id="${a.id}"]`)?.focus()})}deleteItem(o){if(this.items.length===1){this.updateItemText(o,"");return}let r=this.items.findIndex((i)=>i.id===o);if(r===-1)return;let a=r>0?r-1:r+1,t=this.items[a]?.id;if(this.items=this.items.filter((i)=>i.id!==o),this.dispatchChangeEvent(),t)this.updateComplete.then(()=>{this.shadowRoot?.querySelector(`input[data-item-id="${t}"]`)?.focus()})}toggleItem(o){this.items=this.items.map((r)=>r.id===o?{...r,checked:!r.checked}:r),this.dispatchChangeEvent()}updateItemText(o,r){this.items=this.items.map((a)=>a.id===o?{...a,text:r}:a),this.dispatchChangeEvent()}handleItemKeydown(o,r){let a=o.target,t=this.items.find((i)=>i.id===r);if(!t)return;if(o.key==="Enter"){if(o.preventDefault(),!t.text.trim())return;this.addItemAfter(r)}else if(o.key==="Backspace"&&a.selectionStart===0&&a.selectionEnd===0){if(!t.text.trim())o.preventDefault(),this.deleteItem(r)}else if(o.key==="ArrowUp"){o.preventDefault();let i=this.items.findIndex((e)=>e.id===r);if(i>0){let e=this.items[i-1].id;this.shadowRoot?.querySelector(`input[data-item-id="${e}"]`)?.focus()}}else if(o.key==="ArrowDown"){o.preventDefault();let i=this.items.findIndex((e)=>e.id===r);if(i<this.items.length-1){let e=this.items[i+1].id;this.shadowRoot?.querySelector(`input[data-item-id="${e}"]`)?.focus()}}}dispatchChangeEvent(){this.dispatchEvent(new CustomEvent("checklist-change",{detail:{blockId:this.blockId,items:this.items},bubbles:!0,composed:!0}))}render(){if(this.items.length===0)return v`
-                <div class="empty-state">
-                    ${n.t("widget.notepad.checklist.empty")}
-                </div>
-                ${!this.readonly?v`
-                    <button class="add-item-btn" @click="${()=>this.addItem()}">
-                        + ${n.t("widget.notepad.checklist.add_first")}
-                    </button>
-                `:""}
-            `;return v`
-            <div class="checklist-items">
-                ${this.items.map((o)=>v`
-                    <div class="checklist-item">
-                        <input
-                            type="checkbox"
-                            .checked="${o.checked}"
-                            @change="${()=>this.toggleItem(o.id)}"
-                        />
-                        <input
-                            type="text"
-                            class="${o.checked?"checked":""}"
-                            .value="${o.text}"
-                            data-item-id="${o.id}"
-                            placeholder="${n.t("widget.notepad.checklist.placeholder")}"
-                            ?readonly="${this.readonly}"
-                            @input="${(r)=>this.updateItemText(o.id,r.target.value)}"
-                            @keydown="${(r)=>this.handleItemKeydown(r,o.id)}"
-                        />
-                        ${!this.readonly?v`
-                            <button
-                                class="delete-btn"
-                                @click="${()=>this.deleteItem(o.id)}"
-                                title="${n.t("widget.notepad.checklist.delete_item")}"
-                            >
-                                ×
-                            </button>
-                        `:""}
-                    </div>
-                `)}
+/* ── Glass Modal ────────────────────────────────────────────────── */
+.glass-modal {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.glass-modal.visible { opacity: 1; pointer-events: all; }
+.modal-content {
+    background: #1a1a1a; border: 1px solid var(--lb-border);
+    border-radius: 10px; padding: 14px; width: 260px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column; gap: 10px;
+}
+.modal-title { font-weight: 600; font-size: 0.85em; margin-bottom: 2px; letter-spacing: 0.02em; text-transform: uppercase; opacity: 0.7; }
+.modal-input {
+    background: rgba(20,20,20,0.5); border: 1px solid var(--lb-border);
+    border-radius: 6px; padding: 8px; color: var(--lb-text);
+    font-family: inherit; outline: none; font-size: 0.9em;
+}
+.modal-input:focus { border-color: var(--lb-accent); background: rgba(0,0,0,0.2); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.modal-btn {
+    padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer;
+    font-size: 0.8em; font-weight: 600;
+}
+.modal-btn.cancel { background: transparent; color: var(--lb-text-dim); }
+.modal-btn.confirm { background: var(--lb-accent); color: white; }
+
+/* ── Lock Button ──────────────────────────────────────────────────── */
+.top-lock-btn {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    border: none; background: rgba(0,0,0,0.2); 
+    backdrop-filter: blur(4px); border-radius: 6px;
+    color: var(--lb-text-dim); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; z-index: 200;
+    border: 1px solid rgba(255,255,255,0.05); opacity: 0; 
+}
+:host(:hover) .top-lock-btn { opacity: 1; }
+.top-lock-btn:hover { background: rgba(255,255,255,0.2); color: var(--lb-text); transform:scale(1.05); }
+.top-lock-btn.locked { color: #ff453a; background: rgba(255, 69, 58, 0.15); border-color: rgba(255, 69, 58, 0.3); }
+
+/* ── Sync Indicator ───────────────────────────────────────────────── */
+.sync-status {
+    position: absolute; bottom: 12px; right: 12px;
+    display: flex; align-items: center; gap: 8px;
+    pointer-events: none; opacity: 0; transition: opacity 0.3s;
+}
+.sync-status.visible { opacity: 1; }
+.sync-dot { width: 5px; height: 5px; border-radius: 50%; background-color: var(--lb-text-dim); transition: background-color 0.3s; }
+.sync-status.saving .sync-dot { background-color: var(--lb-accent); box-shadow: 0 0 6px var(--lb-accent); animation: pulse 1.5s infinite; }
+.sync-status.saved .sync-dot { background-color: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
+.sync-status.dirty .sync-dot { background-color: #e67e22; transform: scale(0.9); }
+.sync-status.error .sync-dot { background-color: #e74c3c; }
+
+/* ── Image Resizer Button ────────────────────────────────────────── */
+.img-resizer {
+    position: absolute;
+    width: 28px; height: 28px;
+    background: rgba(var(--lb-accent-rgb), 0.95);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    color: white; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 400;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.img-resizer.visible { display: flex; }
+.img-resizer:hover { transform: scale(1.1); background: var(--lb-accent); }
+.img-resizer svg { width: 14px; height: 14px; }
+
+@keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(0.9); } }
+`;class nt extends HTMLElement{_itemId=0;_content="";_isDirty=!1;_isLocked=!0;_isSaving=!1;_lastLockTime=0;_editor=null;_syncStatus=null;_dock=null;_editorContainer=null;_modal=null;_imgResizer=null;_activeImage=null;_pendingAction=null;static get observedAttributes(){return["item-id"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.loadContent(),window.addEventListener("beforeunload",this.handleBeforeUnload.bind(this)),i.subscribe(()=>{if(this._editor)this._editor.dataset.placeholder=i.t("widget.notepad.placeholder")})}disconnectedCallback(){window.removeEventListener("beforeunload",this.handleBeforeUnload.bind(this))}attributeChangedCallback(o,t,r){if(o==="item-id")this._itemId=parseInt(r),this.loadContent()}handleBeforeUnload(o){if(this._isDirty)o.preventDefault(),o.returnValue=""}render(){if(!this.shadowRoot)return;let o=this._isLocked?"locked":"unlocked",t=this._isLocked?"locked":"",r=this._isLocked?"hidden":"";this.shadowRoot.innerHTML=`
+            <style>
+                ${Wt}
+                /* V13: Override colors for inverted logic */
+                .top-lock-btn {
+                    /* Default (Unlocked/Edit Mode) -> Red/Alert */
+                    color: #ff453a; 
+                    background: rgba(255, 69, 58, 0.15); 
+                    border-color: rgba(255, 69, 58, 0.3);
+                }
+                .top-lock-btn.locked {
+                    /* Locked (Safe Mode) -> Dim/Gray */
+                    color: var(--lb-text-dim); 
+                    background: rgba(0,0,0,0.2); 
+                    border-color: rgba(255,255,255,0.05);
+                }
+                .top-lock-btn.locked:hover {
+                    background: rgba(255,255,255,0.1);
+                    color: var(--lb-text);
+                }
+            </style>
+            
+             <button class="top-lock-btn ${o}" id="lock-btn" title="${this._isLocked?i.t("widget.notepad.tool.unlock"):i.t("widget.notepad.tool.lock")}">
+                ${this._isLocked?_.lock:_.unlock}
+            </button>
+
+            <div class="editor-container ${t}">
+                <div class="editor" contenteditable="${!this._isLocked}" data-placeholder="${i.t("widget.notepad.placeholder")}"></div>
             </div>
-            ${!this.readonly?v`
-                <button class="add-item-btn" @click="${()=>this.addItem()}">
-                    + ${n.t("widget.notepad.checklist.add_item")}
-                </button>
-            `:""}
-        `}}G([R({type:String}),L("design:type",String)],Wo.prototype,"blockId",void 0),G([R({type:Array}),L("design:type",Array)],Wo.prototype,"items",void 0),G([R({type:Boolean}),L("design:type",Boolean)],Wo.prototype,"readonly",void 0),G([Z(),L("design:type",String)],Wo.prototype,"focusedItemId",void 0),Wo=G([Fo("checklist-block")],Wo);var $={bold:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12a4 4 0 0 0 0-8H6v8"/><path d="M15 20a4 4 0 0 0 0-8H6v8Z"/></svg>`,italic:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>`,underline:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>`,strike:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg>`,h1:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="m17 12 3-2v8"/></svg>`,h2:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M21 18h-4c0-4 4-3 4-6 0-1.5-2-2.5-4-1"/></svg>`,list:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,listOrdered:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>`,checklist:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="2"/><path d="m9 12 2 2 4-4"/></svg>`,link:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,image:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`,color:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>`,undo:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>`,redo:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>`,alignLeft:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="12" x2="3" y2="12"/><line x1="17" y1="18" x2="3" y2="18"/></svg>`,alignCenter:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="12" x2="7" y2="12"/><line x1="19" y1="18" x2="5" y2="18"/></svg>`,alignRight:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="9" y2="12"/><line x1="21" y1="18" x2="7" y2="18"/></svg>`,alignJustify:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="3" y2="12"/><line x1="21" y1="18" x2="3" y2="18"/></svg>`,code:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,clear:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>`,edit:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,save:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`,loader:v`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>`},qo=50000,Jo=1e4;class Io extends B{constructor(){super(...arguments);this.itemId=0;this.content="";this.isInternalEditing=!1;this.isDashboardEditing=!1;this.isSaving=!1;this.characterCount=0;this.hasUnsavedChanges=!1;this.checklistBlocks=[]}_unsubscribe;_autosaveTimeout=null;_savePromise=null;_lastSavedContent="";static styles=bo`
-        :host {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            color: var(--text-main);
-            box-sizing: border-box;
-            position: relative;
-        }
 
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            overflow-x: hidden;
-            position: relative;
-            width: 100%;
-            height: 100%;
-            /* Ocultar scrollbar pero mantener funcionalidad */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-        }
+            <div class="glass-dock ${r}" id="glass-dock">
+                <div class="dock-group">
+                    <button class="dock-btn" data-fmt="undo" title="${i.t("widget.notepad.tool.undo")}">${_.undo}</button>
+                    <button class="dock-btn" data-fmt="redo" title="${i.t("widget.notepad.tool.redo")}">${_.redo}</button>
+                </div>
 
-        .container::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
+                <div class="dock-group">
+                    <button class="dock-btn" data-fmt="formatBlock:H1" title="${i.t("widget.notepad.tool.h1")}" style="width:30px;">${_.h1}</button>
+                    <button class="dock-btn" data-fmt="formatBlock:H2" title="${i.t("widget.notepad.tool.h2")}" style="width:30px;">${_.h2}</button>
+                    <button class="dock-btn" data-fmt="formatBlock:H3" title="${i.t("widget.notepad.tool.h3")}" style="width:30px;">${_.h3}</button>
+                </div>
 
-        /* Ocultar scrollbars en todos los elementos scrollables */
-        * {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-        }
-
-        *::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
-
-        /* Toolbar */
-        .toolbar {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            overflow-x: auto;
-            flex-shrink: 0;
-            min-height: 44px;
-            mask-image: linear-gradient(to right, black 92%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to right, black 92%, transparent 100%);
-            transition: background 0.2s ease;
-        }
-        .toolbar:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-        .toolbar::-webkit-scrollbar { height: 0px; }
-
-        .group {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            padding-right: 6px;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            margin-right: 4px;
-            flex-shrink: 0;
-        }
-        .group:last-child { border-right: none; }
-
-        button {
-            background: transparent;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 24px;
-            height: 24px;
-            transition: all 0.15s ease;
-        }
-        button:hover:not(:disabled) {
-            background: var(--surface-hover);
-            color: var(--text-main);
-        }
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        button svg { width: 16px; height: 16px; }
-        button.text-icon { font-weight: 700; font-size: 11px; width: auto; padding: 0 6px;}
-
-        .color-wrapper { position: relative; display: flex; align-items: center; justify-content: center; }
-        .color-input {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        /* Fixed Controls Container */
-        .fixed-controls {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            pointer-events: none;
-            z-index: 200;
-        }
-
-        .fixed-controls > * {
-            pointer-events: auto;
-        }
-
-        /* Character Counter (bottom right, below FAB button) */
-        .char-counter-bottom {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            background: var(--surface);
-            padding: 4px 10px;
-            border-radius: 12px;
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            z-index: 100;
-        }
-        .char-counter-bottom:hover {
-            opacity: 1;
-        }
-        .char-counter-bottom.warning {
-            color: #ffa500;
-            font-weight: 600;
-        }
-        .char-counter-bottom.error {
-            color: #ff4757;
-            font-weight: 700;
-            opacity: 1;
-        }
-
-        /* Autosave Indicator */
-        .autosave-indicator {
-            font-size: 10px;
-            color: var(--text-dim);
-            padding: 0 6px;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .autosave-indicator.visible {
-            opacity: 1;
-        }
-        .autosave-indicator.saving {
-            color: #ffa500;
-        }
-        .autosave-indicator.saved {
-            color: #2ecc71;
-        }
-
-        /* Content Area */
-        .content-area {
-            flex: 1;
-            padding: 16px;
-            padding-bottom: 60px;
-            overflow-y: auto;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
-            color: var(--text-main) !important;
-            word-break: break-word;
-            outline: none;
-            display: block;
-            width: 100%;
-            height: 100%;
-            min-height: 0;
-        }
-
-        .content-area:empty::before {
-            content: attr(data-placeholder);
-            color: rgba(255, 255, 255, 0.3);
-            font-style: italic;
-            pointer-events: none;
-        }
-
-        /* FABs */
-        .fab-btn {
-            position: absolute;
-            bottom: 70px; /* Moved up to make space for counter below */
-            right: 15px;
-            z-index: 100;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--accent, #0078d4);
-            color: #ffffff;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        :host(:hover) .fab-btn:not(:disabled),
-        .fab-btn:focus-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .fab-btn:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            filter: brightness(1.1);
-        }
-
-        .fab-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .edit-btn {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(4px);
-            color: rgba(255,255,255,0.8);
-        }
-        .edit-btn:hover { background: var(--accent, #ff4757); color: white; }
-
-        .save-btn {
-            background: var(--accent, #ff4757);
-            color: white;
-        }
-        .save-btn:hover:not(:disabled) { background: #ff6b81; }
-
-        /* Spinner Animation */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .fab-btn.saving svg {
-            animation: spin 1s linear infinite;
-        }
-
-        /* Typography Styles */
-        h1 { font-size: 1.6em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.2em; margin-top:0;}
-        h2 { font-size: 1.4em; margin-top:0.5em;}
-        a { color: var(--accent, #ff4757); }
-        blockquote { border-left: 3px solid var(--accent, #ff4757); padding-left: 1em; color: rgba(255,255,255,0.6); }
-        img { max-width: 100%; border-radius: 8px; }
-
-        /* Code Block Styles */
-        pre {
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            margin: 8px 0;
-            width: fit-content;
-            max-width: 100%;
-            overflow-x: auto;
-            display: block;
-        }
-        pre code {
-            background: transparent;
-            padding: 0;
-            display: block;
-            width: fit-content;
-        }
-
-        /* Checklist Styles */
-        .content-area input[type="checkbox"] {
-            cursor: pointer;
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-        }
-        .content-area label {
-            flex: 1;
-            min-width: 0;
-        }
-
-        /* Error State */
-        .error-state {
-            padding: 20px;
-            color: var(--text-main);
-            text-align: center;
-        }
-        .error-state h3 {
-            color: #ff4757;
-            margin-top: 0;
-        }
-        .error-state button {
-            margin-top: 16px;
-            padding: 8px 16px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            min-width: auto;
-            height: auto;
-        }
-        .error-state details {
-            margin-top: 16px;
-            text-align: left;
-        }
-        .error-state pre {
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            border-radius: 4px;
-            overflow: auto;
-            font-size: 11px;
-        }
-
-        /* Checklist Block Wrapper */
-        .checklist-block-wrapper {
-            position: relative;
-            width: 85%;
-            margin: 12px 0;
-            padding: 0 8px;
-        }
-
-        .delete-block-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            opacity: 0;
-            transition: opacity 0.2s, background 0.2s;
-            font-size: 20px;
-            line-height: 1;
-            z-index: 10;
-        }
-
-        .checklist-block-wrapper:hover .delete-block-btn {
-            opacity: 1;
-        }
-
-    .delete-block-btn:hover {
-            background: var(--error);
-            color: white;
-        }
-    `;connectedCallback(){super.connectedCallback(),this._unsubscribe=x.subscribe((r)=>{let a=this.isDashboardEditing;if(this.isDashboardEditing=r.isEditing||!1,a!==this.isDashboardEditing)if(this.isDashboardEditing)if(this.hasUnsavedChanges&&this.isInternalEditing)if(confirm(n.t("widget.notepad.confirm_discard")))this.isInternalEditing=!1,this.hasUnsavedChanges=!1,this.cancelAutosave(),this.requestUpdate();else setTimeout(()=>x.toggleEditMode(),0);else this.isInternalEditing=!1,this.cancelAutosave(),this.requestUpdate();else this.loadFromStore()});let o=x.getState();this.isDashboardEditing=o.isEditing||!1,this.loadFromStore()}disconnectedCallback(){if(super.disconnectedCallback(),this._unsubscribe)this._unsubscribe();this.cancelAutosave()}updated(o){if(super.updated(o),o.has("content")&&!this.isInternalEditing&&this.editorElement){let r=oo.sanitize(this.content);if(this.editorElement.innerHTML!==r)this.editorElement.innerHTML=r}}loadFromStore(){if(!this.itemId)return;let r=x.getState().items.find((a)=>a.id===this.itemId);if(r){let a=Ho.getNotepadText(r.content);try{let t=JSON.parse(a);if(t&&typeof t==="object"&&"html"in t)this.content=t.html||"",this.checklistBlocks=t.checklists||[];else this.content=a,this.checklistBlocks=[]}catch{this.content=a,this.checklistBlocks=[]}this.characterCount=this.content.length,this._lastSavedContent=a}}exec(o,r){if(document.execCommand(o,!1,r),this.editorElement)this.editorElement.focus()}cancelAutosave(){if(this._autosaveTimeout)clearTimeout(this._autosaveTimeout),this._autosaveTimeout=null}scheduleAutosave(){if(this.cancelAutosave(),Jo>0)this._autosaveTimeout=setTimeout(()=>{if(this.hasUnsavedChanges)this.saveContent(!0)},Jo)}async saveContent(o=!1){if(this._savePromise){await this._savePromise;return}try{let r=this.shadowRoot?.querySelector(".editor")||this.shadowRoot?.querySelector("[contenteditable]");if(!r)throw Error("Critical: Editor element missing");let a=r.innerHTML;if(a.length>qo){alert(n.t("widget.notepad.error.too_large"));return}let t=oo.sanitize(a),i=JSON.stringify({html:t,checklists:this.checklistBlocks});if(!o)this.content=t,this.characterCount=t.length,this.isInternalEditing=!1,this.hasUnsavedChanges=!1,this.requestUpdate();this._savePromise=(async()=>{if(!this.itemId)return;if(!o)this.isSaving=!0,this.requestUpdate();try{let e=x.getState().items.find((p)=>p.id===this.itemId);if(!e){console.warn("[NotepadWidget] Item no longer exists");return}let s=Ho.setNotepadText(e.content,i);if(await x.updateItem({id:this.itemId,content:s}),this._lastSavedContent=i,o)this.hasUnsavedChanges=!1}catch(e){if(console.error("[NotepadWidget] Save failed:",e),!o)alert(n.t("widget.notepad.error.save")+e)}finally{if(!o)this.isSaving=!1,this.requestUpdate()}})(),await this._savePromise}catch(r){if(console.error("[NotepadWidget] Save error:",r),!o)alert(n.t("widget.notepad.error.save")+r)}finally{this._savePromise=null}}startEditing(){if(this.isDashboardEditing)return;this.isInternalEditing=!0,setTimeout(()=>{if(this.editorElement){this.editorElement.focus();let o=oo.sanitize(this.content);if(this.editorElement.innerHTML!==o)this.editorElement.innerHTML=o;this.focusEditor(!0)}},0)}focusEditor(o=!0){if(!this.editorElement)return;if(this.editorElement.focus(),o){let r=window.getSelection();if(r){let a=document.createRange();a.selectNodeContents(this.editorElement),a.collapse(!1),r.removeAllRanges(),r.addRange(a)}}}handleColor(o){let r=o.target;this.exec("foreColor",r.value)}handleToolbarWheel(o){o.preventDefault();let r=o.currentTarget;r.scrollLeft+=o.deltaY}insertChecklist(){let o="block-"+Math.random().toString(36).substring(2,11),r={id:o,items:[{id:"item-"+Math.random().toString(36).substring(2,11),checked:!1,text:""}]};this.checklistBlocks=[...this.checklistBlocks,r],this.hasUnsavedChanges=!0,this.scheduleAutosave(),this.updateComplete.then(()=>{this.shadowRoot?.querySelector(`checklist-block[block-id="${o}"]`)?.shadowRoot?.querySelector('input[type="text"]')?.focus()})}insertCode(){let r=`<pre><code>${n.t("widget.notepad.prompt.code_block")}</code></pre><p><br></p>`;this.exec("insertHTML",r),setTimeout(()=>{let a=window.getSelection();if(a&&this.editorElement){let t=this.editorElement.querySelectorAll("code"),i=t[t.length-1];if(i){let e=document.createRange();e.selectNodeContents(i),a.removeAllRanges(),a.addRange(e)}}},0)}handleChecklistChange(o){let{blockId:r,items:a}=o.detail;this.checklistBlocks=this.checklistBlocks.map((t)=>t.id===r?{...t,items:a}:t),this.hasUnsavedChanges=!0,this.scheduleAutosave()}deleteChecklistBlock(o){this.checklistBlocks=this.checklistBlocks.filter((r)=>r.id!==o),this.hasUnsavedChanges=!0,this.scheduleAutosave()}handleEditorInput(o){let r=o.target;if(this.characterCount=r.innerHTML.length,this.hasUnsavedChanges=r.innerHTML!==this._lastSavedContent,this.cancelAutosave(),Jo>0)this._autosaveTimeout=setTimeout(()=>{if(this.hasUnsavedChanges)this.saveContent(!0)},Jo)}handleEditorKeydown(o){if(o.ctrlKey||o.metaKey)switch(o.key.toLowerCase()){case"b":o.preventDefault(),this.exec("bold");return;case"i":o.preventDefault(),this.exec("italic");return;case"s":o.preventDefault(),this.saveContent(!1);return;case"z":if(o.shiftKey)o.preventDefault(),this.exec("redo");else o.preventDefault(),this.exec("undo");return;case"k":o.preventDefault();let r=prompt(n.t("widget.notepad.prompt.url"));if(r)this.exec("createLink",r);return}}handlePaste(o){let r=o.clipboardData?.items;if(!r)return;for(let a of Array.from(r))if(a.type.indexOf("image")!==-1){o.preventDefault();let t=a.getAsFile();if(!t)continue;let i=new FileReader;i.onload=(e)=>{let s=e.target?.result;if(s.length>1e6){alert(n.t("widget.notepad.error.image_too_large"));return}this.exec("insertImage",s)},i.readAsDataURL(t);return}}render(){try{if(!this.isInternalEditing){let t=oo.sanitize(this.content)||`<span style='opacity:0.5; font-style:italic; color: var(--text-dim);'>${n.t("widget.notepad.placeholder")}</span>`;return v`
-                    <div style="flex: 1; width: 100%; height: 100%; min-height: 100px; overflow-y: auto; display: flex; flex-direction: column;">
-                        <div
-                            class="viewer"
-                            style="padding: 16px; color: var(--text-main) !important; word-wrap: break-word;"
-                            .innerHTML="${t}"
-                        ></div>
-
-                        <!-- Render checklist blocks in view mode (read-only) -->
-                        ${this.checklistBlocks.map((i)=>v`
-                            <div class="checklist-block-wrapper">
-                                <checklist-block
-                                    .blockId="${i.id}"
-                                    .items="${i.items}"
-                                    .readonly="${!0}"
-                                    @checklist-change="${()=>{}}"
-                                ></checklist-block>
-                            </div>
-                        `)}
-                    </div>
-
-                    <button
-                        class="fab-btn edit-btn"
-                        @click="${this.startEditing}"
-                        ?disabled="${this.isDashboardEditing}"
-                        title="${n.t("widget.notepad.tool.edit")}"
-                    >
-                        ${$.edit}
+                <div class="dock-group">
+                    <button class="dock-btn" data-fmt="bold" title="${i.t("widget.notepad.tool.bold")}">${_.bold}</button>
+                    <button class="dock-btn" data-fmt="italic" title="${i.t("widget.notepad.tool.italic")}">${_.italic}</button>
+                    <button class="dock-btn" data-fmt="underline" title="${i.t("widget.notepad.tool.underline")}">${_.underline}</button>
+                    <button class="dock-btn" data-fmt="strikeThrough" title="${i.t("widget.notepad.tool.strike")}">${_.strike}</button>
+                    <button class="dock-btn" title="${i.t("widget.notepad.tool.color")}">
+                        ${_.color}
+                        <input type="color" id="color-picker">
                     </button>
-                `}let o=this.characterCount>qo*0.9,r=this.characterCount>qo;return v`
-                <div class="container">
-                    <div class="toolbar" @wheel="${this.handleToolbarWheel}" title="${n.t("widget.notepad.tool.scroll_hint")}">
-                        <!-- History Group -->
-                        <div class="group">
-                             <button @click="${(a)=>{a.preventDefault(),this.exec("undo")}}" title="${n.t("widget.notepad.tool.undo")} (Ctrl+Z)">${$.undo}</button>
-                             <button @click="${(a)=>{a.preventDefault(),this.exec("redo")}}" title="${n.t("widget.notepad.tool.redo")} (Ctrl+Shift+Z)">${$.redo}</button>
-                        </div>
-
-                        <!-- Text Group -->
-                        <div class="group">
-                            <button @click="${(a)=>{a.preventDefault(),this.exec("formatBlock","H1")}}" title="${n.t("widget.notepad.tool.h1")}">${$.h1}</button>
-                            <button @click="${(a)=>{a.preventDefault(),this.exec("formatBlock","H2")}}" title="${n.t("widget.notepad.tool.h2")}">${$.h2}</button>
-                            <button @click="${(a)=>{a.preventDefault(),this.exec("bold")}}" title="${n.t("widget.notepad.tool.bold")} (Ctrl+B)">${$.bold}</button>
-                            <button @click="${(a)=>{a.preventDefault(),this.exec("italic")}}" title="${n.t("widget.notepad.tool.italic")} (Ctrl+I)">${$.italic}</button>
-
-                            <!-- Color Picker -->
-                            <div class="color-wrapper">
-                                <button title="${n.t("widget.notepad.tool.color")}">${$.color}</button>
-                                <input type="color" class="color-input" @change="${this.handleColor}" title="${n.t("widget.notepad.tool.color")}" />
-                            </div>
-                        </div>
-
-                        <!-- Paragraph Group -->
-                        <div class="group">
-                             <button @click="${(a)=>{a.preventDefault(),this.exec("justifyLeft")}}" title="${n.t("widget.notepad.tool.align_left")}">${$.alignLeft}</button>
-                             <button @click="${(a)=>{a.preventDefault(),this.exec("justifyCenter")}}" title="${n.t("widget.notepad.tool.align_center")}">${$.alignCenter}</button>
-                             <button @click="${(a)=>{a.preventDefault(),this.exec("justifyRight")}}" title="${n.t("widget.notepad.tool.align_right")}">${$.alignRight}</button>
-                             <button @click="${(a)=>{a.preventDefault(),this.exec("justifyFull")}}" title="${n.t("widget.notepad.tool.align_justify")}">${$.alignJustify}</button>
-                        </div>
-
-                        <div class="group">
-                            <button @click="${(a)=>{a.preventDefault(),this.insertChecklist()}}" title="${n.t("widget.notepad.tool.checklist")}">${$.checklist}</button>
-                            <button @click="${(a)=>{a.preventDefault(),this.exec("insertUnorderedList")}}" title="${n.t("widget.notepad.tool.list_bullet")}">${$.list}</button>
-                            <button @click="${(a)=>{a.preventDefault(),this.exec("insertOrderedList")}}" title="${n.t("widget.notepad.tool.list_ordered")}">${$.listOrdered}</button>
-                        </div>
-
-                        <!-- Insert Group -->
-                        <div class="group">
-                            <button @click="${(a)=>{a.preventDefault(),this.insertCode()}}" title="${n.t("widget.notepad.tool.code")}">${$.code}</button>
-                            <button @click="${(a)=>{a.preventDefault();let t=prompt(n.t("widget.notepad.prompt.url"));if(t)this.exec("createLink",t)}}" title="${n.t("widget.notepad.tool.link")} (Ctrl+K)">${$.link}</button>
-                             <button @click="${(a)=>{a.preventDefault(),this.exec("removeFormat")}}" title="${n.t("widget.notepad.tool.clear_format")}">${$.clear}</button>
-                        </div>
-
-                        <!-- Status Group -->
-                        <div class="autosave-indicator ${this.isSaving?"visible saving":""}">
-                            ${this.isSaving?n.t("widget.notepad.status.saving"):""}
-                        </div>
-                    </div>
-
-                    <div class="content-area editor"
-                         contenteditable="true"
-                         spellcheck="false"
-                         data-placeholder="${n.t("widget.notepad.placeholder")}"
-                         @keydown="${this.handleEditorKeydown}"
-                         @input="${this.handleEditorInput}"
-                         @paste="${this.handlePaste}"
-                         .innerHTML="${oo.sanitize(this.content)}">
-                    </div>
-
-                    <!-- Checklist Blocks (independent from contenteditable) -->
-                    ${this.checklistBlocks.map((a)=>v`
-                        <div class="checklist-block-wrapper">
-                            <checklist-block
-                                .blockId="${a.id}"
-                                .items="${a.items}"
-                                @checklist-change="${this.handleChecklistChange}"
-                            ></checklist-block>
-                            <button
-                                class="delete-block-btn"
-                                @click="${()=>this.deleteChecklistBlock(a.id)}"
-                                title="${n.t("widget.notepad.checklist.delete_block")}"
-                            >
-                                ×
-                            </button>
-                        </div>
-                    `)}
                 </div>
 
-                <!-- Fixed Controls (outside scrollable container) -->
-                <div class="fixed-controls">
-                    <button
-                        class="fab-btn save-btn ${this.isSaving?"saving":""}"
-                        @click="${()=>this.saveContent(!1)}"
-                        ?disabled="${this.isSaving||r}"
-                        title="${n.t("widget.notepad.tool.save")} (Ctrl+S)"
-                    >
-                        ${this.isSaving?$.loader:$.save}
-                    </button>
+                <div class="dock-group">
+                    <button class="dock-btn" data-fmt="justifyLeft" title="${i.t("widget.notepad.tool.left")}">${_.alignLeft}</button>
+                    <button class="dock-btn" data-fmt="justifyCenter" title="${i.t("widget.notepad.tool.center")}">${_.alignCenter}</button>
+                    <button class="dock-btn" data-fmt="justifyRight" title="${i.t("widget.notepad.tool.right")}">${_.alignRight}</button>
+                    <button class="dock-btn" data-fmt="justifyFull" title="${i.t("widget.notepad.tool.justify")}">${_.alignJustify}</button>
+                </div>
 
-                    <!-- Character Counter (bottom right, below save button) -->
-                    <div class="char-counter-bottom ${o?"warning":""} ${r?"error":""}">
-                        ${this.characterCount} / ${qo}
+                <div class="dock-group">
+                     <button class="dock-btn" id="btn-link" title="${i.t("widget.notepad.tool.link")}">${_.link}</button>
+                     <button class="dock-btn" id="btn-image" title="${i.t("widget.notepad.tool.image")}">${_.image}</button>
+                </div>
+
+                <div class="dock-group">
+                    <button class="dock-btn" data-fmt="insertUnorderedList" title="${i.t("widget.notepad.tool.bullet")}">${_.list}</button>
+                    <button class="dock-btn" data-fmt="insertOrderedList" title="${i.t("widget.notepad.tool.number")}">${_.ordered}</button>
+                    <button class="dock-btn" data-fmt="insertChecklist" title="${i.t("widget.notepad.tool.check")}">${_.check}</button>
+                </div>
+
+                <div class="dock-group">
+                    <button class="dock-btn" data-fmt="formatBlock:BLOCKQUOTE" title="${i.t("widget.notepad.tool.quote")}">${_.quote}</button>
+                     <button class="dock-btn" data-fmt="formatBlock:PRE" title="${i.t("widget.notepad.tool.code")}">${_.code}</button>
+                    <button class="dock-btn" data-fmt="removeFormat" title="${i.t("widget.notepad.tool.clear")}">${_.eraser_clean}</button>
+                </div>
+            </div>
+
+            <div class="glass-modal" id="glass-modal">
+                <div class="modal-content">
+                    <div class="modal-title" id="modal-title">Insert</div>
+                    <input type="text" class="modal-input" id="modal-input-1">
+                    <input type="text" class="modal-input" id="modal-input-2" style="display:none">
+                    <div class="modal-actions">
+                        <button class="modal-btn cancel" id="modal-cancel">${i.t("general.cancel")}</button>
+                        <button class="modal-btn confirm" id="modal-confirm">${i.t("general.confirm")}</button>
                     </div>
                 </div>
-                </div>
-            `}catch(o){return console.error("[NotepadWidget] Render error:",o),fetch("/api/log-error",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({component:"NotepadWidget",error:o.toString(),stack:o.stack,itemId:this.itemId})}).catch(()=>{}),v`
-                <div class="error-state">
-                    <h3>${n.t("general.error")}</h3>
-                    <p>${n.t("widget.notepad.error.render")}</p>
-                    <button @click="${()=>this.loadFromStore()}">
-                        ${n.t("general.restore")}
-                    </button>
-                    <details>
-                        <summary>Technical Details</summary>
-                        <pre>${o.toString()}\n${o.stack}</pre>
-                    </details>
-                </div>
-            `}}}G([R({type:Number,attribute:"item-id"}),L("design:type",Number)],Io.prototype,"itemId",void 0),G([R({type:String}),L("design:type",String)],Io.prototype,"content",void 0),G([Z(),L("design:type",Boolean)],Io.prototype,"isInternalEditing",void 0),G([Z(),L("design:type",Boolean)],Io.prototype,"isDashboardEditing",void 0),G([Z(),L("design:type",Boolean)],Io.prototype,"isSaving",void 0),G([Z(),L("design:type",Number)],Io.prototype,"characterCount",void 0),G([Z(),L("design:type",Boolean)],Io.prototype,"hasUnsavedChanges",void 0),G([Z(),L("design:type",typeof Array==="undefined"?Object:Array)],Io.prototype,"checklistBlocks",void 0),G([ga(".content-area.editor"),L("design:type",typeof HTMLElement==="undefined"?Object:HTMLElement)],Io.prototype,"editorElement",void 0),Io=G([Fo("widget-notepad")],Io);m();H();class ba extends HTMLElement{cpuBar=null;ramBar=null;tempBar=null;cpuText=null;ramText=null;tempText=null;_unsubscribe;_unsubscribeI18n;_itemId=0;_interval=1000;lastUpdate=0;static get observedAttributes(){return["item-id","content"]}attributeChangedCallback(o,r,a){if(o==="item-id")this._itemId=parseInt(a);if(o==="content")try{let t=typeof a==="string"?JSON.parse(a):a;if(t&&t.interval)this._interval=parseInt(t.interval)}catch(t){}}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){if(!this.shadowRoot)this.attachShadow({mode:"open"});if(!this.cpuBar)this.render();if(this._unsubscribe)return;if(this._unsubscribe=x.subscribe((o)=>{if(this._itemId){let a=(Array.isArray(o.items)?o.items:[]).find((t)=>t.id===this._itemId);if(a&&a.content)try{let t=typeof a.content==="string"?JSON.parse(a.content):a.content;if(t.interval&&t.interval!==this._interval)this._interval=parseInt(t.interval)}catch(t){}}if(o.stats)this.update(o.stats)}),!this._unsubscribeI18n)this._unsubscribeI18n=n.subscribe(()=>{this.render();let o=x.getState();if(o.stats)this.update(o.stats)})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n()}lastKnownStats={cpu_usage:0,ram_usage:0,temperature:0};update(o){if(!this.shadowRoot)return;let r=Date.now(),a=100;if(r-this.lastUpdate<this._interval-a)return;if(this.lastUpdate=r,typeof o.cpu_usage==="number")this.lastKnownStats.cpu_usage=o.cpu_usage;if(typeof o.ram_usage==="number")this.lastKnownStats.ram_usage=o.ram_usage;if(typeof o.temperature==="number")this.lastKnownStats.temperature=o.temperature;let t=typeof o.cpu_usage==="number"?o.cpu_usage:this.lastKnownStats.cpu_usage,i=typeof o.ram_usage==="number"?o.ram_usage:this.lastKnownStats.ram_usage,e=typeof o.temperature==="number"?o.temperature:this.lastKnownStats.temperature;requestAnimationFrame(()=>{let s=Math.min(100,Math.max(0,Math.round(t)));if(this.cpuBar)this.cpuBar.style.strokeDasharray=`${s}, 100`;if(this.cpuText)this.cpuText.textContent=`${s}%`;let p=Math.min(100,Math.max(0,Math.round(i)));if(this.ramBar)this.ramBar.style.strokeDasharray=`${p}, 100`;if(this.ramText)this.ramText.textContent=`${p}%`;let l=Math.round(e),c=Math.min(100,Math.max(0,l));if(this.tempBar)this.tempBar.style.strokeDasharray=`${c}, 100`;if(this.tempText)this.tempText.textContent=`${l}°C`})}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
+            </div>
+
+            <div class="sync-status" id="sync-status">
+                <div class="sync-dot"></div>
+            </div>
+
+             <button class="img-resizer" id="img-resizer" title="${i.t("widget.notepad.tool.update_image")}">
+                ${_.resize}
+             </button>
+        `,this._editor=this.shadowRoot.querySelector(".editor"),this._editorContainer=this.shadowRoot.querySelector(".editor-container"),this._syncStatus=this.shadowRoot.querySelector("#sync-status"),this._dock=this.shadowRoot.querySelector("#glass-dock"),this._modal=this.shadowRoot.querySelector("#glass-modal"),this._imgResizer=this.shadowRoot.querySelector("#img-resizer"),this.bindEvents()}bindEvents(){if(!this._editor)return;this._editor.addEventListener("input",(r)=>this.handleInput(r)),this._editor.addEventListener("keydown",(r)=>this.handleKeydown(r)),this._editor.addEventListener("paste",(r)=>this.handlePaste(r)),this._editor.addEventListener("click",(r)=>this.handleEditorClick(r));let o=this.shadowRoot?.querySelector("#lock-btn");if(o)o.addEventListener("click",(r)=>{r.preventDefault(),r.stopImmediatePropagation();let a=Date.now();if(a-this._lastLockTime<300)return;this._lastLockTime=a,this.toggleLock()}),o.addEventListener("mousedown",(r)=>r.stopPropagation());this.shadowRoot?.querySelectorAll(".dock-btn[data-fmt]").forEach((r)=>{r.addEventListener("mousedown",(a)=>{if(a.preventDefault(),this._isLocked)return;let n=a.currentTarget.dataset.fmt;if(n)if(n.includes(":")){let[e,s]=n.split(":");this.executeFormat(e,s)}else this.executeFormat(n)})});let t=this.shadowRoot?.querySelector("#color-picker");if(t)t.addEventListener("input",(r)=>{let a=r.target.value;this.executeFormat("foreColor",a)});this.shadowRoot?.querySelector("#btn-link")?.addEventListener("click",()=>this.openModal("link")),this.shadowRoot?.querySelector("#btn-image")?.addEventListener("click",()=>this.openModal("image")),this.shadowRoot?.querySelector("#modal-cancel")?.addEventListener("click",()=>this.closeModal()),this.shadowRoot?.querySelector("#modal-confirm")?.addEventListener("click",()=>this.handleModalConfirm()),this._imgResizer?.addEventListener("click",()=>this.openModal("image-edit")),this._editorContainer?.addEventListener("scroll",()=>this.hideResizer())}openModal(o){if(!this._modal||this._isLocked)return;this._pendingAction=o;let t=this.shadowRoot?.querySelector("#modal-title"),r=this.shadowRoot?.querySelector("#modal-input-1"),a=this.shadowRoot?.querySelector("#modal-input-2");if(r)r.value="";if(a)a.value="";if(o==="link"){if(t)t.textContent="Insert Link";if(r)r.placeholder="https://example.com";if(a)a.style.display="none"}else if(o==="image"){if(t)t.textContent="Insert Image";if(r)r.placeholder="Image URL";if(a)a.style.display="block",a.placeholder="Width (e.g. 100%, 300px)"}else if(o==="image-edit"&&this._activeImage){if(t)t.textContent="Edit Image";if(r)r.placeholder="Image URL",r.value=this._activeImage.src;if(a)a.style.display="block",a.placeholder="Width (e.g. 100%, 300px)",a.value=this._activeImage.style.width||""}this._modal.classList.add("visible"),setTimeout(()=>r?.focus(),50)}closeModal(){if(this._modal)this._modal.classList.remove("visible");this._pendingAction=null,this._editor?.focus()}handleModalConfirm(){let o=this.shadowRoot?.querySelector("#modal-input-1"),t=this.shadowRoot?.querySelector("#modal-input-2"),r=o?.value,a=t?.value;if(!r){this.closeModal();return}if(this._editor?.focus(),this._pendingAction==="link")document.execCommand("createLink",!1,r);else if(this._pendingAction==="image"){let n=a?` style="width:${a}; max-width:100%;"`:' style="max-width:100%;"',e=`<img src="${r}"${n} />`;document.execCommand("insertHTML",!1,e)}else if(this._pendingAction==="image-edit"&&this._activeImage){if(this._activeImage.src=r,a)this._activeImage.style.width=a;else this._activeImage.style.width="";this._isDirty=!0,this.setStatus("dirty")}this.closeModal(),this.hideResizer()}executeFormat(o,t){if(this._editor?.focus(),o==="insertChecklist")document.execCommand("insertHTML",!1,'<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else if(o==="removeFormat")document.execCommand("removeFormat"),document.execCommand("formatBlock",!1,"p"),document.execCommand("unlink");else document.execCommand(o,!1,t)}toggleLock(){if(this._isLocked=!this._isLocked,this.updateLockState(),this._isLocked&&this._isDirty)this.save()}updateLockState(){if(this._editor)this._editor.contentEditable=this._isLocked?"false":"true";let o=this.shadowRoot?.querySelector("#lock-btn");if(o)o.classList.toggle("locked",this._isLocked),o.innerHTML=this._isLocked?_.lock:_.unlock,o.setAttribute("title",this._isLocked?i.t("widget.notepad.tool.unlock"):i.t("widget.notepad.tool.lock"));if(this._dock)if(this._isLocked)this._dock.classList.add("hidden");else this._dock.classList.remove("hidden");if(this._editorContainer)this._editorContainer.classList.toggle("locked",this._isLocked);if(!this._isLocked&&this._editor)setTimeout(()=>{this._editor.focus()},10)}handleInput(o){if(this._isLocked)return;this.hideResizer(),this.checkPlaceholder(),this._isDirty=!0,this.setStatus("dirty"),this.checkInputRules()}handleEditorClick(o){if(this._isLocked)return;let t=o.target;if(t instanceof HTMLImageElement){this._activeImage=t,this.showResizer(t);return}else if(!t.closest("#img-resizer"))this.hideResizer(),this._activeImage=null;if(t.classList.contains("checkbox-char")){if(o.preventDefault(),o.stopPropagation(),t.textContent==="☐")t.textContent="☑",t.classList.add("checked");else t.textContent="☐",t.classList.remove("checked");this._isDirty=!0,this.setStatus("dirty")}}showResizer(o){if(!this._imgResizer)return;let t=o.getBoundingClientRect(),r=this.getBoundingClientRect(),a=t.top-r.top,n=t.right-r.left;this._imgResizer.style.top=`${a+8}px`,this._imgResizer.style.left=`${n-36}px`,this._imgResizer.classList.add("visible")}hideResizer(){this._imgResizer?.classList.remove("visible")}handleKeydown(o){if(this._isLocked)return;if(o.key==="Tab")o.preventDefault(),document.execCommand("insertText",!1,"  ");let t=(a)=>/^[☐☑]/.test(a.trim()),r=(a)=>a.replace(/[☐☑\s\u00A0\u200B]/g,"").length===0;if(o.key==="Enter"){let a=this.getSelection();if(a&&a.anchorNode){let n=a.anchorNode,e=n.nodeType===Node.TEXT_NODE?n.parentElement:n,s=e?.textContent||"";if(t(s)){if(r(s))if(o.preventDefault(),document.execCommand("delete"),e.tagName==="DIV"||e.tagName==="P")e.innerHTML="<br>";else document.execCommand("insertHTML",!1,"<br>");else{o.preventDefault();let d=e;while(d&&d!==this._editor&&d.tagName!=="DIV"&&d.tagName!=="P")d=d.parentElement;if(!d||d===this._editor)document.execCommand("insertHTML",!1,'<br><span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else{let l=document.createElement(d.tagName);if(d instanceof HTMLElement)l.style.textAlign=d.style.textAlign;if(l.innerHTML='<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;',d.nextSibling)d.parentNode?.insertBefore(l,d.nextSibling);else d.parentNode?.appendChild(l);let c=document.createRange();c.selectNodeContents(l),c.collapse(!1);let p=this.getSelection();p.removeAllRanges(),p.addRange(c)}}return}}}if(o.key==="Backspace"){let a=this.getSelection();if(a&&a.isCollapsed&&a.anchorNode){let n=a.anchorNode,e=n.nodeType===Node.TEXT_NODE?n.parentElement:n,s=e?.textContent||"";if(t(s)&&r(s)){if(o.preventDefault(),e.tagName==="DIV"||e.tagName==="P")e.innerHTML="<br>";else document.execCommand("delete");return}if(a.anchorOffset===0){if(n.nodeType===Node.TEXT_NODE){let d=n.previousSibling;if(d&&d.nodeType===Node.ELEMENT_NODE&&d.classList.contains("checkbox-char")){o.preventDefault(),d.remove();return}}}if(n.nodeType===Node.ELEMENT_NODE&&a.anchorOffset>0){let d=n.childNodes[a.anchorOffset-1];if(d&&d.nodeType===Node.ELEMENT_NODE&&d.classList.contains("checkbox-char")){o.preventDefault(),d.remove();return}}}}if((o.ctrlKey||o.metaKey)&&o.key==="s")o.preventDefault(),this.save()}handlePaste(o){if(this._isLocked)return;o.preventDefault();let t=o.clipboardData?.getData("text/plain")??"";document.execCommand("insertText",!1,t)}checkInputRules(){let o=this.getSelection();if(!o||!o.isCollapsed)return;let t=o.anchorNode;if(!t||t.nodeType!==Node.TEXT_NODE)return;let r=t.textContent||"",a=o.anchorOffset,n=r.slice(0,a),e=[{match:/^#\s$/,cmd:"formatBlock",val:"H1"},{match:/^##\s$/,cmd:"formatBlock",val:"H2"},{match:/^###\s$/,cmd:"formatBlock",val:"H3"},{match:/^>\s$/,cmd:"formatBlock",val:"BLOCKQUOTE"},{match:/^-\s$/,cmd:"insertUnorderedList",val:null},{match:/^\*\s$/,cmd:"insertUnorderedList",val:null},{match:/^1\.\s$/,cmd:"insertOrderedList",val:null},{match:/^\[\]\s$/,cmd:"insertChecklist",val:null},{match:/^---\s$/,cmd:"insertHorizontalRule",val:null}];for(let s of e)if(s.match.test(n)){let d=document.createRange();if(d.setStart(t,0),d.setEnd(t,a),d.deleteContents(),s.cmd==="insertChecklist")document.execCommand("insertHTML",!1,'<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else if(s.cmd==="insertHorizontalRule")document.execCommand("insertHorizontalRule");else document.execCommand(s.cmd,!1,s.val);return}}checkPlaceholder(){if(!this._editor)return;if(this._editor.innerText.trim()===""&&this._editor.querySelectorAll("img").length===0)this._editor.classList.add("is-empty");else this._editor.classList.remove("is-empty")}async loadContent(){if(!this._itemId)return;let t=g.getState().items.find((r)=>r.id===this._itemId);if(t){let a=Q.parse(t.content).text||"";if(this._editor&&this._editor.innerHTML!==a)this._editor.innerHTML=a;this._content=a,this.checkPlaceholder()}}async save(o=!1){if(!this._itemId||!this._editor)return;let t=this._editor.innerHTML;this._isSaving=!0,this.setStatus("saving");try{let a=g.getState().items.find((n)=>n.id===this._itemId);if(a){let n=Q.setNotepadText(a.content,t);g.updateItem({...a,content:n}).then(()=>{this._isDirty=!1,this.setStatus("saved")})}}catch(r){console.error(r),this.setStatus("error")}finally{this._isSaving=!1}}setStatus(o){if(!this._syncStatus)return;switch(this._syncStatus.className="sync-status",this._syncStatus.classList.add("visible"),o){case"saving":this._syncStatus.classList.add("saving");break;case"saved":this._syncStatus.classList.add("saved"),setTimeout(()=>{this._syncStatus?.classList.remove("visible")},2000);break;case"dirty":this._syncStatus.classList.add("dirty");break;case"error":this._syncStatus.classList.add("error");break;case"idle":this._syncStatus.classList.remove("visible");break}}getSelection(){let o=this.shadowRoot;return o.getSelection?o.getSelection():document.getSelection()}}customElements.define("widget-notepad",nt);m();L();class et extends HTMLElement{cpuBar=null;ramBar=null;tempBar=null;cpuText=null;ramText=null;tempText=null;_unsubscribe;_unsubscribeI18n;_itemId=0;_interval=1000;lastUpdate=0;static get observedAttributes(){return["item-id","content"]}attributeChangedCallback(o,t,r){if(o==="item-id")this._itemId=parseInt(r);if(o==="content")try{let a=typeof r==="string"?JSON.parse(r):r;if(a&&a.interval)this._interval=parseInt(a.interval)}catch(a){}}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){if(!this.shadowRoot)this.attachShadow({mode:"open"});if(!this.cpuBar)this.render();if(this._unsubscribe)return;if(this._unsubscribe=g.subscribe((o)=>{if(this._itemId){let r=(Array.isArray(o.items)?o.items:[]).find((a)=>a.id===this._itemId);if(r&&r.content)try{let a=typeof r.content==="string"?JSON.parse(r.content):r.content;if(a.interval&&a.interval!==this._interval)this._interval=parseInt(a.interval)}catch(a){}}if(o.stats)this.update(o.stats)}),!this._unsubscribeI18n)this._unsubscribeI18n=i.subscribe(()=>{this.render();let o=g.getState();if(o.stats)this.update(o.stats)})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n()}lastKnownStats={cpu_usage:0,ram_usage:0,temperature:0};update(o){if(!this.shadowRoot)return;let t=Date.now(),r=100;if(t-this.lastUpdate<this._interval-r)return;if(this.lastUpdate=t,typeof o.cpu_usage==="number")this.lastKnownStats.cpu_usage=o.cpu_usage;if(typeof o.ram_usage==="number")this.lastKnownStats.ram_usage=o.ram_usage;if(typeof o.temperature==="number")this.lastKnownStats.temperature=o.temperature;let a=typeof o.cpu_usage==="number"?o.cpu_usage:this.lastKnownStats.cpu_usage,n=typeof o.ram_usage==="number"?o.ram_usage:this.lastKnownStats.ram_usage,e=typeof o.temperature==="number"?o.temperature:this.lastKnownStats.temperature;requestAnimationFrame(()=>{let s=Math.min(100,Math.max(0,Math.round(a)));if(this.cpuBar)this.cpuBar.style.strokeDasharray=`${s}, 100`;if(this.cpuText)this.cpuText.textContent=`${s}%`;let d=Math.min(100,Math.max(0,Math.round(n)));if(this.ramBar)this.ramBar.style.strokeDasharray=`${d}, 100`;if(this.ramText)this.ramText.textContent=`${d}%`;let l=Math.round(e),c=Math.min(100,Math.max(0,l));if(this.tempBar)this.tempBar.style.strokeDasharray=`${c}, 100`;if(this.tempText)this.tempText.textContent=`${l}°C`})}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
             <style>
                 :host {
                     display: flex;
@@ -3036,7 +2713,7 @@ input:checked+.slider:before {
                     </svg>
                     <div class="value-overlay cpu-text">0%</div>
                 </div>
-                <div class="sub">${n.t("widget.telemetry.cpu")}</div>
+                <div class="sub">${i.t("widget.telemetry.cpu")}</div>
             </div>
 
             <!-- RAM -->
@@ -3048,7 +2725,7 @@ input:checked+.slider:before {
                     </svg>
                     <div class="value-overlay ram-text">0%</div>
                 </div>
-                <div class="sub">${n.t("widget.telemetry.ram")}</div>
+                <div class="sub">${i.t("widget.telemetry.ram")}</div>
             </div>
 
             <!-- TEMP -->
@@ -3060,9 +2737,9 @@ input:checked+.slider:before {
                     </svg>
                     <div class="value-overlay temp-text">0°C</div>
                 </div>
-                <div class="sub">${n.t("widget.telemetry.temp")}</div>
+                <div class="sub">${i.t("widget.telemetry.temp")}</div>
             </div>
-        `,this.cpuBar=this.shadowRoot.querySelector(".cpu-bar"),this.ramBar=this.shadowRoot.querySelector(".ram-bar"),this.tempBar=this.shadowRoot.querySelector(".temp-bar"),this.cpuText=this.shadowRoot.querySelector(".cpu-text"),this.ramText=this.shadowRoot.querySelector(".ram-text"),this.tempText=this.shadowRoot.querySelector(".temp-text")}}customElements.define("widget-telemetry",ba);m();H();var ha=new Map,fa=900000,va={widgetId:"weather",latitude:0,longitude:0,city:"",unit:"celsius",showForecast:!1,forecastDays:5};function eo(o){if(o===0)return`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        `,this.cpuBar=this.shadowRoot.querySelector(".cpu-bar"),this.ramBar=this.shadowRoot.querySelector(".ram-bar"),this.tempBar=this.shadowRoot.querySelector(".temp-bar"),this.cpuText=this.shadowRoot.querySelector(".cpu-text"),this.ramText=this.shadowRoot.querySelector(".ram-text"),this.tempText=this.shadowRoot.querySelector(".temp-text")}}customElements.define("widget-telemetry",et);m();L();var st=new Map,lt=900000,dt={widgetId:"weather",latitude:0,longitude:0,city:"",unit:"celsius",showForecast:!1,forecastDays:5};function V(o){if(o===0)return`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <circle cx="32" cy="32" r="11"/>
             <line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/>
             <line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/>
@@ -3101,36 +2778,36 @@ input:checked+.slider:before {
             <polyline points="35,38 28,48 36,48 29,58" stroke-width="2.5"/>
         </svg>`;return`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <path d="M14 40 Q14 32 22 32 Q22 22 34 22 Q46 22 46 32 Q54 32 54 40 Q54 46 46 46 L20 46 Q14 46 14 40Z"/>
-    </svg>`}function So(o){let r={0:"clear_sky",1:"mainly_clear",2:"partly_cloudy",3:"overcast",45:"fog",48:"fog",51:"light_drizzle",53:"drizzle",55:"heavy_drizzle",56:"freezing_drizzle",57:"freezing_drizzle",61:"light_rain",63:"rain",65:"heavy_rain",66:"freezing_rain",67:"freezing_rain",71:"light_snow",73:"snow",75:"heavy_snow",77:"snow_grains",80:"light_showers",81:"showers",82:"heavy_showers",85:"snow_showers",86:"heavy_snow_showers",95:"thunderstorm",96:"thunderstorm_hail",99:"thunderstorm_hail"};return n.t(`widget.weather.${r[o]||"unknown"}`)}function E(o,r){if(r==="fahrenheit")return`${Math.round(o*9/5+32)}°F`;return`${Math.round(o)}°C`}async function mt(o,r){let a=`${o.toFixed(2)},${r.toFixed(2)}`,t=ha.get(a);if(t&&Date.now()-t.timestamp<fa)return t.data;let i=`https://api.open-meteo.com/v1/forecast?latitude=${o}&longitude=${r}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,wind_speed_10m_max&timezone=auto&forecast_days=7`,e=await fetch(i);if(!e.ok)throw Error("Weather API error");let s=await e.json();return ha.set(a,{data:s,timestamp:Date.now()}),s}class _a extends HTMLElement{_config={...va};_itemId=0;_unsubscribe=null;_unsubscribeI18n;_weatherData=null;_refreshTimer=null;_loading=!1;_error=!1;constructor(){super();this.attachShadow({mode:"open"})}static get observedAttributes(){return["item-id"]}attributeChangedCallback(o,r,a){if(o==="item-id")this._itemId=parseInt(a)}connectedCallback(){this.render(),this.loadWeather(),this._refreshTimer=setInterval(()=>this.loadWeather(),fa),this._unsubscribe=x.subscribe((o)=>{if(!this._itemId)return;let r=o.items.find((a)=>a.id===this._itemId);if(!r?.content)return;try{let a=typeof r.content==="string"?JSON.parse(r.content):r.content;if(a.widgetId!=="weather")return;let t=this._config.latitude,i=this._config.longitude;if(this._config={...va,...a},t!==this._config.latitude||i!==this._config.longitude)this.loadWeather();else this.updateDisplay()}catch(a){}}),this._unsubscribeI18n=n.subscribe(()=>this.updateDisplay())}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._refreshTimer)clearInterval(this._refreshTimer)}async loadWeather(){if(!this._config.latitude&&!this._config.longitude){this._loading=!1,this._error=!1,this.updateDisplay();return}this._loading=!0,this._error=!1,this.updateDisplay();try{this._weatherData=await mt(this._config.latitude,this._config.longitude),this._loading=!1}catch(o){this._loading=!1,this._error=!0}this.updateDisplay()}updateDisplay(){let o=this.shadowRoot?.querySelector(".weather-body");if(!o){this.render();return}if(!this._config.latitude&&!this._config.longitude){o.innerHTML=this.emptyState(eo(0),n.t("widget.weather.no_location"));return}if(this._loading){o.innerHTML=this.emptyState(eo(3),n.t("general.loading"),!0);return}if(this._error||!this._weatherData){o.innerHTML=this.emptyState(eo(-1),n.t("general.error"));return}let r=this._weatherData.current_weather,a=this._weatherData.daily,t=this._config.unit||"celsius";if(this._config.showForecast&&a)o.innerHTML=this.forecastView(r,a,t);else o.innerHTML=this.simpleView(r,a,t)}emptyState(o,r,a=!1){return`<div class="state"><div class="state-icon${a?" pulse":""}">${o}</div><span class="state-text">${r}</span></div>`}simpleView(o,r,a){return`
-            <div class="icon-main">${eo(o.weathercode)}</div>
-            <div class="temp-main">${E(o.temperature,a)}</div>
-            <div class="desc">${So(o.weathercode)}</div>
-            ${r?`<div class="minmax"><span class="hi">${E(r.temperature_2m_max[0],a)}</span><span class="lo">${E(r.temperature_2m_min[0],a)}</span></div>`:""}
+    </svg>`}function go(o){let t={0:"clear_sky",1:"mainly_clear",2:"partly_cloudy",3:"overcast",45:"fog",48:"fog",51:"light_drizzle",53:"drizzle",55:"heavy_drizzle",56:"freezing_drizzle",57:"freezing_drizzle",61:"light_rain",63:"rain",65:"heavy_rain",66:"freezing_rain",67:"freezing_rain",71:"light_snow",73:"snow",75:"heavy_snow",77:"snow_grains",80:"light_showers",81:"showers",82:"heavy_showers",85:"snow_showers",86:"heavy_snow_showers",95:"thunderstorm",96:"thunderstorm_hail",99:"thunderstorm_hail"};return i.t(`widget.weather.${t[o]||"unknown"}`)}function E(o,t){if(t==="fahrenheit")return`${Math.round(o*9/5+32)}°F`;return`${Math.round(o)}°C`}async function It(o,t){let r=`${o.toFixed(2)},${t.toFixed(2)}`,a=st.get(r);if(a&&Date.now()-a.timestamp<lt)return a.data;let n=`https://api.open-meteo.com/v1/forecast?latitude=${o}&longitude=${t}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,wind_speed_10m_max&timezone=auto&forecast_days=7`,e=await fetch(n);if(!e.ok)throw Error("Weather API error");let s=await e.json();return st.set(r,{data:s,timestamp:Date.now()}),s}class pt extends HTMLElement{_config={...dt};_itemId=0;_unsubscribe=null;_unsubscribeI18n;_weatherData=null;_refreshTimer=null;_loading=!1;_error=!1;constructor(){super();this.attachShadow({mode:"open"})}static get observedAttributes(){return["item-id"]}attributeChangedCallback(o,t,r){if(o==="item-id")this._itemId=parseInt(r)}connectedCallback(){this.render(),this.loadWeather(),this._refreshTimer=setInterval(()=>this.loadWeather(),lt),this._unsubscribe=g.subscribe((o)=>{if(!this._itemId)return;let t=o.items.find((r)=>r.id===this._itemId);if(!t?.content)return;try{let r=typeof t.content==="string"?JSON.parse(t.content):t.content;if(r.widgetId!=="weather")return;let a=this._config.latitude,n=this._config.longitude;if(this._config={...dt,...r},a!==this._config.latitude||n!==this._config.longitude)this.loadWeather();else this.updateDisplay()}catch(r){}}),this._unsubscribeI18n=i.subscribe(()=>this.updateDisplay())}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._refreshTimer)clearInterval(this._refreshTimer)}async loadWeather(){if(!this._config.latitude&&!this._config.longitude){this._loading=!1,this._error=!1,this.updateDisplay();return}this._loading=!0,this._error=!1,this.updateDisplay();try{this._weatherData=await It(this._config.latitude,this._config.longitude),this._loading=!1}catch(o){this._loading=!1,this._error=!0}this.updateDisplay()}updateDisplay(){let o=this.shadowRoot?.querySelector(".weather-body");if(!o){this.render();return}if(!this._config.latitude&&!this._config.longitude){o.innerHTML=this.emptyState(V(0),i.t("widget.weather.no_location"));return}if(this._loading){o.innerHTML=this.emptyState(V(3),i.t("general.loading"),!0);return}if(this._error||!this._weatherData){o.innerHTML=this.emptyState(V(-1),i.t("general.error"));return}let t=this._weatherData.current_weather,r=this._weatherData.daily,a=this._config.unit||"celsius";if(this._config.showForecast&&r)o.innerHTML=this.forecastView(t,r,a);else o.innerHTML=this.simpleView(t,r,a)}emptyState(o,t,r=!1){return`<div class="state"><div class="state-icon${r?" pulse":""}">${o}</div><span class="state-text">${t}</span></div>`}simpleView(o,t,r){return`
+            <div class="icon-main">${V(o.weathercode)}</div>
+            <div class="temp-main">${E(o.temperature,r)}</div>
+            <div class="desc">${go(o.weathercode)}</div>
+            ${t?`<div class="minmax"><span class="hi">${E(t.temperature_2m_max[0],r)}</span><span class="lo">${E(t.temperature_2m_min[0],r)}</span></div>`:""}
             ${this._config.city?`<div class="city">${this._config.city}</div>`:""}
-        `}forecastView(o,r,a){let t=n.getLocale().code,i=Math.min(this._config.forecastDays||5,r.time.length-1),e="";for(let s=1;s<=i;s++){let p=new Date(r.time[s]+"T00:00:00"),l=p.toLocaleDateString(t,{weekday:"short"}),c=p.toLocaleDateString(t,{weekday:"long",day:"numeric",month:"long"}),d=So(r.weathercode[s]),b=E(r.temperature_2m_max[s],a),h=E(r.temperature_2m_min[s],a),g=r.sunrise?.[s]?.split("T")[1]||"",u=r.sunset?.[s]?.split("T")[1]||"",w=r.wind_speed_10m_max?.[s]!=null?`${Math.round(r.wind_speed_10m_max[s])} km/h`:"";e+=`<div class="fc-day">
+        `}forecastView(o,t,r){let a=i.getLocale().code,n=Math.min(this._config.forecastDays||5,t.time.length-1),e="";for(let s=1;s<=n;s++){let d=new Date(t.time[s]+"T00:00:00"),l=d.toLocaleDateString(a,{weekday:"short"}),c=d.toLocaleDateString(a,{weekday:"long",day:"numeric",month:"long"}),p=go(t.weathercode[s]),v=E(t.temperature_2m_max[s],r),f=E(t.temperature_2m_min[s],r),x=t.sunrise?.[s]?.split("T")[1]||"",u=t.sunset?.[s]?.split("T")[1]||"",y=t.wind_speed_10m_max?.[s]!=null?`${Math.round(t.wind_speed_10m_max[s])} km/h`:"";e+=`<div class="fc-day">
                 <span class="fc-name">${l}</span>
-                <span class="fc-icon">${eo(r.weathercode[s])}</span>
-                <span class="fc-temp">${b}</span>
+                <span class="fc-icon">${V(t.weathercode[s])}</span>
+                <span class="fc-temp">${v}</span>
                 <div class="fc-tooltip">
                     <div class="tt-date">${c}</div>
-                    <div class="tt-desc">${d}</div>
-                    <div class="tt-row"><span class="tt-label">${n.t("widget.weather.max_min")}</span><span>${b} / ${h}</span></div>
-                    ${g?`<div class="tt-row"><span class="tt-label">${n.t("widget.weather.sunrise")}</span><span>${g}</span></div>`:""}
-                    ${u?`<div class="tt-row"><span class="tt-label">${n.t("widget.weather.sunset")}</span><span>${u}</span></div>`:""}
-                    ${w?`<div class="tt-row"><span class="tt-label">${n.t("widget.weather.wind")}</span><span>${w}</span></div>`:""}
+                    <div class="tt-desc">${p}</div>
+                    <div class="tt-row"><span class="tt-label">${i.t("widget.weather.max_min")}</span><span>${v} / ${f}</span></div>
+                    ${x?`<div class="tt-row"><span class="tt-label">${i.t("widget.weather.sunrise")}</span><span>${x}</span></div>`:""}
+                    ${u?`<div class="tt-row"><span class="tt-label">${i.t("widget.weather.sunset")}</span><span>${u}</span></div>`:""}
+                    ${y?`<div class="tt-row"><span class="tt-label">${i.t("widget.weather.wind")}</span><span>${y}</span></div>`:""}
                 </div>
             </div>`}return`
             <div class="fc-header">
-                <div class="fc-h-icon">${eo(o.weathercode)}</div>
+                <div class="fc-h-icon">${V(o.weathercode)}</div>
                 <div class="fc-h-info">
-                    <div class="fc-h-temp">${E(o.temperature,a)}</div>
-                    <div class="fc-h-desc">${So(o.weathercode)}</div>
+                    <div class="fc-h-temp">${E(o.temperature,r)}</div>
+                    <div class="fc-h-desc">${go(o.weathercode)}</div>
                 </div>
                 ${this._config.city?`<div class="fc-h-city">${this._config.city}</div>`:""}
             </div>
-            <div class="minmax compact"><span class="hi">${E(r.temperature_2m_max[0],a)}</span><span class="lo">${E(r.temperature_2m_min[0],a)}</span></div>
+            <div class="minmax compact"><span class="hi">${E(t.temperature_2m_max[0],r)}</span><span class="lo">${E(t.temperature_2m_min[0],r)}</span></div>
             <div class="fc-row">${e}</div>
-        `}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`<style>${kt}</style><div class="weather-body"></div>`,this.updateDisplay()}}var kt=`
+        `}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`<style>${St}</style><div class="weather-body"></div>`,this.updateDisplay()}}var St=`
 :host {
     display: flex;
     flex-direction: column;
@@ -3287,7 +2964,7 @@ input:checked+.slider:before {
     color: var(--text-dim);
     margin-right: 12px;
 }
-`;customElements.define("widget-weather",_a);var ua=`:host {
+`;customElements.define("widget-weather",pt);var ct=`:host {
     /* Fixed Grid System */
     /* --user-preferred-columns is set by JS on :root (Default: 12) */
     --grid-cols: var(--user-preferred-columns, 12);
@@ -3836,12 +3513,12 @@ input:checked+.slider:before {
 .bookmark-grid__nested-content .bookmark-grid__label {
     flex-shrink: 0;
     font-size: clamp(9px, 9cqi, 14px);
-}`;class ka extends HTMLElement{bookmarks=[];allItems=[];isEditing=!1;searchQuery="";_unsubscribe;_unsubscribeI18n;_resizeObserver;_resizeDebounce=null;dragTargetId=null;ghostEl=null;dragOffsetX=0;dragOffsetY=0;isResizing=!1;resizeTargetId=null;initialResizeX=0;initialResizeY=0;initialResizeW=0;initialResizeH=0;currentColWidth=0;currentGridCols=12;isTouchDevice=!1;constructor(){super();this.attachShadow({mode:"open"})}_widgetModal;_boundActionClick=this.handleActionClick.bind(this);_boundMouseMove=this.handleWindowMouseMove.bind(this);_boundMouseUp=this.handleWindowMouseUp.bind(this);applyFilters(){let o=this.isTouchDevice,r=!!this.searchQuery;if(r&&!o)this.classList.add("search-active");else this.classList.remove("search-active");if(o||r)this.bookmarks=this.allItems.filter((a)=>{let t=a.content;if(typeof a.content==="string")try{t=JSON.parse(a.content)}catch{return!1}if(o&&a.type!=="bookmark")return!1;if(o&&t.visibleTouch===!1)return!1;if(r)return(t.label||"").toLowerCase().includes(this.searchQuery);return!0});else this.bookmarks=this.allItems}connectedCallback(){let o=()=>{let a=window.innerWidth<768,t=window.matchMedia("(pointer: coarse)").matches||"ontouchstart"in window||navigator.maxTouchPoints>0;return a&&t},r=()=>{let a=o();if(this.isTouchDevice!==a){if(this.isTouchDevice=a,a)this.classList.add("touch-mode");else this.classList.remove("touch-mode");this.applyFilters(),this.render()}};if(window.addEventListener("resize",r),window.addEventListener("orientationchange",r),this.isTouchDevice=o(),this.isTouchDevice)this.classList.add("touch-mode");this.applyFilters(),this.render(),this.updateGridMetrics(),this._resizeObserver=new ResizeObserver(()=>{if(this._resizeDebounce)return;this._resizeDebounce=setTimeout(()=>{this._resizeDebounce=null,this.updateGridMetrics();let a=this.getBoundingClientRect();x.setGridMetrics(a.width,this.currentGridCols),this.applyFilters(),this.render()},16)}),this._resizeObserver.observe(this),this._unsubscribe=x.subscribe((a)=>{let t=!1;if(this.isEditing!==a.isEditing)this.isEditing=a.isEditing,t=!0;if(this.searchQuery!==a.searchQuery)this.searchQuery=a.searchQuery,t=!0;let i=Array.isArray(a.items)?a.items:[];if(JSON.stringify(this.allItems)!==JSON.stringify(i)||t)this.allItems=i,this.applyFilters(),t=!0;if(t)this.render()}),this.setupDragListeners(),this.setupResizeListeners(),this.setupActionListeners(),xo.start(),this._unsubscribeI18n=n.subscribe(()=>this.render()),Promise.resolve().then(() => (X(),yo)).then(({userStore:a})=>{this._unsubscribeUser=a.subscribe(()=>{requestAnimationFrame(()=>{this.updateGridMetrics(),this.render()})})})}_unsubscribeUser=null;setupActionListeners(){let o=this.shadowRoot;o.removeEventListener("click",this._boundActionClick),o.addEventListener("click",this._boundActionClick)}async handleActionClick(o){if(!this.isEditing)return;let r=o.target;if(!r)return;let a=r.closest(".btn-delete"),t=r.closest(".btn-edit");if(a||t)o.preventDefault(),o.stopPropagation();else if(r.closest("a"))o.preventDefault();if(a){let i=a.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!i)return;let e=parseInt(i.dataset.id||"0"),s=this.allItems.find((d)=>d.id===e);if(!s)return;let p=s.type==="section"?n.t("type.section"):s.type==="widget"?n.t("type.widget"):n.t("type.bookmark"),{eventBus:l,EVENTS:c}=await Promise.resolve().then(() => (Ko(),or));l.emit(c.SHOW_CONFIRMATION,{title:`${n.t("general.delete")} ${p}`,message:n.t("bookmark.delete_confirm_message"),onConfirm:()=>{x.deleteItem(e)}});return}if(t){let i=t.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!i)return;let e=parseInt(i.dataset.id||"0"),s=this.allItems.find((p)=>p.id===e);if(s){let{eventBus:p,EVENTS:l}=await Promise.resolve().then(() => (Ko(),or));if(s.type==="widget")p.emit(l.SHOW_WIDGET_CONFIG,{item:s,type:"widget"});else if(s.type==="section")p.emit(l.SHOW_WIDGET_CONFIG,{item:s,type:"section"});else p.emit(l.SHOW_WIDGET_CONFIG,{item:s,type:"bookmark"})}return}}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._unsubscribeUser)this._unsubscribeUser();if(this._resizeObserver)this._resizeObserver.disconnect();if(this._resizeDebounce)clearTimeout(this._resizeDebounce);if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout);window.removeEventListener("mousemove",this._boundMouseMove),window.removeEventListener("mouseup",this._boundMouseUp),xo.stop()}updateGridMetrics(){let o=this.getBoundingClientRect(),r=getComputedStyle(this),a=r.getPropertyValue("--grid-cols").trim(),t=parseInt(a)||12,i=r.columnGap||r.gap||"16px",e=parseFloat(i)||16;if(o.width<=0){this.currentGridCols=t,this.currentColWidth=100,this.style.setProperty("--current-grid-cols",t.toString()),this.style.setProperty("--row-height","100px");return}let s=(t-1)*e,p=(o.width-s)/t;if(p<10)p=10;this.currentGridCols=t,this.currentColWidth=p,this.style.setProperty("--current-grid-cols",String(t)),this.style.setProperty("--row-height",`${p}px`),this.ensureGridBuffer()}ensureGridBuffer(){if(this.isTouchDevice){this.style.minHeight="";return}let o=0;this.bookmarks.forEach((s)=>{let p=(s.y||1)+(s.h||1);if(p>o)o=p});let a=o+1,t=this.currentColWidth||100,i=16,e=a*t+(a-1)*i;this.style.minHeight=`${e}px`}setupResizeListeners(){window.addEventListener("mousemove",this._boundMouseMove),window.addEventListener("mouseup",this._boundMouseUp),this.shadowRoot.addEventListener("mousedown",(o)=>{let r=o;if(!this.isEditing)return;let a=r.target;if(a.classList.contains("resize-handle")){r.preventDefault(),r.stopPropagation();let t=a.closest(".bookmark-grid__card, .bookmark-grid__section");if(!t||!t.dataset.id)return;let i=parseInt(t.dataset.id),e=this.bookmarks.find((g)=>g.id===i);if(!e)return;this.isResizing=!0,this.resizeTargetId=i,this.initialResizeX=r.clientX,this.initialResizeY=r.clientY,this.initialResizeW=e.w,this.initialResizeH=e.h;let s=this,p=s.getBoundingClientRect(),c=getComputedStyle(s).getPropertyValue("--current-grid-cols").trim(),d=c?parseInt(c,10):9,b=isNaN(d)?9:d,h=16;this.currentColWidth=(p.width-(b-1)*h)/b,this.updateGhost({x:e.x,y:e.y,w:e.w,h:e.h},!0)}})}_updateGhostTimeout=null;handleWindowMouseMove(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)return;this._updateGhostTimeout=setTimeout(()=>{this._updateGhostTimeout=null,this.processResizeMove(o)},16)}processResizeMove(o){if(!this.isResizing||!this.resizeTargetId)return;let r=o.clientX-this.initialResizeX,a=o.clientY-this.initialResizeY,t=Math.round(r/(this.currentColWidth+16)),i=Math.round(a/(this.currentColWidth+16)),e=this.initialResizeW+t,s=this.initialResizeH+i,p=this.bookmarks.find((l)=>l.id===this.resizeTargetId);if(p){let l=this.applyResizeConstraints(e,s,p),c={x:p.x,y:p.y,w:l.w,h:l.h,id:p.id,parent_id:p.parent_id},d=N.calculateDropValidity(c,this.bookmarks,this.currentGridCols);this.updateGhost(c,d.valid)}}applyResizeConstraints(o,r,a){let t=1,i=1;if(a.type==="widget"){let e=a.content;if(typeof a.content==="string")try{e=JSON.parse(a.content)}catch{return{w:Math.max(1,Math.min(12,o)),h:Math.max(1,Math.min(12,r))}}let s=(e.widgetId||"").toLowerCase();if(s==="notepad")t=2,i=2;else if(s==="clock")return{w:2,h:1};else if(s==="telemetry")return{w:2,h:1};let p=Math.max(t,Math.min(12,o)),l=Math.max(i,Math.min(12,r));return{w:p,h:l}}else if(a.type==="section"){let e=Math.max(1,Math.min(12,o)),s=Math.max(1,Math.min(12,r));return{w:e,h:s}}else{let e=Math.max(1,Math.min(2,o)),s=Math.max(1,Math.min(2,r));return{w:e,h:s}}}async handleWindowMouseUp(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout),this._updateGhostTimeout=null;let r=o.clientX-this.initialResizeX,a=o.clientY-this.initialResizeY,t=Math.round(r/(this.currentColWidth+16)),i=Math.round(a/(this.currentColWidth+16)),e=this.initialResizeW+t,s=this.initialResizeH+i,p=this.bookmarks.find((b)=>b.id===this.resizeTargetId);if(!p)return;let l=this.applyResizeConstraints(e,s,p);e=l.w,s=l.h;let c={x:p.x,y:p.y,w:e,h:s,id:p.id,parent_id:p.parent_id};if(N.calculateDropValidity(c,this.bookmarks,this.currentGridCols).valid&&(p.w!==e||p.h!==s)){if(p.type==="section"){let b=e*s,h=this.bookmarks.filter((g)=>g.parent_id===p.id);if(h.sort((g,u)=>g.y-u.y||g.x-u.x),h.length>b){let g=h.slice(b),u=[...this.bookmarks],w=g.map((k)=>{let f=N.findFirstAvailableSlot(k.w,k.h,u,this.currentGridCols);return u.push({...k,x:f.x,y:f.y,parent_id:void 0}),{id:k.id,x:f.x,y:f.y,parent_id:void 0}});await Promise.all(w.map((k)=>x.updateItem(k)))}}await x.resizeItem(p.id,e,s)}if(this.isResizing=!1,this.resizeTargetId=null,this.ghostEl)this.ghostEl.style.display="none"}setupDragListeners(){let o=this.shadowRoot,r=this;o.addEventListener("dragstart",(t)=>{let i=t;if(!this.isEditing){i.preventDefault();return}let e=i.target.closest('[draggable="true"]');if(e&&e.dataset.id){this.dragTargetId=parseInt(e.dataset.id),i.dataTransfer.effectAllowed="move",e.style.opacity="0.5";let s=e.getBoundingClientRect();if(this.dragOffsetX=i.clientX-s.left,this.dragOffsetY=i.clientY-s.top,i.dataTransfer)i.dataTransfer.setDragImage(e,this.dragOffsetX,this.dragOffsetY)}}),o.addEventListener("dragend",(t)=>{let i=t.target.closest('[draggable="true"]');if(i)i.style.opacity="1";if(this.dragTargetId=null,this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((s)=>s.classList.remove("drop-target"))});let a=null;r.addEventListener("dragover",(t)=>{let i=t;if(!this.isEditing||!this.dragTargetId)return;if(i.preventDefault(),i.dataTransfer.dropEffect="move",a)return;a=setTimeout(()=>{a=null,this.processDragOver(i,r)},16)}),r.addEventListener("drop",async(t)=>{let i=t;if(a)clearTimeout(a),a=null;await this.handleDrop(i,r)})}processDragOver(o,r){let i=document.querySelector(".main-content");if(i){let z=i.getBoundingClientRect(),go=o.clientY;if(go>z.bottom-100)i.scrollBy(0,15);else if(go<z.top+100)i.scrollBy(0,-15)}let e=r.getBoundingClientRect(),s=this.currentGridCols||12,p=e.width,l=16,c=(p-(s-1)*l)/s,d=this.bookmarks.find((z)=>z.id===this.dragTargetId);if(!d)return;let b=o.clientX-this.dragOffsetX,h=o.clientY-this.dragOffsetY,g=b-e.left,u=h-e.top,w=Math.floor(g/(c+l)),k=Math.floor(u/(c+l)),f=Math.max(1,Math.min(s-d.w+1,w+1)),J=Math.max(1,k+1),A={x:f,y:J,w:d.w,h:d.h,id:d.id,parent_id:d.parent_id},_=N.calculateDropValidity(A,this.bookmarks,s),U=!this.bookmarks.some((z)=>{if(z.id===d.id)return!1;if(z.parent_id!==d.parent_id&&!_.targetGroup)return!1;let go=z.x||1,nr=z.y||1,Va=z.w||1,Ea=z.h||1;if(_.targetGroup&&z.id===_.targetGroup.id)return!1;return f<go+Va&&f+d.w>go&&J<nr+Ea&&J+d.h>nr})&&_.valid;if(this.updateGhost(A,U),this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((z)=>z.classList.remove("drop-target")),_.targetGroup&&U){let z=this.shadowRoot.querySelector(`.bookmark-grid__section[data-id="${_.targetGroup.id}"]`);if(z)z.classList.add("drop-target")}}async handleDrop(o,r){if(!this.isEditing||!this.dragTargetId)return;o.preventDefault();let a=this.bookmarks.find((_)=>_.id===this.dragTargetId);if(!a)return;let t=r.getBoundingClientRect(),i=this.currentGridCols||12,e=t.width,s=16,p=(e-(i-1)*s)/i,l=o.clientX-this.dragOffsetX,c=o.clientY-this.dragOffsetY,d=l-t.left,b=c-t.top,h=Math.floor(d/(p+s)),g=Math.floor(b/(p+s)),u=Math.max(1,Math.min(i-a.w+1,h+1)),w=Math.max(1,g+1),k={x:u,y:w,w:a.w,h:a.h,id:a.id,parent_id:a.parent_id},f=N.calculateDropValidity(k,this.bookmarks,i);if(this.bookmarks.some((_)=>{if(_.id===a.id)return!1;if(_.parent_id!==a.parent_id&&!f.targetGroup)return!1;let co=_.x||1,U=_.y||1,ir=_.w||1,z=_.h||1;if(f.targetGroup&&_.id===f.targetGroup.id)return!1;return u<co+ir&&u+a.w>co&&w<U+z&&w+a.h>U})&&!f.targetGroup){if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".drop-target").forEach((_)=>_.classList.remove("drop-target"));return}if(f.valid){let _={id:a.id,x:f.x,y:f.y};if(f.targetGroup)_.parent_id=f.targetGroup.id,_.x=f.x-f.targetGroup.x+1,_.y=f.y-f.targetGroup.y+1;else _.parent_id=void 0;await x.updateItem(_)}if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((_)=>_.classList.remove("drop-target"))}updateGhost(o,r){if(!this.ghostEl)this.ghostEl=this.shadowRoot.getElementById("ghost-element");if(!this.ghostEl)return;if(this.ghostEl.style.display="block",this.ghostEl.style.setProperty("--ghost-x",String(o.x)),this.ghostEl.style.setProperty("--ghost-y",String(o.y)),this.ghostEl.style.setProperty("--ghost-w",String(o.w)),this.ghostEl.style.setProperty("--ghost-h",String(o.h)),r)this.ghostEl.classList.remove("invalid");else this.ghostEl.classList.add("invalid")}render(){if(this.isEditing)this.classList.add("edit-mode");else this.classList.remove("edit-mode");this.shadowRoot.innerHTML=`
-            <style>${ua}</style>
-            ${Or({bookmarks:this.bookmarks,isEditing:this.isEditing,isSearching:!!this.searchQuery,isTouchDevice:this.isTouchDevice,maxCols:this.currentGridCols})}
-        `,this.setupActionListeners(),this.ghostEl=this.shadowRoot.getElementById("ghost-element")}}if(!customElements.get("bookmark-grid"))customElements.define("bookmark-grid",ka);var wa=()=>`
+}`;class xt extends HTMLElement{bookmarks=[];allItems=[];isEditing=!1;searchQuery="";_unsubscribe;_unsubscribeI18n;_resizeObserver;_resizeDebounce=null;dragTargetId=null;ghostEl=null;dragOffsetX=0;dragOffsetY=0;isResizing=!1;resizeTargetId=null;initialResizeX=0;initialResizeY=0;initialResizeW=0;initialResizeH=0;currentColWidth=0;currentGridCols=12;isTouchDevice=!1;constructor(){super();this.attachShadow({mode:"open"})}_widgetModal;_boundActionClick=this.handleActionClick.bind(this);_boundMouseMove=this.handleWindowMouseMove.bind(this);_boundMouseUp=this.handleWindowMouseUp.bind(this);applyFilters(){let o=this.isTouchDevice,t=!!this.searchQuery;if(t&&!o)this.classList.add("search-active");else this.classList.remove("search-active");if(o||t)this.bookmarks=this.allItems.filter((r)=>{let a=r.content;if(typeof r.content==="string")try{a=JSON.parse(r.content)}catch{return!1}if(o&&r.type!=="bookmark")return!1;if(o&&a.visibleTouch===!1)return!1;if(t)return(a.label||"").toLowerCase().includes(this.searchQuery);return!0});else this.bookmarks=this.allItems}connectedCallback(){let o=()=>{let r=window.innerWidth<768,a=window.matchMedia("(pointer: coarse)").matches||"ontouchstart"in window||navigator.maxTouchPoints>0;return r&&a},t=()=>{let r=o();if(this.isTouchDevice!==r){if(this.isTouchDevice=r,r)this.classList.add("touch-mode");else this.classList.remove("touch-mode");this.applyFilters(),this.render()}};if(window.addEventListener("resize",t),window.addEventListener("orientationchange",t),this.isTouchDevice=o(),this.isTouchDevice)this.classList.add("touch-mode");this.applyFilters(),this.render(),this.updateGridMetrics(),this._resizeObserver=new ResizeObserver(()=>{if(this._resizeDebounce)return;this._resizeDebounce=setTimeout(()=>{this._resizeDebounce=null,this.updateGridMetrics();let r=this.getBoundingClientRect();g.setGridMetrics(r.width,this.currentGridCols),this.applyFilters(),this.render()},16)}),this._resizeObserver.observe(this),this._unsubscribe=g.subscribe((r)=>{let a=!1;if(this.isEditing!==r.isEditing)this.isEditing=r.isEditing,a=!0;if(this.searchQuery!==r.searchQuery)this.searchQuery=r.searchQuery,a=!0;let n=Array.isArray(r.items)?r.items:[];if(JSON.stringify(this.allItems)!==JSON.stringify(n)||a)this.allItems=n,this.applyFilters(),a=!0;if(a)this.render()}),this.setupDragListeners(),this.setupResizeListeners(),this.setupActionListeners(),W.start(),this._unsubscribeI18n=i.subscribe(()=>this.render()),Promise.resolve().then(() => (K(),S)).then(({userStore:r})=>{this._unsubscribeUser=r.subscribe(()=>{requestAnimationFrame(()=>{this.updateGridMetrics(),this.render()})})})}_unsubscribeUser=null;setupActionListeners(){let o=this.shadowRoot;o.removeEventListener("click",this._boundActionClick),o.addEventListener("click",this._boundActionClick)}async handleActionClick(o){if(!this.isEditing)return;let t=o.target;if(!t)return;let r=t.closest(".btn-delete"),a=t.closest(".btn-edit");if(r||a)o.preventDefault(),o.stopPropagation();else if(t.closest("a"))o.preventDefault();if(r){let n=r.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!n)return;let e=parseInt(n.dataset.id||"0"),s=this.allItems.find((p)=>p.id===e);if(!s)return;let d=s.type==="section"?i.t("type.section"):s.type==="widget"?i.t("type.widget"):i.t("type.bookmark"),{eventBus:l,EVENTS:c}=await Promise.resolve().then(() => (oo(),xo));l.emit(c.SHOW_CONFIRMATION,{title:`${i.t("general.delete")} ${d}`,message:i.t("bookmark.delete_confirm_message"),onConfirm:()=>{g.deleteItem(e)}});return}if(a){let n=a.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!n)return;let e=parseInt(n.dataset.id||"0"),s=this.allItems.find((d)=>d.id===e);if(s){let{eventBus:d,EVENTS:l}=await Promise.resolve().then(() => (oo(),xo));if(s.type==="widget")d.emit(l.SHOW_WIDGET_CONFIG,{item:s,type:"widget"});else if(s.type==="section")d.emit(l.SHOW_WIDGET_CONFIG,{item:s,type:"section"});else d.emit(l.SHOW_WIDGET_CONFIG,{item:s,type:"bookmark"})}return}}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._unsubscribeUser)this._unsubscribeUser();if(this._resizeObserver)this._resizeObserver.disconnect();if(this._resizeDebounce)clearTimeout(this._resizeDebounce);if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout);window.removeEventListener("mousemove",this._boundMouseMove),window.removeEventListener("mouseup",this._boundMouseUp),W.stop()}updateGridMetrics(){let o=this.getBoundingClientRect(),t=getComputedStyle(this),r=t.getPropertyValue("--grid-cols").trim(),a=parseInt(r)||12,n=t.columnGap||t.gap||"16px",e=parseFloat(n)||16;if(o.width<=0){this.currentGridCols=a,this.currentColWidth=100,this.style.setProperty("--current-grid-cols",a.toString()),this.style.setProperty("--row-height","100px");return}let s=(a-1)*e,d=(o.width-s)/a;if(d<10)d=10;this.currentGridCols=a,this.currentColWidth=d,this.style.setProperty("--current-grid-cols",String(a)),this.style.setProperty("--row-height",`${d}px`),this.ensureGridBuffer()}ensureGridBuffer(){if(this.isTouchDevice){this.style.minHeight="";return}let o=0;this.bookmarks.forEach((s)=>{let d=(s.y||1)+(s.h||1);if(d>o)o=d});let r=o+1,a=this.currentColWidth||100,n=16,e=r*a+(r-1)*n;this.style.minHeight=`${e}px`}setupResizeListeners(){window.addEventListener("mousemove",this._boundMouseMove),window.addEventListener("mouseup",this._boundMouseUp),this.shadowRoot.addEventListener("mousedown",(o)=>{let t=o;if(!this.isEditing)return;let r=t.target;if(r.classList.contains("resize-handle")){t.preventDefault(),t.stopPropagation();let a=r.closest(".bookmark-grid__card, .bookmark-grid__section");if(!a||!a.dataset.id)return;let n=parseInt(a.dataset.id),e=this.bookmarks.find((x)=>x.id===n);if(!e)return;this.isResizing=!0,this.resizeTargetId=n,this.initialResizeX=t.clientX,this.initialResizeY=t.clientY,this.initialResizeW=e.w,this.initialResizeH=e.h;let s=this,d=s.getBoundingClientRect(),c=getComputedStyle(s).getPropertyValue("--current-grid-cols").trim(),p=c?parseInt(c,10):9,v=isNaN(p)?9:p,f=16;this.currentColWidth=(d.width-(v-1)*f)/v,this.updateGhost({x:e.x,y:e.y,w:e.w,h:e.h},!0)}})}_updateGhostTimeout=null;handleWindowMouseMove(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)return;this._updateGhostTimeout=setTimeout(()=>{this._updateGhostTimeout=null,this.processResizeMove(o)},16)}processResizeMove(o){if(!this.isResizing||!this.resizeTargetId)return;let t=o.clientX-this.initialResizeX,r=o.clientY-this.initialResizeY,a=Math.round(t/(this.currentColWidth+16)),n=Math.round(r/(this.currentColWidth+16)),e=this.initialResizeW+a,s=this.initialResizeH+n,d=this.bookmarks.find((l)=>l.id===this.resizeTargetId);if(d){let l=this.applyResizeConstraints(e,s,d),c={x:d.x,y:d.y,w:l.w,h:l.h,id:d.id,parent_id:d.parent_id},p=F.calculateDropValidity(c,this.bookmarks,this.currentGridCols);this.updateGhost(c,p.valid)}}applyResizeConstraints(o,t,r){let a=1,n=1;if(r.type==="widget"){let e=r.content;if(typeof r.content==="string")try{e=JSON.parse(r.content)}catch{return{w:Math.max(1,Math.min(12,o)),h:Math.max(1,Math.min(12,t))}}let s=(e.widgetId||"").toLowerCase();if(s==="notepad")a=2,n=2;else if(s==="clock")return{w:2,h:1};else if(s==="telemetry")return{w:2,h:1};let d=Math.max(a,Math.min(12,o)),l=Math.max(n,Math.min(12,t));return{w:d,h:l}}else if(r.type==="section"){let e=Math.max(1,Math.min(12,o)),s=Math.max(1,Math.min(12,t));return{w:e,h:s}}else{let e=Math.max(1,Math.min(2,o)),s=Math.max(1,Math.min(2,t));return{w:e,h:s}}}async handleWindowMouseUp(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout),this._updateGhostTimeout=null;let t=o.clientX-this.initialResizeX,r=o.clientY-this.initialResizeY,a=Math.round(t/(this.currentColWidth+16)),n=Math.round(r/(this.currentColWidth+16)),e=this.initialResizeW+a,s=this.initialResizeH+n,d=this.bookmarks.find((v)=>v.id===this.resizeTargetId);if(!d)return;let l=this.applyResizeConstraints(e,s,d);e=l.w,s=l.h;let c={x:d.x,y:d.y,w:e,h:s,id:d.id,parent_id:d.parent_id};if(F.calculateDropValidity(c,this.bookmarks,this.currentGridCols).valid&&(d.w!==e||d.h!==s)){if(d.type==="section"){let v=e*s,f=this.bookmarks.filter((x)=>x.parent_id===d.id);if(f.sort((x,u)=>x.y-u.y||x.x-u.x),f.length>v){let x=f.slice(v),u=[...this.bookmarks],y=x.map((k)=>{let b=F.findFirstAvailableSlot(k.w,k.h,u,this.currentGridCols);return u.push({...k,x:b.x,y:b.y,parent_id:void 0}),{id:k.id,x:b.x,y:b.y,parent_id:void 0}});await Promise.all(y.map((k)=>g.updateItem(k)))}}await g.resizeItem(d.id,e,s)}if(this.isResizing=!1,this.resizeTargetId=null,this.ghostEl)this.ghostEl.style.display="none"}setupDragListeners(){let o=this.shadowRoot,t=this;o.addEventListener("dragstart",(a)=>{let n=a;if(!this.isEditing){n.preventDefault();return}let e=n.target.closest('[draggable="true"]');if(e&&e.dataset.id){this.dragTargetId=parseInt(e.dataset.id),n.dataTransfer.effectAllowed="move",e.style.opacity="0.5";let s=e.getBoundingClientRect();if(this.dragOffsetX=n.clientX-s.left,this.dragOffsetY=n.clientY-s.top,n.dataTransfer)n.dataTransfer.setDragImage(e,this.dragOffsetX,this.dragOffsetY)}}),o.addEventListener("dragend",(a)=>{let n=a.target.closest('[draggable="true"]');if(n)n.style.opacity="1";if(this.dragTargetId=null,this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((s)=>s.classList.remove("drop-target"))});let r=null;t.addEventListener("dragover",(a)=>{let n=a;if(!this.isEditing||!this.dragTargetId)return;if(n.preventDefault(),n.dataTransfer.dropEffect="move",r)return;r=setTimeout(()=>{r=null,this.processDragOver(n,t)},16)}),t.addEventListener("drop",async(a)=>{let n=a;if(r)clearTimeout(r),r=null;await this.handleDrop(n,t)})}processDragOver(o,t){let n=document.querySelector(".main-content");if(n){let $=n.getBoundingClientRect(),D=o.clientY;if(D>$.bottom-100)n.scrollBy(0,15);else if(D<$.top+100)n.scrollBy(0,-15)}let e=t.getBoundingClientRect(),s=this.currentGridCols||12,d=e.width,l=16,c=(d-(s-1)*l)/s,p=this.bookmarks.find(($)=>$.id===this.dragTargetId);if(!p)return;let v=o.clientX-this.dragOffsetX,f=o.clientY-this.dragOffsetY,x=v-e.left,u=f-e.top,y=Math.floor(x/(c+l)),k=Math.floor(u/(c+l)),b=Math.max(1,Math.min(s-p.w+1,y+1)),A=Math.max(1,k+1),R={x:b,y:A,w:p.w,h:p.h,id:p.id,parent_id:p.parent_id},h=F.calculateDropValidity(R,this.bookmarks,s),J=!this.bookmarks.some(($)=>{if($.id===p.id)return!1;if($.parent_id!==p.parent_id&&!h.targetGroup)return!1;let D=$.x||1,_o=$.y||1,Et=$.w||1,Jt=$.h||1;if(h.targetGroup&&$.id===h.targetGroup.id)return!1;return b<D+Et&&b+p.w>D&&A<_o+Jt&&A+p.h>_o})&&h.valid;if(this.updateGhost(R,J),this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach(($)=>$.classList.remove("drop-target")),h.targetGroup&&J){let $=this.shadowRoot.querySelector(`.bookmark-grid__section[data-id="${h.targetGroup.id}"]`);if($)$.classList.add("drop-target")}}async handleDrop(o,t){if(!this.isEditing||!this.dragTargetId)return;o.preventDefault();let r=this.bookmarks.find((h)=>h.id===this.dragTargetId);if(!r)return;let a=t.getBoundingClientRect(),n=this.currentGridCols||12,e=a.width,s=16,d=(e-(n-1)*s)/n,l=o.clientX-this.dragOffsetX,c=o.clientY-this.dragOffsetY,p=l-a.left,v=c-a.top,f=Math.floor(p/(d+s)),x=Math.floor(v/(d+s)),u=Math.max(1,Math.min(n-r.w+1,f+1)),y=Math.max(1,x+1),k={x:u,y,w:r.w,h:r.h,id:r.id,parent_id:r.parent_id},b=F.calculateDropValidity(k,this.bookmarks,n);if(this.bookmarks.some((h)=>{if(h.id===r.id)return!1;if(h.parent_id!==r.parent_id&&!b.targetGroup)return!1;let P=h.x||1,J=h.y||1,uo=h.w||1,$=h.h||1;if(b.targetGroup&&h.id===b.targetGroup.id)return!1;return u<P+uo&&u+r.w>P&&y<J+$&&y+r.h>J})&&!b.targetGroup){if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".drop-target").forEach((h)=>h.classList.remove("drop-target"));return}if(b.valid){let h={id:r.id,x:b.x,y:b.y};if(b.targetGroup)h.parent_id=b.targetGroup.id,h.x=b.x-b.targetGroup.x+1,h.y=b.y-b.targetGroup.y+1;else h.parent_id=void 0;await g.updateItem(h)}if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((h)=>h.classList.remove("drop-target"))}updateGhost(o,t){if(!this.ghostEl)this.ghostEl=this.shadowRoot.getElementById("ghost-element");if(!this.ghostEl)return;if(this.ghostEl.style.display="block",this.ghostEl.style.setProperty("--ghost-x",String(o.x)),this.ghostEl.style.setProperty("--ghost-y",String(o.y)),this.ghostEl.style.setProperty("--ghost-w",String(o.w)),this.ghostEl.style.setProperty("--ghost-h",String(o.h)),t)this.ghostEl.classList.remove("invalid");else this.ghostEl.classList.add("invalid")}render(){if(this.isEditing)this.classList.add("edit-mode");else this.classList.remove("edit-mode");this.shadowRoot.innerHTML=`
+            <style>${ct}</style>
+            ${rt({bookmarks:this.bookmarks,isEditing:this.isEditing,isSearching:!!this.searchQuery,isTouchDevice:this.isTouchDevice,maxCols:this.currentGridCols})}
+        `,this.setupActionListeners(),this.ghostEl=this.shadowRoot.getElementById("ghost-element")}}if(!customElements.get("bookmark-grid"))customElements.define("bookmark-grid",xt);var bt=()=>`
     <div class="toast-container"></div>
-`;var ya=`.toast-container {
+`;var ht=`.toast-container {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -3876,10 +3553,10 @@ input:checked+.slider:before {
 
 .toast--error {
     border-left-color: var(--danger-color);
-}`;class $a extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),window.notifier=this,window.addEventListener("drawer-open",()=>this.shift(!0)),window.addEventListener("drawer-close",()=>this.shift(!1))}shift(o){let r=this.shadowRoot.querySelector(".toast-container");if(r)if(o)r.classList.add("toast-container--shifted");else r.classList.remove("toast-container--shifted")}show(o,r="success"){let a=this.shadowRoot.querySelector(".toast-container");if(!a)return;let t=document.createElement("div");t.className=`toast toast--${r}`,t.textContent=o,a.appendChild(t),requestAnimationFrame(()=>{t.style.opacity="1",t.style.transform="translateY(0)"}),setTimeout(()=>{t.style.opacity="0",t.style.transform="translateY(20px)",setTimeout(()=>t.remove(),300)},3000)}render(){this.shadowRoot.innerHTML=`
-            <style>${ya}</style>
-            ${wa()}
-        `}}if(!customElements.get("app-notifier"))customElements.define("app-notifier",$a);m();var za=()=>`
+}`;class vt extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),window.notifier=this,window.addEventListener("drawer-open",()=>this.shift(!0)),window.addEventListener("drawer-close",()=>this.shift(!1))}shift(o){let t=this.shadowRoot.querySelector(".toast-container");if(t)if(o)t.classList.add("toast-container--shifted");else t.classList.remove("toast-container--shifted")}show(o,t="success"){let r=this.shadowRoot.querySelector(".toast-container");if(!r)return;let a=document.createElement("div");a.className=`toast toast--${t}`,a.textContent=o,r.appendChild(a),requestAnimationFrame(()=>{a.style.opacity="1",a.style.transform="translateY(0)"}),setTimeout(()=>{a.style.opacity="0",a.style.transform="translateY(20px)",setTimeout(()=>a.remove(),300)},3000)}render(){this.shadowRoot.innerHTML=`
+            <style>${ht}</style>
+            ${bt()}
+        `}}if(!customElements.get("app-notifier"))customElements.define("app-notifier",vt);m();var ft=()=>`
     <div class="icon-picker">
         <div class="icon-picker__header">
             <div id="selected-container"></div>
@@ -3887,13 +3564,13 @@ input:checked+.slider:before {
                 <input type="text"
                        id="icon-search"
                        class="icon-picker__search-input"
-                       placeholder="${n.t("general.search")}" />
+                       placeholder="${i.t("general.search")}" />
             </div>
         </div>
 
         <div id="grid-container" class="icon-picker__grid"></div>
     </div>
-`,ja=(o)=>o?`
+`,ut=(o)=>o?`
     <div class="icon-picker__selected">
         <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${o}.png"
              alt="${o}"
@@ -3903,13 +3580,13 @@ input:checked+.slider:before {
     <div class="icon-picker__placeholder">
         <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
     </div>
-`,Ga=(o,r,a)=>{if(a)return`<div class="icon-picker__loading">${n.t("general.loading")}</div>`;if(o.length===0)return`<div class="icon-picker__empty">${n.t("general.no_icons")}</div>`;return o.map((t)=>`
-        <div class="icon-picker__item ${r===t.name?"icon-picker__item--selected":""}"
-             data-icon="${t.name}"
-             title="${t.name}">
-            <img src="${t.url}" alt="${t.name}" loading="lazy" />
+`,_t=(o,t,r)=>{if(r)return`<div class="icon-picker__loading">${i.t("general.loading")}</div>`;if(o.length===0)return`<div class="icon-picker__empty">${i.t("general.no_icons")}</div>`;return o.map((a)=>`
+        <div class="icon-picker__item ${t===a.name?"icon-picker__item--selected":""}"
+             data-icon="${a.name}"
+             title="${a.name}">
+            <img src="${a.url}" alt="${a.name}" loading="lazy" />
         </div>
-    `).join("")};class La{icons=[];loaded=!1;loading=!1;BASE_URL="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons";FALLBACK_URL="https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main";async loadIcons(){if(this.loaded)return this.icons;if(this.loading)return await new Promise((o)=>setTimeout(o,100)),this.loadIcons();this.loading=!0;try{let o=await fetch(`${this.BASE_URL}/tree.json`);if(!o.ok)console.log("[IconService] CDN failed, trying GitHub raw"),o=await fetch(`${this.FALLBACK_URL}/tree.json`);if(!o.ok)throw Error("Failed to fetch icon list");let r=await o.json(),a=Array.isArray(r)?r:r.png||[];if(Array.isArray(a)&&a.length>0)this.icons=a.filter((t)=>t.endsWith(".png")||t.endsWith(".svg")).map((t)=>{let i=t.replace(/\.(png|svg)$/,"");return{name:i,url:`${this.BASE_URL}/png/${i}.png`}}).sort((t,i)=>t.name.localeCompare(i.name));else console.warn("[IconService] Unexpected tree.json structure, using fallback",r),this.icons=this.getFallbackIcons();return this.loaded=!0,this.loading=!1,console.log(`[IconService] Loaded ${this.icons.length} icons`),this.icons}catch(o){return console.error("[IconService] Failed to load icons:",o),this.loading=!1,this.icons=this.getFallbackIcons(),this.loaded=!0,this.icons}}getFallbackIcons(){return["github","gitlab","docker","proxmox","truenas","plex","jellyfin","nextcloud","cloudflare","nginx","traefik","portainer","grafana","prometheus","influxdb","pihole","adguard","homeassistant","esphome","frigate","unraid","synology","opnsense","pfsense","wireguard","openvpn","bitwarden","vaultwarden","sonarr","radarr","lidarr","bazarr","prowlarr","overseerr","tautulli","transmission","qbittorrent","deluge","sabnzbd","nzbget","calibre","paperless","photoprism","immich","mealie","freshrss","miniflux","wallabag","linkding","shiori","firefox","chrome","vscode","code-server","jupyter","portainer"].map((r)=>({name:r,url:`${this.BASE_URL}/png/${r}.png`}))}searchIcons(o,r=50){if(!o.trim())return this.icons.slice(0,r);let a=o.toLowerCase().trim();return this.icons.filter((t)=>t.name.toLowerCase().includes(a)).slice(0,r)}getIconUrl(o){return`${this.BASE_URL}/png/${o}.png`}}var rr=new La;var Qa=`:host {
+    `).join("")};class mt{icons=[];loaded=!1;loading=!1;BASE_URL="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons";FALLBACK_URL="https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main";async loadIcons(){if(this.loaded)return this.icons;if(this.loading)return await new Promise((o)=>setTimeout(o,100)),this.loadIcons();this.loading=!0;try{let o=await fetch(`${this.BASE_URL}/tree.json`);if(!o.ok)console.log("[IconService] CDN failed, trying GitHub raw"),o=await fetch(`${this.FALLBACK_URL}/tree.json`);if(!o.ok)throw Error("Failed to fetch icon list");let t=await o.json(),r=Array.isArray(t)?t:t.png||[];if(Array.isArray(r)&&r.length>0)this.icons=r.filter((a)=>a.endsWith(".png")||a.endsWith(".svg")).map((a)=>{let n=a.replace(/\.(png|svg)$/,"");return{name:n,url:`${this.BASE_URL}/png/${n}.png`}}).sort((a,n)=>a.name.localeCompare(n.name));else console.warn("[IconService] Unexpected tree.json structure, using fallback",t),this.icons=this.getFallbackIcons();return this.loaded=!0,this.loading=!1,console.log(`[IconService] Loaded ${this.icons.length} icons`),this.icons}catch(o){return console.error("[IconService] Failed to load icons:",o),this.loading=!1,this.icons=this.getFallbackIcons(),this.loaded=!0,this.icons}}getFallbackIcons(){return["github","gitlab","docker","proxmox","truenas","plex","jellyfin","nextcloud","cloudflare","nginx","traefik","portainer","grafana","prometheus","influxdb","pihole","adguard","homeassistant","esphome","frigate","unraid","synology","opnsense","pfsense","wireguard","openvpn","bitwarden","vaultwarden","sonarr","radarr","lidarr","bazarr","prowlarr","overseerr","tautulli","transmission","qbittorrent","deluge","sabnzbd","nzbget","calibre","paperless","photoprism","immich","mealie","freshrss","miniflux","wallabag","linkding","shiori","firefox","chrome","vscode","code-server","jupyter","portainer"].map((t)=>({name:t,url:`${this.BASE_URL}/png/${t}.png`}))}searchIcons(o,t=50){if(!o.trim())return this.icons.slice(0,t);let r=o.toLowerCase().trim();return this.icons.filter((a)=>a.name.toLowerCase().includes(r)).slice(0,t)}getIconUrl(o){return`${this.BASE_URL}/png/${o}.png`}}var bo=new mt;var kt=`:host {
     display: block;
 }
 
@@ -4076,35 +3753,35 @@ input:checked+.slider:before {
     50% {
         opacity: 1;
     }
-}`;class Fa extends HTMLElement{icons=[];filteredIcons=[];selectedIcon="";searchQuery="";isLoading=!0;debounceTimer=null;inputElement=null;constructor(){super();this.attachShadow({mode:"open"})}async connectedCallback(){if(this.shadowRoot.childElementCount>0)return;if(this.renderBase(),this.setupListeners(),this.icons.length===0)await this.loadIcons()}async loadIcons(){try{this.icons=await rr.loadIcons(),this.filteredIcons=this.icons.slice(0,50),this.isLoading=!1,this.updateGrid()}catch(o){console.error("[IconPicker] Failed to load icons",o),this.isLoading=!1,this.updateGrid()}}setupListeners(){let o=this.shadowRoot;this.inputElement=o.getElementById("icon-search"),this.inputElement?.addEventListener("input",(a)=>{let t=a.target;if(this.searchQuery=t.value,this.debounceTimer)window.clearTimeout(this.debounceTimer);this.debounceTimer=window.setTimeout(()=>{this.performSearch()},100)}),o.getElementById("grid-container")?.addEventListener("click",(a)=>{let i=a.target.closest(".icon-picker__item");if(i&&i.dataset.icon)this.selectedIcon=i.dataset.icon,this.updateSelected(),this.updateGrid(),this.dispatchEvent(new CustomEvent("icon-selected",{detail:{iconName:this.selectedIcon},bubbles:!0,composed:!0}))})}performSearch(){this.filteredIcons=rr.searchIcons(this.searchQuery,50),this.updateGrid()}getSelectedIcon(){return this.selectedIcon}setSelectedIcon(o){this.selectedIcon=o,this.updateSelected(),this.updateGrid()}renderBase(){this.shadowRoot.innerHTML=`
-            <style>${Qa}</style>
-            ${za()}
-        `}updateGrid(){let o=this.shadowRoot.getElementById("grid-container");if(o){if(!this.searchQuery.trim()&&!this.isLoading){o.style.display="none",o.innerHTML="";return}o.style.display="grid",o.innerHTML=Ga(this.filteredIcons,this.selectedIcon,this.isLoading)}}updateSelected(){let o=this.shadowRoot.getElementById("selected-container");if(o)o.innerHTML=ja(this.selectedIcon)}}if(!customElements.get("icon-picker"))customElements.define("icon-picker",Fa);m();var Ha=({isOpen:o,isEditMode:r})=>`
+}`;class yt extends HTMLElement{icons=[];filteredIcons=[];selectedIcon="";searchQuery="";isLoading=!0;debounceTimer=null;inputElement=null;constructor(){super();this.attachShadow({mode:"open"})}async connectedCallback(){if(this.shadowRoot.childElementCount>0)return;if(this.renderBase(),this.setupListeners(),this.icons.length===0)await this.loadIcons()}async loadIcons(){try{this.icons=await bo.loadIcons(),this.filteredIcons=this.icons.slice(0,50),this.isLoading=!1,this.updateGrid()}catch(o){console.error("[IconPicker] Failed to load icons",o),this.isLoading=!1,this.updateGrid()}}setupListeners(){let o=this.shadowRoot;this.inputElement=o.getElementById("icon-search"),this.inputElement?.addEventListener("input",(r)=>{let a=r.target;if(this.searchQuery=a.value,this.debounceTimer)window.clearTimeout(this.debounceTimer);this.debounceTimer=window.setTimeout(()=>{this.performSearch()},100)}),o.getElementById("grid-container")?.addEventListener("click",(r)=>{let n=r.target.closest(".icon-picker__item");if(n&&n.dataset.icon)this.selectedIcon=n.dataset.icon,this.updateSelected(),this.updateGrid(),this.dispatchEvent(new CustomEvent("icon-selected",{detail:{iconName:this.selectedIcon},bubbles:!0,composed:!0}))})}performSearch(){this.filteredIcons=bo.searchIcons(this.searchQuery,50),this.updateGrid()}getSelectedIcon(){return this.selectedIcon}setSelectedIcon(o){this.selectedIcon=o,this.updateSelected(),this.updateGrid()}renderBase(){this.shadowRoot.innerHTML=`
+            <style>${kt}</style>
+            ${ft()}
+        `}updateGrid(){let o=this.shadowRoot.getElementById("grid-container");if(o){if(!this.searchQuery.trim()&&!this.isLoading){o.style.display="none",o.innerHTML="";return}o.style.display="grid",o.innerHTML=_t(this.filteredIcons,this.selectedIcon,this.isLoading)}}updateSelected(){let o=this.shadowRoot.getElementById("selected-container");if(o)o.innerHTML=ut(this.selectedIcon)}}if(!customElements.get("icon-picker"))customElements.define("icon-picker",yt);m();var wt=({isOpen:o,isEditMode:t})=>`
     <dialog id="modal">
         <div class="modal-header">
-            <h2 class="modal-title">${r?n.t("bookmark.edit"):n.t("bookmark.add")}</h2>
+            <h2 class="modal-title">${t?i.t("bookmark.edit"):i.t("bookmark.add")}</h2>
             <button class="modal-close" id="modal-close">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
         <form class="modal-form" id="bookmark-form">
             <div class="form-group">
-                <label for="bookmark-label">${n.t("bookmark.label")}</label>
-                <input type="text" id="bookmark-label" name="label" placeholder="${n.t("bookmark.placeholder_label")}" required />
+                <label for="bookmark-label">${i.t("bookmark.label")}</label>
+                <input type="text" id="bookmark-label" name="label" placeholder="${i.t("bookmark.placeholder_label")}" required />
             </div>
             <div class="form-group">
-                <label for="bookmark-url">${n.t("bookmark.url")}</label>
-                <input type="url" id="bookmark-url" name="url" placeholder="${n.t("bookmark.placeholder_url")}" required />
+                <label for="bookmark-url">${i.t("bookmark.url")}</label>
+                <input type="url" id="bookmark-url" name="url" placeholder="${i.t("bookmark.placeholder_url")}" required />
             </div>
             <div class="form-group">
-                <label>${n.t("bookmark.icon")}</label>
+                <label>${i.t("bookmark.icon")}</label>
                 <div id="icon-picker-container"></div>
             </div>
 
             <!-- Status Check & Touch Visibility on same row -->
             <div class="visibility-row">
                 <div class="checkbox-group">
-                    <label for="bookmark-status">${n.t("bookmark.monitor_status")}</label>
+                    <label for="bookmark-status">${i.t("bookmark.monitor_status")}</label>
                     <label class="toggle-switch">
                         <input type="checkbox" id="bookmark-status" name="statusCheck" />
                         <span class="slider"></span>
@@ -4112,7 +3789,7 @@ input:checked+.slider:before {
                 </div>
 
                 <div class="checkbox-group">
-                    <label for="bookmark-touch">${n.t("bookmark.visible_touch")}</label>
+                    <label for="bookmark-touch">${i.t("bookmark.visible_touch")}</label>
                     <label class="toggle-switch">
                         <input type="checkbox" id="bookmark-touch" name="visibleTouch" checked />
                         <span class="slider"></span>
@@ -4121,11 +3798,11 @@ input:checked+.slider:before {
             </div>
 
             <div class="form-actions">
-                <app-button type="submit" variant="primary" class="btn-submit">${n.t("general.save")}</app-button>
+                <app-button type="submit" variant="primary" class="btn-submit">${i.t("general.save")}</app-button>
             </div>
         </form>
     </dialog>
-`;H();m();var qa=`:host {
+`;L();m();var $t=`:host {
     display: contents;
 }
 
@@ -4349,10 +4026,10 @@ input:checked+.slider:before {
 .visibility-row .checkbox-group {
     flex: 1;
     margin-bottom: 0;
-}`;class Ja extends HTMLElement{dialog=null;iconPicker=null;selectedIconName="";clickHandler=null;submitHandler=null;escapeHandler=null;_unsubscribeI18n;isEditMode=!1;currentItemId=null;constructor(){super();this.attachShadow({mode:"open"}),this.setupHandlers()}setupHandlers(){this.clickHandler=(o)=>{if(o.target.closest("#modal-close")){o.preventDefault(),o.stopPropagation(),this.close();return}if(o.target===this.dialog){this.close();return}},this.submitHandler=async(o)=>{o.preventDefault(),o.stopPropagation();let r=o.target,a=new FormData(r),t=a.get("label"),i=a.get("url"),e=a.get("statusCheck")==="on",s=a.get("visibleTouch")==="on",p=this.iconPicker?this.iconPicker.getSelectedIcon():"",l=p?`https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${p}.png`:"";try{let c=JSON.stringify({label:t,url:i,icon:l,iconName:p,statusCheck:e,visibleTouch:s});if(this.isEditMode&&this.currentItemId){if(await x.updateItem({id:this.currentItemId,content:c}),window.notifier)window.notifier.show(n.t("notifier.bookmark_updated"))}else{let d=x.getState(),b=Array.isArray(d.items)?d.items:[],{collisionService:h}=await Promise.resolve().then(() => (T(),to)),g=h.findFirstAvailableSlot(1,1,b);if(await x.addItem({type:"bookmark",x:g.x,y:g.y,w:1,h:1,content:c}),window.notifier)window.notifier.show(n.t("notifier.bookmark_added"))}this.close()}catch(c){if(console.error("[Modal] Error:",c),window.notifier)window.notifier.show(n.t("notifier.bookmark_error"),"error")}},this.escapeHandler=(o)=>{if(o.key==="Escape"&&this.dialog?.open)this.close()}}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribeI18n=n.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n();let o=this.shadowRoot;if(this.clickHandler)o.removeEventListener("click",this.clickHandler);if(this.submitHandler)o.removeEventListener("submit",this.submitHandler);if(this.escapeHandler)document.removeEventListener("keydown",this.escapeHandler)}setupListeners(){let o=this.shadowRoot;o.addEventListener("click",this.clickHandler),o.addEventListener("submit",this.submitHandler),document.addEventListener("keydown",this.escapeHandler)}open(){this.isEditMode=!1,this.currentItemId=null,this.selectedIconName="",this.render(),this.dialog?.showModal(),requestAnimationFrame(()=>{this.resetForm(),this.initializeIconPicker()})}openForEdit(o){this.isEditMode=!0,this.currentItemId=o.id;let r=o.content;if(typeof r==="string")try{r=JSON.parse(r)}catch(a){console.error("Failed to parse item content",a)}this.selectedIconName=r.iconName||"",this.render(),this.dialog?.showModal(),this.initializeIconPicker(),setTimeout(()=>{let a=this.shadowRoot.getElementById("bookmark-form");if(a){let t=a.elements.namedItem("label"),i=a.elements.namedItem("url"),e=a.elements.namedItem("statusCheck"),s=a.elements.namedItem("visibleTouch");if(t)t.value=r.label||"";if(i)i.value=r.url||"";if(e)e.checked=!!r.statusCheck;if(s)s.checked=r.visibleTouch!==!1}if(this.iconPicker)this.iconPicker.setSelectedIcon(this.selectedIconName)},100)}close(){this.dialog?.close(),this.selectedIconName="",this.resetForm()}resetForm(){setTimeout(()=>{let o=this.shadowRoot.getElementById("bookmark-form");if(o)o.reset();if(this.iconPicker)this.iconPicker.setSelectedIcon("")},100)}initializeIconPicker(){requestAnimationFrame(()=>{let o=this.shadowRoot.getElementById("icon-picker-container");if(!o){console.error("[Modal] Icon picker container not found");return}if(!this.iconPicker)this.iconPicker=document.createElement("icon-picker"),this.iconPicker.addEventListener("icon-selected",(r)=>{this.selectedIconName=r.detail.iconName});o.innerHTML="",o.appendChild(this.iconPicker)})}render(){this.shadowRoot.innerHTML=`
-            <style>${qa}</style>
-            ${Ha({isOpen:!0,isEditMode:this.isEditMode})}
-        `,this.dialog=this.shadowRoot.getElementById("modal"),this.setupListeners()}}if(!customElements.get("add-bookmark-modal"))customElements.define("add-bookmark-modal",Ja);m();var ar=[{id:"clock",name:"Clock",icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',description:"Digital clock with date",defaultW:2,defaultH:1,componentTag:"widget-clock"},{id:"notepad",name:"Notepad",icon:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',description:"Simple sticky note",defaultW:2,defaultH:2,componentTag:"widget-notepad"},{id:"telemetry",name:"System Status",icon:'<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>',description:"CPU, RAM and Temp",defaultW:2,defaultH:1,componentTag:"widget-telemetry"},{id:"weather",name:"Weather",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="14.7" y1="3.3" x2="13.3" y2="4.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><path d="M10 19 Q10 15 14 15 Q14 11 18 11 Q22 11 22 15 Q24 15 24 18 Q24 21 21 21 L12 21 Q10 21 10 19Z"/></svg>',description:"Current weather & forecast",defaultW:2,defaultH:2,componentTag:"widget-weather"}];class Ka extends HTMLElement{dialog=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}open(){if(this.dialog)this.dialog.showModal()}close(){if(this.dialog)this.dialog.close()}selectWidget(o){this.dispatchEvent(new CustomEvent("widget-selected",{detail:o,bubbles:!0,composed:!0})),this.close()}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
+}`;class zt extends HTMLElement{dialog=null;iconPicker=null;selectedIconName="";clickHandler=null;submitHandler=null;escapeHandler=null;_unsubscribeI18n;isEditMode=!1;currentItemId=null;constructor(){super();this.attachShadow({mode:"open"}),this.setupHandlers()}setupHandlers(){this.clickHandler=(o)=>{if(o.target.closest("#modal-close")){o.preventDefault(),o.stopPropagation(),this.close();return}if(o.target===this.dialog){this.close();return}},this.submitHandler=async(o)=>{o.preventDefault(),o.stopPropagation();let t=o.target,r=new FormData(t),a=r.get("label"),n=r.get("url"),e=r.get("statusCheck")==="on",s=r.get("visibleTouch")==="on",d=this.iconPicker?this.iconPicker.getSelectedIcon():"",l=d?`https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${d}.png`:"";try{let c=JSON.stringify({label:a,url:n,icon:l,iconName:d,statusCheck:e,visibleTouch:s});if(this.isEditMode&&this.currentItemId){if(await g.updateItem({id:this.currentItemId,content:c}),window.notifier)window.notifier.show(i.t("notifier.bookmark_updated"))}else{let p=g.getState(),v=Array.isArray(p.items)?p.items:[],{collisionService:f}=await Promise.resolve().then(() => (B(),N)),x=f.findFirstAvailableSlot(1,1,v);if(await g.addItem({type:"bookmark",x:x.x,y:x.y,w:1,h:1,content:c}),window.notifier)window.notifier.show(i.t("notifier.bookmark_added"))}this.close()}catch(c){if(console.error("[Modal] Error:",c),window.notifier)window.notifier.show(i.t("notifier.bookmark_error"),"error")}},this.escapeHandler=(o)=>{if(o.key==="Escape"&&this.dialog?.open)this.close()}}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribeI18n=i.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n();let o=this.shadowRoot;if(this.clickHandler)o.removeEventListener("click",this.clickHandler);if(this.submitHandler)o.removeEventListener("submit",this.submitHandler);if(this.escapeHandler)document.removeEventListener("keydown",this.escapeHandler)}setupListeners(){let o=this.shadowRoot;o.addEventListener("click",this.clickHandler),o.addEventListener("submit",this.submitHandler),document.addEventListener("keydown",this.escapeHandler)}open(){this.isEditMode=!1,this.currentItemId=null,this.selectedIconName="",this.render(),this.dialog?.showModal(),requestAnimationFrame(()=>{this.resetForm(),this.initializeIconPicker()})}openForEdit(o){this.isEditMode=!0,this.currentItemId=o.id;let t=o.content;if(typeof t==="string")try{t=JSON.parse(t)}catch(r){console.error("Failed to parse item content",r)}this.selectedIconName=t.iconName||"",this.render(),this.dialog?.showModal(),this.initializeIconPicker(),setTimeout(()=>{let r=this.shadowRoot.getElementById("bookmark-form");if(r){let a=r.elements.namedItem("label"),n=r.elements.namedItem("url"),e=r.elements.namedItem("statusCheck"),s=r.elements.namedItem("visibleTouch");if(a)a.value=t.label||"";if(n)n.value=t.url||"";if(e)e.checked=!!t.statusCheck;if(s)s.checked=t.visibleTouch!==!1}if(this.iconPicker)this.iconPicker.setSelectedIcon(this.selectedIconName)},100)}close(){this.dialog?.close(),this.selectedIconName="",this.resetForm()}resetForm(){setTimeout(()=>{let o=this.shadowRoot.getElementById("bookmark-form");if(o)o.reset();if(this.iconPicker)this.iconPicker.setSelectedIcon("")},100)}initializeIconPicker(){requestAnimationFrame(()=>{let o=this.shadowRoot.getElementById("icon-picker-container");if(!o){console.error("[Modal] Icon picker container not found");return}if(!this.iconPicker)this.iconPicker=document.createElement("icon-picker"),this.iconPicker.addEventListener("icon-selected",(t)=>{this.selectedIconName=t.detail.iconName});o.innerHTML="",o.appendChild(this.iconPicker)})}render(){this.shadowRoot.innerHTML=`
+            <style>${$t}</style>
+            ${wt({isOpen:!0,isEditMode:this.isEditMode})}
+        `,this.dialog=this.shadowRoot.getElementById("modal"),this.setupListeners()}}if(!customElements.get("add-bookmark-modal"))customElements.define("add-bookmark-modal",zt);m();var ho=[{id:"clock",name:"Clock",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',description:"Digital clock with date",defaultW:2,defaultH:1,componentTag:"widget-clock"},{id:"notepad",name:"Notepad",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>',description:"Markdown notepad",defaultW:2,defaultH:2,componentTag:"widget-notepad"},{id:"telemetry",name:"System Status",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><circle cx="6" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="6" cy="17.5" r="1" fill="currentColor" stroke="none"/><line x1="10" y1="6.5" x2="18" y2="6.5"/><line x1="10" y1="17.5" x2="18" y2="17.5"/></svg>',description:"CPU, RAM and Temp",defaultW:2,defaultH:1,componentTag:"widget-telemetry"},{id:"weather",name:"Weather",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="14.7" y1="3.3" x2="13.3" y2="4.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><path d="M10 19 Q10 15 14 15 Q14 11 18 11 Q22 11 22 15 Q24 15 24 18 Q24 21 21 21 L12 21 Q10 21 10 19Z"/></svg>',description:"Current weather & forecast",defaultW:2,defaultH:2,componentTag:"widget-weather"},{id:"markdown",name:"Markdown",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>',description:"Native Markdown Editor",defaultW:2,defaultH:2,componentTag:"widget-markdown"}];class jt extends HTMLElement{dialog=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}open(){if(this.dialog)this.dialog.showModal()}close(){if(this.dialog)this.dialog.close()}selectWidget(o){this.dispatchEvent(new CustomEvent("widget-selected",{detail:o,bubbles:!0,composed:!0})),this.close()}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
             <style>
                 :host {
                     display: contents;
@@ -4475,12 +4152,17 @@ input:checked+.slider:before {
                     box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.4);
                 }
                 .card:hover .icon-container svg {
+                    stroke: #fff;
+                    fill: none;
+                }
+                .card:hover .icon-container svg circle[fill="currentColor"] {
                     fill: #fff;
                 }
                 .icon-container svg {
                     width: 32px;
                     height: 32px;
-                    fill: var(--accent, #3b82f6);
+                    stroke: var(--accent, #3b82f6);
+                    fill: none;
                 }
                 .name {
                     font-weight: 700;
@@ -4499,8 +4181,8 @@ input:checked+.slider:before {
             <dialog id="modal">
                 <div class="header">
                     <div class="title-group">
-                        <h3>${n.t("widget.add_title")||"Add Widget"}</h3>
-                        <p>${n.t("widget.add_subtitle")||"Enhance your dashboard with dynamic components"}</p>
+                        <h3>${i.t("widget.add_title")||"Add Widget"}</h3>
+                        <p>${i.t("widget.add_subtitle")||"Enhance your dashboard with dynamic components"}</p>
                     </div>
                     <button class="close-btn" onclick="this.getRootNode().host.close()">
                         <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -4508,16 +4190,16 @@ input:checked+.slider:before {
                 </div>
                 
                 <div class="grid">
-                    ${ar.map((o)=>`
+                    ${ho.map((o)=>`
                         <div class="card" data-id="${o.id}">
                             <div class="icon-container">${o.icon}</div>
-                            <div class="name">${n.t(`widget.${o.id}.name`)||o.name}</div>
-                            <div class="desc">${n.t(`widget.${o.id}.description`)||o.description}</div>
+                            <div class="name">${i.t(`widget.${o.id}.name`)||o.name}</div>
+                            <div class="desc">${i.t(`widget.${o.id}.description`)||o.description}</div>
                         </div>
                     `).join("")}
                 </div>
             </dialog>
-        `,this.dialog=this.shadowRoot.querySelector("dialog"),this.shadowRoot.querySelectorAll(".card").forEach((o)=>{o.addEventListener("click",()=>{let r=o.getAttribute("data-id"),a=ar.find((t)=>t.id===r);if(a)this.selectWidget(a)})})}}customElements.define("add-widget-modal",Ka);H();m();var Ma=`:host {
+        `,this.dialog=this.shadowRoot.querySelector("dialog"),this.shadowRoot.querySelectorAll(".card").forEach((o)=>{o.addEventListener("click",()=>{let t=o.getAttribute("data-id"),r=ho.find((a)=>a.id===t);if(r)this.selectWidget(r)})})}}customElements.define("add-widget-modal",jt);L();m();var Lt=`:host {
     display: contents;
 }
 
@@ -4860,124 +4542,124 @@ dialog[open] {
     color: var(--text-dim);
     text-align: center;
     padding: 12px;
-}`;var tr=new Map;async function Ba(o,r){try{let a=await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${o}&longitude=${r}`);if(!a.ok)throw Error("TimeAPI failed");return(await a.json()).timeZone||"local"}catch(a){return console.error("[Timezone] TimeAPI error:",a),"local"}}async function Gt(o){if(!o||o.trim()==="")return"local";let r=o.toLowerCase().trim();if(tr.has(r))return tr.get(r);try{let a=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o)}&limit=1`,t=await fetch(a,{headers:{"User-Agent":"Lastboard/1.0"}});if(!t.ok)throw Error("Geocoding failed");let i=await t.json();if(i.length===0)return"local";let{lat:e,lon:s}=i[0],p=await Ba(parseFloat(e),parseFloat(s));return tr.set(r,p),p}catch(a){return console.error("[Timezone] Error resolving city:",o,a),"local"}}class Ra extends HTMLElement{dialog=null;currentItem=null;_clockSelectedLat=null;_clockSelectedLon=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}open(o){if(this.currentItem=o,this.render(),this.dialog)this.dialog.showModal()}close(){if(this.dialog)this.dialog.close();this.currentItem=null}async save(){if(!this.currentItem)return;let o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,r=o.widgetId,a={...o};if(r==="clock"){let t=this.shadowRoot?.getElementById("clock-city"),i=this.shadowRoot?.getElementById("clock-12h"),e=this.shadowRoot?.getElementById("clock-date"),s=this.shadowRoot?.getElementById("save-btn"),p=t?.value||"";if(s)s.disabled=!0,s.textContent=n.t("general.loading");let l="local";if(this._clockSelectedLat!=null&&this._clockSelectedLon!=null)l=await Ba(this._clockSelectedLat,this._clockSelectedLon);else if(p)l=await Gt(p);if(a.city=p,a.timezone=l,a.hour12=i?.checked||!1,a.showDate=e?.checked||!1,this._clockSelectedLat=null,this._clockSelectedLon=null,s)s.disabled=!1,s.textContent=n.t("general.save")}else if(r==="weather"){let t=this.shadowRoot?.getElementById("weather-city"),i=this.shadowRoot?.getElementById("weather-lat"),e=this.shadowRoot?.getElementById("weather-lon"),s=this.shadowRoot?.getElementById("weather-fahrenheit"),p=this.shadowRoot?.getElementById("weather-forecast"),l=this.shadowRoot?.getElementById("weather-days");a.city=t?.value||"",a.latitude=parseFloat(i?.value)||0,a.longitude=parseFloat(e?.value)||0,a.unit=s?.checked?"fahrenheit":"celsius",a.showForecast=p?.checked||!1,a.forecastDays=parseInt(l?.value)||5}else if(r==="telemetry"){let t=this.shadowRoot?.getElementById("telemetry-interval");a.interval=t?parseInt(t.value):1000}if(this.currentItem.type==="section"){let t=this.shadowRoot?.getElementById("section-title");a.title=t?t.value:"",delete a.name}await x.updateItem({id:this.currentItem.id,content:JSON.stringify(a)}),this.close()}render(){if(!this.shadowRoot)return;let o={},r="";if(this.currentItem)o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,r=o.widgetId;let a=(g)=>String(g).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"),t=()=>{if(!this.currentItem)return"";if(r==="clock"){let g=o.city||"",u=o.hour12||!1,w=o.showDate!==!1;return`
+}`;var vo=new Map;async function Mt(o,t){try{let r=await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${o}&longitude=${t}`);if(!r.ok)throw Error("TimeAPI failed");return(await r.json()).timeZone||"local"}catch(r){return console.error("[Timezone] TimeAPI error:",r),"local"}}async function nr(o){if(!o||o.trim()==="")return"local";let t=o.toLowerCase().trim();if(vo.has(t))return vo.get(t);try{let r=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o)}&limit=1`,a=await fetch(r,{headers:{"User-Agent":"Lastboard/1.0"}});if(!a.ok)throw Error("Geocoding failed");let n=await a.json();if(n.length===0)return"local";let{lat:e,lon:s}=n[0],d=await Mt(parseFloat(e),parseFloat(s));return vo.set(t,d),d}catch(r){return console.error("[Timezone] Error resolving city:",o,r),"local"}}class At extends HTMLElement{dialog=null;currentItem=null;_clockSelectedLat=null;_clockSelectedLon=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}open(o){if(this.currentItem=o,this.render(),this.dialog)this.dialog.showModal()}close(){if(this.dialog)this.dialog.close();this.currentItem=null}async save(){if(!this.currentItem)return;let o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,t=o.widgetId,r={...o};if(t==="clock"){let a=this.shadowRoot?.getElementById("clock-city"),n=this.shadowRoot?.getElementById("clock-12h"),e=this.shadowRoot?.getElementById("clock-date"),s=this.shadowRoot?.getElementById("save-btn"),d=a?.value||"";if(s)s.disabled=!0,s.textContent=i.t("general.loading");let l="local";if(this._clockSelectedLat!=null&&this._clockSelectedLon!=null)l=await Mt(this._clockSelectedLat,this._clockSelectedLon);else if(d)l=await nr(d);if(r.city=d,r.timezone=l,r.hour12=n?.checked||!1,r.showDate=e?.checked||!1,this._clockSelectedLat=null,this._clockSelectedLon=null,s)s.disabled=!1,s.textContent=i.t("general.save")}else if(t==="weather"){let a=this.shadowRoot?.getElementById("weather-city"),n=this.shadowRoot?.getElementById("weather-lat"),e=this.shadowRoot?.getElementById("weather-lon"),s=this.shadowRoot?.getElementById("weather-fahrenheit"),d=this.shadowRoot?.getElementById("weather-forecast"),l=this.shadowRoot?.getElementById("weather-days");r.city=a?.value||"",r.latitude=parseFloat(n?.value)||0,r.longitude=parseFloat(e?.value)||0,r.unit=s?.checked?"fahrenheit":"celsius",r.showForecast=d?.checked||!1,r.forecastDays=parseInt(l?.value)||5}else if(t==="telemetry"){let a=this.shadowRoot?.getElementById("telemetry-interval");r.interval=a?parseInt(a.value):1000}if(this.currentItem.type==="section"){let a=this.shadowRoot?.getElementById("section-title");r.title=a?a.value:"",delete r.name}await g.updateItem({id:this.currentItem.id,content:JSON.stringify(r)}),this.close()}render(){if(!this.shadowRoot)return;let o={},t="";if(this.currentItem)o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,t=o.widgetId;let r=(x)=>String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"),a=()=>{if(!this.currentItem)return"";if(t==="clock"){let x=o.city||"",u=o.hour12||!1,y=o.showDate!==!1;return`
                     <div class="field-group">
-                        <label>${n.t("widget.clock.city")}</label>
+                        <label>${i.t("widget.clock.city")}</label>
                         <div class="input-row">
-                            <input type="text" id="clock-city" value="${a(g)}" placeholder="${n.t("widget.clock.city_placeholder")}"/>
-                            <app-button variant="ghost" id="clock-search-btn">${n.t("widget.weather.search")}</app-button>
+                            <input type="text" id="clock-city" value="${r(x)}" placeholder="${i.t("widget.clock.city_placeholder")}"/>
+                            <app-button variant="ghost" id="clock-search-btn">${i.t("widget.weather.search")}</app-button>
                         </div>
-                        <small>${n.t("widget.clock.city_desc")}</small>
+                        <small>${i.t("widget.clock.city_desc")}</small>
                     </div>
 
                     <div class="field-group" id="clock-results-container" style="display:none;">
-                        <label>${n.t("widget.weather.results")}</label>
+                        <label>${i.t("widget.weather.results")}</label>
                         <div id="clock-results" class="weather-results"></div>
                     </div>
 
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-12h" ${u?"checked":""} />
-                        <label for="clock-12h">${n.t("widget.clock.use_12h")}</label>
+                        <label for="clock-12h">${i.t("widget.clock.use_12h")}</label>
                     </div>
 
                     <div class="field-group check-row">
-                        <input type="checkbox" id="clock-date" ${w?"checked":""} />
-                        <label for="clock-date">${n.t("widget.clock.show_date")}</label>
+                        <input type="checkbox" id="clock-date" ${y?"checked":""} />
+                        <label for="clock-date">${i.t("widget.clock.show_date")}</label>
                     </div>
-                `}else if(r==="weather"){let g=o.city||"",u=o.latitude||"",w=o.longitude||"",k=o.unit==="fahrenheit",f=o.showForecast||!1,J=o.forecastDays||5;return`
+                `}else if(t==="weather"){let x=o.city||"",u=o.latitude||"",y=o.longitude||"",k=o.unit==="fahrenheit",b=o.showForecast||!1,A=o.forecastDays||5;return`
                     <div class="field-group">
-                        <label>${n.t("widget.weather.city")}</label>
+                        <label>${i.t("widget.weather.city")}</label>
                         <div class="input-row">
-                            <input type="text" id="weather-city" value="${a(g)}" placeholder="${n.t("widget.weather.city_placeholder")}"/>
-                            <app-button variant="ghost" id="weather-search-btn">${n.t("widget.weather.search")}</app-button>
+                            <input type="text" id="weather-city" value="${r(x)}" placeholder="${i.t("widget.weather.city_placeholder")}"/>
+                            <app-button variant="ghost" id="weather-search-btn">${i.t("widget.weather.search")}</app-button>
                         </div>
-                        <small>${n.t("widget.weather.city_desc")}</small>
+                        <small>${i.t("widget.weather.city_desc")}</small>
                     </div>
 
                     <div class="field-group" id="weather-results-container" style="display:none;">
-                        <label>${n.t("widget.weather.results")}</label>
+                        <label>${i.t("widget.weather.results")}</label>
                         <div id="weather-results" class="weather-results"></div>
                     </div>
 
                     <div class="field-group">
-                        <label>${n.t("widget.weather.coordinates")}</label>
+                        <label>${i.t("widget.weather.coordinates")}</label>
                         <div class="input-row">
                             <input type="number" id="weather-lat" value="${u}" placeholder="Lat" step="0.0001" />
-                            <input type="number" id="weather-lon" value="${w}" placeholder="Lon" step="0.0001" />
+                            <input type="number" id="weather-lon" value="${y}" placeholder="Lon" step="0.0001" />
                         </div>
                     </div>
 
                     <div class="field-group check-row">
                         <input type="checkbox" id="weather-fahrenheit" ${k?"checked":""} />
-                        <label for="weather-fahrenheit">${n.t("widget.weather.use_fahrenheit")}</label>
+                        <label for="weather-fahrenheit">${i.t("widget.weather.use_fahrenheit")}</label>
                     </div>
 
                     <div class="field-group check-row">
-                        <input type="checkbox" id="weather-forecast" ${f?"checked":""} />
-                        <label for="weather-forecast">${n.t("widget.weather.show_forecast")}</label>
+                        <input type="checkbox" id="weather-forecast" ${b?"checked":""} />
+                        <label for="weather-forecast">${i.t("widget.weather.show_forecast")}</label>
                     </div>
 
-                    <div class="field-group row-aligned" id="weather-days-row" ${!f?'style="display:none;"':""}>
-                        <label>${n.t("widget.weather.forecast_days")}</label>
+                    <div class="field-group row-aligned" id="weather-days-row" ${!b?'style="display:none;"':""}>
+                        <label>${i.t("widget.weather.forecast_days")}</label>
                         <div class="stepper-wrap">
                             <button type="button" class="stepper-btn" id="weather-days-dec">&minus;</button>
-                            <input type="number" id="weather-days" value="${J}" min="1" max="6" />
+                            <input type="number" id="weather-days" value="${A}" min="1" max="6" />
                             <button type="button" class="stepper-btn" id="weather-days-inc">+</button>
                         </div>
                     </div>
-                `}else if(r==="telemetry"){let g=o.interval||1000;return`
+                `}else if(t==="telemetry"){let x=o.interval||1000;return`
                     <div class="field-group row-aligned">
-                        <label>${n.t("widget.telemetry.update_interval")}</label>
-                        <app-select id="telemetry-interval" value="${g}"></app-select>
+                        <label>${i.t("widget.telemetry.update_interval")}</label>
+                        <app-select id="telemetry-interval" value="${x}"></app-select>
                     </div>
-                `}else if(this.currentItem.type==="section"){let g=o.title||"";return`
+                `}else if(this.currentItem.type==="section"){let x=o.title||"";return`
                     <div class="field-group">
-                        <label>${n.t("bookmark.label")}</label>
+                        <label>${i.t("bookmark.label")}</label>
                         <div class="input-row">
-                            <input type="text" id="section-title" value="${a(g)}" placeholder="${n.t("section.placeholder_title")}" />
+                            <input type="text" id="section-title" value="${r(x)}" placeholder="${i.t("section.placeholder_title")}" />
                         </div>
-                        <small>${n.t("section.leave_empty")}</small>
+                        <small>${i.t("section.leave_empty")}</small>
                     </div>
-                `}return`<p>${n.t("widget.config.no_config")}</p>`},i=()=>{if(this.currentItem?.type==="section")return n.t("section.edit_title");return n.t("widget.config.title")};this.shadowRoot.innerHTML=`
-            <style>${Ma}</style>
+                `}return`<p>${i.t("widget.config.no_config")}</p>`},n=()=>{if(this.currentItem?.type==="section")return i.t("section.edit_title");return i.t("widget.config.title")};this.shadowRoot.innerHTML=`
+            <style>${Lt}</style>
             <dialog id="modal">
                 <div class="modal-header">
-                    <h3 class="modal-title">${i()}</h3>
+                    <h3 class="modal-title">${n()}</h3>
                     <button class="modal-close" id="close-btn">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
                 </div>
                 <div class="content">
-                    ${t()}
+                    ${a()}
                 </div>
                 <div class="actions">
-                    ${["clock","telemetry","weather"].includes(r)||this.currentItem?.type==="section"?`<app-button variant="primary" id="save-btn">${n.t("general.save")}</app-button>`:""}
+                    ${["clock","telemetry","weather"].includes(t)||this.currentItem?.type==="section"?`<app-button variant="primary" id="save-btn">${i.t("general.save")}</app-button>`:""}
                 </div>
             </dialog>
-        `,this.dialog=this.shadowRoot.querySelector("dialog");let e=this.shadowRoot.getElementById("telemetry-interval");if(e)e.options=[{value:"1000",label:"1s"},{value:"2000",label:"2s"},{value:"5000",label:"5s"},{value:"10000",label:"10s"}];this.shadowRoot.getElementById("close-btn")?.addEventListener("click",()=>this.close()),this.shadowRoot.getElementById("save-btn")?.addEventListener("click",()=>this.save());let s=this.shadowRoot.getElementById("clock-search-btn");if(s)s.addEventListener("click",()=>this.searchClockCity());let p=this.shadowRoot.getElementById("weather-search-btn");if(p)p.addEventListener("click",()=>this.searchWeatherCity());let l=this.shadowRoot.getElementById("weather-forecast"),c=this.shadowRoot.getElementById("weather-days-row");if(l&&c)l.addEventListener("change",()=>{c.style.display=l.checked?"":"none"});let d=this.shadowRoot.getElementById("weather-days"),b=this.shadowRoot.getElementById("weather-days-dec"),h=this.shadowRoot.getElementById("weather-days-inc");if(d&&b&&h)b.addEventListener("click",()=>{let g=parseInt(d.value)||1;if(g>1)d.value=String(g-1)}),h.addEventListener("click",()=>{let g=parseInt(d.value)||1;if(g<6)d.value=String(g+1)})}async searchClockCity(){let o=this.shadowRoot?.getElementById("clock-city"),r=this.shadowRoot?.getElementById("clock-results-container"),a=this.shadowRoot?.getElementById("clock-results");if(!o||!r||!a)return;let t=o.value.trim();if(!t)return;a.innerHTML=`<div class="search-loading">${n.t("general.loading")}</div>`,r.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(t)}&count=5&language=${n.getLocale().code}`)).json();if(!e.results||e.results.length===0){a.innerHTML=`<div class="search-empty">${n.t("general.no_icons")}</div>`;return}a.innerHTML=e.results.map((s)=>`
+        `,this.dialog=this.shadowRoot.querySelector("dialog");let e=this.shadowRoot.getElementById("telemetry-interval");if(e)e.options=[{value:"1000",label:"1s"},{value:"2000",label:"2s"},{value:"5000",label:"5s"},{value:"10000",label:"10s"}];this.shadowRoot.getElementById("close-btn")?.addEventListener("click",()=>this.close()),this.shadowRoot.getElementById("save-btn")?.addEventListener("click",()=>this.save());let s=this.shadowRoot.getElementById("clock-search-btn");if(s)s.addEventListener("click",()=>this.searchClockCity());let d=this.shadowRoot.getElementById("weather-search-btn");if(d)d.addEventListener("click",()=>this.searchWeatherCity());let l=this.shadowRoot.getElementById("weather-forecast"),c=this.shadowRoot.getElementById("weather-days-row");if(l&&c)l.addEventListener("change",()=>{c.style.display=l.checked?"":"none"});let p=this.shadowRoot.getElementById("weather-days"),v=this.shadowRoot.getElementById("weather-days-dec"),f=this.shadowRoot.getElementById("weather-days-inc");if(p&&v&&f)v.addEventListener("click",()=>{let x=parseInt(p.value)||1;if(x>1)p.value=String(x-1)}),f.addEventListener("click",()=>{let x=parseInt(p.value)||1;if(x<6)p.value=String(x+1)})}async searchClockCity(){let o=this.shadowRoot?.getElementById("clock-city"),t=this.shadowRoot?.getElementById("clock-results-container"),r=this.shadowRoot?.getElementById("clock-results");if(!o||!t||!r)return;let a=o.value.trim();if(!a)return;r.innerHTML=`<div class="search-loading">${i.t("general.loading")}</div>`,t.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(a)}&count=5&language=${i.getLocale().code}`)).json();if(!e.results||e.results.length===0){r.innerHTML=`<div class="search-empty">${i.t("general.no_icons")}</div>`;return}r.innerHTML=e.results.map((s)=>`
                 <button class="city-result" data-lat="${s.latitude}" data-lon="${s.longitude}" data-name="${s.name}">
                     <span class="city-name">${s.name}</span>
                     <span class="city-detail">${[s.admin1,s.country].filter(Boolean).join(", ")}</span>
                 </button>
-            `).join(""),a.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let p=parseFloat(s.getAttribute("data-lat")||"0"),l=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("clock-city")).value=c,this._clockSelectedLat=p,this._clockSelectedLon=l,r.style.display="none"})})}catch(i){a.innerHTML=`<div class="search-empty">${n.t("general.error")}</div>`}}async searchWeatherCity(){let o=this.shadowRoot?.getElementById("weather-city"),r=this.shadowRoot?.getElementById("weather-results-container"),a=this.shadowRoot?.getElementById("weather-results");if(!o||!r||!a)return;let t=o.value.trim();if(!t)return;a.innerHTML=`<div class="search-loading">${n.t("general.loading")}</div>`,r.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(t)}&count=5&language=${n.getLocale().code}`)).json();if(!e.results||e.results.length===0){a.innerHTML=`<div class="search-empty">${n.t("general.no_icons")}</div>`;return}a.innerHTML=e.results.map((s)=>`
+            `).join(""),r.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let d=parseFloat(s.getAttribute("data-lat")||"0"),l=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("clock-city")).value=c,this._clockSelectedLat=d,this._clockSelectedLon=l,t.style.display="none"})})}catch(n){r.innerHTML=`<div class="search-empty">${i.t("general.error")}</div>`}}async searchWeatherCity(){let o=this.shadowRoot?.getElementById("weather-city"),t=this.shadowRoot?.getElementById("weather-results-container"),r=this.shadowRoot?.getElementById("weather-results");if(!o||!t||!r)return;let a=o.value.trim();if(!a)return;r.innerHTML=`<div class="search-loading">${i.t("general.loading")}</div>`,t.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(a)}&count=5&language=${i.getLocale().code}`)).json();if(!e.results||e.results.length===0){r.innerHTML=`<div class="search-empty">${i.t("general.no_icons")}</div>`;return}r.innerHTML=e.results.map((s)=>`
                 <button class="city-result" data-lat="${s.latitude}" data-lon="${s.longitude}" data-name="${s.name}">
                     <span class="city-name">${s.name}</span>
                     <span class="city-detail">${[s.admin1,s.country].filter(Boolean).join(", ")}</span>
                 </button>
-            `).join(""),a.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let p=parseFloat(s.getAttribute("data-lat")||"0"),l=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("weather-lat")).value=p.toString(),(this.shadowRoot?.getElementById("weather-lon")).value=l.toString(),(this.shadowRoot?.getElementById("weather-city")).value=c,r.style.display="none"})})}catch(i){a.innerHTML=`<div class="search-empty">${n.t("general.error")}</div>`}}}customElements.define("widget-config-modal",Ra);m();var Za=({isOpen:o,title:r,message:a})=>`
+            `).join(""),r.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let d=parseFloat(s.getAttribute("data-lat")||"0"),l=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("weather-lat")).value=d.toString(),(this.shadowRoot?.getElementById("weather-lon")).value=l.toString(),(this.shadowRoot?.getElementById("weather-city")).value=c,t.style.display="none"})})}catch(n){r.innerHTML=`<div class="search-empty">${i.t("general.error")}</div>`}}}customElements.define("widget-config-modal",At);m();var Ht=({isOpen:o,title:t,message:r})=>`
     <dialog id="modal">
         <div class="modal-header">
-            <h3 class="modal-title">${r}</h3>
+            <h3 class="modal-title">${t}</h3>
             <button class="modal-close" id="modal-close">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
-        <p class="modal-message">${a}</p>
+        <p class="modal-message">${r}</p>
         <div class="modal-actions">
-            <app-button variant="danger" id="btn-confirm">${n.t("general.confirm")}</app-button>
+            <app-button variant="danger" id="btn-confirm">${i.t("general.confirm")}</app-button>
         </div>
     </dialog>
-`;m();var Aa=`:host {
+`;m();var Gt=`:host {
     display: contents;
 }
 
@@ -5064,10 +4746,200 @@ dialog[open] {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
-}`;class Ya extends HTMLElement{dialog=null;titleText="Confirm Action";messageText="Are you sure?";resolvePromise=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this._unsubscribeI18n=n.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n()}setupDynamicListeners(){let o=this.shadowRoot.getElementById("modal-close"),r=this.shadowRoot.getElementById("btn-confirm");this.dialog=this.shadowRoot.getElementById("modal");let a=(t)=>{if(this.resolvePromise)this.resolvePromise(t),this.resolvePromise=null;this.dialog?.close()};if(o)o.onclick=()=>a(!1);if(r)r.onclick=()=>a(!0);if(this.dialog)this.dialog.onclick=(t)=>{if(t.target===this.dialog)a(!1)}}async confirm(o,r){return this.titleText=o,this.messageText=r,this.render(),this.dialog?.showModal(),new Promise((a)=>{this.resolvePromise=a})}render(){this.shadowRoot.innerHTML=`
-            <style>${Aa}</style>
-            ${Za({isOpen:!0,title:this.titleText,message:this.messageText})}
-        `,this.setupDynamicListeners()}}if(!customElements.get("confirmation-modal"))customElements.define("confirmation-modal",Ya);m();async function Na(o){try{await n.ensureInitialized(),await o()}catch(r){console.error("[Bootstrap] Critical failure:",r),document.body.innerHTML=`
+}`;class Rt extends HTMLElement{dialog=null;titleText="Confirm Action";messageText="Are you sure?";resolvePromise=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this._unsubscribeI18n=i.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n()}setupDynamicListeners(){let o=this.shadowRoot.getElementById("modal-close"),t=this.shadowRoot.getElementById("btn-confirm");this.dialog=this.shadowRoot.getElementById("modal");let r=(a)=>{if(this.resolvePromise)this.resolvePromise(a),this.resolvePromise=null;this.dialog?.close()};if(o)o.onclick=()=>r(!1);if(t)t.onclick=()=>r(!0);if(this.dialog)this.dialog.onclick=(a)=>{if(a.target===this.dialog)r(!1)}}async confirm(o,t){return this.titleText=o,this.messageText=t,this.render(),this.dialog?.showModal(),new Promise((r)=>{this.resolvePromise=r})}render(){this.shadowRoot.innerHTML=`
+            <style>${Gt}</style>
+            ${Ht({isOpen:!0,title:this.titleText,message:this.messageText})}
+        `,this.setupDynamicListeners()}}if(!customElements.get("confirmation-modal"))customElements.define("confirmation-modal",Rt);L();class fo{static parse(o){if(!o)return"";let t=o.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");return t=t.replace(/```(\w+)?\n([\s\S]*?)```/g,'<pre><code class="language-$1">$2</code></pre>'),t=t.replace(/^> (.*$)/gim,"<blockquote>$1</blockquote>"),t=t.replace(/^### (.*$)/gim,"<h3>$1</h3>"),t=t.replace(/^## (.*$)/gim,"<h2>$1</h2>"),t=t.replace(/^# (.*$)/gim,"<h1>$1</h1>"),t=t.replace(/^---$/gim,"<hr />"),t=t.replace(/^\s*[-*]\s+(.*$)/gim,"<ul><li>$1</li></ul>"),t=t.replace(/<\/ul>\s*<ul>/gim,""),t=t.replace(/^\s*\d+\.\s+(.*$)/gim,"<ol><li>$1</li></ol>"),t=t.replace(/<\/ol>\s*<ol>/gim,""),t=t.replace(/^\s*\[ \]\s+(.*$)/gim,'<div class="checklist-item"><input type="checkbox" disabled> $1</div>'),t=t.replace(/^\s*\[x\]\s+(.*$)/gim,'<div class="checklist-item"><input type="checkbox" checked disabled> $1</div>'),t=t.replace(/`([^`]+)`/gim,"<code>$1</code>"),t=t.replace(/!\[([^\]]+)\]\(([^)]+)\)/gim,'<img src="$2" alt="$1" style="max-width:100%"/>'),t=t.replace(/\[([^\]]+)\]\(([^)]+)\)/gim,'<a href="$2" target="_blank">$1</a>'),t=t.replace(/\*\*([^*]+)\*\*/gim,"<strong>$1</strong>"),t=t.replace(/__([^_]+)__/gim,"<strong>$1</strong>"),t=t.replace(/\*([^*]+)\*/gim,"<em>$1</em>"),t=t.replace(/_([^_]+)_/gim,"<em>$1</em>"),t=t.replace(/\n\n/gim,"<br><br>"),t=t.replace(/\n/gim,"<br>"),t}}m();var I={lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',preview:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'};class qt extends HTMLElement{_itemId=0;_content="";_isPreviewMode=!1;_isLocked=!0;_isDirty=!1;_isSaving=!1;_editor=null;_preview=null;_headerActions=null;_lockBtn=null;_togglePreviewBtn=null;static get observedAttributes(){return["item-id"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.loadContent()}attributeChangedCallback(o,t,r){if(o==="item-id"&&t!==r)this._itemId=parseInt(r,10),this.loadContent()}render(){if(!this.shadowRoot)return;let o=this._isLocked?"locked":"unlocked";this.shadowRoot.innerHTML=`
+            <style>
+                :host {
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
+                    width: 100%;
+                    background: var(--lb-bg-card);
+                    color: var(--lb-text-main);
+                    border-radius: 12px;
+                    overflow: hidden;
+                    position: relative;
+                    --lb-accent: var(--accent, #0078D4);
+                    --lb-border: var(--border, rgba(255,255,255,0.1));
+                    --lb-text-dim: var(--text-dim, rgba(255,255,255,0.5));
+                }
+
+                /* Header Actions (Top Right) */
+                .header-actions {
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    display: flex;
+                    gap: 6px; /* Closer gap */
+                    z-index: 10;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                }
+
+                :host(:hover) .header-actions {
+                    opacity: 1;
+                }
+                
+                :host(.locked) .header-actions {
+                    opacity: 1;
+                }
+
+                .action-btn {
+                    /* Match Notepad .dock-btn / .top-lock-btn style base */
+                    background: rgba(0, 0, 0, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    color: var(--lb-text-dim);
+                    cursor: pointer;
+                    width: 28px; /* Match Notepad 28px */
+                    height: 28px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                    backdrop-filter: blur(4px);
+                }
+
+                .action-btn:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                    color: var(--lb-text-main);
+                    transform: scale(1.05); /* Match Notepad hover effect */
+                }
+
+                .action-btn.active {
+                    background: var(--lb-accent);
+                    color: #fff;
+                    border-color: var(--lb-accent);
+                }
+
+                /* Lock Button Specifics - Match Notepad .top-lock-btn */
+                .action-btn.lock-btn {
+                    /* Default (Unlocked/Edit Mode) -> Red/Alert hint */
+                    color: #ff453a; 
+                    background: rgba(255, 69, 58, 0.15); 
+                    border-color: rgba(255, 69, 58, 0.3);
+                }
+                .action-btn.lock-btn.locked {
+                    /* Locked (Safe Mode) -> Dim/Gray */
+                    color: var(--lb-text-dim); 
+                    background: rgba(0,0,0,0.2); 
+                    border-color: rgba(255,255,255,0.05);
+                }
+                .action-btn.lock-btn.locked:hover {
+                    background: rgba(255,255,255,0.1);
+                    color: var(--lb-text-main);
+                }
+
+                .action-btn svg {
+                    width: 14px; /* Match Notepad icon size */
+                    height: 14px;
+                }
+
+                /* Scrollbar Styles (Match Notepad) */
+                .editor-container::-webkit-scrollbar,
+                .preview::-webkit-scrollbar,
+                textarea.editor::-webkit-scrollbar { width: 4px; }
+                
+                .editor-container::-webkit-scrollbar-thumb,
+                .preview::-webkit-scrollbar-thumb,
+                textarea.editor::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; }
+                
+                .editor-container:hover::-webkit-scrollbar-thumb,
+                .preview:hover::-webkit-scrollbar-thumb,
+                textarea.editor:hover::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.15); }
+
+                .editor-container {
+                    flex-grow: 1;
+                    position: relative;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    padding-top: 20px; 
+                }
+
+                textarea.editor {
+                    flex-grow: 1;
+                    width: 100%;
+                    height: 100%;
+                    background: transparent !important;
+                    background-color: transparent !important;
+                    border: none !important;
+                    color: var(--lb-text-main);
+                    caret-color: var(--lb-accent);
+                    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+                    font-size: 14px;
+                    padding: 16px;
+                    resize: none;
+                    outline: none !important;
+                    box-shadow: none !important;
+                    box-sizing: border-box;
+                    line-height: 1.6;
+                }
+
+                textarea.editor:disabled {
+                    opacity: 0.7; 
+                    cursor: default;
+                }
+
+                .preview {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    padding: 16px;
+                    padding-top: 36px; 
+                    overflow-y: auto;
+                    box-sizing: border-box;
+                    display: none;
+                    font-family: var(--lb-font-sans, system-ui, sans-serif);
+                    line-height: 1.6;
+                    background: var(--lb-bg-card); 
+                    z-index: 5;
+                }
+
+                .preview.visible {
+                    display: block;
+                }
+
+                /* Markdown Styles for Preview */
+                .preview h1, .preview h2, .preview h3 { margin-top: 1em; margin-bottom: 0.5em; color: var(--lb-text-header); font-weight: 600; }
+                .preview h1 { font-size: 1.6em; border-bottom: 1px solid var(--lb-border); padding-bottom: 0.3em; }
+                .preview h2 { font-size: 1.4em; }
+                .preview h3 { font-size: 1.2em; }
+                .preview p { margin-bottom: 1em; }
+                .preview ul, .preview ol { padding-left: 24px; margin-bottom: 1em; }
+                .preview li { margin-bottom: 4px; }
+                .preview blockquote { border-left: 3px solid var(--lb-accent); margin: 0 0 1em 0; padding-left: 12px; color: var(--lb-text-dim); font-style: italic; }
+                .preview code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+                .preview pre { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; overflow-x: auto; margin-bottom: 1em; }
+                .preview pre code { background: transparent; padding: 0; }
+                .preview img { max-width: 100%; border-radius: 6px; margin: 8px 0; }
+                .preview a { color: var(--lb-accent); text-decoration: none; }
+                .preview a:hover { text-decoration: underline; }
+                .preview hr { border: none; border-top: 1px solid var(--lb-border); margin: 16px 0; }
+                .preview .checklist-item { display: flex; align-items: start; gap: 8px; margin-bottom: 6px; }
+                .preview .checklist-item input { margin-top: 5px; cursor: default; }
+
+                @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+            </style>
+
+            <div class="header-actions">
+                <button class="action-btn toggle-preview" title="${i.t("widget.markdown.tool.toggle_preview")}" style="${this._isLocked?"display:none":""}">
+                    ${I.preview}
+                </button>
+                <button class="action-btn lock-btn ${o}" title="${this._isLocked?i.t("widget.markdown.tool.unlock"):i.t("widget.markdown.tool.lock")}">
+                    ${this._isLocked?I.lock:I.unlock}
+                </button>
+            </div>
+
+            <div class="editor-container">
+                <textarea class="editor" placeholder="${i.t("widget.markdown.placeholder")}" style="${this._isLocked?"display:none":""}"></textarea>
+                <div class="preview ${this._isLocked?"visible":""}"></div>
+            </div>
+        `,this._editor=this.shadowRoot.querySelector(".editor"),this._preview=this.shadowRoot.querySelector(".preview"),this._headerActions=this.shadowRoot.querySelector(".header-actions"),this._lockBtn=this.shadowRoot.querySelector(".lock-btn"),this._togglePreviewBtn=this.shadowRoot.querySelector(".toggle-preview"),this.bindEvents()}bindEvents(){this._editor?.addEventListener("input",()=>this.handleInput()),this._editor?.addEventListener("keydown",(o)=>this.handleKeydown(o)),this._headerActions?.addEventListener("click",(o)=>{let t=o.target.closest(".action-btn");if(!t)return;if(t.classList.contains("toggle-preview"))this.togglePreview();else if(t.classList.contains("lock-btn"))this.toggleLock()})}handleInput(){if(this._isLocked)return;if(this._isDirty=!0,this._isPreviewMode)this.updatePreview()}handleKeydown(o){if(this._isLocked)return;if(o.key==="Tab")o.preventDefault(),this.insertText("  ");if((o.ctrlKey||o.metaKey)&&o.key==="s")o.preventDefault(),this.save()}insertText(o){if(!this._editor)return;let t=this._editor.selectionStart,r=this._editor.selectionEnd,a=this._editor.value;this._editor.value=a.substring(0,t)+o+a.substring(r),this._editor.selectionStart=this._editor.selectionEnd=t+o.length,this.handleInput()}togglePreview(){if(this._isPreviewMode=!this._isPreviewMode,this._togglePreviewBtn)this._togglePreviewBtn.classList.toggle("active",this._isPreviewMode);this.applyViewState()}updatePreview(){if(this._editor&&this._preview)try{this._preview.innerHTML=fo.parse(this._editor.value)}catch(o){console.error("Markdown parsing failed",o),this._preview.innerHTML='<div class="error">Preview Error</div>'}}applyViewState(){if(this._isPreviewMode){if(this.updatePreview(),this._preview)this._preview.classList.add("visible"),this._preview.style.display="block";if(this._editor)this._editor.style.display="none",this._editor.style.visibility="hidden"}else{if(this._preview)this._preview.classList.remove("visible"),this._preview.style.display="none";if(this._editor)this._editor.style.display="block",this._editor.style.visibility="visible"}}toggleLock(){if(this._isLocked=!this._isLocked,this._editor)this._editor.disabled=this._isLocked;if(this._lockBtn)if(this._lockBtn.innerHTML=this._isLocked?I.lock:I.unlock,this._lockBtn.title=this._isLocked?i.t("widget.markdown.tool.unlock"):i.t("widget.markdown.tool.lock"),this._isLocked)this._lockBtn.classList.add("locked"),this._lockBtn.classList.remove("unlocked");else this._lockBtn.classList.remove("locked"),this._lockBtn.classList.add("unlocked");if(this._isLocked){if(this._isPreviewMode=!0,this._togglePreviewBtn)this._togglePreviewBtn.style.display="none"}else{if(this._isPreviewMode=!1,this._togglePreviewBtn)this._togglePreviewBtn.style.display="flex",this._togglePreviewBtn.classList.remove("active");this._editor?.focus()}if(this.applyViewState(),this._isLocked&&this._isDirty)this.save()}async loadContent(){if(!this._itemId)return;let t=g.getState().items.find((r)=>r.id===this._itemId);if(t){let r=Q.getMarkdownText(t.content);if(this._content=r,this._editor)this._editor.value=r;if(this._isLocked)this.updatePreview()}}async save(){if(!this._itemId||!this._editor)return;this._isSaving=!0;let o=this._editor.value;this._content=o;try{let r=g.getState().items.find((a)=>a.id===this._itemId);if(r){let a=Q.setMarkdownText(r.content,o);await g.updateItem({...r,content:a}),this._isDirty=!1}}catch(t){console.error(t)}finally{this._isSaving=!1}}}customElements.define("widget-markdown",qt);m();async function Ft(o){try{await i.ensureInitialized(),await o()}catch(t){console.error("[Bootstrap] Critical failure:",t),document.body.innerHTML=`
             <div style="
                 display: flex; 
                 flex-direction: column; 
@@ -5092,4 +4964,4 @@ dialog[open] {
                     border-radius: 4px;
                 ">Reload</button>
             </div>
-        `}}Ko();var F=document.getElementById("main-topbar"),Oa=document.getElementById("right-drawer"),Mo=document.getElementById("dashboard-root"),lo,Bo,Ro;Na(async()=>{M.init(),await y.fetchUser();let o=y.getUser();if(o){if(o.language)await n.setLanguage(o.language);if(o.preferences&&o.preferences.grid_columns)document.documentElement.style.setProperty("--user-preferred-columns",o.preferences.grid_columns.toString());if(o.theme==="dark")M.enableDark();else if(o.theme==="light")M.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)M.enableDark();else M.enableLight();if(o.id)x.setUserId(o.id)}if(F){if(F.setState({user:o}),o&&o.project_name)F.setAttribute("title",o.project_name);y.subscribe((a)=>{if(a){if(F.setState({user:a}),a.project_name)F.setAttribute("title",a.project_name)}})}await x.fetchItems(),Qt(),xo.start(),lo=document.createElement("add-bookmark-modal"),document.body.appendChild(lo),Bo=document.createElement("add-widget-modal"),document.body.appendChild(Bo),Ro=document.createElement("confirmation-modal"),document.body.appendChild(Ro);let r=document.createElement("widget-config-modal");document.body.appendChild(r)});po.on(so.SHOW_CONFIRMATION,async(o)=>{let{title:r,message:a,onConfirm:t}=o.detail;if(Ro){if(await Ro.confirm(r,a)&&t)t()}});po.on(so.SHOW_WIDGET_CONFIG,(o)=>{let{item:r,type:a}=o.detail;if(a==="bookmark"){if(lo)lo.openForEdit(r)}else{let t=document.querySelector("widget-config-modal");if(t)t.open(r)}});po.on(so.NOTIFY,(o)=>{let r=document.querySelector("app-notifier");if(r)r.show(o.detail.message,o.detail.type)});if(F)F.addEventListener("drawer-toggle",(o)=>{if(o.detail.action==="open")Oa.open(),F.setState({drawerOpen:!0});else Oa.close(),F.setState({drawerOpen:!1})}),F.addEventListener("edit-mode-change",(o)=>{let r=o.detail.active;if(Mo.classList.toggle("edit-mode",r),!r)window.location.reload()}),F.addEventListener("search-input",(o)=>{let r=o.detail.query;x.setSearchQuery(r)}),F.addEventListener("add-item",async(o)=>{let r=o.detail.action;if(r==="add-bookmark"){if(lo)lo.open()}else if(r==="add-widget"){if(Bo)Bo.open()}else if(r==="add-section"){let t=x.getState().items||[],{collisionService:i}=await Promise.resolve().then(() => (T(),to)),e=i.findFirstAvailableSlot(1,1,t),s={type:"section",x:e.x,y:e.y,w:1,h:1,content:JSON.stringify({title:""})},p=await x.addItem(s);if(p)po.emit(so.SHOW_WIDGET_CONFIG,{item:p,type:"section"})}});window.addEventListener("widget-selected",async(o)=>{let a=o.detail,i=x.getState().items||[],{collisionService:e}=await Promise.resolve().then(() => (T(),to)),s=e.findFirstAvailableSlot(a.defaultW,a.defaultH,i),p={type:"widget",x:s.x,y:s.y,w:a.defaultW,h:a.defaultH,content:JSON.stringify({widgetId:a.id,text:a.id==="notepad"?"":void 0})};await x.addItem(p)});window.addEventListener("drawer-close",()=>{if(F)F.setState({drawerOpen:!1})});window.addEventListener("click",(o)=>{let r=o.target,a=document.getElementById("add-menu"),t=document.getElementById("add-toggle");if(a&&a.classList.contains("active")&&!a.contains(r)&&t&&!t.contains(r))a.classList.remove("active")});function Qt(){if(!Mo)return;Mo.innerHTML="";let o=document.createElement("bookmark-grid");Mo.appendChild(o)}
+        `}}oo();var j=document.getElementById("main-topbar"),Qt=document.getElementById("right-drawer"),to=document.getElementById("dashboard-root"),C,ro,ao;Ft(async()=>{G.init(),await w.fetchUser();let o=w.getUser();if(o){if(o.language)await i.setLanguage(o.language);if(o.preferences&&o.preferences.grid_columns)document.documentElement.style.setProperty("--user-preferred-columns",o.preferences.grid_columns.toString());if(o.theme==="dark")G.enableDark();else if(o.theme==="light")G.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)G.enableDark();else G.enableLight();if(o.id)g.setUserId(o.id)}if(j){if(j.setState({user:o}),o&&o.project_name)j.setAttribute("title",o.project_name);w.subscribe((r)=>{if(r){if(j.setState({user:r}),r.project_name)j.setAttribute("title",r.project_name)}})}await g.fetchItems(),sr(),W.start(),C=document.createElement("add-bookmark-modal"),document.body.appendChild(C),ro=document.createElement("add-widget-modal"),document.body.appendChild(ro),ao=document.createElement("confirmation-modal"),document.body.appendChild(ao);let t=document.createElement("widget-config-modal");document.body.appendChild(t)});X.on(O.SHOW_CONFIRMATION,async(o)=>{let{title:t,message:r,onConfirm:a}=o.detail;if(ao){if(await ao.confirm(t,r)&&a)a()}});X.on(O.SHOW_WIDGET_CONFIG,(o)=>{let{item:t,type:r}=o.detail;if(r==="bookmark"){if(C)C.openForEdit(t)}else{let a=document.querySelector("widget-config-modal");if(a)a.open(t)}});X.on(O.NOTIFY,(o)=>{let t=document.querySelector("app-notifier");if(t)t.show(o.detail.message,o.detail.type)});if(j)j.addEventListener("drawer-toggle",(o)=>{if(o.detail.action==="open")Qt.open(),j.setState({drawerOpen:!0});else Qt.close(),j.setState({drawerOpen:!1})}),j.addEventListener("edit-mode-change",(o)=>{let t=o.detail.active;if(to.classList.toggle("edit-mode",t),!t)window.location.reload()}),j.addEventListener("search-input",(o)=>{let t=o.detail.query;g.setSearchQuery(t)}),j.addEventListener("add-item",async(o)=>{let t=o.detail.action;if(t==="add-bookmark"){if(C)C.open()}else if(t==="add-widget"){if(ro)ro.open()}else if(t==="add-section"){let a=g.getState().items||[],{collisionService:n}=await Promise.resolve().then(() => (B(),N)),e=n.findFirstAvailableSlot(1,1,a),s={type:"section",x:e.x,y:e.y,w:1,h:1,content:JSON.stringify({title:""})},d=await g.addItem(s);if(d)X.emit(O.SHOW_WIDGET_CONFIG,{item:d,type:"section"})}});window.addEventListener("widget-selected",async(o)=>{let r=o.detail,n=g.getState().items||[],{collisionService:e}=await Promise.resolve().then(() => (B(),N)),s=e.findFirstAvailableSlot(r.defaultW,r.defaultH,n),d={type:"widget",x:s.x,y:s.y,w:r.defaultW,h:r.defaultH,content:JSON.stringify({widgetId:r.id,text:r.id==="notepad"||r.id==="markdown"?"":void 0})};await g.addItem(d)});window.addEventListener("drawer-close",()=>{if(j)j.setState({drawerOpen:!1})});window.addEventListener("click",(o)=>{let t=o.target,r=document.getElementById("add-menu"),a=document.getElementById("add-toggle");if(r&&r.classList.contains("active")&&!r.contains(t)&&a&&!a.contains(t))r.classList.remove("active")});function sr(){if(!to)return;to.innerHTML="";let o=document.createElement("bookmark-grid");to.appendChild(o)}

@@ -80,7 +80,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             'clock': 'widget-clock',
             'notepad': 'widget-notepad',
             'telemetry': 'widget-telemetry',
-            'weather': 'widget-weather'
+            'weather': 'widget-weather',
+            'markdown': 'widget-markdown'
         };
         const tagName = tagMap[widgetId] || 'div';
         const rawContent = data.text || '';
