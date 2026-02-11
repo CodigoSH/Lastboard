@@ -2,7 +2,7 @@ import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateStatusTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import '../Select/Select';
 // @ts-ignore
@@ -156,22 +156,7 @@ class SettingsContent extends HTMLElement {
 
     async handleBetaToggle(checked: boolean) {
         this.savePrefs({ beta_updates: checked });
-
-        // Update visual text state immediately
-        const text = this.shadowRoot!.getElementById('beta-text');
-        if (text) {
-            if (checked) {
-                text.style.color = '#2fb344';
-                text.style.borderColor = '#2fb344';
-                text.style.boxShadow = '0 0 10px rgba(47, 179, 68, 0.2)';
-            } else {
-                text.style.color = 'var(--text-dim)';
-                text.style.borderColor = 'var(--border)';
-                text.style.boxShadow = 'none';
-            }
-        }
-
-        // Re-check for updates with new beta preference
+        // Logic handled by re-rendering and CSS
         await this.checkForUpdates();
     }
 
@@ -440,7 +425,7 @@ class SettingsContent extends HTMLElement {
                 return usersTemplate(this.users);
 
             case 'about':
-                return aboutTemplate(this.version, this.updateInfo, user.role || '');
+                return aboutTemplate(this.version, this.updateInfo, user.role || '', this.prefs.beta_updates || false);
 
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">${i18n.t('settings.default_module_desc')}</p></div>`;
@@ -448,7 +433,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.2.0-Beta.09'; // Should be sync with backend or injected
+    private version = 'v1.2.0-Beta.10'; // Should be sync with backend or injected
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
 
@@ -461,12 +446,14 @@ class SettingsContent extends HTMLElement {
                 const isBeta = this.prefs.beta_updates || false;
 
                 this.updateInfo = await updateService.check(isBeta);
-                this.version = this.updateInfo.current_version;
+                if (this.updateInfo) {
+                    this.version = this.updateInfo.current_version;
+                    this.updateUpdateUI();
+                }
             } catch (e) {
                 console.error("Check update failed", e);
             } finally {
                 this.checkUpdatesPromise = null;
-                this.render();
             }
         })();
 
@@ -693,26 +680,22 @@ class SettingsContent extends HTMLElement {
     }
 
     updateBetaBadgeVisuals() {
+        // Simple initialization of the toggle state
         setTimeout(() => {
             const toggle = this.shadowRoot!.getElementById('beta-updates-toggle-badge') as HTMLInputElement;
-            const text = this.shadowRoot!.getElementById('beta-text');
-
-            // Use current prefs
-            const isActive = this.prefs.beta_updates || false;
-
-            if (toggle && text) {
-                toggle.checked = isActive;
-                if (isActive) {
-                    text.style.color = '#2fb344';
-                    text.style.borderColor = '#2fb344';
-                    text.style.boxShadow = '0 0 10px rgba(47, 179, 68, 0.2)';
-                } else {
-                    text.style.color = 'var(--text-dim)';
-                    text.style.borderColor = 'var(--border)';
-                    text.style.boxShadow = 'none';
-                }
+            if (toggle) {
+                toggle.checked = this.prefs.beta_updates || false;
             }
         }, 0);
+    }
+
+    private updateUpdateUI() {
+        const container = this.shadowRoot!.getElementById('update-status-container');
+        if (container) {
+            const user = userStore.getUser();
+            const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'administrator';
+            container.innerHTML = updateStatusTemplate(isAdmin, this.updateInfo);
+        }
     }
 }
 

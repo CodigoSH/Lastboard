@@ -96,7 +96,8 @@
     text-align: left;
     padding: 0;
     flex: 1;
-    min-width: 0; /* allow text-overflow ellipsis in flex */
+    min-width: 0;
+    /* allow text-overflow ellipsis in flex */
 }
 
 /* Status indicator — inline at end of card instead of absolute */
@@ -447,6 +448,9 @@
     transform: translateY(calc(-50% - 1px));
     /* Lift half-way up to interrupt border */
     left: 12px;
+    right: 12px;
+    display: block;
+    width: fit-content;
     z-index: 2;
 
     color: var(--text-dim);
@@ -466,10 +470,20 @@
     /* Opaque match to hide border line behind */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     line-height: 1.4;
-    width: fit-content;
+
+    /* Professional Truncation */
+    max-width: calc(100% - 24px);
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+    box-sizing: border-box;
 
     transition: all 0.3s ease;
+}
+
+/* In edit mode, leave room for action buttons on the right */
+:host(.edit-mode) .section-title {
+    max-width: calc(100% - 84px);
 }
 
 /* Hover state for title to match section consistency */
@@ -557,12 +571,10 @@
     pointer-events: none;
     border: 1px solid var(--border);
     animation: skeleton-shimmer 1.5s infinite linear;
-    background: linear-gradient(
-        90deg,
-        var(--surface) 25%,
-        var(--border) 50%,
-        var(--surface) 75%
-    );
+    background: linear-gradient(90deg,
+            var(--surface) 25%,
+            var(--border) 50%,
+            var(--surface) 75%);
     background-size: 200% 100%;
 }
 
@@ -582,6 +594,11 @@
 }
 
 @keyframes skeleton-shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }

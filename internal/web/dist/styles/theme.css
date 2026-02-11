@@ -197,3 +197,28 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+/* Global Scrollbar Aesthetics */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--accent-rgb), 0.25) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(var(--accent-rgb), 0.25);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--accent-rgb), 0.45);
+}

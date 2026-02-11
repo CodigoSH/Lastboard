@@ -99,18 +99,6 @@
     border-radius: var(--radius);
 }
 
-.icon-picker__grid::-webkit-scrollbar {
-    width: 6px;
-}
-
-.icon-picker__grid::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.icon-picker__grid::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 3px;
-}
 
 .icon-picker__item {
     aspect-ratio: 1;

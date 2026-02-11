@@ -337,76 +337,90 @@ export const advancedTemplate = () => `
     </dialog>
 `;
 
-export const aboutTemplate = (version: string, updateInfo: any, role: string) => {
+export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
+    if (!isAdmin) return '';
+    if (!updateInfo) return '';
+
+    if (updateInfo.is_docker) {
+        return `
+            <div style="background: rgba(var(--info-rgb), 0.1); border: 1px solid rgba(var(--info-rgb), 0.3); padding: 16px; border-radius: var(--radius); width: 100%; text-align: left;">
+                    <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--accent); flex-shrink: 0;"><path d="M21 12l-4.37-6.16c-.37-.52-.98-.84-1.63-.84h-3V4c0-1.1-.9-2-2-2s-2 .9-2 2v1H5c-.65 0-1.26.32-1.63.84L-1 12v3h2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h2v-3zm-11 7H7v-3h3v3zm-5 0H2v-3h3v3zm12 0h-3v-3h3v3z"/></svg>
+                    <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${i18n.t('settings.docker_mode')}</h4>
+                        <p style="margin: 0; font-size: 13px; color: var(--text-dim);">
+                            ${i18n.t('settings.docker_desc')}<br>
+                            ${updateInfo.available ? `<strong style="color: var(--accent);">${i18n.t('settings.new_version_notif')} (${updateInfo.latest_version})</strong>` : i18n.t('settings.up_to_date_docker_msg')}
+                        </p>
+                    </div>
+                    </div>
+            </div>
+        `;
+    }
+
+    if (updateInfo.available) {
+        return `
+            <div class="update-modal">
+                <div class="update-modal__glow"></div>
+                
+                <div class="update-modal__content">
+                    <div class="update-modal__header">
+                        <div class="update-modal__badge">${i18n.t('settings.update_available')}</div>
+                        <h3 class="update-modal__version">${updateInfo.latest_version}</h3>
+                    </div>
+                    
+                    <div class="update-modal__footer">
+                        <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${updateInfo.asset_url}')">
+                            ${i18n.t('action.download_install')}
+                        </app-button>
+                        <a href="https://github.com/CodigoSH/Lastboard/releases" target="_blank" style="text-decoration: none;">
+                            <app-button variant="ghost" style="height: 100%;">${i18n.t('general.changelog')}</app-button>
+                        </a>
+                    </div>
+                    <p id="update-status" style="margin: 0; font-size: 12px; color: var(--text-dim); display: none; text-align: center;">${i18n.t('notifier.downloading_secure')}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div style="color: var(--success-color); font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 500;">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            <span>${i18n.t('settings.up_to_date')}</span>
+        </div>
+    `;
+};
+
+export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean) => {
     const isAdmin = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'administrator';
     return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
-        <div class="bento-card" style="text-align: center; padding: 48px 24px; position: relative;">
-             ${isAdmin ? `
-                <div style="position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                    <span id="beta-text" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s; user-select: none; border: 2px solid transparent; padding: 4px 10px; border-radius: 20px;">
-                        ${i18n.t('settings.beta_tester')}
-                    </span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="beta-updates-toggle-badge" onchange="this.getRootNode().host.handleBetaToggle(this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-             ` : ''}
-             
-             <!-- Logo Placeholder -->
-             <img src="/images/logo.png" alt="Lastboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
-             
-             <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
-             <p class="settings-content__text-dim" style="margin: 0 0 32px 0;">${version}</p>
+    <div style="position: relative;">
+        ${isAdmin ? `
+            <div class="beta-badge">
+                <span id="beta-text" class="beta-badge__pill ${betaUpdates ? 'active' : ''}">
+                    ${i18n.t('settings.beta_tester')}
+                </span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="beta-updates-toggle-badge" onchange="this.getRootNode().host.handleBetaToggle(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        ` : ''}
 
-             <div style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px;">
-                ${isAdmin ? (updateInfo ? `
-                    ${updateInfo.is_docker ? `
-                        <div style="background: rgba(var(--info-rgb), 0.1); border: 1px solid rgba(var(--info-rgb), 0.3); padding: 16px; border-radius: var(--radius); width: 100%; text-align: left;">
-                             <div style="display: flex; gap: 12px; align-items: flex-start;">
-                                <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--accent); flex-shrink: 0;"><path d="M21 12l-4.37-6.16c-.37-.52-.98-.84-1.63-.84h-3V4c0-1.1-.9-2-2-2s-2 .9-2 2v1H5c-.65 0-1.26.32-1.63.84L-1 12v3h2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h2v-3zm-11 7H7v-3h3v3zm-5 0H2v-3h3v3zm12 0h-3v-3h3v3z"/></svg>
-                                <div>
-                                    <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${i18n.t('settings.docker_mode')}</h4>
-                                    <p style="margin: 0; font-size: 13px; color: var(--text-dim);">
-                                        ${i18n.t('settings.docker_desc')}<br>
-                                        ${updateInfo.available ? `<strong style="color: var(--accent);">${i18n.t('settings.new_version_notif')} (${updateInfo.latest_version})</strong>` : i18n.t('settings.up_to_date_docker_msg')}
-                                    </p>
-                                </div>
-                             </div>
-                        </div>
-                    ` : `
-                        <!-- Native Update Logic -->
-                        <!-- Native Update Logic -->
-                        ${updateInfo.available ? `
-                             <div class="update-modal">
-                                <div class="update-modal__glow"></div>
-                                
-                                <div class="update-modal__content">
-                                    <div class="update-modal__header">
-                                        <div class="update-modal__badge">${i18n.t('settings.update_available')}</div>
-                                        <h3 class="update-modal__version">${updateInfo.latest_version}</h3>
-                                    </div>
-                                    
-                                    <div class="update-modal__footer">
-                                        <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${updateInfo.asset_url}')">
-                                            ${i18n.t('action.download_install')}
-                                        </app-button>
-                                        <a href="https://github.com/CodigoSH/Lastboard/releases" target="_blank" style="text-decoration: none;">
-                                            <app-button variant="ghost" style="height: 100%;">${i18n.t('general.changelog')}</app-button>
-                                        </a>
-                                    </div>
-                                    <p id="update-status" style="margin: 0; font-size: 12px; color: var(--text-dim); display: none; text-align: center;">${i18n.t('notifier.downloading_secure')}</p>
-                                </div>
-                            </div>
-                        ` : `
-                            <div style="color: var(--success-color); font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 500;">
-                                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                                <span>${i18n.t('settings.up_to_date')}</span>
-                            </div>
-                        `}
-                    `}
-                ` : ``) : ''}
+        <div class="bento-grid" style="grid-template-columns: 1fr;">
+            <div class="bento-card" style="text-align: center; padding: 24px;">
+            
+            <div style="margin: 24px 0;">
+                <!-- Logo Placeholder -->
+                <img src="/images/logo.png" alt="Lastboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
+                
+                <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
+                <p class="settings-content__text-dim" style="margin: 0;">${version}</p>
+            </div>
+
+             <div id="update-status-container" style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px; min-height: 48px;">
+                ${updateStatusTemplate(isAdmin, updateInfo)}
+             </div>
              </div>
 
              <div style="margin-top: 64px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: center; gap: 24px;">

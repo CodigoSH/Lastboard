@@ -141,19 +141,6 @@ export class MarkdownWidget extends HTMLElement {
                     height: 14px;
                 }
 
-                /* Scrollbar Styles (Match Notepad) */
-                .editor-container::-webkit-scrollbar,
-                .preview::-webkit-scrollbar,
-                textarea.editor::-webkit-scrollbar { width: 4px; }
-                
-                .editor-container::-webkit-scrollbar-thumb,
-                .preview::-webkit-scrollbar-thumb,
-                textarea.editor::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; }
-                
-                .editor-container:hover::-webkit-scrollbar-thumb,
-                .preview:hover::-webkit-scrollbar-thumb,
-                textarea.editor:hover::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.15); }
-
                 .editor-container {
                     flex-grow: 1;
                     position: relative;
@@ -202,10 +189,6 @@ export class MarkdownWidget extends HTMLElement {
                     line-height: 1.6;
                     background: var(--lb-bg-card); 
                     z-index: 5;
-                }
-
-                .preview.visible {
-                    display: block;
                 }
 
                 /* Markdown Styles for Preview */
