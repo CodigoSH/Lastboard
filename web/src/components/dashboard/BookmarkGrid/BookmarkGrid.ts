@@ -16,6 +16,7 @@ class BookmarkGrid extends HTMLElement {
     private bookmarks: GridItem[] = [];
     private allItems: GridItem[] = []; // Store all items for filtering
     private isEditing: boolean = false;
+    private isLoading: boolean = true;
     private searchQuery: string = '';
     private _unsubscribe: (() => void) | undefined;
     private _unsubscribeI18n: (() => void) | undefined;
@@ -170,6 +171,11 @@ class BookmarkGrid extends HTMLElement {
 
             if (this.isEditing !== state.isEditing) {
                 this.isEditing = state.isEditing;
+                shouldRerender = true;
+            }
+
+            if (this.isLoading !== state.loading) {
+                this.isLoading = state.loading;
                 shouldRerender = true;
             }
 
@@ -923,6 +929,7 @@ class BookmarkGrid extends HTMLElement {
             ${template({
             bookmarks: this.bookmarks,
             isEditing: this.isEditing,
+            isLoading: this.isLoading,
             isSearching: !!this.searchQuery,
             isTouchDevice: this.isTouchDevice,
             maxCols: this.currentGridCols

@@ -42,15 +42,15 @@ bootstrap(async () => {
     // from the DB; this call only matters for the 'system' edge case.
     ThemeService.init();
 
-    // Initialize stores
-    await userStore.fetchUser();
+    // ── Parallel Initialization ─────────────────────────────────────
+    // We launch all critical data fetching tasks simultaneously.
+    // i18n is already ensured by bootstrap wrapper.
+    const [userFetch, itemsFetch] = await Promise.all([
+        userStore.fetchUser(),
+        dashboardStore.fetchItems()
+    ]);
 
     // ── Per-user sync ──────────────────────────────────────────────
-    // After the authenticated user is fetched, every preference that lives in
-    // browser-local storage (language, theme, item cache) must be overwritten
-    // with the backend value.  Without this a second user logging into the
-    // same browser would inherit the first user's language, theme and cached
-    // dashboard items.
     const u = userStore.getUser();
     if (u) {
         // Language: overwrite i18n with the backend preference.
@@ -58,8 +58,7 @@ bootstrap(async () => {
             await i18n.setLanguage(u.language);
         }
 
-        // Theme: apply from backend and update the cookie that serveIndex
-        // reads, so the next page-load renders the correct class server-side.
+        // Theme & Grid columns
         if (u.preferences && u.preferences.grid_columns) {
             document.documentElement.style.setProperty('--user-preferred-columns', u.preferences.grid_columns.toString());
         }
@@ -69,7 +68,6 @@ bootstrap(async () => {
         } else if (u.theme === 'light') {
             ThemeService.enableLight();
         } else {
-            // 'system' — honour OS preference
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 ThemeService.enableDark();
             } else {
@@ -77,22 +75,18 @@ bootstrap(async () => {
             }
         }
 
-        // Dashboard items: scope the localStorage cache to this user so a
-        // different user logging into the same browser never sees stale items.
         if (u.id) {
             dashboardStore.setUserId(u.id);
         }
     }
-    // ── end per-user sync ──────────────────────────────────────────
 
-    // Inject user into topbar for permission handling
+    // Inject user into topbar
     if (topbar) {
         topbar.setState({ user: u });
         if (u && u.project_name) {
             topbar.setAttribute('title', u.project_name);
         }
 
-        // Dynamic update
         userStore.subscribe((user) => {
             if (user) {
                 topbar.setState({ user });
@@ -102,8 +96,6 @@ bootstrap(async () => {
             }
         });
     }
-
-    await dashboardStore.fetchItems();
 
     // Render dashboard components
     renderDashboard();

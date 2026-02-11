@@ -9,6 +9,7 @@ interface DashboardState {
     searchQuery: string;
     isOffline: boolean;
     updateAvailable: boolean;
+    loading: boolean;
     stats: {
         cpu_usage: number;
         ram_usage: number;
@@ -41,6 +42,7 @@ class DashboardStore {
         searchQuery: '',
         isOffline: false,
         updateAvailable: false,
+        loading: true,
         stats: null,
         availableWidth: 1200, // Default fallback
         gridColumns: 12
@@ -241,42 +243,52 @@ class DashboardStore {
     }
 
     async fetchItems() {
-        try {
-            // Try to fetch from backend first
+        // 1. STALE: Try to load from localStorage immediately for instant UI
+        const cached = localStorage.getItem(this.getStorageKey());
+        if (cached) {
             try {
-                const items = await dashboardService.getItems();
-                if (Array.isArray(items)) {
-                    this.state.items = items;
-                    this.state.isOffline = false;
-                    this.saveToLocalStorage();
-                } else {
-                    throw new Error('Backend returned invalid data');
+                const storedItems = JSON.parse(cached);
+                if (Array.isArray(storedItems) && storedItems.length > 0) {
+                    this.state.items = storedItems;
+                    this.state.loading = false; // We have data, even if stale
+                    this.notify();
                 }
-            } catch (apiError) {
-                this.state.isOffline = true;
-
-                // Try localStorage next
-                const serialized = localStorage.getItem(this.getStorageKey());
-                if (serialized) {
-                    const storedItems = JSON.parse(serialized);
-                    if (Array.isArray(storedItems) && storedItems.length > 0) {
-                        this.state.items = storedItems;
-                    } else {
-                        // Last resort: use initial mock data
-                        this.state.items = [...INITIAL_ITEMS];
-                        this.saveToLocalStorage();
-                    }
-                } else {
-                    // No localStorage, use initial mock data
-                    this.state.items = [...INITIAL_ITEMS];
-                    this.saveToLocalStorage();
-                }
+            } catch (e) {
+                console.warn('[DashboardStore] Failed to parse cached items', e);
             }
-            this.ensureItemsIsArray();
-            this.notify();
-        } catch (error) {
-            console.error('[DashboardStore] Failed to fetch dashboard items', error);
-            this.state.items = [];
+        }
+
+        // 2. REVALIDATE: Fetch from backend in background
+        try {
+            const items = await dashboardService.getItems();
+            if (Array.isArray(items)) {
+                // Only update and notify if data actually changed to prevent flicker
+                const hasChanged = JSON.stringify(this.state.items) !== JSON.stringify(items);
+
+                this.state.items = items;
+                this.state.isOffline = false;
+                this.state.loading = false;
+                this.saveToLocalStorage();
+
+                if (hasChanged) {
+                    this.notify();
+                }
+            } else {
+                throw new Error('Backend returned invalid data');
+            }
+        } catch (apiError) {
+            console.error('[DashboardStore] API fetch failed', apiError);
+            this.state.isOffline = true;
+            this.state.loading = false;
+
+            // If we don't even have cache, fallback to mock
+            if (this.state.items.length === 0) {
+                this.state.items = [...INITIAL_ITEMS];
+                this.saveToLocalStorage();
+                this.notify();
+            } else {
+                this.notify(); // Notify so UI knows we're done (offline)
+            }
         }
     }
 
