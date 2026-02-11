@@ -174,7 +174,8 @@
 
 html,
 body {
-    height: 100vh;
+    height: 100vh; /* Fallback for older browsers */
+    height: 100dvh; /* Dynamic viewport height - adjusts for browser bars */
     margin: 0;
     padding: 0;
     overflow: hidden;
