@@ -42,7 +42,7 @@ COPY --from=builder /app/lastboard /app/lastboard
 
 # Environment
 ENV PORT=8080
-ENV DB_FILE=/app/data/dashboard.db
+ENV DB_FILE=/app/data/lastboard.db
 
 # Expose internal port
 EXPOSE 8080

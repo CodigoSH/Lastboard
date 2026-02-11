@@ -13,7 +13,7 @@ func main() {
 	// 1. Initialize Database
 	dbFile := os.Getenv("DB_FILE")
 	if dbFile == "" {
-		dbFile = "./dashboard.db"
+		dbFile = "./lastboard.db"
 	}
 	db, err := database.InitDB(dbFile)
 	if err != nil {

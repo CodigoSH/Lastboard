@@ -7,15 +7,15 @@ services:
     volumes:
       - ./data:/app/data
       # Map the database file to persist data. 
-      # Note: The app currently uses ./dashboard.db in root. 
-      # We need to ensure the app uses /app/data/dashboard.db via config or consistent paths.
-      # The main.go uses "./dashboard.db".
+      # Note: The app currently uses ./lastboard.db in root. 
+      # We need to ensure the app uses /app/data/lastboard.db via config or consistent paths.
+      # The main.go uses "./lastboard.db".
       # To make volume mapping work effectively without changing code heavily,
       # we can map the file directly or symlink, but mapping specific file to directory requires expected file existence or dir mapping.
       # Best practice: Map directory.
       # For now, following user request: "./data:/app/data"
-      # IMPORTANT: If the app writes to "./dashboard.db" (PWD/dashboard.db), 
-      # and PWD is /app, then it writes to /app/dashboard.db.
+      # IMPORTANT: If the app writes to "./lastboard.db" (PWD/lastboard.db), 
+      # and PWD is /app, then it writes to /app/lastboard.db.
       # The user requested mapping "./data:/app/data".
       # So we should probably tell the app to store DB in /app/data if possible, 
       # or if we can't change code, we might need a workaround.
