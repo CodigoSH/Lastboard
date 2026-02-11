@@ -45,27 +45,35 @@ sed -i "s/Current = \".*\"/Current = \"$NEW_TAG\"/" $GO_VERSION_FILE
 # SettingsContent.ts
 sed -i "s/private version = '.*'/private version = '$NEW_TAG'/" $SETTINGS_FILE
 
-# 4. Generate Release Notes
+# 4. Handle Pending Changes
+if [ -n "$(git status --porcelain)" ]; then
+    echo "📦 Committing pending changes before generating notes..."
+    git add .
+    git commit -m "chore: pre-release synchronization for $NEW_TAG"
+fi
+
+# 5. Generate Release Notes
 LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
 if [ -z "$LAST_TAG" ]; then
-    CHANGELOG="  - Initial release"
+    CHANGELOG="- Initial release"
 else
-    CHANGELOG=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"  - %s")
+    CHANGELOG=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s")
 fi
 
 NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
 cat <<EOF > $NOTES_FILE
 # Official Release: $NEW_TAG
 
-## 🚀 Changes since $LAST_TAG
+## 🚀 Changes since ${LAST_TAG:-initial}
 $CHANGELOG
 
 EOF
 
-# 5. Git Operations
+# 6. Git Operations (Official Release)
 git add .
 git commit -m "chore(release): official stable release $NEW_TAG"
 git tag $NEW_TAG
+git push origin main
 git push origin $NEW_TAG
 rm $NOTES_FILE
 
