@@ -391,7 +391,27 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
     `;
 };
 
-export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean) => {
+export const updateZoneTemplate = (isAdmin: boolean, updateInfo: any, isCheckingUpdates: boolean) => {
+    return `
+        <div id="update-status-container" style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px; min-height: 48px;">
+            ${updateStatusTemplate(isAdmin, updateInfo)}
+        </div>
+
+        ${isAdmin ? `
+        <div style="margin-top: 16px;">
+            <app-button variant="ghost" 
+                        id="btn-check-updates"
+                        ?loading="${isCheckingUpdates}"
+                        onclick="this.getRootNode().host.handleManualCheckUpdates()">
+                <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                ${i18n.t('action.check_updates')}
+            </app-button>
+        </div>
+        ` : ''}
+    `;
+};
+
+export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean, isCheckingUpdates: boolean) => {
     const isAdmin = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'administrator';
     return `
     <div style="position: relative;">
@@ -418,9 +438,9 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
                 <p class="settings-content__text-dim" style="margin: 0;">${version}</p>
             </div>
 
-             <div id="update-status-container" style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px; min-height: 48px;">
-                ${updateStatusTemplate(isAdmin, updateInfo)}
-             </div>
+              <div id="update-zone-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                ${updateZoneTemplate(isAdmin, updateInfo, isCheckingUpdates)}
+              </div>
              </div>
 
              <div style="margin-top: 64px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: center; gap: 24px;">
