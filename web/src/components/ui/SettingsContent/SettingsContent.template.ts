@@ -345,7 +345,7 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string) =>
              ${isAdmin ? `
                 <div style="position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
                     <span id="beta-text" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s; user-select: none; border: 2px solid transparent; padding: 4px 10px; border-radius: 20px;">
-                        Beta Tester
+                        ${i18n.t('settings.beta_tester')}
                     </span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="beta-updates-toggle-badge" onchange="this.getRootNode().host.handleBetaToggle(this.checked)">

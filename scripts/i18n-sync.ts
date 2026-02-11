@@ -263,9 +263,24 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Unduh cadangan", "ar": "تنزيل النسخة الاحتياطية", "fa": "دانلود پشتیبان", "el": "Λήψη αντιγράφου ασφαλείας", "hi": "बैकअप डाउनलोड करें", "bn": "ব্যাকআপ ডাউনলোড করুন", "ur": "بیک اپ ڈاؤن لوڈ کریں"
     },
     "action.download_install": {
-        "es": "Descargar e instalar", "fr": "Télécharger et installer", "de": "Herunterladen & installieren", "it": "Scarica e installa", "pt": "Baixar e instalar", "nl": "Downloaden & installeren",
-        "ru": "Скачать и установить", "zh": "下载并安装", "ja": "ダウンロードしてインストール", "ko": "다운로드 및 설치", "tr": "İndir ve yükle", "pl": "Pobierz i zainstaluj",
+        "es": "Descargar e instalar", "fr": "Télécharger et instalar", "de": "Herunterladen & installieren", "it": "Scarica e installa", "pt": "Baixar e instalar", "nl": "Downloaden & installeren",
+        "ru": "Скачать и установить", "zh": "下载并安装", "ja": "ダウンロードしてインストール", "ko": "다운로드 및 설치", "tr": "İndir ve yükle", "pl": "Pobierz i zainstalluj",
         "id": "Unduh & instal", "ar": "تنزيل وتثبيت", "fa": "دانلود و نصب", "el": "Λήψη και εγκατάσταση", "hi": "डाउनलोड और इंस्टॉल करें", "bn": "ডাউনলোড এবং ইনস্টল করুন", "ur": "ڈاؤن لوڈ اور انسٹال کریں"
+    },
+    "action.edit_mode": {
+        "es": "Modo Edición", "fr": "Mode Édition", "de": "Bearbeitungsmodus", "it": "Modalità Modifica", "pt": "Modo de Edição", "nl": "Bewerkingsmodus",
+        "ru": "Режим редактирования", "zh": "编辑模式", "ja": "編集モード", "ko": "편집 모드", "tr": "Düzenleme Modu", "pl": "Tryb edycji",
+        "id": "Mode Edit", "ar": "وضع التحرير", "fa": "حالت ویرایش", "el": "Λειτουργία επεξεργασίας", "hi": "संपादन मोड", "bn": "সম্পাদনা মোড", "ur": "ترمیم کا موڈ"
+    },
+    "action.edit_user": {
+        "es": "Editar usuario", "fr": "Modifier l'utilisateur", "de": "Benutzer bearbeiten", "it": "Modifica utente", "pt": "Editar utilizador", "nl": "Gebruiker bewerken",
+        "ru": "Редактировать пользователя", "zh": "编辑用户", "ja": "ユーザーを編集", "ko": "사용자 편집", "tr": "Kullanıcıyı düzenle", "pl": "Edytuj użytkownika",
+        "id": "Edit pengguna", "ar": "تحرير المستخدم", "fa": "ویرایش کاربر", "el": "Επεξεργασία χρήστη", "hi": "उपयोगकर्ता संपादित करें", "bn": "ব্যবহারকারী সম্পাদনা করুন", "ur": "صارف میں ترمیم کریں"
+    },
+    "action.save_changes": {
+        "es": "Guardar cambios", "fr": "Enregistrer les modifications", "de": "Änderungen speichern", "it": "Salva modifiche", "pt": "Guardar alterações", "nl": "Wijzigingen opslaan",
+        "ru": "Сохранить изменения", "zh": "保存更改", "ja": "変更を保存", "ko": "변경 사항 저장", "tr": "Değişiklikleri kaydet", "pl": "Zapisz zmiany",
+        "id": "Simpan perubahan", "ar": "حفظ التغييرات", "fa": "ذخیره تغییرات", "el": "Αποθήκευση αλλαγών", "hi": "परिवर्तन सहेजें", "bn": "পরিবর্তনগুলি সংরক্ষণ করুন", "ur": "تبدیلیاں محفوظ کریں"
     },
     "action.erase_everything": {
         "es": "Borrar todo", "fr": "Tout effacer", "de": "Alles löschen", "it": "Cancella tutto", "pt": "Apagar tudo", "nl": "Alles wissen",
@@ -273,7 +288,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Hapus semua", "ar": "مسح كل شيء", "fa": "پاک کردن همه", "el": "Διαγραφή όλων", "hi": "सब कुछ मिटाएं", "bn": "সব মুছুন", "ur": "سب کچھ مٹائیں"
     },
     "action.report_issue": {
-        "es": "Reportar problema", "fr": "Signaler un problème", "de": "Problem melden", "it": "Segnala problema", "pt": "Relatar problema", "nl": "Probleem melden",
+        "es": "Reportar problema", "fr": "Signaler un problema", "de": "Problem melden", "it": "Segnala problema", "pt": "Relatar problema", "nl": "Probleem melden",
         "ru": "Сообщить о проблеме", "zh": "报告问题", "ja": "問題を報告", "ko": "문제 신고", "tr": "Sorun bildir", "pl": "Zgłoś problem",
         "id": "Laporkan masalah", "ar": "الإبلاغ عن مشكلة", "fa": "گزارش مشکل", "el": "Αναφορά προβλήματος", "hi": "समस्या की रिपोर्ट करें", "bn": "সমস্যা রিপোর্ট করুন", "ur": "مسئلہ کی اطلاع دیں"
     },
@@ -296,15 +311,15 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     "widget.telemetry.name": {
         "es": "Salud del Servidor", "fr": "Santé du Serveur", "it": "Salute del Server", "pt": "Saúde do Servidor", "de": "Serverstatus", "nl": "Servergezondheid",
         "ru": "Состояние сервера", "zh": "服务器健康", "ja": "サーバーの状態", "ko": "서버 상태", "tr": "Sunucu Sağlığı", "pl": "Stan serwera",
-        "id": "Kesehatan Server", "ar": "حالة الخادم", "fa": "سلامت سرور", "el": "Υγεία διακομιστή", "hi": "سرور کی صحت", "bn": "সার্ভার স্বাস্থ্য", "ur": "سرور کی صحت"
+        "id": "Kesehatan Server", "ar": "حالة الخادم", "fa": "سلامت سرور", "el": "Υγεία διακομιστή", "hi": "सरवर की सेहत", "bn": "সার্ভার স্বাস্থ্য", "ur": "سرور کی صحت"
     },
     "widget.telemetry.description": {
         "es": "Monitor de hardware en vivo", "fr": "Moniteur matériel en direct", "it": "Monitor hardware live", "pt": "Monitor de hardware ao vivo", "de": "Live-Hardware-Überwachung", "nl": "Live hardwaremonitor",
         "ru": "Мониторинг оборудования", "zh": "实时硬件监控", "ja": "ライブハードウェア監視", "ko": "실시간 하드웨어 모니터", "tr": "Canlı Donanım İzleme", "pl": "Monitorowanie sprzętu na żywo",
-        "id": "Monitor perangkat keras langsung", "ar": "مراقبة الأجهزة الحية", "fa": "مانیتورینگ سخت‌افزار زنده", "el": "Ζωντανή παρακολούθηση υλικού", "hi": "لائیو ہارڈویئر مانیٹر", "bn": "লাইভ হার্ডওয়্যার মনিটর", "ur": "لائیو ہارڈویئر مانیٹر"
+        "id": "Monitor perangkat keras langsung", "ar": "مراقبة الأجهزة الحية", "fa": "مانیتورینگ سخت‌افزار زنده", "el": "Ζωντανή παρακολούθηση υλικού", "hi": "लائیو हार्डवीयर मॉनिटर", "bn": "লাইভ হার্ডওয়্যার মনিটর", "ur": "لائیو ہارڈویئر مانیٹر"
     },
     "setup.ready_msg": {
-        "es": "¿Listo para inicializar el sistema?", "fr": "Prêt à initialiser le système ?", "it": "Pronto per inizializzare il sistema?", "pt": "Pronto para inicializar o sistema?", "de": "Bereit zum Initialisieren?",
+        "es": "¿Listo para inicializar el sistema?", "fr": "Prêt à initialiser le système ?", "it": "Pronto per inizializzare el sistema?", "pt": "Pronto para inicializar o sistema?", "de": "Bereit zum Initialisieren?",
         "ru": "Готовы к инициализации?", "zh": "准备好初始化了吗？", "ja": "システムを初期化しますか？", "ko": "시스템을 초기화하시겠습니까?", "nl": "Klaar om te initialiseren?",
         "tr": "Sistemi başlatmaya hazır mısınız?", "pl": "Gotowy do inicjalizacji?", "id": "Siap menginisialisasi sistem?", "ar": "جاهز لتهيئة النظام؟"
     },
@@ -338,6 +353,46 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Загрузка...", "zh": "加载中...", "ja": "読み込み中...", "ko": "로딩 중...", "tr": "Yükleniyor...", "pl": "Ładowanie...",
         "id": "Memuat...", "ar": "جار التحميل...", "fa": "در حال بارگذاری...", "el": "Φόρτωση...", "hi": "लोड हो रहा है...", "bn": "লোড হচ্ছে...", "ur": "لوڈ ہو رہا ہے..."
     },
+    "general.cancel": {
+        "es": "Cancelar", "fr": "Annuler", "de": "Abbrechen", "it": "Annulla", "pt": "Cancelar", "nl": "Annuleren",
+        "ru": "Отмена", "zh": "取消", "ja": "キャンセル", "ko": "취소", "tr": "İptal", "pl": "Anuluj",
+        "id": "Batal", "ar": "إلغاء", "fa": "لغو", "el": "Ακύρωση", "hi": "रद्द करें", "bn": "বাতিল", "ur": "منسوخ کریں"
+    },
+    "general.close": {
+        "es": "Cerrar", "fr": "Fermer", "de": "Schließen", "it": "Chiudi", "pt": "Fechar", "nl": "Sluiten",
+        "ru": "Закрыть", "zh": "关闭", "ja": "閉じる", "ko": "닫기", "tr": "Kapat", "pl": "Zamknij",
+        "id": "Tutup", "ar": "إغلاق", "fa": "بستن", "el": "Κλείσιμο", "hi": "बंद करें", "bn": "বন্ধ করুন", "ur": "بند کریں"
+    },
+    "general.confirm": {
+        "es": "Confirmar", "fr": "Confirmer", "de": "Bestätigen", "it": "Conferma", "pt": "Confirmar", "nl": "Bevestigen",
+        "ru": "Подтвердить", "zh": "确认", "ja": "確認", "ko": "확인", "tr": "Onayla", "pl": "Potwierdź",
+        "id": "Konfirmasi", "ar": "تأكيد", "fa": "تایید", "el": "Επιβεβαίωση", "hi": "पुष्टि करें", "bn": "নিশ্চিত করুন", "ur": "تصدیق کریں"
+    },
+    "general.delete": {
+        "es": "Eliminar", "fr": "Supprimer", "de": "Löschen", "it": "Elimina", "pt": "Eliminar", "nl": "Verwijderen",
+        "ru": "Удалить", "zh": "删除", "ja": "削除", "ko": "삭제", "tr": "Sil", "pl": "Usuń",
+        "id": "Hapus", "ar": "حذف", "fa": "حذف", "el": "Διαγραφή", "hi": "हटाएं", "bn": "মুছে ফেলুন", "ur": "حذف کریں"
+    },
+    "general.edit": {
+        "es": "Editar", "fr": "Modifier", "de": "Bearbeiten", "it": "Modifica", "pt": "Editar", "nl": "Bewerken",
+        "ru": "Редактировать", "zh": "编辑", "ja": "編集", "ko": "편집", "tr": "Düzenle", "pl": "Edytuj",
+        "id": "Edit", "ar": "تحرير", "fa": "ویرایش", "el": "Επεξεργασία", "hi": "संपादित करें", "bn": "সম্পাদনা", "ur": "ترمیم کریں"
+    },
+    "general.error": {
+        "es": "¡Uy!", "fr": "Oups !", "de": "Hoppla!", "it": "Ops!", "pt": "Ops!", "nl": "Oeps!",
+        "ru": "Ой!", "zh": "糟糕！", "ja": "おっと！", "ko": "앗!", "tr": "Hata!", "pl": "Ups!",
+        "id": "Ups!", "ar": "عفوًا!", "fa": "اوه!", "el": "Ωχ!", "hi": "ओह!", "bn": "ওহ!", "ur": "اوہ!"
+    },
+    "general.save": {
+        "es": "Guardar cambios", "fr": "Enregistrer les modifications", "de": "Änderungen speichern", "it": "Salva modifiche", "pt": "Guardar alterações", "nl": "Wijzigingen opslaan",
+        "ru": "Сохранить изменения", "zh": "保存更改", "ja": "変更を保存", "ko": "변경 사항 저장", "tr": "Değişiklikleri kaydet", "pl": "Zapisz zmiany",
+        "id": "Simpan perubahan", "ar": "حفظ التغييرات", "fa": "ذخیره تغییرات", "el": "Αποθήκευση αλλαγών", "hi": "परिवर्तन सहेजें", "bn": "পরিবর্তনগুলি সংরক্ষণ করুন", "ur": "تبدیلیاں محفوظ کریں"
+    },
+    "general.success": {
+        "es": "¡Todo listo!", "fr": "Tout est prêt !", "de": "Alles bereit!", "it": "Tutto pronto!", "pt": "Tudo pronto!", "nl": "Alles klaar!",
+        "ru": "Все готово!", "zh": "一切就绪！", "ja": "準備完了！", "ko": "모두 준비됐습니다!", "tr": "Her şey hazır!", "pl": "Wszystko gotowe!",
+        "id": "Semua siap!", "ar": "كل شيء جاهز!", "fa": "همه چیز آماده!", "el": "Όλα έτοιμα!", "hi": "सब तैयार है!", "bn": "সব প্রস্তুত!", "ur": "سب تیار ہے!"
+    },
     "settings.about": {
         "es": "Info", // Spanish
         "fr": "Info", // French
@@ -358,6 +413,11 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "hi": "जानकारी", // Hindi
         "bn": "তথ্য", // Bengali
         "ur": "معلومات" // Urdu
+    },
+    "settings.beta_tester": {
+        "es": "Beta Tester", "fr": "Bêta-testeur", "de": "Beta-Tester", "it": "Beta Tester", "pt": "Beta Tester", "nl": "Bètatester",
+        "ru": "Бета-тестер", "zh": "Beta 测试员", "ja": "ベータテスター", "ko": "베타 테스터", "tr": "Beta Test Kullanıcısı", "pl": "Tester wersji beta",
+        "id": "Penguji Beta", "ar": "مختبر بيتا", "fa": "تست‌کننده بتا", "el": "Δοκιμαστής Beta", "hi": "बीटा टेस्टर", "bn": "বিটা টেস্টার", "ur": "بیٹا ٹیسٹر"
     },
     "settings.fluid_grid_architecture": {
         "es": "Arquitectura de Rejilla Fluida",
@@ -436,7 +496,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "¡Ups! Error al procesar Markdown.", "fr": "Oups ! Échec de l'aperçu Markdown.", "it": "Ops! Errore di anteprima Markdown.", "pt": "Ops! Erro de visualização Markdown.", "de": "Hoppla! Markdown-Vorschau fehlgeschlagen.",
         "ru": "Ой! Ошибка предпросмотра Markdown.", "zh": "糟糕！Markdown 预览失败。", "ja": "おっと！Markdownのプレビューに失敗しました。", "ko": "앗! Markdown 미리보기에 실패했습니다.", "nl": "Oeps! Markdown-voorbeeld mislukt.",
         "tr": "Hata! Markdown önizlemesi başarısız.", "pl": "Ups! Błąd podglądu Markdown.", "id": "Ups! Pratinjau Markdown gagal.", "ar": "عفوًا! فشلت معاينة Markdown.", "fa": "اوه! پیش‌نمایش Markdown ناموفق بود.",
-        "el": "Ωχ! Η προεπισκόπηση Markdown απέτυχε.", "hi": "ओह! Markdown पूर्वावलोकन विफल रहा।", "bn": "ওহ! Markdown প্রিভিউ ব্যর্থ হয়েছে।", "ur": "اوہ! مکارڈاؤن پیش منظر ناکام رہا۔"
+        "el": "Ωχ! Η προεπισκόπηση Markdown απέτυψε.", "hi": "ओह! Markdown पूर्वावलोकन विफल रहा।", "bn": "ওহ! Markdown প্রিভিউ ব্যর্থ হয়েছে।", "ur": "اوہ! مکارڈاؤن پیش منظر ناکام رہا۔"
     },
     "widget.notepad.modal.title": {
         "es": "Insertar contenido", "fr": "Insérer du contenu", "it": "Inserisci contenuto", "pt": "Inserir conteúdo", "de": "Inhalt einfügen",
@@ -488,7 +548,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     "widget.notepad.tool.scroll_hint": {
         "es": "Desplaza horizontalmente con la rueda del ratón para ver más herramientas",
         "fr": "Faites défiler horizontalement avec la molette de la souris pour voir plus d'outils",
-        "it": "Scorri orizzontalmente con la rotellina del mouse per vedere altri strumenti",
+        "it": "Scorri orizzontalmente con la rotellina del mouse para vedere altri strumenti",
         "pt": "Role horizontalmente com a roda do mouse para ver mais ferramentas",
         "de": "Horizontal mit dem Mausrad scrollen, um mehr Werkzeuge zu sehen",
         "ru": "Прокрутите горизонтально колесом мыши, чтобы увидеть больше инструментов",
@@ -514,14 +574,14 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Jam", "ar": "ساعة", "fa": "ساعت", "el": "Ρολόι", "hi": "घड़ी", "bn": "ঘড়ি", "ur": "گھڑی"
     },
     "widget.clock.description": {
-        "es": "Reloj digital con fecha", "fr": "Horloge numérique avec date", "it": "Orologio digitale con data", "pt": "Relógio digital com data", "de": "Digitaluhr mit Datum", "nl": "Digitale klok met datum",
+        "es": "Reloj digital con fecha", "fr": "Horloge numérique con fecha", "it": "Orologio digitale con data", "pt": "Relógio digital com data", "de": "Digitaluhr mit Datum", "nl": "Digitale klok met datum",
         "ru": "Цифровые часы с датой", "zh": "带日期的数字时钟", "ja": "日付付きデジタル時計", "ko": "날짜가 있는 디지털 시계", "tr": "Tarihli dijital saat", "pl": "Zegar cyfrowy z datą",
-        "id": "Jam digital dengan tanggal", "ar": "ساعة رقمية مع التاريخ", "fa": "ساعت دیجیتال با تاریخ", "el": "Ψηφιακό ρολόι με ημερομηνία", "hi": "तारीख के साथ डिजिटल घड़ी", "bn": "তারিখ সহ ডিজিটাল ঘড়ি", "ur": "تاریخ کے ساتھ ڈیजीٹل گھڑی"
+        "id": "Jam digital dengan tanggal", "ar": "ساعة رقمية مع التاريخ", "fa": "ساعت دیجیتال با تاریخ", "el": "Ψηφιακό ρολόι με ημερομηνία", "hi": "तारीख के साथ डिजिटल घड़ी", "bn": "তারিখ সহ ডিজিটাল ঘড়ি", "ur": "تاریخ کے ساتھ ڈیجیٹل گھڑی"
     },
     "widget.clock.city_desc": {
         "es": "Busca tu ciudad y selecciónala de los resultados.",
         "fr": "Recherchez votre ville et sélectionnez-la dans les résultats.",
-        "it": "Cerca la tua città e selezionala dai risultati.",
+        "it": "Cerca la tua città y selezionala dai risultati.",
         "pt": "Pesquise sua cidade e selecione-a nos resultados.",
         "de": "Suchen Sie Ihre Stadt und wählen Sie sie aus den Ergebnissen aus.",
         "nl": "Zoek uw stad en selecteer deze uit de resultaten.",
@@ -555,7 +615,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     // --- New Notifications ---
     "notifier.please_wait": {
         "es": "Por favor espere mientras el sistema se restablece...", "fr": "Veuillez patienter pendant la réinitialisation...", "it": "Attendere prego mientras el sistema si ripristina...", "pt": "Aguarde enquanto o sistema é redefinido...", "de": "Bitte warten, während das System zurückgesetzt wird...",
-        "ru": "Пожалуйста, подождите, пока система сбрасывается...", "zh": "请稍候，系统正在重置...", "ja": "システムがリセットされるまでお待ちください...", "ko": "시스템이 초기화되는 동안 잠시 기다려 주십시오...", "nl": "Een ogenblik geduld terwijl het systeem reset...",
+        "ru": "Пожалуйста, подождите, пока система сбрасывается...", "zh": "请稍候，系统正在重置...", "ja": "システムがリसेटされるまでお待ちください...", "ko": "시스템이 초기화되는 동안 잠시 기다려 주십시오...", "nl": "Een ogenblik geduld terwijl het systeem reset...",
         "tr": "Sistem sıfırlanırken lütfen bekleyin...", "pl": "Proszę czekać, trwa resetowanie systemu...", "id": "Harap tunggu saat sistem diatur ulang...", "ar": "يرجى الانتظار بينما يتم إعادة تعيين النظام...",
         "fa": "لطفاً صبر کنید تا سیستم بازنشانی شود...", "el": "Παρακαλώ περιμένετε ενώ το σύστημα επαναφέρεται...", "hi": "कृपया प्रतीक्षा करें जब तक सिस्टम रीसेट हो रहा है...", "bn": "সিস্টেম রিসেট করার সময় অনুগ্রহ করে অপেক্ষা করুন...", "ur": "براہ کرم انتظار کریں جبکہ سسٹم ری سیٹ ہو رہا ہے..."
     },
@@ -571,10 +631,10 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "fa": "رمز عبور خیلی کوتاه است (حداقل 4 کاراکتر)", "el": "Ο κωδικός είναι πολύ μικρός (τουλάχιστον 4 χαρακτήρες)", "hi": "पासवर्ड बहुत छोटा है (न्यूनतम 4 वर्ण)", "bn": "পাসওয়ার্ড খুব ছোট (ন্যূনতম ৪ অক্ষর)", "ur": "پاس ورڈ بہت مختصر ہے (کم از کم 4 حروف)"
     },
     "setup.error_connection": {
-        "es": "Falló la conexión. Revise los registros.", "fr": "La connexion a échoué. Vérifiez les journaux.", "it": "Connessione fallita. Controlla i registri.", "pt": "Falha na conexão. Verifique os logs.", "de": "Verbindung fehlgeschlagen. Protokolle prüfen.",
+        "es": "Falló la conexión. Revise los registros.", "fr": "La conexión ha fallado. Verifique los registros.", "it": "Connessione fallita. Controlla i registri.", "pt": "Falha na conexão. Verifique os logs.", "de": "Verbindung fehlgeschlagen. Protokolle prüfen.",
         "ru": "Ошибка подключения. Проверьте журналы.", "zh": "连接失败。请检查日志。", "ja": "接続に失敗しました。ログを確認してください。", "ko": "연결 실패. 로그를 확인하세요.", "nl": "Verbinding mislukt. Controleer logboeken.",
         "tr": "Bağlantı başarısız. Günlükleri kontrol edin.", "pl": "Połączenie nie powiodło się. Sprawdź logi.", "id": "Koneksi gagal. Periksa log.", "ar": "فشل الاتصال. تحقق من السجلات.",
-        "fa": "اتصال ناموفق بود. لاگ‌ها را بررسی کنید.", "el": "Η σύνδεση απέτυχε. Ελέγξτε τα αρχεία καταγραφής.", "hi": "कनेक्शन विफल। लॉग की जाँच करें।", "bn": "সংযোগ ব্যর্থ হয়েছে। লগ চেক করুন।", "ur": "کنکشن ناکام ہوگیا۔ لاگز چیک کریں۔"
+        "fa": "اتصال ناموفق بود. لاگ‌ها را بررسی کنید.", "el": "Η σύνδεση απέτυψε. Ελέγξτε τα αρχεία καταγραφής.", "hi": "कनेक्शन विफल। लॉग की जाँच करें।", "bn": "সংযোগ ব্যর্থ হয়েছে। লগ চেক করুন।", "ur": "کنکشن ناکام ہوگیا۔ لاگز چیک کریں۔"
     },
     "notifier.username_required": {
         "es": "Usuario requerido", "fr": "Nom d'utilisateur requis", "it": "Nome utente richiesto", "pt": "Nome de usuário obrigatório", "de": "Benutzername erforderlich",
@@ -597,7 +657,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     },
     "settings.up_to_date_docker_msg": {
         "es": "Estás estrictamente al día.", "fr": "Vous êtes strictement à jour.", "it": "Sei rigorosamente actualizado.", "pt": "Você está rigorosamente atualizado.", "de": "Sie sind auf dem neuesten Stand.",
-        "ru": "Вы полностью обновлены.", "zh": "您已是最新版本。", "ja": "最新の状態です。", "ko": "최신 상태입니다.", "nl": "Je bent helemaal bijgewerkt.",
+        "ru": "Вы полностью обновлены.", "zh": "Вы полностью обновлены.", "ja": "最新の状態です。", "ko": "최신 상태입니다.", "nl": "Je bent helemaal bijgewerkt.",
         "tr": "Tamamen güncelsiniz.", "pl": "System jest aktualny.", "id": "Anda sudah mutakhir.", "ar": "أنت محدث تمامًا.", "fa": "شما کاملاً بروز هستید.",
         "el": "Είστε πλήρως ενημερωμένοι.", "hi": "आप पूरी तरह से अपडेट हैं।", "bn": "আপনি সম্পূর্ণ আপ-টু-ডেট।", "ur": "آپ مکمل طور پر اپ ٹو ڈیٹ ہیں۔"
     },
@@ -609,9 +669,9 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     },
     "notifier.user_delete_superadmin": {
         "es": "No se puede eliminar al Super Administrador", "fr": "L'administrateur principal ne peut pas être supprimé", "it": "L'amministratore principale non può essere eliminato", "pt": "O Super Administrador não pode ser excluído", "de": "Der Super-Administrator kann nicht gelöscht werden",
-        "ru": "Супер администратор не может быть удален", "zh": "超级管理员无法删除", "ja": "スーパー管理者は削除できません", "ko": "최고 관리자는 삭제할 수 없습니다", "nl": "De superbeheerder kan niet worden verwijderd",
+        "ru": "Супер администратор не может ser удален", "zh": "超级管理员无法删除", "ja": "スーパー管理者は削除できません", "ko": "최고 관리자는 삭제할 수 없습니다", "nl": "De superbeheerder kan niet worden verwijderd",
         "tr": "Süper Yönetici silinemez", "pl": "Nie można usunąć Super Administratora", "id": "Super Administrator tidak dapat dihapus", "ar": "لا يمكن حذف المسؤول العام", "fa": "سوپر ادمین قابل حذف نیست",
-        "el": "Δεν είναι δυνατή η διαγραφή του Super Administrator", "hi": "सुपर एडमिनिस्ट्रेटर को हटाया नहीं जा सकता", "bn": "সুপার অ্যাডমিনিস্ট্রেটর মুছে ফেলা যাবে না", "ur": "سپر ایڈمنسٹریٹر کو حذف نہیں کیا جا सकता"
+        "el": "Δεν είναι δυνατή η διαγραφή του Super Administrator", "hi": "सुपर एडमिनिस्ट्रेटर को हटाया नहीं जा सकता", "bn": "সুপার অ্যাডমিনিস্ট্রেটর মুছে ফেলা যাবে না", "ur": "سپر ایڈمنسٹریٹر کو حذف نہیں کیا جا سکتا"
     },
     "settings.role_super_admin": {
         "es": "Super Admin", "fr": "Super Admin", "it": "Super Admin", "pt": "Super Admin", "de": "Super-Admin",
@@ -625,14 +685,14 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "pt": "Erro na base de dados", "ru": "Ошибка базы данных", "zh": "数据库错误", "ja": "データベースエラー",
         "ko": "데이터베이스 오류", "nl": "Databasefout", "pl": "Błąd bazy danych", "tr": "Veritabanı hatası",
         "id": "Kesalahan basis data", "ar": "خطأ في قاعدة البيانات", "fa": "خطای پایگاه داده", "el": "Σφάλμα βάσης δεδομένων",
-        "hi": "डेटाबेस त्रुटि", "bn": "ডেটাবেस ত্রুটি", "ur": "ڈیٹا بیس کی غلطی"
+        "hi": "डेटाबेस त्रुटि", "bn": "ডেটাবেস ত্রুটি", "ur": "ڈیٹا بیس کی غلطی"
     },
     "general.internal_error": {
         "es": "Error interno del servidor", "fr": "Erreur interne du serveur", "de": "Interner Serverfehler", "it": "Errore interno del server",
         "pt": "Erro interno do servidor", "ru": "Внутренняя ошибка сервера", "zh": "服务器内部错误", "ja": "サーバー内部エラー",
         "ko": "서버 내부 오류", "nl": "Interne serverfout", "pl": "Wewnętrzny błąd serwera", "tr": "Dahili sunucu hatası",
         "id": "Kesalahan server internal", "ar": "خطأ داخلي في الخادم", "fa": "خطای داخلی سرور", "el": "Εσωτερικό σφάλμα διακομιστή",
-        "hi": "आंतरिक सर्वर त्रुटि", "bn": "অভ্যন্তরীণ সার্ভার ত্রুটি", "ur": "اندرونی سرور की غلطی"
+        "hi": "आंतरिक सर्वर त्रुटि", "bn": "অভ্যন্তরীণ সার্ভার ত্রুটি", "ur": "اندرونی سرور کی غلطی"
     },
     "general.invalid_input": {
         "es": "Entrada no válida", "fr": "Entrée invalide", "de": "Ungültige Eingabe", "it": "Input non valido",
@@ -653,7 +713,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Имя пользователя должно быть не менее 2 символов", "zh": "用户名必须至少包含 2 个字符", "ja": "ユーザー名は2文字以上である必要があります", "ko": "사용자 이름은 2자 이상이어야 합니다", "ar": "يجب أن يتكون اسم المستخدم من حرفين على الأقل"
     },
     "error.password_min_length": {
-        "es": "La contraseña debe tener al menos 4 caracteres", "fr": "Le mot de passe doit contenir au moins 4 caracteres", "de": "Passwort muss mindestens 4 Zeichen lang sein",
+        "es": "La contraseña debe tener al menos 4 caracteres", "fr": "Le mot de passe doit contenir au menos 4 caracteres", "de": "Passwort muss mindestens 4 Zeichen lang sein",
         "ru": "Пароль должен быть не менее 4 символов", "zh": "密码必须至少包含 4 个字符", "ja": "パスワードは4文字以上である必要があります", "ko": "비밀번호는 4자 이상이어야 합니다", "ar": "يجب أن تتكون كلمة المرور من 4 أحرف على الأقل"
     },
     "setup.already_initialized": {
@@ -661,17 +721,17 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "pt": "Sistema já inicializado", "ru": "Система уже инициализирована", "zh": "系统已初始化", "ja": "システムはすでに初期化されています",
         "ko": "시스템이 이미 초기화되었습니다", "nl": "Systeem is al geïnitialiseerd", "pl": "System został już zainicjowany", "tr": "Sistem zaten başlatıldı",
         "id": "Sistem sudah diinisialisasi", "ar": "تم تهيئة النظام بالفعل", "fa": "سیستم قبلاً راه اندازی شده است", "el": "Το σύστημα έχει ήδη αρχικοποιηθεί",
-        "hi": "सिस्टम पहले से ही आरंभीकृत है", "bn": "सისტেম ইতিমধ্যে शुरू হয়েছে", "ur": "نظام پہلے ہی शुरू हो चुका है"
+        "hi": "सिस्टम पहले से ही आरंभीकृत है", "bn": "সিস্টেম ইতিমধ্যে শুরু হয়েছে", "ur": "نظام پہلے ہی شروع ہو چکا ہے"
     },
     "notifier.system_restarting": {
-        "es": "El sistema se está reiniciando...", "fr": "Le système redémarre...", "de": "System wird neu gestartet...", "it": "Il sistema si sta riavviando...",
+        "es": "El sistema se está reiniciando...", "fr": "Le système redémarre...", "de": "System wird neu gestartado...", "it": "Il sistema si sta riavviando...",
         "pt": "O sistema está a reiniciar...", "ru": "Система перезагружается...", "zh": "系统正在重启...", "ja": "システムを再起動しています...",
         "ko": "시스템을 재시작하는 중입니다...", "ar": "النظام يعيد التشغيل..."
     },
     "error.missing_url": {
         "es": "Falta la URL", "fr": "URL manquante", "de": "URL fehlt", "it": "URL mancante", "pt": "URL ausente", "nl": "URL ontbreekt",
         "ru": "URL отсутствует", "zh": "缺少 URL", "ja": "URLがありません", "ko": "URL 누락", "tr": "URL eksik", "pl": "Brak adresu URL",
-        "id": "URL tidak ada", "ar": "عنوان URL مفقود", "fa": "آدرس وب موجود نیست", "el": "Λείπει το URL", "hi": "URL गायब है", "bn": "URL অনুপস্থিত", "ur": "یو آر ایل غائب ہے"
+        "id": "URL tidak ada", "ar": "عنوان URL مفقود", "fa": "آدرس وب موجود نیست", "el": "Λείпси το URL", "hi": "URL गायब है", "bn": "URL অনুপস্থিত", "ur": "یو آر ایل غائب ہے"
     },
     "error.could_not_resolve_host": {
         "es": "No se pudo resolver el host", "fr": "Impossible de résoudre l'hôte", "de": "Host konnte nicht aufgelöst werden", "it": "Impossibile risolvere l'host", "pt": "Não foi possível resolver o host", "nl": "Kan host niet oplossen",
@@ -682,7 +742,8 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "Dejar vacío para ocultar el título.", "fr": "Laisser vide pour masquer le titre.", "de": "Leer lassen, um den Titel auszublenden.",
         "it": "Lasciare vuoto per nascondere il titolo.", "pt": "Deixe vazio para ocultar o título.", "ru": "Оставьте пустым, чтобы скрыть заголовок.",
         "zh": "留空以隐藏标题。", "ja": "タイトルを非表示にするには空のままにします。", "ko": "제목을 숨기려면 비워 두세요。", "nl": "Laat leeg om de titel te verbergen.",
-        "tr": "Başlığı gizlemek için boş bırakın.", "pl": "Pozostaw puste, aby ukryć tytuł.", "id": "Biarkan kosong untuk menyembunyikan judul.",
+        "tr": "Başlığı gizlemek için boş bırakın.", "pl": "Pozostaw puste, aby ukryć tytuł.",
+        "id": "Biarkan kosong untuk menyembunyikan judul.",
         "ar": "اتركه فارغًا لإخفاء العنوان.", "fa": "برای مخفی کردن عنوان خالی بگذارید.", "el": "Αφήστε κενό για απόκρυψη τίτλου.",
         "hi": "शीर्षक छिपाने के लिए खाली छोड़ें।", "bn": "শিরোনাম লুকাতে খালি রাখুন।", "ur": "عنوان چھپانے کے لیے خالی چھوڑ دیں۔"
     },
@@ -714,7 +775,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "cth. Jakarta, Surabaya, Bandung", "ar": "مثال القاهرة، الرياض، دبي", "fa": "مانند تهران، مشهد، اصفهان", "el": "π.χ. Αθήνα, Θεσσαλονίκη, Πάτρα", "hi": "उदाहरण दिल्ली, मुंबई, बैंगलोर", "bn": "যেমন ঢাকা, চট্টগ্রাম, খুলনা", "ur": "مثال کراچی، لاہور، اسلام آباد"
     },
     "widget.weather.city_desc": {
-        "es": "Busca una ciudad para autocompletar las coordenadas.", "fr": "Recherchez une ville pour compléter automatiquement les coordonnées.", "it": "Cerca una città per completare automaticamente le coordinate.", "pt": "Pesquise uma cidade para preencher automaticamente as coordenadas.", "de": "Suchen Sie nach einer Stadt, um die Koordinaten automatisch zu vervollständigen.", "nl": "Zoek een stad om de coördinaten automatisch aan te vullen.",
+        "es": "Busca una ciudad para autocompletar las coordenadas.", "fr": "Recherchez una ciudad para completar automáticamente las coordenadas.", "it": "Cerca una città per completare automaticamente le coordinate.", "pt": "Pesquise uma cidade para preencher automaticamente as coordenadas.", "de": "Suchen Sie nach einer Stadt, um die Koordinaten automatisch zu vervollständigen.", "nl": "Zoek een stad om de coördinaten automatisch aan te vullen.",
         "ru": "Найдите город, чтобы автоматически заполнить координаты.", "zh": "搜索城市以自动完成坐标。", "ja": "都市を検索して座標を自動入力します。", "ko": "도시를 검색하여 좌표를 자동 완성합니다.", "tr": "Koordinatları otomatik tamamlamak için bir şehir arayın.", "pl": "Wyszukaj miasto, aby automatycznie uzupełnić współrzędne.",
         "id": "Cari kota untuk melengkapi koordinat secara otomatis.", "ar": "ابحث عن مدينة لإكمال الإحداثيات تلقائيًا.", "fa": "برای تکمیل خودکار مختصات یک شهر جستجو کنید.", "el": "Αναζητήστε μια πόλη για αυτόματη συμπλήρωση συντεταγμένων.", "hi": "निर्देशांक स्वतः पूर्ण करने के लिए शहर खोजें।", "bn": "স্থানাঙ্ক স্বয়ংক্রিয়ভাবে পূরণ করতে একটি শহর অনুসন্ধান করুন।", "ur": "کوآرڈینیٹس خودکار مکمل کرنے کے لیے شہر تلاش کریں۔"
     },
@@ -735,16 +796,16 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     },
     "widget.weather.use_fahrenheit": {
         "es": "Usar Fahrenheit (°F)", "fr": "Utiliser Fahrenheit (°F)", "it": "Usa Fahrenheit (°F)", "pt": "Usar Fahrenheit (°F)", "de": "Fahrenheit verwenden (°F)", "nl": "Gebruik Fahrenheit (°F)",
-        "ru": "Использовать Фаренгейт (°F)", "zh": "使用华氏度 (°F)", "ja": "華氏 (°F) を使用", "ko": "화씨 (°F) 사용", "tr": "Fahrenheit (°F) kullan", "pl": "Użyj Fahrenheita (°F)",
+        "ru": "Использовать Фаренгейт (°F)", "zh": "Использовать Фаренгейт (°F)", "ja": "華氏 (°F) を使用", "ko": "화씨 (°F) 사용", "tr": "Fahrenheit (°F) kullan", "pl": "Użyj Fahrenheita (°F)",
         "id": "Gunakan Fahrenheit (°F)", "ar": "استخدم فهرنهايت (°F)", "fa": "استفاده از فارنهایت (°F)", "el": "Χρήση Fahrenheit (°F)", "hi": "फारेनहाइट (°F) का उपयोग करें", "bn": "ফারেনহাইট (°F) ব্যবহার করুন", "ur": "فارن ہائیٹ (°F) استعمال کریں"
     },
     "widget.weather.show_forecast": {
-        "es": "Mostrar pronóstico", "fr": "Afficher les prévisions", "it": "Mostra previsioni", "pt": "Mostrar previsão", "de": "Vorhersage anzeigen", "nl": "Voorspelling tonen",
+        "es": "Mostrar pronóstico", "fr": "Afficher las prévisions", "it": "Mostra previsioni", "pt": "Mostrar previsão", "de": "Vorhersage anzeigen", "nl": "Voorspelling tonen",
         "ru": "Показать прогноз", "zh": "显示预报", "ja": "予報を表示", "ko": "예보 표시", "tr": "Tahmini Göster", "pl": "Pokaż prognozę",
         "id": "Tampilkan Prakiraan", "ar": "عرض التوقعات", "fa": "نمایش پیش‌بینی", "el": "Εμφάνιση πρόβλεψης", "hi": "पूर्वानुमान दिखाएं", "bn": "পূর্বাভাস দেখান", "ur": "پیشین گوئی دکھائیں"
     },
     "widget.weather.forecast_days": {
-        "es": "Días de pronóstico", "fr": "Jours de prévision", "it": "Giorni di previsione", "pt": "Dias de previsão", "de": "Vorhersagetage", "nl": "Voorspellingsdagen",
+        "es": "Días de pronóstico", "fr": "Jours de prévision", "it": "Giorni de previsione", "pt": "Dias de previsão", "de": "Vorhersagetage", "nl": "Voorspellingsdagen",
         "ru": "Дни прогноза", "zh": "预报天数", "ja": "予報日数", "ko": "예보 일수", "tr": "Tahmin Günleri", "pl": "Dni prognozy",
         "id": "Hari Prakiraan", "ar": "أيام التوقعات", "fa": "روزهای پیش‌بینی", "el": "Ημέρες πρόβλεψης", "hi": "पूर्वानुमान के दिन", "bn": "পূর্বাভাস দিন", "ur": "پیشین گوئی کے دن"
     },
@@ -774,7 +835,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Angin", "ar": "رياح", "fa": "باد", "el": "Άνεμος", "hi": "हवा", "bn": "বাতাস", "ur": "ہوا"
     },
     "widget.no_config": {
-        "es": "No hay configuración disponible para este elemento.", "fr": "Aucune configuration disponible pour cet élément.", "de": "Keine Konfiguration für dieses Element verfügbar."
+        "es": "No hay configuración disponible para este elemento.", "fr": "Aucune configuration disponible para cet élément.", "de": "Keine Konfiguration für dieses Element verfügbar."
     },
     "widget.config.no_config": {
         "es": "No hay configuración disponible para este elemento.",
@@ -802,6 +863,16 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "pt": "Não autorizado", "ru": "Не авторизован", "zh": "未授权", "ja": "権限がありません",
         "ko": "권한이 없습니다", "ar": "غير مصرح"
     },
+    "auth.connection_error": {
+        "es": "No se puede conectar ahora. ¿Reintentar?", "fr": "Connexion impossible pour le moment. Réessayer ?", "de": "Verbindung derzeit nicht möglich. Erneut versuchen?", "it": "Impossibile connettersi ora. Riprovare?", "pt": "Não é posible conetar agora. Tentar novamente?", "nl": "Kan nu geen verbinding maken. Opnieuw proberen?",
+        "ru": "Сейчас невозможно подключиться. Попробовать снова?", "zh": "现在无法连接。重试吗？", "ja": "現在接続できません。再試行しますか？", "ko": "지금은 연결할 수 없습니다. 다시 시도할까요?", "tr": "Şu anda bağlanılamıyor. Tekrar denensin mi?", "pl": "Nie można się teraz połączyć. Spróbować ponownie?",
+        "id": "Tidak dapat terhubung sekarang. Coba lagi?", "ar": "لا يمكن الاتصال الآن. هل تريد المحاولة مرة أخرى؟", "fa": "در حال حاضر امکان اتصال وجود ندارد. تلاش مجدد؟", "el": "Δεν είναι δυνατή η σύνδεση αυτή τη στιγμή. Δοκιμάστε ξανά;", "hi": "अभी कनेक्ट नहीं हो सकता। फिर से प्रयास करें?", "bn": "এখন সংযোগ করা যাচ্ছে না। আবার চেষ্টা করবেন?", "ur": "ابھی منسلک نہیں ہو سکتا۔ دوبارہ کوشش کریں؟"
+    },
+    "auth.invalid_credentials": {
+        "es": "Eso no parece correcto", "fr": "Cela ne semble pas correct", "de": "Das sieht nicht richtig aus", "it": "Non sembra corretto", "pt": "Isso não parece correto", "nl": "Dat ziet er niet goed uit",
+        "ru": "Это выглядит неправильно", "zh": "这看起来不对", "ja": "正しくないようです", "ko": "올바르지 않은 것 같습니다", "tr": "Bu doğru görünmüyor", "pl": "To nie wygląda poprawnie",
+        "id": "Itu sepertinya tidak benar", "ar": "هذا لا يبدو صحيحًا", "fa": "این درست به نظر نمی‌رسد", "el": "Αυτό δεν φαίνεται σωστό", "hi": "यह सही नहीं लग रहा है", "bn": "এটি সঠিক মনে হচ্ছে না", "ur": "یہ درست نہیں لگتا"
+    },
     "general.loading": {
         "es": "Cargando...", "fr": "Chargement...", "it": "Caricamento...", "pt": "Carregando...", "de": "Laden...", "nl": "Laden...",
         "ru": "Загрузка...", "zh": "加载中...", "ja": "読み込み中...", "ko": "로딩 중...", "tr": "Yükleniyor...", "pl": "Ładowanie...",
@@ -817,7 +888,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     "notifier.user_delete_error": {
         "es": "Error al eliminar usuario", "fr": "Échec de la suppression de l'utilisateur", "de": "Fehler beim Löschen des Benutzers",
         "it": "Errore durante l'eliminazione dell'utente", "pt": "Erro ao eliminar utilizador", "nl": "Fout bij verwijderen gebruiker",
-        "ru": "Ошибка при удалении пользователя", "zh": "删除用户时出错", "ja": "ユーザーの削除エラー", "ko": "사용자 삭제 오류",
+        "ru": "Ошибка при удалении пользователя", "zh": "Ошибка при удалении пользователя", "ja": "ユーザーの削除エラー", "ko": "사용자 삭제 오류",
         "tr": "Kullanıcı silinirken hata oluştu", "pl": "Błąd usuwania użytkownika", "id": "Kesalahan menghapus pengguna",
         "ar": "خطأ في حذف المستخدم", "fa": "خطا در حذف کاربر", "el": "Σφάλμα διαγραφής χρήστη",
         "hi": "उपयोगकर्ता हटाने में त्रुटि", "bn": "ব্যবহারকারী মুছতে ত্রুটি", "ur": "صارف حذف کرنے میں خرابی"
@@ -845,11 +916,11 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "it": "Aggiornamento fallito", "pt": "Atualização falhada", "nl": "Update mislukt",
         "ru": "Ошибка обновления", "zh": "更新失败", "ja": "更新に失敗しました", "ko": "업데이트 실패",
         "tr": "Güncelleme başarısız", "pl": "Aktualizacja nie powiodła się", "id": "Pembaruan gagal",
-        "ar": "فشل التحديث", "fa": "به‌روزرسانی ناموفق بود", "el": "Η ενημέρωση απέτυχε",
+        "ar": "فشل التحديث", "fa": "به‌روزرسانی ناموفق بود", "el": "Η ενημέρωση απέτυψε",
         "hi": "अपडेट विफल", "bn": "আপডেট ব্যর্থ", "ur": "اپ ڈیٹ ناکام"
     },
     "notifier.save_error": {
-        "es": "Error al guardar los ajustes", "fr": "Échec de l'enregistrement des paramètres", "de": "Fehler beim Speichern der Einstellungen",
+        "es": "Error al guardar los ajustes", "fr": "Échec de l'enregistrement de los parámetros", "de": "Fehler beim Speichern der Einstellungen",
         "it": "Errore nel salvataggio delle impostazioni", "pt": "Erro ao guardar as definições", "nl": "Fout bij opslaan instellingen",
         "ru": "Ошибка сохранения настроек", "zh": "保存设置时出错", "ja": "設定の保存エラー", "ko": "설정 저장 오류",
         "tr": "Ayarlar kaydedilirken hata", "pl": "Błąd zapisu ustawień", "id": "Kesalahan menyimpan pengaturan",
@@ -865,7 +936,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "hi": "प्रोफ़ाइल अपडेट की गई", "bn": "প্রোফাইল আপডেট করা হয়েছে", "ur": "پروفائل اپ ڈیٹ ہو گیا"
     },
     "notifier.profile_error": {
-        "es": "Error al actualizar el perfil", "fr": "Échec de la mise à jour du profil", "de": "Fehler beim Aktualisieren des Profils",
+        "es": "Error al actualizar el perfil", "fr": "Échec de la mise à jour del perfil", "de": "Fehler beim Aktualisieren des Profils",
         "it": "Errore nell'aggiornamento del profilo", "pt": "Erro ao atualizar o perfil", "nl": "Fout bij bijwerken profiel",
         "ru": "Ошибка обновления профиля", "zh": "更新个人资料时出错", "ja": "プロフィール更新エラー", "ko": "프로필 업데이트 오류",
         "tr": "Profil güncellenirken hata", "pl": "Błąd aktualizacji profilu", "id": "Kesalahan memperbarui profil",
@@ -923,6 +994,11 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Добавить закладку", "zh": "添加书签", "ja": "ブックマークを追加", "ko": "북마크 추가", "tr": "Yer imi ekle", "pl": "Dodaj zakładkę",
         "id": "Tambah bookmark", "ar": "إضافة إشارة مرجعية", "fa": "افزودن نشانک", "el": "Προσθήκη σελιδοδείκτη", "hi": "बुकमार्क जोड़ें", "bn": "বুকমার্ক যোগ করুন", "ur": "بک مارک شامل کریں"
     },
+    "bookmark.edit": {
+        "es": "Editar", "fr": "Modifier", "de": "Bearbeiten", "it": "Modifica", "pt": "Editar", "nl": "Bewerken",
+        "ru": "Редактировать", "zh": "编辑", "ja": "編集", "ko": "편집", "tr": "Düzenle", "pl": "Edytuj",
+        "id": "Edit", "ar": "تحرير", "fa": "ویرایش", "el": "Επεξεργασία", "hi": "संपादित करें", "bn": "সম্পাদনা", "ur": "ترمیم کریں"
+    },
     "bookmark.delete_confirm_message": {
         "es": "¿Estás seguro? Se eliminará para siempre.", "fr": "Êtes-vous sûr ? Ce sera supprimé définitivement.", "de": "Bist du sicher? Es wird endgültig gelöscht.", "it": "Sei sicuro? Sarà eliminato per sempre.", "pt": "Tem certeza? Será eliminado para sempre.", "nl": "Weet je het zeker? Het wordt permanent verwijderd.",
         "ru": "Вы уверены? Это будет удалено навсегда.", "zh": "你确定吗？它将被永久删除。", "ja": "本当によろしいですか？完全に削除されます。", "ko": "확실합니까? 영구적으로 삭제됩니다.", "tr": "Emin misiniz? Kalıcı olarak silinecek.", "pl": "Czy jesteś pewien? Zostanie trwale usunięte.",
@@ -958,6 +1034,21 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "URL", "zh": "网址", "ja": "URL", "ko": "URL", "tr": "URL", "pl": "URL",
         "id": "URL", "ar": "عنوان URL", "fa": "آدرس وب", "el": "URL", "hi": "यूआरएल", "bn": "ইউআরএল", "ur": "یو آر ایل"
     },
+    "error.invalid_id": {
+        "es": "Ese ID no funciona", "fr": "Cet identifiant ne fonctionne pas", "de": "Diese ID funktioniert nicht", "it": "Questo ID non funziona", "pt": "Ese ID não funciona", "nl": "Die ID werkt niet",
+        "ru": "Этот ID не работает", "zh": "该 ID 无效", "ja": "そのIDは機能しません", "ko": "그 ID는 작동하지 않습니다", "tr": "Bu kimlik çalışmıyor", "pl": "Ten identyfikator nie działa",
+        "id": "ID itu tidak berfungsi", "ar": "هذا المعرف لا يعمل", "fa": "آن شناسه کار نمی‌کند", "el": "Αυτό το ID δεν λειτουργεί", "hi": "वह आईडी काम नहीं करती", "bn": "ওই আইডি কাজ করছে না", "ur": "وہ آئی ڈی کام نہیں کرتی"
+    },
+    "error.invalid_url": {
+        "es": "Esa URL no parece correcta", "fr": "Cette URL ne semble pas correcte", "de": "Diese URL sieht nicht richtig aus", "it": "Questa URL non sembra corretta", "pt": "Esa URL não parece correta", "nl": "Die URL ziet er niet goed uit",
+        "ru": "Этот URL выглядит неправильно", "zh": "该 URL 看起来不对", "ja": "そのURLは正しくないようです", "ko": "그 URL은 올바르지 않은 것 같습니다", "tr": "Bu URL doğru görünmüyor", "pl": "Ten adres URL nie wygląda poprawnie",
+        "id": "URL itu sepertinya tidak benar", "ar": "هذا الرابط لا يبدو صحيحًا", "fa": "آن آدرس درست به نظر نمی‌رسد", "el": "Αυτό το URL δεν φαίνεται σωστό", "hi": "वह यूआरएल सही नहीं लग रहा है", "bn": "ওই ইউআরএল সঠিক মনে হচ্ছে না", "ur": "وہ یو آر ایل درست نہیں لگتا"
+    },
+    "error.not_found": {
+        "es": "No se puede encontrar eso", "fr": "Impossible de trouver cela", "de": "Das kann nicht gefunden werden", "it": "Impossibile trovare questo", "pt": "Não é posible encontrar isso", "nl": "Dat kan niet worden gevonden",
+        "ru": "Это не удалось найти", "zh": "找不到该项", "ja": "見つかりませんでした", "ko": "찾을 수 없습니다", "tr": "Bu bulunamadı", "pl": "Nie można tego znaleźć",
+        "id": "Tidak dapat ditemukan", "ar": "تعذر العثور على ذلك", "fa": "پیدا نشد", "el": "Δεν βρέθηκε", "hi": "वह नहीं मिला", "bn": "এটি খুঁজে পাওয়া যাচ্ছে না", "ur": "وہ نہیں ملا"
+    },
     "error.failed_to_create": {
         "es": "No se pudo crear", "fr": "Impossible de créer", "de": "Erstellung fehlgeschlagen", "it": "Impossibile creare", "pt": "Falha ao criar", "nl": "Kon niet maken",
         "ru": "Не удалось создать", "zh": "创建失败", "ja": "作成に失敗しました", "ko": "생성 실패", "tr": "Oluşturulamadı", "pl": "Nie udało się utworzyć",
@@ -985,7 +1076,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     },
     "general.no_icons": {
         "es": "No hay iconos aquí", "fr": "Pas d'icônes ici", "de": "Hier sind keine Symbole", "it": "Nessuna icona qui", "pt": "Sem ícones aqui", "nl": "Geen pictogrammen hier",
-        "ru": "Здесь нет иконок", "zh": "这里没有图标", "ja": "ここにアイコンはありません", "ko": "여기에 아이콘이 없습니다", "tr": "Burada simge yok", "pl": "Brak ikon tutaj",
+        "ru": "Здесь нет иконок", "zh": "Здесь нет иконок", "ja": "ここにアイコンはありません", "ko": "여기에 아이콘이 없습니다", "tr": "Burada simge yok", "pl": "Brak ikon tutaj",
         "id": "Tidak ada ikon di sini", "ar": "لا توجد أيقونات هنا", "fa": "اینجا نمادی وجود ندارد", "el": "Δεν υπάρχουν εικονίδια εδώ", "hi": "यहां कोई आइकन नहीं", "bn": "এখানে কোন আইকন নেই", "ur": "یہاں کوئی آئیکن نہیں"
     },
     "general.restore": {
@@ -1004,13 +1095,13 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Pengaturan", "ar": "الإعدادات", "fa": "تنظیمات", "el": "Ρυθμίσεις", "hi": "सेटिंग्स", "bn": "সেটিংস", "ur": "ترتیبات"
     },
     "header.view_changelog": {
-        "es": "Ver novedades", "fr": "Voir les nouveautés", "de": "Neuerungen ansehen", "it": "Vedi novità", "pt": "Ver novidades", "nl": "Bekijk nieuwigheden",
+        "es": "Ver novedades", "fr": "Voir las novedades", "de": "Neuerungen ansehen", "it": "Vedi novità", "pt": "Ver novidades", "nl": "Bekijk nieuwigheden",
         "ru": "Посмотреть новинки", "zh": "查看新功能", "ja": "新機能を見る", "ko": "새로운 기능 보기", "tr": "Yenilikleri gör", "pl": "Zobacz nowości",
         "id": "Lihat yang baru", "ar": "عرض الجديد", "fa": "مشاهده تازه‌ها", "el": "Δείτε τα νέα", "hi": "नया क्या है देखें", "bn": "নতুন কী দেখুন", "ur": "نیا کیا ہے دیکھیں"
     },
     "header.view_profile": {
-        "es": "Mi perfil", "fr": "Mon profil", "de": "Mein Profil", "it": "Il mio profilo", "pt": "Meu perfil", "nl": "Mijn profiel",
-        "ru": "Мой профиль", "zh": "我的个人资料", "ja": "マイプロフィール", "ko": "내 프로필", "tr": "Profilim", "pl": "Mój profil",
+        "es": "Mi perfil", "fr": "Mon perfil", "de": "Mein Profil", "it": "Il mio profilo", "pt": "Meu perfil", "nl": "Mijn profiel",
+        "ru": "Мой профиль", "zh": "Мой профиль", "ja": "マイプロフィール", "ko": "내 프로필", "tr": "Profilim", "pl": "Mój profil",
         "id": "Profil saya", "ar": "ملفي الشخصي", "fa": "نمایه من", "el": "Το προφίλ μου", "hi": "मेरी प्रोफ़ाइल", "bn": "আমার প্রোফাইল", "ur": "میری پروفائل"
     },
 
@@ -1026,27 +1117,27 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Bookmark ditambahkan", "ar": "تمت إضافة الإشارة المرجعية", "fa": "نشانک اضافه شد", "el": "Προστέθηκε σελιδοδείκτης", "hi": "बुकमार्क जोड़ा गया", "bn": "বুকমার্ক যোগ করা হয়েছে", "ur": "بک مارک شامل کیا گیا"
     },
     "notifier.bookmark_error": {
-        "es": "No se pudo guardar el marcador", "fr": "Impossible de sauvegarder le signet", "de": "Lesezeichen konnte nicht gespeichert werden", "it": "Impossibile salvare il segnalibro", "pt": "Não foi possível guardar o favorito", "nl": "Kon bladwijzer niet opslaan",
+        "es": "No se pudo guardar el marcador", "fr": "Impossible de sauvegarder el signet", "de": "Lesezeichen konnte nicht gespeichert werden", "it": "Impossibile salvare il segnalibro", "pt": "Não foi possível guardar o favorito", "nl": "Kon bladwijzer niet opslaan",
         "ru": "Не удалось сохранить закладку", "zh": "无法保存书签", "ja": "ブックマークを保存できませんでした", "ko": "북마크를 저장할 수 없습니다", "tr": "Yer imi kaydedilemedi", "pl": "Nie można zapisać zakładki",
         "id": "Tidak dapat menyimpan bookmark", "ar": "تعذر حفظ الإشارة المرجعية", "fa": "امکان ذخیره نشانک وجود ندارد", "el": "Αδυναμία αποθήκευσης σελιδοδείκτη", "hi": "बुकमार्क सहेजा नहीं जा सका", "bn": "বুকমার্ক সংরক্ষণ করা যায়নি", "ur": "بک مارک محفوظ نہیں ہو سکا"
     },
     "notifier.bookmark_updated": {
-        "es": "Marcador actualizado", "fr": "Signet mis à jour", "de": "Lesezeichen aktualisiert", "it": "Segnalibro aggiornato", "pt": "Favorito atualizado", "nl": "Bladwijzer bijgewerkt",
+        "es": "Marcador actualizado", "fr": "Signet mis a jour", "de": "Lesezeichen aktualisiert", "it": "Segnalibro aggiornato", "pt": "Favorito atualizado", "nl": "Bladwijzer bijgewerkt",
         "ru": "Закладка обновлена", "zh": "书签已更新", "ja": "ブックマークを更新しました", "ko": "북마크 업데이트됨", "tr": "Yer imi güncellendi", "pl": "Zakładka zaktualizowana",
         "id": "Bookmark diperbarui", "ar": "تم تحديث الإشارة المرجعية", "fa": "نشانک به‌روز شد", "el": "Ο σελιδοδείκτης ενημερώθηκε", "hi": "बुकमार्क अपडेट किया गया", "bn": "বুকমার্ক আপডেট করা হয়েছে", "ur": "بک مارک اپ ڈیٹ ہوگیا"
     },
     "notifier.downloading_secure": {
-        "es": "Iniciando descarga segura...", "fr": "Démarrage du téléchargement sécurisé...", "de": "Sicherer Download wird gestartet...", "it": "Avvio download sicuro...", "pt": "Iniciando download seguro...", "nl": "Veilige download starten...",
+        "es": "Iniciando descarga segura...", "fr": "Démarrage del téléchargement sécurisé...", "de": "Sicherer Download wird gestartet...", "it": "Avvio download sicuro...", "pt": "Iniciando download seguro...", "nl": "Veilige download starten...",
         "ru": "Начало безопасной загрузки...", "zh": "开始安全下载...", "ja": "安全なダウンロードを開始しています...", "ko": "안전한 다운로드 시작 중...", "tr": "Güvenli indirme başlatılıyor...", "pl": "Rozpoczynanie bezpiecznego pobierania...",
         "id": "Memulai unduhan aman...", "ar": "بدء التنزيل الآمن...", "fa": "شروع دانلود ایمن...", "el": "Έναρξη ασφαλούς λήψης...", "hi": "सुरक्षित डाउनलोड शुरू हो रहा है...", "bn": "নিরাপদ ডাউনলোড শুরু হচ্ছে...", "ur": "محفوظ ڈاؤن لوڈ شروع ہو رہا ہے..."
     },
     "notifier.fields_required": {
         "es": "Se necesitan tus credenciales", "fr": "Vos identifiants sont requis", "de": "Anmeldedaten erforderlich", "it": "Sono necessarie le credenziali", "pt": "Credenciais necessárias", "nl": "Inloggegevens vereist",
-        "ru": "Требуются учетные данные", "zh": "需要凭据", "ja": "認証情報が必要です", "ko": "자격 증명이 필요합니다", "tr": "Kimlik bilgileri gerekli", "pl": "Wymagane dane logowania",
-        "id": "Kredensial diperlukan", "ar": "مطلوب بيانات الاعتماد", "fa": "اعتبارنامه مورد نیاز است", "el": "Απαιτούνται διαπιστευτήρια", "hi": "क्रेडेंशियल आवश्यक", "bn": "শংসাপত্র প্রয়োজন", "ur": "اسناد درکار ہیں"
+        "ru": "Требуются учетные данные", "zh": "Требуются учетные данные", "ja": "認証情報が必要です", "ko": "자격 증명이 필요합니다", "tr": "Kimlik bilgileri gerekli", "pl": "Wymagane dane logowania",
+        "id": "Kredensial diperlukan", "ar": "مطلوب بيانات الاعتماد", "fa": "اعتبارنامه مورد نیاز است", "el": "Απαιτούνται διαπιστευτήρια", "hi": "क्रेडेंशियल आवश्यक", "bn": "শংসাপত্র প্রয়োজন", "ur": "اسناد درکار ہے"
     },
     "notifier.password_changed": {
-        "es": "Contraseña actualizada", "fr": "Mot de passe mis à jour", "de": "Passwort aktualisiert", "it": "Password aggiornata", "pt": "Senha atualizada", "nl": "Wachtwoord bijgewerkt",
+        "es": "Contraseña actualizada", "fr": "Mot de passe mis a jour", "de": "Passwort aktualisiert", "it": "Password aggiornata", "pt": "Senha atualizada", "nl": "Wachtwoord bijgewerkt",
         "ru": "Пароль обновлен", "zh": "密码已更新", "ja": "パスワードが更新されました", "ko": "비밀번호 업데이트됨", "tr": "Şifre güncellendi", "pl": "Hasło zaktualizowane",
         "id": "Kata sandi diperbarui", "ar": "تم تحديث كلمة المرور", "fa": "رمز عبور به‌روز شد", "el": "Ο κωδικός ενημερώθηκε", "hi": "पासवर्ड अपडेट किया गया", "bn": "পাসওয়ার্ড আপডেট করা হয়েছে", "ur": "پاس ورڈ اپ ڈیٹ ہوگیا"
     },
@@ -1061,22 +1152,22 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Bukan itu", "ar": "هذه ليست صحيحة", "fa": "این درست نیست", "el": "Αυτό δεν είναι", "hi": "यह नहीं है", "bn": "এটা নয়", "ur": "یہ نہیں ہے"
     },
     "notifier.password_mismatch": {
-        "es": "Las contraseñas no coinciden", "fr": "Les mots de passe ne correspondent pas", "de": "Passwörter stimmen nicht überein", "it": "Le password non corrispondono", "pt": "As senhas não correspondem", "nl": "Wachtwoorden komen niet overeen",
+        "es": "Las contraseñas no coinciden", "fr": "Les mots de passe no coinciden", "de": "Passwörter stimmen nicht überein", "it": "Le password non corrispondono", "pt": "As senhas não correspondem", "nl": "Wachtwoorden komen niet overeen",
         "ru": "Пароли не совпадают", "zh": "密码不匹配", "ja": "パスワードが一致しません", "ko": "비밀번호가 일치하지 않습니다", "tr": "Şifreler eşleşmiyor", "pl": "Hasła nie pasują",
         "id": "Kata sandi tidak cocok", "ar": "كلمات المرور غير متطابقة", "fa": "رمزهای عبور مطابقت ندارند", "el": "Οι κωδικοί δεν ταιριάζουν", "hi": "पासवर्ड मेल नहीं खाते", "bn": "পাসওয়ার্ড মিলছে না", "ur": "پاس ورڈ مماثل نہیں"
     },
     "notifier.password_required": {
         "es": "Se necesita tu contraseña actual", "fr": "Votre mot de passe actuel est requis", "de": "Aktuelles Passwort erforderlich", "it": "È richiesta la password attuale", "pt": "Senha atual necessária", "nl": "Huidig wachtwoord vereist",
-        "ru": "Требуется текущий пароль", "zh": "需要当前密码", "ja": "現在のパスワードが必要です", "ko": "현재 비밀번호가 필요합니다", "tr": "Mevcut şifre gerekli", "pl": "Wymagane obecne hasło",
+        "ru": "Требуется текущий пароль", "zh": "Требуется текущий пароль", "ja": "現在のパスワードが必要です", "ko": "현재 비밀번호가 필요합니다", "tr": "Mevcut şifre gerekli", "pl": "Wymagane obecne hasło",
         "id": "Kata sandi saat ini diperlukan", "ar": "مطلوب كلمة المرور الحالية", "fa": "رمز عبور فعلی مورد نیاز است", "el": "Απαιτείται ο τρέχων κωδικός", "hi": "वर्तमान पासवर्ड आवश्यक", "bn": "বর্তমান পাসওয়ার্ড প্রয়োজন", "ur": "موجودہ پاس ورڈ درکار ہے"
     },
     "notifier.reset_confirm_text": {
-        "es": "Escribe \"delete\" para confirmar", "fr": "Tapez \"delete\" pour confirmer", "de": "Geben Sie \"delete\" ein, um zu bestätigen", "it": "Digita \"delete\" per confermare", "pt": "Digite \"delete\" para confirmar", "nl": "Typ \"delete\" om te bevestigen",
+        "es": "Escribe \"delete\" para confirmar", "fr": "Tapez \"delete\" para confirmar", "de": "Geben Sie \"delete\" ein, um zu bestätigen", "it": "Digita \"delete\" per confermare", "pt": "Digite \"delete\" para confirmar", "nl": "Typ \"delete\" om te bevestigen",
         "ru": "Введите \"delete\" для подтверждения", "zh": "输入 \"delete\" 以确认", "ja": "確認するには \"delete\" と入力してください", "ko": "확인하려면 \"delete\" 를 입력하세요", "tr": "Onaylamak için \"delete\" yazın", "pl": "Wpisz \"delete\", aby potwierdzić",
         "id": "Ketik \"delete\" untuk mengonfirmasi", "ar": "اكتب \"delete\" للتأكيد", "fa": "برای تایید \"delete\" تایپ کنید", "el": "Πληκτρολογήστε \"delete\" για επιβεβαίωση", "hi": "पुष्टि करने के लिए \"delete\" टाइप करें", "bn": "নিশ্চিত করতে \"delete\" লিখুন", "ur": "تصدیق کے لیے \"delete\" لکھیں"
     },
     "notifier.reset_error": {
-        "es": "Reinicio fallido (revisa tu conexión)", "fr": "Réinitialisation échouée (vérifiez votre connexion)", "de": "Reset fehlgeschlagen (Verbindung prüfen)", "it": "Reset fallito (controlla la connessione)", "pt": "Reset falhado (verifique a conexão)", "nl": "Reset mislukt (controleer verbinding)",
+        "es": "Reinicio fallido (revisa tu conexión)", "fr": "Réinitialisation échouée (vérifiez votre conexión)", "de": "Reset fehlgeschlagen (Verbindung prüfen)", "it": "Reset fallito (controlla la connessione)", "pt": "Reset falhado (verifique a conexão)", "nl": "Reset mislukt (controleer verbinding)",
         "ru": "Сброс не удался (проверьте подключение)", "zh": "重置失败（检查连接）", "ja": "リセット失敗（接続を確認してください）", "ko": "재설정 실패 (연결 확인)", "tr": "Sıfırlama başarısız (bağlantıyı kontrol edin)", "pl": "Reset nie powiódł się (sprawdź połączenie)",
         "id": "Reset gagal (periksa koneksi)", "ar": "فشلت إعادة التعيين (تحقق من الاتصال)", "fa": "بازنشانی ناموفق (اتصال را بررسی کنید)", "el": "Η επαναφορά απέτυχε (ελέγξτε τη σύνδεση)", "hi": "रीसेट विफल (कनेक्शन जांचें)", "bn": "রিসেট ব্যর্থ (সংযোগ পরীক্ষা করুন)", "ur": "ری سیٹ ناکام (کنکشن چیک کریں)"
     },
@@ -1088,10 +1179,10 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     "notifier.restore_confirm": {
         "es": "ADVERTENCIA: Esto reemplazará todo. ¿Estás seguro?", "fr": "ATTENTION : Cela remplacera tout. Êtes-vous sûr ?", "de": "WARNUNG: Dies ersetzt alles. Sind Sie sicher?", "it": "AVVISO: Questo sostituirà tutto. Sei sicuro?", "pt": "AVISO: Isto substituirá tudo. Tem certeza?", "nl": "WAARSCHUWING: Dit vervangt alles. Weet u het zeker?",
         "ru": "ВНИМАНИЕ: Это заменит все. Вы уверены?", "zh": "警告：这将替换所有内容。确定吗？", "ja": "警告：これによりすべてが置き換えられます。よろしいですか？", "ko": "경고: 모든 것이 교체됩니다. 확실합니까?", "tr": "UYARI: Bu her şeyin yerine geçecek. Emin misiniz?", "pl": "OSTRZEŻENIE: To zastąpi wszystko. Czy jesteś pewien?",
-        "id": "PERINGATAN: Ini akan mengganti semuanya. Apakah Anda yakin?", "ar": "تحذير: سيؤدي هذا إلى استبدال كل شيء. هل أنت متأكد؟", "fa": "هشدار: این همه چیز را جایگزین می‌کند. آیا مطمئن هستید؟", "el": "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτό θα αντικαταστήσει τα πάντα. Είστε σίγουροι;", "hi": "चेतावनी: यह सब कुछ बदल देगा। क्या आप सुनिश्चित हैं?", "bn": "সতর্কতা: এটি সবকিছু প্রতিস্থাপন করবে। আপনি কি নিश্চিত?", "ur": "انتباہ: یہ سب کچھ تبدیل کر دے گا۔ کیا آپ کو یقین ہے؟"
+        "id": "PERINGATAN: Ini akan mengganti semuanya. Apakah Anda yakin?", "ar": "تحذير: سيؤدي هذا إلى استبدال كل شيء. هل أنت متأكد؟", "fa": "هشدار: این همه چیز را جایگزین می‌کند. آیا مطمئن هستید؟", "el": "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτό θα αντικαταστήσει τα πάντα. Είστε σίγουροι;", "hi": "चेतावनी: यह सब कुछ बदल देगा। क्या आप सुनिश्चित हैं?", "bn": "সতর্কতা: এটি সবকিছু প্রতিস্থাপন করবে। আপনি কি নিশ্চিত?", "ur": "انتباہ: یہ سب کچھ تبدیل کر دے گا۔ کیا آپ کو یقین ہے؟"
     },
     "notifier.restore_failed": {
-        "es": "La restauración no funcionó", "fr": "La restauration n'a pas fonctionné", "de": "Wiederherstellung hat nicht funktioniert", "it": "Il ripristino non ha funzionato", "pt": "A restauração não funcionou", "nl": "Herstel werkte niet",
+        "es": "La restauración no funcionó", "fr": "La restauration n'a pas funcionado", "de": "Wiederherstellung hat nicht funktioniert", "it": "Il ripristino non ha funzionato", "pt": "A restauração não funcionou", "nl": "Herstel werkte niet",
         "ru": "Восстановление не сработало", "zh": "恢复不起作用", "ja": "復元が機能しませんでした", "ko": "복원이 작동하지 않았습니다", "tr": "Geri yükleme işe yaramadı", "pl": "Przywracanie nie zadziałało",
         "id": "Pemulihan tidak berhasil", "ar": "لم تنجح الاستعادة", "fa": "بازیابی کار نکرد", "el": "Η επαναφορά δεν λειτούργησε", "hi": "पुनर्स्थापना काम नहीं की", "bn": "পুনরুদ্ধার কাজ করেনি", "ur": "بحالی کام نہیں کی"
     },
@@ -1101,7 +1192,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Mengunduh pembaruan...", "ar": "جاري تنزيل التحديث...", "fa": "در حال دانلود به‌روزرسانی...", "el": "Λήψη ενημέρωσης...", "hi": "अपडेट डाउनलोड हो रहा है...", "bn": "আপডেট ডাউনলোড হচ্ছে...", "ur": "اپ ڈیٹ ڈاؤن لوڈ ہو رہی ہے..."
     },
     "notifier.update_error": {
-        "es": "Error al descargar la actualización", "fr": "Échec du téléchargement de la mise à jour", "de": "Update-Download fehlgeschlagen", "it": "Download aggiornamento fallito", "pt": "Falha no download da atualização", "nl": "Update-download mislukt",
+        "es": "Error al descargar la actualización", "fr": "Échec del téléchargement de la mise à jour", "de": "Update-Download fehlgeschlagen", "it": "Download aggiornamento fallito", "pt": "Falha no download da atualização", "nl": "Update-download mislukt",
         "ru": "Ошибка загрузки обновления", "zh": "更新下载失败", "ja": "更新のダウンロードに失敗しました", "ko": "업데이트 다운로드 실패", "tr": "Güncelleme indirme başarısız", "pl": "Pobieranie aktualizacji nie powiodło się",
         "id": "Gagal mengunduh pembaruan", "ar": "فشل تنزيل التحديث", "fa": "دانلود به‌روزرسانی ناموفق بود", "el": "Αποτυχία λήψης ενημέρωσης", "hi": "अपडेट डाउनलोड विफल", "bn": "আপডেট ডাউনলোড ব্যর্থ", "ur": "اپ ڈیٹ ڈاؤن لوڈ ناکام"
     },
@@ -1111,32 +1202,32 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Siap memperbarui? Kami akan restart.", "ar": "هل أنت مستعد للتحديث؟ سنقوم بإعادة التشغيل.", "fa": "آماده به‌روزرسانی هستید؟ راه‌اندازی مجدد می‌کنیم.", "el": "Έτοιμοι για ενημέρωση; Θα κάνουμε επανεκκίνηση.", "hi": "अपडेट के लिए तैयार? हम पुनः आरंभ करेंगे।", "bn": "আপডেট করার জন্য প্রস্তুত? আমরা পুনরায় চালু করব।", "ur": "اپ ڈیٹ کے لیے تیار ہیں؟ ہم دوبارہ شروع کریں گے۔"
     },
     "notifier.user_create_error": {
-        "es": "No se pudo crear ese usuario", "fr": "Impossible de créer cet utilisateur", "de": "Benutzer konnte nicht erstellt werden", "it": "Impossibile creare quell'utente", "pt": "Não foi possível criar esse utilizador", "nl": "Kon die gebruiker niet maken",
+        "es": "No se pudo crear ese usuario", "fr": "No se pudo crear ese usuario", "de": "Benutzer konnte nicht erstellt werden", "it": "Impossibile creare quell'utente", "pt": "Não foi possível criar esse utilizador", "nl": "Kon die gebruiker niet maken",
         "ru": "Не удалось создать пользователя", "zh": "无法创建该用户", "ja": "そのユーザーを作成できませんでした", "ko": "해당 사용자를 만들 수 없습니다", "tr": "Bu kullanıcı oluşturulamadı", "pl": "Nie można utworzyć tego użytkownika",
         "id": "Tidak dapat membuat pengguna itu", "ar": "تعذر إنشاء هذا المستخدم", "fa": "امکان ایجاد آن کاربر وجود ندارد", "el": "Αδυναμία δημιουργίας αυτού του χρήστη", "hi": "वह उपयोगकर्ता नहीं बनाया जा सका", "bn": "সেই ব্যবহারকারী তৈরি করা যায়নি", "ur": "وہ صارف نہیں بنایا جا سکا"
     },
     "notifier.user_created": {
         "es": "Usuario agregado", "fr": "Utilisateur ajouté", "de": "Benutzer hinzugefügt", "it": "Utente aggiunto", "pt": "Utilizador adicionado", "nl": "Gebruiker toegevoegd",
-        "ru": "Пользователь добавлен", "zh": "用户已添加", "ja": "ユーザーを追加しました", "ko": "사용자 추가됨", "tr": "Kullanıcı eklendi", "pl": "Użytkownik dodany",
+        "ru": "Пользователь добавлен", "zh": "Пользователь добавлен", "ja": "ユーザーを追加しました", "ko": "사용자 추가됨", "tr": "Kullanıcı eklendi", "pl": "Użytkownik dodany",
         "id": "Pengguna ditambahkan", "ar": "تمت إضافة المستخدم", "fa": "کاربر اضافه شد", "el": "Προστέθηκε χρήστης", "hi": "उपयोगकर्ता जोड़ा गया", "bn": "ব্যবহারকারী যোগ করা হয়েছে", "ur": "صارف شامل کیا گیا"
     },
     "notifier.user_delete_confirm": {
-        "es": "¿Eliminar este usuario de verdad?", "fr": "Supprimer vraiment cet utilisateur ?", "de": "Diesen Benutzer wirklich löschen?", "it": "Eliminare davvero questo utente?", "pt": "Eliminar mesmo este utilizador?", "nl": "Deze gebruiker echt verwijderen?",
+        "es": "¿Eliminar este usuario de verdad?", "fr": "Supprimer este usuario de verdad?", "de": "Diesen Benutzer wirklich löschen?", "it": "Eliminare davvero questo utente?", "pt": "Eliminar mesmo este utilizador?", "nl": "Deze gebruiker echt verwijderen?",
         "ru": "Действительно удалить этого пользователя?", "zh": "真的要删除此用户吗？", "ja": "本当にこのユーザーを削除しますか？", "ko": "정말로 이 사용자를 삭제하시겠습니까?", "tr": "Bu kullanıcıyı gerçekten silmek istiyor musunuz?", "pl": "Czy na pewno usunąć tego użytkownika?",
         "id": "Benar-benar hapus pengguna ini?", "ar": "هل تريد حذف هذا المستخدم حقًا؟", "fa": "واقعاً این کاربر را حذف کنید؟", "el": "Πραγματικά να διαγραφεί αυτός ο χρήστης;", "hi": "वाकई इस उपयोगकर्ता को हटाएं?", "bn": "সত্যিই এই ব্যবহারকারী মুছবেন?", "ur": "واقعی میں اس صارف کو حذف کریں؟"
     },
     "notifier.user_update_error": {
-        "es": "No se pudo actualizar el usuario", "fr": "Impossible de mettre à jour l'utilisateur", "de": "Benutzer konnte nicht aktualisiert werden", "it": "Impossibile aggiornare l'utente", "pt": "Não foi possível atualizar o utilizador", "nl": "Kon gebruiker niet bijwerken",
+        "es": "No se pudo actualizar el usuario", "fr": "No se pudo actualizar el usuario", "de": "Benutzer konnte nicht aktualisiert werden", "it": "Impossibile aggiornare l'utente", "pt": "Não foi possível atualizar o utilizador", "nl": "Kon gebruiker niet bijwerken",
         "ru": "Не удалось обновить пользователя", "zh": "无法更新用户", "ja": "ユーザーを更新できませんでした", "ko": "사용자를 업데이트할 수 없습니다", "tr": "Kullanıcı güncellenemedi", "pl": "Nie można zaktualizować użytkownika",
         "id": "Tidak dapat memperbarui pengguna", "ar": "تعذر تحديث المستخدم", "fa": "امکان به‌روزرسانی کاربر وجود ندارد", "el": "Αδυναμία ενημέρωσης χρήστη", "hi": "उपयोगकर्ता अपडेट नहीं किया जा सका", "bn": "ব্যবহারকারী আপডেট করা যায়নি", "ur": "صارف کو اپ ڈیٹ نہیں کیا جا سکا"
     },
     "notifier.user_updated": {
-        "es": "Usuario actualizado", "fr": "Utilisateur mis à jour", "de": "Benutzer aktualisiert", "it": "Utente aggiornato", "pt": "Utilizador atualizado", "nl": "Gebruiker bijgewerkt",
+        "es": "Usuario actualizado", "fr": "Usuario actualizado", "de": "Benutzer aktualisiert", "it": "Utente aggiornato", "pt": "Utilizador atualizado", "nl": "Gebruiker bijgewerkt",
         "ru": "Пользователь обновлен", "zh": "用户已更新", "ja": "ユーザーが更新されました", "ko": "사용자 업데이트됨", "tr": "Kullanıcı güncellendi", "pl": "Użytkownik zaktualizowany",
         "id": "Pengguna diperbarui", "ar": "تم تحديث المستخدم", "fa": "کاربر به‌روز شد", "el": "Ο χρήστης ενημερώθηκε", "hi": "उपयोगकर्ता अपडेट किया गया", "bn": "ব্যবহারকারী আপডেট করা হয়েছে", "ur": "صارف اپ ڈیٹ ہو گیا"
     },
     "notifier.username_updated": {
-        "es": "Nombre de usuario cambiado", "fr": "Nom d'utilisateur modifié", "de": "Benutzername geändert", "it": "Nome utente cambiato", "pt": "Nome de utilizador alterado", "nl": "Gebruikersnaam gewijzigd",
+        "es": "Nombre de usuario cambiado", "fr": "Nombre de usuario cambiado", "de": "Benutzername geändert", "it": "Nome utente cambiato", "pt": "Nome de utilizador alterado", "nl": "Gebruikersnaam gewijzigd",
         "ru": "Имя пользователя изменено", "zh": "用户名已更改", "ja": "ユーザー名が変更されました", "ko": "사용자 이름 변경됨", "tr": "Kullanıcı adı değiştirildi", "pl": "Nazwa użytkownika zmieniona",
         "id": "Nama pengguna diubah", "ar": "تم تغيير اسم المستخدم", "fa": "نام کاربری تغییر کرد", "el": "Το όνομα χρήστη άλλαξε", "hi": "उपयोगकर्ता नाम बदल गया", "bn": "ব্যবহারকারীর নাম পরিবর্তিত", "ur": "صارف نام تبدیل ہو گیا"
     },
@@ -1147,11 +1238,15 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Добавить раздел", "zh": "添加部分", "ja": "セクションを追加", "ko": "섹션 추가", "tr": "Bölüm ekle", "pl": "Dodaj sekcję",
         "id": "Tambah bagian", "ar": "إضافة قسم", "fa": "افزودن بخش", "el": "Προσθήκη ενότητας", "hi": "अनुभाग जोड़ें", "bn": "বিভাগ যোগ করুন", "ur": "سیکشن شامل کریں"
     },
+    "section.delete_confirm_message": {
+        "es": "¿Eliminar esta sección y todo su contenido?", "fr": "Supprimer cette section et tout son contenu ?", "de": "Diesen Abschnitt und seinen gesamten Inhalt löschen?", "it": "Eliminare questa sezione e tutto il suo contenuto?", "pt": "Eliminar esta seção e todo o seu conteúdo?", "nl": "Deze sectie en alle inhoud verwijderen?",
+        "ru": "Удалить этот раздел и всё его содержимое?", "zh": "删除此部分及其所有内容？", "ja": "このセクションとそのすべての内容を削除しますか？", "ko": "이 섹션과 모든 내용을 삭제하시겠습니까?", "tr": "Bu bölümü ve tüm içeriğini silmek istiyor musunuz?", "pl": "Usunąć tę sekcję i całą jej zawartość?",
+        "id": "Hapus bagian ini dan semua isinya?", "ar": "هل تريد حذف هذا القسم وجميع محتوياته؟", "fa": "این بخش و تمامی محتوای آن حذف شود؟", "el": "Διαγραφή αυτής της ενότητας και όλου του περιεχομένου της;", "hi": "इस अनुभाग और इसकी सभी सामग्री को हटाएं?", "bn": "এই বিভাগ এবং এর সমস্ত বিষয়বস্তু মুছুন?", "ur": "اس سیکشن اور اس کے تمام مواد کو حذف کریں؟"
+    },
 
     // === Settings Keys ===
     "settings.adaptive_msg": {
         "es": "> La aceleración de hardware adaptable está activada.", "fr": "> L'accélération matérielle adaptive est activée.", "de": "> Adaptive Hardware-Beschleunigung ist aktiviert.", "it": "> L'accelerazione hardware adattiva è attiva.", "pt": "> A aceleração de hardware adaptativa está ativada.", "nl": "> Adaptieve hardwareversnelling is ingeschakeld.",
-        "ru": "> Адаптивное аппаратное ускорение включено.", "zh": "> 自适应硬件加速已启用。", "ja": "> アダプティブハードウェアアクセラレーションが有効です。", "ko": "> 적응형 하드웨어 가속이 활성화되었습니다.", "tr": "> Uyarlanabilir donanım hızlandırma etkin.", "pl": "> Adaptacyjne przyspieszanie sprzętowe jest włączone.",
         "id": "> Akselerasi perangkat keras adaptif diaktifkan.", "ar": "> التسريع الأجهزة التكيفي نشط.", "fa": "> شتاب سخت‌افزاری تطبیقی فعال است.", "el": "> Η προσαρμοστική επιτάχυνση υλικού είναι ενεργή.", "hi": "> अनुकूली हार्डवेयर त्वरण सक्रिय है।", "bn": "> অভিযোজক হার্ডওয়্যার ত্বরণ সক্রিয়।", "ur": "> موافقت پذیر ہارڈ ویئر سرعت فعال ہے۔"
     },
     "settings.admin": {
@@ -1205,9 +1300,9 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Zona Bahaya", "ar": "منطقة الخطر", "fa": "منطقه خطر", "el": "Ζώνη κινδύνου", "hi": "खतरे का क्षेत्र", "bn": "বিপদ অঞ্চল", "ur": "خطرے کا علاقہ"
     },
     "settings.dark": {
-        "es": "Medianoche", "fr": "Minuit", "de": "Mitternacht", "it": "Mezzanotte", "pt": "Meia-noite", "nl": "Middernacht",
-        "ru": "Полночь", "zh": "午夜", "ja": "真夜中", "ko": "자정", "tr": "Gece Yarısı", "pl": "Północ",
-        "id": "Tengah malam", "ar": "منتصف الليل", "fa": "نیمه شب", "el": "Μεσάνυχτα", "hi": "आधी रात", "bn": "মধ্যরাত্রি", "ur": "آدھی رات"
+        "es": "Oscuro", "fr": "Sombre", "de": "Dunkel", "it": "Scuro", "pt": "Escuro", "nl": "Donker",
+        "ru": "Темная", "zh": "深色", "ja": "ダーク", "ko": "다크", "tr": "Koyu", "pl": "Ciemny",
+        "id": "Gelap", "ar": "داكن", "fa": "تیره", "el": "Σκούρο", "hi": "डार्क", "bn": "ডার্ক", "ur": "ڈارک"
     },
     "settings.default_module_desc": {
         "es": "Configuraciones principales.", "fr": "Paramètres principaux.", "de": "Haupteinstellungen.", "it": "Impostazioni principali.", "pt": "Configurações principais.", "nl": "Hoofdinstellingen.",
@@ -1300,9 +1395,9 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Bahasa", "ar": "اللغة", "fa": "زبان", "el": "Γλώσσα", "hi": "भाषा", "bn": "ভাষা", "ur": "زبان"
     },
     "settings.light": {
-        "es": "Luz del día", "fr": "Lumière du jour", "de": "Tageslicht", "it": "Luce del giorno", "pt": "Luz do dia", "nl": "Daglicht",
-        "ru": "Дневной свет", "zh": "日光", "ja": "日光", "ko": "햇빛", "tr": "Gün Işığı", "pl": "Światło dzienne",
-        "id": "Cahaya Siang", "ar": "ضوء النهار", "fa": "نور روز", "el": "Φως ημέρας", "hi": "दिन का प्रकाश", "bn": "দিনের আলো", "ur": "دن کی روشنی"
+        "es": "Claro", "fr": "Clair", "de": "Hell", "it": "Chiaro", "pt": "Claro", "nl": "Licht",
+        "ru": "Светлая", "zh": "浅色", "ja": "ライト", "ko": "라이트", "tr": "Açık", "pl": "Jasny",
+        "id": "Terang", "ar": "فاتح", "fa": "روشن", "el": "Φωτεινό", "hi": "लाइट", "bn": "লাইট", "ur": "لائٹ"
     },
     "settings.localization": {
         "es": "Región", "fr": "Région", "de": "Region", "it": "Regione", "pt": "Região", "nl": "Regio",
@@ -1423,6 +1518,16 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "Usuarios", "fr": "Utilisateurs", "de": "Benutzer", "it": "Utenti", "pt": "Utilizadores", "nl": "Gebruikers",
         "ru": "Пользователи", "zh": "用户", "ja": "ユーザー", "ko": "사용자", "tr": "Kullanıcılar", "pl": "Użytkownicy",
         "id": "Pengguna", "ar": "المستخدمون", "fa": "کاربران", "el": "Χρήστες", "hi": "उपयोगकर्ता", "bn": "ব্যবহারকারীরা", "ur": "صارفین"
+    },
+    "settings.type_delete": {
+        "es": "Escribe <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> para confirmar.", "fr": "Tapez <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> pour confirmer.", "de": "Geben Sie <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> ein, um zu bestätigen.", "it": "Digita <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> per confermare.", "pt": "Digite <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> para confirmar.", "nl": "Typ <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> om te bevestigen.",
+        "ru": "Введите <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> для подтверждения.", "zh": "输入 <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> 以确认。", "ja": "確認するには <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> と入力してください。", "ko": "확인하려면 <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> 를 입력하세요.", "tr": "Onaylamak için <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> yazın.", "pl": "Wpisz <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span>, aby potwierdzić.",
+        "id": "Ketik <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> untuk mengonfirmasi.", "ar": "اكتب <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> للتأكيد.", "fa": "برای تایید <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> تایپ کنید.", "el": "Πληκτρολογήστε <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> για επιβεβαίωση.", "hi": "पुष्टि करने के लिए <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> टाइप करें।", "bn": "নিশ্চিত করতে <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> লিখুন।", "ur": "تصدیق کے لیے <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> لکھیں۔"
+    },
+    "settings.type_delete_placeholder": {
+        "es": "delete", "fr": "delete", "de": "delete", "it": "delete", "pt": "delete", "nl": "delete",
+        "ru": "delete", "zh": "delete", "ja": "delete", "ko": "delete", "tr": "delete", "pl": "delete",
+        "id": "delete", "ar": "delete", "fa": "delete", "el": "delete", "hi": "delete", "bn": "delete", "ur": "delete"
     },
     "settings.version": {
         "es": "Versión", "fr": "Version", "de": "Version", "it": "Versione", "pt": "Versão", "nl": "Versie",
@@ -1583,6 +1688,16 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "Guardado", "fr": "Enregistré", "de": "Gespeichert", "it": "Salvato", "pt": "Guardado", "nl": "Opgeslagen",
         "ru": "Сохранено", "zh": "已保存", "ja": "保存済み", "ko": "저장됨", "tr": "Kaydedildi", "pl": "Zapisano",
         "id": "Tersimpan", "ar": "تم الحفظ", "fa": "ذخیره شد", "el": "Αποθηκεύτηκε", "hi": "सहेजा गया", "bn": "সংরক্ষিত", "ur": "محفوظ ہو گیا"
+    },
+    "widget.notepad.tool.edit": {
+        "es": "Editar", "fr": "Modifier", "de": "Bearbeiten", "it": "Modifica", "pt": "Editar", "nl": "Bewerken",
+        "ru": "Редактировать", "zh": "编辑", "ja": "編集", "ko": "편집", "tr": "Düzenle", "pl": "Edytuj",
+        "id": "Edit", "ar": "تحرير", "fa": "ویرایش", "el": "Επεξεργασία", "hi": "संपादित करें", "bn": "সম্পাদনা", "ur": "ترمیم کریں"
+    },
+    "widget.notepad.tool.save": {
+        "es": "Guardar", "fr": "Enregistrer", "de": "Speichern", "it": "Salva", "pt": "Guardar", "nl": "Opslaan",
+        "ru": "Сохранить", "zh": "保存", "ja": "保存", "ko": "저장", "tr": "Kaydet", "pl": "Zapisz",
+        "id": "Simpan", "ar": "حفظ", "fa": "ذخیره", "el": "Αποθήκευση", "hi": "सहेजें", "bn": "সংরক্ষণ", "ur": "محفوظ کریں"
     },
     "widget.notepad.status.saving": {
         "es": "Guardando...", "fr": "Enregistrement...", "de": "Speichern...", "it": "Salvataggio...", "pt": "A guardar...", "nl": "Opslaan...",
