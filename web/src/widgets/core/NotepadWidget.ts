@@ -99,11 +99,6 @@ const CSS = `
     padding-bottom: 24px !important; 
 }
 
-/* Scrollbar on hover */
-.editor-container::-webkit-scrollbar { width: 4px; }
-.editor-container::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; }
-.editor-container:hover::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.15); }
-
 /* ── ContentEditable ───────────────────────────────────────────────── */
 .editor {
     background: transparent !important;

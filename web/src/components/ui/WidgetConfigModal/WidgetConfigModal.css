@@ -219,11 +219,13 @@ dialog[open] {
 /* Number input spinner */
 .field-group input[type="number"] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .field-group input[type="number"]::-webkit-inner-spin-button,
 .field-group input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
+    appearance: none;
     margin: 0;
 }
 
@@ -284,25 +286,6 @@ dialog[open] {
     gap: 4px;
     max-height: 180px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(var(--accent-rgb), 0.25) transparent;
-}
-
-.weather-results::-webkit-scrollbar {
-    width: 5px;
-}
-
-.weather-results::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.weather-results::-webkit-scrollbar-thumb {
-    background: rgba(var(--accent-rgb), 0.25);
-    border-radius: 10px;
-}
-
-.weather-results::-webkit-scrollbar-thumb:hover {
-    background: rgba(var(--accent-rgb), 0.4);
 }
 
 .city-result {
