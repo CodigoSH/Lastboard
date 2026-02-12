@@ -215,25 +215,26 @@ class SettingsContent extends HTMLElement {
         }
 
         try {
-            await userStore.changePassword({
+            const response = await userStore.changePassword({
                 current_password: currentPw,
                 new_password: newPw
             });
-            if (window.notifier) window.notifier.show(i18n.t('notifier.password_changed'));
 
             // Clear inputs
             (this.shadowRoot!.getElementById('current-password') as HTMLInputElement).value = '';
             (this.shadowRoot!.getElementById('new-password') as HTMLInputElement).value = '';
             (this.shadowRoot!.getElementById('confirm-password') as HTMLInputElement).value = '';
 
-            // Force logout to re-authenticate
-            setTimeout(async () => {
-                try {
-                    await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-Token': this.getCsrfToken() } });
-                } catch (e) { /* ignore */ }
+            // Show success message
+            if (window.notifier) window.notifier.show(i18n.t('notifier.password_changed_relogin'));
+
+            // Session was invalidated by backend, redirect to login
+            setTimeout(() => {
+                // Clear local storage
+                localStorage.removeItem('lastboard_user_cache');
                 document.body.style.opacity = '0';
                 window.location.href = '/login';
-            }, 1500);
+            }, 2000);
         } catch (e) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.password_incorrect'), 'error');
         }
@@ -495,7 +496,8 @@ class SettingsContent extends HTMLElement {
 
         if (status) {
             status.style.display = 'block';
-            status.textContent = i18n.t('notifier.update_downloading');
+            const statusText = status.querySelector('p');
+            if (statusText) statusText.textContent = i18n.t('notifier.update_downloading');
         }
 
         try {
@@ -506,23 +508,36 @@ class SettingsContent extends HTMLElement {
             });
 
             if (res.ok) {
-                if (status) status.textContent = i18n.t('notifier.update_verified');
+                if (status) {
+                    const statusText = status.querySelector('p');
+                    if (statusText) statusText.textContent = i18n.t('notifier.update_verified');
+                }
                 setTimeout(() => {
                     window.location.reload();
                 }, 5000);
             } else {
                 const err = await res.text();
                 if (status) {
-                    status.style.color = 'var(--danger-color)';
-                    status.textContent = i18n.t('notifier.update_failed') + err;
+                    status.style.background = 'rgba(var(--danger-rgb), 0.1)';
+                    status.style.borderColor = 'rgba(var(--danger-rgb), 0.3)';
+                    const statusText = status.querySelector('p');
+                    if (statusText) {
+                        statusText.style.color = 'var(--danger-color)';
+                        statusText.textContent = i18n.t('notifier.update_failed') + ': ' + err;
+                    }
                 }
                 if (btn) btn.loading = false;
             }
         } catch (e) {
             console.error("Update failed", e);
             if (status) {
-                status.style.color = 'var(--danger-color)';
-                status.textContent = i18n.t('notifier.update_error');
+                status.style.background = 'rgba(var(--danger-rgb), 0.1)';
+                status.style.borderColor = 'rgba(var(--danger-rgb), 0.3)';
+                const statusText = status.querySelector('p');
+                if (statusText) {
+                    statusText.style.color = 'var(--danger-color)';
+                    statusText.textContent = i18n.t('notifier.update_error');
+                }
             }
             if (btn) btn.loading = false;
         }
