@@ -157,7 +157,25 @@ class UserStore {
     async updateProfile(data: Partial<User>) {
         if (!this.user) return;
         try {
-            await userService.updateProfile(data);
+            const response = await userService.updateProfile(data);
+
+            // Check if session was invalidated (username changed)
+            // @ts-ignore
+            if (response && response.session_invalidated) {
+                // Clear local storage
+                localStorage.removeItem('lastboard_user_cache');
+
+                // Show notification and redirect to login
+                // @ts-ignore
+                if (window.notifier) window.notifier.show(i18n.t('notifier.username_changed_relogin'));
+
+                setTimeout(() => {
+                    document.body.style.opacity = '0';
+                    window.location.href = '/login';
+                }, 2000);
+                return;
+            }
+
             this.user = { ...this.user, ...data };
             this.notify();
             // @ts-ignore
@@ -171,7 +189,8 @@ class UserStore {
 
     async changePassword(data: any) {
         try {
-            await userService.changePassword(data);
+            const response = await userService.changePassword(data);
+            return response;
         } catch (e) {
             console.error('[UserStore] Change password failed', e);
             throw e;

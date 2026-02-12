@@ -45,7 +45,7 @@ export const accountTemplate = (user: User) => `
                     <label class="settings-content__label">${i18n.t('settings.display_username')}</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('settings.display_username')}">
-                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(document.getElementById('username-input').value)">${i18n.t('action.update')}</app-button>
+                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(this.getRootNode().getElementById('username-input').value)">${i18n.t('action.update')}</app-button>
                     </div>
                 </div>
             </div>
@@ -375,7 +375,9 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
                             <app-button variant="ghost" style="height: 100%;">${i18n.t('general.changelog')}</app-button>
                         </a>
                     </div>
-                    <p id="update-status" style="margin: 0; font-size: 12px; color: var(--text-dim); display: none; text-align: center;">${i18n.t('notifier.downloading_secure')}</p>
+                    <div id="update-status" style="display: none; margin-top: 12px; padding: 12px; background: rgba(var(--accent-rgb), 0.1); border: 1px solid rgba(var(--accent-rgb), 0.3); border-radius: 8px; text-align: center;">
+                        <p style="margin: 0; font-size: 13px; color: var(--accent); font-weight: 500;">${i18n.t('notifier.downloading_secure')}</p>
+                    </div>
                 </div>
             </div>
         `;

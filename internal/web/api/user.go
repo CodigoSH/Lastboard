@@ -175,12 +175,16 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Track if username changed (requires session invalidation)
+	usernameChanged := false
+
 	// Validate new username only if it changed
 	if input.Username != "" && input.Username != username {
 		if err := validateUsername(input.Username); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		usernameChanged = true
 	}
 	if input.Username == "" {
 		input.Username = username
@@ -202,6 +206,32 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		return
+	}
+
+	// If username changed, invalidate session for security
+	if usernameChanged {
+		expired := time.Now().Add(-1 * time.Hour)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    "",
+			Path:     "/",
+			Expires:  expired,
+			HttpOnly: true,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "csrf_token",
+			Value:    "",
+			Path:     "/",
+			Expires:  expired,
+			HttpOnly: false,
+		})
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "Profile updated",
+			"session_invalidated": true,
+		})
 		return
 	}
 
@@ -250,8 +280,28 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Invalidate session for security (force re-login with new password)
+	expired := time.Now().Add(-1 * time.Hour)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  expired,
+		HttpOnly: true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "csrf_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  expired,
+		HttpOnly: false,
+	})
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Password updated"})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Password updated",
+		"session_invalidated": true,
+	})
 }
 
 // Admin Endpoints
