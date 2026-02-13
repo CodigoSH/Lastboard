@@ -8,10 +8,10 @@
 
   <p>
     <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
-    <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
+    <img src="https://img.shields.io/badge/Docker-Available-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+    <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
     <img src="https://img.shields.io/badge/Bun-%26_TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="Bun & TypeScript" />
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License" />
-    <img src="https://img.shields.io/badge/Platform-Linux%20-lightgrey?style=for-the-badge" alt="Platform" />
   </p>
 </div>
 
@@ -61,18 +61,45 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 
 ## Installation & Build
 
-### Prerequisites
-- **Go 1.21+**
+### 🐳 Quick Start with Docker (Recommended)
+The easiest way to get started is using Docker. Images are automatically built and published to GHCR.
+
+**Using Docker Compose:**
+```yaml
+services:
+  lastboard:
+    image: ghcr.io/codigosh/lastboard:latest
+    container_name: lastboard
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+```
+
+**Using Docker CLI:**
+```bash
+docker run -d \
+  --name lastboard \
+  -p 8080:8080 \
+  -v $(pwd)/data:/app/data \
+  --restart unless-stopped \
+  ghcr.io/codigosh/lastboard:latest
+```
+
+### 📦 Manual Installation
+If you prefer running the binary directly on your host machine.
+
+#### Prerequisites
+- **Go 1.23+**
 - **Bun** (for building frontend assets)
 
-### Automated Installation (One-Liner)
-Install Lastboard with a single command. This script automates everything: user creation, directory setup, and systemd service registration.
-
+#### Automated Script (Linux)
 ```bash
 curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
 ```
 
-### Build from Source
+#### Build from Source
 
 1. **Clone the repository**
    ```bash
@@ -81,13 +108,12 @@ curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh 
    ```
 
 2. **Build the Frontend**
-   Compile TypeScript, process CSS, and bundle assets into the `dist` folder:
    ```bash
+   bun install
    bun run build
    ```
 
 3. **Build the Binary**
-   Generate the final executable with Go:
    ```bash
    go build -o lastboard ./cmd/dashboard/main.go
    ```
