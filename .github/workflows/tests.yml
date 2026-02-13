@@ -23,14 +23,12 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24'
-        cache: false
+        cache: true
 
     - name: Set up Bun
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: latest
-
-
 
     - name: Install dependencies
       run: |
@@ -84,8 +82,6 @@ jobs:
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: latest
-
-
 
     - name: Install dependencies
       run: |
