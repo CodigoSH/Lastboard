@@ -32,7 +32,7 @@ We built our own high-performance drag-and-drop grid system using **100% native 
 - **Butter-smooth interactions**: Optimized for 60fps animations even on low-power devices.
 - **Adaptive Architecture**: Seamless logic for desktop, tablet, and mobile layouts.
 
-### 🛠️ Professional Setup Wizard
+### Professional Setup Wizard
 A secure, guided initialization flow helps you configure your environment in seconds.
 - **First-run configuration**: set your admin credentials, theme preferences, and system defaults.
 - **Auto-discovery**: detects environment capabilities automatically.
