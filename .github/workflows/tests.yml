@@ -30,17 +30,7 @@ jobs:
       with:
         bun-version: latest
 
-    # Manual Bun cache
-    - name: Get Bun cache directory
-      id: bun-cache
-      run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
 
-    - uses: actions/cache@v3
-      with:
-        path: ${{ steps.bun-cache.outputs.dir }}
-        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-        restore-keys: |
-          ${{ runner.os }}-bun-
 
     - name: Install dependencies
       run: |
@@ -95,17 +85,7 @@ jobs:
       with:
         bun-version: latest
 
-    # Manual Bun cache
-    - name: Get Bun cache directory
-      id: bun-cache
-      run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
 
-    - uses: actions/cache@v3
-      with:
-        path: ${{ steps.bun-cache.outputs.dir }}
-        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-        restore-keys: |
-          ${{ runner.os }}-bun-
 
     - name: Install dependencies
       run: |
