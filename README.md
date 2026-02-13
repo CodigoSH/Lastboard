@@ -61,7 +61,7 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 
 ## Installation & Build
 
-### 🐳 Quick Start with Docker (Recommended)
+### Quick Start with Docker (Recommended)
 The easiest way to get started is using Docker. Images are automatically built and published to GHCR.
 
 **Using Docker Compose:**
@@ -87,7 +87,7 @@ docker run -d \
   ghcr.io/codigosh/lastboard:latest
 ```
 
-### 📦 Manual Installation
+### Manual Installation
 If you prefer running the binary directly on your host machine.
 
 #### Prerequisites
