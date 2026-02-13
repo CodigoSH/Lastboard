@@ -34,8 +34,15 @@ FROM alpine:latest
 
 WORKDIR /app
 
-# Create persistent data directory
-RUN mkdir -p /app/data
+# Install runtime dependencies
+RUN apk add --no-cache tzdata curl
+
+# Create a non-root user
+RUN addgroup -S codigosh && adduser -S codigosh -G codigosh
+
+# Create persistent data directory and set permissions
+# Note: If mounting a host volume, ensure host directory permissions allow writing by UID 1000
+RUN mkdir -p /app/data && chown -R codigosh:codigosh /app/data
 
 # Copy ONLY the static binary
 COPY --from=builder /app/lastboard /app/lastboard
@@ -46,6 +53,13 @@ ENV DB_FILE=/app/data/lastboard.db
 
 # Expose internal port
 EXPOSE 8080
+
+# Switch to non-root user
+USER codigosh
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD curl -f http://localhost:8080/api/dashboard/health || exit 1
 
 # Command
 CMD ["/app/lastboard"]
