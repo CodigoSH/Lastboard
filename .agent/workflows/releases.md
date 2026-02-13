@@ -10,29 +10,29 @@ This workflow ensures consistent releases using automated scripts that handle ve
 - Decide on the type of release (Beta, RC, or Stable).
 
 ## 2. Execute Release Script
-Run the appropriate script from the `scripts/` directory. These scripts automatically:
-- Detect the current version from `package.json`.
-- Increment the version (handling padded numbers like `09` -> `10`).
-- Update `package.json`, `internal/version/version.go`, and `web/src/components/ui/SettingsContent/SettingsContent.ts`.
-- Generate release notes from recent git commits.
-- Commit, tag, and push to origin.
+Run the unified release script from the `scripts/` directory. This script automatically handles version bumps, file updates, and changelog generation based on the release type.
+
+### Usage
+```bash
+./scripts/release.sh [stable|beta|rc]
+```
 
 ### Release Beta
 Use this for ongoing development and testing.
 ```bash
-./scripts/release_beta.sh
+./scripts/release.sh beta
 ```
 
 ### Release RC (Release Candidate)
 Use this when a version is potentially ready for stable.
 ```bash
-./scripts/release_rc.sh
+./scripts/release.sh rc
 ```
 
 ### Release Stable
 Use this for final production releases.
 ```bash
-./scripts/release_stable.sh
+./scripts/release.sh stable
 ```
 
 ## 3. Verification
