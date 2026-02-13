@@ -72,7 +72,7 @@ Install Lastboard with a single command. This script automates everything: user 
 curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
 ```
 
-### 🛠️ Build from Source
+### Build from Source
 
 1. **Clone the repository**
    ```bash
