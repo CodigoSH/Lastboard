@@ -1,0 +1,122 @@
+.header {
+    background-color: var(--header-bg, #121212);
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.header__left {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.header__group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header__btn-changelog {
+    background-color: var(--primary-blue, #0078D4);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: 28px;
+}
+
+.header__btn-changelog:hover {
+    filter: brightness(1.1);
+}
+
+.header__icon-close {
+    width: 14px;
+    height: 14px;
+}
+
+.header__action {
+    width: 20px;
+    height: 20px;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.header__action:hover {
+    color: var(--text-main);
+    background-color: var(--hover-bg, rgba(255, 255, 255, 0.05));
+}
+
+.header__separator {
+    width: 1px;
+    height: 20px;
+    background-color: var(--border-color, rgba(255, 255, 255, 0.1));
+    margin: 0 4px;
+}
+
+.header__profile-container {
+    position: relative;
+}
+
+.header__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: #1e1e1e;
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 6px;
+    width: 200px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    display: none;
+    overflow: hidden;
+    z-index: 100;
+}
+
+.header__dropdown--active {
+    display: block;
+}
+
+.header__dropdown-item {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+}
+
+.header__dropdown-item:hover {
+    background-color: var(--hover-bg, rgba(255, 255, 255, 0.05));
+    color: var(--text-main);
+}
+
+@media (pointer: coarse),
+(max-width: 1024px) {
+
+    /* Hide Changelog Button */
+    .header__btn-changelog,
+    /* Hide Specific Icons by Title Attribute Selector */
+    .header__action[title="Layouts"],
+    .header__action[title="Chrome"],
+    .header__action[title="Settings"],
+    .header__action[title="Profile"],
+    /* Hide Separator */
+    .header__separator,
+    /* Hide Profile Container entirely just in case */
+    .header__profile-container {
+        display: none !important;
+    }
+}

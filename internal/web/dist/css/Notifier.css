@@ -1,0 +1,36 @@
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toast-container--shifted {
+    right: 340px;
+    /* 320px drawer + 20px gap */
+}
+
+.toast {
+    background-color: var(--surface);
+    color: var(--text-main);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 300ms, transform 300ms;
+    border-left: 4px solid var(--accent);
+}
+
+.toast--success {
+    border-left-color: var(--success-color);
+}
+
+.toast--error {
+    border-left-color: var(--danger-color);
+}

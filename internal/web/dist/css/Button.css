@@ -1,0 +1,67 @@
+:host {
+    display: inline-block;
+    width: 100%;
+}
+
+.btn {
+    width: 100%;
+    height: 38px;
+    border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    outline: none;
+    box-sizing: border-box;
+    padding: 0 16px;
+}
+
+/* Variant: Ghost (Default) */
+.btn--ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+}
+
+.btn--ghost:hover {
+    color: var(--text-main);
+    border-color: var(--border-bright);
+    background: var(--panel);
+}
+
+/* Variant: Primary */
+.btn--primary {
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+}
+
+.btn--primary:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+/* Variant: Danger (same style as Primary for consistency) */
+.btn--danger {
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+}
+
+.btn--danger:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    color: var(--accent);
+    border-color: var(--accent);
+}

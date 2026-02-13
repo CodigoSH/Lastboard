@@ -562,7 +562,7 @@ func validateUsername(username string) error {
 }
 
 func validatePassword(password string) error {
-	if len(password) < 4 {
+	if len(password) < 8 {
 		return fmt.Errorf("error.password_min_length")
 	}
 	if len(password) > 72 {
