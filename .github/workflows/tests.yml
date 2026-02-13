@@ -23,7 +23,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24'
-        cache: true
+        cache: false
 
     - name: Set up Bun
       uses: oven-sh/setup-bun@v1
@@ -39,7 +39,7 @@ jobs:
 
     - name: Run Go tests
       run: |
-        go test ./internal/... -v -cover -coverprofile=coverage.out
+        go test ./internal/... -v -cover -coverprofile=coverage.out -timeout 5m
 
     - name: Generate coverage report
       run: |
