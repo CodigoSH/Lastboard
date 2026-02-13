@@ -23,11 +23,24 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24'
+        cache: true
 
     - name: Set up Bun
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: latest
+
+    # Manual Bun cache
+    - name: Get Bun cache directory
+      id: bun-cache
+      run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
+
+    - uses: actions/cache@v3
+      with:
+        path: ${{ steps.bun-cache.outputs.dir }}
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
 
     - name: Install dependencies
       run: |
@@ -75,11 +88,24 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24'
+        cache: true
 
     - name: Set up Bun
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: latest
+
+    # Manual Bun cache
+    - name: Get Bun cache directory
+      id: bun-cache
+      run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
+
+    - uses: actions/cache@v3
+      with:
+        path: ${{ steps.bun-cache.outputs.dir }}
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
 
     - name: Install dependencies
       run: |
@@ -113,6 +139,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24'
+        cache: true
 
     - name: Install dependencies
       run: |
