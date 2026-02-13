@@ -60,3 +60,33 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -rf coverage/*.out coverage/*.html
 	@rm -rf web/dist
+
+# --- Docker ---
+docker:
+	@echo "Building Docker image..."
+	@docker build -t lastboard:local .
+
+# --- Release Shortcuts ---
+release-beta:
+	@./scripts/release.sh beta
+
+release-rc:
+	@./scripts/release.sh rc
+
+release-stable:
+	@./scripts/release.sh stable
+
+# --- Dev ---
+dev:
+	@if command -v air > /dev/null; then \
+	    air; \
+	else \
+	    read -p "Go 'air' is not installed. Run 'go install github.com/air-verse/air@latest' (y/N)? " choice; \
+	    if [ "$$choice" = "y" ] || [ "$$choice" = "Y" ]; then \
+	        go install github.com/air-verse/air@latest; \
+	        air; \
+	    else \
+	        echo "Please install air manually or use 'make run'"; \
+	        exit 1; \
+	    fi; \
+	fi
