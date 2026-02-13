@@ -2,7 +2,7 @@
 
 First off, thanks for taking the time to contribute! Lastboard aims to be the fastest and most beautiful personal dashboard, and your help makes that possible.
 
-## 🛠️ Development Setup
+## Development Setup
 
 ### Prerequisites
 - **Go 1.23+**
@@ -36,13 +36,13 @@ First off, thanks for taking the time to contribute! Lastboard aims to be the fa
    go run ./cmd/dashboard/main.go
    ```
 
-## 🏗️ Project Structure
+## Project Structure
 - `cmd/dashboard`: Main entry point.
 - `internal`: Backend logic (handlers, storage, services).
 - `web`: Frontend application (TypeScript, CSS).
 - `scripts`: Utilities for release and i18n.
 
-## 🚀 Releasing Support
+## Releasing Support
 We use a unified script to handle versioning and changelogs.
 
 **Do not manually edit `package.json` version.** Use the script:
@@ -58,13 +58,13 @@ We use a unified script to handle versioning and changelogs.
 ./scripts/release.sh stable
 ```
 
-## 🌐 Translations (i18n)
+## Translations (i18n)
 If you want to add or update translations:
 1. Edit the master file `scripts/i18n-sync.ts`.
 2. Run `bun run i18n:sync` to propagate changes to all `locales/*.json` files.
 3. Commit both the script and the generated json files.
 
-## 🤝 Code Style
+## Code Style
 - **Go**: Follow standard Go idioms. Run `go fmt ./...` before committing.
 - **TypeScript**: We use standard prettier/eslint rules.
 - **Commits**: Please follow [Conventional Commits](https://www.conventionalcommits.org/).
