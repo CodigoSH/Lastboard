@@ -1,0 +1,333 @@
+:host {
+    display: contents;
+}
+
+dialog {
+    background: var(--paper-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--paper-border);
+    border-top: 1px solid var(--paper-border-top);
+    border-radius: var(--radius);
+    padding: 0;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: var(--paper-shadow);
+    overflow: visible;
+    color: var(--text-main);
+}
+
+dialog::backdrop {
+    background: var(--overlay-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+dialog[open] {
+    animation: modalIn 0.4s cubic-bezier(0.34, 1, 0.64, 1);
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.modal-close {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    outline: none;
+}
+
+.modal-close:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    transform: rotate(90deg);
+    color: var(--accent);
+    border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+.modal-close:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+.content {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--label-text);
+}
+
+.field-group input[type="text"],
+.field-group input[type="number"] {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.field-group input[type="text"]::placeholder,
+.field-group input[type="number"]::placeholder {
+    color: var(--input-placeholder);
+}
+
+.field-group input[type="text"]:focus,
+.field-group input[type="number"]:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: var(--input-focus-shadow);
+}
+
+.field-group small {
+    font-size: 12px;
+    color: var(--text-dim);
+    opacity: 0.7;
+}
+
+.input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-row input[type="text"] {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.input-row app-button {
+    width: auto;
+    flex: 0 0 auto;
+}
+
+.check-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+}
+
+.check-row input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: var(--input-bg);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.check-row input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.check-row input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.check-row label {
+    color: var(--text-main);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.row-aligned {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.row-aligned label {
+    flex-shrink: 0;
+}
+
+.row-aligned app-select {
+    flex: 1;
+    max-width: 150px;
+}
+
+.actions {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.actions app-button {
+    min-width: 120px;
+}
+
+/* Number input spinner */
+.field-group input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.field-group input[type="number"]::-webkit-inner-spin-button,
+.field-group input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+.stepper-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--input-bg);
+}
+
+.stepper-wrap input[type="number"] {
+    border: none !important;
+    border-radius: 0 !important;
+    text-align: center;
+    width: 44px;
+    padding: 8px 4px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.stepper-wrap input[type="number"]:focus {
+    box-shadow: none !important;
+}
+
+.stepper-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 38px;
+    background: var(--surface);
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.15s;
+    font-family: var(--font-sans);
+    user-select: none;
+}
+
+.stepper-btn:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    color: var(--accent);
+}
+
+.stepper-btn:active {
+    background: rgba(var(--accent-rgb), 0.18);
+}
+
+/* Weather city search results */
+.weather-results {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.city-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    font-family: var(--font-sans);
+    color: var(--text-main);
+}
+
+.city-result:hover {
+    background: rgba(var(--accent-rgb), 0.08);
+    border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+.city-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.city-detail {
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+.search-loading,
+.search-empty {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 12px;
+}

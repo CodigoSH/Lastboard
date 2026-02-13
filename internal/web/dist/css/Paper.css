@@ -1,0 +1,14 @@
+:host {
+    display: block;
+}
+
+.paper {
+    /* Neutralized to allow components.css to control styling via Host */
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    color: inherit;
+    box-sizing: border-box;
+    height: 100%;
+}

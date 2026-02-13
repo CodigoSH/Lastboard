@@ -1,0 +1,293 @@
+:host {
+    display: block;
+    height: 48px;
+    width: 100%;
+}
+
+.top-bar {
+    height: 48px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background-color: var(--panel);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    color: var(--text-main);
+    box-sizing: border-box;
+}
+
+.top-bar__title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+    /* Guard the title from shrinking */
+    margin-right: 16px;
+}
+
+.top-bar__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    /* Take remaining space */
+    justify-content: flex-end;
+}
+
+.top-bar__toggle {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: opacity 0.2s;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.top-bar__toggle:hover {
+    opacity: 0.7;
+    background: rgba(128, 128, 128, 0.1);
+    border-radius: 4px;
+}
+
+.top-bar__toggle svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.5px;
+}
+
+.top-bar__indicator {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 6px;
+    height: 18px;
+    fill: var(--text-main);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.top-bar__indicator--active {
+    opacity: 1;
+}
+
+/* Search Styles */
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 0;
+    height: 32px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 32px;
+    overflow: hidden;
+    cursor: pointer;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.search-wrapper--active {
+    flex: 1;
+    /* Allow to grow into available space */
+    max-width: 300px;
+    /* But don't go too wide on desktop */
+    background: var(--surface-solid);
+    border-color: var(--border);
+    cursor: default;
+    padding: 0 4px 0 12px;
+    justify-content: space-between;
+    /* Icon to the right */
+}
+
+.search-input {
+    background: none;
+    border: none;
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+    padding: 0;
+    /* Clean state when closed */
+    width: 0;
+    flex: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.search-wrapper--active .search-input {
+    flex: 1;
+    width: auto;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.search-clear {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(128, 128, 128, 0.2);
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    margin: 0 8px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.search-clear:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+.search-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--text-main);
+    stroke: currentColor;
+    stroke-width: 1.5px;
+    transition: color 0.2s;
+    order: 2;
+    /* Ensure icon is visually after everything */
+}
+
+.search-wrapper:hover .search-icon,
+.search-wrapper--active .search-icon {
+    color: var(--accent);
+}
+
+.add-menu {
+    position: absolute;
+    top: 42px;
+    right: 80px;
+    background: var(--surface-solid, #1a1b1e);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 140px;
+    z-index: 2000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
+}
+
+.add-menu--active {
+    display: flex;
+}
+
+.add-menu-item {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+}
+
+.add-menu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--accent);
+}
+
+.add-menu-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.add-menu-item:hover .add-menu-icon {
+    opacity: 1;
+    color: var(--accent);
+}
+
+/* Mobile & Tablet Responsiveness (Touch or Small Screen) */
+@media (pointer: coarse),
+(max-width: 1024px) {
+
+    #edit-toggle,
+    #add-toggle,
+    #drawer-toggle {
+        display: none !important;
+    }
+
+    .top-bar__title {
+        margin-right: 8px;
+    }
+}
+
+/* Notification Dot */
+.notification-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--danger-color);
+    border-radius: 50%;
+    border: 2px solid var(--panel);
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ========================================
+   UTILITY CLASSES (CSP-Safe replacements for inline styles)
+   ======================================== */
+
+/* Display utilities */
+.hidden { display: none !important; }
+
+/* Position utilities */
+.relative { position: relative !important; }
+
+/* Margin utilities */
+.mr-n6 { margin-right: -6px !important; }
+
+/* Edit toggle active state */
+.edit-toggle--active {
+    color: var(--accent);
+}
+
+/* Add menu icon dashed variant */
+.add-menu-icon--dashed {
+    stroke-dasharray: 4 2;
+}

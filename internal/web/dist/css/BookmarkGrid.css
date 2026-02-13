@@ -1,0 +1,618 @@
+:host {
+    /* Fixed Grid System */
+    /* --user-preferred-columns is set by JS on :root (Default: 12) */
+    --grid-cols: var(--user-preferred-columns, 12);
+
+    display: grid;
+    /* Fixed columns based on user preference */
+    grid-template-columns: repeat(var(--grid-cols), 1fr);
+
+    /* Rows track auto, but generally square via aspect ratio */
+    /* FORCE Square cells: row-height is synced to colWidth in JS */
+    grid-auto-rows: var(--row-height, 100px);
+
+    gap: 16px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 6rem;
+
+    /* Hide scrollbars */
+    scrollbar-width: none !important;
+
+    /* Optimize dynamic height changes during drag */
+    will-change: min-height;
+    contain: layout style;
+}
+
+:host::-webkit-scrollbar {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Touch Mode / Mobile & Tablet — Horizontal Card List
+   ═══════════════════════════════════════════════════════════════
+   On touch devices the grid is replaced by a simple vertical list
+   of full-width horizontal cards.  Each card shows the icon on the
+   left, the label in the centre, and the optional status indicator
+   on the right.  This layout completely avoids the desktop column-
+   flex + percentage-max-height chain that caused cards to collapse
+   on mobile browsers.
+   ═══════════════════════════════════════════════════════════════ */
+
+:host(.touch-mode) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    /* Remove layout containment — it can interfere with flex height
+       resolution on some mobile browsers */
+    contain: none;
+    will-change: auto;
+}
+
+:host(.touch-mode) .bookmark-grid__card {
+    /* Reset grid positioning */
+    grid-column: auto !important;
+    grid-row: auto !important;
+
+    /* Full-width horizontal card */
+    width: 100%;
+    height: auto;
+    min-height: 52px;
+    max-height: none;
+    aspect-ratio: auto;
+
+    /* Horizontal layout: [Icon] [Label] [Status●] */
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    align-self: stretch;
+    gap: 12px;
+    padding: 12px 16px !important;
+
+    /* Remove container-query context (avoids implicit containment
+       and undefined cqi units in a non-grid context) */
+    container-type: normal;
+}
+
+/* Icon container — fixed size, no flex-grow */
+:host(.touch-mode) .bookmark-grid__icon-container {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+/* Icons — fixed pixel size avoids the max-height:80% circular
+   dependency that collapsed icons on mobile */
+:host(.touch-mode) .bookmark-grid__icon-img,
+:host(.touch-mode) .bookmark-grid__icon-svg {
+    width: 40px;
+    height: 40px;
+    max-height: none;
+}
+
+/* Label — fills remaining space, left-aligned */
+:host(.touch-mode) .bookmark-grid__label {
+    font-size: 14px;
+    text-align: left;
+    padding: 0;
+    flex: 1;
+    min-width: 0;
+    /* allow text-overflow ellipsis in flex */
+}
+
+/* Status indicator — inline at end of card instead of absolute */
+:host(.touch-mode) .status-indicator {
+    position: static;
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+}
+
+/* Hide sections in touch mode (content is flattened) */
+:host(.touch-mode) .bookmark-grid__section {
+    display: none !important;
+}
+
+/* Items positioned by coordinates */
+/* Items positioned by Flow (Order) or Coordinates (if we keep strict mode, but requested Flow) */
+.bookmark-grid__card {
+    /* Items positioned by Coordinates (Strict) */
+    grid-column: var(--x, auto) / span var(--w, 1);
+    grid-row: var(--y, auto) / span var(--h, 1);
+
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    /* Responsive Padding */
+    padding: 8% 4% !important;
+
+    position: relative;
+    /* aspect-ratio: 1 / 1;  <-- REMOVED: let grid-auto-rows control height */
+    height: 100%;
+    /* Fill the grid area */
+
+    max-width: 100%;
+    max-height: 100%;
+
+    justify-self: center;
+    align-self: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    /* Start from top, let flex-1 push down */
+    gap: 0;
+
+    text-decoration: none;
+    color: var(--text-main);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+    box-sizing: border-box;
+    overflow: hidden;
+    container-type: inline-size;
+    z-index: 10;
+}
+
+/* SEARCH OVERRIDE (Desktop only): Auto-flow grid for search results */
+:host(.search-active) .bookmark-grid__card {
+    grid-column: auto / span 1 !important;
+    grid-row: auto / span 1 !important;
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* Allow widget tooltips to overflow the card */
+.bookmark-grid__card[data-type="widget"] {
+    overflow: visible;
+}
+
+.bookmark-grid__card:hover {
+    border-color: var(--border-bright);
+    background: var(--surface-solid);
+    /* Removed card lift, moved to icon */
+}
+
+/* Status Indicator - Responsive Position & Size */
+.status-indicator {
+    position: absolute;
+    /* Position scales with card width, but never too close to edge */
+    top: clamp(6px, 6cqi, 12px);
+    right: clamp(6px, 6cqi, 12px);
+
+    /* Size scales with card width */
+    width: clamp(8px, 9cqi, 14px);
+    height: clamp(8px, 9cqi, 14px);
+
+    border-radius: 50%;
+    background-color: var(--text-dim);
+    /* Border scales slightly for visual weight */
+    border: clamp(1px, 1.2cqi, 2px) solid var(--panel);
+
+    /* Light effect shadow scales slightly */
+    box-shadow: 0 0 clamp(2px, 2cqi, 6px) rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    transition: all 0.3s ease;
+}
+
+.status-up {
+    background-color: #2ecc71;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.8), 0 0 0 0px rgba(46, 204, 113, 0.4);
+    animation: status-pulse-up 2s infinite;
+}
+
+.status-down {
+    background-color: #e74c3c;
+    box-shadow: 0 0 8px rgba(231, 76, 60, 0.8), 0 0 0 0px rgba(231, 76, 60, 0.4);
+    animation: status-pulse-down 2s infinite;
+}
+
+@keyframes status-pulse-up {
+    0% {
+        box-shadow: 0 0 0 0px rgba(46, 204, 113, 0.7), 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, 0), 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0px rgba(46, 204, 113, 0), 0 0 8px rgba(46, 204, 113, 0.8);
+    }
+}
+
+@keyframes status-pulse-down {
+    0% {
+        box-shadow: 0 0 0 0px rgba(231, 76, 60, 0.7), 0 0 8px rgba(231, 76, 60, 0.8);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(231, 76, 60, 0), 0 0 8px rgba(231, 76, 60, 0.8);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0px rgba(231, 76, 60, 0), 0 0 8px rgba(231, 76, 60, 0.8);
+    }
+}
+
+/* Action Buttons (Edit Mode) */
+.bookmark-actions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 4px;
+    z-index: 999;
+    /* Above everything else in the card */
+    pointer-events: auto;
+}
+
+.action-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-main);
+    transition: all 0.2s;
+    padding: 0;
+    pointer-events: auto;
+}
+
+.action-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.btn-delete:hover {
+    background: #e74c3c;
+    border-color: #e74c3c;
+}
+
+/* Edit Mode Styles */
+:host(.edit-mode) .bookmark-grid__card,
+:host(.edit-mode) .bookmark-grid__section {
+    border: 1px dashed var(--accent);
+    background: rgba(0, 120, 212, 0.1);
+    /* Increased opacity for light mode visibility */
+    cursor: grab;
+    position: relative;
+    /* Ensure handle positioning context */
+}
+
+/* Resize Handle */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    cursor: nwse-resize;
+    z-index: 20;
+
+    /* Visual indicator: Solid technical triangle */
+    border-style: solid;
+    border-width: 0 0 12px 12px;
+    border-color: transparent transparent var(--accent) transparent;
+    opacity: 0.8;
+    transition: all 0.2s;
+}
+
+.resize-handle:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+:host(.edit-mode) .bookmark-grid__card:active,
+:host(.edit-mode) .bookmark-grid__section:active {
+    cursor: grabbing;
+    background: rgba(0, 120, 212, 0.2);
+    border-style: solid;
+}
+
+/* Edit Mode Grid Guide - (Visuals removed for cleanliness) */
+
+.bookmark-grid__icon-container {
+    /* Layout: Takes remaining space to center icon vertically */
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--text-dim);
+    transition: color 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bookmark-grid__card:hover .bookmark-grid__icon-container {
+    /* No movement, just rotate and scale */
+    transform: rotate(-5deg) scale(1.1);
+    color: var(--text-main);
+}
+
+.bookmark-grid__label {
+    /* wrapper restored */
+    /* Responsive Font Size: Controlled scaling for elegance */
+    /* Never smaller than 11px, never larger than 18px (standard desktop icon size) */
+    font-size: clamp(11px, 11cqi, 18px);
+
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.4;
+    width: 100%;
+
+    /* Spacing */
+    padding: 0 6px;
+    margin-top: 0;
+    /* Handled by flex gap/grow */
+
+    /* Professional Truncation (No multi-line mess) */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* Typography Polish */
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    color: var(--text-dim);
+    transition: color 0.2s;
+}
+
+/* Highlight label on hover */
+.bookmark-grid__card:hover .bookmark-grid__label {
+    color: var(--text-main);
+}
+
+.bookmark-grid__icon-svg {
+    /* Icon Size: 45% of CARD width */
+    width: 45%;
+    height: auto;
+    aspect-ratio: 1/1;
+    stroke: currentColor;
+    stroke-width: 1.5px;
+    fill: none;
+    max-height: 80%;
+}
+
+.bookmark-grid__icon-img {
+    /* Icon Size: 45% of CARD width */
+    width: 45%;
+    height: auto;
+    aspect-ratio: 1/1;
+    object-fit: contain;
+    max-height: 80%;
+}
+
+/* Ensure all injected SVGs inherit hover colors */
+.bookmark-grid__icon-container svg,
+.bookmark-grid__icon-container svg path {
+    fill: currentColor;
+    stroke: none;
+    transition: all 0.2s;
+}
+
+.bookmark-grid__card:hover .bookmark-grid__icon-container svg,
+.bookmark-grid__card:hover .bookmark-grid__icon-container svg path {
+    fill: var(--accent);
+}
+
+/* Group Styles */
+/* Section (Resizable Box) */
+/* Section (Resizable Box) - Premium Glassmorphism */
+/* Section (Resizable Box) - Premium Glassmorphism */
+.bookmark-grid__section {
+    background: var(--surface);
+    /* Use theme surface instead of fixed dark rgba */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    /* Use theme border */
+    border-radius: var(--radius);
+    grid-column: var(--x) / span var(--w);
+    grid-row: var(--y) / span var(--h);
+    padding: 12px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+    /* Lighter shadow */
+    /* CRITICAL FIX: Sections are containers/backgrounds, should be below cards */
+    z-index: 1;
+
+    /* Reset margins & Force Fill */
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+}
+
+.bookmark-grid__section:hover {
+    border-color: var(--border-bright);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    position: absolute;
+    top: 0;
+    transform: translateY(calc(-50% - 1px));
+    /* Lift half-way up to interrupt border */
+    left: 12px;
+    right: 12px;
+    display: block;
+    width: fit-content;
+    z-index: 2;
+
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    /* Pill padding */
+    font-family: var(--font-mono, monospace);
+    opacity: 0.9;
+
+    /* Premium "Button/Pill" Look */
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-solid);
+    /* Opaque match to hide border line behind */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    line-height: 1.4;
+
+    /* Professional Truncation */
+    max-width: calc(100% - 24px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+
+    transition: all 0.3s ease;
+}
+
+/* In edit mode, leave room for action buttons on the right */
+:host(.edit-mode) .section-title {
+    max-width: calc(100% - 84px);
+}
+
+/* Hover state for title to match section consistency */
+.bookmark-grid__section:hover .section-title {
+    border-color: var(--border-bright);
+    color: var(--text-dim);
+    background: var(--surface-solid);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.bookmark-grid__section:hover .section-title:hover {
+    /* Allow individual highlight if interacting directly */
+    color: var(--text-main);
+    border-color: var(--border-bright);
+}
+
+/* Ghost Styles */
+.bookmark-grid__ghost {
+    background: rgba(0, 255, 0, 0.1);
+    border: 2px dashed #00ff00;
+    border-radius: var(--radius);
+
+    /* Use Grid Positioning to perfectly align with other items */
+    grid-column: var(--ghost-x, 1) / span var(--ghost-w, 1);
+    grid-row: var(--ghost-y, 1) / span var(--ghost-h, 1);
+
+    /* Ensure it appears in the grid */
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+    /* Removed transition to prevent jitter during rapid resize/drag */
+    z-index: 100;
+    will-change: grid-column, grid-row;
+    /* Force GPU acceleration for smoother rendering */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+}
+
+.bookmark-grid__ghost.invalid {
+    background: rgba(255, 0, 0, 0.1);
+    border-color: #ff0000;
+}
+
+/* Ghost visibility states (CSP-compliant) */
+.bookmark-grid__ghost.hidden {
+    display: none;
+}
+
+.bookmark-grid__ghost.visible {
+    display: block;
+}
+
+/* Drag target opacity (CSP-compliant) */
+.drag-active {
+    opacity: 0.5;
+}
+
+/* Group Content Layout */
+/* Nested Content Layout */
+/* Nested Content Layout - Large & Responsive */
+
+.bookmark-grid__nested-content {
+    display: grid;
+    /* Use the section's width and height for local grid */
+    grid-template-columns: repeat(var(--w), 1fr);
+    grid-template-rows: repeat(var(--h), 1fr);
+    gap: 12px;
+    width: 100%;
+    height: 100%;
+    align-content: start;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Nested Cards — compact layout so label is never clipped
+   ═══════════════════════════════════════════════════════════════ */
+.bookmark-grid__nested-content .bookmark-grid__card {
+    padding: 6% 4% !important;
+}
+
+/* Icon container: shrinkable so label always fits */
+.bookmark-grid__nested-content .bookmark-grid__icon-container {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Label: never shrinks, always visible */
+.bookmark-grid__nested-content .bookmark-grid__label {
+    flex-shrink: 0;
+    font-size: clamp(9px, 9cqi, 14px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Skeleton Loading Effects
+   ═══════════════════════════════════════════════════════════════ */
+.skeleton {
+    background: var(--surface);
+    pointer-events: none;
+    border: 1px solid var(--border);
+    animation: skeleton-shimmer 1.5s infinite linear;
+    background: linear-gradient(90deg,
+            var(--surface) 25%,
+            var(--border) 50%,
+            var(--surface) 75%);
+    background-size: 200% 100%;
+}
+
+.skeleton-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--border);
+    margin-bottom: 12px;
+}
+
+.skeleton-text {
+    width: 60%;
+    height: 10px;
+    border-radius: 4px;
+    background: var(--border);
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

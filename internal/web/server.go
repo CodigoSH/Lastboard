@@ -257,10 +257,37 @@ func (s *Server) routes() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Security Headers
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+	// HSTS (HTTP Strict Transport Security)
+	// Only send over HTTPS to prevent MITM attacks
+	// max-age=31536000 (1 year), includeSubDomains, preload
+	if isSecureConnection(r) {
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+	}
+
 	s.Router.ServeHTTP(w, r)
+}
+
+// isSecureConnection detects if the request is over HTTPS
+// Checks both direct TLS and proxy headers (X-Forwarded-Proto)
+func isSecureConnection(r *http.Request) bool {
+	// Direct TLS connection
+	if r.TLS != nil {
+		return true
+	}
+	// Behind reverse proxy (nginx, traefik, cloudflare, etc.)
+	if proto := r.Header.Get("X-Forwarded-Proto"); proto == "https" {
+		return true
+	}
+	// Behind AWS ALB/ELB
+	if proto := r.Header.Get("CloudFront-Forwarded-Proto"); proto == "https" {
+		return true
+	}
+	return false
 }
 
 func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename string) {
