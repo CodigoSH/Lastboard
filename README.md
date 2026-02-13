@@ -108,6 +108,6 @@ curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh 
 - **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
 
 <div align="center">
-  <sub>Built with ❤️ by the Lastboard Team</sub>
+  <sub>Built with ❤️ by the CodigoSH Team</sub>
 </div>
 
