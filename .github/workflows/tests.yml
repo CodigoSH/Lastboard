@@ -72,6 +72,16 @@ jobs:
       with:
         go-version: '1.24'
 
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: |
+        go mod download
+        bun install
+
     - name: Run benchmarks
       run: |
         go test ./internal/... -bench=. -benchmem -run=^$ > benchmark.txt
@@ -95,6 +105,10 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24'
+
+    - name: Install dependencies
+      run: |
+        go mod download
 
     - name: Run Gosec Security Scanner
       uses: securego/gosec@master
