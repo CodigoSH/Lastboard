@@ -59,7 +59,7 @@ USER codigosh
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -f http://localhost:8080/api/dashboard/health || exit 1
+    CMD curl -f http://localhost:${PORT}/api/dashboard/health || exit 1
 
 # Command
 CMD ["/app/lastboard"]
