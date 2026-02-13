@@ -1,15 +1,27 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/CodigoSH/Lastboard/internal/platform/database"
+	"github.com/CodigoSH/Lastboard/internal/version"
 	"github.com/CodigoSH/Lastboard/internal/web"
 )
 
 func main() {
+	// Parse flags
+	versionFlag := flag.Bool("version", false, "Print version and exit")
+	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("Lastboard %s\n", version.Current)
+		os.Exit(0)
+	}
+
 	// 1. Initialize Database
 	dbFile := os.Getenv("DB_FILE")
 	if dbFile == "" {
