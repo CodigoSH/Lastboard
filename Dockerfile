@@ -1,65 +1,75 @@
-# === Stage 1: Frontend Build ===
-FROM oven/bun:1 AS frontend-builder
+# syntax=docker/dockerfile:1
+
+# ==========================================
+# Stage 1: Frontend Build (Bun)
+# ==========================================
+FROM oven/bun:alpine AS frontend-builder
 WORKDIR /app
+
+# Install dependencies (Frozen Lockfile for reproducibility)
 COPY package.json bun.lock ./
-RUN bun install
+RUN bun install --frozen-lockfile
+
+# Copy source and build
 COPY . .
-# PRODUCTION BUILD
 RUN bun web/build.ts
 
-# === Stage 2: Go Build (With Embed) ===
-FROM golang:1.23-alpine AS builder
-
+# ==========================================
+# Stage 2: Backend Build (Go)
+# ==========================================
+FROM golang:1.23-alpine AS backend-builder
 WORKDIR /app
 
 # Install build dependencies
 RUN apk add --no-cache gcc musl-dev
 
-# Copy Go mod files
+# Copy Go mod files and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy source code
 COPY . .
 
-# Copy Frontend Build into Go 'internal/web/dist' for embedding
-# Note: 'internal/web/server.go' expects 'dist' in the same folder.
+# Embed Frontend: Copy dist from Stage 1 to internal/web/dist
 COPY --from=frontend-builder /app/web/dist /app/internal/web/dist
 
-# Build the Single Binary
-RUN CGO_ENABLED=1 GOOS=linux go build -o /app/lastboard ./cmd/dashboard
+# Build Static Binary
+# -ldflags="-s -w" strips debug info for smaller binary size
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o /app/lastboard ./cmd/dashboard
 
-# === Stage 3: Final Runtime ===
-FROM alpine:latest
+# ==========================================
+# Stage 3: High-Performance Runtime (Alpine)
+# ==========================================
+FROM alpine:3.19
 
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apk add --no-cache tzdata curl
+# Install Runtime Dependencies
+# - ca-certificates: For HTTPS requests
+# - tzdata: For timezone support
+# - curl: For Healthcheck
+RUN apk add --no-cache ca-certificates tzdata curl
 
-# Create a non-root user
+# Create non-root user for security
 RUN addgroup -S codigosh && adduser -S codigosh -G codigosh
 
-# Create persistent data directory and set permissions
-# Note: If mounting a host volume, ensure host directory permissions allow writing by UID 1000
+# Create persistent data directory with correct permissions
 RUN mkdir -p /app/data && chown -R codigosh:codigosh /app/data
 
-# Copy ONLY the static binary
-COPY --from=builder /app/lastboard /app/lastboard
+# Copy Binary from Builder
+COPY --from=backend-builder /app/lastboard /app/lastboard
 
-# Environment
-ENV PORT=8080
-ENV DB_FILE=/app/data/lastboard.db
-
-# Expose internal port
+# Networking Configuration
+# Application listens on internal fixed port 8080 by default
 EXPOSE 8080
 
 # Switch to non-root user
 USER codigosh
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -f http://localhost:${PORT}/api/dashboard/health || exit 1
+# Uses localhost:8080 explicitly as per "Fixed Port" requirement
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/api/dashboard/health || exit 1
 
-# Command
-CMD ["/app/lastboard"]
+# Entrypoint
+ENTRYPOINT ["/app/lastboard"]
