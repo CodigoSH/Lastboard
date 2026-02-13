@@ -1,6 +1,43 @@
-node_modules
-dist
-output
+# Version Control
 .git
+.gitignore
+.github
+
+# Environment & Secrets (CRITICAL)
 .env
-dashboard.db
+.env.*
+
+# Dependencies
+node_modules
+vendor
+
+# Build Artifacts (Local)
+dist
+bin
+output
+lastboard
+lastboard-linux-*
+*.exe
+
+# Databases & Data
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# IDE & Tooling
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+coverage
+*.log
+
+# Scripts & Docs (Not needed in runtime image)
+install.sh
+Makefile
+docs/
+scripts/
+README.md
+LICENSE
+NOTICE
