@@ -21,12 +21,12 @@
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🚀 Single Binary Architecture
+### Single Binary Architecture
 Forget about complex Docker chains or multi-service dependencies. **Lastboard** compiles the entire frontend (assets, fonts, styles) and backend into a **single, portable executable**. Deployment is as simple as copying one file.
 
-### ⚡ Native Grid Engine
+### Native Grid Engine
 We built our own high-performance drag-and-drop grid system using **100% native JavaScript**.
 - **Zero dependencies**: No heavy layout libraries like React-Grid-Layout.
 - **Butter-smooth interactions**: Optimized for 60fps animations even on low-power devices.
@@ -37,7 +37,7 @@ A secure, guided initialization flow helps you configure your environment in sec
 - **First-run configuration**: set your admin credentials, theme preferences, and system defaults.
 - **Auto-discovery**: detects environment capabilities automatically.
 
-### 🎨 Premium UI & Theming
+### Premium UI & Theming
 Designed with **Glassmorphism** principles for a depth-rich, modern aesthetic.
 - **Real-time Dark/Light Mode**: toggles instantly with specialized color tokens for each mode.
 - **Stealth Scroll System**: custom, non-intrusive scrollbars that vanish when not needed.
@@ -45,7 +45,7 @@ Designed with **Glassmorphism** principles for a depth-rich, modern aesthetic.
 
 ---
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 Lastboard is built on a "Performance First" philosophy, selecting the best tools for speed and developer experience.
 
@@ -59,13 +59,13 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 
 ---
 
-## 📦 Installation & Build
+## Installation & Build
 
 ### Prerequisites
 - **Go 1.21+**
 - **Bun** (for building frontend assets)
 
-### ⚡ Automated Installation (One-Liner)
+### Automated Installation (One-Liner)
 Install Lastboard with a single command. This script automates everything: user creation, directory setup, and systemd service registration.
 
 ```bash
