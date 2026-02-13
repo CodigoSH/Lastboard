@@ -59,15 +59,6 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 
 ---
 
-## Gallery (Screenshots)
-
-*Add screenshots of your dashboard here to showcase the beautiful UI.*
-
-> [!TIP]
-> The interface adapts automatically to mobile, tablet, and desktop screens.
-
----
-
 ## Configuration
 
 Lastboard is designed to work out-of-the-box, but you can customize it via environment variables.
