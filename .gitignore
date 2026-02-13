@@ -25,9 +25,7 @@ vendor/
 # IDE specialized files
 .vscode/
 .idea/
-.claude/
-.agents/
-.cursor/
+.agent/
 *.swp
 *.swo
 *.sublime-project
