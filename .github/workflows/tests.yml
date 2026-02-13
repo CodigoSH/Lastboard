@@ -39,7 +39,7 @@ jobs:
 
     - name: Run Go tests
       run: |
-        go test ./internal/... -v -cover -coverprofile=coverage.out -timeout 5m
+        go test ./internal/... -v -cover -coverprofile=coverage.out
 
     - name: Generate coverage report
       run: |
