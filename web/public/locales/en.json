@@ -23,6 +23,7 @@
   "auth.login": "Login",
   "auth.logout": "Logout",
   "auth.password": "Password",
+  "auth.remember_me": "Remember me",
   "auth.session_expired": "Your session timed out",
   "auth.sign_in": "Sign In",
   "auth.sign_out": "Sign Out",
