@@ -159,6 +159,10 @@ func (s *Server) routes() {
 
 	// Login Page (Public)
 	s.Router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		// Prevent aggressive caching for HTML
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
 		// Check if setup is needed (Clean Install)
 		var exists bool
 		if err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
@@ -210,6 +214,10 @@ func (s *Server) routes() {
 
 	// Setup Page (Secured)
 	s.Router.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
+		// Prevent aggressive caching for HTML
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
 		// Security Check: If users exist, redirect to login
 		var exists bool
 		err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists)
@@ -312,6 +320,11 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 }
 
 func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
+	// Prevent aggressive caching for HTML so we always get fresh asset links
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+
 	username := middleware.GetUserFromContext(r)
 	var projectName string = "Lastboard"
 	var dbTheme string = ""
