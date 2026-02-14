@@ -87,6 +87,15 @@ func (h *Hub) StartBroadcasting(interval time.Duration) {
 	defer ticker.Stop()
 
 	for range ticker.C {
+		// Optimization: Don't gather stats if no one is listening
+		h.mu.Lock()
+		clientCount := len(h.clients)
+		h.mu.Unlock()
+
+		if clientCount == 0 {
+			continue
+		}
+
 		stats, err := gatherStats()
 		if err == nil {
 			h.broadcast <- WSMessage{
