@@ -19,7 +19,7 @@ const (
 	maxLoginAttempts = 5
 	lockoutDuration  = 5 * time.Minute
 	attemptWindow    = 1 * time.Minute
-	sessionDuration  = 24 * time.Hour
+	sessionDuration  = 30 * 24 * time.Hour // 30 Days (Professional "Remember Me" standard)
 )
 
 type loginAttempt struct {
