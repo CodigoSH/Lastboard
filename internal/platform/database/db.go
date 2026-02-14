@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -33,6 +34,11 @@ func InitDB(dsn string) (*DB, error) {
 	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
 		log.Printf("Warning: failed to set busy_timeout: %v", err)
 	}
+
+	// Limit connection pool to prevent unbounded memory usage (modernc sqlite is pure go)
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(1 * time.Hour)
 
 	if err := runMigrations(db); err != nil {
 		return nil, err
