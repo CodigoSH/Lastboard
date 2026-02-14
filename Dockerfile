@@ -35,7 +35,7 @@ COPY --from=frontend-builder /app/web/dist /app/internal/web/dist
 
 # Build Static Binary
 # -ldflags="-s -w" strips debug info for smaller binary size
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o /app/lastboard ./cmd/dashboard
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/lastboard ./cmd/dashboard
 
 # ==========================================
 # Stage 3: High-Performance Runtime (Alpine)
