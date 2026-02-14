@@ -19,7 +19,8 @@ const (
 	maxLoginAttempts = 5
 	lockoutDuration  = 5 * time.Minute
 	attemptWindow    = 1 * time.Minute
-	sessionDuration  = 30 * 24 * time.Hour // 30 Days (Professional "Remember Me" standard)
+	defaultSession   = 24 * time.Hour
+	extendedSession  = 30 * 24 * time.Hour
 )
 
 type loginAttempt struct {
@@ -84,8 +85,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	rateLimiterMu.Unlock()
 
 	var input struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username   string `json:"username"`
+		Password   string `json:"password"`
+		RememberMe bool   `json:"remember_me"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -122,7 +124,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	delete(rateLimiter, ip)
 	rateLimiterMu.Unlock()
 
-	expiry := time.Now().Add(sessionDuration)
+	duration := defaultSession
+	if input.RememberMe {
+		duration = extendedSession
+	}
+	expiry := time.Now().Add(duration)
 	token := util.SignToken(input.Username, h.Secret, expiry)
 	secure := isSecureRequest(r)
 

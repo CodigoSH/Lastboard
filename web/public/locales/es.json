@@ -23,6 +23,7 @@
   "auth.login": "Iniciar sesión",
   "auth.logout": "Cerrar sesión",
   "auth.password": "Contraseña",
+  "auth.remember_me": "Recuérdame",
   "auth.session_expired": "Sesión expirada",
   "auth.sign_in": "Entrar",
   "auth.sign_out": "Salir",

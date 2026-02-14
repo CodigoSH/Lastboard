@@ -39,6 +39,8 @@ bootstrap(async () => {
         if (subtitleEl) subtitleEl.textContent = i18n.t('auth.subtitle');
         if (userLabel) userLabel.textContent = i18n.t('auth.username');
         if (passLabel) passLabel.textContent = i18n.t('auth.password');
+        const rememberLabel = document.querySelector('label[for="remember_me"]');
+        if (rememberLabel) rememberLabel.textContent = i18n.t('auth.remember_me');
         if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
 
         // Show UI after text update
@@ -68,7 +70,10 @@ bootstrap(async () => {
         }
 
         const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+        const data: any = Object.fromEntries(formData.entries());
+
+        // Convert checkbox to boolean
+        data.remember_me = formData.get('remember_me') === 'on';
 
         try {
             const response = await fetch('/api/login', {
