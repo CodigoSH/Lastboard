@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/platform/database"
 	"github.com/CodigoSH/Lastboard/internal/version"
@@ -43,8 +44,17 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Starting server on :%s", port)
-	if err := http.ListenAndServe(":"+port, srv); err != nil {
+	server := &http.Server{
+		Addr:              ":" + port,
+		Handler:           srv,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Printf("Starting server on :%s (with timeouts)", port)
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }
