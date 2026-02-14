@@ -56,7 +56,6 @@ jobs:
 
     - name: Build backend
       run: |
-        cp web/dist/index.js internal/web/dist/bundle.js
         go build -v -o lastboard cmd/dashboard/main.go
 
     - name: Test binary
