@@ -112,14 +112,15 @@ docker run -d \
   ghcr.io/codigosh/lastboard:latest
 ```
 
-### Manual Installation
-If you prefer running the binary directly on your host machine.
-
-#### Quick Install (Linux)
+### Quick Install (Linux)
 Run this command to install or update Lastboard automatically:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
 ```
+
+### Manual Installation
+If you prefer running the binary directly on your host machine.
 
 #### Build from Source
 1. **Clone the repository**
