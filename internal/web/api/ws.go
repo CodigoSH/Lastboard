@@ -18,12 +18,6 @@ type SystemStats struct {
 	Temperature float64 `json:"temperature"`
 }
 
-var upgrader = websocket.Server{
-	Handshake: func(config *websocket.Config, r *http.Request) error {
-		return nil // In production, refine this
-	},
-}
-
 // WSMessage represents a typed message sent over WebSocket
 type WSMessage struct {
 	Type    string      `json:"type"`
