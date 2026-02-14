@@ -43,6 +43,11 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Рады видеть вас снова", "zh": "很高兴再次见到您", "ja": "またお会いできて嬉しいです", "ko": "다시 만나서 반갑습니다", "tr": "Sizi tekrar görmek güzel", "pl": "Miło cię znowu widzieć",
         "id": "Senang bertemu Anda lagi", "ar": "سعيد لرؤيتك مرة أخرى", "fa": "از دیدن دوباره شما خوشحالم", "el": "Χαίρομαι που σας βλέπω ξανά", "hi": "आपको फिर से देखकर अच्छा लगा", "bn": "তোমাকে আবার দেখে ভালো লাগলো", "ur": "آپ کو دوبارہ دیکھ کر اچھا لگا"
     },
+    "auth.remember_me": {
+        "es": "Recuérdame", "fr": "Se souvenir de moi", "it": "Ricordami", "pt": "Lembrar-me", "de": "Angemeldet bleiben", "nl": "Onthoud mij",
+        "ru": "Запомнить меня", "zh": "记住我", "ja": "ログインしたままにする", "ko": "로그인 유지", "tr": "Beni hatırla", "pl": "Zapamiętaj mnie",
+        "id": "Ingat saya", "ar": "تذكرني", "fa": "مرا به خاطر بسپار", "el": "Να με θυμάσαι", "hi": "मुझे याद रखें", "bn": "আমাকে মনে রাখুন", "ur": "مجھے یاد رکھیں"
+    },
     "widget.notepad.placeholder": {
         "es": "Anota tus ideas...", "fr": "Notez vos idées...", "it": "Annota le tue idee...", "pt": "Anote suas ideias...", "de": "Notieren Sie Ihre Ideen...",
         "ru": "Запишите свои мысли...", "zh": "记下你的想法...", "ja": "アイデアを書き留める...", "ko": "아이디어를 적어보세요...", "nl": "Schrijf je gedachten op...", "pl": "Zapisz swoje myśli...",
