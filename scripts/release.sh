@@ -126,7 +126,20 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 
 # 5. Generate Changelog
-LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+# 5. Generate Changelog
+if [ "$TYPE" == "stable" ]; then
+    # Find the last stable tag (exclude Beta/RC)
+    # Sort by version desc, filter out pre-releases, take the first one
+    LAST_TAG=$(git tag -l "v*" --sort=-v:refname | grep -v -E 'Beta|RC' | head -n 1)
+    if [ -z "$LAST_TAG" ]; then
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+    fi
+    echo "📝 Generating stable changelog (aggregating since $LAST_TAG)..."
+else
+    LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+    echo "📝 Generating changelog from $LAST_TAG..."
+fi
+
 REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//')
 
 echo "📝 Generating changelog from $LAST_TAG..."
