@@ -7,7 +7,8 @@
     "i18n:sync": "bun run scripts/i18n-sync.ts",
     "i18n:audit": "bun run scripts/i18n-audit.ts",
     "i18n:scan": "bun run scripts/i18n-scan.ts",
-    "set-version": "bun run scripts/set_version.ts"
+    "set-version": "bun run scripts/set_version.ts",
+    "build": "bun web/build.ts"
   },
   "devDependencies": {
     "bun-types": "latest"

@@ -52,7 +52,7 @@ jobs:
 
     - name: Build frontend
       run: |
-        bun build web/src/index.ts --outdir=web/dist --minify --bundle
+        bun run build
 
     - name: Build backend
       run: |
