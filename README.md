@@ -115,23 +115,19 @@ docker run -d \
 ### Manual Installation
 If you prefer running the binary directly on your host machine.
 
-#### Prerequisites
-- **Go 1.23+**
-- **Bun** (for building frontend assets)
-
-#### Automated Script (Linux)
+#### Quick Install (Linux)
+Run this command to install or update Lastboard automatically:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
 ```
 
 #### Build from Source
-
 1. **Clone the repository**
    ```bash
    git clone https://github.com/CodigoSH/Lastboard.git
    cd Lastboard
    ```
-
+   
 2. **Build the Frontend**
    ```bash
    bun install
