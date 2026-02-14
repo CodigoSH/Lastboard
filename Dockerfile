@@ -17,11 +17,12 @@ RUN bun web/build.ts
 # ==========================================
 # Stage 2: Backend Build (Go)
 # ==========================================
-FROM golang:1.24-alpine AS backend-builder
+# Use local platform for building (fast), target specific arch via GOARCH
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS backend-builder
 WORKDIR /app
 
 # Install build dependencies
-RUN apk add --no-cache gcc musl-dev
+RUN apk add --no-cache git
 
 # Copy Go mod files and download dependencies
 COPY go.mod go.sum ./
@@ -34,8 +35,11 @@ COPY . .
 COPY --from=frontend-builder /app/web/dist /app/internal/web/dist
 
 # Build Static Binary
-# -ldflags="-s -w" strips debug info for smaller binary size
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/lastboard ./cmd/dashboard
+# We use ARG TARGETOS and TARGETARCH which are populated by Buildx
+ARG TARGETOS
+ARG TARGETARCH
+
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /app/lastboard ./cmd/dashboard
 
 # ==========================================
 # Stage 3: High-Performance Runtime (Alpine)
