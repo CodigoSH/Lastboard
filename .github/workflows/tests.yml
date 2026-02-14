@@ -50,6 +50,10 @@ jobs:
         flags: unittests
         name: codecov-lastboard
 
+    - name: Run Frontend Tests
+      run: |
+        bun test web/src/services/collisionService.test.ts
+
     - name: Build frontend
       run: |
         bun run build
