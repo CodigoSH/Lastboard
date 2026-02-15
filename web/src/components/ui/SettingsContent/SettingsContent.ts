@@ -244,24 +244,77 @@ class SettingsContent extends HTMLElement {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const dataUrl = event.target?.result as string;
+        // Validation: Must be image
+        if (!file.type.startsWith('image/')) {
+            if (window.notifier) window.notifier.show(i18n.t('notifier.invalid_image_type'), 'error');
+            return;
+        }
+
+        try {
+            const resizedDataUrl = await this.resizeImage(file, 256, 256);
             const u = userStore.getUser();
             if (!u) return;
 
             // Optimistic localized update
-            this.prefs.avatar_url = dataUrl;
+            this.prefs.avatar_url = resizedDataUrl;
 
             await userStore.updateProfile({
                 username: u.username,
-                avatar_url: dataUrl
+                avatar_url: resizedDataUrl
             });
 
             this.render();
             if (window.notifier) window.notifier.show(i18n.t('notifier.avatar_updated'));
-        };
-        reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Resize failed', error);
+            if (window.notifier) window.notifier.show(i18n.t('notifier.avatar_error'), 'error');
+        }
+    }
+
+    private resizeImage(file: File, maxWidth: number, maxHeight: number): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Calculate aspect ratio
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error('Canvas context not available'));
+                        return;
+                    }
+
+                    // Draw image on canvas
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert back to base64
+                    // Quality 0.8 is good compromise
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.onerror = (e) => reject(e);
+                img.src = event.target?.result as string;
+            };
+            reader.onerror = (e) => reject(e);
+            reader.readAsDataURL(file);
+        });
     }
 
     // --- User Management Logic ---
