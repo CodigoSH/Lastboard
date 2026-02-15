@@ -42,6 +42,88 @@
             border-radius: 4px;
             border: 1px solid rgba(255, 107, 107, 0.2);
         }
+
+        /* Custom Checkbox Styling */
+        .checkbox-group {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .custom-checkbox {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkbox-label {
+            position: relative;
+            padding-left: 30px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-dim);
+            user-select: none;
+            line-height: 20px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            transition: color 0.2s ease;
+            text-transform: uppercase;
+            text-transform: uppercase;
+            font-size: 11px;
+            pointer-events: auto !important;
+            /* Override global label style */
+        }
+
+        .checkbox-label:hover {
+            color: var(--text-main);
+        }
+
+        /* Checkbox Box */
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Hover effect */
+        .checkbox-label:hover input~.checkmark {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+        }
+
+        /* Checked STATE */
+        .custom-checkbox:checked~.checkmark {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.4);
+        }
+
+        /* Checkmark Icon */
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 7px;
+            top: 3px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* Show checkmark when checked */
+        .custom-checkbox:checked~.checkmark:after {
+            display: block;
+        }
     </style>
 </head>
 
@@ -69,9 +151,12 @@
                     <label for="password">Password</label>
                 </div>
 
-                <div class="checkbox-group" style="margin-top: 16px; display: flex; align-items: center;">
-                    <input type="checkbox" id="remember_me" name="remember_me" style="accent-color: var(--accent);">
-                    <label for="remember_me" style="margin-left: 8px; font-size: 0.9rem; color: var(--text-dim); cursor: pointer;">Remember me</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label" for="remember_me">
+                        <span id="rememberMeText">Remember me</span>
+                        <input type="checkbox" id="remember_me" name="remember_me" class="custom-checkbox" checked>
+                        <span class="checkmark"></span>
+                    </label>
                 </div>
 
                 <div id="feedback" class="feedback"></div>

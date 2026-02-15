@@ -39,8 +39,8 @@ bootstrap(async () => {
         if (subtitleEl) subtitleEl.textContent = i18n.t('auth.subtitle');
         if (userLabel) userLabel.textContent = i18n.t('auth.username');
         if (passLabel) passLabel.textContent = i18n.t('auth.password');
-        const rememberLabel = document.querySelector('label[for="remember_me"]');
-        if (rememberLabel) rememberLabel.textContent = i18n.t('auth.remember_me');
+        const rememberText = document.getElementById('rememberMeText');
+        if (rememberText) rememberText.textContent = i18n.t('auth.remember_me');
         if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
 
         // Show UI after text update
