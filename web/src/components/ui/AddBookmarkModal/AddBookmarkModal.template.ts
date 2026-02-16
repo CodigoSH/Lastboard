@@ -178,8 +178,8 @@ export const template = ({
                             <div class="icon-dropdown">
                                 <button type="button" class="icon-dropdown-btn" id="touch-pos-btn" style="position: relative;">
                                     ${visibleTouch ?
-        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10z"/></svg>` :
-        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.5" /><path d="M15 9l-6 6M9 9l6 6" /></svg>`
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /></svg>` :
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>`
     }
                                     <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
                                         <path d="M7 10l5 5 5-5z" />
@@ -187,10 +187,10 @@ export const template = ({
                                 </button>
                                 <div class="dropdown-menu" id="touch-pos-menu">
                                     <div class="dropdown-item ${visibleTouch ? 'selected' : ''}" data-touch="on" title="Visible">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10z"/></svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /></svg>
                                     </div>
                                     <div class="dropdown-item ${!visibleTouch ? 'selected' : ''}" data-touch="off" title="Hidden">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.5" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>
                                     </div>
                                 </div>
                                 <input type="hidden" name="visibleTouch" id="bookmark-visibleTouch" value="${visibleTouch ? 'on' : 'off'}">
