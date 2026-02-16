@@ -80,10 +80,22 @@ dialog[open] {
     border-color: rgba(var(--accent-rgb), 0.3);
 }
 
-display: flex;
-flex-direction: column;
-gap: 16px;
-overflow: visible;
+.tab-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: hidden;
+}
+
+.tab-content {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+}
+
+.tab-content.active {
+    display: flex;
 }
 
 .field-group {

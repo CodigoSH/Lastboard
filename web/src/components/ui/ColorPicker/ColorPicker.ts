@@ -19,6 +19,7 @@ export class ColorPicker extends HTMLElement {
     private _hexInput: HTMLInputElement | null = null;
     private _preview: HTMLElement | null = null;
     private _overlay: HTMLElement | null = null;
+    private _portal: HTMLElement | null = null;
 
     private _isDraggingSat = false;
     private _isDraggingHue = false;
@@ -87,6 +88,7 @@ export class ColorPicker extends HTMLElement {
                  So let's make this component fill the parent. -->
 
             <div class="popover" id="popover">
+                <style>${css}</style>
                 <div class="saturation-area" id="sat-area">
                     <div class="saturation-white"></div>
                     <div class="saturation-black"></div>
@@ -211,19 +213,52 @@ export class ColorPicker extends HTMLElement {
     }
 
     private openPopover() {
-        if (!this._popover || !this._overlay) return;
+        if (!this._popover || !this.shadowRoot) return;
+
+        // Portal Strategy: Move popover to body
+        if (!this._portal) {
+            this._portal = document.createElement('div');
+            this._portal.style.display = 'contents'; // Wrapper shouldn't affect layout
+            document.body.appendChild(this._portal);
+        }
+
+        // Move popover to portal
+        this._portal.appendChild(this._popover);
+
+        // Ensure display is flex BEFORE adding visible class for transition
+        this._popover.style.display = 'flex';
+        // Force reflow
+        this._popover.offsetHeight;
 
         this._popover.classList.add('visible');
-        this._overlay.classList.add('visible');
-        this.updatePosition();
+        if (this._overlay) this._overlay.classList.add('visible'); // Keep local overlay for local blocking
 
-        // Refresh UI in case value changed externally usually
+        requestAnimationFrame(() => {
+            this.updatePosition();
+        });
+
+        // Refresh UI
         this.hexToHsv(this._value);
         this.updateUI();
 
-        // Add resize/scroll listeners to update position (or close)
         window.addEventListener('resize', this.updatePositionRef);
-        window.addEventListener('scroll', this.updatePositionRef, true); // true to catch scroll in sub-elements
+        window.addEventListener('scroll', this.updatePositionRef, true);
+
+        // Add global click listener to close
+        setTimeout(() => document.addEventListener('click', this.onGlobalClick), 0);
+    }
+
+    private onGlobalClick = (e: MouseEvent) => {
+        // Check if click is inside popover or trigger
+        const target = e.target as HTMLElement;
+        if (this._popover && this._popover.contains(target)) return;
+        if (this.contains(target)) return; // Trigger
+
+        // Also check if composed path contains these
+        const path = e.composedPath();
+        if (path.includes(this._popover!) || path.includes(this)) return;
+
+        this.closePopover();
     }
 
     private updatePositionRef = () => {
@@ -255,147 +290,150 @@ export class ColorPicker extends HTMLElement {
         // Calculate Left
         let left = rect.left + (rect.width / 2);
 
-        console.log('[ColorPicker] Position:', { top, left, rectTop: rect.top, rectLeft: rect.left });
+        // Portal Logic: We are in body, so offsets are window coordinates.
+        // But we need to account for scroll if we use absolute, or just use fixed.
+        // Fixed is easiest for "on top of everything".
 
-        // Apply Fixed Position first to check offsetParent
         this._popover.style.position = 'fixed';
-        this._popover.style.zIndex = '999999';
+        this._popover.style.zIndex = '10002'; // Higher than modals (usually 10000-10001)
         this._popover.style.margin = '0';
 
-        // Check if we are "trapped" in a transformed parent
-        let trappedParent: HTMLElement | null = null;
-        let p = this._popover.parentElement;
-        while (p && p !== document.body) {
-            const style = window.getComputedStyle(p);
-            if (style.transform !== 'none' || style.perspective !== 'none' || style.willChange === 'transform') {
-                trappedParent = p;
-                break;
-            }
-            p = p.parentElement;
-        }
-
-        if (trappedParent) {
-            const parentRect = trappedParent.getBoundingClientRect();
-            top -= parentRect.top;
-            left -= parentRect.left;
-            this._popover.style.position = 'absolute';
-        } else {
-            this._popover.style.position = 'fixed';
-        }
-    }
+        // No trapped parent check needed because we are in body!
 
         this._popover.style.top = `${top}px`;
-this._popover.style.left = `${left}px`;
-this._popover.style.transform = `translateX(-50%)`; // Keep X centering
-this._popover.style.width = '240px';
+        this._popover.style.left = `${left}px`;
+        this._popover.style.transform = `translateX(-50%)`; // Keep X centering
+        this._popover.style.width = '240px';
     }
 
     private closePopover() {
-    if (!this._popover || !this.shadowRoot) return;
+        if (!this._popover) return;
 
-    this._popover.classList.remove('visible');
-    this._overlay?.classList.remove('visible');
+        this._popover.classList.remove('visible');
+        if (this._overlay) this._overlay.classList.remove('visible');
 
-    window.removeEventListener('resize', this.updatePositionRef);
-    window.removeEventListener('scroll', this.updatePositionRef, true);
-}
+        // Wait for transition to finish before hiding/moving
+        const handleTransitionEnd = () => {
+            if (!this._popover) return;
+
+            // Hide element to reclaim space
+            this._popover.style.display = 'none';
+
+            // Move back to shadow
+            if (this.shadowRoot) {
+                this.shadowRoot.appendChild(this._popover);
+            }
+
+            // Cleanup portal
+            if (this._portal) {
+                this._portal.remove();
+                this._portal = null;
+            }
+        };
+
+        this._popover.addEventListener('transitionend', handleTransitionEnd, { once: true });
+
+        window.removeEventListener('resize', this.updatePositionRef);
+        window.removeEventListener('scroll', this.updatePositionRef, true);
+        document.removeEventListener('click', this.onGlobalClick);
+    }
 
     private emitChange() {
-    this.dispatchEvent(new CustomEvent('input', {
-        detail: { value: this._value },
-        bubbles: true,
-        composed: true
-    }));
-    this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
-}
+        this.dispatchEvent(new CustomEvent('input', {
+            detail: { value: this._value },
+            bubbles: true,
+            composed: true
+        }));
+        this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+    }
 
     private updateColorFromHsv() {
-    this._value = this.hsvToHex(this._h, this._s, this._v);
-}
+        this._value = this.hsvToHex(this._h, this._s, this._v);
+    }
 
     private updateUI() {
-    if (!this._satCursor || !this._hueCursor || !this._hexInput || !this._preview || !this._satArea) return;
+        if (!this._satCursor || !this._hueCursor || !this._hexInput || !this._preview || !this._satArea) return;
 
-    // Update Cursors
-    this._satCursor.style.left = `${this._s}%`;
-    this._satCursor.style.top = `${100 - this._v}%`;
-    this._hueCursor.style.left = `${(this._h / 360) * 100}%`;
+        // Update Cursors
+        this._satCursor.style.left = `${this._s}%`;
+        this._satCursor.style.top = `${100 - this._v}%`;
+        this._hueCursor.style.left = `${(this._h / 360) * 100}%`;
 
-    // Update Backgrounds
-    // Saturation area bg color is purely Hue
-    const hueColor = this.hsvToHex(this._h, 100, 100);
-    this._satArea.style.backgroundColor = hueColor;
+        // Update Backgrounds
+        // Saturation area bg color is purely Hue
+        const hueColor = this.hsvToHex(this._h, 100, 100);
+        this._satArea.style.backgroundColor = hueColor;
 
-    this._hexInput.value = this._value;
-    this._preview.style.backgroundColor = this._value;
+        this._hexInput.value = this._value;
+        this._preview.style.backgroundColor = this._value;
 
-    // Also update cursor colors for contrast if needed? White border usually works.
-}
+        // Also update cursor colors for contrast if needed? White border usually works.
+    }
 
     // --- Helpers ---
 
     private hexToHsv(hex: string) {
-    // Expand shorthand
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+        // Expand shorthand
+        const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
 
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!result) return;
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return;
 
-    const r = parseInt(result[1], 16) / 255;
-    const g = parseInt(result[2], 16) / 255;
-    const b = parseInt(result[3], 16) / 255;
+        const r = parseInt(result[1], 16) / 255;
+        const g = parseInt(result[2], 16) / 255;
+        const b = parseInt(result[3], 16) / 255;
 
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s, v = max;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h = 0, s, v = max;
 
-    const d = max - min;
-    s = max === 0 ? 0 : d / max;
+        const d = max - min;
+        s = max === 0 ? 0 : d / max;
 
-    if (max === min) {
-        h = 0; // achromatic
-    } else {
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
+        if (max === min) {
+            h = 0; // achromatic
+        } else {
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
         }
-        h /= 6;
-    }
 
-    this._h = h * 360;
-    this._s = s * 100;
-    this._v = v * 100;
-}
+        this._h = h * 360;
+        this._s = s * 100;
+        this._v = v * 100;
+    }
 
     private hsvToHex(h: number, s: number, v: number) {
-    s /= 100;
-    v /= 100;
+        s /= 100;
+        v /= 100;
 
-    const i = Math.floor(h / 60);
-    const f = h / 60 - i;
-    const p = v * (1 - s);
-    const q = v * (1 - f * s);
-    const t = v * (1 - (1 - f) * s);
+        const i = Math.floor(h / 60);
+        const f = h / 60 - i;
+        const p = v * (1 - s);
+        const q = v * (1 - f * s);
+        const t = v * (1 - (1 - f) * s);
 
-    let r = 0, g = 0, b = 0;
+        let r = 0, g = 0, b = 0;
 
-    switch (i % 6) {
-        case 0: r = v; g = t; b = p; break;
-        case 1: r = q; g = v; b = p; break;
-        case 2: r = p; g = v; b = t; break;
-        case 3: r = p; g = q; b = v; break;
-        case 4: r = t; g = p; b = v; break;
-        case 5: r = v; g = p; b = q; break;
+        switch (i % 6) {
+            case 0: r = v; g = t; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = t; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = t; g = p; b = v; break;
+            case 5: r = v; g = p; b = q; break;
+        }
+
+        const toHex = (x: number) => {
+            const hex = Math.round(x * 255).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
-
-    const toHex = (x: number) => {
-        const hex = Math.round(x * 255).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-    };
-
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
 }
 
 customElements.define('app-color-picker', ColorPicker);

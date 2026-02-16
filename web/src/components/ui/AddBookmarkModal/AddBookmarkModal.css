@@ -94,7 +94,7 @@ dialog[open] {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .modal-form {
@@ -102,24 +102,22 @@ dialog[open] {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .tab-content {
     flex: 1;
     overflow-y: auto;
-    scrollbar-gutter: stable;
-    /* Prevent horizontal shift */
     display: none;
     animation: fadeIn 0.15s ease-out;
-    overflow: visible;
+    padding: 16px 24px 0 24px;
     /* Prevent clipping color picker */
 }
 
 .tab-content.active {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .tab-content::-webkit-scrollbar {
@@ -457,8 +455,8 @@ dialog[open] {
 
 /* --- Independent Icon Button --- */
 .independent-icon-btn {
-    width: 42px;
-    height: 42px;
+    width: 52px;
+    height: 52px;
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     border-radius: var(--radius);

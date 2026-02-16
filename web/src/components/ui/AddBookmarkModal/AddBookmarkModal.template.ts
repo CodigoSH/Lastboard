@@ -29,7 +29,7 @@ const renderAppearanceControls = (color: string, borderWidth: number) => {
     const isCustom = !premiumColors.includes(color) && color !== '';
 
     return `
-    <div class="form-group" style="margin-top: 12px;">
+    <div class="form-group">
         <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
         <div class="premium-color-grid">
             ${premiumColors.map(c => `
@@ -50,7 +50,7 @@ const renderAppearanceControls = (color: string, borderWidth: number) => {
         </div>
     </div>
 
-    <div class="form-group" style="margin-top: 20px;">
+    <div class="form-group">
         <label>${i18n.t('bookmark.border_width') || 'Border Width'}</label>
         <div class="segmented-control">
             <button type="button" class="border-width-btn ${borderWidth === 1 ? 'active' : ''}" data-width="1">
@@ -101,11 +101,11 @@ export const template = ({
                 <div id="tab-general" class="tab-content active">
                     <div class="form-row" style="display: flex; gap: 12px; align-items: flex-end;">
                         <!-- Icon Box (Independent) -->
-                        <div class="form-group" style="width: 42px;">
+                        <div class="form-group" style="width: 52px;">
                             <button type="button" class="independent-icon-btn" id="icon-trigger-btn" title="${i18n.t('bookmark.icon')}">
                                 ${selectedIcon ?
-        `<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${selectedIcon}.png" alt="icon" style="width: 24px; height: 24px; object-fit: contain;">` :
-        `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`
+        `<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${selectedIcon}.png" alt="icon" style="width: 36px; height: 36px; object-fit: contain;">` :
+        `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`
     }
                             </button>
                         </div>
