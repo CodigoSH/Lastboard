@@ -80,6 +80,9 @@ class AddBookmarkModal extends HTMLElement {
             } else if (target.closest('#protocol-btn')) {
                 e.preventDefault(); e.stopPropagation();
                 this.toggleDropdown('protocol-menu', target.closest('#protocol-btn') as HTMLElement);
+            } else if (target.closest('#color-btn')) {
+                e.preventDefault(); e.stopPropagation();
+                this.toggleDropdown('color-menu', target.closest('#color-btn') as HTMLElement);
             } else {
                 this.closeAllDropdowns();
             }
@@ -112,6 +115,17 @@ class AddBookmarkModal extends HTMLElement {
                     this.protocol = el.dataset.protocol!;
                     this.updateTriggers();
                 }
+
+                if (el.dataset.color) {
+                    if (el.dataset.color === 'custom') {
+                        const nativePicker = this.shadowRoot!.getElementById('bookmark-borderColor') as HTMLInputElement;
+                        nativePicker?.click();
+                    } else {
+                        this.color = el.dataset.color!;
+                        this.updateTriggers();
+                        this.closeAllDropdowns();
+                    }
+                }
             }
         };
 
@@ -119,7 +133,10 @@ class AddBookmarkModal extends HTMLElement {
             const target = e.target as HTMLInputElement;
             if (target.id === 'bookmark-label') this.bookmarkTitle = target.value;
             if (target.id === 'bookmark-url') this.url = target.value;
-            if (target.id === 'bookmark-borderColor') this.color = target.value;
+            if (target.id === 'bookmark-borderColor') {
+                this.color = target.value;
+                this.updateTriggers();
+            }
         };
 
         this.submitHandler = async (e: Event) => {
@@ -276,6 +293,25 @@ class AddBookmarkModal extends HTMLElement {
                 el.classList.toggle('selected', (val === 'on' && this.visibleTouch) || (val === 'off' && !this.visibleTouch));
             });
         }
+
+        // Update Color Trigger
+        const colorBtn = root.getElementById('color-btn');
+        if (colorBtn) {
+            colorBtn.innerHTML = `
+                <div class="color-preview-circle" style="background: ${this.color}; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-bright);"></div>
+                <span style="font-size: 13px; font-weight: 500; font-family: var(--font-mono, monospace); color: var(--text-dim);">${this.color.toUpperCase()}</span>
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg>
+            `;
+            const input = root.getElementById('bookmark-borderColor') as HTMLInputElement;
+            if (input) input.value = this.color;
+
+            // Sync selected class in presets
+            root.querySelectorAll('#color-menu .color-preset').forEach(el => {
+                el.classList.toggle('selected', (el as HTMLElement).dataset.color === this.color);
+            });
+        }
     }
 
     updateIconPreview() {
@@ -326,7 +362,7 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     closeAllDropdowns(exceptId: string | null = null) {
-        const ids = ['label-pos-menu', 'status-pos-menu', 'touch-pos-menu', 'protocol-menu'];
+        const ids = ['label-pos-menu', 'status-pos-menu', 'touch-pos-menu', 'protocol-menu', 'color-menu'];
         ids.forEach(id => {
             if (id !== exceptId) {
                 const menu = this.shadowRoot!.getElementById(id);

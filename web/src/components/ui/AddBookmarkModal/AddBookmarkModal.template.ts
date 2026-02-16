@@ -19,13 +19,25 @@ interface AddBookmarkModalData {
 import { i18n } from '../../../services/i18n';
 
 const renderColorPicker = (color: string) => `
-    <div class="color-picker-row">
-        <label for="bookmark-borderColor">${i18n.t('bookmark.border_color') || 'Border Color'}</label>
-        <div class="color-input-wrapper">
-            <input type="color" id="bookmark-borderColor" name="borderColor" value="${color}" />
+    <div class="form-group" style="margin-top: 12px;">
+        <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
+        <div class="input-group">
+            <button type="button" class="icon-dropdown-btn color-trigger-btn" id="color-btn" style="position: relative; justify-content: flex-start; padding: 0 12px; gap: 12px;">
+                <div class="color-preview-circle" style="background: ${color}; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-bright);"></div>
+                <span style="font-size: 13px; font-weight: 500; font-family: var(--font-mono, monospace); color: var(--text-dim);">${color.toUpperCase()}</span>
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg>
+            </button>
+            <input type="color" id="bookmark-borderColor" name="borderColor" value="${color}" style="display: none;" />
         </div>
     </div>
 `;
+
+const premiumColors = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#64748b', '#f8fafc', '#1e293b', '#333333'
+];
 
 export const template = ({
     isOpen,
@@ -217,6 +229,23 @@ export const template = ({
                 </div>
                 <div class="dropdown-item ${!visibleTouch ? 'selected' : ''}" data-touch="off" title="Hidden">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>
+                </div>
+            </div>
+
+            <!-- Color Menu -->
+            <div class="dropdown-menu color-menu" id="color-menu" style="width: 200px; padding: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;">
+                    ${premiumColors.map(c => `
+                        <div class="color-preset ${color === c ? 'selected' : ''}" 
+                             data-color="${c}" 
+                             style="background: ${c}; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s;"
+                             title="${c}">
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="dropdown-item custom-color-item" data-color="custom" style="justify-content: center; gap: 8px; font-size: 12px; font-weight: 500; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="M2 2l7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
+                    <span>${i18n.t('bookmark.custom_color') || 'Custom Color'}</span>
                 </div>
             </div>
         </div>

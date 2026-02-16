@@ -517,3 +517,44 @@ dialog[open] {
 .btn:active {
     transform: translateY(1px);
 }
+
+/* --- Color Picker Styles --- */
+.color-menu {
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.color-preset {
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.color-preset:hover {
+    transform: scale(1.15);
+    z-index: 2;
+    border-color: var(--accent) !important;
+}
+
+.color-preset.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+/* Force dark check for light presets */
+.color-preset.selected[data-color="#f8fafc"]::after {
+    color: #333;
+    text-shadow: none;
+}
+
+.custom-color-item:hover {
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.1);
+}
