@@ -42,9 +42,13 @@ dialog[open] {
 .modal-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 24px 24px 16px 24px;
+    align-items: flex-end;
+    /* Align tabs to bottom */
+    margin-bottom: 0;
     border-bottom: 1px solid var(--border);
+    padding: 12px 24px 0 24px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .modal-title {
@@ -324,4 +328,111 @@ dialog[open] {
     color: var(--text-dim);
     text-align: center;
     padding: 12px;
+}
+
+/* --- Integrated Tabs (Modern Minimalist) --- */
+.integrated-tabs {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 8px;
+    height: 100%;
+}
+
+/* Base Tab Button (Text Only) */
+.tab-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    padding: 12px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.7;
+    letter-spacing: 0.02em;
+}
+
+/* Hover State */
+.tab-btn:hover {
+    color: var(--text-main);
+    opacity: 1;
+}
+
+/* Active State */
+.tab-btn.active {
+    color: var(--accent);
+    font-weight: 600;
+    opacity: 1;
+}
+
+/* The Glowing Underline */
+.tab-btn.active::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 -2px 10px rgba(var(--accent-rgb), 0.5);
+    border-radius: 2px 2px 0 0;
+    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+    from {
+        transform: scaleX(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+/* Content Area - Clean */
+.tab-container {
+    background: transparent;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+}
+
+/* Header Adjustments */
+.modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 24px;
+    background: transparent;
+    height: 56px;
+    /* Slightly compact */
+    align-items: center;
+}
+
+/* Remove old styles */
+.tab-header {
+    display: none;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeContent 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeContent {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

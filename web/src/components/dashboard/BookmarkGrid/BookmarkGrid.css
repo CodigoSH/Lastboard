@@ -140,11 +140,13 @@
     align-self: center;
 
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: flex-start;
     /* Start from top, let flex-1 push down */
     gap: 0;
+
+    /* Default: Icon Top, Label Bottom */
+    flex-direction: column;
+    align-items: center;
 
     text-decoration: none;
     color: var(--text-main);
@@ -153,6 +155,84 @@
     overflow: hidden;
     container-type: inline-size;
     z-index: 10;
+}
+
+/* Label Position: Top */
+.bookmark-grid__card.label-top {
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+}
+
+/* Label Position: Section Style (Pill on Top Border) */
+.bookmark-grid__card.label-section {
+    position: relative;
+    padding-top: 12px !important;
+    /* Make room for the pill */
+    overflow: visible;
+    /* Allow pill to sit on border */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* Center icon vertically */
+    align-items: center;
+}
+
+.bookmark-grid__card.label-section .bookmark-grid__label {
+    position: absolute;
+    top: 0;
+    transform: translateY(calc(-50% - 1px));
+    /* EXACT MATCH */
+    left: 12px;
+    right: 12px;
+    width: fit-content;
+    /* EXACT MATCH */
+    max-width: calc(100% - 24px);
+    /* EXACT MATCH */
+
+    /* Pill Style (Borrowed from .section-title) */
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2px 8px;
+    /* EXACT MATCH */
+
+    font-size: 0.65rem;
+    /* EXACT MATCH */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    /* EXACT MATCH */
+    color: var(--text-dim);
+    line-height: 1.4;
+    /* EXACT MATCH */
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    /* EXACT MATCH */
+    z-index: 5;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    margin: 0;
+    opacity: 0.9;
+    font-family: var(--font-mono, monospace);
+    /* EXACT MATCH */
+    box-sizing: border-box;
+}
+
+.bookmark-grid__card.label-section .bookmark-grid__icon-container {
+    /* Icon takes full space, label is absolute */
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.bookmark-grid__card.label-section:hover .bookmark-grid__label {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 /* SEARCH OVERRIDE (Desktop only): Auto-flow grid for search results */
@@ -178,7 +258,7 @@
 /* Status Indicator - Responsive Position & Size */
 .status-indicator {
     position: absolute;
-    /* Position scales with card width, but never too close to edge */
+    /* Default Position (Top-Right) - Overridden by specific classes below */
     top: clamp(6px, 6cqi, 12px);
     right: clamp(6px, 6cqi, 12px);
 
@@ -195,6 +275,35 @@
     box-shadow: 0 0 clamp(2px, 2cqi, 6px) rgba(0, 0, 0, 0.5);
     z-index: 5;
     transition: all 0.3s ease;
+}
+
+/* Status Positions */
+.status-indicator.status-pos-top-right {
+    top: clamp(6px, 6cqi, 12px);
+    right: clamp(6px, 6cqi, 12px);
+    bottom: auto;
+    left: auto;
+}
+
+.status-indicator.status-pos-top-left {
+    top: clamp(6px, 6cqi, 12px);
+    left: clamp(6px, 6cqi, 12px);
+    bottom: auto;
+    right: auto;
+}
+
+.status-indicator.status-pos-bottom-right {
+    bottom: clamp(6px, 6cqi, 12px);
+    right: clamp(6px, 6cqi, 12px);
+    top: auto;
+    left: auto;
+}
+
+.status-indicator.status-pos-bottom-left {
+    bottom: clamp(6px, 6cqi, 12px);
+    left: clamp(6px, 6cqi, 12px);
+    top: auto;
+    right: auto;
 }
 
 .status-up {
@@ -601,4 +710,33 @@
     100% {
         background-position: -200% 0;
     }
+}
+
+/* Status Positions */
+.status-indicator.status-pos-top-right {
+    top: clamp(6px, 6cqi, 12px);
+    right: clamp(6px, 6cqi, 12px);
+    bottom: auto;
+    left: auto;
+}
+
+.status-indicator.status-pos-top-left {
+    top: clamp(6px, 6cqi, 12px);
+    left: clamp(6px, 6cqi, 12px);
+    bottom: auto;
+    right: auto;
+}
+
+.status-indicator.status-pos-bottom-right {
+    bottom: clamp(6px, 6cqi, 12px);
+    right: clamp(6px, 6cqi, 12px);
+    top: auto;
+    left: auto;
+}
+
+.status-indicator.status-pos-bottom-left {
+    bottom: clamp(6px, 6cqi, 12px);
+    left: clamp(6px, 6cqi, 12px);
+    top: auto;
+    right: auto;
 }

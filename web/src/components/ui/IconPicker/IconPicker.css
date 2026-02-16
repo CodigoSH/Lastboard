@@ -91,12 +91,15 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
     gap: 8px;
-    max-height: 200px;
+    height: 216px;
+    /* Fixed height for stability (4 rows approx) */
     overflow-y: auto;
     padding: 4px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 }
 
 

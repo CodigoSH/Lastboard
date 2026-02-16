@@ -124,13 +124,17 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
 
     const hrefAttr = isEditing ? 'role="button"' : `href="${safeUrl(data.url)}" target="_blank"`;
 
+    const vPosStyle = !isTouchDevice ? `--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};` : '';
+    const borderColorStyle = data.borderColor ? `border-color: ${data.borderColor} !important;` : '';
+    const labelPosClass = data.labelPos === 'top' ? 'label-top' : (data.labelPos === 'section' ? 'label-section' : '');
+
     return `
-        <a ${hrefAttr} class="bookmark-grid__card"
+        <a ${hrefAttr} class="bookmark-grid__card ${labelPosClass}"
            draggable="${isEditing}"
            data-id="${b.id}"
            data-type="${b.type}"
            data-orig-x="${b.x}" data-orig-y="${b.y}"
-           ${!isTouchDevice ? `style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};"` : ''}>
+           style="${vPosStyle} ${borderColorStyle}">
             
             ${isEditing ? `
                 <div class="bookmark-actions">
@@ -147,7 +151,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             ${isEditing && b.type === 'section' ? '<div class="resize-handle"></div>' : ''}
             
             ${data.statusCheck ? `
-                <div class="status-indicator ${b.status ? `status-${b.status}` : ''}" 
+                <div class="status-indicator ${b.status ? `status-${b.status}` : ''} ${data.statusPos ? `status-pos-${data.statusPos}` : ''}" 
                      title="${b.status === 'up' ? i18n.t('status.online') : (b.status === 'down' ? i18n.t('status.unreachable') : (b.status === 'pending' ? i18n.t('status.checking') : i18n.t('general.pinging')))}">
                 </div>
             ` : ''}

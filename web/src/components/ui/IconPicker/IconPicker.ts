@@ -114,14 +114,16 @@ class IconPicker extends HTMLElement {
     updateGrid() {
         const grid = this.shadowRoot!.getElementById('grid-container');
         if (grid) {
-            // Only show grid if there is a search query or if loading
+            // ALWAYS show grid container to maintain layout stability
+            grid.style.display = 'grid';
+
             if (!this.searchQuery.trim() && !this.isLoading) {
-                grid.style.display = 'none';
-                grid.innerHTML = '';
+                // Optional: Render "Start typing..." or just empty. 
+                // Empty is fine as long as container height holds.
+                grid.innerHTML = '<div class="icon-picker__empty">Start typing to search icons...</div>';
                 return;
             }
 
-            grid.style.display = 'grid';
             grid.innerHTML = gridTemplate(this.filteredIcons, this.selectedIcon, this.isLoading);
         }
     }

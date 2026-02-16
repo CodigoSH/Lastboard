@@ -1,4 +1,5 @@
 
+
 import { dashboardStore } from '../../../store/dashboardStore';
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
@@ -76,17 +77,102 @@ class WidgetConfigModal extends HTMLElement {
 
     connectedCallback() {
         this.render();
+        this.setupEventListeners(); // Initial setup
     }
 
     open(item: GridItem) {
         this.currentItem = item;
         this.render();
-        if (this.dialog) this.dialog.showModal();
+
+        // Re-bind listeners after render
+        this.setupEventListeners();
+
+        if (this.dialog) {
+            this.dialog.showModal();
+            // Reset to general tab
+            this.switchTab('general');
+        }
     }
 
     close() {
         if (this.dialog) this.dialog.close();
         this.currentItem = null;
+    }
+
+    private setupEventListeners() {
+        if (!this.shadowRoot) return;
+
+        // Tab Switching
+        this.shadowRoot.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabName = (e.currentTarget as HTMLElement).dataset.tab;
+                if (tabName) this.switchTab(tabName);
+            });
+        });
+
+        // Close button
+        this.shadowRoot.getElementById('close-btn')?.addEventListener('click', () => this.close());
+
+        // Save button
+        this.shadowRoot.getElementById('save-btn')?.addEventListener('click', () => this.save());
+
+        // Widget-specific bindings
+        if (this.currentItem) {
+            const content = typeof this.currentItem.content === 'string'
+                ? JSON.parse(this.currentItem.content)
+                : this.currentItem.content;
+            const widgetId = content.widgetId;
+
+            if (widgetId === 'clock') {
+                const clockSearchBtn = this.shadowRoot.getElementById('clock-search-btn');
+                if (clockSearchBtn) {
+                    clockSearchBtn.addEventListener('click', () => this.searchClockCity());
+                }
+            } else if (widgetId === 'weather') {
+                const weatherSearchBtn = this.shadowRoot.getElementById('weather-search-btn');
+                if (weatherSearchBtn) {
+                    weatherSearchBtn.addEventListener('click', () => this.searchWeatherCity());
+                }
+
+                const forecastCheck = this.shadowRoot.getElementById('weather-forecast') as HTMLInputElement;
+                const daysRow = this.shadowRoot.getElementById('weather-days-row');
+                if (forecastCheck && daysRow) {
+                    forecastCheck.addEventListener('change', () => {
+                        daysRow.style.display = forecastCheck.checked ? '' : 'none';
+                    });
+                }
+
+                // Stepper
+                const daysInput = this.shadowRoot.getElementById('weather-days') as HTMLInputElement;
+                const decBtn = this.shadowRoot.getElementById('weather-days-dec');
+                const incBtn = this.shadowRoot.getElementById('weather-days-inc');
+                if (daysInput && decBtn && incBtn) {
+                    decBtn.addEventListener('click', () => {
+                        const v = parseInt(daysInput.value) || 1;
+                        if (v > 1) daysInput.value = String(v - 1);
+                    });
+                    incBtn.addEventListener('click', () => {
+                        const v = parseInt(daysInput.value) || 1;
+                        if (v < 6) daysInput.value = String(v + 1);
+                    });
+                }
+            }
+        }
+    }
+
+    private switchTab(tabName: string) {
+        if (!this.shadowRoot) return;
+
+        // Update Buttons
+        this.shadowRoot.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', (btn as HTMLElement).dataset.tab === tabName);
+        });
+
+        // Update Content
+        this.shadowRoot.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === `tab-${tabName}`);
+        });
     }
 
     private async save() {
@@ -187,13 +273,15 @@ class WidgetConfigModal extends HTMLElement {
         const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
         const renderForm = () => {
-            if (!this.currentItem) return '';
+            if (!this.currentItem) return { general: '', customization: '' };
+
+            // --- CLOCK ---
             if (widgetId === 'clock') {
                 const city = content.city || '';
                 const h12 = content.hour12 || false;
-                const showDate = content.showDate !== false; // default true if undefined
+                const showDate = content.showDate !== false;
 
-                return `
+                const generalTab = `
                     <div class="field-group">
                         <label>${i18n.t('widget.clock.city')}</label>
                         <div class="input-row">
@@ -207,7 +295,9 @@ class WidgetConfigModal extends HTMLElement {
                         <label>${i18n.t('widget.weather.results')}</label>
                         <div id="clock-results" class="weather-results"></div>
                     </div>
+                `;
 
+                const customizationTab = `
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-12h" ${h12 ? 'checked' : ''} />
                         <label for="clock-12h">${i18n.t('widget.clock.use_12h')}</label>
@@ -218,6 +308,10 @@ class WidgetConfigModal extends HTMLElement {
                         <label for="clock-date">${i18n.t('widget.clock.show_date')}</label>
                     </div>
                 `;
+
+                return { general: generalTab, customization: customizationTab };
+
+                // --- WEATHER ---
             } else if (widgetId === 'weather') {
                 const city = content.city || '';
                 const lat = content.latitude || '';
@@ -226,7 +320,7 @@ class WidgetConfigModal extends HTMLElement {
                 const showForecast = content.showForecast || false;
                 const forecastDays = content.forecastDays || 5;
 
-                return `
+                const generalTab = `
                     <div class="field-group">
                         <label>${i18n.t('widget.weather.city')}</label>
                         <div class="input-row">
@@ -248,7 +342,9 @@ class WidgetConfigModal extends HTMLElement {
                             <input type="number" id="weather-lon" value="${lon}" placeholder="Lon" step="0.0001" />
                         </div>
                     </div>
+                `;
 
+                const customizationTab = `
                     <div class="field-group check-row">
                         <input type="checkbox" id="weather-fahrenheit" ${isFahrenheit ? 'checked' : ''} />
                         <label for="weather-fahrenheit">${i18n.t('widget.weather.use_fahrenheit')}</label>
@@ -268,18 +364,31 @@ class WidgetConfigModal extends HTMLElement {
                         </div>
                     </div>
                 `;
+
+                return { general: generalTab, customization: customizationTab };
+
+                // --- TELEMETRY ---
             } else if (widgetId === 'telemetry') {
                 const interval = content.interval || 1000;
 
-                return `
+                const generalTab = `
+                    <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">This widget displays real-time system metrics.</p>
+                `;
+
+                const customizationTab = `
                     <div class="field-group row-aligned">
                         <label>${i18n.t('widget.telemetry.update_interval')}</label>
                         <app-select id="telemetry-interval" value="${interval}"></app-select>
                     </div>
                 `;
+
+                return { general: generalTab, customization: customizationTab };
+
+                // --- SECTION ---
             } else if (this.currentItem.type === 'section') {
                 const title = content.title || '';
-                return `
+
+                const generalTab = `
                     <div class="field-group">
                         <label>${i18n.t('bookmark.label')}</label>
                         <div class="input-row">
@@ -288,8 +397,15 @@ class WidgetConfigModal extends HTMLElement {
                         <small>${i18n.t('section.leave_empty')}</small>
                     </div>
                 `;
+
+                const customizationTab = `
+                    <p style="color: var(--text-dim); font-size: 13px;">${i18n.t('general.no_options')}</p>
+                `;
+
+                return { general: generalTab, customization: customizationTab };
             }
-            return `<p>${i18n.t('widget.config.no_config')}</p>`;
+
+            return { general: `<p>${i18n.t('widget.config.no_config')}</p>`, customization: '' };
         };
 
 
@@ -300,18 +416,35 @@ class WidgetConfigModal extends HTMLElement {
             return i18n.t('widget.config.title');
         };
 
+        const formData = renderForm();
+
         this.shadowRoot.innerHTML = `
             <style>${css}</style>
             <dialog id="modal">
                 <div class="modal-header">
-                    <h3 class="modal-title">${getTitle()}</h3>
+                    <div class="integrated-tabs">
+                        <button class="tab-btn active" data-tab="general">${i18n.t('general.general')}</button>
+                        <button class="tab-btn" data-tab="customization">${i18n.t('general.customization')}</button>
+                    </div>
                     <button class="modal-close" id="close-btn">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
                 </div>
-                <div class="content">
-                    ${renderForm()}
+                
+                <div class="tab-container">
+                    <div class="content">
+                         <!-- TAB: GENERAL -->
+                        <div id="tab-general" class="tab-content active">
+                            ${formData.general}
+                        </div>
+
+                         <!-- TAB: CUSTOMIZATION -->
+                        <div id="tab-customization" class="tab-content">
+                            ${formData.customization}
+                        </div>
+                    </div>
                 </div>
+
                 <div class="actions">
                     ${['clock', 'telemetry', 'weather'].includes(widgetId) || this.currentItem?.type === 'section' ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
@@ -320,7 +453,7 @@ class WidgetConfigModal extends HTMLElement {
 
         this.dialog = this.shadowRoot.querySelector('dialog');
 
-        // Init Selects
+        // Init Selects (if any in DOM)
         const telSelect = this.shadowRoot.getElementById('telemetry-interval') as any;
         if (telSelect) {
             telSelect.options = [
@@ -329,45 +462,6 @@ class WidgetConfigModal extends HTMLElement {
                 { value: '5000', label: '5s' },
                 { value: '10000', label: '10s' }
             ];
-        }
-
-        // Bindings
-        this.shadowRoot.getElementById('close-btn')?.addEventListener('click', () => this.close());
-        this.shadowRoot.getElementById('save-btn')?.addEventListener('click', () => this.save());
-
-        // Clock city search binding
-        const clockSearchBtn = this.shadowRoot.getElementById('clock-search-btn');
-        if (clockSearchBtn) {
-            clockSearchBtn.addEventListener('click', () => this.searchClockCity());
-        }
-
-        // Weather-specific bindings
-        const weatherSearchBtn = this.shadowRoot.getElementById('weather-search-btn');
-        if (weatherSearchBtn) {
-            weatherSearchBtn.addEventListener('click', () => this.searchWeatherCity());
-        }
-
-        const forecastCheck = this.shadowRoot.getElementById('weather-forecast') as HTMLInputElement;
-        const daysRow = this.shadowRoot.getElementById('weather-days-row');
-        if (forecastCheck && daysRow) {
-            forecastCheck.addEventListener('change', () => {
-                daysRow.style.display = forecastCheck.checked ? '' : 'none';
-            });
-        }
-
-        // Stepper buttons
-        const daysInput = this.shadowRoot.getElementById('weather-days') as HTMLInputElement;
-        const decBtn = this.shadowRoot.getElementById('weather-days-dec');
-        const incBtn = this.shadowRoot.getElementById('weather-days-inc');
-        if (daysInput && decBtn && incBtn) {
-            decBtn.addEventListener('click', () => {
-                const v = parseInt(daysInput.value) || 1;
-                if (v > 1) daysInput.value = String(v - 1);
-            });
-            incBtn.addEventListener('click', () => {
-                const v = parseInt(daysInput.value) || 1;
-                if (v < 6) daysInput.value = String(v + 1);
-            });
         }
     }
 
