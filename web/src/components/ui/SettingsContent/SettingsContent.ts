@@ -5,6 +5,7 @@ import { ThemeService } from '../../../services/ThemeService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateStatusTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import '../Select/Select';
+import '../ColorPicker/ColorPicker';
 // @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
 

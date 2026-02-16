@@ -4,6 +4,7 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
 import '../Select/Select';
+import '../ColorPicker/ColorPicker';
 // @ts-ignore
 import css from './WidgetConfigModal.css' with { type: 'text' };
 
@@ -325,6 +326,12 @@ class WidgetConfigModal extends HTMLElement {
             newContent.unit = unitInput?.checked ? 'fahrenheit' : 'celsius';
             newContent.showForecast = forecastInput?.checked || false;
             newContent.forecastDays = parseInt(daysInput?.value) || 5;
+        } else if (widgetId === 'notepad') {
+            const textInput = this.shadowRoot?.getElementById('notepad-text') as HTMLTextAreaElement;
+            newContent.text = textInput ? textInput.value : '';
+        } else if (widgetId === 'markdown') {
+            const textInput = this.shadowRoot?.getElementById('markdown-text') as HTMLTextAreaElement;
+            newContent.text = textInput ? textInput.value : '';
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 1000;
@@ -384,11 +391,11 @@ class WidgetConfigModal extends HTMLElement {
                         `).join('')}
                         
                         <div class="premium-color-swatch premium-color-swatch--custom ${isCustom ? 'active' : ''}" 
-                            style="background-color: ${isCustom ? color : '#333'}">
-                            <svg viewBox="0 0 24 24" style="opacity: 0.8; fill: ${isCustom ? '#fff' : 'rgba(255,255,255,0.4)'};">
+                            style="background-color: ${isCustom ? color : 'transparent'}">
+                            <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events: none;">
                                 <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                             </svg>
-                            <input type="color" class="premium-swatch-picker" id="widget-borderColor" value="${isCustom ? color : '#0078D4'}">
+                            <app-color-picker class="premium-swatch-picker" id="widget-borderColor" trigger-opacity="0" value="${isCustom ? color : '#0078D4'}"></app-color-picker>
                         </div>
                     </div>
                 </div>
@@ -525,6 +532,30 @@ class WidgetConfigModal extends HTMLElement {
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
 
                 // --- SECTION ---
+            } else if (widgetId === 'notepad') {
+                const text = content.text || '';
+
+                const generalTab = `
+                    <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
+                        <p>${i18n.t('widget.config.check_personalize') || 'Please check the <b>Personalize</b> tab for content and style options.'}</p>
+                    </div>
+                `;
+
+                const customizationTab = ``;
+                return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
+
+            } else if (widgetId === 'markdown') {
+                const text = content.text || '';
+
+                const generalTab = `
+                    <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
+                        <p>${i18n.t('widget.config.check_personalize') || 'Please check the <b>Personalize</b> tab for content and style options.'}</p>
+                    </div>
+                `;
+
+                const customizationTab = ``;
+                return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
+
             } else if (this.currentItem.type === 'section') {
                 const title = content.title || '';
 
@@ -584,7 +615,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
 
                 <div class="actions">
-                    ${['clock', 'telemetry', 'weather'].includes(widgetId) || this.currentItem?.type === 'section' ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
+                    ${['clock', 'telemetry', 'weather', 'notepad', 'markdown'].includes(widgetId) || this.currentItem?.type === 'section' ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
             </dialog>
         `;

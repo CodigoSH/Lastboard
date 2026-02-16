@@ -2,6 +2,7 @@ import { template } from './AddBookmarkModal.template';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
+import '../ColorPicker/ColorPicker';
 // @ts-ignore
 import css from './AddBookmarkModal.css' with { type: 'text' };
 

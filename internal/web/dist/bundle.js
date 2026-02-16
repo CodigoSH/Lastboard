@@ -1,8 +1,8 @@
-var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enumerable:!0,configurable:!0,set:(a)=>r[t]=()=>a})};var M=(o,r)=>()=>(o&&(r=o(o=0)),r);class yo{baseUrl;constructor(){this.baseUrl=window.LASTBOARD_CONFIG?.API_BASE_URL||""}getCsrfToken(){let o=document.cookie.split("; ").find((r)=>r.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}async request(o,r){let t=`${this.baseUrl}${o}`,a=(r.method||"GET").toUpperCase(),n={"Content-Type":"application/json","Cache-Control":"no-cache, no-store, must-revalidate",Pragma:"no-cache",Expires:"0",...r.headers};if(a==="POST"||a==="PUT"||a==="PATCH"||a==="DELETE"){let e=this.getCsrfToken();if(e)n["X-CSRF-Token"]=e}try{let e=await fetch(t,{...r,headers:n,cache:"no-store"});if(!e.ok){let p=await e.json().catch(()=>({}));throw Error(p.error||`HTTP ${e.status}: ${e.statusText}`)}let s=await e.text();return s?JSON.parse(s):{}}catch(e){throw console.error(`[ApiService] Request failed: ${t}`,e),e}}async get(o){return this.request(o,{method:"GET"})}async post(o,r){return this.request(o,{method:"POST",body:JSON.stringify(r)})}async patch(o,r){return this.request(o,{method:"PATCH",body:JSON.stringify(r)})}async put(o,r){return this.request(o,{method:"PUT",body:JSON.stringify(r)})}async delete(o){return this.request(o,{method:"DELETE"})}}var $;var io=M(()=>{$=new yo});var H;var no=M(()=>{io();H={async getCurrentUser(){return $.get("/api/me")},async updateProfile(o){return $.post("/api/user/update-profile",o)},async updatePreferences(o){return $.post("/api/user/preferences",o)},async changePassword(o){return $.post("/api/user/change-password",o)},async getUsers(){return $.get("/api/users")},async createUser(o){return $.post("/api/users",o)},async adminUpdateUser(o){return $.put("/api/users",o)},async deleteUser(o){return $.delete(`/api/users?id=${o}`)}}});var K;var wo=M(()=>{K=[{code:"en",name:"English",flag:"\uD83C\uDDFA\uD83C\uDDF8"},{code:"zh",name:"简体中文",flag:"\uD83C\uDDE8\uD83C\uDDF3"},{code:"hi",name:"हिन्दी",flag:"\uD83C\uDDEE\uD83C\uDDF3"},{code:"es",name:"Español",flag:"\uD83C\uDDEA\uD83C\uDDF8"},{code:"ar",name:"العربية",flag:"\uD83C\uDDF8\uD83C\uDDE6"},{code:"fr",name:"Français",flag:"\uD83C\uDDEB\uD83C\uDDF7"},{code:"bn",name:"Bengali",flag:"\uD83C\uDDE7\uD83C\uDDE9"},{code:"pt",name:"Português",flag:"\uD83C\uDDF5\uD83C\uDDF9"},{code:"ru",name:"Русский",flag:"\uD83C\uDDF7\uD83C\uDDFA"},{code:"de",name:"Deutsch",flag:"\uD83C\uDDE9\uD83C\uDDEA"},{code:"ja",name:"日本語",flag:"\uD83C\uDDEF\uD83C\uDDF5"},{code:"it",name:"Italiano",flag:"\uD83C\uDDEE\uD83C\uDDF9"},{code:"tr",name:"Turkish",flag:"\uD83C\uDDF9\uD83C\uDDF7"},{code:"ko",name:"한국어",flag:"\uD83C\uDDF0\uD83C\uDDF7"},{code:"id",name:"Indonesian",flag:"\uD83C\uDDEE\uD83C\uDDE9"},{code:"pl",name:"Polski",flag:"\uD83C\uDDF5\uD83C\uDDF1"},{code:"ur",name:"Urdu",flag:"\uD83C\uDDF5\uD83C\uDDF0"},{code:"nl",name:"Nederlands",flag:"\uD83C\uDDF3\uD83C\uDDF1"},{code:"fa",name:"Persian",flag:"\uD83C\uDDEE\uD83C\uDDF7"},{code:"el",name:"Greek",flag:"\uD83C\uDDEC\uD83C\uDDF7"}]});class T{currentLanguage="en";cache=new Map;listeners=[];static instance;initialized;constructor(){this.initialized=this.init()}async init(){await this.loadLocale("en");let o=localStorage.getItem("lastboard_lang"),r=navigator.language.split("-")[0],t="en";if(o&&K.find((a)=>a.code===o))t=o;else if(K.find((a)=>a.code===r))t=r;if(t!=="en")await this.loadLocale(t);this.currentLanguage=t,this.notifyListeners()}static getInstance(){if(!T.instance)T.instance=new T;return T.instance}getLocale(){return{...K.find((r)=>r.code===this.currentLanguage)||K[0],translations:this.cache.get(this.currentLanguage)||{}}}getAvailableLocales(){let o=(t)=>/^[a-zA-Z]/.test(t);return[...K].sort((t,a)=>{let n=o(t.name),e=o(a.name);if(n&&!e)return-1;if(!n&&e)return 1;return t.name.localeCompare(a.name,void 0,{sensitivity:"base"})})}async loadLocale(o){if(this.cache.has(o))return;try{let r=await fetch(`/locales/${o}.json?v=${new Date().getTime()}`);if(!r.ok)throw Error(`Failed to load locale ${o}`);let t=await r.json();this.cache.set(o,t)}catch(r){console.error(r)}}async setLanguage(o){if(K.find((r)=>r.code===o))await this.loadLocale(o),this.currentLanguage=o,localStorage.setItem("lastboard_lang",o),this.notifyListeners();else console.warn(`[I18n] Language ${o} not supported`)}t(o,r){let t=this.cache.get(this.currentLanguage),a=this.cache.get("en"),n=t?.[o];if(!n&&a)n=a[o];if(!n)return o;if(r)Object.keys(r).forEach((e)=>{n=n.replace(`{${e}}`,r[e])});return n}subscribe(o){return this.listeners.push(o),o(this.getLocale()),()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}notifyListeners(){let o=this.getLocale();this.listeners.forEach((r)=>r(o))}async ensureInitialized(){return this.initialized}}var i;var v=M(()=>{wo();i=T.getInstance()});var S={};U(S,{userStore:()=>k});class ko{user=null;listeners=[];constructor(){this.loadFromStorage()}loadFromStorage(){let o=localStorage.getItem("lastboard_user_cache");if(o)try{this.user=JSON.parse(o),this.applyAesthetics(),this.notify()}catch(r){console.error("Failed to parse user cache",r)}}saveToStorage(){if(this.user)localStorage.setItem("lastboard_user_cache",JSON.stringify(this.user))}subscribe(o){if(this.listeners.push(o),this.user)o(this.user);return()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}notify(){this.listeners.forEach((o)=>o(this.user)),this.saveToStorage()}setUser(o){if(!o)return;this.user={...o,preferences:{accent_color:o.accent_color||"blue",language:o.language||"en",theme:o.theme,grid_columns:o.grid_columns||12,project_name:o.project_name||"Lastboard",beta_updates:o.beta_updates},project_name:o.project_name||"Lastboard"},this.applyAesthetics(),this.notify()}applyAesthetics(){if(!this.user||!this.user.preferences)return;let o=this.user.preferences,r=document.documentElement;if(o.grid_columns)r.style.setProperty("--user-preferred-columns",`${o.grid_columns}`);else r.style.setProperty("--user-preferred-columns","12");if(o.accent_color){let t=this.getAccentHex(o.accent_color);r.style.setProperty("--accent",t),localStorage.setItem("lastboard_accent",t)}if(o.theme==="light")r.classList.add("light-theme");else r.classList.remove("light-theme")}getAccentHex(o){if(o.startsWith("#"))return o;return{blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"}[o]||"#0078D4"}async updatePreferences(o){if(!this.user||!this.user.preferences)return;let r={...this.user.preferences};if(this.user.preferences={...this.user.preferences,...o},o.accent_color)this.user.accent_color=o.accent_color;if(o.language)this.user.language=o.language;if(o.project_name)this.user.project_name=o.project_name;if(o.theme)this.user.preferences.theme=o.theme;if(o.grid_columns)this.user.preferences.grid_columns=o.grid_columns;if(o.beta_updates!==void 0)this.user.preferences.beta_updates=o.beta_updates;this.applyAesthetics(),this.notify();try{let t={accent_color:this.user.accent_color,language:this.user.language,theme:this.user.preferences.theme,grid_columns:this.user.preferences.grid_columns,project_name:this.user.project_name,beta_updates:this.user.preferences.beta_updates};if(await H.updatePreferences(t),window.notifier)window.notifier.show(i.t("general.success")||"Preferences saved")}catch(t){if(console.error("[UserStore] Failed to sync preferences, rolling back",t),this.user.preferences=r,this.applyAesthetics(),this.notify(),window.notifier)window.notifier.show(i.t("notifier.save_error"),"error");throw t}}async updateProfile(o){if(!this.user)return;try{let r=await H.updateProfile(o);if(r&&r.session_invalidated){if(localStorage.removeItem("lastboard_user_cache"),window.notifier)window.notifier.show(i.t("notifier.username_changed_relogin"));setTimeout(()=>{document.body.style.opacity="0",window.location.href="/login"},2000);return}if(this.user={...this.user,...o},this.notify(),window.notifier)window.notifier.show(i.t("notifier.profile_updated"))}catch(r){if(console.error("[UserStore] Update profile failed",r),window.notifier)window.notifier.show(i.t("notifier.profile_error"),"error")}}async changePassword(o){try{return await H.changePassword(o)}catch(r){throw console.error("[UserStore] Change password failed",r),r}}getUser(){return this.user}async fetchUser(){try{let o=await H.getCurrentUser();this.setUser(o)}catch(o){if(console.error("[UserStore] Error fetching user",o),!this.user){if(window.notifier)window.notifier.show(i.t("auth.session_expired"),"error")}}}}var k;var Y=M(()=>{no();v();k=new ko});var R;var eo=M(()=>{io();R={async getItems(){return $.get("/api/dashboard")},async updateItem(o){let r={...o};if(o.parent_id===void 0&&"parent_id"in o)r.clear_parent=!0;return $.patch(`/api/dashboard/item/${o.id}`,r)},async createItem(o){return $.post("/api/dashboard/item",o)},async deleteItem(o){return $.delete(`/api/dashboard/item/${o}`)},async checkHealth(o){return $.get(`/api/dashboard/health?url=${encodeURIComponent(o)}`)}}});var zo={};U(zo,{socketService:()=>Ur});class so{socket=null;statsListeners=[];notificationListeners=[];reconnectTimeout;reconnectDelay=1000;static MAX_DELAY=30000;constructor(){this.connect()}connect(){let o=window.location.protocol==="https:"?"wss:":"ws:",r=window.location.host,t=`${o}//${r}/ws`;this.socket=new WebSocket(t),this.socket.onopen=()=>{this.reconnectDelay=1000},this.socket.onmessage=(a)=>{try{let n=JSON.parse(a.data);if(n.type==="stats")this.notifyStats(n.payload);else this.notifyNotification(n.type,n.payload)}catch(n){console.error("[SocketService] Failed to parse message",n)}},this.socket.onclose=()=>{console.warn("[SocketService] WebSocket closed. Reconnecting..."),this.scheduleReconnect()},this.socket.onerror=(a)=>{console.error("[SocketService] WebSocket error",a),this.socket?.close()}}scheduleReconnect(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);let o=Math.random()*this.reconnectDelay*0.5;this.reconnectTimeout=setTimeout(()=>this.connect(),this.reconnectDelay+o),this.reconnectDelay=Math.min(this.reconnectDelay*2,so.MAX_DELAY)}destroy(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);if(this.socket)this.socket.onclose=null,this.socket.close(),this.socket=null}subscribe(o){return this.statsListeners.push(o),()=>{this.statsListeners=this.statsListeners.filter((r)=>r!==o)}}subscribeNotification(o){return this.notificationListeners.push(o),()=>{this.notificationListeners=this.notificationListeners.filter((r)=>r!==o)}}notifyStats(o){this.statsListeners.forEach((r)=>r(o))}notifyNotification(o,r){this.notificationListeners.forEach((t)=>t(o,r))}}var Ur;var $o=M(()=>{Ur=new so});var po={};U(po,{updateService:()=>Tr});class jo{version="";compareVersions(o,r){let t=o.replace(/^v/,""),a=r.replace(/^v/,""),n=t.split("-"),e=a.split("-"),s=n[0].split(".").map(Number),p=e[0].split(".").map(Number);for(let l=0;l<3;l++){if(s[l]>p[l])return!0;if(s[l]<p[l])return!1}if(!n[1]&&e[1])return!0;if(n[1]&&!e[1])return!1;if(!n[1]&&!e[1])return!1;let d=n[1].toLowerCase(),c=e[1].toLowerCase();return d>c}async check(o){try{let r=await fetch("/api/system/update/check"),t={current_version:"v0.0.0",is_docker:!1,available:!1,os:"linux",arch:"amd64"};if(r.ok)t=await r.json(),this.version=t.current_version;if(t.is_docker)return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!0};try{let a=`https://api-updates.codigosh.com/api/v1/check-update?beta=${o}`,n=await fetch(a);if(n.ok){let e=await n.json();if(this.compareVersions(e.latest_version,this.version)){let p=t.os||"linux",d=t.arch||"amd64",c=`lastboard-${p}-${d}.tar.gz`;return{available:!0,current_version:this.version,latest_version:e.latest_version,asset_url:`https://github.com/CodigoSH/Lastboard/releases/download/${e.latest_version}/${c}`,is_docker:!1}}}}catch(a){console.error("[UpdateService] Proxy check failed",a)}return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!1}}catch(r){return console.error("[UpdateService] Failed to check for updates",r),{available:!1,current_version:this.version||"v0.0.0",latest_version:"v0.0.0",is_docker:!1}}}}var Tr;var lo=M(()=>{Tr=new jo});var O={};U(O,{collisionService:()=>F});var F;var B=M(()=>{F={isOverlap(o,r){return o.x<r.x+r.w&&o.x+o.w>r.x&&o.y<r.y+r.h&&o.y+o.h>r.y},calculateDropValidity(o,r,t=12){let a=Number(o.x),n=Number(o.y),e=Number(o.w),s=Number(o.h);if(a<1||a+e-1>t||n<1)return{valid:!1,x:a,y:n};let d=r.find((l)=>l.id===o.id)?.type==="section",c={x:a,y:n,w:e,h:s};for(let l of r){if(l.id===o.id)continue;let x=Number(l.x),_=Number(l.y),u=Number(l.w||1),w=Number(l.h||1),m={x,y:_,w:u,h:w};if(l.parent_id){let y=r.find((b)=>b.id===l.parent_id);if(y)m.x=Number(y.x)+x-1,m.y=Number(y.y)+_-1;else continue}if(this.isOverlap(c,m)){if(d&&l.parent_id===o.id){let y=Number(l.x),b=Number(l.y),A=Number(l.w||1),q=Number(l.h||1);if(y+A-1>e)return{valid:!1,x:a,y:n};if(b+q-1>s)return{valid:!1,x:a,y:n};continue}if(!d&&l.type==="section"){let y=a-Number(l.x)+1,b=n-Number(l.y)+1;if(y<1||y+e-1>Number(l.w||1)||b<1||b+s-1>Number(l.h||1))return{valid:!1,x:a,y:n};let A=r.filter((h)=>h.parent_id===l.id),q=!1;for(let h of A){let E={x:Number(h.x),y:Number(h.y),w:Number(h.w||1),h:Number(h.h||1)},Z={x:y,y:b,w:e,h:s};if(this.isOverlap(Z,E)){q=!0;break}}if(!q)return{valid:!0,x:a,y:n,targetGroup:l}}return{valid:!1,x:a,y:n}}}return{valid:!0,x:a,y:n}},snapToGrid(o,r,t,a){let n=t+a,e=Math.max(1,Math.floor(o/n)+1),s=t+a,p=Math.max(1,Math.floor(r/s)+1);return{x:e,y:p}},findFirstAvailableSlot(o,r,t,a=12){return this.findCompactPosition(o,r,t,a)},findAvailableSlot(o,r,t,a){let n=1;while(!0){for(let e=1;e<=a-o+1;e++){let s={x:e,y:n,w:o,h:r},p=!1;for(let d of t)if(this.isOverlap(s,d)){p=!0;break}if(!p)return{x:e,y:n}}if(n++,n>500)return console.warn("[CollisionService] Grid exhausted, no available slot found. Grid may be full."),{x:1,y:500}}},findCompactPosition(o,r,t,a,n){let e=1,s=1;while(!0){for(let p=1;p<=a-o+1;p++){let d={x:p,y:e,w:o,h:r},c=!1;for(let l of t){if(n&&l.id===n)continue;let x={x:l.x,y:l.y,w:l.w||1,h:l.h||1};if(this.isOverlap(d,x)){c=!0;break}}if(!c)return{x:p,y:e}}if(e++,e>500)return console.warn("[CollisionService] Grid exhausted, no compact position found. Grid may be full."),{x:1,y:500}}}}});var Ao={};U(Ao,{dashboardStore:()=>g});class Lo{state={isEditing:!1,items:[],searchQuery:"",isOffline:!1,updateAvailable:!1,loading:!0,stats:null,availableWidth:1200,gridColumns:12};listeners=[];userId=0;getStorageKey(){return this.userId?`lastboard-items-${this.userId}`:"lastboard-items"}setUserId(o){this.userId=o}constructor(){this.initSocket(),this.checkSystemUpdate()}initSocket(){Promise.resolve().then(() => ($o(),zo)).then(({socketService:o})=>{o.subscribe((r)=>{this.state.stats={cpu_usage:r.cpu_usage,ram_usage:r.ram_usage,temperature:r.temperature},this.notify()}),o.subscribeNotification((r,t)=>{if(r==="update_available")console.log("[DashboardStore] Real-time update detected:",t.latest_version),this.checkSystemUpdate()})})}async checkSystemUpdate(){try{setTimeout(async()=>{let{userStore:o}=await Promise.resolve().then(() => (Y(),S)),{updateService:r}=await Promise.resolve().then(() => (lo(),po)),a=o.getUser()?.preferences?.beta_updates||!1;if((await r.check(a)).available)this.state.updateAvailable=!0,this.notify()},2000)}catch(o){}}saveToLocalStorage(){try{let o=JSON.stringify(this.state.items);localStorage.setItem(this.getStorageKey(),o)}catch(o){if(console.error("[DashboardStore] Failed to save to localStorage",o),o.name==="QuotaExceededError"||o.code===22)this.sanitizeStorage()}}loadFromLocalStorage(){try{this.sanitizeStorage();let o=localStorage.getItem(this.getStorageKey());if(o){let r=JSON.parse(o);if(Array.isArray(r)&&r.length>0)this.state.items=r}}catch(o){console.error("[DashboardStore] Failed to load from localStorage",o)}}sanitizeStorage(){try{let o=[];for(let r=0;r<localStorage.length;r++){let t=localStorage.key(r);if(t&&(t.includes("user_cache")||t.includes("old_dashboard_")))o.push(t)}o.forEach((r)=>localStorage.removeItem(r))}catch(o){}}subscribe(o){return this.listeners.push(o),this.ensureItemsIsArray(),o({...this.state,items:this.deepCopyItems(this.state.items)}),()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}ensureItemsIsArray(){if(!Array.isArray(this.state.items))console.error("[DashboardStore] CRITICAL: items is not an array, resetting to empty array",typeof this.state.items),this.state.items=[]}deepCopyItems(o){return o.map((r)=>{let t=r.content;if(typeof r.content==="string")try{let a=JSON.parse(r.content);if(typeof a==="object"&&a!==null)t=JSON.stringify(a)}catch{}return{...r,content:t,status:r.status}})}setItemStatus(o,r){let t=this.state.items.findIndex((a)=>a.id===o);if(t===-1)return;if(this.state.items[t].status===r)return;this.state.items[t].status=r,this.notify()}notify(){this.ensureItemsIsArray();let o={...this.state,items:this.deepCopyItems(this.state.items)};this.listeners.forEach((r)=>r(o))}setEditMode(o){this.state.isEditing=o,this.notify()}toggleEditMode(){this.setEditMode(!this.state.isEditing)}setSearchQuery(o){this.state.searchQuery=o.toLowerCase().trim(),this.notify()}setGridMetrics(o,r){if(o===this.state.availableWidth&&r===this.state.gridColumns)return;this.state.availableWidth=o,this.state.gridColumns=r,this.notify()}async fetchItems(){let o=localStorage.getItem(this.getStorageKey());if(o)try{let r=JSON.parse(o);if(Array.isArray(r)&&r.length>0)this.state.items=r,this.state.loading=!1,this.notify()}catch(r){console.warn("[DashboardStore] Failed to parse cached items",r)}try{let r=await R.getItems();if(Array.isArray(r)){let t=JSON.stringify(this.state.items)!==JSON.stringify(r);if(this.state.items=r,this.state.isOffline=!1,this.state.loading=!1,this.saveToLocalStorage(),t)this.notify()}else throw Error("Backend returned invalid data")}catch(r){if(console.error("[DashboardStore] API fetch failed",r),this.state.isOffline=!0,this.state.loading=!1,this.state.items.length===0)this.state.items=[...Or],this.saveToLocalStorage(),this.notify();else this.notify()}}async updateItem(o){try{this.ensureItemsIsArray();let r=this.state.items.findIndex((a)=>a.id===o.id);if(r===-1){console.warn("[DashboardStore] Item not found for update:",o.id);return}let t={...this.state.items[r]};this.state.items[r]={...this.state.items[r],...o},this.saveToLocalStorage(),this.notify();try{await R.updateItem(o),this.state.isOffline=!1,this.notify()}catch(a){console.error("[DashboardStore] Failed to sync item update (offline?), keeping local state",a),this.state.isOffline=!0,this.saveToLocalStorage(),this.notify()}}catch(r){console.error("[DashboardStore] Error updating item",r)}}async resizeItem(o,r,t){let a=this.state.items.find((n)=>n.id===o);if(!a)return;if(await this.updateItem({id:o,w:r,h:t}),a.type==="section")await this.reflowChildren(o,r)}async reflowChildren(o,r){let{collisionService:t}=await Promise.resolve().then(() => (B(),O)),a=this.state.items.filter((e)=>e.parent_id===o).sort((e,s)=>e.y-s.y||e.x-s.x);if(a.length===0)return;let n=[];for(let e of a){let s=t.findAvailableSlot(e.w,e.h,n,r);if(n.push({x:s.x,y:s.y,w:e.w,h:e.h}),e.x!==s.x||e.y!==s.y)await this.updateItem({id:e.id,x:s.x,y:s.y})}}async addItem(o){try{this.ensureItemsIsArray();try{let r={...o};if(r.type==="widget"&&!r.url)r.url="";let{userStore:t}=await Promise.resolve().then(() => (Y(),S)),n=t.getUser()?.preferences,e=this.state.gridColumns;if(!e||e<1){let p=n?.widget_min_width||140,d=16,c=document.querySelector("bookmark-grid"),l=this.state.availableWidth||c?.clientWidth||window.innerWidth;e=Math.floor((l+16)/(p+16))}if(e<1)e=1;if(e>24)e=24;if(!r.x||!r.y){let{collisionService:p}=await Promise.resolve().then(() => (B(),O)),d=p.findFirstAvailableSlot(r.w||1,r.h||1,this.state.items,e);r.x=d.x,r.y=d.y}let s=await R.createItem(r);return this.state.isOffline=!1,this.state.items.push(s),this.saveToLocalStorage(),this.notify(),s}catch(r){console.error("[DashboardStore] Failed to add item to backend",r);return}}catch(r){console.error("[DashboardStore] Error adding item",r);return}}async deleteItem(o){try{this.ensureItemsIsArray();let r=this.state.items.findIndex((a)=>a.id===o);if(r===-1){console.warn("[DashboardStore] Item not found for deletion:",o);return}let t=this.state.items[r];this.state.items.splice(r,1),this.saveToLocalStorage(),this.notify();try{await R.deleteItem(o)}catch(a){console.error("[DashboardStore] Failed to delete item, rolling back",a),this.state.items.push(t),this.saveToLocalStorage(),this.notify()}}catch(r){console.error("[DashboardStore] Error deleting item",r)}}getState(){return this.ensureItemsIsArray(),{...this.state,items:[...this.state.items]}}}var Or,g;var L=M(()=>{eo();Or=[{id:1,type:"bookmark",x:1,y:1,w:1,h:1,content:{label:"CodigoSH",url:"https://github.com/CodigoSH/Lastboard",icon:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png",iconName:"git"}}];g=new Lo});var bo={};U(bo,{eventBus:()=>D,EVENTS:()=>N});var N,gr,D;var oo=M(()=>{N={SHOW_CONFIRMATION:"lastboard:show-confirmation",SHOW_WIDGET_CONFIG:"lastboard:show-widget-config",NOTIFY:"lastboard:notify"};gr=class gr extends EventTarget{emit(o,r){this.dispatchEvent(new CustomEvent(o,{detail:r}))}on(o,r){this.addEventListener(o,r)}off(o,r){this.removeEventListener(o,r)}};D=new gr});Y();L();L();eo();class Mo{interval=null;checkFrequency=300000;start(){if(this.interval)return;setTimeout(()=>this.checkAll(),2000),this.interval=window.setInterval(()=>{this.checkAll()},this.checkFrequency)}stop(){if(this.interval)clearInterval(this.interval),this.interval=null}async checkAll(){let r=g.getState().items.filter((s)=>{if(s.type!=="bookmark")return!1;let p=s.content;if(typeof p==="string")try{p=JSON.parse(p)}catch(d){return!1}return p&&p.statusCheck===!0});r.forEach((s)=>this.updateUIStatus(s.id,"pending"));let t=5,a=[...r],n=async()=>{while(a.length>0){let s=a.shift();if(s)await this.checkItem(s)}},e=Array(Math.min(r.length,t)).fill(null).map(()=>n());await Promise.all(e)}async checkItem(o){let r=o.content;if(typeof r==="string")try{r=JSON.parse(r)}catch(a){return}let t=r.url;if(!t||t==="#"||t.startsWith("javascript:"))return;try{if((await R.checkHealth(t)).status==="up")this.updateUIStatus(o.id,"up");else this.updateUIStatus(o.id,"down")}catch(a){console.warn(`[StatusService] ${t} health check failed:`,a),this.updateUIStatus(o.id,"down")}}updateUIStatus(o,r){g.setItemStatus(o,r)}}var W=new Mo;class G{static STORAGE_KEY="lastboard_theme";static CLASS_NAME="dark-mode";static init(){let o=localStorage.getItem(this.STORAGE_KEY);if(o==="dark")this.enableDark();else if(o==="light")this.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)this.enableDark();else this.enableLight()}static enableDark(){document.documentElement.classList.add(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"dark"),this.setCookie(this.STORAGE_KEY,"dark",365)}static enableLight(){document.documentElement.classList.remove(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"light"),this.setCookie(this.STORAGE_KEY,"light",365)}static toggle(){if(document.documentElement.classList.contains(this.CLASS_NAME))this.enableLight();else this.enableDark()}static isDark(){return document.documentElement.classList.contains(this.CLASS_NAME)}static setCookie(o,r,t){let a="";if(t){let n=new Date;n.setTime(n.getTime()+t*24*60*60*1000),a="; expires="+n.toUTCString()}document.cookie=o+"="+(r||"")+a+"; path=/"}static async sync(){try{let o=await fetch("/api/me");if(o.ok){let r=await o.json();if(r.theme==="dark")this.enableDark();else if(r.theme==="light")this.enableLight()}}catch(o){}}}v();var qo=()=>`
+var Tr=Object.defineProperty;var U=(o,r)=>{for(var t in r)Tr(o,t,{get:r[t],enumerable:!0,configurable:!0,set:(i)=>r[t]=()=>i})};var M=(o,r)=>()=>(o&&(r=o(o=0)),r);class yo{baseUrl;constructor(){this.baseUrl=window.LASTBOARD_CONFIG?.API_BASE_URL||""}getCsrfToken(){let o=document.cookie.split("; ").find((r)=>r.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}async request(o,r){let t=`${this.baseUrl}${o}`,i=(r.method||"GET").toUpperCase(),n={"Content-Type":"application/json","Cache-Control":"no-cache, no-store, must-revalidate",Pragma:"no-cache",Expires:"0",...r.headers};if(i==="POST"||i==="PUT"||i==="PATCH"||i==="DELETE"){let e=this.getCsrfToken();if(e)n["X-CSRF-Token"]=e}try{let e=await fetch(t,{...r,headers:n,cache:"no-store"});if(!e.ok){let p=await e.json().catch(()=>({}));throw Error(p.error||`HTTP ${e.status}: ${e.statusText}`)}let s=await e.text();return s?JSON.parse(s):{}}catch(e){throw console.error(`[ApiService] Request failed: ${t}`,e),e}}async get(o){return this.request(o,{method:"GET"})}async post(o,r){return this.request(o,{method:"POST",body:JSON.stringify(r)})}async patch(o,r){return this.request(o,{method:"PATCH",body:JSON.stringify(r)})}async put(o,r){return this.request(o,{method:"PUT",body:JSON.stringify(r)})}async delete(o){return this.request(o,{method:"DELETE"})}}var $;var ao=M(()=>{$=new yo});var G;var no=M(()=>{ao();G={async getCurrentUser(){return $.get("/api/me")},async updateProfile(o){return $.post("/api/user/update-profile",o)},async updatePreferences(o){return $.post("/api/user/preferences",o)},async changePassword(o){return $.post("/api/user/change-password",o)},async getUsers(){return $.get("/api/users")},async createUser(o){return $.post("/api/users",o)},async adminUpdateUser(o){return $.put("/api/users",o)},async deleteUser(o){return $.delete(`/api/users?id=${o}`)}}});var K;var wo=M(()=>{K=[{code:"en",name:"English",flag:"\uD83C\uDDFA\uD83C\uDDF8"},{code:"zh",name:"简体中文",flag:"\uD83C\uDDE8\uD83C\uDDF3"},{code:"hi",name:"हिन्दी",flag:"\uD83C\uDDEE\uD83C\uDDF3"},{code:"es",name:"Español",flag:"\uD83C\uDDEA\uD83C\uDDF8"},{code:"ar",name:"العربية",flag:"\uD83C\uDDF8\uD83C\uDDE6"},{code:"fr",name:"Français",flag:"\uD83C\uDDEB\uD83C\uDDF7"},{code:"bn",name:"Bengali",flag:"\uD83C\uDDE7\uD83C\uDDE9"},{code:"pt",name:"Português",flag:"\uD83C\uDDF5\uD83C\uDDF9"},{code:"ru",name:"Русский",flag:"\uD83C\uDDF7\uD83C\uDDFA"},{code:"de",name:"Deutsch",flag:"\uD83C\uDDE9\uD83C\uDDEA"},{code:"ja",name:"日本語",flag:"\uD83C\uDDEF\uD83C\uDDF5"},{code:"it",name:"Italiano",flag:"\uD83C\uDDEE\uD83C\uDDF9"},{code:"tr",name:"Turkish",flag:"\uD83C\uDDF9\uD83C\uDDF7"},{code:"ko",name:"한국어",flag:"\uD83C\uDDF0\uD83C\uDDF7"},{code:"id",name:"Indonesian",flag:"\uD83C\uDDEE\uD83C\uDDE9"},{code:"pl",name:"Polski",flag:"\uD83C\uDDF5\uD83C\uDDF1"},{code:"ur",name:"Urdu",flag:"\uD83C\uDDF5\uD83C\uDDF0"},{code:"nl",name:"Nederlands",flag:"\uD83C\uDDF3\uD83C\uDDF1"},{code:"fa",name:"Persian",flag:"\uD83C\uDDEE\uD83C\uDDF7"},{code:"el",name:"Greek",flag:"\uD83C\uDDEC\uD83C\uDDF7"}]});class T{currentLanguage="en";cache=new Map;listeners=[];static instance;initialized;constructor(){this.initialized=this.init()}async init(){await this.loadLocale("en");let o=localStorage.getItem("lastboard_lang"),r=navigator.language.split("-")[0],t="en";if(o&&K.find((i)=>i.code===o))t=o;else if(K.find((i)=>i.code===r))t=r;if(t!=="en")await this.loadLocale(t);this.currentLanguage=t,this.notifyListeners()}static getInstance(){if(!T.instance)T.instance=new T;return T.instance}getLocale(){return{...K.find((r)=>r.code===this.currentLanguage)||K[0],translations:this.cache.get(this.currentLanguage)||{}}}getAvailableLocales(){let o=(t)=>/^[a-zA-Z]/.test(t);return[...K].sort((t,i)=>{let n=o(t.name),e=o(i.name);if(n&&!e)return-1;if(!n&&e)return 1;return t.name.localeCompare(i.name,void 0,{sensitivity:"base"})})}async loadLocale(o){if(this.cache.has(o))return;try{let r=await fetch(`/locales/${o}.json?v=${new Date().getTime()}`);if(!r.ok)throw Error(`Failed to load locale ${o}`);let t=await r.json();this.cache.set(o,t)}catch(r){console.error(r)}}async setLanguage(o){if(K.find((r)=>r.code===o))await this.loadLocale(o),this.currentLanguage=o,localStorage.setItem("lastboard_lang",o),this.notifyListeners();else console.warn(`[I18n] Language ${o} not supported`)}t(o,r){let t=this.cache.get(this.currentLanguage),i=this.cache.get("en"),n=t?.[o];if(!n&&i)n=i[o];if(!n)return o;if(r)Object.keys(r).forEach((e)=>{n=n.replace(`{${e}}`,r[e])});return n}subscribe(o){return this.listeners.push(o),o(this.getLocale()),()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}notifyListeners(){let o=this.getLocale();this.listeners.forEach((r)=>r(o))}async ensureInitialized(){return this.initialized}}var a;var y=M(()=>{wo();a=T.getInstance()});var S={};U(S,{userStore:()=>k});class ko{user=null;listeners=[];constructor(){this.loadFromStorage()}loadFromStorage(){let o=localStorage.getItem("lastboard_user_cache");if(o)try{this.user=JSON.parse(o),this.applyAesthetics(),this.notify()}catch(r){console.error("Failed to parse user cache",r)}}saveToStorage(){if(this.user)localStorage.setItem("lastboard_user_cache",JSON.stringify(this.user))}subscribe(o){if(this.listeners.push(o),this.user)o(this.user);return()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}notify(){this.listeners.forEach((o)=>o(this.user)),this.saveToStorage()}setUser(o){if(!o)return;this.user={...o,preferences:{accent_color:o.accent_color||"blue",language:o.language||"en",theme:o.theme,grid_columns:o.grid_columns||12,project_name:o.project_name||"Lastboard",beta_updates:o.beta_updates},project_name:o.project_name||"Lastboard"},this.applyAesthetics(),this.notify()}applyAesthetics(){if(!this.user||!this.user.preferences)return;let o=this.user.preferences,r=document.documentElement;if(o.grid_columns)r.style.setProperty("--user-preferred-columns",`${o.grid_columns}`);else r.style.setProperty("--user-preferred-columns","12");if(o.accent_color){let t=this.getAccentHex(o.accent_color);r.style.setProperty("--accent",t),localStorage.setItem("lastboard_accent",t)}if(o.theme==="light")r.classList.add("light-theme");else r.classList.remove("light-theme")}getAccentHex(o){if(o.startsWith("#"))return o;return{blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"}[o]||"#0078D4"}async updatePreferences(o){if(!this.user||!this.user.preferences)return;let r={...this.user.preferences};if(this.user.preferences={...this.user.preferences,...o},o.accent_color)this.user.accent_color=o.accent_color;if(o.language)this.user.language=o.language;if(o.project_name)this.user.project_name=o.project_name;if(o.theme)this.user.preferences.theme=o.theme;if(o.grid_columns)this.user.preferences.grid_columns=o.grid_columns;if(o.beta_updates!==void 0)this.user.preferences.beta_updates=o.beta_updates;this.applyAesthetics(),this.notify();try{let t={accent_color:this.user.accent_color,language:this.user.language,theme:this.user.preferences.theme,grid_columns:this.user.preferences.grid_columns,project_name:this.user.project_name,beta_updates:this.user.preferences.beta_updates};if(await G.updatePreferences(t),window.notifier)window.notifier.show(a.t("general.success")||"Preferences saved")}catch(t){if(console.error("[UserStore] Failed to sync preferences, rolling back",t),this.user.preferences=r,this.applyAesthetics(),this.notify(),window.notifier)window.notifier.show(a.t("notifier.save_error"),"error");throw t}}async updateProfile(o){if(!this.user)return;try{let r=await G.updateProfile(o);if(r&&r.session_invalidated){if(localStorage.removeItem("lastboard_user_cache"),window.notifier)window.notifier.show(a.t("notifier.username_changed_relogin"));setTimeout(()=>{document.body.style.opacity="0",window.location.href="/login"},2000);return}if(this.user={...this.user,...o},this.notify(),window.notifier)window.notifier.show(a.t("notifier.profile_updated"))}catch(r){if(console.error("[UserStore] Update profile failed",r),window.notifier)window.notifier.show(a.t("notifier.profile_error"),"error")}}async changePassword(o){try{return await G.changePassword(o)}catch(r){throw console.error("[UserStore] Change password failed",r),r}}getUser(){return this.user}async fetchUser(){try{let o=await G.getCurrentUser();this.setUser(o)}catch(o){if(console.error("[UserStore] Error fetching user",o),!this.user){if(window.notifier)window.notifier.show(a.t("auth.session_expired"),"error")}}}}var k;var B=M(()=>{no();y();k=new ko});var R;var eo=M(()=>{ao();R={async getItems(){return $.get("/api/dashboard")},async updateItem(o){let r={...o};if(o.parent_id===void 0&&"parent_id"in o)r.clear_parent=!0;return $.patch(`/api/dashboard/item/${o.id}`,r)},async createItem(o){return $.post("/api/dashboard/item",o)},async deleteItem(o){return $.delete(`/api/dashboard/item/${o}`)},async checkHealth(o){return $.get(`/api/dashboard/health?url=${encodeURIComponent(o)}`)}}});var zo={};U(zo,{socketService:()=>Or});class so{socket=null;statsListeners=[];notificationListeners=[];reconnectTimeout;reconnectDelay=1000;static MAX_DELAY=30000;constructor(){this.connect()}connect(){let o=window.location.protocol==="https:"?"wss:":"ws:",r=window.location.host,t=`${o}//${r}/ws`;this.socket=new WebSocket(t),this.socket.onopen=()=>{this.reconnectDelay=1000},this.socket.onmessage=(i)=>{try{let n=JSON.parse(i.data);if(n.type==="stats")this.notifyStats(n.payload);else this.notifyNotification(n.type,n.payload)}catch(n){console.error("[SocketService] Failed to parse message",n)}},this.socket.onclose=()=>{console.warn("[SocketService] WebSocket closed. Reconnecting..."),this.scheduleReconnect()},this.socket.onerror=(i)=>{console.error("[SocketService] WebSocket error",i),this.socket?.close()}}scheduleReconnect(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);let o=Math.random()*this.reconnectDelay*0.5;this.reconnectTimeout=setTimeout(()=>this.connect(),this.reconnectDelay+o),this.reconnectDelay=Math.min(this.reconnectDelay*2,so.MAX_DELAY)}destroy(){if(this.reconnectTimeout)clearTimeout(this.reconnectTimeout);if(this.socket)this.socket.onclose=null,this.socket.close(),this.socket=null}subscribe(o){return this.statsListeners.push(o),()=>{this.statsListeners=this.statsListeners.filter((r)=>r!==o)}}subscribeNotification(o){return this.notificationListeners.push(o),()=>{this.notificationListeners=this.notificationListeners.filter((r)=>r!==o)}}notifyStats(o){this.statsListeners.forEach((r)=>r(o))}notifyNotification(o,r){this.notificationListeners.forEach((t)=>t(o,r))}}var Or;var $o=M(()=>{Or=new so});var po={};U(po,{updateService:()=>Xr});class jo{version="";compareVersions(o,r){let t=o.replace(/^v/,""),i=r.replace(/^v/,""),n=t.split("-"),e=i.split("-"),s=n[0].split(".").map(Number),p=e[0].split(".").map(Number);for(let l=0;l<3;l++){if(s[l]>p[l])return!0;if(s[l]<p[l])return!1}if(!n[1]&&e[1])return!0;if(n[1]&&!e[1])return!1;if(!n[1]&&!e[1])return!1;let d=n[1].toLowerCase(),c=e[1].toLowerCase();return d>c}async check(o){try{let r=await fetch("/api/system/update/check"),t={current_version:"v0.0.0",is_docker:!1,available:!1,os:"linux",arch:"amd64"};if(r.ok)t=await r.json(),this.version=t.current_version;if(t.is_docker)return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!0};try{let i=`https://api-updates.codigosh.com/api/v1/check-update?beta=${o}`,n=await fetch(i);if(n.ok){let e=await n.json();if(this.compareVersions(e.latest_version,this.version)){let p=t.os||"linux",d=t.arch||"amd64",c=`lastboard-${p}-${d}.tar.gz`;return{available:!0,current_version:this.version,latest_version:e.latest_version,asset_url:`https://github.com/CodigoSH/Lastboard/releases/download/${e.latest_version}/${c}`,is_docker:!1}}}}catch(i){console.error("[UpdateService] Proxy check failed",i)}return{available:!1,current_version:this.version,latest_version:this.version,is_docker:!1}}catch(r){return console.error("[UpdateService] Failed to check for updates",r),{available:!1,current_version:this.version||"v0.0.0",latest_version:"v0.0.0",is_docker:!1}}}}var Xr;var lo=M(()=>{Xr=new jo});var O={};U(O,{collisionService:()=>F});var F;var Y=M(()=>{F={isOverlap(o,r){return o.x<r.x+r.w&&o.x+o.w>r.x&&o.y<r.y+r.h&&o.y+o.h>r.y},calculateDropValidity(o,r,t=12){let i=Number(o.x),n=Number(o.y),e=Number(o.w),s=Number(o.h);if(i<1||i+e-1>t||n<1)return{valid:!1,x:i,y:n};let d=r.find((l)=>l.id===o.id)?.type==="section",c={x:i,y:n,w:e,h:s};for(let l of r){if(l.id===o.id)continue;let g=Number(l.x),u=Number(l.y),f=Number(l.w||1),_=Number(l.h||1),v={x:g,y:u,w:f,h:_};if(l.parent_id){let w=r.find((b)=>b.id===l.parent_id);if(w)v.x=Number(w.x)+g-1,v.y=Number(w.y)+u-1;else continue}if(this.isOverlap(c,v)){if(d&&l.parent_id===o.id){let w=Number(l.x),b=Number(l.y),A=Number(l.w||1),q=Number(l.h||1);if(w+A-1>e)return{valid:!1,x:i,y:n};if(b+q-1>s)return{valid:!1,x:i,y:n};continue}if(!d&&l.type==="section"){let w=i-Number(l.x)+1,b=n-Number(l.y)+1;if(w<1||w+e-1>Number(l.w||1)||b<1||b+s-1>Number(l.h||1))return{valid:!1,x:i,y:n};let A=r.filter((h)=>h.parent_id===l.id),q=!1;for(let h of A){let E={x:Number(h.x),y:Number(h.y),w:Number(h.w||1),h:Number(h.h||1)},Z={x:w,y:b,w:e,h:s};if(this.isOverlap(Z,E)){q=!0;break}}if(!q)return{valid:!0,x:i,y:n,targetGroup:l}}return{valid:!1,x:i,y:n}}}return{valid:!0,x:i,y:n}},snapToGrid(o,r,t,i){let n=t+i,e=Math.max(1,Math.floor(o/n)+1),s=t+i,p=Math.max(1,Math.floor(r/s)+1);return{x:e,y:p}},findFirstAvailableSlot(o,r,t,i=12){return this.findCompactPosition(o,r,t,i)},findAvailableSlot(o,r,t,i){let n=1;while(!0){for(let e=1;e<=i-o+1;e++){let s={x:e,y:n,w:o,h:r},p=!1;for(let d of t)if(this.isOverlap(s,d)){p=!0;break}if(!p)return{x:e,y:n}}if(n++,n>500)return console.warn("[CollisionService] Grid exhausted, no available slot found. Grid may be full."),{x:1,y:500}}},findCompactPosition(o,r,t,i,n){let e=1,s=1;while(!0){for(let p=1;p<=i-o+1;p++){let d={x:p,y:e,w:o,h:r},c=!1;for(let l of t){if(n&&l.id===n)continue;let g={x:l.x,y:l.y,w:l.w||1,h:l.h||1};if(this.isOverlap(d,g)){c=!0;break}}if(!c)return{x:p,y:e}}if(e++,e>500)return console.warn("[CollisionService] Grid exhausted, no compact position found. Grid may be full."),{x:1,y:500}}}}});var Ao={};U(Ao,{dashboardStore:()=>x});class Lo{state={isEditing:!1,items:[],searchQuery:"",isOffline:!1,updateAvailable:!1,loading:!0,stats:null,availableWidth:1200,gridColumns:12};listeners=[];userId=0;getStorageKey(){return this.userId?`lastboard-items-${this.userId}`:"lastboard-items"}setUserId(o){this.userId=o}constructor(){this.initSocket(),this.checkSystemUpdate()}initSocket(){Promise.resolve().then(() => ($o(),zo)).then(({socketService:o})=>{o.subscribe((r)=>{this.state.stats={cpu_usage:r.cpu_usage,ram_usage:r.ram_usage,temperature:r.temperature},this.notify()}),o.subscribeNotification((r,t)=>{if(r==="update_available")console.log("[DashboardStore] Real-time update detected:",t.latest_version),this.checkSystemUpdate()})})}async checkSystemUpdate(){try{setTimeout(async()=>{let{userStore:o}=await Promise.resolve().then(() => (B(),S)),{updateService:r}=await Promise.resolve().then(() => (lo(),po)),i=o.getUser()?.preferences?.beta_updates||!1;if((await r.check(i)).available)this.state.updateAvailable=!0,this.notify()},2000)}catch(o){}}saveToLocalStorage(){try{let o=JSON.stringify(this.state.items);localStorage.setItem(this.getStorageKey(),o)}catch(o){if(console.error("[DashboardStore] Failed to save to localStorage",o),o.name==="QuotaExceededError"||o.code===22)this.sanitizeStorage()}}loadFromLocalStorage(){try{this.sanitizeStorage();let o=localStorage.getItem(this.getStorageKey());if(o){let r=JSON.parse(o);if(Array.isArray(r)&&r.length>0)this.state.items=r}}catch(o){console.error("[DashboardStore] Failed to load from localStorage",o)}}sanitizeStorage(){try{let o=[];for(let r=0;r<localStorage.length;r++){let t=localStorage.key(r);if(t&&(t.includes("user_cache")||t.includes("old_dashboard_")))o.push(t)}o.forEach((r)=>localStorage.removeItem(r))}catch(o){}}subscribe(o){return this.listeners.push(o),this.ensureItemsIsArray(),o({...this.state,items:this.deepCopyItems(this.state.items)}),()=>{this.listeners=this.listeners.filter((r)=>r!==o)}}ensureItemsIsArray(){if(!Array.isArray(this.state.items))console.error("[DashboardStore] CRITICAL: items is not an array, resetting to empty array",typeof this.state.items),this.state.items=[]}deepCopyItems(o){return o.map((r)=>{let t=r.content;if(typeof r.content==="string")try{let i=JSON.parse(r.content);if(typeof i==="object"&&i!==null)t=JSON.stringify(i)}catch{}return{...r,content:t,status:r.status}})}setItemStatus(o,r){let t=this.state.items.findIndex((i)=>i.id===o);if(t===-1)return;if(this.state.items[t].status===r)return;this.state.items[t].status=r,this.notify()}notify(){this.ensureItemsIsArray();let o={...this.state,items:this.deepCopyItems(this.state.items)};this.listeners.forEach((r)=>r(o))}setEditMode(o){this.state.isEditing=o,this.notify()}toggleEditMode(){this.setEditMode(!this.state.isEditing)}setSearchQuery(o){this.state.searchQuery=o.toLowerCase().trim(),this.notify()}setGridMetrics(o,r){if(o===this.state.availableWidth&&r===this.state.gridColumns)return;this.state.availableWidth=o,this.state.gridColumns=r,this.notify()}async fetchItems(){let o=localStorage.getItem(this.getStorageKey());if(o)try{let r=JSON.parse(o);if(Array.isArray(r)&&r.length>0)this.state.items=r,this.state.loading=!1,this.notify()}catch(r){console.warn("[DashboardStore] Failed to parse cached items",r)}try{let r=await R.getItems();if(Array.isArray(r)){let t=JSON.stringify(this.state.items)!==JSON.stringify(r);if(this.state.items=r,this.state.isOffline=!1,this.state.loading=!1,this.saveToLocalStorage(),t)this.notify()}else throw Error("Backend returned invalid data")}catch(r){if(console.error("[DashboardStore] API fetch failed",r),this.state.isOffline=!0,this.state.loading=!1,this.state.items.length===0)this.state.items=[...Nr],this.saveToLocalStorage(),this.notify();else this.notify()}}async updateItem(o){try{this.ensureItemsIsArray();let r=this.state.items.findIndex((i)=>i.id===o.id);if(r===-1){console.warn("[DashboardStore] Item not found for update:",o.id);return}let t={...this.state.items[r]};this.state.items[r]={...this.state.items[r],...o},this.saveToLocalStorage(),this.notify();try{await R.updateItem(o),this.state.isOffline=!1,this.notify()}catch(i){console.error("[DashboardStore] Failed to sync item update (offline?), keeping local state",i),this.state.isOffline=!0,this.saveToLocalStorage(),this.notify()}}catch(r){console.error("[DashboardStore] Error updating item",r)}}async resizeItem(o,r,t){let i=this.state.items.find((n)=>n.id===o);if(!i)return;if(await this.updateItem({id:o,w:r,h:t}),i.type==="section")await this.reflowChildren(o,r)}async reflowChildren(o,r){let{collisionService:t}=await Promise.resolve().then(() => (Y(),O)),i=this.state.items.filter((e)=>e.parent_id===o).sort((e,s)=>e.y-s.y||e.x-s.x);if(i.length===0)return;let n=[];for(let e of i){let s=t.findAvailableSlot(e.w,e.h,n,r);if(n.push({x:s.x,y:s.y,w:e.w,h:e.h}),e.x!==s.x||e.y!==s.y)await this.updateItem({id:e.id,x:s.x,y:s.y})}}async addItem(o){try{this.ensureItemsIsArray();try{let r={...o};if(r.type==="widget"&&!r.url)r.url="";let{userStore:t}=await Promise.resolve().then(() => (B(),S)),n=t.getUser()?.preferences,e=this.state.gridColumns;if(!e||e<1){let p=n?.widget_min_width||140,d=16,c=document.querySelector("bookmark-grid"),l=this.state.availableWidth||c?.clientWidth||window.innerWidth;e=Math.floor((l+16)/(p+16))}if(e<1)e=1;if(e>24)e=24;if(!r.x||!r.y){let{collisionService:p}=await Promise.resolve().then(() => (Y(),O)),d=p.findFirstAvailableSlot(r.w||1,r.h||1,this.state.items,e);r.x=d.x,r.y=d.y}let s=await R.createItem(r);return this.state.isOffline=!1,this.state.items.push(s),this.saveToLocalStorage(),this.notify(),s}catch(r){console.error("[DashboardStore] Failed to add item to backend",r);return}}catch(r){console.error("[DashboardStore] Error adding item",r);return}}async deleteItem(o){try{this.ensureItemsIsArray();let r=this.state.items.findIndex((i)=>i.id===o);if(r===-1){console.warn("[DashboardStore] Item not found for deletion:",o);return}let t=this.state.items[r];this.state.items.splice(r,1),this.saveToLocalStorage(),this.notify();try{await R.deleteItem(o)}catch(i){console.error("[DashboardStore] Failed to delete item, rolling back",i),this.state.items.push(t),this.saveToLocalStorage(),this.notify()}}catch(r){console.error("[DashboardStore] Error deleting item",r)}}getState(){return this.ensureItemsIsArray(),{...this.state,items:[...this.state.items]}}}var Nr,x;var L=M(()=>{eo();Nr=[{id:1,type:"bookmark",x:1,y:1,w:1,h:1,content:{label:"CodigoSH",url:"https://github.com/CodigoSH/Lastboard",icon:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png",iconName:"git"}}];x=new Lo});var bo={};U(bo,{eventBus:()=>D,EVENTS:()=>V});var V,br,D;var oo=M(()=>{V={SHOW_CONFIRMATION:"lastboard:show-confirmation",SHOW_WIDGET_CONFIG:"lastboard:show-widget-config",NOTIFY:"lastboard:notify"};br=class br extends EventTarget{emit(o,r){this.dispatchEvent(new CustomEvent(o,{detail:r}))}on(o,r){this.addEventListener(o,r)}off(o,r){this.removeEventListener(o,r)}};D=new br});B();L();L();eo();class Mo{interval=null;checkFrequency=300000;start(){if(this.interval)return;setTimeout(()=>this.checkAll(),2000),this.interval=window.setInterval(()=>{this.checkAll()},this.checkFrequency)}stop(){if(this.interval)clearInterval(this.interval),this.interval=null}async checkAll(){let r=x.getState().items.filter((s)=>{if(s.type!=="bookmark")return!1;let p=s.content;if(typeof p==="string")try{p=JSON.parse(p)}catch(d){return!1}return p&&p.statusCheck===!0});r.forEach((s)=>this.updateUIStatus(s.id,"pending"));let t=5,i=[...r],n=async()=>{while(i.length>0){let s=i.shift();if(s)await this.checkItem(s)}},e=Array(Math.min(r.length,t)).fill(null).map(()=>n());await Promise.all(e)}async checkItem(o){let r=o.content;if(typeof r==="string")try{r=JSON.parse(r)}catch(i){return}let t=r.url;if(!t||t==="#"||t.startsWith("javascript:"))return;try{if((await R.checkHealth(t)).status==="up")this.updateUIStatus(o.id,"up");else this.updateUIStatus(o.id,"down")}catch(i){console.warn(`[StatusService] ${t} health check failed:`,i),this.updateUIStatus(o.id,"down")}}updateUIStatus(o,r){x.setItemStatus(o,r)}}var W=new Mo;class H{static STORAGE_KEY="lastboard_theme";static CLASS_NAME="dark-mode";static init(){let o=localStorage.getItem(this.STORAGE_KEY);if(o==="dark")this.enableDark();else if(o==="light")this.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)this.enableDark();else this.enableLight()}static enableDark(){document.documentElement.classList.add(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"dark"),this.setCookie(this.STORAGE_KEY,"dark",365)}static enableLight(){document.documentElement.classList.remove(this.CLASS_NAME),localStorage.setItem(this.STORAGE_KEY,"light"),this.setCookie(this.STORAGE_KEY,"light",365)}static toggle(){if(document.documentElement.classList.contains(this.CLASS_NAME))this.enableLight();else this.enableDark()}static isDark(){return document.documentElement.classList.contains(this.CLASS_NAME)}static setCookie(o,r,t){let i="";if(t){let n=new Date;n.setTime(n.getTime()+t*24*60*60*1000),i="; expires="+n.toUTCString()}document.cookie=o+"="+(r||"")+i+"; path=/"}static async sync(){try{let o=await fetch("/api/me");if(o.ok){let r=await o.json();if(r.theme==="dark")this.enableDark();else if(r.theme==="light")this.enableLight()}}catch(o){}}}y();var qo=()=>`
     <div class="paper">
         <slot></slot>
     </div>
-`;var Ho=`:host {
+`;var Go=`:host {
     display: block;
 }
 
@@ -15,10 +15,10 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
     color: inherit;
     box-sizing: border-box;
     height: 100%;
-}`;class Go extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}render(){this.shadowRoot.innerHTML=`
-            <style>${Ho}</style>
+}`;class Ho extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}render(){this.shadowRoot.innerHTML=`
+            <style>${Go}</style>
             ${qo()}
-        `}}if(!customElements.get("app-paper"))customElements.define("app-paper",Go);var Ro=`:host {
+        `}}if(!customElements.get("app-paper"))customElements.define("app-paper",Ho);var Ro=`:host {
     display: inline-block;
     width: 100%;
 }
@@ -84,7 +84,7 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
     background: rgba(var(--accent-rgb), 0.1);
     color: var(--accent);
     border-color: var(--accent);
-}`;v();class Fo extends HTMLElement{static get observedAttributes(){return["variant"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.addEventListener("click",this.handleClick.bind(this))}handleClick(o){if(this.getAttribute("type")==="submit"){let r=this.closest("form");if(r)if(r.requestSubmit)r.requestSubmit();else r.submit()}}attributeChangedCallback(){this.render()}_loading=!1;set loading(o){this._loading=o,this.render()}get loading(){return this._loading}render(){let o=this.getAttribute("variant")||"ghost",r=this._loading?i.t("general.loading"):"<slot></slot>";this.shadowRoot.innerHTML=`
+}`;y();class Fo extends HTMLElement{static get observedAttributes(){return["variant"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.addEventListener("click",this.handleClick.bind(this))}handleClick(o){if(this.getAttribute("type")==="submit"){let r=this.closest("form");if(r)if(r.requestSubmit)r.requestSubmit();else r.submit()}}attributeChangedCallback(){this.render()}_loading=!1;set loading(o){this._loading=o,this.render()}get loading(){return this._loading}render(){let o=this.getAttribute("variant")||"ghost",r=this._loading?a.t("general.loading"):"<slot></slot>";this.shadowRoot.innerHTML=`
             <style>${Ro}</style>
             <button class="btn btn--${o}" ${this._loading?"disabled":""}>
                 ${r}
@@ -132,66 +132,66 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
 }`;class Eo extends HTMLElement{static get observedAttributes(){return["src","alt","initials"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}attributeChangedCallback(o,r,t){if(r!==t)this.render()}render(){let o=this.getAttribute("src"),r=this.getAttribute("initials")||"??",t=this.getAttribute("alt")||"User Avatar";this.shadowRoot.innerHTML=`
             <style>${Jo}</style>
             ${Qo({src:o||void 0,initials:r,alt:t})}
-        `}}if(!customElements.get("app-avatar"))customElements.define("app-avatar",Eo);v();Y();no();v();var Zo=(o)=>`
+        `}}if(!customElements.get("app-avatar"))customElements.define("app-avatar",Eo);y();B();no();y();var Zo=(o)=>`
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("settings.profile")}</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${a.t("settings.profile")}</div>
             <div class="settings-content__profile-header">
                 <div class="settings-content__avatar-container" style="cursor: pointer;" onclick="this.nextElementSibling.click()">
                     <app-avatar initials="${o.initials||"??"}" src="${o.avatar_url||""}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
-                    <div class="settings-content__edit-overlay">${i.t("action.change_image")}</div>
+                    <div class="settings-content__edit-overlay">${a.t("action.change_image")}</div>
                 </div>
                 <input type="file" id="avatar-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleAvatarChange(event)">
                 <div class="settings-content__profile-info">
-                    <span class="settings-content__profile-name">${o.username||i.t("settings.default_user")}</span>
+                    <span class="settings-content__profile-name">${o.username||a.t("settings.default_user")}</span>
                     <span class="mono-tag">
-                        ${(()=>{let r=(o.role||"").toLowerCase();if(o.is_superadmin)return i.t("settings.role_super_admin");if(r==="admin"||r==="administrator")return i.t("settings.role_admin");if(r==="user")return i.t("settings.role_user");return o.role||i.t("settings.default_role")})()}
+                        ${(()=>{let r=(o.role||"").toLowerCase();if(o.is_superadmin)return a.t("settings.role_super_admin");if(r==="admin"||r==="administrator")return a.t("settings.role_admin");if(r==="user")return a.t("settings.role_user");return o.role||a.t("settings.default_role")})()}
                     </span>
                 </div>
             </div>
             
             <div class="settings-content__form-container" style="margin-top: 32px;">
                 <div class="settings-content__form-group">
-                    <label class="settings-content__label">${i.t("settings.display_username")}</label>
+                    <label class="settings-content__label">${a.t("settings.display_username")}</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="username-input" class="settings-content__input" value="${o.username||""}" placeholder="${i.t("settings.display_username")}">
-                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(this.getRootNode().getElementById('username-input').value)">${i.t("action.update")}</app-button>
+                        <input type="text" id="username-input" class="settings-content__input" value="${o.username||""}" placeholder="${a.t("settings.display_username")}">
+                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(this.getRootNode().getElementById('username-input').value)">${a.t("action.update")}</app-button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("auth.password")}</div>
-            <h3 class="settings-content__title">${i.t("settings.system_password")}</h3>
+            <div class="mono-tag" style="margin-bottom: 12px;">${a.t("auth.password")}</div>
+            <h3 class="settings-content__title">${a.t("settings.system_password")}</h3>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${i.t("settings.current_password")}</label>
-                <input type="password" id="current-password" class="settings-content__input" placeholder="${i.t("settings.password_placeholder")}">
+                <label class="settings-content__label">${a.t("settings.current_password")}</label>
+                <input type="password" id="current-password" class="settings-content__input" placeholder="${a.t("settings.password_placeholder")}">
             </div>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${i.t("settings.new_password")}</label>
+                <label class="settings-content__label">${a.t("settings.new_password")}</label>
                 <input type="password" id="new-password" class="settings-content__input" placeholder="••••••••">
             </div>
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${i.t("settings.confirm_password")}</label>
+                <label class="settings-content__label">${a.t("settings.confirm_password")}</label>
                 <input type="password" id="confirm-password" class="settings-content__input" placeholder="••••••••">
             </div>
             <div style="margin-top: 32px;">
-                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">${i.t("general.save")}</app-button>
+                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">${a.t("general.save")}</app-button>
             </div>
         </div>
     </div>
 `,Ko=(o,r,t)=>`
     <div class="bento-grid">
         <div class="bento-card">
-             <div class="mono-tag" style="margin-bottom: 8px;">${i.t("settings.appearance")}</div>
-             <h3 class="settings-content__title">${i.t("settings.studio_accent")}</h3>
+             <div class="mono-tag" style="margin-bottom: 8px;">${a.t("settings.appearance")}</div>
+             <h3 class="settings-content__title">${a.t("settings.studio_accent")}</h3>
              <div class="settings-content__color-grid">
-                ${t.map((a)=>`
-                    <div class="settings-content__color-swatch ${o.accent_color===a?"settings-content__color-swatch--active":""}" 
-                         style="background-color: ${r[a]}"
-                         onclick="this.getRootNode().host.savePrefs({accent_color: '${a}'})">
-                         ${o.accent_color===a?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
+                ${t.map((i)=>`
+                    <div class="settings-content__color-swatch ${o.accent_color===i?"settings-content__color-swatch--active":""}" 
+                         style="background-color: ${r[i]}"
+                         onclick="this.getRootNode().host.savePrefs({accent_color: '${i}'})">
+                         ${o.accent_color===i?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
                     </div>
                 `).join("")}
                 <div class="settings-content__color-swatch settings-content__color-swatch--custom ${o.accent_color.startsWith("#")?"settings-content__color-swatch--active":""}" 
@@ -199,58 +199,59 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
                      <svg viewBox="0 0 24 24" style="opacity: 0.8; fill: ${o.accent_color.startsWith("#")?"#fff":"rgba(255,255,255,0.4)"};">
                         <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                      </svg>
-                     <input type="color" class="settings-content__swatch-picker" value="${o.accent_color.startsWith("#")?o.accent_color:"#0078D4"}" 
-                            onchange="this.getRootNode().host.savePrefs({accent_color: this.value})">
+                     </svg>
+                     <app-color-picker class="settings-content__swatch-picker" style="opacity: 1;" value="${o.accent_color.startsWith("#")?o.accent_color:"#0078D4"}" 
+                            onchange="this.getRootNode().host.savePrefs({accent_color: this.value})"></app-color-picker>
                 </div>
              </div>
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${i.t("settings.system_locale")}</div>
-            <h3 class="settings-content__title">${i.t("settings.localization")}</h3>
+            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${a.t("settings.system_locale")}</div>
+            <h3 class="settings-content__title">${a.t("settings.localization")}</h3>
 
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${i.t("settings.language")}</label>
+                <label class="settings-content__label">${a.t("settings.language")}</label>
                 <app-select id="language-select" value="${o.language}"></app-select>
             </div>
 
             <div class="settings-content__form-group">
-                <label class="settings-content__label">${i.t("settings.theme_mode")}</label>
+                <label class="settings-content__label">${a.t("settings.theme_mode")}</label>
                 <div class="settings-content__segmented-control">
                     <button class="settings-content__segment ${!o.theme||o.theme==="system"||o.theme==="dark"?"active":""}"
                             onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
-                        \uD83C\uDF19 ${i.t("settings.dark")}
+                        \uD83C\uDF19 ${a.t("settings.dark")}
                     </button>
                     <button class="settings-content__segment ${o.theme==="light"?"active":""}"
                             onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
-                        ☀️ ${i.t("settings.light")}
+                        ☀️ ${a.t("settings.light")}
                     </button>
                 </div>
             </div>
         </div>
     </div>
-`,Yo=(o)=>`
+`,Bo=(o)=>`
     <div class="bento-grid">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("settings.fluid_grid_architecture")}</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${a.t("settings.fluid_grid_architecture")}</div>
             
             <!-- Project Name -->
             <div class="settings-content__form-group" style="margin-bottom: 24px;">
-                <label class="settings-content__label">${i.t("settings.project_name")}</label>
+                <label class="settings-content__label">${a.t("settings.project_name")}</label>
                 <div style="display: flex; gap: 8px;">
                      <input type="text" 
                             id="project-name-input"
                             class="settings-content__input" 
                             value="${o.project_name||"Lastboard"}" 
                             placeholder="Lastboard">
-                     <app-button variant="primary" onclick="this.getRootNode().host.savePrefs({project_name: this.getRootNode().getElementById('project-name-input').value})">${i.t("action.update")}</app-button>
+                     <app-button variant="primary" onclick="this.getRootNode().host.savePrefs({project_name: this.getRootNode().getElementById('project-name-input').value})">${a.t("action.update")}</app-button>
                 </div>
             </div>
 
             <div class="settings-content__personalization-grid">
                 <div class="settings-content__slider-group">
                     <div class="settings-content__slider-header">
-                        <label class="settings-content__slider-label">${i.t("settings.grid_columns")}</label>
+                        <label class="settings-content__slider-label">${a.t("settings.grid_columns")}</label>
                         <span class="settings-content__slider-value" id="val-grid_columns">${o.grid_columns||12}</span>
                     </div>
                     <input type="range" 
@@ -262,17 +263,17 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
             </div>
             
             <p class="settings-content__text-dim" style="font-size: 11px; margin-top: 24px; font-family: var(--font-mono);">
-                ${i.t("settings.density_desc")}
+                ${a.t("settings.density_desc")}
             </p>
         </div>
     </div>
-`,Bo=(o)=>`
+`,Yo=(o)=>`
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i.t("settings.admin_section")}</div>
+            <div class="mono-tag" style="margin-bottom: 12px;">${a.t("settings.admin_section")}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h3 class="settings-content__title" style="margin: 0;">${i.t("settings.user_management")}</h3>
-                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ ${i.t("action.add_user")}</app-button>
+                <h3 class="settings-content__title" style="margin: 0;">${a.t("settings.user_management")}</h3>
+                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ ${a.t("action.add_user")}</app-button>
             </div>
 
             <div class="settings-content__user-list">
@@ -287,99 +288,99 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
                             <div>
                                 <div style="font-weight: 500; font-size: 14px;">${r.username}</div>
                                 <div class="mono-tag" style="font-size: 10px;">
-                                    ${(()=>{let t=(r.role||"").toLowerCase();if(r.is_superadmin)return i.t("settings.role_super_admin");if(t==="admin"||t==="administrator")return i.t("settings.role_admin");if(t==="user")return i.t("settings.role_user");return r.role})()}
+                                    ${(()=>{let t=(r.role||"").toLowerCase();if(r.is_superadmin)return a.t("settings.role_super_admin");if(t==="admin"||t==="administrator")return a.t("settings.role_admin");if(t==="user")return a.t("settings.role_user");return r.role})()}
                                 </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${r.id}, '${r.username}', '${r.role}')">${i.t("general.edit")}</app-button>
-                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${r.id})">${i.t("general.delete")}</app-button>
+                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${r.id}, '${r.username}', '${r.role}')">${a.t("general.edit")}</app-button>
+                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${r.id})">${a.t("general.delete")}</app-button>
                         </div>
                     </div>
                 `).join("")}
             </div>
-             ${(o||[]).length===0?`<p class="settings-content__text-dim">${i.t("settings.no_users")}</p>`:""}
+             ${(o||[]).length===0?`<p class="settings-content__text-dim">${a.t("settings.no_users")}</p>`:""}
         </div>
     </div>
     
      <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
-            <h3 class="modal-title">${i.t("action.add_new_user")}</h3>
+            <h3 class="modal-title">${a.t("action.add_new_user")}</h3>
             <button class="modal-close" onclick="this.getRootNode().getElementById('add-user-modal').close()">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i.t("auth.username")}</label>
+            <label class="settings-content__label">${a.t("auth.username")}</label>
             <input type="text" id="new-user-username" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i.t("auth.password")}</label>
+            <label class="settings-content__label">${a.t("auth.password")}</label>
             <input type="password" id="new-user-password" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i.t("settings.role")}</label>
+            <label class="settings-content__label">${a.t("settings.role")}</label>
             <app-select id="new-user-role" value="user"></app-select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${i.t("general.save")}</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${a.t("general.save")}</app-button>
         </div>
     </dialog>
 
     <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
-            <h3 class="modal-title">${i.t("action.edit_user")}</h3>
+            <h3 class="modal-title">${a.t("action.edit_user")}</h3>
             <button class="modal-close" onclick="this.getRootNode().getElementById('edit-user-modal').close()">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
         <input type="hidden" id="edit-user-id">
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i.t("auth.username")}</label>
+            <label class="settings-content__label">${a.t("auth.username")}</label>
             <input type="text" id="edit-user-username" class="settings-content__input">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i.t("settings.new_password")}</label>
-            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${i.t("settings.password_leave_blank")}">
+            <label class="settings-content__label">${a.t("settings.new_password")}</label>
+            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${a.t("settings.password_leave_blank")}">
         </div>
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i.t("settings.role")}</label>
+            <label class="settings-content__label">${a.t("settings.role")}</label>
             <app-select id="edit-user-role"></app-select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${i.t("action.save_changes")}</app-button>
+            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${a.t("action.save_changes")}</app-button>
         </div>
     </dialog>
 `,Uo=()=>`
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <!-- System Migration Section -->
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 24px;">${i.t("settings.system_data")}</div>
+            <div class="mono-tag" style="margin-bottom: 24px;">${a.t("settings.system_data")}</div>
             
             <div class="settings-content__action-group">
                 <!-- Export -->
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i.t("settings.export_db")}</h3>
-                        <p>${i.t("settings.export_desc")}</p>
+                        <h3>${a.t("settings.export_db")}</h3>
+                        <p>${a.t("settings.export_desc")}</p>
                     </div>
                     <app-button variant="primary" onclick="this.getRootNode().host.downloadBackup()">
                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                        ${i.t("action.download_backup")}
+                        ${a.t("action.download_backup")}
                     </app-button>
                 </div>
 
                 <!-- Import -->
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i.t("settings.import_db")}</h3>
-                        <p>${i.t("settings.import_desc")} <br><span style="color: var(--accent); font-weight: 500;">${i.t("settings.import_warn")}</span></p>
+                        <h3>${a.t("settings.import_db")}</h3>
+                        <p>${a.t("settings.import_desc")} <br><span style="color: var(--accent); font-weight: 500;">${a.t("settings.import_warn")}</span></p>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                          <input type="file" id="backup-upload" accept=".json" style="display: none;" onchange="this.getRootNode().host.restoreBackup(this.files[0])">
                          <app-button variant="primary" onclick="this.getRootNode().getElementById('backup-upload').click()">
                             <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
-                            ${i.t("action.select_file")}
+                            ${a.t("action.select_file")}
                          </app-button>
                     </div>
                 </div>
@@ -391,14 +392,14 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
              <div>
                 <div class="settings-content__danger-title">
                     <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: var(--danger-color);"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                    ${i.t("settings.factory_reset")}
+                    ${a.t("settings.factory_reset")}
                 </div>
                 <p class="settings-content__text-dim" style="font-size: 13px; color: var(--danger-color); opacity: 0.8;">
-                    ${i.t("settings.reset_desc")}
+                    ${a.t("settings.reset_desc")}
                 </p>
              </div>
              <app-button onclick="this.getRootNode().host.openResetModal()" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent; transition: all 0.2s;">
-                ${i.t("action.reset_system")}
+                ${a.t("action.reset_system")}
              </app-button>
         </div>
     </div>
@@ -408,36 +409,36 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
         <div class="modal-header">
             <h3 class="modal-title" style="color: var(--danger-color); font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
                 <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: var(--danger-color);"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                ${i.t("settings.confirm_reset_title")}
+                ${a.t("settings.confirm_reset_title")}
             </h3>
             <button class="modal-close" onclick="this.getRootNode().getElementById('reset-confirm-modal').close()">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
         <p class="settings-content__text-dim" style="font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
-            ${i.t("settings.confirm_reset_msg")}
-            ${i.t("settings.type_delete")}
+            ${a.t("settings.confirm_reset_msg")}
+            ${a.t("settings.type_delete")}
         </p>
 
         <div class="settings-content__form-group">
-            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="${i.t("settings.type_delete_placeholder")}" style="border-color: var(--danger-color); opacity: 0.6; font-family: monospace;">
+            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="${a.t("settings.type_delete_placeholder")}" style="border-color: var(--danger-color); opacity: 0.6; font-family: monospace;">
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 32px; width: 100%;">
             <app-button id="btn-reset-confirm" variant="danger" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1; justify-content: center;">
-                ${i.t("action.erase_everything")}
+                ${a.t("action.erase_everything")}
             </app-button>
         </div>
     </dialog>
-`,Dr=(o,r)=>{if(!o)return"";if(!r)return"";if(r.is_docker)return`
+`,Pr=(o,r)=>{if(!o)return"";if(!r)return"";if(r.is_docker)return`
             <div style="background: rgba(var(--info-rgb), 0.1); border: 1px solid rgba(var(--info-rgb), 0.3); padding: 16px; border-radius: var(--radius); width: 100%; text-align: left;">
                     <div style="display: flex; gap: 12px; align-items: flex-start;">
                     <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--accent); flex-shrink: 0;"><path d="M21 12l-4.37-6.16c-.37-.52-.98-.84-1.63-.84h-3V4c0-1.1-.9-2-2-2s-2 .9-2 2v1H5c-.65 0-1.26.32-1.63.84L-1 12v3h2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h2v-3zm-11 7H7v-3h3v3zm-5 0H2v-3h3v3zm12 0h-3v-3h3v3z"/></svg>
                     <div>
-                        <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${i.t("settings.docker_mode")}</h4>
+                        <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${a.t("settings.docker_mode")}</h4>
                         <p style="margin: 0; font-size: 13px; color: var(--text-dim);">
-                            ${i.t("settings.docker_desc")}<br>
-                            ${r.available?`<strong style="color: var(--accent);">${i.t("settings.new_version_notif")} (${r.latest_version})</strong>`:i.t("settings.up_to_date_docker_msg")}
+                            ${a.t("settings.docker_desc")}<br>
+                            ${r.available?`<strong style="color: var(--accent);">${a.t("settings.new_version_notif")} (${r.latest_version})</strong>`:a.t("settings.up_to_date_docker_msg")}
                         </p>
                     </div>
                     </div>
@@ -448,31 +449,31 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
                 
                 <div class="update-modal__content">
                     <div class="update-modal__header">
-                        <div class="update-modal__badge">${i.t("settings.update_available")}</div>
+                        <div class="update-modal__badge">${a.t("settings.update_available")}</div>
                         <h3 class="update-modal__version">${r.latest_version}</h3>
                     </div>
                     
                     <div class="update-modal__footer">
                         <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${r.asset_url}')">
-                            ${i.t("action.download_install")}
+                            ${a.t("action.download_install")}
                         </app-button>
                         <a href="https://github.com/CodigoSH/Lastboard/releases" target="_blank" style="text-decoration: none;">
-                            <app-button variant="ghost" style="height: 100%;">${i.t("general.changelog")}</app-button>
+                            <app-button variant="ghost" style="height: 100%;">${a.t("general.changelog")}</app-button>
                         </a>
                     </div>
                     <div id="update-status" style="display: none; margin-top: 12px; padding: 12px; background: rgba(var(--accent-rgb), 0.1); border: 1px solid rgba(var(--accent-rgb), 0.3); border-radius: 8px; text-align: center;">
-                        <p style="margin: 0; font-size: 13px; color: var(--accent); font-weight: 500;">${i.t("notifier.downloading_secure")}</p>
+                        <p style="margin: 0; font-size: 13px; color: var(--accent); font-weight: 500;">${a.t("notifier.downloading_secure")}</p>
                     </div>
                 </div>
             </div>
         `;return`
         <div style="color: var(--success-color); font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 500;">
             <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            <span>${i.t("settings.up_to_date")}</span>
+            <span>${a.t("settings.up_to_date")}</span>
         </div>
     `},co=(o,r,t)=>{return`
         <div id="update-status-container" style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px; min-height: 48px;">
-            ${Dr(o,r)}
+            ${Pr(o,r)}
         </div>
 
         ${o?`
@@ -482,16 +483,16 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
                         ?loading="${t}"
                         onclick="this.getRootNode().host.handleManualCheckUpdates()">
                 <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-                ${i.t("action.check_updates")}
+                ${a.t("action.check_updates")}
             </app-button>
         </div>
         `:""}
-    `},To=(o,r,t,a,n)=>{let e=t?.toLowerCase()==="admin"||t?.toLowerCase()==="administrator";return`
+    `},To=(o,r,t,i,n)=>{let e=t?.toLowerCase()==="admin"||t?.toLowerCase()==="administrator";return`
     <div style="position: relative;">
         ${e?`
             <div class="beta-badge">
-                <span id="beta-text" class="beta-badge__pill ${a?"active":""}">
-                    ${i.t("settings.beta_tester")}
+                <span id="beta-text" class="beta-badge__pill ${i?"active":""}">
+                    ${a.t("settings.beta_tester")}
                 </span>
                 <label class="toggle-switch">
                     <input type="checkbox" id="beta-updates-toggle-badge" onchange="this.getRootNode().host.handleBetaToggle(this.checked)">
@@ -507,7 +508,7 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
                 <!-- Logo Placeholder -->
                 <img src="/images/logo.png" alt="Lastboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
                 
-                <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i.t("app.title")}</h2>
+                <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${a.t("app.title")}</h2>
                 <p class="settings-content__text-dim" style="margin: 0;">${o}</p>
             </div>
 
@@ -519,11 +520,11 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
              <div style="margin-top: 64px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: center; gap: 24px;">
                  <a href="https://github.com/CodigoSH/Lastboard" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
                      <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.597 1.028 2.688 0 3.848-2.339 4.685-4.566 4.943.359.309.678.919.678 1.852 0 1.336-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12c0-5.523-4.477-10-10-10z"/></svg>
-                     ${i.t("settings.github")}
+                     ${a.t("settings.github")}
                  </a>
                  <a href="https://github.com/CodigoSH/Lastboard/issues" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
                      <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-                     ${i.t("action.report_issue")}
+                     ${a.t("action.report_issue")}
                  </a>
              </div>
          </div>
@@ -653,7 +654,7 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
                  data-value="${o.value}">
                  ${o.label}
             </div>
-        `).join(""),this.dropdownEl.querySelectorAll(".select-option").forEach((o)=>{o.addEventListener("click",(r)=>{r.stopPropagation();let t=r.currentTarget.dataset.value;if(t)this.selectOption(t)})}),this.isInsideDialog)this.dropdownEl.style.position="absolute",this.dropdownEl.style.left="0",this.dropdownEl.style.right="0",this.dropdownEl.style.top="100%",this.dropdownEl.style.marginTop="6px",this.shadowRoot.appendChild(this.dropdownEl);else{let o=this.shadowRoot.getElementById("trigger");if(o){let r=o.getBoundingClientRect();this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${r.bottom+6}px`,this.dropdownEl.style.left=`${r.left}px`,this.dropdownEl.style.width=`${r.width}px`,this.dropdownEl.style.zIndex="99999"}document.body.appendChild(this.dropdownEl)}requestAnimationFrame(()=>{if(this.dropdownEl)this.dropdownEl.classList.add("open")})}positionPortal(){if(!this.dropdownEl||!this.shadowRoot)return;let o=this.shadowRoot.getElementById("trigger");if(!o)return;let r=o.getBoundingClientRect(),t=r.bottom+6,a=r.left,n=300;if(t+n>window.innerHeight&&r.top-n>0)t=r.top-6-n;this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${t}px`,this.dropdownEl.style.left=`${a}px`,this.dropdownEl.style.width=`${r.width}px`,this.dropdownEl.style.zIndex="99999"}close(){if(this.dropdownEl)this.dropdownEl.remove(),this.dropdownEl=null;this.isOpen=!1,this.removeAttribute("open")}handleOutsideClick(o){if(!this.isOpen)return;let r=o.composedPath();if(r.includes(this))return;if(this.dropdownEl&&r.includes(this.dropdownEl))return;this.close()}selectOption(o){this._value=o,this.setAttribute("value",o),this.updateTriggerDisplay(),this.dispatchEvent(new CustomEvent("change",{detail:o,bubbles:!0})),this.close()}render(){if(!this.shadowRoot)return;let o=this._options.find((t)=>t.value===this._value)||this._options[0],r=o?o.label:"Select...";this.shadowRoot.innerHTML=`
+        `).join(""),this.dropdownEl.querySelectorAll(".select-option").forEach((o)=>{o.addEventListener("click",(r)=>{r.stopPropagation();let t=r.currentTarget.dataset.value;if(t)this.selectOption(t)})}),this.isInsideDialog)this.dropdownEl.style.position="absolute",this.dropdownEl.style.left="0",this.dropdownEl.style.right="0",this.dropdownEl.style.top="100%",this.dropdownEl.style.marginTop="6px",this.shadowRoot.appendChild(this.dropdownEl);else{let o=this.shadowRoot.getElementById("trigger");if(o){let r=o.getBoundingClientRect();this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${r.bottom+6}px`,this.dropdownEl.style.left=`${r.left}px`,this.dropdownEl.style.width=`${r.width}px`,this.dropdownEl.style.zIndex="99999"}document.body.appendChild(this.dropdownEl)}requestAnimationFrame(()=>{if(this.dropdownEl)this.dropdownEl.classList.add("open")})}positionPortal(){if(!this.dropdownEl||!this.shadowRoot)return;let o=this.shadowRoot.getElementById("trigger");if(!o)return;let r=o.getBoundingClientRect(),t=r.bottom+6,i=r.left,n=300;if(t+n>window.innerHeight&&r.top-n>0)t=r.top-6-n;this.dropdownEl.style.position="fixed",this.dropdownEl.style.top=`${t}px`,this.dropdownEl.style.left=`${i}px`,this.dropdownEl.style.width=`${r.width}px`,this.dropdownEl.style.zIndex="99999"}close(){if(this.dropdownEl)this.dropdownEl.remove(),this.dropdownEl=null;this.isOpen=!1,this.removeAttribute("open")}handleOutsideClick(o){if(!this.isOpen)return;let r=o.composedPath();if(r.includes(this))return;if(this.dropdownEl&&r.includes(this.dropdownEl))return;this.close()}selectOption(o){this._value=o,this.setAttribute("value",o),this.updateTriggerDisplay(),this.dispatchEvent(new CustomEvent("change",{detail:o,bubbles:!0})),this.close()}render(){if(!this.shadowRoot)return;let o=this._options.find((t)=>t.value===this._value)||this._options[0],r=o?o.label:"Select...";this.shadowRoot.innerHTML=`
             <style>${go}</style>
             <div class="select-wrapper">
                 <div class="select-trigger" id="trigger">
@@ -664,6 +665,208 @@ var Br=Object.defineProperty;var U=(o,r)=>{for(var t in r)Br(o,t,{get:r[t],enume
                 </div>
             </div>
         `,this.shadowRoot.getElementById("trigger")?.addEventListener("click",(t)=>{t.stopPropagation(),this.toggle()})}}if(!customElements.get("app-select"))customElements.define("app-select",Oo);var Xo=`:host {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Trigger Button */
+.color-trigger {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    /* Matches swatch radius */
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Popover */
+.popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--surface-solid, #1e1e23);
+    /* Fallback to solid surface if vars missing */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg, 0 10px 40px rgba(0, 0, 0, 0.5));
+    border-radius: 12px;
+    padding: 12px;
+    width: 240px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.popover.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Saturation/Brightness Area */
+.saturation-area {
+    width: 100%;
+    height: 160px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: crosshair;
+    /* Base color set via inline style background-color */
+    background-image:
+        linear-gradient(to top, #000, 0% 1000px, transparent),
+        linear-gradient(to right, #fff, 0% 1000px, transparent);
+    /* Note: The order matters. White horizontal, Black vertical. */
+    background-blend-mode: normal, normal;
+    /* Default behavior */
+}
+
+/* CSS Gradients for Saturation/Value */
+.saturation-white {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+}
+
+.saturation-black {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #000, rgba(0, 0, 0, 0));
+}
+
+.saturation-cursor {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* Hue Slider */
+.hue-slider {
+    width: 100%;
+    height: 12px;
+    position: relative;
+    border-radius: 6px;
+    background: linear-gradient(to right,
+            #f00 0%, #ff0 17%, #0f0 33%,
+            #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+    cursor: pointer;
+}
+
+.hue-cursor {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    border: 2px solid white;
+    /* Make it look like a handle */
+}
+
+/* Controls Row */
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.color-preview {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.hex-input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-main);
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    text-transform: uppercase;
+    outline: none;
+    text-align: center;
+}
+
+.hex-input:focus {
+    border-color: var(--accent);
+    background: var(--input-bg);
+}
+
+/* Overlay to close popover */
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: none;
+}
+
+.overlay.visible {
+    display: block;
+}`;class No extends HTMLElement{static get observedAttributes(){return["value"]}_value="#0078D4";_h=210;_s=100;_v=83;_popover=null;_satArea=null;_satCursor=null;_hueSlider=null;_hueCursor=null;_hexInput=null;_preview=null;_overlay=null;_isDraggingSat=!1;_isDraggingHue=!1;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.bindEvents(),this.hexToHsv(this._value),this.updateUI()}get value(){return this._value}set value(o){if(this._value!==o){if(this._value=o,this.hexToHsv(o),this.updateUI(),this._hexInput)this._hexInput.value=o}}attributeChangedCallback(o,r,t){if(o==="value"&&r!==t)this.value=t}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
+            <style>${Xo}</style>
+            
+            <div class="overlay" id="overlay"></div>
+
+            <button class="color-trigger" id="trigger">
+                <slot></slot>
+            </button> <!-- Slot allows wrapping a custom icon or div, but we usually want to be invisible and let parent style the trigger container, OR we are the trigger. 
+                 Actually, the parent code surrounds <input> with a styled div. 
+                 We want to REPLACE <input type="color">. 
+                 Since the <input> was usually invisible (opacity:0) over a swatch, 
+                 this component should probably just BE the invisible trigger area over the swatch, 
+                 OR ideally, be the SWATCH ITSELF. 
+                 
+                 Looking at existing code:
+                 <div class="settings-content__color-swatch ..."> 
+                    <input type="color" ...> 
+                 </div>
+                 
+                 So let's make this component fill the parent. -->
+
+            <div class="popover" id="popover">
+                <div class="saturation-area" id="sat-area">
+                    <div class="saturation-white"></div>
+                    <div class="saturation-black"></div>
+                    <div class="saturation-cursor" id="sat-cursor"></div>
+                </div>
+
+                <div class="hue-slider" id="hue-slider">
+                    <div class="hue-cursor" id="hue-cursor"></div>
+                </div>
+
+                <div class="controls">
+                    <div class="color-preview" id="preview"></div>
+                    <input type="text" class="hex-input" id="hex-input" value="${this._value}" maxlength="7">
+                </div>
+            </div>
+        `,this._popover=this.shadowRoot.querySelector("#popover"),this._satArea=this.shadowRoot.querySelector("#sat-area"),this._satCursor=this.shadowRoot.querySelector("#sat-cursor"),this._hueSlider=this.shadowRoot.querySelector("#hue-slider"),this._hueCursor=this.shadowRoot.querySelector("#hue-cursor"),this._hexInput=this.shadowRoot.querySelector("#hex-input"),this._preview=this.shadowRoot.querySelector("#preview"),this._overlay=this.shadowRoot.querySelector("#overlay")}bindEvents(){this.shadowRoot?.querySelector("#trigger")?.addEventListener("click",(r)=>{r.stopPropagation(),this.togglePicker()}),this._overlay?.addEventListener("click",()=>this.closePopover()),this._satArea?.addEventListener("mousedown",(r)=>{this._isDraggingSat=!0,this.handleSatDrag(r),window.addEventListener("mousemove",this.onMouseMoveSat),window.addEventListener("mouseup",this.onMouseUpSat)}),this._hueSlider?.addEventListener("mousedown",(r)=>{this._isDraggingHue=!0,this.handleHueDrag(r),window.addEventListener("mousemove",this.onMouseMoveHue),window.addEventListener("mouseup",this.onMouseUpHue)}),this._hexInput?.addEventListener("input",(r)=>{let t=r.target.value;if(/^#[0-9A-Fa-f]{6}$/.test(t))this.value=t,this.emitChange()}),this._popover?.addEventListener("click",(r)=>r.stopPropagation())}onMouseMoveSat=(o)=>{if(this._isDraggingSat)this.handleSatDrag(o)};onMouseUpSat=()=>{this._isDraggingSat=!1,window.removeEventListener("mousemove",this.onMouseMoveSat),window.removeEventListener("mouseup",this.onMouseUpSat),this.emitChange()};onMouseMoveHue=(o)=>{if(this._isDraggingHue)this.handleHueDrag(o)};onMouseUpHue=()=>{this._isDraggingHue=!1,window.removeEventListener("mousemove",this.onMouseMoveHue),window.removeEventListener("mouseup",this.onMouseUpHue),this.emitChange()};handleSatDrag(o){if(!this._satArea)return;let r=this._satArea.getBoundingClientRect(),t=o.clientX-r.left,i=o.clientY-r.top;t=Math.max(0,Math.min(t,r.width)),i=Math.max(0,Math.min(i,r.height)),this._s=t/r.width*100,this._v=100-i/r.height*100,this.updateColorFromHsv(),this.updateUI()}handleHueDrag(o){if(!this._hueSlider)return;let r=this._hueSlider.getBoundingClientRect(),t=o.clientX-r.left;t=Math.max(0,Math.min(t,r.width)),this._h=t/r.width*360,this.updateColorFromHsv(),this.updateUI()}togglePicker(){if(this._popover?.classList.contains("visible"))this.closePopover();else this.openPopover()}openPopover(){if(!this._popover||!this._overlay)return;this._popover.classList.add("visible"),this._overlay.classList.add("visible"),this.updatePosition(),this.hexToHsv(this._value),this.updateUI(),window.addEventListener("resize",this.updatePositionRef),window.addEventListener("scroll",this.updatePositionRef,!0)}updatePositionRef=()=>{if(this._popover?.classList.contains("visible"))this.updatePosition()};updatePosition(){if(!this._popover)return;let o=this.getBoundingClientRect(),r=this._popover.getBoundingClientRect(),t=o.bottom+8;if(t+300>window.innerHeight)t=o.top-8-(r.height||310);let i=o.left+o.width/2;console.log("[ColorPicker] Position:",{top:t,left:i,rectTop:o.top,rectLeft:o.left}),this._popover.style.position="fixed",this._popover.style.zIndex="999999",this._popover.style.margin="0";let n=this._popover.offsetParent;if(n&&n!==document.body&&n!==document.documentElement){console.log("[ColorPicker] Trapped by:",n);let e=n.getBoundingClientRect();t-=e.top,i-=e.left}this._popover.style.top=`${t}px`,this._popover.style.left=`${i}px`,this._popover.style.transform="translateX(-50%)",this._popover.style.width="240px"}closePopover(){if(!this._popover||!this.shadowRoot)return;this._popover.classList.remove("visible"),this._overlay?.classList.remove("visible"),window.removeEventListener("resize",this.updatePositionRef),window.removeEventListener("scroll",this.updatePositionRef,!0)}emitChange(){this.dispatchEvent(new CustomEvent("input",{detail:{value:this._value},bubbles:!0,composed:!0})),this.dispatchEvent(new Event("change",{bubbles:!0,composed:!0}))}updateColorFromHsv(){this._value=this.hsvToHex(this._h,this._s,this._v)}updateUI(){if(!this._satCursor||!this._hueCursor||!this._hexInput||!this._preview||!this._satArea)return;this._satCursor.style.left=`${this._s}%`,this._satCursor.style.top=`${100-this._v}%`,this._hueCursor.style.left=`${this._h/360*100}%`;let o=this.hsvToHex(this._h,100,100);this._satArea.style.backgroundColor=o,this._hexInput.value=this._value,this._preview.style.backgroundColor=this._value}hexToHsv(o){let r=/^#?([a-f\d])([a-f\d])([a-f\d])$/i;o=o.replace(r,(u,f,_,v)=>f+f+_+_+v+v);let t=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(o);if(!t)return;let i=parseInt(t[1],16)/255,n=parseInt(t[2],16)/255,e=parseInt(t[3],16)/255,s=Math.max(i,n,e),p=Math.min(i,n,e),d=0,c,l=s,g=s-p;if(c=s===0?0:g/s,s===p)d=0;else{switch(s){case i:d=(n-e)/g+(n<e?6:0);break;case n:d=(e-i)/g+2;break;case e:d=(i-n)/g+4;break}d/=6}this._h=d*360,this._s=c*100,this._v=l*100}hsvToHex(o,r,t){r/=100,t/=100;let i=Math.floor(o/60),n=o/60-i,e=t*(1-r),s=t*(1-n*r),p=t*(1-(1-n)*r),d=0,c=0,l=0;switch(i%6){case 0:d=t,c=p,l=e;break;case 1:d=s,c=t,l=e;break;case 2:d=e,c=t,l=p;break;case 3:d=e,c=s,l=t;break;case 4:d=p,c=e,l=t;break;case 5:d=t,c=e,l=s;break}let g=(u)=>{let f=Math.round(u*255).toString(16);return f.length===1?"0"+f:f};return`#${g(d)}${g(c)}${g(l)}`}}customElements.define("app-color-picker",No);var Vo=`:host {
     display: block;
     color: var(--text-main);
     max-width: 900px;
@@ -1426,17 +1629,17 @@ input:checked+.slider:before {
     .settings-content__personalization-grid {
         grid-template-columns: 1fr;
     }
-}`;class Vo extends HTMLElement{prefs;users=[];getCsrfToken(){let o=document.cookie.split("; ").find((r)=>r.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}static get observedAttributes(){return["section"]}constructor(){super();this.attachShadow({mode:"open"}),this.prefs={accent_color:"#0078D4",language:"en",widget_min_width:140,beta_updates:!1}}unsubscribe=null;_renderPending=!1;connectedCallback(){this.unsubscribe=k.subscribe((r)=>{if(r&&r.preferences)this.prefs={...r.preferences,project_name:r.project_name||r.preferences.project_name||"Lastboard"},this.render()}),this.fetchPrefs();let o=this.getAttribute("section");if(o==="users")this.fetchUsers();this.render()}disconnectedCallback(){if(this.unsubscribe)this.unsubscribe(),this.unsubscribe=null}async fetchPrefs(){let o=k.getUser();if(o&&o.preferences)this.prefs={...o.preferences,project_name:o.project_name||o.preferences.project_name||"Lastboard"},this.render()}async fetchUsers(){try{this.users=await H.getUsers(),this.render()}catch(o){console.error("Failed to fetch users",o)}}attributeChangedCallback(o,r,t){if(o==="section"&&r!==t){if(t==="users")this.fetchUsers();this.render()}}async savePrefs(o){let r={...this.prefs};if(this.prefs={...this.prefs,...o},o.accent_color)this.applyAccent(o.accent_color);if(o.language)i.setLanguage(o.language);if(o.theme)if(o.theme==="dark")G.enableDark();else G.enableLight();try{await k.updatePreferences(o)}catch{if(this.prefs=r,o.language&&r.language)i.setLanguage(r.language)}this.render()}applyAccent(o){let r=o,t={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"};if(!o.startsWith("#"))r=t[o]||"#0078D4";document.documentElement.style.setProperty("--accent",r);let a=parseInt(r.slice(1,3),16),n=parseInt(r.slice(3,5),16),e=parseInt(r.slice(5,7),16);if(!isNaN(a)&&!isNaN(n)&&!isNaN(e))document.documentElement.style.setProperty("--accent-rgb",`${a}, ${n}, ${e}`)}async handleBetaToggle(o){this.savePrefs({beta_updates:o}),this.render()}updateDensity(o){let r=this.shadowRoot.getElementById("val-widget_min_width");if(r)r.textContent=o+"px";document.documentElement.style.setProperty("--widget-min-size",o+"px")}commitDensity(o){let r=parseInt(o);k.updatePreferences({widget_min_width:r})}updateColumns(o){let r=this.shadowRoot.getElementById("val-grid_columns");if(r)r.textContent=o;document.documentElement.style.setProperty("--user-preferred-columns",o)}commitColumns(o){let r=parseInt(o);k.updatePreferences({grid_columns:r})}async updateUsername(o){let r=k.getUser();if(!r)return;if(await k.updateProfile({username:o,avatar_url:this.prefs.avatar_url||r.avatar_url}),window.notifier)window.notifier.show(i.t("notifier.username_updated"))}async updatePassword(){let o=this.shadowRoot.getElementById("current-password")?.value,r=this.shadowRoot.getElementById("new-password")?.value,t=this.shadowRoot.getElementById("confirm-password")?.value;if(!o){if(window.notifier)window.notifier.show(i.t("notifier.password_required"),"error");return}if(r!==t){if(window.notifier)window.notifier.show(i.t("notifier.password_mismatch"),"error");return}if(!r){if(window.notifier)window.notifier.show(i.t("notifier.password_empty"),"error");return}try{let a=await k.changePassword({current_password:o,new_password:r});if(this.shadowRoot.getElementById("current-password").value="",this.shadowRoot.getElementById("new-password").value="",this.shadowRoot.getElementById("confirm-password").value="",window.notifier)window.notifier.show(i.t("notifier.password_changed_relogin"));setTimeout(()=>{localStorage.removeItem("lastboard_user_cache"),document.body.style.opacity="0",window.location.href="/login"},2000)}catch(a){if(window.notifier)window.notifier.show(i.t("notifier.password_incorrect"),"error")}}async handleAvatarChange(o){let r=o.target.files?.[0];if(!r)return;if(!r.type.startsWith("image/")){if(window.notifier)window.notifier.show(i.t("notifier.invalid_image_type"),"error");return}try{let t=await this.resizeImage(r,256,256),a=k.getUser();if(!a)return;if(this.prefs.avatar_url=t,await k.updateProfile({username:a.username,avatar_url:t}),this.render(),window.notifier)window.notifier.show(i.t("notifier.avatar_updated"))}catch(t){if(console.error("Resize failed",t),window.notifier)window.notifier.show(i.t("notifier.avatar_error"),"error")}}resizeImage(o,r,t){return new Promise((a,n)=>{let e=new FileReader;e.onload=(s)=>{let p=new Image;p.onload=()=>{let d=document.createElement("canvas"),c=p.width,l=p.height;if(c>l){if(c>r)l=Math.round(l*r/c),c=r}else if(l>t)c=Math.round(c*t/l),l=t;d.width=c,d.height=l;let x=d.getContext("2d");if(!x){n(Error("Canvas context not available"));return}x.drawImage(p,0,0,c,l),a(d.toDataURL("image/jpeg",0.8))},p.onerror=(d)=>n(d),p.src=s.target?.result},e.onerror=(s)=>n(s),e.readAsDataURL(o)})}openAddUserModal(){let o=this.shadowRoot.getElementById("add-user-modal");if(o){o.showModal();let r=this.shadowRoot.getElementById("new-user-role");if(r)r.options=[{value:"user",label:i.t("settings.role_user")},{value:"admin",label:i.t("settings.role_admin")}]}}async createUser(){let o=this.shadowRoot.getElementById("new-user-username").value,r=this.shadowRoot.getElementById("new-user-password").value,t=this.shadowRoot.getElementById("new-user-role").value;if(!o||!r){if(window.notifier)window.notifier.show(i.t("notifier.fields_required"),"error");return}try{if(await H.createUser({username:o,password:r,role:t}),window.notifier)window.notifier.show(i.t("notifier.user_created"));let a=this.shadowRoot.getElementById("add-user-modal");if(a)a.close();this.fetchUsers()}catch(a){if(window.notifier)window.notifier.show(i.t("notifier.user_create_error"),"error")}}openEditUserModal(o,r,t){let a=this.shadowRoot.getElementById("edit-user-modal");if(a){this.shadowRoot.getElementById("edit-user-id").value=o.toString(),this.shadowRoot.getElementById("edit-user-username").value=r,this.shadowRoot.getElementById("edit-user-password").value="",a.showModal();let n=this.shadowRoot.getElementById("edit-user-role");if(n)n.options=[{value:"user",label:i.t("settings.role_user")},{value:"admin",label:i.t("settings.role_admin")}],n.value=t}}async updateAdminUser(){let o=parseInt(this.shadowRoot.getElementById("edit-user-id").value),r=this.shadowRoot.getElementById("edit-user-username").value,t=this.shadowRoot.getElementById("edit-user-password").value,a=this.shadowRoot.getElementById("edit-user-role").value;if(!r){if(window.notifier)window.notifier.show(i.t("notifier.username_required"),"error");return}try{if(await H.adminUpdateUser({id:o,username:r,role:a,password:t||void 0}),window.notifier)window.notifier.show(i.t("notifier.user_updated"));let n=this.shadowRoot.getElementById("edit-user-modal");if(n)n.close();this.fetchUsers()}catch(n){if(window.notifier)window.notifier.show(i.t("notifier.user_update_error"),"error")}}async deleteUser(o){let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(i.t("general.delete"),i.t("notifier.user_delete_confirm")))return}try{let t=[...this.users];if(this.users=this.users.filter((a)=>a.id!==o),this.render(),await H.deleteUser(o),window.notifier)window.notifier.show(i.t("notifier.user_deleted"));this.fetchUsers()}catch(t){this.fetchUsers();let a=i.t("notifier.user_delete_error");if(t.message&&t.message.includes("error.cannot_delete_superadmin"))a=i.t("notifier.user_delete_superadmin");if(window.notifier)window.notifier.show(a,"error")}}getContent(o){let r=k.getUser()||{username:"Guest",initials:"??",role:"View Only",avatar_url:"",accent_color:"#0078D4",language:"en",preferences:{}};switch(o){case"account":return Zo(r);case"theme":{let t={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"},a=Object.keys(t);return Ko(this.prefs,t,a)}case"personalization":return Yo(this.prefs);case"advanced":return Uo();case"users":return Bo(this.users);case"about":return To(this.version,this.updateInfo,r.role||"user",r.preferences?.beta_updates||!1,this.isCheckingUpdates);default:return`<div class="bento-card"><h3>${o}</h3><p class="settings-content__text-dim">${i.t("settings.default_module_desc")}</p></div>`}}version="v1.2.5";updateInfo=null;checkUpdatesPromise=null;isCheckingUpdates=!1;async handleManualCheckUpdates(){if(this.isCheckingUpdates)return;this.isCheckingUpdates=!0,this.updateUpdateUI();try{if(await this.checkForUpdates(),this.updateInfo&&!this.updateInfo.available){if(window.notifier)window.notifier.show(i.t("settings.up_to_date"))}}finally{this.isCheckingUpdates=!1,this.updateUpdateUI()}}async checkForUpdates(){if(this.checkUpdatesPromise)return this.checkUpdatesPromise;return this.checkUpdatesPromise=(async()=>{try{let{updateService:o}=await Promise.resolve().then(() => (lo(),po)),r=this.prefs.beta_updates||!1;if(this.updateInfo=await o.check(r),this.updateInfo)this.version=this.updateInfo.current_version,this.updateUpdateUI()}catch(o){console.error("Check update failed",o)}finally{this.checkUpdatesPromise=null}})(),this.checkUpdatesPromise}async performUpdate(o){let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(i.t("settings.update_available"),i.t("notifier.update_start_confirm")))return}let t=this.shadowRoot.getElementById("btn-update-now"),a=this.shadowRoot.getElementById("update-status");if(t)t.loading=!0;if(a){a.style.display="block";let n=a.querySelector("p");if(n)n.textContent=i.t("notifier.update_downloading")}try{let n=await fetch("/api/system/update/perform",{method:"POST",headers:{"Content-Type":"application/json","X-CSRF-Token":this.getCsrfToken()},body:JSON.stringify({asset_url:o})});if(n.ok){if(a){let e=a.querySelector("p");if(e)e.textContent=i.t("notifier.update_verified")}setTimeout(()=>{window.location.reload()},5000)}else{let e=await n.text();if(a){a.style.background="rgba(var(--danger-rgb), 0.1)",a.style.borderColor="rgba(var(--danger-rgb), 0.3)";let s=a.querySelector("p");if(s)s.style.color="var(--danger-color)",s.textContent=i.t("notifier.update_failed")+": "+e}if(t)t.loading=!1}}catch(n){if(console.error("Update failed",n),a){a.style.background="rgba(var(--danger-rgb), 0.1)",a.style.borderColor="rgba(var(--danger-rgb), 0.3)";let e=a.querySelector("p");if(e)e.style.color="var(--danger-color)",e.textContent=i.t("notifier.update_error")}if(t)t.loading=!1}}downloadBackup(){window.location.href="/api/system/backup"}async restoreBackup(o){if(!o)return;let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(i.t("general.restore"),i.t("notifier.restore_confirm")))return}let t=new FormData;t.append("backup_file",o);try{if((await fetch("/api/system/restore",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()},body:t})).ok){if(window.notifier)window.notifier.show(i.t("notifier.restore_success"));setTimeout(()=>window.location.reload(),2000)}else if(window.notifier)window.notifier.show(i.t("notifier.restore_failed"),"error")}catch(a){if(console.error("Restore error",a),window.notifier)window.notifier.show(i.t("notifier.restore_failed"),"error")}}openResetModal(){let o=this.shadowRoot.getElementById("reset-confirm-modal"),r=this.shadowRoot.getElementById("reset-confirm-input");if(o){if(r)r.value="";o.showModal()}}async executeFactoryReset(){let o=this.shadowRoot.getElementById("reset-confirm-input");if(!o||o.value.trim()!=="delete"){if(window.notifier)window.notifier.show(i.t("notifier.reset_confirm_text"),"error");o.focus();return}let r=this.shadowRoot.getElementById("btn-reset-confirm");try{if(r)r.disabled=!0,r.textContent=i.t("settings.restoring")||"Restoring...";if((await fetch("/api/system/reset",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()}})).ok){let a=document.createElement("div");Object.assign(a.style,{position:"fixed",top:"0",left:"0",width:"100%",height:"100%",backgroundColor:"rgba(0,0,0,0.9)",zIndex:"9999",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",fontFamily:"var(--font-main, sans-serif)"}),a.innerHTML=`
+}`;class Do extends HTMLElement{prefs;users=[];getCsrfToken(){let o=document.cookie.split("; ").find((r)=>r.startsWith("csrf_token="));return o?decodeURIComponent(o.split("=")[1]):""}static get observedAttributes(){return["section"]}constructor(){super();this.attachShadow({mode:"open"}),this.prefs={accent_color:"#0078D4",language:"en",widget_min_width:140,beta_updates:!1}}unsubscribe=null;_renderPending=!1;connectedCallback(){this.unsubscribe=k.subscribe((r)=>{if(r&&r.preferences)this.prefs={...r.preferences,project_name:r.project_name||r.preferences.project_name||"Lastboard"},this.render()}),this.fetchPrefs();let o=this.getAttribute("section");if(o==="users")this.fetchUsers();this.render()}disconnectedCallback(){if(this.unsubscribe)this.unsubscribe(),this.unsubscribe=null}async fetchPrefs(){let o=k.getUser();if(o&&o.preferences)this.prefs={...o.preferences,project_name:o.project_name||o.preferences.project_name||"Lastboard"},this.render()}async fetchUsers(){try{this.users=await G.getUsers(),this.render()}catch(o){console.error("Failed to fetch users",o)}}attributeChangedCallback(o,r,t){if(o==="section"&&r!==t){if(t==="users")this.fetchUsers();this.render()}}async savePrefs(o){let r={...this.prefs};if(this.prefs={...this.prefs,...o},o.accent_color)this.applyAccent(o.accent_color);if(o.language)a.setLanguage(o.language);if(o.theme)if(o.theme==="dark")H.enableDark();else H.enableLight();try{await k.updatePreferences(o)}catch{if(this.prefs=r,o.language&&r.language)a.setLanguage(r.language)}this.render()}applyAccent(o){let r=o,t={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"};if(!o.startsWith("#"))r=t[o]||"#0078D4";document.documentElement.style.setProperty("--accent",r);let i=parseInt(r.slice(1,3),16),n=parseInt(r.slice(3,5),16),e=parseInt(r.slice(5,7),16);if(!isNaN(i)&&!isNaN(n)&&!isNaN(e))document.documentElement.style.setProperty("--accent-rgb",`${i}, ${n}, ${e}`)}async handleBetaToggle(o){this.savePrefs({beta_updates:o}),this.render()}updateDensity(o){let r=this.shadowRoot.getElementById("val-widget_min_width");if(r)r.textContent=o+"px";document.documentElement.style.setProperty("--widget-min-size",o+"px")}commitDensity(o){let r=parseInt(o);k.updatePreferences({widget_min_width:r})}updateColumns(o){let r=this.shadowRoot.getElementById("val-grid_columns");if(r)r.textContent=o;document.documentElement.style.setProperty("--user-preferred-columns",o)}commitColumns(o){let r=parseInt(o);k.updatePreferences({grid_columns:r})}async updateUsername(o){let r=k.getUser();if(!r)return;if(await k.updateProfile({username:o,avatar_url:this.prefs.avatar_url||r.avatar_url}),window.notifier)window.notifier.show(a.t("notifier.username_updated"))}async updatePassword(){let o=this.shadowRoot.getElementById("current-password")?.value,r=this.shadowRoot.getElementById("new-password")?.value,t=this.shadowRoot.getElementById("confirm-password")?.value;if(!o){if(window.notifier)window.notifier.show(a.t("notifier.password_required"),"error");return}if(r!==t){if(window.notifier)window.notifier.show(a.t("notifier.password_mismatch"),"error");return}if(!r){if(window.notifier)window.notifier.show(a.t("notifier.password_empty"),"error");return}try{let i=await k.changePassword({current_password:o,new_password:r});if(this.shadowRoot.getElementById("current-password").value="",this.shadowRoot.getElementById("new-password").value="",this.shadowRoot.getElementById("confirm-password").value="",window.notifier)window.notifier.show(a.t("notifier.password_changed_relogin"));setTimeout(()=>{localStorage.removeItem("lastboard_user_cache"),document.body.style.opacity="0",window.location.href="/login"},2000)}catch(i){if(window.notifier)window.notifier.show(a.t("notifier.password_incorrect"),"error")}}async handleAvatarChange(o){let r=o.target.files?.[0];if(!r)return;if(!r.type.startsWith("image/")){if(window.notifier)window.notifier.show(a.t("notifier.invalid_image_type"),"error");return}try{let t=await this.resizeImage(r,256,256),i=k.getUser();if(!i)return;if(this.prefs.avatar_url=t,await k.updateProfile({username:i.username,avatar_url:t}),this.render(),window.notifier)window.notifier.show(a.t("notifier.avatar_updated"))}catch(t){if(console.error("Resize failed",t),window.notifier)window.notifier.show(a.t("notifier.avatar_error"),"error")}}resizeImage(o,r,t){return new Promise((i,n)=>{let e=new FileReader;e.onload=(s)=>{let p=new Image;p.onload=()=>{let d=document.createElement("canvas"),c=p.width,l=p.height;if(c>l){if(c>r)l=Math.round(l*r/c),c=r}else if(l>t)c=Math.round(c*t/l),l=t;d.width=c,d.height=l;let g=d.getContext("2d");if(!g){n(Error("Canvas context not available"));return}g.drawImage(p,0,0,c,l),i(d.toDataURL("image/jpeg",0.8))},p.onerror=(d)=>n(d),p.src=s.target?.result},e.onerror=(s)=>n(s),e.readAsDataURL(o)})}openAddUserModal(){let o=this.shadowRoot.getElementById("add-user-modal");if(o){o.showModal();let r=this.shadowRoot.getElementById("new-user-role");if(r)r.options=[{value:"user",label:a.t("settings.role_user")},{value:"admin",label:a.t("settings.role_admin")}]}}async createUser(){let o=this.shadowRoot.getElementById("new-user-username").value,r=this.shadowRoot.getElementById("new-user-password").value,t=this.shadowRoot.getElementById("new-user-role").value;if(!o||!r){if(window.notifier)window.notifier.show(a.t("notifier.fields_required"),"error");return}try{if(await G.createUser({username:o,password:r,role:t}),window.notifier)window.notifier.show(a.t("notifier.user_created"));let i=this.shadowRoot.getElementById("add-user-modal");if(i)i.close();this.fetchUsers()}catch(i){if(window.notifier)window.notifier.show(a.t("notifier.user_create_error"),"error")}}openEditUserModal(o,r,t){let i=this.shadowRoot.getElementById("edit-user-modal");if(i){this.shadowRoot.getElementById("edit-user-id").value=o.toString(),this.shadowRoot.getElementById("edit-user-username").value=r,this.shadowRoot.getElementById("edit-user-password").value="",i.showModal();let n=this.shadowRoot.getElementById("edit-user-role");if(n)n.options=[{value:"user",label:a.t("settings.role_user")},{value:"admin",label:a.t("settings.role_admin")}],n.value=t}}async updateAdminUser(){let o=parseInt(this.shadowRoot.getElementById("edit-user-id").value),r=this.shadowRoot.getElementById("edit-user-username").value,t=this.shadowRoot.getElementById("edit-user-password").value,i=this.shadowRoot.getElementById("edit-user-role").value;if(!r){if(window.notifier)window.notifier.show(a.t("notifier.username_required"),"error");return}try{if(await G.adminUpdateUser({id:o,username:r,role:i,password:t||void 0}),window.notifier)window.notifier.show(a.t("notifier.user_updated"));let n=this.shadowRoot.getElementById("edit-user-modal");if(n)n.close();this.fetchUsers()}catch(n){if(window.notifier)window.notifier.show(a.t("notifier.user_update_error"),"error")}}async deleteUser(o){let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(a.t("general.delete"),a.t("notifier.user_delete_confirm")))return}try{let t=[...this.users];if(this.users=this.users.filter((i)=>i.id!==o),this.render(),await G.deleteUser(o),window.notifier)window.notifier.show(a.t("notifier.user_deleted"));this.fetchUsers()}catch(t){this.fetchUsers();let i=a.t("notifier.user_delete_error");if(t.message&&t.message.includes("error.cannot_delete_superadmin"))i=a.t("notifier.user_delete_superadmin");if(window.notifier)window.notifier.show(i,"error")}}getContent(o){let r=k.getUser()||{username:"Guest",initials:"??",role:"View Only",avatar_url:"",accent_color:"#0078D4",language:"en",preferences:{}};switch(o){case"account":return Zo(r);case"theme":{let t={blue:"#228be6",indigo:"#4c6ef5",cyan:"#15aabf",teal:"#12b886",orange:"#fd7e14",red:"#fa5252",grape:"#be4bdb"},i=Object.keys(t);return Ko(this.prefs,t,i)}case"personalization":return Bo(this.prefs);case"advanced":return Uo();case"users":return Yo(this.users);case"about":return To(this.version,this.updateInfo,r.role||"user",r.preferences?.beta_updates||!1,this.isCheckingUpdates);default:return`<div class="bento-card"><h3>${o}</h3><p class="settings-content__text-dim">${a.t("settings.default_module_desc")}</p></div>`}}version="v1.2.5";updateInfo=null;checkUpdatesPromise=null;isCheckingUpdates=!1;async handleManualCheckUpdates(){if(this.isCheckingUpdates)return;this.isCheckingUpdates=!0,this.updateUpdateUI();try{if(await this.checkForUpdates(),this.updateInfo&&!this.updateInfo.available){if(window.notifier)window.notifier.show(a.t("settings.up_to_date"))}}finally{this.isCheckingUpdates=!1,this.updateUpdateUI()}}async checkForUpdates(){if(this.checkUpdatesPromise)return this.checkUpdatesPromise;return this.checkUpdatesPromise=(async()=>{try{let{updateService:o}=await Promise.resolve().then(() => (lo(),po)),r=this.prefs.beta_updates||!1;if(this.updateInfo=await o.check(r),this.updateInfo)this.version=this.updateInfo.current_version,this.updateUpdateUI()}catch(o){console.error("Check update failed",o)}finally{this.checkUpdatesPromise=null}})(),this.checkUpdatesPromise}async performUpdate(o){let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(a.t("settings.update_available"),a.t("notifier.update_start_confirm")))return}let t=this.shadowRoot.getElementById("btn-update-now"),i=this.shadowRoot.getElementById("update-status");if(t)t.loading=!0;if(i){i.style.display="block";let n=i.querySelector("p");if(n)n.textContent=a.t("notifier.update_downloading")}try{let n=await fetch("/api/system/update/perform",{method:"POST",headers:{"Content-Type":"application/json","X-CSRF-Token":this.getCsrfToken()},body:JSON.stringify({asset_url:o})});if(n.ok){if(i){let e=i.querySelector("p");if(e)e.textContent=a.t("notifier.update_verified")}setTimeout(()=>{window.location.reload()},5000)}else{let e=await n.text();if(i){i.style.background="rgba(var(--danger-rgb), 0.1)",i.style.borderColor="rgba(var(--danger-rgb), 0.3)";let s=i.querySelector("p");if(s)s.style.color="var(--danger-color)",s.textContent=a.t("notifier.update_failed")+": "+e}if(t)t.loading=!1}}catch(n){if(console.error("Update failed",n),i){i.style.background="rgba(var(--danger-rgb), 0.1)",i.style.borderColor="rgba(var(--danger-rgb), 0.3)";let e=i.querySelector("p");if(e)e.style.color="var(--danger-color)",e.textContent=a.t("notifier.update_error")}if(t)t.loading=!1}}downloadBackup(){window.location.href="/api/system/backup"}async restoreBackup(o){if(!o)return;let r=document.querySelector("confirmation-modal");if(r){if(!await r.confirm(a.t("general.restore"),a.t("notifier.restore_confirm")))return}let t=new FormData;t.append("backup_file",o);try{if((await fetch("/api/system/restore",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()},body:t})).ok){if(window.notifier)window.notifier.show(a.t("notifier.restore_success"));setTimeout(()=>window.location.reload(),2000)}else if(window.notifier)window.notifier.show(a.t("notifier.restore_failed"),"error")}catch(i){if(console.error("Restore error",i),window.notifier)window.notifier.show(a.t("notifier.restore_failed"),"error")}}openResetModal(){let o=this.shadowRoot.getElementById("reset-confirm-modal"),r=this.shadowRoot.getElementById("reset-confirm-input");if(o){if(r)r.value="";o.showModal()}}async executeFactoryReset(){let o=this.shadowRoot.getElementById("reset-confirm-input");if(!o||o.value.trim()!=="delete"){if(window.notifier)window.notifier.show(a.t("notifier.reset_confirm_text"),"error");o.focus();return}let r=this.shadowRoot.getElementById("btn-reset-confirm");try{if(r)r.disabled=!0,r.textContent=a.t("settings.restoring")||"Restoring...";if((await fetch("/api/system/reset",{method:"POST",headers:{"X-CSRF-Token":this.getCsrfToken()}})).ok){let i=document.createElement("div");Object.assign(i.style,{position:"fixed",top:"0",left:"0",width:"100%",height:"100%",backgroundColor:"rgba(0,0,0,0.9)",zIndex:"9999",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",fontFamily:"var(--font-main, sans-serif)"}),i.innerHTML=`
                     <div style="border: 4px solid #333; border-top: 4px solid var(--accent, #0078d4); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
-                    <h2 style="margin: 0; font-weight: 500;">${i.t("notifier.system_restarting")}</h2>
-                    <p style="opacity: 0.7; margin-top: 8px;">${i.t("notifier.please_wait")}</p>
+                    <h2 style="margin: 0; font-weight: 500;">${a.t("notifier.system_restarting")}</h2>
+                    <p style="opacity: 0.7; margin-top: 8px;">${a.t("notifier.please_wait")}</p>
                     <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-                `,document.body.appendChild(a);let n=0,e=async()=>{n++;try{if((await fetch("/",{method:"HEAD",cache:"no-store"})).ok){window.location.href="/setup";return}}catch(s){}if(n<60)setTimeout(e,1000);else window.location.href="/setup"};setTimeout(e,2000)}else if(window.notifier)window.notifier.show(i.t("notifier.reset_failed"),"error")}catch(t){if(console.error("Reset error",t),window.notifier)window.notifier.show(i.t("notifier.reset_error"),"error")}}render(){if(this._renderPending)return;this._renderPending=!0,requestAnimationFrame(()=>{this._renderPending=!1,this._doRender()})}_doRender(){if(this.shadowRoot.innerHTML=`
-            <style>${Xo}</style>
+                `,document.body.appendChild(i);let n=0,e=async()=>{n++;try{if((await fetch("/",{method:"HEAD",cache:"no-store"})).ok){window.location.href="/setup";return}}catch(s){}if(n<60)setTimeout(e,1000);else window.location.href="/setup"};setTimeout(e,2000)}else if(window.notifier)window.notifier.show(a.t("notifier.reset_failed"),"error")}catch(t){if(console.error("Reset error",t),window.notifier)window.notifier.show(a.t("notifier.reset_error"),"error")}}render(){if(this._renderPending)return;this._renderPending=!0,requestAnimationFrame(()=>{this._renderPending=!1,this._doRender()})}_doRender(){if(this.shadowRoot.innerHTML=`
+            <style>${Vo}</style>
             <div class="fade-in">
                 ${this.getContent(this.getAttribute("section")||"account")}
             </div>
-        `,this.shadowRoot.querySelectorAll(".settings-content__checkbox").forEach((o)=>{o.addEventListener("click",()=>o.classList.toggle("settings-content__checkbox--checked"))}),this.initSelects(),this.getAttribute("section")==="about")this.updateBetaBadgeVisuals()}initSelects(){let o=this.shadowRoot.getElementById("language-select");if(o){let n=i.getAvailableLocales();o.options=n.map((e)=>({value:e.code,label:`${e.flag} ${e.name}`})),o.addEventListener("change",(e)=>{this.savePrefs({language:e.detail})})}let r=[{value:"user",label:i.t("settings.role_user")},{value:"admin",label:i.t("settings.role_admin")}],t=this.shadowRoot.getElementById("new-user-role");if(t)t.options=r;let a=this.shadowRoot.getElementById("edit-user-role");if(a)a.options=r}updateBetaBadgeVisuals(){setTimeout(()=>{let o=this.shadowRoot.getElementById("beta-updates-toggle-badge");if(o)o.checked=this.prefs.beta_updates||!1},0)}updateUpdateUI(){let o=this.shadowRoot.getElementById("update-zone-wrapper");if(o){let r=k.getUser(),t=r?.role?.toLowerCase()==="admin"||r?.role?.toLowerCase()==="administrator";o.innerHTML=co(t,this.updateInfo,this.isCheckingUpdates)}}}if(!customElements.get("settings-content"))customElements.define("settings-content",Vo);Y();v();var No=({user:o,isOpen:r,selectedSection:t,updateAvailable:a})=>`
+        `,this.shadowRoot.querySelectorAll(".settings-content__checkbox").forEach((o)=>{o.addEventListener("click",()=>o.classList.toggle("settings-content__checkbox--checked"))}),this.initSelects(),this.getAttribute("section")==="about")this.updateBetaBadgeVisuals()}initSelects(){let o=this.shadowRoot.getElementById("language-select");if(o){let n=a.getAvailableLocales();o.options=n.map((e)=>({value:e.code,label:`${e.flag} ${e.name}`})),o.addEventListener("change",(e)=>{this.savePrefs({language:e.detail})})}let r=[{value:"user",label:a.t("settings.role_user")},{value:"admin",label:a.t("settings.role_admin")}],t=this.shadowRoot.getElementById("new-user-role");if(t)t.options=r;let i=this.shadowRoot.getElementById("edit-user-role");if(i)i.options=r}updateBetaBadgeVisuals(){setTimeout(()=>{let o=this.shadowRoot.getElementById("beta-updates-toggle-badge");if(o)o.checked=this.prefs.beta_updates||!1},0)}updateUpdateUI(){let o=this.shadowRoot.getElementById("update-zone-wrapper");if(o){let r=k.getUser(),t=r?.role?.toLowerCase()==="admin"||r?.role?.toLowerCase()==="administrator";o.innerHTML=co(t,this.updateInfo,this.isCheckingUpdates)}}}if(!customElements.get("settings-content"))customElements.define("settings-content",Do);B();y();var Co=({user:o,isOpen:r,selectedSection:t,updateAvailable:i})=>`
     <div class="right-drawer__overlay"></div>
     
     <div class="right-drawer__content-panel ${t?"":"right-drawer__content-panel--closed"}">
@@ -1451,45 +1654,45 @@ input:checked+.slider:before {
             <div class="right-drawer__user-info">
                 <span class="right-drawer__username">${o.username}</span>
                 ${o.role?.toLowerCase()==="admin"||o.role?.toLowerCase()==="administrator"?`<span class="right-drawer__role">
-                    ${(()=>{let n=(o.role||"").toLowerCase();if(o.is_superadmin)return i.t("settings.role_super_admin");if(n==="admin"||n==="administrator")return i.t("settings.role_admin");if(n==="user")return i.t("settings.role_user");return o.role||i.t("settings.default_role")})()}
+                    ${(()=>{let n=(o.role||"").toLowerCase();if(o.is_superadmin)return a.t("settings.role_super_admin");if(n==="admin"||n==="administrator")return a.t("settings.role_admin");if(n==="user")return a.t("settings.role_user");return o.role||a.t("settings.default_role")})()}
                 </span>`:""}
             </div>
         </div>
         
         <div class="right-drawer__body">
-            <div class="right-drawer__section-label">${i.t("settings.title")}</div>
+            <div class="right-drawer__section-label">${a.t("settings.title")}</div>
             <nav class="right-drawer__menu">
                 <div class="right-drawer__menu-item ${t==="account"?"right-drawer__menu-item--active":""}" data-section="account">
                     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-                    <span>${i.t("settings.profile")}</span>
+                    <span>${a.t("settings.profile")}</span>
                 </div>
                 <div class="right-drawer__menu-item ${t==="theme"?"right-drawer__menu-item--active":""}" data-section="theme">
                     <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z"/></svg>
-                    <span>${i.t("settings.theme")}</span>
+                    <span>${a.t("settings.theme")}</span>
                 </div>
                 <div class="right-drawer__menu-item ${t==="personalization"?"right-drawer__menu-item--active":""}" data-section="personalization">
                     <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                    <span>${i.t("settings.personalization")}</span>
+                    <span>${a.t("settings.personalization")}</span>
                 </div>
 
                 ${o.role?.toLowerCase()==="admin"||o.role==="Administrator"?`
                     <div class="right-drawer__menu-item ${t==="users"?"right-drawer__menu-item--active":""}" data-section="users">
                         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-                        <span>${i.t("settings.users")}</span>
+                        <span>${a.t("settings.users")}</span>
                     </div>
 
                     <div class="right-drawer__menu-item ${t==="advanced"?"right-drawer__menu-item--active":""}" data-section="advanced">
                         <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-                        <span>${i.t("settings.advanced")}</span>
+                        <span>${a.t("settings.advanced")}</span>
                     </div>
                 `:""}
                 <div class="right-drawer__menu-item ${t==="about"?"right-drawer__menu-item--active":""}" data-section="about" style="justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                        <span>${i.t("settings.about")}</span>
+                        <span>${a.t("settings.about")}</span>
                     </div>
-                    ${a&&(o.role?.toLowerCase()==="admin"||o.role==="Administrator")?`
-                        <span style="font-size: 10px; font-weight: 600; color: var(--danger-color); background: rgba(var(--danger-rgb), 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(var(--danger-rgb), 0.2); animation: blink-badge 2s infinite;">${i.t("settings.update_available")}</span>
+                    ${i&&(o.role?.toLowerCase()==="admin"||o.role==="Administrator")?`
+                        <span style="font-size: 10px; font-weight: 600; color: var(--danger-color); background: rgba(var(--danger-rgb), 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(var(--danger-rgb), 0.2); animation: blink-badge 2s infinite;">${a.t("settings.update_available")}</span>
                         <style>@keyframes blink-badge { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }</style>
                     `:""}
                 </div>
@@ -1499,11 +1702,11 @@ input:checked+.slider:before {
         <div class="right-drawer__footer">
             <button type="button" id="logout-btn" class="right-drawer__menu-item right-drawer__menu-item--logout" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;width:100%;padding:0;">
                 <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9"/></svg>
-                <span>${i.t("auth.logout")}</span>
+                <span>${a.t("auth.logout")}</span>
             </button>
         </div>
     </div>
-`;v();var Do=`:host {
+`;y();var Po=`:host {
     position: fixed;
     top: 48px;
     /* Below top-bar */
@@ -1727,10 +1930,10 @@ input:checked+.slider:before {
 
 .right-drawer__menu-item--logout:hover {
     background: rgba(var(--danger-rgb), 0.05) !important;
-}`;class Co extends HTMLElement{isOpen;selectedSection;_unsubscribe;_unsubscribeI18n;_keydownHandler;updateAvailable;_unsubscribeDashboard;constructor(){super();this.attachShadow({mode:"open"}),this.isOpen=!1,this.selectedSection=null,this.updateAvailable=!1}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribe=k.subscribe((o)=>{if(this.isOpen)this.render()}),Promise.resolve().then(() => (L(),Ao)).then(({dashboardStore:o})=>{this._unsubscribeDashboard=o.subscribe((r)=>{if(this.updateAvailable!==r.updateAvailable)this.updateAvailable=r.updateAvailable,this.render()})}),this._unsubscribeI18n=i.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._keydownHandler)window.removeEventListener("keydown",this._keydownHandler)}open(){this.isOpen=!0,this.setAttribute("open",""),this.render(),document.body.style.overflow="hidden",this.dispatchEvent(new CustomEvent("drawer-open",{bubbles:!0,composed:!0}))}close(){this.isOpen=!1,this.removeAttribute("open"),this.selectedSection=null,this.render(),document.body.style.overflow="",this.dispatchEvent(new CustomEvent("drawer-close",{bubbles:!0,composed:!0}))}selectSection(o){if(this.selectedSection===o)this.selectedSection=null;else this.selectedSection=o;this.render()}async performLogout(){let o=document.cookie.split("; ").find((t)=>t.startsWith("csrf_token=")),r=o?decodeURIComponent(o.split("=")[1]):"";try{await fetch("/logout",{method:"POST",headers:{"X-CSRF-Token":r}})}catch(t){}document.body.style.opacity="0",window.location.href="/login"}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target;if(r.classList.contains("right-drawer__overlay"))this.close();if(r.closest("#logout-btn")){o.preventDefault(),this.performLogout();return}let t=r.closest(".right-drawer__menu-item");if(t&&t.dataset.section)o.preventDefault(),this.selectSection(t.dataset.section)}),this._keydownHandler=(o)=>{if(o.key==="Escape"&&this.isOpen)this.close()},window.addEventListener("keydown",this._keydownHandler)}render(){let o=k.getUser()||{username:"Guest",initials:"??",role:"Viewer"};this.shadowRoot.innerHTML=`
-            <style>${Do}</style>
-            ${No({user:o,isOpen:this.isOpen,selectedSection:this.selectedSection,updateAvailable:this.updateAvailable})}
-        `}}if(!customElements.get("app-right-drawer"))customElements.define("app-right-drawer",Co);v();var Po=({title:o,editMode:r,searchActive:t,addMenuActive:a,drawerOpen:n,searchQuery:e,user:s,updateAvailable:p})=>{return`
+}`;class Wo extends HTMLElement{isOpen;selectedSection;_unsubscribe;_unsubscribeI18n;_keydownHandler;updateAvailable;_unsubscribeDashboard;constructor(){super();this.attachShadow({mode:"open"}),this.isOpen=!1,this.selectedSection=null,this.updateAvailable=!1}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribe=k.subscribe((o)=>{if(this.isOpen)this.render()}),Promise.resolve().then(() => (L(),Ao)).then(({dashboardStore:o})=>{this._unsubscribeDashboard=o.subscribe((r)=>{if(this.updateAvailable!==r.updateAvailable)this.updateAvailable=r.updateAvailable,this.render()})}),this._unsubscribeI18n=a.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._keydownHandler)window.removeEventListener("keydown",this._keydownHandler)}open(){this.isOpen=!0,this.setAttribute("open",""),this.render(),document.body.style.overflow="hidden",this.dispatchEvent(new CustomEvent("drawer-open",{bubbles:!0,composed:!0}))}close(){this.isOpen=!1,this.removeAttribute("open"),this.selectedSection=null,this.render(),document.body.style.overflow="",this.dispatchEvent(new CustomEvent("drawer-close",{bubbles:!0,composed:!0}))}selectSection(o){if(this.selectedSection===o)this.selectedSection=null;else this.selectedSection=o;this.render()}async performLogout(){let o=document.cookie.split("; ").find((t)=>t.startsWith("csrf_token=")),r=o?decodeURIComponent(o.split("=")[1]):"";try{await fetch("/logout",{method:"POST",headers:{"X-CSRF-Token":r}})}catch(t){}document.body.style.opacity="0",window.location.href="/login"}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target;if(r.classList.contains("right-drawer__overlay"))this.close();if(r.closest("#logout-btn")){o.preventDefault(),this.performLogout();return}let t=r.closest(".right-drawer__menu-item");if(t&&t.dataset.section)o.preventDefault(),this.selectSection(t.dataset.section)}),this._keydownHandler=(o)=>{if(o.key==="Escape"&&this.isOpen)this.close()},window.addEventListener("keydown",this._keydownHandler)}render(){let o=k.getUser()||{username:"Guest",initials:"??",role:"Viewer"};this.shadowRoot.innerHTML=`
+            <style>${Po}</style>
+            ${Co({user:o,isOpen:this.isOpen,selectedSection:this.selectedSection,updateAvailable:this.updateAvailable})}
+        `}}if(!customElements.get("app-right-drawer"))customElements.define("app-right-drawer",Wo);y();var Io=({title:o,editMode:r,searchActive:t,addMenuActive:i,drawerOpen:n,searchQuery:e,user:s,updateAvailable:p})=>{return`
     <div class="top-bar">
         <div class="top-bar__title">${o}</div>
         <div class="top-bar__actions">
@@ -1739,7 +1942,7 @@ input:checked+.slider:before {
 
             <!-- Search Bar -->
             <div id="search-wrapper" class="search-wrapper ${t?"search-wrapper--active":""}">
-                <input type="text" id="search-input" class="search-input" placeholder="${i.t("general.search")}" 
+                <input type="text" id="search-input" class="search-input" placeholder="${a.t("general.search")}" 
                        value="${e||""}" onclick="event.stopPropagation()">
                 <div id="search-clear" class="search-clear" style="display: ${e?"flex":"none"};">×</div>
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1749,7 +1952,7 @@ input:checked+.slider:before {
             </div>
 
             <!-- Add Item Toggle -->
-            <div id="add-toggle" class="top-bar__toggle" title="${i.t("topbar.add_tooltip")}" 
+            <div id="add-toggle" class="top-bar__toggle" title="${a.t("topbar.add_tooltip")}" 
                  style="${r?"display: flex;":"display: none;"} margin-right: -6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M12 5v14M5 12h14" stroke-width="1.5" stroke-linecap="round" />
@@ -1757,23 +1960,23 @@ input:checked+.slider:before {
             </div>
 
             <!-- Add Menu Dropdown -->
-            <div id="add-menu" class="add-menu ${a?"add-menu--active":""}">
+            <div id="add-menu" class="add-menu ${i?"add-menu--active":""}">
                 <div class="add-menu-item" data-action="add-bookmark">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    ${i.t("action.add_bookmark")}
+                    ${a.t("action.add_bookmark")}
                 </div>
                 <div class="add-menu-item" data-action="add-section">
                      <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon" style="stroke-dasharray: 4 2;"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/></svg>
-                    ${i.t("action.add_section")}
+                    ${a.t("action.add_section")}
                 </div>
                 <div class="add-menu-item" data-action="add-widget">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/></svg>
-                    ${i.t("action.add_widget")}
+                    ${a.t("action.add_widget")}
                 </div>
             </div>
 
             <!-- Edit Mode Toggle -->
-            <div id="edit-toggle" class="top-bar__toggle" title="${i.t("topbar.edit_tooltip")}" 
+            <div id="edit-toggle" class="top-bar__toggle" title="${a.t("topbar.edit_tooltip")}" 
                  style="margin-right: -6px; ${r?"color: var(--accent);":""}">
                 <svg id="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     ${r?`
@@ -1799,7 +2002,7 @@ input:checked+.slider:before {
             </div>
         </div>
     </div>
-`};L();v();var Wo=`:host {
+`};L();y();var So=`:host {
     display: block;
     height: 48px;
     width: 100%;
@@ -2068,10 +2271,10 @@ input:checked+.slider:before {
         opacity: 1;
         transform: scale(1);
     }
-}`;class Io extends HTMLElement{state;_unsubscribeDashboard;_unsubscribeI18n;_windowClickHandler;static get observedAttributes(){return["title"]}constructor(){super();this.attachShadow({mode:"open"}),this.state={editMode:!1,searchActive:!1,addMenuActive:!1,drawerOpen:!1,searchQuery:""}}attributeChangedCallback(o,r,t){if(o==="title"&&r!==t)this.render()}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribeDashboard=g.subscribe((o)=>{if(this.state.editMode!==o.isEditing||this.state.updateAvailable!==o.updateAvailable)this.setState({editMode:o.isEditing,updateAvailable:o.updateAvailable})}),this._unsubscribeI18n=i.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._windowClickHandler)window.removeEventListener("click",this._windowClickHandler)}setState(o){let r=this.state.editMode;if(this.state={...this.state,...o},this.render(),o.editMode!==void 0&&o.editMode!==r)this.dispatchEvent(new CustomEvent("edit-mode-change",{detail:{active:this.state.editMode},bubbles:!0,composed:!0}))}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target;if(r.closest("#search-clear")){o.stopPropagation(),this.state.searchQuery="";let d=this.shadowRoot.getElementById("search-input");if(d)d.value="",d.focus();this.render(),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0}));return}if(r.closest("#search-wrapper")&&!this.state.searchActive)o.stopPropagation(),this.setState({searchActive:!0}),this.shadowRoot.getElementById("search-input")?.focus();if(r.closest("#edit-toggle"))g.toggleEditMode();if(r.closest("#add-toggle"))o.stopPropagation(),this.setState({addMenuActive:!this.state.addMenuActive});let s=r.closest(".add-menu-item");if(s){let d=s.dataset.action;if(d)this.setState({addMenuActive:!1}),this.dispatchEvent(new CustomEvent("add-item",{detail:{action:d},bubbles:!0,composed:!0}));return}if(r.closest("#drawer-toggle")){let d=this.state.drawerOpen?"close":"open";this.dispatchEvent(new CustomEvent("drawer-toggle",{detail:{action:d},bubbles:!0,composed:!0}));return}}),this.shadowRoot.addEventListener("input",(o)=>{let r=o.target;if(r.id==="search-input"){let t=r.value;this.state.searchQuery=t;let a=this.shadowRoot.getElementById("search-clear");if(a)a.style.display=t?"flex":"none";this.dispatchEvent(new CustomEvent("search-input",{detail:{query:t},bubbles:!0,composed:!0}))}}),this.shadowRoot.addEventListener("keydown",(o)=>{let r=o.target,t=o;if(r.id==="search-input"&&t.key==="Escape")r.value="",this.setState({searchActive:!1}),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0})),r.blur()}),this._windowClickHandler=(o)=>{if(this.state.addMenuActive)this.setState({addMenuActive:!1});let r=o.composedPath(),t=this.shadowRoot.getElementById("search-wrapper");if(this.state.searchActive&&t&&!r.includes(t)){let a=this.shadowRoot.getElementById("search-input");if(a&&a.value==="")this.setState({searchActive:!1})}},window.addEventListener("click",this._windowClickHandler)}render(){let o=this.getAttribute("title")||"Lastboard";this.shadowRoot.innerHTML=`
-            <style>${Wo}</style>
-            ${Po({title:o,editMode:this.state.editMode,searchActive:this.state.searchActive,addMenuActive:this.state.addMenuActive,drawerOpen:this.state.drawerOpen,searchQuery:this.state.searchQuery,user:this.state.user,updateAvailable:this.state.updateAvailable})}
-        `}}if(!customElements.get("app-topbar"))customElements.define("app-topbar",Io);v();var So=({title:o,dropdownOpen:r})=>`
+}`;class or extends HTMLElement{state;_unsubscribeDashboard;_unsubscribeI18n;_windowClickHandler;static get observedAttributes(){return["title"]}constructor(){super();this.attachShadow({mode:"open"}),this.state={editMode:!1,searchActive:!1,addMenuActive:!1,drawerOpen:!1,searchQuery:""}}attributeChangedCallback(o,r,t){if(o==="title"&&r!==t)this.render()}connectedCallback(){this.render(),this.setupListeners(),this._unsubscribeDashboard=x.subscribe((o)=>{if(this.state.editMode!==o.isEditing||this.state.updateAvailable!==o.updateAvailable)this.setState({editMode:o.isEditing,updateAvailable:o.updateAvailable})}),this._unsubscribeI18n=a.subscribe(()=>{this.render()})}disconnectedCallback(){if(this._unsubscribeDashboard)this._unsubscribeDashboard();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._windowClickHandler)window.removeEventListener("click",this._windowClickHandler)}setState(o){let r=this.state.editMode;if(this.state={...this.state,...o},this.render(),o.editMode!==void 0&&o.editMode!==r)this.dispatchEvent(new CustomEvent("edit-mode-change",{detail:{active:this.state.editMode},bubbles:!0,composed:!0}))}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target;if(r.closest("#search-clear")){o.stopPropagation(),this.state.searchQuery="";let d=this.shadowRoot.getElementById("search-input");if(d)d.value="",d.focus();this.render(),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0}));return}if(r.closest("#search-wrapper")&&!this.state.searchActive)o.stopPropagation(),this.setState({searchActive:!0}),this.shadowRoot.getElementById("search-input")?.focus();if(r.closest("#edit-toggle"))x.toggleEditMode();if(r.closest("#add-toggle"))o.stopPropagation(),this.setState({addMenuActive:!this.state.addMenuActive});let s=r.closest(".add-menu-item");if(s){let d=s.dataset.action;if(d)this.setState({addMenuActive:!1}),this.dispatchEvent(new CustomEvent("add-item",{detail:{action:d},bubbles:!0,composed:!0}));return}if(r.closest("#drawer-toggle")){let d=this.state.drawerOpen?"close":"open";this.dispatchEvent(new CustomEvent("drawer-toggle",{detail:{action:d},bubbles:!0,composed:!0}));return}}),this.shadowRoot.addEventListener("input",(o)=>{let r=o.target;if(r.id==="search-input"){let t=r.value;this.state.searchQuery=t;let i=this.shadowRoot.getElementById("search-clear");if(i)i.style.display=t?"flex":"none";this.dispatchEvent(new CustomEvent("search-input",{detail:{query:t},bubbles:!0,composed:!0}))}}),this.shadowRoot.addEventListener("keydown",(o)=>{let r=o.target,t=o;if(r.id==="search-input"&&t.key==="Escape")r.value="",this.setState({searchActive:!1}),this.dispatchEvent(new CustomEvent("search-input",{detail:{query:""},bubbles:!0,composed:!0})),r.blur()}),this._windowClickHandler=(o)=>{if(this.state.addMenuActive)this.setState({addMenuActive:!1});let r=o.composedPath(),t=this.shadowRoot.getElementById("search-wrapper");if(this.state.searchActive&&t&&!r.includes(t)){let i=this.shadowRoot.getElementById("search-input");if(i&&i.value==="")this.setState({searchActive:!1})}},window.addEventListener("click",this._windowClickHandler)}render(){let o=this.getAttribute("title")||"Lastboard";this.shadowRoot.innerHTML=`
+            <style>${So}</style>
+            ${Io({title:o,editMode:this.state.editMode,searchActive:this.state.searchActive,addMenuActive:this.state.addMenuActive,drawerOpen:this.state.drawerOpen,searchQuery:this.state.searchQuery,user:this.state.user,updateAvailable:this.state.updateAvailable})}
+        `}}if(!customElements.get("app-topbar"))customElements.define("app-topbar",or);y();var rr=({title:o,dropdownOpen:r})=>`
     <header class="header">
         <div class="header__left">
             ${o}
@@ -2079,7 +2282,7 @@ input:checked+.slider:before {
 
         <div class="header__group">
             <button class="header__btn-changelog">
-                <span>${i.t("header.view_changelog")}</span>
+                <span>${a.t("header.view_changelog")}</span>
                 <svg class="header__icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -2129,14 +2332,14 @@ input:checked+.slider:before {
                     </svg>
                 </div>
                 <div class="header__dropdown ${r?"header__dropdown--active":""}" id="profile-dropdown">
-                    <div class="header__dropdown-item">${i.t("header.view_profile")}</div>
-                    <div class="header__dropdown-item">${i.t("header.preferences")}</div>
-                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: var(--danger-color);">${i.t("auth.sign_out")}</div>
+                    <div class="header__dropdown-item">${a.t("header.view_profile")}</div>
+                    <div class="header__dropdown-item">${a.t("header.preferences")}</div>
+                    <div class="header__dropdown-item" style="border-top: 1px solid var(--border-color); color: var(--danger-color);">${a.t("auth.sign_out")}</div>
                 </div>
             </div>
         </div>
     </header>
-`;var or=`.header {
+`;var tr=`.header {
     background-color: var(--header-bg, #121212);
     height: 48px;
     display: flex;
@@ -2257,63 +2460,64 @@ input:checked+.slider:before {
     .header__profile-container {
         display: none !important;
     }
-}`;class rr extends HTMLElement{dropdownOpen;constructor(){super();this.attachShadow({mode:"open"}),this.dropdownOpen=!1}connectedCallback(){this.render(),this.setupListeners()}toggleDropdown(o){this.dropdownOpen=typeof o==="boolean"?o:!this.dropdownOpen,this.render()}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target,t=r.closest(".header__btn-changelog");if(t)t.style.display="none";if(r.closest("#profile-trigger"))o.stopPropagation(),this.toggleDropdown()}),window.addEventListener("click",()=>{if(this.dropdownOpen)this.toggleDropdown(!1)})}render(){let o=this.getAttribute("title")||"Task";this.shadowRoot.innerHTML=`
-            <style>${or}</style>
-            ${So({title:o,dropdownOpen:this.dropdownOpen})}
-        `}}if(!customElements.get("app-header"))customElements.define("app-header",rr);v();var X=(o)=>String(o).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"),ot=(o)=>{if(!o)return"#";let r=o.trim().toLowerCase();if(r.startsWith("http://")||r.startsWith("https://")||r==="#")return X(o);return"#"},tr=({bookmarks:o,isEditing:r,isLoading:t,isSearching:a,isTouchDevice:n,maxCols:e=12})=>{let s=Array.isArray(o)?o:[];if(t&&s.length===0)return tt(e);let p=(c)=>s.filter((l)=>l.parent_id===c);return`
-    ${(n?s:a?s:s.filter((c)=>!c.parent_id)).map((c)=>{let l={};try{l=typeof c.content==="string"?JSON.parse(c.content):c.content}catch(m){console.error("Failed to parse content for item",c.id,m)}let x=c.type==="section",_={x:c.x||1,y:c.y||1},u=Math.min(c.w||1,e),w=c.h||1;if(x){let m=p(c.id),y=(l.title||"").trim(),b=l.borderColor&&!r?`border-color: ${l.borderColor} !important;`:"",A=!r?`border-width: ${l.borderWidth||1}px !important;`:"";return`
+}`;class ir extends HTMLElement{dropdownOpen;constructor(){super();this.attachShadow({mode:"open"}),this.dropdownOpen=!1}connectedCallback(){this.render(),this.setupListeners()}toggleDropdown(o){this.dropdownOpen=typeof o==="boolean"?o:!this.dropdownOpen,this.render()}setupListeners(){this.shadowRoot.addEventListener("click",(o)=>{let r=o.target,t=r.closest(".header__btn-changelog");if(t)t.style.display="none";if(r.closest("#profile-trigger"))o.stopPropagation(),this.toggleDropdown()}),window.addEventListener("click",()=>{if(this.dropdownOpen)this.toggleDropdown(!1)})}render(){let o=this.getAttribute("title")||"Task";this.shadowRoot.innerHTML=`
+            <style>${tr}</style>
+            ${rr({title:o,dropdownOpen:this.dropdownOpen})}
+        `}}if(!customElements.get("app-header"))customElements.define("app-header",ir);y();var X=(o)=>String(o).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"),it=(o)=>{if(!o)return"#";let r=o.trim().toLowerCase();if(r.startsWith("http://")||r.startsWith("https://")||r==="#")return X(o);return"#"},ar=({bookmarks:o,isEditing:r,isLoading:t,isSearching:i,isTouchDevice:n,maxCols:e=12})=>{let s=Array.isArray(o)?o:[];if(t&&s.length===0)return nt(e);let p=(c)=>s.filter((l)=>l.parent_id===c);return`
+    ${(n?s:i?s:s.filter((c)=>!c.parent_id)).map((c)=>{let l={};try{l=typeof c.content==="string"?JSON.parse(c.content):c.content}catch(v){console.error("Failed to parse content for item",c.id,v)}let g=c.type==="section",u={x:c.x||1,y:c.y||1},f=Math.min(c.w||1,e),_=c.h||1;if(g){let v=p(c.id),w=(l.title||"").trim(),b=l.borderColor&&!r?`border-color: ${l.borderColor} !important;`:"",A=!r?`border-width: ${l.borderWidth||1}px !important;`:"";return`
             <fieldset class="bookmark-grid__section"
                data-id="${c.id}"
                data-orig-x="${c.x}" data-orig-y="${c.y}"
                draggable="${r}"
-               style="--x: ${_.x}; --y: ${_.y}; --w: ${u}; --h: ${w}; ${b} ${A}">
-               ${y?`<legend class="section-title">${X(y)}</legend>`:""}
+               style="--x: ${u.x}; --y: ${u.y}; --w: ${f}; --h: ${_}; ${b} ${A}">
+               ${w?`<legend class="section-title">${X(w)}</legend>`:""}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
-                   ${rt(m,r,!0,u,n)}
+                   ${at(v,r,!0,f,n)}
                </div>
                ${r?`
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-edit" title="${i.t("general.edit")}">✎</button>
-                    <button class="action-btn btn-delete" title="${i.t("general.delete")}">\uD83D\uDDD1</button>
+                    <button class="action-btn btn-edit" title="${a.t("general.edit")}">✎</button>
+                    <button class="action-btn btn-delete" title="${a.t("general.delete")}">\uD83D\uDDD1</button>
                 </div>
                 <div class="resize-handle"></div>
                `:""}
-            </fieldset>`}return ar(c,l,r,_,u,w,n)}).join("")}
+            </fieldset>`}return nr(c,l,r,u,f,_,n)}).join("")}
 
     <div id="ghost-element" class="bookmark-grid__ghost" style="display: none;"></div>
-    `};function ar(o,r,t,a,n,e=0,s=!1){let p=e||o.h||1;if(o.type==="widget"){let m=r.widgetId,b={clock:"widget-clock",notepad:"widget-notepad",telemetry:"widget-telemetry",weather:"widget-weather",markdown:"widget-markdown"}[m]||"div",q=(r.text||"").replace(/"/g,"&quot;"),h=r.borderColor&&!t?`border-color: ${r.borderColor} !important;`:"",E=!t?`border-width: ${r.borderWidth||1}px !important;`:"";return`
+    `};function nr(o,r,t,i,n,e=0,s=!1){let p=e||o.h||1;if(o.type==="widget"){let v=r.widgetId,b={clock:"widget-clock",notepad:"widget-notepad",telemetry:"widget-telemetry",weather:"widget-weather",markdown:"widget-markdown"}[v]||"div",q=(r.text||"").replace(/"/g,"&quot;"),h=r.borderColor&&!t?`border-color: ${r.borderColor} !important;`:"",E=!t?`border-width: ${r.borderWidth||1}px !important;`:"";return`
         <div class="bookmark-grid__card"
             draggable="${t}"
             data-id="${o.id}"
             data-type="${o.type}"
             data-orig-x="${o.x}" data-orig-y="${o.y}"
-            ${!s?`style="--x: ${a.x}; --y: ${a.y}; --w: ${n}; --h: ${p}; ${h} ${E}"`:""}>
+            ${!s?`style="--x: ${i.x}; --y: ${i.y}; --w: ${n}; --h: ${p}; ${h} ${E}"`:""}>
 
             <${b}
                 item-id="${o.id}"
-                ${m==="notepad"?`content="${q}"`:""}
+                data-editing="${t}"
+                ${v==="notepad"?`content="${q}"`:""}
             ></${b}>
 
             ${t?`
             <div class="bookmark-actions">
-                 ${["clock","telemetry","weather"].includes(m)?`<button class="action-btn btn-edit" title="${i.t("general.edit")}">✎</button>`:""}
-                 <button class="action-btn btn-delete" title="${i.t("general.delete")}">\uD83D\uDDD1</button>
+                 ${["clock","telemetry","weather","notepad","markdown"].includes(v)?`<button class="action-btn btn-edit" title="${a.t("general.edit")}">✎</button>`:""}
+                 <button class="action-btn btn-delete" title="${a.t("general.delete")}">\uD83D\uDDD1</button>
             </div>
-            ${["clock","telemetry"].includes(m)?"":'<div class="resize-handle"></div>'}
+            ${["clock","telemetry"].includes(v)?"":'<div class="resize-handle"></div>'}
             `:""}
         </div>
-    `}let d=r.icon||"",l=d.startsWith("http")||d.startsWith("/")?`<img src="${X(d)}" alt="${X(r.label)}" class="bookmark-grid__icon-img" draggable="false" />`:d?X(d):'<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>',x=t?'role="button"':`href="${ot(r.url)}" target="_blank"`,_=!s?`--x: ${a.x}; --y: ${a.y}; --w: ${n}; --h: ${p};`:"",u=r.borderColor&&!t?`border-color: ${r.borderColor} !important;`:"",w=r.labelPos==="top"?"label-top":r.labelPos==="section"?"label-section":r.labelPos==="off"?"label-off":"";return`
-        <a ${x} class="bookmark-grid__card ${w}"
+    `}let d=r.icon||"",l=d.startsWith("http")||d.startsWith("/")?`<img src="${X(d)}" alt="${X(r.label)}" class="bookmark-grid__icon-img" draggable="false" />`:d?X(d):'<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>',g=t?'role="button"':`href="${it(r.url)}" target="_blank"`,u=!s?`--x: ${i.x}; --y: ${i.y}; --w: ${n}; --h: ${p};`:"",f=r.borderColor&&!t?`border-color: ${r.borderColor} !important;`:"",_=r.labelPos==="top"?"label-top":r.labelPos==="section"?"label-section":r.labelPos==="off"?"label-off":"";return`
+        <a ${g} class="bookmark-grid__card ${_}"
            draggable="${t}"
            data-id="${o.id}"
            data-type="${o.type}"
            data-orig-x="${o.x}" data-orig-y="${o.y}"
-           style="${_} ${u} ${!t?`border-width: ${r.borderWidth||1}px !important;`:""}">
+           style="${u} ${f} ${!t?`border-width: ${r.borderWidth||1}px !important;`:""}">
             
             ${t?`
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-edit" title="${i.t("general.edit")}">✎</button>
-                    <button class="action-btn btn-delete" title="${i.t("general.delete")}">\uD83D\uDDD1</button>
+                    <button class="action-btn btn-edit" title="${a.t("general.edit")}">✎</button>
+                    <button class="action-btn btn-delete" title="${a.t("general.delete")}">\uD83D\uDDD1</button>
                 </div>
             `:""}
 
@@ -2326,11 +2530,11 @@ input:checked+.slider:before {
             
             ${r.statusCheck?`
                 <div class="status-indicator ${o.status?`status-${o.status}`:""} ${r.statusPos?`status-pos-${r.statusPos}`:""}" 
-                     title="${o.status==="up"?i.t("status.online"):o.status==="down"?i.t("status.unreachable"):o.status==="pending"?i.t("status.checking"):i.t("general.pinging")}">
+                     title="${o.status==="up"?a.t("status.online"):o.status==="down"?a.t("status.unreachable"):o.status==="pending"?a.t("status.checking"):a.t("general.pinging")}">
                 </div>
             `:""}
         </a>
-    `}function rt(o,r,t=!1,a=12,n=!1){return o.map((e)=>{let s={};try{s=typeof e.content==="string"?JSON.parse(e.content):e.content}catch(l){console.error("Failed to parse content for item (nested)",e.id,l)}let p={x:e.x||1,y:e.y||1},d=e.h||1,c=Math.min(e.w||1,a);return ar(e,s,r,p,c,d,n)}).join("")}function tt(o){return`
+    `}function at(o,r,t=!1,i=12,n=!1){return o.map((e)=>{let s={};try{s=typeof e.content==="string"?JSON.parse(e.content):e.content}catch(l){console.error("Failed to parse content for item (nested)",e.id,l)}let p={x:e.x||1,y:e.y||1},d=e.h||1,c=Math.min(e.w||1,i);return nr(e,s,r,p,c,d,n)}).join("")}function nt(o){return`
         <style>
             .skeleton {
                 background: var(--surface);
@@ -2362,13 +2566,13 @@ input:checked+.slider:before {
                 100% { background-position: -200% 0; }
             }
         </style>
-        ${Array(8).fill(null).map((t,a)=>`
-            <div class="bookmark-grid__card skeleton" style="--x: ${a%o+1}; --y: ${Math.floor(a/o)+1}; --w: 1; --h: 1;">
+        ${Array(8).fill(null).map((t,i)=>`
+            <div class="bookmark-grid__card skeleton" style="--x: ${i%o+1}; --y: ${Math.floor(i/o)+1}; --w: 1; --h: 1;">
                 <div class="skeleton-icon"></div>
                 <div class="skeleton-text"></div>
             </div>
         `).join("")}
-    `}L();B();v();v();L();class ir extends HTMLElement{timer;timeEl=null;dateEl=null;_unsubscribe=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}isEditing=!1;configMode=!1;_config={timezone:"local",hour12:!1,showDate:!0};_itemId=0;static get observedAttributes(){return["item-id","content","mode"]}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t);if(o==="content")try{let a=typeof t==="string"?JSON.parse(t):t;if(a&&typeof a==="object")this._config={...this._config,...a},this.updateTime()}catch(a){}}connectedCallback(){this.render(),this.updateTime(),this.timer=setInterval(()=>{this.updateTime()},1000),this._unsubscribe=g.subscribe((o)=>{if(this.isEditing!==o.isEditing)this.isEditing=o.isEditing,this.render();if(this._itemId){let r=o.items.find((t)=>t.id===this._itemId);if(r&&r.content)try{let t=typeof r.content==="string"?JSON.parse(r.content):r.content;if(t.widgetId==="clock")this._config={...this._config,...t},this.updateTime()}catch(t){}}}),this._unsubscribeI18n=i.subscribe(()=>{this.updateTime()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this.timer)clearInterval(this.timer)}updateTime(){if(!this.timeEl||!this.dateEl)return;let o=new Date,r={hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:this._config.hour12},t=void 0;if(this._config.timezone&&this._config.timezone!=="local")t=this._config.timezone;let a=i.getLocale().code;try{let s=new Intl.DateTimeFormat(a,{...r,timeZone:t}).formatToParts(o).map((p)=>{if(p.type==="dayPeriod")return`<span class="ampm">${p.value.toUpperCase().replace(/\./g,"").trim()}</span>`;return p.value}).join("");this.timeEl.innerHTML=s}catch(n){this.timeEl.textContent=o.toLocaleTimeString()}if(this._config.showDate){let n={weekday:"long",day:"numeric",month:"long",timeZone:t};this.dateEl.textContent=o.toLocaleDateString(a,n),this.dateEl.style.display="block"}else this.dateEl.style.display="none"}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
+    `}L();Y();y();y();L();class er extends HTMLElement{timer;timeEl=null;dateEl=null;_unsubscribe=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}isEditing=!1;configMode=!1;_config={timezone:"local",hour12:!1,showDate:!0};_itemId=0;static get observedAttributes(){return["item-id","content","mode"]}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t);if(o==="content")try{let i=typeof t==="string"?JSON.parse(t):t;if(i&&typeof i==="object")this._config={...this._config,...i},this.updateTime()}catch(i){}}connectedCallback(){this.render(),this.updateTime(),this.timer=setInterval(()=>{this.updateTime()},1000),this._unsubscribe=x.subscribe((o)=>{if(this.isEditing!==o.isEditing)this.isEditing=o.isEditing,this.render();if(this._itemId){let r=o.items.find((t)=>t.id===this._itemId);if(r&&r.content)try{let t=typeof r.content==="string"?JSON.parse(r.content):r.content;if(t.widgetId==="clock")this._config={...this._config,...t},this.updateTime()}catch(t){}}}),this._unsubscribeI18n=a.subscribe(()=>{this.updateTime()})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this.timer)clearInterval(this.timer)}updateTime(){if(!this.timeEl||!this.dateEl)return;let o=new Date,r={hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:this._config.hour12},t=void 0;if(this._config.timezone&&this._config.timezone!=="local")t=this._config.timezone;let i=a.getLocale().code;try{let s=new Intl.DateTimeFormat(i,{...r,timeZone:t}).formatToParts(o).map((p)=>{if(p.type==="dayPeriod")return`<span class="ampm">${p.value.toUpperCase().replace(/\./g,"").trim()}</span>`;return p.value}).join("");this.timeEl.innerHTML=s}catch(n){this.timeEl.textContent=o.toLocaleTimeString()}if(this._config.showDate){let n={weekday:"long",day:"numeric",month:"long",timeZone:t};this.dateEl.textContent=o.toLocaleDateString(i,n),this.dateEl.style.display="block"}else this.dateEl.style.display="none"}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
             <style>
                 :host {
                     display: flex;
@@ -2404,7 +2608,7 @@ input:checked+.slider:before {
             
             <div class="time">--:--:--</div>
             <div class="date">-- --</div>
-        `,this.timeEl=this.shadowRoot.querySelector(".time"),this.dateEl=this.shadowRoot.querySelector(".date")}}customElements.define("widget-clock",ir);L();v();class Q{static parse(o){try{if(typeof o==="object"&&o!==null)return o;if(typeof o==="string"){let r=JSON.parse(o);if(typeof r==="object"&&r!==null)return r}return{widgetId:"unknown"}}catch(r){return console.warn("[WidgetContentHelper] Failed to parse content:",r),{widgetId:"unknown"}}}static serialize(o){try{return JSON.stringify(o)}catch(r){return console.error("[WidgetContentHelper] Failed to serialize content:",r),"{}"}}static getNotepadText(o){return this.parse(o).text||""}static setNotepadText(o,r){let a={...this.parse(o),widgetId:"notepad",text:r};return this.serialize(a)}static merge(o,r){let a={...this.parse(o),...r};return this.serialize(a)}static validate(o,r){return this.parse(o).widgetId===r}static getMarkdownText(o){return this.parse(o).text||""}static setMarkdownText(o,r){let a={...this.parse(o),widgetId:"markdown",text:r};return this.serialize(a)}}var f={undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M5 12l6-6"/><path d="M5 12l6 6"/></svg>',redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M19 12l-6-6"/><path d="M19 12l-6 6"/></svg>',h1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M19 18V6l-2 2"/></svg>',h2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M21 18h-4c0-4 4-5 4-8a2 2 0 0 0-4 0"/></svg>',h3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M17.5 18a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 0 0-5H20"/></svg>',bold:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12a4 4 0 0 0 0-8H6v8"/><path d="M15 20a4 4 0 0 0 0-8H6v8Z"/></svg>',italic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>',underline:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',strike:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.3 19c-1.4 1.4-3.5 1.4-5.2-.2-1.9-1.9-1.9-5.2 0-7.2l.6-.6c2.2-2.2 6.6-2.2 9.1.5"/><line x1="4" y1="12" x2="20" y2="12"/><path d="M10.2 6c1.6-1.5 3.9-1.5 5.5.1"/></svg>',color:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',alignLeft:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>',alignCenter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>',alignRight:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>',alignJustify:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',ordered:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>',check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 12l2 2 4-4"/></svg>',quote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/></svg>',code:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',eraser_clean:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"/><path d="M11 3L20 12"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',resize:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 9V6a2 2 0 0 0-2-2h-3"/><path d="M3 15v3a2 2 0 0 0 2 2h3"/><path d="M16 20h3a2 2 0 0 0 2-2v-3"/><path d="M8 4H5a2 2 0 0 0-2 2v3"/></svg>'},at=`
+        `,this.timeEl=this.shadowRoot.querySelector(".time"),this.dateEl=this.shadowRoot.querySelector(".date")}}customElements.define("widget-clock",er);L();y();class Q{static parse(o){try{if(typeof o==="object"&&o!==null)return o;if(typeof o==="string"){let r=JSON.parse(o);if(typeof r==="object"&&r!==null)return r}return{widgetId:"unknown"}}catch(r){return console.warn("[WidgetContentHelper] Failed to parse content:",r),{widgetId:"unknown"}}}static serialize(o){try{return JSON.stringify(o)}catch(r){return console.error("[WidgetContentHelper] Failed to serialize content:",r),"{}"}}static getNotepadText(o){return this.parse(o).text||""}static setNotepadText(o,r){let i={...this.parse(o),widgetId:"notepad",text:r};return this.serialize(i)}static merge(o,r){let i={...this.parse(o),...r};return this.serialize(i)}static validate(o,r){return this.parse(o).widgetId===r}static getMarkdownText(o){return this.parse(o).text||""}static setMarkdownText(o,r){let i={...this.parse(o),widgetId:"markdown",text:r};return this.serialize(i)}}var m={undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M5 12l6-6"/><path d="M5 12l6 6"/></svg>',redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M19 12l-6-6"/><path d="M19 12l-6 6"/></svg>',h1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M19 18V6l-2 2"/></svg>',h2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M21 18h-4c0-4 4-5 4-8a2 2 0 0 0-4 0"/></svg>',h3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M17.5 18a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 0 0-5H20"/></svg>',bold:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12a4 4 0 0 0 0-8H6v8"/><path d="M15 20a4 4 0 0 0 0-8H6v8Z"/></svg>',italic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>',underline:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',strike:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.3 19c-1.4 1.4-3.5 1.4-5.2-.2-1.9-1.9-1.9-5.2 0-7.2l.6-.6c2.2-2.2 6.6-2.2 9.1.5"/><line x1="4" y1="12" x2="20" y2="12"/><path d="M10.2 6c1.6-1.5 3.9-1.5 5.5.1"/></svg>',color:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',alignLeft:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>',alignCenter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>',alignRight:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>',alignJustify:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',ordered:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>',check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 12l2 2 4-4"/></svg>',quote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/></svg>',code:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',eraser_clean:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"/><path d="M11 3L20 12"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',resize:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 9V6a2 2 0 0 0-2-2h-3"/><path d="M3 15v3a2 2 0 0 0 2 2h3"/><path d="M16 20h3a2 2 0 0 0 2-2v-3"/><path d="M8 4H5a2 2 0 0 0-2 2v3"/></svg>'},et=`
 :host {
     display: flex;
     flex-direction: column;
@@ -2643,9 +2847,9 @@ input:checked+.slider:before {
 .img-resizer svg { width: 14px; height: 14px; }
 
 @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(0.9); } }
-`;class nr extends HTMLElement{_itemId=0;_content="";_isDirty=!1;_isLocked=!0;_isSaving=!1;_lastLockTime=0;_editor=null;_syncStatus=null;_dock=null;_editorContainer=null;_modal=null;_imgResizer=null;_activeImage=null;_pendingAction=null;static get observedAttributes(){return["item-id"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.loadContent(),window.addEventListener("beforeunload",this.handleBeforeUnload.bind(this)),i.subscribe(()=>{if(this._editor)this._editor.dataset.placeholder=i.t("widget.notepad.placeholder")})}disconnectedCallback(){window.removeEventListener("beforeunload",this.handleBeforeUnload.bind(this))}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t),this.loadContent()}handleBeforeUnload(o){if(this._isDirty)o.preventDefault(),o.returnValue=""}render(){if(!this.shadowRoot)return;let o=this._isLocked?"locked":"unlocked",r=this._isLocked?"locked":"",t=this._isLocked?"hidden":"";this.shadowRoot.innerHTML=`
+`;class sr extends HTMLElement{_itemId=0;_content="";_isDirty=!1;_isLocked=!0;_isSaving=!1;_lastLockTime=0;_editor=null;_syncStatus=null;_dock=null;_editorContainer=null;_modal=null;_imgResizer=null;_activeImage=null;_pendingAction=null;static get observedAttributes(){return["item-id"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.loadContent(),window.addEventListener("beforeunload",this.handleBeforeUnload.bind(this)),a.subscribe(()=>{if(this._editor)this._editor.dataset.placeholder=a.t("widget.notepad.placeholder")})}disconnectedCallback(){window.removeEventListener("beforeunload",this.handleBeforeUnload.bind(this))}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t),this.loadContent()}handleBeforeUnload(o){if(this._isDirty)o.preventDefault(),o.returnValue=""}render(){if(!this.shadowRoot)return;let o=this._isLocked?"locked":"unlocked",r=this._isLocked?"locked":"",t=this._isLocked?"hidden":"";this.shadowRoot.innerHTML=`
             <style>
-                ${at}
+                ${et}
                 /* V13: Override colors for inverted logic */
                 .top-lock-btn {
                     /* Default (Unlocked/Edit Mode) -> Red/Alert */
@@ -2663,72 +2867,77 @@ input:checked+.slider:before {
                     background: rgba(255,255,255,0.1);
                     color: var(--lb-text);
                 }
+
+                /* Hide Lock Button in Edit Mode (Grid Editing) */
+                :host([data-editing="true"]) .top-lock-btn {
+                    display: none !important;
+                }
             </style>
             
-             <button class="top-lock-btn ${o}" id="lock-btn" title="${this._isLocked?i.t("widget.notepad.tool.unlock"):i.t("widget.notepad.tool.lock")}">
-                ${this._isLocked?f.lock:f.unlock}
+             <button class="top-lock-btn ${o}" id="lock-btn" title="${this._isLocked?a.t("widget.notepad.tool.unlock"):a.t("widget.notepad.tool.lock")}">
+                ${this._isLocked?m.lock:m.unlock}
             </button>
 
             <div class="editor-container ${r}">
-                <div class="editor" contenteditable="${!this._isLocked}" data-placeholder="${i.t("widget.notepad.placeholder")}"></div>
+                <div class="editor" contenteditable="${!this._isLocked}" data-placeholder="${a.t("widget.notepad.placeholder")}"></div>
             </div>
 
             <div class="glass-dock ${t}" id="glass-dock">
                 <div class="dock-group">
-                    <button class="dock-btn" data-fmt="undo" title="${i.t("widget.notepad.tool.undo")}">${f.undo}</button>
-                    <button class="dock-btn" data-fmt="redo" title="${i.t("widget.notepad.tool.redo")}">${f.redo}</button>
+                    <button class="dock-btn" data-fmt="undo" title="${a.t("widget.notepad.tool.undo")}">${m.undo}</button>
+                    <button class="dock-btn" data-fmt="redo" title="${a.t("widget.notepad.tool.redo")}">${m.redo}</button>
                 </div>
 
                 <div class="dock-group">
-                    <button class="dock-btn" data-fmt="formatBlock:H1" title="${i.t("widget.notepad.tool.h1")}" style="width:30px;">${f.h1}</button>
-                    <button class="dock-btn" data-fmt="formatBlock:H2" title="${i.t("widget.notepad.tool.h2")}" style="width:30px;">${f.h2}</button>
-                    <button class="dock-btn" data-fmt="formatBlock:H3" title="${i.t("widget.notepad.tool.h3")}" style="width:30px;">${f.h3}</button>
+                    <button class="dock-btn" data-fmt="formatBlock:H1" title="${a.t("widget.notepad.tool.h1")}" style="width:30px;">${m.h1}</button>
+                    <button class="dock-btn" data-fmt="formatBlock:H2" title="${a.t("widget.notepad.tool.h2")}" style="width:30px;">${m.h2}</button>
+                    <button class="dock-btn" data-fmt="formatBlock:H3" title="${a.t("widget.notepad.tool.h3")}" style="width:30px;">${m.h3}</button>
                 </div>
 
                 <div class="dock-group">
-                    <button class="dock-btn" data-fmt="bold" title="${i.t("widget.notepad.tool.bold")}">${f.bold}</button>
-                    <button class="dock-btn" data-fmt="italic" title="${i.t("widget.notepad.tool.italic")}">${f.italic}</button>
-                    <button class="dock-btn" data-fmt="underline" title="${i.t("widget.notepad.tool.underline")}">${f.underline}</button>
-                    <button class="dock-btn" data-fmt="strikeThrough" title="${i.t("widget.notepad.tool.strike")}">${f.strike}</button>
-                    <button class="dock-btn" title="${i.t("widget.notepad.tool.color")}">
-                        ${f.color}
+                    <button class="dock-btn" data-fmt="bold" title="${a.t("widget.notepad.tool.bold")}">${m.bold}</button>
+                    <button class="dock-btn" data-fmt="italic" title="${a.t("widget.notepad.tool.italic")}">${m.italic}</button>
+                    <button class="dock-btn" data-fmt="underline" title="${a.t("widget.notepad.tool.underline")}">${m.underline}</button>
+                    <button class="dock-btn" data-fmt="strikeThrough" title="${a.t("widget.notepad.tool.strike")}">${m.strike}</button>
+                    <button class="dock-btn" title="${a.t("widget.notepad.tool.color")}">
+                        ${m.color}
                         <input type="color" id="color-picker">
                     </button>
                 </div>
 
                 <div class="dock-group">
-                    <button class="dock-btn" data-fmt="justifyLeft" title="${i.t("widget.notepad.tool.left")}">${f.alignLeft}</button>
-                    <button class="dock-btn" data-fmt="justifyCenter" title="${i.t("widget.notepad.tool.center")}">${f.alignCenter}</button>
-                    <button class="dock-btn" data-fmt="justifyRight" title="${i.t("widget.notepad.tool.right")}">${f.alignRight}</button>
-                    <button class="dock-btn" data-fmt="justifyFull" title="${i.t("widget.notepad.tool.justify")}">${f.alignJustify}</button>
+                    <button class="dock-btn" data-fmt="justifyLeft" title="${a.t("widget.notepad.tool.left")}">${m.alignLeft}</button>
+                    <button class="dock-btn" data-fmt="justifyCenter" title="${a.t("widget.notepad.tool.center")}">${m.alignCenter}</button>
+                    <button class="dock-btn" data-fmt="justifyRight" title="${a.t("widget.notepad.tool.right")}">${m.alignRight}</button>
+                    <button class="dock-btn" data-fmt="justifyFull" title="${a.t("widget.notepad.tool.justify")}">${m.alignJustify}</button>
                 </div>
 
                 <div class="dock-group">
-                     <button class="dock-btn" id="btn-link" title="${i.t("widget.notepad.tool.link")}">${f.link}</button>
-                     <button class="dock-btn" id="btn-image" title="${i.t("widget.notepad.tool.image")}">${f.image}</button>
+                     <button class="dock-btn" id="btn-link" title="${a.t("widget.notepad.tool.link")}">${m.link}</button>
+                     <button class="dock-btn" id="btn-image" title="${a.t("widget.notepad.tool.image")}">${m.image}</button>
                 </div>
 
                 <div class="dock-group">
-                    <button class="dock-btn" data-fmt="insertUnorderedList" title="${i.t("widget.notepad.tool.bullet")}">${f.list}</button>
-                    <button class="dock-btn" data-fmt="insertOrderedList" title="${i.t("widget.notepad.tool.number")}">${f.ordered}</button>
-                    <button class="dock-btn" data-fmt="insertChecklist" title="${i.t("widget.notepad.tool.check")}">${f.check}</button>
+                    <button class="dock-btn" data-fmt="insertUnorderedList" title="${a.t("widget.notepad.tool.bullet")}">${m.list}</button>
+                    <button class="dock-btn" data-fmt="insertOrderedList" title="${a.t("widget.notepad.tool.number")}">${m.ordered}</button>
+                    <button class="dock-btn" data-fmt="insertChecklist" title="${a.t("widget.notepad.tool.check")}">${m.check}</button>
                 </div>
 
                 <div class="dock-group">
-                    <button class="dock-btn" data-fmt="formatBlock:BLOCKQUOTE" title="${i.t("widget.notepad.tool.quote")}">${f.quote}</button>
-                     <button class="dock-btn" data-fmt="formatBlock:PRE" title="${i.t("widget.notepad.tool.code")}">${f.code}</button>
-                    <button class="dock-btn" data-fmt="removeFormat" title="${i.t("widget.notepad.tool.clear")}">${f.eraser_clean}</button>
+                    <button class="dock-btn" data-fmt="formatBlock:BLOCKQUOTE" title="${a.t("widget.notepad.tool.quote")}">${m.quote}</button>
+                     <button class="dock-btn" data-fmt="formatBlock:PRE" title="${a.t("widget.notepad.tool.code")}">${m.code}</button>
+                    <button class="dock-btn" data-fmt="removeFormat" title="${a.t("widget.notepad.tool.clear")}">${m.eraser_clean}</button>
                 </div>
             </div>
 
             <div class="glass-modal" id="glass-modal">
                 <div class="modal-content">
-                    <div class="modal-title" id="modal-title">${i.t("widget.notepad.modal.title")}</div>
+                    <div class="modal-title" id="modal-title">${a.t("widget.notepad.modal.title")}</div>
                     <input type="text" class="modal-input" id="modal-input-1">
                     <input type="text" class="modal-input" id="modal-input-2" style="display:none">
                     <div class="modal-actions">
-                        <button class="modal-btn cancel" id="modal-cancel">${i.t("general.cancel")}</button>
-                        <button class="modal-btn confirm" id="modal-confirm">${i.t("general.confirm")}</button>
+                        <button class="modal-btn cancel" id="modal-cancel">${a.t("general.cancel")}</button>
+                        <button class="modal-btn confirm" id="modal-confirm">${a.t("general.confirm")}</button>
                     </div>
                 </div>
             </div>
@@ -2737,10 +2946,10 @@ input:checked+.slider:before {
                 <div class="sync-dot"></div>
             </div>
 
-             <button class="img-resizer" id="img-resizer" title="${i.t("widget.notepad.tool.update_image")}">
-                ${f.resize}
+             <button class="img-resizer" id="img-resizer" title="${a.t("widget.notepad.tool.update_image")}">
+                ${m.resize}
              </button>
-        `,this._editor=this.shadowRoot.querySelector(".editor"),this._editorContainer=this.shadowRoot.querySelector(".editor-container"),this._syncStatus=this.shadowRoot.querySelector("#sync-status"),this._dock=this.shadowRoot.querySelector("#glass-dock"),this._modal=this.shadowRoot.querySelector("#glass-modal"),this._imgResizer=this.shadowRoot.querySelector("#img-resizer"),this.bindEvents()}bindEvents(){if(!this._editor)return;this._editor.addEventListener("input",(t)=>this.handleInput(t)),this._editor.addEventListener("keydown",(t)=>this.handleKeydown(t)),this._editor.addEventListener("paste",(t)=>this.handlePaste(t)),this._editor.addEventListener("click",(t)=>this.handleEditorClick(t));let o=this.shadowRoot?.querySelector("#lock-btn");if(o)o.addEventListener("click",(t)=>{t.preventDefault(),t.stopImmediatePropagation();let a=Date.now();if(a-this._lastLockTime<300)return;this._lastLockTime=a,this.toggleLock()}),o.addEventListener("mousedown",(t)=>t.stopPropagation());this.shadowRoot?.querySelectorAll(".dock-btn[data-fmt]").forEach((t)=>{t.addEventListener("mousedown",(a)=>{if(a.preventDefault(),this._isLocked)return;let n=a.currentTarget.dataset.fmt;if(n)if(n.includes(":")){let[e,s]=n.split(":");this.executeFormat(e,s)}else this.executeFormat(n)})});let r=this.shadowRoot?.querySelector("#color-picker");if(r)r.addEventListener("input",(t)=>{let a=t.target.value;this.executeFormat("foreColor",a)});this.shadowRoot?.querySelector("#btn-link")?.addEventListener("click",()=>this.openModal("link")),this.shadowRoot?.querySelector("#btn-image")?.addEventListener("click",()=>this.openModal("image")),this.shadowRoot?.querySelector("#modal-cancel")?.addEventListener("click",()=>this.closeModal()),this.shadowRoot?.querySelector("#modal-confirm")?.addEventListener("click",()=>this.handleModalConfirm()),this._imgResizer?.addEventListener("click",()=>this.openModal("image-edit")),this._editorContainer?.addEventListener("scroll",()=>this.hideResizer())}openModal(o){if(!this._modal||this._isLocked)return;this._pendingAction=o;let r=this.shadowRoot?.querySelector("#modal-title"),t=this.shadowRoot?.querySelector("#modal-input-1"),a=this.shadowRoot?.querySelector("#modal-input-2");if(t)t.value="";if(a)a.value="";if(o==="link"){if(r)r.textContent=i.t("widget.notepad.modal.link_title");if(t)t.placeholder=i.t("widget.notepad.modal.placeholder_url");if(a)a.style.display="none"}else if(o==="image"){if(r)r.textContent=i.t("widget.notepad.modal.image_title");if(t)t.placeholder=i.t("widget.notepad.modal.placeholder_img");if(a)a.style.display="block",a.placeholder=i.t("widget.notepad.modal.placeholder_width")}else if(o==="image-edit"&&this._activeImage){if(r)r.textContent=i.t("widget.notepad.modal.image_edit_title");if(t)t.placeholder=i.t("widget.notepad.modal.placeholder_img"),t.value=this._activeImage.src;if(a)a.style.display="block",a.placeholder=i.t("widget.notepad.modal.placeholder_width"),a.value=this._activeImage.style.width||""}this._modal.classList.add("visible"),setTimeout(()=>t?.focus(),50)}closeModal(){if(this._modal)this._modal.classList.remove("visible");this._pendingAction=null,this._editor?.focus()}handleModalConfirm(){let o=this.shadowRoot?.querySelector("#modal-input-1"),r=this.shadowRoot?.querySelector("#modal-input-2"),t=o?.value,a=r?.value;if(!t){this.closeModal();return}if(this._editor?.focus(),this._pendingAction==="link")document.execCommand("createLink",!1,t);else if(this._pendingAction==="image"){let n=a?` style="width:${a}; max-width:100%;"`:' style="max-width:100%;"',e=`<img src="${t}"${n} />`;document.execCommand("insertHTML",!1,e)}else if(this._pendingAction==="image-edit"&&this._activeImage){if(this._activeImage.src=t,a)this._activeImage.style.width=a;else this._activeImage.style.width="";this._isDirty=!0,this.setStatus("dirty")}this.closeModal(),this.hideResizer()}executeFormat(o,r){if(this._editor?.focus(),o==="insertChecklist")document.execCommand("insertHTML",!1,'<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else if(o==="removeFormat")document.execCommand("removeFormat"),document.execCommand("formatBlock",!1,"p"),document.execCommand("unlink");else document.execCommand(o,!1,r)}toggleLock(){if(this._isLocked=!this._isLocked,this.updateLockState(),this._isLocked&&this._isDirty)this.save()}updateLockState(){if(this._editor)this._editor.contentEditable=this._isLocked?"false":"true";let o=this.shadowRoot?.querySelector("#lock-btn");if(o)o.classList.toggle("locked",this._isLocked),o.innerHTML=this._isLocked?f.lock:f.unlock,o.setAttribute("title",this._isLocked?i.t("widget.notepad.tool.unlock"):i.t("widget.notepad.tool.lock"));if(this._dock)if(this._isLocked)this._dock.classList.add("hidden");else this._dock.classList.remove("hidden");if(this._editorContainer)this._editorContainer.classList.toggle("locked",this._isLocked);if(!this._isLocked&&this._editor)setTimeout(()=>{this._editor?.focus()},10)}handleInput(o){if(this._isLocked)return;this.hideResizer(),this.checkPlaceholder(),this._isDirty=!0,this.setStatus("dirty"),this.checkInputRules()}handleEditorClick(o){if(this._isLocked)return;let r=o.target;if(r instanceof HTMLImageElement){this._activeImage=r,this.showResizer(r);return}else if(!r.closest("#img-resizer"))this.hideResizer(),this._activeImage=null;if(r.classList.contains("checkbox-char")){if(o.preventDefault(),o.stopPropagation(),r.textContent==="☐")r.textContent="☑",r.classList.add("checked");else r.textContent="☐",r.classList.remove("checked");this._isDirty=!0,this.setStatus("dirty")}}showResizer(o){if(!this._imgResizer)return;let r=o.getBoundingClientRect(),t=this.getBoundingClientRect(),a=r.top-t.top,n=r.right-t.left;this._imgResizer.style.top=`${a+8}px`,this._imgResizer.style.left=`${n-36}px`,this._imgResizer.classList.add("visible")}hideResizer(){this._imgResizer?.classList.remove("visible")}handleKeydown(o){if(this._isLocked)return;if(o.key==="Tab")o.preventDefault(),document.execCommand("insertText",!1,"  ");let r=(a)=>/^[☐☑]/.test(a.trim()),t=(a)=>a.replace(/[☐☑\s\u00A0\u200B]/g,"").length===0;if(o.key==="Enter"){let a=this.getSelection();if(a&&a.anchorNode){let n=a.anchorNode,e=n.nodeType===Node.TEXT_NODE?n.parentElement:n,s=e?.textContent||"";if(r(s)){if(t(s))if(o.preventDefault(),document.execCommand("delete"),e.tagName==="DIV"||e.tagName==="P")e.innerHTML="<br>";else document.execCommand("insertHTML",!1,"<br>");else{o.preventDefault();let p=e;while(p&&p!==this._editor&&p.tagName!=="DIV"&&p.tagName!=="P")p=p.parentElement;if(!p||p===this._editor)document.execCommand("insertHTML",!1,'<br><span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else{let d=document.createElement(p.tagName);if(p instanceof HTMLElement)d.style.textAlign=p.style.textAlign;if(d.innerHTML='<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;',p.nextSibling)p.parentNode?.insertBefore(d,p.nextSibling);else p.parentNode?.appendChild(d);let c=document.createRange();c.selectNodeContents(d),c.collapse(!1);let l=this.getSelection();l.removeAllRanges(),l.addRange(c)}}return}}}if(o.key==="Backspace"){let a=this.getSelection();if(a&&a.isCollapsed&&a.anchorNode){let n=a.anchorNode,e=n.nodeType===Node.TEXT_NODE?n.parentElement:n,s=e?.textContent||"";if(r(s)&&t(s)){if(o.preventDefault(),e.tagName==="DIV"||e.tagName==="P")e.innerHTML="<br>";else document.execCommand("delete");return}if(a.anchorOffset===0){if(n.nodeType===Node.TEXT_NODE){let p=n.previousSibling;if(p&&p.nodeType===Node.ELEMENT_NODE&&p.classList.contains("checkbox-char")){o.preventDefault(),p.remove();return}}}if(n.nodeType===Node.ELEMENT_NODE&&a.anchorOffset>0){let p=n.childNodes[a.anchorOffset-1];if(p&&p.nodeType===Node.ELEMENT_NODE&&p.classList.contains("checkbox-char")){o.preventDefault(),p.remove();return}}}}if((o.ctrlKey||o.metaKey)&&o.key==="s")o.preventDefault(),this.save()}handlePaste(o){if(this._isLocked)return;o.preventDefault();let r=o.clipboardData?.getData("text/plain")??"";document.execCommand("insertText",!1,r)}checkInputRules(){let o=this.getSelection();if(!o||!o.isCollapsed)return;let r=o.anchorNode;if(!r||r.nodeType!==Node.TEXT_NODE)return;let t=r.textContent||"",a=o.anchorOffset,n=t.slice(0,a),e=[{match:/^#\s$/,cmd:"formatBlock",val:"H1"},{match:/^##\s$/,cmd:"formatBlock",val:"H2"},{match:/^###\s$/,cmd:"formatBlock",val:"H3"},{match:/^>\s$/,cmd:"formatBlock",val:"BLOCKQUOTE"},{match:/^-\s$/,cmd:"insertUnorderedList",val:null},{match:/^\*\s$/,cmd:"insertUnorderedList",val:null},{match:/^1\.\s$/,cmd:"insertOrderedList",val:null},{match:/^\[\]\s$/,cmd:"insertChecklist",val:null},{match:/^---\s$/,cmd:"insertHorizontalRule",val:null}];for(let s of e)if(s.match.test(n)){let p=document.createRange();if(p.setStart(r,0),p.setEnd(r,a),p.deleteContents(),s.cmd==="insertChecklist")document.execCommand("insertHTML",!1,'<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else if(s.cmd==="insertHorizontalRule")document.execCommand("insertHorizontalRule");else document.execCommand(s.cmd,!1,s.val);return}}checkPlaceholder(){if(!this._editor)return;if(this._editor.innerText.trim()===""&&this._editor.querySelectorAll("img").length===0)this._editor.classList.add("is-empty");else this._editor.classList.remove("is-empty")}async loadContent(){if(!this._itemId)return;let r=g.getState().items.find((t)=>t.id===this._itemId);if(r){let a=Q.parse(r.content).text||"";if(this._editor&&this._editor.innerHTML!==a)this._editor.innerHTML=a;this._content=a,this.checkPlaceholder()}}async save(o=!1){if(!this._itemId||!this._editor)return;let r=this._editor.innerHTML;this._isSaving=!0,this.setStatus("saving");try{let a=g.getState().items.find((n)=>n.id===this._itemId);if(a){let n=Q.setNotepadText(a.content,r);g.updateItem({...a,content:n}).then(()=>{this._isDirty=!1,this.setStatus("saved")})}}catch(t){console.error(t),this.setStatus("error")}finally{this._isSaving=!1}}setStatus(o){if(!this._syncStatus)return;switch(this._syncStatus.className="sync-status",this._syncStatus.classList.add("visible"),o){case"saving":this._syncStatus.classList.add("saving");break;case"saved":this._syncStatus.classList.add("saved"),setTimeout(()=>{this._syncStatus?.classList.remove("visible")},2000);break;case"dirty":this._syncStatus.classList.add("dirty");break;case"error":this._syncStatus.classList.add("error");break;case"idle":this._syncStatus.classList.remove("visible");break}}getSelection(){let o=this.shadowRoot;return o.getSelection?o.getSelection():document.getSelection()}}customElements.define("widget-notepad",nr);v();L();class er extends HTMLElement{cpuBar=null;ramBar=null;tempBar=null;cpuText=null;ramText=null;tempText=null;_unsubscribe;_unsubscribeI18n;_itemId=0;_interval=1000;lastUpdate=0;static get observedAttributes(){return["item-id","content"]}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t);if(o==="content")try{let a=typeof t==="string"?JSON.parse(t):t;if(a&&a.interval)this._interval=parseInt(a.interval)}catch(a){}}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){if(!this.shadowRoot)this.attachShadow({mode:"open"});if(!this.cpuBar)this.render();if(this._unsubscribe)return;if(this._unsubscribe=g.subscribe((o)=>{if(this._itemId){let t=(Array.isArray(o.items)?o.items:[]).find((a)=>a.id===this._itemId);if(t&&t.content)try{let a=typeof t.content==="string"?JSON.parse(t.content):t.content;if(a.interval&&a.interval!==this._interval)this._interval=parseInt(a.interval)}catch(a){}}if(o.stats)this.update(o.stats)}),!this._unsubscribeI18n)this._unsubscribeI18n=i.subscribe(()=>{this.render();let o=g.getState();if(o.stats)this.update(o.stats)})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n()}lastKnownStats={cpu_usage:0,ram_usage:0,temperature:0};update(o){if(!this.shadowRoot)return;let r=Date.now(),t=100;if(r-this.lastUpdate<this._interval-t)return;if(this.lastUpdate=r,typeof o.cpu_usage==="number")this.lastKnownStats.cpu_usage=o.cpu_usage;if(typeof o.ram_usage==="number")this.lastKnownStats.ram_usage=o.ram_usage;if(typeof o.temperature==="number")this.lastKnownStats.temperature=o.temperature;let a=typeof o.cpu_usage==="number"?o.cpu_usage:this.lastKnownStats.cpu_usage,n=typeof o.ram_usage==="number"?o.ram_usage:this.lastKnownStats.ram_usage,e=typeof o.temperature==="number"?o.temperature:this.lastKnownStats.temperature;requestAnimationFrame(()=>{let s=Math.min(100,Math.max(0,Math.round(a)));if(this.cpuBar)this.cpuBar.style.strokeDasharray=`${s}, 100`;if(this.cpuText)this.cpuText.textContent=`${s}%`;let p=Math.min(100,Math.max(0,Math.round(n)));if(this.ramBar)this.ramBar.style.strokeDasharray=`${p}, 100`;if(this.ramText)this.ramText.textContent=`${p}%`;let d=Math.round(e),c=Math.min(100,Math.max(0,d));if(this.tempBar)this.tempBar.style.strokeDasharray=`${c}, 100`;if(this.tempText)this.tempText.textContent=`${d}°C`})}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
+        `,this._editor=this.shadowRoot.querySelector(".editor"),this._editorContainer=this.shadowRoot.querySelector(".editor-container"),this._syncStatus=this.shadowRoot.querySelector("#sync-status"),this._dock=this.shadowRoot.querySelector("#glass-dock"),this._modal=this.shadowRoot.querySelector("#glass-modal"),this._imgResizer=this.shadowRoot.querySelector("#img-resizer"),this.bindEvents()}bindEvents(){if(!this._editor)return;this._editor.addEventListener("input",(t)=>this.handleInput(t)),this._editor.addEventListener("keydown",(t)=>this.handleKeydown(t)),this._editor.addEventListener("paste",(t)=>this.handlePaste(t)),this._editor.addEventListener("click",(t)=>this.handleEditorClick(t));let o=this.shadowRoot?.querySelector("#lock-btn");if(o)o.addEventListener("click",(t)=>{t.preventDefault(),t.stopImmediatePropagation();let i=Date.now();if(i-this._lastLockTime<300)return;this._lastLockTime=i,this.toggleLock()}),o.addEventListener("mousedown",(t)=>t.stopPropagation());this.shadowRoot?.querySelectorAll(".dock-btn[data-fmt]").forEach((t)=>{t.addEventListener("mousedown",(i)=>{if(i.preventDefault(),this._isLocked)return;let n=i.currentTarget.dataset.fmt;if(n)if(n.includes(":")){let[e,s]=n.split(":");this.executeFormat(e,s)}else this.executeFormat(n)})});let r=this.shadowRoot?.querySelector("#color-picker");if(r)r.addEventListener("input",(t)=>{let i=t.target.value;this.executeFormat("foreColor",i)});this.shadowRoot?.querySelector("#btn-link")?.addEventListener("click",()=>this.openModal("link")),this.shadowRoot?.querySelector("#btn-image")?.addEventListener("click",()=>this.openModal("image")),this.shadowRoot?.querySelector("#modal-cancel")?.addEventListener("click",()=>this.closeModal()),this.shadowRoot?.querySelector("#modal-confirm")?.addEventListener("click",()=>this.handleModalConfirm()),this._imgResizer?.addEventListener("click",()=>this.openModal("image-edit")),this._editorContainer?.addEventListener("scroll",()=>this.hideResizer())}openModal(o){if(!this._modal||this._isLocked)return;this._pendingAction=o;let r=this.shadowRoot?.querySelector("#modal-title"),t=this.shadowRoot?.querySelector("#modal-input-1"),i=this.shadowRoot?.querySelector("#modal-input-2");if(t)t.value="";if(i)i.value="";if(o==="link"){if(r)r.textContent=a.t("widget.notepad.modal.link_title");if(t)t.placeholder=a.t("widget.notepad.modal.placeholder_url");if(i)i.style.display="none"}else if(o==="image"){if(r)r.textContent=a.t("widget.notepad.modal.image_title");if(t)t.placeholder=a.t("widget.notepad.modal.placeholder_img");if(i)i.style.display="block",i.placeholder=a.t("widget.notepad.modal.placeholder_width")}else if(o==="image-edit"&&this._activeImage){if(r)r.textContent=a.t("widget.notepad.modal.image_edit_title");if(t)t.placeholder=a.t("widget.notepad.modal.placeholder_img"),t.value=this._activeImage.src;if(i)i.style.display="block",i.placeholder=a.t("widget.notepad.modal.placeholder_width"),i.value=this._activeImage.style.width||""}this._modal.classList.add("visible"),setTimeout(()=>t?.focus(),50)}closeModal(){if(this._modal)this._modal.classList.remove("visible");this._pendingAction=null,this._editor?.focus()}handleModalConfirm(){let o=this.shadowRoot?.querySelector("#modal-input-1"),r=this.shadowRoot?.querySelector("#modal-input-2"),t=o?.value,i=r?.value;if(!t){this.closeModal();return}if(this._editor?.focus(),this._pendingAction==="link")document.execCommand("createLink",!1,t);else if(this._pendingAction==="image"){let n=i?` style="width:${i}; max-width:100%;"`:' style="max-width:100%;"',e=`<img src="${t}"${n} />`;document.execCommand("insertHTML",!1,e)}else if(this._pendingAction==="image-edit"&&this._activeImage){if(this._activeImage.src=t,i)this._activeImage.style.width=i;else this._activeImage.style.width="";this._isDirty=!0,this.setStatus("dirty")}this.closeModal(),this.hideResizer()}executeFormat(o,r){if(this._editor?.focus(),o==="insertChecklist")document.execCommand("insertHTML",!1,'<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else if(o==="removeFormat")document.execCommand("removeFormat"),document.execCommand("formatBlock",!1,"p"),document.execCommand("unlink");else document.execCommand(o,!1,r)}toggleLock(){if(this._isLocked=!this._isLocked,this.updateLockState(),this._isLocked&&this._isDirty)this.save()}updateLockState(){if(this._editor)this._editor.contentEditable=this._isLocked?"false":"true";let o=this.shadowRoot?.querySelector("#lock-btn");if(o)o.classList.toggle("locked",this._isLocked),o.innerHTML=this._isLocked?m.lock:m.unlock,o.setAttribute("title",this._isLocked?a.t("widget.notepad.tool.unlock"):a.t("widget.notepad.tool.lock"));if(this._dock)if(this._isLocked)this._dock.classList.add("hidden");else this._dock.classList.remove("hidden");if(this._editorContainer)this._editorContainer.classList.toggle("locked",this._isLocked);if(!this._isLocked&&this._editor)setTimeout(()=>{this._editor?.focus()},10)}handleInput(o){if(this._isLocked)return;this.hideResizer(),this.checkPlaceholder(),this._isDirty=!0,this.setStatus("dirty"),this.checkInputRules()}handleEditorClick(o){if(this._isLocked)return;let r=o.target;if(r instanceof HTMLImageElement){this._activeImage=r,this.showResizer(r);return}else if(!r.closest("#img-resizer"))this.hideResizer(),this._activeImage=null;if(r.classList.contains("checkbox-char")){if(o.preventDefault(),o.stopPropagation(),r.textContent==="☐")r.textContent="☑",r.classList.add("checked");else r.textContent="☐",r.classList.remove("checked");this._isDirty=!0,this.setStatus("dirty")}}showResizer(o){if(!this._imgResizer)return;let r=o.getBoundingClientRect(),t=this.getBoundingClientRect(),i=r.top-t.top,n=r.right-t.left;this._imgResizer.style.top=`${i+8}px`,this._imgResizer.style.left=`${n-36}px`,this._imgResizer.classList.add("visible")}hideResizer(){this._imgResizer?.classList.remove("visible")}handleKeydown(o){if(this._isLocked)return;if(o.key==="Tab")o.preventDefault(),document.execCommand("insertText",!1,"  ");let r=(i)=>/^[☐☑]/.test(i.trim()),t=(i)=>i.replace(/[☐☑\s\u00A0\u200B]/g,"").length===0;if(o.key==="Enter"){let i=this.getSelection();if(i&&i.anchorNode){let n=i.anchorNode,e=n.nodeType===Node.TEXT_NODE?n.parentElement:n,s=e?.textContent||"";if(r(s)){if(t(s))if(o.preventDefault(),document.execCommand("delete"),e.tagName==="DIV"||e.tagName==="P")e.innerHTML="<br>";else document.execCommand("insertHTML",!1,"<br>");else{o.preventDefault();let p=e;while(p&&p!==this._editor&&p.tagName!=="DIV"&&p.tagName!=="P")p=p.parentElement;if(!p||p===this._editor)document.execCommand("insertHTML",!1,'<br><span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else{let d=document.createElement(p.tagName);if(p instanceof HTMLElement)d.style.textAlign=p.style.textAlign;if(d.innerHTML='<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;',p.nextSibling)p.parentNode?.insertBefore(d,p.nextSibling);else p.parentNode?.appendChild(d);let c=document.createRange();c.selectNodeContents(d),c.collapse(!1);let l=this.getSelection();l.removeAllRanges(),l.addRange(c)}}return}}}if(o.key==="Backspace"){let i=this.getSelection();if(i&&i.isCollapsed&&i.anchorNode){let n=i.anchorNode,e=n.nodeType===Node.TEXT_NODE?n.parentElement:n,s=e?.textContent||"";if(r(s)&&t(s)){if(o.preventDefault(),e.tagName==="DIV"||e.tagName==="P")e.innerHTML="<br>";else document.execCommand("delete");return}if(i.anchorOffset===0){if(n.nodeType===Node.TEXT_NODE){let p=n.previousSibling;if(p&&p.nodeType===Node.ELEMENT_NODE&&p.classList.contains("checkbox-char")){o.preventDefault(),p.remove();return}}}if(n.nodeType===Node.ELEMENT_NODE&&i.anchorOffset>0){let p=n.childNodes[i.anchorOffset-1];if(p&&p.nodeType===Node.ELEMENT_NODE&&p.classList.contains("checkbox-char")){o.preventDefault(),p.remove();return}}}}if((o.ctrlKey||o.metaKey)&&o.key==="s")o.preventDefault(),this.save()}handlePaste(o){if(this._isLocked)return;o.preventDefault();let r=o.clipboardData?.getData("text/plain")??"";document.execCommand("insertText",!1,r)}checkInputRules(){let o=this.getSelection();if(!o||!o.isCollapsed)return;let r=o.anchorNode;if(!r||r.nodeType!==Node.TEXT_NODE)return;let t=r.textContent||"",i=o.anchorOffset,n=t.slice(0,i),e=[{match:/^#\s$/,cmd:"formatBlock",val:"H1"},{match:/^##\s$/,cmd:"formatBlock",val:"H2"},{match:/^###\s$/,cmd:"formatBlock",val:"H3"},{match:/^>\s$/,cmd:"formatBlock",val:"BLOCKQUOTE"},{match:/^-\s$/,cmd:"insertUnorderedList",val:null},{match:/^\*\s$/,cmd:"insertUnorderedList",val:null},{match:/^1\.\s$/,cmd:"insertOrderedList",val:null},{match:/^\[\]\s$/,cmd:"insertChecklist",val:null},{match:/^---\s$/,cmd:"insertHorizontalRule",val:null}];for(let s of e)if(s.match.test(n)){let p=document.createRange();if(p.setStart(r,0),p.setEnd(r,i),p.deleteContents(),s.cmd==="insertChecklist")document.execCommand("insertHTML",!1,'<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;');else if(s.cmd==="insertHorizontalRule")document.execCommand("insertHorizontalRule");else document.execCommand(s.cmd,!1,s.val);return}}checkPlaceholder(){if(!this._editor)return;if(this._editor.innerText.trim()===""&&this._editor.querySelectorAll("img").length===0)this._editor.classList.add("is-empty");else this._editor.classList.remove("is-empty")}async loadContent(){if(!this._itemId)return;let r=x.getState().items.find((t)=>t.id===this._itemId);if(r){let i=Q.parse(r.content).text||"";if(this._editor&&this._editor.innerHTML!==i)this._editor.innerHTML=i;this._content=i,this.checkPlaceholder()}}async save(o=!1){if(!this._itemId||!this._editor)return;let r=this._editor.innerHTML;this._isSaving=!0,this.setStatus("saving");try{let i=x.getState().items.find((n)=>n.id===this._itemId);if(i){let n=Q.setNotepadText(i.content,r);x.updateItem({...i,content:n}).then(()=>{this._isDirty=!1,this.setStatus("saved")})}}catch(t){console.error(t),this.setStatus("error")}finally{this._isSaving=!1}}setStatus(o){if(!this._syncStatus)return;switch(this._syncStatus.className="sync-status",this._syncStatus.classList.add("visible"),o){case"saving":this._syncStatus.classList.add("saving");break;case"saved":this._syncStatus.classList.add("saved"),setTimeout(()=>{this._syncStatus?.classList.remove("visible")},2000);break;case"dirty":this._syncStatus.classList.add("dirty");break;case"error":this._syncStatus.classList.add("error");break;case"idle":this._syncStatus.classList.remove("visible");break}}getSelection(){let o=this.shadowRoot;return o.getSelection?o.getSelection():document.getSelection()}}customElements.define("widget-notepad",sr);y();L();class pr extends HTMLElement{cpuBar=null;ramBar=null;tempBar=null;cpuText=null;ramText=null;tempText=null;_unsubscribe;_unsubscribeI18n;_itemId=0;_interval=1000;lastUpdate=0;static get observedAttributes(){return["item-id","content"]}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t);if(o==="content")try{let i=typeof t==="string"?JSON.parse(t):t;if(i&&i.interval)this._interval=parseInt(i.interval)}catch(i){}}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){if(!this.shadowRoot)this.attachShadow({mode:"open"});if(!this.cpuBar)this.render();if(this._unsubscribe)return;if(this._unsubscribe=x.subscribe((o)=>{if(this._itemId){let t=(Array.isArray(o.items)?o.items:[]).find((i)=>i.id===this._itemId);if(t&&t.content)try{let i=typeof t.content==="string"?JSON.parse(t.content):t.content;if(i.interval&&i.interval!==this._interval)this._interval=parseInt(i.interval)}catch(i){}}if(o.stats)this.update(o.stats)}),!this._unsubscribeI18n)this._unsubscribeI18n=a.subscribe(()=>{this.render();let o=x.getState();if(o.stats)this.update(o.stats)})}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n()}lastKnownStats={cpu_usage:0,ram_usage:0,temperature:0};update(o){if(!this.shadowRoot)return;let r=Date.now(),t=100;if(r-this.lastUpdate<this._interval-t)return;if(this.lastUpdate=r,typeof o.cpu_usage==="number")this.lastKnownStats.cpu_usage=o.cpu_usage;if(typeof o.ram_usage==="number")this.lastKnownStats.ram_usage=o.ram_usage;if(typeof o.temperature==="number")this.lastKnownStats.temperature=o.temperature;let i=typeof o.cpu_usage==="number"?o.cpu_usage:this.lastKnownStats.cpu_usage,n=typeof o.ram_usage==="number"?o.ram_usage:this.lastKnownStats.ram_usage,e=typeof o.temperature==="number"?o.temperature:this.lastKnownStats.temperature;requestAnimationFrame(()=>{let s=Math.min(100,Math.max(0,Math.round(i)));if(this.cpuBar)this.cpuBar.style.strokeDasharray=`${s}, 100`;if(this.cpuText)this.cpuText.textContent=`${s}%`;let p=Math.min(100,Math.max(0,Math.round(n)));if(this.ramBar)this.ramBar.style.strokeDasharray=`${p}, 100`;if(this.ramText)this.ramText.textContent=`${p}%`;let d=Math.round(e),c=Math.min(100,Math.max(0,d));if(this.tempBar)this.tempBar.style.strokeDasharray=`${c}, 100`;if(this.tempText)this.tempText.textContent=`${d}°C`})}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
             <style>
                 :host {
                     display: flex;
@@ -2840,7 +3049,7 @@ input:checked+.slider:before {
                     </svg>
                     <div class="value-overlay cpu-text">0%</div>
                 </div>
-                <div class="sub">${i.t("widget.telemetry.cpu")}</div>
+                <div class="sub">${a.t("widget.telemetry.cpu")}</div>
             </div>
 
             <!-- RAM -->
@@ -2852,7 +3061,7 @@ input:checked+.slider:before {
                     </svg>
                     <div class="value-overlay ram-text">0%</div>
                 </div>
-                <div class="sub">${i.t("widget.telemetry.ram")}</div>
+                <div class="sub">${a.t("widget.telemetry.ram")}</div>
             </div>
 
             <!-- TEMP -->
@@ -2864,9 +3073,9 @@ input:checked+.slider:before {
                     </svg>
                     <div class="value-overlay temp-text">0°C</div>
                 </div>
-                <div class="sub">${i.t("widget.telemetry.temp")}</div>
+                <div class="sub">${a.t("widget.telemetry.temp")}</div>
             </div>
-        `,this.cpuBar=this.shadowRoot.querySelector(".cpu-bar"),this.ramBar=this.shadowRoot.querySelector(".ram-bar"),this.tempBar=this.shadowRoot.querySelector(".temp-bar"),this.cpuText=this.shadowRoot.querySelector(".cpu-text"),this.ramText=this.shadowRoot.querySelector(".ram-text"),this.tempText=this.shadowRoot.querySelector(".temp-text")}}customElements.define("widget-telemetry",er);v();L();var sr=new Map,dr=900000,pr={widgetId:"weather",latitude:0,longitude:0,city:"",unit:"celsius",showForecast:!1,forecastDays:5};function V(o){if(o===0)return`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        `,this.cpuBar=this.shadowRoot.querySelector(".cpu-bar"),this.ramBar=this.shadowRoot.querySelector(".ram-bar"),this.tempBar=this.shadowRoot.querySelector(".temp-bar"),this.cpuText=this.shadowRoot.querySelector(".cpu-text"),this.ramText=this.shadowRoot.querySelector(".ram-text"),this.tempText=this.shadowRoot.querySelector(".temp-text")}}customElements.define("widget-telemetry",pr);y();L();var dr=new Map,cr=900000,lr={widgetId:"weather",latitude:0,longitude:0,city:"",unit:"celsius",showForecast:!1,forecastDays:5};function N(o){if(o===0)return`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <circle cx="32" cy="32" r="11"/>
             <line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/>
             <line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/>
@@ -2905,27 +3114,27 @@ input:checked+.slider:before {
             <polyline points="35,38 28,48 36,48 29,58" stroke-width="2.5"/>
         </svg>`;return`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <path d="M14 40 Q14 32 22 32 Q22 22 34 22 Q46 22 46 32 Q54 32 54 40 Q54 46 46 46 L20 46 Q14 46 14 40Z"/>
-    </svg>`}function xo(o){let r={0:"clear_sky",1:"mainly_clear",2:"partly_cloudy",3:"overcast",45:"fog",48:"fog",51:"light_drizzle",53:"drizzle",55:"heavy_drizzle",56:"freezing_drizzle",57:"freezing_drizzle",61:"light_rain",63:"rain",65:"heavy_rain",66:"freezing_rain",67:"freezing_rain",71:"light_snow",73:"snow",75:"heavy_snow",77:"snow_grains",80:"light_showers",81:"showers",82:"heavy_showers",85:"snow_showers",86:"heavy_snow_showers",95:"thunderstorm",96:"thunderstorm_hail",99:"thunderstorm_hail"};return i.t(`widget.weather.${r[o]||"unknown"}`)}function J(o,r){if(r==="fahrenheit")return`${Math.round(o*9/5+32)}°F`;return`${Math.round(o)}°C`}async function it(o,r){let t=`${o.toFixed(2)},${r.toFixed(2)}`,a=sr.get(t);if(a&&Date.now()-a.timestamp<dr)return a.data;let n=`https://api.open-meteo.com/v1/forecast?latitude=${o}&longitude=${r}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,wind_speed_10m_max&timezone=auto&forecast_days=7`,e=await fetch(n);if(!e.ok)throw Error("Weather API error");let s=await e.json();return sr.set(t,{data:s,timestamp:Date.now()}),s}class lr extends HTMLElement{_config={...pr};_itemId=0;_unsubscribe=null;_unsubscribeI18n;_weatherData=null;_refreshTimer=null;_loading=!1;_error=!1;constructor(){super();this.attachShadow({mode:"open"})}static get observedAttributes(){return["item-id"]}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t)}connectedCallback(){this.render(),this.loadWeather(),this._refreshTimer=setInterval(()=>this.loadWeather(),dr),this._unsubscribe=g.subscribe((o)=>{if(!this._itemId)return;let r=o.items.find((t)=>t.id===this._itemId);if(!r?.content)return;try{let t=typeof r.content==="string"?JSON.parse(r.content):r.content;if(t.widgetId!=="weather")return;let a=this._config.latitude,n=this._config.longitude;if(this._config={...pr,...t},a!==this._config.latitude||n!==this._config.longitude)this.loadWeather();else this.updateDisplay()}catch(t){}}),this._unsubscribeI18n=i.subscribe(()=>this.updateDisplay())}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._refreshTimer)clearInterval(this._refreshTimer)}async loadWeather(){if(!this._config.latitude&&!this._config.longitude){this._loading=!1,this._error=!1,this.updateDisplay();return}this._loading=!0,this._error=!1,this.updateDisplay();try{this._weatherData=await it(this._config.latitude,this._config.longitude),this._loading=!1}catch(o){this._loading=!1,this._error=!0}this.updateDisplay()}updateDisplay(){let o=this.shadowRoot?.querySelector(".weather-body");if(!o){this.render();return}if(!this._config.latitude&&!this._config.longitude){o.innerHTML=this.emptyState(V(0),i.t("widget.weather.no_location"));return}if(this._loading){o.innerHTML=this.emptyState(V(3),i.t("general.loading"),!0);return}if(this._error||!this._weatherData){o.innerHTML=this.emptyState(V(-1),i.t("general.error"));return}let r=this._weatherData.current_weather,t=this._weatherData.daily,a=this._config.unit||"celsius";if(this._config.showForecast&&t)o.innerHTML=this.forecastView(r,t,a);else o.innerHTML=this.simpleView(r,t,a)}emptyState(o,r,t=!1){return`<div class="state"><div class="state-icon${t?" pulse":""}">${o}</div><span class="state-text">${r}</span></div>`}simpleView(o,r,t){return`
-            <div class="icon-main">${V(o.weathercode)}</div>
+    </svg>`}function xo(o){let r={0:"clear_sky",1:"mainly_clear",2:"partly_cloudy",3:"overcast",45:"fog",48:"fog",51:"light_drizzle",53:"drizzle",55:"heavy_drizzle",56:"freezing_drizzle",57:"freezing_drizzle",61:"light_rain",63:"rain",65:"heavy_rain",66:"freezing_rain",67:"freezing_rain",71:"light_snow",73:"snow",75:"heavy_snow",77:"snow_grains",80:"light_showers",81:"showers",82:"heavy_showers",85:"snow_showers",86:"heavy_snow_showers",95:"thunderstorm",96:"thunderstorm_hail",99:"thunderstorm_hail"};return a.t(`widget.weather.${r[o]||"unknown"}`)}function J(o,r){if(r==="fahrenheit")return`${Math.round(o*9/5+32)}°F`;return`${Math.round(o)}°C`}async function st(o,r){let t=`${o.toFixed(2)},${r.toFixed(2)}`,i=dr.get(t);if(i&&Date.now()-i.timestamp<cr)return i.data;let n=`https://api.open-meteo.com/v1/forecast?latitude=${o}&longitude=${r}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,wind_speed_10m_max&timezone=auto&forecast_days=7`,e=await fetch(n);if(!e.ok)throw Error("Weather API error");let s=await e.json();return dr.set(t,{data:s,timestamp:Date.now()}),s}class gr extends HTMLElement{_config={...lr};_itemId=0;_unsubscribe=null;_unsubscribeI18n;_weatherData=null;_refreshTimer=null;_loading=!1;_error=!1;constructor(){super();this.attachShadow({mode:"open"})}static get observedAttributes(){return["item-id"]}attributeChangedCallback(o,r,t){if(o==="item-id")this._itemId=parseInt(t)}connectedCallback(){this.render(),this.loadWeather(),this._refreshTimer=setInterval(()=>this.loadWeather(),cr),this._unsubscribe=x.subscribe((o)=>{if(!this._itemId)return;let r=o.items.find((t)=>t.id===this._itemId);if(!r?.content)return;try{let t=typeof r.content==="string"?JSON.parse(r.content):r.content;if(t.widgetId!=="weather")return;let i=this._config.latitude,n=this._config.longitude;if(this._config={...lr,...t},i!==this._config.latitude||n!==this._config.longitude)this.loadWeather();else this.updateDisplay()}catch(t){}}),this._unsubscribeI18n=a.subscribe(()=>this.updateDisplay())}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._refreshTimer)clearInterval(this._refreshTimer)}async loadWeather(){if(!this._config.latitude&&!this._config.longitude){this._loading=!1,this._error=!1,this.updateDisplay();return}this._loading=!0,this._error=!1,this.updateDisplay();try{this._weatherData=await st(this._config.latitude,this._config.longitude),this._loading=!1}catch(o){this._loading=!1,this._error=!0}this.updateDisplay()}updateDisplay(){let o=this.shadowRoot?.querySelector(".weather-body");if(!o){this.render();return}if(!this._config.latitude&&!this._config.longitude){o.innerHTML=this.emptyState(N(0),a.t("widget.weather.no_location"));return}if(this._loading){o.innerHTML=this.emptyState(N(3),a.t("general.loading"),!0);return}if(this._error||!this._weatherData){o.innerHTML=this.emptyState(N(-1),a.t("general.error"));return}let r=this._weatherData.current_weather,t=this._weatherData.daily,i=this._config.unit||"celsius";if(this._config.showForecast&&t)o.innerHTML=this.forecastView(r,t,i);else o.innerHTML=this.simpleView(r,t,i)}emptyState(o,r,t=!1){return`<div class="state"><div class="state-icon${t?" pulse":""}">${o}</div><span class="state-text">${r}</span></div>`}simpleView(o,r,t){return`
+            <div class="icon-main">${N(o.weathercode)}</div>
             <div class="temp-main">${J(o.temperature,t)}</div>
             <div class="desc">${xo(o.weathercode)}</div>
             ${r?`<div class="minmax"><span class="hi">${J(r.temperature_2m_max[0],t)}</span><span class="lo">${J(r.temperature_2m_min[0],t)}</span></div>`:""}
             ${this._config.city?`<div class="city">${this._config.city}</div>`:""}
-        `}forecastView(o,r,t){let a=i.getLocale().code,n=Math.min(this._config.forecastDays||5,r.time.length-1),e="";for(let s=1;s<=n;s++){let p=new Date(r.time[s]+"T00:00:00"),d=p.toLocaleDateString(a,{weekday:"short"}),c=p.toLocaleDateString(a,{weekday:"long",day:"numeric",month:"long"}),l=xo(r.weathercode[s]),x=J(r.temperature_2m_max[s],t),_=J(r.temperature_2m_min[s],t),u=r.sunrise?.[s]?.split("T")[1]||"",w=r.sunset?.[s]?.split("T")[1]||"",m=r.wind_speed_10m_max?.[s]!=null?`${Math.round(r.wind_speed_10m_max[s])} km/h`:"";e+=`<div class="fc-day">
+        `}forecastView(o,r,t){let i=a.getLocale().code,n=Math.min(this._config.forecastDays||5,r.time.length-1),e="";for(let s=1;s<=n;s++){let p=new Date(r.time[s]+"T00:00:00"),d=p.toLocaleDateString(i,{weekday:"short"}),c=p.toLocaleDateString(i,{weekday:"long",day:"numeric",month:"long"}),l=xo(r.weathercode[s]),g=J(r.temperature_2m_max[s],t),u=J(r.temperature_2m_min[s],t),f=r.sunrise?.[s]?.split("T")[1]||"",_=r.sunset?.[s]?.split("T")[1]||"",v=r.wind_speed_10m_max?.[s]!=null?`${Math.round(r.wind_speed_10m_max[s])} km/h`:"";e+=`<div class="fc-day">
                 <span class="fc-name">${d}</span>
-                <span class="fc-icon">${V(r.weathercode[s])}</span>
-                <span class="fc-temp">${x}</span>
+                <span class="fc-icon">${N(r.weathercode[s])}</span>
+                <span class="fc-temp">${g}</span>
                 <div class="fc-tooltip">
                     <div class="tt-date">${c}</div>
                     <div class="tt-desc">${l}</div>
-                    <div class="tt-row"><span class="tt-label">${i.t("widget.weather.max_min")}</span><span>${x} / ${_}</span></div>
-                    ${u?`<div class="tt-row"><span class="tt-label">${i.t("widget.weather.sunrise")}</span><span>${u}</span></div>`:""}
-                    ${w?`<div class="tt-row"><span class="tt-label">${i.t("widget.weather.sunset")}</span><span>${w}</span></div>`:""}
-                    ${m?`<div class="tt-row"><span class="tt-label">${i.t("widget.weather.wind")}</span><span>${m}</span></div>`:""}
+                    <div class="tt-row"><span class="tt-label">${a.t("widget.weather.max_min")}</span><span>${g} / ${u}</span></div>
+                    ${f?`<div class="tt-row"><span class="tt-label">${a.t("widget.weather.sunrise")}</span><span>${f}</span></div>`:""}
+                    ${_?`<div class="tt-row"><span class="tt-label">${a.t("widget.weather.sunset")}</span><span>${_}</span></div>`:""}
+                    ${v?`<div class="tt-row"><span class="tt-label">${a.t("widget.weather.wind")}</span><span>${v}</span></div>`:""}
                 </div>
             </div>`}return`
             <div class="fc-header">
-                <div class="fc-h-icon">${V(o.weathercode)}</div>
+                <div class="fc-h-icon">${N(o.weathercode)}</div>
                 <div class="fc-h-info">
                     <div class="fc-h-temp">${J(o.temperature,t)}</div>
                     <div class="fc-h-desc">${xo(o.weathercode)}</div>
@@ -2934,7 +3143,7 @@ input:checked+.slider:before {
             </div>
             <div class="minmax compact"><span class="hi">${J(r.temperature_2m_max[0],t)}</span><span class="lo">${J(r.temperature_2m_min[0],t)}</span></div>
             <div class="fc-row">${e}</div>
-        `}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`<style>${nt}</style><div class="weather-body"></div>`,this.updateDisplay()}}var nt=`
+        `}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`<style>${pt}</style><div class="weather-body"></div>`,this.updateDisplay()}}var pt=`
 :host {
     display: flex;
     flex-direction: column;
@@ -3091,7 +3300,7 @@ input:checked+.slider:before {
     color: var(--text-dim);
     margin-right: 12px;
 }
-`;customElements.define("widget-weather",lr);var cr=`:host {
+`;customElements.define("widget-weather",gr);var xr=`:host {
     /* Fixed Grid System */
     /* --user-preferred-columns is set by JS on :root (Default: 12) */
     --grid-cols: var(--user-preferred-columns, 12);
@@ -3844,12 +4053,12 @@ input:checked+.slider:before {
     left: clamp(6px, 6cqi, 12px);
     top: auto;
     right: auto;
-}`;class xr extends HTMLElement{bookmarks=[];allItems=[];isEditing=!1;isLoading=!0;searchQuery="";_unsubscribe;_unsubscribeI18n;_resizeObserver;_resizeDebounce=null;dragTargetId=null;ghostEl=null;dragOffsetX=0;dragOffsetY=0;isResizing=!1;resizeTargetId=null;initialResizeX=0;initialResizeY=0;initialResizeW=0;initialResizeH=0;currentColWidth=0;currentGridCols=12;isTouchDevice=!1;constructor(){super();this.attachShadow({mode:"open"})}_widgetModal;_boundActionClick=this.handleActionClick.bind(this);_boundMouseMove=this.handleWindowMouseMove.bind(this);_boundMouseUp=this.handleWindowMouseUp.bind(this);applyFilters(){let o=this.isTouchDevice,r=!!this.searchQuery;if(r&&!o)this.classList.add("search-active");else this.classList.remove("search-active");if(o||r)this.bookmarks=this.allItems.filter((t)=>{let a=t.content;if(typeof t.content==="string")try{a=JSON.parse(t.content)}catch{return!1}if(o&&t.type!=="bookmark")return!1;if(o&&a.visibleTouch===!1)return!1;if(r)return(a.label||"").toLowerCase().includes(this.searchQuery);return!0});else this.bookmarks=this.allItems}connectedCallback(){let o=()=>{let t=window.innerWidth<768,a=window.matchMedia("(pointer: coarse)").matches||"ontouchstart"in window||navigator.maxTouchPoints>0;return t&&a},r=()=>{let t=o();if(this.isTouchDevice!==t){if(this.isTouchDevice=t,t)this.classList.add("touch-mode");else this.classList.remove("touch-mode");this.applyFilters(),this.render()}};if(window.addEventListener("resize",r),window.addEventListener("orientationchange",r),this.isTouchDevice=o(),this.isTouchDevice)this.classList.add("touch-mode");this.applyFilters(),this.render(),this.updateGridMetrics(),this._resizeObserver=new ResizeObserver(()=>{if(this._resizeDebounce)return;this._resizeDebounce=setTimeout(()=>{this._resizeDebounce=null,this.updateGridMetrics();let t=this.getBoundingClientRect();g.setGridMetrics(t.width,this.currentGridCols),this.applyFilters(),this.render()},16)}),this._resizeObserver.observe(this),this._unsubscribe=g.subscribe((t)=>{let a=!1;if(this.isEditing!==t.isEditing)this.isEditing=t.isEditing,a=!0;if(this.isLoading!==t.loading)this.isLoading=t.loading,a=!0;if(this.searchQuery!==t.searchQuery)this.searchQuery=t.searchQuery,a=!0;let n=Array.isArray(t.items)?t.items:[];if(JSON.stringify(this.allItems)!==JSON.stringify(n)||a)this.allItems=n,this.applyFilters(),a=!0;if(a)this.render()}),this.setupDragListeners(),this.setupResizeListeners(),this.setupActionListeners(),W.start(),this._unsubscribeI18n=i.subscribe(()=>this.render()),Promise.resolve().then(() => (Y(),S)).then(({userStore:t})=>{this._unsubscribeUser=t.subscribe(()=>{requestAnimationFrame(()=>{this.updateGridMetrics(),this.render()})})})}_unsubscribeUser=null;setupActionListeners(){let o=this.shadowRoot;o.removeEventListener("click",this._boundActionClick),o.addEventListener("click",this._boundActionClick)}async handleActionClick(o){if(!this.isEditing)return;let r=o.target;if(!r)return;let t=r.closest(".btn-delete"),a=r.closest(".btn-edit");if(t||a)o.preventDefault(),o.stopPropagation();else if(r.closest("a"))o.preventDefault();if(t){let n=t.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!n)return;let e=parseInt(n.dataset.id||"0"),s=this.allItems.find((l)=>l.id===e);if(!s)return;let p=s.type==="section"?i.t("type.section"):s.type==="widget"?i.t("type.widget"):i.t("type.bookmark"),{eventBus:d,EVENTS:c}=await Promise.resolve().then(() => (oo(),bo));d.emit(c.SHOW_CONFIRMATION,{title:`${i.t("general.delete")} ${p}`,message:i.t("bookmark.delete_confirm_message"),onConfirm:()=>{g.deleteItem(e)}});return}if(a){let n=a.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!n)return;let e=parseInt(n.dataset.id||"0"),s=this.allItems.find((p)=>p.id===e);if(s){let{eventBus:p,EVENTS:d}=await Promise.resolve().then(() => (oo(),bo));if(s.type==="widget")p.emit(d.SHOW_WIDGET_CONFIG,{item:s,type:"widget"});else if(s.type==="section")p.emit(d.SHOW_WIDGET_CONFIG,{item:s,type:"section"});else p.emit(d.SHOW_WIDGET_CONFIG,{item:s,type:"bookmark"})}return}}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._unsubscribeUser)this._unsubscribeUser();if(this._resizeObserver)this._resizeObserver.disconnect();if(this._resizeDebounce)clearTimeout(this._resizeDebounce);if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout);window.removeEventListener("mousemove",this._boundMouseMove),window.removeEventListener("mouseup",this._boundMouseUp),W.stop()}updateGridMetrics(){let o=this.getBoundingClientRect(),r=getComputedStyle(this),t=r.getPropertyValue("--grid-cols").trim(),a=parseInt(t)||12,n=r.columnGap||r.gap||"16px",e=parseFloat(n)||16;if(o.width<=0){this.currentGridCols=a,this.currentColWidth=100,this.style.setProperty("--current-grid-cols",a.toString()),this.style.setProperty("--row-height","100px");return}let s=(a-1)*e,p=(o.width-s)/a;if(p<10)p=10;this.currentGridCols=a,this.currentColWidth=p,this.style.setProperty("--current-grid-cols",String(a)),this.style.setProperty("--row-height",`${p}px`),this.ensureGridBuffer()}ensureGridBuffer(){if(this.isTouchDevice){this.style.minHeight="";return}let o=0;this.bookmarks.forEach((s)=>{let p=(s.y||1)+(s.h||1);if(p>o)o=p});let t=o+1,a=this.currentColWidth||100,n=16,e=t*a+(t-1)*n;this.style.minHeight=`${e}px`}setupResizeListeners(){window.addEventListener("mousemove",this._boundMouseMove),window.addEventListener("mouseup",this._boundMouseUp),this.shadowRoot.addEventListener("mousedown",(o)=>{let r=o;if(!this.isEditing)return;let t=r.target;if(t.classList.contains("resize-handle")){r.preventDefault(),r.stopPropagation();let a=t.closest(".bookmark-grid__card, .bookmark-grid__section");if(!a||!a.dataset.id)return;let n=parseInt(a.dataset.id),e=this.bookmarks.find((u)=>u.id===n);if(!e)return;this.isResizing=!0,this.resizeTargetId=n,this.initialResizeX=r.clientX,this.initialResizeY=r.clientY,this.initialResizeW=e.w,this.initialResizeH=e.h;let s=this,p=s.getBoundingClientRect(),c=getComputedStyle(s).getPropertyValue("--current-grid-cols").trim(),l=c?parseInt(c,10):9,x=isNaN(l)?9:l,_=16;this.currentColWidth=(p.width-(x-1)*_)/x,this.updateGhost({x:e.x,y:e.y,w:e.w,h:e.h},!0)}})}_updateGhostTimeout=null;handleWindowMouseMove(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)return;this._updateGhostTimeout=setTimeout(()=>{this._updateGhostTimeout=null,this.processResizeMove(o)},16)}processResizeMove(o){if(!this.isResizing||!this.resizeTargetId)return;let r=o.clientX-this.initialResizeX,t=o.clientY-this.initialResizeY,a=Math.round(r/(this.currentColWidth+16)),n=Math.round(t/(this.currentColWidth+16)),e=this.initialResizeW+a,s=this.initialResizeH+n,p=this.bookmarks.find((d)=>d.id===this.resizeTargetId);if(p){let d=this.applyResizeConstraints(e,s,p),c={x:p.x,y:p.y,w:d.w,h:d.h,id:p.id,parent_id:p.parent_id},l=F.calculateDropValidity(c,this.bookmarks,this.currentGridCols);this.updateGhost(c,l.valid)}}applyResizeConstraints(o,r,t){let a=1,n=1;if(t.type==="widget"){let e=t.content;if(typeof t.content==="string")try{e=JSON.parse(t.content)}catch{return{w:Math.max(1,Math.min(12,o)),h:Math.max(1,Math.min(12,r))}}let s=(e.widgetId||"").toLowerCase();if(s==="notepad")a=2,n=2;else if(s==="clock")return{w:2,h:1};else if(s==="telemetry")return{w:2,h:1};let p=Math.max(a,Math.min(12,o)),d=Math.max(n,Math.min(12,r));return{w:p,h:d}}else if(t.type==="section"){let e=Math.max(1,Math.min(12,o)),s=Math.max(1,Math.min(12,r));return{w:e,h:s}}else{let e=Math.max(1,Math.min(2,o)),s=Math.max(1,Math.min(2,r));return{w:e,h:s}}}async handleWindowMouseUp(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout),this._updateGhostTimeout=null;let r=o.clientX-this.initialResizeX,t=o.clientY-this.initialResizeY,a=Math.round(r/(this.currentColWidth+16)),n=Math.round(t/(this.currentColWidth+16)),e=this.initialResizeW+a,s=this.initialResizeH+n,p=this.bookmarks.find((x)=>x.id===this.resizeTargetId);if(!p)return;let d=this.applyResizeConstraints(e,s,p);e=d.w,s=d.h;let c={x:p.x,y:p.y,w:e,h:s,id:p.id,parent_id:p.parent_id};if(F.calculateDropValidity(c,this.bookmarks,this.currentGridCols).valid&&(p.w!==e||p.h!==s)){if(p.type==="section"){let x=e*s,_=this.bookmarks.filter((u)=>u.parent_id===p.id);if(_.sort((u,w)=>u.y-w.y||u.x-w.x),_.length>x){let u=_.slice(x),w=[...this.bookmarks],m=u.map((y)=>{let b=F.findFirstAvailableSlot(y.w,y.h,w,this.currentGridCols);return w.push({...y,x:b.x,y:b.y,parent_id:void 0}),{id:y.id,x:b.x,y:b.y,parent_id:void 0}});await Promise.all(m.map((y)=>g.updateItem(y)))}}await g.resizeItem(p.id,e,s)}if(this.isResizing=!1,this.resizeTargetId=null,this.ghostEl)this.ghostEl.style.display="none"}setupDragListeners(){let o=this.shadowRoot,r=this;o.addEventListener("dragstart",(a)=>{let n=a;if(!this.isEditing){n.preventDefault();return}let e=n.target.closest('[draggable="true"]');if(e&&e.dataset.id){this.dragTargetId=parseInt(e.dataset.id),n.dataTransfer.effectAllowed="move",e.style.opacity="0.5";let s=e.getBoundingClientRect();if(this.dragOffsetX=n.clientX-s.left,this.dragOffsetY=n.clientY-s.top,n.dataTransfer)n.dataTransfer.setDragImage(e,this.dragOffsetX,this.dragOffsetY)}}),o.addEventListener("dragend",(a)=>{let n=a.target.closest('[draggable="true"]');if(n)n.style.opacity="1";if(this.dragTargetId=null,this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((s)=>s.classList.remove("drop-target"))});let t=null;r.addEventListener("dragover",(a)=>{let n=a;if(!this.isEditing||!this.dragTargetId)return;if(n.preventDefault(),n.dataTransfer.dropEffect="move",t)return;t=setTimeout(()=>{t=null,this.processDragOver(n,r)},16)}),r.addEventListener("drop",async(a)=>{let n=a;if(t)clearTimeout(t),t=null;await this.handleDrop(n,r)})}processDragOver(o,r){let n=document.querySelector(".main-content");if(n){let z=n.getBoundingClientRect(),P=o.clientY;if(P>z.bottom-100)n.scrollBy(0,15);else if(P<z.top+100)n.scrollBy(0,-15)}let e=r.getBoundingClientRect(),s=this.currentGridCols||12,p=e.width,d=16,c=(p-(s-1)*d)/s,l=this.bookmarks.find((z)=>z.id===this.dragTargetId);if(!l)return;let x=o.clientX-this.dragOffsetX,_=o.clientY-this.dragOffsetY,u=x-e.left,w=_-e.top,m=Math.floor(u/(c+d)),y=Math.floor(w/(c+d)),b=Math.max(1,Math.min(s-l.w+1,m+1)),A=Math.max(1,y+1),q={x:b,y:A,w:l.w,h:l.h,id:l.id,parent_id:l.parent_id},h=F.calculateDropValidity(q,this.bookmarks,s),Z=!this.bookmarks.some((z)=>{if(z.id===l.id)return!1;if(z.parent_id!==l.parent_id&&!h.targetGroup)return!1;let P=z.x||1,_o=z.y||1,Kr=z.w||1,Yr=z.h||1;if(h.targetGroup&&z.id===h.targetGroup.id)return!1;return b<P+Kr&&b+l.w>P&&A<_o+Yr&&A+l.h>_o})&&h.valid;if(this.updateGhost(q,Z),this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((z)=>z.classList.remove("drop-target")),h.targetGroup&&Z){let z=this.shadowRoot.querySelector(`.bookmark-grid__section[data-id="${h.targetGroup.id}"]`);if(z)z.classList.add("drop-target")}}async handleDrop(o,r){if(!this.isEditing||!this.dragTargetId)return;o.preventDefault();let t=this.bookmarks.find((h)=>h.id===this.dragTargetId);if(!t)return;let a=r.getBoundingClientRect(),n=this.currentGridCols||12,e=a.width,s=16,p=(e-(n-1)*s)/n,d=o.clientX-this.dragOffsetX,c=o.clientY-this.dragOffsetY,l=d-a.left,x=c-a.top,_=Math.floor(l/(p+s)),u=Math.floor(x/(p+s)),w=Math.max(1,Math.min(n-t.w+1,_+1)),m=Math.max(1,u+1),y={x:w,y:m,w:t.w,h:t.h,id:t.id,parent_id:t.parent_id},b=F.calculateDropValidity(y,this.bookmarks,n);if(this.bookmarks.some((h)=>{if(h.id===t.id)return!1;if(h.parent_id!==t.parent_id&&!b.targetGroup)return!1;let E=h.x||1,Z=h.y||1,mo=h.w||1,z=h.h||1;if(b.targetGroup&&h.id===b.targetGroup.id)return!1;return w<E+mo&&w+t.w>E&&m<Z+z&&m+t.h>Z})&&!b.targetGroup){if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".drop-target").forEach((h)=>h.classList.remove("drop-target"));return}if(b.valid){let h={id:t.id,x:b.x,y:b.y};if(b.targetGroup)h.parent_id=b.targetGroup.id,h.x=b.x-b.targetGroup.x+1,h.y=b.y-b.targetGroup.y+1;else h.parent_id=void 0;await g.updateItem(h)}if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((h)=>h.classList.remove("drop-target"))}updateGhost(o,r){if(!this.ghostEl)this.ghostEl=this.shadowRoot.getElementById("ghost-element");if(!this.ghostEl)return;if(this.ghostEl.style.display="block",this.ghostEl.style.setProperty("--ghost-x",String(o.x)),this.ghostEl.style.setProperty("--ghost-y",String(o.y)),this.ghostEl.style.setProperty("--ghost-w",String(o.w)),this.ghostEl.style.setProperty("--ghost-h",String(o.h)),r)this.ghostEl.classList.remove("invalid");else this.ghostEl.classList.add("invalid")}render(){if(this.isEditing)this.classList.add("edit-mode");else this.classList.remove("edit-mode");this.shadowRoot.innerHTML=`
-            <style>${cr}</style>
-            ${tr({bookmarks:this.bookmarks,isEditing:this.isEditing,isLoading:this.isLoading,isSearching:!!this.searchQuery,isTouchDevice:this.isTouchDevice,maxCols:this.currentGridCols})}
-        `,this.setupActionListeners(),this.ghostEl=this.shadowRoot.getElementById("ghost-element")}}if(!customElements.get("bookmark-grid"))customElements.define("bookmark-grid",xr);var br=()=>`
+}`;class hr extends HTMLElement{bookmarks=[];allItems=[];isEditing=!1;isLoading=!0;searchQuery="";_unsubscribe;_unsubscribeI18n;_resizeObserver;_resizeDebounce=null;dragTargetId=null;ghostEl=null;dragOffsetX=0;dragOffsetY=0;isResizing=!1;resizeTargetId=null;initialResizeX=0;initialResizeY=0;initialResizeW=0;initialResizeH=0;currentColWidth=0;currentGridCols=12;isTouchDevice=!1;constructor(){super();this.attachShadow({mode:"open"})}_widgetModal;_boundActionClick=this.handleActionClick.bind(this);_boundMouseMove=this.handleWindowMouseMove.bind(this);_boundMouseUp=this.handleWindowMouseUp.bind(this);applyFilters(){let o=this.isTouchDevice,r=!!this.searchQuery;if(r&&!o)this.classList.add("search-active");else this.classList.remove("search-active");if(o||r)this.bookmarks=this.allItems.filter((t)=>{let i=t.content;if(typeof t.content==="string")try{i=JSON.parse(t.content)}catch{return!1}if(o&&t.type!=="bookmark")return!1;if(o&&i.visibleTouch===!1)return!1;if(r)return(i.label||"").toLowerCase().includes(this.searchQuery);return!0});else this.bookmarks=this.allItems}connectedCallback(){let o=()=>{let t=window.innerWidth<768,i=window.matchMedia("(pointer: coarse)").matches||"ontouchstart"in window||navigator.maxTouchPoints>0;return t&&i},r=()=>{let t=o();if(this.isTouchDevice!==t){if(this.isTouchDevice=t,t)this.classList.add("touch-mode");else this.classList.remove("touch-mode");this.applyFilters(),this.render()}};if(window.addEventListener("resize",r),window.addEventListener("orientationchange",r),this.isTouchDevice=o(),this.isTouchDevice)this.classList.add("touch-mode");this.applyFilters(),this.render(),this.updateGridMetrics(),this._resizeObserver=new ResizeObserver(()=>{if(this._resizeDebounce)return;this._resizeDebounce=setTimeout(()=>{this._resizeDebounce=null,this.updateGridMetrics();let t=this.getBoundingClientRect();x.setGridMetrics(t.width,this.currentGridCols),this.applyFilters(),this.render()},16)}),this._resizeObserver.observe(this),this._unsubscribe=x.subscribe((t)=>{let i=!1;if(this.isEditing!==t.isEditing)this.isEditing=t.isEditing,i=!0;if(this.isLoading!==t.loading)this.isLoading=t.loading,i=!0;if(this.searchQuery!==t.searchQuery)this.searchQuery=t.searchQuery,i=!0;let n=Array.isArray(t.items)?t.items:[];if(JSON.stringify(this.allItems)!==JSON.stringify(n)||i)this.allItems=n,this.applyFilters(),i=!0;if(i)this.render()}),this.setupDragListeners(),this.setupResizeListeners(),this.setupActionListeners(),W.start(),this._unsubscribeI18n=a.subscribe(()=>this.render()),Promise.resolve().then(() => (B(),S)).then(({userStore:t})=>{this._unsubscribeUser=t.subscribe(()=>{requestAnimationFrame(()=>{this.updateGridMetrics(),this.render()})})})}_unsubscribeUser=null;setupActionListeners(){let o=this.shadowRoot;o.removeEventListener("click",this._boundActionClick),o.addEventListener("click",this._boundActionClick)}async handleActionClick(o){if(!this.isEditing)return;let r=o.target;if(!r)return;let t=r.closest(".btn-delete"),i=r.closest(".btn-edit");if(t||i)o.preventDefault(),o.stopPropagation();else if(r.closest("a"))o.preventDefault();if(t){let n=t.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!n)return;let e=parseInt(n.dataset.id||"0"),s=this.allItems.find((l)=>l.id===e);if(!s)return;let p=s.type==="section"?a.t("type.section"):s.type==="widget"?a.t("type.widget"):a.t("type.bookmark"),{eventBus:d,EVENTS:c}=await Promise.resolve().then(() => (oo(),bo));d.emit(c.SHOW_CONFIRMATION,{title:`${a.t("general.delete")} ${p}`,message:a.t("bookmark.delete_confirm_message"),onConfirm:()=>{x.deleteItem(e)}});return}if(i){let n=i.closest(".bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section");if(!n)return;let e=parseInt(n.dataset.id||"0"),s=this.allItems.find((p)=>p.id===e);if(s){let{eventBus:p,EVENTS:d}=await Promise.resolve().then(() => (oo(),bo));if(s.type==="widget")p.emit(d.SHOW_WIDGET_CONFIG,{item:s,type:"widget"});else if(s.type==="section")p.emit(d.SHOW_WIDGET_CONFIG,{item:s,type:"section"});else p.emit(d.SHOW_WIDGET_CONFIG,{item:s,type:"bookmark"})}return}}disconnectedCallback(){if(this._unsubscribe)this._unsubscribe();if(this._unsubscribeI18n)this._unsubscribeI18n();if(this._unsubscribeUser)this._unsubscribeUser();if(this._resizeObserver)this._resizeObserver.disconnect();if(this._resizeDebounce)clearTimeout(this._resizeDebounce);if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout);window.removeEventListener("mousemove",this._boundMouseMove),window.removeEventListener("mouseup",this._boundMouseUp),W.stop()}updateGridMetrics(){let o=this.getBoundingClientRect(),r=getComputedStyle(this),t=r.getPropertyValue("--grid-cols").trim(),i=parseInt(t)||12,n=r.columnGap||r.gap||"16px",e=parseFloat(n)||16;if(o.width<=0){this.currentGridCols=i,this.currentColWidth=100,this.style.setProperty("--current-grid-cols",i.toString()),this.style.setProperty("--row-height","100px");return}let s=(i-1)*e,p=(o.width-s)/i;if(p<10)p=10;this.currentGridCols=i,this.currentColWidth=p,this.style.setProperty("--current-grid-cols",String(i)),this.style.setProperty("--row-height",`${p}px`),this.ensureGridBuffer()}ensureGridBuffer(){if(this.isTouchDevice){this.style.minHeight="";return}let o=0;this.bookmarks.forEach((s)=>{let p=(s.y||1)+(s.h||1);if(p>o)o=p});let t=o+1,i=this.currentColWidth||100,n=16,e=t*i+(t-1)*n;this.style.minHeight=`${e}px`}setupResizeListeners(){window.addEventListener("mousemove",this._boundMouseMove),window.addEventListener("mouseup",this._boundMouseUp),this.shadowRoot.addEventListener("mousedown",(o)=>{let r=o;if(!this.isEditing)return;let t=r.target;if(t.classList.contains("resize-handle")){r.preventDefault(),r.stopPropagation();let i=t.closest(".bookmark-grid__card, .bookmark-grid__section");if(!i||!i.dataset.id)return;let n=parseInt(i.dataset.id),e=this.bookmarks.find((f)=>f.id===n);if(!e)return;this.isResizing=!0,this.resizeTargetId=n,this.initialResizeX=r.clientX,this.initialResizeY=r.clientY,this.initialResizeW=e.w,this.initialResizeH=e.h;let s=this,p=s.getBoundingClientRect(),c=getComputedStyle(s).getPropertyValue("--current-grid-cols").trim(),l=c?parseInt(c,10):9,g=isNaN(l)?9:l,u=16;this.currentColWidth=(p.width-(g-1)*u)/g,this.updateGhost({x:e.x,y:e.y,w:e.w,h:e.h},!0)}})}_updateGhostTimeout=null;handleWindowMouseMove(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)return;this._updateGhostTimeout=setTimeout(()=>{this._updateGhostTimeout=null,this.processResizeMove(o)},16)}processResizeMove(o){if(!this.isResizing||!this.resizeTargetId)return;let r=o.clientX-this.initialResizeX,t=o.clientY-this.initialResizeY,i=Math.round(r/(this.currentColWidth+16)),n=Math.round(t/(this.currentColWidth+16)),e=this.initialResizeW+i,s=this.initialResizeH+n,p=this.bookmarks.find((d)=>d.id===this.resizeTargetId);if(p){let d=this.applyResizeConstraints(e,s,p),c={x:p.x,y:p.y,w:d.w,h:d.h,id:p.id,parent_id:p.parent_id},l=F.calculateDropValidity(c,this.bookmarks,this.currentGridCols);this.updateGhost(c,l.valid)}}applyResizeConstraints(o,r,t){let i=1,n=1;if(t.type==="widget"){let e=t.content;if(typeof t.content==="string")try{e=JSON.parse(t.content)}catch{return{w:Math.max(1,Math.min(12,o)),h:Math.max(1,Math.min(12,r))}}let s=(e.widgetId||"").toLowerCase();if(s==="notepad")i=2,n=2;else if(s==="clock")return{w:2,h:1};else if(s==="telemetry")return{w:2,h:1};let p=Math.max(i,Math.min(12,o)),d=Math.max(n,Math.min(12,r));return{w:p,h:d}}else if(t.type==="section"){let e=Math.max(1,Math.min(12,o)),s=Math.max(1,Math.min(12,r));return{w:e,h:s}}else{let e=Math.max(1,Math.min(2,o)),s=Math.max(1,Math.min(2,r));return{w:e,h:s}}}async handleWindowMouseUp(o){if(!this.isResizing||!this.resizeTargetId)return;if(this._updateGhostTimeout)clearTimeout(this._updateGhostTimeout),this._updateGhostTimeout=null;let r=o.clientX-this.initialResizeX,t=o.clientY-this.initialResizeY,i=Math.round(r/(this.currentColWidth+16)),n=Math.round(t/(this.currentColWidth+16)),e=this.initialResizeW+i,s=this.initialResizeH+n,p=this.bookmarks.find((g)=>g.id===this.resizeTargetId);if(!p)return;let d=this.applyResizeConstraints(e,s,p);e=d.w,s=d.h;let c={x:p.x,y:p.y,w:e,h:s,id:p.id,parent_id:p.parent_id};if(F.calculateDropValidity(c,this.bookmarks,this.currentGridCols).valid&&(p.w!==e||p.h!==s)){if(p.type==="section"){let g=e*s,u=this.bookmarks.filter((f)=>f.parent_id===p.id);if(u.sort((f,_)=>f.y-_.y||f.x-_.x),u.length>g){let f=u.slice(g),_=[...this.bookmarks],v=f.map((w)=>{let b=F.findFirstAvailableSlot(w.w,w.h,_,this.currentGridCols);return _.push({...w,x:b.x,y:b.y,parent_id:void 0}),{id:w.id,x:b.x,y:b.y,parent_id:void 0}});await Promise.all(v.map((w)=>x.updateItem(w)))}}await x.resizeItem(p.id,e,s)}if(this.isResizing=!1,this.resizeTargetId=null,this.ghostEl)this.ghostEl.style.display="none"}setupDragListeners(){let o=this.shadowRoot,r=this;o.addEventListener("dragstart",(i)=>{let n=i;if(!this.isEditing){n.preventDefault();return}let e=n.target.closest('[draggable="true"]');if(e&&e.dataset.id){this.dragTargetId=parseInt(e.dataset.id),n.dataTransfer.effectAllowed="move",e.style.opacity="0.5";let s=e.getBoundingClientRect();if(this.dragOffsetX=n.clientX-s.left,this.dragOffsetY=n.clientY-s.top,n.dataTransfer)n.dataTransfer.setDragImage(e,this.dragOffsetX,this.dragOffsetY)}}),o.addEventListener("dragend",(i)=>{let n=i.target.closest('[draggable="true"]');if(n)n.style.opacity="1";if(this.dragTargetId=null,this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((s)=>s.classList.remove("drop-target"))});let t=null;r.addEventListener("dragover",(i)=>{let n=i;if(!this.isEditing||!this.dragTargetId)return;if(n.preventDefault(),n.dataTransfer.dropEffect="move",t)return;t=setTimeout(()=>{t=null,this.processDragOver(n,r)},16)}),r.addEventListener("drop",async(i)=>{let n=i;if(t)clearTimeout(t),t=null;await this.handleDrop(n,r)})}processDragOver(o,r){let n=document.querySelector(".main-content");if(n){let z=n.getBoundingClientRect(),P=o.clientY;if(P>z.bottom-100)n.scrollBy(0,15);else if(P<z.top+100)n.scrollBy(0,-15)}let e=r.getBoundingClientRect(),s=this.currentGridCols||12,p=e.width,d=16,c=(p-(s-1)*d)/s,l=this.bookmarks.find((z)=>z.id===this.dragTargetId);if(!l)return;let g=o.clientX-this.dragOffsetX,u=o.clientY-this.dragOffsetY,f=g-e.left,_=u-e.top,v=Math.floor(f/(c+d)),w=Math.floor(_/(c+d)),b=Math.max(1,Math.min(s-l.w+1,v+1)),A=Math.max(1,w+1),q={x:b,y:A,w:l.w,h:l.h,id:l.id,parent_id:l.parent_id},h=F.calculateDropValidity(q,this.bookmarks,s),Z=!this.bookmarks.some((z)=>{if(z.id===l.id)return!1;if(z.parent_id!==l.parent_id&&!h.targetGroup)return!1;let P=z.x||1,_o=z.y||1,Yr=z.w||1,Ur=z.h||1;if(h.targetGroup&&z.id===h.targetGroup.id)return!1;return b<P+Yr&&b+l.w>P&&A<_o+Ur&&A+l.h>_o})&&h.valid;if(this.updateGhost(q,Z),this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((z)=>z.classList.remove("drop-target")),h.targetGroup&&Z){let z=this.shadowRoot.querySelector(`.bookmark-grid__section[data-id="${h.targetGroup.id}"]`);if(z)z.classList.add("drop-target")}}async handleDrop(o,r){if(!this.isEditing||!this.dragTargetId)return;o.preventDefault();let t=this.bookmarks.find((h)=>h.id===this.dragTargetId);if(!t)return;let i=r.getBoundingClientRect(),n=this.currentGridCols||12,e=i.width,s=16,p=(e-(n-1)*s)/n,d=o.clientX-this.dragOffsetX,c=o.clientY-this.dragOffsetY,l=d-i.left,g=c-i.top,u=Math.floor(l/(p+s)),f=Math.floor(g/(p+s)),_=Math.max(1,Math.min(n-t.w+1,u+1)),v=Math.max(1,f+1),w={x:_,y:v,w:t.w,h:t.h,id:t.id,parent_id:t.parent_id},b=F.calculateDropValidity(w,this.bookmarks,n);if(this.bookmarks.some((h)=>{if(h.id===t.id)return!1;if(h.parent_id!==t.parent_id&&!b.targetGroup)return!1;let E=h.x||1,Z=h.y||1,mo=h.w||1,z=h.h||1;if(b.targetGroup&&h.id===b.targetGroup.id)return!1;return _<E+mo&&_+t.w>E&&v<Z+z&&v+t.h>Z})&&!b.targetGroup){if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".drop-target").forEach((h)=>h.classList.remove("drop-target"));return}if(b.valid){let h={id:t.id,x:b.x,y:b.y};if(b.targetGroup)h.parent_id=b.targetGroup.id,h.x=b.x-b.targetGroup.x+1,h.y=b.y-b.targetGroup.y+1;else h.parent_id=void 0;await x.updateItem(h)}if(this.ghostEl)this.ghostEl.style.display="none";this.shadowRoot.querySelectorAll(".bookmark-grid__section").forEach((h)=>h.classList.remove("drop-target"))}updateGhost(o,r){if(!this.ghostEl)this.ghostEl=this.shadowRoot.getElementById("ghost-element");if(!this.ghostEl)return;if(this.ghostEl.style.display="block",this.ghostEl.style.setProperty("--ghost-x",String(o.x)),this.ghostEl.style.setProperty("--ghost-y",String(o.y)),this.ghostEl.style.setProperty("--ghost-w",String(o.w)),this.ghostEl.style.setProperty("--ghost-h",String(o.h)),r)this.ghostEl.classList.remove("invalid");else this.ghostEl.classList.add("invalid")}render(){if(this.isEditing)this.classList.add("edit-mode");else this.classList.remove("edit-mode");this.shadowRoot.innerHTML=`
+            <style>${xr}</style>
+            ${ar({bookmarks:this.bookmarks,isEditing:this.isEditing,isLoading:this.isLoading,isSearching:!!this.searchQuery,isTouchDevice:this.isTouchDevice,maxCols:this.currentGridCols})}
+        `,this.setupActionListeners(),this.ghostEl=this.shadowRoot.getElementById("ghost-element")}}if(!customElements.get("bookmark-grid"))customElements.define("bookmark-grid",hr);var fr=()=>`
     <div class="toast-container"></div>
-`;var hr=`.toast-container {
+`;var vr=`.toast-container {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -3884,29 +4093,29 @@ input:checked+.slider:before {
 
 .toast--error {
     border-left-color: var(--danger-color);
-}`;class fr extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),window.notifier=this,window.addEventListener("drawer-open",()=>this.shift(!0)),window.addEventListener("drawer-close",()=>this.shift(!1))}shift(o){let r=this.shadowRoot.querySelector(".toast-container");if(r)if(o)r.classList.add("toast-container--shifted");else r.classList.remove("toast-container--shifted")}show(o,r="success"){let t=this.shadowRoot.querySelector(".toast-container");if(!t)return;let a=document.createElement("div");a.className=`toast toast--${r}`,a.textContent=o,t.appendChild(a),requestAnimationFrame(()=>{a.style.opacity="1",a.style.transform="translateY(0)"}),setTimeout(()=>{a.style.opacity="0",a.style.transform="translateY(20px)",setTimeout(()=>a.remove(),300)},3000)}render(){this.shadowRoot.innerHTML=`
-            <style>${hr}</style>
-            ${br()}
-        `}}if(!customElements.get("app-notifier"))customElements.define("app-notifier",fr);v();var vr=()=>`
+}`;class ur extends HTMLElement{constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),window.notifier=this,window.addEventListener("drawer-open",()=>this.shift(!0)),window.addEventListener("drawer-close",()=>this.shift(!1))}shift(o){let r=this.shadowRoot.querySelector(".toast-container");if(r)if(o)r.classList.add("toast-container--shifted");else r.classList.remove("toast-container--shifted")}show(o,r="success"){let t=this.shadowRoot.querySelector(".toast-container");if(!t)return;let i=document.createElement("div");i.className=`toast toast--${r}`,i.textContent=o,t.appendChild(i),requestAnimationFrame(()=>{i.style.opacity="1",i.style.transform="translateY(0)"}),setTimeout(()=>{i.style.opacity="0",i.style.transform="translateY(20px)",setTimeout(()=>i.remove(),300)},3000)}render(){this.shadowRoot.innerHTML=`
+            <style>${vr}</style>
+            ${fr()}
+        `}}if(!customElements.get("app-notifier"))customElements.define("app-notifier",ur);y();var mr=()=>`
     <div class="icon-picker">
         <div class="icon-picker__header">
             <div class="icon-picker__search">
                 <input type="text"
                        id="icon-search"
                        class="icon-picker__search-input"
-                       placeholder="${i.t("general.search")}" />
+                       placeholder="${a.t("general.search")}" />
             </div>
         </div>
 
         <div id="grid-container" class="icon-picker__grid"></div>
     </div>
-`,ur=(o,r,t)=>{if(t)return`<div class="icon-picker__loading">${i.t("general.loading")}</div>`;if(o.length===0)return`<div class="icon-picker__empty">${i.t("general.no_icons")}</div>`;return o.map((a)=>`
-        <div class="icon-picker__item ${r===a.name?"icon-picker__item--selected":""}"
-             data-icon="${a.name}"
-             title="${a.name}">
-            <img src="${a.url}" alt="${a.name}" loading="lazy" />
+`,_r=(o,r,t)=>{if(t)return`<div class="icon-picker__loading">${a.t("general.loading")}</div>`;if(o.length===0)return`<div class="icon-picker__empty">${a.t("general.no_icons")}</div>`;return o.map((i)=>`
+        <div class="icon-picker__item ${r===i.name?"icon-picker__item--selected":""}"
+             data-icon="${i.name}"
+             title="${i.name}">
+            <img src="${i.url}" alt="${i.name}" loading="lazy" />
         </div>
-    `).join("")};class mr{icons=[];loaded=!1;loading=!1;BASE_URL="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons";FALLBACK_URL="https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main";async loadIcons(){if(this.loaded)return this.icons;if(this.loading)return await new Promise((o)=>setTimeout(o,100)),this.loadIcons();this.loading=!0;try{let o=await fetch(`${this.BASE_URL}/tree.json`);if(!o.ok)console.log("[IconService] CDN failed, trying GitHub raw"),o=await fetch(`${this.FALLBACK_URL}/tree.json`);if(!o.ok)throw Error("Failed to fetch icon list");let r=await o.json(),t=Array.isArray(r)?r:r.png||[];if(Array.isArray(t)&&t.length>0)this.icons=t.filter((a)=>a.endsWith(".png")||a.endsWith(".svg")).map((a)=>{let n=a.replace(/\.(png|svg)$/,"");return{name:n,url:`${this.BASE_URL}/png/${n}.png`}}).sort((a,n)=>a.name.localeCompare(n.name));else console.warn("[IconService] Unexpected tree.json structure, using fallback",r),this.icons=this.getFallbackIcons();return this.loaded=!0,this.loading=!1,console.log(`[IconService] Loaded ${this.icons.length} icons`),this.icons}catch(o){return console.error("[IconService] Failed to load icons:",o),this.loading=!1,this.icons=this.getFallbackIcons(),this.loaded=!0,this.icons}}getFallbackIcons(){return["github","gitlab","docker","proxmox","truenas","plex","jellyfin","nextcloud","cloudflare","nginx","traefik","portainer","grafana","prometheus","influxdb","pihole","adguard","homeassistant","esphome","frigate","unraid","synology","opnsense","pfsense","wireguard","openvpn","bitwarden","vaultwarden","sonarr","radarr","lidarr","bazarr","prowlarr","overseerr","tautulli","transmission","qbittorrent","deluge","sabnzbd","nzbget","calibre","paperless","photoprism","immich","mealie","freshrss","miniflux","wallabag","linkding","shiori","firefox","chrome","vscode","code-server","jupyter","portainer"].map((r)=>({name:r,url:`${this.BASE_URL}/png/${r}.png`}))}searchIcons(o,r=50){if(!o.trim())return this.icons.slice(0,r);let t=o.toLowerCase().trim();return this.icons.filter((a)=>a.name.toLowerCase().includes(t)).slice(0,r)}getIconUrl(o){return`${this.BASE_URL}/png/${o}.png`}}var ho=new mr;var _r=`:host {
+    `).join("")};class yr{icons=[];loaded=!1;loading=!1;BASE_URL="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons";FALLBACK_URL="https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main";async loadIcons(){if(this.loaded)return this.icons;if(this.loading)return await new Promise((o)=>setTimeout(o,100)),this.loadIcons();this.loading=!0;try{let o=await fetch(`${this.BASE_URL}/tree.json`);if(!o.ok)console.log("[IconService] CDN failed, trying GitHub raw"),o=await fetch(`${this.FALLBACK_URL}/tree.json`);if(!o.ok)throw Error("Failed to fetch icon list");let r=await o.json(),t=Array.isArray(r)?r:r.png||[];if(Array.isArray(t)&&t.length>0)this.icons=t.filter((i)=>i.endsWith(".png")||i.endsWith(".svg")).map((i)=>{let n=i.replace(/\.(png|svg)$/,"");return{name:n,url:`${this.BASE_URL}/png/${n}.png`}}).sort((i,n)=>i.name.localeCompare(n.name));else console.warn("[IconService] Unexpected tree.json structure, using fallback",r),this.icons=this.getFallbackIcons();return this.loaded=!0,this.loading=!1,console.log(`[IconService] Loaded ${this.icons.length} icons`),this.icons}catch(o){return console.error("[IconService] Failed to load icons:",o),this.loading=!1,this.icons=this.getFallbackIcons(),this.loaded=!0,this.icons}}getFallbackIcons(){return["github","gitlab","docker","proxmox","truenas","plex","jellyfin","nextcloud","cloudflare","nginx","traefik","portainer","grafana","prometheus","influxdb","pihole","adguard","homeassistant","esphome","frigate","unraid","synology","opnsense","pfsense","wireguard","openvpn","bitwarden","vaultwarden","sonarr","radarr","lidarr","bazarr","prowlarr","overseerr","tautulli","transmission","qbittorrent","deluge","sabnzbd","nzbget","calibre","paperless","photoprism","immich","mealie","freshrss","miniflux","wallabag","linkding","shiori","firefox","chrome","vscode","code-server","jupyter","portainer"].map((r)=>({name:r,url:`${this.BASE_URL}/png/${r}.png`}))}searchIcons(o,r=50){if(!o.trim())return this.icons.slice(0,r);let t=o.toLowerCase().trim();return this.icons.filter((i)=>i.name.toLowerCase().includes(t)).slice(0,r)}getIconUrl(o){return`${this.BASE_URL}/png/${o}.png`}}var ho=new yr;var wr=`:host {
     display: block;
 }
 
@@ -4020,54 +4229,54 @@ input:checked+.slider:before {
     50% {
         opacity: 1;
     }
-}`;class yr extends HTMLElement{icons=[];filteredIcons=[];selectedIcon="";searchQuery="";isLoading=!0;debounceTimer=null;inputElement=null;constructor(){super();this.attachShadow({mode:"open"})}async connectedCallback(){if(this.shadowRoot.childElementCount>0)return;if(this.renderBase(),this.setupListeners(),this.icons.length===0)await this.loadIcons()}async loadIcons(){try{this.icons=await ho.loadIcons(),this.filteredIcons=this.icons.slice(0,50),this.isLoading=!1,this.updateGrid()}catch(o){console.error("[IconPicker] Failed to load icons",o),this.isLoading=!1,this.updateGrid()}}setupListeners(){let o=this.shadowRoot;this.inputElement=o.getElementById("icon-search"),this.inputElement?.addEventListener("input",(t)=>{let a=t.target;if(this.searchQuery=a.value,this.debounceTimer)window.clearTimeout(this.debounceTimer);this.debounceTimer=window.setTimeout(()=>{this.performSearch()},100)}),o.getElementById("grid-container")?.addEventListener("click",(t)=>{let n=t.target.closest(".icon-picker__item");if(n&&n.dataset.icon)this.selectedIcon=n.dataset.icon,this.updateGrid(),this.dispatchEvent(new CustomEvent("icon-selected",{detail:{iconName:this.selectedIcon},bubbles:!0,composed:!0}))})}performSearch(){this.filteredIcons=ho.searchIcons(this.searchQuery,50),this.updateGrid()}getSelectedIcon(){return this.selectedIcon}setSelectedIcon(o){this.selectedIcon=o,this.updateGrid()}renderBase(){this.shadowRoot.innerHTML=`
-            <style>${_r}</style>
-            ${vr()}
-        `}updateGrid(){let o=this.shadowRoot.getElementById("grid-container");if(o){if(o.style.display="grid",!this.searchQuery.trim()&&!this.isLoading){o.innerHTML='<div class="icon-picker__empty">Start typing to search icons...</div>';return}o.innerHTML=ur(this.filteredIcons,this.selectedIcon,this.isLoading)}}}if(!customElements.get("icon-picker"))customElements.define("icon-picker",yr);v();var wr=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#64748b","#f8fafc","#1e293b","#333333"],dt=(o,r)=>{let t=!wr.includes(o)&&o!=="";return`
+}`;class kr extends HTMLElement{icons=[];filteredIcons=[];selectedIcon="";searchQuery="";isLoading=!0;debounceTimer=null;inputElement=null;constructor(){super();this.attachShadow({mode:"open"})}async connectedCallback(){if(this.shadowRoot.childElementCount>0)return;if(this.renderBase(),this.setupListeners(),this.icons.length===0)await this.loadIcons()}async loadIcons(){try{this.icons=await ho.loadIcons(),this.filteredIcons=this.icons.slice(0,50),this.isLoading=!1,this.updateGrid()}catch(o){console.error("[IconPicker] Failed to load icons",o),this.isLoading=!1,this.updateGrid()}}setupListeners(){let o=this.shadowRoot;this.inputElement=o.getElementById("icon-search"),this.inputElement?.addEventListener("input",(t)=>{let i=t.target;if(this.searchQuery=i.value,this.debounceTimer)window.clearTimeout(this.debounceTimer);this.debounceTimer=window.setTimeout(()=>{this.performSearch()},100)}),o.getElementById("grid-container")?.addEventListener("click",(t)=>{let n=t.target.closest(".icon-picker__item");if(n&&n.dataset.icon)this.selectedIcon=n.dataset.icon,this.updateGrid(),this.dispatchEvent(new CustomEvent("icon-selected",{detail:{iconName:this.selectedIcon},bubbles:!0,composed:!0}))})}performSearch(){this.filteredIcons=ho.searchIcons(this.searchQuery,50),this.updateGrid()}getSelectedIcon(){return this.selectedIcon}setSelectedIcon(o){this.selectedIcon=o,this.updateGrid()}renderBase(){this.shadowRoot.innerHTML=`
+            <style>${wr}</style>
+            ${mr()}
+        `}updateGrid(){let o=this.shadowRoot.getElementById("grid-container");if(o){if(o.style.display="grid",!this.searchQuery.trim()&&!this.isLoading){o.innerHTML='<div class="icon-picker__empty">Start typing to search icons...</div>';return}o.innerHTML=_r(this.filteredIcons,this.selectedIcon,this.isLoading)}}}if(!customElements.get("icon-picker"))customElements.define("icon-picker",kr);y();var zr=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#64748b","#f8fafc","#1e293b","#333333"],gt=(o,r)=>{let t=!zr.includes(o)&&o!=="";return`
     <div class="form-group" style="margin-top: 12px;">
-        <label>${i.t("bookmark.border_color")||"Border Color"}</label>
+        <label>${a.t("bookmark.border_color")||"Border Color"}</label>
         <div class="premium-color-grid">
-            ${wr.map((a)=>`
-                <div class="premium-color-swatch ${o===a?"active":""}" 
-                     style="background-color: ${a}"
-                     data-color="${a}">
-                     ${o===a?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
+            ${zr.map((i)=>`
+                <div class="premium-color-swatch ${o===i?"active":""}" 
+                     style="background-color: ${i}"
+                     data-color="${i}">
+                     ${o===i?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
                 </div>
             `).join("")}
             
-            <div class="premium-color-swatch premium-color-swatch--custom ${t?"active":""}" 
+             <div class="premium-color-swatch premium-color-swatch--custom ${t?"active":""}" 
                  style="background-color: ${t?o:"#333"}">
-                 <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+                 <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events: none;">
                     <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                  </svg>
-                 <input type="color" class="premium-swatch-picker" id="bookmark-borderColor" name="borderColor" value="${t?o:"#0078D4"}">
+                 <app-color-picker class="premium-swatch-picker" id="bookmark-borderColor" style="opacity: 0; position: absolute; inset: 0; z-index: 10;" value="${t?o:"#0078D4"}"></app-color-picker>
             </div>
         </div>
     </div>
 
     <div class="form-group" style="margin-top: 20px;">
-        <label>${i.t("bookmark.border_width")||"Border Width"}</label>
+        <label>${a.t("bookmark.border_width")||"Border Width"}</label>
         <div class="segmented-control">
             <button type="button" class="border-width-btn ${r===1?"active":""}" data-width="1">
                 <div style="height: 1px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                <span>${i.t("general.thin")||"Thin"}</span>
+                <span>${a.t("general.thin")||"Thin"}</span>
             </button>
             <button type="button" class="border-width-btn ${r===2?"active":""}" data-width="2">
                 <div style="height: 2px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                <span>${i.t("general.regular")||"Regular"}</span>
+                <span>${a.t("general.regular")||"Regular"}</span>
             </button>
             <button type="button" class="border-width-btn ${r===3?"active":""}" data-width="3">
                 <div style="height: 3px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                <span>${i.t("general.thick")||"Thick"}</span>
+                <span>${a.t("general.thick")||"Thick"}</span>
             </button>
         </div>
     </div>
-    `},kr=({isOpen:o,isEditMode:r,title:t,url:a,protocol:n,selectedIcon:e,color:s,statusPosition:p,checkStatus:d,labelPosition:c,visibleTouch:l,borderWidth:x})=>`
+    `},$r=({isOpen:o,isEditMode:r,title:t,url:i,protocol:n,selectedIcon:e,color:s,statusPosition:p,checkStatus:d,labelPosition:c,visibleTouch:l,borderWidth:g})=>`
     <dialog id="modal">
         <div class="modal-header">
             <div class="integrated-tabs">
-                <button class="tab-btn active" data-tab="general">${i.t("general.general")}</button>
-                <button class="tab-btn" data-tab="customization">${i.t("general.customization")}</button>
+                <button class="tab-btn active" data-tab="general">${a.t("general.general")}</button>
+                <button class="tab-btn" data-tab="customization">${a.t("general.customization")}</button>
             </div>
             <button class="modal-close" id="modal-close">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -4081,14 +4290,14 @@ input:checked+.slider:before {
                     <div class="form-row" style="display: flex; gap: 12px; align-items: flex-end;">
                         <!-- Icon Box (Independent) -->
                         <div class="form-group" style="width: 42px;">
-                            <button type="button" class="independent-icon-btn" id="icon-trigger-btn" title="${i.t("bookmark.icon")}">
+                            <button type="button" class="independent-icon-btn" id="icon-trigger-btn" title="${a.t("bookmark.icon")}">
                                 ${e?`<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${e}.png" alt="icon" style="width: 24px; height: 24px; object-fit: contain;">`:'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>'}
                             </button>
                         </div>
 
                         <!-- Title Field -->
                         <div class="form-group" style="flex: 1;">
-                            <label for="bookmark-label">${i.t("bookmark.label")}</label>
+                            <label for="bookmark-label">${a.t("bookmark.label")}</label>
                             <div class="input-group">
                                 <!-- Label Position Dropdown -->
                                 <div class="icon-dropdown">
@@ -4100,14 +4309,14 @@ input:checked+.slider:before {
                                     </button>
                                     <input type="hidden" name="labelPos" id="bookmark-labelPos" value="${c}">
                                 </div>
-                                <input type="text" id="bookmark-label" name="label" placeholder="${i.t("bookmark.placeholder_label")}" value="${t}" required />
+                                <input type="text" id="bookmark-label" name="label" placeholder="${a.t("bookmark.placeholder_label")}" value="${t}" required />
                             </div>
                         </div>
                     </div>
 
                     <!-- URL Field -->
                     <div class="form-group" style="margin-top: 12px;">
-                        <label for="bookmark-url">${i.t("bookmark.url")}</label>
+                        <label for="bookmark-url">${a.t("bookmark.url")}</label>
                         <div class="input-group">
                             <!-- Status Monitor Dropdown -->
                             <div class="icon-dropdown">
@@ -4133,7 +4342,7 @@ input:checked+.slider:before {
                                 <input type="hidden" name="protocol" id="bookmark-protocol" value="${n}">
                             </div>
 
-                            <input type="text" id="bookmark-url" name="url" placeholder="google.com" value="${a}" required />
+                            <input type="text" id="bookmark-url" name="url" placeholder="google.com" value="${i}" required />
                         </div>
                     </div>
                     
@@ -4150,7 +4359,7 @@ input:checked+.slider:before {
                                 <input type="hidden" name="visibleTouch" id="bookmark-visibleTouch" value="${l?"on":"off"}">
                             </div>
                             <div class="fake-input" style="flex: 1; padding: 0 14px;">
-                                ${i.t("bookmark.visible_touch")}
+                                ${a.t("bookmark.visible_touch")}
                             </div>
                         </div>
                     </div>
@@ -4159,11 +4368,11 @@ input:checked+.slider:before {
                 <!-- TAB: CUSTOMIZATION -->
                 <div id="tab-customization" class="tab-content">
                     <!-- Appearance Controls -->
-                    ${dt(s,x)}
+                    ${gt(s,g)}
                 </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">${i.t("general.save")}</button>
+                <div class="actions">
+                    <app-button variant="primary" type="submit">${a.t("general.save")}</app-button>
                 </div>
             </form>
         </div>
@@ -4230,7 +4439,7 @@ input:checked+.slider:before {
 
         </div>
     </dialog>
-`;L();v();var zr=()=>`
+`;L();y();var jr=()=>`
 <dialog id="icon-modal">
     <div class="modal-header">
         <h3 class="modal-title">Select Icon</h3>
@@ -4245,7 +4454,7 @@ input:checked+.slider:before {
         <icon-picker id="icon-picker-component"></icon-picker>
     </div>
 </dialog>
-`;var $r=`:host {
+`;var Lr=`:host {
     display: contents;
 }
 
@@ -4340,30 +4549,28 @@ icon-picker {
     display: flex;
     flex-direction: column;
     min-height: 0;
-}`;class jr extends HTMLElement{dialog=null;resolvePromise=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.setupHandlers()}render(){this.shadowRoot.innerHTML=`
-            <style>${$r}</style>
-            ${zr()}
-        `,this.dialog=this.shadowRoot.getElementById("icon-modal")}setupHandlers(){this.shadowRoot.getElementById("close-btn")?.addEventListener("click",()=>this.close(null)),this.dialog?.addEventListener("click",(r)=>{if(r.target===this.dialog)this.close(null)}),this.shadowRoot.addEventListener("icon-selected",(r)=>{let t=r;this.close(t.detail.iconName)})}async open(){if(!this.dialog)return null;this.dialog.showModal();let o=this.shadowRoot.querySelector("icon-picker");return new Promise((r)=>{this.resolvePromise=r})}close(o){if(this.dialog&&this.dialog.open)this.dialog.close();if(this.resolvePromise)this.resolvePromise(o),this.resolvePromise=null}}if(!customElements.get("icon-selection-modal"))customElements.define("icon-selection-modal",jr);var Lr=`:host {
+}`;class Ar extends HTMLElement{dialog=null;resolvePromise=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.setupHandlers()}render(){this.shadowRoot.innerHTML=`
+            <style>${Lr}</style>
+            ${jr()}
+        `,this.dialog=this.shadowRoot.getElementById("icon-modal")}setupHandlers(){this.shadowRoot.getElementById("close-btn")?.addEventListener("click",()=>this.close(null)),this.dialog?.addEventListener("click",(r)=>{if(r.target===this.dialog)this.close(null)}),this.shadowRoot.addEventListener("icon-selected",(r)=>{let t=r;this.close(t.detail.iconName)})}async open(){if(!this.dialog)return null;this.dialog.showModal();let o=this.shadowRoot.querySelector("icon-picker");return new Promise((r)=>{this.resolvePromise=r})}close(o){if(this.dialog&&this.dialog.open)this.dialog.close();if(this.resolvePromise)this.resolvePromise(o),this.resolvePromise=null}}if(!customElements.get("icon-selection-modal"))customElements.define("icon-selection-modal",Ar);var Mr=`:host {
     display: contents;
 }
 
 dialog {
-    background: var(--surface-solid);
-    color: var(--text-main);
-    border: 1px solid var(--border);
+    background: var(--paper-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--paper-border);
+    border-top: 1px solid var(--paper-border-top);
     border-radius: var(--radius);
     padding: 0;
     width: 90%;
-    max-width: 500px;
-    max-height: 85vh;
-    height: 480px;
-    /* Reduced for a more compact and professional look */
-    display: none;
-    /* Hidden by default */
-    flex-direction: column;
-    backdrop-filter: blur(20px);
+    max-width: 420px;
     box-shadow: var(--paper-shadow);
     overflow: visible;
+    color: var(--text-main);
+    display: none;
+    flex-direction: column;
 }
 
 dialog[open] {
@@ -4398,10 +4605,14 @@ dialog[open] {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* Changed from flex-end to center for better alignment */
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
+    /* Matches WidgetConfigModal padding style more closely if height is fixed */
     background: rgba(0, 0, 0, 0.2);
-    height: 64px;
+    height: 56px;
+    /* Explicit height to match WidgetConfigModal */
+    border-radius: var(--radius) var(--radius) 0 0;
     flex-shrink: 0;
 }
 
@@ -4477,15 +4688,11 @@ dialog[open] {
 }
 
 /* --- Sticky Footer --- */
-.form-actions {
+.actions {
+    padding: 16px 24px 24px 24px;
     display: flex;
-    gap: 12px;
     justify-content: flex-end;
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    background: var(--surface-solid);
-    flex-shrink: 0;
-    z-index: 10;
+    gap: 12px;
 }
 
 /* --- COMPONENT STYLES (Restored) --- */
@@ -4755,6 +4962,7 @@ dialog[open] {
     position: absolute;
     /* top and left will be set via JS relative to render overlay */
     background: var(--surface-solid);
+    /* Revert to solid surface for readability per user request */
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
@@ -4788,7 +4996,8 @@ dialog[open] {
 }
 
 .dropdown-item:hover {
-    background: var(--hover-bg);
+    background: rgba(255, 255, 255, 0.08);
+    /* Subtle white hover */
     color: var(--text-main);
 }
 
@@ -4965,7 +5174,75 @@ dialog[open] {
     cursor: pointer;
     border: none;
     padding: 0;
-}`;var gt=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#64748b","#f8fafc","#1e293b","#333333"];class Ar extends HTMLElement{dialog=null;isEditMode=!1;currentItemId=null;bookmarkTitle="";url="";protocol="http://";selectedIconName=null;color="#333333";statusPosition="top-right";checkStatus=!1;labelPosition="bottom";visibleTouch=!0;borderWidth=1;_unsubscribeI18n;clickHandler=null;submitHandler=null;escapeHandler=null;inputHandler=null;constructor(){super();this.attachShadow({mode:"open"}),this.setupHandlers()}setupHandlers(){this.clickHandler=async(o)=>{let r=o.target;if(r.closest("#modal-close")){o.preventDefault(),this.close();return}if(r.classList.contains("tab-btn")){o.preventDefault();let e=r.dataset.tab;this.switchTab(e)}if(r.closest("#icon-trigger-btn")){o.preventDefault();let e=this.shadowRoot.getElementById("icon-modal-component");if(e){let s=await e.open();if(s)this.selectedIconName=s,this.updateIconPreview()}}if(r.closest("#label-pos-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("label-pos-menu",r.closest("#label-pos-btn"));else if(r.closest("#status-pos-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("status-pos-menu",r.closest("#status-pos-btn"));else if(r.closest("#touch-pos-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("touch-pos-menu",r.closest("#touch-pos-btn"));else if(r.closest("#protocol-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("protocol-menu",r.closest("#protocol-btn"));else this.closeAllDropdowns();let t=r.closest(".premium-color-swatch");if(t&&!t.classList.contains("premium-color-swatch--custom")){o.preventDefault(),this.color=t.dataset.color,this.updateTriggers();return}let a=r.closest(".border-width-btn");if(a){o.preventDefault(),this.borderWidth=parseInt(a.dataset.width),this.updateTriggers();return}let n=r.closest(".dropdown-item");if(n){o.preventDefault(),o.stopPropagation();let e=n;if(e.dataset.pos)this.labelPosition=e.dataset.pos,this.updateTriggers();if(e.dataset.statusPos){let s=e.dataset.statusPos;if(s==="off")this.checkStatus=!1;else this.checkStatus=!0,this.statusPosition=s;this.updateTriggers()}if(e.dataset.touch)this.visibleTouch=e.dataset.touch==="on",this.updateTriggers();if(e.dataset.protocol)this.protocol=e.dataset.protocol,this.updateTriggers()}},this.inputHandler=(o)=>{let r=o.target;if(r.id==="bookmark-label")this.bookmarkTitle=r.value;if(r.id==="bookmark-url")this.url=r.value;if(r.id==="bookmark-borderColor")this.color=r.value,this.updateTriggers()},this.submitHandler=async(o)=>{o.preventDefault();let r=this.selectedIconName?`https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.selectedIconName}.png`:"",t=JSON.stringify({label:this.bookmarkTitle,url:this.protocol+this.url.replace(/^https?:\/\//,""),description:"",icon:r,iconName:this.selectedIconName,statusCheck:this.checkStatus,statusPos:this.checkStatus?this.statusPosition:"off",visibleTouch:this.visibleTouch,openInNewTab:!0,labelPos:this.labelPosition,borderColor:this.color,borderWidth:this.borderWidth});try{if(this.isEditMode&&this.currentItemId){if(await g.updateItem({id:this.currentItemId,content:t}),window.notifier)window.notifier.show(i.t("notifier.bookmark_updated"))}else{let{collisionService:a}=await Promise.resolve().then(() => (B(),O)),n=g.getState(),e=Array.isArray(n.items)?n.items:[],s=a.findFirstAvailableSlot(1,1,e);if(await g.addItem({type:"bookmark",x:s.x,y:s.y,w:1,h:1,content:t}),window.notifier)window.notifier.show(i.t("notifier.bookmark_added"))}this.close()}catch(a){if(console.error("[Modal] Error:",a),window.notifier)window.notifier.show(i.t("notifier.bookmark_error"),"error")}},this.escapeHandler=(o)=>{if(o.key==="Escape"){let r=this.shadowRoot.querySelector("icon-selection-modal");if(this.dialog?.open)this.close()}}}updateTriggers(){let o=this.shadowRoot,r=o.getElementById("label-pos-btn");if(r){r.innerHTML=`
+}
+
+/* --- Segmented Control (Border Width) --- */
+.segmented-control {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: 8px;
+    margin-top: 8px;
+    gap: 4px;
+    border: 1px solid var(--border);
+}
+
+.border-width-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.border-width-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+.border-width-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.1);
+}
+
+.border-width-btn span {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Rainbow swatch correction */
+.premium-color-swatch--custom {
+    background: #333;
+    /* Override rainbow */
+    overflow: hidden;
+    position: relative;
+    /* Ensure input child is positioned relative to this */
+}
+
+/* Ensure hidden input covers the whole area for clicking */
+.premium-swatch-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    z-index: 10;
+    /* Ensure it's on top */
+}`;var ht=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#64748b","#f8fafc","#1e293b","#333333"];class qr extends HTMLElement{dialog=null;isEditMode=!1;currentItemId=null;bookmarkTitle="";url="";protocol="http://";selectedIconName=null;color="#333333";statusPosition="top-right";checkStatus=!1;labelPosition="bottom";visibleTouch=!0;borderWidth=1;_unsubscribeI18n;clickHandler=null;submitHandler=null;escapeHandler=null;inputHandler=null;constructor(){super();this.attachShadow({mode:"open"}),this.setupHandlers()}setupHandlers(){this.clickHandler=async(o)=>{let r=o.target;if(r.closest("#modal-close")){o.preventDefault(),this.close();return}if(r.classList.contains("tab-btn")){o.preventDefault();let e=r.dataset.tab;this.switchTab(e)}if(r.closest("#icon-trigger-btn")){o.preventDefault();let e=this.shadowRoot.getElementById("icon-modal-component");if(e){let s=await e.open();if(s)this.selectedIconName=s,this.updateIconPreview()}}if(r.closest("#label-pos-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("label-pos-menu",r.closest("#label-pos-btn"));else if(r.closest("#status-pos-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("status-pos-menu",r.closest("#status-pos-btn"));else if(r.closest("#touch-pos-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("touch-pos-menu",r.closest("#touch-pos-btn"));else if(r.closest("#protocol-btn"))o.preventDefault(),o.stopPropagation(),this.toggleDropdown("protocol-menu",r.closest("#protocol-btn"));else this.closeAllDropdowns();let t=r.closest(".premium-color-swatch");if(t&&!t.classList.contains("premium-color-swatch--custom")){o.preventDefault(),this.color=t.dataset.color,this.updateTriggers();return}let i=r.closest(".border-width-btn");if(i){o.preventDefault(),this.borderWidth=parseInt(i.dataset.width),this.updateTriggers();return}let n=r.closest(".dropdown-item");if(n){o.preventDefault(),o.stopPropagation();let e=n;if(e.dataset.pos)this.labelPosition=e.dataset.pos,this.updateTriggers();if(e.dataset.statusPos){let s=e.dataset.statusPos;if(s==="off")this.checkStatus=!1;else this.checkStatus=!0,this.statusPosition=s;this.updateTriggers()}if(e.dataset.touch)this.visibleTouch=e.dataset.touch==="on",this.updateTriggers();if(e.dataset.protocol)this.protocol=e.dataset.protocol,this.updateTriggers()}},this.inputHandler=(o)=>{let r=o.target;if(r.id==="bookmark-label")this.bookmarkTitle=r.value;if(r.id==="bookmark-url")this.url=r.value;if(r.id==="bookmark-borderColor")this.color=r.value,this.updateTriggers()},this.submitHandler=async(o)=>{o.preventDefault();let r=this.selectedIconName?`https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.selectedIconName}.png`:"",t=JSON.stringify({label:this.bookmarkTitle,url:this.protocol+this.url.replace(/^https?:\/\//,""),description:"",icon:r,iconName:this.selectedIconName,statusCheck:this.checkStatus,statusPos:this.checkStatus?this.statusPosition:"off",visibleTouch:this.visibleTouch,openInNewTab:!0,labelPos:this.labelPosition,borderColor:this.color,borderWidth:this.borderWidth});try{if(this.isEditMode&&this.currentItemId){if(await x.updateItem({id:this.currentItemId,content:t}),window.notifier)window.notifier.show(a.t("notifier.bookmark_updated"))}else{let{collisionService:i}=await Promise.resolve().then(() => (Y(),O)),n=x.getState(),e=Array.isArray(n.items)?n.items:[],s=i.findFirstAvailableSlot(1,1,e);if(await x.addItem({type:"bookmark",x:s.x,y:s.y,w:1,h:1,content:t}),window.notifier)window.notifier.show(a.t("notifier.bookmark_added"))}this.close()}catch(i){if(console.error("[Modal] Error:",i),window.notifier)window.notifier.show(a.t("notifier.bookmark_error"),"error")}},this.escapeHandler=(o)=>{if(o.key==="Escape"){let r=this.shadowRoot.querySelector("icon-selection-modal");if(this.dialog?.open)this.close()}}}updateTriggers(){let o=this.shadowRoot,r=o.getElementById("label-pos-btn");if(r){r.innerHTML=`
                 ${this.labelPosition==="top"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 8 h8" /><path d="M12 13 v2" /></svg>':this.labelPosition==="section"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M7 4 h10" stroke-width="4" /></svg>':this.labelPosition==="off"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 16 h8" /><path d="M12 9 v2" /></svg>'}
                 <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
                     <path d="M7 10l5 5 5-5z" />
@@ -4977,15 +5254,15 @@ dialog[open] {
                 <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
                     <path d="M7 10l5 5 5-5z" />
                 </svg>
-            `;let e=o.getElementById("bookmark-statusPos");if(e)e.value=this.checkStatus?this.statusPosition:"off";o.querySelectorAll("#status-pos-menu .dropdown-item").forEach((s)=>{let p=s.dataset.statusPos,d=p==="off"?!this.checkStatus:this.checkStatus&&p===this.statusPosition;s.classList.toggle("selected",d)})}let a=o.getElementById("protocol-text");if(a){a.textContent=this.protocol;let e=o.getElementById("bookmark-protocol");if(e)e.value=this.protocol;o.querySelectorAll("#protocol-menu .dropdown-item").forEach((s)=>{s.classList.toggle("selected",s.dataset.protocol===this.protocol)})}let n=o.getElementById("touch-pos-btn");if(n){n.innerHTML=`
+            `;let e=o.getElementById("bookmark-statusPos");if(e)e.value=this.checkStatus?this.statusPosition:"off";o.querySelectorAll("#status-pos-menu .dropdown-item").forEach((s)=>{let p=s.dataset.statusPos,d=p==="off"?!this.checkStatus:this.checkStatus&&p===this.statusPosition;s.classList.toggle("selected",d)})}let i=o.getElementById("protocol-text");if(i){i.textContent=this.protocol;let e=o.getElementById("bookmark-protocol");if(e)e.value=this.protocol;o.querySelectorAll("#protocol-menu .dropdown-item").forEach((s)=>{s.classList.toggle("selected",s.dataset.protocol===this.protocol)})}let n=o.getElementById("touch-pos-btn");if(n){n.innerHTML=`
                 ${this.visibleTouch?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>'}
                 <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
                     <path d="M7 10l5 5 5-5z" />
                 </svg>
-            `;let e=o.getElementById("bookmark-visibleTouch");if(e)e.value=this.visibleTouch?"on":"off";o.querySelectorAll("#touch-pos-menu .dropdown-item").forEach((s)=>{let p=s.dataset.touch;s.classList.toggle("selected",p==="on"&&this.visibleTouch||p==="off"&&!this.visibleTouch)})}o.querySelectorAll(".border-width-btn").forEach((e)=>{let s=parseInt(e.dataset.width);e.classList.toggle("active",s===this.borderWidth)}),o.querySelectorAll(".premium-color-swatch").forEach((e)=>{let s=e,p=s.dataset.color;if(p)if(p===this.color){if(s.classList.add("active"),!s.querySelector("svg"))s.innerHTML+='<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>'}else{s.classList.remove("active");let d=s.querySelector("svg");if(d)d.remove()}else if(s.classList.contains("premium-color-swatch--custom")){let d=!gt.includes(this.color)&&this.color!=="";s.classList.toggle("active",d);let c=s.querySelector("svg");if(c)c.style.fill=d?"#fff":"rgba(255,255,255,0.4)";let l=o.getElementById("bookmark-borderColor");if(l&&d)l.value=this.color;if(d)s.style.backgroundColor=this.color;else s.style.backgroundColor="#333"}})}updateIconPreview(){let r=this.shadowRoot.getElementById("icon-trigger-btn");if(r)r.innerHTML=this.selectedIconName?`<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.selectedIconName}.png" alt="icon" style="width: 24px; height: 24px; object-fit: contain;">`:'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>'}toggleDropdown(o,r){this.closeAllDropdowns(o);let t=this.shadowRoot.getElementById(o);if(!t)return;if(t.classList.toggle("show"))requestAnimationFrame(()=>{let n=this.dialog.getBoundingClientRect(),e=r.getBoundingClientRect(),s=e.left-n.left,p=e.bottom-n.top+4;t.style.left=`${s}px`,t.style.top=`${p}px`,t.style.minWidth=`${e.width}px`})}closeAllDropdowns(o=null){["label-pos-menu","status-pos-menu","touch-pos-menu","protocol-menu","color-menu"].forEach((t)=>{if(t!==o)this.shadowRoot.getElementById(t)?.classList.remove("show")})}switchTab(o){let r=this.shadowRoot;r.querySelectorAll(".tab-btn").forEach((t)=>{t.classList.toggle("active",t.dataset.tab===o)}),r.querySelectorAll(".tab-content").forEach((t)=>{t.classList.toggle("active",t.id===`tab-${o}`)})}connectedCallback(){this.render(),this._unsubscribeI18n=i.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n();let o=this.shadowRoot;if(this.clickHandler)o.removeEventListener("click",this.clickHandler);if(this.submitHandler)o.removeEventListener("submit",this.submitHandler);if(this.inputHandler)o.removeEventListener("input",this.inputHandler);if(this.escapeHandler)document.removeEventListener("keydown",this.escapeHandler)}render(){let o=this.dialog?.open;this.shadowRoot.innerHTML=`
-            <style>${Lr}</style>
-            ${kr({isOpen:!0,isEditMode:this.isEditMode,title:this.bookmarkTitle,url:this.url,protocol:this.protocol,selectedIcon:this.selectedIconName,color:this.color,statusPosition:this.statusPosition,checkStatus:this.checkStatus,labelPosition:this.labelPosition,visibleTouch:this.visibleTouch,borderWidth:this.borderWidth})}
-        `,this.dialog=this.shadowRoot.getElementById("modal");let r=this.shadowRoot;if(r.addEventListener("click",this.clickHandler),r.addEventListener("submit",this.submitHandler),r.addEventListener("input",this.inputHandler),o)this.dialog?.showModal()}open(){this.resetState(),this.isEditMode=!1,this.render(),this.dialog?.showModal()}openForEdit(o){this.isEditMode=!0,this.currentItemId=o.id;let r=o.content;if(typeof r==="string")try{r=JSON.parse(r)}catch(a){console.error(a)}this.bookmarkTitle=r.label||"",this.selectedIconName=r.iconName||"",this.color=r.borderColor||"#333333",this.labelPosition=r.labelPos||"bottom",this.visibleTouch=r.visibleTouch!==!1,this.borderWidth=r.borderWidth||1;let t=r.url||"";if(t.startsWith("https://"))this.protocol="https://",this.url=t.substring(8);else if(t.startsWith("http://"))this.protocol="http://",this.url=t.substring(7);else this.protocol="http://",this.url=t;if(r.statusPos&&r.statusPos!=="off")this.checkStatus=!0,this.statusPosition=r.statusPos;else this.checkStatus=!1,this.statusPosition="top-right";this.render(),this.dialog?.showModal()}close(){this.dialog?.close(),this.resetState()}resetState(){this.bookmarkTitle="",this.url="",this.protocol="http://",this.selectedIconName=null,this.color="#333333",this.statusPosition="top-right",this.checkStatus=!1,this.labelPosition="bottom",this.visibleTouch=!0,this.borderWidth=1,this.currentItemId=null}}if(!customElements.get("add-bookmark-modal"))customElements.define("add-bookmark-modal",Ar);v();var fo=[{id:"clock",name:"Clock",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',description:"Digital clock with date",defaultW:2,defaultH:1,componentTag:"widget-clock"},{id:"notepad",name:"Notepad",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>',description:"Markdown notepad",defaultW:2,defaultH:2,componentTag:"widget-notepad"},{id:"telemetry",name:"System Status",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><circle cx="6" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="6" cy="17.5" r="1" fill="currentColor" stroke="none"/><line x1="10" y1="6.5" x2="18" y2="6.5"/><line x1="10" y1="17.5" x2="18" y2="17.5"/></svg>',description:"CPU, RAM and Temp",defaultW:2,defaultH:1,componentTag:"widget-telemetry"},{id:"weather",name:"Weather",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="14.7" y1="3.3" x2="13.3" y2="4.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><path d="M10 19 Q10 15 14 15 Q14 11 18 11 Q22 11 22 15 Q24 15 24 18 Q24 21 21 21 L12 21 Q10 21 10 19Z"/></svg>',description:"Current weather & forecast",defaultW:2,defaultH:2,componentTag:"widget-weather"},{id:"markdown",name:"Markdown",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>',description:"Native Markdown Editor",defaultW:2,defaultH:2,componentTag:"widget-markdown"}];class Mr extends HTMLElement{dialog=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}open(){if(this.dialog)this.dialog.showModal()}close(){if(this.dialog)this.dialog.close()}selectWidget(o){this.dispatchEvent(new CustomEvent("widget-selected",{detail:o,bubbles:!0,composed:!0})),this.close()}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
+            `;let e=o.getElementById("bookmark-visibleTouch");if(e)e.value=this.visibleTouch?"on":"off";o.querySelectorAll("#touch-pos-menu .dropdown-item").forEach((s)=>{let p=s.dataset.touch;s.classList.toggle("selected",p==="on"&&this.visibleTouch||p==="off"&&!this.visibleTouch)})}o.querySelectorAll(".border-width-btn").forEach((e)=>{let s=parseInt(e.dataset.width);e.classList.toggle("active",s===this.borderWidth)}),o.querySelectorAll(".premium-color-swatch").forEach((e)=>{let s=e,p=s.dataset.color;if(p)if(p===this.color){if(s.classList.add("active"),!s.querySelector("svg"))s.innerHTML+='<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>'}else{s.classList.remove("active");let d=s.querySelector("svg");if(d)d.remove()}else if(s.classList.contains("premium-color-swatch--custom")){let d=!ht.includes(this.color)&&this.color!=="";s.classList.toggle("active",d);let c=s.querySelector("svg");if(c)c.style.fill=d?"#fff":"rgba(255,255,255,0.4)";let l=o.getElementById("bookmark-borderColor");if(l&&d)l.value=this.color;if(d)s.style.backgroundColor=this.color;else s.style.backgroundColor="#333"}})}updateIconPreview(){let r=this.shadowRoot.getElementById("icon-trigger-btn");if(r)r.innerHTML=this.selectedIconName?`<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.selectedIconName}.png" alt="icon" style="width: 24px; height: 24px; object-fit: contain;">`:'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>'}toggleDropdown(o,r){this.closeAllDropdowns(o);let t=this.shadowRoot.getElementById(o);if(!t)return;if(t.classList.toggle("show"))requestAnimationFrame(()=>{let n=this.dialog.getBoundingClientRect(),e=r.getBoundingClientRect(),s=e.left-n.left,p=e.bottom-n.top+4;t.style.left=`${s}px`,t.style.top=`${p}px`,t.style.minWidth=`${e.width}px`})}closeAllDropdowns(o=null){["label-pos-menu","status-pos-menu","touch-pos-menu","protocol-menu","color-menu"].forEach((t)=>{if(t!==o)this.shadowRoot.getElementById(t)?.classList.remove("show")})}switchTab(o){let r=this.shadowRoot;r.querySelectorAll(".tab-btn").forEach((t)=>{t.classList.toggle("active",t.dataset.tab===o)}),r.querySelectorAll(".tab-content").forEach((t)=>{t.classList.toggle("active",t.id===`tab-${o}`)})}connectedCallback(){this.render(),this._unsubscribeI18n=a.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n();let o=this.shadowRoot;if(this.clickHandler)o.removeEventListener("click",this.clickHandler);if(this.submitHandler)o.removeEventListener("submit",this.submitHandler);if(this.inputHandler)o.removeEventListener("input",this.inputHandler);if(this.escapeHandler)document.removeEventListener("keydown",this.escapeHandler)}render(){let o=this.dialog?.open;this.shadowRoot.innerHTML=`
+            <style>${Mr}</style>
+            ${$r({isOpen:!0,isEditMode:this.isEditMode,title:this.bookmarkTitle,url:this.url,protocol:this.protocol,selectedIcon:this.selectedIconName,color:this.color,statusPosition:this.statusPosition,checkStatus:this.checkStatus,labelPosition:this.labelPosition,visibleTouch:this.visibleTouch,borderWidth:this.borderWidth})}
+        `,this.dialog=this.shadowRoot.getElementById("modal");let r=this.shadowRoot;if(r.addEventListener("click",this.clickHandler),r.addEventListener("submit",this.submitHandler),r.addEventListener("input",this.inputHandler),o)this.dialog?.showModal()}open(){this.resetState(),this.isEditMode=!1,this.render(),this.dialog?.showModal()}openForEdit(o){this.isEditMode=!0,this.currentItemId=o.id;let r=o.content;if(typeof r==="string")try{r=JSON.parse(r)}catch(i){console.error(i)}this.bookmarkTitle=r.label||"",this.selectedIconName=r.iconName||"",this.color=r.borderColor||"#333333",this.labelPosition=r.labelPos||"bottom",this.visibleTouch=r.visibleTouch!==!1,this.borderWidth=r.borderWidth||1;let t=r.url||"";if(t.startsWith("https://"))this.protocol="https://",this.url=t.substring(8);else if(t.startsWith("http://"))this.protocol="http://",this.url=t.substring(7);else this.protocol="http://",this.url=t;if(r.statusPos&&r.statusPos!=="off")this.checkStatus=!0,this.statusPosition=r.statusPos;else this.checkStatus=!1,this.statusPosition="top-right";this.render(),this.dialog?.showModal()}close(){this.dialog?.close(),this.resetState()}resetState(){this.bookmarkTitle="",this.url="",this.protocol="http://",this.selectedIconName=null,this.color="#333333",this.statusPosition="top-right",this.checkStatus=!1,this.labelPosition="bottom",this.visibleTouch=!0,this.borderWidth=1,this.currentItemId=null}}if(!customElements.get("add-bookmark-modal"))customElements.define("add-bookmark-modal",qr);y();var fo=[{id:"clock",name:"Clock",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',description:"Digital clock with date",defaultW:2,defaultH:1,componentTag:"widget-clock"},{id:"notepad",name:"Notepad",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>',description:"Markdown notepad",defaultW:2,defaultH:2,componentTag:"widget-notepad"},{id:"telemetry",name:"System Status",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><circle cx="6" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="6" cy="17.5" r="1" fill="currentColor" stroke="none"/><line x1="10" y1="6.5" x2="18" y2="6.5"/><line x1="10" y1="17.5" x2="18" y2="17.5"/></svg>',description:"CPU, RAM and Temp",defaultW:2,defaultH:1,componentTag:"widget-telemetry"},{id:"weather",name:"Weather",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="14.7" y1="3.3" x2="13.3" y2="4.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><path d="M10 19 Q10 15 14 15 Q14 11 18 11 Q22 11 22 15 Q24 15 24 18 Q24 21 21 21 L12 21 Q10 21 10 19Z"/></svg>',description:"Current weather & forecast",defaultW:2,defaultH:2,componentTag:"widget-weather"},{id:"markdown",name:"Markdown",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>',description:"Native Markdown Editor",defaultW:2,defaultH:2,componentTag:"widget-markdown"}];class Gr extends HTMLElement{dialog=null;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render()}open(){if(this.dialog)this.dialog.showModal()}close(){if(this.dialog)this.dialog.close()}selectWidget(o){this.dispatchEvent(new CustomEvent("widget-selected",{detail:o,bubbles:!0,composed:!0})),this.close()}render(){if(!this.shadowRoot)return;this.shadowRoot.innerHTML=`
             <style>
                 :host {
                     display: contents;
@@ -5137,8 +5414,8 @@ dialog[open] {
             <dialog id="modal">
                 <div class="header">
                     <div class="title-group">
-                        <h3>${i.t("widget.add_title")||"Add Widget"}</h3>
-                        <p>${i.t("widget.add_subtitle")||"Enhance your dashboard with dynamic components"}</p>
+                        <h3>${a.t("widget.add_title")||"Add Widget"}</h3>
+                        <p>${a.t("widget.add_subtitle")||"Enhance your dashboard with dynamic components"}</p>
                     </div>
                     <button class="close-btn" onclick="this.getRootNode().host.close()">
                         <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -5149,13 +5426,13 @@ dialog[open] {
                     ${fo.map((o)=>`
                         <div class="card" data-id="${o.id}">
                             <div class="icon-container">${o.icon}</div>
-                            <div class="name">${i.t(`widget.${o.id}.name`)||o.name}</div>
-                            <div class="desc">${i.t(`widget.${o.id}.description`)||o.description}</div>
+                            <div class="name">${a.t(`widget.${o.id}.name`)||o.name}</div>
+                            <div class="desc">${a.t(`widget.${o.id}.description`)||o.description}</div>
                         </div>
                     `).join("")}
                 </div>
             </dialog>
-        `,this.dialog=this.shadowRoot.querySelector("dialog"),this.shadowRoot.querySelectorAll(".card").forEach((o)=>{o.addEventListener("click",()=>{let r=o.getAttribute("data-id"),t=fo.find((a)=>a.id===r);if(t)this.selectWidget(t)})})}}customElements.define("add-widget-modal",Mr);L();v();var qr=`:host {
+        `,this.dialog=this.shadowRoot.querySelector("dialog"),this.shadowRoot.querySelectorAll(".card").forEach((o)=>{o.addEventListener("click",()=>{let r=o.getAttribute("data-id"),t=fo.find((i)=>i.id===r);if(t)this.selectWidget(t)})})}}customElements.define("add-widget-modal",Gr);L();y();var Hr=`:host {
     display: contents;
 }
 
@@ -5708,134 +5985,142 @@ dialog[open] {
 .border-width-btn span {
     font-size: 11px;
     font-weight: 500;
-}`;var vo=new Map;async function Hr(o,r){try{let t=await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${o}&longitude=${r}`);if(!t.ok)throw Error("TimeAPI failed");return(await t.json()).timeZone||"local"}catch(t){return console.error("[Timezone] TimeAPI error:",t),"local"}}async function bt(o){if(!o||o.trim()==="")return"local";let r=o.toLowerCase().trim();if(vo.has(r))return vo.get(r);try{let t=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o)}&limit=1`,a=await fetch(t,{headers:{"User-Agent":"Lastboard/1.0"}});if(!a.ok)throw Error("Geocoding failed");let n=await a.json();if(n.length===0)return"local";let{lat:e,lon:s}=n[0],p=await Hr(parseFloat(e),parseFloat(s));return vo.set(r,p),p}catch(t){return console.error("[Timezone] Error resolving city:",o,t),"local"}}class Gr extends HTMLElement{dialog=null;currentItem=null;_clockSelectedLat=null;_clockSelectedLon=null;_selectedColor="#333333";_selectedBorderWidth=1;premiumColors=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#64748b","#f8fafc","#1e293b","#333333"];constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.setupEventListeners()}open(o){this.currentItem=o;let r={};try{r=typeof o.content==="string"?JSON.parse(o.content):o.content}catch(t){console.error("Failed to parse content",t)}if(this._selectedColor=r.borderColor||"#333333",this._selectedBorderWidth=r.borderWidth||1,this.render(),this.setupEventListeners(),this.dialog)this.dialog.showModal(),this.switchTab("general")}close(){if(this.dialog)this.dialog.close();this.currentItem=null}setupEventListeners(){if(!this.shadowRoot)return;if(this.shadowRoot.querySelectorAll(".tab-btn").forEach((r)=>{r.addEventListener("click",(t)=>{t.preventDefault();let a=t.currentTarget.dataset.tab;if(a)this.switchTab(a)})}),this.shadowRoot.getElementById("close-btn")?.addEventListener("click",()=>this.close()),this.shadowRoot.getElementById("save-btn")?.addEventListener("click",()=>this.save()),this.currentItem){let t=(typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content).widgetId;if(t==="clock"){let a=this.shadowRoot.getElementById("clock-search-btn");if(a)a.addEventListener("click",()=>this.searchClockCity())}else if(t==="weather"){let a=this.shadowRoot.getElementById("weather-search-btn");if(a)a.addEventListener("click",()=>this.searchWeatherCity());let n=this.shadowRoot.getElementById("weather-forecast"),e=this.shadowRoot.getElementById("weather-days-row");if(n&&e)n.addEventListener("change",()=>{e.style.display=n.checked?"":"none"});let s=this.shadowRoot.getElementById("weather-days"),p=this.shadowRoot.getElementById("weather-days-dec"),d=this.shadowRoot.getElementById("weather-days-inc");if(s&&p&&d)p.addEventListener("click",()=>{let c=parseInt(s.value)||1;if(c>1)s.value=String(c-1)}),d.addEventListener("click",()=>{let c=parseInt(s.value)||1;if(c<6)s.value=String(c+1)})}}this.shadowRoot.querySelectorAll(".premium-color-swatch").forEach((r)=>{r.addEventListener("click",(t)=>{let a=t.currentTarget;if(a.classList.contains("premium-color-swatch--custom"))return;this._selectedColor=a.dataset.color,this.updateAppearanceUI()})});let o=this.shadowRoot.getElementById("widget-borderColor");if(o)o.addEventListener("input",(r)=>{this._selectedColor=r.target.value,this.updateAppearanceUI()});this.shadowRoot.querySelectorAll(".border-width-btn").forEach((r)=>{r.addEventListener("click",(t)=>{let a=t.currentTarget;this._selectedBorderWidth=parseInt(a.dataset.width),this.updateAppearanceUI()})})}updateAppearanceUI(){if(!this.shadowRoot)return;this.shadowRoot.querySelectorAll(".premium-color-swatch").forEach((o)=>{let r=o,t=r.dataset.color,a=r.classList.contains("premium-color-swatch--custom");if(t)if(t===this._selectedColor){if(r.classList.add("active"),!r.querySelector("svg"))r.innerHTML+='<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>'}else{r.classList.remove("active");let n=r.querySelector("svg");if(n)n.remove()}else if(a){let n=!this.premiumColors.includes(this._selectedColor)&&this._selectedColor!=="";r.classList.toggle("active",n);let e=r.querySelector("svg");if(e)e.style.fill=n?"#fff":"rgba(255,255,255,0.4)";let s=this.shadowRoot?.getElementById("widget-borderColor");if(s&&n)s.value=this._selectedColor;if(n)r.style.backgroundColor=this._selectedColor;else r.style.backgroundColor="#333"}}),this.shadowRoot.querySelectorAll(".border-width-btn").forEach((o)=>{let r=parseInt(o.dataset.width);o.classList.toggle("active",r===this._selectedBorderWidth)})}switchTab(o){if(!this.shadowRoot)return;this.shadowRoot.querySelectorAll(".tab-btn").forEach((r)=>{r.classList.toggle("active",r.dataset.tab===o)}),this.shadowRoot.querySelectorAll(".tab-content").forEach((r)=>{r.classList.toggle("active",r.id===`tab-${o}`)})}async save(){if(!this.currentItem)return;let o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,r=o.widgetId,t={...o};if(r==="clock"){let a=this.shadowRoot?.getElementById("clock-city"),n=this.shadowRoot?.getElementById("clock-12h"),e=this.shadowRoot?.getElementById("clock-date"),s=this.shadowRoot?.getElementById("save-btn"),p=a?.value||"";if(s)s.disabled=!0,s.textContent=i.t("general.loading");let d="local";if(this._clockSelectedLat!=null&&this._clockSelectedLon!=null)d=await Hr(this._clockSelectedLat,this._clockSelectedLon);else if(p)d=await bt(p);if(t.city=p,t.timezone=d,t.hour12=n?.checked||!1,t.showDate=e?.checked||!1,this._clockSelectedLat=null,this._clockSelectedLon=null,s)s.disabled=!1,s.textContent=i.t("general.save")}else if(r==="weather"){let a=this.shadowRoot?.getElementById("weather-city"),n=this.shadowRoot?.getElementById("weather-lat"),e=this.shadowRoot?.getElementById("weather-lon"),s=this.shadowRoot?.getElementById("weather-fahrenheit"),p=this.shadowRoot?.getElementById("weather-forecast"),d=this.shadowRoot?.getElementById("weather-days");t.city=a?.value||"",t.latitude=parseFloat(n?.value)||0,t.longitude=parseFloat(e?.value)||0,t.unit=s?.checked?"fahrenheit":"celsius",t.showForecast=p?.checked||!1,t.forecastDays=parseInt(d?.value)||5}else if(r==="telemetry"){let a=this.shadowRoot?.getElementById("telemetry-interval");t.interval=a?parseInt(a.value):1000}if(this.currentItem.type==="section"){let a=this.shadowRoot?.getElementById("section-title");t.title=a?a.value:"",delete t.name}t.borderColor=this._selectedColor,t.borderWidth=this._selectedBorderWidth,await g.updateItem({id:this.currentItem.id,content:JSON.stringify(t)}),this.close()}render(){if(!this.shadowRoot)return;let o={},r="";if(this.currentItem)o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,r=o.widgetId;let t=(p)=>String(p).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"),a=()=>{let p=()=>{let d=this._selectedColor,c=this._selectedBorderWidth,l=!this.premiumColors.includes(d)&&d!=="";return`
+}`;var vo=new Map;async function Rr(o,r){try{let t=await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${o}&longitude=${r}`);if(!t.ok)throw Error("TimeAPI failed");return(await t.json()).timeZone||"local"}catch(t){return console.error("[Timezone] TimeAPI error:",t),"local"}}async function vt(o){if(!o||o.trim()==="")return"local";let r=o.toLowerCase().trim();if(vo.has(r))return vo.get(r);try{let t=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(o)}&limit=1`,i=await fetch(t,{headers:{"User-Agent":"Lastboard/1.0"}});if(!i.ok)throw Error("Geocoding failed");let n=await i.json();if(n.length===0)return"local";let{lat:e,lon:s}=n[0],p=await Rr(parseFloat(e),parseFloat(s));return vo.set(r,p),p}catch(t){return console.error("[Timezone] Error resolving city:",o,t),"local"}}class Fr extends HTMLElement{dialog=null;currentItem=null;_clockSelectedLat=null;_clockSelectedLon=null;_selectedColor="#333333";_selectedBorderWidth=1;premiumColors=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#64748b","#f8fafc","#1e293b","#333333"];constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.setupEventListeners()}open(o){this.currentItem=o;let r={};try{r=typeof o.content==="string"?JSON.parse(o.content):o.content}catch(t){console.error("Failed to parse content",t)}if(this._selectedColor=r.borderColor||"#333333",this._selectedBorderWidth=r.borderWidth||1,this.render(),this.setupEventListeners(),this.dialog)this.dialog.showModal(),this.switchTab("general")}close(){if(this.dialog)this.dialog.close();this.currentItem=null}setupEventListeners(){if(!this.shadowRoot)return;if(this.shadowRoot.querySelectorAll(".tab-btn").forEach((r)=>{r.addEventListener("click",(t)=>{t.preventDefault();let i=t.currentTarget.dataset.tab;if(i)this.switchTab(i)})}),this.shadowRoot.getElementById("close-btn")?.addEventListener("click",()=>this.close()),this.shadowRoot.getElementById("save-btn")?.addEventListener("click",()=>this.save()),this.currentItem){let t=(typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content).widgetId;if(t==="clock"){let i=this.shadowRoot.getElementById("clock-search-btn");if(i)i.addEventListener("click",()=>this.searchClockCity())}else if(t==="weather"){let i=this.shadowRoot.getElementById("weather-search-btn");if(i)i.addEventListener("click",()=>this.searchWeatherCity());let n=this.shadowRoot.getElementById("weather-forecast"),e=this.shadowRoot.getElementById("weather-days-row");if(n&&e)n.addEventListener("change",()=>{e.style.display=n.checked?"":"none"});let s=this.shadowRoot.getElementById("weather-days"),p=this.shadowRoot.getElementById("weather-days-dec"),d=this.shadowRoot.getElementById("weather-days-inc");if(s&&p&&d)p.addEventListener("click",()=>{let c=parseInt(s.value)||1;if(c>1)s.value=String(c-1)}),d.addEventListener("click",()=>{let c=parseInt(s.value)||1;if(c<6)s.value=String(c+1)})}}this.shadowRoot.querySelectorAll(".premium-color-swatch").forEach((r)=>{r.addEventListener("click",(t)=>{let i=t.currentTarget;if(i.classList.contains("premium-color-swatch--custom"))return;this._selectedColor=i.dataset.color,this.updateAppearanceUI()})});let o=this.shadowRoot.getElementById("widget-borderColor");if(o)o.addEventListener("input",(r)=>{this._selectedColor=r.target.value,this.updateAppearanceUI()});this.shadowRoot.querySelectorAll(".border-width-btn").forEach((r)=>{r.addEventListener("click",(t)=>{let i=t.currentTarget;this._selectedBorderWidth=parseInt(i.dataset.width),this.updateAppearanceUI()})})}updateAppearanceUI(){if(!this.shadowRoot)return;this.shadowRoot.querySelectorAll(".premium-color-swatch").forEach((o)=>{let r=o,t=r.dataset.color,i=r.classList.contains("premium-color-swatch--custom");if(t)if(t===this._selectedColor){if(r.classList.add("active"),!r.querySelector("svg"))r.innerHTML+='<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>'}else{r.classList.remove("active");let n=r.querySelector("svg");if(n)n.remove()}else if(i){let n=!this.premiumColors.includes(this._selectedColor)&&this._selectedColor!=="";r.classList.toggle("active",n);let e=r.querySelector("svg");if(e)e.style.fill=n?"#fff":"rgba(255,255,255,0.4)";let s=this.shadowRoot?.getElementById("widget-borderColor");if(s&&n)s.value=this._selectedColor;if(n)r.style.backgroundColor=this._selectedColor;else r.style.backgroundColor="#333"}}),this.shadowRoot.querySelectorAll(".border-width-btn").forEach((o)=>{let r=parseInt(o.dataset.width);o.classList.toggle("active",r===this._selectedBorderWidth)})}switchTab(o){if(!this.shadowRoot)return;this.shadowRoot.querySelectorAll(".tab-btn").forEach((r)=>{r.classList.toggle("active",r.dataset.tab===o)}),this.shadowRoot.querySelectorAll(".tab-content").forEach((r)=>{r.classList.toggle("active",r.id===`tab-${o}`)})}async save(){if(!this.currentItem)return;let o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,r=o.widgetId,t={...o};if(r==="clock"){let i=this.shadowRoot?.getElementById("clock-city"),n=this.shadowRoot?.getElementById("clock-12h"),e=this.shadowRoot?.getElementById("clock-date"),s=this.shadowRoot?.getElementById("save-btn"),p=i?.value||"";if(s)s.disabled=!0,s.textContent=a.t("general.loading");let d="local";if(this._clockSelectedLat!=null&&this._clockSelectedLon!=null)d=await Rr(this._clockSelectedLat,this._clockSelectedLon);else if(p)d=await vt(p);if(t.city=p,t.timezone=d,t.hour12=n?.checked||!1,t.showDate=e?.checked||!1,this._clockSelectedLat=null,this._clockSelectedLon=null,s)s.disabled=!1,s.textContent=a.t("general.save")}else if(r==="weather"){let i=this.shadowRoot?.getElementById("weather-city"),n=this.shadowRoot?.getElementById("weather-lat"),e=this.shadowRoot?.getElementById("weather-lon"),s=this.shadowRoot?.getElementById("weather-fahrenheit"),p=this.shadowRoot?.getElementById("weather-forecast"),d=this.shadowRoot?.getElementById("weather-days");t.city=i?.value||"",t.latitude=parseFloat(n?.value)||0,t.longitude=parseFloat(e?.value)||0,t.unit=s?.checked?"fahrenheit":"celsius",t.showForecast=p?.checked||!1,t.forecastDays=parseInt(d?.value)||5}else if(r==="notepad"){let i=this.shadowRoot?.getElementById("notepad-text");t.text=i?i.value:""}else if(r==="markdown"){let i=this.shadowRoot?.getElementById("markdown-text");t.text=i?i.value:""}else if(r==="telemetry"){let i=this.shadowRoot?.getElementById("telemetry-interval");t.interval=i?parseInt(i.value):1000}if(this.currentItem.type==="section"){let i=this.shadowRoot?.getElementById("section-title");t.title=i?i.value:"",delete t.name}t.borderColor=this._selectedColor,t.borderWidth=this._selectedBorderWidth,await x.updateItem({id:this.currentItem.id,content:JSON.stringify(t)}),this.close()}render(){if(!this.shadowRoot)return;let o={},r="";if(this.currentItem)o=typeof this.currentItem.content==="string"?JSON.parse(this.currentItem.content):this.currentItem.content,r=o.widgetId;let t=(p)=>String(p).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"),i=()=>{let p=()=>{let d=this._selectedColor,c=this._selectedBorderWidth,l=!this.premiumColors.includes(d)&&d!=="";return`
                 <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
-                    <label>${i.t("bookmark.border_color")||"Border Color"}</label>
+                    <label>${a.t("bookmark.border_color")||"Border Color"}</label>
                     <div class="premium-color-grid">
-                        ${this.premiumColors.map((x)=>`
-                            <div class="premium-color-swatch ${d===x?"active":""}" 
-                                style="background-color: ${x}"
-                                data-color="${x}">
-                                ${d===x?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
+                        ${this.premiumColors.map((g)=>`
+                            <div class="premium-color-swatch ${d===g?"active":""}" 
+                                style="background-color: ${g}"
+                                data-color="${g}">
+                                ${d===g?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>':""}
                             </div>
                         `).join("")}
                         
                         <div class="premium-color-swatch premium-color-swatch--custom ${l?"active":""}" 
                             style="background-color: ${l?d:"#333"}">
-                            <svg viewBox="0 0 24 24" style="opacity: 0.8; fill: ${l?"#fff":"rgba(255,255,255,0.4)"};">
+                            <svg viewBox="0 0 24 24" style="opacity: 0.8; fill: ${l?"#fff":"rgba(255,255,255,0.4)"}; pointer-events: none;">
                                 <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                             </svg>
-                            <input type="color" class="premium-swatch-picker" id="widget-borderColor" value="${l?d:"#0078D4"}">
+                            <app-color-picker class="premium-swatch-picker" id="widget-borderColor" style="opacity: 0; position: absolute; inset: 0; z-index: 10;" value="${l?d:"#0078D4"}"></app-color-picker>
                         </div>
                     </div>
                 </div>
 
                 <div class="field-group" style="margin-top: 20px;">
-                    <label>${i.t("bookmark.border_width")||"Border Width"}</label>
+                    <label>${a.t("bookmark.border_width")||"Border Width"}</label>
                     <div class="segmented-control">
                         <button type="button" class="border-width-btn ${c===1?"active":""}" data-width="1">
                             <div style="height: 1px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                            <span>${i.t("general.thin")||"Thin"}</span>
+                            <span>${a.t("general.thin")||"Thin"}</span>
                         </button>
                         <button type="button" class="border-width-btn ${c===2?"active":""}" data-width="2">
                             <div style="height: 2px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                            <span>${i.t("general.regular")||"Regular"}</span>
+                            <span>${a.t("general.regular")||"Regular"}</span>
                         </button>
                         <button type="button" class="border-width-btn ${c===3?"active":""}" data-width="3">
                             <div style="height: 3px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                            <span>${i.t("general.thick")||"Thick"}</span>
+                            <span>${a.t("general.thick")||"Thick"}</span>
                         </button>
                     </div>
                 </div>
-                `};if(!this.currentItem)return{general:"",customization:""};if(r==="clock"){let d=o.city||"",c=o.hour12||!1,l=o.showDate!==!1,x=`
+                `};if(!this.currentItem)return{general:"",customization:""};if(r==="clock"){let d=o.city||"",c=o.hour12||!1,l=o.showDate!==!1,g=`
                     <div class="field-group">
-                        <label>${i.t("widget.clock.city")}</label>
+                        <label>${a.t("widget.clock.city")}</label>
                         <div class="input-row">
-                            <input type="text" id="clock-city" value="${t(d)}" placeholder="${i.t("widget.clock.city_placeholder")}"/>
-                            <app-button variant="ghost" id="clock-search-btn">${i.t("widget.weather.search")}</app-button>
+                            <input type="text" id="clock-city" value="${t(d)}" placeholder="${a.t("widget.clock.city_placeholder")}"/>
+                            <app-button variant="ghost" id="clock-search-btn">${a.t("widget.weather.search")}</app-button>
                         </div>
-                        <small>${i.t("widget.clock.city_desc")}</small>
+                        <small>${a.t("widget.clock.city_desc")}</small>
                     </div>
 
                     <div class="field-group" id="clock-results-container" style="display:none;">
-                        <label>${i.t("widget.weather.results")}</label>
+                        <label>${a.t("widget.weather.results")}</label>
                         <div id="clock-results" class="weather-results"></div>
                     </div>
 
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-12h" ${c?"checked":""} />
-                        <label for="clock-12h">${i.t("widget.clock.use_12h")}</label>
+                        <label for="clock-12h">${a.t("widget.clock.use_12h")}</label>
                     </div>
 
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-date" ${l?"checked":""} />
-                        <label for="clock-date">${i.t("widget.clock.show_date")}</label>
+                        <label for="clock-date">${a.t("widget.clock.show_date")}</label>
                     </div>
-                `,_="";return{general:x,customization:""+p()}}else if(r==="weather"){let d=o.city||"",c=o.latitude||"",l=o.longitude||"",x=o.unit==="fahrenheit",_=o.showForecast||!1,u=o.forecastDays||5,w=`
+                `,u="";return{general:g,customization:""+p()}}else if(r==="weather"){let d=o.city||"",c=o.latitude||"",l=o.longitude||"",g=o.unit==="fahrenheit",u=o.showForecast||!1,f=o.forecastDays||5,_=`
                     <div class="field-group">
-                        <label>${i.t("widget.weather.city")}</label>
+                        <label>${a.t("widget.weather.city")}</label>
                         <div class="input-row">
-                            <input type="text" id="weather-city" value="${t(d)}" placeholder="${i.t("widget.weather.city_placeholder")}"/>
-                            <app-button variant="ghost" id="weather-search-btn">${i.t("widget.weather.search")}</app-button>
+                            <input type="text" id="weather-city" value="${t(d)}" placeholder="${a.t("widget.weather.city_placeholder")}"/>
+                            <app-button variant="ghost" id="weather-search-btn">${a.t("widget.weather.search")}</app-button>
                         </div>
-                        <small>${i.t("widget.weather.city_desc")}</small>
+                        <small>${a.t("widget.weather.city_desc")}</small>
                     </div>
 
                     <div class="field-group" id="weather-results-container" style="display:none;">
-                        <label>${i.t("widget.weather.results")}</label>
+                        <label>${a.t("widget.weather.results")}</label>
                         <div id="weather-results" class="weather-results"></div>
                     </div>
 
                     <div class="field-group">
-                        <label>${i.t("widget.weather.coordinates")}</label>
+                        <label>${a.t("widget.weather.coordinates")}</label>
                         <div class="input-row">
                             <input type="number" id="weather-lat" value="${c}" placeholder="Lat" step="0.0001" />
                             <input type="number" id="weather-lon" value="${l}" placeholder="Lon" step="0.0001" />
                         </div>
                     </div>
-                `,m=`
+                `,v=`
                     <div class="field-group check-row">
-                        <input type="checkbox" id="weather-fahrenheit" ${x?"checked":""} />
-                        <label for="weather-fahrenheit">${i.t("widget.weather.use_fahrenheit")}</label>
+                        <input type="checkbox" id="weather-fahrenheit" ${g?"checked":""} />
+                        <label for="weather-fahrenheit">${a.t("widget.weather.use_fahrenheit")}</label>
                     </div>
 
                     <div class="field-group check-row">
-                        <input type="checkbox" id="weather-forecast" ${_?"checked":""} />
-                        <label for="weather-forecast">${i.t("widget.weather.show_forecast")}</label>
+                        <input type="checkbox" id="weather-forecast" ${u?"checked":""} />
+                        <label for="weather-forecast">${a.t("widget.weather.show_forecast")}</label>
                     </div>
 
-                    <div class="field-group row-aligned" id="weather-days-row" ${!_?'style="display:none;"':""}>
-                        <label>${i.t("widget.weather.forecast_days")}</label>
+                    <div class="field-group row-aligned" id="weather-days-row" ${!u?'style="display:none;"':""}>
+                        <label>${a.t("widget.weather.forecast_days")}</label>
                         <div class="stepper-wrap">
                             <button type="button" class="stepper-btn" id="weather-days-dec">&minus;</button>
-                            <input type="number" id="weather-days" value="${u}" min="1" max="6" />
+                            <input type="number" id="weather-days" value="${f}" min="1" max="6" />
                             <button type="button" class="stepper-btn" id="weather-days-inc">+</button>
                         </div>
                     </div>
-                `;return{general:w,customization:m+p()}}else if(r==="telemetry"){let d=o.interval||1000,c=`
+                `;return{general:_,customization:v+p()}}else if(r==="telemetry"){let d=o.interval||1000,c=`
                     <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">This widget displays real-time system metrics.</p>
                 `;return{general:`
                     <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">This widget displays real-time system metrics.</p>
                 `,customization:`
                     <div class="field-group row-aligned">
-                        <label>${i.t("widget.telemetry.update_interval")}</label>
+                        <label>${a.t("widget.telemetry.update_interval")}</label>
                         <app-select id="telemetry-interval" value="${d}"></app-select>
                     </div>
-                `+p()}}else if(this.currentItem.type==="section"){let d=o.title||"",c=`
-                    <div class="field-group">
-                        <label>${i.t("bookmark.label")}</label>
-                        <div class="input-row">
-                            <input type="text" id="section-title" value="${t(d)}" placeholder="${i.t("section.placeholder_title")}" />
-                        </div>
-                        <small>${i.t("section.leave_empty")}</small>
+                `+p()}}else if(r==="notepad"){let d=o.text||"",c=`
+                    <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
+                        <p>${a.t("widget.config.check_personalize")||"Please check the <b>Personalize</b> tab for content and style options."}</p>
                     </div>
-                `,l="";return{general:c,customization:""+p()}}return{general:`<p>${i.t("widget.config.no_config")}</p>`,customization:""}},n=()=>{if(this.currentItem?.type==="section")return i.t("section.edit_title");return i.t("widget.config.title")},e=a();this.shadowRoot.innerHTML=`
-            <style>${qr}</style>
+                `,l="";return{general:c,customization:""+p()}}else if(r==="markdown"){let d=o.text||"",c=`
+                    <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
+                        <p>${a.t("widget.config.check_personalize")||"Please check the <b>Personalize</b> tab for content and style options."}</p>
+                    </div>
+                `,l="";return{general:c,customization:""+p()}}else if(this.currentItem.type==="section"){let d=o.title||"",c=`
+                    <div class="field-group">
+                        <label>${a.t("bookmark.label")}</label>
+                        <div class="input-row">
+                            <input type="text" id="section-title" value="${t(d)}" placeholder="${a.t("section.placeholder_title")}" />
+                        </div>
+                        <small>${a.t("section.leave_empty")}</small>
+                    </div>
+                `,l="";return{general:c,customization:""+p()}}return{general:`<p>${a.t("widget.config.no_config")}</p>`,customization:""}},n=()=>{if(this.currentItem?.type==="section")return a.t("section.edit_title");return a.t("widget.config.title")},e=i();this.shadowRoot.innerHTML=`
+            <style>${Hr}</style>
             <dialog id="modal">
                 <div class="modal-header">
                     <div class="integrated-tabs">
-                        <button class="tab-btn active" data-tab="general">${i.t("general.general")}</button>
-                        <button class="tab-btn" data-tab="customization">${i.t("general.customization")}</button>
+                        <button class="tab-btn active" data-tab="general">${a.t("general.general")}</button>
+                        <button class="tab-btn" data-tab="customization">${a.t("general.customization")}</button>
                     </div>
                     <button class="modal-close" id="close-btn">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -5857,20 +6142,20 @@ dialog[open] {
                 </div>
 
                 <div class="actions">
-                    ${["clock","telemetry","weather"].includes(r)||this.currentItem?.type==="section"?`<app-button variant="primary" id="save-btn">${i.t("general.save")}</app-button>`:""}
+                    ${["clock","telemetry","weather","notepad","markdown"].includes(r)||this.currentItem?.type==="section"?`<app-button variant="primary" id="save-btn">${a.t("general.save")}</app-button>`:""}
                 </div>
             </dialog>
-        `,this.dialog=this.shadowRoot.querySelector("dialog");let s=this.shadowRoot.getElementById("telemetry-interval");if(s)s.options=[{value:"1000",label:"1s"},{value:"2000",label:"2s"},{value:"5000",label:"5s"},{value:"10000",label:"10s"}]}async searchClockCity(){let o=this.shadowRoot?.getElementById("clock-city"),r=this.shadowRoot?.getElementById("clock-results-container"),t=this.shadowRoot?.getElementById("clock-results");if(!o||!r||!t)return;let a=o.value.trim();if(!a)return;t.innerHTML=`<div class="search-loading">${i.t("general.loading")}</div>`,r.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(a)}&count=5&language=${i.getLocale().code}`)).json();if(!e.results||e.results.length===0){t.innerHTML=`<div class="search-empty">${i.t("general.no_icons")}</div>`;return}t.innerHTML=e.results.map((s)=>`
+        `,this.dialog=this.shadowRoot.querySelector("dialog");let s=this.shadowRoot.getElementById("telemetry-interval");if(s)s.options=[{value:"1000",label:"1s"},{value:"2000",label:"2s"},{value:"5000",label:"5s"},{value:"10000",label:"10s"}]}async searchClockCity(){let o=this.shadowRoot?.getElementById("clock-city"),r=this.shadowRoot?.getElementById("clock-results-container"),t=this.shadowRoot?.getElementById("clock-results");if(!o||!r||!t)return;let i=o.value.trim();if(!i)return;t.innerHTML=`<div class="search-loading">${a.t("general.loading")}</div>`,r.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(i)}&count=5&language=${a.getLocale().code}`)).json();if(!e.results||e.results.length===0){t.innerHTML=`<div class="search-empty">${a.t("general.no_icons")}</div>`;return}t.innerHTML=e.results.map((s)=>`
                 <button class="city-result" data-lat="${s.latitude}" data-lon="${s.longitude}" data-name="${s.name}">
                     <span class="city-name">${s.name}</span>
                     <span class="city-detail">${[s.admin1,s.country].filter(Boolean).join(", ")}</span>
                 </button>
-            `).join(""),t.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let p=parseFloat(s.getAttribute("data-lat")||"0"),d=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("clock-city")).value=c,this._clockSelectedLat=p,this._clockSelectedLon=d,r.style.display="none"})})}catch(n){t.innerHTML=`<div class="search-empty">${i.t("general.error")}</div>`}}async searchWeatherCity(){let o=this.shadowRoot?.getElementById("weather-city"),r=this.shadowRoot?.getElementById("weather-results-container"),t=this.shadowRoot?.getElementById("weather-results");if(!o||!r||!t)return;let a=o.value.trim();if(!a)return;t.innerHTML=`<div class="search-loading">${i.t("general.loading")}</div>`,r.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(a)}&count=5&language=${i.getLocale().code}`)).json();if(!e.results||e.results.length===0){t.innerHTML=`<div class="search-empty">${i.t("general.no_icons")}</div>`;return}t.innerHTML=e.results.map((s)=>`
+            `).join(""),t.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let p=parseFloat(s.getAttribute("data-lat")||"0"),d=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("clock-city")).value=c,this._clockSelectedLat=p,this._clockSelectedLon=d,r.style.display="none"})})}catch(n){t.innerHTML=`<div class="search-empty">${a.t("general.error")}</div>`}}async searchWeatherCity(){let o=this.shadowRoot?.getElementById("weather-city"),r=this.shadowRoot?.getElementById("weather-results-container"),t=this.shadowRoot?.getElementById("weather-results");if(!o||!r||!t)return;let i=o.value.trim();if(!i)return;t.innerHTML=`<div class="search-loading">${a.t("general.loading")}</div>`,r.style.display="";try{let e=await(await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(i)}&count=5&language=${a.getLocale().code}`)).json();if(!e.results||e.results.length===0){t.innerHTML=`<div class="search-empty">${a.t("general.no_icons")}</div>`;return}t.innerHTML=e.results.map((s)=>`
                 <button class="city-result" data-lat="${s.latitude}" data-lon="${s.longitude}" data-name="${s.name}">
                     <span class="city-name">${s.name}</span>
                     <span class="city-detail">${[s.admin1,s.country].filter(Boolean).join(", ")}</span>
                 </button>
-            `).join(""),t.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let p=parseFloat(s.getAttribute("data-lat")||"0"),d=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("weather-lat")).value=p.toString(),(this.shadowRoot?.getElementById("weather-lon")).value=d.toString(),(this.shadowRoot?.getElementById("weather-city")).value=c,r.style.display="none"})})}catch(n){t.innerHTML=`<div class="search-empty">${i.t("general.error")}</div>`}}}customElements.define("widget-config-modal",Gr);v();var Rr=({isOpen:o,title:r,message:t})=>`
+            `).join(""),t.querySelectorAll(".city-result").forEach((s)=>{s.addEventListener("click",()=>{let p=parseFloat(s.getAttribute("data-lat")||"0"),d=parseFloat(s.getAttribute("data-lon")||"0"),c=s.getAttribute("data-name")||"";(this.shadowRoot?.getElementById("weather-lat")).value=p.toString(),(this.shadowRoot?.getElementById("weather-lon")).value=d.toString(),(this.shadowRoot?.getElementById("weather-city")).value=c,r.style.display="none"})})}catch(n){t.innerHTML=`<div class="search-empty">${a.t("general.error")}</div>`}}}customElements.define("widget-config-modal",Fr);y();var Qr=({isOpen:o,title:r,message:t})=>`
     <dialog id="modal">
         <div class="modal-header">
             <h3 class="modal-title">${r}</h3>
@@ -5880,10 +6165,10 @@ dialog[open] {
         </div>
         <p class="modal-message">${t}</p>
         <div class="modal-actions">
-            <app-button variant="danger" id="btn-confirm">${i.t("general.confirm")}</app-button>
+            <app-button variant="danger" id="btn-confirm">${a.t("general.confirm")}</app-button>
         </div>
     </dialog>
-`;v();var Fr=`:host {
+`;y();var Jr=`:host {
     display: contents;
 }
 
@@ -5970,10 +6255,10 @@ dialog[open] {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
-}`;class Qr extends HTMLElement{dialog=null;titleText="Confirm Action";messageText="Are you sure?";resolvePromise=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this._unsubscribeI18n=i.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n()}setupDynamicListeners(){let o=this.shadowRoot.getElementById("modal-close"),r=this.shadowRoot.getElementById("btn-confirm");this.dialog=this.shadowRoot.getElementById("modal");let t=(a)=>{if(this.resolvePromise)this.resolvePromise(a),this.resolvePromise=null;this.dialog?.close()};if(o)o.onclick=()=>t(!1);if(r)r.onclick=()=>t(!0);if(this.dialog)this.dialog.onclick=(a)=>{if(a.target===this.dialog)t(!1)}}async confirm(o,r){return this.titleText=o,this.messageText=r,this.render(),this.dialog?.showModal(),new Promise((t)=>{this.resolvePromise=t})}render(){this.shadowRoot.innerHTML=`
-            <style>${Fr}</style>
-            ${Rr({isOpen:!0,title:this.titleText,message:this.messageText})}
-        `,this.setupDynamicListeners()}}if(!customElements.get("confirmation-modal"))customElements.define("confirmation-modal",Qr);L();class uo{static parse(o){if(!o)return"";let r=o.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");return r=r.replace(/```(\w+)?\n([\s\S]*?)```/g,'<pre><code class="language-$1">$2</code></pre>'),r=r.replace(/^> (.*$)/gim,"<blockquote>$1</blockquote>"),r=r.replace(/^### (.*$)/gim,"<h3>$1</h3>"),r=r.replace(/^## (.*$)/gim,"<h2>$1</h2>"),r=r.replace(/^# (.*$)/gim,"<h1>$1</h1>"),r=r.replace(/^---$/gim,"<hr />"),r=r.replace(/^\s*[-*]\s+(.*$)/gim,"<ul><li>$1</li></ul>"),r=r.replace(/<\/ul>\s*<ul>/gim,""),r=r.replace(/^\s*\d+\.\s+(.*$)/gim,"<ol><li>$1</li></ol>"),r=r.replace(/<\/ol>\s*<ol>/gim,""),r=r.replace(/^\s*\[ \]\s+(.*$)/gim,'<div class="checklist-item"><input type="checkbox" disabled> $1</div>'),r=r.replace(/^\s*\[x\]\s+(.*$)/gim,'<div class="checklist-item"><input type="checkbox" checked disabled> $1</div>'),r=r.replace(/`([^`]+)`/gim,"<code>$1</code>"),r=r.replace(/!\[([^\]]+)\]\(([^)]+)\)/gim,'<img src="$2" alt="$1" style="max-width:100%"/>'),r=r.replace(/\[([^\]]+)\]\(([^)]+)\)/gim,'<a href="$2" target="_blank">$1</a>'),r=r.replace(/\*\*([^*]+)\*\*/gim,"<strong>$1</strong>"),r=r.replace(/__([^_]+)__/gim,"<strong>$1</strong>"),r=r.replace(/\*([^*]+)\*/gim,"<em>$1</em>"),r=r.replace(/_([^_]+)_/gim,"<em>$1</em>"),r=r.replace(/\n\n/gim,"<br><br>"),r=r.replace(/\n/gim,"<br>"),r}}v();var I={lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',preview:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'};class Jr extends HTMLElement{_itemId=0;_content="";_isPreviewMode=!1;_isLocked=!0;_isDirty=!1;_isSaving=!1;_editor=null;_preview=null;_headerActions=null;_lockBtn=null;_togglePreviewBtn=null;static get observedAttributes(){return["item-id"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.loadContent()}attributeChangedCallback(o,r,t){if(o==="item-id"&&r!==t)this._itemId=parseInt(t,10),this.loadContent()}render(){if(!this.shadowRoot)return;let o=this._isLocked?"locked":"unlocked";this.shadowRoot.innerHTML=`
+}`;class Er extends HTMLElement{dialog=null;titleText="Confirm Action";messageText="Are you sure?";resolvePromise=null;_unsubscribeI18n;constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this._unsubscribeI18n=a.subscribe(()=>{if(this.dialog?.open)this.render()})}disconnectedCallback(){if(this._unsubscribeI18n)this._unsubscribeI18n()}setupDynamicListeners(){let o=this.shadowRoot.getElementById("modal-close"),r=this.shadowRoot.getElementById("btn-confirm");this.dialog=this.shadowRoot.getElementById("modal");let t=(i)=>{if(this.resolvePromise)this.resolvePromise(i),this.resolvePromise=null;this.dialog?.close()};if(o)o.onclick=()=>t(!1);if(r)r.onclick=()=>t(!0);if(this.dialog)this.dialog.onclick=(i)=>{if(i.target===this.dialog)t(!1)}}async confirm(o,r){return this.titleText=o,this.messageText=r,this.render(),this.dialog?.showModal(),new Promise((t)=>{this.resolvePromise=t})}render(){this.shadowRoot.innerHTML=`
+            <style>${Jr}</style>
+            ${Qr({isOpen:!0,title:this.titleText,message:this.messageText})}
+        `,this.setupDynamicListeners()}}if(!customElements.get("confirmation-modal"))customElements.define("confirmation-modal",Er);L();class uo{static parse(o){if(!o)return"";let r=o.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");return r=r.replace(/```(\w+)?\n([\s\S]*?)```/g,'<pre><code class="language-$1">$2</code></pre>'),r=r.replace(/^> (.*$)/gim,"<blockquote>$1</blockquote>"),r=r.replace(/^### (.*$)/gim,"<h3>$1</h3>"),r=r.replace(/^## (.*$)/gim,"<h2>$1</h2>"),r=r.replace(/^# (.*$)/gim,"<h1>$1</h1>"),r=r.replace(/^---$/gim,"<hr />"),r=r.replace(/^\s*[-*]\s+(.*$)/gim,"<ul><li>$1</li></ul>"),r=r.replace(/<\/ul>\s*<ul>/gim,""),r=r.replace(/^\s*\d+\.\s+(.*$)/gim,"<ol><li>$1</li></ol>"),r=r.replace(/<\/ol>\s*<ol>/gim,""),r=r.replace(/^\s*\[ \]\s+(.*$)/gim,'<div class="checklist-item"><input type="checkbox" disabled> $1</div>'),r=r.replace(/^\s*\[x\]\s+(.*$)/gim,'<div class="checklist-item"><input type="checkbox" checked disabled> $1</div>'),r=r.replace(/`([^`]+)`/gim,"<code>$1</code>"),r=r.replace(/!\[([^\]]+)\]\(([^)]+)\)/gim,'<img src="$2" alt="$1" style="max-width:100%"/>'),r=r.replace(/\[([^\]]+)\]\(([^)]+)\)/gim,'<a href="$2" target="_blank">$1</a>'),r=r.replace(/\*\*([^*]+)\*\*/gim,"<strong>$1</strong>"),r=r.replace(/__([^_]+)__/gim,"<strong>$1</strong>"),r=r.replace(/\*([^*]+)\*/gim,"<em>$1</em>"),r=r.replace(/_([^_]+)_/gim,"<em>$1</em>"),r=r.replace(/\n\n/gim,"<br><br>"),r=r.replace(/\n/gim,"<br>"),r}}y();var I={lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',preview:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'};class Zr extends HTMLElement{_itemId=0;_content="";_isPreviewMode=!1;_isLocked=!0;_isDirty=!1;_isSaving=!1;_editor=null;_preview=null;_headerActions=null;_lockBtn=null;_togglePreviewBtn=null;static get observedAttributes(){return["item-id"]}constructor(){super();this.attachShadow({mode:"open"})}connectedCallback(){this.render(),this.loadContent()}attributeChangedCallback(o,r,t){if(o==="item-id"&&r!==t)this._itemId=parseInt(t,10),this.loadContent()}render(){if(!this.shadowRoot)return;let o=this._isLocked?"locked":"unlocked";this.shadowRoot.innerHTML=`
             <style>
                 :host {
                     display: flex;
@@ -6061,6 +6346,11 @@ dialog[open] {
                     height: 14px;
                 }
 
+                /* Hide Lock Button in Edit Mode (Grid Editing) */
+                :host([data-editing="true"]) .action-btn.lock-btn {
+                    display: none !important;
+                }
+
                 .editor-container {
                     flex-grow: 1;
                     position: relative;
@@ -6134,19 +6424,19 @@ dialog[open] {
             </style>
 
             <div class="header-actions">
-                <button class="action-btn toggle-preview" title="${i.t("widget.markdown.tool.toggle_preview")}" style="${this._isLocked?"display:none":""}">
+                <button class="action-btn toggle-preview" title="${a.t("widget.markdown.tool.toggle_preview")}" style="${this._isLocked?"display:none":""}">
                     ${I.preview}
                 </button>
-                <button class="action-btn lock-btn ${o}" title="${this._isLocked?i.t("widget.markdown.tool.unlock"):i.t("widget.markdown.tool.lock")}">
+                <button class="action-btn lock-btn ${o}" title="${this._isLocked?a.t("widget.markdown.tool.unlock"):a.t("widget.markdown.tool.lock")}">
                     ${this._isLocked?I.lock:I.unlock}
                 </button>
             </div>
 
             <div class="editor-container">
-                <textarea class="editor" placeholder="${i.t("widget.markdown.placeholder")}" style="${this._isLocked?"display:none":""}"></textarea>
+                <textarea class="editor" placeholder="${a.t("widget.markdown.placeholder")}" style="${this._isLocked?"display:none":""}"></textarea>
                 <div class="preview ${this._isLocked?"visible":""}"></div>
             </div>
-        `,this._editor=this.shadowRoot.querySelector(".editor"),this._preview=this.shadowRoot.querySelector(".preview"),this._headerActions=this.shadowRoot.querySelector(".header-actions"),this._lockBtn=this.shadowRoot.querySelector(".lock-btn"),this._togglePreviewBtn=this.shadowRoot.querySelector(".toggle-preview"),this.bindEvents()}bindEvents(){this._editor?.addEventListener("input",()=>this.handleInput()),this._editor?.addEventListener("keydown",(o)=>this.handleKeydown(o)),this._headerActions?.addEventListener("click",(o)=>{let r=o.target.closest(".action-btn");if(!r)return;if(r.classList.contains("toggle-preview"))this.togglePreview();else if(r.classList.contains("lock-btn"))this.toggleLock()})}handleInput(){if(this._isLocked)return;if(this._isDirty=!0,this._isPreviewMode)this.updatePreview()}handleKeydown(o){if(this._isLocked)return;if(o.key==="Tab")o.preventDefault(),this.insertText("  ");if((o.ctrlKey||o.metaKey)&&o.key==="s")o.preventDefault(),this.save()}insertText(o){if(!this._editor)return;let r=this._editor.selectionStart,t=this._editor.selectionEnd,a=this._editor.value;this._editor.value=a.substring(0,r)+o+a.substring(t),this._editor.selectionStart=this._editor.selectionEnd=r+o.length,this.handleInput()}togglePreview(){if(this._isPreviewMode=!this._isPreviewMode,this._togglePreviewBtn)this._togglePreviewBtn.classList.toggle("active",this._isPreviewMode);this.applyViewState()}updatePreview(){if(this._editor&&this._preview)try{this._preview.innerHTML=uo.parse(this._editor.value)}catch(o){console.error("Markdown parsing failed",o),this._preview.innerHTML=`<div class="error">${i.t("widget.markdown.error.preview")}</div>`}}applyViewState(){if(this._isPreviewMode){if(this.updatePreview(),this._preview)this._preview.classList.add("visible"),this._preview.style.display="block";if(this._editor)this._editor.style.display="none",this._editor.style.visibility="hidden"}else{if(this._preview)this._preview.classList.remove("visible"),this._preview.style.display="none";if(this._editor)this._editor.style.display="block",this._editor.style.visibility="visible"}}toggleLock(){if(this._isLocked=!this._isLocked,this._editor)this._editor.disabled=this._isLocked;if(this._lockBtn)if(this._lockBtn.innerHTML=this._isLocked?I.lock:I.unlock,this._lockBtn.title=this._isLocked?i.t("widget.markdown.tool.unlock"):i.t("widget.markdown.tool.lock"),this._isLocked)this._lockBtn.classList.add("locked"),this._lockBtn.classList.remove("unlocked");else this._lockBtn.classList.remove("locked"),this._lockBtn.classList.add("unlocked");if(this._isLocked){if(this._isPreviewMode=!0,this._togglePreviewBtn)this._togglePreviewBtn.style.display="none"}else{if(this._isPreviewMode=!1,this._togglePreviewBtn)this._togglePreviewBtn.style.display="flex",this._togglePreviewBtn.classList.remove("active");this._editor?.focus()}if(this.applyViewState(),this._isLocked&&this._isDirty)this.save()}async loadContent(){if(!this._itemId)return;let r=g.getState().items.find((t)=>t.id===this._itemId);if(r){let t=Q.getMarkdownText(r.content);if(this._content=t,this._editor)this._editor.value=t;if(this._isLocked)this.updatePreview()}}async save(){if(!this._itemId||!this._editor)return;this._isSaving=!0;let o=this._editor.value;this._content=o;try{let t=g.getState().items.find((a)=>a.id===this._itemId);if(t){let a=Q.setMarkdownText(t.content,o);await g.updateItem({...t,content:a}),this._isDirty=!1}}catch(r){console.error(r)}finally{this._isSaving=!1}}}customElements.define("widget-markdown",Jr);v();async function Er(o){try{await i.ensureInitialized(),await o()}catch(r){console.error("[Bootstrap] Critical failure:",r),document.body.innerHTML=`
+        `,this._editor=this.shadowRoot.querySelector(".editor"),this._preview=this.shadowRoot.querySelector(".preview"),this._headerActions=this.shadowRoot.querySelector(".header-actions"),this._lockBtn=this.shadowRoot.querySelector(".lock-btn"),this._togglePreviewBtn=this.shadowRoot.querySelector(".toggle-preview"),this.bindEvents()}bindEvents(){this._editor?.addEventListener("input",()=>this.handleInput()),this._editor?.addEventListener("keydown",(o)=>this.handleKeydown(o)),this._headerActions?.addEventListener("click",(o)=>{let r=o.target.closest(".action-btn");if(!r)return;if(r.classList.contains("toggle-preview"))this.togglePreview();else if(r.classList.contains("lock-btn"))this.toggleLock()})}handleInput(){if(this._isLocked)return;if(this._isDirty=!0,this._isPreviewMode)this.updatePreview()}handleKeydown(o){if(this._isLocked)return;if(o.key==="Tab")o.preventDefault(),this.insertText("  ");if((o.ctrlKey||o.metaKey)&&o.key==="s")o.preventDefault(),this.save()}insertText(o){if(!this._editor)return;let r=this._editor.selectionStart,t=this._editor.selectionEnd,i=this._editor.value;this._editor.value=i.substring(0,r)+o+i.substring(t),this._editor.selectionStart=this._editor.selectionEnd=r+o.length,this.handleInput()}togglePreview(){if(this._isPreviewMode=!this._isPreviewMode,this._togglePreviewBtn)this._togglePreviewBtn.classList.toggle("active",this._isPreviewMode);this.applyViewState()}updatePreview(){if(this._editor&&this._preview)try{this._preview.innerHTML=uo.parse(this._editor.value)}catch(o){console.error("Markdown parsing failed",o),this._preview.innerHTML=`<div class="error">${a.t("widget.markdown.error.preview")}</div>`}}applyViewState(){if(this._isPreviewMode){if(this.updatePreview(),this._preview)this._preview.classList.add("visible"),this._preview.style.display="block";if(this._editor)this._editor.style.display="none",this._editor.style.visibility="hidden"}else{if(this._preview)this._preview.classList.remove("visible"),this._preview.style.display="none";if(this._editor)this._editor.style.display="block",this._editor.style.visibility="visible"}}toggleLock(){if(this._isLocked=!this._isLocked,this._editor)this._editor.disabled=this._isLocked;if(this._lockBtn)if(this._lockBtn.innerHTML=this._isLocked?I.lock:I.unlock,this._lockBtn.title=this._isLocked?a.t("widget.markdown.tool.unlock"):a.t("widget.markdown.tool.lock"),this._isLocked)this._lockBtn.classList.add("locked"),this._lockBtn.classList.remove("unlocked");else this._lockBtn.classList.remove("locked"),this._lockBtn.classList.add("unlocked");if(this._isLocked){if(this._isPreviewMode=!0,this._togglePreviewBtn)this._togglePreviewBtn.style.display="none"}else{if(this._isPreviewMode=!1,this._togglePreviewBtn)this._togglePreviewBtn.style.display="flex",this._togglePreviewBtn.classList.remove("active");this._editor?.focus()}if(this.applyViewState(),this._isLocked&&this._isDirty)this.save()}async loadContent(){if(!this._itemId)return;let r=x.getState().items.find((t)=>t.id===this._itemId);if(r){let t=Q.getMarkdownText(r.content);if(this._content=t,this._editor)this._editor.value=t;if(this._isLocked)this.updatePreview()}}async save(){if(!this._itemId||!this._editor)return;this._isSaving=!0;let o=this._editor.value;this._content=o;try{let t=x.getState().items.find((i)=>i.id===this._itemId);if(t){let i=Q.setMarkdownText(t.content,o);await x.updateItem({...t,content:i}),this._isDirty=!1}}catch(r){console.error(r)}finally{this._isSaving=!1}}}customElements.define("widget-markdown",Zr);y();async function Kr(o){try{await a.ensureInitialized(),await o()}catch(r){console.error("[Bootstrap] Critical failure:",r),document.body.innerHTML=`
             <div style="
                 display: flex; 
                 flex-direction: column; 
@@ -6171,4 +6461,4 @@ dialog[open] {
                     border-radius: 4px;
                 ">Reload</button>
             </div>
-        `}}oo();var j=document.getElementById("main-topbar"),Zr=document.getElementById("right-drawer"),ro=document.getElementById("dashboard-root"),C,to,ao;Er(async()=>{G.init();let[o,r]=await Promise.all([k.fetchUser(),g.fetchItems()]),t=k.getUser();if(t){if(t.language)await i.setLanguage(t.language);if(t.preferences&&t.preferences.grid_columns)document.documentElement.style.setProperty("--user-preferred-columns",t.preferences.grid_columns.toString());if(t.theme==="dark")G.enableDark();else if(t.theme==="light")G.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)G.enableDark();else G.enableLight();if(t.id)g.setUserId(t.id)}if(j){if(j.setState({user:t}),t&&t.project_name)j.setAttribute("title",t.project_name);k.subscribe((n)=>{if(n){if(j.setState({user:n}),n.project_name)j.setAttribute("title",n.project_name)}})}ft(),W.start(),C=document.createElement("add-bookmark-modal"),document.body.appendChild(C),to=document.createElement("add-widget-modal"),document.body.appendChild(to),ao=document.createElement("confirmation-modal"),document.body.appendChild(ao);let a=document.createElement("widget-config-modal");document.body.appendChild(a)});D.on(N.SHOW_CONFIRMATION,async(o)=>{let{title:r,message:t,onConfirm:a}=o.detail;if(ao){if(await ao.confirm(r,t)&&a)a()}});D.on(N.SHOW_WIDGET_CONFIG,(o)=>{let{item:r,type:t}=o.detail;if(t==="bookmark"){if(C)C.openForEdit(r)}else{let a=document.querySelector("widget-config-modal");if(a)a.open(r)}});D.on(N.NOTIFY,(o)=>{let r=document.querySelector("app-notifier");if(r)r.show(o.detail.message,o.detail.type)});if(j)j.addEventListener("drawer-toggle",(o)=>{if(o.detail.action==="open")Zr.open(),j.setState({drawerOpen:!0});else Zr.close(),j.setState({drawerOpen:!1})}),j.addEventListener("edit-mode-change",(o)=>{let r=o.detail.active;if(ro.classList.toggle("edit-mode",r),!r)window.location.reload()}),j.addEventListener("search-input",(o)=>{let r=o.detail.query;g.setSearchQuery(r)}),j.addEventListener("add-item",async(o)=>{let r=o.detail.action;if(r==="add-bookmark"){if(C)C.open()}else if(r==="add-widget"){if(to)to.open()}else if(r==="add-section"){let a=g.getState().items||[],{collisionService:n}=await Promise.resolve().then(() => (B(),O)),e=n.findFirstAvailableSlot(1,1,a),s={type:"section",x:e.x,y:e.y,w:1,h:1,content:JSON.stringify({title:""})},p=await g.addItem(s);if(p)D.emit(N.SHOW_WIDGET_CONFIG,{item:p,type:"section"})}});window.addEventListener("widget-selected",async(o)=>{let t=o.detail,n=g.getState().items||[],{collisionService:e}=await Promise.resolve().then(() => (B(),O)),s=e.findFirstAvailableSlot(t.defaultW,t.defaultH,n),p={type:"widget",x:s.x,y:s.y,w:t.defaultW,h:t.defaultH,content:JSON.stringify({widgetId:t.id,text:t.id==="notepad"||t.id==="markdown"?"":void 0})};await g.addItem(p)});window.addEventListener("drawer-close",()=>{if(j)j.setState({drawerOpen:!1})});window.addEventListener("click",(o)=>{let r=o.target,t=document.getElementById("add-menu"),a=document.getElementById("add-toggle");if(t&&t.classList.contains("active")&&!t.contains(r)&&a&&!a.contains(r))t.classList.remove("active")});function ft(){if(!ro)return;ro.innerHTML="";let o=document.createElement("bookmark-grid");ro.appendChild(o)}
+        `}}oo();var j=document.getElementById("main-topbar"),Br=document.getElementById("right-drawer"),ro=document.getElementById("dashboard-root"),C,to,io;Kr(async()=>{H.init();let[o,r]=await Promise.all([k.fetchUser(),x.fetchItems()]),t=k.getUser();if(t){if(t.language)await a.setLanguage(t.language);if(t.preferences&&t.preferences.grid_columns)document.documentElement.style.setProperty("--user-preferred-columns",t.preferences.grid_columns.toString());if(t.theme==="dark")H.enableDark();else if(t.theme==="light")H.enableLight();else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)H.enableDark();else H.enableLight();if(t.id)x.setUserId(t.id)}if(j){if(j.setState({user:t}),t&&t.project_name)j.setAttribute("title",t.project_name);k.subscribe((n)=>{if(n){if(j.setState({user:n}),n.project_name)j.setAttribute("title",n.project_name)}})}mt(),W.start(),C=document.createElement("add-bookmark-modal"),document.body.appendChild(C),to=document.createElement("add-widget-modal"),document.body.appendChild(to),io=document.createElement("confirmation-modal"),document.body.appendChild(io);let i=document.createElement("widget-config-modal");document.body.appendChild(i)});D.on(V.SHOW_CONFIRMATION,async(o)=>{let{title:r,message:t,onConfirm:i}=o.detail;if(io){if(await io.confirm(r,t)&&i)i()}});D.on(V.SHOW_WIDGET_CONFIG,(o)=>{let{item:r,type:t}=o.detail;if(t==="bookmark"){if(C)C.openForEdit(r)}else{let i=document.querySelector("widget-config-modal");if(i)i.open(r)}});D.on(V.NOTIFY,(o)=>{let r=document.querySelector("app-notifier");if(r)r.show(o.detail.message,o.detail.type)});if(j)j.addEventListener("drawer-toggle",(o)=>{if(o.detail.action==="open")Br.open(),j.setState({drawerOpen:!0});else Br.close(),j.setState({drawerOpen:!1})}),j.addEventListener("edit-mode-change",(o)=>{let r=o.detail.active;if(ro.classList.toggle("edit-mode",r),!r)window.location.reload()}),j.addEventListener("search-input",(o)=>{let r=o.detail.query;x.setSearchQuery(r)}),j.addEventListener("add-item",async(o)=>{let r=o.detail.action;if(r==="add-bookmark"){if(C)C.open()}else if(r==="add-widget"){if(to)to.open()}else if(r==="add-section"){let i=x.getState().items||[],{collisionService:n}=await Promise.resolve().then(() => (Y(),O)),e=n.findFirstAvailableSlot(1,1,i),s={type:"section",x:e.x,y:e.y,w:1,h:1,content:JSON.stringify({title:""})},p=await x.addItem(s);if(p)D.emit(V.SHOW_WIDGET_CONFIG,{item:p,type:"section"})}});window.addEventListener("widget-selected",async(o)=>{let t=o.detail,n=x.getState().items||[],{collisionService:e}=await Promise.resolve().then(() => (Y(),O)),s=e.findFirstAvailableSlot(t.defaultW,t.defaultH,n),p={type:"widget",x:s.x,y:s.y,w:t.defaultW,h:t.defaultH,content:JSON.stringify({widgetId:t.id,text:t.id==="notepad"||t.id==="markdown"?"":void 0})};await x.addItem(p)});window.addEventListener("drawer-close",()=>{if(j)j.setState({drawerOpen:!1})});window.addEventListener("click",(o)=>{let r=o.target,t=document.getElementById("add-menu"),i=document.getElementById("add-toggle");if(t&&t.classList.contains("active")&&!t.contains(r)&&i&&!i.contains(r))t.classList.remove("active")});function mt(){if(!ro)return;ro.innerHTML="";let o=document.createElement("bookmark-grid");ro.appendChild(o)}

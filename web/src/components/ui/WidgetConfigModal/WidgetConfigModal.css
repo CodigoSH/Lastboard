@@ -80,11 +80,10 @@ dialog[open] {
     border-color: rgba(var(--accent-rgb), 0.3);
 }
 
-.content {
-    padding: 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+display: flex;
+flex-direction: column;
+gap: 16px;
+overflow: visible;
 }
 
 .field-group {
@@ -242,7 +241,7 @@ dialog[open] {
     gap: 0;
     border: 1px solid var(--input-border);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow: visible;
     background: var(--input-bg);
 }
 
@@ -483,8 +482,10 @@ dialog[open] {
 }
 
 .premium-color-swatch--custom {
-    background: #333;
-    overflow: hidden;
+    background: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
+    overflow: visible;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .premium-swatch-picker {

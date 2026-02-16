@@ -141,6 +141,11 @@ export class MarkdownWidget extends HTMLElement {
                     height: 14px;
                 }
 
+                /* Hide Lock Button in Edit Mode (Grid Editing) */
+                :host([data-editing="true"]) .action-btn.lock-btn {
+                    display: none !important;
+                }
+
                 .editor-container {
                     flex-grow: 1;
                     position: relative;

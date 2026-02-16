@@ -3,22 +3,20 @@
 }
 
 dialog {
-    background: var(--surface-solid);
-    color: var(--text-main);
-    border: 1px solid var(--border);
+    background: var(--paper-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--paper-border);
+    border-top: 1px solid var(--paper-border-top);
     border-radius: var(--radius);
     padding: 0;
     width: 90%;
-    max-width: 500px;
-    max-height: 85vh;
-    height: 480px;
-    /* Reduced for a more compact and professional look */
-    display: none;
-    /* Hidden by default */
-    flex-direction: column;
-    backdrop-filter: blur(20px);
+    max-width: 420px;
     box-shadow: var(--paper-shadow);
     overflow: visible;
+    color: var(--text-main);
+    display: none;
+    flex-direction: column;
 }
 
 dialog[open] {
@@ -53,10 +51,14 @@ dialog[open] {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* Changed from flex-end to center for better alignment */
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
+    /* Matches WidgetConfigModal padding style more closely if height is fixed */
     background: rgba(0, 0, 0, 0.2);
-    height: 64px;
+    height: 56px;
+    /* Explicit height to match WidgetConfigModal */
+    border-radius: var(--radius) var(--radius) 0 0;
     flex-shrink: 0;
 }
 
@@ -92,7 +94,7 @@ dialog[open] {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .modal-form {
@@ -100,20 +102,18 @@ dialog[open] {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .tab-content {
     flex: 1;
     overflow-y: auto;
-    padding: 24px;
-    min-height: 0;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
     scrollbar-gutter: stable;
     /* Prevent horizontal shift */
     display: none;
     animation: fadeIn 0.15s ease-out;
+    overflow: visible;
+    /* Prevent clipping color picker */
 }
 
 .tab-content.active {
@@ -132,15 +132,11 @@ dialog[open] {
 }
 
 /* --- Sticky Footer --- */
-.form-actions {
+.actions {
+    padding: 16px 24px 24px 24px;
     display: flex;
-    gap: 12px;
     justify-content: flex-end;
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    background: var(--surface-solid);
-    flex-shrink: 0;
-    z-index: 10;
+    gap: 12px;
 }
 
 /* --- COMPONENT STYLES (Restored) --- */
@@ -410,6 +406,7 @@ dialog[open] {
     position: absolute;
     /* top and left will be set via JS relative to render overlay */
     background: var(--surface-solid);
+    /* Revert to solid surface for readability per user request */
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
@@ -443,7 +440,8 @@ dialog[open] {
 }
 
 .dropdown-item:hover {
-    background: var(--hover-bg);
+    background: rgba(255, 255, 255, 0.08);
+    /* Subtle white hover */
     color: var(--text-main);
 }
 
@@ -521,7 +519,7 @@ dialog[open] {
 /* --- Color Picker Styles --- */
 .color-menu {
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .color-preset {
@@ -601,13 +599,17 @@ dialog[open] {
 }
 
 .premium-color-swatch--custom {
-    background-image: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
-    opacity: 0.9;
+    background: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
+    overflow: visible;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .premium-color-swatch--custom.active {
     opacity: 1;
     background-image: none;
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
 
 .premium-swatch-picker {
@@ -620,4 +622,71 @@ dialog[open] {
     cursor: pointer;
     border: none;
     padding: 0;
+}
+
+/* --- Segmented Control (Border Width) --- */
+.segmented-control {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: 8px;
+    margin-top: 8px;
+    gap: 4px;
+    border: 1px solid var(--border);
+}
+
+.border-width-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.border-width-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+.border-width-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.1);
+}
+
+.border-width-btn span {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Rainbow swatch correction */
+.premium-color-swatch--custom {
+    background: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
+    overflow: visible;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure hidden input covers the whole area for clicking */
+.premium-swatch-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    z-index: 10;
+    /* Ensure it's on top */
 }

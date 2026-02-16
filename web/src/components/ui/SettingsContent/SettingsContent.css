@@ -199,13 +199,17 @@ dialog {
 }
 
 .settings-content__color-swatch--custom {
-    background-image: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
-    opacity: 0.9;
+    background: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .settings-content__color-swatch--custom.settings-content__color-swatch--active {
     opacity: 1;
     background-image: none;
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
 
 .settings-content__swatch-picker {

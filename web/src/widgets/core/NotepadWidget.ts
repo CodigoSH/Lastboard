@@ -378,6 +378,11 @@ export class NotepadWidget extends HTMLElement {
                     background: rgba(255,255,255,0.1);
                     color: var(--lb-text);
                 }
+
+                /* Hide Lock Button in Edit Mode (Grid Editing) */
+                :host([data-editing="true"]) .top-lock-btn {
+                    display: none !important;
+                }
             </style>
             
              <button class="top-lock-btn ${lockClass}" id="lock-btn" title="${this._isLocked ? i18n.t('widget.notepad.tool.unlock') : i18n.t('widget.notepad.tool.lock')}">

@@ -1,0 +1,167 @@
+:host {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Trigger Button */
+.color-trigger {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    /* Matches swatch radius */
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Popover */
+.popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #1e1e23;
+    /* Solid fallback */
+    background: var(--surface-solid, #1e1e23);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    padding: 12px;
+    width: 240px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.popover.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Saturation/Brightness Area */
+.saturation-area {
+    width: 100%;
+    height: 160px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: crosshair;
+    /* Base color set via inline style background-color */
+    background-image:
+        linear-gradient(to top, #000, 0% 1000px, transparent),
+        linear-gradient(to right, #fff, 0% 1000px, transparent);
+    /* Note: The order matters. White horizontal, Black vertical. */
+    background-blend-mode: normal, normal;
+    /* Default behavior */
+}
+
+/* CSS Gradients for Saturation/Value */
+.saturation-white {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+}
+
+.saturation-black {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #000, rgba(0, 0, 0, 0));
+}
+
+.saturation-cursor {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* Hue Slider */
+.hue-slider {
+    width: 100%;
+    height: 12px;
+    position: relative;
+    border-radius: 6px;
+    background: linear-gradient(to right,
+            #f00 0%, #ff0 17%, #0f0 33%,
+            #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+    cursor: pointer;
+}
+
+.hue-cursor {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    border: 2px solid white;
+    /* Make it look like a handle */
+}
+
+/* Controls Row */
+.controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.color-preview {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.hex-input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-main);
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    text-transform: uppercase;
+    outline: none;
+    text-align: center;
+}
+
+.hex-input:focus {
+    border-color: var(--accent);
+    background: var(--input-bg);
+}
+
+/* Overlay to close popover */
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: none;
+}
+
+.overlay.visible {
+    display: block;
+}
