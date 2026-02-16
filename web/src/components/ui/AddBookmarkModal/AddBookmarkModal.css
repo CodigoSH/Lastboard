@@ -11,8 +11,8 @@ dialog {
     width: 90%;
     max-width: 500px;
     max-height: 85vh;
-    height: 640px;
-    /* Increased for fixed layout and "luxury" spacing */
+    height: 480px;
+    /* Reduced for a more compact and professional look */
     display: none;
     /* Hidden by default */
     flex-direction: column;
