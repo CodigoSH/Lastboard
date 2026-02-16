@@ -142,7 +142,7 @@ export const template = ({
                                 </button>
                                 <input type="hidden" name="visibleTouch" id="bookmark-visibleTouch" value="${visibleTouch ? 'on' : 'off'}">
                             </div>
-                            <div class="fake-input" style="flex: 1; display: flex; align-items: center; padding: 0 12px; background: var(--input-bg); border: 1px solid var(--input-border); border-left: none; border-radius: 0 var(--radius) var(--radius) 0; color: var(--text-dim); font-size: 14px; height: 42px; box-sizing: border-box;">
+                            <div class="fake-input" style="flex: 1; padding: 0 14px;">
                                 ${i18n.t('bookmark.visible_touch')}
                             </div>
                         </div>

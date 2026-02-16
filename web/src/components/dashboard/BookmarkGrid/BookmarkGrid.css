@@ -401,9 +401,9 @@
 /* Edit Mode Styles */
 :host(.edit-mode) .bookmark-grid__card,
 :host(.edit-mode) .bookmark-grid__section {
-    border: 1px dashed var(--accent);
-    background: rgba(0, 120, 212, 0.1);
-    /* Increased opacity for light mode visibility */
+    border: 2px dashed var(--accent) !important;
+    background: rgba(var(--accent-rgb), 0.15) !important;
+    /* Increased opacity and forced priority */
     cursor: grab;
     position: relative;
     /* Ensure handle positioning context */

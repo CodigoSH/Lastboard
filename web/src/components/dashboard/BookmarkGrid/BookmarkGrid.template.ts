@@ -125,7 +125,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
     const hrefAttr = isEditing ? 'role="button"' : `href="${safeUrl(data.url)}" target="_blank"`;
 
     const vPosStyle = !isTouchDevice ? `--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};` : '';
-    const borderColorStyle = data.borderColor ? `border-color: ${data.borderColor} !important;` : '';
+    const borderColorStyle = (data.borderColor && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
     const labelPosClass = data.labelPos === 'top' ? 'label-top' : (data.labelPos === 'section' ? 'label-section' : (data.labelPos === 'off' ? 'label-off' : ''));
 
     return `

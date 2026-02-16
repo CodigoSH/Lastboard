@@ -291,7 +291,8 @@ dialog[open] {
 /* Base Styles for Inputs and Buttons */
 .icon-dropdown-btn,
 .input-group input,
-.icon-dropdown .fake-input {
+.icon-dropdown .fake-input,
+.input-group .fake-input {
     height: 46px;
     box-sizing: border-box;
     background: var(--input-bg);
@@ -303,9 +304,15 @@ dialog[open] {
 }
 
 .icon-dropdown-btn,
-.icon-dropdown .fake-input {
+.icon-dropdown .fake-input,
+.input-group .fake-input {
     display: flex;
     align-items: center;
+}
+
+.input-group .fake-input {
+    padding: 0 14px;
+    font-size: 14px;
 }
 
 .icon-dropdown-btn {
