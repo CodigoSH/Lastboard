@@ -1,4 +1,4 @@
-import { layoutContainer, gridTemplate, selectedIconTemplate } from './IconPicker.template';
+import { layoutContainer, gridTemplate } from './IconPicker.template';
 import { iconService, IconInfo } from '../../../services/iconService';
 // @ts-ignore
 import css from './IconPicker.css' with { type: 'text' };
@@ -76,7 +76,6 @@ class IconPicker extends HTMLElement {
             const item = target.closest('.icon-picker__item') as HTMLElement;
             if (item && item.dataset.icon) {
                 this.selectedIcon = item.dataset.icon;
-                this.updateSelected();
                 this.updateGrid();
 
                 this.dispatchEvent(new CustomEvent('icon-selected', {
@@ -99,7 +98,6 @@ class IconPicker extends HTMLElement {
 
     setSelectedIcon(iconName: string) {
         this.selectedIcon = iconName;
-        this.updateSelected();
         this.updateGrid();
     }
 
@@ -128,12 +126,7 @@ class IconPicker extends HTMLElement {
         }
     }
 
-    updateSelected() {
-        const container = this.shadowRoot!.getElementById('selected-container');
-        if (container) {
-            container.innerHTML = selectedIconTemplate(this.selectedIcon);
-        }
-    }
+
 }
 
 if (!customElements.get('icon-picker')) {

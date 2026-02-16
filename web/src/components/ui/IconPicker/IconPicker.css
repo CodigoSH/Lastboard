@@ -11,55 +11,8 @@
 .icon-picker__header {
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
-.icon-picker__selected {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    height: 42px;
-    /* Match input height roughly */
-    width: 42px;
-    box-sizing: border-box;
-    flex-shrink: 0;
-}
-
-.icon-picker__preview {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-}
-
-.icon-picker__placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-dim);
-    opacity: 0.5;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    /* Dashed maybe? or just solid */
-    border-radius: var(--radius);
-    height: 42px;
-    width: 42px;
-    box-sizing: border-box;
-    flex-shrink: 0;
-}
-
-.icon-picker__placeholder svg {
-    width: 24px;
-    height: 24px;
-}
-
-/* Hide name */
-.icon-picker__selected-name {
-    display: none;
-}
 
 .icon-picker__search {
     position: relative;
