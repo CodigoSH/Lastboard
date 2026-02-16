@@ -407,6 +407,9 @@ dialog[open] {
     z-index: 100;
     min-width: 50px;
     padding: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+    scrollbar-width: thin;
 }
 
 .dropdown-menu.show {
@@ -484,9 +487,9 @@ dialog[open] {
 /* Smart Dropdown: Drop Up */
 .dropdown-menu.drop-up {
     top: auto;
-    bottom: 100%;
+    bottom: calc(100% + 4px);
     margin-top: 0;
-    margin-bottom: 4px;
+    margin-bottom: 0;
     transform-origin: bottom center;
 }
 

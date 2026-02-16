@@ -298,27 +298,25 @@ class AddBookmarkModal extends HTMLElement {
         const isShowing = menu.classList.toggle('show');
 
         if (isShowing) {
-            // Smart Positioning Logic
-            const menuRect = menu.getBoundingClientRect();
-            const modalRect = this.dialog!.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
+            // Use requestAnimationFrame to ensure display: flex has taken effect for height calculation
+            requestAnimationFrame(() => {
+                const menuRect = menu.getBoundingClientRect();
+                const modalRect = this.dialog!.getBoundingClientRect();
 
-            // Available space below trigger
-            // Note: We use fixed position or relative calculation. 
-            // Since dropups are absolute to parent, we check if opening down goes off screen or clipped by modal
+                // Available space below trigger inside the modal content area
+                // We subtract ~70px for the footer and some padding
+                const spaceHereToBottom = modalRect.bottom - triggerBtn.getBoundingClientRect().bottom - 80;
 
-            // Estimate expanded height (or measure after slight delay/visibility)
-            // menuRect is valid now because display:flex is applied (if 'show' sets display)
+                // If menu is hidden or 0 height, assume a reasonable default for calculation
+                const menuHeight = menuRect.height || 160;
 
-            const spaceHereToBottom = modalRect.bottom - triggerBtn.getBoundingClientRect().bottom;
-            const menuHeight = menuRect.height || 150; // Fallback if not rendered yet
-
-            // If menu height > space below, flip it UP
-            if (menuHeight > spaceHereToBottom - 10) { // 10px buffer
-                menu.classList.add('drop-up');
-            } else {
-                menu.classList.remove('drop-up');
-            }
+                // If menu height > space below, flip it UP
+                if (menuHeight > spaceHereToBottom) {
+                    menu.classList.add('drop-up');
+                } else {
+                    menu.classList.remove('drop-up');
+                }
+            });
         }
     }
 
