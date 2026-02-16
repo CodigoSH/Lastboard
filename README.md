@@ -155,19 +155,30 @@ If you prefer running the binary directly on your host machine.
   - Homarr Labs Dashboard Icons (Apache 2.0 - https://github.com/homarr-labs/dashboard-icons)
 - **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
 
+---
+
 ## Support & Recognition
 
-We are an open-source initiative managed through [Open Collective Europe](https://opencollective.com/codigosh). 
+We are an open-source initiative managed through [Open Collective Europe](https://opencollective.com/codigosh).
 
-### Financial Contributors
-Special thanks to everyone supporting our mission through unconditional donations.
+### Financial Support
+If you find our tools useful, consider supporting our infrastructure through an unconditional donation.
 
+[<img src="https://opencollective.com/codigosh/donate/button@2x.png?color=blue" width="250" />](https://opencollective.com/codigosh)
+
+### Acknowledgments
+Special thanks to everyone supporting our mission. 
 <a href="https://opencollective.com/codigosh">
-  <img src="https://opencollective.com/codigosh/contributors.svg?width=890&button=false" />
+  <img src="https://opencollective.com/codigosh/tiers/backer.svg?width=890&button=false" />
 </a>
 
 ### Organizations
 We appreciate the organizations that support us as a gesture of goodwill to help maintain our infrastructure.
+<a href="https://opencollective.com/codigosh">
+  <img src="https://opencollective.com/codigosh/tiers/sponsor.svg?width=890&button=false" />
+</a>
+
+---
 
 <div align="center">
   <sub>Built with ❤️ by the CodigoSH Team</sub>
