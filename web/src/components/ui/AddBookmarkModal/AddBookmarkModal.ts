@@ -5,6 +5,11 @@ import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
 // @ts-ignore
 import css from './AddBookmarkModal.css' with { type: 'text' };
 
+const premiumColors = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#64748b', '#f8fafc', '#1e293b', '#333333'
+];
+
 class AddBookmarkModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
 
@@ -21,6 +26,7 @@ class AddBookmarkModal extends HTMLElement {
     private checkStatus: boolean = false;
     private labelPosition: string = 'bottom';
     private visibleTouch: boolean = true;
+    private borderWidth: number = 1;
 
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -80,11 +86,26 @@ class AddBookmarkModal extends HTMLElement {
             } else if (target.closest('#protocol-btn')) {
                 e.preventDefault(); e.stopPropagation();
                 this.toggleDropdown('protocol-menu', target.closest('#protocol-btn') as HTMLElement);
-            } else if (target.closest('#color-btn')) {
-                e.preventDefault(); e.stopPropagation();
-                this.toggleDropdown('color-menu', target.closest('#color-btn') as HTMLElement);
             } else {
                 this.closeAllDropdowns();
+            }
+
+            // Premium Color Swatch Selection
+            const premiumSwatch = target.closest('.premium-color-swatch');
+            if (premiumSwatch && !premiumSwatch.classList.contains('premium-color-swatch--custom')) {
+                e.preventDefault();
+                this.color = (premiumSwatch as HTMLElement).dataset.color!;
+                this.updateTriggers();
+                return;
+            }
+
+            // Border Width Selection
+            const widthBtn = target.closest('.border-width-btn');
+            if (widthBtn) {
+                e.preventDefault();
+                this.borderWidth = parseInt((widthBtn as HTMLElement).dataset.width!);
+                this.updateTriggers();
+                return;
             }
 
             // Dropdown Selection
@@ -114,17 +135,6 @@ class AddBookmarkModal extends HTMLElement {
                 if (el.dataset.protocol) {
                     this.protocol = el.dataset.protocol!;
                     this.updateTriggers();
-                }
-
-                if (el.dataset.color) {
-                    if (el.dataset.color === 'custom') {
-                        const nativePicker = this.shadowRoot!.getElementById('bookmark-borderColor') as HTMLInputElement;
-                        nativePicker?.click();
-                    } else {
-                        this.color = el.dataset.color!;
-                        this.updateTriggers();
-                        this.closeAllDropdowns();
-                    }
                 }
             }
         };
@@ -158,7 +168,8 @@ class AddBookmarkModal extends HTMLElement {
                 visibleTouch: this.visibleTouch,
                 openInNewTab: true,
                 labelPos: this.labelPosition,
-                borderColor: this.color
+                borderColor: this.color,
+                borderWidth: this.borderWidth
             });
 
             try {
@@ -197,11 +208,6 @@ class AddBookmarkModal extends HTMLElement {
         this.escapeHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 const iconModal = this.shadowRoot!.querySelector('icon-selection-modal') as any;
-                // If icon modal is not open (implemented via check or assumption), close this one
-                // Simple logic: Close main modal on Escape. 
-                // Note: The icon modal handles its own escape natively via <dialog> usually, 
-                // but we might need to check if it's open to prevent double closing. 
-                // For now, simple close logic.
                 if (this.dialog?.open) this.close();
             }
         };
@@ -242,7 +248,7 @@ class AddBookmarkModal extends HTMLElement {
             statusBtn.innerHTML = `
                 ${this.checkStatus ?
                     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" />
-                        ${this.statusPosition.includes('top') ? '<circle cx="16" cy="8" r="2" fill="currentColor"/>' : '<circle cx="16" cy="16" r="2" fill="currentColor"/>'}
+                        <circle cx="${this.statusPosition.includes('left') ? '8' : '16'}" cy="${this.statusPosition.includes('top') ? '8' : '16'}" r="2" fill="currentColor"/>
                     </svg>` :
                     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /></svg>`
                 }
@@ -294,24 +300,44 @@ class AddBookmarkModal extends HTMLElement {
             });
         }
 
-        // Update Color Trigger
-        const colorBtn = root.getElementById('color-btn');
-        if (colorBtn) {
-            colorBtn.innerHTML = `
-                <div class="color-preview-circle" style="background: ${this.color}; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-bright);"></div>
-                <span style="font-size: 13px; font-weight: 500; font-family: var(--font-mono, monospace); color: var(--text-dim);">${this.color.toUpperCase()}</span>
-                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
-                    <path d="M7 10l5 5 5-5z" />
-                </svg>
-            `;
-            const input = root.getElementById('bookmark-borderColor') as HTMLInputElement;
-            if (input) input.value = this.color;
+        // Update Border Width Selection
+        root.querySelectorAll('.border-width-btn').forEach(btn => {
+            const w = parseInt((btn as HTMLElement).dataset.width!);
+            btn.classList.toggle('active', w === this.borderWidth);
+        });
 
-            // Sync selected class in presets
-            root.querySelectorAll('#color-menu .color-preset').forEach(el => {
-                el.classList.toggle('selected', (el as HTMLElement).dataset.color === this.color);
-            });
-        }
+        // Update Color Grid Selection
+        root.querySelectorAll('.premium-color-swatch').forEach(swatch => {
+            const el = swatch as HTMLElement;
+            const color = el.dataset.color;
+
+            if (color) {
+                // Preset Swatch
+                if (color === this.color) {
+                    el.classList.add('active');
+                    if (!el.querySelector('svg')) {
+                        el.innerHTML += '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>';
+                    }
+                } else {
+                    el.classList.remove('active');
+                    const svg = el.querySelector('svg');
+                    if (svg) svg.remove();
+                }
+            } else if (el.classList.contains('premium-color-swatch--custom')) {
+                // Custom Swatch
+                const isCustom = !premiumColors.includes(this.color) && this.color !== '';
+                el.classList.toggle('active', isCustom);
+
+                const svg = el.querySelector('svg');
+                if (svg) svg.style.fill = isCustom ? '#fff' : 'rgba(255,255,255,0.4)';
+
+                const input = root.getElementById('bookmark-borderColor') as HTMLInputElement;
+                if (input && isCustom) input.value = this.color;
+
+                if (isCustom) el.style.backgroundColor = this.color;
+                else el.style.backgroundColor = '#333';
+            }
+        });
     }
 
     updateIconPreview() {
@@ -336,27 +362,17 @@ class AddBookmarkModal extends HTMLElement {
         const isShowing = menu.classList.toggle('show');
 
         if (isShowing) {
-            // Position Helper logic
             requestAnimationFrame(() => {
                 const modalRect = this.dialog!.getBoundingClientRect();
                 const triggerRect = triggerBtn.getBoundingClientRect();
 
-                // Calculate position relative to dialog (since menu-overlay is absolute to dialog)
-                // Left: relative to dialog
+                // Calculate position relative to dialog
                 let left = triggerRect.left - modalRect.left;
-
-                // Top: below the button
                 let top = triggerRect.bottom - modalRect.top + 4; // 4px gap
-
-                // Check if it goes off bottom (simple check, can be improved)
-                // If we are very low in the modal, we might want to drop up?
-                // For now, let's just stick to drop down as requested, but since it's an overlay
-                // it will just protrude. If the user wants to force drop up later we can add it.
-                // But user specifically said "it will protrude".
 
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
-                menu.style.minWidth = `${triggerRect.width}px`; // Match button width at minimum
+                menu.style.minWidth = `${triggerRect.width}px`;
             });
         }
     }
@@ -399,10 +415,6 @@ class AddBookmarkModal extends HTMLElement {
     }
 
     render() {
-        // Save focus if needed, or simple re-render
-        // Ideally we use a vDOM, but full HTML replacement is fast enough here
-        // We must re-bind listeners after render
-
         const wasOpen = this.dialog?.open;
 
         this.shadowRoot!.innerHTML = `
@@ -418,7 +430,8 @@ class AddBookmarkModal extends HTMLElement {
             statusPosition: this.statusPosition,
             checkStatus: this.checkStatus,
             labelPosition: this.labelPosition,
-            visibleTouch: this.visibleTouch
+            visibleTouch: this.visibleTouch,
+            borderWidth: this.borderWidth
         })}
         `;
 
@@ -456,6 +469,7 @@ class AddBookmarkModal extends HTMLElement {
         this.color = content.borderColor || '#333333';
         this.labelPosition = content.labelPos || 'bottom';
         this.visibleTouch = (content.visibleTouch !== false);
+        this.borderWidth = content.borderWidth || 1;
 
         // URL parsing
         let fullUrl = content.url || '';
@@ -498,6 +512,7 @@ class AddBookmarkModal extends HTMLElement {
         this.checkStatus = false;
         this.labelPosition = 'bottom';
         this.visibleTouch = true;
+        this.borderWidth = 1;
         this.currentItemId = null;
     }
 }

@@ -134,7 +134,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
            data-id="${b.id}"
            data-type="${b.type}"
            data-orig-x="${b.x}" data-orig-y="${b.y}"
-           style="${vPosStyle} ${borderColorStyle}">
+           style="${vPosStyle} ${borderColorStyle} ${!isEditing ? `border-width: ${data.borderWidth || 1}px !important;` : ''}">
             
             ${isEditing ? `
                 <div class="bookmark-actions">

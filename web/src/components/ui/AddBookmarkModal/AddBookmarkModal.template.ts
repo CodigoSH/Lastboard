@@ -14,30 +14,61 @@ interface AddBookmarkModalData {
     checkStatus: boolean;
     labelPosition: string;
     visibleTouch: boolean;
+    borderWidth: number;
 }
 
 import { i18n } from '../../../services/i18n';
-
-const renderColorPicker = (color: string) => `
-    <div class="form-group" style="margin-top: 12px;">
-        <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
-        <div class="input-group">
-            <button type="button" class="icon-dropdown-btn color-trigger-btn" id="color-btn" style="position: relative; justify-content: flex-start; padding: 0 12px; gap: 12px;">
-                <div class="color-preview-circle" style="background: ${color}; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-bright);"></div>
-                <span style="font-size: 13px; font-weight: 500; font-family: var(--font-mono, monospace); color: var(--text-dim);">${color.toUpperCase()}</span>
-                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
-                    <path d="M7 10l5 5 5-5z" />
-                </svg>
-            </button>
-            <input type="color" id="bookmark-borderColor" name="borderColor" value="${color}" style="display: none;" />
-        </div>
-    </div>
-`;
 
 const premiumColors = [
     '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
     '#ec4899', '#64748b', '#f8fafc', '#1e293b', '#333333'
 ];
+
+const renderAppearanceControls = (color: string, borderWidth: number) => {
+    // Check if color is in presets (ignoring case usually, but here exact strings)
+    const isCustom = !premiumColors.includes(color) && color !== '';
+
+    return `
+    <div class="form-group" style="margin-top: 12px;">
+        <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
+        <div class="premium-color-grid">
+            ${premiumColors.map(c => `
+                <div class="premium-color-swatch ${color === c ? 'active' : ''}" 
+                     style="background-color: ${c}"
+                     data-color="${c}">
+                     ${color === c ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>' : ''}
+                </div>
+            `).join('')}
+            
+            <div class="premium-color-swatch premium-color-swatch--custom ${isCustom ? 'active' : ''}" 
+                 style="background-color: ${isCustom ? color : '#333'}">
+                 <svg viewBox="0 0 24 24" style="opacity: 0.8; fill: ${isCustom ? '#fff' : 'rgba(255,255,255,0.4)'};">
+                    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                 </svg>
+                 <input type="color" class="premium-swatch-picker" id="bookmark-borderColor" name="borderColor" value="${isCustom ? color : '#0078D4'}">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group" style="margin-top: 20px;">
+        <label>${i18n.t('bookmark.border_width') || 'Border Width'}</label>
+        <div class="segmented-control">
+            <button type="button" class="border-width-btn ${borderWidth === 1 ? 'active' : ''}" data-width="1">
+                <div style="height: 1px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                <span>${i18n.t('general.thin') || 'Thin'}</span>
+            </button>
+            <button type="button" class="border-width-btn ${borderWidth === 2 ? 'active' : ''}" data-width="2">
+                <div style="height: 2px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                <span>${i18n.t('general.regular') || 'Regular'}</span>
+            </button>
+            <button type="button" class="border-width-btn ${borderWidth === 3 ? 'active' : ''}" data-width="3">
+                <div style="height: 3px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                <span>${i18n.t('general.thick') || 'Thick'}</span>
+            </button>
+        </div>
+    </div>
+    `;
+};
 
 export const template = ({
     isOpen,
@@ -50,7 +81,8 @@ export const template = ({
     statusPosition,
     checkStatus,
     labelPosition,
-    visibleTouch
+    visibleTouch,
+    borderWidth
 }: AddBookmarkModalData) => `
     <dialog id="modal">
         <div class="modal-header">
@@ -163,8 +195,8 @@ export const template = ({
 
                 <!-- TAB: CUSTOMIZATION -->
                 <div id="tab-customization" class="tab-content">
-                    <!-- Color Picker -->
-                    ${renderColorPicker(color)}
+                    <!-- Appearance Controls -->
+                    ${renderAppearanceControls(color, borderWidth)}
                 </div>
 
                 <div class="form-actions">
@@ -232,22 +264,7 @@ export const template = ({
                 </div>
             </div>
 
-            <!-- Color Menu -->
-            <div class="dropdown-menu color-menu" id="color-menu" style="width: 200px; padding: 12px;">
-                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;">
-                    ${premiumColors.map(c => `
-                        <div class="color-preset ${color === c ? 'selected' : ''}" 
-                             data-color="${c}" 
-                             style="background: ${c}; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s;"
-                             title="${c}">
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="dropdown-item custom-color-item" data-color="custom" style="justify-content: center; gap: 8px; font-size: 12px; font-weight: 500; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px;">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="M2 2l7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
-                    <span>${i18n.t('bookmark.custom_color') || 'Custom Color'}</span>
-                </div>
-            </div>
+
         </div>
     </dialog>
 `;
