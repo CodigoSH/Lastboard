@@ -235,6 +235,18 @@
     color: var(--accent);
 }
 
+/* Label Position: Off (Hidden) */
+.bookmark-grid__card.label-off .bookmark-grid__label {
+    display: none;
+}
+
+.bookmark-grid__card.label-off .bookmark-grid__icon-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* SEARCH OVERRIDE (Desktop only): Auto-flow grid for search results */
 :host(.search-active) .bookmark-grid__card {
     grid-column: auto / span 1 !important;

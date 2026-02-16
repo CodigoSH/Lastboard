@@ -62,8 +62,7 @@ class AddBookmarkModal extends HTMLElement {
                     const selected = await iconModal.open();
                     if (selected) {
                         this.selectedIconName = selected;
-                        this.render(); // Re-render to show new icon
-                        this.switchTab('general'); // Ensure we stay on general tab
+                        this.updateIconPreview();
                     }
                 }
             }
@@ -93,7 +92,7 @@ class AddBookmarkModal extends HTMLElement {
 
                 if (el.dataset.pos) {
                     this.labelPosition = el.dataset.pos!;
-                    this.render();
+                    this.updateTriggers();
                 }
                 if (el.dataset.statusPos) {
                     const val = el.dataset.statusPos!;
@@ -103,24 +102,22 @@ class AddBookmarkModal extends HTMLElement {
                         this.checkStatus = true;
                         this.statusPosition = val;
                     }
-                    this.render();
-                    this.switchTab('general');
+                    this.updateTriggers();
                 }
                 if (el.dataset.touch) {
                     this.visibleTouch = el.dataset.touch === 'on';
-                    this.render();
-                    this.switchTab('customization');
+                    this.updateTriggers();
                 }
                 if (el.dataset.protocol) {
                     this.protocol = el.dataset.protocol!;
-                    this.render();
+                    this.updateTriggers();
                 }
             }
         };
 
         this.inputHandler = (e: Event) => {
             const target = e.target as HTMLInputElement;
-            if (target.id === 'bookmark-title') this.bookmarkTitle = target.value;
+            if (target.id === 'bookmark-label') this.bookmarkTitle = target.value;
             if (target.id === 'bookmark-url') this.url = target.value;
             if (target.id === 'bookmark-borderColor') this.color = target.value;
         };
@@ -191,6 +188,104 @@ class AddBookmarkModal extends HTMLElement {
                 if (this.dialog?.open) this.close();
             }
         };
+    }
+
+    // --- Targeted UI Updates to avoid full render() ---
+    updateTriggers() {
+        const root = this.shadowRoot!;
+
+        // Update Label Position Trigger
+        const labelBtn = root.getElementById('label-pos-btn');
+        if (labelBtn) {
+            labelBtn.innerHTML = `
+                ${this.labelPosition === 'top' ?
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 8 h8" /><path d="M12 13 v2" /></svg>` :
+                    this.labelPosition === 'section' ?
+                        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M7 4 h10" stroke-width="4" /></svg>` :
+                        this.labelPosition === 'off' ?
+                            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>` :
+                            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 16 h8" /><path d="M12 9 v2" /></svg>`
+                }
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg>
+            `;
+            const input = root.getElementById('bookmark-labelPos') as HTMLInputElement;
+            if (input) input.value = this.labelPosition;
+
+            // Sync selected class in menu
+            root.querySelectorAll('#label-pos-menu .dropdown-item').forEach(el => {
+                el.classList.toggle('selected', (el as HTMLElement).dataset.pos === this.labelPosition);
+            });
+        }
+
+        // Update Status Position Trigger
+        const statusBtn = root.getElementById('status-pos-btn');
+        if (statusBtn) {
+            statusBtn.innerHTML = `
+                ${this.checkStatus ?
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" />
+                        ${this.statusPosition.includes('top') ? '<circle cx="16" cy="8" r="2" fill="currentColor"/>' : '<circle cx="16" cy="16" r="2" fill="currentColor"/>'}
+                    </svg>` :
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /></svg>`
+                }
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg>
+            `;
+            const input = root.getElementById('bookmark-statusPos') as HTMLInputElement;
+            if (input) input.value = this.checkStatus ? this.statusPosition : 'off';
+
+            // Sync selected class in menu
+            root.querySelectorAll('#status-pos-menu .dropdown-item').forEach(el => {
+                const val = (el as HTMLElement).dataset.statusPos;
+                const isSelected = val === 'off' ? !this.checkStatus : (this.checkStatus && val === this.statusPosition);
+                el.classList.toggle('selected', isSelected);
+            });
+        }
+
+        // Update Protocol Trigger
+        const protocolText = root.getElementById('protocol-text');
+        if (protocolText) {
+            protocolText.textContent = this.protocol;
+            const input = root.getElementById('bookmark-protocol') as HTMLInputElement;
+            if (input) input.value = this.protocol;
+
+            root.querySelectorAll('#protocol-menu .dropdown-item').forEach(el => {
+                el.classList.toggle('selected', (el as HTMLElement).dataset.protocol === this.protocol);
+            });
+        }
+
+        // Update Touch Visibility
+        const touchBtn = root.getElementById('touch-pos-btn');
+        if (touchBtn) {
+            touchBtn.innerHTML = `
+                ${this.visibleTouch ?
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10z"/></svg>` :
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.5" /><path d="M15 9l-6 6M9 9l6 6" /></svg>`
+                }
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="position: absolute; bottom: 1px; right: 1px; opacity: 0.7;">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg>
+            `;
+            const input = root.getElementById('bookmark-visibleTouch') as HTMLInputElement;
+            if (input) input.value = this.visibleTouch ? 'on' : 'off';
+
+            root.querySelectorAll('#touch-pos-menu .dropdown-item').forEach(el => {
+                const val = (el as HTMLElement).dataset.touch;
+                el.classList.toggle('selected', (val === 'on' && this.visibleTouch) || (val === 'off' && !this.visibleTouch));
+            });
+        }
+    }
+
+    updateIconPreview() {
+        const root = this.shadowRoot!;
+        const btn = root.getElementById('icon-trigger-btn');
+        if (btn) {
+            btn.innerHTML = this.selectedIconName ?
+                `<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.selectedIconName}.png" alt="icon" style="width: 24px; height: 24px; object-fit: contain;">` :
+                `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+        }
     }
 
     // --- Dropdown Logic with Smart Positioning ---
