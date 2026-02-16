@@ -18,7 +18,7 @@ dialog {
     flex-direction: column;
     backdrop-filter: blur(20px);
     box-shadow: var(--paper-shadow);
-    overflow: hidden;
+    overflow: visible;
 }
 
 dialog[open] {
@@ -395,21 +395,22 @@ dialog[open] {
 /* Dropdown Menu */
 .dropdown-menu {
     position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 4px;
+    /* top and left will be set via JS relative to render overlay */
     background: var(--surface-solid);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
     display: none;
     flex-direction: column;
-    z-index: 100;
+    z-index: 9999;
+    /* Ensure it's on top of everything */
     min-width: 50px;
     padding: 4px;
-    max-height: 180px;
+    max-height: 200px;
     overflow-y: auto;
     scrollbar-width: thin;
+    pointer-events: auto;
+    /* Re-enable pointer events since parent has none */
 }
 
 .dropdown-menu.show {
@@ -418,18 +419,18 @@ dialog[open] {
 }
 
 .dropdown-item {
-    padding: 8px;
-    cursor: pointer;
-    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: var(--radius);
     color: var(--text-dim);
-    transition: all 0.1s;
+    transition: all 0.2s;
 }
 
 .dropdown-item:hover {
-    background: var(--surface-active);
+    background: var(--hover-bg);
     color: var(--text-main);
 }
 
@@ -441,56 +442,6 @@ dialog[open] {
 .dropdown-item svg {
     width: 20px;
     height: 20px;
-}
-
-/* Color Picker */
-.color-picker-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    margin-top: 12px;
-}
-
-.color-picker-row label {
-    margin: 0;
-    font-size: 14px;
-    color: var(--text-main);
-    font-weight: 400;
-}
-
-.color-input-wrapper {
-    position: relative;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid var(--border);
-    cursor: pointer;
-}
-
-.color-input-wrapper input[type="color"] {
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    cursor: pointer;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
-
-/* Smart Dropdown: Drop Up */
-.dropdown-menu.drop-up {
-    top: auto;
-    bottom: calc(100% + 4px);
-    margin-top: 0;
-    margin-bottom: 0;
-    transform-origin: bottom center;
 }
 
 /* --- Independent Icon Button --- */

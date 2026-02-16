@@ -85,20 +85,6 @@ export const template = ({
                                             <path d="M7 10l5 5 5-5z" />
                                         </svg>
                                     </button>
-                                    <div class="dropdown-menu" id="label-pos-menu">
-                                        <div class="dropdown-item ${labelPosition === 'bottom' ? 'selected' : ''}" data-pos="bottom" title="Label Below">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 16 h8" /><path d="M12 9 v2" /></svg>
-                                        </div>
-                                        <div class="dropdown-item ${labelPosition === 'top' ? 'selected' : ''}" data-pos="top" title="Label Above">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 8 h8" /><path d="M12 13 v2" /></svg>
-                                        </div>
-                                        <div class="dropdown-item ${labelPosition === 'section' ? 'selected' : ''}" data-pos="section" title="Section Style">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M7 4 h10" stroke-width="4" /></svg>
-                                        </div>
-                                        <div class="dropdown-item ${labelPosition === 'off' ? 'selected' : ''}" data-pos="off" title="Hidden (No Name)">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>
-                                        </div>
-                                    </div>
                                     <input type="hidden" name="labelPos" id="bookmark-labelPos" value="${labelPosition}">
                                 </div>
                                 <input type="text" id="bookmark-label" name="label" placeholder="${i18n.t('bookmark.placeholder_label')}" value="${title}" required />
@@ -123,23 +109,6 @@ export const template = ({
                                         <path d="M7 10l5 5 5-5z" />
                                     </svg>
                                 </button>
-                                <div class="dropdown-menu" id="status-pos-menu">
-                                    <div class="dropdown-item ${!checkStatus ? 'selected' : ''}" data-status-pos="off" title="Off">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /></svg>
-                                    </div>
-                                    <div class="dropdown-item ${statusPosition === 'top-left' ? 'selected' : ''}" data-status-pos="top-left" title="Top Left">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>
-                                    </div>
-                                    <div class="dropdown-item ${statusPosition === 'top-right' ? 'selected' : ''}" data-status-pos="top-right" title="Top Right">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="8" r="2" fill="currentColor"/></svg>
-                                    </div>
-                                    <div class="dropdown-item ${statusPosition === 'bottom-left' ? 'selected' : ''}" data-status-pos="bottom-left" title="Bottom Left">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="16" r="2" fill="currentColor"/></svg>
-                                    </div>
-                                    <div class="dropdown-item ${statusPosition === 'bottom-right' ? 'selected' : ''}" data-status-pos="bottom-right" title="Bottom Right">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="16" r="2" fill="currentColor"/></svg>
-                                    </div>
-                                </div>
                                 <input type="hidden" name="statusPos" id="bookmark-statusPos" value="${checkStatus ? statusPosition : 'off'}">
                             </div>
 
@@ -151,14 +120,6 @@ export const template = ({
                                         <path d="M7 10l5 5 5-5z" />
                                     </svg>
                                 </button>
-                                <div class="dropdown-menu" id="protocol-menu" style="width: 100%;">
-                                    <div class="dropdown-item ${protocol === 'http://' ? 'selected' : ''}" data-protocol="http://" title="HTTP">
-                                        <span style="font-size: 13px;">http://</span>
-                                    </div>
-                                    <div class="dropdown-item ${protocol === 'https://' ? 'selected' : ''}" data-protocol="https://" title="HTTPS">
-                                        <span style="font-size: 13px;">https://</span>
-                                    </div>
-                                </div>
                                 <input type="hidden" name="protocol" id="bookmark-protocol" value="${protocol}">
                             </div>
 
@@ -179,14 +140,6 @@ export const template = ({
                                         <path d="M7 10l5 5 5-5z" />
                                     </svg>
                                 </button>
-                                <div class="dropdown-menu" id="touch-pos-menu">
-                                    <div class="dropdown-item ${visibleTouch ? 'selected' : ''}" data-touch="on" title="Visible">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /></svg>
-                                    </div>
-                                    <div class="dropdown-item ${!visibleTouch ? 'selected' : ''}" data-touch="off" title="Hidden">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>
-                                    </div>
-                                </div>
                                 <input type="hidden" name="visibleTouch" id="bookmark-visibleTouch" value="${visibleTouch ? 'on' : 'off'}">
                             </div>
                             <div class="fake-input" style="flex: 1; display: flex; align-items: center; padding: 0 12px; background: var(--input-bg); border: 1px solid var(--input-border); border-left: none; border-radius: 0 var(--radius) var(--radius) 0; color: var(--text-dim); font-size: 14px; height: 42px; box-sizing: border-box;">
@@ -209,5 +162,63 @@ export const template = ({
         </div>
         
         <icon-selection-modal id="icon-modal-component"></icon-selection-modal>
+
+        <!-- Dropdown Menu Overlay -->
+        <div id="menu-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;">
+            <!-- Label Position Menu -->
+            <div class="dropdown-menu" id="label-pos-menu">
+                <div class="dropdown-item ${labelPosition === 'bottom' ? 'selected' : ''}" data-pos="bottom" title="Label Below">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 16 h8" /><path d="M12 9 v2" /></svg>
+                </div>
+                <div class="dropdown-item ${labelPosition === 'top' ? 'selected' : ''}" data-pos="top" title="Label Above">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="14" rx="2" stroke-opacity="0.5" /><path d="M8 8 h8" /><path d="M12 13 v2" /></svg>
+                </div>
+                <div class="dropdown-item ${labelPosition === 'section' ? 'selected' : ''}" data-pos="section" title="Section Style">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M7 4 h10" stroke-width="4" /></svg>
+                </div>
+                <div class="dropdown-item ${labelPosition === 'off' ? 'selected' : ''}" data-pos="off" title="Hidden (No Name)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>
+                </div>
+            </div>
+
+            <!-- Status Position Menu -->
+            <div class="dropdown-menu" id="status-pos-menu">
+                <div class="dropdown-item ${!checkStatus ? 'selected' : ''}" data-status-pos="off" title="Off">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /></svg>
+                </div>
+                <div class="dropdown-item ${statusPosition === 'top-left' ? 'selected' : ''}" data-status-pos="top-left" title="Top Left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>
+                </div>
+                <div class="dropdown-item ${statusPosition === 'top-right' ? 'selected' : ''}" data-status-pos="top-right" title="Top Right">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="8" r="2" fill="currentColor"/></svg>
+                </div>
+                <div class="dropdown-item ${statusPosition === 'bottom-left' ? 'selected' : ''}" data-status-pos="bottom-left" title="Bottom Left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="16" r="2" fill="currentColor"/></svg>
+                </div>
+                <div class="dropdown-item ${statusPosition === 'bottom-right' ? 'selected' : ''}" data-status-pos="bottom-right" title="Bottom Right">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="16" r="2" fill="currentColor"/></svg>
+                </div>
+            </div>
+
+            <!-- Protocol Menu -->
+            <div class="dropdown-menu" id="protocol-menu" style="width: 85px;">
+                <div class="dropdown-item ${protocol === 'http://' ? 'selected' : ''}" data-protocol="http://" title="HTTP">
+                    <span style="font-size: 13px;">http://</span>
+                </div>
+                <div class="dropdown-item ${protocol === 'https://' ? 'selected' : ''}" data-protocol="https://" title="HTTPS">
+                    <span style="font-size: 13px;">https://</span>
+                </div>
+            </div>
+
+            <!-- Touch Visibility Menu -->
+            <div class="dropdown-menu" id="touch-pos-menu">
+                <div class="dropdown-item ${visibleTouch ? 'selected' : ''}" data-touch="on" title="Visible">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /></svg>
+                </div>
+                <div class="dropdown-item ${!visibleTouch ? 'selected' : ''}" data-touch="off" title="Hidden">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>
+                </div>
+            </div>
+        </div>
     </dialog>
 `;

@@ -292,30 +292,35 @@ class AddBookmarkModal extends HTMLElement {
     toggleDropdown(id: string, triggerBtn: HTMLElement) {
         this.closeAllDropdowns(id); // Close others
         const menu = this.shadowRoot!.getElementById(id);
-        if (!menu) return;
+        if (!menu) {
+            return;
+        }
 
         // Toggle
         const isShowing = menu.classList.toggle('show');
 
         if (isShowing) {
-            // Use requestAnimationFrame to ensure display: flex has taken effect for height calculation
+            // Position Helper logic
             requestAnimationFrame(() => {
-                const menuRect = menu.getBoundingClientRect();
                 const modalRect = this.dialog!.getBoundingClientRect();
+                const triggerRect = triggerBtn.getBoundingClientRect();
 
-                // Available space below trigger inside the modal content area
-                // We subtract ~70px for the footer and some padding
-                const spaceHereToBottom = modalRect.bottom - triggerBtn.getBoundingClientRect().bottom - 80;
+                // Calculate position relative to dialog (since menu-overlay is absolute to dialog)
+                // Left: relative to dialog
+                let left = triggerRect.left - modalRect.left;
 
-                // If menu is hidden or 0 height, assume a reasonable default for calculation
-                const menuHeight = menuRect.height || 160;
+                // Top: below the button
+                let top = triggerRect.bottom - modalRect.top + 4; // 4px gap
 
-                // If menu height > space below, flip it UP
-                if (menuHeight > spaceHereToBottom) {
-                    menu.classList.add('drop-up');
-                } else {
-                    menu.classList.remove('drop-up');
-                }
+                // Check if it goes off bottom (simple check, can be improved)
+                // If we are very low in the modal, we might want to drop up?
+                // For now, let's just stick to drop down as requested, but since it's an overlay
+                // it will just protrude. If the user wants to force drop up later we can add it.
+                // But user specifically said "it will protrude".
+
+                menu.style.left = `${left}px`;
+                menu.style.top = `${top}px`;
+                menu.style.minWidth = `${triggerRect.width}px`; // Match button width at minimum
             });
         }
     }
