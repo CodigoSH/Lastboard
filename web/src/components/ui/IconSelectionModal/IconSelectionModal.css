@@ -10,8 +10,9 @@ dialog {
     padding: 0;
     width: 90%;
     max-width: 400px;
-    height: 500px;
-    /* Fixed height for consistency */
+    height: 370px;
+    /* Increased height to fully clear 3 rows of icons */
+    margin: auto;
     display: none;
     flex-direction: column;
     backdrop-filter: blur(20px);
@@ -81,18 +82,14 @@ dialog::backdrop {
 }
 
 .modal-body {
-    flex: 1;
     padding: 16px;
     background: var(--surface);
-    overflow: hidden;
-    /* IconPicker handles its own scroll */
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
-/* Ensure IconPicker takes full available space */
 icon-picker {
-    flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
