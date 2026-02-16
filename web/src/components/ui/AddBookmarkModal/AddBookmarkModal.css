@@ -559,7 +559,7 @@ dialog[open] {
     background: rgba(var(--accent-rgb), 0.1);
 }
 
-/* Premium Color Grid (Ported from Settings) */
+/* Premium Color Grid */
 .premium-color-grid {
     display: flex;
     gap: 12px;
@@ -620,47 +620,4 @@ dialog[open] {
     cursor: pointer;
     border: none;
     padding: 0;
-}
-/* Segmented Control */
-.segmented-control {
-    display: flex;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 4px;
-    border-radius: 8px;
-    margin-top: 8px;
-    gap: 4px;
-    border: 1px solid var(--border);
-}
-
-.border-width-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.border-width-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-main);
-}
-
-.border-width-btn.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.1);
-}
-
-.border-width-btn span {
-    font-size: 11px;
-    font-weight: 500;
 }

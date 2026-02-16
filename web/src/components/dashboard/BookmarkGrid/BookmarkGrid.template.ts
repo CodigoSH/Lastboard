@@ -49,12 +49,15 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
             const children = getChildren(b.id);
             const title = (data.title || '').trim();
 
+            const borderColorStyle = (data.borderColor && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
+            const borderWidthStyle = !isEditing ? `border-width: ${data.borderWidth || 1}px !important;` : '';
+
             return `
             <fieldset class="bookmark-grid__section"
                data-id="${b.id}"
                data-orig-x="${b.x}" data-orig-y="${b.y}"
                draggable="${isEditing}"
-               style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH};">
+               style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH}; ${borderColorStyle} ${borderWidthStyle}">
                ${title ? `<legend class="section-title">${esc(title)}</legend>` : ''}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
                    ${renderBookmarks(children, isEditing, true, clampedW, isTouchDevice)}
@@ -92,13 +95,16 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
         const rawContent = data.text || '';
         const dataContent = rawContent.replace(/"/g, '&quot;');
 
+        const borderColorStyle = (data.borderColor && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
+        const borderWidthStyle = !isEditing ? `border-width: ${data.borderWidth || 1}px !important;` : '';
+
         return `
         <div class="bookmark-grid__card"
             draggable="${isEditing}"
             data-id="${b.id}"
             data-type="${b.type}"
             data-orig-x="${b.x}" data-orig-y="${b.y}"
-            ${!isTouchDevice ? `style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};"` : ''}>
+            ${!isTouchDevice ? `style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH}; ${borderColorStyle} ${borderWidthStyle}"` : ''}>
 
             <${tagName}
                 item-id="${b.id}"

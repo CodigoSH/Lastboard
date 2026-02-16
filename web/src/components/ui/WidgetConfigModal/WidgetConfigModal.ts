@@ -69,6 +69,13 @@ class WidgetConfigModal extends HTMLElement {
     private currentItem: GridItem | null = null;
     private _clockSelectedLat: number | null = null;
     private _clockSelectedLon: number | null = null;
+    private _selectedColor: string = '#333333';
+    private _selectedBorderWidth: number = 1;
+
+    private readonly premiumColors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+        '#ec4899', '#64748b', '#f8fafc', '#1e293b', '#333333'
+    ];
 
     constructor() {
         super();
@@ -82,6 +89,17 @@ class WidgetConfigModal extends HTMLElement {
 
     open(item: GridItem) {
         this.currentItem = item;
+
+        // Init Appearance State
+        let content: any = {};
+        try {
+            content = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+        } catch (e) {
+            console.error('Failed to parse content', e);
+        }
+        this._selectedColor = content.borderColor || '#333333';
+        this._selectedBorderWidth = content.borderWidth || 1;
+
         this.render();
 
         // Re-bind listeners after render
@@ -159,6 +177,77 @@ class WidgetConfigModal extends HTMLElement {
                 }
             }
         }
+
+        // Appearance Controls Listeners
+        this.shadowRoot.querySelectorAll('.premium-color-swatch').forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                const el = e.currentTarget as HTMLElement;
+                if (el.classList.contains('premium-color-swatch--custom')) return; // handled by input
+
+                this._selectedColor = el.dataset.color!;
+                this.updateAppearanceUI();
+            });
+        });
+
+        const colorInput = this.shadowRoot.getElementById('widget-borderColor') as HTMLInputElement;
+        if (colorInput) {
+            colorInput.addEventListener('input', (e) => {
+                this._selectedColor = (e.target as HTMLInputElement).value;
+                this.updateAppearanceUI();
+            });
+        }
+
+        this.shadowRoot.querySelectorAll('.border-width-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const el = e.currentTarget as HTMLElement;
+                this._selectedBorderWidth = parseInt(el.dataset.width!);
+                this.updateAppearanceUI();
+            });
+        });
+    }
+
+    private updateAppearanceUI() {
+        if (!this.shadowRoot) return;
+
+        // Update Swatches
+        this.shadowRoot.querySelectorAll('.premium-color-swatch').forEach(swatch => {
+            const el = swatch as HTMLElement;
+            const color = el.dataset.color;
+            const isCustom = el.classList.contains('premium-color-swatch--custom');
+
+            if (color) {
+                // Preset
+                if (color === this._selectedColor) {
+                    el.classList.add('active');
+                    if (!el.querySelector('svg')) {
+                        el.innerHTML += '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>';
+                    }
+                } else {
+                    el.classList.remove('active');
+                    const svg = el.querySelector('svg');
+                    if (svg) svg.remove();
+                }
+            } else if (isCustom) {
+                // Custom
+                const isCustomColor = !this.premiumColors.includes(this._selectedColor) && this._selectedColor !== '';
+                el.classList.toggle('active', isCustomColor);
+
+                const svg = el.querySelector('svg');
+                if (svg) svg.style.fill = isCustomColor ? '#fff' : 'rgba(255,255,255,0.4)';
+
+                const input = this.shadowRoot?.getElementById('widget-borderColor') as HTMLInputElement;
+                if (input && isCustomColor) input.value = this._selectedColor;
+
+                if (isCustomColor) el.style.backgroundColor = this._selectedColor;
+                else el.style.backgroundColor = '#333';
+            }
+        });
+
+        // Update Width Buttons
+        this.shadowRoot.querySelectorAll('.border-width-btn').forEach(btn => {
+            const w = parseInt((btn as HTMLElement).dataset.width!);
+            btn.classList.toggle('active', w === this._selectedBorderWidth);
+        });
     }
 
     private switchTab(tabName: string) {
@@ -248,6 +337,10 @@ class WidgetConfigModal extends HTMLElement {
             delete newContent.name;
         }
 
+        // Persist Appearance
+        newContent.borderColor = this._selectedColor;
+        newContent.borderWidth = this._selectedBorderWidth;
+
         // Optimistic / Store update
         await dashboardStore.updateItem({
             id: this.currentItem.id,
@@ -273,6 +366,53 @@ class WidgetConfigModal extends HTMLElement {
         const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
         const renderForm = () => {
+            const renderAppearanceControls = () => {
+                const color = this._selectedColor;
+                const borderWidth = this._selectedBorderWidth;
+                const isCustom = !this.premiumColors.includes(color) && color !== '';
+
+                return `
+                <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
+                    <div class="premium-color-grid">
+                        ${this.premiumColors.map(c => `
+                            <div class="premium-color-swatch ${color === c ? 'active' : ''}" 
+                                style="background-color: ${c}"
+                                data-color="${c}">
+                                ${color === c ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>' : ''}
+                            </div>
+                        `).join('')}
+                        
+                        <div class="premium-color-swatch premium-color-swatch--custom ${isCustom ? 'active' : ''}" 
+                            style="background-color: ${isCustom ? color : '#333'}">
+                            <svg viewBox="0 0 24 24" style="opacity: 0.8; fill: ${isCustom ? '#fff' : 'rgba(255,255,255,0.4)'};">
+                                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                            </svg>
+                            <input type="color" class="premium-swatch-picker" id="widget-borderColor" value="${isCustom ? color : '#0078D4'}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group" style="margin-top: 20px;">
+                    <label>${i18n.t('bookmark.border_width') || 'Border Width'}</label>
+                    <div class="segmented-control">
+                        <button type="button" class="border-width-btn ${borderWidth === 1 ? 'active' : ''}" data-width="1">
+                            <div style="height: 1px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                            <span>${i18n.t('general.thin') || 'Thin'}</span>
+                        </button>
+                        <button type="button" class="border-width-btn ${borderWidth === 2 ? 'active' : ''}" data-width="2">
+                            <div style="height: 2px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                            <span>${i18n.t('general.regular') || 'Regular'}</span>
+                        </button>
+                        <button type="button" class="border-width-btn ${borderWidth === 3 ? 'active' : ''}" data-width="3">
+                            <div style="height: 3px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                            <span>${i18n.t('general.thick') || 'Thick'}</span>
+                        </button>
+                    </div>
+                </div>
+                `;
+            };
+
             if (!this.currentItem) return { general: '', customization: '' };
 
             // --- CLOCK ---
@@ -295,9 +435,7 @@ class WidgetConfigModal extends HTMLElement {
                         <label>${i18n.t('widget.weather.results')}</label>
                         <div id="clock-results" class="weather-results"></div>
                     </div>
-                `;
 
-                const customizationTab = `
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-12h" ${h12 ? 'checked' : ''} />
                         <label for="clock-12h">${i18n.t('widget.clock.use_12h')}</label>
@@ -309,7 +447,9 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
                 `;
 
-                return { general: generalTab, customization: customizationTab };
+                const customizationTab = ``;
+
+                return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
 
                 // --- WEATHER ---
             } else if (widgetId === 'weather') {
@@ -365,7 +505,7 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
                 `;
 
-                return { general: generalTab, customization: customizationTab };
+                return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
 
                 // --- TELEMETRY ---
             } else if (widgetId === 'telemetry') {
@@ -382,7 +522,7 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
                 `;
 
-                return { general: generalTab, customization: customizationTab };
+                return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
 
                 // --- SECTION ---
             } else if (this.currentItem.type === 'section') {
@@ -398,11 +538,9 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
                 `;
 
-                const customizationTab = `
-                    <p style="color: var(--text-dim); font-size: 13px;">${i18n.t('general.no_options')}</p>
-                `;
+                const customizationTab = ``; // Section customization tab is empty by default, only appearance controls are added.
 
-                return { general: generalTab, customization: customizationTab };
+                return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
             }
 
             return { general: `<p>${i18n.t('widget.config.no_config')}</p>`, customization: '' };
