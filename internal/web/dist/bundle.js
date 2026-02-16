@@ -4143,12 +4143,6 @@ input:checked+.slider:before {
                             <input type="text" id="bookmark-url" name="url" placeholder="google.com" value="${i}" required />
                         </div>
                     </div>
-                </div>
-
-                <!-- TAB: CUSTOMIZATION -->
-                <div id="tab-customization" class="tab-content">
-                    <!-- Color Picker -->
-                    ${dr(s)}
                     
                     <!-- Touch Visibility -->
                     <div class="form-group" style="margin-top: 12px;">
@@ -4175,6 +4169,12 @@ input:checked+.slider:before {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- TAB: CUSTOMIZATION -->
+                <div id="tab-customization" class="tab-content">
+                    <!-- Color Picker -->
+                    ${dr(s)}
                 </div>
 
                 <div class="form-actions">

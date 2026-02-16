@@ -165,12 +165,6 @@ export const template = ({
                             <input type="text" id="bookmark-url" name="url" placeholder="google.com" value="${url}" required />
                         </div>
                     </div>
-                </div>
-
-                <!-- TAB: CUSTOMIZATION -->
-                <div id="tab-customization" class="tab-content">
-                    <!-- Color Picker -->
-                    ${renderColorPicker(color)}
                     
                     <!-- Touch Visibility -->
                     <div class="form-group" style="margin-top: 12px;">
@@ -200,6 +194,12 @@ export const template = ({
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- TAB: CUSTOMIZATION -->
+                <div id="tab-customization" class="tab-content">
+                    <!-- Color Picker -->
+                    ${renderColorPicker(color)}
                 </div>
 
                 <div class="form-actions">
