@@ -42,7 +42,7 @@
     "bookmark.placeholder_label": "Mi Sitio Increíble",
     "bookmark.placeholder_url": "https://ejemplo.com",
     "bookmark.url": "URL",
-    "bookmark.visible_touch": "Visible en Dispositivos Táctiles",
+    "bookmark.visible_touch": "Dispositivos Táctiles",
     "error.could_not_resolve_host": "No se pudo resolver el host",
     "error.failed_to_create": "No se pudo crear",
     "error.invalid_id": "Ese ID no funciona",

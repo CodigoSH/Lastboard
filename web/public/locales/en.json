@@ -45,7 +45,7 @@
     "bookmark.placeholder_label": "My Awesome Site",
     "bookmark.placeholder_url": "https://example.com",
     "bookmark.url": "URL",
-    "bookmark.visible_touch": "Show on Mobile",
+    "bookmark.visible_touch": "Touch Devices",
     "error.could_not_resolve_host": "Can't reach that host",
     "error.failed_to_create": "Couldn't create that",
     "error.invalid_id": "That ID doesn't work",

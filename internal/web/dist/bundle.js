@@ -4603,7 +4603,7 @@ dialog[open] {
 .icon-dropdown-btn,
 .input-group input,
 .icon-dropdown .fake-input {
-    height: 42px;
+    height: 46px;
     box-sizing: border-box;
     background: var(--input-bg);
     border: 1px solid var(--input-border);
@@ -4611,6 +4611,10 @@ dialog[open] {
     transition: all 0.2s;
     width: 100%;
     margin: 0;
+}
+
+.icon-dropdown-btn,
+.icon-dropdown .fake-input {
     display: flex;
     align-items: center;
 }
@@ -4623,10 +4627,12 @@ dialog[open] {
 
 .input-group input {
     color: var(--input-text);
-    padding: 10px 14px;
+    padding: 12px 14px;
+    line-height: 1.4;
     flex: 1;
     min-width: 0;
     z-index: 1;
+    overflow: visible;
 }
 
 /* --- Chaining Logic (Seamless Integration) --- */
