@@ -33,6 +33,76 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Толщина границы", "zh": "边框宽度", "ja": "枠線の太さ", "ko": "테두리 두께", "tr": "Kenarlık genişliği", "pl": "Szerokość obramowania",
         "id": "Lebar bingkai", "ar": "عرض الحدود", "fa": "عرض حاشیه", "el": "Πλάτος περιγράμματος", "hi": "सीमा की चौड़ाई", "bn": "সীমানা প্রস্থ", "ur": "بارڈر کی چوڑائی"
     },
+    "bookmark.label_position": {
+        "es": "Posición del título", "fr": "Position du titre", "it": "Posizione del titolo", "pt": "Posição do título", "de": "Titelposition", "nl": "Titelpositie",
+        "ru": "Позиция заголовка", "zh": "标题位置", "ja": "タイトルの位置", "ko": "제목 위치", "tr": "Başlık konumu", "pl": "Pozycja tytułu",
+        "id": "Posisi judul", "ar": "موقع العنوان", "fa": "موقعیت عنوان", "el": "Θέση τίτλου", "hi": "शीर्षक की स्थिति", "bn": "শিরোনামের অবস্থান", "ur": "عنوان کی پوزیشن"
+    },
+    "bookmark.status_position": {
+        "es": "Posición del estado", "fr": "Position du statut", "it": "Posizione dello stato", "pt": "Posição do status", "de": "Statusposition", "nl": "Statuspositie",
+        "ru": "Позиция статуса", "zh": "状态位置", "ja": "ステータスの位置", "ko": "상태 위치", "tr": "Durum konumu", "pl": "Pozycja statusu",
+        "id": "Posisi status", "ar": "موقع الحالة", "fa": "موقعیت وضعیت", "el": "Θέση κατάστασης", "hi": "स्थिति की स्थिति", "bn": "স্থিতি অবস্থান", "ur": "سٹیٹس پوزیشن"
+    },
+    "bookmark.protocol": {
+        "es": "Protocolo", "fr": "Protocole", "it": "Protocollo", "pt": "Protocolo", "de": "Protokoll", "nl": "Protocol",
+        "ru": "Протокол", "zh": "协议", "ja": "プロトコル", "ko": "프로토콜", "tr": "Protokol", "pl": "Protokół",
+        "id": "Protokol", "ar": "بروتوكول", "fa": "پروتکل", "el": "Πρωτόκολλο", "hi": "प्रोटोकॉल", "bn": "প্রটোকল", "ur": "پروٹوکول"
+    },
+    "bookmark.label_bottom": {
+        "es": "Título debajo", "fr": "Titre en dessous", "it": "Titolo sotto", "pt": "Título abaixo", "de": "Titel unten", "nl": "Titel onder",
+        "ru": "Заголовок снизу", "zh": "标题在下", "ja": "タイトルを下に", "ko": "제목 아래", "tr": "Başlık altta", "pl": "Tytuł poniżej",
+        "id": "Judul di bawah", "ar": "العنوان بالأسفل", "fa": "عنوان در پایین", "el": "Τίτλος στο κάτω μέρος", "hi": "शीर्षक नीचे", "bn": "নীচে শিরোনাম", "ur": "عنوان نیچے"
+    },
+    "bookmark.label_top": {
+        "es": "Título arriba", "fr": "Titre au-dessus", "it": "Titolo sopra", "pt": "Título acima", "de": "Titel oben", "nl": "Titel boven",
+        "ru": "Заголовок сверху", "zh": "标题在上", "ja": "タイトルを上に", "ko": "제목 위", "tr": "Başlık üstte", "pl": "Tytuł powyżej",
+        "id": "Judul di atas", "ar": "العنوان بالأعلى", "fa": "عنوان در بالا", "el": "Τίτλος στο πάνω μέρος", "hi": "शीर्षक ऊपर", "bn": "শিরোনাম উপরে", "ur": "عنوان اوپر"
+    },
+    "bookmark.label_section": {
+        "es": "Estilo sección", "fr": "Style section", "it": "Stile sezione", "pt": "Estilo seção", "de": "Abschnittsstil", "nl": "Sectiestijl",
+        "ru": "Стиль раздела", "zh": "区域样式", "ja": "セクションスタイル", "ko": "섹션 스타일", "tr": "Bölüm stili", "pl": "Styl sekcji",
+        "id": "Gaya bagian", "ar": "نمط القسم", "fa": "سبک بخش", "el": "Στυλ ενότητας", "hi": "अनुभाग शैली", "bn": "বিভাগ শৈলী", "ur": "سیکشن اسٹائل"
+    },
+    "bookmark.label_hidden": {
+        "es": "Oculto (sin nombre)", "fr": "Masqué (sans nom)", "it": "Nascosto (senza nome)", "pt": "Oculto (sem nome)", "de": "Versteckt (kein Name)", "nl": "Verborgen (geen naam)",
+        "ru": "Скрыто (без имени)", "zh": "隐藏（无名称）", "ja": "非表示（名前なし）", "ko": "숨김 (이름 없음)", "tr": "Gizli (ad yok)", "pl": "Ukryty (brak nazwy)",
+        "id": "Tersembunyi (tanpa nama)", "ar": "مخفي (بدون اسم)", "fa": "مخفی (بدون نام)", "el": "Κρυφό (χωρίς όνομα)", "hi": "छिपा हुआ (कोई नाम नहीं)", "bn": "লুকানো (কোন নাম নেই)", "ur": "خفیہ (بغیر نام)"
+    },
+    "bookmark.status_off": {
+        "es": "Desactivado", "fr": "Désactivé", "it": "Disattivato", "pt": "Desativado", "de": "Aus", "nl": "Uit",
+        "ru": "Выкл", "zh": "关闭", "ja": "オフ", "ko": "끄기", "tr": "Kapalı", "pl": "Wyłączone",
+        "id": "Mati", "ar": "إيقاف", "fa": "خاموش", "el": "Αενεργό", "hi": "बंद", "bn": "বন্ধ", "ur": "بند"
+    },
+    "bookmark.pos_top_left": {
+        "es": "Arriba a la izquierda", "fr": "En haut à gauche", "it": "In alto a sinistra", "pt": "Superior esquerdo", "de": "Oben links", "nl": "Linksboven",
+        "ru": "Сверху слева", "zh": "左上", "ja": "左上", "ko": "왼쪽 상단", "tr": "Sol üst", "pl": "Górny lewy",
+        "id": "Kiri atas", "ar": "أعلى اليسار", "fa": "بالا سمت چپ", "el": "Πάνω αριστερά", "hi": "ऊपरी बाएं", "bn": "উপরে বাম", "ur": "اوپر بائیں"
+    },
+    "bookmark.pos_top_right": {
+        "es": "Arriba a la derecha", "fr": "En haut à droite", "it": "In alto a destra", "pt": "Superior derecho", "de": "Oben rechts", "nl": "Rechtsboven",
+        "ru": "Сверху справа", "zh": "右上", "ja": "右上", "ko": "오른쪽 상단", "tr": "Sağ üst", "pl": "Górny prawy",
+        "id": "Kanan atas", "ar": "أعلى اليمين", "fa": "بالا سمت راست", "el": "Πάνω δεξιά", "hi": "ऊपरी दाएं", "bn": "উপরে ডান", "ur": "اوپر دائیں"
+    },
+    "bookmark.pos_bottom_left": {
+        "es": "Abajo a la izquierda", "fr": "En bas à gauche", "it": "In basso a sinistra", "pt": "Inferior esquerdo", "de": "Unten links", "nl": "Linksonder",
+        "ru": "Снизу слева", "zh": "左下", "ja": "左下", "ko": "왼쪽 하단", "tr": "Sol alt", "pl": "Dolny lewy",
+        "id": "Kiri bawah", "ar": "أسفل اليسار", "fa": "پایین سمت چپ", "el": "Κάτω αριστερά", "hi": "निचला बायां", "bn": "নীচে বাম", "ur": "نیچے بائیں"
+    },
+    "bookmark.pos_bottom_right": {
+        "es": "Abajo a la derecha", "fr": "En bas à droite", "it": "In basso a destra", "pt": "Inferior derecho", "de": "Unten rechts", "nl": "Rechtsonder",
+        "ru": "Снизу справа", "zh": "右下", "ja": "右下", "ko": "오른쪽 하단", "tr": "Sağ alt", "pl": "Dolny prawy",
+        "id": "Kanan bawah", "ar": "أسفل اليمين", "fa": "پایین سمت راست", "el": "Κάτω δεξιά", "hi": "निचला दायां", "bn": "নীচে ডান", "ur": "نیچے دائیں"
+    },
+    "bookmark.visible": {
+        "es": "Visible", "fr": "Visible", "it": "Visibile", "pt": "Visível", "de": "Sichtbar", "nl": "Zichtbaar",
+        "ru": "Видно", "zh": "可见", "ja": "表示", "ko": "표시", "tr": "Görünür", "pl": "Widoczne",
+        "id": "Terlihat", "ar": "مرئي", "fa": "مرئی", "el": "Ορατό", "hi": "दृश्य", "bn": "দৃশ্যমান", "ur": "ظاہر"
+    },
+    "bookmark.hidden": {
+        "es": "Oculto", "fr": "Masqué", "it": "Nascosto", "pt": "Oculto", "de": "Versteckt", "nl": "Verborgen",
+        "ru": "Скрыто", "zh": "隐藏", "ja": "非表示", "ko": "숨김", "tr": "Gizli", "pl": "Ukryty",
+        "id": "Tersembunyi", "ar": "مخفي", "fa": "مخفی", "el": "Κρυφό", "hi": "छिपा हुआ", "bn": "লুকানো", "ur": "خفیہ"
+    },
     "section.edit_title": {
         "es": "Editar Sección", "fr": "Modifier la section", "it": "Modifica sezione", "pt": "Editar seção", "de": "Abschnitt bearbeiten", "nl": "Sectie bewerken",
         "ru": "Редактировать раздел", "zh": "编辑部分", "ja": "セクションを編集", "ko": "섹션 편집", "tr": "Bölümü Düzenle", "pl": "Edytuj sekcję",
@@ -367,6 +437,26 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "Grueso", "fr": "Épais", "it": "Spesso", "pt": "Grosso", "de": "Dick", "nl": "Dik",
         "ru": "Толстый", "zh": "粗", "ja": "太い", "ko": "두껍게", "tr": "Kalın", "pl": "Gruby",
         "id": "Tebal", "ar": "سميك", "fa": "ضخیم", "el": "Παχύ", "hi": "मोटा", "bn": "মোটা", "ur": "موٹا"
+    },
+    "general.layouts": {
+        "es": "Diseños", "fr": "Dispositions", "it": "Layout", "pt": "Layouts", "de": "Layouts", "nl": "Layouts",
+        "ru": "Макеты", "zh": "布局", "ja": "レイアウト", "ko": "레이아웃", "tr": "Düzenler", "pl": "Układy",
+        "id": "Tata letak", "ar": "التخطيطات", "fa": "طرح‌ها", "el": "Διατάξεις", "hi": "लेआउट", "bn": "লেআউট", "ur": "لے آؤٹ"
+    },
+    "general.chrome": {
+        "es": "Navegador", "fr": "Navigateur", "it": "Browser", "pt": "Navegador", "de": "Browser", "nl": "Browser",
+        "ru": "Браузер", "zh": "浏览器", "ja": "ブラウザ", "ko": "브라우저", "tr": "Tarayıcı", "pl": "Przeglądarka",
+        "id": "Peramban", "ar": "المتصفح", "fa": "مرورگر", "el": "Πρόγραμμα περιήγησης", "hi": "ब्राउज़र", "bn": "ব্রাউজার", "ur": "براؤزر"
+    },
+    "general.profile": {
+        "es": "Perfil", "fr": "Profil", "it": "Profilo", "pt": "Perfil", "de": "Profil", "nl": "Profiel",
+        "ru": "Профиль", "zh": "个人资料", "ja": "プロフィール", "ko": "프로필", "tr": "Profil", "pl": "Profil",
+        "id": "Profil", "ar": "الملف الشخصي", "fa": "نمایه", "el": "Προφίλ", "hi": "प्रोफ़ाइल", "bn": "প্রোফাইল", "ur": "پروفائل"
+    },
+    "general.user_avatar": {
+        "es": "Avatar de usuario", "fr": "Avatar de l'utilisateur", "it": "Avatar utente", "pt": "Avatar do usuário", "de": "Benutzer-Avatar", "nl": "Gebruikersavatar",
+        "ru": "Аватар пользователя", "zh": "用户头像", "ja": "ユーザーアバター", "ko": "사용자 아바타", "tr": "Kullanıcı Avatarı", "pl": "Awatar użytkownika",
+        "id": "Avatar pengguna", "ar": "الصورة الرمزية للمستخدم", "fa": "آواتار کاربر", "el": "Avatar χρήστη", "hi": "उपयोगकर्ता अवतार", "bn": "ব্যবহারকারীর অবতার", "ur": "صارف کا اوتار"
     },
     "widget.config.check_personalize": {
         "es": "Consulta la pestaña 'Personalizar' para más estilos", "fr": "Consultez l'onglet 'Personnaliser' pour plus de styles", "it": "Controlla la scheda 'Personalizza' per altri stili", "pt": "Verifique a guia 'Personalizar' para mais estilos", "de": "Weitere Stile finden Sie unter 'Personalisieren'", "nl": "Check het tabblad 'Personaliseer' voor meer stijlen",
@@ -1654,9 +1744,14 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Tambah item", "ar": "إضافة عنصر", "fa": "افزودن مورد", "el": "Προσθήκη στοιχείου", "hi": "आइटम जोड़ें", "bn": "আইটেম যোগ করুন", "ur": "آئٹم شامل کریں"
     },
     "topbar.edit_tooltip": {
-        "es": "Editar panel", "fr": "Modifier le tableau de bord", "de": "Dashboard bearbeiten", "it": "Modifica dashboard", "pt": "Editar painel", "nl": "Dashboard bewerken",
-        "ru": "Редактировать панель", "zh": "编辑仪表板", "ja": "ダッシュボードを編集", "ko": "대시보드 편집", "tr": "Kontrol Panelini Düzenle", "pl": "Edytuj pulpit",
-        "id": "Edit Dasbor", "ar": "تحرير لوحة التحكم", "fa": "ویرایش داشبورد", "el": "Επεξεργασία πίνακα ελέγχου", "hi": "डैशबोर्ड संपादित करें", "bn": "ড্যাশবোর্ড সম্পাদনা করুন", "ur": "ڈیش بورڈ میں ترمیم کریں"
+        "es": "Editar tablero", "fr": "Modifier le tableau de bord", "it": "Modifica dashboard", "pt": "Editar painel", "de": "Dashboard bearbeiten", "nl": "Dashboard bewerken",
+        "ru": "Редактировать панель", "zh": "编辑仪表板", "ja": "ダッシュボードを編集", "ko": "대시보드 편집", "tr": "Panoyu Düzenle", "pl": "Edytuj pulpit",
+        "id": "Edit dasbor", "ar": "تحرير لوحة القيادة", "fa": "ویرایش داشبورد", "el": "Επεξεργασία πίνακα ελέγχου", "hi": "डैशबोर्ड संपादित करें", "bn": "ড্যাشبورد সম্পাদনা করুন", "ur": "ڈیش بورڈ میں ترمیم کریں"
+    },
+    "topbar.drawer_tooltip": {
+        "es": "Ajustes", "fr": "Paramètres", "it": "Impostazioni", "pt": "Definições", "de": "Einstellungen", "nl": "Instellingen",
+        "ru": "Настройки", "zh": "设置", "ja": "設定", "ko": "설정", "tr": "Ayarlar", "pl": "Ustawienia",
+        "id": "Pengaturan", "ar": "الإعدادات", "fa": "تنظیمات", "el": "Ρυθμίσεις", "hi": "से팅्स", "bn": "সেটিংস", "ur": "ترتیبات"
     },
 
     // === Type Keys ===

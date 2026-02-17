@@ -72,7 +72,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             </div>
 
             <!-- Sidebar Toggle Icon -->
-            <div id="drawer-toggle" class="top-bar__toggle" style="position: relative;">
+            <div id="drawer-toggle" class="top-bar__toggle" style="position: relative;" title="${i18n.t('topbar.drawer_tooltip')}">
                 ${updateAvailable ? '<div class="notification-dot"></div>' : ''}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5" />

@@ -1,6 +1,7 @@
 import { template } from './Avatar.template';
 // @ts-ignore
 import css from './Avatar.css' with { type: 'text' };
+import { i18n } from '../../../services/i18n';
 
 class AppAvatar extends HTMLElement {
     static get observedAttributes() {
@@ -25,7 +26,7 @@ class AppAvatar extends HTMLElement {
     render() {
         const src = this.getAttribute('src');
         const initials = this.getAttribute('initials') || '??';
-        const alt = this.getAttribute('alt') || 'User Avatar';
+        const alt = this.getAttribute('alt') || i18n.t('general.user_avatar');
 
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>

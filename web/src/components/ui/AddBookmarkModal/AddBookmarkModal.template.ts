@@ -116,7 +116,7 @@ export const template = ({
                             <div class="input-group">
                                 <!-- Label Position Dropdown -->
                                 <div class="icon-dropdown">
-                                    <button type="button" class="icon-dropdown-btn" id="label-pos-btn" title="Label Position" style="position: relative;">
+                                    <button type="button" class="icon-dropdown-btn" id="label-pos-btn" title="${i18n.t('bookmark.label_position')}" style="position: relative;">
                                         ${labelPosition === 'top' ?
         `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 8 h8" /><path d="M12 13 v2" /></svg>` :
         labelPosition === 'section' ?
@@ -142,7 +142,7 @@ export const template = ({
                         <div class="input-group">
                             <!-- Status Monitor Dropdown -->
                             <div class="icon-dropdown">
-                                <button type="button" class="icon-dropdown-btn" id="status-pos-btn" title="Status Position" style="position: relative;">
+                                <button type="button" class="icon-dropdown-btn" id="status-pos-btn" title="${i18n.t('bookmark.status_position')}" style="position: relative;">
                                     ${checkStatus ?
         `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" />
                                          ${statusPosition.includes('top') ? '<circle cx="16" cy="8" r="2" fill="currentColor"/>' : '<circle cx="16" cy="16" r="2" fill="currentColor"/>'}
@@ -158,7 +158,7 @@ export const template = ({
 
                             <!-- Protocol Dropdown -->
                             <div class="icon-dropdown protocol-dropdown">
-                                <button type="button" class="icon-dropdown-btn" id="protocol-btn" title="Protocol" style="position: relative; justify-content: space-between; padding: 0 8px;">
+                                <button type="button" class="icon-dropdown-btn" id="protocol-btn" title="${i18n.t('bookmark.protocol')}" style="position: relative; justify-content: space-between; padding: 0 8px;">
                                     <span id="protocol-text" style="font-size: 13px; font-weight: 500;">${protocol}</span>
                                     <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="opacity: 0.7;">
                                         <path d="M7 10l5 5 5-5z" />
@@ -211,55 +211,55 @@ export const template = ({
         <div id="menu-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;">
             <!-- Label Position Menu -->
             <div class="dropdown-menu" id="label-pos-menu">
-                <div class="dropdown-item ${labelPosition === 'bottom' ? 'selected' : ''}" data-pos="bottom" title="Label Below">
+                <div class="dropdown-item ${labelPosition === 'bottom' ? 'selected' : ''}" data-pos="bottom" title="${i18n.t('bookmark.label_bottom')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M8 16 h8" /><path d="M12 9 v2" /></svg>
                 </div>
-                <div class="dropdown-item ${labelPosition === 'top' ? 'selected' : ''}" data-pos="top" title="Label Above">
+                <div class="dropdown-item ${labelPosition === 'top' ? 'selected' : ''}" data-pos="top" title="${i18n.t('bookmark.label_top')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="14" rx="2" stroke-opacity="0.5" /><path d="M8 8 h8" /><path d="M12 13 v2" /></svg>
                 </div>
-                <div class="dropdown-item ${labelPosition === 'section' ? 'selected' : ''}" data-pos="section" title="Section Style">
+                <div class="dropdown-item ${labelPosition === 'section' ? 'selected' : ''}" data-pos="section" title="${i18n.t('bookmark.label_section')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><path d="M7 4 h10" stroke-width="4" /></svg>
                 </div>
-                <div class="dropdown-item ${labelPosition === 'off' ? 'selected' : ''}" data-pos="off" title="Hidden (No Name)">
+                <div class="dropdown-item ${labelPosition === 'off' ? 'selected' : ''}" data-pos="off" title="${i18n.t('bookmark.label_hidden')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>
                 </div>
             </div>
 
             <!-- Status Position Menu -->
             <div class="dropdown-menu" id="status-pos-menu">
-                <div class="dropdown-item ${!checkStatus ? 'selected' : ''}" data-status-pos="off" title="Off">
+                <div class="dropdown-item ${!checkStatus ? 'selected' : ''}" data-status-pos="off" title="${i18n.t('bookmark.status_off')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'top-left' ? 'selected' : ''}" data-status-pos="top-left" title="Top Left">
+                <div class="dropdown-item ${statusPosition === 'top-left' ? 'selected' : ''}" data-status-pos="top-left" title="${i18n.t('bookmark.pos_top_left')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'top-right' ? 'selected' : ''}" data-status-pos="top-right" title="Top Right">
+                <div class="dropdown-item ${statusPosition === 'top-right' ? 'selected' : ''}" data-status-pos="top-right" title="${i18n.t('bookmark.pos_top_right')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="8" r="2" fill="currentColor"/></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'bottom-left' ? 'selected' : ''}" data-status-pos="bottom-left" title="Bottom Left">
+                <div class="dropdown-item ${statusPosition === 'bottom-left' ? 'selected' : ''}" data-status-pos="bottom-left" title="${i18n.t('bookmark.pos_bottom_left')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="16" r="2" fill="currentColor"/></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'bottom-right' ? 'selected' : ''}" data-status-pos="bottom-right" title="Bottom Right">
+                <div class="dropdown-item ${statusPosition === 'bottom-right' ? 'selected' : ''}" data-status-pos="bottom-right" title="${i18n.t('bookmark.pos_bottom_right')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="16" r="2" fill="currentColor"/></svg>
                 </div>
             </div>
 
             <!-- Protocol Menu -->
             <div class="dropdown-menu" id="protocol-menu" style="width: 85px;">
-                <div class="dropdown-item ${protocol === 'http://' ? 'selected' : ''}" data-protocol="http://" title="HTTP">
+                <div class="dropdown-item ${protocol === 'http://' ? 'selected' : ''}" data-protocol="http://" title="${i18n.t('bookmark.protocol')} HTTP">
                     <span style="font-size: 13px;">http://</span>
                 </div>
-                <div class="dropdown-item ${protocol === 'https://' ? 'selected' : ''}" data-protocol="https://" title="HTTPS">
+                <div class="dropdown-item ${protocol === 'https://' ? 'selected' : ''}" data-protocol="https://" title="${i18n.t('bookmark.protocol')} HTTPS">
                     <span style="font-size: 13px;">https://</span>
                 </div>
             </div>
 
             <!-- Touch Visibility Menu -->
             <div class="dropdown-menu" id="touch-pos-menu">
-                <div class="dropdown-item ${visibleTouch ? 'selected' : ''}" data-touch="on" title="Visible">
+                <div class="dropdown-item ${visibleTouch ? 'selected' : ''}" data-touch="on" title="${i18n.t('bookmark.visible')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /></svg>
                 </div>
-                <div class="dropdown-item ${!visibleTouch ? 'selected' : ''}" data-touch="off" title="Hidden">
+                <div class="dropdown-item ${!visibleTouch ? 'selected' : ''}" data-touch="off" title="${i18n.t('bookmark.hidden')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>
                 </div>
             </div>
