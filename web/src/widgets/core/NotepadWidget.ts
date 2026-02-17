@@ -12,9 +12,6 @@ import { i18n } from '../../services/i18n';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
 
 // ============================================================================
-// ICONS (Unified System - Stroke 2px, Round Caps/Joins)
-// ============================================================================
-// ============================================================================
 // ICONS (V14: Pro Minimalist - 1.5px Stroke, Lucide Style)
 // ============================================================================
 const ICONS = {

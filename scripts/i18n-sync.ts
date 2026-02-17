@@ -23,6 +23,16 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ru": "Название", "zh": "标题", "ja": "タイトル", "ko": "제목", "tr": "Başlık", "pl": "Tytył",
         "id": "Judul", "ar": "العنوان", "fa": "عنوان", "el": "Τίτλος", "hi": "शीर्षक", "bn": "শিরোনাম", "ur": "عنوان"
     },
+    "bookmark.border_color": {
+        "es": "Color del borde", "fr": "Couleur de la bordure", "it": "Colore del bordo", "pt": "Cor da borda", "de": "Rahmenfarbe", "nl": "Kleur van de rand",
+        "ru": "Цвет границы", "zh": "边框颜色", "ja": "枠線の色", "ko": "테두리 색상", "tr": "Kenarlık rengi", "pl": "Kolor obramowania",
+        "id": "Warna bingkai", "ar": "لون الحدود", "fa": "رنگ حاشیه", "el": "Χρώμα περιγράμματος", "hi": "सीमा का रंग", "bn": "সীমানা রঙ", "ur": "بارڈر کا رنگ"
+    },
+    "bookmark.border_width": {
+        "es": "Grosor del borde", "fr": "Épaisseur de la bordure", "it": "Spessore del bordo", "pt": "Espessura da borda", "de": "Rahmenbreite", "nl": "Breedte van de rand",
+        "ru": "Толщина границы", "zh": "边框宽度", "ja": "枠線の太さ", "ko": "테두리 두께", "tr": "Kenarlık genişliği", "pl": "Szerokość obramowania",
+        "id": "Lebar bingkai", "ar": "عرض الحدود", "fa": "عرض حاشیه", "el": "Πλάτος περιγράμματος", "hi": "सीमा की चौड़ाई", "bn": "সীমানা প্রস্থ", "ur": "بارڈر کی چوڑائی"
+    },
     "section.edit_title": {
         "es": "Editar Sección", "fr": "Modifier la section", "it": "Modifica sezione", "pt": "Editar seção", "de": "Abschnitt bearbeiten", "nl": "Sectie bewerken",
         "ru": "Редактировать раздел", "zh": "编辑部分", "ja": "セクションを編集", "ko": "섹션 편집", "tr": "Bölümü Düzenle", "pl": "Edytuj sekcję",
@@ -342,6 +352,26 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "es": "Atrás", "fr": "Retour", "it": "Indietro", "pt": "Voltar", "de": "Zurück", "nl": "Terug",
         "ru": "Назад", "zh": "返回", "ja": "戻る", "ko": "뒤로", "tr": "Geri", "pl": "Wstecz",
         "id": "Kembali", "ar": "رجوع", "fa": "برگشت", "el": "Πίσω", "hi": "पीछे", "bn": "ফিরে", "ur": "واپس"
+    },
+    "general.thin": {
+        "es": "Fino", "fr": "Fin", "it": "Sottile", "pt": "Fino", "de": "Dünn", "nl": "Dun",
+        "ru": "Тонкий", "zh": "细", "ja": "細い", "ko": "얇게", "tr": "İnce", "pl": "Cienki",
+        "id": "Tipis", "ar": "رقيق", "fa": "نازک", "el": "Λεπτό", "hi": "पतला", "bn": "পাতলা", "ur": "پتلا"
+    },
+    "general.regular": {
+        "es": "Regular", "fr": "Régulier", "it": "Regolare", "pt": "Regular", "de": "Normal", "nl": "Normaal",
+        "ru": "Обычный", "zh": "普通", "ja": "標準", "ko": "보통", "tr": "Normal", "pl": "Regularny",
+        "id": "Reguler", "ar": "عادي", "fa": "معمولی", "el": "Κανονικό", "hi": "नियमित", "bn": "নিয়মিত", "ur": "باقاعدہ"
+    },
+    "general.thick": {
+        "es": "Grueso", "fr": "Épais", "it": "Spesso", "pt": "Grosso", "de": "Dick", "nl": "Dik",
+        "ru": "Толстый", "zh": "粗", "ja": "太い", "ko": "두껍게", "tr": "Kalın", "pl": "Gruby",
+        "id": "Tebal", "ar": "سميك", "fa": "ضخیم", "el": "Παχύ", "hi": "मोटा", "bn": "মোটা", "ur": "موٹا"
+    },
+    "widget.config.check_personalize": {
+        "es": "Consulta la pestaña 'Personalizar' para más estilos", "fr": "Consultez l'onglet 'Personnaliser' pour plus de styles", "it": "Controlla la scheda 'Personalizza' per altri stili", "pt": "Verifique a guia 'Personalizar' para mais estilos", "de": "Weitere Stile finden Sie unter 'Personalisieren'", "nl": "Check het tabblad 'Personaliseer' voor meer stijlen",
+        "ru": "Проверьте вкладку 'Персонализация' для выбора стилей", "zh": "查看“个性化”选项卡以获取更多样式", "ja": "その他のスタイルについては「「個人設定」」タブを確認してください", "ko": "더 많은 스타일을 보려면 '개인 설정' 탭을 확인하세요", "tr": "Daha fazla stil için 'Kişiselleştir' sekmesine bakın", "pl": "Sprawdź kartę „Personalizacja”, aby uzyskać więcej stylów",
+        "id": "Periksa tab 'Personalisasi' untuk gaya lainnya", "ar": "راجع علامة التبويب 'تخصيص' لمزيد من الأنماط", "fa": "برای سبک‌های بیشتر، برگه «شخصی‌سازی» را بررسی کنید", "el": "Ελέγξτε την καρτέλα 'Εξατομίκευση' για περισσότερα στυλ", "hi": "अधिक शैलियों के लिए 'वैयक्तिकृत करें' टैब देखें", "bn": "আরও শৈলীর জন্য 'ব্যক্তিগতকরণ' ট্যাবটি দেখুন", "ur": "مزید اسٹائل کے لیے 'پرسنلائز' ٹیب چیک کریں"
     },
     "general.next": {
         "es": "Siguiente", "fr": "Suivant", "it": "Avanti", "pt": "Próximo", "de": "Weiter", "nl": "Volgende",
@@ -932,6 +962,16 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "tr": "Profil güncellendi", "pl": "Profil zaktualizowany", "id": "Profil diperbarui",
         "ar": "تم تحديث الملف الشخصي", "fa": "نمایه به‌روز شد", "el": "Το προφίλ ενημερώθηκε",
         "hi": "प्रोफ़ाइल अपडेट की गई", "bn": "প্রোফাইল আপডেট করা হয়েছে", "ur": "پروفائل اپ ڈیٹ ہو گیا"
+    },
+    "notifier.avatar_error": {
+        "es": "Error al subir la imagen de perfil", "fr": "Échec del téléchargement de l'avatar", "it": "Errore durante il caricamento dell'avatar", "pt": "Erro ao carregar o avatar", "de": "Fehler beim Hochladen des avatars", "nl": "Fout bij uploaden van avatar",
+        "ru": "Ошибка при загрузке аватара", "zh": "上传头像失败", "ja": "アバターのアップロードに失敗しました", "ko": "아바타 업로드 실패", "tr": "Avatar yükleme hatası", "pl": "Błąd przesyłania awatara",
+        "id": "Kesalahan unggah avatar", "ar": "خطأ في تحميل الصورة الرمزية", "fa": "خطا در بارگذاری آواتار", "el": "Σφάλμα μεταφόρτωσης avatar", "hi": "अवatar अपलोड विफलता", "bn": "অ্যাভাটার আপলোড ত্রুটি", "ur": "ایواٹار اپ لوڈ کی غلطی"
+    },
+    "notifier.invalid_image_type": {
+        "es": "Tipo de imagen no válido", "fr": "Type d'image invalide", "it": "Tipo de imagen no válido", "pt": "Tipo de imagem inválido", "de": "Ungültiger Bildtyp", "nl": "Ongeldig afbeeldingstype",
+        "ru": "Недопустимый тип изображения", "zh": "无效的图片类型", "ja": "無効な画像形式です", "ko": "유효하지 않은 이미지 유형", "tr": "Geçersiz resim türü", "pl": "Nieprawidłowy typ obrazu",
+        "id": "Jenis gambar tidak valid", "ar": "نوع صورة غير صالح", "fa": "نوع تصویر نامعتبر است", "el": "Μη έγκυρος τύπος εικόνας", "hi": "अमान्य छवि प्रकार", "bn": "অকার্যকর ছবির ধরন", "ur": "غلط تصویر کی قسم"
     },
     "notifier.profile_error": {
         "es": "Error al actualizar el perfil", "fr": "Échec de la mise à jour del perfil", "de": "Fehler beim Aktualisieren des Profils",

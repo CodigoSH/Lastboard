@@ -110,8 +110,6 @@ bootstrap(async () => {
                     const result = ev.target?.result as string;
                     if (result) {
                         avatarPreview.setAttribute('src', result);
-                        // avatarPreview.style.display = 'block'; // Not needed usually for app-avatar
-                        // avatarTrigger.classList.add('has-image');
                         avatarUrlInput.value = result; // Save Base64
                         selectedAvatar = result;
                     }

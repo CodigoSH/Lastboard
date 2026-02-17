@@ -27,7 +27,6 @@ export class MarkdownWidget extends HTMLElement {
     private _headerActions: HTMLDivElement | null = null;
     private _lockBtn: HTMLButtonElement | null = null;
     private _togglePreviewBtn: HTMLButtonElement | null = null;
-    // private _saveIndicator: HTMLSpanElement | null = null; // Removed
 
     static get observedAttributes() { return ['item-id']; }
 

@@ -7,7 +7,6 @@ import './components/ui/Notifier/Notifier';
 // Logic
 bootstrap(async () => {
     const form = document.getElementById('loginForm') as HTMLFormElement;
-    // const feedback = document.getElementById('feedback') as HTMLElement; // No longer used for text
     const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
 
     // Helper for Toast

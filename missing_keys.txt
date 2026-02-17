@@ -1,0 +1,59 @@
+🔍 Scanning /home/kiwinho/Proyectos/Lastboard/web/src for translation issues...
+📚 Loaded 331 valid translation keys.
+
+⚠️  [Hardcoded HTML?] /web/src/components/ui/Avatar/Avatar.template.ts: "> `
+        : ` <"
+❌ [Missing Key] /web/src/components/ui/SettingsContent/SettingsContent.ts: i18n.t('notifier.invalid_image_type')
+❌ [Missing Key] /web/src/components/ui/SettingsContent/SettingsContent.ts: i18n.t('notifier.avatar_error')
+⚠️  [Hardcoded HTML?] /web/src/components/ui/SettingsContent/SettingsContent.template.ts: "> `;
+
+export const themeTemplate = (prefs: Prefs, colorMap: Record <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/SettingsContent/SettingsContent.template.ts: "> , colors: string[]) => ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/SettingsContent/SettingsContent.template.ts: "> `;
+
+export const personalizationTemplate = (prefs: Prefs) => ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/SettingsContent/SettingsContent.template.ts: "> `;
+
+export const usersTemplate = (users: any[]) => ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/SettingsContent/SettingsContent.template.ts: "> `;
+
+export const advancedTemplate = () => ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/IconSelectionModal/IconSelectionModal.template.ts: "> Select Icon <"
+❌ [Missing Key] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: i18n.t('bookmark.border_color')
+❌ [Missing Key] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: i18n.t('bookmark.border_width')
+❌ [Missing Key] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: i18n.t('general.thin')
+❌ [Missing Key] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: i18n.t('general.regular')
+❌ [Missing Key] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: i18n.t('general.thick')
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> ` :
+        ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> ` :
+        labelPosition === 'section' ?
+            ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> ` :
+            labelPosition === 'off' ?
+                ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> ` :
+                ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> ' : ' <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> ` :
+        ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> ` :
+        ` <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> http:// <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/AddBookmarkModal/AddBookmarkModal.template.ts: "> https:// <"
+⚠️  [Hardcoded HTML?] /web/src/components/ui/TopBar/TopBar.template.ts: "> ` : ` <"
+❌ [Missing Key] /web/src/components/ui/WidgetConfigModal/WidgetConfigModal.ts: i18n.t('bookmark.border_color')
+❌ [Missing Key] /web/src/components/ui/WidgetConfigModal/WidgetConfigModal.ts: i18n.t('bookmark.border_width')
+❌ [Missing Key] /web/src/components/ui/WidgetConfigModal/WidgetConfigModal.ts: i18n.t('general.thin')
+❌ [Missing Key] /web/src/components/ui/WidgetConfigModal/WidgetConfigModal.ts: i18n.t('general.regular')
+❌ [Missing Key] /web/src/components/ui/WidgetConfigModal/WidgetConfigModal.ts: i18n.t('general.thick')
+❌ [Missing Key] /web/src/components/ui/WidgetConfigModal/WidgetConfigModal.ts: i18n.t('widget.config.check_personalize')
+❌ [Missing Key] /web/src/components/ui/WidgetConfigModal/WidgetConfigModal.ts: i18n.t('widget.config.check_personalize')
+⚠️  [Hardcoded HTML?] /web/src/components/dashboard/BookmarkGrid/BookmarkGrid.template.ts: "> String(s).replace(/&/g, '&amp;').replace(/ <"
+⚠️  [Hardcoded HTML?] /web/src/components/dashboard/BookmarkGrid/BookmarkGrid.template.ts: "> `
+        : (icon ? esc(icon) : ` <"
+
+----------------------------------------
+Scan Complete.
+❌ Missing Keys Found: 14
+⚠️  Suspicious Strings: 19
