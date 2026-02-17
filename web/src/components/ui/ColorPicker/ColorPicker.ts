@@ -18,8 +18,6 @@ export class ColorPicker extends HTMLElement {
     private _hueCursor: HTMLElement | null = null;
     private _hexInput: HTMLInputElement | null = null;
     private _preview: HTMLElement | null = null;
-    private _overlay: HTMLElement | null = null;
-    private _portal: HTMLElement | null = null;
 
     private _isDraggingSat = false;
     private _isDraggingHue = false;
@@ -68,26 +66,12 @@ export class ColorPicker extends HTMLElement {
         if (!this.shadowRoot) return;
         this.shadowRoot.innerHTML = `
             <style>${css}</style>
-            
-            <div class="overlay" id="overlay"></div>
 
             <button class="color-trigger" id="trigger">
                 <slot></slot>
-            </button> <!-- Slot allows wrapping a custom icon or div, but we usually want to be invisible and let parent style the trigger container, OR we are the trigger. 
-                 Actually, the parent code surrounds <input> with a styled div. 
-                 We want to REPLACE <input type="color">. 
-                 Since the <input> was usually invisible (opacity:0) over a swatch, 
-                 this component should probably just BE the invisible trigger area over the swatch, 
-                 OR ideally, be the SWATCH ITSELF. 
-                 
-                 Looking at existing code:
-                 <div class="settings-content__color-swatch ..."> 
-                    <input type="color" ...> 
-                 </div>
-                 
-                 So let's make this component fill the parent. -->
+            </button>
 
-            <div class="popover" id="popover">
+            <dialog class="popover" id="popover">
                 <style>${css}</style>
                 <div class="saturation-area" id="sat-area">
                     <div class="saturation-white"></div>
@@ -103,7 +87,7 @@ export class ColorPicker extends HTMLElement {
                     <div class="color-preview" id="preview"></div>
                     <input type="text" class="hex-input" id="hex-input" value="${this._value}" maxlength="7">
                 </div>
-            </div>
+            </dialog>
         `;
 
         this._popover = this.shadowRoot.querySelector('#popover');
@@ -113,7 +97,6 @@ export class ColorPicker extends HTMLElement {
         this._hueCursor = this.shadowRoot.querySelector('#hue-cursor');
         this._hexInput = this.shadowRoot.querySelector('#hex-input');
         this._preview = this.shadowRoot.querySelector('#preview');
-        this._overlay = this.shadowRoot.querySelector('#overlay');
     }
 
     bindEvents() {
@@ -123,7 +106,14 @@ export class ColorPicker extends HTMLElement {
             this.togglePicker();
         });
 
-        this._overlay?.addEventListener('click', () => this.closePopover());
+        // Close dialog when clicking on backdrop
+        this._popover?.addEventListener('click', (e) => {
+            const dialogElement = e.target as HTMLDialogElement;
+            // If clicked directly on the dialog element (backdrop), close it
+            if (dialogElement === this._popover) {
+                this.closePopover();
+            }
+        });
 
         // Saturation Events
         this._satArea?.addEventListener('mousedown', (e) => {
@@ -147,11 +137,10 @@ export class ColorPicker extends HTMLElement {
             if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
                 this.value = val;
                 this.emitChange();
+                // Close picker after entering a valid hex color
+                setTimeout(() => this.closePopover(), 300);
             }
         });
-
-        // Prevent closing when clicking inside popover
-        this._popover?.addEventListener('click', (e) => e.stopPropagation());
     }
 
     // --- Drag Handlers ---
@@ -164,6 +153,8 @@ export class ColorPicker extends HTMLElement {
         window.removeEventListener('mousemove', this.onMouseMoveSat);
         window.removeEventListener('mouseup', this.onMouseUpSat);
         this.emitChange();
+        // Close picker after selecting a color
+        setTimeout(() => this.closePopover(), 150);
     }
 
     private onMouseMoveHue = (e: MouseEvent) => {
@@ -174,6 +165,8 @@ export class ColorPicker extends HTMLElement {
         window.removeEventListener('mousemove', this.onMouseMoveHue);
         window.removeEventListener('mouseup', this.onMouseUpHue);
         this.emitChange();
+        // Close picker after selecting a color
+        setTimeout(() => this.closePopover(), 150);
     }
 
     private handleSatDrag(e: MouseEvent) {
@@ -215,23 +208,17 @@ export class ColorPicker extends HTMLElement {
     private openPopover() {
         if (!this._popover || !this.shadowRoot) return;
 
-        // Portal Strategy: Move popover to body
-        if (!this._portal) {
-            this._portal = document.createElement('div');
-            this._portal.style.display = 'contents'; // Wrapper shouldn't affect layout
-            document.body.appendChild(this._portal);
+        const dialogElement = this._popover as HTMLDialogElement;
+
+        // Use dialog.showModal() to open in top layer
+        try {
+            dialogElement.showModal();
+        } catch (e) {
+            console.error('Failed to show color picker dialog:', e);
+            return;
         }
 
-        // Move popover to portal
-        this._portal.appendChild(this._popover);
-
-        // Ensure display is flex BEFORE adding visible class for transition
-        this._popover.style.display = 'flex';
-        // Force reflow
-        this._popover.offsetHeight;
-
         this._popover.classList.add('visible');
-        if (this._overlay) this._overlay.classList.add('visible'); // Keep local overlay for local blocking
 
         requestAnimationFrame(() => {
             this.updatePosition();
@@ -243,22 +230,6 @@ export class ColorPicker extends HTMLElement {
 
         window.addEventListener('resize', this.updatePositionRef);
         window.addEventListener('scroll', this.updatePositionRef, true);
-
-        // Add global click listener to close
-        setTimeout(() => document.addEventListener('click', this.onGlobalClick), 0);
-    }
-
-    private onGlobalClick = (e: MouseEvent) => {
-        // Check if click is inside popover or trigger
-        const target = e.target as HTMLElement;
-        if (this._popover && this._popover.contains(target)) return;
-        if (this.contains(target)) return; // Trigger
-
-        // Also check if composed path contains these
-        const path = e.composedPath();
-        if (path.includes(this._popover!) || path.includes(this)) return;
-
-        this.closePopover();
     }
 
     private updatePositionRef = () => {
@@ -275,10 +246,6 @@ export class ColorPicker extends HTMLElement {
         const rect = this.getBoundingClientRect();
         const popoverRect = this._popover.getBoundingClientRect();
 
-        // If it's the first render and visibility hidden, we might need to assume a size or just force show briefly?
-        // Our css uses visibility:hidden + opacity:0, so it still takes space? No, CSS says display:flex. So it has size.
-        // Assuming width=240px + padding + border ~ 266px.
-
         // Calculate Top
         let top = rect.bottom + 8;
         // Check if it fits below
@@ -287,55 +254,35 @@ export class ColorPicker extends HTMLElement {
             top = rect.top - 8 - (popoverRect.height || 310);
         }
 
-        // Calculate Left
-        let left = rect.left + (rect.width / 2);
+        // Calculate Left - center horizontally on trigger
+        let left = rect.left + (rect.width / 2) - 120; // 120 is half of popover width (240px)
 
-        // Portal Logic: We are in body, so offsets are window coordinates.
-        // But we need to account for scroll if we use absolute, or just use fixed.
-        // Fixed is easiest for "on top of everything".
+        // Ensure it doesn't go off-screen horizontally
+        const maxLeft = window.innerWidth - 240 - 8;
+        left = Math.max(8, Math.min(left, maxLeft));
 
-        this._popover.style.position = 'fixed';
-        this._popover.style.zIndex = '10002'; // Higher than modals (usually 10000-10001)
-        this._popover.style.margin = '0';
-
-        // No trapped parent check needed because we are in body!
-
+        // Apply positioning
         this._popover.style.top = `${top}px`;
         this._popover.style.left = `${left}px`;
-        this._popover.style.transform = `translateX(-50%)`; // Keep X centering
-        this._popover.style.width = '240px';
     }
 
     private closePopover() {
         if (!this._popover) return;
 
-        this._popover.classList.remove('visible');
-        if (this._overlay) this._overlay.classList.remove('visible');
+        const dialogElement = this._popover as HTMLDialogElement;
 
-        // Wait for transition to finish before hiding/moving
+        this._popover.classList.remove('visible');
+
+        // Wait for transition to finish before closing dialog
         const handleTransitionEnd = () => {
             if (!this._popover) return;
-
-            // Hide element to reclaim space
-            this._popover.style.display = 'none';
-
-            // Move back to shadow
-            if (this.shadowRoot) {
-                this.shadowRoot.appendChild(this._popover);
-            }
-
-            // Cleanup portal
-            if (this._portal) {
-                this._portal.remove();
-                this._portal = null;
-            }
+            dialogElement.close();
         };
 
         this._popover.addEventListener('transitionend', handleTransitionEnd, { once: true });
 
         window.removeEventListener('resize', this.updatePositionRef);
         window.removeEventListener('scroll', this.updatePositionRef, true);
-        document.removeEventListener('click', this.onGlobalClick);
     }
 
     private emitChange() {
