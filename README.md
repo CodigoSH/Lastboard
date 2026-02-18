@@ -77,6 +77,11 @@ services:
     volumes:
       - ./data:/var/lib/lastboard
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 ```
 
 **Using Docker CLI:**

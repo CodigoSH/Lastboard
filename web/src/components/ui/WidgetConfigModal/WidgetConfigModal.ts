@@ -489,10 +489,8 @@ class WidgetConfigModal extends HTMLElement {
                             <input type="number" id="weather-lon" value="${lon}" placeholder="Lon" step="0.0001" />
                         </div>
                     </div>
-                `;
 
-                const customizationTab = `
-                    <div class="field-group check-row">
+                    <div class="field-group check-row" style="margin-top: 16px;">
                         <input type="checkbox" id="weather-fahrenheit" ${isFahrenheit ? 'checked' : ''} />
                         <label for="weather-fahrenheit">${i18n.t('widget.weather.use_fahrenheit')}</label>
                     </div>
@@ -511,6 +509,8 @@ class WidgetConfigModal extends HTMLElement {
                         </div>
                     </div>
                 `;
+
+                const customizationTab = ``;
 
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
 

@@ -1,9 +1,11 @@
 services:
   lastboard:
-    container_name: lastboard
     image: ghcr.io/codigosh/lastboard:latest
+    container_name: lastboard
     ports:
       - "8080:8080"
+    environment:
+      - TZ=Europe/Madrid
     volumes:
       - ./data:/var/lib/lastboard
     restart: unless-stopped

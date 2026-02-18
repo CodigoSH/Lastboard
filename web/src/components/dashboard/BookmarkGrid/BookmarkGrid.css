@@ -215,7 +215,6 @@
     text-overflow: ellipsis;
     text-align: center;
     margin: 0;
-    opacity: 0.9;
     font-family: var(--font-mono, monospace);
     /* EXACT MATCH */
     box-sizing: border-box;
@@ -579,14 +578,13 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    padding: 2px 8px;
     /* Pill padding */
     font-family: var(--font-mono, monospace);
-    opacity: 0.9;
 
     /* Premium "Button/Pill" Look */
     border: 1px solid var(--border);
     border-radius: 12px;
+    padding: 2px 8px;
     background: var(--surface-solid);
     /* Opaque match to hide border line behind */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
