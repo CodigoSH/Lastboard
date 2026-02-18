@@ -104,9 +104,11 @@ Lastboard is designed to work out-of-the-box, but you can customize it via envir
 
 All state is stored in a single SQLite database file for simplicity and portability.
 
-*   **Location:** `/var/lib/lastboard/lastboard.db`
 *   **Backup:** Simply copy this file to a safe location.
 *   **Restore:** Stop the instance, replace the file, and restart.
+
+> [!TIP]
+> **Plug & Play Permissions:** Lastboard automatically manages volume permissions. For advanced setups, you can optionally pass `PUID` and `PGID` environment variables to match your host user.
 
 > [!IMPORTANT]
 > Ensure the application is stopped before replacing the database file to prevent corruption.

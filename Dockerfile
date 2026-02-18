@@ -52,10 +52,11 @@ WORKDIR /app
 # - ca-certificates: For HTTPS requests
 # - tzdata: For timezone support
 # - curl: For Healthcheck
-RUN apk add --no-cache ca-certificates tzdata curl
+# - su-exec: For professional privilege dropping
+RUN apk add --no-cache ca-certificates tzdata curl su-exec
 
-# Create non-root user for security
-RUN addgroup -S codigosh && adduser -S codigosh -G codigosh
+# Create non-root user for security (Fixed UID for predictable volume permissions)
+RUN addgroup -g 1001 -S codigosh && adduser -u 1001 -S codigosh -G codigosh
 
 # Create persistent data directory with correct permissions
 RUN mkdir -p /var/lib/lastboard && chown -R codigosh:codigosh /var/lib/lastboard
@@ -63,23 +64,24 @@ RUN mkdir -p /var/lib/lastboard && chown -R codigosh:codigosh /var/lib/lastboard
 # Copy Binary from Builder
 COPY --from=backend-builder /app/lastboard /app/lastboard
 
+# Copy Entrypoint Script
+COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Networking Configuration
 # Application listens on internal fixed port 8080 by default
 # Application listens on internal fixed port 8080 by default
 EXPOSE 8080
 
 # Environment Defaults
-# CRITICAL: Set DB_FILE to the writable data directory to avoid "out of memory" / permission errors
+# CRITICAL: Set DB_FILE to the writable data directory
 ENV DB_FILE=/var/lib/lastboard/lastboard.db
 ENV PORT=8080
 
-# Switch to non-root user
-USER codigosh
-
 # Healthcheck
-# Uses localhost:8080 explicitly as per "Fixed Port" requirement
+# Uses localhost:8080 as per requirement
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/api/dashboard/health || exit 1
 
-# Entrypoint
-ENTRYPOINT ["/app/lastboard"]
+# Entrypoint: Professional wrapper for automatic permission management
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
