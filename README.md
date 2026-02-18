@@ -7,6 +7,12 @@
   </p>
 
   <p>
+    <a href="https://lb-demo.codigosh.com" target="_blank">
+      <img src="https://img.shields.io/badge/Live_Demo-Visit_Dashboard-FF4B4B?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Demo" />
+    </a>
+  </p>
+
+  <p>
     <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
     <img src="https://img.shields.io/badge/Docker-Available-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
     <img src="https://img.shields.io/github/downloads/CodigoSH/Lastboard/total?style=for-the-badge&label=Installations&color=blue" alt="Installations" />
