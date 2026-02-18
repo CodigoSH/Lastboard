@@ -13,9 +13,9 @@
   </p>
 
   <p>
-    <img src="https://img.shields.io/github/v/tag/codigosh/Lastboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
+    <img src="https://img.shields.io/github/v/release/codigosh/lastboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
     <img src="https://img.shields.io/badge/Docker-Available-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-    <img src="https://img.shields.io/github/downloads/codigosh/Lastboard/total?style=for-the-badge&label=Installations&color=blue" alt="Installations" />
+    <img src="https://img.shields.io/github/downloads/codigosh/lastboard/total?style=for-the-badge&label=Installations&color=blue" alt="Installations" />
     <img src="https://img.shields.io/badge/Go-1.24+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
     <img src="https://img.shields.io/badge/Bun-%26_TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="Bun & TypeScript" />
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License" />
