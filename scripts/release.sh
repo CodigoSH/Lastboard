@@ -177,10 +177,10 @@ echo "📤 Pushing to Remote..."
 git push origin main
 git push origin $NEW_TAG
 
-# Cleanup
-rm -f RELEASE_NOTES_*.md 2>/dev/null
-git add .
-git commit -m "chore(release): cleanup release notes"
-git push origin main
+# Cleanup (DISABLED to ensure GitHub Actions can read the notes)
+# rm -f RELEASE_NOTES_*.md 2>/dev/null
+# git add .
+# git commit -m "chore(release): cleanup release notes"
+# git push origin main
 
 echo "✅ Successfully deployed $NEW_TAG!"
