@@ -73,7 +73,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - TZ=Europe/Madrid # Recommended for local time in widgets
+      - TZ=Europe/Madrid
     volumes:
       - ./data:/var/lib/lastboard
     restart: unless-stopped
