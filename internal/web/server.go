@@ -155,6 +155,13 @@ func (s *Server) routes() {
 	// Mount UNPROTECTED handler because it handles its own static file exemption
 	s.Router.Handle("/", indexHandler)
 
+	// Public Health Check (Docker/Coolify)
+	s.Router.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
+
 	// Public Routes requiring explicit handlers to bypass 'protect' wrapper if needed?
 	// The previous logic used specific handlers.
 	// We need to keep the explicit handlers from strict server.go but updated for FS.

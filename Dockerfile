@@ -73,7 +73,7 @@ ENV PORT=8080
 # Healthcheck
 # Uses localhost:8080 as per requirement
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/api/dashboard/health || exit 1
+    CMD curl -f http://localhost:8080/api/health || exit 1
 
 # Entrypoint
 ENTRYPOINT ["/app/lastboard"]
