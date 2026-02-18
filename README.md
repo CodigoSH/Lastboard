@@ -97,13 +97,14 @@ Lastboard is designed to work out-of-the-box, but you can customize it via envir
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `PORT` | `8080` | The port the HTTP server listens on. |
+| `DB_FILE` | `./lastboard.db` | Path to the SQLite database file. In Docker, it defaults to `/var/lib/lastboard/lastboard.db`. |
 | `TZ` | `UTC` | Timezone for the application (e.g., `America/New_York`). |
-| `DATA_DIR` | `./data` | Directory where the database and uploads are stored. |
 
 #### Data & Backups
 
 All state is stored in a single SQLite database file for simplicity and portability.
 
+*   **Internal Location (Docker):** `/var/lib/lastboard/lastboard.db`
 *   **Backup:** Simply copy this file to a safe location.
 *   **Restore:** Stop the instance, replace the file, and restart.
 
@@ -137,7 +138,7 @@ If you prefer running the binary directly on your host machine.
 
 3. **Build the Binary**
    ```bash
-   go build -o lastboard ./cmd/dashboard/main.go
+   go build -o lastboard ./cmd/dashboard
    ```
 
 4. **Run**
