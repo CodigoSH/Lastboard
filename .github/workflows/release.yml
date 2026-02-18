@@ -81,11 +81,20 @@ jobs:
           find . -name "*.tar.gz" -exec sha256sum {} \; > checksums.txt
           cat checksums.txt
 
+      - name: Debug - List Files
+        run: |
+          echo "Checking for release notes:"
+          ls -l RELEASE_NOTES_${{ github.ref_name }}.md || echo "Notes not found!"
+          echo "Checking for artifacts:"
+          ls -R artifacts/
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'Beta') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'RC') }}
           body_path: RELEASE_NOTES_${{ github.ref_name }}.md
           files: |
             artifacts/*/*.tar.gz
             artifacts/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
