@@ -75,7 +75,7 @@ services:
     environment:
       - TZ=Europe/Madrid # Recommended for local time in widgets
     volumes:
-      - ./data:/app/data
+      - ./data:/var/lib/lastboard
     restart: unless-stopped
 ```
 
@@ -85,7 +85,7 @@ docker run -d \
   --name lastboard \
   -p 8080:8080 \
   -e TZ=Europe/Madrid \
-  -v $(pwd)/data:/app/data \
+  -v $(pwd)/data:/var/lib/lastboard \
   --restart unless-stopped \
   ghcr.io/codigosh/lastboard:latest
 ```
@@ -104,7 +104,7 @@ Lastboard is designed to work out-of-the-box, but you can customize it via envir
 
 All state is stored in a single SQLite database file for simplicity and portability.
 
-*   **Location:** `/app/data/lastboard.db`
+*   **Location:** `/var/lib/lastboard/lastboard.db`
 *   **Backup:** Simply copy this file to a safe location.
 *   **Restore:** Stop the instance, replace the file, and restart.
 

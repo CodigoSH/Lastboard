@@ -58,7 +58,7 @@ RUN apk add --no-cache ca-certificates tzdata curl
 RUN addgroup -S codigosh && adduser -S codigosh -G codigosh
 
 # Create persistent data directory with correct permissions
-RUN mkdir -p /app/data && chown -R codigosh:codigosh /app/data
+RUN mkdir -p /var/lib/lastboard && chown -R codigosh:codigosh /var/lib/lastboard
 
 # Copy Binary from Builder
 COPY --from=backend-builder /app/lastboard /app/lastboard
@@ -70,7 +70,7 @@ EXPOSE 8080
 
 # Environment Defaults
 # CRITICAL: Set DB_FILE to the writable data directory to avoid "out of memory" / permission errors
-ENV DB_FILE=/app/data/lastboard.db
+ENV DB_FILE=/var/lib/lastboard/lastboard.db
 ENV PORT=8080
 
 # Switch to non-root user

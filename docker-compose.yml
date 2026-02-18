@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/app/data
+      - ./data:/var/lib/lastboard
     restart: unless-stopped
     logging:
       driver: "json-file"
