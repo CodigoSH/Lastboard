@@ -9,14 +9,18 @@ interface TopBarData {
     addMenuActive: boolean;
     drawerOpen: boolean;
     searchQuery: string;
+    isDemo?: boolean;
 }
 
 import { i18n } from '../../../services/i18n';
 
-export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
+export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable, isDemo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
     return `
     <div class="top-bar">
-        <div class="top-bar__title">${title}</div>
+        <div style="display: flex; align-items: center;">
+            <div class="top-bar__title">${title}</div>
+            ${isDemo ? '<div class="top-bar__demo-badge">Demo Mode</div>' : ''}
+        </div>
         <div class="top-bar__actions">
             <!-- Offline Indicator -->
             <offline-badge></offline-badge>

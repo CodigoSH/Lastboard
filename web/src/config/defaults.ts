@@ -13,29 +13,29 @@ export const DEFAULT_USER: User = {
     username: 'Demo User',
     initials: 'DU',
     role: 'admin',
-    avatar_url: '', // Default avatar
+    avatar_url: '',
     accent_color: 'blue',
     language: 'en',
-    theme: 'dark', // Demo looks best in dark mode
+    theme: 'dark',
     grid_columns: 12,
-    project_name: 'Lastboard Demo',
+    project_name: 'Lastboard',
     beta_updates: false,
     preferences: {
         accent_color: 'blue',
         language: 'en',
         theme: 'dark',
         grid_columns: 12,
-        project_name: 'Lastboard Demo',
+        project_name: 'Lastboard',
         beta_updates: false
     }
 };
 
 export const DEFAULT_ITEMS: GridItem[] = [
-    // --- ZONE 1: HERO (Visual Impact) ---
+    // --- TOP ROW: System Monitoring & Control ---
     {
         id: 1,
         type: 'widget',
-        x: 1, y: 1, w: 4, h: 2,
+        x: 1, y: 1, w: 3, h: 2,
         content: JSON.stringify({
             widgetId: 'clock',
             timezone: 'local',
@@ -45,64 +45,51 @@ export const DEFAULT_ITEMS: GridItem[] = [
     {
         id: 2,
         type: 'widget',
-        x: 5, y: 1, w: 4, h: 2,
+        x: 4, y: 1, w: 2, h: 2,
         content: JSON.stringify({
             widgetId: 'weather',
-            location: 'London',
+            location: 'Madrid',
             units: 'metric'
         })
     },
     {
         id: 3,
         type: 'widget',
-        x: 9, y: 1, w: 4, h: 2,
+        x: 6, y: 1, w: 4, h: 2,
         content: JSON.stringify({
-            widgetId: 'telemetry', // Shows fake CPU/RAM in demo
+            widgetId: 'telemetry',
             show_cpu: true,
             show_ram: true
         })
     },
-
-    // --- ZONE 2: WELCOME (Information) ---
     {
         id: 4,
         type: 'widget',
-        x: 1, y: 3, w: 6, h: 4,
+        x: 10, y: 1, w: 3, h: 2,
         content: JSON.stringify({
             widgetId: 'markdown',
-            title: 'Welcome to Lastboard',
-            content: `## 👋 Welcome to the Demo!
-            
-Lastboard is a modern, privacy-focused dashboard for your homelab.
-
-**Key Features:**
-- 🎨 **Glassmorphism Design**: Sleek and modern UI.
-- ⚡ **Fast & Lightweight**: Built with Go and Vanilla JS.
-- 🔒 **Secure**: Private by default.
-- 🐳 **Docker Ready**: Easy to deploy.
-
-*Try moving widgets around! This demo runs entirely in your browser.*`
+            title: 'Lab Status',
+            content: `**Uptime:** 142 days\n**Updates:** 0 pending\n**Security:** Verified`
         })
     },
 
-    // --- ZONE 3: HOMELAB (Technical Bookmarks) ---
+    // --- SECOND ROW: Media & Infrastructure (Grouped) ---
     {
         id: 5,
         type: 'section',
-        x: 7, y: 3, w: 6, h: 4,
-        content: JSON.stringify({ title: 'My Homelab' })
+        x: 1, y: 3, w: 6, h: 4,
+        content: JSON.stringify({ title: 'Media Services' })
     },
-    // Bookmarks inside Section (parent_id: 5)
     {
         id: 6,
         parent_id: 5,
         type: 'bookmark',
         x: 1, y: 1, w: 1, h: 1,
         content: JSON.stringify({
-            label: 'Home Assistant',
-            url: 'https://www.home-assistant.io',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/home-assistant.png',
-            iconName: 'home-assistant'
+            label: 'Plex',
+            url: 'https://plex.tv',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png',
+            iconName: 'plex'
         })
     },
     {
@@ -111,10 +98,10 @@ Lastboard is a modern, privacy-focused dashboard for your homelab.
         type: 'bookmark',
         x: 2, y: 1, w: 1, h: 1,
         content: JSON.stringify({
-            label: 'Plex',
-            url: 'https://www.plex.tv',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/plex.png',
-            iconName: 'plex'
+            label: 'Sonarr',
+            url: 'https://sonarr.tv',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sonarr.png',
+            iconName: 'sonarr'
         })
     },
     {
@@ -123,10 +110,10 @@ Lastboard is a modern, privacy-focused dashboard for your homelab.
         type: 'bookmark',
         x: 3, y: 1, w: 1, h: 1,
         content: JSON.stringify({
-            label: 'Portainer',
-            url: 'https://www.portainer.io',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/portainer.png',
-            iconName: 'portainer'
+            label: 'Radarr',
+            url: 'https://radarr.video',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/radarr.png',
+            iconName: 'radarr'
         })
     },
     {
@@ -135,10 +122,10 @@ Lastboard is a modern, privacy-focused dashboard for your homelab.
         type: 'bookmark',
         x: 1, y: 2, w: 1, h: 1,
         content: JSON.stringify({
-            label: 'Docker',
-            url: 'https://www.docker.com',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/docker.png',
-            iconName: 'docker'
+            label: 'Jellyfin',
+            url: 'https://jellyfin.org',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png',
+            iconName: 'jellyfin'
         })
     },
     {
@@ -147,10 +134,10 @@ Lastboard is a modern, privacy-focused dashboard for your homelab.
         type: 'bookmark',
         x: 2, y: 2, w: 1, h: 1,
         content: JSON.stringify({
-            label: 'Pi-hole',
-            url: 'https://pi-hole.net',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/pi-hole.png',
-            iconName: 'pi-hole'
+            label: 'Tautulli',
+            url: 'https://tautulli.com',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tautulli.png',
+            iconName: 'tautulli'
         })
     },
     {
@@ -159,45 +146,122 @@ Lastboard is a modern, privacy-focused dashboard for your homelab.
         type: 'bookmark',
         x: 3, y: 2, w: 1, h: 1,
         content: JSON.stringify({
+            label: 'Transmission',
+            url: 'https://transmissionbt.com',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/transmission.png',
+            iconName: 'transmission'
+        })
+    },
+
+    {
+        id: 12,
+        type: 'section',
+        x: 7, y: 3, w: 6, h: 4,
+        content: JSON.stringify({ title: 'Infrastructure' })
+    },
+    {
+        id: 13,
+        parent_id: 12,
+        type: 'bookmark',
+        x: 1, y: 1, w: 1, h: 1,
+        content: JSON.stringify({
+            label: 'Proxmox',
+            url: 'https://www.proxmox.com',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/proxmox.png',
+            iconName: 'proxmox'
+        })
+    },
+    {
+        id: 14,
+        parent_id: 12,
+        type: 'bookmark',
+        x: 2, y: 1, w: 1, h: 1,
+        content: JSON.stringify({
+            label: 'Portainer',
+            url: 'https://www.portainer.io',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png',
+            iconName: 'portainer'
+        })
+    },
+    {
+        id: 15,
+        parent_id: 12,
+        type: 'bookmark',
+        x: 3, y: 1, w: 1, h: 1,
+        content: JSON.stringify({
+            label: 'Pi-hole',
+            url: 'https://pi-hole.net',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png',
+            iconName: 'pi-hole'
+        })
+    },
+    {
+        id: 16,
+        parent_id: 12,
+        type: 'bookmark',
+        x: 1, y: 2, w: 1, h: 1,
+        content: JSON.stringify({
+            label: 'Home Assistant',
+            url: 'https://www.home-assistant.io',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png',
+            iconName: 'home-assistant'
+        })
+    },
+    {
+        id: 17,
+        parent_id: 12,
+        type: 'bookmark',
+        x: 2, y: 2, w: 1, h: 1,
+        content: JSON.stringify({
+            label: 'Nginx Proxy Manager',
+            url: 'https://nginxproxymanager.com',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png',
+            iconName: 'nginx-proxy-manager'
+        })
+    },
+    {
+        id: 18,
+        parent_id: 12,
+        type: 'bookmark',
+        x: 3, y: 2, w: 1, h: 1,
+        content: JSON.stringify({
             label: 'Grafana',
             url: 'https://grafana.com',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/grafana.png',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/grafana.png',
             iconName: 'grafana'
         })
     },
 
-    // --- ZONE 4: DAILY (Productivity) ---
+    // --- BOTTOM ROW: Daily Links ---
     {
-        id: 12,
+        id: 19,
         type: 'bookmark',
         x: 1, y: 7, w: 2, h: 1,
         content: JSON.stringify({
             label: 'GitHub',
             url: 'https://github.com/CodigoSH/Lastboard',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/github.png',
+            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png',
             iconName: 'github'
         })
     },
     {
-        id: 13,
+        id: 20,
         type: 'bookmark',
-        x: 3, y: 7, w: 2, h: 1,
+        x: 4, y: 7, w: 4, h: 1,
         content: JSON.stringify({
-            label: 'YouTube',
-            url: 'https://youtube.com',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/youtube.png',
-            iconName: 'youtube'
+            label: 'Lastboard Documentation',
+            url: 'https://github.com/CodigoSH/Lastboard/wiki',
+            icon: '',
         })
     },
     {
-        id: 14,
+        id: 21,
         type: 'bookmark',
-        x: 5, y: 7, w: 2, h: 1,
+        x: 9, y: 7, w: 3, h: 1,
         content: JSON.stringify({
-            label: 'ChatGPT',
-            url: 'https://chat.openai.com',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/openai.png',
-            iconName: 'openai'
+            label: 'Official Site',
+            url: 'https://codigosh.com',
+            iconName: 'globe'
         })
     }
 ];

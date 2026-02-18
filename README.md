@@ -9,7 +9,7 @@
   <p>
     <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
     <img src="https://img.shields.io/badge/Docker-Available-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-    <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
+    <img src="https://img.shields.io/badge/Go-1.24+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
     <img src="https://img.shields.io/badge/Bun-%26_TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="Bun & TypeScript" />
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License" />
   </p>
@@ -97,6 +97,8 @@ services:
     container_name: lastboard
     ports:
       - "8080:8080"
+    environment:
+      - TZ=Europe/Madrid # Recommended for local time in widgets
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -107,6 +109,7 @@ services:
 docker run -d \
   --name lastboard \
   -p 8080:8080 \
+  -e TZ=Europe/Madrid \
   -v $(pwd)/data:/app/data \
   --restart unless-stopped \
   ghcr.io/codigosh/lastboard:latest

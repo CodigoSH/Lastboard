@@ -12,6 +12,7 @@ interface TopBarState {
     searchQuery: string;
     user?: { role?: string };
     updateAvailable?: boolean;
+    isDemo?: boolean;
 }
 
 class TopBar extends HTMLElement {
@@ -32,7 +33,8 @@ class TopBar extends HTMLElement {
             searchActive: false,
             addMenuActive: false,
             drawerOpen: false,
-            searchQuery: ''
+            searchQuery: '',
+            isDemo: localStorage.getItem('lastboard_demo_mode') === 'true'
         };
     }
 
@@ -216,7 +218,8 @@ class TopBar extends HTMLElement {
             drawerOpen: this.state.drawerOpen,
             searchQuery: this.state.searchQuery,
             user: this.state.user,
-            updateAvailable: this.state.updateAvailable // Pass it
+            updateAvailable: this.state.updateAvailable,
+            isDemo: this.state.isDemo
         })}
         `;
     }
