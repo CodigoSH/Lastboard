@@ -73,7 +73,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - TZ=Europe/Madrid
+      - TZ=America/New_York
     volumes:
       - ./data:/var/lib/lastboard
     restart: unless-stopped
@@ -89,7 +89,7 @@ services:
 docker run -d \
   --name lastboard \
   -p 8080:8080 \
-  -e TZ=Europe/Madrid \
+  -e TZ=America/New_York \
   -v $(pwd)/data:/var/lib/lastboard \
   --restart unless-stopped \
   ghcr.io/codigosh/lastboard:latest

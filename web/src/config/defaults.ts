@@ -31,11 +31,11 @@ export const DEFAULT_USER: User = {
 };
 
 export const DEFAULT_ITEMS: GridItem[] = [
-    // --- COLUMN 10-12: Widgets (Fixed 3 columns wide, height 1 for Clock/Telemetry) ---
+    // --- RIGHT SIDEBAR (Col 11-12): Core Widgets (Strict 1x2) ---
     {
         id: 1,
         type: 'widget',
-        x: 10, y: 1, w: 2, h: 1,
+        x: 11, y: 1, w: 2, h: 1,
         content: JSON.stringify({
             widgetId: 'clock',
             timezone: 'local',
@@ -46,7 +46,7 @@ export const DEFAULT_ITEMS: GridItem[] = [
     {
         id: 2,
         type: 'widget',
-        x: 10, y: 2, w: 2, h: 2,
+        x: 11, y: 2, w: 2, h: 1,
         content: JSON.stringify({
             widgetId: 'weather',
             city: 'Madrid',
@@ -60,106 +60,82 @@ export const DEFAULT_ITEMS: GridItem[] = [
     {
         id: 3,
         type: 'widget',
-        x: 10, y: 4, w: 2, h: 1,
+        x: 11, y: 3, w: 2, h: 1,
         content: JSON.stringify({
             widgetId: 'telemetry',
             interval: 2000
         })
     },
 
-    // --- Media Services (Section) ---
+    // --- INFRASTRUCTURE (Col 1-5): Vertical Section ---
     {
         id: 4,
         type: 'section',
-        x: 1, y: 1, w: 3, h: 3,
-        content: JSON.stringify({ title: 'Media Services' })
-    },
-    {
-        id: 5, parent_id: 4, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Plex', url: 'https://plex.tv', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png' })
-    },
-    {
-        id: 6, parent_id: 4, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Sonarr', url: 'https://sonarr.tv', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sonarr.png' })
-    },
-    {
-        id: 7, parent_id: 4, type: 'bookmark', x: 3, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Radarr', url: 'https://radarr.video', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/radarr.png' })
-    },
-    {
-        id: 8, parent_id: 4, type: 'bookmark', x: 1, y: 2, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Jellyfin', url: 'https://jellyfin.org', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png' })
-    },
-    {
-        id: 9, parent_id: 4, type: 'bookmark', x: 2, y: 2, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Tautulli', url: 'https://tautulli.com', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tautulli.png' })
-    },
-    {
-        id: 10, parent_id: 4, type: 'bookmark', x: 3, y: 2, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Transmission', url: 'https://transmissionbt.com', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/transmission.png' })
-    },
-
-    // --- Infrastructure (Section) ---
-    {
-        id: 11,
-        type: 'section',
-        x: 4, y: 1, w: 6, h: 3,
+        x: 1, y: 1, w: 5, h: 2,
         content: JSON.stringify({ title: 'Infrastructure' })
     },
     {
-        id: 12, parent_id: 11, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
+        id: 5, parent_id: 4, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
         content: JSON.stringify({ label: 'Proxmox', url: 'https://proxmox.com', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/proxmox.png' })
     },
     {
-        id: 13, parent_id: 11, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Portainer', url: 'https://portainer.io', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png' })
-    },
-    {
-        id: 14, parent_id: 11, type: 'bookmark', x: 3, y: 1, w: 1, h: 1,
+        id: 6, parent_id: 4, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
         content: JSON.stringify({ label: 'Pi-hole', url: 'https://pi-hole.net', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png' })
     },
     {
-        id: 15, parent_id: 11, type: 'bookmark', x: 4, y: 1, w: 1, h: 1,
+        id: 7, parent_id: 4, type: 'bookmark', x: 3, y: 1, w: 1, h: 1,
         content: JSON.stringify({ label: 'Home Assistant', url: 'https://home-assistant.io', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png' })
     },
     {
-        id: 16, parent_id: 11, type: 'bookmark', x: 5, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Nginx Proxy Manager', url: 'https://nginxproxymanager.com', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png' })
+        id: 8, parent_id: 4, type: 'bookmark', x: 4, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'Portainer', url: 'https://portainer.io', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png' })
     },
     {
-        id: 17, parent_id: 11, type: 'bookmark', x: 6, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Grafana', url: 'https://grafana.com', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/grafana.png' })
+        id: 9, parent_id: 4, type: 'bookmark', x: 5, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'NPM', url: 'https://nginxproxymanager.com', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png' })
     },
 
-    // --- Lastboard Project (Bottom Section) ---
+    // --- MEDIA (Col 6-10): Vertical Section ---
     {
-        id: 18,
+        id: 10,
         type: 'section',
-        x: 1, y: 4, w: 9, h: 1,
-        content: JSON.stringify({ title: 'Lastboard Project' })
+        x: 6, y: 1, w: 5, h: 2,
+        content: JSON.stringify({ title: 'Media Services' })
     },
     {
-        id: 19, parent_id: 18, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
-        content: JSON.stringify({
-            label: 'GitHub',
-            url: 'https://github.com/CodigoSH/Lastboard',
-            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png'
-        })
+        id: 11, parent_id: 10, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'Plex', url: 'https://plex.tv', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png' })
     },
     {
-        id: 20, parent_id: 18, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
-        content: JSON.stringify({
-            label: 'Project Wiki',
-            url: 'https://github.com/CodigoSH/Lastboard/wiki',
-            icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png'
-        })
+        id: 12, parent_id: 10, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'Sonarr', url: 'https://sonarr.tv', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sonarr.png' })
     },
     {
-        id: 21, parent_id: 18, type: 'bookmark', x: 3, y: 1, w: 1, h: 1,
-        content: JSON.stringify({
-            label: 'CodigoSH Official',
-            url: 'https://codigosh.com',
-            icon: 'https://codigosh.com/favicon.ico'
-        })
+        id: 13, parent_id: 10, type: 'bookmark', x: 3, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'Radarr', url: 'https://radarr.video', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/radarr.png' })
+    },
+    {
+        id: 14, parent_id: 10, type: 'bookmark', x: 4, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'Jellyfin', url: 'https://jellyfin.org', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png' })
+    },
+    {
+        id: 15, parent_id: 10, type: 'bookmark', x: 5, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'Tautulli', url: 'https://tautulli.com', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tautulli.png' })
+    },
+
+    // --- EXTRA (Col 1-10 Row 3): Horizontal Section ---
+    {
+        id: 16,
+        type: 'section',
+        x: 1, y: 3, w: 10, h: 1,
+        content: JSON.stringify({ title: 'Project Links' })
+    },
+    {
+        id: 17, parent_id: 16, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'GitHub', url: 'https://github.com/CodigoSH/Lastboard', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png' })
+    },
+    {
+        id: 18, parent_id: 16, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
+        content: JSON.stringify({ label: 'Wiki', url: 'https://github.com/CodigoSH/Lastboard/wiki', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png' })
     }
 ];
