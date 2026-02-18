@@ -7,7 +7,7 @@
   </p>
 
   <p>
-    <a href="https://lb-demo.codigosh.com" target="_blank">
+    <a href="https://lb-demo.codigosh.com" target="_blank" rel="noopener noreferrer">
       <img src="https://img.shields.io/badge/Live_Demo-Visit_Dashboard-FF4B4B?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Demo" />
     </a>
   </p>
