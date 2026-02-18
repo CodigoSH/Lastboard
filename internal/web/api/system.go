@@ -14,14 +14,62 @@ import (
 
 	"github.com/CodigoSH/Lastboard/internal/version"
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // ... existing code ...
 
 // POST /api/system/reset
 func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
+	username := middleware.GetUserFromContext(r)
+	if username == "" {
+		http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Verify if the user is the Super Admin
+	var isAdmin bool
+	var userID int
+	err := h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &isAdmin) // Wait, Scan needs to match columns.
+	// Actually let's do it properly
+	var role string
+	err = h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &role)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	if strings.ToLower(role) != "admin" && strings.ToLower(role) != "administrator" {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
+		return
+	}
+
+	// Check if it's the first admin (Superadmin)
+	var firstAdminID int
+	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
+	if userID != firstAdminID {
+		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
+		return
+	}
+
+	// Verify Password
+	var input struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	var storedHash string
+	err = h.DB.QueryRow("SELECT password FROM users WHERE id=?", userID).Scan(&storedHash)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.Password)); err != nil {
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 

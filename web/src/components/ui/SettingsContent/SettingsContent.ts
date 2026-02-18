@@ -415,31 +415,33 @@ class SettingsContent extends HTMLElement {
             if (!confirmed) return;
         }
 
-        try {
-            // Optimistic UI Update: Remove locally first for instant feedback
-            const previousUsers = [...this.users];
-            this.users = this.users.filter(u => u.id !== id);
-            this.render();
+        const passwordModal = document.querySelector('password-confirm-modal') as any;
+        if (passwordModal) {
+            const password = await passwordModal.prompt(
+                i18n.t('general.delete'),
+                i18n.t('notifier.user_delete_confirm')
+            );
+            if (!password) return;
 
-            await userService.deleteUser(id);
-            if (window.notifier) window.notifier.show(i18n.t('notifier.user_deleted'));
+            try {
+                // Optimistic UI Update
+                const previousUsers = [...this.users];
+                this.users = this.users.filter(u => u.id !== id);
+                this.render();
 
-            // Re-fetch to ensure consistency with server state
-            this.fetchUsers();
-        } catch (e: any) {
-            // Rollback if failed
-            // We can't easily rollback without re-fetching or storing previous state.
-            // Since we already re-fetch in try, let's just re-fetch here too to restore the user if delete failed.
-            this.fetchUsers();
-
-            let msg = i18n.t('notifier.user_delete_error');
-
-            // If we have a specific error token from backend
-            if (e.message && e.message.includes('error.cannot_delete_superadmin')) {
-                msg = i18n.t('notifier.user_delete_superadmin');
+                await userService.deleteUser(id, password);
+                if (window.notifier) window.notifier.show(i18n.t('notifier.user_deleted'));
+                this.fetchUsers();
+            } catch (e: any) {
+                this.fetchUsers();
+                let msg = i18n.t('notifier.user_delete_error');
+                if (e.message && e.message.includes('error.cannot_delete_superadmin')) {
+                    msg = i18n.t('notifier.user_delete_superadmin');
+                } else if (e.status === 401) {
+                    msg = i18n.t('notifier.password_incorrect');
+                }
+                if (window.notifier) window.notifier.show(msg, 'error');
             }
-
-            if (window.notifier) window.notifier.show(msg, 'error');
         }
     }
 
@@ -636,22 +638,19 @@ class SettingsContent extends HTMLElement {
         }
     }
 
-    openResetModal() {
-        const modal = this.shadowRoot!.getElementById('reset-confirm-modal') as HTMLDialogElement;
-        const input = this.shadowRoot!.getElementById('reset-confirm-input') as HTMLInputElement;
-        if (modal) {
-            if (input) input.value = '';
-            modal.showModal();
-        }
-    }
+
 
     async executeFactoryReset() {
-        const input = (this.shadowRoot!.getElementById('reset-confirm-input') as HTMLInputElement);
-        if (!input || input.value.trim() !== 'delete') {
-            if (window.notifier) window.notifier.show(i18n.t('notifier.reset_confirm_text'), 'error');
-            input.focus();
-            return;
-        }
+
+        const passwordModal = document.querySelector('password-confirm-modal') as any;
+        if (!passwordModal) return;
+
+        const password = await passwordModal.prompt(
+            i18n.t('settings.factory_reset'),
+            i18n.t('settings.confirm_reset_msg')
+        );
+
+        if (!password) return;
 
         const btn = this.shadowRoot!.getElementById('btn-reset-confirm') as HTMLButtonElement;
 
@@ -661,7 +660,15 @@ class SettingsContent extends HTMLElement {
                 btn.textContent = i18n.t('settings.restoring') || "Restoring...";
             }
 
-            const res = await fetch('/api/system/reset', { method: 'POST', headers: { 'X-CSRF-Token': this.getCsrfToken() } });
+            const res = await fetch('/api/system/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': this.getCsrfToken()
+                },
+                body: JSON.stringify({ password })
+            });
+
             if (res.ok) {
                 // Show Overlay
                 const overlay = document.createElement('div');

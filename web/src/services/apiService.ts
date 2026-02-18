@@ -18,6 +18,56 @@ class ApiService {
     }
 
     private async request<T>(url: string, options: RequestInit): Promise<T> {
+        // --- DEMO MODE INTERCEPTION ---
+        if (window.LASTBOARD_CONFIG?.demo_mode) {
+            const { demoService } = await import('./demoService');
+            const method = (options.method || 'GET').toUpperCase();
+            const body = options.body ? JSON.parse(options.body as string) : {};
+
+            try {
+                // User & Auth
+                if (url === '/api/me') return demoService.fetchUser() as any;
+                if (url === '/api/user/update-profile') {
+                    await demoService.updateUser(body);
+                    return { message: 'Profile updated (Demo)' } as any;
+                }
+                if (url === '/api/user/preferences') {
+                    await demoService.updatePreferences(body);
+                    return { message: 'Preferences updated (Demo)' } as any;
+                }
+                if (url === '/api/user/change-password') return { message: 'Password changed (Demo)' } as any;
+
+                // Dashboard Items
+                if (url === '/api/dashboard') return demoService.fetchItems() as any;
+                if (url.startsWith('/api/dashboard/item') && method === 'POST') {
+                    return demoService.saveItem(body) as any;
+                }
+                if (url.startsWith('/api/dashboard/item/') && method === 'PATCH') {
+                    const id = parseInt(url.split('/').pop() || '0');
+                    return demoService.saveItem({ ...body, id }) as any;
+                }
+                if (url.startsWith('/api/dashboard/item/') && method === 'DELETE') {
+                    const id = parseInt(url.split('/').pop() || '0');
+                    await demoService.deleteItem(id);
+                    return { message: 'Item deleted (Demo)' } as any;
+                }
+
+                // Health Check (Mock success)
+                if (url.startsWith('/api/dashboard/health')) return { status: 200 } as any;
+
+                // Admin (Mock success)
+                if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;
+                if (url === '/api/users') return { message: 'Admin action simulated (Demo)' } as any;
+
+                console.warn('[DemoMode] Unhandled URL, returning empty object:', url);
+                return {} as T;
+            } catch (e) {
+                console.error('[DemoMode] Error:', e);
+                throw e;
+            }
+        }
+        // ------------------------------
+
         const fullUrl = `${this.baseUrl}${url}`;
         const method = (options.method || 'GET').toUpperCase();
 

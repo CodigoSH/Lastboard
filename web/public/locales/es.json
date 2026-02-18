@@ -79,7 +79,7 @@
   "general.changelog": "Registro de cambios",
   "general.close": "Cerrar",
   "general.confirm": "Confirmar",
-  "general.customization": "Personalize",
+  "general.customization": "Personalización",
   "general.db_error": "Error de base de datos",
   "general.delete": "Eliminar",
   "general.edit": "Editar",
@@ -121,7 +121,6 @@
   "notifier.please_wait": "Por favor espere mientras el sistema se restablece...",
   "notifier.profile_error": "Error al actualizar el perfil",
   "notifier.profile_updated": "Perfil actualizado",
-  "notifier.reset_confirm_text": "Escribe \"delete\" para confirmar",
   "notifier.reset_error": "Reinicio fallido (revisa tu conexión)",
   "notifier.reset_failed": "El reinicio no funcionó",
   "notifier.restore_confirm": "ADVERTENCIA: Esto reemplazará todo. ¿Estás seguro?",
@@ -213,8 +212,6 @@
   "settings.theme": "Tema",
   "settings.theme_mode": "Aspecto",
   "settings.title": "Configuración",
-  "settings.type_delete": "Escribe <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> para confirmar.",
-  "settings.type_delete_placeholder": "delete",
   "settings.up_to_date": "Estás al día",
   "settings.up_to_date_docker_msg": "Estás estrictamente al día.",
   "settings.update_available": "¡Nueva actualización!",
@@ -356,5 +353,8 @@
   "widget.weather.thunderstorm_hail": "Tormenta de granizo",
   "widget.weather.unknown": "Desconocido",
   "widget.weather.use_fahrenheit": "Usar Fahrenheit (°F)",
-  "widget.weather.wind": "Viento"
+  "widget.weather.wind": "Viento",
+  "notifier.reset_confirm_text": "Escribe \"delete\" para confirmar",
+  "settings.type_delete": "Escribe <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> para confirmar.",
+  "settings.type_delete_placeholder": "delete"
 }

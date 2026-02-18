@@ -42,7 +42,10 @@ export const userService = {
         return apiService.put<MessageResponse>('/api/users', data);
     },
 
-    async deleteUser(id: number): Promise<MessageResponse> {
+    async deleteUser(id: number, password?: string): Promise<MessageResponse> {
+        if (password) {
+            return apiService.post<MessageResponse>('/api/users/delete', { id, admin_password: password });
+        }
         return apiService.delete<MessageResponse>(`/api/users?id=${id}`);
     }
 };

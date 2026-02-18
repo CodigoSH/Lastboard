@@ -29,6 +29,7 @@ type Server struct {
 	WSHub         *api.Hub
 	assets        fs.FS
 	sessionSecret []byte
+	DemoMode      bool
 }
 
 func NewServer(db *sql.DB) *Server {
@@ -49,6 +50,7 @@ func NewServer(db *sql.DB) *Server {
 		WSHub:         api.NewHub(),
 		assets:        assets,
 		sessionSecret: secret,
+		DemoMode:      os.Getenv("DEMO_MODE") == "true",
 	}
 
 	// Start WebSocket Hub
@@ -211,6 +213,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/users", protect(http.HandlerFunc(userHandler.CreateUser)))
 	s.Router.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
 	s.Router.Handle("DELETE /api/users", protect(http.HandlerFunc(userHandler.DeleteUser)))
+	s.Router.Handle("POST /api/users/delete", protect(http.HandlerFunc(userHandler.DeleteUser)))
 
 	// Setup Page (Secured)
 	s.Router.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
@@ -361,9 +364,11 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		ProjectName string
 		ThemeClass  string
+		DemoMode    bool
 	}{
 		ProjectName: projectName,
 		ThemeClass:  themeClass,
+		DemoMode:    s.DemoMode,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {

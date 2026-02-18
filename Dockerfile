@@ -65,7 +65,13 @@ COPY --from=backend-builder /app/lastboard /app/lastboard
 
 # Networking Configuration
 # Application listens on internal fixed port 8080 by default
+# Application listens on internal fixed port 8080 by default
 EXPOSE 8080
+
+# Environment Defaults
+# CRITICAL: Set DB_FILE to the writable data directory to avoid "out of memory" / permission errors
+ENV DB_FILE=/app/data/lastboard.db
+ENV PORT=8080
 
 # Switch to non-root user
 USER codigosh

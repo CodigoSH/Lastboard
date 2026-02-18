@@ -20,6 +20,7 @@ import './components/ui/AddBookmarkModal/AddBookmarkModal';
 import './components/ui/AddWidgetModal/AddWidgetModal';
 import './components/ui/WidgetConfigModal/WidgetConfigModal';
 import './components/ui/ConfirmationModal/ConfirmationModal';
+import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
 // Widget Components
 import './widgets/core/NotepadWidget';
 import './widgets/core/ClockWidget';
@@ -33,6 +34,7 @@ const dashboardRoot = document.getElementById('dashboard-root') as HTMLElement;
 let addBookmarkModal: any;
 let addWidgetModal: any;
 let confirmationModal: any;
+let passwordConfirmModal: any;
 
 import { bootstrap } from './core/bootstrap';
 
@@ -114,6 +116,9 @@ bootstrap(async () => {
     confirmationModal = document.createElement('confirmation-modal');
     document.body.appendChild(confirmationModal);
 
+    passwordConfirmModal = document.createElement('password-confirm-modal');
+    document.body.appendChild(passwordConfirmModal);
+
     const widgetConfigModal = document.createElement('widget-config-modal');
     document.body.appendChild(widgetConfigModal);
 });
@@ -128,6 +133,16 @@ eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: any) => {
         const confirmed = await confirmationModal.confirm(title, message);
         if (confirmed && onConfirm) {
             onConfirm();
+        }
+    }
+});
+
+eventBus.on(EVENTS.SHOW_PASSWORD_CONFIRM, async (e: any) => {
+    const { title, message, onConfirm } = e.detail;
+    if (passwordConfirmModal) {
+        const password = await passwordConfirmModal.prompt(title, message);
+        if (password !== null && onConfirm) {
+            onConfirm(password);
         }
     }
 });

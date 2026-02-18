@@ -301,38 +301,13 @@ export const advancedTemplate = () => `
                     ${i18n.t('settings.reset_desc')}
                 </p>
              </div>
-             <app-button onclick="this.getRootNode().host.openResetModal()" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent; transition: all 0.2s;">
+             <app-button onclick="this.getRootNode().host.executeFactoryReset()" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent; transition: all 0.2s;">
                 ${i18n.t('action.reset_system')}
              </app-button>
         </div>
     </div>
 
-    <!-- Factory Reset Confirmation Modal -->
-    <dialog id="reset-confirm-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 440px; backdrop-filter: blur(20px); box-shadow: var(--paper-shadow);">
-        <div class="modal-header">
-            <h3 class="modal-title" style="color: var(--danger-color); font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
-                <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: var(--danger-color);"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                ${i18n.t('settings.confirm_reset_title')}
-            </h3>
-            <button class="modal-close" onclick="this.getRootNode().getElementById('reset-confirm-modal').close()">
-                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
-        </div>
-        <p class="settings-content__text-dim" style="font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
-            ${i18n.t('settings.confirm_reset_msg')}
-            ${i18n.t('settings.type_delete')}
-        </p>
 
-        <div class="settings-content__form-group">
-            <input type="text" id="reset-confirm-input" class="settings-content__input" placeholder="${i18n.t('settings.type_delete_placeholder')}" style="border-color: var(--danger-color); opacity: 0.6; font-family: monospace;">
-        </div>
-
-        <div style="display: flex; gap: 12px; margin-top: 32px; width: 100%;">
-            <app-button id="btn-reset-confirm" variant="danger" onclick="this.getRootNode().host.executeFactoryReset()" style="flex: 1; justify-content: center;">
-                ${i18n.t('action.erase_everything')}
-            </app-button>
-        </div>
-    </dialog>
 `;
 
 export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {

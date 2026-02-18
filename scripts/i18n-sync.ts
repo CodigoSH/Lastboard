@@ -13,6 +13,12 @@ console.log(`📚 Master (EN) has ${masterKeys.length} keys.`);
 // Keys: es, fr, de, it, pt, ru, zh, ja, ko, nl, pl, tr, id, ar, fa, el, hi, bn, ur
 const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
     // --- Touch Visibility Toggle ---
+    "general.general": {
+        "es": "General", "fr": "Général", "de": "Allgemein", "it": "Generale", "pt": "Geral", "ru": "Общие", "zh": "常规", "ja": "全般", "ko": "일반", "nl": "Algemeen", "pl": "Ogólne", "tr": "Genel", "id": "Umum", "ar": "عام", "fa": "عمومی", "el": "Γενικά", "hi": "सामान्य", "bn": "সাধারণ", "ur": "عام"
+    },
+    "general.customization": {
+        "es": "Personalización", "fr": "Personnalisation", "de": "Personalisierung", "it": "Personalizzazione", "pt": "Personalização", "ru": "Персонализация", "zh": "个性化", "ja": "カスタマイズ", "ko": "맞춤 설정", "nl": "Personalisatie", "pl": "Personalizacja", "tr": "Kişiselleştirme", "id": "Personalisasi", "ar": "تخصيص", "fa": "شخصی‌سازی", "el": "Εξατομίκευση", "hi": "वैयक्तिकरण", "bn": "কাস্টমাইজेशन", "ur": "تخصیص"
+    },
     "bookmark.visible_touch": {
         "es": "Visible en Dispositivos Táctiles", "fr": "Visible sur les appareils tactiles", "it": "Visibile sui dispositivi touch", "pt": "Visível em Dispositivos Touch", "de": "Sichtbar auf Touch-Geräten", "nl": "Zichtbaar op aanraakapparaten",
         "ru": "Видно на сенсорных устройствах", "zh": "触摸设备可见", "ja": "タッチデバイスで表示", "ko": "터치 기기에서 표시", "tr": "Dokunmatik Cihazlarda Görünür", "pl": "Widoczne na urządzeniach dotykowych",

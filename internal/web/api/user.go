@@ -229,7 +229,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"message": "Profile updated",
+			"message":             "Profile updated",
 			"session_invalidated": true,
 		})
 		return
@@ -299,7 +299,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "Password updated",
+		"message":             "Password updated",
 		"session_invalidated": true,
 	})
 }
@@ -310,7 +310,17 @@ func (h *UserHandler) isAdmin(r *http.Request) bool {
 	username := middleware.GetUserFromContext(r)
 	var role string
 	err := h.DB.QueryRow("SELECT role FROM users WHERE username=?", username).Scan(&role)
-	return err == nil && strings.ToLower(role) == "admin"
+	return err == nil && (strings.ToLower(role) == "admin" || strings.ToLower(role) == "administrator")
+}
+
+func (h *UserHandler) verifyPassword(username, password string) bool {
+	var storedHash string
+	err := h.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
+	if err != nil {
+		return false
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(password))
+	return err == nil
 }
 
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -483,16 +493,41 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		http.Error(w, "Missing user ID", http.StatusBadRequest)
-		return
+	var targetID int
+	var adminPassword string
+	var err error
+
+	if r.Method == http.MethodPost {
+		var input struct {
+			ID            int    `json:"id"`
+			AdminPassword string `json:"admin_password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, "Invalid input", http.StatusBadRequest)
+			return
+		}
+		targetID = input.ID
+		adminPassword = input.AdminPassword
+	} else {
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			http.Error(w, "Missing user ID", http.StatusBadRequest)
+			return
+		}
+		targetID, err = strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "Invalid user ID", http.StatusBadRequest)
+			return
+		}
 	}
 
-	targetID, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
+	// Verify Admin Password if provided (Required for Enhanced Security)
+	if adminPassword != "" {
+		adminUsername := middleware.GetUserFromContext(r)
+		if !h.verifyPassword(adminUsername, adminPassword) {
+			http.Error(w, "Invalid admin password", http.StatusUnauthorized)
+			return
+		}
 	}
 
 	// Prevent self-deletion
@@ -507,9 +542,9 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-	if strings.ToLower(targetRole) == "admin" {
+	if strings.ToLower(targetRole) == "admin" || strings.ToLower(targetRole) == "administrator" {
 		var adminCount int
-		if err := h.DB.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'admin'").Scan(&adminCount); err != nil {
+		if err := h.DB.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'admin' OR role = 'administrator'").Scan(&adminCount); err != nil {
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}
@@ -520,7 +555,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 		// Protect the First Admin (Superadmin)
 		var firstAdminID int
-		if err := h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID); err == nil {
+		if err := h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID); err == nil {
 			if targetID == firstAdminID {
 				http.Error(w, "error.cannot_delete_superadmin", http.StatusForbidden)
 				return

@@ -59,7 +59,9 @@ declare global {
     interface Window {
         LASTBOARD_CONFIG?: {
             API_BASE_URL: string;
+            demo_mode?: boolean;
         };
         notifier?: any;
+        demoService?: any;
     }
 }
