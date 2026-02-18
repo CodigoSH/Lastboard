@@ -497,10 +497,10 @@ class BookmarkGrid extends HTMLElement {
                 minW = 2;
                 minH = 2;
             } else if (widgetId === 'clock') {
-                // Fixed 2x1
+                // Fixed 2x1 (Width 2, Height 1)
                 return { w: 2, h: 1 };
             } else if (widgetId === 'telemetry') {
-                // Fixed 2x1
+                // Fixed 2x1 (Width 2, Height 1)
                 return { w: 2, h: 1 };
             }
 

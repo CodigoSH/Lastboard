@@ -34,7 +34,8 @@ class TopBar extends HTMLElement {
             addMenuActive: false,
             drawerOpen: false,
             searchQuery: '',
-            isDemo: localStorage.getItem('lastboard_demo_mode') === 'true'
+            // @ts-ignore
+            isDemo: window.LASTBOARD_CONFIG?.demo_mode || false
         };
     }
 
