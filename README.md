@@ -59,31 +59,6 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 
 ---
 
-## Configuration
-
-Lastboard is designed to work out-of-the-box, but you can customize it via environment variables.
-
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `PORT` | `8080` | The port the HTTP server listens on. |
-| `TZ` | `UTC` | Timezone for the container (e.g., `America/New_York`). |
-| `DATA_DIR` | `./data` | Directory where the database and uploads are stored. |
-
----
-
-## Data & Backups
-
-All state is stored in a single SQLite database file for simplicity and portability.
-
-*   **Location:** `/app/data/lastboard.db`
-*   **Backup:** Simply copy this file to a safe location.
-*   **Restore:** Stop the instance, replace the file, and restart.
-
-> [!IMPORTANT]
-> Ensure the application is stopped before replacing the database file to prevent corruption.
-
----
-
 ## Installation & Build
 
 ### Quick Start with Docker (Recommended)
@@ -114,6 +89,33 @@ docker run -d \
   --restart unless-stopped \
   ghcr.io/codigosh/lastboard:latest
 ```
+
+---
+
+## Configuration
+
+Lastboard is designed to work out-of-the-box, but you can customize it via environment variables.
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `PORT` | `8080` | The port the HTTP server listens on. |
+| `TZ` | `UTC` | Timezone for the container (e.g., `America/New_York`). |
+| `DATA_DIR` | `./data` | Directory where the database and uploads are stored. |
+
+---
+
+## Data & Backups
+
+All state is stored in a single SQLite database file for simplicity and portability.
+
+*   **Location:** `/app/data/lastboard.db`
+*   **Backup:** Simply copy this file to a safe location.
+*   **Restore:** Stop the instance, replace the file, and restart.
+
+> [!IMPORTANT]
+> Ensure the application is stopped before replacing the database file to prevent corruption.
+
+---
 
 ### Quick Install (Linux)
 Run this command to install or update Lastboard automatically:
