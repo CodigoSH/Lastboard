@@ -3,7 +3,10 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,6 +18,22 @@ type DB struct {
 }
 
 func InitDB(dsn string) (*DB, error) {
+	// 1. Ensure the directory for the database exists
+	dir := filepath.Dir(dsn)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create database directory %s: %v", dir, err)
+	}
+
+	// 2. Proactive check for write permissions to provide a better error message
+	// than SQLite's confusing "out of memory (14)" which often means CANTOPEN.
+	testFile := filepath.Join(dir, ".perm_test")
+	if f, err := os.Create(testFile); err != nil {
+		return nil, fmt.Errorf("database directory %s is not writable: %v (check Docker volume permissions)", dir, err)
+	} else {
+		f.Close()
+		os.Remove(testFile)
+	}
+
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, err
