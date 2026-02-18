@@ -76,7 +76,7 @@ export const DEFAULT_ITEMS: GridItem[] = [
     },
     {
         id: 5, parent_id: 4, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'GitHub', url: 'https://github.com/CodigoSH/Lastboard', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png' })
+        content: JSON.stringify({ label: 'GitHub', url: 'https://github.com/CodigoSH/Lastboard', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/git.png' })
     },
     {
         id: 6, parent_id: 4, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
