@@ -59,7 +59,7 @@ Lastboard is built on a "Performance First" philosophy, selecting the best tools
 
 ---
 
-## Installation & Build
+## Installation Methods
 
 ### Quick Start with Docker (Recommended)
 The easiest way to get started is using Docker. Images are automatically built and published to GHCR.
@@ -90,21 +90,17 @@ docker run -d \
   ghcr.io/codigosh/lastboard:latest
 ```
 
----
-
-## Configuration
+#### Advanced Configuration
 
 Lastboard is designed to work out-of-the-box, but you can customize it via environment variables.
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `PORT` | `8080` | The port the HTTP server listens on. |
-| `TZ` | `UTC` | Timezone for the container (e.g., `America/New_York`). |
+| `TZ` | `UTC` | Timezone for the application (e.g., `America/New_York`). |
 | `DATA_DIR` | `./data` | Directory where the database and uploads are stored. |
 
----
-
-## Data & Backups
+#### Data & Backups
 
 All state is stored in a single SQLite database file for simplicity and portability.
 
