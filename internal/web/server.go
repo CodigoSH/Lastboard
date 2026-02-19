@@ -135,7 +135,7 @@ func (s *Server) routes() {
 
 		// 1. Explicit Public Pages
 		if path == "/login" || path == "/login.html" {
-			s.serveFile(w, r, "login.html")
+			s.serveLoginPage(w, r)
 			return
 		}
 		// Setup page is now handled by explicit handler below to ensure security check precedence
@@ -151,7 +151,8 @@ func (s *Server) routes() {
 
 		// 2. Try to serve static file (Public)
 		// If it's a file that exists in assets, serve it.
-		if path != "/" && path != "/index.html" {
+		// Avoid serving raw template files as static assets.
+		if path != "/" && path != "/index.html" && path != "/login.html" {
 			f, err := s.assets.Open(strings.TrimPrefix(path, "/"))
 			if err == nil {
 				f.Close()
