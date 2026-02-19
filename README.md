@@ -150,7 +150,7 @@ If you prefer running the binary directly on your host machine.
 
 ## Updates
 > [!IMPORTANT]
-> Lastboard features an automated update system via a secure proxy to ensure 24/7 availability and bypass GitHub API rate limits. 
+> Lastboard features a dedicated update system via a secure proxy to **optimize performance** and ensure 24/7 availability, providing a smoother experience than standard API limits allow. 
 
 For more information on our infrastructure and how we protect your privacy, please read our [Security Policy](./SECURITY.md).
 
