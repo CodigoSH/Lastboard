@@ -148,6 +148,17 @@ If you prefer running the binary directly on your host machine.
 
 ---
 
+## Updates & Security
+Lastboard uses a dedicated proxy (`api-updates.codigosh.com`) to manage version checks. 
+This ensures:
+* **Reliability:** Bypassing GitHub's rate limits for a smoother experience.
+* **Privacy:** No user data is tracked or stored during the update process.
+* **Integrity:** Secure delivery of official releases.
+
+For more technical details on our infrastructure transparency, see our [SECURITY.md](./SECURITY.md).
+
+---
+
 ## Support & Recognition
 
 We are an open-source initiative managed through [Open Collective Europe](https://opencollective.com/codigosh).
