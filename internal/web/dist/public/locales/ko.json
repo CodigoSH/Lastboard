@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "우박 뇌우",
   "widget.weather.unknown": "알 수 없음",
   "widget.weather.use_fahrenheit": "화씨 (°F) 사용",
-  "widget.weather.wind": "바람",
-  "notifier.reset_confirm_text": "확인하려면 \"delete\" 를 입력하세요",
-  "settings.type_delete": "확인하려면 <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> 를 입력하세요.",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "바람"
 }

@@ -7,7 +7,7 @@
   "action.change_image": "Cambiar imagen",
   "action.check_again": "Comprobar de nuevo",
   "action.check_updates": "Buscar actualizaciones",
-  "action.download_backup": "Descargar Copia de Seguridad",
+  "action.download_backup": "Copia de seguridad",
   "action.download_install": "Descargar e instalar",
   "action.edit_mode": "Modo Edición",
   "action.edit_user": "Editar usuario",
@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "Tormenta de granizo",
   "widget.weather.unknown": "Desconocido",
   "widget.weather.use_fahrenheit": "Usar Fahrenheit (°F)",
-  "widget.weather.wind": "Viento",
-  "notifier.reset_confirm_text": "Escribe \"delete\" para confirmar",
-  "settings.type_delete": "Escribe <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> para confirmar.",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "Viento"
 }

@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "Burza gradowa",
   "widget.weather.unknown": "Nieznany",
   "widget.weather.use_fahrenheit": "Użyj Fahrenheita (°F)",
-  "widget.weather.wind": "Wiatr",
-  "notifier.reset_confirm_text": "Wpisz \"delete\", aby potwierdzić",
-  "settings.type_delete": "Wpisz <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span>, aby potwierdzić.",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "Wiatr"
 }

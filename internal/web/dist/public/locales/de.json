@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "Hagelgewitter",
   "widget.weather.unknown": "Unbekannt",
   "widget.weather.use_fahrenheit": "Fahrenheit verwenden (°F)",
-  "widget.weather.wind": "Wind",
-  "notifier.reset_confirm_text": "Geben Sie \"delete\" ein, um zu bestätigen",
-  "settings.type_delete": "Geben Sie <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> ein, um zu bestätigen.",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "Wind"
 }

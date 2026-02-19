@@ -100,16 +100,10 @@ bootstrap(async () => {
 
                 // Shake effect for feedback
                 if (container) {
-                    container.animate([
-                        { transform: 'translateX(0)' },
-                        { transform: 'translateX(-10px)' },
-                        { transform: 'translateX(10px)' },
-                        { transform: 'translateX(-10px)' },
-                        { transform: 'translateX(0)' }
-                    ], {
-                        duration: 400,
-                        easing: 'ease-in-out'
-                    });
+                    container.classList.remove('shake');
+                    void container.offsetWidth; // Trigger reflow
+                    container.classList.add('shake');
+                    setTimeout(() => container.classList.remove('shake'), 500);
                 }
             }
         } catch (error) {

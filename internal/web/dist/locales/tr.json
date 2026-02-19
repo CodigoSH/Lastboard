@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "Dolu fırtınası",
   "widget.weather.unknown": "Bilinmeyen",
   "widget.weather.use_fahrenheit": "Fahrenheit (°F) kullan",
-  "widget.weather.wind": "Rüzgar",
-  "notifier.reset_confirm_text": "Onaylamak için \"delete\" yazın",
-  "settings.type_delete": "Onaylamak için <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> yazın.",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "Rüzgar"
 }

@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "雷暴冰雹",
   "widget.weather.unknown": "未知",
   "widget.weather.use_fahrenheit": "Использовать Фаренгейт (°F)",
-  "widget.weather.wind": "风",
-  "notifier.reset_confirm_text": "输入 \"delete\" 以确认",
-  "settings.type_delete": "输入 <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> 以确认。",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "风"
 }
