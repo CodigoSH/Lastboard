@@ -27,6 +27,14 @@ bootstrap(async () => {
     // Apply Theme
     ThemeService.init();
 
+    // Demo button: opens the fully isolated demo UI (no backend auth needed)
+    const demoBtn = document.getElementById('demoBtn') as HTMLButtonElement;
+    if (demoBtn) {
+        demoBtn.addEventListener('click', () => {
+            window.location.href = '/demo';
+        });
+    }
+
     // Localize UI
     const localize = () => {
         const titleEl = document.querySelector('.auth-title');

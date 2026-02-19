@@ -13,8 +13,8 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <title>Login - Lastboard</title>
     <!-- Core Themes -->
-    <link rel="stylesheet" href="/styles/theme.css?v=1771470083">
-    <link rel="stylesheet" href="/styles/components.css?v=1771470083">
+    <link rel="stylesheet" href="/styles/theme.css?v=1771473638">
+    <link rel="stylesheet" href="/styles/components.css?v=1771473638">
 
     <style>
         body {
@@ -164,13 +164,21 @@
                 <div style="margin-top: 32px;">
                     <button type="submit" id="submitBtn" class="premium-btn filled">Sign In</button>
                 </div>
+
+                {{if .DemoOnly}}
+                <div style="margin-top: 12px; text-align: center;">
+                    <button type="button" id="demoBtn" class="premium-btn ghost" style="width: 100%; opacity: 0.75;">
+                        🧪 Try Demo
+                    </button>
+                </div>
+                {{end}}
             </form>
         </app-paper>
     </div>
 
     <!-- Compile to dist/login.js -->
     <app-notifier></app-notifier>
-    <script type="module" src="/login.js?v=1771470083"></script>
+    <script type="module" src="/login.js?v=1771473638"></script>
 </body>
 
 </html>

@@ -164,6 +164,14 @@
                 <div style="margin-top: 32px;">
                     <button type="submit" id="submitBtn" class="premium-btn filled">Sign In</button>
                 </div>
+
+                {{if .DemoOnly}}
+                <div style="margin-top: 12px; text-align: center;">
+                    <button type="button" id="demoBtn" class="premium-btn ghost" style="width: 100%; opacity: 0.75;">
+                        🧪 Try Demo
+                    </button>
+                </div>
+                {{end}}
             </form>
         </app-paper>
     </div>

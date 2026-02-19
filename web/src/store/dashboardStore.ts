@@ -1,4 +1,5 @@
 import { dashboardService } from '../services/dashboardService';
+import { demoService } from '../services/demoService';
 import { GridItem } from '../types';
 
 type Listener = (state: DashboardState) => void;
@@ -63,12 +64,21 @@ class DashboardStore {
         this.userId = id;
     }
 
+    // Returns true when running in pure-frontend demo mode (no real backend used).
+    private isDemo(): boolean {
+        // @ts-ignore
+        return window.LASTBOARD_CONFIG?.demo_mode === true;
+    }
+
     constructor() {
         // Item cache is NOT pre-loaded here — it may contain another user's
         // data.  fetchItems() loads the correct set from the backend and uses
         // a user-scoped cache key for the offline fallback.
-        this.initSocket();
-        this.checkSystemUpdate();
+        // Skip backend connections in demo mode (all data is in localStorage)
+        if (!this.isDemo()) {
+            this.initSocket();
+            this.checkSystemUpdate();
+        }
     }
 
     private initSocket() {
@@ -252,6 +262,15 @@ class DashboardStore {
     }
 
     async fetchItems() {
+        // --- DEMO MODE: use localStorage via demoService ---
+        if (this.isDemo()) {
+            const items = await demoService.fetchItems();
+            this.state.items = items;
+            this.state.loading = false;
+            this.notify();
+            return;
+        }
+
         // 1. STALE: Try to load from localStorage immediately for instant UI
         const cached = localStorage.getItem(this.getStorageKey());
         if (cached) {
@@ -302,6 +321,17 @@ class DashboardStore {
     }
 
     async updateItem(updatedItem: Partial<GridItem> & { id: number }) {
+        // --- DEMO MODE ---
+        if (this.isDemo()) {
+            const itemIndex = this.state.items.findIndex(item => item.id === updatedItem.id);
+            if (itemIndex !== -1) {
+                this.state.items[itemIndex] = { ...this.state.items[itemIndex], ...updatedItem };
+                await demoService.saveItem(this.state.items[itemIndex]);
+                this.notify();
+            }
+            return;
+        }
+
         try {
             this.ensureItemsIsArray();
 
@@ -380,6 +410,14 @@ class DashboardStore {
     }
 
     async addItem(newItem: Omit<GridItem, 'id' | 'created_at'>): Promise<GridItem | undefined> {
+        // --- DEMO MODE ---
+        if (this.isDemo()) {
+            const createdItem = await demoService.saveItem(newItem as GridItem);
+            this.state.items.push(createdItem);
+            this.notify();
+            return createdItem;
+        }
+
         try {
             this.ensureItemsIsArray();
 
@@ -453,6 +491,14 @@ class DashboardStore {
 
 
     async deleteItem(id: number) {
+        // --- DEMO MODE ---
+        if (this.isDemo()) {
+            this.state.items = this.state.items.filter(item => item.id !== id);
+            await demoService.deleteItem(id);
+            this.notify();
+            return;
+        }
+
         try {
             this.ensureItemsIsArray();
 

@@ -1,4 +1,5 @@
 import { userService } from '../services/userService';
+import { demoService } from '../services/demoService';
 import { i18n } from '../services/i18n';
 import { User, UserPreferences } from '../types';
 
@@ -7,6 +8,12 @@ type Listener = (user: User | null) => void;
 class UserStore {
     private user: User | null = null;
     private listeners: Listener[] = [];
+
+    // Returns true when running in pure-frontend demo mode.
+    private isDemo(): boolean {
+        // @ts-ignore
+        return window.LASTBOARD_CONFIG?.demo_mode === true;
+    }
 
     constructor() {
         this.loadFromStorage();
@@ -111,6 +118,22 @@ class UserStore {
     async updatePreferences(newPrefs: Partial<UserPreferences>) {
         if (!this.user || !this.user.preferences) return;
 
+        // --- DEMO MODE: persist to localStorage only ---
+        if (this.isDemo()) {
+            this.user.preferences = { ...this.user.preferences, ...newPrefs };
+            if (newPrefs.accent_color) this.user.accent_color = newPrefs.accent_color;
+            if (newPrefs.language) this.user.language = newPrefs.language;
+            if (newPrefs.project_name) this.user.project_name = newPrefs.project_name;
+            if (newPrefs.theme) this.user.preferences.theme = newPrefs.theme;
+            if (newPrefs.grid_columns) this.user.preferences.grid_columns = newPrefs.grid_columns;
+            await demoService.updatePreferences(newPrefs);
+            this.applyAesthetics();
+            this.notify();
+            // @ts-ignore
+            if (window.notifier) window.notifier.show(i18n.t('general.success') || 'Preferences saved');
+            return;
+        }
+
         // 1. Optimistic Update (Immediate UI response)
         const previousPrefs = { ...this.user.preferences };
         this.user.preferences = { ...this.user.preferences, ...newPrefs };
@@ -202,6 +225,13 @@ class UserStore {
     }
 
     async fetchUser() {
+        // --- DEMO MODE: use demoService (localStorage) ---
+        if (this.isDemo()) {
+            const demoUser = await demoService.fetchUser();
+            this.setUser(demoUser);
+            return;
+        }
+
         try {
             const user = await userService.getCurrentUser();
             this.setUser(user);

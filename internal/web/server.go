@@ -29,7 +29,6 @@ type Server struct {
 	WSHub         *api.Hub
 	assets        fs.FS
 	sessionSecret []byte
-	DemoMode      bool
 }
 
 func NewServer(db *sql.DB) *Server {
@@ -50,7 +49,6 @@ func NewServer(db *sql.DB) *Server {
 		WSHub:         api.NewHub(),
 		assets:        assets,
 		sessionSecret: secret,
-		DemoMode:      os.Getenv("DEMO_MODE") == "true",
 	}
 
 	// Start WebSocket Hub
@@ -119,6 +117,21 @@ func (s *Server) routes() {
 	indexHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
+		// Demo-Only mode: redirect all non-asset traffic to /demo
+		if os.Getenv("DEMO_ONLY") == "true" {
+			// Allow static assets through
+			if path != "/" && path != "/index.html" {
+				f, err := s.assets.Open(strings.TrimPrefix(path, "/"))
+				if err == nil {
+					f.Close()
+					fileServer.ServeHTTP(w, r)
+					return
+				}
+			}
+			http.Redirect(w, r, "/demo", http.StatusFound)
+			return
+		}
+
 		// 1. Explicit Public Pages
 		if path == "/login" || path == "/login.html" {
 			s.serveFile(w, r, "login.html")
@@ -172,6 +185,13 @@ func (s *Server) routes() {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "0")
+
+		// Demo-Only mode: skip login entirely
+		if os.Getenv("DEMO_ONLY") == "true" {
+			http.Redirect(w, r, "/demo", http.StatusFound)
+			return
+		}
+
 		// Check if setup is needed (Clean Install)
 		var exists bool
 		if err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
@@ -192,7 +212,8 @@ func (s *Server) routes() {
 				return
 			}
 		}
-		s.serveFile(w, r, "login.html")
+		// Render login page with template data (e.g. DemoOnly flag)
+		s.serveLoginPage(w, r)
 	})
 
 	// Auth API
@@ -221,6 +242,17 @@ func (s *Server) routes() {
 	s.Router.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
 	s.Router.Handle("DELETE /api/users", protect(http.HandlerFunc(userHandler.DeleteUser)))
 	s.Router.Handle("POST /api/users/delete", protect(http.HandlerFunc(userHandler.DeleteUser)))
+
+	// Demo Route — only available when DEMO_ONLY=true.
+	// In normal production installs this returns 404 so the route is invisible.
+	s.Router.HandleFunc("/demo", func(w http.ResponseWriter, r *http.Request) {
+		if os.Getenv("DEMO_ONLY") != "true" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		s.serveIndexDemo(w, r)
+	})
 
 	// Setup Page (Secured)
 	s.Router.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
@@ -329,6 +361,27 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 	http.ServeContent(w, r, filename, stat.ModTime(), rs)
 }
 
+// serveLoginPage renders login.html as a Go template, injecting server-side flags.
+// DemoOnly: when true, the "Try Demo" button is rendered; otherwise completely absent.
+func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFS(s.assets, "login.html")
+	if err != nil {
+		log.Printf("Error loading login template: %v", err)
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		DemoOnly bool
+	}{
+		DemoOnly: os.Getenv("DEMO_ONLY") == "true",
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing login template: %v", err)
+	}
+}
+
 func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	// Prevent aggressive caching for HTML so we always get fresh asset links
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -375,10 +428,39 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	}{
 		ProjectName: projectName,
 		ThemeClass:  themeClass,
-		DemoMode:    s.DemoMode,
+		DemoMode:    false,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing template: %v", err)
+	}
+}
+
+// serveIndexDemo serves the dashboard in fully isolated demo mode.
+// No authentication is required. All data is stored in the visitor's localStorage
+// via demoService.ts — the production database is never touched.
+func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+
+	tmpl, err := template.ParseFS(s.assets, "index.html")
+	if err != nil {
+		log.Printf("Error loading demo template: %v", err)
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		ProjectName string
+		ThemeClass  string
+		DemoMode    bool
+	}{
+		ProjectName: "Lastboard",
+		ThemeClass:  "dark-mode",
+		DemoMode:    true,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing demo template: %v", err)
 	}
 }
