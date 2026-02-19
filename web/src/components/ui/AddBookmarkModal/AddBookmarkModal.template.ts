@@ -29,7 +29,7 @@ const renderAppearanceControls = (color: string, borderWidth: number) => {
     const isCustom = !premiumColors.includes(color) && color !== '';
 
     return `
-    <div class="form-group">
+    <div class="form-group" style="border-top: 1px solid var(--border); padding-top: 8px; margin-top: 0;">
         <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
         <div class="premium-color-grid">
             ${premiumColors.map(c => `

@@ -4285,7 +4285,7 @@ input:checked+.slider:before {
             <style>${Jr}</style>
             ${Gr()}
         `}updateGrid(){let o=this.shadowRoot.getElementById("grid-container");if(o){if(o.style.display="grid",!this.searchQuery.trim()&&!this.isLoading){o.innerHTML='<div class="icon-picker__empty">Start typing to search icons...</div>';return}o.innerHTML=Fr(this.filteredIcons,this.selectedIcon,this.isLoading)}}}if(!customElements.get("icon-picker"))customElements.define("icon-picker",Rr);v();var Zr=["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#64748b","#f8fafc","#1e293b","#333333"],Mt=(o,r)=>{let t=!Zr.includes(o)&&o!=="";return`
-    <div class="form-group">
+    <div class="form-group" style="border-top: 1px solid var(--border); padding-top: 8px; margin-top: 0;">
         <label>${i.t("bookmark.border_color")||"Border Color"}</label>
         <div class="premium-color-grid">
             ${Zr.map((a)=>`
@@ -4657,13 +4657,10 @@ dialog[open] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* Changed from flex-end to center for better alignment */
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0 24px;
-    /* Matches WidgetConfigModal padding style more closely if height is fixed */
-    background: var(--modal-header-bg);
+    background: transparent;
     height: 56px;
-    /* Explicit height to match WidgetConfigModal */
     border-radius: var(--radius) var(--radius) 0 0;
     flex-shrink: 0;
 }
@@ -4716,8 +4713,7 @@ dialog[open] {
     overflow-y: auto;
     display: none;
     animation: fadeIn 0.15s ease-out;
-    padding: 16px 24px 0 24px;
-    /* Prevent clipping color picker */
+    padding: 24px;
 }
 
 .tab-content.active {

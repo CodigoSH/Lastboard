@@ -51,13 +51,10 @@ dialog[open] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* Changed from flex-end to center for better alignment */
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0 24px;
-    /* Matches WidgetConfigModal padding style more closely if height is fixed */
-    background: var(--modal-header-bg);
+    background: transparent;
     height: 56px;
-    /* Explicit height to match WidgetConfigModal */
     border-radius: var(--radius) var(--radius) 0 0;
     flex-shrink: 0;
 }
@@ -110,8 +107,7 @@ dialog[open] {
     overflow-y: auto;
     display: none;
     animation: fadeIn 0.15s ease-out;
-    padding: 16px 24px 0 24px;
-    /* Prevent clipping color picker */
+    padding: 24px;
 }
 
 .tab-content.active {
