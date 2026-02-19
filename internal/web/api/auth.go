@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
-	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -108,11 +107,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var storedHash string
 	err := h.DB.QueryRow("SELECT password FROM users WHERE username = ?", input.Username).Scan(&storedHash)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Printf("[Auth] Login failed: User '%s' not found", input.Username)
-		} else {
-			log.Printf("[Auth] Database error during login for '%s': %v", input.Username, err)
-		}
 		bcrypt.CompareHashAndPassword([]byte("$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01"), []byte(input.Password))
 		h.recordFailedAttempt(ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
@@ -120,7 +114,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.Password)); err != nil {
-		log.Printf("[Auth] Login failed: Incorrect password for user '%s'", input.Username)
 		h.recordFailedAttempt(ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return

@@ -36,6 +36,17 @@ class UpdateService {
     }
 
     async check(betaUpdates: boolean): Promise<UpdateInfo> {
+        // --- DEMO MODE: skip backend check (API is protected) ---
+        // @ts-ignore
+        if (window.LASTBOARD_CONFIG?.demo_mode === true) {
+            return {
+                available: false,
+                current_version: 'v1.3.2', // Mock version for demo
+                latest_version: 'v1.3.2',
+                is_docker: false
+            };
+        }
+
         try {
             // 1. Get System Info (Version & Context) from Backend
             // The backend NO LONGER checks GitHub, it just returns local info.
