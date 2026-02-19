@@ -42,25 +42,6 @@
 
 ---
 
-## Get started in 30 seconds
-
-```bash
-docker run -d \
-  --name lastboard \
-  -p 8080:8080 \
-  -v $(pwd)/data:/var/lib/lastboard \
-  ghcr.io/codigosh/lastboard:latest
-```
-
-Open `http://localhost:8080` — the setup wizard takes care of the rest.
-
-> **Linux one-liner:**
-> ```bash
-> curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
-> ```
-
----
-
 ## Why Lastboard
 
 Most self-hosted dashboards are either too heavy, too ugly, or too complex to maintain. Lastboard was built with a simple rule: **nothing ships unless it's fast and looks good doing it.**
