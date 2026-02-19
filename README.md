@@ -148,14 +148,10 @@ If you prefer running the binary directly on your host machine.
 
 ---
 
-## Updates & Security
-Lastboard uses a dedicated proxy (`api-updates.codigosh.com`) to manage version checks. 
-This ensures:
-* **Reliability:** Bypassing GitHub's rate limits for a smoother experience.
-* **Privacy:** No user data is tracked or stored during the update process.
-* **Integrity:** Secure delivery of official releases.
+## Updates
+Lastboard features an automated update system via a secure proxy to ensure 24/7 availability and bypass GitHub API rate limits. 
 
-For more technical details on our infrastructure transparency, see our [SECURITY.md](./SECURITY.md).
+For more information on our infrastructure and how we protect your privacy, please read our [Security Policy](./SECURITY.md).
 
 ---
 
