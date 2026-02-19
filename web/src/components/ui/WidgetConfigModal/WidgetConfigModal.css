@@ -47,7 +47,7 @@ dialog[open] {
     margin-bottom: 0;
     border-bottom: 1px solid var(--border);
     padding: 12px 24px 0 24px;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--modal-header-bg);
     border-radius: var(--radius) var(--radius) 0 0;
 }
 
@@ -525,7 +525,7 @@ dialog[open] {
 /* --- Segmented Control --- */
 .segmented-control {
     display: flex;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--segmented-bg);
     padding: 4px;
     border-radius: 8px;
     margin-top: 8px;
@@ -550,12 +550,12 @@ dialog[open] {
 }
 
 .border-width-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-hover);
     color: var(--text-main);
 }
 
 .border-width-btn.active {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-active);
     color: var(--accent);
     border-color: var(--accent);
     box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.1);

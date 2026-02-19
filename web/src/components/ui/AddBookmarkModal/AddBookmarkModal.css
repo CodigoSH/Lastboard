@@ -55,7 +55,7 @@ dialog[open] {
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
     /* Matches WidgetConfigModal padding style more closely if height is fixed */
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--modal-header-bg);
     height: 56px;
     /* Explicit height to match WidgetConfigModal */
     border-radius: var(--radius) var(--radius) 0 0;
@@ -438,8 +438,7 @@ dialog[open] {
 }
 
 .dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    /* Subtle white hover */
+    background: var(--surface-hover);
     color: var(--text-main);
 }
 
@@ -625,7 +624,7 @@ dialog[open] {
 /* --- Segmented Control (Border Width) --- */
 .segmented-control {
     display: flex;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--segmented-bg);
     padding: 4px;
     border-radius: 8px;
     margin-top: 8px;
@@ -650,12 +649,12 @@ dialog[open] {
 }
 
 .border-width-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-hover);
     color: var(--text-main);
 }
 
 .border-width-btn.active {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-active);
     color: var(--accent);
     border-color: var(--accent);
     box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.1);

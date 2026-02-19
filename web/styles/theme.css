@@ -52,6 +52,10 @@
     --card-border-inactive: rgba(0, 0, 0, 0.06);
     --icon-inactive: rgba(0, 0, 0, 0.3);
 
+    /* Modal & Control Surfaces */
+    --modal-header-bg: rgba(0, 0, 0, 0.04);
+    --segmented-bg: rgba(0, 0, 0, 0.05);
+
     /* Wizard Components */
     --stepper-track: rgba(0, 0, 0, 0.05);
     --stepper-dot-bg: #ffffff;
@@ -132,6 +136,10 @@
     --card-bg-inactive: rgba(255, 255, 255, 0.03);
     --card-border-inactive: rgba(255, 255, 255, 0.1);
     --icon-inactive: rgba(255, 255, 255, 0.3);
+
+    /* Modal & Control Surfaces */
+    --modal-header-bg: rgba(0, 0, 0, 0.2);
+    --segmented-bg: rgba(0, 0, 0, 0.2);
 
     /* Wizard Components */
     --stepper-track: rgba(255, 255, 255, 0.2);
