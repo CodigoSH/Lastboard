@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"encoding/hex"
-	"html/template"
+	htmltemplate "html/template"
 	"io"
 	"io/fs"
 	"log"
@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	texttmpl "text/template"
 	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/web/api"
@@ -364,7 +365,7 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 // serveLoginPage renders login.html as a Go template, injecting server-side flags.
 // DemoOnly: when true, the "Try Demo" button is rendered; otherwise completely absent.
 func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFS(s.assets, "login.html")
+	tmpl, err := texttmpl.ParseFS(s.assets, "login.html")
 	if err != nil {
 		log.Printf("Error loading login template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
@@ -414,7 +415,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 		themeClass = "dark-mode"
 	}
 
-	tmpl, err := template.ParseFS(s.assets, "index.html")
+	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")
 	if err != nil {
 		log.Printf("Error loading template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
@@ -443,7 +444,7 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
 
-	tmpl, err := template.ParseFS(s.assets, "index.html")
+	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")
 	if err != nil {
 		log.Printf("Error loading demo template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
