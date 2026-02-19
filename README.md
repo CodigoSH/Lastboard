@@ -50,7 +50,6 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 - **Real dark/light mode** — dedicated color token sets per theme, not just a CSS filter.
 - **Go backend** — small memory footprint, concurrent by default. Runs fine on a Raspberry Pi.
 - **Single SQLite file** — your entire dashboard state in one portable file. Backup = `cp lastboard.db`.
-- **Smart update proxy** — privacy-first. Your instance never talks to GitHub directly.
 - **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
 
 ---
