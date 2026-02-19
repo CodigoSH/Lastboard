@@ -1,68 +1,76 @@
 <div align="center">
-  <img src="web/public/images/logo.png" alt="Lastboard Logo" width="120" style="margin-bottom: 20px;" />
+  <br />
+  <img src="web/public/images/logo.png" alt="Lastboard" width="90" />
+  <br /><br />
+
   <h1>Lastboard</h1>
-  
-  <p>
-    <strong>A sleek, high-performance personal dashboard focused on native speed and premium aesthetics.</strong>
-  </p>
+  <p><strong>The personal dashboard you actually want to open every day.</strong></p>
 
   <p>
-    <a href="https://lb-demo.codigosh.com" target="_blank">
-      <img src="https://img.shields.io/badge/Live_Demo-Visit_Dashboard-FF4B4B?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Demo" />
+    <a href="https://lb-demo.codigosh.com">
+      <img src="https://img.shields.io/badge/Live_Demo-FF4B4B?style=for-the-badge&logo=google-chrome&logoColor=white" />
     </a>
+    &nbsp;
+    <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" />
+    &nbsp;
+    <img src="https://img.shields.io/github/downloads/codigosh/lastboard/total?style=for-the-badge&label=Installations&color=3178C6" />
+    &nbsp;
+    <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" />
   </p>
 
-  <p>
-    <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" alt="Latest Release" />
-    <img src="https://img.shields.io/badge/Docker-Available-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-    <img src="https://img.shields.io/github/downloads/codigosh/lastboard/total?style=for-the-badge&label=Installations&color=3178C6" alt="Installations" />
-    <img src="https://img.shields.io/badge/Go-1.24+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
-    <img src="https://img.shields.io/badge/Bun-%26_TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="Bun & TypeScript" />
-    <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" alt="License" />
-  </p>
+  <br />
+
+  <img src="web/public/images/screenshot.png" alt="Lastboard Dashboard" width="92%" style="border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" />
+
+  <br /><br />
+
 </div>
 
-<br />
+---
 
-**Lastboard** is a modern, self-hosted dashboard designed for enthusiasts who demand both beauty and raw performance. Built with a single-binary architecture, it replaces clunky, resource-heavy alternatives with a lightweight, lightning-fast experience.
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">🚀<br/><strong>One-line deploy</strong></td>
+      <td align="center">⚡<br/><strong>60fps native grid</strong></td>
+      <td align="center">🎨<br/><strong>Glassmorphism UI</strong></td>
+      <td align="center">🔒<br/><strong>100% self-hosted</strong></td>
+      <td align="center">💾<br/><strong>SQLite — no DB setup</strong></td>
+    </tr>
+  </table>
+</div>
 
 ---
 
-## Key Features
+## Get started in 30 seconds
 
-### Single Binary Architecture
-Forget about complex Docker chains or multi-service dependencies. **Lastboard** compiles the entire frontend (assets, fonts, styles) and backend into a **single, portable executable**. Deployment is as simple as copying one file.
+```bash
+docker run -d \
+  --name lastboard \
+  -p 8080:8080 \
+  -v $(pwd)/data:/var/lib/lastboard \
+  ghcr.io/codigosh/lastboard:latest
+```
 
-### Native Grid Engine
-We built our own high-performance drag-and-drop grid system using **100% native JavaScript**.
-- **Zero dependencies**: No heavy layout libraries like React-Grid-Layout.
-- **Butter-smooth interactions**: Optimized for 60fps animations even on low-power devices.
-- **Adaptive Architecture**: Seamless logic for desktop, tablet, and mobile layouts.
+Open `http://localhost:8080` — the setup wizard takes care of the rest.
 
-### Professional Setup Wizard
-A secure, guided initialization flow helps you configure your environment in seconds.
-- **First-run configuration**: set your admin credentials, theme preferences, and system defaults.
-- **Auto-discovery**: detects environment capabilities automatically.
-
-### Premium UI & Theming
-Designed with **Glassmorphism** principles for a depth-rich, modern aesthetic.
-- **Real-time Dark/Light Mode**: toggles instantly with specialized color tokens for each mode.
-- **Stealth Scroll System**: custom, non-intrusive scrollbars that vanish when not needed.
-- **Responsive Animations**: subtle micro-interactions that make the interface feel alive.
+> **Linux one-liner:**
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
+> ```
 
 ---
 
-## Technical Architecture
+## Why Lastboard
 
-Lastboard is built on a "Performance First" philosophy, selecting the best tools for speed and developer experience.
+Most self-hosted dashboards are either too heavy, too ugly, or too complex to maintain. Lastboard was built with a simple rule: **nothing ships unless it's fast and looks good doing it.**
 
-| Layer | Technology | Description |
-| :--- | :--- | :--- |
-| **Backend** | **Go (Golang)** | Provides a robust, concurrent HTTP server, persistent storage management, and system-level operations. |
-| **Frontend** | **TypeScript** | Strongly typed, modern client-side logic ensuring reliability and maintainability. |
-| **Build Tool** | **Bun** | Ultra-fast bundler and runtime used to compile frontend assets lightning-fast. |
-| **Styling** | **CSS Variables** | A centralized design token system allowing for instant theming and high-performance rendering without CSS-in-JS overhead. |
-| **Updates** | **Smart Proxy** | Privacy-focused update system that acts as a shield between your instance and GitHub, enforcing Rate Limits and caching. |
+- **Built-in drag & drop grid** — written from scratch in native JS. No framework overhead, silky smooth on any device.
+- **Real dark/light mode** — dedicated color token sets per theme, not just a CSS filter.
+- **Go backend** — small memory footprint, concurrent by default. Runs fine on a Raspberry Pi.
+- **Single SQLite file** — your entire dashboard state in one portable file. Backup = `cp lastboard.db`.
+- **Smart update proxy** — privacy-first. Your instance never talks to GitHub directly.
+- **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
 
 ---
 
