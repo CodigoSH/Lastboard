@@ -1,0 +1,136 @@
+# Release: v1.3.0
+
+
+
+
+### 📝 Other Changes
+- feat: v1.3.0 release: border customization, public demo, and unified feedback
+- feat(ui): unify shake effect and toast messaging in login and password modal
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.25
+- feat: i18n refactor and unificationni18n refactor and unification
+- refactor(i18n): restructure sync script and unify backup labels
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.24
+- feat: unify bookmark modal aesthetics with widget config modal
+- fix(ui): fix modal grays clashing in light mode with adaptive CSS variables
+- fix(i18n): shorten settings labels for better UI density (advanced, backup, restore, grid)
+- fix(i18n): correct telemetry label to TEMP and sync all languages
+- docs: use target=_blank for demo link
+- docs: add rel=noopener to demo link for security and better tab behavior
+- docs: finalize badges and push user tweaks
+- fix: force Installations badge cache refresh
+- fix: use exact repository casing for badges to resolve invalid status
+- fix: restore stable release version in latest badge
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.23
+- feat: fixed invalid badges by switching to v/tag endpoint
+- fix: use robust v/tag endpoint for release badge
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.22
+- feat: added official live demo link to readme
+- docs: add official live demo link to readme
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.21
+- feat: implemented public health check endpoint for coolify/docker
+- fix: implement public health check endpoint for docker/coolify
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.20
+- feat: changed default github bookmark icon to git
+- style: change default github icon to git
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.19
+- feat: corrected installations badge label to english
+- docs: use english label for installations badge
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.18
+- feat: fixed broken docker pulls badge by using github downloads
+- fix: replace broken ghcr badge with reliable downloads counter
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.17
+- feat: added docker installations counter to readme
+- docs: add docker pulls counter to README
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.16
+- feat: exact dashboard layout parity with reference image
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.15
+- feat: complete dashboard reset with professional 1x1 and 1x2 sizing parity
+- fix: complete dashboard reset to professional parity standard (1x1 and 1x2)
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.14
+- feat: demo mode visibility and widget 1x2 sizing parity
+- fix: adjust core widget sizes to 1x2 parity standard
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.13
+- feat: final translation refinements and UI parity fixes
+- feat: professional i18n refinements, UI glassmorphism fixes, and Docker config sync
+- docs: minor cleanup in README docker-compose example
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.12
+- feat: restore technical documentation and finalize transparent docker architecture
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.11
+- feat: transparent and professional docker architecture with native permission handling
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.10
+- feat: implement professional plug-and-play docker permissions with smart entrypoint
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.09
+- feat: implement smart cleanup for release notes while preserving tag history
+- chore(release): bump to v1.3.0-Beta.08
+- feat: use official github cli and persistent notes for reliable releases
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.07
+- feat: fix github release workflow authentication and diagnostics
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.06
+- feat: fix sqlite permission issues in docker with proactive checks
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.05
+- feat: unify docker persistence paths to /var/lib/lastboard
+- fix: unify docker persistence paths to /var/lib/lastboard
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.04
+- feat: demo mode aesthetics and readme organization
+- docs: integrate configuration and data into docker section to improve installation flow
+- docs: reorder README sections for better installation flow
+- feat: professionalize demo mode aesthetics and content, update README docker docs
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.0-Beta.03
+- chore: fix release action (Go 1.24) and gitignore for notes
+- feat: security enhancements, demo mode isolation, and release script cleanup
+- chore(release): cleanup notes for v1.3.0-Beta.02
+- chore(release): bump to v1.3.0-Beta.02
+- feat: i18n: translate tooltips and finalize 20-language supportni18n: translate tooltips and finalize 20-language support
+- fix: Restore accidentally deleted collisionService test file
+- i18n: Translate UI tooltips and finalize 20-language support
+- chore: Remove temporary scan file
+- i18n: Update and synchronize translations for 20 languages
+- docs: add release notes for v1.3.0-Beta.01
+- chore(release): bump to v1.3.0-Beta.01
+- Refactor: Finalize UI polish (Z-Index fix, Notepad/Markdown setup, Task cleanup)
+- UI: improve Add Bookmark modal (fix scrollbar, padding asymmetry, and enlarge icon selector to 52px)
+- feat(ui): fix color picker visibility, positioning, and styling
+- docs: update funding configuration
+- docs: move credits section to bottom of README
+- docs: update support and recognition section in README
+- feat: refine dashboard UI
+- feat(ui): Premium Color Picker & Border Width Control
+- feat(ui): implement premium color picker with presets
+- style: refine edit mode aesthetics and fix border alignment
+- fix(ui): increase input height to 46px to prevent text clipping
+- style(ui): restore premium styles for dropdown items
+- feat: implement intelligent dropdowns with drop-up logic and max-height
+- style: reduce bookmark modal height to 480px for better density
+- style: move touch visibility to general tab, keep border color in customization
+- style: update touch visibility icons to mobile device style
+- style: remove redundant icon preview from icon picker
+- chore: sync build assets after manual revert
+- feat: unify hidden label icon and fix modal persistence
+- style: refine IconSelectionModal UI (fixed 3-row layout, alignment and centering)
+- feat: refactor AddBookmarkModal layout, icons selection and UI polish
+- chore(release): cleanup notes for v1.2.5
+
+---
+**Full Changelog**: [v1.2.5...v1.3.0](https://github.com/CodigoSH/Lastboard/compare/v1.2.5...v1.3.0)
