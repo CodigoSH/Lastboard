@@ -29,15 +29,13 @@
 ---
 
 <div align="center">
-  <table>
-    <tr>
-      <td align="center">🚀<br/><strong>One-line deploy</strong></td>
-      <td align="center">⚡<br/><strong>60fps native grid</strong></td>
-      <td align="center">🎨<br/><strong>Glassmorphism UI</strong></td>
-      <td align="center">🔒<br/><strong>100% self-hosted</strong></td>
-      <td align="center">💾<br/><strong>SQLite — no DB setup</strong></td>
-    </tr>
-  </table>
+
+![](https://img.shields.io/badge/🚀_One--line_deploy-1a1a2e?style=for-the-badge)
+![](https://img.shields.io/badge/⚡_60fps_native_grid-1a1a2e?style=for-the-badge)
+![](https://img.shields.io/badge/🎨_Glassmorphism_UI-1a1a2e?style=for-the-badge)
+![](https://img.shields.io/badge/🔒_100%25_self--hosted-1a1a2e?style=for-the-badge)
+![](https://img.shields.io/badge/💾_SQLite,_no_DB_setup-1a1a2e?style=for-the-badge)
+
 </div>
 
 ---
