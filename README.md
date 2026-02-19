@@ -49,6 +49,7 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 - **Built-in drag & drop grid** — written from scratch in native JS. No framework overhead, silky smooth on any device.
 - **Real dark/light mode** — dedicated color token sets per theme, not just a CSS filter.
 - **Go backend** — small memory footprint, concurrent by default. Runs fine on a Raspberry Pi.
+- **Peace of mind** - Backup and restore directly from the website.
 - **Single SQLite file** — your entire dashboard state in one portable file. Backup = `cp lastboard.db`.
 - **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
 
