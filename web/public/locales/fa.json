@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "طوفان تگرگ",
   "widget.weather.unknown": "ناشناخته",
   "widget.weather.use_fahrenheit": "استفاده از فارنهایت (°F)",
-  "widget.weather.wind": "باد",
-  "notifier.reset_confirm_text": "برای تایید \"delete\" تایپ کنید",
-  "settings.type_delete": "برای تایید <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> تایپ کنید.",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "باد"
 }

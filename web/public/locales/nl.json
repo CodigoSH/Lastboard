@@ -353,8 +353,5 @@
   "widget.weather.thunderstorm_hail": "Onweer met hagel",
   "widget.weather.unknown": "Onbekend",
   "widget.weather.use_fahrenheit": "Gebruik Fahrenheit (°F)",
-  "widget.weather.wind": "Wind",
-  "notifier.reset_confirm_text": "Typ \"delete\" om te bevestigen",
-  "settings.type_delete": "Typ <span style=\"font-family: monospace; color: #fa5252; background: rgba(250, 82, 82, 0.1); padding: 2px 6px; border-radius: 4px;\">delete</span> om te bevestigen.",
-  "settings.type_delete_placeholder": "delete"
+  "widget.weather.wind": "Wind"
 }
