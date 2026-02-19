@@ -551,12 +551,12 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Penguji Beta", "ar": "مختبر بيتا", "fa": "تست‌کننده بتا", "el": "Δοκιμαστής Beta", "hi": "बीटा टेस्टर", "bn": "বিটা টেস্টার", "ur": "بیٹا ٹیسٹر"
     },
     "settings.fluid_grid_architecture": {
-        "es": "Arquitectura de Rejilla Fluida",
-        "fr": "Architecture de Grille Fluide",
-        "de": "Flüssige Rasterarchitektur",
-        "it": "Architettura a Griglia Fluida",
-        "pt": "Arquitetura de Grade Fluida",
-        "nl": "Vloeibare Rasterarchitectuur",
+        "es": "Rejilla inteligente",
+        "fr": "Grille intelligente",
+        "de": "Smartes Layout",
+        "it": "Griglia intelligente",
+        "pt": "Layout inteligente",
+        "nl": "Slimme lay-out",
         "ru": "Архитектура Изменяемой Сетки",
         "zh": "流式网格架构",
         "ja": "流動グリッドアーキテクチャ",
@@ -572,7 +572,7 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "ur": "سیال گرڈ فن تعمیر"
     },
     "settings.grid_columns": {
-        "es": "Número de Columnas", "fr": "Nombre de colonnes", "de": "Spaltenanzahl", "it": "Numero di colonne", "pt": "Número de Colunas", "nl": "Aantal kolommen",
+        "es": "Columnas", "fr": "Colonnes", "de": "Spalten", "it": "Colonne", "pt": "Colunas", "nl": "Kolommen",
         "ru": "Количество столбцов", "zh": "列数", "ja": "列数", "ko": "열 수", "tr": "Sütun Sayısı", "pl": "Liczba kolumn",
         "id": "Jumlah Kolom", "ar": "عدد الأعمدة", "fa": "تعداد ستون‌ها", "el": "Αριθμός Στηλών", "hi": "Column Count", "bn": "Column Count", "ur": "Column Count"
     },
@@ -1394,9 +1394,9 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Kontrol Akses", "ar": "التحكم في الوصول", "fa": "کنترل دسترسی", "el": "Έλεγχος πρόσβασης", "hi": "पहुंच नियंत्रण", "bn": "প্রবেশ নিয়ন্ত্রণ", "ur": "رسائی کنٹرول"
     },
     "settings.advanced": {
-        "es": "Usuario avanzado", "fr": "Utilisateur avancé", "de": "Power-User", "it": "Utente avanzato", "pt": "Utilizador avançado", "nl": "Geavanceerde gebruiker",
-        "ru": "Продвинутый пользователь", "zh": "高级用户", "ja": "パワーユーザー", "ko": "고급 사용자", "tr": "İleri Kullanıcı", "pl": "Użytkownik zaawansowany",
-        "id": "Pengguna Lanjutan", "ar": "مستخدم متقدم", "fa": "کاربر پیشرفته", "el": "Προχωρημένος χρήστης", "hi": "उन्नत उपयोगकर्ता", "bn": "উন্নত ব্যবহারকারী", "ur": "جدید صارف"
+        "es": "Avanzado", "fr": "Avancé", "de": "Erweitert", "it": "Avanzate", "pt": "Avançado", "nl": "Geavanceerd",
+        "ru": "Продвинутый", "zh": "高级", "ja": "詳細設定", "ko": "고급", "tr": "Gelişmiş", "pl": "Zaawansowane",
+        "id": "Lanjutan", "ar": "متقدم", "fa": "پیشرفته", "el": "Προχωρημένα", "hi": "उन्नत", "bn": "उन्नत", "ur": "جدید"
     },
     "settings.appearance": {
         "es": "Aspecto", "fr": "Apparence", "de": "Erscheinungsbild", "it": "Aspetto", "pt": "Aparência", "nl": "Uiterlijk",
@@ -1469,9 +1469,9 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Mode Docker", "ar": "وضع Docker", "fa": "حالت Docker", "el": "Λειτουργία Docker", "hi": "Docker मोड", "bn": "Docker মোড", "ur": "Docker موڈ"
     },
     "settings.export_db": {
-        "es": "Copias de seguridad", "fr": "Données de sauvegarde", "de": "Backup-Daten", "it": "Dati di backup", "pt": "Dados de cópia de segurança", "nl": "Back-upgegevens",
-        "ru": "Резервные данные", "zh": "Резервные данные", "ja": "バックアップデータ", "ko": "백अप 데이터", "tr": "Yedek Veri", "pl": "Dane kopii zapasowej",
-        "id": "Data Cadangan", "ar": "بيانات النسخ الاحتياطي", "fa": "داده‌های پشتیبان", "el": "Δεδομένα αντιγράφων ασφαλείας", "hi": "बैकअप डेटा", "bn": "ব্যাকআপ ডেটা", "ur": "بیک اپ ڈیٹا"
+        "es": "Copia de seguridad", "fr": "Sauvegarde", "de": "Backup", "it": "Backup", "pt": "Copia de seguridad", "nl": "Back-up",
+        "ru": "Бэкап", "zh": "备份", "ja": "バックアップ", "ko": "백업", "tr": "Yedekle", "pl": "Kopia zapasowa",
+        "id": "Cadangan", "ar": "نسخ احتياطي", "fa": "پشتیبان‌گیری", "el": "Αντίγραφο ασφαλείας", "hi": "बैक업", "bn": "ব্যাকআপ", "ur": "بیک اپ"
     },
     "settings.export_desc": {
         "es": "Guarda una copia de todo tu panel.", "fr": "Sauvegardez une copie de tout votre tableau de bord.", "de": "Speichern Sie eine Kopie Ihres gesamten Dashboards.", "it": "Salva una copia di tutta la tua dashboard.", "pt": "Guarde uma cópia de todo o seu painel.", "nl": "Sla een kopie van uw hele dashboard op.",
@@ -1504,9 +1504,9 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "Tata Letak Tablet", "ar": "تخطيط الجهاز اللوحي", "fa": "طرح‌بندی تبلت", "el": "Διάταξη tablet", "hi": "टैबलेट लेआउट", "bn": "ট্যাবলেট লেআউট", "ur": "ٹیبلیٹ لے آؤٹ"
     },
     "settings.import_db": {
-        "es": "Restaurar copia", "fr": "Restaurer la sauvegarde", "de": "Backup wiederherstellen", "it": "Ripristina backup", "pt": "Restaurar cópia de segurança", "nl": "Back-up herstellen",
-        "ru": "Восстановить резервную копию", "zh": "Восстановить резервную копию", "ja": "バックアップを復元", "ko": "백업 복원", "tr": "Yedeği Geri Yükle", "pl": "Przywróć kopię zapasową",
-        "id": "Pulihkan Cadangan", "ar": "استعادة النسخة الاحتياطية", "fa": "بازیابی پشتیبان", "el": "Επαναφορά αντιγράφου ασφαλείας", "hi": "बैकअप पुनर्स्थापित करें", "bn": "ব্যাকআপ পুনরুদ্ধার করুন", "ur": "بیک اپ بحال کریں"
+        "es": "Restaurar", "fr": "Restaurer", "de": "Wiederherstellen", "it": "Ripristina", "pt": "Restaurar", "nl": "Herstellen",
+        "ru": "Восстановить", "zh": "恢复", "ja": "复元", "ko": "복원", "tr": "Geri Yükle", "pl": "Przywróć",
+        "id": "Pulihkan", "ar": "استعادة", "fa": "بازیابی", "el": "Επαναφορά", "hi": "पुनर्स्थापित करें", "bn": "পুনরুদ্ধার করুন", "ur": "بحال کریں"
     },
     "settings.import_desc": {
         "es": "Sube una copia de seguridad para restaurar.", "fr": "Téléchargez une sauvegarde à restaurer.", "de": "Laden Sie ein Backup hoch, um es wiederherzustellen.", "it": "Carica un backup da ripristinare.", "pt": "Carregue uma cópia de segurança para restaurar.", "nl": "Upload een back-up om te herstellen.",
