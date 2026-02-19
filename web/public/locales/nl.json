@@ -311,7 +311,7 @@
   "widget.telemetry.description": "Live hardwaremonitor",
   "widget.telemetry.name": "Servergezondheid",
   "widget.telemetry.ram": "RAM",
-  "widget.telemetry.temp": "WARMTE",
+  "widget.telemetry.temp": "TEMP",
   "widget.telemetry.update_interval": "Verversingssnelheid",
   "widget.weather.city": "Stad",
   "widget.weather.city_desc": "Zoek een stad om de coördinaten automatisch aan te vullen.",

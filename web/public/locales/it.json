@@ -311,7 +311,7 @@
   "widget.telemetry.description": "Monitor hardware live",
   "widget.telemetry.name": "Salute del Server",
   "widget.telemetry.ram": "RAM",
-  "widget.telemetry.temp": "CALORE",
+  "widget.telemetry.temp": "TEMP",
   "widget.telemetry.update_interval": "Frequenza aggiornamento",
   "widget.weather.city": "Città",
   "widget.weather.city_desc": "Cerca una ciudad para completar automáticamente las coordenadas.",

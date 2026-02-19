@@ -311,7 +311,7 @@
   "widget.telemetry.description": "Monitor perangkat keras langsung",
   "widget.telemetry.name": "Kesehatan Server",
   "widget.telemetry.ram": "RAM",
-  "widget.telemetry.temp": "PANAS",
+  "widget.telemetry.temp": "TEMP",
   "widget.telemetry.update_interval": "Tingkat Penyegaran",
   "widget.weather.city": "Kota",
   "widget.weather.city_desc": "Cari kota untuk melengkapi koordinat secara otomatis.",

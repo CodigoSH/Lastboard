@@ -311,7 +311,7 @@
   "widget.telemetry.description": "Moniteur matériel en direct",
   "widget.telemetry.name": "Santé du Serveur",
   "widget.telemetry.ram": "RAM",
-  "widget.telemetry.temp": "CHALEUR",
+  "widget.telemetry.temp": "TEMP",
   "widget.telemetry.update_interval": "Taux de rafraîchissement",
   "widget.weather.city": "Ville",
   "widget.weather.city_desc": "Recherchez una ciudad para completar automáticamente las coordenadas.",

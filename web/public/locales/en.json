@@ -311,7 +311,7 @@
     "widget.telemetry.description": "Live hardware monitor",
     "widget.telemetry.name": "Server Health",
     "widget.telemetry.ram": "RAM",
-    "widget.telemetry.temp": "HEAT",
+    "widget.telemetry.temp": "TEMP",
     "widget.telemetry.update_interval": "Refresh Rate",
     "widget.weather.city": "City",
     "widget.weather.city_desc": "Find your city for weather.",

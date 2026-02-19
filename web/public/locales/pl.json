@@ -311,7 +311,7 @@
   "widget.telemetry.description": "Monitorowanie sprzętu na żywo",
   "widget.telemetry.name": "Stan serwera",
   "widget.telemetry.ram": "RAM",
-  "widget.telemetry.temp": "CIEPŁO",
+  "widget.telemetry.temp": "TEMP",
   "widget.telemetry.update_interval": "Częstotliwość odświeżania",
   "widget.weather.city": "Miasto",
   "widget.weather.city_desc": "Wyszukaj miasto, aby automatycznie uzupełnić współrzędne.",

@@ -311,7 +311,7 @@
   "widget.telemetry.description": "Мониторинг оборудования",
   "widget.telemetry.name": "Состояние сервера",
   "widget.telemetry.ram": "ОЗУ",
-  "widget.telemetry.temp": "ТЕПЛО",
+  "widget.telemetry.temp": "ТЕМП",
   "widget.telemetry.update_interval": "Частота обновления",
   "widget.weather.city": "Город",
   "widget.weather.city_desc": "Найдите город, чтобы автоматически заполнить координаты.",

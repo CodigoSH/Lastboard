@@ -1854,9 +1854,9 @@ const COMMON_TRANSLATIONS: Record<string, Record<string, string>> = {
         "id": "RAM", "ar": "الذاكرة", "fa": "رم", "el": "RAM", "hi": "RAM", "bn": "RAM", "ur": "RAM"
     },
     "widget.telemetry.temp": {
-        "es": "CALOR", "fr": "CHALEUR", "de": "WÄRME", "it": "CALORE", "pt": "CALOR", "nl": "WARMTE",
-        "ru": "ТЕПЛО", "zh": "温度", "ja": "温度", "ko": "온도", "tr": "ISI", "pl": "CIEPŁO",
-        "id": "PANAS", "ar": "الحرارة", "fa": "گرما", "el": "ΘΕΡΜΟΤΗΤΑ", "hi": "ताप", "bn": "তাপ", "ur": "حرارت"
+        "es": "TEMP", "fr": "TEMP", "de": "TEMP", "it": "TEMP", "pt": "TEMP", "nl": "TEMP",
+        "ru": "ТЕМП", "zh": "温度", "ja": "温度", "ko": "온도", "tr": "TEMP", "pl": "TEMP",
+        "id": "TEMP", "ar": "الحرارة", "fa": "گرما", "el": "ΘΕΡΜΟΤΗΤΑ", "hi": "ताप", "bn": "তাপ", "ur": "حرارت"
     },
     "widget.telemetry.update_interval": {
         "es": "Tasa de actualización", "fr": "Taux de rafraîchissement", "de": "Aktualisierungsrate", "it": "Frequenza aggiornamento", "pt": "Taxa de atualização", "nl": "Verversingssnelheid",

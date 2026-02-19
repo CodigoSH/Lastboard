@@ -311,7 +311,7 @@
   "widget.telemetry.description": "Canlı Donanım İzleme",
   "widget.telemetry.name": "Sunucu Sağlığı",
   "widget.telemetry.ram": "RAM",
-  "widget.telemetry.temp": "ISI",
+  "widget.telemetry.temp": "TEMP",
   "widget.telemetry.update_interval": "Yenileme Hızı",
   "widget.weather.city": "Şehir",
   "widget.weather.city_desc": "Koordinatları otomatik tamamlamak için bir şehir arayın.",
