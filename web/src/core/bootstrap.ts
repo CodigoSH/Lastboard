@@ -26,9 +26,9 @@ export async function bootstrap(initCallback: () => void | Promise<void>) {
                 font-family: sans-serif;
                 text-align: center;
             ">
-                <h1 style="color: #fa5252;">System Error</h1>
-                <p>Failed to initialize application resources.</p>
-                <p style="opacity: 0.7; font-size: 0.9em;">Check console for details.</p>
+                <h1 style="color: #fa5252;">${i18n.t('error.system_error')}</h1>
+                <p>${i18n.t('error.init_failed')}</p>
+                <p style="opacity: 0.7; font-size: 0.9em;">${i18n.t('error.check_console')}</p>
                 <button onclick="window.location.reload()" style="
                     margin-top: 20px;
                     padding: 10px 20px;
@@ -37,7 +37,7 @@ export async function bootstrap(initCallback: () => void | Promise<void>) {
                     border: 1px solid #555;
                     cursor: pointer;
                     border-radius: 4px;
-                ">Reload</button>
+                ">${i18n.t('general.reload')}</button>
             </div>
         `;
     }

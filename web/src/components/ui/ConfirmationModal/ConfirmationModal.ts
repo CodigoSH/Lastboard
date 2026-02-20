@@ -5,8 +5,8 @@ import css from './ConfirmationModal.css' with { type: 'text' };
 
 export class ConfirmationModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
-    private titleText: string = 'Confirm Action';
-    private messageText: string = 'Are you sure?';
+    private titleText: string = i18n.t('general.confirm_action');
+    private messageText: string = i18n.t('general.are_you_sure');
     private resolvePromise: ((value: boolean) => void) | null = null;
     private _unsubscribeI18n: (() => void) | undefined;
 

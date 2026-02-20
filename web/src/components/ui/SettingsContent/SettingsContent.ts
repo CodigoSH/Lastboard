@@ -451,7 +451,7 @@ class SettingsContent extends HTMLElement {
         const user = userStore.getUser() || {
             username: 'Guest',
             initials: '??',
-            role: 'View Only',
+            role: i18n.t('role.view_only'),
             avatar_url: '',
             accent_color: '#0078D4',
             language: 'en',

@@ -6,7 +6,7 @@ import css from './PasswordConfirmModal.css' with { type: 'text' };
 export class PasswordConfirmModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
     private titleText: string = i18n.t('general.confirm');
-    private messageText: string = 'Please enter your password to continue';
+    private messageText: string = i18n.t('general.please_enter_password');
     private resolvePromise: ((value: string | null) => void) | null = null;
     private _unsubscribeI18n: (() => void) | undefined;
 

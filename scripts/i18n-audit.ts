@@ -44,10 +44,10 @@ files.forEach(file => {
     console.log(`${langCode.padEnd(10)} | ${status.padEnd(10)} | ${String(missing.length).padEnd(8)} | ${String(untranslated.length).padEnd(12)} | ${completeness}%`);
 
     if (missing.length > 0) {
-        // console.log(`  - Missing: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '...' : ''}`);
+        console.log(`  - Missing: ${missing.slice(0, 10).join(', ')}${missing.length > 10 ? '...' : ''}`);
     }
     if (untranslated.length > 0) {
-        // console.log(`  - Untranslated: ${untranslated.slice(0, 3).join(', ')}${untranslated.length > 3 ? '...' : ''}`);
+        console.log(`  - Untranslated: ${untranslated.slice(0, 10).join(', ')}${untranslated.length > 10 ? '...' : ''}`);
     }
 });
 

@@ -1,3 +1,4 @@
+import { i18n } from '../../../services/i18n';
 import { layoutContainer, gridTemplate } from './IconPicker.template';
 import { iconService, IconInfo } from '../../../services/iconService';
 // @ts-ignore
@@ -118,7 +119,7 @@ class IconPicker extends HTMLElement {
             if (!this.searchQuery.trim() && !this.isLoading) {
                 // Optional: Render "Start typing..." or just empty. 
                 // Empty is fine as long as container height holds.
-                grid.innerHTML = '<div class="icon-picker__empty">Start typing to search icons...</div>';
+                grid.innerHTML = `<div class="icon-picker__empty">${i18n.t('general.search_icons')}</div>`;
                 return;
             }
 

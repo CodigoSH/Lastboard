@@ -19,7 +19,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
     <div class="top-bar">
         <div style="display: flex; align-items: center;">
             <div class="top-bar__title">${title}</div>
-            ${isDemo ? '<div class="top-bar__demo-badge">Demo Mode</div>' : ''}
+            ${isDemo ? `<div class="top-bar__demo-badge">${i18n.t('general.demo_mode')}</div>` : ''}
         </div>
         <div class="top-bar__actions">
             <!-- Offline Indicator -->
