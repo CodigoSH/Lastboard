@@ -101,6 +101,8 @@
   "general.search": "Cari sesuatu...",
   "general.search_icons": "Mulai mengetik untuk mencari ikon...",
   "general.select_icon": "Pilih Ikon",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "Muat Ulang",
   "general.confirm_action": "Konfirmasi Tindakan",
   "general.are_you_sure": "Apakah Anda yakin?",

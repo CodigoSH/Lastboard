@@ -101,6 +101,8 @@
   "general.search": "Αναζητήστε κάτι...",
   "general.search_icons": "Ξεκινήστε να πληκτρολογείτε για αναζήτηση εικονιδίων...",
   "general.select_icon": "Επιλογή εικονιδίου",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "Επαναφόρτωση",
   "general.confirm_action": "Επιβεβαίωση ενέργειας",
   "general.are_you_sure": "Είστε σίγουροι;",

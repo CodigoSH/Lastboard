@@ -101,6 +101,8 @@
   "general.search": "Iets zoeken...",
   "general.search_icons": "Begin met typen om pictogrammen te zoeken...",
   "general.select_icon": "Pictogram selecteren",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "Herladen",
   "general.confirm_action": "Actie bevestigen",
   "general.are_you_sure": "Weet u het zeker?",

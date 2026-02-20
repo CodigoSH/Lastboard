@@ -101,6 +101,8 @@
   "general.search": "何かを検索...",
   "general.search_icons": "入力を開始してアイコンを検索...",
   "general.select_icon": "アイコンを選択",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "再読み込み",
   "general.confirm_action": "操作を確認",
   "general.are_you_sure": "よろしいですか？",

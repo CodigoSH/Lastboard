@@ -101,6 +101,8 @@
   "general.search": "Chercher quelque chose...",
   "general.search_icons": "Commencez à taper pour rechercher des icônes...",
   "general.select_icon": "Sélectionner l'icône",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "Recharger",
   "general.confirm_action": "Confirmer l'action",
   "general.are_you_sure": "Êtes-vous sûr ?",

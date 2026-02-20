@@ -101,6 +101,8 @@
   "general.search": "কিছু খুঁজুন...",
   "general.search_icons": "আইকন অনুসন্ধান করতে টাইপ করা শুরু করুন...",
   "general.select_icon": "আইকন নির্বাচন করুন",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "রিললোড করুন",
   "general.confirm_action": "অ্যাকশন কনফার্ম করুন",
   "general.are_you_sure": "আপনি কি নিশ্চিত?",

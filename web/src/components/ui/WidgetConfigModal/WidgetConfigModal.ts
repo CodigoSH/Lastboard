@@ -485,8 +485,8 @@ class WidgetConfigModal extends HTMLElement {
                     <div class="field-group">
                         <label>${i18n.t('widget.weather.coordinates')}</label>
                         <div class="input-row">
-                            <input type="number" id="weather-lat" value="${lat}" placeholder="Lat" step="0.0001" />
-                            <input type="number" id="weather-lon" value="${lon}" placeholder="Lon" step="0.0001" />
+                            <input type="number" id="weather-lat" value="${lat}" placeholder="${i18n.t('general.latitude')}" step="0.0001" />
+                            <input type="number" id="weather-lon" value="${lon}" placeholder="${i18n.t('general.longitude')}" step="0.0001" />
                         </div>
                     </div>
 
@@ -519,7 +519,7 @@ class WidgetConfigModal extends HTMLElement {
                 const interval = content.interval || 1000;
 
                 const generalTab = `
-                    <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">This widget displays real-time system metrics.</p>
+                    <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">${i18n.t('widget.telemetry.description')}</p>
                 `;
 
                 const customizationTab = `
@@ -537,7 +537,7 @@ class WidgetConfigModal extends HTMLElement {
 
                 const generalTab = `
                     <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
-                        <p>${i18n.t('widget.config.check_personalize') || 'Please check the <b>Personalize</b> tab for content and style options.'}</p>
+                        <p>${i18n.t('widget.config.check_personalize')}</p>
                     </div>
                 `;
 
@@ -549,7 +549,7 @@ class WidgetConfigModal extends HTMLElement {
 
                 const generalTab = `
                     <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
-                        <p>${i18n.t('widget.config.check_personalize') || 'Please check the <b>Personalize</b> tab for content and style options.'}</p>
+                        <p>${i18n.t('widget.config.check_personalize')}</p>
                     </div>
                 `;
 

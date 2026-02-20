@@ -101,6 +101,8 @@
   "general.search": "Bir şey ara...",
   "general.search_icons": "Simge aramak için yazmaya başlayın...",
   "general.select_icon": "Simge Seç",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "Yeniden Yükle",
   "general.confirm_action": "Eylemi Onayla",
   "general.are_you_sure": "Emin misiniz?",

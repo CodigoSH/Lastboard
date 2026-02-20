@@ -101,6 +101,8 @@
   "general.search": "무언가 찾기...",
   "general.search_icons": "입력을 시작하여 아이콘 검색...",
   "general.select_icon": "아이콘 선택",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "새로고침",
   "general.confirm_action": "작업 확인",
   "general.are_you_sure": "정말입니까?",

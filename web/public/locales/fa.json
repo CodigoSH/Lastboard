@@ -101,6 +101,8 @@
   "general.search": "چیزی جستجو کنید...",
   "general.search_icons": "برای جستجوی نمادها شروع به تایپ کنید...",
   "general.select_icon": "انتخاب نماد",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "بارگذاری مجدد",
   "general.confirm_action": "تایید عملیات",
   "general.are_you_sure": "آیا مطمئن هستید؟",

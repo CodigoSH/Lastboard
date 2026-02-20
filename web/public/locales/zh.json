@@ -101,6 +101,8 @@
   "general.search": "查找内容...",
   "general.search_icons": "开始输入以搜索图标...",
   "general.select_icon": "选择图标",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "重新加载",
   "general.confirm_action": "确认操作",
   "general.are_you_sure": "您确定吗？",

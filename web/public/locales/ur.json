@@ -101,6 +101,8 @@
   "general.search": "کچھ تلاش کریں...",
   "general.search_icons": "آئیکنز تلاش کرنے کے لیے ٹائپ کرنا شروع کریں...",
   "general.select_icon": "آئیکن منتخب کریں",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "دوباره لوڈ کریں",
   "general.confirm_action": "عمل کی تصدیق کریں",
   "general.are_you_sure": "کیا آپ کو یقین ہے؟",

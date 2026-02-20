@@ -101,6 +101,8 @@
   "general.search": "Найти что-нибудь...",
   "general.search_icons": "Начните вводить текст для поиска значков...",
   "general.select_icon": "Выбрать значок",
+  "general.latitude": "Latitude",
+  "general.longitude": "Longitude",
   "general.reload": "Перезагрузить",
   "general.confirm_action": "Подтвердить действие",
   "general.are_you_sure": "Вы уверены?",
