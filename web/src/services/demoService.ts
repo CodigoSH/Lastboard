@@ -24,6 +24,8 @@ class DemoService {
      * If expired (> 1 hour), resets all data to defaults.
      */
     private checkTTL() {
+        if (!window.LASTBOARD_CONFIG?.demo_mode) return;
+
         const start = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
         const now = Date.now();
 

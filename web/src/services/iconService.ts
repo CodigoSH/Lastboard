@@ -32,7 +32,6 @@ class IconService {
 
             // If CDN fails, try GitHub raw
             if (!response.ok) {
-                console.log('[IconService] CDN failed, trying GitHub raw');
                 response = await fetch(`${this.FALLBACK_URL}/tree.json`);
             }
 
@@ -65,7 +64,6 @@ class IconService {
 
             this.loaded = true;
             this.loading = false;
-            console.log(`[IconService] Loaded ${this.icons.length} icons`);
             return this.icons;
 
         } catch (error) {
