@@ -58,6 +58,7 @@ class BookmarkGrid extends HTMLElement {
     private _boundActionClick = this.handleActionClick.bind(this);
     private _boundMouseMove = this.handleWindowMouseMove.bind(this);
     private _boundMouseUp = this.handleWindowMouseUp.bind(this);
+    private _boundUpdateTouchState: () => void = () => { };
 
     private applyFilters() {
         const isTouch = this.isTouchDevice;
@@ -116,7 +117,7 @@ class BookmarkGrid extends HTMLElement {
             return narrowScreen && isTouch;
         };
 
-        const updateTouchState = () => {
+        this._boundUpdateTouchState = () => {
             const isMobile = detectTouch();
             if (this.isTouchDevice !== isMobile) {
                 this.isTouchDevice = isMobile;
@@ -130,8 +131,8 @@ class BookmarkGrid extends HTMLElement {
             }
         };
 
-        window.addEventListener('resize', updateTouchState);
-        window.addEventListener('orientationchange', updateTouchState);
+        window.addEventListener('resize', this._boundUpdateTouchState);
+        window.addEventListener('orientationchange', this._boundUpdateTouchState);
 
         // Initial touch check + first render
         this.isTouchDevice = detectTouch();
@@ -310,6 +311,8 @@ class BookmarkGrid extends HTMLElement {
         if (this._updateGhostTimeout) clearTimeout(this._updateGhostTimeout);
         window.removeEventListener('mousemove', this._boundMouseMove);
         window.removeEventListener('mouseup', this._boundMouseUp);
+        window.removeEventListener('resize', this._boundUpdateTouchState);
+        window.removeEventListener('orientationchange', this._boundUpdateTouchState);
         statusService.stop();
     }
 

@@ -3,9 +3,14 @@ import { template } from './Notifier.template';
 import css from './Notifier.css' with { type: 'text' };
 
 class AppNotifier extends HTMLElement {
+    private _boundOpen: () => void;
+    private _boundClose: () => void;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this._boundOpen = () => this.shift(true);
+        this._boundClose = () => this.shift(false);
     }
 
     connectedCallback() {
@@ -13,8 +18,13 @@ class AppNotifier extends HTMLElement {
         // @ts-ignore
         window.notifier = this;
 
-        window.addEventListener('drawer-open', () => this.shift(true));
-        window.addEventListener('drawer-close', () => this.shift(false));
+        window.addEventListener('drawer-open', this._boundOpen);
+        window.addEventListener('drawer-close', this._boundClose);
+    }
+
+    disconnectedCallback() {
+        window.removeEventListener('drawer-open', this._boundOpen);
+        window.removeEventListener('drawer-close', this._boundClose);
     }
 
     shift(isOpen: boolean) {

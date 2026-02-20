@@ -127,7 +127,9 @@ class IconPicker extends HTMLElement {
         }
     }
 
-
+    disconnectedCallback() {
+        if (this.debounceTimer) window.clearTimeout(this.debounceTimer);
+    }
 }
 
 if (!customElements.get('icon-picker')) {

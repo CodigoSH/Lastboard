@@ -4,6 +4,7 @@ import css from './ReferenceHeader.css' with { type: 'text' };
 
 class ReferenceHeader extends HTMLElement {
     dropdownOpen: boolean;
+    private _boundWindowClick?: () => void;
 
     constructor() {
         super();
@@ -14,6 +15,12 @@ class ReferenceHeader extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupListeners();
+    }
+
+    disconnectedCallback() {
+        if (this._boundWindowClick) {
+            window.removeEventListener('click', this._boundWindowClick);
+        }
     }
 
     toggleDropdown(state?: boolean) {
@@ -36,11 +43,12 @@ class ReferenceHeader extends HTMLElement {
             }
         });
 
-        window.addEventListener('click', () => {
+        this._boundWindowClick = () => {
             if (this.dropdownOpen) {
                 this.toggleDropdown(false);
             }
-        });
+        };
+        window.addEventListener('click', this._boundWindowClick);
     }
 
     render() {

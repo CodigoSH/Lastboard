@@ -317,23 +317,27 @@ export class NotepadWidget extends HTMLElement {
     private _imgResizer: HTMLButtonElement | null = null;
     private _activeImage: HTMLImageElement | null = null;
     private _pendingAction: 'link' | 'image' | 'image-edit' | null = null;
+    private _boundBeforeUnload: (e: BeforeUnloadEvent) => void;
+    private _unsubscribeI18n: (() => void) | undefined;
 
     static get observedAttributes() { return ['item-id']; }
 
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this._boundBeforeUnload = this.handleBeforeUnload.bind(this);
     }
 
     connectedCallback() {
         this.render();
         this.loadContent();
-        window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
-        i18n.subscribe(() => { if (this._editor) this._editor.dataset.placeholder = i18n.t('widget.notepad.placeholder'); });
+        window.addEventListener('beforeunload', this._boundBeforeUnload);
+        this._unsubscribeI18n = i18n.subscribe(() => { if (this._editor) this._editor.dataset.placeholder = i18n.t('widget.notepad.placeholder'); });
     }
 
     disconnectedCallback() {
-        window.removeEventListener('beforeunload', this.handleBeforeUnload.bind(this));
+        window.removeEventListener('beforeunload', this._boundBeforeUnload);
+        if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
 
     attributeChangedCallback(name: string, old: string, val: string) {

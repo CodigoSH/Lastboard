@@ -35,6 +35,15 @@ export class ColorPicker extends HTMLElement {
         this.updateUI();
     }
 
+    disconnectedCallback() {
+        window.removeEventListener('resize', this.updatePositionRef);
+        window.removeEventListener('scroll', this.updatePositionRef, true);
+        window.removeEventListener('mousemove', this.onMouseMoveSat);
+        window.removeEventListener('mouseup', this.onMouseUpSat);
+        window.removeEventListener('mousemove', this.onMouseMoveHue);
+        window.removeEventListener('mouseup', this.onMouseUpHue);
+    }
+
     get value() { return this._value; }
     set value(val: string) {
         if (this._value !== val) {
