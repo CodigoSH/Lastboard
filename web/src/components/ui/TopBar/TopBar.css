@@ -60,6 +60,7 @@
     animation: demo-glow-gpu 2s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
     z-index: -1;
     pointer-events: none;
+    will-change: opacity;
 }
 
 .top-bar__demo-badge::before {
@@ -302,6 +303,7 @@
     border-radius: 50%;
     border: 2px solid var(--panel);
     animation: blink 2s infinite;
+    will-change: opacity, transform;
 }
 
 @keyframes blink {

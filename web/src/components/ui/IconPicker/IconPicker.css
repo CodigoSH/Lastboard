@@ -207,6 +207,7 @@
 
 .icon-picker__loading {
     animation: pulse 2s infinite;
+    will-change: opacity;
 }
 
 @keyframes pulse {

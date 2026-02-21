@@ -526,14 +526,13 @@ class WidgetConfigModal extends HTMLElement {
 
                 const generalTab = `
                     <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">${i18n.t('widget.telemetry.description')}</p>
-                `;
-
-                const customizationTab = `
                     <div class="field-group row-aligned">
                         <label>${i18n.t('widget.telemetry.update_interval')}</label>
                         <app-select id="telemetry-interval" value="${interval}"></app-select>
                     </div>
                 `;
+
+                const customizationTab = ``;
 
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
 
@@ -542,10 +541,10 @@ class WidgetConfigModal extends HTMLElement {
                 const text = content.text || '';
 
                 const generalTab = `
-                    <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
-                        <p>${i18n.t('widget.config.check_personalize')}</p>
-                    </div>
-                `;
+                    < div style = "text-align: center; padding: 32px 20px; color: var(--text-dim);" >
+                        <p>${i18n.t('widget.config.check_personalize')} </p>
+                            </div>
+                                `;
 
                 const customizationTab = ``;
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
@@ -580,7 +579,9 @@ class WidgetConfigModal extends HTMLElement {
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
             }
 
-            return { general: `<p>${i18n.t('widget.config.no_config')}</p>`, customization: '' };
+            return {
+                general: `<p>${i18n.t('widget.config.no_config')}</p>`, customization: ''
+            };
         };
 
 

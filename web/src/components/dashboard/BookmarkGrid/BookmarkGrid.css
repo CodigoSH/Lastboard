@@ -325,13 +325,13 @@
 .status-up::after {
     content: '';
     position: absolute;
-    inset: -2px;
+    inset: 0;
     border-radius: 50%;
-    border: 2px solid #2ecc71;
-    background: transparent;
-    animation: status-pulse-gpu 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    background: #2ecc71;
+    animation: status-pulse-gpu 2.5s infinite cubic-bezier(0.1, 0.7, 0.3, 1);
     z-index: -1;
     pointer-events: none;
+    will-change: transform, opacity;
 }
 
 .status-down {
@@ -341,23 +341,23 @@
 .status-down::after {
     content: '';
     position: absolute;
-    inset: -2px;
+    inset: 0;
     border-radius: 50%;
-    border: 2px solid #e74c3c;
-    background: transparent;
-    animation: status-pulse-gpu 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    background: #e74c3c;
+    animation: status-pulse-gpu 2.5s infinite cubic-bezier(0.1, 0.7, 0.3, 1);
     z-index: -1;
     pointer-events: none;
+    will-change: transform, opacity;
 }
 
 @keyframes status-pulse-gpu {
     0% {
-        transform: scale(0.8);
-        opacity: 0.8;
+        transform: scale(1);
+        opacity: 0.6;
     }
 
     100% {
-        transform: scale(2.5);
+        transform: scale(1.6);
         opacity: 0;
     }
 }

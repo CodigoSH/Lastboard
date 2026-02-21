@@ -584,6 +584,7 @@ button {
     border-radius: 50%;
     box-shadow: 0 0 8px var(--accent);
     animation: pulse 2s infinite;
+    will-change: transform, opacity;
 }
 
 .update-modal__version {
@@ -642,6 +643,7 @@ button {
     border-top-color: #fff;
     animation: spin 0.8s linear infinite;
     margin-right: 8px;
+    will-change: transform;
 }
 
 /* Standard Toggle Switch */

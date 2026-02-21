@@ -83,6 +83,9 @@ class ClockWidget extends HTMLElement {
         if (this.timer) clearInterval(this.timer);
     }
 
+    private _lastTimeHTML = '';
+    private _lastDateStr = '';
+
     updateTime() {
         if (!this.timeEl || !this.dateEl) return;
         const now = new Date();
@@ -123,11 +126,18 @@ class ClockWidget extends HTMLElement {
                 return p.value;
             }).join('');
 
-            this.timeEl.innerHTML = timeHTML;
+            if (this._lastTimeHTML !== timeHTML) {
+                this.timeEl.innerHTML = timeHTML;
+                this._lastTimeHTML = timeHTML;
+            }
 
         } catch (e) {
             // Fallback
-            this.timeEl.textContent = now.toLocaleTimeString();
+            const fallback = now.toLocaleTimeString();
+            if (this._lastTimeHTML !== fallback) {
+                this.timeEl.textContent = fallback;
+                this._lastTimeHTML = fallback;
+            }
         }
 
         // Date Logic (Keep existing, but ensure timezone)
@@ -138,7 +148,11 @@ class ClockWidget extends HTMLElement {
                 month: 'long',
                 timeZone
             };
-            this.dateEl.textContent = now.toLocaleDateString(currentLocale, dateOpts);
+            const dateStr = now.toLocaleDateString(currentLocale, dateOpts);
+            if (this._lastDateStr !== dateStr) {
+                this.dateEl.textContent = dateStr;
+                this._lastDateStr = dateStr;
+            }
             this.dateEl.style.display = 'block';
         } else {
             this.dateEl.style.display = 'none';

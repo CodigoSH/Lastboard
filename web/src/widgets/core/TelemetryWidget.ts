@@ -82,6 +82,7 @@ class TelemetryWidget extends HTMLElement {
     }
 
     private lastKnownStats: any = { cpu_usage: 0, ram_usage: 0, temperature: 0 };
+    private _lastRendered = { cpu: -1, ram: -1, temp: -1 };
 
     update(data: any) {
         if (!this.shadowRoot) return;
@@ -106,24 +107,35 @@ class TelemetryWidget extends HTMLElement {
         const ramVal = typeof data.ram_usage === 'number' ? data.ram_usage : this.lastKnownStats.ram_usage;
         const tempVal = typeof data.temperature === 'number' ? data.temperature : this.lastKnownStats.temperature;
 
+        const cpu = Math.min(100, Math.max(0, Math.round(cpuVal)));
+        const ram = Math.min(100, Math.max(0, Math.round(ramVal)));
+        const temp = Math.round(tempVal);
+        const displayTemp = Math.min(100, Math.max(0, temp));
+
+        // Dirty Check: Only update DOM if values changed
+        if (
+            this._lastRendered.cpu === cpu &&
+            this._lastRendered.ram === ram &&
+            this._lastRendered.temp === temp
+        ) {
+            return;
+        }
+
+        this._lastRendered = { cpu, ram, temp };
+
         // Force visual update in next frame to ensure DOM is ready
         requestAnimationFrame(() => {
             // CPU
-            const cpu = Math.min(100, Math.max(0, Math.round(cpuVal)));
             if (this.cpuBar) {
                 this.cpuBar.style.strokeDasharray = `${cpu}, 100`;
             }
             if (this.cpuText) this.cpuText.textContent = `${cpu}%`;
 
             // RAM
-            const ram = Math.min(100, Math.max(0, Math.round(ramVal)));
             if (this.ramBar) this.ramBar.style.strokeDasharray = `${ram}, 100`;
             if (this.ramText) this.ramText.textContent = `${ram}%`;
 
             // Temp
-            const temp = Math.round(tempVal);
-            const displayTemp = Math.min(100, Math.max(0, temp));
-
             if (this.tempBar) {
                 this.tempBar.style.strokeDasharray = `${displayTemp}, 100`;
             }
