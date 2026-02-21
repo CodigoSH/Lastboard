@@ -29,11 +29,12 @@ export class IconSelectionModal extends HTMLElement {
         const closeBtn = this.shadowRoot!.getElementById('close-btn');
         closeBtn?.addEventListener('click', () => this.close(null));
 
-        this.dialog?.addEventListener('click', (e) => {
-            if (e.target === this.dialog) {
-                this.close(null);
-            }
-        });
+        // Prevent closing on backdrop click (user must select or click X)
+        // this.dialog?.addEventListener('click', (e) => {
+        //     if (e.target === this.dialog) {
+        //         this.close(null);
+        //     }
+        // });
 
         // Listen for icon selection from the child component
         this.shadowRoot!.addEventListener('icon-selected', (e: Event) => {

@@ -154,8 +154,9 @@ class AddBookmarkModal extends HTMLElement {
             e.preventDefault();
 
             // Re-read values just in case (though state should be consistent)
+            const isDirectUrl = this.selectedIconName && (this.selectedIconName.startsWith('http') || this.selectedIconName.startsWith('/') || this.selectedIconName.startsWith('data:'));
             const iconUrl = this.selectedIconName
-                ? `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.selectedIconName}.png`
+                ? (isDirectUrl ? this.selectedIconName : `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${this.selectedIconName}.webp`)
                 : '';
 
             const content = JSON.stringify({
@@ -345,9 +346,25 @@ class AddBookmarkModal extends HTMLElement {
         const root = this.shadowRoot!;
         const btn = root.getElementById('icon-trigger-btn');
         if (btn) {
-            btn.innerHTML = this.selectedIconName ?
-                `<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.selectedIconName}.png" alt="icon" style="width: 24px; height: 24px; object-fit: contain;">` :
-                `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+            if (this.selectedIconName) {
+                // Check if it's already a full URL, absolute path, or Base64 instead of a provider key
+                const isDirectUrl = this.selectedIconName.startsWith('http') || this.selectedIconName.startsWith('/') || this.selectedIconName.startsWith('data:');
+
+                let iconUrl = '';
+                if (isDirectUrl) {
+                    iconUrl = this.selectedIconName;
+                } else {
+                    // It's from the icon service. We should really store the full URL in the DB 
+                    // or ask the service for the URL, but as a fallback assume homarr if it's just a string.
+                    // Note: with the new IconPicker, selectedIconName should ideally be the full URL,
+                    // but we dispatched just the name. Currently we rely on iconService.getIconUrl
+                    iconUrl = `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${this.selectedIconName}.webp`;
+                }
+
+                btn.innerHTML = `<img src="${iconUrl}" alt="icon" style="width: 24px; height: 24px; object-fit: contain;">`;
+            } else {
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+            }
         }
     }
 

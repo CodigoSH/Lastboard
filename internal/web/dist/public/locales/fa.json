@@ -265,6 +265,7 @@
   "widget.clock.description": "ساعت دیجیتال با تاریخ",
   "widget.clock.name": "ساعت",
   "widget.clock.show_date": "نمایش تاریخ",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "ساعت 12 ساعته",
   "widget.config.no_config": "تنظیماتی برای این مورد وجود ندارد.",
   "widget.config.title": "تنظیمات",

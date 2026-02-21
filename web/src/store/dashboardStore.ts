@@ -30,7 +30,7 @@ const INITIAL_ITEMS: GridItem[] = [
         content: {
             label: 'CodigoSH',
             url: 'https://github.com/CodigoSH/Lastboard',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png',
+            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/git.webp',
             iconName: 'git'
         }
     }

@@ -88,10 +88,10 @@ bootstrap(async () => {
 
     // --- 2. Avatar Picker ---
     const avatars = [
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/proxmox.png', // Generic/Default
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/pi-hole.png',
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/home-assistant.png',
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/docker.png'
+        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/proxmox.webp', // Generic/Default
+        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/pi-hole.webp',
+        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/home-assistant.webp',
+        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp'
     ];
     // Avatar Upload Logic
     const avatarInput = document.getElementById('avatarInput') as HTMLInputElement;

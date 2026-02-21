@@ -20,6 +20,7 @@ export interface ClockWidgetContent extends BaseWidgetContent {
     timezone?: string;
     use12h?: boolean;
     showDate?: boolean;
+    showSeconds?: boolean;
 }
 
 export interface TelemetryWidgetContent extends BaseWidgetContent {

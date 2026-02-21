@@ -3,21 +3,23 @@
 }
 
 dialog {
-    background: var(--surface-solid);
-    color: var(--text-main);
-    border: 1px solid var(--border);
+    background: var(--paper-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--paper-border);
+    border-top: 1px solid var(--paper-border-top);
     border-radius: var(--radius);
     padding: 0;
     width: 90%;
-    max-width: 400px;
-    height: 370px;
-    /* Increased height to fully clear 3 rows of icons */
+    max-width: 720px;
+    height: 460px;
+    /* Fixed boundaries tuned for 3 providers */
     margin: auto;
     display: none;
     flex-direction: column;
-    backdrop-filter: blur(20px);
     box-shadow: var(--paper-shadow);
     overflow: hidden;
+    color: var(--text-main);
 }
 
 dialog[open] {
@@ -47,10 +49,11 @@ dialog::backdrop {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0 24px;
-    background: var(--modal-header-bg);
-    height: 64px;
+    background: transparent;
+    height: 56px;
+    border-radius: var(--radius) var(--radius) 0 0;
     flex-shrink: 0;
 }
 
@@ -77,20 +80,23 @@ dialog::backdrop {
 
 .modal-close:hover {
     background: rgba(var(--accent-rgb), 0.1);
+    transform: rotate(90deg);
     color: var(--accent);
     border-color: rgba(var(--accent-rgb), 0.3);
 }
 
 .modal-body {
-    padding: 16px;
-    background: var(--surface);
+    padding: 24px;
+    background: transparent;
     display: flex;
     flex-direction: column;
+    flex: 1;
     min-height: 0;
 }
 
 icon-picker {
     display: flex;
     flex-direction: column;
+    flex: 1;
     min-height: 0;
 }

@@ -265,6 +265,7 @@
   "widget.clock.description": "带日期的数字时钟",
   "widget.clock.name": "时钟",
   "widget.clock.show_date": "显示日期",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "12小时制",
   "widget.config.no_config": "此项目没有可用的配置。",
   "widget.config.title": "设置",

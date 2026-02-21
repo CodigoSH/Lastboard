@@ -302,6 +302,7 @@ class WidgetConfigModal extends HTMLElement {
             newContent.timezone = timezone;
             newContent.hour12 = h12Input?.checked || false;
             newContent.showDate = dateInput?.checked || false;
+            newContent.showSeconds = (this.shadowRoot?.getElementById('clock-seconds') as HTMLInputElement)?.checked ?? true;
 
             // Reset stored coords
             this._clockSelectedLat = null;
@@ -451,6 +452,11 @@ class WidgetConfigModal extends HTMLElement {
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-date" ${showDate ? 'checked' : ''} />
                         <label for="clock-date">${i18n.t('widget.clock.show_date')}</label>
+                    </div>
+
+                    <div class="field-group check-row">
+                        <input type="checkbox" id="clock-seconds" ${content.showSeconds !== false ? 'checked' : ''} />
+                        <label for="clock-seconds">${i18n.t('widget.clock.show_seconds')}</label>
                     </div>
                 `;
 

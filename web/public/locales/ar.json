@@ -265,6 +265,7 @@
   "widget.clock.description": "ساعة رقمية مع التاريخ",
   "widget.clock.name": "ساعة",
   "widget.clock.show_date": "عرض التاريخ",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "ساعة 12 ساعة",
   "widget.config.no_config": "لا يوجد تكوين متاح لهذا العنصر.",
   "widget.config.title": "الإعدادات",

@@ -265,6 +265,7 @@
   "widget.clock.description": "Zegar cyfrowy z datą",
   "widget.clock.name": "Zegar",
   "widget.clock.show_date": "Pokaż datę",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "Zegar 12-godzinny",
   "widget.config.no_config": "Brak konfiguracji dla tego elementu.",
   "widget.config.title": "Ustawienia",

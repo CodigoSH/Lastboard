@@ -40,7 +40,8 @@ export const DEFAULT_ITEMS: GridItem[] = [
             widgetId: 'clock',
             timezone: 'local',
             hour12: false,
-            showDate: true
+            showDate: true,
+            showSeconds: true
         })
     },
     {

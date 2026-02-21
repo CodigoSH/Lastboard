@@ -265,6 +265,7 @@
   "widget.clock.description": "तारीख के साथ डिजिटल घड़ी",
   "widget.clock.name": "घड़ी",
   "widget.clock.show_date": "तारीख दिखाएं",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "12 घंटे की घड़ी",
   "widget.config.no_config": "इस आइटम के लिए कोई कॉन्फ़िगरेशन उपलब्ध नहीं है।",
   "widget.config.title": "सेटिंग्स",

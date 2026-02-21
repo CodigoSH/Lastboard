@@ -265,6 +265,7 @@
   "widget.clock.description": "Orologio digitale con data",
   "widget.clock.name": "Orologio",
   "widget.clock.show_date": "Mostra data",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "Orologio a 12 ore",
   "widget.config.no_config": "Nessuna configurazione disponibile per questo elemento.",
   "widget.config.title": "Impostazioni",

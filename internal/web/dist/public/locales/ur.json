@@ -265,6 +265,7 @@
   "widget.clock.description": "تاریخ کے ساتھ ڈیجیٹل گھڑی",
   "widget.clock.name": "گھڑی",
   "widget.clock.show_date": "تاریخ دکھائیں",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "12 گھنٹے کی گھڑی",
   "widget.config.no_config": "اس آئٹم کے لیے کوئی ترتیب دستیاب نہیں ہے۔",
   "widget.config.title": "ترتیبات",

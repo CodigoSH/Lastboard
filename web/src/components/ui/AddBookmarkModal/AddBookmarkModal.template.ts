@@ -24,6 +24,15 @@ const premiumColors = [
     '#ec4899', '#64748b', '#f8fafc', '#1e293b', '#333333'
 ];
 
+const renderIconPreview = (selectedIcon: string | null) => {
+    if (!selectedIcon) {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+    }
+    const isDirectUrl = selectedIcon.startsWith('http') || selectedIcon.startsWith('/') || selectedIcon.startsWith('data:');
+    const iconUrl = isDirectUrl ? selectedIcon : `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${selectedIcon}.webp`;
+    return `<img src="${iconUrl}" alt="icon" style="width: 36px; height: 36px; object-fit: contain;">`;
+};
+
 const renderAppearanceControls = (color: string, borderWidth: number) => {
     // Check if color is in presets (ignoring case usually, but here exact strings)
     const isCustom = !premiumColors.includes(color) && color !== '';
@@ -103,10 +112,7 @@ export const template = ({
                         <!-- Icon Box (Independent) -->
                         <div class="form-group" style="width: 52px;">
                             <button type="button" class="independent-icon-btn" id="icon-trigger-btn" title="${i18n.t('bookmark.icon')}">
-                                ${selectedIcon ?
-        `<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${selectedIcon}.png" alt="icon" style="width: 36px; height: 36px; object-fit: contain;">` :
-        `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`
-    }
+                                ${renderIconPreview(selectedIcon)}
                             </button>
                         </div>
 
@@ -230,16 +236,16 @@ export const template = ({
                 <div class="dropdown-item ${!checkStatus ? 'selected' : ''}" data-status-pos="off" title="${i18n.t('bookmark.status_off')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'top-left' ? 'selected' : ''}" data-status-pos="top-left" title="${i18n.t('bookmark.pos_top_left')}">
+                <div class="dropdown-item ${checkStatus && statusPosition === 'top-left' ? 'selected' : ''}" data-status-pos="top-left" title="${i18n.t('bookmark.pos_top_left')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'top-right' ? 'selected' : ''}" data-status-pos="top-right" title="${i18n.t('bookmark.pos_top_right')}">
+                <div class="dropdown-item ${checkStatus && statusPosition === 'top-right' ? 'selected' : ''}" data-status-pos="top-right" title="${i18n.t('bookmark.pos_top_right')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="8" r="2" fill="currentColor"/></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'bottom-left' ? 'selected' : ''}" data-status-pos="bottom-left" title="${i18n.t('bookmark.pos_bottom_left')}">
+                <div class="dropdown-item ${checkStatus && statusPosition === 'bottom-left' ? 'selected' : ''}" data-status-pos="bottom-left" title="${i18n.t('bookmark.pos_bottom_left')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="8" cy="16" r="2" fill="currentColor"/></svg>
                 </div>
-                <div class="dropdown-item ${statusPosition === 'bottom-right' ? 'selected' : ''}" data-status-pos="bottom-right" title="${i18n.t('bookmark.pos_bottom_right')}">
+                <div class="dropdown-item ${checkStatus && statusPosition === 'bottom-right' ? 'selected' : ''}" data-status-pos="bottom-right" title="${i18n.t('bookmark.pos_bottom_right')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" /><circle cx="16" cy="16" r="2" fill="currentColor"/></svg>
                 </div>
             </div>

@@ -124,7 +124,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
     }
 
     const icon = data.icon || '';
-    const isIconUrl = icon.startsWith('http') || icon.startsWith('/');
+    const isIconUrl = icon.startsWith('http') || icon.startsWith('/') || icon.startsWith('data:');
     const iconHtml = isIconUrl
         ? `<img src="${esc(icon)}" alt="${esc(data.label)}" class="bookmark-grid__icon-img" draggable="false" />`
         : (icon ? esc(icon) : `<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`);

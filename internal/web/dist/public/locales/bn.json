@@ -265,6 +265,7 @@
   "widget.clock.description": "তারিখ সহ ডিজিটাল ঘড়ি",
   "widget.clock.name": "ঘড়ি",
   "widget.clock.show_date": "তারিখ দেখান",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "১২ ঘন্টার ঘড়ি",
   "widget.config.no_config": "এই আইটেমের জন্য কোন কনফিগারেশন নেই।",
   "widget.config.title": "সেটিংস",

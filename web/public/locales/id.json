@@ -265,6 +265,7 @@
   "widget.clock.description": "Jam digital dengan tanggal",
   "widget.clock.name": "Jam",
   "widget.clock.show_date": "Tampilkan tanggal",
+  "widget.clock.show_seconds": "Show Seconds",
   "widget.clock.use_12h": "Jam 12 jam",
   "widget.config.no_config": "Tidak ada konfigurasi untuk item ini.",
   "widget.config.title": "Pengaturan",
