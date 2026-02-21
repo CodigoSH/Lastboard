@@ -282,6 +282,16 @@ class TelemetryWidget extends HTMLElement {
         this.cpuText = this.shadowRoot.querySelector('.cpu-text');
         this.ramText = this.shadowRoot.querySelector('.ram-text');
         this.tempText = this.shadowRoot.querySelector('.temp-text');
+
+        // Reset dirty check cache and throttle since the DOM was just wiped out
+        this._lastRendered = { cpu: -1, ram: -1, temp: -1 };
+        this.lastUpdate = 0;
+
+        // Force immediate paint with the current real data
+        const state = dashboardStore.getState();
+        if (state.stats) {
+            this.update(state.stats);
+        }
     }
 }
 
