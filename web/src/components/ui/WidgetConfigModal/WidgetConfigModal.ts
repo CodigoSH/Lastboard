@@ -455,7 +455,7 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
 
                     <div class="field-group check-row">
-                        <input type="checkbox" id="clock-seconds" ${content.showSeconds !== false ? 'checked' : ''} />
+                        <input type="checkbox" id="clock-seconds" ${content.showSeconds === true ? 'checked' : ''} />
                         <label for="clock-seconds">${i18n.t('widget.clock.show_seconds')}</label>
                     </div>
                 `;
@@ -522,7 +522,7 @@ class WidgetConfigModal extends HTMLElement {
 
                 // --- TELEMETRY ---
             } else if (widgetId === 'telemetry') {
-                const interval = content.interval || 1000;
+                const interval = content.interval || 5000;
 
                 const generalTab = `
                     <div class="field-group row-aligned">

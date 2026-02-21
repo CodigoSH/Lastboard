@@ -17,7 +17,7 @@ class ClockWidget extends HTMLElement {
 
     private isEditing: boolean = false;
     private configMode: boolean = false;
-    private _config: { timezone: string, hour12: boolean, showDate: boolean, showSeconds: boolean } = { timezone: 'local', hour12: false, showDate: true, showSeconds: true };
+    private _config: { timezone: string, hour12: boolean, showDate: boolean, showSeconds: boolean } = { timezone: 'local', hour12: false, showDate: true, showSeconds: false };
     private _itemId: number = 0;
 
     static get observedAttributes() {

@@ -14,7 +14,7 @@ class TelemetryWidget extends HTMLElement {
     private _unsubscribeI18n: (() => void) | undefined;
 
     private _itemId: number = 0;
-    private _interval: number = 1000;
+    private _interval: number = 5000;
     private lastUpdate: number = 0;
 
     static get observedAttributes() {
