@@ -202,6 +202,11 @@ class ClockWidget extends HTMLElement {
 
         this.timeEl = this.shadowRoot.querySelector('.time');
         this.dateEl = this.shadowRoot.querySelector('.date');
+
+        // Reset dirty check cache since the DOM was just wiped out
+        this._lastTimeHTML = '';
+        this._lastDateStr = '';
+        this.updateTime();
     }
 }
 

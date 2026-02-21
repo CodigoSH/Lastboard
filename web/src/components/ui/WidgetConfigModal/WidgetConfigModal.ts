@@ -525,7 +525,6 @@ class WidgetConfigModal extends HTMLElement {
                 const interval = content.interval || 1000;
 
                 const generalTab = `
-                    <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">${i18n.t('widget.telemetry.description')}</p>
                     <div class="field-group row-aligned">
                         <label>${i18n.t('widget.telemetry.update_interval')}</label>
                         <app-select id="telemetry-interval" value="${interval}"></app-select>
