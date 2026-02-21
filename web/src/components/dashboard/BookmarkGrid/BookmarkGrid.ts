@@ -187,19 +187,47 @@ class BookmarkGrid extends HTMLElement {
 
             const newAllItems = Array.isArray(state.items) ? state.items : [];
 
-            // Deep compare items to avoid re-rendering on reference change (e.g. stats update)
-            // This prevents the grid from flickering when telemetry data arrives every second
-            const itemsChanged = JSON.stringify(this.allItems) !== JSON.stringify(newAllItems);
+            // SURGICAL DIFFING LOGIC for PING UPDATES
+            // We want to avoid wiping the DOM if ONLY the 'status' property changed (e.g., from Ping system)
+            let structuralChange = false;
+            let statusOnlyChange = false;
 
-            if (itemsChanged || shouldRerender) {
+            if (this.allItems.length !== newAllItems.length) {
+                structuralChange = true;
+            } else {
+                for (let i = 0; i < newAllItems.length; i++) {
+                    const oldItem = this.allItems[i];
+                    const newItem = newAllItems[i];
+
+                    if (oldItem.id !== newItem.id ||
+                        oldItem.x !== newItem.x ||
+                        oldItem.y !== newItem.y ||
+                        oldItem.w !== newItem.w ||
+                        oldItem.h !== newItem.h ||
+                        oldItem.parent_id !== newItem.parent_id ||
+                        oldItem.content !== newItem.content) {
+                        structuralChange = true;
+                        break;
+                    }
+
+                    if (oldItem.status !== newItem.status) {
+                        statusOnlyChange = true;
+                    }
+                }
+            }
+
+            if (structuralChange || shouldRerender) {
+                // Hard layout change: Re-render everything
                 this.allItems = newAllItems;
                 this.applyFilters();
-                shouldRerender = true;
+                this.render();
+            } else if (statusOnlyChange) {
+                // Soft status change: Only update the CSS classes of existing elements
+                this.updateStatusIndicators(this.allItems, newAllItems);
+                this.allItems = newAllItems; // Keep reference updated
+                this.applyFilters(); // Apply filters without forcing a full DOM re-render
             }
 
-            if (shouldRerender) {
-                this.render();
-            }
         });
 
         this.setupDragListeners();
@@ -221,6 +249,39 @@ class BookmarkGrid extends HTMLElement {
                 });
             });
         });
+    }
+
+    private updateStatusIndicators(oldItems: any[], newItems: any[]) {
+        if (!this.shadowRoot) return;
+
+        // Find items that changed status
+        for (let i = 0; i < newItems.length; i++) {
+            const oldItem = oldItems[i];
+            const newItem = newItems[i];
+
+            if (oldItem.id === newItem.id && oldItem.status !== newItem.status) {
+                // Find the DOM card for this ID
+                const card = this.shadowRoot.querySelector(`[data-id="${newItem.id}"]`);
+                if (card) {
+                    const indicator = card.querySelector('.status-indicator');
+                    if (indicator) {
+                        // Strip old status classes and applied the new one
+                        indicator.classList.remove('status-up', 'status-down', 'status-pending');
+                        if (newItem.status) {
+                            indicator.classList.add(`status-${newItem.status}`);
+                        }
+
+                        // Update tooltip
+                        let title = i18n.t('general.pinging');
+                        if (newItem.status === 'up') title = i18n.t('status.online');
+                        else if (newItem.status === 'down') title = i18n.t('status.unreachable');
+                        else if (newItem.status === 'pending') title = i18n.t('status.checking');
+
+                        indicator.setAttribute('title', title);
+                    }
+                }
+            }
+        }
     }
 
     private _unsubscribeUser: (() => void) | null = null;
