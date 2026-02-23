@@ -52,6 +52,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Return System Info
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(UpdateResponse{
 		Available:      false, // Handled by frontend or background ws
 		CurrentVersion: version.Current,
@@ -215,6 +216,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		h.restartSelf(currentExe)
 	}()
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "notifier.update_verified"})
 }
@@ -291,7 +293,8 @@ func (h *UpdateHandler) downloadFile(url string, dest string) error {
 	}
 	defer out.Close()
 
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: 5 * time.Minute}
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}

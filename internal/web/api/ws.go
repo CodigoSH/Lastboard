@@ -61,16 +61,24 @@ func (h *Hub) Run() {
 			h.mu.Unlock()
 
 		case message := <-h.broadcast:
+			// Snapshot clients under lock, then release before sending
 			h.mu.Lock()
+			snapshot := make([]*websocket.Conn, 0, len(h.clients))
 			for client := range h.clients {
-				err := websocket.JSON.Send(client, message)
-				if err != nil {
-					log.Printf("WebSocket error: %v", err)
-					client.Close()
-					delete(h.clients, client)
-				}
+				snapshot = append(snapshot, client)
 			}
 			h.mu.Unlock()
+
+			// Send without holding the lock so a slow client doesn't block others
+			for _, client := range snapshot {
+				if err := websocket.JSON.Send(client, message); err != nil {
+					log.Printf("WebSocket error: %v", err)
+					client.Close()
+					h.mu.Lock()
+					delete(h.clients, client)
+					h.mu.Unlock()
+				}
+			}
 		}
 	}
 }

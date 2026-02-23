@@ -159,6 +159,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Preferences updated"})
 }
@@ -227,6 +228,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: false,
 		})
 
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"message":             "Profile updated",
@@ -235,6 +237,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Profile updated"})
 }
@@ -297,6 +300,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: false,
 	})
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":             "Password updated",
@@ -425,6 +429,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true, "visibleTouch": true}', "https://github.com/CodigoSH/Lastboard")`, newUserID)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User created"})
 }
@@ -483,6 +488,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User updated"})
 }
@@ -519,15 +525,18 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid user ID", http.StatusBadRequest)
 			return
 		}
+		adminPassword = r.URL.Query().Get("admin_password")
 	}
 
-	// Verify Admin Password if provided (Required for Enhanced Security)
-	if adminPassword != "" {
-		adminUsername := middleware.GetUserFromContext(r)
-		if !h.verifyPassword(adminUsername, adminPassword) {
-			http.Error(w, "Invalid admin password", http.StatusUnauthorized)
-			return
-		}
+	// Admin password is always required to confirm destructive action
+	if adminPassword == "" {
+		http.Error(w, "Admin password required", http.StatusBadRequest)
+		return
+	}
+	adminUsername := middleware.GetUserFromContext(r)
+	if !h.verifyPassword(adminUsername, adminPassword) {
+		http.Error(w, "Invalid admin password", http.StatusUnauthorized)
+		return
 	}
 
 	// Prevent self-deletion
@@ -569,6 +578,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.user_deleted"})
 }

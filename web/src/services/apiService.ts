@@ -94,8 +94,10 @@ class ApiService {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                const text = await response.text();
+                let message = text.trim();
+                try { message = JSON.parse(text).error || message; } catch { }
+                throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
             }
 
             // Handle empty responses (like 204 No Content) or empty bodies
@@ -135,6 +137,28 @@ class ApiService {
 
     async delete<T>(url: string): Promise<T> {
         return this.request<T>(url, { method: 'DELETE' });
+    }
+
+    async postForm<T>(url: string, data: FormData): Promise<T> {
+        const fullUrl = `${this.baseUrl}${url}`;
+        const token = this.getCsrfToken();
+        const headers: Record<string, string> = {};
+        if (token) headers['X-CSRF-Token'] = token;
+        // Do NOT set Content-Type — the browser sets it with the correct multipart boundary
+        try {
+            const response = await fetch(fullUrl, { method: 'POST', headers, body: data });
+            if (!response.ok) {
+                const text = await response.text();
+                let message = text.trim();
+                try { message = JSON.parse(text).error || message; } catch { }
+                throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            const text = await response.text();
+            return text ? JSON.parse(text) : {} as T;
+        } catch (error) {
+            console.error(`[ApiService] Request failed: ${fullUrl}`, error);
+            throw error;
+        }
     }
 }
 

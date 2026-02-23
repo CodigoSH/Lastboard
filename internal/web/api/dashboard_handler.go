@@ -86,6 +86,7 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 512*1024)
 	var item dashboard.Item
 
 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
@@ -126,6 +127,7 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 512*1024)
 	userID := middleware.GetUserIDFromContext(r)
 	// Extract ID from URL path (e.g. /api/dashboard/item/3)
 	parts := strings.Split(r.URL.Path, "/")
@@ -234,6 +236,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
 }

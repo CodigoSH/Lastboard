@@ -28,12 +28,9 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify if the user is the Super Admin
-	var isAdmin bool
-	var userID int
-	err := h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &isAdmin) // Wait, Scan needs to match columns.
-	// Actually let's do it properly
 	var role string
-	err = h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &role)
+	var userID int
+	err := h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &role)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -168,8 +165,28 @@ func (h *SystemHandler) isAdmin(r *http.Request) bool {
 
 // GET /api/system/backup
 func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
+	username := middleware.GetUserFromContext(r)
+	if username == "" {
 		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Only the Superadmin (first admin by ID) may download the backup,
+	// because it contains password hashes for all users.
+	var userID int
+	var role string
+	if err := h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &role); err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+	if strings.ToLower(role) != "admin" && strings.ToLower(role) != "administrator" {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+	var firstAdminID int
+	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
+	if userID != firstAdminID {
+		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
 		return
 	}
 
@@ -373,6 +390,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.restore_success"})
 }

@@ -2,6 +2,7 @@ import { i18n } from '../../../services/i18n';
 import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
+import { apiService } from '../../../services/apiService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateStatusTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import '../Select/Select';
@@ -13,10 +14,6 @@ class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
     private users: User[] = [];
 
-    private getCsrfToken(): string {
-        const match = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
-        return match ? decodeURIComponent(match.split('=')[1]) : '';
-    }
 
     static get observedAttributes() {
         return ['section'];
@@ -557,34 +554,15 @@ class SettingsContent extends HTMLElement {
         }
 
         try {
-            const res = await fetch('/api/system/update/perform', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': this.getCsrfToken() },
-                body: JSON.stringify({ asset_url: assetUrl })
-            });
-
-            if (res.ok) {
-                if (status) {
-                    const statusText = status.querySelector('p');
-                    if (statusText) statusText.textContent = i18n.t('notifier.update_verified');
-                }
-                setTimeout(() => {
-                    window.location.reload();
-                }, 5000);
-            } else {
-                const err = await res.text();
-                if (status) {
-                    status.style.background = 'rgba(var(--danger-rgb), 0.1)';
-                    status.style.borderColor = 'rgba(var(--danger-rgb), 0.3)';
-                    const statusText = status.querySelector('p');
-                    if (statusText) {
-                        statusText.style.color = 'var(--danger-color)';
-                        statusText.textContent = i18n.t('notifier.update_failed') + ': ' + err;
-                    }
-                }
-                if (btn) btn.loading = false;
+            await apiService.post('/api/system/update/perform', { asset_url: assetUrl });
+            if (status) {
+                const statusText = status.querySelector('p');
+                if (statusText) statusText.textContent = i18n.t('notifier.update_verified');
             }
-        } catch (e) {
+            setTimeout(() => {
+                window.location.reload();
+            }, 5000);
+        } catch (e: any) {
             console.error("Update failed", e);
             if (status) {
                 status.style.background = 'rgba(var(--danger-rgb), 0.1)';
@@ -592,7 +570,7 @@ class SettingsContent extends HTMLElement {
                 const statusText = status.querySelector('p');
                 if (statusText) {
                     statusText.style.color = 'var(--danger-color)';
-                    statusText.textContent = i18n.t('notifier.update_error');
+                    statusText.textContent = i18n.t('notifier.update_failed') + (e?.message ? ': ' + e.message : '');
                 }
             }
             if (btn) btn.loading = false;
@@ -621,17 +599,9 @@ class SettingsContent extends HTMLElement {
         formData.append('backup_file', file);
 
         try {
-            const res = await fetch('/api/system/restore', {
-                method: 'POST',
-                headers: { 'X-CSRF-Token': this.getCsrfToken() },
-                body: formData
-            });
-            if (res.ok) {
-                if (window.notifier) window.notifier.show(i18n.t('notifier.restore_success'));
-                setTimeout(() => window.location.reload(), 2000);
-            } else {
-                if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');
-            }
+            await apiService.postForm('/api/system/restore', formData);
+            if (window.notifier) window.notifier.show(i18n.t('notifier.restore_success'));
+            setTimeout(() => window.location.reload(), 2000);
         } catch (e) {
             console.error('Restore error', e);
             if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');
@@ -660,56 +630,45 @@ class SettingsContent extends HTMLElement {
                 btn.textContent = i18n.t('settings.restoring') || "Restoring...";
             }
 
-            const res = await fetch('/api/system/reset', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': this.getCsrfToken()
-                },
-                body: JSON.stringify({ password })
+            await apiService.post('/api/system/reset', { password });
+
+            // Show Overlay
+            const overlay = document.createElement('div');
+            Object.assign(overlay.style, {
+                position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+                backgroundColor: 'rgba(0,0,0,0.9)', zIndex: '9999',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontFamily: 'var(--font-main, sans-serif)'
             });
 
-            if (res.ok) {
-                // Show Overlay
-                const overlay = document.createElement('div');
-                Object.assign(overlay.style, {
-                    position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.9)', zIndex: '9999',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    color: 'white', fontFamily: 'var(--font-main, sans-serif)'
-                });
+            overlay.innerHTML = `
+                <div style="border: 4px solid #333; border-top: 4px solid var(--accent, #0078d4); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
+                <h2 style="margin: 0; font-weight: 500;">${i18n.t('notifier.system_restarting')}</h2>
+                <p style="opacity: 0.7; margin-top: 8px;">${i18n.t('notifier.please_wait')}</p>
+                <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            `;
+            document.body.appendChild(overlay);
 
-                overlay.innerHTML = `
-                    <div style="border: 4px solid #333; border-top: 4px solid var(--accent, #0078d4); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
-                    <h2 style="margin: 0; font-weight: 500;">${i18n.t('notifier.system_restarting')}</h2>
-                    <p style="opacity: 0.7; margin-top: 8px;">${i18n.t('notifier.please_wait')}</p>
-                    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-                `;
-                document.body.appendChild(overlay);
-
-                // Poll for recovery
-                let attempts = 0;
-                const poll = async () => {
-                    attempts++;
-                    try {
-                        const check = await fetch('/', { method: 'HEAD', cache: 'no-store' });
-                        if (check.ok) {
-                            window.location.href = '/setup';
-                            return;
-                        }
-                    } catch (e) {
-                        // Still down
+            // Poll for recovery
+            let attempts = 0;
+            const poll = async () => {
+                attempts++;
+                try {
+                    const check = await fetch('/', { method: 'HEAD', cache: 'no-store' });
+                    if (check.ok) {
+                        window.location.href = '/setup';
+                        return;
                     }
-                    if (attempts < 60) setTimeout(poll, 1000);
-                    else window.location.href = '/setup'; // Fallback after 60s
-                };
+                } catch (e) {
+                    // Still down
+                }
+                if (attempts < 60) setTimeout(poll, 1000);
+                else window.location.href = '/setup'; // Fallback after 60s
+            };
 
-                // Wait 2s for shutdown, then start polling
-                setTimeout(poll, 2000);
+            // Wait 2s for shutdown, then start polling
+            setTimeout(poll, 2000);
 
-            } else {
-                if (window.notifier) window.notifier.show(i18n.t('notifier.reset_failed'), 'error');
-            }
         } catch (e) {
             console.error('Reset error', e);
             if (window.notifier) window.notifier.show(i18n.t('notifier.reset_error'), 'error');

@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	texttmpl "text/template"
 	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/web/api"
@@ -366,7 +365,7 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 // serveLoginPage renders login.html as a Go template, injecting server-side flags.
 // DemoOnly: when true, the "Try Demo" button is rendered; otherwise completely absent.
 func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := texttmpl.ParseFS(s.assets, "login.html")
+	tmpl, err := htmltemplate.ParseFS(s.assets, "login.html")
 	if err != nil {
 		log.Printf("Error loading login template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
