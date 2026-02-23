@@ -30,7 +30,6 @@ class DemoService {
         const now = Date.now();
 
         if (!start || (now - parseInt(start)) > DEMO_TTL_MS) {
-            console.log('[DemoService] Session expired or new. Resetting demo environment.');
             this.resetDemo();
         }
     }

@@ -13,7 +13,6 @@ bootstrap(async () => {
     function notify(msg: string, type: 'success' | 'error' = 'success') {
         // @ts-ignore
         if (window.notifier) window.notifier.show(msg, type);
-        else console.log(`[${type}] ${msg}`);
     }
 
     const container = document.querySelector('.setup-container') as HTMLElement;
