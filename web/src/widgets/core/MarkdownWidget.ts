@@ -73,7 +73,7 @@ export class MarkdownWidget extends HTMLElement {
                 .header-actions {
                     position: absolute;
                     top: 8px;
-                    right: 8px;
+                    right: 16px;
                     display: flex;
                     gap: 6px; /* Closer gap */
                     z-index: 10;
@@ -193,6 +193,14 @@ export class MarkdownWidget extends HTMLElement {
                     line-height: 1.6;
                     background: var(--lb-bg-card); 
                     z-index: 5;
+                }
+
+                .preview.locked {
+                    overflow-y: hidden;
+                }
+
+                .preview.locked:hover {
+                    overflow-y: auto;
                 }
 
                 /* Markdown Styles for Preview */
@@ -317,6 +325,10 @@ export class MarkdownWidget extends HTMLElement {
     }
 
     private applyViewState() {
+        if (this._preview) {
+            this._preview.classList.toggle('locked', this._isLocked);
+        }
+
         if (this._isPreviewMode) {
             this.updatePreview();
             if (this._preview) {

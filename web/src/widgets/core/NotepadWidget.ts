@@ -93,6 +93,14 @@ const CSS = `
     position: relative;
 }
 
+.editor-container.locked {
+    overflow-y: hidden;
+}
+
+.editor-container.locked:hover {
+    overflow-y: auto;
+}
+
 /* ── ContentEditable ───────────────────────────────────────────────── */
 .editor {
     background: transparent !important;
@@ -254,7 +262,7 @@ const CSS = `
 
 /* ── Lock Button ──────────────────────────────────────────────────── */
 .top-lock-btn {
-    position: absolute; top: 8px; right: 8px;
+    position: absolute; top: 8px; right: 16px;
     width: 28px; height: 28px;
     border: none; background: rgba(0,0,0,0.2); 
     backdrop-filter: blur(4px); border-radius: 6px;
