@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,11 +47,11 @@ func InitDB(dsn string) (*DB, error) {
 		return nil, err
 	}
 	if _, err := db.Exec("PRAGMA journal_mode = WAL"); err != nil {
-		log.Printf("Warning: failed to set WAL mode: %v", err)
+		slog.Warn("Failed to set WAL mode", "error", err)
 	}
 	// Busy timeout to prevent "database is locked" errors in high concurrency
 	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
-		log.Printf("Warning: failed to set busy_timeout: %v", err)
+		slog.Warn("Failed to set busy_timeout", "error", err)
 	}
 
 	// Limit connection pool to prevent unbounded memory usage (modernc sqlite is pure go)
@@ -84,7 +84,7 @@ func runMigrations(db *sql.DB) error {
 
 	// --- VERSION 1: Initial Schema & Legacy Migrations ---
 	if currentVersion < 1 {
-		log.Println("Applying Schema Version 1...")
+		slog.Info("Applying schema migration", "version", 1)
 		queries := []string{
 			`CREATE TABLE IF NOT EXISTS users (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -133,7 +133,7 @@ func runMigrations(db *sql.DB) error {
 				if strings.Contains(err.Error(), "duplicate column name") {
 					continue
 				}
-				log.Printf("Migration Version 1 notice: %v", err)
+				slog.Warn("Migration v1 notice", "error", err)
 			}
 		}
 
@@ -142,17 +142,36 @@ func runMigrations(db *sql.DB) error {
 		if err != nil {
 			return fmt.Errorf("failed to update schema version to 1: %v", err)
 		}
-		log.Println("Schema Version 1 applied successfully.")
+		slog.Info("Schema migration applied", "version", 1)
 	}
 
 	// M5: assign any items still at user_id = 0 to the first admin.
 	if err := migrateOrphanedItems(db); err != nil {
-		log.Printf("Orphan migration warning: %v", err)
+		slog.Warn("Orphan migration warning", "error", err)
 	}
 
 	// M6: migrate legacy visibility flags
 	if err := migrateVisibilityFlags(db); err != nil {
-		log.Printf("Visibility migration warning: %v", err)
+		slog.Warn("Visibility migration warning", "error", err)
+	}
+
+	// --- VERSION 2: Login Attempts Persistence ---
+	if currentVersion < 2 {
+		slog.Info("Applying schema migration", "version", 2)
+		_, err := db.Exec(`CREATE TABLE IF NOT EXISTS login_attempts (
+			ip TEXT PRIMARY KEY,
+			count INTEGER NOT NULL DEFAULT 0,
+			first_seen DATETIME NOT NULL,
+			locked_until DATETIME
+		)`)
+		if err != nil {
+			return fmt.Errorf("migration v2 failed: %v", err)
+		}
+		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (2)")
+		if err != nil {
+			return fmt.Errorf("failed to update schema version to 2: %v", err)
+		}
+		slog.Info("Schema migration applied", "version", 2)
 	}
 
 	return nil
@@ -178,7 +197,7 @@ func migrateOrphanedItems(db *sql.DB) error {
 	}
 
 	if rows, _ := result.RowsAffected(); rows > 0 {
-		log.Printf("Legacy migration: assigned %d orphaned item(s) to admin user id=%d", rows, adminID)
+		slog.Info("Legacy migration: assigned orphaned items to admin", "count", rows, "admin_id", adminID)
 	}
 	return nil
 }
@@ -237,14 +256,14 @@ func migrateVisibilityFlags(db *sql.DB) error {
 		}
 
 		if _, err := db.Exec("UPDATE items SET content = ? WHERE id = ?", string(newContent), id); err != nil {
-			log.Printf("Visibility migration: failed to update item %d: %v", id, err)
+			slog.Warn("Visibility migration: failed to update item", "id", id, "error", err)
 			continue
 		}
 		migrated++
 	}
 
 	if migrated > 0 {
-		log.Printf("Visibility migration: converted %d item(s) from legacy flags to visibleTouch", migrated)
+		slog.Info("Visibility migration: converted legacy flags to visibleTouch", "count", migrated)
 	}
 	return rows.Err()
 }

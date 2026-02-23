@@ -1,7 +1,7 @@
 package api
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -49,14 +49,14 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			h.clients[client] = true
 			h.mu.Unlock()
-			log.Println("WebSocket client registered")
+			slog.Info("WebSocket client registered")
 
 		case client := <-h.unregister:
 			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				client.Close()
-				log.Println("WebSocket client unregistered")
+				slog.Info("WebSocket client unregistered")
 			}
 			h.mu.Unlock()
 
@@ -72,7 +72,7 @@ func (h *Hub) Run() {
 			// Send without holding the lock so a slow client doesn't block others
 			for _, client := range snapshot {
 				if err := websocket.JSON.Send(client, message); err != nil {
-					log.Printf("WebSocket error: %v", err)
+					slog.Warn("WebSocket send error", "error", err)
 					client.Close()
 					h.mu.Lock()
 					delete(h.clients, client)
@@ -105,7 +105,7 @@ func (h *Hub) StartBroadcasting(interval time.Duration) {
 				Payload: stats,
 			}
 		} else {
-			log.Printf("Error gathering stats for WS: %v", err)
+			slog.Warn("Error gathering stats for WS", "error", err)
 		}
 	}
 }

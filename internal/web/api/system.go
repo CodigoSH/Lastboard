@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -72,7 +72,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Close DB Connection
 	if err := h.DB.Close(); err != nil {
-		log.Printf("Error closing DB during reset: %v", err)
+		slog.Warn("Error closing DB during reset", "error", err)
 	}
 
 	// 2. Delete DB File
@@ -99,7 +99,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		// Get current binary path
 		binary, err := os.Executable()
 		if err != nil {
-			log.Printf("Failed to get executable path, falling back to exit: %v", err)
+			slog.Warn("Failed to get executable path, falling back to exit", "error", err)
 			os.Exit(1)
 		}
 
@@ -107,7 +107,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		args := os.Args
 
 		if err := syscall.Exec(binary, args, env); err != nil {
-			log.Printf("Failed to re-exec, falling back to exit: %v", err)
+			slog.Warn("Failed to re-exec, falling back to exit", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -154,13 +154,6 @@ type BackupItem struct {
 	W        int     `json:"w"`
 	H        int     `json:"h"`
 	Content  *string `json:"content"`
-}
-
-func (h *SystemHandler) isAdmin(r *http.Request) bool {
-	username := middleware.GetUserFromContext(r)
-	var role string
-	err := h.DB.QueryRow("SELECT role FROM users WHERE username=?", username).Scan(&role)
-	return err == nil && strings.ToLower(role) == "admin"
 }
 
 // GET /api/system/backup
@@ -249,7 +242,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 // POST /api/system/restore
 func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -381,7 +374,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		if _, err := tx.Exec("UPDATE items SET parent_id = ? WHERE id = ?", newParent, newID); err != nil {
-			log.Printf("Restore: failed to set parent_id for item %d: %v", newID, err)
+			slog.Warn("Restore: failed to set parent_id", "item_id", newID, "error", err)
 		}
 	}
 

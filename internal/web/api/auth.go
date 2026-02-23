@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -23,36 +22,6 @@ const (
 	extendedSession  = 30 * 24 * time.Hour
 )
 
-type loginAttempt struct {
-	count     int
-	firstSeen time.Time
-	lockedAt  time.Time
-}
-
-var (
-	rateLimiter   = make(map[string]*loginAttempt)
-	rateLimiterMu sync.Mutex
-)
-
-func init() {
-	go func() {
-		ticker := time.NewTicker(5 * time.Minute)
-		defer ticker.Stop()
-		for range ticker.C {
-			rateLimiterMu.Lock()
-			now := time.Now()
-			for ip, entry := range rateLimiter {
-				if !entry.lockedAt.IsZero() && now.After(entry.lockedAt.Add(lockoutDuration)) {
-					delete(rateLimiter, ip)
-				} else if entry.lockedAt.IsZero() && now.Sub(entry.firstSeen) > attemptWindow {
-					delete(rateLimiter, ip)
-				}
-			}
-			rateLimiterMu.Unlock()
-		}
-	}()
-}
-
 type AuthHandler struct {
 	DB     *sql.DB
 	Secret []byte
@@ -64,25 +33,37 @@ func NewAuthHandler(db *sql.DB, secret []byte) *AuthHandler {
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-
-	rateLimiterMu.Lock()
-	entry := rateLimiter[ip]
 	now := time.Now()
-	if entry != nil {
-		// Check if locked out
-		if !entry.lockedAt.IsZero() && now.Before(entry.lockedAt.Add(lockoutDuration)) {
-			rateLimiterMu.Unlock()
+
+	// Inline cleanup: remove expired lockouts to keep the table lean
+	h.DB.Exec("DELETE FROM login_attempts WHERE locked_until IS NOT NULL AND locked_until < ?", now)
+
+	// Check current state for this IP
+	var count int
+	var firstSeen time.Time
+	var lockedUntil sql.NullTime
+
+	err := h.DB.QueryRow(
+		"SELECT count, first_seen, locked_until FROM login_attempts WHERE ip = ?", ip,
+	).Scan(&count, &firstSeen, &lockedUntil)
+
+	if err != nil && err != sql.ErrNoRows {
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
+		return
+	}
+
+	if err == nil { // record exists
+		// Locked out?
+		if lockedUntil.Valid && now.Before(lockedUntil.Time) {
 			http.Error(w, "auth.too_many_attempts", http.StatusTooManyRequests)
 			return
 		}
-		// Clear stale window
-		if now.Sub(entry.firstSeen) > attemptWindow {
-			entry.count = 0
-			entry.firstSeen = now
-			entry.lockedAt = time.Time{}
+		// Attempt window expired — reset stale record
+		if !lockedUntil.Valid && now.Sub(firstSeen) > attemptWindow {
+			h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip)
+			count = 0
 		}
 	}
-	rateLimiterMu.Unlock()
 
 	var input struct {
 		Username   string `json:"username"`
@@ -98,31 +79,29 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if len(input.Password) > 72 {
 		// Dummy bcrypt call to maintain constant timing regardless of failure reason
 		bcrypt.CompareHashAndPassword([]byte("$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01"), []byte(input.Password))
-		h.recordFailedAttempt(ip)
+		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
 	// Fetch user
 	var storedHash string
-	err := h.DB.QueryRow("SELECT password FROM users WHERE username = ?", input.Username).Scan(&storedHash)
+	err = h.DB.QueryRow("SELECT password FROM users WHERE username = ?", input.Username).Scan(&storedHash)
 	if err != nil {
 		bcrypt.CompareHashAndPassword([]byte("$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01"), []byte(input.Password))
-		h.recordFailedAttempt(ip)
+		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.Password)); err != nil {
-		h.recordFailedAttempt(ip)
+		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
-	// Success: clear rate limit
-	rateLimiterMu.Lock()
-	delete(rateLimiter, ip)
-	rateLimiterMu.Unlock()
+	// Success: clear rate limit record for this IP
+	h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip)
 
 	duration := defaultSession
 	if input.RememberMe {
@@ -183,18 +162,32 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *AuthHandler) recordFailedAttempt(ip string) {
-	rateLimiterMu.Lock()
-	defer rateLimiterMu.Unlock()
+// recordFailedAttempt increments the failed login count for an IP in SQLite.
+// If the count reaches maxLoginAttempts, sets locked_until.
+func (h *AuthHandler) recordFailedAttempt(ip string, currentCount int) {
+	now := time.Now()
+	newCount := currentCount + 1
 
-	entry := rateLimiter[ip]
-	if entry == nil {
-		entry = &loginAttempt{firstSeen: time.Now()}
-		rateLimiter[ip] = entry
+	if currentCount == 0 {
+		// First failure: insert new record
+		h.DB.Exec(
+			"INSERT OR IGNORE INTO login_attempts (ip, count, first_seen) VALUES (?, 1, ?)",
+			ip, now,
+		)
+		return
 	}
-	entry.count++
-	if entry.count >= maxLoginAttempts {
-		entry.lockedAt = time.Now()
+
+	if newCount >= maxLoginAttempts {
+		lockedUntil := now.Add(lockoutDuration)
+		h.DB.Exec(
+			"UPDATE login_attempts SET count = ?, locked_until = ? WHERE ip = ?",
+			newCount, lockedUntil, ip,
+		)
+	} else {
+		h.DB.Exec(
+			"UPDATE login_attempts SET count = ? WHERE ip = ?",
+			newCount, ip,
+		)
 	}
 }
 

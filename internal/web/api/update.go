@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,7 +22,6 @@ import (
 	"database/sql"
 
 	"github.com/CodigoSH/Lastboard/internal/version"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 type UpdateHandler struct {
@@ -75,12 +74,12 @@ func (h *UpdateHandler) CheckForUpdatesBackground(hub *Hub) {
 		// We'll notify if ANY newer version is available, frontend will filter based on user prefs.
 		latest, err := h.fetchLatestVersionFromProxy()
 		if err != nil {
-			log.Printf("[Update] Background check failed: %v", err)
+			slog.Warn("Background update check failed", "error", err)
 			return
 		}
 
 		if latest != "" && latest != version.Current {
-			log.Printf("[Update] New version detected: %s (Current: %s). Broadcasting...", latest, version.Current)
+			slog.Info("New version detected", "latest", latest, "current", version.Current)
 			hub.broadcast <- WSMessage{
 				Type: "update_available",
 				Payload: map[string]string{
@@ -123,7 +122,7 @@ func (h *UpdateHandler) fetchLatestVersionFromProxy() (string, error) {
 
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	// Verify Admin
-	if !h.isAdmin(r) {
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
@@ -270,22 +269,6 @@ func (h *UpdateHandler) moveFile(src, dst string) error {
 
 // Helpers
 
-func (h *UpdateHandler) isAdmin(r *http.Request) bool {
-	username := middleware.GetUserFromContext(r)
-	if username == "" {
-		return false
-	}
-
-	var role string
-	err := h.DB.QueryRow("SELECT role FROM users WHERE username = ?", username).Scan(&role)
-	if err != nil {
-		log.Printf("Error checking role for %s: %v", username, err)
-		return false
-	}
-
-	return strings.ToLower(role) == "admin"
-}
-
 func (h *UpdateHandler) downloadFile(url string, dest string) error {
 	out, err := os.Create(dest)
 	if err != nil {
@@ -390,7 +373,7 @@ func (h *UpdateHandler) restartSelf(exePath string) {
 	args := os.Args
 
 	if err := syscall.Exec(exePath, args, env); err != nil {
-		log.Printf("Failed to restart: %v. Exiting to allow supervisor to restart.", err)
+		slog.Error("Failed to restart, exiting for supervisor", "error", err)
 		os.Exit(0)
 	}
 }

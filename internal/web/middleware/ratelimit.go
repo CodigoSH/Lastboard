@@ -60,7 +60,8 @@ func RateLimit(next http.Handler) http.Handler {
 		// Extract IP (naive approach for internal/direct use, check X-Forwarded-For if behind proxy)
 		ip := r.RemoteAddr
 		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-			ip = strings.Split(forwarded, ",")[0]
+			parts := strings.Split(forwarded, ",")
+			ip = strings.TrimSpace(parts[len(parts)-1])
 		}
 		// Strip port if present
 		if strings.Contains(ip, ":") {

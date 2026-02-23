@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"database/sql"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -22,7 +22,7 @@ func SetupRequired(db *sql.DB) func(http.Handler) http.Handler {
 			var count int
 			err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
 			if err != nil {
-				log.Printf("Error checking users count: %v", err)
+				slog.Error("Error checking users count", "error", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}

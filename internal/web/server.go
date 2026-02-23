@@ -8,7 +8,7 @@ import (
 	htmltemplate "html/template"
 	"io"
 	"io/fs"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -39,7 +39,7 @@ func NewServer(db *sql.DB) *Server {
 	assets, err := fs.Sub(content, "dist")
 	if err != nil {
 		// Fallback for local dev or build failure (won't happen if strict embed but good safety)
-		log.Printf("Warning: Embed 'dist' failed: %v. Using local file system.", err)
+		slog.Warn("Embed 'dist' failed, using local filesystem", "error", err)
 		assets = osDir("./web/dist")
 	}
 
@@ -71,20 +71,23 @@ func initSessionSecret(db *sql.DB) []byte {
 		// Generate new secret
 		bytes := make([]byte, 32)
 		if _, err := rand.Read(bytes); err != nil {
-			log.Fatalf("Failed to generate session secret: %v", err)
+			slog.Error("Failed to generate session secret", "error", err)
+			os.Exit(1)
 		}
 		secretHex = hex.EncodeToString(bytes)
 		_, err := db.Exec("INSERT INTO system_settings (key, value) VALUES ('session_secret', ?)", secretHex)
 		if err != nil {
-			log.Printf("Warning: Failed to persist session secret: %v", err)
+			slog.Warn("Failed to persist session secret", "error", err)
 		}
 	} else if err != nil {
-		log.Fatalf("Failed to load session secret: %v", err)
+		slog.Error("Failed to load session secret", "error", err)
+		os.Exit(1)
 	}
 
 	secret, err := hex.DecodeString(secretHex)
 	if err != nil {
-		log.Fatalf("Invalid session secret in DB: %v", err)
+		slog.Error("Invalid session secret in DB", "error", err)
+		os.Exit(1)
 	}
 	return secret
 }
@@ -265,7 +268,7 @@ func (s *Server) routes() {
 		var exists bool
 		err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists)
 		if err != nil {
-			log.Printf("Error checking system state: %v", err)
+			slog.Error("Error checking system state", "error", err)
 			http.Error(w, "Internal System Error", http.StatusInternalServerError)
 			return
 		}
@@ -376,7 +379,7 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := htmltemplate.ParseFS(s.assets, "login.html")
 	if err != nil {
-		log.Printf("Error loading login template: %v", err)
+		slog.Error("Error loading login template", "error", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 		return
 	}
@@ -388,7 +391,7 @@ func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing login template: %v", err)
+		slog.Error("Error executing login template", "error", err)
 	}
 }
 
@@ -406,7 +409,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 		// Fetch Project Name AND Theme
 		err := s.DB.QueryRow("SELECT project_name, COALESCE(theme, '') FROM users WHERE username = ?", username).Scan(&projectName, &dbTheme)
 		if err != nil && err != sql.ErrNoRows {
-			log.Printf("Error fetching user data for %s: %v", username, err)
+			slog.Warn("Error fetching user data", "error", err)
 		}
 	}
 
@@ -426,7 +429,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")
 	if err != nil {
-		log.Printf("Error loading template: %v", err)
+		slog.Error("Error loading template", "error", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 		return
 	}
@@ -442,7 +445,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing template: %v", err)
+		slog.Error("Error executing template", "error", err)
 	}
 }
 
@@ -455,7 +458,7 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")
 	if err != nil {
-		log.Printf("Error loading demo template: %v", err)
+		slog.Error("Error loading demo template", "error", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 		return
 	}
@@ -471,6 +474,6 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing demo template: %v", err)
+		slog.Error("Error executing demo template", "error", err)
 	}
 }

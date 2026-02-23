@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/platform/database"
@@ -14,6 +17,13 @@ import (
 )
 
 func main() {
+	// Initialize structured logging first
+	if os.Getenv("LOG_FORMAT") == "json" {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	} else {
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
+	}
+
 	// Parse flags
 	versionFlag := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
@@ -30,10 +40,11 @@ func main() {
 	}
 	db, err := database.InitDB(dbFile)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		slog.Error("Failed to initialize database", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
-	log.Println("Database initialized at", dbFile)
+	slog.Info("Database initialized", "path", dbFile)
 
 	// 2. Initialize Server (Dependency Injection)
 	srv := web.NewServer(db.DB)
@@ -53,8 +64,25 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	log.Printf("Starting server on :%s (with timeouts)", port)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("Server failed: %v", err)
+	slog.Info("Starting server", "addr", ":"+port)
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	slog.Info("shutting down server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		slog.Error("shutdown error", "error", err)
 	}
+	slog.Info("server stopped")
 }

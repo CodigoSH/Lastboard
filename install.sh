@@ -212,6 +212,8 @@ Environment="DB_FILE=$DATA_DIR/lastboard.db"
 ProtectSystem=full
 PrivateTmp=true
 NoNewPrivileges=true
+MemoryMax=512M
+CPUQuota=200%
 
 [Install]
 WantedBy=multi-user.target

@@ -21,6 +21,9 @@
     outline: none;
     box-sizing: border-box;
     padding: 0 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Variant: Ghost (Default) */

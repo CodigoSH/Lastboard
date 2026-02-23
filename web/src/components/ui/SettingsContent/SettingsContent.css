@@ -90,7 +90,9 @@ dialog {
     height: 36px;
 }
 
-.modal-close:focus { outline: none; }
+.modal-close:focus {
+    outline: none;
+}
 
 .modal-close:hover {
     background: rgba(var(--accent-rgb), 0.1);
@@ -370,7 +372,9 @@ dialog {
     transition: all 0.2s;
 }
 
-.settings-content__segment:focus { outline: none; }
+.settings-content__segment:focus {
+    outline: none;
+}
 
 .settings-content__segment:hover {
     color: var(--text-main);
@@ -398,6 +402,9 @@ dialog {
     font-family: var(--font-sans);
     font-size: 13px;
     transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .settings-content__button:hover {
@@ -411,6 +418,9 @@ button {
     color: var(--text-main);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Range Input Styling */
@@ -446,6 +456,8 @@ button {
     align-items: center;
     justify-content: center;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     min-width: 160px;
 }
 

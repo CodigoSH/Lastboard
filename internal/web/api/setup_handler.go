@@ -3,7 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -106,7 +106,7 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		// Legacy: Assign any orphan items
 		if res, err := tx.Exec("UPDATE items SET user_id = ? WHERE user_id = 0", adminID); err == nil {
 			if n, _ := res.RowsAffected(); n > 0 {
-				log.Printf("Setup: assigned %d seeded item(s) to new admin id=%d", n, adminID)
+				slog.Info("Setup: assigned seeded items to admin", "count", n, "admin_id", adminID)
 			}
 		}
 

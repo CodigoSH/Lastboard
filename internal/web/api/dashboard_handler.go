@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -65,7 +65,7 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 		var urlSql sql.NullString
 
 		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &urlSql); err != nil {
-			log.Printf("Scan error: %v", err)
+			slog.Warn("Scan error reading items", "error", err)
 			continue
 		}
 		if urlSql.Valid {
@@ -110,7 +110,7 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	res, err := h.DB.Exec("INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		userID, item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url)
 	if err != nil {
-		log.Printf("[CreateItem] DB Insert Error: %v", err)
+		slog.Error("DB Insert error in CreateItem", "error", err)
 		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)
 		return
 	}
@@ -152,7 +152,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		Content     *string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		log.Printf("[UpdateItem] JSON Decode Error: %v", err)
+		slog.Warn("JSON Decode error in UpdateItem", "error", err)
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
@@ -220,14 +220,14 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.DB.Exec(query, args...)
 	if err != nil {
-		log.Printf("Update error: %v", err)
+		slog.Error("Update error in UpdateItem", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
 	rows, err := result.RowsAffected()
 	if err != nil {
-		log.Printf("[UpdateItem] RowsAffected error: %v", err)
+		slog.Error("RowsAffected error in UpdateItem", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -287,7 +287,7 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	// We logged them before, but blocking them breaks the feature "Monitor Status" for local labs.
 	for _, ip := range ips {
 		if isPrivateIP(ip) {
-			log.Printf("[Health] Allowing local access to %s (%s)", hostname, ip.String())
+			slog.Info("Health check: allowing local access", "hostname", hostname, "ip", ip.String())
 		}
 	}
 
@@ -321,7 +321,7 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Do(req)
 	if err == nil && resp.StatusCode < 500 {
 		defer resp.Body.Close()
-		log.Printf("[Health] %s is UP (HTTP %d)", rawUrl, resp.StatusCode)
+		slog.Info("Health check UP (HTTP)", "url", rawUrl, "status", resp.StatusCode)
 		h.respondJson(w, map[string]string{"status": "up"})
 		return
 	}
@@ -330,12 +330,12 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", pinnedIP, port), time.Second*2)
 	if err == nil {
 		defer conn.Close()
-		log.Printf("[Health] %s is UP (TCP Open)", rawUrl)
+		slog.Info("Health check UP (TCP)", "url", rawUrl)
 		h.respondJson(w, map[string]string{"status": "up"})
 		return
 	}
 
-	log.Printf("[Health] %s is DOWN", rawUrl)
+	slog.Info("Health check DOWN", "url", rawUrl)
 	w.WriteHeader(http.StatusServiceUnavailable)
 	h.respondJson(w, map[string]string{"status": "down"})
 }

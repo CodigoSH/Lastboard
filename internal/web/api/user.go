@@ -310,13 +310,6 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 // Admin Endpoints
 
-func (h *UserHandler) isAdmin(r *http.Request) bool {
-	username := middleware.GetUserFromContext(r)
-	var role string
-	err := h.DB.QueryRow("SELECT role FROM users WHERE username=?", username).Scan(&role)
-	return err == nil && (strings.ToLower(role) == "admin" || strings.ToLower(role) == "administrator")
-}
-
 func (h *UserHandler) verifyPassword(username, password string) bool {
 	var storedHash string
 	err := h.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
@@ -328,7 +321,7 @@ func (h *UserHandler) verifyPassword(username, password string) bool {
 }
 
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
 		return
 	}
@@ -364,7 +357,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
 		return
 	}
@@ -435,7 +428,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
 		return
 	}
@@ -494,7 +487,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	if !h.isAdmin(r) {
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
 		return
 	}
