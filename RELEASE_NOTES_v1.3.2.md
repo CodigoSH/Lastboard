@@ -1,0 +1,94 @@
+# Release: v1.3.2
+
+
+
+
+### 📝 Other Changes
+- feat: Security & Stability Update: Implemented persistent SQLite rate limiting, structured logging with slog, graceful HTTP server shutdown, and comprehensive integration tests. Hardened backend APIs with MaxBytesReader, strict Content-Type headers, and Superadmin-only backup access. Added GitHub Actions CI for automated testing.
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.19
+- feat: Integrate CI GitHub Actions and Full Backend Audit fixes
+- chore: Add GitHub Actions CI and remove redundant front-end console.logs
+- Tests: Add integration tests for Login, Rate Limit, Backup/Restore and Dashboard isolation
+- Security and Tech Debt: Persistent Rate Limiting, slog Migration, Graceful Shutdown, and systemd limits
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.18
+- feat: UI tweaks for Notepad and Markdown widgets (lock position and scrollbar)
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.17
+- feat: CSP Policies, fix modal outlines, and markdown widget display bug
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.16
+- feat: Audit findings fixes (Tasks 1-10)
+- Audit: Security and code quality improvements (Tasks 1-10)
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.15
+- feat: fix: modal dropdown clipping and update default widget settings
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.14
+- feat: perf: optimize ping reactivity in BookmarkGrid
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.13
+- feat: fix: telemetry widget blinking on reload
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.12
+- feat: fix: clock dirty check cache on render, remove telemetry text
+- chore: remove deprecated set_version.ts script
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.11
+- feat: perf: remove ping pulse animation for 0% cpu idle
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.10
+- feat: perf: dirty check caching for telemetry and clock widgets
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.09
+- feat: perf: optimize box-shadow animations for cpu
+- perf: replace heavy box-shadow animations with GPU-accelerated pseudo-elements
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.08
+- feat: fix: complete icon picker and translations
+- feat(i18n): Translate missing strings across all 20 locales
+- fix(ui): Fix bookmark custom icon rendering, modal duplicate selections and Papirus symlink handling
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.07
+- feat: memory leak fixes and performance optimization
+- perf(ui): fix memory leaks in global event listeners
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.06
+- feat: fix remaining hardcoded strings in WidgetConfigModal and sync locales
+- i18n: fix remaining hardcoded strings in WidgetConfigModal and sync locales
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.05
+- feat: comprehensive internationalization and code health improvements
+- i18n: externalize remaining strings and synchronize translations across all locales
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.04
+- feat: clean development and demo logs from console
+- chore: remove development and demo logs from production console
+- chore: remove .agent from tracking (keeping it locally)
+- chore: add .agent to .gitignore to keep assistant workflows local
+- Update README.md
+- Update SECURITY.md
+- Update README.md
+- Update README.md
+- Create SECURITY.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Screenshot
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.03
+- feat: fix: skip update check in demo mode to avoid JSON parsing error
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.02
+- feat: unified login routing and diagnostic logs for remote debugging
+- chore(release): cleanup release notes
+- chore(release): bump to v1.3.2-Beta.01
+- feat: hotfix: fix login credentials bug by using text/template for login.html
+- chore(release): cleanup release notes
+
+---
+**Full Changelog**: [v1.3.1...v1.3.2](https://github.com/CodigoSH/Lastboard/compare/v1.3.1...v1.3.2)
