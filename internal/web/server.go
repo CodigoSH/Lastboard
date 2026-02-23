@@ -312,6 +312,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+	w.Header().Set("Content-Security-Policy-Report-Only",
+		"default-src 'self'; "+
+			"script-src 'self' 'unsafe-inline'; "+
+			"style-src 'self' 'unsafe-inline'; "+
+			"img-src 'self' data: https:; "+
+			"connect-src 'self' wss: ws: https://cdn.jsdelivr.net https://unpkg.com https://api.github.com https://api-updates.codigosh.com https://*.open-meteo.com https://timeapi.io; "+
+			"font-src 'self'; "+
+			"object-src 'none'; "+
+			"frame-ancestors 'self'")
 
 	// HSTS (HTTP Strict Transport Security)
 	// Only send over HTTPS to prevent MITM attacks

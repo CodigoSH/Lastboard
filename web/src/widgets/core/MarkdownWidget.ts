@@ -17,7 +17,7 @@ const ICONS = {
 export class MarkdownWidget extends HTMLElement {
     private _itemId: number = 0;
     private _content: string = '';
-    private _isPreviewMode: boolean = false;
+    private _isPreviewMode: boolean = true;
     private _isLocked: boolean = true; // Default to locked (read-only)
     private _isDirty: boolean = false;
     private _isSaving: boolean = false;
@@ -395,10 +395,10 @@ export class MarkdownWidget extends HTMLElement {
             const content = WidgetContentHelper.getMarkdownText(item.content);
             this._content = content;
             if (this._editor) this._editor.value = content;
-
-            // Initial Preview Render if locked
-            if (this._isLocked) this.updatePreview();
         }
+
+        // Apply visibility state initially based on the lock defaults
+        this.applyViewState();
     }
 
     private async save() {

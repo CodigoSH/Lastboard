@@ -78,6 +78,10 @@ dialog[open] {
     height: 36px;
 }
 
+.modal-close:focus {
+    outline: none;
+}
+
 .modal-close:hover {
     background: rgba(var(--accent-rgb), 0.1);
     transform: rotate(90deg);
@@ -207,6 +211,12 @@ dialog[open] {
     opacity: 0.7;
     letter-spacing: 0.02em;
 }
+
+.tab-btn:focus {
+    outline: none;
+}
+
+.tab-btn:focus { outline: none; }
 
 .tab-btn:hover {
     color: var(--text-main);
@@ -493,6 +503,10 @@ dialog[open] {
     box-sizing: border-box;
     padding: 0 24px;
     border: none;
+}
+
+.btn:focus {
+    outline: none;
 }
 
 .btn-primary {

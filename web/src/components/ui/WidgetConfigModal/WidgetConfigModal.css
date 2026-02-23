@@ -73,6 +73,8 @@ dialog[open] {
     height: 36px;
 }
 
+.modal-close:focus { outline: none; }
+
 .modal-close:hover {
     background: rgba(var(--accent-rgb), 0.1);
     transform: rotate(90deg);
@@ -369,6 +371,8 @@ dialog[open] {
 }
 
 /* Hover State */
+.tab-btn:focus { outline: none; }
+
 .tab-btn:hover {
     color: var(--text-main);
     opacity: 1;

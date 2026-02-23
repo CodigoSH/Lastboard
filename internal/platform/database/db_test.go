@@ -52,7 +52,7 @@ func TestMigrations(t *testing.T) {
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	tables := []string{"users", "system_settings", "items"}
+	tables := []string{"users", "system_settings", "items", "schema_version"}
 
 	for _, table := range tables {
 		var name string
@@ -64,6 +64,22 @@ func TestMigrations(t *testing.T) {
 		} else if err != nil {
 			t.Errorf("Error checking table '%s': %v", table, err)
 		}
+	}
+}
+
+// TestSchemaVersion tests that the schema version is correctly set
+func TestSchemaVersion(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	var version int
+	err := db.QueryRow("SELECT version FROM schema_version").Scan(&version)
+	if err != nil {
+		t.Fatalf("Failed to query schema version: %v", err)
+	}
+
+	if version != 1 {
+		t.Errorf("Expected schema version 1, got %d", version)
 	}
 }
 

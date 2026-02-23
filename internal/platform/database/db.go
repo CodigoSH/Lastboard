@@ -67,75 +67,90 @@ func InitDB(dsn string) (*DB, error) {
 }
 
 func runMigrations(db *sql.DB) error {
-	queries := []string{
-		`CREATE TABLE IF NOT EXISTS users (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			username TEXT NOT NULL UNIQUE,
-			password TEXT NOT NULL,
-			role TEXT NOT NULL DEFAULT 'user',
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);`,
-		`CREATE TABLE IF NOT EXISTS system_settings (
-			key TEXT PRIMARY KEY,
-			value TEXT
-		);`,
-		`CREATE TABLE IF NOT EXISTS items (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			parent_id INTEGER,
-			user_id INTEGER NOT NULL DEFAULT 0,
-			type TEXT NOT NULL,
-			x INTEGER NOT NULL,
-			y INTEGER NOT NULL,
-			w INTEGER NOT NULL,
-			h INTEGER NOT NULL,
-			content TEXT,
-			url TEXT,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY(parent_id) REFERENCES items(id) ON DELETE CASCADE,
-			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-		);`,
-		// Add new columns if they don't exist (SQLite ignores ADD COLUMN if exists usually, but modernc might strict.
-		// We'll wrap in try-catch block style or just append.
-		// Simplest for this demo: Try add each. If fail, assume exists.
-		`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system';`,
-		`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'blue';`,
-		`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en';`,
-		`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12;`,
-		`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4;`,
-		`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2;`,
-		`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT '';`,
-		`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Lastboard';`,
-		// Add url column for direct access (required for some strict persistence modes)
-		`ALTER TABLE items ADD COLUMN url TEXT;`,
-		// M5: per-user dashboard isolation — backfill column on existing tables
-		`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
-		`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
-		`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
-		`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
+	// 0. Ensure schema_version table exists
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);`)
+	if err != nil {
+		return fmt.Errorf("failed to create schema_version table: %v", err)
 	}
 
-	for _, query := range queries {
-		_, err := db.Exec(query)
-		if err != nil {
-			// Check if error is about duplicate column
-			errStr := err.Error()
-			if strings.Contains(errStr, "duplicate column name") {
-				// Silently ignore
-				continue
-			}
-			log.Printf("Migration notice: %v", err)
-		}
+	// 1. Get current version
+	var currentVersion int
+	err = db.QueryRow("SELECT version FROM schema_version").Scan(&currentVersion)
+	if err == sql.ErrNoRows {
+		currentVersion = 0
+	} else if err != nil {
+		return fmt.Errorf("failed to query schema version: %v", err)
 	}
-	log.Println("Migrations completed successfully.")
+
+	// --- VERSION 1: Initial Schema & Legacy Migrations ---
+	if currentVersion < 1 {
+		log.Println("Applying Schema Version 1...")
+		queries := []string{
+			`CREATE TABLE IF NOT EXISTS users (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				username TEXT NOT NULL UNIQUE,
+				password TEXT NOT NULL,
+				role TEXT NOT NULL DEFAULT 'user',
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			);`,
+			`CREATE TABLE IF NOT EXISTS system_settings (
+				key TEXT PRIMARY KEY,
+				value TEXT
+			);`,
+			`CREATE TABLE IF NOT EXISTS items (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				parent_id INTEGER,
+				user_id INTEGER NOT NULL DEFAULT 0,
+				type TEXT NOT NULL,
+				x INTEGER NOT NULL,
+				y INTEGER NOT NULL,
+				w INTEGER NOT NULL,
+				h INTEGER NOT NULL,
+				content TEXT,
+				url TEXT,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+				FOREIGN KEY(parent_id) REFERENCES items(id) ON DELETE CASCADE,
+				FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+			);`,
+			`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system';`,
+			`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'blue';`,
+			`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en';`,
+			`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12;`,
+			`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4;`,
+			`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2;`,
+			`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT '';`,
+			`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Lastboard';`,
+			`ALTER TABLE items ADD COLUMN url TEXT;`,
+			`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`, // Duplicated removed below
+			`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
+			`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
+		}
+
+		for _, query := range queries {
+			_, err := db.Exec(query)
+			if err != nil {
+				// Fallback for existing installations that might have these columns already
+				if strings.Contains(err.Error(), "duplicate column name") {
+					continue
+				}
+				log.Printf("Migration Version 1 notice: %v", err)
+			}
+		}
+
+		// Mark as Version 1
+		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (1)")
+		if err != nil {
+			return fmt.Errorf("failed to update schema version to 1: %v", err)
+		}
+		log.Println("Schema Version 1 applied successfully.")
+	}
 
 	// M5: assign any items still at user_id = 0 to the first admin.
-	// On a fresh install the admin does not exist yet; that path is
-	// handled by SetupHandler after the account is created.
 	if err := migrateOrphanedItems(db); err != nil {
 		log.Printf("Orphan migration warning: %v", err)
 	}
 
-	// M6: migrate legacy visibility flags (visibleMobile/visibleTablet → visibleTouch)
+	// M6: migrate legacy visibility flags
 	if err := migrateVisibilityFlags(db); err != nil {
 		log.Printf("Visibility migration warning: %v", err)
 	}

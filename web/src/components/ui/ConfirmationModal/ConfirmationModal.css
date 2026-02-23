@@ -67,6 +67,8 @@ dialog[open] {
     height: 36px;
 }
 
+.modal-close:focus { outline: none; }
+
 .modal-close:hover {
     background: rgba(var(--accent-rgb), 0.1);
     transform: rotate(90deg);

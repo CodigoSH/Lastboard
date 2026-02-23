@@ -90,6 +90,8 @@ dialog {
     height: 36px;
 }
 
+.modal-close:focus { outline: none; }
+
 .modal-close:hover {
     background: rgba(var(--accent-rgb), 0.1);
     transform: rotate(90deg);
@@ -367,6 +369,8 @@ dialog {
     cursor: pointer;
     transition: all 0.2s;
 }
+
+.settings-content__segment:focus { outline: none; }
 
 .settings-content__segment:hover {
     color: var(--text-main);
