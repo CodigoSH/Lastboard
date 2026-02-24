@@ -1,6 +1,6 @@
 <div align="center">
   <br />
-  <img src="web/public/images/logo.png" alt="Lastboard" width="90" />
+  <img src="web/public/images/logo.png" alt="Lastboard" width="150" />
   <br /><br />
 
   <h1>Lastboard</h1>
