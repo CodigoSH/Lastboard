@@ -17,8 +17,10 @@ jobs:
           TOTAL=$(gh api repos/CodigoSH/Lastboard/releases \
             --paginate --jq '[.[].assets[].download_count] | add')
           
+          PAYLOAD=$(jq -n --arg val "$TOTAL" '{"files":{"stats.json":{"content":("{\"downloads\":" + $val + ")"}}}}')
+          
           curl -s -X PATCH \
             -H "Authorization: token $GIST_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"files\":{\"stats.json\":{\"content\":\"{\\\"downloads\\\":$TOTAL}\"}}}" \
+            -d "$PAYLOAD" \
             https://api.github.com/gists/9f912610d0a33f16728a4ecf26bb6937
