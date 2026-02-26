@@ -13,7 +13,7 @@
     &nbsp;
     <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" />
     &nbsp;
-    <img src="https://img.shields.io/github/downloads/codigosh/lastboard/total?style=for-the-badge&label=Installations&color=3178C6" />
+    <img src="https://img.shields.io/badge/dynamic/json?url=https://gist.githubusercontent.com/k4wit0/9f912610d0a33f16728a4ecf26bb6937/raw/stats.json&query=$.downloads&label=Installations&style=for-the-badge&color=3178C6" />
     &nbsp;
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" />
   </p>
