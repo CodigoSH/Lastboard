@@ -17,7 +17,8 @@ jobs:
           TOTAL=$(gh api repos/CodigoSH/Lastboard/releases \
             --paginate --jq '[.[].assets[].download_count] | add')
           
-          PAYLOAD=$(jq -n --arg val "$TOTAL" '{"files":{"stats.json":{"content":("{\"downloads\":" + $val + ")"}}}}')
+          CONTENT="{\"downloads\":$TOTAL}"
+          PAYLOAD=$(jq -n --arg content "$CONTENT" '{"files":{"stats.json":{"content":$content}}}')
           
           curl -s -X PATCH \
             -H "Authorization: token $GIST_TOKEN" \
