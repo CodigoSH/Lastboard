@@ -15,7 +15,8 @@ jobs:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
         run: |
           TOTAL=$(gh api repos/CodigoSH/Lastboard/releases \
-            --paginate --jq '[.[].assets[].download_count] | add')
+            --paginate --jq '[.[].assets[].download_count] | add' | \
+            paste -sd+ | bc)
           
           CONTENT="{\"downloads\":$TOTAL}"
           PAYLOAD=$(jq -n --arg content "$CONTENT" '{"files":{"stats.json":{"content":$content}}}')
