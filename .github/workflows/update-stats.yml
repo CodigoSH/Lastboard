@@ -9,7 +9,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Calculate total downloads
+      - name: Calculate total downloads and latest version
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
@@ -18,7 +18,10 @@ jobs:
             --paginate --jq '[.[].assets[].download_count] | add' | \
             paste -sd+ | bc)
           
-          CONTENT="{\"downloads\":$TOTAL}"
+          LATEST=$(gh api repos/CodigoSH/Lastboard/releases \
+            --jq '[.[] | select(.prerelease == false)] | first | .tag_name')
+          
+          CONTENT="{\"downloads\":$TOTAL,\"version\":\"$LATEST\"}"
           PAYLOAD=$(jq -n --arg content "$CONTENT" '{"files":{"stats.json":{"content":$content}}}')
           
           curl -s -X PATCH \
