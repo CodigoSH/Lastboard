@@ -1,0 +1,24 @@
+name: Update Install Count
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate total downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: |
+          TOTAL=$(gh api repos/CodigoSH/Lastboard/releases \
+            --paginate --jq '[.[].assets[].download_count] | add')
+          
+          curl -s -X PATCH \
+            -H "Authorization: token $GIST_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"files\":{\"stats.json\":{\"content\":\"{\\\"downloads\\\":$TOTAL}\"}}}" \
+            https://api.github.com/gists/9f912610d0a33f16728a4ecf26bb6937
