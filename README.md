@@ -47,9 +47,36 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 - **Built-in drag & drop grid** — written from scratch in native JS. No framework overhead, silky smooth on any device.
 - **Real dark/light mode** — dedicated color token sets per theme, not just a CSS filter.
 - **Go backend** — small memory footprint, concurrent by default. Runs fine on a Raspberry Pi.
-- **Peace of mind** - Backup and restore directly from the website.
+- **Peace of mind** — Backup and restore directly from the website.
 - **Single SQLite file** — your entire dashboard state in one portable file. Backup = `cp lastboard.db`.
 - **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
+- **Multi-user support** — per-user dashboards, preferences, and password management.
+- **Real-time telemetry** — server stats (CPU, RAM, disk) streamed over WebSocket.
+
+---
+
+## Security & Widgets
+
+### Security
+
+Lastboard is built with defense-in-depth throughout the stack.
+
+- **HTTP Security Headers** — CSP (report-only), `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` on every response.
+- **HSTS** — `Strict-Transport-Security` (1 year + preload) applied automatically on HTTPS connections.
+- **CSRF Protection** — all state-changing methods (`POST`, `PUT`, `PATCH`, `DELETE`) require a matching `csrf_token` cookie and `X-CSRF-Token` header (`403` on mismatch).
+- **Session Tokens** — HMAC-SHA256 signed with expiry, generated from a 32-byte cryptographic secret; constant-time verification prevents timing attacks.
+- **Rate Limiting** — token-bucket limiter (20 req/s, burst 50) on all protected routes, with automatic cleanup of stale IP entries.
+- **Setup Lock** — `/setup` is hard-blocked once any user exists, preventing re-initialization.
+
+### Widgets (5)
+
+| Widget | Description |
+| :--- | :--- |
+| **Clock** | Analog/digital clock with configurable timezone and seconds display |
+| **Notepad** | Persistent per-user text notepad |
+| **Telemetry** | Real-time server metrics (CPU, RAM, disk) via WebSocket |
+| **Weather** | Current conditions and forecast via Open-Meteo |
+| **Markdown** | Freeform Markdown renderer for notes and links |
 
 ---
 
