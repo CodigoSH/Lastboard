@@ -17,13 +17,14 @@ jobs:
           TOTAL=$(gh api repos/CodigoSH/Lastboard/releases \
             --paginate --jq '[.[].assets[].download_count] | add' | \
             paste -sd+ | bc)
-          
+
           LATEST=$(gh api repos/CodigoSH/Lastboard/releases \
-            --jq '[.[] | select(.prerelease == false)] | first | .tag_name')
-          
+            --paginate --jq '.[] | select(.prerelease == false) | .tag_name' | \
+            head -1)
+
           CONTENT="{\"downloads\":$TOTAL,\"version\":\"$LATEST\"}"
           PAYLOAD=$(jq -n --arg content "$CONTENT" '{"files":{"stats.json":{"content":$content}}}')
-          
+
           curl -s -X PATCH \
             -H "Authorization: token $GIST_TOKEN" \
             -H "Content-Type: application/json" \
