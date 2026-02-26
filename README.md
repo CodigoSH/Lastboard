@@ -11,7 +11,7 @@
       <img src="https://img.shields.io/badge/Live_Demo-FF4B4B?style=for-the-badge&logo=google-chrome&logoColor=white" />
     </a>
     &nbsp;
-    <img src="https://img.shields.io/github/v/release/CodigoSH/Lastboard?style=for-the-badge&label=Latest&color=blue" />
+    <img src="https://img.shields.io/badge/dynamic/json?url=https://gist.githubusercontent.com/k4wit0/9f912610d0a33f16728a4ecf26bb6937/raw/stats.json&query=$.version&label=Latest&style=for-the-badge&color=blue" />
     &nbsp;
     <img src="https://img.shields.io/badge/dynamic/json?url=https://gist.githubusercontent.com/k4wit0/9f912610d0a33f16728a4ecf26bb6937/raw/stats.json&query=$.downloads&label=Installations&style=for-the-badge&color=3178C6" />
     &nbsp;
