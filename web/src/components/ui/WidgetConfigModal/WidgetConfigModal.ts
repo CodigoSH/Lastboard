@@ -98,7 +98,7 @@ class WidgetConfigModal extends HTMLElement {
         } catch (e) {
             console.error('Failed to parse content', e);
         }
-        this._selectedColor = content.borderColor || '#333333';
+        this._selectedColor = content.borderColor || '';
         this._selectedBorderWidth = content.borderWidth || 1;
 
         this.render();

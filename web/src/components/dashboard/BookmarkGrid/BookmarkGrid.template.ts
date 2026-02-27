@@ -49,8 +49,8 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
             const children = getChildren(b.id);
             const title = (data.title || '').trim();
 
-            const borderColorStyle = (data.borderColor && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
-            const borderWidthStyle = !isEditing ? `border-width: ${data.borderWidth || 1}px !important;` : '';
+            const borderColorStyle = (data.borderColor && data.borderColor !== '#333333' && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
+            const borderWidthStyle = (data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : '';
 
             return `
             <fieldset class="bookmark-grid__section"
@@ -95,8 +95,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
         const rawContent = data.text || '';
         const dataContent = rawContent.replace(/"/g, '&quot;');
 
-        const borderColorStyle = (data.borderColor && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
-        const borderWidthStyle = !isEditing ? `border-width: ${data.borderWidth || 1}px !important;` : '';
+        const borderColorStyle = (data.borderColor && data.borderColor !== '#333333' && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
+        const borderWidthStyle = (data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : '';
 
         return `
         <div class="bookmark-grid__card"
@@ -132,7 +132,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
     const hrefAttr = isEditing ? 'role="button"' : `href="${safeUrl(data.url)}" target="_blank"`;
 
     const vPosStyle = !isTouchDevice ? `--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};` : '';
-    const borderColorStyle = (data.borderColor && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
+    const borderColorStyle = (data.borderColor && data.borderColor !== '#333333' && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';
     const labelPosClass = data.labelPos === 'top' ? 'label-top' : (data.labelPos === 'section' ? 'label-section' : (data.labelPos === 'off' ? 'label-off' : ''));
 
     return `
@@ -141,7 +141,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
            data-id="${b.id}"
            data-type="${b.type}"
            data-orig-x="${b.x}" data-orig-y="${b.y}"
-           style="${vPosStyle} ${borderColorStyle} ${!isEditing ? `border-width: ${data.borderWidth || 1}px !important;` : ''}">
+           style="${vPosStyle} ${borderColorStyle} ${(data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : ''}">
             
             ${isEditing ? `
                 <div class="bookmark-actions">

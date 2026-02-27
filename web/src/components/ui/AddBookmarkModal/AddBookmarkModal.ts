@@ -22,7 +22,7 @@ class AddBookmarkModal extends HTMLElement {
     private url: string = '';
     private protocol: string = 'http://';
     private selectedIconName: string | null = null;
-    private color: string = '#333333';
+    private color: string = '';
     private statusPosition: string = 'top-right';
     private checkStatus: boolean = false;
     private labelPosition: string = 'bottom';
@@ -484,7 +484,7 @@ class AddBookmarkModal extends HTMLElement {
         // Populate State
         this.bookmarkTitle = content.label || '';
         this.selectedIconName = content.iconName || '';
-        this.color = content.borderColor || '#333333';
+        this.color = content.borderColor || '';
         this.labelPosition = content.labelPos || 'bottom';
         this.visibleTouch = (content.visibleTouch !== false);
         this.borderWidth = content.borderWidth || 1;
@@ -525,7 +525,7 @@ class AddBookmarkModal extends HTMLElement {
         this.url = '';
         this.protocol = 'http://';
         this.selectedIconName = null;
-        this.color = '#333333';
+        this.color = '';
         this.statusPosition = 'top-right';
         this.checkStatus = false;
         this.labelPosition = 'bottom';
