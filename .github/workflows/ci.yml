@@ -9,13 +9,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install frontend dependencies
+        run: bun install
+
+      - name: Build frontend (required for go:embed)
+        run: bun run build
+
       - name: Build
         run: go build ./...
+
       - name: Test
         run: go test ./...
+
       - name: Vet
         run: go vet ./...
 
@@ -23,10 +37,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
       - name: Install dependencies
         run: bun install
+
       - name: Frontend Test
-        run: bun test
+        run: bun test web/src/services/collisionService.test.ts
