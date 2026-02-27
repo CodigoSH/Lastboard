@@ -19,8 +19,9 @@
     --accent-rgb: 37, 99, 235;
 
     /* Borders & Text */
-    --border: rgba(0, 0, 0, 0.08);
-    --border-bright: rgba(0, 0, 0, 0.12);
+    --border: rgba(0, 0, 0, 0.06);
+    --border-bright: rgba(0, 0, 0, 0.09);
+    --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
     --text-main: #0f172a;
     --text-dim: #475569;
 
@@ -113,6 +114,7 @@
     /* Borders & Text */
     --border: #333333;
     --border-bright: #444444;
+    --card-shadow: none;
     --text-main: #ffffff;
     --text-dim: #a0a0a0;
 

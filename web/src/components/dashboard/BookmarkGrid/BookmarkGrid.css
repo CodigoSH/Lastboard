@@ -123,6 +123,7 @@
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
     border-radius: var(--radius);
 
     /* Responsive Padding */
@@ -513,6 +514,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
     /* Use theme border */
     border-radius: var(--radius);
     grid-column: var(--x) / span var(--w);
