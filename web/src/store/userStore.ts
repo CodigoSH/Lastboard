@@ -129,7 +129,6 @@ class UserStore {
             await demoService.updatePreferences(newPrefs);
             this.applyAesthetics();
             this.notify();
-            // @ts-ignore
             if (window.notifier) window.notifier.show(i18n.t('general.success') || 'Preferences saved');
             return;
         }
@@ -163,7 +162,6 @@ class UserStore {
 
             await userService.updatePreferences(payload);
 
-            // @ts-ignore
             if (window.notifier) window.notifier.show(i18n.t('general.success') || 'Preferences saved');
         } catch (e) {
             console.error('[UserStore] Failed to sync preferences, rolling back', e);
@@ -171,7 +169,6 @@ class UserStore {
             this.user.preferences = previousPrefs;
             this.applyAesthetics();
             this.notify();
-            // @ts-ignore
             if (window.notifier) window.notifier.show(i18n.t('notifier.save_error'), 'error');
             throw e;
         }
@@ -189,7 +186,6 @@ class UserStore {
                 localStorage.removeItem('lastboard_user_cache');
 
                 // Show notification and redirect to login
-                // @ts-ignore
                 if (window.notifier) window.notifier.show(i18n.t('notifier.username_changed_relogin'));
 
                 setTimeout(() => {
@@ -201,11 +197,9 @@ class UserStore {
 
             this.user = { ...this.user, ...data };
             this.notify();
-            // @ts-ignore
             if (window.notifier) window.notifier.show(i18n.t('notifier.profile_updated'));
         } catch (e) {
             console.error('[UserStore] Update profile failed', e);
-            // @ts-ignore
             if (window.notifier) window.notifier.show(i18n.t('notifier.profile_error'), 'error');
         }
     }
@@ -239,7 +233,6 @@ class UserStore {
             console.error('[UserStore] Error fetching user', error);
             // Don't show error immediately on fetch fail if we have cached data
             if (!this.user) {
-                // @ts-ignore
                 if (window.notifier) window.notifier.show(i18n.t('auth.session_expired'), 'error');
             }
         }
