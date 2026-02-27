@@ -176,6 +176,20 @@ class WidgetConfigModal extends HTMLElement {
                         if (v < 6) daysInput.value = String(v + 1);
                     });
                 }
+            } else if (widgetId === 'telemetry') {
+                // "At least one" guard: prevent deselecting all metric toggles
+                this.shadowRoot.querySelectorAll('.metric-toggle').forEach(toggle => {
+                    toggle.addEventListener('change', () => {
+                        const all = Array.from(
+                            this.shadowRoot!.querySelectorAll<HTMLInputElement>('.metric-toggle')
+                        );
+                        const checked = all.filter(cb => cb.checked);
+                        if (checked.length === 0) {
+                            // Re-check the one that was just unchecked
+                            (toggle as HTMLInputElement).checked = true;
+                        }
+                    });
+                });
             }
         }
 
@@ -335,7 +349,34 @@ class WidgetConfigModal extends HTMLElement {
             newContent.text = textInput ? textInput.value : '';
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
-            newContent.interval = intervalInput ? parseInt(intervalInput.value) : 1000;
+            newContent.interval = intervalInput ? parseInt(intervalInput.value) : 5000;
+
+            // Collect selected metrics (guarantee at least one)
+            const allKeys = ['cpu', 'ram', 'temp'];
+            const selected = allKeys.filter(k =>
+                (this.shadowRoot?.getElementById(`metric-${k}`) as HTMLInputElement)?.checked
+            );
+            newContent.metrics = selected.length > 0 ? selected : allKeys;
+
+            // Auto-resize grid cell based on metric count
+            const sizeMap: Record<number, { w: number; h: number }> = {
+                1: { w: 1, h: 1 },
+                2: { w: 2, h: 1 },
+                3: { w: 3, h: 1 }
+            };
+            const newSize = sizeMap[newContent.metrics.length] ?? { w: 3, h: 1 };
+
+            // Persist appearance + content, then resize
+            newContent.borderColor = this._selectedColor;
+            newContent.borderWidth = this._selectedBorderWidth;
+            await dashboardStore.updateItem({
+                id: this.currentItem!.id,
+                content: JSON.stringify(newContent),
+                w: newSize.w,
+                h: newSize.h
+            });
+            this.close();
+            return; // Skip the generic updateItem below
         }
 
         if (this.currentItem.type === 'section') {
@@ -523,8 +564,31 @@ class WidgetConfigModal extends HTMLElement {
                 // --- TELEMETRY ---
             } else if (widgetId === 'telemetry') {
                 const interval = content.interval || 5000;
+                const activeMetrics: string[] = Array.isArray(content.metrics) ? content.metrics : ['cpu', 'ram', 'temp'];
+
+                const metricDef = [
+                    { key: 'cpu', label: i18n.t('widget.telemetry.cpu'), icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/></svg>` },
+                    { key: 'ram', label: i18n.t('widget.telemetry.ram'), icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="2" y="7" width="20" height="10" rx="1"/><line x1="6" y1="17" x2="6" y2="20"/><line x1="10" y1="17" x2="10" y2="20"/><line x1="14" y1="17" x2="14" y2="20"/><line x1="18" y1="17" x2="18" y2="20"/><line x1="5" y1="10" x2="5" y2="14"/><line x1="9" y1="10" x2="9" y2="14"/><line x1="13" y1="10" x2="13" y2="14"/></svg>` },
+                    { key: 'temp', label: i18n.t('widget.telemetry.temp'), icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>` }
+                ];
+
+                const metricsRows = metricDef.map(m => `
+                    <div class="metric-toggle-row">
+                        <span class="metric-toggle-icon">${m.icon}</span>
+                        <span class="metric-toggle-label">${m.label}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="metric-toggle" id="metric-${m.key}" ${activeMetrics.includes(m.key) ? 'checked' : ''} data-metric="${m.key}" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                `).join('');
 
                 const generalTab = `
+                    <div class="field-group">
+                        <label>${i18n.t('widget.telemetry.metrics') || 'Metrics'}</label>
+                        <div class="metric-toggles">${metricsRows}</div>
+                        <small>${i18n.t('widget.telemetry.metrics_hint') || 'At least one metric must remain active.'}</small>
+                    </div>
                     <div class="field-group row-aligned">
                         <label>${i18n.t('widget.telemetry.update_interval')}</label>
                         <app-select id="telemetry-interval" value="${interval}"></app-select>
@@ -540,7 +604,7 @@ class WidgetConfigModal extends HTMLElement {
                 const text = content.text || '';
 
                 const generalTab = `
-                    < div style = "text-align: center; padding: 32px 20px; color: var(--text-dim);" >
+                    <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
                         <p>${i18n.t('widget.config.check_personalize')} </p>
                             </div>
                                 `;

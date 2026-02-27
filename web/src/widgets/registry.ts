@@ -34,7 +34,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         get name() { return i18n.t('widget.telemetry.name'); },
         icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><circle cx="6" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="6" cy="17.5" r="1" fill="currentColor" stroke="none"/><line x1="10" y1="6.5" x2="18" y2="6.5"/><line x1="10" y1="17.5" x2="18" y2="17.5"/></svg>',
         get description() { return i18n.t('widget.telemetry.description'); },
-        defaultW: 2,
+        defaultW: 3,
         defaultH: 1, // Compact row
         componentTag: 'widget-telemetry'
     },

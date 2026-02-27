@@ -128,9 +128,19 @@
     /* Responsive Padding */
     padding: 8% 4% !important;
 
+    /* Telemetry widgets manage their own internal padding */
+    &:has(widget-telemetry) {
+        padding: 0 !important;
+
+        /* Match Section behavior: No background illumination on hover for the frame */
+        &:hover {
+            background: var(--surface) !important;
+        }
+    }
+
     position: relative;
-    /* aspect-ratio: 1 / 1;  <-- REMOVED: let grid-auto-rows control height */
-    height: 100%;
+    aspect-ratio: calc(var(--w, 1) / var(--h, 1)) !important;
+    height: auto !important;
     /* Fill the grid area */
 
     max-width: 100%;
@@ -150,7 +160,8 @@
 
     text-decoration: none;
     color: var(--text-main);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s;
     box-sizing: border-box;
     overflow: hidden;
     container-type: inline-size;
