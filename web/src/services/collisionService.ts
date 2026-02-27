@@ -159,13 +159,6 @@ export const collisionService = {
     },
 
     /**
-     * Finds the first available slot for an item of given size.
-     */
-    findFirstAvailableSlot(w: number, h: number, allItems: GridItem[], gridCols: number = 12): { x: number, y: number } {
-        return this.findCompactPosition(w, h, allItems, gridCols);
-    },
-
-    /**
      * Finds the first available slot for any item in a container of obstacles.
      * Pure geometry, no parent_id logic.
      */

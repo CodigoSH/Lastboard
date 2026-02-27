@@ -186,7 +186,7 @@ class AddBookmarkModal extends HTMLElement {
                     const { collisionService } = await import('../../../services/collisionService');
                     const state = dashboardStore.getState();
                     const items = Array.isArray(state.items) ? state.items : [];
-                    const slot = collisionService.findFirstAvailableSlot(1, 1, items);
+                    const slot = collisionService.findCompactPosition(1, 1, items, 12);
 
                     await dashboardStore.addItem({
                         type: 'bookmark',

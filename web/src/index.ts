@@ -213,7 +213,7 @@ if (topbar) {
             // @ts-ignore
             const items = currentState.items || [];
             const { collisionService } = await import('./services/collisionService');
-            const slot = collisionService.findFirstAvailableSlot(1, 1, items);
+            const slot = collisionService.findCompactPosition(1, 1, items, 12);
 
             const newItem = {
                 type: 'section',
@@ -241,7 +241,7 @@ window.addEventListener('widget-selected', async (e: Event) => {
     const items = currentState.items || [];
 
     const { collisionService } = await import('./services/collisionService');
-    const slot = collisionService.findFirstAvailableSlot(widgetDef.defaultW, widgetDef.defaultH, items);
+    const slot = collisionService.findCompactPosition(widgetDef.defaultW, widgetDef.defaultH, items, 12);
 
     const newItem = {
         type: 'widget',

@@ -642,7 +642,7 @@ class BookmarkGrid extends HTMLElement {
 
                     // Calculate all slots FIRST before any updates (prevents race condition)
                     const ejections = toEject.map(child => {
-                        const slot = collisionService.findFirstAvailableSlot(child.w, child.h, simulatedItems, this.currentGridCols);
+                        const slot = collisionService.findCompactPosition(child.w, child.h, simulatedItems, this.currentGridCols);
 
                         // Update simulation so next ejected item finds a different slot
                         simulatedItems.push({

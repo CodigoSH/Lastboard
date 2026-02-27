@@ -453,7 +453,7 @@ class DashboardStore {
                 if (!payload.x || !payload.y) {
                     const { collisionService } = await import('../services/collisionService');
                     // We need to pass the CURRENT items to find a slot
-                    const slot = collisionService.findFirstAvailableSlot(payload.w || 1, payload.h || 1, this.state.items, gridWidth);
+                    const slot = collisionService.findCompactPosition(payload.w || 1, payload.h || 1, this.state.items, gridWidth);
                     payload.x = slot.x;
                     payload.y = slot.y;
                 }
