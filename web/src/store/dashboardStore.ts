@@ -93,7 +93,7 @@ class DashboardStore {
                 this.notify();
             });
 
-            // GOLD STANDARD: Handle real-time update notifications
+
             socketService.subscribeNotification((type, payload) => {
                 if (type === 'update_available') {
                     this.checkSystemUpdate(); // Re-validate with user preferences (beta toggle)
@@ -245,18 +245,7 @@ class DashboardStore {
         if (width === this.state.availableWidth && columns === this.state.gridColumns) return;
         this.state.availableWidth = width;
         this.state.gridColumns = columns;
-        // Do NOT notify for this? Or strictly for layout reactivity?
-        // Layout reactivity is handled by BookmarkGrid calling render().
-        // Store notification might trigger full framework update which is heavy.
-        // But if other components need it, we should notify.
-        // Let's notify. BookmarkGrid should be smart enough not to loop.
-        // Actually, BookmarkGrid SUBSCRIBES to this. Updating state triggers notify -> triggers BookmarkGrid.
-        // This creates a loop if BookmarkGrid calls setGridMetrics inside its render/resize loop.
-        // CAREFUL.
-        // BookmarkGrid.ts L80: `dashboardStore.subscribe`.
-        // BookmarkGrid updates Metrics on Resize.
-        // If it calls store.setGridMetrics -> Store notifies -> BookmarkGrid receives update -> checks changes -> renders.
-        // This is safe provided `setGridMetrics` has the equality check above.
+
         this.notify();
     }
 
@@ -429,7 +418,7 @@ class DashboardStore {
                     payload.url = '';
                 }
 
-                // FIX: Use Store state for grid metrics if available, fallback to DOM/Prefs if not ready
+
                 // Dynamic Grid Width Detection
                 const { userStore } = await import('./userStore');
                 const user = userStore.getUser();
@@ -486,7 +475,7 @@ class DashboardStore {
         }
     }
 
-    // Legacy reflowGrid removed in favor of CSS Grid auto-fill
+
 
 
     async deleteItem(id: number) {
