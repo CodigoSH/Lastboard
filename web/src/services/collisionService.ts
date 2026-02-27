@@ -152,8 +152,8 @@ export const collisionService = {
         // Simple logic: column = floor(px / (width + gap)) + 1
         const totalCellW = cellWidth + gap;
         const col = Math.max(1, Math.floor(pixelsX / totalCellW) + 1);
-        // Usar mismo tamaño de celda que columnas para consistencia
-        const totalCellH = cellWidth + gap; // Mismo cálculo que para columnas
+        // Use the same cell size as columns for consistency
+        const totalCellH = cellWidth + gap; // Same calculation as for columns
         const row = Math.max(1, Math.floor(pixelsY / totalCellH) + 1);
         return { x: col, y: row };
     },

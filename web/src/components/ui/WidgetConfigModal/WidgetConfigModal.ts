@@ -8,10 +8,10 @@ import '../ColorPicker/ColorPicker';
 // @ts-ignore
 import css from './WidgetConfigModal.css' with { type: 'text' };
 
-// Caché para evitar consultas repetidas
+// Cache to avoid repeated queries
 const timezoneCache = new Map<string, string>();
 
-// Función para obtener zona horaria desde coordenadas usando TimeAPI
+// Function to get timezone from coordinates using TimeAPI
 async function getTimezoneFromCoords(lat: number, lon: number): Promise<string> {
     try {
         const response = await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lon}`);
@@ -24,7 +24,7 @@ async function getTimezoneFromCoords(lat: number, lon: number): Promise<string> 
     }
 }
 
-// Función para obtener zona horaria desde nombre de ciudad
+// Function to get timezone from city name
 async function getCityTimezone(city: string): Promise<string> {
     if (!city || city.trim() === '') return 'local';
 
@@ -51,10 +51,10 @@ async function getCityTimezone(city: string): Promise<string> {
 
         const { lat, lon } = geocodeData[0];
 
-        // 2. Obtener timezone desde coordenadas
+        // 2. Get timezone from coordinates
         const timezone = await getTimezoneFromCoords(parseFloat(lat), parseFloat(lon));
 
-        // Guardar en caché
+        // Save to cache
         timezoneCache.set(normalized, timezone);
 
         return timezone;

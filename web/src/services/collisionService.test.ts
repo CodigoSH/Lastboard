@@ -1,30 +1,55 @@
 import { describe, it, expect } from 'bun:test';
-// We mock the implementation or import the real one if it's pure logic
-// collisionService is pure logic, so imports work fine in Bun test runner
-
-// Mocking the collision logic for test if the service is complex/dependent
-// But let's assume we can test the core algorithm directly.
-
-// Re-implementing core logic for test verification or importing real module?
-// Importing real module in Bun test environment might need 'dom' lib if it touches window.
-// CollisionService should be pure logic.
+import { collisionService } from './collisionService';
 
 describe('Collision Service', () => {
-    it('should find first available slot in empty grid', () => {
-        // 0,0 is available
-        const items: any[] = [];
-        // Placeholder for real logic verification
-        expect(items.length).toBe(0);
+    describe('isOverlap', () => {
+        it('two overlapping rectangles should return true', () => {
+            const r1 = { x: 1, y: 1, w: 2, h: 2 };
+            const r2 = { x: 2, y: 2, w: 2, h: 2 }; // Overlaps at (2,2)
+            expect(collisionService.isOverlap(r1, r2)).toBe(true);
+        });
+
+        it('two non-overlapping rectangles should return false', () => {
+            const r1 = { x: 1, y: 1, w: 2, h: 2 };
+            const r2 = { x: 4, y: 4, w: 2, h: 2 }; // Far away
+            expect(collisionService.isOverlap(r1, r2)).toBe(false);
+        });
+
+        it('two rectangles touching at exact border (adjacent) should return false', () => {
+            const r1 = { x: 1, y: 1, w: 2, h: 2 }; // covers x: 1..2, y: 1..2
+            const r2 = { x: 3, y: 1, w: 2, h: 2 }; // covers x: 3..4, y: 1..2
+            expect(collisionService.isOverlap(r1, r2)).toBe(false);
+        });
     });
 
-    it('should detect overlap', () => {
-        const items = [{ x: 0, y: 0, w: 1, h: 1 }];
-        const newItem = { x: 0, y: 0, w: 1, h: 1 };
-        // Simple overlap check logic
-        const overlap = (items[0].x < newItem.x + newItem.w &&
-            items[0].x + items[0].w > newItem.x &&
-            items[0].y < newItem.y + newItem.h &&
-            items[0].y + items[0].h > newItem.y);
-        expect(overlap).toBe(true);
+    describe('findCompactPosition', () => {
+        it('empty grid should return { x: 1, y: 1 }', () => {
+            const items: any[] = [];
+            const result = collisionService.findCompactPosition(1, 1, items, 12);
+            expect(result).toEqual({ x: 1, y: 1 });
+        });
+
+        it('with one item at { x:1, y:1, w:1, h:1 }, next 1x1 item should be placed at { x: 2, y: 1 }', () => {
+            const items = [{ id: 1, x: 1, y: 1, w: 1, h: 1, type: 'bookmark' }];
+            const result = collisionService.findCompactPosition(1, 1, items as any, 12);
+            expect(result).toEqual({ x: 2, y: 1 });
+        });
+    });
+
+    describe('calculateDropValidity', () => {
+        it('item exceeding right grid boundary should return valid: false', () => {
+            // An item that exceeds the gridWidth of 12
+            const draggedItem = { id: 99, x: 12, y: 1, w: 2, h: 1 };
+            const items: any[] = [];
+            const result = collisionService.calculateDropValidity(draggedItem, items, 12);
+            expect(result.valid).toBe(false);
+        });
+
+        it('free position with no collisions should return valid: true', () => {
+            const draggedItem = { id: 99, x: 1, y: 1, w: 1, h: 1 };
+            const items: any[] = [];
+            const result = collisionService.calculateDropValidity(draggedItem, items, 12);
+            expect(result.valid).toBe(true);
+        });
     });
 });
