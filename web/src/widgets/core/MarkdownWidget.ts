@@ -1,4 +1,5 @@
 
+import { htmlSanitizer } from '../../services/htmlSanitizer';
 import { dashboardStore } from '../../store/dashboardStore';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
 import { MarkdownParser } from '../../services/MarkdownParser';
@@ -316,7 +317,7 @@ export class MarkdownWidget extends HTMLElement {
     private updatePreview() {
         if (this._editor && this._preview) {
             try {
-                this._preview.innerHTML = MarkdownParser.parse(this._editor.value);
+                this._preview.innerHTML = htmlSanitizer.sanitize(MarkdownParser.parse(this._editor.value));
             } catch (e) {
                 console.error('Markdown parsing failed', e);
                 this._preview.innerHTML = `<div class="error">${i18n.t('widget.markdown.error.preview')}</div>`;

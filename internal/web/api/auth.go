@@ -78,7 +78,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if len(input.Password) > 72 {
 		// Dummy bcrypt call to maintain constant timing regardless of failure reason
-		bcrypt.CompareHashAndPassword([]byte("$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01"), []byte(input.Password))
+		bcrypt.CompareHashAndPassword([]byte("$2b$10$KIWAy9N7gtNA4CHEO4YXrOQgZw.wye/ZD98.n6hwFVrEVb.SoU/ya"), []byte(input.Password))
 		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
@@ -88,7 +88,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var storedHash string
 	err = h.DB.QueryRow("SELECT password FROM users WHERE username = ?", input.Username).Scan(&storedHash)
 	if err != nil {
-		bcrypt.CompareHashAndPassword([]byte("$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01"), []byte(input.Password))
+		bcrypt.CompareHashAndPassword([]byte("$2b$10$KIWAy9N7gtNA4CHEO4YXrOQgZw.wye/ZD98.n6hwFVrEVb.SoU/ya"), []byte(input.Password))
 		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return

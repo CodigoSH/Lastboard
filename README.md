@@ -68,6 +68,14 @@ Lastboard is built with defense-in-depth throughout the stack.
 - **Rate Limiting** — token-bucket limiter (20 req/s, burst 50) on all protected routes, with automatic cleanup of stale IP entries.
 - **Setup Lock** — `/setup` is hard-blocked once any user exists, preventing re-initialization.
 
+> **Note for reverse proxy users:** Lastboard's rate limiter reads the client IP from the `X-Forwarded-For` header when present. For the login protection to work correctly, configure your reverse proxy to set this header to the real client IP:
+>
+> - **Nginx:** `proxy_set_header X-Forwarded-For $remote_addr;`
+> - **Cloudflare:** enabled by default (real IP is passed automatically)
+> - **Pangolin / Coolify / Traefik:** ensure `X-Forwarded-For` passthrough is enabled in your proxy configuration
+>
+> If you expose Lastboard directly without a reverse proxy, rate limiting still works using the direct TCP connection IP.
+
 ### Widgets (5)
 
 | Widget | Description |
