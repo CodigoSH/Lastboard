@@ -14,91 +14,93 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.24'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
 
-    - name: Set up Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
 
-    - name: Install dependencies
-      run: |
-        go mod download
-        bun install
+      - name: Install dependencies
+        run: |
+          go mod download
+          bun install
 
-    - name: Run Go tests
-      run: |
-        go test ./internal/... -v -cover -coverprofile=coverage.out
+      - name: Build frontend (required for go:embed)
+        run: |
+          bun run build
 
-    - name: Generate coverage report
-      run: |
-        go tool cover -func=coverage.out -o=coverage.txt
-        cat coverage.txt
+      - name: Run Go tests
+        run: |
+          go test ./internal/... -v -cover -coverprofile=coverage.out
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./coverage.out
-        flags: unittests
-        name: codecov-lastboard
+      - name: Generate coverage report
+        run: |
+          go tool cover -func=coverage.out -o=coverage.txt
+          cat coverage.txt
 
-    - name: Run Frontend Tests
-      run: |
-        bun test web/src/services/collisionService.test.ts
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.out
+          flags: unittests
+          name: codecov-lastboard
 
-    - name: Build frontend
-      run: |
-        bun run build
+      - name: Run Frontend Tests
+        run: |
+          bun test web/src/services/collisionService.test.ts
 
-    - name: Build backend
-      run: |
-        go build -v -o lastboard cmd/dashboard/main.go
+      - name: Build backend
+        run: |
+          go build -v -o lastboard cmd/dashboard/main.go
 
-    - name: Test binary
-      run: |
-        ./lastboard --version || echo "Binary built successfully"
+      - name: Test binary
+        run: |
+          ./lastboard --version || echo "Binary built successfully"
 
   benchmark:
     name: Run Benchmarks
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.24'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
 
-    - name: Set up Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
 
-    - name: Install dependencies
-      run: |
-        go mod download
-        bun install
+      - name: Install dependencies
+        run: |
+          go mod download
+          bun install
 
-    - name: Run benchmarks
-      run: |
-        go test ./internal/... -bench=. -benchmem -run=^$ > benchmark.txt
-        cat benchmark.txt
+      - name: Build frontend (required for go:embed)
+        run: |
+          bun run build
 
-    - name: Upload benchmark results
-      uses: actions/upload-artifact@v4
-      with:
-        name: benchmark-results
-        path: benchmark.txt
+      - name: Run benchmarks
+        run: |
+          go test ./internal/... -bench=. -benchmem -run=^$ > benchmark.txt
+          cat benchmark.txt
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark.txt
 
   security:
     name: Security Scan
@@ -107,26 +109,25 @@ jobs:
       security-events: write
       actions: read
       contents: read
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.24'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
 
-    - name: Install dependencies
-      run: |
-        go mod download
+      - name: Install dependencies
+        run: |
+          go mod download
 
-    - name: Run Gosec Security Scanner
-      uses: securego/gosec@v2.21.0
-      with:
-        args: '-no-fail -fmt sarif -out results.sarif ./...'
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@v2.21.0
+        with:
+          args: '-no-fail -fmt sarif -out results.sarif ./...'
 
-    - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: results.sarif
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
