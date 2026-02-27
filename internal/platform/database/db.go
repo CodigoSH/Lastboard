@@ -121,7 +121,7 @@ func runMigrations(db *sql.DB) error {
 			`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT '';`,
 			`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Lastboard';`,
 			`ALTER TABLE items ADD COLUMN url TEXT;`,
-			`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`, // Duplicated removed below
+			`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
 			`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
 			`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
 		}

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -61,11 +62,11 @@ func RateLimit(next http.Handler) http.Handler {
 		ip := r.RemoteAddr
 		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
 			parts := strings.Split(forwarded, ",")
-			ip = strings.TrimSpace(parts[len(parts)-1])
+			ip = strings.TrimSpace(parts[0])
 		}
-		// Strip port if present
-		if strings.Contains(ip, ":") {
-			ip = strings.Split(ip, ":")[0]
+		// Strip port correctly for both IPv4 and IPv6
+		if host, _, err := net.SplitHostPort(ip); err == nil {
+			ip = host
 		}
 
 		limiter := getLimiter(ip)

@@ -57,11 +57,7 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 	var items []dashboard.Item
 	for rows.Next() {
 		var i dashboard.Item
-		// Scan url as well (it may be null in DB, so we scan into sql.NullString if we wanted to be safe,
-		// but Scan handles NULL to *string or string differently.
-		// Let's assume standard behavior: if NULL, string becomes "".
-		// Actually, `Scan` into `string` fails on NULL. We need a workaround or sql.NullString.
-		// For simplicity/speed in this legacy fix, let's use a temporary pointer or sql.NullString.
+
 		var urlSql sql.NullString
 
 		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &urlSql); err != nil {
