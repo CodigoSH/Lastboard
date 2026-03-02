@@ -61,20 +61,22 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 
 Lastboard is built with defense-in-depth throughout the stack.
 
-- **HTTP Security Headers** — CSP (report-only), `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` on every response.
+- **HTTP Security Headers** — CSP (enforced), `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` on every response.
 - **HSTS** — `Strict-Transport-Security` (1 year + preload) applied automatically on HTTPS connections.
 - **CSRF Protection** — all state-changing methods (`POST`, `PUT`, `PATCH`, `DELETE`) require a matching `csrf_token` cookie and `X-CSRF-Token` header (`403` on mismatch).
 - **Session Tokens** — HMAC-SHA256 signed with expiry, generated from a 32-byte cryptographic secret; constant-time verification prevents timing attacks.
 - **Rate Limiting** — token-bucket limiter (20 req/s, burst 50) on all protected routes, with automatic cleanup of stale IP entries.
 - **Setup Lock** — `/setup` is hard-blocked once any user exists, preventing re-initialization.
 
-> **Note for reverse proxy users:** Lastboard's rate limiter reads the client IP from the `X-Forwarded-For` header when present. For the login protection to work correctly, configure your reverse proxy to set this header to the real client IP:
+> **Reverse proxy users — `TRUST_PROXY` flag:** By default, Lastboard ignores the `X-Forwarded-For` header to prevent IP spoofing. If you run Lastboard behind a reverse proxy (nginx, Traefik, Caddy, Cloudflare, Coolify, Pangolin...), you **must** enable proxy trust so that rate limiting and login lockout work against the real client IP instead of the proxy IP.
 >
-> - **Nginx:** `proxy_set_header X-Forwarded-For $remote_addr;`
-> - **Cloudflare:** enabled by default (real IP is passed automatically)
-> - **Pangolin / Coolify / Traefik:** ensure `X-Forwarded-For` passthrough is enabled in your proxy configuration
+> Set the environment variable:
+> ```
+> TRUST_PROXY=true
+> ```
+> **Without this flag**, all users behind the proxy will share the same IP for rate limiting purposes, which may cause false 429 errors under load.
 >
-> If you expose Lastboard directly without a reverse proxy, rate limiting still works using the direct TCP connection IP.
+> **Do not enable this flag** if Lastboard is exposed directly to the internet without a reverse proxy, as it would allow clients to spoof their IP.
 
 ### Widgets (5)
 
@@ -103,6 +105,7 @@ services:
       - "8080:8080"
     environment:
       - TZ=America/New_York
+      # - TRUST_PROXY=true   # Uncomment if running behind a reverse proxy
     volumes:
       - ./data:/var/lib/lastboard
     restart: unless-stopped
@@ -119,6 +122,7 @@ docker run -d \
   --name lastboard \
   -p 8080:8080 \
   -e TZ=America/New_York \
+  # -e TRUST_PROXY=true \   # Uncomment if running behind a reverse proxy
   -v $(pwd)/data:/var/lib/lastboard \
   --restart unless-stopped \
   ghcr.io/codigosh/lastboard:latest
@@ -133,6 +137,8 @@ Lastboard is designed to work out-of-the-box, but you can customize it via envir
 | `PORT` | `8080` | The port the HTTP server listens on. |
 | `DB_FILE` | `./lastboard.db` | Path to the SQLite database file. In Docker, it defaults to `/var/lib/lastboard/lastboard.db`. |
 | `TZ` | `UTC` | Timezone for the application (e.g., `America/New_York`). |
+| `TRUST_PROXY` | `false` | Set to `true` if Lastboard runs behind a reverse proxy (nginx, Traefik, Caddy, Cloudflare). Enables reading the real client IP from `X-Forwarded-For`. **Do not enable if exposed directly.** |
+| `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. Increase only if needed. |
 
 #### Data & Backups
 
@@ -144,6 +150,12 @@ All state is stored in a single SQLite database file for simplicity and portabil
 
 > [!IMPORTANT]
 > Ensure the application is stopped before replacing the database file to prevent corruption.
+
+> [!WARNING]
+> The backup file downloaded from the web interface contains **sensitive data including bcrypt password hashes** for all users. Store it in a secure location and never share it publicly.
+
+> [!NOTE]
+> Restoring a backup via the web interface will **log out all active sessions** immediately. All users will need to log in again after a restore. This is intentional behavior to ensure session consistency with the restored data.
 
 ---
 

@@ -62,15 +62,18 @@ fi
 # 2. Configuration
 PORT="8080"
 IS_UPDATE=false
+TRUST_PROXY=false
 
 # --- Existing Installation Checks ---
 
 if [ -f "$SERVICE_FILE" ]; then
     # Start detection
     DETECTED_PORT=$(grep 'Environment="PORT=' "$SERVICE_FILE" | cut -d'=' -f3 | tr -d '"')
-    
+    DETECTED_PROXY=$(grep 'Environment="TRUST_PROXY=' "$SERVICE_FILE" | cut -d'=' -f3 | tr -d '"')
+
     if [ -n "$DETECTED_PORT" ]; then
         PORT="$DETECTED_PORT"
+        TRUST_PROXY="${DETECTED_PROXY:-false}"
         IS_UPDATE=true
         status_msg "Existing installation found. Updating version on port ${BOLD}${PORT}${NC}..."
     fi
@@ -91,6 +94,14 @@ if [ -c /dev/tty ]; then
     read -r INPUT_CHANNEL < /dev/tty
     if [[ "$INPUT_CHANNEL" == "beta" ]]; then
         RELEASE_CHANNEL="beta"
+    fi
+
+    echo -n "  Behind a reverse proxy? (nginx, Traefik, Caddy, Cloudflare...) (yes/no) [no]: "
+    read -r INPUT_PROXY < /dev/tty
+    if [[ "$INPUT_PROXY" == "yes" || "$INPUT_PROXY" == "y" ]]; then
+        TRUST_PROXY=true
+    else
+        TRUST_PROXY=false
     fi
 fi
 echo "" # Spacer
@@ -207,6 +218,7 @@ Restart=always
 RestartSec=5
 Environment="PORT=$PORT"
 Environment="DB_FILE=$DATA_DIR/lastboard.db"
+Environment="TRUST_PROXY=$TRUST_PROXY"
 
 # Security Hardening
 ProtectSystem=full
