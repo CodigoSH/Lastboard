@@ -12,8 +12,10 @@ import (
 type contextKey string
 
 const (
-	userContextKey   contextKey = "user"
-	userIDContextKey contextKey = "user_id"
+	userContextKey            contextKey = "user"
+	userIDContextKey          contextKey = "user_id"
+	passwordVersionContextKey contextKey = "password_version"
+	userRoleContextKey        contextKey = "user_role"
 )
 
 // AuthRequired checks for a valid session cookie.
@@ -70,7 +72,9 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			// an extra round-trip.  A missing row also covers the "account deleted
 			// while session was still live" case.
 			var userID int
-			if err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
+			var passwordVersion int
+			var userRole string
+			if err := db.QueryRow("SELECT id, COALESCE(password_version, 0), role FROM users WHERE username = ?", username).Scan(&userID, &passwordVersion, &userRole); err != nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
@@ -81,6 +85,8 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 
 			ctx := context.WithValue(r.Context(), userContextKey, username)
 			ctx = context.WithValue(ctx, userIDContextKey, userID)
+			ctx = context.WithValue(ctx, passwordVersionContextKey, passwordVersion)
+			ctx = context.WithValue(ctx, userRoleContextKey, userRole)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -98,4 +104,18 @@ func GetUserIDFromContext(r *http.Request) int {
 		return id
 	}
 	return 0
+}
+
+func GetPasswordVersionFromContext(r *http.Request) int {
+	if v, ok := r.Context().Value(passwordVersionContextKey).(int); ok {
+		return v
+	}
+	return 0
+}
+
+func GetUserRoleFromContext(r *http.Request) string {
+	if v, ok := r.Context().Value(userRoleContextKey).(string); ok {
+		return v
+	}
+	return ""
 }

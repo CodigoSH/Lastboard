@@ -3,6 +3,7 @@ package middleware
 import (
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -58,15 +59,16 @@ func getLimiter(ip string) *rate.Limiter {
 // RateLimit middleware limits requests based on IP
 func RateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract IP (naive approach for internal/direct use, check X-Forwarded-For if behind proxy)
+		// Extract IP
 		ip := r.RemoteAddr
-		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-			parts := strings.Split(forwarded, ",")
-			ip = strings.TrimSpace(parts[0])
-		}
-		// Strip port correctly for both IPv4 and IPv6
 		if host, _, err := net.SplitHostPort(ip); err == nil {
 			ip = host
+		}
+		if os.Getenv("TRUST_PROXY") == "true" {
+			if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
+				parts := strings.Split(forwarded, ",")
+				ip = strings.TrimSpace(parts[0])
+			}
 		}
 
 		limiter := getLimiter(ip)

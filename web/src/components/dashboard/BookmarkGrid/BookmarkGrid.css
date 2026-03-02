@@ -273,7 +273,7 @@
 }
 
 .bookmark-grid__card:hover {
-    border-color: var(--border-bright);
+    border-color: rgba(var(--accent-rgb), 0.3);
     background: var(--surface-solid);
     /* Removed card lift, moved to icon */
 }
@@ -539,7 +539,7 @@
 }
 
 .bookmark-grid__section:hover {
-    border-color: var(--border-bright);
+    border-color: rgba(var(--accent-rgb), 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
@@ -588,7 +588,7 @@
 
 /* Hover state for title to match section consistency */
 .bookmark-grid__section:hover .section-title {
-    border-color: var(--border-bright);
+    border-color: rgba(var(--accent-rgb), 0.3);
     color: var(--text-dim);
     background: var(--surface-solid);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -597,7 +597,7 @@
 .bookmark-grid__section:hover .section-title:hover {
     /* Allow individual highlight if interacting directly */
     color: var(--text-main);
-    border-color: var(--border-bright);
+    border-color: rgba(var(--accent-rgb), 0.5);
 }
 
 /* Ghost Styles */

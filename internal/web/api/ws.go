@@ -3,6 +3,7 @@ package api
 import (
 	"log/slog"
 	"net/http"
+	"runtime"
 	"sync"
 	"time"
 
@@ -35,7 +36,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan WSMessage),
+		broadcast:  make(chan WSMessage, 10),
 		register:   make(chan *websocket.Conn),
 		unregister: make(chan *websocket.Conn),
 		clients:    make(map[*websocket.Conn]bool),
@@ -113,6 +114,15 @@ func (h *Hub) StartBroadcasting(interval time.Duration) {
 func gatherStats() (SystemStats, error) {
 	stats := SystemStats{}
 
+	if runtime.GOOS != "linux" {
+		// Non-Linux systems cannot read /proc — return sentinel values
+		// so the frontend can display a "not available" state gracefully.
+		stats.Temperature = -1
+		stats.CPUUsage = -1
+		stats.RAMUsage = -1
+		return stats, nil
+	}
+
 	// RAM
 	if mem, err := readMemInfo(); err == nil {
 		stats.RAMTotal = mem.Total
@@ -122,7 +132,7 @@ func gatherStats() (SystemStats, error) {
 		}
 	}
 
-	// CPU (Take a shorter sample for periodic broadcasing)
+	// CPU (Take a shorter sample for periodic broadcasting)
 	if cpu, err := calculateCPUUsage(100 * time.Millisecond); err == nil {
 		stats.CPUUsage = cpu
 	}

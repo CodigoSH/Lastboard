@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -101,8 +102,30 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
 		return
 	}
+	if item.X > 100 || item.Y > 100 || item.W > 100 || item.H > 100 {
+		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		return
+	}
 
 	userID := middleware.GetUserIDFromContext(r)
+
+	// Enforce per-user item limit
+	maxItems := 500
+	if envMax := os.Getenv("MAX_ITEMS_PER_USER"); envMax != "" {
+		if parsed, err := strconv.Atoi(envMax); err == nil && parsed > 0 {
+			maxItems = parsed
+		}
+	}
+	var itemCount int
+	if err := h.DB.QueryRow("SELECT COUNT(*) FROM items WHERE user_id = ?", userID).Scan(&itemCount); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if itemCount >= maxItems {
+		http.Error(w, "error.item_limit_reached", http.StatusTooManyRequests)
+		return
+	}
+
 	res, err := h.DB.Exec("INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		userID, item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url)
 	if err != nil {
@@ -156,6 +179,11 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	// Validate Grid Coordinates (if being updated)
 	if (input.X != nil && *input.X < 1) || (input.Y != nil && *input.Y < 1) ||
 		(input.W != nil && *input.W < 1) || (input.H != nil && *input.H < 1) {
+		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		return
+	}
+	if (input.X != nil && *input.X > 100) || (input.Y != nil && *input.Y > 100) ||
+		(input.W != nil && *input.W > 100) || (input.H != nil && *input.H > 100) {
 		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
 		return
 	}

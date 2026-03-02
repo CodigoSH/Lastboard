@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -33,6 +35,12 @@ func NewAuthHandler(db *sql.DB, secret []byte) *AuthHandler {
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	if os.Getenv("TRUST_PROXY") == "true" {
+		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
+			parts := strings.Split(forwarded, ",")
+			ip = strings.TrimSpace(parts[0])
+		}
+	}
 	now := time.Now()
 
 	// Inline cleanup: remove expired lockouts to keep the table lean

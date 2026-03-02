@@ -579,7 +579,15 @@ class SettingsContent extends HTMLElement {
 
     // --- System Logic ---
 
-    downloadBackup() {
+    async downloadBackup() {
+        const confirmationModal = document.querySelector('confirmation-modal') as any;
+        if (confirmationModal) {
+            const confirmed = await confirmationModal.confirm(
+                i18n.t('action.download_backup'),
+                'This backup file contains sensitive data including password hashes for all users. Store it in a secure location and never share it. Continue?'
+            );
+            if (!confirmed) return;
+        }
         window.location.href = '/api/system/backup';
     }
 

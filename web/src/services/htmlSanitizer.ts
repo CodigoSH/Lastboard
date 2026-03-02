@@ -22,7 +22,7 @@ const DEFAULT_CONFIG: SanitizerConfig = {
         'label', 'input'
     ],
     allowedAttrs: {
-        '*': ['style', 'class'],
+        '*': ['class'],
         'a': ['href', 'title', 'target'],
         'img': ['src', 'alt', 'title', 'width', 'height'],
         'input': ['type', 'id', 'checked'],

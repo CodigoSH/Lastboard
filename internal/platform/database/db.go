@@ -124,16 +124,18 @@ func runMigrations(db *sql.DB) error {
 			`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
 			`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
 			`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
+			`ALTER TABLE users ADD COLUMN password_version INTEGER NOT NULL DEFAULT 0;`,
 		}
 
 		for _, query := range queries {
 			_, err := db.Exec(query)
 			if err != nil {
-				// Fallback for existing installations that might have these columns already
+				// Only skip duplicate column errors (existing installations upgrading)
 				if strings.Contains(err.Error(), "duplicate column name") {
 					continue
 				}
-				slog.Warn("Migration v1 notice", "error", err)
+				// Any other error is a real problem — fail fast
+				return fmt.Errorf("migration v1 failed: %v", err)
 			}
 		}
 
@@ -172,6 +174,20 @@ func runMigrations(db *sql.DB) error {
 			return fmt.Errorf("failed to update schema version to 2: %v", err)
 		}
 		slog.Info("Schema migration applied", "version", 2)
+	}
+
+	// --- VERSION 3: Index on items(user_id) for query performance ---
+	if currentVersion < 3 {
+		slog.Info("Applying schema migration", "version", 3)
+		_, err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id)`)
+		if err != nil {
+			return fmt.Errorf("migration v3 failed: %v", err)
+		}
+		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (3)")
+		if err != nil {
+			return fmt.Errorf("failed to update schema version to 3: %v", err)
+		}
+		slog.Info("Schema migration applied", "version", 3)
 	}
 
 	return nil

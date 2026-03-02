@@ -100,19 +100,12 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Assign any seeded dashboard items (user_id = 0) to the new admin
+	// Assign seeded dashboard items to the new admin
 	var adminID int
 	if err := tx.QueryRow("SELECT id FROM users WHERE username = ?", input.Username).Scan(&adminID); err == nil {
-		// Legacy: Assign any orphan items
-		if res, err := tx.Exec("UPDATE items SET user_id = ? WHERE user_id = 0", adminID); err == nil {
-			if n, _ := res.RowsAffected(); n > 0 {
-				slog.Info("Setup: assigned seeded items to admin", "count", n, "admin_id", adminID)
-			}
+		if err := SeedDefaultItems(tx, adminID); err != nil {
+			slog.Warn("Setup: failed to seed default items", "admin_id", adminID, "error", err)
 		}
-
-		// Seed Default Bookmark for First Admin
-		_, _ = tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
-			(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true, "visibleTouch": true}', "https://github.com/CodigoSH/Lastboard")`, adminID)
 	}
 
 	if err := tx.Commit(); err != nil {

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -100,7 +100,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if input.AccentColor != "" {
-		if len(input.AccentColor) > 32 {
+		if !isValidAccentColor(input.AccentColor) {
 			http.Error(w, "Invalid accent color", http.StatusBadRequest)
 			return
 		}
@@ -412,14 +412,16 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Seed Default Bookmark for New User
+	// Seed Default Items for New User
 	newUserID, err := result.LastInsertId()
-	if err != nil {
-		newUserID = 0
-	}
-	if newUserID > 0 {
-		_, _ = h.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES
-		(?, 'bookmark', 1, 1, 1, 1, '{"label": "CodigoSH", "url": "https://github.com/CodigoSH/Lastboard", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/git.png", "iconName": "git", "statusCheck": true, "visibleTouch": true}', "https://github.com/CodigoSH/Lastboard")`, newUserID)
+	if err == nil && newUserID > 0 {
+		tx, err := h.DB.Begin()
+		if err == nil {
+			if err := SeedDefaultItems(tx, int(newUserID)); err != nil {
+				slog.Warn("CreateUser: failed to seed default items", "user_id", newUserID, "error", err)
+			}
+			tx.Commit()
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -471,7 +473,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Encryption failed", http.StatusInternalServerError)
 			return
 		}
-		_, err = h.DB.Exec("UPDATE users SET username=?, role=?, password=? WHERE id=?", input.Username, role, string(hashedPassword), input.ID)
+		_, err = h.DB.Exec("UPDATE users SET username=?, role=?, password=?, password_version=password_version+1 WHERE id=?", input.Username, role, string(hashedPassword), input.ID)
 	} else {
 		_, err = h.DB.Exec("UPDATE users SET username=?, role=? WHERE id=?", input.Username, role, input.ID)
 	}
@@ -508,17 +510,8 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		targetID = input.ID
 		adminPassword = input.AdminPassword
 	} else {
-		idStr := r.URL.Query().Get("id")
-		if idStr == "" {
-			http.Error(w, "Missing user ID", http.StatusBadRequest)
-			return
-		}
-		targetID, err = strconv.Atoi(idStr)
-		if err != nil {
-			http.Error(w, "Invalid user ID", http.StatusBadRequest)
-			return
-		}
-		adminPassword = r.URL.Query().Get("admin_password")
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
 
 	// Admin password is always required to confirm destructive action
@@ -607,4 +600,28 @@ func validatePassword(password string) error {
 		return fmt.Errorf("error.password_max_length")
 	}
 	return nil
+}
+
+func isValidAccentColor(color string) bool {
+	// Allow named colors used by the frontend
+	named := map[string]bool{
+		"blue": true, "indigo": true, "cyan": true, "teal": true,
+		"orange": true, "red": true, "grape": true,
+	}
+	if named[color] {
+		return true
+	}
+	// Allow hex colors: #RGB or #RRGGBB
+	if len(color) != 4 && len(color) != 7 {
+		return false
+	}
+	if color[0] != '#' {
+		return false
+	}
+	for _, c := range color[1:] {
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
 }

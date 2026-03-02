@@ -94,6 +94,19 @@ class UserStore {
         if (prefs.accent_color) {
             const hex = this.getAccentHex(prefs.accent_color);
             root.style.setProperty('--accent', hex);
+
+            // Convert hex to rgb string for transparencies
+            let r = 0, g = 120, b = 212; // Fallback to blue
+            if (hex.startsWith('#')) {
+                const cleanHex = hex.replace('#', '');
+                if (cleanHex.length === 6) {
+                    r = parseInt(cleanHex.substring(0, 2), 16);
+                    g = parseInt(cleanHex.substring(2, 4), 16);
+                    b = parseInt(cleanHex.substring(4, 6), 16);
+                }
+            }
+            root.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
+
             // Persist for Login Page
             localStorage.setItem('lastboard_accent', hex);
         }

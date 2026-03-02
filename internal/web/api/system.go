@@ -1,7 +1,9 @@
 package api
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -70,43 +72,44 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Close DB Connection
-	if err := h.DB.Close(); err != nil {
-		slog.Warn("Error closing DB during reset", "error", err)
-	}
-
-	// 2. Delete DB File
-	dbPath := os.Getenv("DB_FILE")
-	if dbPath == "" {
-		dbPath = "./dashboard.db"
-	}
-	if err := os.Remove(dbPath); err != nil {
-		if !os.IsNotExist(err) {
-			http.Error(w, "Failed to delete database file: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// 3. Respond
+	// 1. Respond first, before any destructive operation
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.system_restarting"})
 
-	// 4. Self-Restart (Re-Exec)
+	// 2. Perform reset and restart asynchronously after response is sent
 	go func() {
 		time.Sleep(500 * time.Millisecond)
 
-		// Get current binary path
+		// Close DB
+		if err := h.DB.Close(); err != nil {
+			slog.Warn("Error closing DB during reset", "error", err)
+		}
+
+		// Delete DB File
+		dbPath := os.Getenv("DB_FILE")
+		if dbPath == "" {
+			dbPath = "./lastboard.db"
+		}
+		if err := os.Remove(dbPath); err != nil {
+			if !os.IsNotExist(err) {
+				slog.Error("Failed to delete database file", "error", err)
+				os.Exit(1)
+			}
+		}
+
+		// Ensure SQLite WAL files are also removed
+		os.Remove(dbPath + "-wal")
+		os.Remove(dbPath + "-shm")
+
+		// Self-Restart (Re-Exec)
 		binary, err := os.Executable()
 		if err != nil {
 			slog.Warn("Failed to get executable path, falling back to exit", "error", err)
 			os.Exit(1)
 		}
 
-		env := os.Environ()
-		args := os.Args
-
-		if err := syscall.Exec(binary, args, env); err != nil {
+		if err := syscall.Exec(binary, os.Args, os.Environ()); err != nil {
 			slog.Warn("Failed to re-exec, falling back to exit", "error", err)
 			os.Exit(1)
 		}
@@ -381,6 +384,15 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	if err := tx.Commit(); err != nil {
 		http.Error(w, "Commit failed", http.StatusInternalServerError)
 		return
+	}
+
+	// Regenerate session secret to invalidate all active sessions.
+	// After a restore, all users must re-authenticate to ensure they
+	// are accessing data consistent with the restored state.
+	newSecret := make([]byte, 32)
+	if _, err := rand.Read(newSecret); err == nil {
+		newSecretHex := hex.EncodeToString(newSecret)
+		_, _ = h.DB.Exec("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('session_secret', ?)", newSecretHex)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

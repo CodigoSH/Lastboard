@@ -22,6 +22,7 @@ import (
 	"database/sql"
 
 	"github.com/CodigoSH/Lastboard/internal/version"
+	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 type UpdateHandler struct {
@@ -121,9 +122,24 @@ func (h *UpdateHandler) fetchLatestVersionFromProxy() (string, error) {
 }
 
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
-	// Verify Admin
+	// Verify Superadmin only
 	if !isAdminUser(h.DB, r) {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
+		return
+	}
+	username := middleware.GetUserFromContext(r)
+	var userID int
+	if err := h.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
+		http.Error(w, "auth.unauthorized", http.StatusForbidden)
+		return
+	}
+	var firstAdminID int
+	if err := h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID); err != nil {
+		http.Error(w, "auth.unauthorized", http.StatusForbidden)
+		return
+	}
+	if userID != firstAdminID {
+		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
 		return
 	}
 

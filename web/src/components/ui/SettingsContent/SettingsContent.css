@@ -619,8 +619,18 @@ button {
 
 .update-modal__footer {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     margin-top: 4px;
+}
+
+.update-modal__footer>* {
+    flex: 1;
+    min-width: 160px;
+}
+
+.update-modal__footer a {
+    display: flex;
 }
 
 @keyframes pulse {
