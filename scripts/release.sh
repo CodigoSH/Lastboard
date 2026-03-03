@@ -169,24 +169,14 @@ if [ -f "CHANGELOG.md" ]; then
     [ -n "$REFACTORS" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${REFACTORS}\n")"
     [ -n "$OTHER" ] && [ "$OTHER" != "" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${OTHER}\n")"
 
-    # Insert after [Unreleased] header and clear old Unreleased content
-    # We use awk to recreate the file
+    # Insert before the first version header
     awk -v new_entry="$NEW_ENTRY" '
-    BEGIN { skip = 0; done = 0 }
-    /^## \[Unreleased\]/ {
-        print $0
-        print ""
+    BEGIN { done = 0 }
+    /^## \[/ && !done {
         print new_entry
         done = 1
-        skip = 1
-        next
     }
-    /^## \[/ && skip {
-        skip = 0
-    }
-    !skip {
-        print $0
-    }
+    { print $0 }
     ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
 fi
 
