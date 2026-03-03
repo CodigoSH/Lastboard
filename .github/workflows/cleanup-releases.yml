@@ -1,0 +1,33 @@
+name: Professional Release Cleanup
+
+on:
+  schedule:
+    # Runs every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    # Allows manual execution for testing
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup Old Stable Releases
+        uses: dev-drprasad/delete-older-releases@v0.3.3
+        with:
+          # Keep the 5 most recent stable releases
+          keep_latest: 5
+          # Do not delete the git tags, only the release entry and assets
+          delete_tags: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Old Pre-releases (Betas)
+        uses: dev-drprasad/delete-older-releases@v0.3.3
+        with:
+          # Keep only the very last beta/pre-release
+          keep_latest: 1
+          delete_tags: false
+          # Target only pre-releases for this step
+          delete_pre_releases_only: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
