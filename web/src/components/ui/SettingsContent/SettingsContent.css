@@ -626,7 +626,7 @@ button {
 
 .update-modal__footer>* {
     flex: 1;
-    min-width: 160px;
+    min-width: 200px;
 }
 
 .update-modal__footer a {

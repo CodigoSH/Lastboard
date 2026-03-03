@@ -190,6 +190,35 @@ func runMigrations(db *sql.DB) error {
 		slog.Info("Schema migration applied", "version", 3)
 	}
 
+	// --- VERSION 4: Add missing columns for existing users upgrading from legacy versions ---
+	if currentVersion < 4 {
+		slog.Info("Applying schema migration", "version", 4)
+		// These columns were previously added inside the V1 block, which meant existing
+		// installations upgrading to the current codebase would skip it and miss these columns.
+		queries := []string{
+			`ALTER TABLE users ADD COLUMN password_version INTEGER NOT NULL DEFAULT 0;`,
+			`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
+			`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
+		}
+
+		for _, query := range queries {
+			_, err := db.Exec(query)
+			if err != nil {
+				// Safely ignore "duplicate column name" as it means the user already has it
+				if strings.Contains(err.Error(), "duplicate column name") {
+					continue
+				}
+				return fmt.Errorf("migration v4 failed: %v", err)
+			}
+		}
+
+		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (4)")
+		if err != nil {
+			return fmt.Errorf("failed to update schema version to 4: %v", err)
+		}
+		slog.Info("Schema migration applied", "version", 4)
+	}
+
 	return nil
 }
 

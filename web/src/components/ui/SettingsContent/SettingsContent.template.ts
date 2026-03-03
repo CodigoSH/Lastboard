@@ -368,7 +368,7 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
 
 export const updateZoneTemplate = (isAdmin: boolean, updateInfo: any, isCheckingUpdates: boolean) => {
     return `
-        <div id="update-status-container" style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 400px; min-height: 48px;">
+        <div id="update-status-container" style="display: inline-flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 480px; min-height: 48px;">
             ${updateStatusTemplate(isAdmin, updateInfo)}
         </div>
 
