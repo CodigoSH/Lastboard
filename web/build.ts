@@ -85,6 +85,12 @@ if (result.success && resultSetup.success && resultLogin.success) {
             console.log("✅ Favicon copied to web/dist/favicon.png");
         }
 
+        // Copy Web Manifest explicitly to root
+        if (existsSync('./web/manifest.json')) {
+            await cp('./web/manifest.json', './web/dist/manifest.json');
+            console.log("✅ Manifest copied to web/dist/manifest.json");
+        }
+
         // Copy Public folder (CSS, Icons, etc)
         // Check availability to avoid errors
         if (existsSync('./web/public')) {
