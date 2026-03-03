@@ -7,29 +7,31 @@ on:
   workflow_dispatch:
     # Allows manual execution for testing
 
+permissions:
+  contents: write
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Cleanup Old Stable Releases
-        uses: dev-drprasad/delete-older-releases@v0.3.3
-        with:
-          # Keep the 5 most recent stable releases
-          keep_latest: 5
-          # Do not delete the git tags, only the release entry and assets
-          delete_tags: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Cleanup Old Pre-releases (Betas)
         uses: dev-drprasad/delete-older-releases@v0.3.3
         with:
-          # Keep only the very last beta/pre-release
-          keep_latest: 1
+          # Keep only the 2 most recent beta/pre-release
+          keep_latest: 2
           delete_tags: false
           # Target only pre-releases for this step
           delete_pre_releases_only: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Old Stable Releases
+        uses: dev-drprasad/delete-older-releases@v0.3.3
+        with:
+          # Keep the 5 most recent releases in total. 
+          # Since step 1 keeps 2 betas, this ensures at least 3 stable releases are kept.
+          keep_latest: 5
+          # Do not delete the git tags, only the release entry and assets
+          delete_tags: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
