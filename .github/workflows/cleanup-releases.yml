@@ -1,4 +1,4 @@
-name: Professional Release Cleanup
+name: Release Cleanup
 
 on:
   schedule:
