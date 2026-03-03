@@ -17,7 +17,7 @@ jobs:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
         run: |
           TOTAL=$(gh api repos/CodigoSH/Lastboard/releases \
-            --paginate --jq '[.[].assets[].download_count] | add' | \
+            --paginate --jq '[.[].assets[].download_count] | add // 0' | \
             paste -sd+ | bc)
 
           LATEST=$(gh api repos/CodigoSH/Lastboard/releases \
