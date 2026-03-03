@@ -126,10 +126,7 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 
 # 5. Generate Changelog
-# 5. Generate Changelog
 if [ "$TYPE" == "stable" ]; then
-    # Find the last stable tag (exclude Beta/RC)
-    # Sort by version desc, filter out pre-releases, take the first one
     LAST_TAG=$(git tag -l "v*" --sort=-v:refname | grep -v -E 'Beta|RC' | head -n 1)
     if [ -z "$LAST_TAG" ]; then
         LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
@@ -142,18 +139,58 @@ fi
 
 REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//')
 
-echo "📝 Generating changelog from $LAST_TAG..."
-
 get_log() {
     local pattern=$1
-    git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s" | grep -iE "$pattern" | grep -vE "chore\(release\)|chore: cleanup|pre-release" || echo ""
+    git log $LAST_TAG..HEAD --oneline --pretty=format:"%s" | \
+    grep -iE "$pattern" | \
+    grep -vE "chore\(release\)|chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | \
+    sed -E 's/^(feat|fix|refactor|perf|chore|docs|style)(\([a-z0-9_-]+\))?: //i' | \
+    sed 's/^[a-z]*: //' | \
+    awk '{$1=toupper(substr($1,1,1))substr($1,2)}1' | \
+    sed 's/^/- /' | \
+    sort -u || echo ""
 }
 
 FEATS=$(get_log "^feat")
 FIXES=$(get_log "^fix")
 REFACTORS=$(get_log "^refactor|^perf")
-OTHER=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s" | grep -vE "^feat|^fix|^refactor|^perf|^chore\(release\)|^chore: cleanup|pre-release" || echo "")
+OTHER=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"%s" | grep -vE "^feat|^fix|^refactor|^perf|^chore\(release\)|^chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | sed 's/^[a-z]*: //' | awk '{$1=toupper(substr($1,1,1))substr($1,2)}1' | sed 's/^/- /' | sort -u || echo "")
 
+# Update CHANGELOG.md
+if [ -f "CHANGELOG.md" ]; then
+    echo "📝 Updating CHANGELOG.md..."
+    DATE=$(date +%Y-%m-%d)
+    VERSION_DISPLAY=$(echo $NEW_TAG | sed 's/^v//')
+    
+    # Prepare the new section
+    NEW_ENTRY=$(echo -e "## [$VERSION_DISPLAY] - $DATE\n")
+    [ -n "$FEATS" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Added\n${FEATS}\n")"
+    [ -n "$FIXES" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Fixed\n${FIXES}\n")"
+    [ -n "$REFACTORS" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${REFACTORS}\n")"
+    [ -n "$OTHER" ] && [ "$OTHER" != "" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${OTHER}\n")"
+
+    # Insert after [Unreleased] header and clear old Unreleased content
+    # We use awk to recreate the file
+    awk -v new_entry="$NEW_ENTRY" '
+    BEGIN { skip = 0; done = 0 }
+    /^## \[Unreleased\]/ {
+        print $0
+        print ""
+        print new_entry
+        done = 1
+        skip = 1
+        next
+    }
+    /^## \[/ && skip {
+        skip = 0
+    }
+    !skip {
+        print $0
+    }
+    ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+fi
+
+# Also create temporary file for GitHub Release Body if needed
 NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
 cat <<EOF > $NOTES_FILE
 # Release: $NEW_TAG
