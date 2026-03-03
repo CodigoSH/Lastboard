@@ -21,7 +21,7 @@ jobs:
           keep_latest: 2
           delete_tags: false
           # Target only pre-releases for this step
-          delete_pre_releases_only: true
+          delete_prerelease_only: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
