@@ -60,7 +60,7 @@
     height: auto;
     min-height: 52px;
     max-height: none;
-    aspect-ratio: auto;
+    aspect-ratio: auto !important;
 
     /* Horizontal layout: [Icon] [Label] [Status●] */
     flex-direction: row;
