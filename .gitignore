@@ -56,9 +56,10 @@ tmp/
 .temp/
 
 # Root binary
-lastboard
-Lastboard
-dashboard
+/lastboard
+/Lastboard
+/dashboard
+/lastboard-verify
 *.old
 *.tar.gz
 *.tsbuildinfo
