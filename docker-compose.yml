@@ -8,6 +8,9 @@ services:
       - TZ=America/New_York
     volumes:
       - ./data:/var/lib/lastboard
+      # Uncomment the line below to enable the Docker widget with local socket access.
+      # Only needed if you want to monitor containers running on this same host.
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
     logging:
       driver: "json-file"

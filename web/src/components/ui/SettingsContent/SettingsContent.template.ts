@@ -1,7 +1,9 @@
-/**
- * Settings Content Templates
- */
 import { i18n } from '../../../services/i18n';
+
+const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
+const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
 interface User {
     initials?: string;
     avatar_url?: string;
@@ -173,16 +175,16 @@ export const usersTemplate = (users: any[]) => `
 
             <div class="settings-content__user-list">
                 ${(users || []).map(u => `
-                    <div class="settings-content__user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);">
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="settings-content__user-item">
+                        <div class="user-info">
                             <app-avatar 
                                 initials="${u.username.substring(0, 2).toUpperCase()}" 
                                 src="${u.avatar_url || ''}" 
-                                style="width: 32px; height: 32px; font-size: 12px; border-radius: 50%; object-fit: cover;">
+                                style="margin: 0; width: 36px; height: 36px; font-size: 13px; border-radius: 50%; outline: 1px solid var(--border);">
                             </app-avatar>
-                            <div>
-                                <div style="font-weight: 500; font-size: 14px;">${u.username}</div>
-                                <div class="mono-tag" style="font-size: 10px;">
+                            <div class="user-details">
+                                <div class="user-name">${esc(u.username)}</div>
+                                <div class="user-role-tag">
                                     ${(() => {
         const r = (u.role || '').toLowerCase();
         if (u.is_superadmin) return i18n.t('settings.role_super_admin');
@@ -193,9 +195,13 @@ export const usersTemplate = (users: any[]) => `
                                 </div>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                             <app-button variant="ghost" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}', '${u.role}')">${i18n.t('general.edit')}</app-button>
-                            <app-button variant="ghost" onclick="this.getRootNode().host.deleteUser(${u.id})">${i18n.t('general.delete')}</app-button>
+                        <div class="user-actions">
+                             <button class="user-action-btn edit" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}', '${u.role}')" title="${i18n.t('general.edit')}">
+                                ${ICON_EDIT}
+                             </button>
+                             <button class="user-action-btn delete" onclick="this.getRootNode().host.deleteUser(${u.id})" title="${i18n.t('general.delete')}" ${u.is_superadmin ? 'disabled style="opacity:0.2;cursor:not-allowed"' : ''}>
+                                ${ICON_TRASH}
+                             </button>
                         </div>
                     </div>
                 `).join('')}

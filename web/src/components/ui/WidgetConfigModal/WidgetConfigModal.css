@@ -73,7 +73,9 @@ dialog[open] {
     height: 36px;
 }
 
-.modal-close:focus { outline: none; }
+.modal-close:focus {
+    outline: none;
+}
 
 .modal-close:hover {
     background: rgba(var(--accent-rgb), 0.1);
@@ -113,7 +115,8 @@ dialog[open] {
 }
 
 .field-group input[type="text"],
-.field-group input[type="number"] {
+.field-group input[type="number"],
+.field-group input[type="password"] {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     color: var(--input-text);
@@ -128,12 +131,14 @@ dialog[open] {
 }
 
 .field-group input[type="text"]::placeholder,
-.field-group input[type="number"]::placeholder {
+.field-group input[type="number"]::placeholder,
+.field-group input[type="password"]::placeholder {
     color: var(--input-placeholder);
 }
 
 .field-group input[type="text"]:focus,
-.field-group input[type="number"]:focus {
+.field-group input[type="number"]:focus,
+.field-group input[type="password"]:focus {
     border-color: var(--input-focus-border);
     box-shadow: var(--input-focus-shadow);
 }
@@ -148,12 +153,19 @@ dialog[open] {
     display: flex;
     gap: 8px;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.input-row input[type="text"] {
+.input-row input[type="text"],
+.input-row input[type="password"] {
     flex: 1;
     width: auto;
     min-width: 0;
+}
+
+.input-row app-select {
+    flex: 0 0 160px;
 }
 
 .input-row app-button {
@@ -371,7 +383,9 @@ dialog[open] {
 }
 
 /* Hover State */
-.tab-btn:focus { outline: none; }
+.tab-btn:focus {
+    outline: none;
+}
 
 .tab-btn:hover {
     color: var(--text-main);
@@ -645,18 +659,154 @@ dialog[open] {
     background: white;
     border-radius: 50%;
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
     background: var(--accent);
 }
 
-.toggle-switch input:checked + .toggle-slider::before {
+.toggle-switch input:checked+.toggle-slider::before {
     transform: translateX(18px);
 }
 
-.toggle-switch input:disabled + .toggle-slider {
+.toggle-switch input:disabled+.toggle-slider {
     opacity: 0.45;
     cursor: not-allowed;
+}
+
+/* --- Docker Host Management --- */
+.docker-host-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.host-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideIn 0.3s ease-out;
+}
+
+.host-item:hover {
+    border-color: rgba(var(--accent-rgb), 0.4);
+    background: rgba(var(--accent-rgb), 0.04);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.host-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.host-header-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.host-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.host-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(var(--accent-rgb), 0.12);
+    color: var(--accent);
+    flex-shrink: 0;
+    width: fit-content;
+}
+
+.host-url {
+    font-size: 11px;
+    color: var(--text-dim);
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.host-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.host-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    opacity: 0.7;
+}
+
+.host-action-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-main);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.host-action-btn.delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.docker-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 0;
+    text-align: center;
+    opacity: 0.6;
+}
+
+.docker-empty-state svg {
+    color: var(--text-dim);
+    opacity: 0.5;
+}
+
+.docker-empty-text {
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.docker-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
 }

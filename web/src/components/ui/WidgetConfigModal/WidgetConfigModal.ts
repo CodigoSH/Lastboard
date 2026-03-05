@@ -8,6 +8,10 @@ import '../ColorPicker/ColorPicker';
 // @ts-ignore
 import css from './WidgetConfigModal.css' with { type: 'text' };
 
+const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
 // Cache to avoid repeated queries
 const timezoneCache = new Map<string, string>();
 
@@ -72,6 +76,8 @@ class WidgetConfigModal extends HTMLElement {
     private _clockSelectedLon: number | null = null;
     private _selectedColor: string = '#333333';
     private _selectedBorderWidth: number = 1;
+    private _dockerView: 'list' | 'form' = 'list';
+    private _editingHostId: string | null = null;
 
     private readonly premiumColors = [
         '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -100,6 +106,8 @@ class WidgetConfigModal extends HTMLElement {
         }
         this._selectedColor = content.borderColor || '';
         this._selectedBorderWidth = content.borderWidth || 1;
+        this._dockerView = 'list';
+        this._editingHostId = null;
 
         this.render();
 
@@ -190,6 +198,8 @@ class WidgetConfigModal extends HTMLElement {
                         }
                     });
                 });
+            } else if (widgetId === 'docker') {
+                this.setupDockerEvents();
             }
         }
 
@@ -547,7 +557,7 @@ class WidgetConfigModal extends HTMLElement {
                         <label for="weather-forecast">${i18n.t('widget.weather.show_forecast')}</label>
                     </div>
 
-                    <div class="field-group row-aligned" id="weather-days-row" ${!showForecast ? 'style="display:none;"' : ''}>
+                    <div class="field-group row-aligned" id="weather-days-row" ${!showForecast ? 'style="display:none; margin-top: 16px;"' : 'style="margin-top: 16px;"'}>
                         <label>${i18n.t('widget.weather.forecast_days')}</label>
                         <div class="stepper-wrap">
                             <button type="button" class="stepper-btn" id="weather-days-dec">&minus;</button>
@@ -640,6 +650,8 @@ class WidgetConfigModal extends HTMLElement {
                 const customizationTab = ``; // Section customization tab is empty by default, only appearance controls are added.
 
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
+            } else if (widgetId === 'docker') {
+                return this.renderDockerForm(content);
             }
 
             return {
@@ -685,7 +697,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
 
                 <div class="actions">
-                    ${['clock', 'telemetry', 'weather', 'notepad', 'markdown'].includes(widgetId) || this.currentItem?.type === 'section' ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
+                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown'].includes(widgetId) || (widgetId === 'docker' && this._dockerView === 'list') || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
             </dialog>
         `;
@@ -794,6 +806,238 @@ class WidgetConfigModal extends HTMLElement {
         } catch (_) {
             resultsEl.innerHTML = `<div class="search-empty">${i18n.t('general.error')}</div>`;
         }
+    }
+
+    private refreshDockerContent() {
+        if (!this.shadowRoot || !this.currentItem) return;
+        const generalTab = this.shadowRoot.getElementById('tab-general');
+        if (!generalTab) return;
+
+        const content = typeof this.currentItem.content === 'string'
+            ? JSON.parse(this.currentItem.content)
+            : this.currentItem.content;
+
+        const formData = this.renderDockerForm(content);
+        generalTab.innerHTML = formData.general;
+        this.setupDockerEvents();
+    }
+
+    private setupDockerEvents() {
+        if (!this.shadowRoot) return;
+        const root = this.shadowRoot;
+
+        if (this._dockerView === 'list') {
+            root.getElementById('docker-show-add-btn')?.addEventListener('click', () => {
+                this._dockerView = 'form';
+                this._editingHostId = null;
+                this.refreshDockerContent();
+            });
+            root.querySelectorAll('.host-action-btn.edit').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = (e.currentTarget as HTMLElement).dataset.id;
+                    if (id) {
+                        this._dockerView = 'form';
+                        this._editingHostId = id;
+                        this.refreshDockerContent();
+                    }
+                });
+            });
+            root.querySelectorAll('.host-action-btn.delete').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = (e.currentTarget as HTMLElement).dataset.id;
+                    if (!id) return;
+
+                    const confirmationModal = document.querySelector('confirmation-modal') as any;
+                    let confirmed = false;
+                    if (confirmationModal) {
+                        confirmed = await confirmationModal.confirm(
+                            i18n.t('general.delete') || 'Delete',
+                            i18n.t('docker.delete_host_confirm') || 'Are you sure you want to delete this host?'
+                        );
+                    } else {
+                        confirmed = confirm(i18n.t('general.are_you_sure') || 'Are you sure?');
+                    }
+
+                    if (confirmed) {
+                        let content = typeof this.currentItem!.content === 'string'
+                            ? JSON.parse(this.currentItem!.content)
+                            : { ...this.currentItem!.content };
+                        content.hosts = (content.hosts || []).filter((h: any) => h.id !== id);
+
+                        this.currentItem!.content = JSON.stringify(content);
+                        this.refreshDockerContent();
+                    }
+                });
+            });
+        } else {
+            const typeSelect = root.getElementById('docker-type') as any;
+            if (typeSelect) {
+                typeSelect.options = [
+                    { value: 'local', label: i18n.t('docker.host_type_local') || 'Local socket' },
+                    { value: 'agent', label: i18n.t('docker.host_type_agent') || 'Remote Agent' },
+                    { value: 'tcp', label: i18n.t('docker.host_type_tcp') || 'Remote TCP' },
+                    { value: 'tls', label: i18n.t('docker.host_type_tls') || 'Remote TLS' }
+                ];
+
+                const toggle = (val?: string) => {
+                    const t = val || typeSelect.value;
+                    const url = root.getElementById('docker-url-row');
+                    const token = root.getElementById('docker-token-row');
+                    if (url) url.style.display = t === 'local' ? 'none' : '';
+                    if (token) token.style.display = t === 'agent' ? '' : 'none';
+                };
+                typeSelect.addEventListener('change', (e: any) => toggle(e.detail.value));
+                toggle();
+            }
+
+            root.getElementById('docker-cancel-btn')?.addEventListener('click', () => {
+                this._dockerView = 'list';
+                this._editingHostId = null;
+                this.refreshDockerContent();
+            });
+
+            root.getElementById('docker-save-host-btn')?.addEventListener('click', () => {
+                const name = (root.getElementById('docker-name') as HTMLInputElement).value.trim();
+                const type = (root.getElementById('docker-type') as any).value;
+                const urlInput = root.getElementById('docker-url') as HTMLInputElement;
+                const url = urlInput ? urlInput.value.trim() : '';
+                const tokenInput = root.getElementById('docker-token') as HTMLInputElement;
+                const token = tokenInput ? tokenInput.value.trim() : '';
+
+                if (!name) return;
+
+                let content = typeof this.currentItem!.content === 'string'
+                    ? JSON.parse(this.currentItem!.content)
+                    : { ...this.currentItem!.content };
+
+                if (!content.hosts) content.hosts = [];
+
+                if (this._editingHostId) {
+                    content.hosts = content.hosts.map((h: any) =>
+                        h.id === this._editingHostId ? { ...h, name, type, url, token } : h
+                    );
+                } else {
+                    content.hosts.push({
+                        id: 'h_' + Math.random().toString(36).slice(2, 8),
+                        name, type, url, token
+                    });
+                }
+
+                this.currentItem!.content = JSON.stringify(content);
+                this._dockerView = 'list';
+                this._editingHostId = null;
+                this.refreshDockerContent();
+            });
+        }
+    }
+
+    private renderDockerForm(content: any) {
+        const renderAppearanceControls = () => {
+            const color = this._selectedColor;
+            const borderWidth = this._selectedBorderWidth;
+            const isCustom = !this.premiumColors.includes(color) && color !== '';
+
+            return `
+            <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+                <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
+                <div class="premium-color-grid">
+                    ${this.premiumColors.map(c => `
+                        <div class="premium-color-swatch ${color === c ? 'active' : ''}" 
+                            style="background-color: ${c}"
+                            data-color="${c}">
+                            ${color === c ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>' : ''}
+                        </div>
+                    `).join('')}
+                    
+                    <div class="premium-color-swatch premium-color-swatch--custom ${isCustom ? 'active' : ''}" 
+                        style="background-color: ${isCustom ? color : 'transparent'}">
+                        <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events: none;">
+                            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                        </svg>
+                        <app-color-picker class="premium-swatch-picker" id="widget-borderColor" trigger-opacity="0" value="${isCustom ? color : '#0078D4'}"></app-color-picker>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-group" style="margin-top: 20px;">
+                <label>${i18n.t('bookmark.border_width') || 'Border Width'}</label>
+                <div class="segmented-control">
+                    <button type="button" class="border-width-btn ${borderWidth === 1 ? 'active' : ''}" data-width="1">
+                        <div style="height: 1px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                        <span>${i18n.t('general.thin') || 'Thin'}</span>
+                    </button>
+                    <button type="button" class="border-width-btn ${borderWidth === 2 ? 'active' : ''}" data-width="2">
+                        <div style="height: 2px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                        <span>${i18n.t('general.regular') || 'Regular'}</span>
+                    </button>
+                    <button type="button" class="border-width-btn ${borderWidth === 3 ? 'active' : ''}" data-width="3">
+                        <div style="height: 3px; width: 24px; background: currentColor; opacity: 0.8;"></div>
+                        <span>${i18n.t('general.thick') || 'Thick'}</span>
+                    </button>
+                </div>
+            </div>
+            `;
+        };
+
+        const hosts = content.hosts || [];
+        let generalTab = '';
+
+        if (this._dockerView === 'list') {
+            const hostsList = hosts.length > 0
+                ? hosts.map((h: any) => `
+                    <div class="host-item">
+                        <div class="host-info">
+                            <span class="host-name">${esc(h.name)}</span>
+                            <span class="host-tag">${h.type === 'local' ? i18n.t('docker.host_type_local') : i18n.t('docker.host_type_' + h.type)}</span>
+                        </div>
+                        <div class="host-actions">
+                            <button class="host-action-btn edit" data-id="${h.id}" title="${i18n.t('general.edit')}">
+                                ${ICON_EDIT}
+                            </button>
+                            <button class="host-action-btn delete" data-id="${h.id}" title="${i18n.t('general.delete')}">
+                                ${ICON_TRASH}
+                            </button>
+                        </div>
+                    </div>
+                `).join('')
+                : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${i18n.t('docker.no_hosts_configured') || 'No hosts found'}</p>`;
+
+            generalTab = `
+                <div class="field-group">
+                    <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
+                    <div class="hosts-list">${hostsList}</div>
+                    <app-button variant="ghost" id="docker-show-add-btn" style="width: 100%; margin-top: 12px;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>
+                </div>
+            `;
+        } else {
+            const editingHost = hosts.find((h: any) => h.id === this._editingHostId) || { type: 'local' };
+            generalTab = `
+                <div class="field-group">
+                    <label>${i18n.t('docker.host_name') || 'Host Name'}</label>
+                    <input type="text" id="docker-name" value="${esc(editingHost.name || '')}" placeholder="${i18n.t('docker.host_name_placeholder')}" />
+                </div>
+                <div class="field-group" style="margin-top: 12px;">
+                    <label>${i18n.t('docker.host_type') || 'Connection Type'}</label>
+                    <app-select id="docker-type" value="${editingHost.type}"></app-select>
+                </div>
+                <div class="field-group" id="docker-url-row" style="margin-top: 12px; ${editingHost.type === 'local' ? 'display: none;' : ''}">
+                    <label>${i18n.t('docker.host_url') || 'Agent URL'}</label>
+                    <input type="text" id="docker-url" value="${esc(editingHost.url || '')}" placeholder="192.168.1.100:2375" />
+                </div>
+                <div class="field-group" id="docker-token-row" style="margin-top: 12px; ${editingHost.type === 'agent' ? '' : 'display: none;'}">
+                    <label>${i18n.t('docker.host_token') || 'Agent Token'}</label>
+                    <input type="password" id="docker-token" value="${esc(editingHost.token || '')}" placeholder="${i18n.t('docker.host_token_placeholder')}" />
+                </div>
+                <div class="docker-form-actions" style="display: flex; gap: 8px; margin-top: 16px;">
+                    <app-button variant="ghost" id="docker-cancel-btn" style="flex: 1;">${i18n.t('general.cancel')}</app-button>
+                    <app-button variant="primary" id="docker-save-host-btn" style="flex: 1;">${i18n.t('general.save')}</app-button>
+                </div>
+            `;
+        }
+
+        return { general: generalTab, customization: renderAppearanceControls() };
     }
 }
 

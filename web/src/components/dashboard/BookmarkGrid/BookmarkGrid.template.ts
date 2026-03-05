@@ -5,6 +5,9 @@
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
 
+const ICON_EDIT = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+const ICON_TRASH = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+
 const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 const safeUrl = (url: string): string => {
     if (!url) return '#';
@@ -64,8 +67,8 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
                </div>
                ${isEditing ? `
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>
-                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
+                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
+                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
                 </div>
                 <div class="resize-handle"></div>
                ` : ''}
@@ -89,7 +92,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             'notepad': 'widget-notepad',
             'telemetry': 'widget-telemetry',
             'weather': 'widget-weather',
-            'markdown': 'widget-markdown'
+            'markdown': 'widget-markdown',
+            'docker': 'widget-docker'
         };
         const tagName = tagMap[widgetId] || 'div';
         const rawContent = data.text || '';
@@ -114,8 +118,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
 
             ${isEditing ? `
             <div class="bookmark-actions">
-                 ${['clock', 'telemetry', 'weather', 'notepad', 'markdown'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>` : ''}
-                 <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
+                 ${['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>` : ''}
+                 <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
             </div>
             ${['clock', 'telemetry'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}
             ` : ''}
@@ -145,8 +149,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             
             ${isEditing ? `
                 <div class="bookmark-actions">
-                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">✎</button>
-                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">🗑</button>
+                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
+                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
                 </div>
             ` : ''}
 

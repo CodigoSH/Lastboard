@@ -9,6 +9,7 @@ import '../../../widgets/core/ClockWidget';
 import '../../../widgets/core/NotepadWidget';
 import '../../../widgets/core/TelemetryWidget';
 import '../../../widgets/core/WeatherWidget';
+import '../../../widgets/core/DockerWidget';
 // @ts-ignore
 import css from './BookmarkGrid.css' with { type: 'text' };
 

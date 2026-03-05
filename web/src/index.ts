@@ -27,6 +27,7 @@ import './widgets/core/ClockWidget';
 import './widgets/core/TelemetryWidget';
 import './widgets/core/WeatherWidget';
 import './widgets/core/MarkdownWidget';
+import './widgets/core/DockerWidget';
 
 const topbar = document.getElementById('main-topbar') as any;
 const drawer = document.getElementById('right-drawer') as any;

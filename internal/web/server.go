@@ -233,6 +233,12 @@ func (s *Server) routes() {
 	s.Router.Handle("DELETE /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.DeleteItem)))
 	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))
 
+	// Docker API
+	dockerHandler := api.NewDockerHandler(s.DB)
+	s.Router.Handle("GET /api/docker/containers", protect(http.HandlerFunc(dockerHandler.GetContainers)))
+	s.Router.Handle("GET /api/docker/stats", protect(http.HandlerFunc(dockerHandler.GetStats)))
+	s.Router.Handle("POST /api/docker/action", protect(http.HandlerFunc(dockerHandler.Action)))
+
 	// User API
 	userHandler := api.NewUserHandler(s.DB)
 	s.Router.Handle("/api/me", protect(http.HandlerFunc(userHandler.GetMe)))

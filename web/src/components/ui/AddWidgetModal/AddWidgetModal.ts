@@ -98,6 +98,9 @@ class AddWidgetModal extends HTMLElement {
                     color: var(--accent);
                     border-color: rgba(var(--accent-rgb), 0.3);
                 }
+                .close-btn:focus, .close-btn:focus-visible {
+                    outline: none;
+                }
                 .grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -160,6 +163,10 @@ class AddWidgetModal extends HTMLElement {
                     stroke: #fff;
                     fill: none;
                 }
+                .card:hover .icon-container svg.solid-icon {
+                    stroke: none;
+                    fill: #fff;
+                }
                 .card:hover .icon-container svg circle[fill="currentColor"] {
                     fill: #fff;
                 }
@@ -168,6 +175,10 @@ class AddWidgetModal extends HTMLElement {
                     height: 32px;
                     stroke: var(--accent, #3b82f6);
                     fill: none;
+                }
+                .icon-container svg.solid-icon {
+                    stroke: none;
+                    fill: var(--accent, #3b82f6);
                 }
                 .name {
                     font-weight: 700;
