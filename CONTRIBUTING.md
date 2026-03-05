@@ -33,11 +33,11 @@ First off, thanks for taking the time to contribute! Lastboard aims to be the fa
    bun run dev
    
    # Terminal 2 (Backend)
-   go run ./cmd/dashboard/main.go
+   go run ./cmd/lastboard/main.go
    ```
 
 ## Project Structure
-- `cmd/dashboard`: Main entry point.
+- `cmd/lastboard`: Main entry point.
 - `internal`: Backend logic (handlers, storage, services).
 - `web`: Frontend application (TypeScript, CSS).
 - `scripts`: Utilities for release and i18n.

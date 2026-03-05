@@ -39,7 +39,7 @@ COPY --from=frontend-builder /app/web/dist /app/internal/web/dist
 ARG TARGETOS
 ARG TARGETARCH
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /app/lastboard ./cmd/dashboard
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /app/lastboard ./cmd/lastboard
 
 # ==========================================
 # Stage 3: High-Performance Runtime (Alpine)

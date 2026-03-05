@@ -8,7 +8,7 @@ tmp_dir = "tmp"
 
 [build]
 # Just plain old go build command. You can use direct build command instead.
-cmd = "go build -o ./tmp/main ./cmd/dashboard/main.go"
+cmd = "go build -o ./tmp/main ./cmd/lastboard/main.go"
 # Binary file yields from `cmd`.
 bin = "./tmp/main"
 # Customize binary, can setup environment variables when run your app.

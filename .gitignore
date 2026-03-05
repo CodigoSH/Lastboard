@@ -58,8 +58,10 @@ tmp/
 # Root binary
 lastboard
 Lastboard
+dashboard
 *.old
 *.tar.gz
+*.tsbuildinfo
 
 # Temporary development notes
 /*_FIXED.md

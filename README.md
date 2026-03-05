@@ -184,7 +184,7 @@ If you prefer running the binary directly on your host machine.
 
 3. **Build the Binary**
    ```bash
-   go build -o lastboard ./cmd/dashboard
+   go build -o lastboard ./cmd/lastboard
    ```
 
 4. **Run**
