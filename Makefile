@@ -60,6 +60,8 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -rf coverage/*.out coverage/*.html
 	@rm -rf web/dist
+	@rm -f $(APP_NAME) dashboard lastboard-verify
+	@rm -f server.log air.log
 
 # --- Docker ---
 docker:

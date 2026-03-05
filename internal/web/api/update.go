@@ -353,6 +353,9 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath, expectedName string)
 
 	tr := tar.NewReader(gzr)
 
+	// Keep track of files found in case we need a fallback
+	var firstFile string
+
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -365,8 +368,25 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath, expectedName string)
 		if header.Typeflag != tar.TypeReg {
 			continue
 		}
-		// Match the expected binary name; skip other files in the archive
-		if expectedName != "" && filepath.Base(header.Name) != expectedName {
+
+		fileName := filepath.Base(header.Name)
+		if firstFile == "" {
+			firstFile = fileName
+		}
+
+		// Priority 1: Exact match (current binary name)
+		// Priority 2: 'lastboard' (new official name)
+		// Priority 3: 'dashboard' (legacy name)
+		match := false
+		if expectedName != "" && fileName == expectedName {
+			match = true
+		} else if fileName == "lastboard" {
+			match = true
+		} else if fileName == "dashboard" {
+			match = true
+		}
+
+		if !match {
 			continue
 		}
 
@@ -381,7 +401,7 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath, expectedName string)
 		out.Close()
 		return nil
 	}
-	return fmt.Errorf("binary '%s' not found in archive", expectedName)
+	return fmt.Errorf("binary not found in archive (expected %s, lastboard, or dashboard)", expectedName)
 }
 
 func (h *UpdateHandler) restartSelf(exePath string) {

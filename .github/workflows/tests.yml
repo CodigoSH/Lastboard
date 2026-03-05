@@ -59,7 +59,7 @@ jobs:
 
       - name: Build backend
         run: |
-          go build -v -o lastboard cmd/dashboard/main.go
+          go build -v -o lastboard ./cmd/lastboard/main.go
 
       - name: Test binary
         run: |
