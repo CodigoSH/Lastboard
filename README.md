@@ -40,6 +40,10 @@
 
 ---
 
+📖 **[Read the Official Documentation](./docs/README.md)** for detailed guides on installation, configuration, security, and widget usage.
+
+---
+
 ## Why Lastboard
 
 Most self-hosted dashboards are either too heavy, too ugly, or too complex to maintain. Lastboard was built with a simple rule: **nothing ships unless it's fast and looks good doing it.**
@@ -51,6 +55,7 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 - **Single SQLite file** — your entire dashboard state in one portable file. Backup = `cp lastboard.db`.
 - **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
 - **Multi-user support** — per-user dashboards, preferences, and password management.
+- **Global readiness** — Fully translated into 20 languages.
 - **Real-time telemetry** — server stats (CPU, RAM, disk) streamed over WebSocket.
 
 ---
@@ -78,7 +83,7 @@ Lastboard is built with defense-in-depth throughout the stack.
 >
 > **Do not enable this flag** if Lastboard is exposed directly to the internet without a reverse proxy, as it would allow clients to spoof their IP.
 
-### Widgets (5)
+### Widgets (6)
 
 | Widget | Description |
 | :--- | :--- |
@@ -87,6 +92,7 @@ Lastboard is built with defense-in-depth throughout the stack.
 | **Telemetry** | Real-time server metrics (CPU, RAM, disk) via WebSocket |
 | **Weather** | Current conditions and forecast via Open-Meteo |
 | **Markdown** | Freeform Markdown renderer for notes and links |
+| **Docker** | Live monitoring and lifecycle management (Start/Stop/Restart) of your containers |
 
 ---
 
