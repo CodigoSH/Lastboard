@@ -149,7 +149,7 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 		return nil, fmt.Errorf("docker: build client: %w", err)
 	}
 
-	resp, err := client.Get(base + "/v1.41/containers/json?all=true")
+	resp, err := client.Get(base + "/containers/json?all=true")
 	if err != nil {
 		return nil, fmt.Errorf("docker: GET /containers/json: %w", err)
 	}
@@ -223,7 +223,7 @@ func GetContainerStats(hostURL, containerID string) (DockerStats, error) {
 		return DockerStats{}, fmt.Errorf("docker: build client: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/v1.41/containers/%s/stats?stream=false", base, containerID)
+	url := fmt.Sprintf("%s/containers/%s/stats?stream=false", base, containerID)
 	resp, err := client.Get(url)
 	if err != nil {
 		return DockerStats{}, fmt.Errorf("docker: GET stats: %w", err)
@@ -286,7 +286,7 @@ func ContainerAction(hostURL, containerID, action string) error {
 		return fmt.Errorf("docker: build client: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/v1.41/containers/%s/%s", base, containerID, action)
+	url := fmt.Sprintf("%s/containers/%s/%s", base, containerID, action)
 	resp, err := client.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("docker: POST /%s: %w", action, err)
