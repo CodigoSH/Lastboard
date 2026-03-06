@@ -130,12 +130,9 @@ const CSS = `
     min-height: 0;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(128,128,128,0.2) transparent;
+    scrollbar-width: none; /* Firefox */
 }
-.widget-body::-webkit-scrollbar { width: 4px; }
-.widget-body::-webkit-scrollbar-track { background: transparent; }
-.widget-body::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.2); border-radius: 2px; }
+.widget-body::-webkit-scrollbar { display: none; /* Safari and Chrome */ }
 
 /* ── State views (empty / error / no-hosts) ── */
 .state-view {
@@ -471,21 +468,24 @@ class DockerWidget extends HTMLElement {
         const param = hostParam(host);
         const running = this._containers.filter(c => c.Status === 'running');
 
-        // Fetch sequentially to avoid rate limiting and browser connection pooling limits
-        for (const c of running) {
-            // Stop if widget unmounted or stopped polling mid-fetch
+        // Fetch concurrently in chunks of 5 to speed up from 25s config down to ~4s
+        const chunkSize = 5;
+        for (let i = 0; i < running.length; i += chunkSize) {
             if (this._pollingTimer === null) break;
 
-            try {
-                const res = await fetch(
-                    `/api/docker/stats?host=${encodeURIComponent(param)}&id=${encodeURIComponent(c.ID)}`
-                );
-                if (res.ok) {
-                    const stats: DockerStats = await res.json();
-                    this._stats.set(c.ID, stats);
-                    this.updateStatsDOM(c.ID, stats);
-                }
-            } catch (_) { }
+            const chunk = running.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async c => {
+                try {
+                    const res = await fetch(
+                        `/api/docker/stats?host=${encodeURIComponent(param)}&id=${encodeURIComponent(c.ID)}`
+                    );
+                    if (res.ok) {
+                        const stats: DockerStats = await res.json();
+                        this._stats.set(c.ID, stats);
+                        this.updateStatsDOM(c.ID, stats);
+                    }
+                } catch (_) { }
+            }));
 
             // Small delay to prevent bursting the API rate limiter
             await new Promise(r => setTimeout(r, 150));
