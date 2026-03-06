@@ -433,15 +433,22 @@ class DockerWidget extends HTMLElement {
 
     private stopPolling() {
         if (this._pollingTimer !== null) {
-            clearInterval(this._pollingTimer);
+            clearTimeout(this._pollingTimer);
             this._pollingTimer = null;
         }
     }
 
     private startStatsPolling() {
         this.stopPolling();
-        this.fetchAllStats(); // immediate first call
-        this._pollingTimer = setInterval(() => this.fetchAllStats(), 3000);
+        const poll = async () => {
+            if (this._pollingTimer === null) return; // stopped
+            await this.fetchAllStats();
+            if (this._pollingTimer !== null) {
+                this._pollingTimer = setTimeout(poll, 4000);
+            }
+        };
+        // Use a dummy timeout to indicate it's active
+        this._pollingTimer = setTimeout(poll, 0);
     }
 
     private async fetchAllStats() {
@@ -450,17 +457,25 @@ class DockerWidget extends HTMLElement {
         const param = hostParam(host);
         const running = this._containers.filter(c => c.Status === 'running');
 
-        await Promise.all(running.map(async (c) => {
+        // Fetch sequentially to avoid rate limiting and browser connection pooling limits
+        for (const c of running) {
+            // Stop if widget unmounted or stopped polling mid-fetch
+            if (this._pollingTimer === null) break;
+
             try {
                 const res = await fetch(
                     `/api/docker/stats?host=${encodeURIComponent(param)}&id=${encodeURIComponent(c.ID)}`
                 );
-                if (!res.ok) return;
-                const stats: DockerStats = await res.json();
-                this._stats.set(c.ID, stats);
-                this.updateStatsDOM(c.ID, stats);
+                if (res.ok) {
+                    const stats: DockerStats = await res.json();
+                    this._stats.set(c.ID, stats);
+                    this.updateStatsDOM(c.ID, stats);
+                }
             } catch (_) { }
-        }));
+
+            // Small delay to prevent bursting the API rate limiter
+            await new Promise(r => setTimeout(r, 150));
+        }
     }
 
     // Targeted DOM update — no full re-render
