@@ -76,8 +76,6 @@ class WidgetConfigModal extends HTMLElement {
     private _clockSelectedLon: number | null = null;
     private _selectedColor: string = '#333333';
     private _selectedBorderWidth: number = 1;
-    private _dockerView: 'list' | 'form' = 'list';
-    private _editingHostId: string | null = null;
 
     private readonly premiumColors = [
         '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -106,8 +104,6 @@ class WidgetConfigModal extends HTMLElement {
         }
         this._selectedColor = content.borderColor || '';
         this._selectedBorderWidth = content.borderWidth || 1;
-        this._dockerView = 'list';
-        this._editingHostId = null;
 
         this.render();
 
@@ -697,8 +693,9 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
 
                 <div class="actions">
-                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown'].includes(widgetId) || (widgetId === 'docker' && this._dockerView === 'list') || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
+                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
+                <div id="docker-host-overlay" class="docker-overlay" style="display: none;"></div>
             </dialog>
         `;
 
@@ -826,111 +823,150 @@ class WidgetConfigModal extends HTMLElement {
         if (!this.shadowRoot) return;
         const root = this.shadowRoot;
 
-        if (this._dockerView === 'list') {
-            root.getElementById('docker-show-add-btn')?.addEventListener('click', () => {
-                this._dockerView = 'form';
-                this._editingHostId = null;
-                this.refreshDockerContent();
+        root.getElementById('docker-show-add-btn')?.addEventListener('click', () => {
+            this.showDockerHostForm(null);
+        });
+        root.querySelectorAll('.host-action-btn.edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = (e.currentTarget as HTMLElement).dataset.id;
+                if (id) {
+                    this.showDockerHostForm(id);
+                }
             });
-            root.querySelectorAll('.host-action-btn.edit').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = (e.currentTarget as HTMLElement).dataset.id;
-                    if (id) {
-                        this._dockerView = 'form';
-                        this._editingHostId = id;
-                        this.refreshDockerContent();
-                    }
-                });
-            });
-            root.querySelectorAll('.host-action-btn.delete').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const id = (e.currentTarget as HTMLElement).dataset.id;
-                    if (!id) return;
+        });
+        root.querySelectorAll('.host-action-btn.delete').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = (e.currentTarget as HTMLElement).dataset.id;
+                if (!id) return;
 
-                    const confirmationModal = document.querySelector('confirmation-modal') as any;
-                    let confirmed = false;
-                    if (confirmationModal) {
-                        confirmed = await confirmationModal.confirm(
-                            i18n.t('general.delete') || 'Delete',
-                            i18n.t('docker.delete_host_confirm') || 'Are you sure you want to delete this host?'
-                        );
-                    } else {
-                        confirmed = confirm(i18n.t('general.are_you_sure') || 'Are you sure?');
-                    }
-
-                    if (confirmed) {
-                        let content = typeof this.currentItem!.content === 'string'
-                            ? JSON.parse(this.currentItem!.content)
-                            : { ...this.currentItem!.content };
-                        content.hosts = (content.hosts || []).filter((h: any) => h.id !== id);
-
-                        this.currentItem!.content = JSON.stringify(content);
-                        this.refreshDockerContent();
-                    }
-                });
-            });
-        } else {
-            const typeSelect = root.getElementById('docker-type') as any;
-            if (typeSelect) {
-                typeSelect.options = [
-                    { value: 'local', label: i18n.t('docker.host_type_local') || 'Local socket' },
-                    { value: 'agent', label: i18n.t('docker.host_type_agent') || 'Remote Agent' },
-                    { value: 'tcp', label: i18n.t('docker.host_type_tcp') || 'Remote TCP' },
-                    { value: 'tls', label: i18n.t('docker.host_type_tls') || 'Remote TLS' }
-                ];
-
-                const toggle = (val?: string) => {
-                    const t = val || typeSelect.value;
-                    const url = root.getElementById('docker-url-row');
-                    const token = root.getElementById('docker-token-row');
-                    if (url) url.style.display = t === 'local' ? 'none' : '';
-                    if (token) token.style.display = t === 'agent' ? '' : 'none';
-                };
-                typeSelect.addEventListener('change', (e: any) => toggle(e.detail.value));
-                toggle();
-            }
-
-            root.getElementById('docker-cancel-btn')?.addEventListener('click', () => {
-                this._dockerView = 'list';
-                this._editingHostId = null;
-                this.refreshDockerContent();
-            });
-
-            root.getElementById('docker-save-host-btn')?.addEventListener('click', () => {
-                const name = (root.getElementById('docker-name') as HTMLInputElement).value.trim();
-                const type = (root.getElementById('docker-type') as any).value;
-                const urlInput = root.getElementById('docker-url') as HTMLInputElement;
-                const url = urlInput ? urlInput.value.trim() : '';
-                const tokenInput = root.getElementById('docker-token') as HTMLInputElement;
-                const token = tokenInput ? tokenInput.value.trim() : '';
-
-                if (!name) return;
-
-                let content = typeof this.currentItem!.content === 'string'
-                    ? JSON.parse(this.currentItem!.content)
-                    : { ...this.currentItem!.content };
-
-                if (!content.hosts) content.hosts = [];
-
-                if (this._editingHostId) {
-                    content.hosts = content.hosts.map((h: any) =>
-                        h.id === this._editingHostId ? { ...h, name, type, url, token } : h
+                const confirmationModal = document.querySelector('confirmation-modal') as any;
+                let confirmed = false;
+                if (confirmationModal) {
+                    confirmed = await confirmationModal.confirm(
+                        i18n.t('general.delete') || 'Delete',
+                        i18n.t('docker.delete_host_confirm') || 'Are you sure you want to delete this host?'
                     );
                 } else {
-                    content.hosts.push({
-                        id: 'h_' + Math.random().toString(36).slice(2, 8),
-                        name, type, url, token
-                    });
+                    confirmed = confirm(i18n.t('general.are_you_sure') || 'Are you sure?');
                 }
 
-                this.currentItem!.content = JSON.stringify(content);
-                this._dockerView = 'list';
-                this._editingHostId = null;
-                this.refreshDockerContent();
+                if (confirmed) {
+                    let content = typeof this.currentItem!.content === 'string'
+                        ? JSON.parse(this.currentItem!.content)
+                        : { ...this.currentItem!.content };
+                    content.hosts = (content.hosts || []).filter((h: any) => h.id !== id);
+
+                    this.currentItem!.content = JSON.stringify(content);
+                    this.refreshDockerContent();
+                }
             });
+        });
+    }
+
+    private showDockerHostForm(hostId: string | null) {
+        if (!this.shadowRoot || !this.currentItem) return;
+        const overlay = this.shadowRoot.getElementById('docker-host-overlay');
+        if (!overlay) return;
+
+        const content = typeof this.currentItem.content === 'string'
+            ? JSON.parse(this.currentItem.content)
+            : this.currentItem.content;
+
+        const hosts = content.hosts || [];
+        const editingHost = hostId ? hosts.find((h: any) => h.id === hostId) || { type: 'local' } : { type: 'local' };
+        
+        overlay.innerHTML = `
+            <div class="modal-header" style="border-radius: var(--radius) var(--radius) 0 0; border-bottom: 1px solid var(--border);">
+                <h3 class="modal-title" style="margin: 0; font-size: 16px; font-weight: 600; color: var(--text-main);">${hostId ? (i18n.t('general.edit') || 'Edit') : (i18n.t('docker.add_new_host') || 'Add Host')}</h3>
+                <button class="modal-close" id="docker-cancel-overlay-btn" title="${i18n.t('general.close') || 'Close'}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div style="padding: 24px; display: flex; flex-direction: column; flex: 1; overflow-y: auto;">
+                <div class="field-group">
+                    <label>${i18n.t('docker.host_name') || 'Host Name'}</label>
+                    <input type="text" id="docker-name" value="${esc(editingHost.name || '')}" placeholder="${i18n.t('docker.host_name_placeholder')}" />
+                </div>
+                <div class="field-group" style="margin-top: 12px;">
+                    <label>${i18n.t('docker.host_type') || 'Connection Type'}</label>
+                    <app-select id="docker-type" value="${editingHost.type}"></app-select>
+                </div>
+                <div class="field-group" id="docker-url-row" style="margin-top: 12px; ${editingHost.type === 'local' ? 'display: none;' : ''}">
+                    <label>${i18n.t('docker.host_url') || 'Agent URL'}</label>
+                    <input type="text" id="docker-url" value="${esc(editingHost.url || '')}" placeholder="192.168.1.100:2375" />
+                </div>
+                <div class="field-group" id="docker-token-row" style="margin-top: 12px; ${editingHost.type === 'agent' ? '' : 'display: none;'}">
+                    <label>${i18n.t('docker.host_token') || 'Agent Token'}</label>
+                    <input type="password" id="docker-token" value="${esc(editingHost.token || '')}" placeholder="${i18n.t('docker.host_token_placeholder')}" />
+                </div>
+                <div class="docker-form-actions" style="margin-top: auto; padding-top: 24px;">
+                    <app-button variant="primary" id="docker-save-overlay-btn" style="flex: 1;">${i18n.t('general.save')}</app-button>
+                </div>
+            </div>
+        `;
+
+        overlay.style.display = 'flex';
+
+        const typeSelect = this.shadowRoot.getElementById('docker-type') as any;
+        if (typeSelect) {
+            typeSelect.options = [
+                { value: 'local', label: i18n.t('docker.host_type_local') || 'Local socket' },
+                { value: 'agent', label: i18n.t('docker.host_type_agent') || 'Remote Agent' },
+                { value: 'tcp', label: i18n.t('docker.host_type_tcp') || 'Remote TCP' },
+                { value: 'tls', label: i18n.t('docker.host_type_tls') || 'Remote TLS' }
+            ];
+
+            const toggle = (val?: string) => {
+                const t = val || typeSelect.value;
+                const url = this.shadowRoot!.getElementById('docker-url-row');
+                const token = this.shadowRoot!.getElementById('docker-token-row');
+                if (url) url.style.display = t === 'local' ? 'none' : '';
+                if (token) token.style.display = t === 'agent' ? '' : 'none';
+            };
+            typeSelect.addEventListener('change', (e: any) => toggle(e.detail.value));
+            toggle();
         }
+
+        this.shadowRoot.getElementById('docker-cancel-overlay-btn')?.addEventListener('click', () => {
+            overlay.style.display = 'none';
+        });
+
+        this.shadowRoot.getElementById('docker-save-overlay-btn')?.addEventListener('click', () => {
+            const name = (this.shadowRoot!.getElementById('docker-name') as HTMLInputElement).value.trim();
+            const type = (this.shadowRoot!.getElementById('docker-type') as any).value;
+            const urlInput = this.shadowRoot!.getElementById('docker-url') as HTMLInputElement;
+            const url = urlInput ? urlInput.value.trim() : '';
+            const tokenInput = this.shadowRoot!.getElementById('docker-token') as HTMLInputElement;
+            const token = tokenInput ? tokenInput.value.trim() : '';
+
+            if (!name) return;
+
+            let currentContent = typeof this.currentItem!.content === 'string'
+                ? JSON.parse(this.currentItem!.content)
+                : { ...this.currentItem!.content };
+
+            if (!currentContent.hosts) currentContent.hosts = [];
+
+            if (hostId) {
+                currentContent.hosts = currentContent.hosts.map((h: any) =>
+                    h.id === hostId ? { ...h, name, type, url, token } : h
+                );
+            } else {
+                currentContent.hosts.push({
+                    id: 'h_' + Math.random().toString(36).slice(2, 8),
+                    name, type, url, token
+                });
+            }
+
+            this.currentItem!.content = JSON.stringify(currentContent);
+            overlay.style.display = 'none';
+            this.refreshDockerContent();
+        });
     }
 
     private renderDockerForm(content: any) {
@@ -984,58 +1020,32 @@ class WidgetConfigModal extends HTMLElement {
         const hosts = content.hosts || [];
         let generalTab = '';
 
-        if (this._dockerView === 'list') {
-            const hostsList = hosts.length > 0
-                ? hosts.map((h: any) => `
-                    <div class="host-item">
-                        <div class="host-info">
-                            <span class="host-name">${esc(h.name)}</span>
-                            <span class="host-tag">${h.type === 'local' ? i18n.t('docker.host_type_local') : i18n.t('docker.host_type_' + h.type)}</span>
-                        </div>
-                        <div class="host-actions">
-                            <button class="host-action-btn edit" data-id="${h.id}" title="${i18n.t('general.edit')}">
-                                ${ICON_EDIT}
-                            </button>
-                            <button class="host-action-btn delete" data-id="${h.id}" title="${i18n.t('general.delete')}">
-                                ${ICON_TRASH}
-                            </button>
-                        </div>
+        const hostsList = hosts.length > 0
+            ? hosts.map((h: any) => `
+                <div class="host-item">
+                    <div class="host-info">
+                        <span class="host-name">${esc(h.name)}</span>
+                        <span class="host-tag">${h.type === 'local' ? i18n.t('docker.host_type_local') : i18n.t('docker.host_type_' + h.type)}</span>
                     </div>
-                `).join('')
-                : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${i18n.t('docker.no_hosts_configured') || 'No hosts found'}</p>`;
+                    <div class="host-actions">
+                        <button class="host-action-btn edit" data-id="${h.id}" title="${i18n.t('general.edit')}">
+                            ${ICON_EDIT}
+                        </button>
+                        <button class="host-action-btn delete" data-id="${h.id}" title="${i18n.t('general.delete')}">
+                            ${ICON_TRASH}
+                        </button>
+                    </div>
+                </div>
+            `).join('')
+            : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${i18n.t('docker.no_hosts_configured') || 'No hosts found'}</p>`;
 
-            generalTab = `
-                <div class="field-group">
-                    <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
-                    <div class="hosts-list">${hostsList}</div>
-                    <app-button variant="ghost" id="docker-show-add-btn" style="width: 100%; margin-top: 12px;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>
-                </div>
-            `;
-        } else {
-            const editingHost = hosts.find((h: any) => h.id === this._editingHostId) || { type: 'local' };
-            generalTab = `
-                <div class="field-group">
-                    <label>${i18n.t('docker.host_name') || 'Host Name'}</label>
-                    <input type="text" id="docker-name" value="${esc(editingHost.name || '')}" placeholder="${i18n.t('docker.host_name_placeholder')}" />
-                </div>
-                <div class="field-group" style="margin-top: 12px;">
-                    <label>${i18n.t('docker.host_type') || 'Connection Type'}</label>
-                    <app-select id="docker-type" value="${editingHost.type}"></app-select>
-                </div>
-                <div class="field-group" id="docker-url-row" style="margin-top: 12px; ${editingHost.type === 'local' ? 'display: none;' : ''}">
-                    <label>${i18n.t('docker.host_url') || 'Agent URL'}</label>
-                    <input type="text" id="docker-url" value="${esc(editingHost.url || '')}" placeholder="192.168.1.100:2375" />
-                </div>
-                <div class="field-group" id="docker-token-row" style="margin-top: 12px; ${editingHost.type === 'agent' ? '' : 'display: none;'}">
-                    <label>${i18n.t('docker.host_token') || 'Agent Token'}</label>
-                    <input type="password" id="docker-token" value="${esc(editingHost.token || '')}" placeholder="${i18n.t('docker.host_token_placeholder')}" />
-                </div>
-                <div class="docker-form-actions" style="display: flex; gap: 8px; margin-top: 16px;">
-                    <app-button variant="ghost" id="docker-cancel-btn" style="flex: 1;">${i18n.t('general.cancel')}</app-button>
-                    <app-button variant="primary" id="docker-save-host-btn" style="flex: 1;">${i18n.t('general.save')}</app-button>
-                </div>
-            `;
-        }
+        generalTab = `
+            <div class="field-group">
+                <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
+                <div class="hosts-list">${hostsList}</div>
+                <app-button variant="ghost" id="docker-show-add-btn" style="width: 100%; margin-top: 12px;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>
+            </div>
+        `;
 
         return { general: generalTab, customization: renderAppearanceControls() };
     }

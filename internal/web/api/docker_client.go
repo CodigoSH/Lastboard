@@ -33,14 +33,22 @@ func (t *agentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // ─── Public Types ──────────────────────────────────────────────────────────────
 
+// DockerPort holds a single port mapping exposed by a container.
+type DockerPort struct {
+	PublicPort  uint16 `json:"PublicPort"`
+	PrivatePort uint16 `json:"PrivatePort"`
+	Type        string `json:"Type"`
+}
+
 // DockerContainer holds the normalised representation of a Docker container.
 type DockerContainer struct {
-	ID      string // Short 12-char container ID
-	Name    string // Name without leading "/"
+	ID      string       // Short 12-char container ID
+	Name    string       // Name without leading "/"
 	Image   string
-	Status  string // "running" | "stopped" | "paused" | "exited" | "restarting"
-	State   string // Raw state string returned by Docker
+	Status  string       // "running" | "stopped" | "paused" | "exited" | "restarting"
+	State   string       // Raw state string returned by Docker
 	Created int64
+	Ports   []DockerPort // Host-exposed port mappings
 }
 
 // DockerStats holds CPU and memory metrics for a running container.
@@ -114,14 +122,23 @@ func newDockerClient(hostURL string) (*http.Client, string, error) {
 
 // ─── ListContainers ────────────────────────────────────────────────────────────
 
+// dockerAPIPort mirrors one entry in the "Ports" array returned by the Docker API.
+type dockerAPIPort struct {
+	IP          string `json:"IP"`
+	PublicPort  uint16 `json:"PublicPort"`
+	PrivatePort uint16 `json:"PrivatePort"`
+	Type        string `json:"Type"`
+}
+
 // dockerAPIContainer is the raw shape returned by GET /containers/json.
 type dockerAPIContainer struct {
-	Id      string   `json:"Id"`
-	Names   []string `json:"Names"`
-	Image   string   `json:"Image"`
-	State   string   `json:"State"`
-	Status  string   `json:"Status"`
-	Created int64    `json:"Created"`
+	Id      string          `json:"Id"`
+	Names   []string        `json:"Names"`
+	Image   string          `json:"Image"`
+	State   string          `json:"State"`
+	Status  string          `json:"Status"`
+	Created int64           `json:"Created"`
+	Ports   []dockerAPIPort `json:"Ports"`
 }
 
 // normaliseStatus maps Docker's raw container state to the set of values
@@ -177,6 +194,21 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 			shortID = shortID[:12]
 		}
 
+		// Build port list — only include host-exposed ports (PublicPort > 0).
+			var ports []DockerPort
+			for _, p := range c.Ports {
+				if p.PublicPort > 0 {
+					ports = append(ports, DockerPort{
+						PublicPort:  p.PublicPort,
+						PrivatePort: p.PrivatePort,
+						Type:        p.Type,
+					})
+				}
+			}
+			if ports == nil {
+				ports = []DockerPort{}
+			}
+
 		containers = append(containers, DockerContainer{
 			ID:      shortID,
 			Name:    name,
@@ -184,6 +216,7 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 			State:   c.State,
 			Status:  normaliseStatus(c.State),
 			Created: c.Created,
+			Ports:   ports,
 		})
 	}
 	return containers, nil
