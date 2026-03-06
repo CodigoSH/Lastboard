@@ -64,24 +64,9 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 
 ### Security
 
-Lastboard is built with defense-in-depth throughout the stack.
+Lastboard is built from the ground up with defense-in-depth principles, including strict CSP headers, CSRF protection, secure session tokens, and aggressive rate limiting.
 
-- **HTTP Security Headers** — CSP (enforced), `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` on every response.
-- **HSTS** — `Strict-Transport-Security` (1 year + preload) applied automatically on HTTPS connections.
-- **CSRF Protection** — all state-changing methods (`POST`, `PUT`, `PATCH`, `DELETE`) require a matching `csrf_token` cookie and `X-CSRF-Token` header (`403` on mismatch).
-- **Session Tokens** — HMAC-SHA256 signed with expiry, generated from a 32-byte cryptographic secret; constant-time verification prevents timing attacks.
-- **Rate Limiting** — token-bucket limiter (20 req/s, burst 50) on all protected routes, with automatic cleanup of stale IP entries.
-- **Setup Lock** — `/setup` is hard-blocked once any user exists, preventing re-initialization.
-
-> **Reverse proxy users — `TRUST_PROXY` flag:** By default, Lastboard ignores the `X-Forwarded-For` header to prevent IP spoofing. If you run Lastboard behind a reverse proxy (nginx, Traefik, Caddy, Cloudflare, Coolify, Pangolin...), you **must** enable proxy trust so that rate limiting and login lockout work against the real client IP instead of the proxy IP.
->
-> Set the environment variable:
-> ```
-> TRUST_PROXY=true
-> ```
-> **Without this flag**, all users behind the proxy will share the same IP for rate limiting purposes, which may cause false 429 errors under load.
->
-> **Do not enable this flag** if Lastboard is exposed directly to the internet without a reverse proxy, as it would allow clients to spoof their IP.
+For a detailed breakdown of our security measures, please refer to our [Security Overview](./docs/security/overview.md).
 
 ### Widgets (6)
 
@@ -134,34 +119,7 @@ docker run -d \
   ghcr.io/codigosh/lastboard:latest
 ```
 
-#### Advanced Configuration
-
-Lastboard is designed to work out-of-the-box, but you can customize it via environment variables.
-
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `PORT` | `8080` | The port the HTTP server listens on. |
-| `DB_FILE` | `./lastboard.db` | Path to the SQLite database file. In Docker, it defaults to `/var/lib/lastboard/lastboard.db`. |
-| `TZ` | `UTC` | Timezone for the application (e.g., `America/New_York`). |
-| `TRUST_PROXY` | `false` | Set to `true` if Lastboard runs behind a reverse proxy (nginx, Traefik, Caddy, Cloudflare). Enables reading the real client IP from `X-Forwarded-For`. **Do not enable if exposed directly.** |
-| `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. Increase only if needed. |
-
-#### Data & Backups
-
-All state is stored in a single SQLite database file for simplicity and portability.
-
-*   **Internal Location (Docker):** `/var/lib/lastboard/lastboard.db`
-*   **Backup:** Simply copy this file to a safe location.
-*   **Restore:** Stop the instance, replace the file, and restart.
-
-> [!IMPORTANT]
-> Ensure the application is stopped before replacing the database file to prevent corruption.
-
-> [!WARNING]
-> The backup file downloaded from the web interface contains **sensitive data including bcrypt password hashes** for all users. Store it in a secure location and never share it publicly.
-
-> [!NOTE]
-> Restoring a backup via the web interface will **log out all active sessions** immediately. All users will need to log in again after a restore. This is intentional behavior to ensure session consistency with the restored data.
+For advanced configuration options, environment variables, and data backups, please refer to the [Configuration Guide](./docs/getting-started/configuration.md).
 
 ---
 
@@ -172,40 +130,15 @@ Run this command to install or update Lastboard automatically:
 curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
 ```
 
-### Manual Installation
-If you prefer running the binary directly on your host machine.
-
-#### Build from Source
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/CodigoSH/Lastboard.git
-   cd Lastboard
-   ```
-   
-2. **Build the Frontend**
-   ```bash
-   bun install
-   bun run build
-   ```
-
-3. **Build the Binary**
-   ```bash
-   go build -o lastboard ./cmd/lastboard
-   ```
-
-4. **Run**
-   ```bash
-   ./lastboard
-   ```
-   Open `http://localhost:8080` in your browser to start the Setup Wizard.
+For more details on manual installations or building from source, check our [Development Guide](./docs/contributing/development.md).
 
 ---
 
 ## Updates
-> [!IMPORTANT]
-> Lastboard features a dedicated update system via a secure proxy to **optimize performance** and ensure 24/7 availability, providing a smoother experience than standard API limits allow. 
 
-For more information on our infrastructure and how we protect your privacy, please read our [Security Policy](./SECURITY.md).
+Lastboard updates are handled securely via a dedicated proxy to guarantee performance and protect our infrastructure. 
+
+For detailed updating instructions, visit the [Updates Guide](./docs/getting-started/updating.md), or see our [Security Policy](./SECURITY.md) for info about our proxy infrastructure.
 
 ---
 
