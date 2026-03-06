@@ -339,11 +339,20 @@ class DockerWidget extends HTMLElement {
             try {
                 const d = typeof val === 'string' ? JSON.parse(val) : val;
                 if (d?.widgetId === 'docker') {
-                    this._config = { ...this._config, ...d };
-                    if (!this._config.activeHost && this._config.hosts.length > 0) {
-                        this._config.activeHost = this._config.hosts[0].id;
+                    const upcomingHosts = d.hosts || [];
+                    let upcomingActiveHost = d.activeHost || '';
+
+                    if (!upcomingActiveHost && upcomingHosts.length > 0) {
+                        upcomingActiveHost = upcomingHosts[0].id;
                     }
-                    this.loadContainers();
+
+                    const hostsChanged = JSON.stringify(upcomingHosts) !== JSON.stringify(this._config.hosts);
+                    const hostChanged = upcomingActiveHost !== this._config.activeHost;
+
+                    if (hostsChanged || hostChanged || this._config.widgetId !== 'docker') {
+                        this._config = { ...this._config, ...d, hosts: upcomingHosts, activeHost: upcomingActiveHost };
+                        this.loadContainers();
+                    }
                 }
             } catch (_) { }
         }
@@ -361,13 +370,18 @@ class DockerWidget extends HTMLElement {
                     try {
                         const c = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
                         if (c?.widgetId === 'docker') {
-                            const hostsChanged = JSON.stringify(c.hosts) !== JSON.stringify(this._config.hosts);
-                            const hostChanged = c.activeHost !== this._config.activeHost;
-                            this._config = { ...this._config, ...c };
-                            if (!this._config.activeHost && this._config.hosts.length > 0) {
-                                this._config.activeHost = this._config.hosts[0].id;
+                            const incomingHosts = c.hosts || [];
+                            let incomingActiveHost = c.activeHost || '';
+
+                            if (!incomingActiveHost && incomingHosts.length > 0) {
+                                incomingActiveHost = incomingHosts[0].id;
                             }
+
+                            const hostsChanged = JSON.stringify(incomingHosts) !== JSON.stringify(this._config.hosts);
+                            const hostChanged = incomingActiveHost !== this._config.activeHost;
+
                             if (hostsChanged || hostChanged) {
+                                this._config = { ...this._config, ...c, hosts: incomingHosts, activeHost: incomingActiveHost };
                                 this.loadContainers();
                             }
                         }
