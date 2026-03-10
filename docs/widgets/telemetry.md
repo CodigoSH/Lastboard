@@ -15,7 +15,7 @@ The widget can display the following metrics:
 - **RAM:** Memory usage percentage.
 - **Temperature:** CPU thermal readings (in °C/°F depending on the global unit setting).
 
-> **📝 Note:** Temperature monitoring relies on system sensors and is currently supported on Linux hosts only. The units (°C/°F) are determined by the **Global Unit System** in the dashboard settings.
+> **Note:** Temperature monitoring relies on system sensors and is currently supported on Linux hosts only. The units (°C/°F) are determined by the **Global Unit System** in the dashboard settings.
 
 ## Configuration Options
 

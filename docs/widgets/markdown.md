@@ -19,7 +19,7 @@ The widget utilizes a custom Markdown parser supporting:
 - Inline `code` and multi-line code blocks
 - Links and Images
 
-> **🛡️ Security Note:** All rendered Markdown output is passed through an HTML sanitizer (DOMPurify) before being attached to the DOM, protecting you from XSS attacks when rendering custom HTML blocks.
+> **Security Note:** All rendered Markdown output is passed through an HTML sanitizer (DOMPurify) before being attached to the DOM, protecting you from XSS attacks when rendering custom HTML blocks.
 
 ---
 [← Previous page](notepad.md) | [Next page →](docker.md)

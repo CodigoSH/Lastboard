@@ -27,16 +27,16 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
 ### Security Benefits
 
-✅ **Prevents SSL Stripping Attacks**
+**Prevents SSL Stripping Attacks**
 - Attacker can't downgrade HTTPS → HTTP on public WiFi
 
-✅ **Prevents Mixed Content**
+**Prevents Mixed Content**
 - Forces all resources to load over HTTPS
 
-✅ **Improves User Privacy**
+**Improves User Privacy**
 - No HTTP requests ever sent (avoids ISP/network snooping)
 
-✅ **SEO Benefits**
+**SEO Benefits**
 - Google prioritizes HTTPS sites in rankings
 
 ### Requirements

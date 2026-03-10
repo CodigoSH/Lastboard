@@ -18,7 +18,7 @@ This widget is powered by [Open-Meteo](https://open-meteo.com/). It resolves coo
 | :--- | :--- | :--- |
 | **Update Interval** | 30m | How often the widget updates. |
 
-> **📝 Note:** Temperature and wind speed units are determined by the **Global Unit System** in the dashboard settings (Celsius/Metric vs Fahrenheit/Imperial).
+> **Note:** Temperature and wind speed units are determined by the **Global Unit System** in the dashboard settings (Celsius/Metric vs Fahrenheit/Imperial).
 
 ---
 [← Previous page](telemetry.md) | [Next page →](notepad.md)
