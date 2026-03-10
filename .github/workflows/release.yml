@@ -109,17 +109,21 @@ jobs:
           fi
 
           echo "Creating or updating release for $VERSION..."
-          gh release create "$VERSION" \
-            $PRERELEASE_ARG \
-            --title "$VERSION" \
-            "$NOTES_OPTION" "$NOTES_VALUE" \
-            artifacts/*/*.tar.gz \
-            artifacts/checksums.txt || \
-          gh release edit "$VERSION" \
-            $PRERELEASE_ARG \
-            --title "$VERSION" \
-            "$NOTES_OPTION" "$NOTES_VALUE" \
-            artifacts/*/*.tar.gz \
-            artifacts/checksums.txt
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release exists, updating notes and uploading artifacts..."
+            gh release edit "$VERSION" \
+              $PRERELEASE_ARG \
+              --title "$VERSION" \
+              "$NOTES_OPTION" "$NOTES_VALUE"
+            gh release upload "$VERSION" artifacts/*/*.tar.gz artifacts/checksums.txt --clobber
+          else
+            echo "Creating new release..."
+            gh release create "$VERSION" \
+              $PRERELEASE_ARG \
+              --title "$VERSION" \
+              "$NOTES_OPTION" "$NOTES_VALUE" \
+              artifacts/*/*.tar.gz \
+              artifacts/checksums.txt
+          fi
 
 
