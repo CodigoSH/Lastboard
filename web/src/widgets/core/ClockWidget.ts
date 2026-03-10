@@ -160,12 +160,29 @@ class ClockWidget extends HTMLElement {
             this.dateEl.style.display = 'none';
         }
 
+        if (!this.shadowRoot) return;
+        const contentEl = this.shadowRoot.getElementById('clock-content');
+        const emptyEl = this.shadowRoot.getElementById('empty-state');
+
+        // Blank State Logic
+        if (!this._config.city) {
+            if (contentEl) contentEl.style.display = 'none';
+            if (emptyEl) {
+                emptyEl.style.display = 'flex';
+                const emptyText = emptyEl.querySelector('.state-text');
+                if (emptyText) emptyText.textContent = i18n.t('widget.clock.no_location') || 'Choose Location';
+            }
+            return;
+        } else {
+            if (contentEl) contentEl.style.display = 'flex';
+            if (emptyEl) emptyEl.style.display = 'none';
+        }
+
         // City Logic
         if (this._config.showCity !== false) {
-            const displayText = this._config.city || i18n.t('widget.clock.no_location') || 'Choose Location';
-            if (this._lastCityStr !== displayText) {
-                this.cityEl.textContent = displayText;
-                this._lastCityStr = displayText;
+            if (this._lastCityStr !== this._config.city) {
+                this.cityEl.textContent = this._config.city;
+                this._lastCityStr = this._config.city;
             }
             this.cityEl.style.display = 'block';
         } else {
@@ -192,6 +209,13 @@ class ClockWidget extends HTMLElement {
                     position: relative;
                     container-type: inline-size; /* Enable CQ */
                 }
+                #clock-content {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%; height: 100%;
+                }
                 .time {
                     font-size: clamp(1.5rem, 22cqi, 5rem); /* Proportional scaling */
                     font-weight: 700;
@@ -217,11 +241,30 @@ class ClockWidget extends HTMLElement {
                     white-space: nowrap;
                     text-transform: uppercase;
                 }
+                .state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; height:100%; width:100%; opacity:.5; }
+                .state-icon { width:clamp(28px,18cqi,56px); height:clamp(28px,18cqi,56px); }
+                .state-icon svg { width:100%; height:100%; }
+                .state-text { font-size:clamp(.6rem,5cqi,.85rem); color:var(--text-dim); text-align:center; }
             </style>
             
-            <div class="city"></div>
-            <div class="time">--:--:--</div>
-            <div class="date">-- --</div>
+            <div id="clock-content">
+                <div class="city"></div>
+                <div class="time">--:--:--</div>
+                <div class="date">-- --</div>
+            </div>
+            
+            <div id="empty-state" class="state" style="display: none;">
+                <div class="state-icon">
+                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <circle cx="32" cy="32" r="11"/>
+                        <line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/>
+                        <line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/>
+                        <line x1="13.6" y1="13.6" x2="19.3" y2="19.3"/><line x1="44.7" y1="44.7" x2="50.4" y2="50.4"/>
+                        <line x1="13.6" y1="50.4" x2="19.3" y2="44.7"/><line x1="44.7" y1="19.3" x2="50.4" y2="13.6"/>
+                    </svg>
+                </div>
+                <span class="state-text"></span>
+            </div>
         `;
 
         this.timeEl = this.shadowRoot.querySelector('.time');
