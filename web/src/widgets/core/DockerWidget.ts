@@ -148,6 +148,7 @@ const CSS = `
     background: transparent;
     border: 1px solid rgba(128,128,128,0.15);
     border-radius: 4px;
+    position: relative;
     cursor: pointer; color: var(--text-dim);
     transition: all 0.15s;
     flex-shrink: 0;
@@ -414,7 +415,7 @@ const CSS = `
 .action-btn:disabled svg { opacity: 0.5; }
 
 /* Tooltip — anchored left so it never overflows widget top edge */
-.action-btn::after {
+.action-btn::after, .header-btn::after {
     content: attr(data-title);
     position: absolute; right: calc(100% + 8px); top: 50%;
     transform: translateY(-50%);
@@ -425,7 +426,7 @@ const CSS = `
     opacity: 0; transition: opacity 0.15s; z-index: 9999;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
-.action-btn:hover::after { opacity: 1; }
+.action-btn:hover::after, .header-btn:hover::after { opacity: 1; }
 
 .spin { animation: spin 0.7s linear infinite; }
 `;
@@ -871,7 +872,7 @@ class DockerWidget extends HTMLElement {
             </div>` : '';
 
         const editBtn = admin
-            ? `<button class="header-btn${this._editMode ? ' active' : ''}" id="edit-mode-btn" title="${i18n.t('docker.edit_mode_toggle') || 'Customize'}">${ICON.ellipsis}</button>`
+            ? `<button class="header-btn${this._editMode ? ' active' : ''}" id="edit-mode-btn" data-title="${i18n.t('docker.edit_mode_toggle') || 'Customize'}">${ICON.ellipsis}</button>`
             : '';
 
         const editBanner = this._editMode ? `
@@ -928,7 +929,7 @@ class DockerWidget extends HTMLElement {
                     <div class="widget-header-icon">${ICON.docker}</div>
                     <span class="widget-title">${i18n.t('widget.docker.name')}</span>
                     ${hostSelector}
-                    <button class="header-btn refresh-btn" id="refresh-btn" title="${i18n.t('docker.refresh') || 'Refresh'}">${ICON.refresh}</button>
+                    <button class="header-btn refresh-btn" id="refresh-btn" data-title="${i18n.t('docker.refresh') || 'Refresh'}">${ICON.refresh}</button>
                     ${editBtn}
                 </div>
                 <div class="${summaryClass}" id="header-summary">${esc(summaryText)}</div>
