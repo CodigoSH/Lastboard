@@ -37,11 +37,12 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
                COALESCE(theme, 'system'),
                COALESCE(project_name, 'Lastboard'),
                COALESCE(beta_updates, 0),
-               COALESCE(grid_columns_pc, 12)
+               COALESCE(grid_columns_pc, 12),
+               COALESCE(unit_system, 'metric')
 		FROM users WHERE username=?`, username).Scan(
 		&u.ID, &u.Username, &u.Role, &u.AccentColor, &u.Language, &u.AvatarUrl,
 		&u.WidgetMinWidth, &u.Theme, &u.ProjectName,
-		&u.BetaUpdates, &u.GridColumnsPC,
+		&u.BetaUpdates, &u.GridColumnsPC, &u.UnitSystem,
 	)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -62,6 +63,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"accent_color":     u.AccentColor,
 		"language":         u.Language,
 		"theme":            u.Theme,
+		"unit_system":      u.UnitSystem,
 		"widget_min_width": u.WidgetMinWidth,
 		"project_name":     u.ProjectName,
 		"beta_updates":     u.BetaUpdates,
@@ -79,6 +81,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		AccentColor    string `json:"accent_color"`
 		Language       string `json:"language"`
 		Theme          string `json:"theme"`
+		UnitSystem     string `json:"unit_system"`
 		WidgetMinWidth int    `json:"widget_min_width"`
 		ProjectName    string `json:"project_name"`
 		BetaUpdates    *bool  `json:"beta_updates"`
@@ -90,9 +93,9 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12)
+	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12), COALESCE(unit_system, 'metric')
 		FROM users WHERE username=?`, username).Scan(
-		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC)
+		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC, &current.UnitSystem)
 
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
@@ -119,6 +122,13 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		current.Theme = input.Theme
+	}
+	if input.UnitSystem != "" {
+		if input.UnitSystem != "metric" && input.UnitSystem != "imperial" {
+			http.Error(w, "Invalid unit system value", http.StatusBadRequest)
+			return
+		}
+		current.UnitSystem = input.UnitSystem
 	}
 	if input.WidgetMinWidth > 0 {
 		if input.WidgetMinWidth < 50 || input.WidgetMinWidth > 500 {
@@ -149,9 +159,9 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	_, err = h.DB.Exec(`UPDATE users SET accent_color=?, language=?, theme=?,
-		widget_min_width=?, project_name=?, beta_updates=?, grid_columns_pc=?
+		unit_system=?, widget_min_width=?, project_name=?, beta_updates=?, grid_columns_pc=?
 		WHERE username=?`,
-		current.AccentColor, current.Language, current.Theme,
+		current.AccentColor, current.Language, current.Theme, current.UnitSystem,
 		current.WidgetMinWidth, current.ProjectName, current.BetaUpdates, current.GridColumnsPC, username)
 
 	if err != nil {
@@ -399,7 +409,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Default Avatar Logic
 	defaultAvatar := "/images/default-avatar.svg"
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, ?, ?, 'system', '#2563eb', 'en', 'Lastboard', 140, ?)")
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, ?, ?, 'system', 'metric', '#2563eb', 'en', 'Lastboard', 140, ?)")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

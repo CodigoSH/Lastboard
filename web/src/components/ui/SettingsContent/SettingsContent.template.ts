@@ -143,6 +143,12 @@ export const personalizationTemplate = (prefs: Prefs) => `
                 </div>
             </div>
 
+            <!-- Unit System -->
+            <div class="settings-content__form-group" style="margin-bottom: 24px;">
+                <label class="settings-content__label">${i18n.t('settings.unit_system')}</label>
+                <app-select id="unit-system-select" value="${prefs.unit_system || 'metric'}"></app-select>
+            </div>
+
             <div class="settings-content__personalization-grid">
                 <div class="settings-content__slider-group">
                     <div class="settings-content__slider-header">

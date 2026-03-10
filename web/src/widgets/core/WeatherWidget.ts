@@ -1,6 +1,7 @@
 
 import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
+import { userStore } from '../../store/userStore';
 
 // --- Cache ---
 const weatherCache = new Map<string, { data: any; timestamp: number }>();
@@ -12,7 +13,6 @@ interface WeatherConfig {
     latitude: number;
     longitude: number;
     city: string;
-    unit: 'celsius' | 'fahrenheit';
     showForecast: boolean;
     forecastDays: number;
 }
@@ -22,7 +22,6 @@ const DEFAULT_CONFIG: WeatherConfig = {
     latitude: 0,
     longitude: 0,
     city: '',
-    unit: 'celsius',
     showForecast: false,
     forecastDays: 5
 };
@@ -121,8 +120,8 @@ function getWeatherDescription(code: number): string {
     return i18n.t(`widget.weather.${map[code] || 'unknown'}`);
 }
 
-function formatTemp(value: number, unit: 'celsius' | 'fahrenheit'): string {
-    if (unit === 'fahrenheit') return `${Math.round(value * 9 / 5 + 32)}°F`;
+function formatTemp(value: number, unit: string): string {
+    if (unit === 'imperial') return `${Math.round(value * 9 / 5 + 32)}°F`;
     return `${Math.round(value)}°C`;
 }
 
@@ -147,6 +146,7 @@ class WeatherWidget extends HTMLElement {
     private _itemId: number = 0;
     private _unsubscribe: (() => void) | null = null;
     private _unsubscribeI18n: (() => void) | undefined;
+    private _unsubscribeUser: (() => void) | undefined;
     private _weatherData: any = null;
     private _refreshTimer: any = null;
     private _loading = false;
@@ -168,6 +168,10 @@ class WeatherWidget extends HTMLElement {
         this.loadWeather();
 
         this._refreshTimer = setInterval(() => this.loadWeather(), CACHE_DURATION);
+
+        this._unsubscribeUser = userStore.subscribe(() => {
+            this.updateDisplay();
+        });
 
         this._unsubscribe = dashboardStore.subscribe((state) => {
             if (!this._itemId) return;
@@ -195,6 +199,7 @@ class WeatherWidget extends HTMLElement {
     disconnectedCallback() {
         if (this._unsubscribe) this._unsubscribe();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
+        if (this._unsubscribeUser) this._unsubscribeUser();
         if (this._refreshTimer) clearInterval(this._refreshTimer);
     }
 
@@ -243,7 +248,7 @@ class WeatherWidget extends HTMLElement {
 
         const cur = this._weatherData.current_weather;
         const daily = this._weatherData.daily;
-        const u = this._config.unit || 'celsius';
+        const u = userStore.getUser()?.preferences?.unit_system || 'metric';
 
         if (this._config.showForecast && daily) {
             el.innerHTML = this.forecastView(cur, daily, u);
@@ -256,7 +261,7 @@ class WeatherWidget extends HTMLElement {
         return `<div class="state"><div class="state-icon${loading ? ' pulse' : ''}">${icon}</div><span class="state-text">${text}</span></div>`;
     }
 
-    private simpleView(cur: any, daily: any, u: 'celsius' | 'fahrenheit'): string {
+    private simpleView(cur: any, daily: any, u: string): string {
         return `
             <div class="icon-main">${getWeatherIcon(cur.weathercode)}</div>
             <div class="temp-main">${formatTemp(cur.temperature, u)}</div>
@@ -266,7 +271,7 @@ class WeatherWidget extends HTMLElement {
         `;
     }
 
-    private forecastView(cur: any, daily: any, u: 'celsius' | 'fahrenheit'): string {
+    private forecastView(cur: any, daily: any, u: string): string {
         const locale = i18n.getLocale().code;
         const n = Math.min(this._config.forecastDays || 5, daily.time.length - 1);
         let cards = '';

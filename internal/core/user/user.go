@@ -10,6 +10,7 @@ type User struct {
 	AccentColor string `json:"accent_color"`
 	Language    string `json:"language"`
 	Theme       string `json:"theme"`
+	UnitSystem  string `json:"unit_system"`
 	// Grid Preferences
 	WidgetMinWidth int `json:"widget_min_width"`
 	// Deprecated: GridColumns* fields are replaced by auto-fill grid

@@ -23,7 +23,6 @@ The widget can display the following metrics:
 | :--- | :--- | :--- |
 | **Update Interval** | 5s | How often the widget updates the displayed data. |
 | **Metrics to Show** | All | Choose which specific metrics (CPU, RAM, Temp) to render. |
-| **Temperature Unit** | celsius | Choose between `celsius` or `fahrenheit` for thermal readings. |
 
 ---
 [← Previous page](clock.md) | [Next page →](weather.md)

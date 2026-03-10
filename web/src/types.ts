@@ -13,6 +13,7 @@ export interface UserPreferences {
     project_name?: string;
     beta_updates?: boolean;
     widget_min_width?: number;
+    unit_system?: string; // 'metric' | 'imperial'
 }
 
 export interface User {
@@ -28,6 +29,7 @@ export interface User {
     project_name?: string;
     beta_updates?: boolean;
     is_superadmin?: boolean;
+    unit_system?: string;
     preferences?: UserPreferences; // Derived on client
 }
 

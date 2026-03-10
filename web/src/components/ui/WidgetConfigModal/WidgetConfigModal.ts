@@ -337,16 +337,15 @@ class WidgetConfigModal extends HTMLElement {
             const cityInput = this.shadowRoot?.getElementById('weather-city') as HTMLInputElement;
             const latInput = this.shadowRoot?.getElementById('weather-lat') as HTMLInputElement;
             const lonInput = this.shadowRoot?.getElementById('weather-lon') as HTMLInputElement;
-            const unitInput = this.shadowRoot?.getElementById('weather-fahrenheit') as HTMLInputElement;
             const forecastInput = this.shadowRoot?.getElementById('weather-forecast') as HTMLInputElement;
             const daysInput = this.shadowRoot?.getElementById('weather-days') as HTMLInputElement;
 
             newContent.city = cityInput?.value || '';
             newContent.latitude = parseFloat(latInput?.value) || 0;
             newContent.longitude = parseFloat(lonInput?.value) || 0;
-            newContent.unit = unitInput?.checked ? 'fahrenheit' : 'celsius';
             newContent.showForecast = forecastInput?.checked || false;
             newContent.forecastDays = parseInt(daysInput?.value) || 5;
+            delete newContent.unit;
         } else if (widgetId === 'notepad') {
             const textInput = this.shadowRoot?.getElementById('notepad-text') as HTMLTextAreaElement;
             newContent.text = textInput ? textInput.value : '';
@@ -516,7 +515,6 @@ class WidgetConfigModal extends HTMLElement {
                 const city = content.city || '';
                 const lat = content.latitude || '';
                 const lon = content.longitude || '';
-                const isFahrenheit = content.unit === 'fahrenheit';
                 const showForecast = content.showForecast || false;
                 const forecastDays = content.forecastDays || 5;
 
@@ -544,11 +542,6 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
 
                     <div class="field-group check-row" style="margin-top: 16px;">
-                        <input type="checkbox" id="weather-fahrenheit" ${isFahrenheit ? 'checked' : ''} />
-                        <label for="weather-fahrenheit">${i18n.t('widget.weather.use_fahrenheit')}</label>
-                    </div>
-
-                    <div class="field-group check-row">
                         <input type="checkbox" id="weather-forecast" ${showForecast ? 'checked' : ''} />
                         <label for="weather-forecast">${i18n.t('widget.weather.show_forecast')}</label>
                     </div>

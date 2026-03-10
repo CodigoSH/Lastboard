@@ -27,7 +27,8 @@ class SettingsContent extends HTMLElement {
             accent_color: '#0078D4',
             language: 'en',
             widget_min_width: 140,
-            beta_updates: false
+            beta_updates: false,
+            unit_system: 'metric'
         };
     }
 
@@ -723,6 +724,18 @@ class SettingsContent extends HTMLElement {
 
             langSelect.addEventListener('change', (e: CustomEvent) => {
                 this.savePrefs({ language: e.detail });
+            });
+        }
+
+        const unitSelect = this.shadowRoot!.getElementById('unit-system-select') as any;
+        if (unitSelect) {
+            unitSelect.options = [
+                { value: 'metric', label: i18n.t('settings.unit_metric') },
+                { value: 'imperial', label: i18n.t('settings.unit_imperial') }
+            ];
+
+            unitSelect.addEventListener('change', (e: CustomEvent) => {
+                this.savePrefs({ unit_system: e.detail });
             });
         }
 

@@ -1,6 +1,7 @@
 
 import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
+import { userStore } from '../../store/userStore';
 
 // ── Icons (Lucide — stroke-width 1.5, round caps, matching project) ────────────
 
@@ -53,11 +54,12 @@ function tempState(c: number): 'ok' | 'warn' | 'crit' {
 class TelemetryWidget extends HTMLElement {
     private _unsubscribe: (() => void) | undefined;
     private _unsubscribeI18n: (() => void) | undefined;
+    private _unsubscribeUser: (() => void) | undefined;
 
     private _itemId: number = 0;
     private _interval: number = 5000;
     private _metrics: string[] = ['cpu', 'ram', 'temp'];
-    private _unit: 'celsius' | 'fahrenheit' = 'celsius';
+    private _unit: string = 'metric';
 
     private lastUpdate: number = 0;
     private lastKnownStats = { cpu_usage: 0, ram_usage: 0, temperature: 0 };
@@ -76,9 +78,6 @@ class TelemetryWidget extends HTMLElement {
                 if (Array.isArray(d?.metrics) && d.metrics.length > 0) {
                     this._metrics = d.metrics;
                 }
-                if (d?.unit === 'fahrenheit' || d?.unit === 'celsius') {
-                    this._unit = d.unit;
-                }
             } catch (_) { }
         }
     }
@@ -93,6 +92,14 @@ class TelemetryWidget extends HTMLElement {
         this.render();
 
         if (this._unsubscribe) return;
+
+        this._unsubscribeUser = userStore.subscribe(user => {
+            const newUnit = user?.preferences?.unit_system || 'metric';
+            if (newUnit !== this._unit) {
+                this._unit = newUnit;
+                this.render();
+            }
+        });
 
         this._unsubscribe = dashboardStore.subscribe((state: any) => {
             if (this._itemId) {
@@ -112,10 +119,6 @@ class TelemetryWidget extends HTMLElement {
                                 this._metrics = c.metrics;
                                 renderNeeded = true;
                             }
-                        }
-                        if ((c.unit === 'fahrenheit' || c.unit === 'celsius') && c.unit !== this._unit) {
-                            this._unit = c.unit;
-                            renderNeeded = true;
                         }
                         if (renderNeeded) {
                             this.render();
@@ -139,6 +142,7 @@ class TelemetryWidget extends HTMLElement {
     disconnectedCallback() {
         this._unsubscribe?.();
         this._unsubscribeI18n?.();
+        this._unsubscribeUser?.();
     }
 
     // ── Update ──────────────────────────────────────────────────────────────
@@ -187,7 +191,7 @@ class TelemetryWidget extends HTMLElement {
             if (this._metrics.includes('temp')) {
                 let displayTemp = temp;
                 let unitStr = '°C';
-                if (this._unit === 'fahrenheit') {
+                if (this._unit === 'imperial') {
                     displayTemp = Math.round(temp * 9 / 5 + 32);
                     unitStr = '°F';
                 }

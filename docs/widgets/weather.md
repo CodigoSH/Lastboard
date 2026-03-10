@@ -17,7 +17,6 @@ This widget is powered by [Open-Meteo](https://open-meteo.com/). It resolves coo
 | Option | Default | Description |
 | :--- | :--- | :--- |
 | **City** | None | The city to fetch weather data for. |
-| **Units** | Celsius | Display temperatures in Celsius or Fahrenheit. |
 | **Show Forecast** | Disabled | Toggle the display of upcoming weather forecast. |
 
 ---
