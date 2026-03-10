@@ -233,13 +233,16 @@ class ClockWidget extends HTMLElement {
                     white-space: nowrap;
                 }
                 .city {
-                    font-size: clamp(0.7rem, 9cqi, 1.8rem);
+                    font-size: clamp(0.5rem, 6cqi, 1.2rem);
                     color: var(--text-main);
                     margin-bottom: 2%;
                     font-weight: 600;
-                    letter-spacing: -0.02em;
+                    letter-spacing: -0.01em;
                     white-space: nowrap;
                     text-transform: uppercase;
+                    max-width: 90%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
                 .state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; height:100%; width:100%; opacity:.5; }
                 .state-icon { width:clamp(28px,18cqi,56px); height:clamp(28px,18cqi,56px); }
