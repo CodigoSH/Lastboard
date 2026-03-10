@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "उदाहरण पेरिस",
   "widget.clock.description": "तारीख के साथ डिजिटल घड़ी",
   "widget.clock.name": "घड़ी",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "स्थान चुनें",
   "widget.clock.show_date": "तारीख दिखाएं",
   "widget.clock.show_city": "शहर दिखाएं",
   "widget.clock.show_seconds": "सेकंड दिखाएं",

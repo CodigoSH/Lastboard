@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "np. Paryż",
   "widget.clock.description": "Zegar cyfrowy z datą",
   "widget.clock.name": "Zegar",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "Wybierz lokalizację",
   "widget.clock.show_date": "Pokaż datę",
   "widget.clock.show_city": "Pokaż Miasto",
   "widget.clock.show_seconds": "Pokaż sekundy",

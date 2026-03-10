@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "যেমন প্যারিস",
   "widget.clock.description": "তারিখ সহ ডিজিটাল ঘড়ি",
   "widget.clock.name": "ঘড়ি",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "অবস্থান চয়ন করুন",
   "widget.clock.show_date": "তারিখ দেখান",
   "widget.clock.show_city": "শহর দেখান",
   "widget.clock.show_seconds": "সেকেন্ড দেখান",

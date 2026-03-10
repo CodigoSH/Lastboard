@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "例: パリ",
   "widget.clock.description": "日付付きデジタル時計",
   "widget.clock.name": "時計",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "場所を選択",
   "widget.clock.show_date": "日付を表示",
   "widget.clock.show_city": "都市を表示",
   "widget.clock.show_seconds": "秒を表示",

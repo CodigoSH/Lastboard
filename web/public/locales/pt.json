@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "ex. Paris",
   "widget.clock.description": "Relógio digital com data",
   "widget.clock.name": "Relógio",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "Escolher Localização",
   "widget.clock.show_date": "Mostrar data",
   "widget.clock.show_city": "Mostrar Cidade",
   "widget.clock.show_seconds": "Mostrar segundos",

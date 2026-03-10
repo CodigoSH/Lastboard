@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "например, Париж",
   "widget.clock.description": "Цифровые часы с датой",
   "widget.clock.name": "Часы",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "Выберите местоположение",
   "widget.clock.show_date": "Показать дату",
   "widget.clock.show_city": "Показать город",
   "widget.clock.show_seconds": "Показывать секунды",

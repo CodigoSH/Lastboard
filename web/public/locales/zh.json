@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "例如 巴黎",
   "widget.clock.description": "带日期的数字时钟",
   "widget.clock.name": "时钟",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "选择位置",
   "widget.clock.show_date": "显示日期",
   "widget.clock.show_city": "显示城市",
   "widget.clock.show_seconds": "显示秒",

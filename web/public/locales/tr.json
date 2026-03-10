@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "örneğin Paris",
   "widget.clock.description": "Tarihli dijital saat",
   "widget.clock.name": "Saat",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "Konum Seçin",
   "widget.clock.show_date": "Tarihi Göster",
   "widget.clock.show_city": "Şehri Göster",
   "widget.clock.show_seconds": "Saniyeleri göster",

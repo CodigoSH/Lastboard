@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "مثال باريس",
   "widget.clock.description": "ساعة رقمية مع التاريخ",
   "widget.clock.name": "ساعة",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "اختر الموقع",
   "widget.clock.show_date": "عرض التاريخ",
   "widget.clock.show_city": "إظهار المدينة",
   "widget.clock.show_seconds": "إظهار الثواني",

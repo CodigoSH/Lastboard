@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "bijv. Parijs",
   "widget.clock.description": "Digitale klok met datum",
   "widget.clock.name": "Klok",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "Kies locatie",
   "widget.clock.show_date": "Datum weergeven",
   "widget.clock.show_city": "Toon Stad",
   "widget.clock.show_seconds": "Seconden weergeven",

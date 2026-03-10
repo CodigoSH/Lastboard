@@ -319,7 +319,7 @@
   "widget.clock.city_placeholder": "ex. Paris",
   "widget.clock.description": "Horloge numérique con fecha",
   "widget.clock.name": "Horloge",
-  "widget.clock.no_location": "Choose Location",
+  "widget.clock.no_location": "Choisir l'emplacement",
   "widget.clock.show_date": "Afficher la date",
   "widget.clock.show_city": "Afficher la ville",
   "widget.clock.show_seconds": "Afficher les secondes",
