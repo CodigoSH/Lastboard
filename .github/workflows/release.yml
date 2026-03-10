@@ -101,23 +101,25 @@ jobs:
             PRERELEASE_ARG="--prerelease"
           fi
           
-          NOTES_ARG="--notes \"Release $VERSION\""
+          NOTES_OPTION="--notes"
+          NOTES_VALUE="Release $VERSION"
           if [ -f "$NOTES_FILE" ]; then
-            NOTES_ARG="--notes-file $NOTES_FILE"
+            NOTES_OPTION="--notes-file"
+            NOTES_VALUE="$NOTES_FILE"
           fi
 
           echo "Creating or updating release for $VERSION..."
-          # Use 'gh release create' with '--generate-notes' as fallback or just the specific file
           gh release create "$VERSION" \
             $PRERELEASE_ARG \
             --title "$VERSION" \
-            $NOTES_ARG \
+            "$NOTES_OPTION" "$NOTES_VALUE" \
             artifacts/*/*.tar.gz \
             artifacts/checksums.txt || \
           gh release edit "$VERSION" \
             $PRERELEASE_ARG \
             --title "$VERSION" \
-            $NOTES_ARG \
+            "$NOTES_OPTION" "$NOTES_VALUE" \
             artifacts/*/*.tar.gz \
             artifacts/checksums.txt
+
 
