@@ -157,7 +157,7 @@ REFACTORS=$(get_log "^refactor|^perf")
 OTHER=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"%s" | grep -vE "^feat|^fix|^refactor|^perf|^chore\(release\)|^chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | sed 's/^[a-z]*: //' | awk '{$1=toupper(substr($1,1,1))substr($1,2)}1' | sed 's/^/- /' | sort -u || echo "")
 
 # Update CHANGELOG.md
-if [ -f "CHANGELOG.md" ]; then
+if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     echo "📝 Updating CHANGELOG.md..."
     DATE=$(date +%Y-%m-%d)
     VERSION_DISPLAY=$(echo $NEW_TAG | sed 's/^v//')

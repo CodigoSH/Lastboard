@@ -4,26 +4,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.0-Beta.01] - 2026-03-10
-### Added
-- Personalized dashboards background support with per-user persistence.
-- Client-side background image optimization and auto-resizing.
-- Global Unit System (Metric/Imperial) and removal of individual widget unit configs.
-- Display city name and location-search functionality in Clock widget.
-- Support for Docker v29+ by removing hardcoded API versions.
-- Guardrail: Disable stop action for Lastboard Agent container in UI.
-
-### Fixed
-- Resolve infinite flickering loops in registry state.
-- Fix manifest.json build errors in CI.
-- Correct unit serialization for weather and telemetry widgets.
-- Fix UI clipping and double tooltips in Docker widget.
-
-### Changed
-- Optimize telemetry polling using background WebSocket streams.
-- Unify UI aesthetics across all widgets and settings panels.
-- Comprehensive documentation overhaul and multi-language cleanup.
-
 ## [1.3.3] - 2026-03-03
 ### Added
 - Core fixes: transparent hover, native backup modal, TRUST_PROXY support, SQL locks resolved.n
