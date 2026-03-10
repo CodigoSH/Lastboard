@@ -408,13 +408,14 @@ const CSS = `
 .action-btn svg { width: 13px; height: 13px; }
 .action-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb,37,99,235),0.1); }
 .action-btn:active { transform: scale(0.92); }
-.action-btn[data-action="stop"]:hover  { background: rgba(var(--danger-rgb,220,38,38),0.1); border-color: var(--danger-color); color: var(--danger-color); }
-.action-btn[data-action="start"]:hover { background: rgba(var(--success-rgb,22,163,74),0.1); border-color: var(--success-color); color: var(--success-color); }
-.action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.action-btn[data-action="stop"]:hover:not(:disabled)  { background: rgba(var(--danger-rgb,220,38,38),0.1); border-color: var(--danger-color); color: var(--danger-color); }
+.action-btn[data-action="start"]:hover:not(:disabled) { background: rgba(var(--success-rgb,22,163,74),0.1); border-color: var(--success-color); color: var(--success-color); }
+.action-btn:disabled { cursor: not-allowed; transform: none; background: rgba(128,128,128,0.04); border-color: rgba(128,128,128,0.07); color: rgba(128,128,128,0.5); }
+.action-btn:disabled svg { opacity: 0.5; }
 
 /* Tooltip — anchored left so it never overflows widget top edge */
 .action-btn::after {
-    content: attr(title);
+    content: attr(data-title);
     position: absolute; right: calc(100% + 8px); top: 50%;
     transform: translateY(-50%);
     background: rgba(0,0,0,0.8); color: #fff;
@@ -995,12 +996,12 @@ class DockerWidget extends HTMLElement {
             const stopDis = (isPending || isAgent) ? 'disabled' : '';
             if (c.Status === 'running') {
                 actionsHTML = `
-                    <button class="action-btn" data-action="stop" data-id="${esc(c.ID)}" title="${isAgent ? i18n.t('docker.action_stop_disabled') || 'Cannot stop agent' : i18n.t('docker.action_stop') || 'Stop'}" ${stopDis}>${isPending ? ICON.spinner : ICON.stop}</button>
-                    <button class="action-btn" data-action="restart" data-id="${esc(c.ID)}" title="${i18n.t('docker.action_restart') || 'Restart'}" ${dis}>${ICON.restart}</button>`;
+                    <button class="action-btn" data-action="stop" data-id="${esc(c.ID)}" data-title="${isAgent ? i18n.t('docker.action_stop_disabled') || 'Cannot stop agent' : i18n.t('docker.action_stop') || 'Stop'}" ${stopDis}>${isPending ? ICON.spinner : ICON.stop}</button>
+                    <button class="action-btn" data-action="restart" data-id="${esc(c.ID)}" data-title="${i18n.t('docker.action_restart') || 'Restart'}" ${dis}>${ICON.restart}</button>`;
             } else {
                 actionsHTML = `
-                    <button class="action-btn" data-action="start" data-id="${esc(c.ID)}" title="${i18n.t('docker.action_start') || 'Start'}" ${dis}>${isPending ? ICON.spinner : ICON.play}</button>
-                    <button class="action-btn" data-action="restart" data-id="${esc(c.ID)}" title="${i18n.t('docker.action_restart') || 'Restart'}" ${dis}>${ICON.restart}</button>`;
+                    <button class="action-btn" data-action="start" data-id="${esc(c.ID)}" data-title="${i18n.t('docker.action_start') || 'Start'}" ${dis}>${isPending ? ICON.spinner : ICON.play}</button>
+                    <button class="action-btn" data-action="restart" data-id="${esc(c.ID)}" data-title="${i18n.t('docker.action_restart') || 'Restart'}" ${dis}>${ICON.restart}</button>`;
             }
         }
 
