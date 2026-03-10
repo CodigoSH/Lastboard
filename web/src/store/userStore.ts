@@ -69,9 +69,11 @@ class UserStore {
                 grid_columns: userData.grid_columns || 12, // Default 12
                 project_name: userData.project_name || 'Lastboard',
                 beta_updates: userData.beta_updates,
-                unit_system: userData.unit_system || 'metric'
+                unit_system: userData.unit_system || 'metric',
+                dashboard_background: userData.dashboard_background || ''
             },
-            project_name: userData.project_name || 'Lastboard'
+            project_name: userData.project_name || 'Lastboard',
+            dashboard_background: userData.dashboard_background || ''
         };
 
         this.applyAesthetics();
@@ -110,6 +112,15 @@ class UserStore {
 
             // Persist for Login Page
             localStorage.setItem('lastboard_accent', hex);
+        }
+
+        // Apply Dashboard Background
+        if (prefs.dashboard_background) {
+            root.style.setProperty('--dashboard-background', `url(${prefs.dashboard_background})`);
+            root.classList.add('has-custom-background');
+        } else {
+            root.style.removeProperty('--dashboard-background');
+            root.classList.remove('has-custom-background');
         }
 
         // Apply Theme (Light/Dark)
@@ -160,6 +171,10 @@ class UserStore {
         if (newPrefs.grid_columns) this.user.preferences.grid_columns = newPrefs.grid_columns;
         if (newPrefs.beta_updates !== undefined) this.user.preferences.beta_updates = newPrefs.beta_updates;
         if (newPrefs.unit_system) this.user.preferences.unit_system = newPrefs.unit_system;
+        if (newPrefs.dashboard_background !== undefined) {
+            this.user.dashboard_background = newPrefs.dashboard_background;
+            this.user.preferences.dashboard_background = newPrefs.dashboard_background;
+        }
 
         this.applyAesthetics();
         this.notify();
@@ -174,7 +189,8 @@ class UserStore {
                 grid_columns: this.user.preferences.grid_columns,
                 project_name: this.user.project_name,
                 beta_updates: this.user.preferences.beta_updates,
-                unit_system: this.user.preferences.unit_system
+                unit_system: this.user.preferences.unit_system,
+                dashboard_background: this.user.dashboard_background
             };
 
             await userService.updatePreferences(payload);

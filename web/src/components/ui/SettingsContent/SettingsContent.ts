@@ -28,7 +28,8 @@ class SettingsContent extends HTMLElement {
             language: 'en',
             widget_min_width: 140,
             beta_updates: false,
-            unit_system: 'metric'
+            unit_system: 'metric',
+            dashboard_background: ''
         };
     }
 
@@ -267,6 +268,46 @@ class SettingsContent extends HTMLElement {
         } catch (error) {
             console.error('Resize failed', error);
             if (window.notifier) window.notifier.show(i18n.t('notifier.avatar_error'), 'error');
+        }
+    }
+
+    async handleBackgroundChange(e: Event) {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+
+        // Validation: Must be image
+        if (!file.type.startsWith('image/')) {
+            if (window.notifier) window.notifier.show(i18n.t('notifier.invalid_image_type'), 'error');
+            return;
+        }
+
+        try {
+            // Backgrounds can be larger than avatars. 1920x1080 is a good balance.
+            const resizedDataUrl = await this.resizeImage(file, 1920, 1080);
+            
+            // Optimistic localized update
+            this.prefs.dashboard_background = resizedDataUrl;
+
+            await this.savePrefs({
+                dashboard_background: resizedDataUrl
+            });
+
+            this.render();
+        } catch (error) {
+            console.error('Background resize failed', error);
+            if (window.notifier) window.notifier.show(i18n.t('notifier.save_error'), 'error');
+        }
+    }
+
+    async removeBackground() {
+        try {
+            this.prefs.dashboard_background = '';
+            await this.savePrefs({
+                dashboard_background: ''
+            });
+            this.render();
+        } catch (error) {
+            if (window.notifier) window.notifier.show(i18n.t('notifier.save_error'), 'error');
         }
     }
 

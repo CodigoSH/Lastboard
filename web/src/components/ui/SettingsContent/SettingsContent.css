@@ -434,11 +434,102 @@ dialog {
         opacity: 1;
         transform: translateY(0);
     }
+}
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Dashboard Background Preview */
+.settings-content__background-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 8px;
+}
+
+.settings-content__background-container:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.settings-content__background-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.settings-content__background-preview.active {
+    display: block;
+}
+
+.settings-content__background-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    gap: 8px;
+    background: linear-gradient(45deg, rgba(var(--accent-rgb), 0.03), transparent);
+}
+
+.settings-content__background-placeholder.hidden {
+    display: none;
+}
+
+.settings-content__background-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s;
+    z-index: 10;
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.settings-content__background-container:hover .settings-content__background-remove {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.settings-content__background-remove:hover {
+    background: var(--danger-color);
+    transform: scale(1.1) !important;
+}
+
+.settings-content__background-remove svg {
+    width: 14px;
+    height: 14px;
+}
+
+.settings-content__flex-row {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.settings-content__flex-col {
+    flex: 1;
+    min-width: 0;
 }
 
 /* Theme Toggle Segmented Control */

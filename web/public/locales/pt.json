@@ -431,5 +431,8 @@
   "general.custom_url": "URL personalizado",
   "general.retry": "Tentar novamente",
   "widget.telemetry.metrics": "Métricas",
-  "widget.telemetry.metrics_hint": "Pelo menos uma métrica deve permanecer ativa."
+  "widget.telemetry.metrics_hint": "Pelo menos uma métrica deve permanecer ativa.",
+  "settings.dashboard_background": "Fundo do Dashboard",
+  "settings.background_size_hint": "Máx 2MB. Otimizado para desempenho.",
+  "settings.remove_background": "Remover Fundo"
 }

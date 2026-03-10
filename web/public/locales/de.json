@@ -431,5 +431,8 @@
   "general.custom_url": "Benutzerdefinierte URL",
   "general.retry": "Wiederholen",
   "widget.telemetry.metrics": "Metriken",
-  "widget.telemetry.metrics_hint": "Mindestens eine Metrik muss aktiv bleiben."
+  "widget.telemetry.metrics_hint": "Mindestens eine Metrik muss aktiv bleiben.",
+  "settings.dashboard_background": "Dashboard-Hintergrund",
+  "settings.background_size_hint": "Max. 2MB. Optimiert für Leistung.",
+  "settings.remove_background": "Hintergrund entfernen"
 }

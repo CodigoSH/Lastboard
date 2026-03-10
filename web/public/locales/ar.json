@@ -431,5 +431,8 @@
   "general.custom_url": "عنوان URL مخصص",
   "general.retry": "إعادة المحاولة",
   "widget.telemetry.metrics": "المقاييس",
-  "widget.telemetry.metrics_hint": "يجب أن يظل مقياس واحد على الأقل نشطًا."
+  "widget.telemetry.metrics_hint": "يجب أن يظل مقياس واحد على الأقل نشطًا.",
+  "settings.dashboard_background": "خلفية لوحة القيادة",
+  "settings.background_size_hint": "الحد الأقصى 2 ميجابايت. محسن للأداء.",
+  "settings.remove_background": "إزالة الخلفية"
 }

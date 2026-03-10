@@ -17,10 +17,11 @@ type User struct {
 	GridColumnsPC     int       `json:"grid_columns"` // Re-enabled for manual override
 	GridColumnsTablet int       `json:"grid_columns_tablet"`
 	GridColumnsMobile int       `json:"grid_columns_mobile"`
-	ProjectName       string    `json:"project_name"`
-	AvatarUrl         string    `json:"avatar_url"`
-	BetaUpdates       bool      `json:"beta_updates"`
-	CreatedAt         time.Time `json:"created_at"`
+	ProjectName         string    `json:"project_name"`
+	AvatarUrl           string    `json:"avatar_url"`
+	DashboardBackground string    `json:"dashboard_background"`
+	BetaUpdates         bool      `json:"beta_updates"`
+	CreatedAt           time.Time `json:"created_at"`
 }
 
 type Repository interface {

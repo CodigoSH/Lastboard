@@ -431,5 +431,8 @@
   "general.custom_url": "사용자 정의 URL",
   "general.retry": "재시도",
   "widget.telemetry.metrics": "메트릭",
-  "widget.telemetry.metrics_hint": "최소한 하나의 메트릭은 활성 상태여야 합니다."
+  "widget.telemetry.metrics_hint": "최소한 하나의 메트릭은 활성 상태여야 합니다.",
+  "settings.dashboard_background": "대시보드 배경",
+  "settings.background_size_hint": "최대 2MB. 성능에 최적화되었습니다.",
+  "settings.remove_background": "배경 제거"
 }

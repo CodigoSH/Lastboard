@@ -431,5 +431,8 @@
   "general.custom_url": "कस्टम URL",
   "general.retry": "पुनः प्रयास करें",
   "widget.telemetry.metrics": "मेट्रिक्स",
-  "widget.telemetry.metrics_hint": "कम से कम एक मीट्रिक सक्रिय रहना चाहिए।"
+  "widget.telemetry.metrics_hint": "कम से कम एक मीट्रिक सक्रिय रहना चाहिए।",
+  "settings.dashboard_background": "डैशबोर्ड बैकग्राउंड",
+  "settings.background_size_hint": "अधिकतम 2MB। प्रदर्शन के लिए अनुकूलित।",
+  "settings.remove_background": "बैकग्राउंड हटाएँ"
 }

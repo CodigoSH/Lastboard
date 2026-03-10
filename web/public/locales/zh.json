@@ -431,5 +431,8 @@
   "general.custom_url": "自定义 URL",
   "general.retry": "重试",
   "widget.telemetry.metrics": "指标",
-  "widget.telemetry.metrics_hint": "至少必须保持一个指标处于活动状态。"
+  "widget.telemetry.metrics_hint": "至少必须保持一个指标处于活动状态。",
+  "settings.dashboard_background": "仪表板背景",
+  "settings.background_size_hint": "最大 2MB。性能已优化。",
+  "settings.remove_background": "移除背景"
 }

@@ -431,5 +431,8 @@
   "general.custom_url": "URL سفارشی",
   "general.retry": "تلاش مجدد",
   "widget.telemetry.metrics": "میتریک‌ها",
-  "widget.telemetry.metrics_hint": "حداقل یک میتریک باید فعال بماند."
+  "widget.telemetry.metrics_hint": "حداقل یک میتریک باید فعال بماند.",
+  "settings.dashboard_background": "پس‌زمینه داشبورد",
+  "settings.background_size_hint": "حداکثر 2 مگابایت. بهینه شده برای عملکرد.",
+  "settings.remove_background": "حذف پس‌زمینه"
 }

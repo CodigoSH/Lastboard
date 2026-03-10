@@ -431,5 +431,8 @@
   "general.custom_url": "Προσαρμοσμένη διεύθυνση URL",
   "general.retry": "Προσπάθεια ξανά",
   "widget.telemetry.metrics": "Μετρήσεις",
-  "widget.telemetry.metrics_hint": "Πρέπει να παραμείνει ενεργή τουλάχιστον μία μέτρηση."
+  "widget.telemetry.metrics_hint": "Πρέπει να παραμείνει ενεργή τουλάχιστον μία μέτρηση.",
+  "settings.dashboard_background": "Φόντο Dashboard",
+  "settings.background_size_hint": "Μέγιστο 2MB. Βελτιστοποιημένο για απόδοση.",
+  "settings.remove_background": "Κατάργηση φόντου"
 }

@@ -431,5 +431,8 @@
   "general.custom_url": "Aangepaste URL",
   "general.retry": "Opnieuw proberen",
   "widget.telemetry.metrics": "Metrieken",
-  "widget.telemetry.metrics_hint": "Ten minste één metriek moet actief blijven."
+  "widget.telemetry.metrics_hint": "Ten minste één metriek moet actief blijven.",
+  "settings.dashboard_background": "Dashboard Achtergrond",
+  "settings.background_size_hint": "Max 2MB. Geoptimaliseerd voor prestaties.",
+  "settings.remove_background": "Achtergrond verwijderen"
 }

@@ -242,6 +242,29 @@ func runMigrations(db *sql.DB) error {
 		}
 		slog.Info("Schema migration applied", "version", 5)
 	}
+	// --- VERSION 6: Dashboard Background ---
+	if currentVersion < 6 {
+		slog.Info("Applying schema migration", "version", 6)
+		queries := []string{
+			`ALTER TABLE users ADD COLUMN dashboard_background TEXT DEFAULT '';`,
+		}
+
+		for _, query := range queries {
+			_, err := db.Exec(query)
+			if err != nil {
+				if strings.Contains(err.Error(), "duplicate column name") {
+					continue
+				}
+				return fmt.Errorf("migration v6 failed: %v", err)
+			}
+		}
+
+		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (6)")
+		if err != nil {
+			return fmt.Errorf("failed to update schema version to 6: %v", err)
+		}
+		slog.Info("Schema migration applied", "version", 6)
+	}
 
 	return nil
 }

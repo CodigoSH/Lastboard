@@ -161,8 +161,8 @@ class ClockWidget extends HTMLElement {
         }
 
         if (!this.shadowRoot) return;
-        const contentEl = this.shadowRoot.getElementById('clock-content');
-        const emptyEl = this.shadowRoot.getElementById('empty-state');
+        const contentEl = this.shadowRoot.querySelector('#clock-content') as HTMLElement;
+        const emptyEl = this.shadowRoot.querySelector('#empty-state') as HTMLElement;
 
         // Blank State Logic
         if (!this._config.city) {
@@ -179,12 +179,10 @@ class ClockWidget extends HTMLElement {
         }
 
         // City Logic
-        if (this._config.showCity !== false) {
-            if (this._lastCityStr !== this._config.city) {
-                this.cityEl.textContent = this._config.city;
-                this._lastCityStr = this._config.city;
-            }
+        if (this._config.showCity !== false && this._config.city) {
+            this.cityEl.textContent = this._config.city;
             this.cityEl.style.display = 'block';
+            this.cityEl.style.marginBottom = '2%';
         } else {
             this.cityEl.style.display = 'none';
         }
@@ -233,16 +231,13 @@ class ClockWidget extends HTMLElement {
                     white-space: nowrap;
                 }
                 .city {
-                    font-size: clamp(0.5rem, 6cqi, 1.2rem);
+                    font-size: clamp(0.6rem, 8cqi, 1.4rem);
                     color: var(--text-main);
-                    margin-bottom: 2%;
                     font-weight: 600;
                     letter-spacing: -0.01em;
                     white-space: nowrap;
                     text-transform: uppercase;
-                    max-width: 90%;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                    text-align: center;
                 }
                 .state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; height:100%; width:100%; opacity:.5; }
                 .state-icon { width:clamp(28px,18cqi,56px); height:clamp(28px,18cqi,56px); }

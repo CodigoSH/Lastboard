@@ -14,6 +14,7 @@ export interface UserPreferences {
     beta_updates?: boolean;
     widget_min_width?: number;
     unit_system?: string; // 'metric' | 'imperial'
+    dashboard_background?: string;
 }
 
 export interface User {
@@ -30,6 +31,7 @@ export interface User {
     beta_updates?: boolean;
     is_superadmin?: boolean;
     unit_system?: string;
+    dashboard_background?: string;
     preferences?: UserPreferences; // Derived on client
 }
 

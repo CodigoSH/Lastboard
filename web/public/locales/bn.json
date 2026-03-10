@@ -431,5 +431,8 @@
   "general.custom_url": "কাস্টম ইউআরএল",
   "general.retry": "আবার চেষ্টা করুন",
   "widget.telemetry.metrics": "মেট্রিক্স",
-  "widget.telemetry.metrics_hint": "অন্তত একটি মেট্রিক সক্রিয় থাকতে হবে।"
+  "widget.telemetry.metrics_hint": "অন্তত একটি মেট্রিক সক্রিয় থাকতে হবে।",
+  "settings.dashboard_background": "ড্যাশবোর্ড ব্যাকগ্রাউন্ড",
+  "settings.background_size_hint": "সর্বোচ্চ 2MB। পারফরম্যান্সের জন্য অপ্টিমাইজ করা হয়েছে।",
+  "settings.remove_background": "ব্যাকগ্রাউন্ড সরান"
 }

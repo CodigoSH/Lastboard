@@ -431,5 +431,8 @@
   "general.custom_url": "حسب ضرورت یو آر ایل",
   "general.retry": "دوبارہ کوشش کریں",
   "widget.telemetry.metrics": "میٹرکس",
-  "widget.telemetry.metrics_hint": "کم از کم ایک میٹرک فعال رہنا چاہیے۔"
+  "widget.telemetry.metrics_hint": "کم از کم ایک میٹرک فعال رہنا چاہیے۔",
+  "settings.dashboard_background": "ڈیش بورڈ پس منظر",
+  "settings.background_size_hint": "زیادہ سے زیادہ 2MB۔ کارکردگی کے لیے موزوں کیا گیا۔",
+  "settings.remove_background": "پس منظر ختم کریں"
 }

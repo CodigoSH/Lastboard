@@ -21,7 +21,8 @@ export const userService = {
         widget_min_width?: number,
         project_name?: string,
         beta_updates?: boolean,
-        unit_system?: string
+        unit_system?: string,
+        dashboard_background?: string
     }): Promise<MessageResponse> {
         return apiService.post<MessageResponse>('/api/user/preferences', preferences);
     },

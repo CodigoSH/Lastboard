@@ -103,22 +103,48 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
             <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${i18n.t('settings.system_locale')}</div>
             <h3 class="settings-content__title">${i18n.t('settings.localization')}</h3>
 
-            <div class="settings-content__form-group">
-                <label class="settings-content__label">${i18n.t('settings.language')}</label>
-                <app-select id="language-select" value="${prefs.language}"></app-select>
-            </div>
+            <div class="settings-content__flex-row">
+                <!-- Dashboard Background -->
+                <div class="settings-content__flex-col">
+                    <label class="settings-content__label">${i18n.t('settings.dashboard_background')}</label>
+                    <div class="settings-content__background-container" onclick="this.nextElementSibling.click()">
+                        <img class="settings-content__background-preview ${prefs.dashboard_background ? 'active' : ''}" 
+                             src="${prefs.dashboard_background || ''}" alt="Background Preview">
+                        <div class="settings-content__background-placeholder ${prefs.dashboard_background ? 'hidden' : ''}">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>${i18n.t('action.change_image')}</span>
+                        </div>
+                        ${prefs.dashboard_background ? `
+                            <button class="settings-content__background-remove" 
+                                    onclick="event.stopPropagation(); this.getRootNode().host.removeBackground()" 
+                                    title="${i18n.t('settings.remove_background')}">
+                                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/></svg>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <input type="file" id="background-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleBackgroundChange(event)">
+                    <p style="font-size: 10px; color: var(--text-dim); margin: 4px 0 0 0;">${i18n.t('settings.background_size_hint')}</p>
+                </div>
 
-            <div class="settings-content__form-group">
-                <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
-                <div class="settings-content__segmented-control">
-                    <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}"
-                            onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
-                        🌙 ${i18n.t('settings.dark')}
-                    </button>
-                    <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}"
-                            onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
-                        ☀️ ${i18n.t('settings.light')}
-                    </button>
+                <div class="settings-content__flex-col">
+                    <div class="settings-content__form-group">
+                        <label class="settings-content__label">${i18n.t('settings.language')}</label>
+                        <app-select id="language-select" value="${prefs.language}"></app-select>
+                    </div>
+
+                    <div class="settings-content__form-group" style="margin-bottom: 0;">
+                        <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
+                        <div class="settings-content__segmented-control">
+                            <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}"
+                                    onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
+                                🌙 ${i18n.t('settings.dark')}
+                            </button>
+                            <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}"
+                                    onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
+                                ☀️ ${i18n.t('settings.light')}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
