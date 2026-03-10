@@ -9,8 +9,10 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 | `PORT` | `8080` | The port the HTTP server listens on. |
 | `DB_FILE` | `./lastboard.db` | Path to the SQLite database. In Docker, this defaults to `/var/lib/lastboard/lastboard.db`. |
 | `TZ` | `UTC` | Timezone for the application (e.g., `America/New_York`). |
+| `LOG_FORMAT` | `text` | Log output format. Use `json` for structured logging. |
+| `DEMO_ONLY` | `false` | Set to `true` to run purely in a frontend-only demo mode (no auth, no persistence). |
 | `TRUST_PROXY` | `false` | Enable reading the real client IP from `X-Forwarded-For`. Set to `true` if behind a proxy. |
-| `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. |
+| `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. Enforced by the backend API. |
 | `DATA_DIR` | `/var/lib/lastboard` | The directory where Lastboard installs persistent files in a native Linux setup. |
 
 > **📝 Note:** `SESSION_SECRET` is automatically generated and securely stored in the database on first run.

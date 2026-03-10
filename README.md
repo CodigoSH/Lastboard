@@ -109,11 +109,11 @@ services:
 
 **Using Docker CLI:**
 ```bash
+# Note: Add `-e TRUST_PROXY=true \` before the image name if running behind a reverse proxy.
 docker run -d \
   --name lastboard \
   -p 8080:8080 \
   -e TZ=America/New_York \
-  # -e TRUST_PROXY=true \   # Uncomment if running behind a reverse proxy
   -v $(pwd)/data:/var/lib/lastboard \
   --restart unless-stopped \
   ghcr.io/codigosh/lastboard:latest

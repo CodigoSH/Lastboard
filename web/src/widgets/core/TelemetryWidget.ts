@@ -57,6 +57,7 @@ class TelemetryWidget extends HTMLElement {
     private _itemId: number = 0;
     private _interval: number = 5000;
     private _metrics: string[] = ['cpu', 'ram', 'temp'];
+    private _unit: 'celsius' | 'fahrenheit' = 'celsius';
 
     private lastUpdate: number = 0;
     private lastKnownStats = { cpu_usage: 0, ram_usage: 0, temperature: 0 };
@@ -74,6 +75,9 @@ class TelemetryWidget extends HTMLElement {
                 if (d?.interval) this._interval = parseInt(d.interval);
                 if (Array.isArray(d?.metrics) && d.metrics.length > 0) {
                     this._metrics = d.metrics;
+                }
+                if (d?.unit === 'fahrenheit' || d?.unit === 'celsius') {
+                    this._unit = d.unit;
                 }
             } catch (_) { }
         }
@@ -98,6 +102,7 @@ class TelemetryWidget extends HTMLElement {
                     try {
                         const c = typeof item.content === 'string'
                             ? JSON.parse(item.content) : item.content;
+                        let renderNeeded = false;
                         if (c.interval && c.interval !== this._interval) {
                             this._interval = parseInt(c.interval);
                         }
@@ -105,9 +110,16 @@ class TelemetryWidget extends HTMLElement {
                             const next = c.metrics.join(',');
                             if (next !== this._metrics.join(',')) {
                                 this._metrics = c.metrics;
-                                this.render();
-                                return;
+                                renderNeeded = true;
                             }
+                        }
+                        if ((c.unit === 'fahrenheit' || c.unit === 'celsius') && c.unit !== this._unit) {
+                            this._unit = c.unit;
+                            renderNeeded = true;
+                        }
+                        if (renderNeeded) {
+                            this.render();
+                            return;
                         }
                     } catch (_) { }
                 }
@@ -171,7 +183,16 @@ class TelemetryWidget extends HTMLElement {
 
             if (this._metrics.includes('cpu')) apply('cpu', `${cpu}%`, percentState(cpu), cpu);
             if (this._metrics.includes('ram')) apply('ram', `${ram}%`, percentState(ram), ram);
-            if (this._metrics.includes('temp')) apply('temp', `${temp}°C`, tempState(temp), Math.min(100, Math.max(0, temp)));
+            
+            if (this._metrics.includes('temp')) {
+                let displayTemp = temp;
+                let unitStr = '°C';
+                if (this._unit === 'fahrenheit') {
+                    displayTemp = Math.round(temp * 9 / 5 + 32);
+                    unitStr = '°F';
+                }
+                apply('temp', `${displayTemp}${unitStr}`, tempState(temp), Math.min(100, Math.max(0, temp)));
+            }
         });
     }
 
