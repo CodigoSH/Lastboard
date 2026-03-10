@@ -43,7 +43,7 @@ Tailor the look and feel of your personal dashboard.
   - **Auto-Optimization**: Images are automatically resized to 1080p for faster load times.
   - **Cover Logic**: The background uses "Cover" logic, ensuring it fills the screen without stretching or distortion.
 - **Interface Language**: Choose from **20 supported languages**, including English, Spanish, German, French, Chinese, and more.
-- **Theme Mode**: Toggle between **Light**, **Dark**, or **System** (follows your OS preference) modes.
+- **Theme Mode**: Toggle between **Light** and **Dark** modes to suit your preference.
 - **Project Name**: Customize the title displayed in the browser tab and top bar.
 - **Global Unit System**: Select between **Metric** (°C, km/h) and **Imperial** (°F, mph). This setting automatically updates all compatible widgets (Weather, Telemetry, etc.).
 - **Grid Density**: Use the slider to adjust the number of columns in your dashboard grid (from 3 to 16), allowing for tighter or more spacious layouts.
