@@ -20,7 +20,8 @@ export const userService = {
         theme?: string,
         widget_min_width?: number,
         project_name?: string,
-        beta_updates?: boolean
+        beta_updates?: boolean,
+        unit_system?: string
     }): Promise<MessageResponse> {
         return apiService.post<MessageResponse>('/api/user/preferences', preferences);
     },

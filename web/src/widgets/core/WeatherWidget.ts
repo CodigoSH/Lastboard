@@ -125,6 +125,11 @@ function formatTemp(value: number, unit: string): string {
     return `${Math.round(value)}°C`;
 }
 
+function formatWind(speedKmh: number, unit: string): string {
+    if (unit === 'imperial') return `${Math.round(speedKmh * 0.621371)} mph`;
+    return `${Math.round(speedKmh)} km/h`;
+}
+
 async function fetchWeatherData(lat: number, lon: number): Promise<any> {
     const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
     const cached = weatherCache.get(key);
@@ -284,7 +289,7 @@ class WeatherWidget extends HTMLElement {
             const lo = formatTemp(daily.temperature_2m_min[i], u);
             const sunrise = daily.sunrise?.[i]?.split('T')[1] || '';
             const sunset = daily.sunset?.[i]?.split('T')[1] || '';
-            const wind = daily.wind_speed_10m_max?.[i] != null ? `${Math.round(daily.wind_speed_10m_max[i])} km/h` : '';
+            const wind = daily.wind_speed_10m_max?.[i] != null ? formatWind(daily.wind_speed_10m_max[i], u) : '';
 
             cards += `<div class="fc-day">
                 <span class="fc-name">${day}</span>
