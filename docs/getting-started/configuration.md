@@ -27,27 +27,47 @@ TRUST_PROXY=true
 
 > **⚠️ Warning:** Without this flag enabled behind a proxy, all users will share the same IP for rate limiting and login lockout purposes, which may cause false 429 errors. **Do not enable this flag** if Lastboard is exposed directly to the internet.
 
-## Personalization
+## Dashboard Settings & Customization
 
-Lastboard allows for extensive per-user personalization through the **Settings** menu.
+Lastboard offers a wide range of settings to personalize your experience and manage the system. These are accessible via the **Settings** icon in the top navigation bar.
 
-### Dashboard Background
-Users can upload a custom background image for their dashboard.
-- **Auto-resize**: Images are resized on the client-side to 1080p to ensure fast loading times.
-- **Persistence**: Backgrounds are saved in the database and are unique to each user.
-- **Removal**: You can remove your custom background at any time to revert to the theme's default.
+### 👤 Account
+Manage your personal profile and security.
+- **Avatar**: Upload a custom profile picture. Supported formats: PNG, JPG, WebP.
+- **Change Password**: Update your login credentials. We recommend using a strong, unique password.
 
-### Global Unit System
-You can switch between **Metric** and **Imperial** units globally. This affects all compatible widgets (e.g., Temperature in Telemetry, Wind speed/Temp in Weather).
+### 🎨 Dashboard & Appearance
+Tailor the look and feel of your personal dashboard.
+- **Dashboard Background**: 
+  - **Custom Image**: Upload any image to use as your dashboard background.
+  - **Auto-Optimization**: Images are automatically resized to 1080p for faster load times.
+  - **Cover Logic**: The background uses "Cover" logic, ensuring it fills the screen without stretching or distortion.
+- **Interface Language**: Choose from **20 supported languages**, including English, Spanish, German, French, Chinese, and more.
+- **Theme Mode**: Toggle between **Light**, **Dark**, or **System** (follows your OS preference) modes.
+- **Project Name**: Customize the title displayed in the browser tab and top bar.
+- **Global Unit System**: Select between **Metric** (°C, km/h) and **Imperial** (°F, mph). This setting automatically updates all compatible widgets (Weather, Telemetry, etc.).
+- **Grid Density**: Use the slider to adjust the number of columns in your dashboard grid (from 3 to 16), allowing for tighter or more spacious layouts.
 
-All state—including users, dashboard layouts, preferences, and system settings—is stored in a single SQLite database file for simplicity and portability.
+### 👥 User Management (Admin Only)
+Administrators can manage access to the Lastboard instance.
+- **Add/Edit Users**: Create new accounts or modify existing ones.
+- **Roles**: Assign roles such as **Super Admin**, **Admin**, or **User** to control feature access.
+- **Delete Users**: Remove access for specific accounts.
 
-For Docker users, this is stored at `/var/lib/lastboard/lastboard.db` and should be mapped via a volume. For native installs, it defaults to `/var/lib/lastboard/lastboard.db`.
+### 🛠️ System & Maintenance
+Tools for keeping your Lastboard instance healthy and up to date.
+- **Data Backup & Restore**:
+  - **Export**: Download your entire dashboard configuration as a portable `.json` file.
+  - **Import**: Restore a previous setup from a backup file. *Warning: This overwrites current data.*
+- **System Updates**:
+  - **Check for Updates**: Manually trigger a check against the official release repository.
+  - **Docker Mode**: If running via Docker, instructions are provided to pull the latest image.
+  - **Native Update**: For Linux installs, updates can be performed directly from the UI.
+- **Beta Updates**: Toggle this setting to participate in the beta testing program and receive early access to new features.
+- **Factory Reset**: A safe-guarded option to wipe all data and return the instance to its original state (Setup Wizard).
 
-### Backup Recommendations
-To backup your entire dashboard, simply copy the `lastboard.db` file to a secure location. 
-
-> **💡 Tip:** Ensure the application is stopped before replacing the database file during a restore to prevent file corruption.
+## Data Persistence
+All state—including users, dashboard layouts, preferences, and system settings—is stored in a single SQLite database file (`lastboard.db`) located in your defined data directory.
 
 ---
 [← Previous page](installation.md) | [Next page →](updating.md)
