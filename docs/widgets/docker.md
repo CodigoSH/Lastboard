@@ -35,13 +35,30 @@ For remote servers, you can use the official Lastboard Agent to securely proxy D
 The Lastboard Agent is a lightweight proxy that exposes specific Docker endpoints.
 
 ### Quick Start
-You can launch the Agent securely via Docker:
+
+**Using Docker Compose (Recommended):**
+```yaml
+services:
+  lastboard-agent:
+    image: ghcr.io/codigosh/lastboard-agent:latest
+    container_name: lastboard-agent
+    ports:
+      - "2375:2375"
+    environment:
+      - TOKEN=your_secure_random_token
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+```
+
+**Using Docker CLI:**
 ```bash
 docker run -d \
   --name lastboard-agent \
   -p 2375:2375 \
   -e TOKEN=your_secure_random_token \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  --restart unless-stopped \
   ghcr.io/codigosh/lastboard-agent:latest
 ```
 
