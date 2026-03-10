@@ -6,7 +6,7 @@ The Clock widget displays the current time and date in a highly configurable for
 
 A clean, responsive analog/digital clock that can show local time or time from a specific timezone. It automatically scales to fit its container using container queries.
 
-![Clock Widget](../assets/clock.png)
+![Clock Widget](../assets/w-time.png)
 
 ## Configuration Options
 

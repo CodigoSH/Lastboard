@@ -6,7 +6,7 @@ The Weather widget displays current meteorological conditions and future forecas
 
 A dynamic weather display that automatically maps WMO weather codes to beautiful SVG icons and respects your dashboard's theme.
 
-![Weather Widget](../assets/weather.png)
+![Weather Widget](../assets/w-weather.png)
 
 ## Data Source
 

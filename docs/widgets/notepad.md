@@ -6,7 +6,7 @@ The Notepad widget acts as a quick, persistent scratchpad right on your dashboar
 
 A rich-text editor designed for quick notes, checklists, and formatting. Content is synchronized to the database automatically. 
 
-![Notepad Widget](../assets/notepad.png)
+![Notepad Widget](../assets/w-notepad.png)
 
 ## Save Behavior
 

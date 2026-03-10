@@ -6,7 +6,7 @@ The Docker widget provides live monitoring and basic management of your Docker c
 
 This widget lists containers, shows their running state, exposes port mappings, and provides real-time CPU/RAM stats. It also allows admin users to control container lifecycles (Start, Stop, Restart).
 
-![Docker Widget](../assets/docker.png)
+![Docker Widget](../assets/w-docker.png)
 
 ## Prerequisites
 

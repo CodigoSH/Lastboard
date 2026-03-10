@@ -6,7 +6,7 @@ The Markdown widget allows you to render formatted text, links, and lists using 
 
 Perfect for creating custom welcome messages, static links, instruction lists, or embedding simple media. It includes both an editing mode and a live preview mode.
 
-![Markdown Widget](../assets/markdown.png)
+![Markdown Widget](../assets/w-markdown.png)
 
 ## Supported Features
 

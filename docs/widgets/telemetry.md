@@ -6,7 +6,7 @@ The Telemetry widget provides real-time monitoring of your server's hardware per
 
 This widget connects directly to the Lastboard backend via WebSockets to stream live system metrics without needing external agents or exporters.
 
-![Telemetry Widget](../assets/telemetry.png)
+![Telemetry Widget](../assets/w-telemetry.png)
 
 ## Metrics Displayed
 
