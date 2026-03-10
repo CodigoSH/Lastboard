@@ -12,8 +12,9 @@ A clean, responsive analog/digital clock that can show local time or time from a
 
 | Option | Default | Description |
 | :--- | :--- | :--- |
-| **Timezone** | Local | The timezone to display (e.g., `America/New_York`), or `local` for the browser's time. |
-| **12/24 Hour Format** | 24 Hour | Toggle between 12-hour (AM/PM) and 24-hour display. |
+| **Location** | Empty | Search for a city to display its time. |
+| **Show City** | Disabled | Display the city name in the widget. |
+| **12-Hour Clock** | Enabled | Toggle between 12-hour (AM/PM) and 24-hour display. |
 | **Show Date** | Enabled | Display the current date beneath the time. |
 | **Show Seconds** | Disabled | Display seconds in the time readout. |
 

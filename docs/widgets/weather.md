@@ -16,8 +16,9 @@ This widget is powered by [Open-Meteo](https://open-meteo.com/). It resolves coo
 
 | Option | Default | Description |
 | :--- | :--- | :--- |
-| **City** | None | The city to fetch weather data for. |
-| **Show Forecast** | Disabled | Toggle the display of upcoming weather forecast. |
+| **Update Interval** | 30m | How often the widget updates. |
+
+> **📝 Note:** Temperature and wind speed units are determined by the **Global Unit System** in the dashboard settings (Celsius/Metric vs Fahrenheit/Imperial).
 
 ---
 [← Previous page](telemetry.md) | [Next page →](notepad.md)

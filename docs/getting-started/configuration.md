@@ -27,7 +27,18 @@ TRUST_PROXY=true
 
 > **⚠️ Warning:** Without this flag enabled behind a proxy, all users will share the same IP for rate limiting and login lockout purposes, which may cause false 429 errors. **Do not enable this flag** if Lastboard is exposed directly to the internet.
 
-## Data Persistence
+## Personalization
+
+Lastboard allows for extensive per-user personalization through the **Settings** menu.
+
+### Dashboard Background
+Users can upload a custom background image for their dashboard.
+- **Auto-resize**: Images are resized on the client-side to 1080p to ensure fast loading times.
+- **Persistence**: Backgrounds are saved in the database and are unique to each user.
+- **Removal**: You can remove your custom background at any time to revert to the theme's default.
+
+### Global Unit System
+You can switch between **Metric** and **Imperial** units globally. This affects all compatible widgets (e.g., Temperature in Telemetry, Wind speed/Temp in Weather).
 
 All state—including users, dashboard layouts, preferences, and system settings—is stored in a single SQLite database file for simplicity and portability.
 

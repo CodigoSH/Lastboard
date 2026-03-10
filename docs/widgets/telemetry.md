@@ -13,9 +13,9 @@ This widget connects directly to the Lastboard backend via WebSockets to stream 
 The widget can display the following metrics:
 - **CPU:** Current processor utilization percentage.
 - **RAM:** Memory usage percentage.
-- **Temperature:** CPU thermal readings (in °C/°F).
+- **Temperature:** CPU thermal readings (in °C/°F depending on the global unit setting).
 
-> **📝 Note:** Temperature monitoring relies on system sensors and is currently supported on Linux hosts only.
+> **📝 Note:** Temperature monitoring relies on system sensors and is currently supported on Linux hosts only. The units (°C/°F) are determined by the **Global Unit System** in the dashboard settings.
 
 ## Configuration Options
 
