@@ -433,6 +433,6 @@
   "widget.telemetry.metrics": "メトリクス",
   "widget.telemetry.metrics_hint": "少なくとも1つのメトリクスがアクティブである必要があります。",
   "settings.dashboard_background": "ダッシュボードの背景",
-  "settings.background_size_hint": "最大 2MB。パフォーマンス向けに最適化されています。",
+  "settings.background_size_hint": "パフォーマンス向けに最適化されています。",
   "settings.remove_background": "背景を削除"
 }

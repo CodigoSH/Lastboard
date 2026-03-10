@@ -433,6 +433,6 @@
   "widget.telemetry.metrics": "Метрики",
   "widget.telemetry.metrics_hint": "Как минимум одна метрика должна оставаться активной.",
   "settings.dashboard_background": "Фон дашборда",
-  "settings.background_size_hint": "Макс. 2 МБ. Оптимизировано для производительности.",
+  "settings.background_size_hint": "Оптимизировано для производительности.",
   "settings.remove_background": "Удалить фон"
 }

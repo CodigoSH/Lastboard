@@ -433,6 +433,6 @@
   "widget.telemetry.metrics": "Metriche",
   "widget.telemetry.metrics_hint": "Almeno una metrica deve rimanere attiva.",
   "settings.dashboard_background": "Sfondo del Dashboard",
-  "settings.background_size_hint": "Max 2MB. Ottimizzato per le prestazioni.",
+  "settings.background_size_hint": "Ottimizzato per le prestazioni.",
   "settings.remove_background": "Rimuovi sfondo"
 }

@@ -433,6 +433,6 @@
   "widget.telemetry.metrics": "Metryki",
   "widget.telemetry.metrics_hint": "Przynajmniej jedna metryka musi pozostać aktywna.",
   "settings.dashboard_background": "Tło pulpitu",
-  "settings.background_size_hint": "Maks. 2 MB. Zoptymalizowane pod kątem wydajności.",
+  "settings.background_size_hint": "Zoptymalizowane pod kątem wydajności.",
   "settings.remove_background": "Usuń tło"
 }

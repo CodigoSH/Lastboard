@@ -433,6 +433,6 @@
   "widget.telemetry.metrics": "Metrik",
   "widget.telemetry.metrics_hint": "Setidaknya satu metrik harus tetap aktif.",
   "settings.dashboard_background": "Latar Belakang Dasbor",
-  "settings.background_size_hint": "Maks 2MB. Dioptimalkan untuk performa.",
+  "settings.background_size_hint": "Dioptimalkan untuk performa.",
   "settings.remove_background": "Hapus Latar Belakang"
 }

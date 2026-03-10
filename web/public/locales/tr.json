@@ -433,6 +433,6 @@
   "widget.telemetry.metrics": "Metrikler",
   "widget.telemetry.metrics_hint": "En az bir metrik aktif kalmalıdır.",
   "settings.dashboard_background": "Dashboard Arka Planı",
-  "settings.background_size_hint": "Maks 2MB. Performans için optimize edilmiştir.",
+  "settings.background_size_hint": "Performans için optimize edilmiştir.",
   "settings.remove_background": "Arka Planı Kaldır"
 }
