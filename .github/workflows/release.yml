@@ -84,7 +84,7 @@ jobs:
       - name: Debug - List Files
         run: |
           echo "Checking for release notes:"
-          ls -l RELEASE_NOTES_${{ github.ref_name }}.md
+          ls -l RELEASE_NOTES_${{ github.ref_name }}.md || echo "Release notes file not found, will use default."
           echo "Checking for artifacts:"
           ls -R artifacts/
 
@@ -101,10 +101,23 @@ jobs:
             PRERELEASE_ARG="--prerelease"
           fi
           
-          echo "Creating release for $VERSION..."
+          NOTES_ARG="--notes \"Release $VERSION\""
+          if [ -f "$NOTES_FILE" ]; then
+            NOTES_ARG="--notes-file $NOTES_FILE"
+          fi
+
+          echo "Creating or updating release for $VERSION..."
+          # Use 'gh release create' with '--generate-notes' as fallback or just the specific file
           gh release create "$VERSION" \
             $PRERELEASE_ARG \
             --title "$VERSION" \
-            --notes-file "$NOTES_FILE" \
+            $NOTES_ARG \
+            artifacts/*/*.tar.gz \
+            artifacts/checksums.txt || \
+          gh release edit "$VERSION" \
+            $PRERELEASE_ARG \
+            --title "$VERSION" \
+            $NOTES_ARG \
             artifacts/*/*.tar.gz \
             artifacts/checksums.txt
+
