@@ -991,9 +991,11 @@ class DockerWidget extends HTMLElement {
         if (admin) {
             const isPending = this._pendingAction.has(c.ID);
             const dis = isPending ? 'disabled' : '';
+            const isAgent = c.Name.replace(/^\//, '') === 'lastboard-agent';
+            const stopDis = (isPending || isAgent) ? 'disabled' : '';
             if (c.Status === 'running') {
                 actionsHTML = `
-                    <button class="action-btn" data-action="stop" data-id="${esc(c.ID)}" title="${i18n.t('docker.action_stop') || 'Stop'}" ${dis}>${isPending ? ICON.spinner : ICON.stop}</button>
+                    <button class="action-btn" data-action="stop" data-id="${esc(c.ID)}" title="${isAgent ? i18n.t('docker.action_stop_disabled') || 'Cannot stop agent' : i18n.t('docker.action_stop') || 'Stop'}" ${stopDis}>${isPending ? ICON.spinner : ICON.stop}</button>
                     <button class="action-btn" data-action="restart" data-id="${esc(c.ID)}" title="${i18n.t('docker.action_restart') || 'Restart'}" ${dis}>${ICON.restart}</button>`;
             } else {
                 actionsHTML = `
