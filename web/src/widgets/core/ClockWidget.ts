@@ -161,10 +161,11 @@ class ClockWidget extends HTMLElement {
         }
 
         // City Logic
-        if (this._config.showCity !== false && this._config.city) {
-            if (this._lastCityStr !== this._config.city) {
-                this.cityEl.textContent = this._config.city;
-                this._lastCityStr = this._config.city;
+        if (this._config.showCity !== false) {
+            const displayText = this._config.city || i18n.t('widget.clock.no_location') || 'Choose Location';
+            if (this._lastCityStr !== displayText) {
+                this.cityEl.textContent = displayText;
+                this._lastCityStr = displayText;
             }
             this.cityEl.style.display = 'block';
         } else {
