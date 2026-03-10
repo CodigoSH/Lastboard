@@ -242,17 +242,17 @@ const CSS = `
 /* ── Container rows — CSS Grid layout ── */
 .container-row {
     display: grid;
-    grid-template-columns: 36px minmax(80px, 1.5fr) 140px minmax(100px, 2fr) auto 90px;
+    grid-template-columns: 36px minmax(0, 1.5fr) 140px minmax(0, 2fr) 110px 90px;
     align-items: center;
     padding: 7px 10px;
     border-bottom: 1px solid rgba(128,128,128,0.08);
     transition: background 0.15s, opacity 0.2s;
     min-width: 0;
-    overflow: visible;
+    overflow: hidden;
 }
 /* Edit mode adds eye column at start */
 .container-row.edit-mode {
-    grid-template-columns: 28px 36px minmax(80px, 1.5fr) 140px minmax(100px, 2fr) auto 90px;
+    grid-template-columns: 28px 36px minmax(0, 1.5fr) 140px minmax(0, 2fr) 110px 90px;
 }
 .container-row:last-child { border-bottom: none; }
 .container-row:hover { background: var(--surface-hover, rgba(128,128,128,0.06)); }

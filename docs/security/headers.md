@@ -149,3 +149,6 @@ Consider implementing additional security headers:
 
 **Implementation Date:** February 12, 2026
 **Version:** Lastboard v1.2.0+
+
+---
+[← Previous page](overview.md) | [Next page →](../contributing/development.md)

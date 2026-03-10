@@ -17,6 +17,7 @@ Welcome to the official Lastboard documentation. Here you will find everything y
   - [Docker](widgets/docker.md)
 - **Security**
   - [Overview](security/overview.md)
+  - [Headers](security/headers.md)
 - **Contributing**
   - [Development](contributing/development.md)
 

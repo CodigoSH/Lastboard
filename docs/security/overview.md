@@ -26,4 +26,4 @@ If you discover a security vulnerability within this project, please contact us 
 We ask that you do not report security vulnerabilities through public GitHub issues to prevent zero-day exposure. We will acknowledge your report within 48 hours and provide a timeline for resolution.
 
 ---
-[← Previous page](../widgets/docker.md) | [Next page →](../contributing/development.md)
+[← Previous page](../widgets/docker.md) | [Next page →](headers.md)
