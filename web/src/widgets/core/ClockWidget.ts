@@ -6,6 +6,7 @@ class ClockWidget extends HTMLElement {
     private timer: any;
     private timeEl: HTMLElement | null = null;
     private dateEl: HTMLElement | null = null;
+    private cityEl: HTMLElement | null = null;
     private _unsubscribe: (() => void) | null = null;
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -17,7 +18,7 @@ class ClockWidget extends HTMLElement {
 
     private isEditing: boolean = false;
     private configMode: boolean = false;
-    private _config: { timezone: string, hour12: boolean, showDate: boolean, showSeconds: boolean } = { timezone: 'local', hour12: false, showDate: true, showSeconds: false };
+    private _config: { timezone: string, hour12: boolean, showDate: boolean, showCity: boolean, city: string, showSeconds: boolean } = { timezone: 'local', hour12: false, showDate: true, showCity: true, city: '', showSeconds: false };
     private _itemId: number = 0;
 
     static get observedAttributes() {
@@ -85,9 +86,10 @@ class ClockWidget extends HTMLElement {
 
     private _lastTimeHTML = '';
     private _lastDateStr = '';
+    private _lastCityStr = '';
 
     updateTime() {
-        if (!this.timeEl || !this.dateEl) return;
+        if (!this.timeEl || !this.dateEl || !this.cityEl) return;
         const now = new Date();
 
         // Time Options
@@ -157,6 +159,17 @@ class ClockWidget extends HTMLElement {
         } else {
             this.dateEl.style.display = 'none';
         }
+
+        // City Logic
+        if (this._config.showCity !== false && this._config.city) {
+            if (this._lastCityStr !== this._config.city) {
+                this.cityEl.textContent = this._config.city;
+                this._lastCityStr = this._config.city;
+            }
+            this.cityEl.style.display = 'block';
+        } else {
+            this.cityEl.style.display = 'none';
+        }
     }
 
     render() {
@@ -194,18 +207,30 @@ class ClockWidget extends HTMLElement {
                     font-weight: 500;
                     white-space: nowrap;
                 }
+                .city {
+                    font-size: clamp(0.7rem, 9cqi, 1.8rem);
+                    color: var(--text-main);
+                    margin-bottom: 2%;
+                    font-weight: 600;
+                    letter-spacing: -0.02em;
+                    white-space: nowrap;
+                    text-transform: uppercase;
+                }
             </style>
             
+            <div class="city"></div>
             <div class="time">--:--:--</div>
             <div class="date">-- --</div>
         `;
 
         this.timeEl = this.shadowRoot.querySelector('.time');
         this.dateEl = this.shadowRoot.querySelector('.date');
+        this.cityEl = this.shadowRoot.querySelector('.city');
 
         // Reset dirty check cache since the DOM was just wiped out
         this._lastTimeHTML = '';
         this._lastDateStr = '';
+        this._lastCityStr = '';
         this.updateTime();
     }
 }

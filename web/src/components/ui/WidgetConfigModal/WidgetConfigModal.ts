@@ -300,6 +300,7 @@ class WidgetConfigModal extends HTMLElement {
             const cityInput = this.shadowRoot?.getElementById('clock-city') as HTMLInputElement;
             const h12Input = this.shadowRoot?.getElementById('clock-12h') as HTMLInputElement;
             const dateInput = this.shadowRoot?.getElementById('clock-date') as HTMLInputElement;
+            const cityDisplayInput = this.shadowRoot?.getElementById('clock-show-city') as HTMLInputElement;
             const saveBtn = this.shadowRoot?.getElementById('save-btn') as any;
 
             const city = cityInput?.value || '';
@@ -322,6 +323,7 @@ class WidgetConfigModal extends HTMLElement {
             newContent.timezone = timezone;
             newContent.hour12 = h12Input?.checked || false;
             newContent.showDate = dateInput?.checked || false;
+            newContent.showCity = cityDisplayInput?.checked ?? true;
             newContent.showSeconds = (this.shadowRoot?.getElementById('clock-seconds') as HTMLInputElement)?.checked ?? true;
 
             // Reset stored coords
@@ -474,6 +476,7 @@ class WidgetConfigModal extends HTMLElement {
                 const city = content.city || '';
                 const h12 = content.hour12 || false;
                 const showDate = content.showDate !== false;
+                const showCity = content.showCity !== false;
 
                 const generalTab = `
                     <div class="field-group">
@@ -498,6 +501,11 @@ class WidgetConfigModal extends HTMLElement {
                     <div class="field-group check-row">
                         <input type="checkbox" id="clock-date" ${showDate ? 'checked' : ''} />
                         <label for="clock-date">${i18n.t('widget.clock.show_date')}</label>
+                    </div>
+
+                    <div class="field-group check-row">
+                        <input type="checkbox" id="clock-show-city" ${showCity ? 'checked' : ''} />
+                        <label for="clock-show-city">${i18n.t('widget.clock.show_city')}</label>
                     </div>
 
                     <div class="field-group check-row">
