@@ -180,7 +180,5 @@ We appreciate the organizations that support us as a gesture of goodwill to help
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ by the CodigoSH Team</sub>
-</div>
+A project by [CodigoSH](https://github.com/CodigoSH) — built to last.
 
