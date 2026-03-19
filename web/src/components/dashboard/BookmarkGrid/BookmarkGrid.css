@@ -129,6 +129,11 @@
     /* Responsive Padding */
     padding: 8% 4% !important;
 
+    /* Telemetry widgets need tighter margins (5x smaller than standard) */
+    &:has(widget-telemetry) {
+        padding: 1.6% 0.8% !important;
+    }
+
     position: relative;
     aspect-ratio: calc(var(--w, 1) / var(--h, 1)) !important;
     height: auto !important;
