@@ -238,7 +238,8 @@ class TelemetryWidget extends HTMLElement {
                 display: flex !important;
                 flex-direction: row !important;
                 align-items: stretch !important;
-                padding: 6px !important;
+                align-items: stretch !important;
+                padding: 0 !important;
                 gap: 4px;
                 overflow: hidden;
                 width: 100% !important;
@@ -260,10 +261,6 @@ class TelemetryWidget extends HTMLElement {
                 transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             
-            .gauge-wrap:hover {
-                transform: scale(1.05);
-            }
-
             .gauge-svg {
                 width: 100%;
                 height: 100%;

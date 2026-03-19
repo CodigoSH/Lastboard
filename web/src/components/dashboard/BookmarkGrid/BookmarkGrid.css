@@ -129,16 +129,6 @@
     /* Responsive Padding */
     padding: 8% 4% !important;
 
-    /* Telemetry widgets manage their own internal padding */
-    &:has(widget-telemetry) {
-        padding: 0 !important;
-
-        /* Match Section behavior: No background illumination on hover for the frame */
-        &:hover {
-            background: var(--surface) !important;
-        }
-    }
-
     position: relative;
     aspect-ratio: calc(var(--w, 1) / var(--h, 1)) !important;
     height: auto !important;
@@ -162,7 +152,10 @@
     text-decoration: none;
     color: var(--text-main);
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.2s;
+    box-shadow 0.2s,
+    backdrop-filter 0.2s;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     box-sizing: border-box;
     overflow: hidden;
     container-type: inline-size;
@@ -520,8 +513,8 @@
 .bookmark-grid__section {
     background: var(--surface);
     /* Use theme surface instead of fixed dark rgba */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--card-border, transparent);
     box-shadow: var(--card-shadow);
     /* Use theme border */
@@ -659,6 +652,8 @@
     padding: 6% 4% !important;
     background: transparent;
     box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .bookmark-grid__nested-content .bookmark-grid__card:hover {

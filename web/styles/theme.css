@@ -10,7 +10,7 @@
     --surface-hover: rgba(var(--accent-rgb), 0.06);
     --surface-active: rgba(var(--accent-rgb), 0.12);
     --surface-dim: rgba(255, 255, 255, 0.4);
-    --glass-blur: blur(12px);
+    --glass-blur: blur(8px);
 
     /* Accents */
     --accent: #2563eb;
@@ -104,7 +104,7 @@
     --surface-solid: #242424;
     --surface-hover: rgba(var(--accent-rgb), 0.1);
     --surface-active: rgba(var(--accent-rgb), 0.2);
-    --glass-blur: blur(12px);
+    --glass-blur: blur(8px);
 
     /* Accents */
     --accent-rgb: 37, 99, 235;

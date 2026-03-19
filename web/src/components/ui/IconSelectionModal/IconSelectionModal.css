@@ -29,8 +29,8 @@ dialog[open] {
 
 dialog::backdrop {
     background: var(--overlay-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 }
 
 @keyframes modalIn {
