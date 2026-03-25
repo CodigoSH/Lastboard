@@ -18,7 +18,7 @@ RUN bun web/build.ts
 # Stage 2: Backend Build (Go)
 # ==========================================
 # Use local platform for building (fast), target specific arch via GOARCH
-FROM --platform=$BUILDPLATFORM golang:1.26.0-alpine AS backend-builder
+FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine AS backend-builder
 WORKDIR /app
 
 # Install build dependencies
