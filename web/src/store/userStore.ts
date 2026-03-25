@@ -55,13 +55,11 @@ class UserStore {
     setUser(userData: User) {
         if (!userData) return;
 
-        // Default constraints
-        // fluid grid defaults to 140px if not set
+        // Destructure to remove redundant fields from top-level before storing in this.user
+        const { dashboard_background, ...cleanUserData } = userData;
 
-
-        // Map server response to store structure
         this.user = {
-            ...userData,
+            ...cleanUserData,
             preferences: {
                 accent_color: userData.accent_color || 'blue',
                 language: userData.language || 'en',
@@ -70,10 +68,9 @@ class UserStore {
                 project_name: userData.project_name || 'Lastboard',
                 beta_updates: userData.beta_updates,
                 unit_system: userData.unit_system || 'metric',
-                dashboard_background: userData.dashboard_background || ''
+                dashboard_background: dashboard_background || ''
             },
-            project_name: userData.project_name || 'Lastboard',
-            dashboard_background: userData.dashboard_background || ''
+            project_name: userData.project_name || 'Lastboard'
         };
 
         this.applyAesthetics();
@@ -172,7 +169,6 @@ class UserStore {
         if (newPrefs.beta_updates !== undefined) this.user.preferences.beta_updates = newPrefs.beta_updates;
         if (newPrefs.unit_system) this.user.preferences.unit_system = newPrefs.unit_system;
         if (newPrefs.dashboard_background !== undefined) {
-            this.user.dashboard_background = newPrefs.dashboard_background;
             this.user.preferences.dashboard_background = newPrefs.dashboard_background;
         }
 
@@ -190,7 +186,7 @@ class UserStore {
                 project_name: this.user.project_name,
                 beta_updates: this.user.preferences.beta_updates,
                 unit_system: this.user.preferences.unit_system,
-                dashboard_background: this.user.dashboard_background
+                dashboard_background: this.user.preferences.dashboard_background
             };
 
             await userService.updatePreferences(payload);

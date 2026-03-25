@@ -52,7 +52,7 @@ func TestMigrations(t *testing.T) {
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	tables := []string{"users", "system_settings", "items", "schema_version"}
+	tables := []string{"users", "system_settings", "items", "login_attempts"}
 
 	for _, table := range tables {
 		var name string
@@ -67,21 +67,7 @@ func TestMigrations(t *testing.T) {
 	}
 }
 
-// TestSchemaVersion tests that the schema version is correctly set
-func TestSchemaVersion(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
 
-	var version int
-	err := db.QueryRow("SELECT version FROM schema_version").Scan(&version)
-	if err != nil {
-		t.Fatalf("Failed to query schema version: %v", err)
-	}
-
-	if version != 1 {
-		t.Errorf("Expected schema version 1, got %d", version)
-	}
-}
 
 // TestUsersTableSchema tests users table structure
 func TestUsersTableSchema(t *testing.T) {
@@ -241,60 +227,7 @@ func TestItemsForeignKeyConstraint(t *testing.T) {
 	}
 }
 
-// TestMigrateOrphanedItems tests orphan item migration
-func TestMigrateOrphanedItems(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
 
-	// Create admin user
-	result, err := db.Exec(`
-		INSERT INTO users (username, password, role)
-		VALUES ('admin', 'hashedpassword', 'admin')
-	`)
-	if err != nil {
-		t.Fatalf("Failed to create admin: %v", err)
-	}
-
-	adminID, _ := result.LastInsertId()
-
-	// Temporarily disable foreign keys to simulate legacy data
-	_, err = db.Exec("PRAGMA foreign_keys = OFF")
-	if err != nil {
-		t.Fatalf("Failed to disable foreign keys: %v", err)
-	}
-
-	// Create orphaned item (user_id = 0) - simulates legacy data
-	_, err = db.Exec(`
-		INSERT INTO items (user_id, type, x, y, w, h)
-		VALUES (0, 'bookmark', 1, 1, 1, 1)
-	`)
-	if err != nil {
-		t.Fatalf("Failed to create orphaned item: %v", err)
-	}
-
-	// Re-enable foreign keys
-	_, err = db.Exec("PRAGMA foreign_keys = ON")
-	if err != nil {
-		t.Fatalf("Failed to enable foreign keys: %v", err)
-	}
-
-	// Run migration
-	err = migrateOrphanedItems(db)
-	if err != nil {
-		t.Fatalf("Migration failed: %v", err)
-	}
-
-	// Check that orphaned item now belongs to admin
-	var itemUserID int
-	err = db.QueryRow("SELECT user_id FROM items WHERE type = 'bookmark'").Scan(&itemUserID)
-	if err != nil {
-		t.Fatalf("Failed to query item: %v", err)
-	}
-
-	if itemUserID != int(adminID) {
-		t.Errorf("Orphaned item not migrated to admin (user_id: %d, expected: %d)", itemUserID, adminID)
-	}
-}
 
 // Benchmark database operations
 func BenchmarkUserInsert(b *testing.B) {

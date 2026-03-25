@@ -2,12 +2,10 @@ package database
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -59,303 +57,68 @@ func InitDB(dsn string) (*DB, error) {
 	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(1 * time.Hour)
 
-	if err := runMigrations(db); err != nil {
+	if err := initSchema(db); err != nil {
 		return nil, err
 	}
 
 	return &DB{DB: db}, nil
 }
 
-func runMigrations(db *sql.DB) error {
-	// 0. Ensure schema_version table exists
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);`)
-	if err != nil {
-		return fmt.Errorf("failed to create schema_version table: %v", err)
-	}
-
-	// 1. Get current version
-	var currentVersion int
-	err = db.QueryRow("SELECT version FROM schema_version").Scan(&currentVersion)
-	if err == sql.ErrNoRows {
-		currentVersion = 0
-	} else if err != nil {
-		return fmt.Errorf("failed to query schema version: %v", err)
-	}
-
-	// --- VERSION 1: Initial Schema & Legacy Migrations ---
-	if currentVersion < 1 {
-		slog.Info("Applying schema migration", "version", 1)
-		queries := []string{
-			`CREATE TABLE IF NOT EXISTS users (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				username TEXT NOT NULL UNIQUE,
-				password TEXT NOT NULL,
-				role TEXT NOT NULL DEFAULT 'user',
-				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-			);`,
-			`CREATE TABLE IF NOT EXISTS system_settings (
-				key TEXT PRIMARY KEY,
-				value TEXT
-			);`,
-			`CREATE TABLE IF NOT EXISTS items (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				parent_id INTEGER,
-				user_id INTEGER NOT NULL DEFAULT 0,
-				type TEXT NOT NULL,
-				x INTEGER NOT NULL,
-				y INTEGER NOT NULL,
-				w INTEGER NOT NULL,
-				h INTEGER NOT NULL,
-				content TEXT,
-				url TEXT,
-				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-				FOREIGN KEY(parent_id) REFERENCES items(id) ON DELETE CASCADE,
-				FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-			);`,
-			`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system';`,
-			`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'blue';`,
-			`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en';`,
-			`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12;`,
-			`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4;`,
-			`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2;`,
-			`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT '';`,
-			`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Lastboard';`,
-			`ALTER TABLE items ADD COLUMN url TEXT;`,
-			`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0;`,
-			`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
-			`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
-			`ALTER TABLE users ADD COLUMN password_version INTEGER NOT NULL DEFAULT 0;`,
-		}
-
-		for _, query := range queries {
-			_, err := db.Exec(query)
-			if err != nil {
-				// Only skip duplicate column errors (existing installations upgrading)
-				if strings.Contains(err.Error(), "duplicate column name") {
-					continue
-				}
-				// Any other error is a real problem — fail fast
-				return fmt.Errorf("migration v1 failed: %v", err)
-			}
-		}
-
-		// Mark as Version 1
-		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (1)")
-		if err != nil {
-			return fmt.Errorf("failed to update schema version to 1: %v", err)
-		}
-		slog.Info("Schema migration applied", "version", 1)
-	}
-
-	// M5: assign any items still at user_id = 0 to the first admin.
-	if err := migrateOrphanedItems(db); err != nil {
-		slog.Warn("Orphan migration warning", "error", err)
-	}
-
-	// M6: migrate legacy visibility flags
-	if err := migrateVisibilityFlags(db); err != nil {
-		slog.Warn("Visibility migration warning", "error", err)
-	}
-
-	// --- VERSION 2: Login Attempts Persistence ---
-	if currentVersion < 2 {
-		slog.Info("Applying schema migration", "version", 2)
-		_, err := db.Exec(`CREATE TABLE IF NOT EXISTS login_attempts (
-			ip TEXT PRIMARY KEY,
-			count INTEGER NOT NULL DEFAULT 0,
-			first_seen DATETIME NOT NULL,
+func initSchema(db *sql.DB) error {
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS users (
+			id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+			username             TEXT NOT NULL UNIQUE,
+			password             TEXT NOT NULL,
+			role                 TEXT NOT NULL DEFAULT 'user',
+			created_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
+			theme                TEXT DEFAULT 'system',
+			accent_color         TEXT DEFAULT 'blue',
+			language             TEXT DEFAULT 'en',
+			grid_columns_pc      INTEGER DEFAULT 12,
+			grid_columns_tablet  INTEGER DEFAULT 4,
+			grid_columns_mobile  INTEGER DEFAULT 2,
+			avatar_url           TEXT DEFAULT '',
+			project_name         TEXT DEFAULT 'Lastboard',
+			beta_updates         BOOLEAN DEFAULT 0,
+			widget_min_width     INTEGER DEFAULT 140,
+			password_version     INTEGER NOT NULL DEFAULT 0,
+			unit_system          TEXT DEFAULT 'metric',
+			dashboard_background TEXT DEFAULT ''
+		);`,
+		`CREATE TABLE IF NOT EXISTS system_settings (
+			key   TEXT PRIMARY KEY,
+			value TEXT
+		);`,
+		`CREATE TABLE IF NOT EXISTS items (
+			id         INTEGER PRIMARY KEY AUTOINCREMENT,
+			parent_id  INTEGER,
+			user_id    INTEGER NOT NULL DEFAULT 0,
+			type       TEXT NOT NULL,
+			x          INTEGER NOT NULL,
+			y          INTEGER NOT NULL,
+			w          INTEGER NOT NULL,
+			h          INTEGER NOT NULL,
+			content    TEXT,
+			url        TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY(parent_id) REFERENCES items(id) ON DELETE CASCADE,
+			FOREIGN KEY(user_id)   REFERENCES users(id) ON DELETE CASCADE
+		);`,
+		`CREATE TABLE IF NOT EXISTS login_attempts (
+			ip           TEXT PRIMARY KEY,
+			count        INTEGER NOT NULL DEFAULT 0,
+			first_seen   DATETIME NOT NULL,
 			locked_until DATETIME
-		)`)
-		if err != nil {
-			return fmt.Errorf("migration v2 failed: %v", err)
-		}
-		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (2)")
-		if err != nil {
-			return fmt.Errorf("failed to update schema version to 2: %v", err)
-		}
-		slog.Info("Schema migration applied", "version", 2)
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id);`,
 	}
 
-	// --- VERSION 3: Index on items(user_id) for query performance ---
-	if currentVersion < 3 {
-		slog.Info("Applying schema migration", "version", 3)
-		_, err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id)`)
-		if err != nil {
-			return fmt.Errorf("migration v3 failed: %v", err)
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("schema init failed: %v", err)
 		}
-		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (3)")
-		if err != nil {
-			return fmt.Errorf("failed to update schema version to 3: %v", err)
-		}
-		slog.Info("Schema migration applied", "version", 3)
-	}
-
-	// --- VERSION 4: Add missing columns for existing users upgrading from legacy versions ---
-	if currentVersion < 4 {
-		slog.Info("Applying schema migration", "version", 4)
-		// These columns were previously added inside the V1 block, which meant existing
-		// installations upgrading to the current codebase would skip it and miss these columns.
-		queries := []string{
-			`ALTER TABLE users ADD COLUMN password_version INTEGER NOT NULL DEFAULT 0;`,
-			`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0;`,
-			`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140;`,
-		}
-
-		for _, query := range queries {
-			_, err := db.Exec(query)
-			if err != nil {
-				// Safely ignore "duplicate column name" as it means the user already has it
-				if strings.Contains(err.Error(), "duplicate column name") {
-					continue
-				}
-				return fmt.Errorf("migration v4 failed: %v", err)
-			}
-		}
-
-		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (4)")
-		if err != nil {
-			return fmt.Errorf("failed to update schema version to 4: %v", err)
-		}
-		slog.Info("Schema migration applied", "version", 4)
-	}
-
-	// --- VERSION 5: Global Unit System Priority ---
-	if currentVersion < 5 {
-		slog.Info("Applying schema migration", "version", 5)
-		queries := []string{
-			`ALTER TABLE users ADD COLUMN unit_system TEXT DEFAULT 'metric';`,
-		}
-
-		for _, query := range queries {
-			_, err := db.Exec(query)
-			if err != nil {
-				if strings.Contains(err.Error(), "duplicate column name") {
-					continue
-				}
-				return fmt.Errorf("migration v5 failed: %v", err)
-			}
-		}
-
-		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (5)")
-		if err != nil {
-			return fmt.Errorf("failed to update schema version to 5: %v", err)
-		}
-		slog.Info("Schema migration applied", "version", 5)
-	}
-	// --- VERSION 6: Dashboard Background ---
-	if currentVersion < 6 {
-		slog.Info("Applying schema migration", "version", 6)
-		queries := []string{
-			`ALTER TABLE users ADD COLUMN dashboard_background TEXT DEFAULT '';`,
-		}
-
-		for _, query := range queries {
-			_, err := db.Exec(query)
-			if err != nil {
-				if strings.Contains(err.Error(), "duplicate column name") {
-					continue
-				}
-				return fmt.Errorf("migration v6 failed: %v", err)
-			}
-		}
-
-		_, err = db.Exec("INSERT OR REPLACE INTO schema_version (version) VALUES (6)")
-		if err != nil {
-			return fmt.Errorf("failed to update schema version to 6: %v", err)
-		}
-		slog.Info("Schema migration applied", "version", 6)
 	}
 
 	return nil
-}
-
-// migrateOrphanedItems assigns dashboard items with user_id = 0 to the first
-// admin user.  This covers two scenarios:
-//   - Existing installs upgrading to per-user isolation (items predate the column).
-//   - Fresh installs where seedItems ran before the admin account was created;
-//     SetupHandler calls the same UPDATE, but this is the safety net if that path
-//     is ever bypassed.
-func migrateOrphanedItems(db *sql.DB) error {
-	var adminID int
-	err := db.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&adminID)
-	if err != nil {
-		// No admin yet (fresh install, pre-setup). SetupHandler will handle it.
-		return nil
-	}
-
-	result, err := db.Exec("UPDATE items SET user_id = ? WHERE user_id = 0", adminID)
-	if err != nil {
-		return err
-	}
-
-	if rows, _ := result.RowsAffected(); rows > 0 {
-		slog.Info("Legacy migration: assigned orphaned items to admin", "count", rows, "admin_id", adminID)
-	}
-	return nil
-}
-
-// migrateVisibilityFlags converts legacy per-device visibility flags
-// (visibleMobile, visibleTablet) into the unified visibleTouch flag.
-// Items that already have visibleTouch are left unchanged (only legacy
-// keys are removed).  The migration is idempotent.
-func migrateVisibilityFlags(db *sql.DB) error {
-	rows, err := db.Query(`SELECT id, content FROM items WHERE content LIKE '%visibleMobile%' OR content LIKE '%visibleTablet%'`)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	var migrated int
-	for rows.Next() {
-		var id int
-		var content sql.NullString
-		if err := rows.Scan(&id, &content); err != nil {
-			continue
-		}
-		if !content.Valid || content.String == "" {
-			continue
-		}
-
-		var data map[string]interface{}
-		if err := json.Unmarshal([]byte(content.String), &data); err != nil {
-			continue
-		}
-
-		// If visibleTouch is already set, just remove legacy keys
-		if _, exists := data["visibleTouch"]; !exists {
-			// Derive visibleTouch: default true unless a legacy flag was explicitly false
-			visibleTouch := true
-			if vm, ok := data["visibleMobile"]; ok {
-				if vmBool, ok := vm.(bool); ok && !vmBool {
-					visibleTouch = false
-				}
-			}
-			if vt, ok := data["visibleTablet"]; ok {
-				if vtBool, ok := vt.(bool); ok && !vtBool {
-					visibleTouch = false
-				}
-			}
-			data["visibleTouch"] = visibleTouch
-		}
-
-		// Remove legacy keys
-		delete(data, "visibleMobile")
-		delete(data, "visibleTablet")
-
-		newContent, err := json.Marshal(data)
-		if err != nil {
-			continue
-		}
-
-		if _, err := db.Exec("UPDATE items SET content = ? WHERE id = ?", string(newContent), id); err != nil {
-			slog.Warn("Visibility migration: failed to update item", "id", id, "error", err)
-			continue
-		}
-		migrated++
-	}
-
-	if migrated > 0 {
-		slog.Info("Visibility migration: converted legacy flags to visibleTouch", "count", migrated)
-	}
-	return rows.Err()
 }
