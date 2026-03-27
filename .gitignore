@@ -85,3 +85,6 @@ ANALYSIS_*.md
 REFACTOR_*.md
 BUILD_*.md
 AUTOSAVE_*.md
+AUDIT_*.md
+AUDIT.md
+audit.md

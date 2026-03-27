@@ -26,12 +26,33 @@ class ClockWidget extends HTMLElement {
     }
 
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-        if (name === 'item-id') this._itemId = parseInt(newValue);
+        if (name === 'item-id') {
+            this._itemId = parseInt(newValue);
+            this.syncFromStore();
+        }
         if (name === 'content') {
             try {
                 const data = typeof newValue === 'string' ? JSON.parse(newValue) : newValue;
                 if (data && typeof data === 'object') {
-                    // Merge defaults
+                    this._config = { ...this._config, ...data };
+                    this.updateTime();
+                }
+            } catch (e) { }
+        }
+    }
+
+    private _lastState: any = null;
+
+    private syncFromStore() {
+        if (!this._itemId) return;
+        const state = dashboardStore.getState();
+        if (this._lastState && this._lastState === state) return;
+        this._lastState = state;
+        const item = state.items.find(i => i.id === this._itemId);
+        if (item && item.content) {
+            try {
+                const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
+                if (data.widgetId === 'clock') {
                     this._config = { ...this._config, ...data };
                     this.updateTime();
                 }
@@ -43,33 +64,20 @@ class ClockWidget extends HTMLElement {
         this.render();
         this.updateTime();
 
-        // 1. Time Update Interval
         this.timer = setInterval(() => {
             this.updateTime();
         }, 1000);
 
-        // 2. Store Subscription (Reactivity)
+        if (this._itemId) {
+            this.syncFromStore();
+        }
+
         this._unsubscribe = dashboardStore.subscribe((state) => {
-            // Edit Mode Sync
             if (this.isEditing !== state.isEditing) {
                 this.isEditing = state.isEditing;
                 this.render();
             }
-
-            // Content Sync
-            if (this._itemId) {
-                const item = state.items.find(i => i.id === this._itemId);
-                if (item && item.content) {
-                    try {
-                        const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
-                        if (data.widgetId === 'clock') {
-                            this._config = { ...this._config, ...data };
-                            // Force immediate update of display
-                            this.updateTime();
-                        }
-                    } catch (e) { }
-                }
-            }
+            this.syncFromStore();
         });
 
         // 3. i18n Subscription
