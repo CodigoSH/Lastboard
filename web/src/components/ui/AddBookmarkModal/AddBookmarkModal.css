@@ -10,8 +10,7 @@ dialog {
     border-top: 1px solid var(--paper-border-top);
     border-radius: var(--radius);
     padding: 0;
-    width: 90%;
-    max-width: 420px;
+    width: clamp(300px, 85cqi, 400px);
     box-shadow: var(--paper-shadow);
     overflow: visible;
     color: var(--text-main);

@@ -8,8 +8,7 @@ dialog {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 28px;
-    width: 90%;
-    max-width: 420px;
+    width: clamp(280px, 85cqi, 400px);
     backdrop-filter: blur(20px);
     box-shadow: var(--paper-shadow);
 }
