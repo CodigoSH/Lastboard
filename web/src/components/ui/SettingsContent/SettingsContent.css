@@ -702,12 +702,19 @@ button {
 }
 
 .settings-content__danger-title {
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 1.2cqi, 8px);
     color: var(--danger-color);
     font-weight: 600;
     font-size: clamp(13px, 2cqi, 15px);
+    line-height: 1;
     margin-bottom: 4px;
-    align-items: center;
-    gap: clamp(6px, 1.2cqi, 8px);
+}
+
+.settings-content__danger-title svg {
+    align-self: center;
+    flex-shrink: 0;
 }
 
 /* --- PREMIUM UPDATE MODAL STYLES --- */
