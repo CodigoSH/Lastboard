@@ -24,7 +24,7 @@ jobs:
           go-version: '1.26.1'
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -33,9 +33,8 @@ jobs:
           go mod download
           bun install
 
-      - name: Build frontend (required for go:embed)
-        run: |
-          bun run build
+      - name: Build frontend
+        run: bun run build
 
       - name: Run Go tests
         run: |
@@ -47,23 +46,20 @@ jobs:
           cat coverage.txt
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.out
           flags: unittests
           name: codecov-lastboard
 
       - name: Run Frontend Tests
-        run: |
-          bun test web/src/services/collisionService.test.ts
+        run: bun test web/src/services/collisionService.test.ts
 
       - name: Build backend
-        run: |
-          go build -v -o lastboard ./cmd/lastboard/main.go
+        run: go build -v -o bin/lastboard ./cmd/lastboard/main.go
 
-      - name: Test binary
-        run: |
-          ./lastboard --version || echo "Binary built successfully"
+      - name: Verify binary
+        run: ./bin/lastboard --version
 
   benchmark:
     name: Run Benchmarks
@@ -78,7 +74,7 @@ jobs:
           go-version: '1.26.1'
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -87,9 +83,8 @@ jobs:
           go mod download
           bun install
 
-      - name: Build frontend (required for go:embed)
-        run: |
-          bun run build
+      - name: Build frontend
+        run: bun run build
 
       - name: Run benchmarks
         run: |
@@ -119,11 +114,10 @@ jobs:
           go-version: '1.26.1'
 
       - name: Install dependencies
-        run: |
-          go mod download
+        run: go mod download
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.21.0
+        uses: securego/gosec@v2
         with:
           args: '-no-fail -fmt sarif -out results.sarif ./...'
 
