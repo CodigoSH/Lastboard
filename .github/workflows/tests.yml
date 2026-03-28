@@ -117,7 +117,7 @@ jobs:
         run: go mod download
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2
+        uses: securego/gosec@v2.25.0
         with:
           args: '-no-fail -fmt sarif -out results.sarif ./...'
 
