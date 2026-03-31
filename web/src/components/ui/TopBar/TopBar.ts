@@ -1,6 +1,8 @@
 import { template } from './TopBar.template';
 import { dashboardStore } from '../../../store/dashboardStore';
+import { eventBus, EVENTS } from '../../../services/EventBus';
 import { i18n } from '../../../services/i18n';
+import '../RenameDashboardModal/RenameDashboardModal';
 // @ts-ignore
 import css from './TopBar.css' with { type: 'text' };
 
@@ -13,6 +15,7 @@ interface TopBarState {
     user?: { role?: string };
     updateAvailable?: boolean;
     isDemo?: boolean;
+    currentDashboardId?: number | null;
 }
 
 class TopBar extends HTMLElement {
@@ -49,10 +52,15 @@ class TopBar extends HTMLElement {
         this.render();
         this.setupListeners();
         this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
-            if (this.state.editMode !== state.isEditing || this.state.updateAvailable !== state.updateAvailable) {
+            const changed =
+                this.state.editMode !== state.isEditing ||
+                this.state.updateAvailable !== state.updateAvailable ||
+                this.state.currentDashboardId !== state.currentDashboardId;
+            if (changed) {
                 this.setState({
                     editMode: state.isEditing,
-                    updateAvailable: state.updateAvailable
+                    updateAvailable: state.updateAvailable,
+                    currentDashboardId: state.currentDashboardId
                 });
             }
         });
@@ -204,6 +212,41 @@ class TopBar extends HTMLElement {
             }
         };
         window.addEventListener('click', this._windowClickHandler);
+
+        this.shadowRoot!.addEventListener('dashboard-delete', (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail && customEvent.detail.id) {
+                eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+                    title: i18n.t('dashboard.delete'),
+                    message: i18n.t('bookmark.delete_confirm_message'),
+                    onConfirm: () => dashboardStore.deleteDashboard(customEvent.detail.id)
+                });
+            }
+        });
+
+        this.shadowRoot!.addEventListener('dashboard-create', () => {
+            this.dispatchEvent(new CustomEvent('add-item', {
+                detail: { action: 'add-dashboard' },
+                bubbles: true,
+                composed: true
+            }));
+        });
+
+        this.shadowRoot!.addEventListener('dashboard-rename', (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail && customEvent.detail.id) {
+                const modal = document.createElement('rename-dashboard-modal') as HTMLElement;
+                modal.dataset.id = customEvent.detail.id.toString();
+                modal.dataset.name = customEvent.detail.name || '';
+                document.body.appendChild(modal);
+
+                modal.addEventListener('modal-close', () => {
+                    if (modal.parentNode) {
+                        modal.parentNode.removeChild(modal);
+                    }
+                }, { once: true });
+            }
+        });
     }
 
     render() {
@@ -220,7 +263,8 @@ class TopBar extends HTMLElement {
             searchQuery: this.state.searchQuery,
             user: this.state.user,
             updateAvailable: this.state.updateAvailable,
-            isDemo: this.state.isDemo
+            isDemo: this.state.isDemo,
+            currentDashboardId: this.state.currentDashboardId
         })}
         `;
     }

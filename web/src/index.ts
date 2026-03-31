@@ -18,6 +18,7 @@ import './components/ui/Notifier/Notifier';
 import './components/ui/IconPicker/IconPicker';
 import './components/ui/AddBookmarkModal/AddBookmarkModal';
 import './components/ui/AddWidgetModal/AddWidgetModal';
+import './components/ui/AddDashboardModal/AddDashboardModal';
 import './components/ui/WidgetConfigModal/WidgetConfigModal';
 import './components/ui/ConfirmationModal/ConfirmationModal';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
@@ -47,15 +48,20 @@ bootstrap(async () => {
     ThemeService.init();
 
     // ── Parallel Initialization ─────────────────────────────────────
-    // We launch all critical data fetching tasks simultaneously.
-    // i18n is already ensured by bootstrap wrapper.
-    const [userFetch, itemsFetch] = await Promise.all([
-        userStore.fetchUser(),
-        dashboardStore.fetchItems()
-    ]);
-
-    // ── Per-user sync ──────────────────────────────────────────────
+    // 1. Fetch User FIRST to get ID for scoped storage keys
+    await userStore.fetchUser();
     const u = userStore.getUser();
+    if (u && u.id) {
+        dashboardStore.setUserId(u.id);
+    }
+
+    // 2. Fetch Items and Dashboards in parallel now that ID is set
+    await Promise.all([
+        dashboardStore.fetchItems(),
+        dashboardStore.fetchDashboards()
+    ]);
+    
+    // ── Per-user sync ──────────────────────────────────────────────
     if (u) {
         // Language: overwrite i18n with the backend preference.
         if (u.language) {
@@ -228,6 +234,20 @@ if (topbar) {
             if (createdItem) {
                 eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item: createdItem, type: 'section' });
             }
+        } else if (action === 'add-dashboard') {
+            const addDashboardModal = document.createElement('add-dashboard-modal') as any;
+            document.body.appendChild(addDashboardModal);
+            
+            const handleClose = () => {
+                addDashboardModal.removeEventListener('modal-close', handleClose);
+                if (addDashboardModal.parentNode) {
+                    addDashboardModal.parentNode.removeChild(addDashboardModal);
+                }
+            };
+            
+            addDashboardModal.addEventListener('modal-close', handleClose);
+            // Assuming the modal auto-opens on connectedCallback or we just let it render.
+            // Since AddDashboardModal.ts calls this.dialog.showModal() in render(), it will open upon connection.
         }
     });
 }

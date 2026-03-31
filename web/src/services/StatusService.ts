@@ -7,14 +7,28 @@ import { i18n } from './i18n';
  * Periodically checks the health of bookmarks that have "Monitor Status" enabled.
  */
 class StatusService {
+    private lastDashboardId: number | null = null;
+    private lastItemsCount: number = 0;
+    private unsubscribe: (() => void) | null = null;
     private interval: number | null = null;
     private checkFrequency = 60000 * 5; // Every 5 minutes
 
     start() {
         if (this.interval) return;
 
-        // Initial check after a short delay
-        setTimeout(() => this.checkAll(), 2000);
+        // Reactive Intelligence: automatically ping when fresh data loads
+        this.unsubscribe = dashboardStore.subscribe((state) => {
+            const dashboardChanged = this.lastDashboardId !== state.currentDashboardId;
+            const itemsHash = state.items.map(i => i.id).join(',');
+            const countChanged = state.items.length !== this.lastItemsCount;
+            const loadFinished = !state.loading && state.items.length > 0;
+
+            if (dashboardChanged || (countChanged && loadFinished)) {
+                this.lastDashboardId = state.currentDashboardId;
+                this.lastItemsCount = state.items.length;
+                this.checkAll();
+            }
+        });
 
         this.interval = window.setInterval(() => {
             this.checkAll();
@@ -40,7 +54,9 @@ class StatusService {
         });
 
         // 1. Set ALL to pending immediately for visual feedback
-        items.forEach(item => this.updateUIStatus(item.id, 'pending'));
+        // BATCH UPDATE to avoid O(N^2) notify() cycle
+        const pendingUpdates = items.map(item => ({ id: item.id, status: 'pending' as const }));
+        dashboardStore.setItemStatuses(pendingUpdates);
 
         // 2. Process in batches to avoid network congestion but remain fast
         const CONCURRENCY = 5;

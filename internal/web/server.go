@@ -233,6 +233,14 @@ func (s *Server) routes() {
 	s.Router.Handle("DELETE /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.DeleteItem)))
 	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))
 
+	// Multi-Dashboard API
+	multiDashHandler := api.NewMultiDashboardHandler(s.DB)
+	s.Router.Handle("GET /api/dashboards", protect(http.HandlerFunc(multiDashHandler.GetDashboards)))
+	s.Router.Handle("POST /api/dashboards", protect(http.HandlerFunc(multiDashHandler.CreateDashboard)))
+	s.Router.Handle("DELETE /api/dashboards/", protect(http.HandlerFunc(multiDashHandler.DeleteDashboard)))
+	s.Router.Handle("PATCH /api/dashboards/", protect(http.HandlerFunc(multiDashHandler.RenameDashboard)))
+	s.Router.Handle("POST /api/dashboards/{id}/default", protect(http.HandlerFunc(multiDashHandler.SetDefaultDashboard)))
+
 	// Docker API
 	dockerHandler := api.NewDockerHandler(s.DB)
 	s.Router.Handle("GET /api/docker/containers", protect(http.HandlerFunc(dockerHandler.GetContainers)))

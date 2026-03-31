@@ -10,8 +10,17 @@ type Item struct {
 	Y         int       `json:"y"`
 	W         int       `json:"w"`
 	H         int       `json:"h"`
-	Url       string    `json:"url,omitempty"` // Added for widget compatibility
-	Content   string    `json:"content,omitempty"`
+	Url         string    `json:"url,omitempty"` // Added for widget compatibility
+	Content     string    `json:"content,omitempty"`
+	DashboardID *int      `json:"dashboard_id,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type Dashboard struct {
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Position  int       `json:"position"`
+	IsDefault bool      `json:"is_default"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

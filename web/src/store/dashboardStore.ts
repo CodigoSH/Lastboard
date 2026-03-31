@@ -1,6 +1,6 @@
 import { dashboardService } from '../services/dashboardService';
 import { demoService } from '../services/demoService';
-import { GridItem } from '../types';
+import { Dashboard, GridItem } from '../types';
 
 type Listener = (state: DashboardState) => void;
 
@@ -18,6 +18,8 @@ interface DashboardState {
     } | null;
     availableWidth: number;
     gridColumns: number;
+    dashboards: Dashboard[];
+    currentDashboardId: number | null;
 }
 
 // Mock data used only as a last-resort offline fallback when no user-scoped
@@ -46,15 +48,19 @@ class DashboardStore {
         loading: true,
         stats: null,
         availableWidth: 1200, // Default fallback
-        gridColumns: 12
+        gridColumns: 12,
+        dashboards: [],
+        currentDashboardId: null
     };
     private listeners: Listener[] = [];
     private userId: number = 0;
 
-    // Returns a cache key scoped to the authenticated user.  Falls back to
-    // the legacy unscoped key before setUserId() is called (edge case).
+    // Returns a cache key scoped to the authenticated user and the active dashboard.
+    // Falls back to 'default' when currentDashboardId is not yet known to prevent
+    // stale data from one dashboard bleeding into another.
     private getStorageKey(): string {
-        return this.userId ? `lastboard-items-${this.userId}` : 'lastboard-items';
+        const dash = this.state.currentDashboardId ?? 'default';
+        return this.userId ? `lastboard-items-${this.userId}-${dash}` : 'lastboard-items';
     }
 
     // Called from index.ts after userStore.fetchUser() resolves.  Scopes the
@@ -216,6 +222,28 @@ class DashboardStore {
         this.notify();
     }
 
+    /**
+     * Batch update multiple item statuses with only ONE notification.
+     * Crucial for performance during mass pings (e.g. 50+ bookmarks).
+     */
+    setItemStatuses(updates: { id: number, status: 'up' | 'down' | 'pending' }[]) {
+        let hasChanged = false;
+        
+        updates.forEach(update => {
+            const itemIndex = this.state.items.findIndex(item => item.id === update.id);
+            if (itemIndex !== -1) {
+                if (this.state.items[itemIndex].status !== update.status) {
+                    this.state.items[itemIndex].status = update.status;
+                    hasChanged = true;
+                }
+            }
+        });
+
+        if (hasChanged) {
+            this.notify();
+        }
+    }
+
     private notify() {
         // Ensure items is an array before notifying
         this.ensureItemsIsArray();
@@ -276,7 +304,9 @@ class DashboardStore {
 
         // 2. REVALIDATE: Fetch from backend in background
         try {
-            const items = await dashboardService.getItems();
+            const items = await dashboardService.getItems(
+                this.state.currentDashboardId ?? undefined
+            );
             if (Array.isArray(items)) {
                 // Only update and notify if data actually changed to prevent flicker
                 const hasChanged = JSON.stringify(this.state.items) !== JSON.stringify(items);
@@ -524,6 +554,83 @@ class DashboardStore {
             ...this.state,
             items: [...this.state.items]
         };
+    }
+
+    // ── Multi-Dashboard ────────────────────────────────────────────────────────
+
+    /**
+     * Fetches all dashboards for the current user.
+     * If no dashboard is selected yet, auto-selects the default (or first) one.
+     */
+    async fetchDashboards(): Promise<void> {
+        const { multiDashboardService } = await import('../services/multiDashboardService');
+        const result = await multiDashboardService.getAll();
+        this.state.dashboards = result;
+
+        if (this.state.currentDashboardId === null && result.length > 0) {
+            // Priority: Default flag (synced from last session on any device) > First item
+            const defaultDash = result.find(d => d.is_default) ?? result[0];
+            this.state.currentDashboardId = defaultDash.id;
+        }
+
+        this.notify();
+    }
+
+    /**
+     * Switches the active dashboard, clears the item cache, and re-fetches items.
+     */
+    async switchDashboard(id: number): Promise<void> {
+        this.state.currentDashboardId = id;
+        this.state.items = [];
+        this.state.loading = true;
+        this.notify();
+
+        // 1. Persist choice universally to the backend
+        const { multiDashboardService } = await import('../services/multiDashboardService');
+        multiDashboardService.setDefault(id).catch(err => {
+            console.warn('[DashboardStore] Failed to sync default dashboard to backend', err);
+        });
+
+        // 2. Load items for the new dashboard
+        await this.fetchItems();
+    }
+
+    /**
+     * Creates a new dashboard and refreshes the list.
+     * Does NOT auto-switch to it.
+     */
+    async createDashboard(name: string): Promise<void> {
+        const { multiDashboardService } = await import('../services/multiDashboardService');
+        await multiDashboardService.create(name);
+        await this.fetchDashboards();
+    }
+
+    /**
+     * Renames a dashboard.
+     */
+    async renameDashboard(id: number, name: string): Promise<void> {
+        const { multiDashboardService } = await import('../services/multiDashboardService');
+        await multiDashboardService.rename(id, name);
+        await this.fetchDashboards();
+    }
+
+    /**
+     * Deletes a dashboard.
+     * If the deleted dashboard is the currently active one, switches to the new default.
+     */
+    async deleteDashboard(id: number): Promise<void> {
+        const { multiDashboardService } = await import('../services/multiDashboardService');
+        await multiDashboardService.delete(id);
+
+        if (this.state.currentDashboardId === id) {
+            await this.fetchDashboards();
+            const newDefault = this.state.dashboards.find(d => d.is_default) ?? this.state.dashboards[0];
+            if (newDefault) {
+                await this.switchDashboard(newDefault.id);
+            }
+        } else {
+            await this.fetchDashboards();
+        }
     }
 }
 

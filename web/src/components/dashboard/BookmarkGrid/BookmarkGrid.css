@@ -293,9 +293,9 @@
     border: clamp(1px, 1.2cqi, 2px) solid var(--panel);
 
     /* Light effect shadow scales slightly */
-    box-shadow: 0 0 clamp(2px, 2cqi, 6px) rgba(0, 0, 0, 0.5);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     z-index: 5;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease;
 }
 
 /* Status Positions */
@@ -334,6 +334,11 @@
 .status-down {
     background-color: #e74c3c;
 }
+
+.status-pending {
+    background-color: #f1c40f;
+}
+
 
 /* Action Buttons (Edit Mode) */
 .bookmark-actions {
@@ -644,7 +649,7 @@
     /* Use the section's width and height for local grid */
     grid-template-columns: repeat(var(--w), 1fr);
     grid-template-rows: repeat(var(--h), 1fr);
-    gap: 12px;
+    gap: 16px;
     width: 100%;
     height: 100%;
     align-content: start;
@@ -659,6 +664,10 @@
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    aspect-ratio: auto !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
 }
 
 .bookmark-grid__nested-content .bookmark-grid__card:hover {
@@ -717,33 +726,4 @@
     100% {
         background-position: -200% 0;
     }
-}
-
-/* Status Positions */
-.status-indicator.status-pos-top-right {
-    top: clamp(6px, 6cqi, 12px);
-    right: clamp(6px, 6cqi, 12px);
-    bottom: auto;
-    left: auto;
-}
-
-.status-indicator.status-pos-top-left {
-    top: clamp(6px, 6cqi, 12px);
-    left: clamp(6px, 6cqi, 12px);
-    bottom: auto;
-    right: auto;
-}
-
-.status-indicator.status-pos-bottom-right {
-    bottom: clamp(6px, 6cqi, 12px);
-    right: clamp(6px, 6cqi, 12px);
-    top: auto;
-    left: auto;
-}
-
-.status-indicator.status-pos-bottom-left {
-    bottom: clamp(6px, 6cqi, 12px);
-    left: clamp(6px, 6cqi, 12px);
-    top: auto;
-    right: auto;
 }

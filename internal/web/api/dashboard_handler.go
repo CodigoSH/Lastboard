@@ -46,9 +46,34 @@ type SectionContent struct {
 }
 
 // GetDashboard returns the list of items owned by the authenticated user.
+// Accepts an optional ?dashboard_id=N query param to filter by a specific dashboard.
+// Without the param it returns items belonging to the user's default dashboard
+// (or items with dashboard_id IS NULL for backwards compatibility).
 func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserIDFromContext(r)
-	rows, err := h.DB.Query("SELECT id, parent_id, type, x, y, w, h, content, url FROM items WHERE user_id = ?", userID)
+
+	var query string
+	var args []interface{}
+
+	if rawID := r.URL.Query().Get("dashboard_id"); rawID != "" {
+		dashID, err := strconv.Atoi(rawID)
+		if err != nil {
+			http.Error(w, "error.invalid_id", http.StatusBadRequest)
+			return
+		}
+		query = "SELECT id, parent_id, type, x, y, w, h, content, url FROM items WHERE user_id = ? AND dashboard_id = ?"
+		args = []interface{}{userID, dashID}
+	} else {
+		// Backwards-compatible fallback: items that are either NULL (legacy) or
+		// assigned to the user's default dashboard.
+		query = `SELECT id, parent_id, type, x, y, w, h, content, url FROM items
+			WHERE user_id = ?
+			AND (dashboard_id IS NULL
+			     OR dashboard_id = (SELECT id FROM dashboards WHERE user_id = ? AND is_default = 1 LIMIT 1))`
+		args = []interface{}{userID, userID}
+	}
+
+	rows, err := h.DB.Query(query, args...)
 	if err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
@@ -58,9 +83,7 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 	var items []dashboard.Item
 	for rows.Next() {
 		var i dashboard.Item
-
 		var urlSql sql.NullString
-
 		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &urlSql); err != nil {
 			slog.Warn("Scan error reading items", "error", err)
 			continue
@@ -126,8 +149,10 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.DB.Exec("INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		userID, item.ParentID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url)
+	res, err := h.DB.Exec(
+		"INSERT INTO items (user_id, parent_id, dashboard_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		userID, item.ParentID, item.DashboardID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url,
+	)
 	if err != nil {
 		slog.Error("DB Insert error in CreateItem", "error", err)
 		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)

@@ -61,6 +61,10 @@ func InitDB(dsn string) (*DB, error) {
 		return nil, err
 	}
 
+	if err := migrateSchema(db); err != nil {
+		return nil, fmt.Errorf("schema migration failed: %w", err)
+	}
+
 	return &DB{DB: db}, nil
 }
 
@@ -112,6 +116,16 @@ func initSchema(db *sql.DB) error {
 			locked_until DATETIME
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id);`,
+		`CREATE TABLE IF NOT EXISTS dashboards (
+			id         INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id    INTEGER NOT NULL,
+			name       TEXT NOT NULL,
+			position   INTEGER DEFAULT 0,
+			is_default BOOLEAN DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_dashboards_user_id ON dashboards(user_id);`,
 	}
 
 	for _, q := range queries {
@@ -121,4 +135,29 @@ func initSchema(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func migrateSchema(db *sql.DB) error {
+	_, err := db.Exec(`ALTER TABLE items ADD COLUMN dashboard_id INTEGER REFERENCES dashboards(id) ON DELETE CASCADE`)
+	if err != nil {
+		if containsAny(err.Error(), "duplicate column name") {
+			slog.Debug("migrateSchema: dashboard_id column already exists, skipping")
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func containsAny(s string, substrings ...string) bool {
+	for _, sub := range substrings {
+		if len(s) >= len(sub) {
+			for i := 0; i <= len(s)-len(sub); i++ {
+				if s[i:i+len(sub)] == sub {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }

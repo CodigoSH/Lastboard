@@ -6,8 +6,11 @@ import { GridItem, MessageResponse } from '../types';
  * Handles grid item management, including coordinate updates and drag-and-drop persistence.
  */
 export const dashboardService = {
-    async getItems(): Promise<GridItem[]> {
-        return apiService.get<GridItem[]>('/api/dashboard');
+    async getItems(dashboardId?: number): Promise<GridItem[]> {
+        const url = dashboardId !== undefined
+            ? `/api/dashboard?dashboard_id=${dashboardId}`
+            : '/api/dashboard';
+        return apiService.get<GridItem[]>(url);
     },
 
     async updateItem(item: Partial<GridItem> & { id: number }): Promise<MessageResponse> {

@@ -10,11 +10,13 @@ interface TopBarData {
     drawerOpen: boolean;
     searchQuery: string;
     isDemo?: boolean;
+    currentDashboardId?: number | null;
 }
 
 import { i18n } from '../../../services/i18n';
+import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable, isDemo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
+export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable, isDemo, currentDashboardId }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center;">
@@ -26,7 +28,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             <offline-badge></offline-badge>
 
             <!-- Search Bar -->
-            <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''}">
+            <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${editMode ? 'search-wrapper--disabled' : ''}">
                 <input type="text" id="search-input" class="search-input" placeholder="${i18n.t('general.search')}" 
                        value="${searchQuery || ''}" onclick="event.stopPropagation()">
                 <div id="search-clear" class="search-clear" style="display: ${searchQuery ? 'flex' : 'none'};">×</div>
@@ -35,7 +37,6 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
                     <path d="M21 21l-4.35-4.35" stroke-linecap="round" />
                 </svg>
             </div>
-
             <!-- Add Item Toggle -->
             <div id="add-toggle" class="top-bar__toggle" title="${i18n.t('topbar.add_tooltip')}" 
                  style="${editMode ? 'display: flex;' : 'display: none;'} margin-right: -6px;">
@@ -46,6 +47,16 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
 
             <!-- Add Menu Dropdown -->
             <div id="add-menu" class="add-menu ${addMenuActive ? 'add-menu--active' : ''}">
+                <div class="add-menu-item" data-action="add-dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon">
+                        <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <path d="M17 13v8M13 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    ${i18n.t('action.add_dashboard')}
+                </div>
+                <div style="height: 1px; background: var(--border); margin: 2px 0;"></div>
                 <div class="add-menu-item" data-action="add-bookmark">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     ${i18n.t('action.add_bookmark')}
@@ -75,16 +86,21 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
                 </svg>
             </div>
 
+            <dashboard-switcher class="${editMode ? 'disabled' : ''}"></dashboard-switcher>
+
             <!-- Sidebar Toggle Icon -->
-            <div id="drawer-toggle" class="top-bar__toggle" style="position: relative;" title="${i18n.t('topbar.drawer_tooltip')}">
+            <div id="drawer-toggle" class="top-bar__toggle ${editMode ? 'top-bar__toggle--disabled' : ''}" 
+                 style="position: relative;" 
+                 title="${i18n.t('topbar.drawer_tooltip')}">
                 ${updateAvailable ? '<div class="notification-dot"></div>' : ''}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5" />
                     <rect class="top-bar__indicator ${drawerOpen ? 'top-bar__indicator--active' : ''}" 
-                          x="15" y="3" width="6" height="18" fill="white" />
+                           x="15" y="3" width="6" height="18" fill="white" />
                     <path d="M15 3V21" stroke-width="1.5" />
                 </svg>
             </div>
+
         </div>
     </div>
 `;

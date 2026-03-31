@@ -69,3 +69,11 @@ declare global {
         demoService?: any;
     }
 }
+
+export interface Dashboard {
+    id: number;
+    name: string;
+    position: number;
+    is_default: boolean;
+    created_at?: string;
+}

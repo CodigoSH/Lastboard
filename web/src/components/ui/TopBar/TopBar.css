@@ -111,6 +111,13 @@
     border-radius: 4px;
 }
 
+.top-bar__toggle--disabled {
+    opacity: 0.3 !important;
+    pointer-events: none !important;
+    filter: grayscale(1);
+    cursor: default;
+}
+
 .top-bar__toggle svg {
     width: 20px;
     height: 20px;
@@ -131,6 +138,13 @@
 
 .top-bar__indicator--active {
     opacity: 1;
+}
+
+dashboard-switcher { margin-right: 4px; }
+dashboard-switcher.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    filter: grayscale(1);
 }
 
 /* Search Styles */
@@ -161,6 +175,12 @@
     padding: 0 4px 0 12px;
     justify-content: space-between;
     /* Icon to the right */
+}
+
+.search-wrapper--disabled {
+    opacity: 0.3 !important;
+    pointer-events: none !important;
+    filter: grayscale(1);
 }
 
 .search-input {

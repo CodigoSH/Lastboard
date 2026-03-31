@@ -1,0 +1,143 @@
+:host {
+    display: inline-block;
+    position: relative;
+    font-family: var(--font-mono);
+}
+
+.switcher-trigger {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: opacity 0.2s, background 0.2s, border-radius 0.2s;
+    padding: 0;
+    margin: 0;
+}
+
+.switcher-trigger:hover {
+    opacity: 0.7;
+    background: rgba(128, 128, 128, 0.1);
+    border-radius: 4px;
+}
+
+.switcher-trigger.active {
+    color: var(--accent);
+}
+
+.switcher-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.5px;
+    flex-shrink: 0;
+}
+
+.switcher-dropdown {
+    position: absolute;
+    top: 42px;
+    right: 0;
+    left: auto;
+    background: var(--surface-solid, #1a1b1e);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 180px;
+    z-index: 2100;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.switcher-dropdown.open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.switcher-item {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.switcher-item.is-active {
+    color: var(--accent);
+    font-weight: 600;
+    background: rgba(var(--accent-rgb, 0, 122, 255), 0.05);
+}
+
+.switcher-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--accent);
+}
+
+.switcher-item-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 8px;
+}
+
+.switcher-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.switcher-item:hover .switcher-actions {
+    opacity: 1;
+}
+
+.switcher-action-btn {
+    background: transparent;
+    border: none;
+    padding: 2px;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: all 0.2s;
+}
+
+.switcher-action-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+}
+
+.switcher-action-btn:hover {
+    color: var(--accent);
+    background: rgba(var(--accent-rgb, 0, 122, 255), 0.1);
+}
+
+.switcher-action-btn[data-action="delete"]:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.switcher-separator {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+}
