@@ -143,7 +143,22 @@ class AddBookmarkModal extends HTMLElement {
         this.inputHandler = (e: Event) => {
             const target = e.target as HTMLInputElement;
             if (target.id === 'bookmark-label') this.bookmarkTitle = target.value;
-            if (target.id === 'bookmark-url') this.url = target.value;
+            if (target.id === 'bookmark-url') {
+                const value = target.value;
+                if (value.startsWith('https://')) {
+                    this.protocol = 'https://';
+                    this.url = value.substring(8);
+                    target.value = this.url;
+                    this.updateTriggers();
+                } else if (value.startsWith('http://')) {
+                    this.protocol = 'http://';
+                    this.url = value.substring(7);
+                    target.value = this.url;
+                    this.updateTriggers();
+                } else {
+                    this.url = value;
+                }
+            }
             if (target.id === 'bookmark-borderColor') {
                 this.color = target.value;
                 this.updateTriggers();
