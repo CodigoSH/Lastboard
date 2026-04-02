@@ -11,15 +11,17 @@ interface TopBarData {
     searchQuery: string;
     isDemo?: boolean;
     currentDashboardId?: number | null;
+    projectLogo?: string;
 }
 
 import { i18n } from '../../../services/i18n';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable, isDemo, currentDashboardId }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
+export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable, isDemo, currentDashboardId, projectLogo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
     return `
     <div class="top-bar">
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="${projectLogo || '/images/logo.png'}" class="top-bar__logo" alt="" aria-hidden="true">
             <div class="top-bar__title">${title}</div>
             ${isDemo ? `<div class="top-bar__demo-badge">${i18n.t('general.demo_mode')}</div>` : ''}
         </div>

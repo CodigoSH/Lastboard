@@ -145,6 +145,12 @@ func migrateSchema(db *sql.DB) error {
 		return err
 	}
 
+	// Migration 3: add project_logo column to users (safe to re-run)
+	_, err = db.Exec(`ALTER TABLE users ADD COLUMN project_logo TEXT DEFAULT ''`)
+	if err != nil && !containsAny(err.Error(), "duplicate column name") {
+		return err
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.

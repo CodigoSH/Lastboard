@@ -7,6 +7,7 @@ import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate,
 import { User, UserPreferences } from '../../../types';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
+import '../IconSelectionModal/IconSelectionModal';
 // @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
 
@@ -41,7 +42,8 @@ class SettingsContent extends HTMLElement {
             if (user && user.preferences) {
                 this.prefs = {
                     ...user.preferences,
-                    project_name: user.project_name || user.preferences.project_name || 'Lastboard'
+                    project_name: user.project_name || user.preferences.project_name || 'Lastboard',
+                    project_logo: user.project_logo || user.preferences.project_logo || ''
                 };
                 this.render();
             }
@@ -71,7 +73,8 @@ class SettingsContent extends HTMLElement {
         if (u && u.preferences) {
             this.prefs = {
                 ...u.preferences,
-                project_name: u.project_name || u.preferences.project_name || 'Lastboard'
+                project_name: u.project_name || u.preferences.project_name || 'Lastboard',
+                project_logo: u.project_logo || u.preferences.project_logo || ''
             };
             this.render();
         }
@@ -308,6 +311,19 @@ class SettingsContent extends HTMLElement {
             this.render();
         } catch (error) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.save_error'), 'error');
+        }
+    }
+
+    async openLogoPicker() {
+        let modal = document.body.querySelector('icon-selection-modal') as any;
+        if (!modal) {
+            modal = document.createElement('icon-selection-modal');
+            document.body.appendChild(modal);
+        }
+        const result: string | null = await modal.open();
+        if (result) {
+            this.prefs.project_logo = result;
+            await this.savePrefs({ project_logo: result });
         }
     }
 

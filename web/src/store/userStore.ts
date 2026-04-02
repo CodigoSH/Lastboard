@@ -66,11 +66,13 @@ class UserStore {
                 theme: userData.theme, // Map theme from backend!
                 grid_columns: userData.grid_columns || 12, // Default 12
                 project_name: userData.project_name || 'Lastboard',
+                project_logo: userData.project_logo || '',
                 beta_updates: userData.beta_updates,
                 unit_system: userData.unit_system || 'metric',
                 dashboard_background: dashboard_background || ''
             },
-            project_name: userData.project_name || 'Lastboard'
+            project_name: userData.project_name || 'Lastboard',
+            project_logo: userData.project_logo || ''
         };
 
         this.applyAesthetics();
@@ -146,6 +148,7 @@ class UserStore {
             if (newPrefs.accent_color) this.user.accent_color = newPrefs.accent_color;
             if (newPrefs.language) this.user.language = newPrefs.language;
             if (newPrefs.project_name) this.user.project_name = newPrefs.project_name;
+            if (newPrefs.project_logo !== undefined) this.user.project_logo = newPrefs.project_logo;
             if (newPrefs.theme) this.user.preferences.theme = newPrefs.theme;
             if (newPrefs.grid_columns) this.user.preferences.grid_columns = newPrefs.grid_columns;
             if (newPrefs.unit_system) this.user.preferences.unit_system = newPrefs.unit_system;
@@ -164,6 +167,10 @@ class UserStore {
         if (newPrefs.accent_color) this.user.accent_color = newPrefs.accent_color;
         if (newPrefs.language) this.user.language = newPrefs.language;
         if (newPrefs.project_name) this.user.project_name = newPrefs.project_name;
+        if (newPrefs.project_logo !== undefined) {
+            this.user.project_logo = newPrefs.project_logo;
+            this.user.preferences.project_logo = newPrefs.project_logo;
+        }
         if (newPrefs.theme) this.user.preferences.theme = newPrefs.theme; // Ensure nested pref is updated for immediate effect
         if (newPrefs.grid_columns) this.user.preferences.grid_columns = newPrefs.grid_columns;
         if (newPrefs.beta_updates !== undefined) this.user.preferences.beta_updates = newPrefs.beta_updates;
@@ -184,6 +191,7 @@ class UserStore {
                 theme: this.user.preferences.theme,
                 grid_columns: this.user.preferences.grid_columns,
                 project_name: this.user.project_name,
+                project_logo: this.user.project_logo,
                 beta_updates: this.user.preferences.beta_updates,
                 unit_system: this.user.preferences.unit_system,
                 dashboard_background: this.user.preferences.dashboard_background

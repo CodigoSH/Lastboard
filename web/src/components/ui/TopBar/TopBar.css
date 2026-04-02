@@ -21,6 +21,14 @@
     box-sizing: border-box;
 }
 
+.top-bar__logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+
 .top-bar__title {
     font-size: 14px;
     font-weight: 600;

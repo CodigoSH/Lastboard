@@ -175,12 +175,22 @@ export const personalizationTemplate = (prefs: Prefs) => `
             <div class="settings-content__form-group" style="margin-bottom: 24px;">
                 <label class="settings-content__label">${i18n.t('settings.project_name')}</label>
                 <div style="display: flex; gap: 8px;">
-                     <input type="text" 
+                     <input type="text"
                             id="project-name-input"
-                            class="settings-content__input" 
-                            value="${prefs.project_name || 'Lastboard'}" 
+                            class="settings-content__input"
+                            value="${prefs.project_name || 'Lastboard'}"
                             placeholder="Lastboard">
                      <app-button variant="primary" onclick="this.getRootNode().host.savePrefs({project_name: this.getRootNode().getElementById('project-name-input').value})">${i18n.t('action.update')}</app-button>
+                </div>
+            </div>
+
+            <!-- Project Logo -->
+            <div class="settings-content__form-group" style="margin-bottom: 24px;">
+                <label class="settings-content__label">${i18n.t('settings.project_logo')}</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    ${prefs.project_logo ? `<img src="${prefs.project_logo}" style="width:32px;height:32px;object-fit:contain;border-radius:4px;border:1px solid var(--border);" alt="">` : `<div style="width:32px;height:32px;border-radius:4px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:18px;">?</div>`}
+                    <app-button variant="secondary" onclick="this.getRootNode().host.openLogoPicker()">${i18n.t('action.choose_icon')}</app-button>
+                    ${prefs.project_logo ? `<app-button variant="ghost" onclick="this.getRootNode().host.savePrefs({project_logo: ''})">${i18n.t('action.remove')}</app-button>` : ''}
                 </div>
             </div>
 

@@ -16,6 +16,7 @@ interface TopBarState {
     updateAvailable?: boolean;
     isDemo?: boolean;
     currentDashboardId?: number | null;
+    projectLogo?: string;
 }
 
 class TopBar extends HTMLElement {
@@ -264,7 +265,8 @@ class TopBar extends HTMLElement {
             user: this.state.user,
             updateAvailable: this.state.updateAvailable,
             isDemo: this.state.isDemo,
-            currentDashboardId: this.state.currentDashboardId
+            currentDashboardId: this.state.currentDashboardId,
+            projectLogo: this.state.projectLogo
         })}
         `;
     }

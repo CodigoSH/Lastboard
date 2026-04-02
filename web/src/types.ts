@@ -11,6 +11,7 @@ export interface UserPreferences {
     grid_columns?: number; // Replaces fixed widget width
     avatar_url?: string;
     project_name?: string;
+    project_logo?: string;
     beta_updates?: boolean;
     widget_min_width?: number;
     unit_system?: string; // 'metric' | 'imperial'
@@ -28,6 +29,7 @@ export interface User {
     theme?: string; // Sync with backend response
     grid_columns?: number;
     project_name?: string;
+    project_logo?: string;
     beta_updates?: boolean;
     is_superadmin?: boolean;
     unit_system?: string;

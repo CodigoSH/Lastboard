@@ -18,6 +18,7 @@ type User struct {
 	GridColumnsTablet int       `json:"grid_columns_tablet"`
 	GridColumnsMobile int       `json:"grid_columns_mobile"`
 	ProjectName         string    `json:"project_name"`
+	ProjectLogo         string    `json:"project_logo"`
 	AvatarUrl           string    `json:"avatar_url"`
 	DashboardBackground string    `json:"dashboard_background"`
 	BetaUpdates         bool      `json:"beta_updates"`

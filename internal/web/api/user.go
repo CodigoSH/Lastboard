@@ -39,11 +39,12 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
                COALESCE(beta_updates, 0),
                COALESCE(grid_columns_pc, 12),
                COALESCE(unit_system, 'metric'),
-               COALESCE(dashboard_background, '')
+               COALESCE(dashboard_background, ''),
+               COALESCE(project_logo, '')
 		FROM users WHERE username=?`, username).Scan(
 		&u.ID, &u.Username, &u.Role, &u.AccentColor, &u.Language, &u.AvatarUrl,
 		&u.WidgetMinWidth, &u.Theme, &u.ProjectName,
-		&u.BetaUpdates, &u.GridColumnsPC, &u.UnitSystem, &u.DashboardBackground,
+		&u.BetaUpdates, &u.GridColumnsPC, &u.UnitSystem, &u.DashboardBackground, &u.ProjectLogo,
 	)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -63,6 +64,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"unit_system":      u.UnitSystem,
 		"widget_min_width": u.WidgetMinWidth,
 		"project_name":         u.ProjectName,
+		"project_logo":         u.ProjectLogo,
 		"beta_updates":         u.BetaUpdates,
 		"grid_columns":         u.GridColumnsPC,
 		"dashboard_background": u.DashboardBackground,
@@ -82,9 +84,10 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		UnitSystem     string `json:"unit_system"`
 		WidgetMinWidth int    `json:"widget_min_width"`
 		ProjectName    string `json:"project_name"`
-		BetaUpdates         *bool  `json:"beta_updates"`
-		GridColumns         *int   `json:"grid_columns"`
-		DashboardBackground string `json:"dashboard_background"`
+		ProjectLogo         *string `json:"project_logo"`
+		BetaUpdates         *bool   `json:"beta_updates"`
+		GridColumns         *int    `json:"grid_columns"`
+		DashboardBackground string  `json:"dashboard_background"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -92,9 +95,9 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12), COALESCE(unit_system, 'metric'), COALESCE(dashboard_background, '')
+	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12), COALESCE(unit_system, 'metric'), COALESCE(dashboard_background, ''), COALESCE(project_logo, '')
 		FROM users WHERE username=?`, username).Scan(
-		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC, &current.UnitSystem, &current.DashboardBackground)
+		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC, &current.UnitSystem, &current.DashboardBackground, &current.ProjectLogo)
 
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
@@ -160,11 +163,21 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	// Dashboard Background: accept any string (Base64 or URL). Empty string clears it.
 	current.DashboardBackground = input.DashboardBackground
 
+	// Project Logo: only update when explicitly provided (nil = not sent = keep current)
+	if input.ProjectLogo != nil {
+		logo := *input.ProjectLogo
+		if logo != "" && len(logo) > 2*1024*1024 {
+			http.Error(w, "Logo too large (max 2MB)", http.StatusBadRequest)
+			return
+		}
+		current.ProjectLogo = logo
+	}
+
 	_, err = h.DB.Exec(`UPDATE users SET accent_color=?, language=?, theme=?,
-		unit_system=?, widget_min_width=?, project_name=?, beta_updates=?, grid_columns_pc=?, dashboard_background=?
+		unit_system=?, widget_min_width=?, project_name=?, beta_updates=?, grid_columns_pc=?, dashboard_background=?, project_logo=?
 		WHERE username=?`,
 		current.AccentColor, current.Language, current.Theme, current.UnitSystem,
-		current.WidgetMinWidth, current.ProjectName, current.BetaUpdates, current.GridColumnsPC, current.DashboardBackground, username)
+		current.WidgetMinWidth, current.ProjectName, current.BetaUpdates, current.GridColumnsPC, current.DashboardBackground, current.ProjectLogo, username)
 
 	if err != nil {
 		http.Error(w, "Failed to update preferences", http.StatusInternalServerError)

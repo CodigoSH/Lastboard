@@ -93,14 +93,14 @@ bootstrap(async () => {
 
     // Inject user into topbar
     if (topbar) {
-        topbar.setState({ user: u });
+        topbar.setState({ user: u, projectLogo: u?.project_logo || '' });
         if (u && u.project_name) {
             topbar.setAttribute('title', u.project_name);
         }
 
         userStore.subscribe((user) => {
             if (user) {
-                topbar.setState({ user });
+                topbar.setState({ user, projectLogo: user.project_logo || '' });
                 if (user.project_name) {
                     topbar.setAttribute('title', user.project_name);
                 }
