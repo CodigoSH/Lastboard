@@ -28,9 +28,9 @@ jobs:
       - name: Cleanup Old Stable Releases
         uses: dev-drprasad/delete-older-releases@v0.3.3
         with:
-          # Keep the 5 most recent releases in total. 
-          # Since step 1 keeps 2 betas, this ensures at least 3 stable releases are kept.
-          keep_latest: 5
+          # Keep the 12 most recent releases in total.
+          # Since step 1 keeps 2 betas, this ensures 10 stable releases are kept.
+          keep_latest: 12
           # Do not delete the git tags, only the release entry and assets
           delete_tags: false
         env:
