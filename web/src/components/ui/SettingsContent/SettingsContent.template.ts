@@ -453,7 +453,7 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
                 <img src="/images/logo.png" alt="Lastboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
                 
                 <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
-                <p class="settings-content__text-dim" style="margin: 0;">${version}</p>
+                <p id="current-version-label" class="settings-content__text-dim" style="margin: 0;">${version || '…'}</p>
             </div>
 
               <div id="update-zone-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">

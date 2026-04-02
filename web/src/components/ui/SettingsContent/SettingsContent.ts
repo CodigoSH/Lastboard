@@ -790,6 +790,10 @@ class SettingsContent extends HTMLElement {
             const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'administrator';
             wrapper.innerHTML = updateZoneTemplate(isAdmin, this.updateInfo, this.isCheckingUpdates);
         }
+        const versionLabel = this.shadowRoot!.getElementById('current-version-label');
+        if (versionLabel && this.version) {
+            versionLabel.textContent = this.version;
+        }
     }
 }
 
