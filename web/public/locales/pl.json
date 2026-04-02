@@ -281,7 +281,7 @@
   "settings.project_name": "Nazwa pulpitu",
   "settings.project_name_desc": "To, co pojawia się w nagłówku.",
   "settings.project_name_and_logo": "Logo i nazwa panelu",
-  "settings.project_logo": "Logo projektu",
+  "settings.project_logo": "Logo panelu",
   "action.choose_icon": "Wybierz ikonę",
   "action.remove": "Usuń",
   "settings.remove_background": "Usuń tło",

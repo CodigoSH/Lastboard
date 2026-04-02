@@ -281,7 +281,7 @@
   "settings.project_name": "Nombre del panel",
   "settings.project_name_desc": "Lo que aparece en tu encabezado.",
   "settings.project_name_and_logo": "Logo y nombre del panel",
-  "settings.project_logo": "Logo del proyecto",
+  "settings.project_logo": "Logo del panel",
   "action.choose_icon": "Elegir icono",
   "action.remove": "Eliminar",
   "settings.remove_background": "Eliminar Fondo",

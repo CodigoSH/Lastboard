@@ -281,7 +281,7 @@
   "settings.project_name": "Nom du tableau de bord",
   "settings.project_name_desc": "Ce qui apparaît dans votre en-tête.",
   "settings.project_name_and_logo": "Logo et nom du panneau",
-  "settings.project_logo": "Logo du projet",
+  "settings.project_logo": "Logo du panneau",
   "action.choose_icon": "Choisir une icône",
   "action.remove": "Supprimer",
   "settings.remove_background": "Supprimer l'arrière-plan",

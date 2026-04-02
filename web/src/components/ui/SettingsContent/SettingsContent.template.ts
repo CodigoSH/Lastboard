@@ -168,9 +168,14 @@ export const personalizationTemplate = (prefs: Prefs) => `
             <div class="settings-content__form-group" style="margin-bottom: 24px;">
                 <label class="settings-content__label">${i18n.t('settings.project_name_and_logo')}</label>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button type="button" class="settings-logo-btn" onclick="this.getRootNode().host.openLogoPicker()" title="${i18n.t('settings.project_logo')}">
-                        <img src="${prefs.project_logo || '/images/logo.png'}" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:4px;">
-                    </button>
+                    <div style="position: relative; flex-shrink: 0;">
+                        <button type="button" class="settings-logo-btn" onclick="this.getRootNode().host.openLogoPicker()" title="${i18n.t('settings.project_logo')}">
+                            <img src="${prefs.project_logo || '/images/logo.png'}" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:4px;">
+                        </button>
+                        ${prefs.project_logo ? `
+                        <button type="button" class="settings-logo-remove" onclick="event.stopPropagation();this.getRootNode().host.savePrefs({project_logo:''})" title="${i18n.t('action.remove')}">×</button>
+                        ` : ''}
+                    </div>
                     <input type="text"
                            id="project-name-input"
                            class="settings-content__input"

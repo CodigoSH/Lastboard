@@ -281,7 +281,7 @@
   "settings.project_name": "Dashboard-Name",
   "settings.project_name_desc": "Was in Ihrer Kopfzeile erscheint.",
   "settings.project_name_and_logo": "Logo & Panel-Name",
-  "settings.project_logo": "Projektlogo",
+  "settings.project_logo": "Panel-Logo",
   "action.choose_icon": "Symbol wählen",
   "action.remove": "Entfernen",
   "settings.remove_background": "Hintergrund entfernen",

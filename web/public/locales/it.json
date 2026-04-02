@@ -281,7 +281,7 @@
   "settings.project_name": "Nome dashboard",
   "settings.project_name_desc": "Ciò che appare nell'intestazione.",
   "settings.project_name_and_logo": "Logo e nome del pannello",
-  "settings.project_logo": "Logo progetto",
+  "settings.project_logo": "Logo del pannello",
   "action.choose_icon": "Scegli icona",
   "action.remove": "Rimuovi",
   "settings.remove_background": "Rimuovi sfondo",

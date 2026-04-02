@@ -281,7 +281,7 @@
   "settings.project_name": "Nome do painel",
   "settings.project_name_desc": "O que aparece no seu cabeçalho.",
   "settings.project_name_and_logo": "Logo e nome do painel",
-  "settings.project_logo": "Logo do projeto",
+  "settings.project_logo": "Logo do painel",
   "action.choose_icon": "Escolher ícone",
   "action.remove": "Remover",
   "settings.remove_background": "Remover Fundo",

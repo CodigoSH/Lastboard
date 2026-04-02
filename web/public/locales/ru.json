@@ -281,7 +281,7 @@
   "settings.project_name": "Название панели",
   "settings.project_name_desc": "Что отображается в вашем заголовке.",
   "settings.project_name_and_logo": "Логотип и название панели",
-  "settings.project_logo": "Логотип проекта",
+  "settings.project_logo": "Логотип панели",
   "action.choose_icon": "Выбрать иконку",
   "action.remove": "Удалить",
   "settings.remove_background": "Удалить фон",

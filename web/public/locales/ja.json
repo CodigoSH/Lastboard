@@ -281,7 +281,7 @@
   "settings.project_name": "ダッシュボード名",
   "settings.project_name_desc": "ヘッダーに表示されます。",
   "settings.project_name_and_logo": "ロゴとパネル名",
-  "settings.project_logo": "プロジェクトロゴ",
+  "settings.project_logo": "パネルロゴ",
   "action.choose_icon": "アイコンを選択",
   "action.remove": "削除",
   "settings.remove_background": "背景を削除",

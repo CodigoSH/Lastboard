@@ -281,7 +281,7 @@
   "settings.project_name": "ড্যাশবোর্ডের নাম",
   "settings.project_name_desc": "আপনার হেডারে যা দেখায়।",
   "settings.project_name_and_logo": "লোগো ও প্যানেলের নাম",
-  "settings.project_logo": "প্রজেক্ট লোগো",
+  "settings.project_logo": "প্যানেলের লোগো",
   "action.choose_icon": "আইকন বেছে নিন",
   "action.remove": "সরান",
   "settings.remove_background": "ব্যাকগ্রাউন্ড সরান",
