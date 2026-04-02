@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "आंधी",
   "widget.weather.thunderstorm_hail": "ओलावृष्टि तूफान",
   "widget.weather.unknown": "अप्रत्यक्ष",
-  "widget.weather.wind": "हवा"
+  "widget.weather.wind": "हवा",
+  "dashboard.default_name": "डिफ़ॉल्ट",
+  "topbar.dashboard_switcher": "डैशबोर्ड"
 }

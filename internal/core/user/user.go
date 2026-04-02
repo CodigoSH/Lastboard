@@ -24,8 +24,3 @@ type User struct {
 	CreatedAt           time.Time `json:"created_at"`
 }
 
-type Repository interface {
-	Create(u *User) error
-	GetByUsername(username string) (*User, error)
-	Count() (int, error)
-}

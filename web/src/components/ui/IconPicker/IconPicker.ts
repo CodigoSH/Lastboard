@@ -46,7 +46,7 @@ class IconPicker extends HTMLElement {
         try {
 
             this.icons = await iconService.loadIcons();
-            this.filteredIcons = iconService.searchIcons('', 12);
+            this.filteredIcons = iconService.searchIcons('', 10);
             this.isLoading = false;
             this.updateGrid();
 
@@ -157,7 +157,7 @@ class IconPicker extends HTMLElement {
     }
 
     performSearch() {
-        this.filteredIcons = iconService.searchIcons(this.searchQuery, 12);
+        this.filteredIcons = iconService.searchIcons(this.searchQuery, 10);
         this.updateGrid();
     }
 

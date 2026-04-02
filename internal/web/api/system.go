@@ -19,8 +19,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// ... existing code ...
-
 // POST /api/system/reset
 func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
@@ -29,24 +27,13 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify if the user is the Super Admin
-	var role string
 	var userID int
-	err := h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &role)
-	if err != nil {
+	if err := h.DB.QueryRow("SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	if strings.ToLower(role) != "admin" && strings.ToLower(role) != "administrator" {
-		http.Error(w, "auth.unauthorized", http.StatusForbidden)
-		return
-	}
-
-	// Check if it's the first admin (Superadmin)
-	var firstAdminID int
-	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
-	if userID != firstAdminID {
+	if !isSuperAdmin(h.DB, userID) {
 		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
 		return
 	}
@@ -61,8 +48,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var storedHash string
-	err = h.DB.QueryRow("SELECT password FROM users WHERE id=?", userID).Scan(&storedHash)
-	if err != nil {
+	if err := h.DB.QueryRow("SELECT password FROM users WHERE id=?", userID).Scan(&storedHash); err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -170,18 +156,11 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	// Only the Superadmin (first admin by ID) may download the backup,
 	// because it contains password hashes for all users.
 	var userID int
-	var role string
-	if err := h.DB.QueryRow("SELECT id, role FROM users WHERE username=?", username).Scan(&userID, &role); err != nil {
+	if err := h.DB.QueryRow("SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	if strings.ToLower(role) != "admin" && strings.ToLower(role) != "administrator" {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-	var firstAdminID int
-	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
-	if userID != firstAdminID {
+	if !isSuperAdmin(h.DB, userID) {
 		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
 		return
 	}
@@ -332,7 +311,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	// Fallback for items from old backups that have no owner field.
 	var fallbackOwner int
-	if err := tx.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&fallbackOwner); err != nil {
+	if err := tx.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&fallbackOwner); err != nil {
 		http.Error(w, "No admin found for item assignment", http.StatusInternalServerError)
 		return
 	}

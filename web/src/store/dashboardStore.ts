@@ -308,10 +308,20 @@ class DashboardStore {
                 this.state.currentDashboardId ?? undefined
             );
             if (Array.isArray(items)) {
-                // Only update and notify if data actually changed to prevent flicker
-                const hasChanged = JSON.stringify(this.state.items) !== JSON.stringify(items);
+                // Preserve transient ping status — the backend never stores it.
+                // Without this, every background revalidation wipes the green dots.
+                const statusMap = new Map(this.state.items.map(i => [i.id, i.status]));
+                const merged = items.map(item => ({
+                    ...item,
+                    status: statusMap.get(item.id) ?? item.status
+                }));
 
-                this.state.items = items;
+                // Exclude status from the change comparison — it is UI-only state
+                // and comparing it against fresh backend items always shows as changed.
+                const strip = (arr: typeof items) => arr.map(({ status, ...rest }) => rest);
+                const hasChanged = JSON.stringify(strip(this.state.items)) !== JSON.stringify(strip(merged));
+
+                this.state.items = merged;
                 this.state.isOffline = false;
                 this.state.loading = false;
                 this.saveToLocalStorage();
@@ -448,6 +458,12 @@ class DashboardStore {
                     payload.url = '';
                 }
 
+                // Always tag the item with the active dashboard so it is never
+                // stored as NULL and cannot bleed into other dashboards.
+                if (this.state.currentDashboardId !== null) {
+                    payload.dashboard_id = this.state.currentDashboardId;
+                }
+
 
                 // Dynamic Grid Width Detection
                 const { userStore } = await import('./userStore');
@@ -571,6 +587,13 @@ class DashboardStore {
             // Priority: Default flag (synced from last session on any device) > First item
             const defaultDash = result.find(d => d.is_default) ?? result[0];
             this.state.currentDashboardId = defaultDash.id;
+
+            // Remove the stale "default" catch-all key now that we have a real dashboard ID.
+            // Without this, fetchItems() would read old content from a previous dashboard
+            // on the next page load if the order of fetches ever changed.
+            if (this.userId) {
+                localStorage.removeItem(`lastboard-items-${this.userId}-default`);
+            }
         }
 
         this.notify();
@@ -599,10 +622,11 @@ class DashboardStore {
      * Creates a new dashboard and refreshes the list.
      * Does NOT auto-switch to it.
      */
-    async createDashboard(name: string): Promise<void> {
+    async createDashboard(name: string): Promise<Dashboard> {
         const { multiDashboardService } = await import('../services/multiDashboardService');
-        await multiDashboardService.create(name);
+        const newDash = await multiDashboardService.create(name);
         await this.fetchDashboards();
+        return newDash;
     }
 
     /**

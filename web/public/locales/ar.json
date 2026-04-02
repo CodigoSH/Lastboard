@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "عاصفة رعدية",
   "widget.weather.thunderstorm_hail": "عاصفة برد",
   "widget.weather.unknown": "غير معروف",
-  "widget.weather.wind": "رياح"
+  "widget.weather.wind": "رياح",
+  "dashboard.default_name": "افتراضي",
+  "topbar.dashboard_switcher": "لوحة التحكم"
 }

@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "طوفان تندری",
   "widget.weather.thunderstorm_hail": "طوفان تگرگ",
   "widget.weather.unknown": "ناشناخته",
-  "widget.weather.wind": "باد"
+  "widget.weather.wind": "باد",
+  "dashboard.default_name": "پیش‌فرض",
+  "topbar.dashboard_switcher": "داشبورد"
 }

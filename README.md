@@ -174,7 +174,6 @@ We appreciate the organizations that support us as a gesture of goodwill to help
   - Homarr Labs Dashboard Icons (Apache 2.0 - https://github.com/homarr-labs/dashboard-icons)
   - Selfhst Icons (MIT License - https://github.com/selfhst/icons)
   - Homelab SVG Assets (MIT License - https://github.com/loganmarchione/homelab-svg-assets)
-  - Simple Icons (CC0 - https://github.com/simple-icons/simple-icons)
   - Papirus Icon Theme (GPL-3.0 - https://github.com/PapirusDevelopmentTeam/papirus-icon-theme)
 - **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
 

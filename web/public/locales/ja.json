@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "雷雨",
   "widget.weather.thunderstorm_hail": "雹を伴う雷雨",
   "widget.weather.unknown": "不明",
-  "widget.weather.wind": "風"
+  "widget.weather.wind": "風",
+  "dashboard.default_name": "デフォルト",
+  "topbar.dashboard_switcher": "ダッシュボード"
 }

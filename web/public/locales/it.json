@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "Temporale",
   "widget.weather.thunderstorm_hail": "Temporale con grandine",
   "widget.weather.unknown": "Sconosciuto",
-  "widget.weather.wind": "Vento"
+  "widget.weather.wind": "Vento",
+  "dashboard.default_name": "Principale",
+  "topbar.dashboard_switcher": "Dashboard"
 }

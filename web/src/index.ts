@@ -55,11 +55,12 @@ bootstrap(async () => {
         dashboardStore.setUserId(u.id);
     }
 
-    // 2. Fetch Items and Dashboards in parallel now that ID is set
-    await Promise.all([
-        dashboardStore.fetchItems(),
-        dashboardStore.fetchDashboards()
-    ]);
+    // 2. Fetch dashboards first to resolve the active dashboard ID,
+    //    then fetch items so the localStorage key and backend query are correct.
+    //    Running them in parallel causes fetchItems() to read from the stale
+    //    "default" cache key (currentDashboardId = null) and show the wrong content.
+    await dashboardStore.fetchDashboards();
+    await dashboardStore.fetchItems();
     
     // ── Per-user sync ──────────────────────────────────────────────
     if (u) {

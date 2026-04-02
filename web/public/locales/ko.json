@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "뇌우",
   "widget.weather.thunderstorm_hail": "우박 뇌우",
   "widget.weather.unknown": "알 수 없음",
-  "widget.weather.wind": "바람"
+  "widget.weather.wind": "바람",
+  "dashboard.default_name": "기본",
+  "topbar.dashboard_switcher": "대시보드"
 }

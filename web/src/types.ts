@@ -38,6 +38,7 @@ export interface User {
 export interface GridItem {
     id: number;
     parent_id?: number;
+    dashboard_id?: number;
     type: string; // 'container' | 'widget' | 'bookmark'
     x: number;
     y: number;

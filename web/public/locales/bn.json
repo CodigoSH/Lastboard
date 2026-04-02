@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "বজ্রঝড়",
   "widget.weather.thunderstorm_hail": "শিলাবৃষ্টি ঝড়",
   "widget.weather.unknown": "অজানা",
-  "widget.weather.wind": "বাতাস"
+  "widget.weather.wind": "বাতাস",
+  "dashboard.default_name": "ডিফল্ট",
+  "topbar.dashboard_switcher": "ড্যাশবোর্ড"
 }

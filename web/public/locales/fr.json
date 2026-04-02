@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "Orage",
   "widget.weather.thunderstorm_hail": "Orage de grêle",
   "widget.weather.unknown": "Inconnu",
-  "widget.weather.wind": "Vent"
+  "widget.weather.wind": "Vent",
+  "dashboard.default_name": "Principal",
+  "topbar.dashboard_switcher": "Tableau de bord"
 }

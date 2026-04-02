@@ -133,12 +133,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
-	var firstAdminID int
-	if err := h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID); err != nil {
-		http.Error(w, "auth.unauthorized", http.StatusForbidden)
-		return
-	}
-	if userID != firstAdminID {
+	if !isSuperAdmin(h.DB, userID) {
 		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
 		return
 	}

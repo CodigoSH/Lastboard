@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "Burza",
   "widget.weather.thunderstorm_hail": "Burza gradowa",
   "widget.weather.unknown": "Nieznany",
-  "widget.weather.wind": "Wiatr"
+  "widget.weather.wind": "Wiatr",
+  "dashboard.default_name": "Domyślny",
+  "topbar.dashboard_switcher": "Panel"
 }

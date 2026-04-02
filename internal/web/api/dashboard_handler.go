@@ -41,10 +41,6 @@ type GroupContent struct {
 	Name string `json:"name"`
 }
 
-type SectionContent struct {
-	Name string `json:"name"`
-}
-
 // GetDashboard returns the list of items owned by the authenticated user.
 // Accepts an optional ?dashboard_id=N query param to filter by a specific dashboard.
 // Without the param it returns items belonging to the user's default dashboard
@@ -214,7 +210,6 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build dynamic update
-	// This is a quick implementation. In prod use a query builder.
 	var sets []string
 	var args []interface{}
 

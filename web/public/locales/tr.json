@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "Fırtına",
   "widget.weather.thunderstorm_hail": "Dolu fırtınası",
   "widget.weather.unknown": "Bilinmeyen",
-  "widget.weather.wind": "Rüzgar"
+  "widget.weather.wind": "Rüzgar",
+  "dashboard.default_name": "Varsayılan",
+  "topbar.dashboard_switcher": "Pano"
 }

@@ -25,26 +25,24 @@ class IconService {
     private loaded: boolean = false;
     private loading: boolean = false;
 
-    // Legacy URLs needed for current code while we transition
     private BASE_URL = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons';
-    private FALLBACK_URL = 'https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main';
 
     private PROVIDERS: IconProvider[] = [
         {
             id: 'homarr',
             name: 'homarr-labs/dashboard-icons',
             url: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/tree.json',
-            prefix: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/',
-            format: 'webp',
+            prefix: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/',
+            format: 'svg',
             parser: (data, prefix, name) => {
-                const list = Array.isArray(data) ? data : (data.webp || data.png || []);
+                const list: string[] = Array.isArray(data) ? data : (data.svg || data.webp || data.png || []);
                 return list
-                    .filter((item: string) => item.endsWith('.webp') || item.endsWith('.svg') || item.endsWith('.png'))
+                    .filter((item: string) => item.endsWith('.svg'))
                     .map((filename: string) => ({
-                        name: filename.replace(/\.(webp|png|svg)$/, ''),
-                        url: `${prefix}${filename.replace(/\.(png|svg)$/, '.webp')}`,
+                        name: filename.replace(/\.svg$/, ''),
+                        url: `${prefix}${filename}`,
                         provider: name,
-                        format: 'webp' as const
+                        format: 'svg' as const
                     }));
             }
         },
@@ -52,16 +50,18 @@ class IconService {
             id: 'selfhst',
             name: 'selfhst/icons',
             url: 'https://cdn.jsdelivr.net/gh/selfhst/icons@main/index.json',
-            prefix: 'https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/',
-            format: 'webp',
+            prefix: 'https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/',
+            format: 'svg',
             parser: (data, prefix, name) => {
                 const list = Array.isArray(data) ? data : [];
-                return list.map((item: any) => ({
-                    name: item.Name || item.Reference,
-                    url: `${prefix}${item.Reference}.webp`,
-                    provider: name,
-                    format: 'webp' as const
-                }));
+                return list
+                    .filter((item: any) => item.SVG === 'Yes')
+                    .map((item: any) => ({
+                        name: item.Name || item.Reference,
+                        url: `${prefix}${item.Reference}.svg`,
+                        provider: name,
+                        format: 'svg' as const
+                    }));
             }
         },
         {
@@ -78,43 +78,6 @@ class IconService {
                     provider: name,
                     format: 'svg' as const
                 }));
-            }
-        },
-        {
-            id: 'simple-icons',
-            name: 'simple-icons/simple-icons',
-            url: 'https://unpkg.com/simple-icons@14.0.0/_data/simple-icons.json',
-            prefix: 'https://cdn.jsdelivr.net/npm/simple-icons@14.0.0/icons/',
-            format: 'svg',
-            parser: (data, prefix, name) => {
-                // simple-icons uses slugs. We slugify the title.
-                const slugify = (title: string) => {
-                    return title.toLowerCase()
-                        .replace(/\+/g, 'plus')
-                        .replace(/^\./, 'dot-')
-                        .replace(/\./g, 'dot')
-                        .replace(/&/g, 'and')
-                        .replace(/đ/g, 'd')
-                        .replace(/ħ/g, 'h')
-                        .replace(/ı/g, 'i')
-                        .replace(/ĸ/g, 'k')
-                        .replace(/ŀ/g, 'l')
-                        .replace(/ł/g, 'l')
-                        .replace(/ß/g, 'ss')
-                        .replace(/ŧ/g, 't')
-                        .replace(/[^a-z0-9]/g, '');
-                };
-
-                const list = Array.isArray(data) ? data : (data.icons || []);
-                return list.map((item: any) => {
-                    const slug = item.slug || slugify(item.title);
-                    return {
-                        name: item.title,
-                        url: `${prefix}${slug}.svg`,
-                        provider: name,
-                        format: 'svg' as const
-                    };
-                });
             }
         },
         {
@@ -191,9 +154,9 @@ class IconService {
 
         return popularIcons.map(name => ({
             name,
-            url: `${this.BASE_URL}/webp/${name}.webp`,
+            url: `${this.BASE_URL}/svg/${name}.svg`,
             provider: 'homarr-labs/dashboard-icons',
-            format: 'webp' as const
+            format: 'svg' as const
         }));
     }
 

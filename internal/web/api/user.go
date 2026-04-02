@@ -50,17 +50,13 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Determine if this is the Super Admin (First admin created)
-	var firstAdminID int
-	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
-
 	resp := map[string]interface{}{
 		"id":               u.ID,
 		"username":         u.Username,
 		"initials":         safeInitials(u.Username),
 		"avatar_url":       u.AvatarUrl,
 		"role":             u.Role,
-		"is_superadmin":    (u.ID > 0 && u.ID == firstAdminID),
+		"is_superadmin":    isSuperAdmin(h.DB, u.ID),
 		"accent_color":     u.AccentColor,
 		"language":         u.Language,
 		"theme":            u.Theme,
@@ -161,13 +157,8 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		current.GridColumnsPC = val
 	}
 
-	// Dashboard Background update logic
-	// We accept any string (Base64 or URL). Empty string means no background.
-	if input.DashboardBackground != "" || r.Body != nil {
-		// We only update if the field was part of the request. 
-		// Since it's a string, we check if it was provided.
-		current.DashboardBackground = input.DashboardBackground
-	}
+	// Dashboard Background: accept any string (Base64 or URL). Empty string clears it.
+	current.DashboardBackground = input.DashboardBackground
 
 	_, err = h.DB.Exec(`UPDATE users SET accent_color=?, language=?, theme=?,
 		unit_system=?, widget_min_width=?, project_name=?, beta_updates=?, grid_columns_pc=?, dashboard_background=?
@@ -213,12 +204,17 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Allow HTTP, HTTPS, or Base64 Image Data
-	if input.AvatarUrl != "" &&
-		!strings.HasPrefix(input.AvatarUrl, "http://") &&
-		!strings.HasPrefix(input.AvatarUrl, "https://") &&
-		!strings.HasPrefix(input.AvatarUrl, "data:image/") {
-		http.Error(w, "Invalid avatar URL", http.StatusBadRequest)
-		return
+	if input.AvatarUrl != "" {
+		if len(input.AvatarUrl) > 2*1024*1024 {
+			http.Error(w, "Avatar too large (max 2MB)", http.StatusBadRequest)
+			return
+		}
+		if !strings.HasPrefix(input.AvatarUrl, "http://") &&
+			!strings.HasPrefix(input.AvatarUrl, "https://") &&
+			!strings.HasPrefix(input.AvatarUrl, "data:image/") {
+			http.Error(w, "Invalid avatar URL", http.StatusBadRequest)
+			return
+		}
 	}
 
 	_, err := h.DB.Exec("UPDATE users SET username=?, avatar_url=? WHERE username=?", input.Username, input.AvatarUrl, username)
@@ -233,22 +229,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 	// If username changed, invalidate session for security
 	if usernameChanged {
-		expired := time.Now().Add(-1 * time.Hour)
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    "",
-			Path:     "/",
-			Expires:  expired,
-			HttpOnly: true,
-		})
-		http.SetCookie(w, &http.Cookie{
-			Name:     "csrf_token",
-			Value:    "",
-			Path:     "/",
-			Expires:  expired,
-			HttpOnly: false,
-		})
-
+		invalidateSession(w)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -305,22 +286,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Invalidate session for security (force re-login with new password)
-	expired := time.Now().Add(-1 * time.Hour)
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  expired,
-		HttpOnly: true,
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  expired,
-		HttpOnly: false,
-	})
-
+	invalidateSession(w)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -356,7 +322,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	var firstAdminID int
-	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
+	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
 
 	var users []map[string]interface{}
 	for rows.Next() {
@@ -440,8 +406,10 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			if err := SeedDefaultItems(tx, int(newUserID)); err != nil {
 				slog.Warn("CreateUser: failed to seed default items", "user_id", newUserID, "error", err)
+				tx.Rollback()
+			} else {
+				tx.Commit()
 			}
-			tx.Commit()
 		}
 	}
 

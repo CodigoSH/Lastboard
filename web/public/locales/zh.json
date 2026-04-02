@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "雷暴",
   "widget.weather.thunderstorm_hail": "雷暴冰雹",
   "widget.weather.unknown": "未知",
-  "widget.weather.wind": "风"
+  "widget.weather.wind": "风",
+  "dashboard.default_name": "默认",
+  "topbar.dashboard_switcher": "仪表盘"
 }

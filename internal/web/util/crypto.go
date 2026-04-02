@@ -6,10 +6,26 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// IsSecureRequest reports whether the request arrived over HTTPS, either via
+// a direct TLS connection or through a trusted reverse proxy header.
+func IsSecureRequest(r *http.Request) bool {
+	if r.TLS != nil {
+		return true
+	}
+	if proto := r.Header.Get("X-Forwarded-Proto"); proto == "https" {
+		return true
+	}
+	if proto := r.Header.Get("CloudFront-Forwarded-Proto"); proto == "https" {
+		return true
+	}
+	return false
+}
 
 // SignToken creates a signed token: base64(data:expiry_unix).base64(hmac_sha256)
 func SignToken(data string, secret []byte, expiry time.Time) string {

@@ -136,8 +136,7 @@
 
 .icon-picker__group-grid {
     display: grid;
-    /* Forces exactly 12 columns instead of auto-fill, preventing overflow wrap */
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
     gap: 8px;
     padding: 8px;
 }

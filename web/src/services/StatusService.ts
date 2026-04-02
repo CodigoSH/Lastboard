@@ -16,16 +16,18 @@ class StatusService {
     start() {
         if (this.interval) return;
 
-        // Reactive Intelligence: automatically ping when fresh data loads
+        let lastItemsHash = '';
+
         this.unsubscribe = dashboardStore.subscribe((state) => {
             const dashboardChanged = this.lastDashboardId !== state.currentDashboardId;
             const itemsHash = state.items.map(i => i.id).join(',');
-            const countChanged = state.items.length !== this.lastItemsCount;
+            const hashChanged = itemsHash !== lastItemsHash;
             const loadFinished = !state.loading && state.items.length > 0;
 
-            if (dashboardChanged || (countChanged && loadFinished)) {
+            if (loadFinished && (dashboardChanged || hashChanged)) {
                 this.lastDashboardId = state.currentDashboardId;
                 this.lastItemsCount = state.items.length;
+                lastItemsHash = itemsHash;
                 this.checkAll();
             }
         });
@@ -83,7 +85,10 @@ class StatusService {
         }
 
         const url = content.url;
-        if (!url || url === '#' || url.startsWith('javascript:')) return;
+        if (!url || url === '#' || url.startsWith('javascript:')) {
+            this.updateUIStatus(item.id, 'down');
+            return;
+        }
 
         try {
             // ROUTE THROUGH BACKEND PROXY

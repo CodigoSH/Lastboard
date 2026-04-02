@@ -3,6 +3,12 @@ import { i18n } from '../../../services/i18n';
 const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+
+const PW_TOGGLE_ONCLICK = `var w=this.closest('.pw-wrap'),i=w.querySelector('input'),v=i.type==='password';i.type=v?'text':'password';w.querySelectorAll('svg')[0].style.display=v?'block':'none';w.querySelectorAll('svg')[1].style.display=v?'none':'block'`;
+const pwToggle = () => `<button type="button" class="pw-toggle" aria-label="Toggle password visibility" onclick="${PW_TOGGLE_ONCLICK}">
+    <svg style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+    <svg style="display:block" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+</button>`;
 const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
 interface User {
     initials?: string;
@@ -58,15 +64,24 @@ export const accountTemplate = (user: User) => `
             <h3 class="settings-content__title">${i18n.t('settings.system_password')}</h3>
             <div class="settings-content__form-group">
                 <label class="settings-content__label">${i18n.t('settings.current_password')}</label>
-                <input type="password" id="current-password" class="settings-content__input" placeholder="${i18n.t('settings.password_placeholder')}">
+                <div class="pw-wrap">
+                    <input type="password" id="current-password" class="settings-content__input" placeholder="${i18n.t('settings.password_placeholder')}">
+                    ${pwToggle()}
+                </div>
             </div>
             <div class="settings-content__form-group">
                 <label class="settings-content__label">${i18n.t('settings.new_password')}</label>
-                <input type="password" id="new-password" class="settings-content__input" placeholder="••••••••">
+                <div class="pw-wrap">
+                    <input type="password" id="new-password" class="settings-content__input" placeholder="••••••••">
+                    ${pwToggle()}
+                </div>
             </div>
             <div class="settings-content__form-group">
                 <label class="settings-content__label">${i18n.t('settings.confirm_password')}</label>
-                <input type="password" id="confirm-password" class="settings-content__input" placeholder="••••••••">
+                <div class="pw-wrap">
+                    <input type="password" id="confirm-password" class="settings-content__input" placeholder="••••••••">
+                    ${pwToggle()}
+                </div>
             </div>
             <div style="margin-top: 32px;">
                 <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">${i18n.t('general.save')}</app-button>
@@ -255,7 +270,10 @@ export const usersTemplate = (users: any[]) => `
         </div>
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('auth.password')}</label>
-            <input type="password" id="new-user-password" class="settings-content__input">
+            <div class="pw-wrap">
+                <input type="password" id="new-user-password" class="settings-content__input">
+                ${pwToggle()}
+            </div>
         </div>
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('settings.role')}</label>
@@ -280,7 +298,10 @@ export const usersTemplate = (users: any[]) => `
         </div>
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('settings.new_password')}</label>
-            <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${i18n.t('settings.password_leave_blank')}">
+            <div class="pw-wrap">
+                <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${i18n.t('settings.password_leave_blank')}">
+                ${pwToggle()}
+            </div>
         </div>
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('settings.role')}</label>

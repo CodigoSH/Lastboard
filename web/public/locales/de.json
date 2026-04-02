@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "Gewitter",
   "widget.weather.thunderstorm_hail": "Hagelgewitter",
   "widget.weather.unknown": "Unbekannt",
-  "widget.weather.wind": "Wind"
+  "widget.weather.wind": "Wind",
+  "dashboard.default_name": "Standard",
+  "topbar.dashboard_switcher": "Dashboard"
 }

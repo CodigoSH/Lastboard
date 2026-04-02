@@ -59,15 +59,13 @@ export const gridTemplate = (icons: IconInfo[], selectedIcon: string, isLoading:
     for (const [provider, providerIcons] of Object.entries(grouped)) {
         html += `
             <div class="icon-picker__group">
-                <div class="icon-picker__group-header">${provider}</div>
+                <div class="icon-picker__group-header">${provider} <span style="opacity:0.5;font-weight:400;">(${providerIcons.length})</span></div>
                 <div class="icon-picker__group-grid">
                     ${providerIcons.map(icon => `
                         <div class="icon-picker__item ${selectedIcon === icon.url ? 'icon-picker__item--selected' : ''}"
                              data-iconurl="${icon.url}"
                              data-iconname="${icon.name}"
                              title="${icon.name}">
-                            ${icon.format === 'svg' ? `<span class="icon-picker__badge badge-svg">SVG</span>` : ''}
-                            ${icon.format === 'webp' ? `<span class="icon-picker__badge badge-webp">WEBP</span>` : ''}
                             <img src="${icon.url}" alt="${icon.name}" loading="lazy" />
                         </div>
                     `).join('')}

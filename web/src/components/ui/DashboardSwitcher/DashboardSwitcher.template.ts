@@ -16,9 +16,9 @@ export const template = ({ dashboards, currentDashboardId, dropdownActive }: {
     dropdownActive: boolean
 }): string => {
     const currentDashboard = dashboards.find(d => d.id === currentDashboardId);
-    const triggerLabel = currentDashboard ? escapeHtml(currentDashboard.name) : i18n.t('general.loading');
+    const resolveName = (name: string) => escapeHtml(i18n.t(name));
     return `
-        <button class="switcher-trigger ${dropdownActive ? 'active' : ''}" title="${triggerLabel}">
+        <button class="switcher-trigger ${dropdownActive ? 'active' : ''}" title="${i18n.t('topbar.dashboard_switcher')}">
             <svg class="switcher-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <polygon points="12 2 2 7 12 12 22 7 12 2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <polyline points="2 12 12 17 22 12" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -29,7 +29,8 @@ export const template = ({ dashboards, currentDashboardId, dropdownActive }: {
         <div class="switcher-dropdown ${dropdownActive ? 'open' : ''}">
             ${dashboards.map(d => `
                 <div class="switcher-item ${d.id === currentDashboardId ? 'is-active' : ''}" data-id="${d.id}">
-                    <span class="switcher-item-name" title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</span>
+                    <span class="switcher-item-dot"></span>
+                    <span class="switcher-item-name" title="${resolveName(d.name)}">${resolveName(d.name)}</span>
                     <div class="switcher-actions">
                         <button class="switcher-action-btn" data-action="rename" data-id="${d.id}" title="${i18n.t('dashboard.rename')}">
                             <svg viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/></svg>

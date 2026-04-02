@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "Badai petir",
   "widget.weather.thunderstorm_hail": "Badai hujan es",
   "widget.weather.unknown": "Tidak diketahui",
-  "widget.weather.wind": "Angin"
+  "widget.weather.wind": "Angin",
+  "dashboard.default_name": "Utama",
+  "topbar.dashboard_switcher": "Dasbor"
 }

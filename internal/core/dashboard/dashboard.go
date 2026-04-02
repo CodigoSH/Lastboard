@@ -24,7 +24,3 @@ type Dashboard struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type Repository interface {
-	Create(item *Item) error
-	GetAll() ([]Item, error)
-}

@@ -140,17 +140,6 @@ func (s *Server) routes() {
 			s.serveLoginPage(w, r)
 			return
 		}
-		// Setup page is now handled by explicit handler below to ensure security check precedence
-		if path == "/setup" || path == "/setup.html" {
-			// Fallthrough to standard handler which will be caught by router exact match?
-			// No, ServeMux might route /setup to here if registered as "/"?
-			// Actually, if we register "/setup", ServeMux prefers looking for most specific pattern.
-			// But if main handler is "/", and we request "/setup", does it go to "/" or "/setup"?
-			// It goes to "/setup" if exact match exists.
-			// However, explicit specific handlers take precedence in standard ServeMux.
-			// So we can safely remove this block.
-		}
-
 		// 2. Try to serve static file (Public)
 		// If it's a file that exists in assets, serve it.
 		// Avoid serving raw template files as static assets.
@@ -258,7 +247,6 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/users", protect(http.HandlerFunc(userHandler.GetUsers)))
 	s.Router.Handle("POST /api/users", protect(http.HandlerFunc(userHandler.CreateUser)))
 	s.Router.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
-	s.Router.Handle("DELETE /api/users", protect(http.HandlerFunc(userHandler.DeleteUser)))
 	s.Router.Handle("POST /api/users/delete", protect(http.HandlerFunc(userHandler.DeleteUser)))
 
 	// Demo Route — only available when DEMO_ONLY=true.
@@ -342,30 +330,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// HSTS (HTTP Strict Transport Security)
 	// Only send over HTTPS to prevent MITM attacks
 	// max-age=31536000 (1 year), includeSubDomains, preload
-	if isSecureConnection(r) {
+	if util.IsSecureRequest(r) {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 	}
 
 	s.Router.ServeHTTP(w, r)
 }
 
-// isSecureConnection detects if the request is over HTTPS
-// Checks both direct TLS and proxy headers (X-Forwarded-Proto)
-func isSecureConnection(r *http.Request) bool {
-	// Direct TLS connection
-	if r.TLS != nil {
-		return true
-	}
-	// Behind reverse proxy (nginx, traefik, cloudflare, etc.)
-	if proto := r.Header.Get("X-Forwarded-Proto"); proto == "https" {
-		return true
-	}
-	// Behind AWS ALB/ELB
-	if proto := r.Header.Get("CloudFront-Forwarded-Proto"); proto == "https" {
-		return true
-	}
-	return false
-}
 
 func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename string) {
 	f, err := s.assets.Open(filename)
@@ -467,6 +438,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 // No authentication is required. All data is stored in the visitor's localStorage
 // via demoService.ts — the production database is never touched.
 func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
 

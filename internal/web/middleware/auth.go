@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"net/http"
 	"strings"
@@ -12,10 +13,9 @@ import (
 type contextKey string
 
 const (
-	userContextKey            contextKey = "user"
-	userIDContextKey          contextKey = "user_id"
-	passwordVersionContextKey contextKey = "password_version"
-	userRoleContextKey        contextKey = "user_role"
+	userContextKey     contextKey = "user"
+	userIDContextKey   contextKey = "user_id"
+	userRoleContextKey contextKey = "user_role"
 )
 
 // AuthRequired checks for a valid session cookie.
@@ -62,7 +62,7 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				r.Method == http.MethodPatch || r.Method == http.MethodDelete {
 				csrfCookie, err := r.Cookie("csrf_token")
 				csrfHeader := r.Header.Get("X-CSRF-Token")
-				if err != nil || csrfCookie.Value == "" || csrfHeader == "" || csrfCookie.Value != csrfHeader {
+				if err != nil || csrfCookie.Value == "" || csrfHeader == "" || subtle.ConstantTimeCompare([]byte(csrfCookie.Value), []byte(csrfHeader)) != 1 {
 					http.Error(w, "Forbidden", http.StatusForbidden)
 					return
 				}
@@ -72,9 +72,8 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			// an extra round-trip.  A missing row also covers the "account deleted
 			// while session was still live" case.
 			var userID int
-			var passwordVersion int
 			var userRole string
-			if err := db.QueryRow("SELECT id, COALESCE(password_version, 0), role FROM users WHERE username = ?", username).Scan(&userID, &passwordVersion, &userRole); err != nil {
+			if err := db.QueryRow("SELECT id, role FROM users WHERE username = ?", username).Scan(&userID, &userRole); err != nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
@@ -85,7 +84,6 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 
 			ctx := context.WithValue(r.Context(), userContextKey, username)
 			ctx = context.WithValue(ctx, userIDContextKey, userID)
-			ctx = context.WithValue(ctx, passwordVersionContextKey, passwordVersion)
 			ctx = context.WithValue(ctx, userRoleContextKey, userRole)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -102,13 +100,6 @@ func GetUserFromContext(r *http.Request) string {
 func GetUserIDFromContext(r *http.Request) int {
 	if id, ok := r.Context().Value(userIDContextKey).(int); ok {
 		return id
-	}
-	return 0
-}
-
-func GetPasswordVersionFromContext(r *http.Request) int {
-	if v, ok := r.Context().Value(passwordVersionContextKey).(int); ok {
-		return v
 	}
 	return 0
 }

@@ -55,6 +55,18 @@ run:
 	@echo "Running $(APP_NAME)..."
 	@go run $(CMD_PATH)
 
+PID_FILE := /tmp/lastboard.pid
+
+restart: build
+	@if [ -f $(PID_FILE) ]; then \
+		kill $$(cat $(PID_FILE)) 2>/dev/null || true; \
+		sleep 1; \
+		rm -f $(PID_FILE); \
+	fi
+	@$(BUILD_DIR)/$(APP_NAME) > /tmp/lastboard.log 2>&1 & echo $$! > $(PID_FILE)
+	@sleep 1
+	@cat /tmp/lastboard.log
+
 clean:
 	@echo "Cleaning up..."
 	@rm -rf $(BUILD_DIR)

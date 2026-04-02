@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
@@ -26,6 +27,33 @@ func isAdminUser(db *sql.DB, r *http.Request) bool {
 		return false
 	}
 	return strings.ToLower(role) == "admin" || strings.ToLower(role) == "administrator"
+}
+
+// isSuperAdmin reports whether userID belongs to the first admin ever created.
+// It is the single source of truth for superadmin checks across all handlers.
+func isSuperAdmin(db *sql.DB, userID int) bool {
+	var firstAdminID int
+	err := db.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
+	return err == nil && userID > 0 && userID == firstAdminID
+}
+
+// invalidateSession expires the session and CSRF cookies, forcing the client to re-login.
+func invalidateSession(w http.ResponseWriter) {
+	expired := time.Now().Add(-1 * time.Hour)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  expired,
+		HttpOnly: true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "csrf_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  expired,
+		HttpOnly: false,
+	})
 }
 
 // SeedDefaultItems inserts the default dashboard items for a new user.

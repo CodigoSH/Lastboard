@@ -834,3 +834,36 @@ dialog[open] {
     z-index: -1;
     pointer-events: none;
 }
+
+.pw-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pw-wrap input[type="password"],
+.pw-wrap input[type="text"] {
+    padding-right: 44px;
+}
+
+.pw-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.pw-toggle:hover { color: var(--text-main); }
+
+.pw-toggle svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}

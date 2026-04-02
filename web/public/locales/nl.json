@@ -445,5 +445,7 @@
   "widget.weather.thunderstorm": "Onweer",
   "widget.weather.thunderstorm_hail": "Onweer met hagel",
   "widget.weather.unknown": "Onbekend",
-  "widget.weather.wind": "Wind"
+  "widget.weather.wind": "Wind",
+  "dashboard.default_name": "Standaard",
+  "topbar.dashboard_switcher": "Dashboard"
 }

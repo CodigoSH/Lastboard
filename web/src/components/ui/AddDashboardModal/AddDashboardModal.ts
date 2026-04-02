@@ -81,7 +81,9 @@ class AddDashboardModal extends HTMLElement {
         this.render();
 
         try {
-            await dashboardStore.createDashboard(name);
+            const newDash = await dashboardStore.createDashboard(name);
+            await dashboardStore.switchDashboard(newDash.id);
+            dashboardStore.setEditMode(true);
             this.close();
         } catch (error: any) {
             this.state.error = error.message || 'Error creating dashboard';

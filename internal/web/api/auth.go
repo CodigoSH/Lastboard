@@ -38,7 +38,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("TRUST_PROXY") == "true" {
 		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
 			parts := strings.Split(forwarded, ",")
-			ip = strings.TrimSpace(parts[0])
+			candidate := strings.TrimSpace(parts[0])
+			if net.ParseIP(candidate) != nil {
+				ip = candidate
+			}
 		}
 	}
 	now := time.Now()
@@ -117,7 +120,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	expiry := time.Now().Add(duration)
 	token := util.SignToken(input.Username, h.Secret, expiry)
-	secure := isSecureRequest(r)
+	secure := util.IsSecureRequest(r)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -151,22 +154,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	expired := time.Now().Add(-1 * time.Hour)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  expired,
-		HttpOnly: true,
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  expired,
-		HttpOnly: false,
-	})
+	invalidateSession(w)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -199,12 +187,6 @@ func (h *AuthHandler) recordFailedAttempt(ip string, currentCount int) {
 	}
 }
 
-func isSecureRequest(r *http.Request) bool {
-	if r.TLS != nil {
-		return true
-	}
-	return r.Header.Get("X-Forwarded-Proto") == "https"
-}
 
 func generateCSRFToken() (string, error) {
 	b := make([]byte, 32)
