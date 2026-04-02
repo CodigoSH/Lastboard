@@ -15,7 +15,6 @@ interface User {
     avatar_url?: string;
     username?: string;
     role?: string;
-    is_superadmin?: boolean;
 }
 
 interface Prefs {
@@ -37,13 +36,7 @@ export const accountTemplate = (user: User) => `
                 <div class="settings-content__profile-info">
                     <span class="settings-content__profile-name">${user.username || i18n.t('settings.default_user')}</span>
                     <span class="mono-tag">
-                        ${(() => {
-        const r = (user.role || '').toLowerCase();
-        if (user.is_superadmin) return i18n.t('settings.role_super_admin');
-        if (r === 'admin' || r === 'administrator') return i18n.t('settings.role_admin');
-        if (r === 'user') return i18n.t('settings.role_user');
-        return user.role || i18n.t('settings.default_role');
-    })()}
+                        ${(user.role || '').toLowerCase() === 'user' ? i18n.t('settings.role_user') : i18n.t('settings.role_admin')}
                     </span>
                 </div>
             </div>
@@ -235,21 +228,15 @@ export const usersTemplate = (users: any[]) => `
                             <div class="user-details">
                                 <div class="user-name">${esc(u.username)}</div>
                                 <div class="user-role-tag">
-                                    ${(() => {
-        const r = (u.role || '').toLowerCase();
-        if (u.is_superadmin) return i18n.t('settings.role_super_admin');
-        if (r === 'admin' || r === 'administrator') return i18n.t('settings.role_admin');
-        if (r === 'user') return i18n.t('settings.role_user');
-        return u.role;
-    })()}
+                                    ${(u.role || '').toLowerCase() === 'user' ? i18n.t('settings.role_user') : i18n.t('settings.role_admin')}
                                 </div>
                             </div>
                         </div>
                         <div class="user-actions">
-                             <button class="user-action-btn edit" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}', '${u.role}')" title="${i18n.t('general.edit')}">
+                             <button class="user-action-btn edit" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}')" title="${i18n.t('general.edit')}">
                                 ${ICON_EDIT}
                              </button>
-                             <button class="user-action-btn delete" onclick="this.getRootNode().host.deleteUser(${u.id})" title="${i18n.t('general.delete')}" ${u.is_superadmin ? 'disabled style="opacity:0.2;cursor:not-allowed"' : ''}>
+                             <button class="user-action-btn delete" onclick="this.getRootNode().host.deleteUser(${u.id})" title="${i18n.t('general.delete')}">
                                 ${ICON_TRASH}
                              </button>
                         </div>
@@ -278,10 +265,6 @@ export const usersTemplate = (users: any[]) => `
                 ${pwToggle()}
             </div>
         </div>
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('settings.role')}</label>
-            <app-select id="new-user-role" value="user"></app-select>
-        </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
             <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${i18n.t('general.save')}</app-button>
         </div>
@@ -305,10 +288,6 @@ export const usersTemplate = (users: any[]) => `
                 <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${i18n.t('settings.password_leave_blank')}">
                 ${pwToggle()}
             </div>
-        </div>
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('settings.role')}</label>
-            <app-select id="edit-user-role"></app-select>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
             <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${i18n.t('action.save_changes')}</app-button>

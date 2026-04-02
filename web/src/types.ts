@@ -31,7 +31,7 @@ export interface User {
     project_name?: string;
     project_logo?: string;
     beta_updates?: boolean;
-    is_superadmin?: boolean;
+    is_admin?: boolean;
     unit_system?: string;
     dashboard_background?: string;
     preferences?: UserPreferences; // Derived on client

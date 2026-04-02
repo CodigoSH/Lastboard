@@ -51,7 +51,7 @@ Tailor the look and feel of your personal dashboard.
 ### User Management (Admin Only)
 Administrators can manage access to the Lastboard instance.
 - **Add/Edit Users**: Create new accounts or modify existing ones.
-- **Roles**: Assign roles such as **Super Admin**, **Admin**, or **User** to control feature access.
+- **Roles**: Two roles exist — **Admin** (the instance owner, full control) and **User** (standard access).
 - **Delete Users**: Remove access for specific accounts.
 
 ### System & Maintenance

@@ -57,7 +57,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"initials":         safeInitials(u.Username),
 		"avatar_url":       u.AvatarUrl,
 		"role":             u.Role,
-		"is_superadmin":    isSuperAdmin(h.DB, u.ID),
+		"is_admin":         isSuperAdmin(h.DB, u.ID),
 		"accent_color":     u.AccentColor,
 		"language":         u.Language,
 		"theme":            u.Theme,
@@ -334,9 +334,6 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var firstAdminID int
-	_ = h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
-
 	var users []map[string]interface{}
 	for rows.Next() {
 		var u user.User
@@ -344,11 +341,10 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		users = append(users, map[string]interface{}{
-			"id":            u.ID,
-			"username":      u.Username,
-			"role":          u.Role,
-			"avatar_url":    u.AvatarUrl,
-			"is_superadmin": (u.ID == firstAdminID),
+			"id":         u.ID,
+			"username":   u.Username,
+			"role":       u.Role,
+			"avatar_url": u.AvatarUrl,
 		})
 	}
 
@@ -365,19 +361,9 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
-		Role     string `json:"role"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-
-	if input.Role == "" {
-		input.Role = "user"
-	}
-	role := strings.ToLower(input.Role)
-	if role != "admin" && role != "user" {
-		http.Error(w, "Invalid role", http.StatusBadRequest)
 		return
 	}
 
@@ -399,14 +385,14 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Default Avatar Logic
 	defaultAvatar := "/images/default-avatar.svg"
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, ?, ?, 'system', 'metric', '#2563eb', 'en', 'Lastboard', 140, ?)")
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, 'user', ?, 'system', 'metric', '#2563eb', 'en', 'Lastboard', 140, ?)")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(input.Username, string(hashedPassword), role, time.Now(), defaultAvatar)
+	result, err := stmt.Exec(input.Username, string(hashedPassword), time.Now(), defaultAvatar)
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusConflict)
 		return
@@ -440,7 +426,6 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		ID       int    `json:"id"`
 		Username string `json:"username"`
-		Role     string `json:"role"`
 		Password string `json:"password"` // Optional: if empty, don't change
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -450,12 +435,6 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	if input.ID == 0 {
 		http.Error(w, "Missing user ID", http.StatusBadRequest)
-		return
-	}
-
-	role := strings.ToLower(input.Role)
-	if role != "admin" && role != "user" {
-		http.Error(w, "Invalid role", http.StatusBadRequest)
 		return
 	}
 
@@ -475,9 +454,9 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Encryption failed", http.StatusInternalServerError)
 			return
 		}
-		_, err = h.DB.Exec("UPDATE users SET username=?, role=?, password=?, password_version=password_version+1 WHERE id=?", input.Username, role, string(hashedPassword), input.ID)
+		_, err = h.DB.Exec("UPDATE users SET username=?, password=?, password_version=password_version+1 WHERE id=?", input.Username, string(hashedPassword), input.ID)
 	} else {
-		_, err = h.DB.Exec("UPDATE users SET username=?, role=? WHERE id=?", input.Username, role, input.ID)
+		_, err = h.DB.Exec("UPDATE users SET username=? WHERE id=?", input.Username, input.ID)
 	}
 
 	if err != nil {
@@ -539,25 +518,10 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-	if strings.ToLower(targetRole) == "admin" || strings.ToLower(targetRole) == "administrator" {
-		var adminCount int
-		if err := h.DB.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'admin' OR role = 'administrator'").Scan(&adminCount); err != nil {
-			http.Error(w, "Database error", http.StatusInternalServerError)
-			return
-		}
-		if adminCount <= 1 {
-			http.Error(w, "Cannot delete the last admin", http.StatusBadRequest)
-			return
-		}
-
-		// Protect the First Admin (Superadmin)
-		var firstAdminID int
-		if err := h.DB.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID); err == nil {
-			if targetID == firstAdminID {
-				http.Error(w, "error.cannot_delete_superadmin", http.StatusForbidden)
-				return
-			}
-		}
+	// Protect the admin (cannot be deleted)
+	if isSuperAdmin(h.DB, targetID) {
+		http.Error(w, "error.cannot_delete_superadmin", http.StatusForbidden)
+		return
 	}
 
 	_, err = h.DB.Exec("DELETE FROM users WHERE id = ?", targetID)

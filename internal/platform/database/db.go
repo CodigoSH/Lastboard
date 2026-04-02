@@ -151,6 +151,17 @@ func migrateSchema(db *sql.DB) error {
 		return err
 	}
 
+	// Migration 4: demote secondary admins to user — only the first admin by ID keeps the role.
+	// Safe to re-run: only affects rows where role = 'admin' or 'administrator' and id != firstAdminID.
+	_, err = db.Exec(`
+		UPDATE users SET role = 'user'
+		WHERE (role = 'admin' OR role = 'administrator')
+		  AND id != (SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1)
+	`)
+	if err != nil {
+		return fmt.Errorf("migration 4 (demote secondary admins) failed: %w", err)
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.

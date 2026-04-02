@@ -3,37 +3,29 @@ package api
 import (
 	"database/sql"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
-// isAdminUser checks whether the currently authenticated user has admin or administrator role.
-// It is the single source of truth for admin checks across all API handlers.
+// isAdminUser checks whether the currently authenticated user is the admin
+// (the first user with role='admin' by ID). Single source of truth for all handlers.
 func isAdminUser(db *sql.DB, r *http.Request) bool {
 	username := middleware.GetUserFromContext(r)
 	if username == "" {
 		return false
 	}
-	// Use role from context if available (set by AuthRequired middleware)
-	if role := middleware.GetUserRoleFromContext(r); role != "" {
-		return strings.ToLower(role) == "admin" || strings.ToLower(role) == "administrator"
-	}
-	// Fallback to DB query if context role is not available
-	var role string
-	err := db.QueryRow("SELECT role FROM users WHERE username = ?", username).Scan(&role)
-	if err != nil {
+	var userID int
+	if err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
 		return false
 	}
-	return strings.ToLower(role) == "admin" || strings.ToLower(role) == "administrator"
+	return isSuperAdmin(db, userID)
 }
 
-// isSuperAdmin reports whether userID belongs to the first admin ever created.
-// It is the single source of truth for superadmin checks across all handlers.
+// isSuperAdmin reports whether userID is the admin (first user with role='admin' by ID).
 func isSuperAdmin(db *sql.DB, userID int) bool {
 	var firstAdminID int
-	err := db.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
+	err := db.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
 	return err == nil && userID > 0 && userID == firstAdminID
 }
 

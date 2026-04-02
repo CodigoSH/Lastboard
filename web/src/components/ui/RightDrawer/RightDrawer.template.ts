@@ -5,7 +5,6 @@ interface User {
     avatar_url?: string;
     username?: string;
     role?: string;
-    is_superadmin?: boolean;
 }
 
 interface RightDrawerProps {
@@ -29,15 +28,7 @@ export const template = ({ user, isOpen, selectedSection, updateAvailable }: Rig
             <app-avatar class="right-drawer__avatar" initials="${user.initials}" src="${user.avatar_url || ''}"></app-avatar>
             <div class="right-drawer__user-info">
                 <span class="right-drawer__username">${user.username}</span>
-                ${(user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'administrator') ? `<span class="right-drawer__role">
-                    ${(() => {
-            const r = (user.role || '').toLowerCase();
-            if (user.is_superadmin) return i18n.t('settings.role_super_admin');
-            if (r === 'admin' || r === 'administrator') return i18n.t('settings.role_admin');
-            if (r === 'user') return i18n.t('settings.role_user');
-            return user.role || i18n.t('settings.default_role');
-        })()}
-                </span>` : ''}
+                ${(user.role?.toLowerCase() === 'admin') ? `<span class="right-drawer__role">${i18n.t('settings.role_admin')}</span>` : ''}
             </div>
         </div>
         

@@ -95,7 +95,7 @@ class SettingsContent extends HTMLElement {
                 this.fetchUsers();
             }
             if (newValue === 'about') {
-                // No longer checking automatically here.
+                this.checkForUpdates();
             }
             this.render();
         }
@@ -377,24 +377,12 @@ class SettingsContent extends HTMLElement {
 
     openAddUserModal() {
         const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
-        if (modal) {
-            modal.showModal();
-
-            // Initialize role select options
-            const roleSelect = this.shadowRoot!.getElementById('new-user-role') as any;
-            if (roleSelect) {
-                roleSelect.options = [
-                    { value: 'user', label: i18n.t('settings.role_user') },
-                    { value: 'admin', label: i18n.t('settings.role_admin') }
-                ];
-            }
-        }
+        if (modal) modal.showModal();
     }
 
     async createUser() {
         const username = (this.shadowRoot!.getElementById('new-user-username') as HTMLInputElement).value;
         const password = (this.shadowRoot!.getElementById('new-user-password') as HTMLInputElement).value;
-        const role = (this.shadowRoot!.getElementById('new-user-role') as HTMLSelectElement).value;
 
         if (!username || !password) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.fields_required'), 'error');
@@ -402,34 +390,23 @@ class SettingsContent extends HTMLElement {
         }
 
         try {
-            await userService.createUser({ username, password, role });
+            await userService.createUser({ username, password });
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_created'));
             const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
             if (modal) modal.close();
-            this.fetchUsers(); // Refresh list
+            this.fetchUsers();
         } catch (e) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_create_error'), 'error');
         }
     }
 
-    openEditUserModal(id: number, username: string, role: string) {
+    openEditUserModal(id: number, username: string) {
         const modal = this.shadowRoot!.getElementById('edit-user-modal') as HTMLDialogElement;
         if (modal) {
             (this.shadowRoot!.getElementById('edit-user-id') as HTMLInputElement).value = id.toString();
             (this.shadowRoot!.getElementById('edit-user-username') as HTMLInputElement).value = username;
             (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value = '';
-
             modal.showModal();
-
-            // Initialize role select options and value
-            const roleSelect = this.shadowRoot!.getElementById('edit-user-role') as any;
-            if (roleSelect) {
-                roleSelect.options = [
-                    { value: 'user', label: i18n.t('settings.role_user') },
-                    { value: 'admin', label: i18n.t('settings.role_admin') }
-                ];
-                roleSelect.value = role;
-            }
         }
     }
 
@@ -437,7 +414,6 @@ class SettingsContent extends HTMLElement {
         const id = parseInt((this.shadowRoot!.getElementById('edit-user-id') as HTMLInputElement).value);
         const username = (this.shadowRoot!.getElementById('edit-user-username') as HTMLInputElement).value;
         const password = (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value;
-        const role = (this.shadowRoot!.getElementById('edit-user-role') as HTMLSelectElement).value;
 
         if (!username) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.username_required'), 'error');
@@ -448,13 +424,12 @@ class SettingsContent extends HTMLElement {
             await userService.adminUpdateUser({
                 id,
                 username,
-                role,
-                password: password || undefined // Only send if set
+                password: password || undefined
             });
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_updated'));
             const modal = this.shadowRoot!.getElementById('edit-user-modal') as HTMLDialogElement;
             if (modal) modal.close();
-            this.fetchUsers(); // Refresh list
+            this.fetchUsers();
         } catch (e) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.user_update_error'), 'error');
         }
@@ -545,7 +520,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.5.0-Beta.02'; // Populated by checkForUpdates() from backend
+    private version = ''; // Populated by checkForUpdates() from backend
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
     private isCheckingUpdates = false;
@@ -796,17 +771,6 @@ class SettingsContent extends HTMLElement {
             });
         }
 
-        // Init Role Selects
-        const roleOptions = [
-            { value: 'user', label: i18n.t('settings.role_user') },
-            { value: 'admin', label: i18n.t('settings.role_admin') }
-        ];
-
-        const newUserRole = this.shadowRoot!.getElementById('new-user-role') as any;
-        if (newUserRole) newUserRole.options = roleOptions;
-
-        const editUserRole = this.shadowRoot!.getElementById('edit-user-role') as any;
-        if (editUserRole) editUserRole.options = roleOptions;
     }
 
     updateBetaBadgeVisuals() {

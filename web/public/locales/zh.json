@@ -280,7 +280,7 @@
   "settings.profile": "Мой профиль",
   "settings.project_name": "仪表板名称",
   "settings.project_name_desc": "标题中显示的内容。",
-  "settings.project_name_and_logo": "面板名称和图标",
+  "settings.project_name_and_logo": "图标和面板名称",
   "settings.project_logo": "项目图标",
   "action.choose_icon": "选择图标",
   "action.remove": "移除",
