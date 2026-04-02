@@ -280,6 +280,7 @@
   "settings.profile": "Mi perfil",
   "settings.project_name": "Nombre del panel",
   "settings.project_name_desc": "Lo que aparece en tu encabezado.",
+  "settings.project_name_and_logo": "Nombre y logo del panel",
   "settings.project_logo": "Logo del proyecto",
   "action.choose_icon": "Elegir icono",
   "action.remove": "Eliminar",

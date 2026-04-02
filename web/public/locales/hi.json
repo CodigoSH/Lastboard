@@ -280,6 +280,7 @@
   "settings.profile": "मेरी प्रोफ़ाइल",
   "settings.project_name": "डैशबोर्ड का नाम",
   "settings.project_name_desc": "आपके हेडर में जो दिखता है।",
+  "settings.project_name_and_logo": "पैनल का नाम और लोगो",
   "settings.project_logo": "प्रोजेक्ट लोगो",
   "action.choose_icon": "आइकन चुनें",
   "action.remove": "हटाएं",

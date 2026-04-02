@@ -280,6 +280,7 @@
   "settings.profile": "マイプロフィール",
   "settings.project_name": "ダッシュボード名",
   "settings.project_name_desc": "ヘッダーに表示されます。",
+  "settings.project_name_and_logo": "パネル名とロゴ",
   "settings.project_logo": "プロジェクトロゴ",
   "action.choose_icon": "アイコンを選択",
   "action.remove": "削除",

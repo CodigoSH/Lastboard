@@ -280,6 +280,7 @@
   "settings.profile": "내 프로필",
   "settings.project_name": "대시보드 이름",
   "settings.project_name_desc": "헤더에 표시되는 내용입니다.",
+  "settings.project_name_and_logo": "패널 이름 및 로고",
   "settings.project_logo": "프로젝트 로고",
   "action.choose_icon": "아이콘 선택",
   "action.remove": "제거",

@@ -280,6 +280,7 @@
   "settings.profile": "Mijn profiel",
   "settings.project_name": "Dashboardnaam",
   "settings.project_name_desc": "Wat in uw koptekst verschijnt.",
+  "settings.project_name_and_logo": "Paneelnaam en logo",
   "settings.project_logo": "Projectlogo",
   "action.choose_icon": "Pictogram kiezen",
   "action.remove": "Verwijderen",
