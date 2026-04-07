@@ -1,3 +1,6 @@
+# Claude Code
+.claude/
+
 # Go binaries and build artifacts
 bin/
 dist/
