@@ -60,7 +60,10 @@ func TestGetDashboard_EmptyForNewUser(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL+"/api/dashboard", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -88,7 +91,10 @@ func TestGetDashboard_UserIsolation(t *testing.T) {
 	s := doLogin(t, server.URL, "bob", "password")
 	req, _ := http.NewRequest("GET", server.URL+"/api/dashboard", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	var items []interface{}
@@ -111,7 +117,10 @@ func TestCreateItem_Bookmark(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/dashboard/item", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -138,7 +147,10 @@ func TestCreateItem_Widget(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/dashboard/item", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -157,7 +169,10 @@ func TestCreateItem_ReturnsNewID(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/dashboard/item", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	var result map[string]interface{}
@@ -186,7 +201,10 @@ func TestUpdateItem_Position(t *testing.T) {
 	req, _ := http.NewRequest("PATCH", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, itemID), strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -218,7 +236,10 @@ func TestUpdateItem_OtherUserCannotUpdate(t *testing.T) {
 	req, _ := http.NewRequest("PATCH", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, itemID), strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Should not find the item (it belongs to alice)
@@ -243,7 +264,10 @@ func TestDeleteItem_Success(t *testing.T) {
 
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, itemID), nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -273,7 +297,10 @@ func TestDeleteItem_OtherUserCannotDelete(t *testing.T) {
 
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, itemID), nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// The handler returns 200 even when no row was deleted (user_id mismatch acts as filter).

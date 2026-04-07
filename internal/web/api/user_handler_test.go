@@ -105,7 +105,10 @@ func TestGetMe_ReturnsOwnData(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL+"/api/me", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -131,7 +134,10 @@ func TestGetMe_SecondAdminNotFirstAdmin(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL+"/api/me", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	var body map[string]interface{}
@@ -145,7 +151,10 @@ func TestGetMe_Unauthenticated(t *testing.T) {
 	server, _, cleanup := setupFullServer(t)
 	defer cleanup()
 
-	resp, _ := http.Get(server.URL + "/api/me")
+	resp, err := http.Get(server.URL + "/api/me")
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -165,7 +174,10 @@ func TestGetUsers_AdminSeesAllUsers(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL+"/api/users", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -188,7 +200,10 @@ func TestGetUsers_RegularUserForbidden(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL+"/api/users", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusForbidden {
@@ -209,7 +224,10 @@ func TestCreateUser_Success(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/users", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
@@ -234,7 +252,10 @@ func TestCreateUser_DuplicateUsername(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/users", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusConflict {
@@ -253,7 +274,10 @@ func TestCreateUser_InvalidUsername(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/users", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusBadRequest {
@@ -273,7 +297,10 @@ func TestCreateUser_NonAdminForbidden(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/users", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusForbidden {
@@ -298,7 +325,10 @@ func TestDeleteUser_Success(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/users/delete", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -325,7 +355,10 @@ func TestDeleteUser_CannotDeletePrimaryAdmin(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/users/delete", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Self-deletion is blocked (400) before the isFirstAdmin target check (403),
@@ -348,7 +381,10 @@ func TestChangePassword_Success(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/user/change-password", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -367,7 +403,10 @@ func TestChangePassword_WrongCurrent(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/user/change-password", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -386,7 +425,10 @@ func TestChangePassword_TooShort(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/user/change-password", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusBadRequest {
@@ -408,7 +450,10 @@ func TestCSRF_PostWithoutTokenRejected(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(s.sessionCookie) // session only, no CSRF
 
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusForbidden {

@@ -60,7 +60,10 @@ func TestFactoryReset_NonAdminForbidden(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/system/reset", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusForbidden {
@@ -79,7 +82,10 @@ func TestFactoryReset_WrongPassword(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/system/reset", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -99,7 +105,10 @@ func TestFactoryReset_SecondAdminForbidden(t *testing.T) {
 	req, _ := http.NewRequest("POST", server.URL+"/api/system/reset", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusForbidden {
@@ -118,7 +127,10 @@ func TestDownloadBackup_AdminGetsJSON(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL+"/api/system/backup", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -143,7 +155,10 @@ func TestDownloadBackup_NonAdminForbidden(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", server.URL+"/api/system/backup", nil)
 	s.attach(req)
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusForbidden {
