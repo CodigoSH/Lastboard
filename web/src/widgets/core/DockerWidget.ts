@@ -65,7 +65,7 @@ function isAdmin(): boolean {
     const user = userStore.getUser();
     if (!user) return false;
     const role = (user.role || '').toLowerCase();
-    return role === 'admin' || role === 'administrator';
+    return role === 'admin';
 }
 
 function shortId(id: string): string {
