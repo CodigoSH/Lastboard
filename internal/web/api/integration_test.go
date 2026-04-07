@@ -201,7 +201,7 @@ func TestBackupAndRestore(t *testing.T) {
 	defer cleanup()
 
 	createUser(t, db, "adminBackup", "password", "admin")
-	// Make sure the admin is user_id 1 to be superadmin
+	// Admin with the lowest ID becomes the first admin (system administrator)
 
 	// Create 2 items
 	_, err := db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (1, 'bookmark', 1, 1, 1, 1, '{}'), (1, 'group', 2, 2, 2, 2, '{}')`)

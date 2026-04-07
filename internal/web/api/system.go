@@ -311,7 +311,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	// Fallback for items from old backups that have no owner field.
 	var fallbackOwner int
-	if err := tx.QueryRow("SELECT id FROM users WHERE role = 'admin' OR role = 'administrator' ORDER BY id ASC LIMIT 1").Scan(&fallbackOwner); err != nil {
+	if err := tx.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&fallbackOwner); err != nil {
 		http.Error(w, "No admin found for item assignment", http.StatusInternalServerError)
 		return
 	}
