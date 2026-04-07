@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -22,6 +23,10 @@ const (
 	attemptWindow    = 1 * time.Minute
 	defaultSession   = 24 * time.Hour
 	extendedSession  = 30 * 24 * time.Hour
+
+	// dummyHash is used in timing-safe comparisons when a user does not exist,
+	// preventing user enumeration via response time differences.
+	dummyHash = "$2b$10$KIWAy9N7gtNA4CHEO4YXrOQgZw.wye/ZD98.n6hwFVrEVb.SoU/ya"
 )
 
 type AuthHandler struct {
@@ -89,7 +94,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if len(input.Password) > 72 {
 		// Dummy bcrypt call to maintain constant timing regardless of failure reason
-		bcrypt.CompareHashAndPassword([]byte("$2b$10$KIWAy9N7gtNA4CHEO4YXrOQgZw.wye/ZD98.n6hwFVrEVb.SoU/ya"), []byte(input.Password))
+		bcrypt.CompareHashAndPassword([]byte(dummyHash), []byte(input.Password))
 		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
@@ -99,7 +104,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var storedHash string
 	err = h.DB.QueryRow("SELECT password FROM users WHERE username = ?", input.Username).Scan(&storedHash)
 	if err != nil {
-		bcrypt.CompareHashAndPassword([]byte("$2b$10$KIWAy9N7gtNA4CHEO4YXrOQgZw.wye/ZD98.n6hwFVrEVb.SoU/ya"), []byte(input.Password))
+		bcrypt.CompareHashAndPassword([]byte(dummyHash), []byte(input.Password))
 		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
@@ -165,25 +170,30 @@ func (h *AuthHandler) recordFailedAttempt(ip string, currentCount int) {
 	newCount := currentCount + 1
 
 	if currentCount == 0 {
-		// First failure: insert new record
-		h.DB.Exec(
+		if _, err := h.DB.Exec(
 			"INSERT OR IGNORE INTO login_attempts (ip, count, first_seen) VALUES (?, 1, ?)",
 			ip, now,
-		)
+		); err != nil {
+			log.Printf("rate-limit: failed to record attempt for %s: %v", ip, err)
+		}
 		return
 	}
 
 	if newCount >= maxLoginAttempts {
 		lockedUntil := now.Add(lockoutDuration)
-		h.DB.Exec(
+		if _, err := h.DB.Exec(
 			"UPDATE login_attempts SET count = ?, locked_until = ? WHERE ip = ?",
 			newCount, lockedUntil, ip,
-		)
+		); err != nil {
+			log.Printf("rate-limit: failed to lock %s: %v", ip, err)
+		}
 	} else {
-		h.DB.Exec(
+		if _, err := h.DB.Exec(
 			"UPDATE login_attempts SET count = ? WHERE ip = ?",
 			newCount, ip,
-		)
+		); err != nil {
+			log.Printf("rate-limit: failed to update count for %s: %v", ip, err)
+		}
 	}
 }
 

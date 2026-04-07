@@ -66,7 +66,10 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	if err != nil {
 		return err
 	}
-	projectLinksID, _ := res.LastInsertId()
+	projectLinksID, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
 
 	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
 		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "GitHub", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/git.png"}', 'https://github.com/CodigoSH/Lastboard'),
@@ -80,7 +83,10 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	if err != nil {
 		return err
 	}
-	mediaServicesID, _ := res.LastInsertId()
+	mediaServicesID, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
 
 	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
 		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Plex", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png"}', 'https://plex.tv'),
@@ -97,7 +103,10 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	if err != nil {
 		return err
 	}
-	infraID, _ := res.LastInsertId()
+	infraID, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
 
 	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
 		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Proxmox", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/proxmox.png"}', 'https://proxmox.com'),
