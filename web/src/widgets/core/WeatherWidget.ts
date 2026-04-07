@@ -154,6 +154,8 @@ class WeatherWidget extends HTMLElement {
     private _unsubscribeUser: (() => void) | undefined;
     private _weatherData: any = null;
     private _refreshTimer: any = null;
+    private _retryTimer: any = null;
+    private _retryCount = 0;
     private _loading = false;
     private _error = false;
 
@@ -206,10 +208,15 @@ class WeatherWidget extends HTMLElement {
         if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._unsubscribeUser) this._unsubscribeUser();
         if (this._refreshTimer) clearInterval(this._refreshTimer);
+        if (this._retryTimer) { clearTimeout(this._retryTimer); this._retryTimer = null; }
     }
 
     // ── Data ──
-    private async loadWeather() {
+    private async loadWeather(isRetry = false) {
+        // Cancel any pending retry when a fresh load is requested
+        if (this._retryTimer) { clearTimeout(this._retryTimer); this._retryTimer = null; }
+        if (!isRetry) this._retryCount = 0;
+
         if (!this._config.latitude && !this._config.longitude) {
             this._loading = false;
             this._error = false;
@@ -223,7 +230,18 @@ class WeatherWidget extends HTMLElement {
         try {
             this._weatherData = await fetchWeatherData(this._config.latitude, this._config.longitude);
             this._loading = false;
+            this._retryCount = 0;
         } catch (_) {
+            if (this._retryCount < 2) {
+                // Silent retry: keep loading state and retry after 5 s
+                this._retryCount++;
+                this._retryTimer = setTimeout(() => {
+                    this._retryTimer = null;
+                    this.loadWeather(true);
+                }, 5000);
+                // Don't call updateDisplay here — stay in loading state
+                return;
+            }
             this._loading = false;
             this._error = true;
         }
