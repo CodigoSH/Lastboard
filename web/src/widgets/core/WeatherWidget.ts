@@ -188,15 +188,22 @@ class WeatherWidget extends HTMLElement {
                 const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
                 if (data.widgetId !== 'weather') return;
 
-                const oldLat = this._config.latitude;
-                const oldLon = this._config.longitude;
-                this._config = { ...DEFAULT_CONFIG, ...data };
+                const newConfig = { ...DEFAULT_CONFIG, ...data };
 
-                if (oldLat !== this._config.latitude || oldLon !== this._config.longitude) {
+                const latLonChanged = this._config.latitude !== newConfig.latitude ||
+                                      this._config.longitude !== newConfig.longitude;
+                const displayChanged = this._config.city !== newConfig.city ||
+                                       this._config.showForecast !== newConfig.showForecast ||
+                                       this._config.forecastDays !== newConfig.forecastDays;
+
+                this._config = newConfig;
+
+                if (latLonChanged) {
                     this.loadWeather();
-                } else {
+                } else if (displayChanged) {
                     this.updateDisplay();
                 }
+                // Stats-only updates (every second) reach neither branch — no DOM thrash
             } catch (_) { }
         });
 
@@ -238,7 +245,7 @@ class WeatherWidget extends HTMLElement {
                 this._retryTimer = setTimeout(() => {
                     this._retryTimer = null;
                     this.loadWeather(true);
-                }, 5000);
+                }, 3000);
                 // Don't call updateDisplay here — stay in loading state
                 return;
             }
