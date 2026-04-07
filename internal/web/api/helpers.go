@@ -8,7 +8,7 @@ import (
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
-// isAdminUser checks whether the currently authenticated user is the admin
+// isAdminUser checks whether the currently authenticated user is the first admin
 // (the first user with role='admin' by ID). Single source of truth for all handlers.
 func isAdminUser(db *sql.DB, r *http.Request) bool {
 	username := middleware.GetUserFromContext(r)
@@ -19,11 +19,11 @@ func isAdminUser(db *sql.DB, r *http.Request) bool {
 	if err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
 		return false
 	}
-	return isSuperAdmin(db, userID)
+	return isFirstAdmin(db, userID)
 }
 
-// isSuperAdmin reports whether userID is the admin (first user with role='admin' by ID).
-func isSuperAdmin(db *sql.DB, userID int) bool {
+// isFirstAdmin reports whether userID is the first admin (lowest ID with role='admin').
+func isFirstAdmin(db *sql.DB, userID int) bool {
 	var firstAdminID int
 	err := db.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&firstAdminID)
 	return err == nil && userID > 0 && userID == firstAdminID

@@ -33,8 +33,8 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isSuperAdmin(h.DB, userID) {
-		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
+	if !isFirstAdmin(h.DB, userID) {
+		http.Error(w, "Forbidden: Admin only", http.StatusForbidden)
 		return
 	}
 
@@ -153,15 +153,15 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Only the Superadmin (first admin by ID) may download the backup,
+	// Only the first admin (by ID) may download the backup,
 	// because it contains password hashes for all users.
 	var userID int
 	if err := h.DB.QueryRow("SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	if !isSuperAdmin(h.DB, userID) {
-		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
+	if !isFirstAdmin(h.DB, userID) {
+		http.Error(w, "Forbidden: Admin only", http.StatusForbidden)
 		return
 	}
 

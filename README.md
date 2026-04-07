@@ -54,7 +54,8 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 - **Peace of mind** — Backup and restore directly from the website.
 - **Single SQLite file** — your entire dashboard state in one portable file. Backup = `cp lastboard.db`.
 - **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
-- **Multi-user support** — per-user dashboards, preferences, and password management.
+- **Multi-dashboard system** — create and switch between multiple independent dashboards, each with its own layout and widgets.
+- **Multi-user support** — per-user preferences and password management.
 - **Personalized backgrounds** — Set a custom image for your dashboard, optimized and saved per user.
 - **Global unit system** — Choose between Metric and Imperial units globally for all widgets.
 - **Global readiness** — Fully translated into 20 languages.

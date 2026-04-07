@@ -44,9 +44,16 @@ Tailor the look and feel of your personal dashboard.
   - **Cover Logic**: The background uses "Cover" logic, ensuring it fills the screen without stretching or distortion.
 - **Interface Language**: Choose from **20 supported languages**, including English, Spanish, German, French, Chinese, and more.
 - **Theme Mode**: Toggle between **Light** and **Dark** modes to suit your preference.
-- **Project Name**: Customize the title displayed in the browser tab and top bar.
+- **Project Name & Logo**: Customize the title and logo displayed in the browser tab and top bar. Both are configured from a single settings row.
 - **Global Unit System**: Select between **Metric** (°C, km/h) and **Imperial** (°F, mph). This setting automatically updates all compatible widgets (Weather, Telemetry, etc.).
 - **Grid Density**: Use the slider to adjust the number of columns in your dashboard grid (from 3 to 16), allowing for tighter or more spacious layouts.
+
+### Multi-Dashboard
+Lastboard supports multiple independent dashboards per user. Each dashboard has its own layout, widgets, and background.
+- **Create**: Use the dashboard switcher in the top bar to add a new dashboard.
+- **Switch**: Click any dashboard in the switcher to navigate to it instantly.
+- **Rename**: Rename dashboards at any time from the switcher menu.
+- **Delete**: Remove a dashboard and all its contents from the switcher menu.
 
 ### User Management (Admin Only)
 Administrators can manage access to the Lastboard instance.

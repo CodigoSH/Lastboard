@@ -57,7 +57,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"initials":         safeInitials(u.Username),
 		"avatar_url":       u.AvatarUrl,
 		"role":             u.Role,
-		"is_admin":         isSuperAdmin(h.DB, u.ID),
+		"is_admin":         isFirstAdmin(h.DB, u.ID),
 		"accent_color":     u.AccentColor,
 		"language":         u.Language,
 		"theme":            u.Theme,
@@ -513,13 +513,13 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prevent deleting the last admin
-	var targetRole string
-	if err := h.DB.QueryRow("SELECT role FROM users WHERE id = ?", targetID).Scan(&targetRole); err != nil {
+	var exists int
+	if err := h.DB.QueryRow("SELECT 1 FROM users WHERE id = ?", targetID).Scan(&exists); err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 	// Protect the admin (cannot be deleted)
-	if isSuperAdmin(h.DB, targetID) {
+	if isFirstAdmin(h.DB, targetID) {
 		http.Error(w, "error.cannot_delete_superadmin", http.StatusForbidden)
 		return
 	}

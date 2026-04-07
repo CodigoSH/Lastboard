@@ -52,7 +52,7 @@ func TestMigrations(t *testing.T) {
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	tables := []string{"users", "system_settings", "items", "login_attempts"}
+	tables := []string{"users", "system_settings", "items", "login_attempts", "dashboards"}
 
 	for _, table := range tables {
 		var name string

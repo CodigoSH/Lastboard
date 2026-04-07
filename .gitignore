@@ -1,6 +1,9 @@
 # Claude Code
 .claude/
 
+# IDE
+.vscode/
+
 # Go binaries and build artifacts
 bin/
 dist/

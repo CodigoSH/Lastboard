@@ -4,7 +4,7 @@ Lastboard makes updates as painless as possible. We offer multiple ways to keep 
 
 ## Web Updater
 
-The easiest way to update is directly from the Lastboard web interface. This feature is restricted to superadmin users only.
+The easiest way to update is directly from the Lastboard web interface. This feature is restricted to admin users only.
 
 1. Navigate to **System settings**.
 2. Go to the **Updates** section.

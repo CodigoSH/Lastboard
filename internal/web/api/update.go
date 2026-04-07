@@ -122,7 +122,7 @@ func (h *UpdateHandler) fetchLatestVersionFromProxy() (string, error) {
 }
 
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
-	// Verify Superadmin only
+	// Verify first admin only
 	if !isAdminUser(h.DB, r) {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
@@ -133,8 +133,8 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
-	if !isSuperAdmin(h.DB, userID) {
-		http.Error(w, "Forbidden: Superadmin only", http.StatusForbidden)
+	if !isFirstAdmin(h.DB, userID) {
+		http.Error(w, "Forbidden: Admin only", http.StatusForbidden)
 		return
 	}
 

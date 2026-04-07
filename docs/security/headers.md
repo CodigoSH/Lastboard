@@ -120,35 +120,11 @@ To submit your domain to browser preload lists:
 - `X-Frame-Options: SAMEORIGIN` - Prevents clickjacking
 - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer info
 
-### Recommended Next Steps
-
-Consider implementing additional security headers:
-
-1. **Content-Security-Policy (CSP)**
-   ```
-   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
-   ```
-
-2. **X-XSS-Protection** (Legacy browsers)
-   ```
-   X-XSS-Protection: 1; mode=block
-   ```
-
-3. **Permissions-Policy** (Feature Policy)
-   ```
-   Permissions-Policy: geolocation=(), microphone=(), camera=()
-   ```
-
 ### References
 
 - [OWASP HSTS Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Strict_Transport_Security_Cheat_Sheet.html)
 - [MDN HSTS Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security)
 - [RFC 6797 - HSTS Specification](https://tools.ietf.org/html/rfc6797)
-
----
-
-**Implementation Date:** February 12, 2026
-**Version:** Lastboard v1.2.0+
 
 ---
 [← Previous page](overview.md) | [Next page →](../contributing/development.md)
