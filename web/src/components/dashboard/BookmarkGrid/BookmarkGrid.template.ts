@@ -56,12 +56,12 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
             const borderWidthStyle = (data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : '';
 
             return `
-            <fieldset class="bookmark-grid__section"
+            <div class="bookmark-grid__section"
                data-id="${b.id}"
                data-orig-x="${b.x}" data-orig-y="${b.y}"
                draggable="${isEditing}"
                style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH}; ${borderColorStyle} ${borderWidthStyle}">
-               ${title ? `<legend class="section-title">${esc(title)}</legend>` : ''}
+               ${title ? `<div class="section-title">${esc(title)}</div>` : ''}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
                    ${renderBookmarks(children, isEditing, true, clampedW, isTouchDevice)}
                </div>
@@ -72,7 +72,7 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
                 </div>
                 <div class="resize-handle"></div>
                ` : ''}
-            </fieldset>`;
+            </div>`;
         }
 
         return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice);
@@ -170,7 +170,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
     `;
 }
 
-function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, isNested: boolean = false, parentCols: number = 12, isTouchDevice: boolean = false) {
+function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, _isNested: boolean = false, parentCols: number = 12, isTouchDevice: boolean = false) {
     // Strictly render children at their relative coordinates
     return bookmarks.map(b => {
         let data: any = {};
