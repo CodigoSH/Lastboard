@@ -17,10 +17,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker CLI
+      - name: Install Docker CLI and Buildx
         run: |
           apt-get update -qq
-          apt-get install -y -qq docker.io
+          apt-get install -y -qq docker.io curl
+          BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep -oP '"tag_name": "\K[^"]+')
+          mkdir -p /usr/lib/docker/cli-plugins
+          curl -sSL "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64" -o /usr/lib/docker/cli-plugins/docker-buildx
+          chmod +x /usr/lib/docker/cli-plugins/docker-buildx
 
       - name: Fix Docker socket permissions
         run: chmod 666 /var/run/docker.sock
