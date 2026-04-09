@@ -53,7 +53,12 @@ jobs:
 
       - name: Set up Docker Buildx
         run: |
-          docker buildx create --name multiarch --driver docker-container --use
+          cat <<EOF > /tmp/buildkitd.toml
+          [registry."${{ env.PUSH_REGISTRY }}"]
+            http = true
+            insecure = true
+          EOF
+          docker buildx create --name multiarch --driver docker-container --config /tmp/buildkitd.toml --use
           docker buildx inspect --bootstrap
 
       - name: Build and push multi-arch image
