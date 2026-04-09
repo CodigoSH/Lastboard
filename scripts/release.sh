@@ -20,6 +20,7 @@ fi
 VERSION_FILE="package.json"
 GO_VERSION_FILE="internal/version/version.go"
 SETTINGS_FILE="web/src/components/ui/SettingsContent/SettingsContent.ts"
+UPDATE_SERVICE_FILE="web/src/services/UpdateService.ts"
 
 # 1. Get current version
 if [ ! -f "$VERSION_FILE" ]; then
@@ -112,6 +113,8 @@ echo "📝 Updating version files..."
 sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" $VERSION_FILE
 sed -i "s/Current = \".*\"/Current = \"$NEW_TAG\"/" $GO_VERSION_FILE
 sed -i "s/private version = '.*'/private version = '$NEW_TAG'/" $SETTINGS_FILE
+sed -i "s/current_version: 'v[^']*', \/\/ Mock version for demo/current_version: '$NEW_TAG', \/\/ Mock version for demo/" $UPDATE_SERVICE_FILE
+sed -i "s/latest_version: 'v[^']*',/latest_version: '$NEW_TAG',/" $UPDATE_SERVICE_FILE
 
 # 4. Handle Pending Changes
 if [ -n "$(git status --porcelain)" ]; then
