@@ -3,7 +3,7 @@
 # ==========================================
 # Stage 1: Frontend Build (Bun)
 # ==========================================
-FROM oven/bun:alpine AS frontend-builder
+FROM --platform=$BUILDPLATFORM oven/bun:alpine AS frontend-builder
 WORKDIR /app
 
 # Install dependencies (Frozen Lockfile for reproducibility)
@@ -17,7 +17,6 @@ RUN bun web/build.ts
 # ==========================================
 # Stage 2: Backend Build (Go)
 # ==========================================
-# Use local platform for building (fast), target specific arch via GOARCH
 FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine AS backend-builder
 WORKDIR /app
 
@@ -34,46 +33,42 @@ COPY . .
 # Embed Frontend: Copy dist from Stage 1 to internal/web/dist
 COPY --from=frontend-builder /app/web/dist /app/internal/web/dist
 
-# Build Static Binary
-# We use ARG TARGETOS and TARGETARCH which are populated by Buildx
+# Cross-compile for target platform
 ARG TARGETOS
 ARG TARGETARCH
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /app/lastboard ./cmd/lastboard
+# Build main binary (timetzdata embeds timezone DB in the binary)
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -tags timetzdata -ldflags="-s -w" -o /app/lastboard ./cmd/lastboard
+
+# Build healthcheck binary for target platform
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -ldflags="-s -w" -o /app/healthcheck ./cmd/healthcheck
 
 # ==========================================
-# Stage 3: High-Performance Runtime (Alpine)
+# Stage 3: Runtime (Alpine, no RUN = no QEMU)
 # ==========================================
 FROM alpine:3.19
 
 WORKDIR /app
 
-# Install Runtime Dependencies
-# - ca-certificates: For HTTPS requests
-# - tzdata: For timezone support
-# - curl: For Healthcheck
-RUN apk add --no-cache ca-certificates tzdata curl
+# CA certificates from builder (text files, architecture-independent)
+COPY --from=backend-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-# Create persistent data directory
-RUN mkdir -p /var/lib/lastboard
-
-# Copy Binary from Builder
+# Cross-compiled binaries
 COPY --from=backend-builder /app/lastboard /app/lastboard
+COPY --from=backend-builder /app/healthcheck /app/healthcheck
 
 # Networking Configuration
-# Application listens on internal fixed port 8080 by default
-# Application listens on internal fixed port 8080 by default
 EXPOSE 8080
 
 # Environment Defaults
-# CRITICAL: Set DB_FILE to the writable data directory
 ENV DB_FILE=/var/lib/lastboard/lastboard.db
 ENV PORT=8080
 
-# Healthcheck
-# Uses localhost:8080 as per requirement
+# Healthcheck (uses cross-compiled Go binary instead of curl)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/api/health || exit 1
+    CMD ["/app/healthcheck"]
 
 # Entrypoint
 ENTRYPOINT ["/app/lastboard"]
