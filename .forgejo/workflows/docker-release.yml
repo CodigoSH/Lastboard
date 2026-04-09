@@ -46,7 +46,7 @@ jobs:
         run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker image
-        run: docker build -t "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
+        run: DOCKER_BUILDKIT=1 docker build -t "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
 
       - name: Push to registry
         run: |
