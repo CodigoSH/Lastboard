@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  REGISTRY: 192.168.50.5:3000
+  REGISTRY: git.codigosh.com
 
 jobs:
   build-and-push:
@@ -16,10 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install Docker CLI
         run: |
           apt-get update -qq
-          apt-get install -y -qq docker.io skopeo
+          apt-get install -y -qq docker.io
 
       - name: Fix Docker socket permissions
         run: chmod 666 /var/run/docker.sock
@@ -41,22 +41,18 @@ jobs:
             type=raw,value=rc,enable=${{ contains(github.ref, 'RC') }}
             type=ref,event=tag
 
-      - name: Build Docker image
-        run: docker build -t lastboard:build .
-
-      - name: Save image
-        run: docker save lastboard:build -o /tmp/image.tar
-
-      - name: Push to registry
+      - name: Login to registry
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+        run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
+
+      - name: Push to registry
         run: |
           while IFS= read -r tag; do
             [ -z "$tag" ] && continue
-            echo "Pushing ${tag}..."
-            skopeo copy \
-              --dest-tls-verify=false \
-              --dest-creds "${{ github.actor }}:${FORGEJO_TOKEN}" \
-              docker-archive:/tmp/image.tar \
-              "docker://${tag}"
+            docker tag "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" "$tag"
+            docker push "$tag"
           done <<< "${{ steps.meta.outputs.tags }}"
