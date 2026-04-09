@@ -30,7 +30,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ gitea.actor }}
+          username: ${{ github.actor }}
           password: ${{ secrets.FORGEJO_TOKEN }}
 
       - name: Extract metadata (tags, labels)
@@ -44,13 +44,13 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
             # Latest tag - Only if it's NOT a pre-release (doesn't contain hyphen)
-            type=raw,value=latest,enable=${{ !contains(gitea.ref, '-') }}
+            type=raw,value=latest,enable=${{ !contains(github.ref, '-') }}
 
             # Beta tag - If version string contains 'Beta'
-            type=raw,value=beta,enable=${{ contains(gitea.ref, 'Beta') }}
+            type=raw,value=beta,enable=${{ contains(github.ref, 'Beta') }}
 
             # RC tag - If version string contains 'RC'
-            type=raw,value=rc,enable=${{ contains(gitea.ref, 'RC') }}
+            type=raw,value=rc,enable=${{ contains(github.ref, 'RC') }}
 
             # Always tag with the full ref name (e.g. 1.1.1-Beta.01)
             type=ref,event=tag
