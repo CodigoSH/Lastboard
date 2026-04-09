@@ -1,4 +1,3 @@
-import { ApiResponse } from '../types';
 
 /**
  * Centalized API Service
@@ -54,6 +53,13 @@ class ApiService {
 
                 // Health Check (Mock success)
                 if (url.startsWith('/api/dashboard/health')) return { status: 200 } as any;
+
+                // Multi-Dashboard (Demo: single default dashboard)
+                if (url === '/api/dashboards' && method === 'GET') return [{ id: 1, name: 'dashboard.default_name', position: 0, is_default: true, created_at: '' }] as any;
+                if (url.startsWith('/api/dashboards') && method === 'POST' && url.endsWith('/default')) return { status: 'updated' } as any;
+                if (url.startsWith('/api/dashboards') && method === 'POST') return { id: 1, name: 'Dashboard', position: 0, is_default: false, created_at: '' } as any;
+                if (url.startsWith('/api/dashboards') && method === 'PATCH') return { status: 'updated' } as any;
+                if (url.startsWith('/api/dashboards') && method === 'DELETE') return { status: 'deleted' } as any;
 
                 // Admin (Mock success)
                 if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;

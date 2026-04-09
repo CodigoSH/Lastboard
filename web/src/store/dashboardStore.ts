@@ -580,7 +580,8 @@ class DashboardStore {
      */
     async fetchDashboards(): Promise<void> {
         const { multiDashboardService } = await import('../services/multiDashboardService');
-        const result = await multiDashboardService.getAll();
+        const raw = await multiDashboardService.getAll();
+        const result = Array.isArray(raw) ? raw : [];
         this.state.dashboards = result;
 
         if (this.state.currentDashboardId === null && result.length > 0) {
