@@ -51,11 +51,42 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		isDocker = true
 	}
 
-	// 2. Return System Info
 	w.Header().Set("Content-Type", "application/json")
+
+	// 2. If ?beta= param present, do full Forgejo check server-side (avoids CORS)
+	betaParam := r.URL.Query().Get("beta")
+	if betaParam != "" && !isDocker {
+		beta := betaParam == "true"
+		latest, releaseNotes, err := h.fetchLatestRelease(beta)
+		if err != nil {
+			slog.Warn("Update check failed", "error", err)
+		} else {
+			isNewer := compareVersions(latest, version.Current)
+			if isNewer {
+				goos := runtime.GOOS
+				goarch := runtime.GOARCH
+				assetName := "lastboard-" + goos + "-" + goarch + ".tar.gz"
+				assetUrl := "https://git.codigosh.com/CodigoSH/Lastboard/releases/download/" + latest + "/" + assetName
+				json.NewEncoder(w).Encode(UpdateResponse{
+					Available:      true,
+					CurrentVersion: version.Current,
+					LatestVersion:  latest,
+					ReleaseNotes:   releaseNotes,
+					AssetUrl:       assetUrl,
+					IsDocker:       false,
+					Os:             goos,
+					Arch:           goarch,
+				})
+				return
+			}
+		}
+	}
+
+	// 3. Return base system info (no update or Docker)
 	json.NewEncoder(w).Encode(UpdateResponse{
-		Available:      false, // Handled by frontend or background ws
+		Available:      false,
 		CurrentVersion: version.Current,
+		LatestVersion:  version.Current,
 		IsDocker:       isDocker,
 		Os:             runtime.GOOS,
 		Arch:           runtime.GOARCH,
@@ -97,30 +128,90 @@ func (h *UpdateHandler) CheckForUpdatesBackground(hub *Hub) {
 	}
 }
 
-func (h *UpdateHandler) fetchLatestVersion() (string, error) {
-	// Fetch latest release including pre-releases from Forgejo
-	url := "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases?limit=1"
-	resp, err := http.Get(url)
+func (h *UpdateHandler) fetchLatestRelease(beta bool) (tagName string, releaseNotes string, err error) {
+	const base = "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard"
+	var fetchURL string
+	if beta {
+		fetchURL = base + "/releases?limit=1"
+	} else {
+		fetchURL = base + "/releases/latest"
+	}
+
+	resp, err := http.Get(fetchURL)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("forgejo returned status %d", resp.StatusCode)
+		return "", "", fmt.Errorf("forgejo returned status %d", resp.StatusCode)
 	}
 
-	var releases []struct {
+	if beta {
+		var releases []struct {
+			TagName string `json:"tag_name"`
+			Body    string `json:"body"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
+			return "", "", err
+		}
+		if len(releases) == 0 {
+			return "", "", fmt.Errorf("no releases found")
+		}
+		return releases[0].TagName, releases[0].Body, nil
+	}
+
+	var release struct {
 		TagName string `json:"tag_name"`
+		Body    string `json:"body"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
-		return "", err
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return "", "", err
 	}
-	if len(releases) == 0 {
-		return "", fmt.Errorf("no releases found")
+	return release.TagName, release.Body, nil
+}
+
+func (h *UpdateHandler) fetchLatestVersion() (string, error) {
+	tag, _, err := h.fetchLatestRelease(true)
+	return tag, err
+}
+
+// compareVersions returns true if v1 > v2 (semver with optional pre-release suffix)
+func compareVersions(v1, v2 string) bool {
+	clean := func(v string) string { return strings.TrimPrefix(v, "v") }
+	c1, c2 := clean(v1), clean(v2)
+	p1 := strings.SplitN(c1, "-", 2)
+	p2 := strings.SplitN(c2, "-", 2)
+
+	core := func(s string) [3]int {
+		var a, b, c int
+		fmt.Sscanf(s, "%d.%d.%d", &a, &b, &c)
+		return [3]int{a, b, c}
+	}
+	n1, n2 := core(p1[0]), core(p2[0])
+
+	for i := 0; i < 3; i++ {
+		if n1[i] > n2[i] {
+			return true
+		}
+		if n1[i] < n2[i] {
+			return false
+		}
 	}
 
-	return releases[0].TagName, nil
+	// Same core: stable > pre-release, pre-release compared lexically
+	hasSuf1 := len(p1) > 1
+	hasSuf2 := len(p2) > 1
+	if !hasSuf1 && hasSuf2 {
+		return true
+	}
+	if hasSuf1 && !hasSuf2 {
+		return false
+	}
+	if !hasSuf1 && !hasSuf2 {
+		return false
+	}
+	return strings.ToLower(p1[1]) > strings.ToLower(p2[1])
 }
 
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
