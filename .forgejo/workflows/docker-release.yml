@@ -47,13 +47,24 @@ jobs:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.PUSH_REGISTRY }} -u ${{ github.actor }} --password-stdin
 
-      - name: Build Docker image
-        run: docker build -t "${{ env.PUSH_REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
+      - name: Set up QEMU for multi-arch
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-      - name: Push to registry
+      - name: Set up Docker Buildx
         run: |
+          docker buildx create --name multiarch --driver docker-container --use
+          docker buildx inspect --bootstrap
+
+      - name: Build and push multi-arch image
+        run: |
+          TAGS=""
           while IFS= read -r tag; do
             [ -z "$tag" ] && continue
-            docker tag "${{ env.PUSH_REGISTRY }}/${{ steps.vars.outputs.image }}:build" "$tag"
-            docker push "$tag"
+            TAGS="$TAGS --tag $tag"
           done <<< "${{ steps.meta.outputs.tags }}"
+
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            $TAGS \
+            --push \
+            .
