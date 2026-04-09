@@ -5,12 +5,12 @@
     /* Core Colors */
     --canvas: #eef0f4;
     --panel: #ffffff;
-    --surface: rgba(255, 255, 255, 0.6);
+    --surface: rgba(255, 255, 255, 0.72);
     --surface-solid: #ffffff;
     --surface-hover: rgba(var(--accent-rgb), 0.06);
     --surface-active: rgba(var(--accent-rgb), 0.12);
     --surface-dim: rgba(255, 255, 255, 0.4);
-    --glass-blur: blur(8px);
+    --glass-blur: none;
 
     /* Accents */
     --accent: #2563eb;
@@ -20,8 +20,10 @@
     /* Borders & Text — light equivalents of dark's #333/#444 */
     --border: rgba(0, 0, 0, 0.05);
     --border-bright: rgba(var(--accent-rgb), 0.35);
-    --card-border: rgba(0, 0, 0, 0.03);
-    --card-shadow: none;
+    --card-border: rgba(0, 0, 0, 0.07);
+    --card-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 2px 10px rgba(0, 0, 0, 0.06);
     --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.05);
     --text-main: #0f172a;
     --text-dim: #64748b;
@@ -100,11 +102,11 @@
     /* Core Colors */
     --canvas: #121212;
     --panel: #1a1a1a;
-    --surface: rgba(36, 36, 36, 0.5);
+    --surface: rgba(28, 22, 20, 0.70);
     --surface-solid: #242424;
     --surface-hover: rgba(var(--accent-rgb), 0.1);
     --surface-active: rgba(var(--accent-rgb), 0.2);
-    --glass-blur: blur(8px);
+    --glass-blur: none;
 
     /* Accents */
     --accent-rgb: 37, 99, 235;
@@ -113,8 +115,10 @@
     /* Borders & Text */
     --border: #333333;
     --border-bright: #444444;
-    --card-border: var(--border);
-    --card-shadow: none;
+    --card-border: rgba(255, 255, 255, 0.09);
+    --card-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 2px 12px rgba(0, 0, 0, 0.35);
     --card-shadow-hover: none;
     --text-main: #ffffff;
     --text-dim: #a0a0a0;
@@ -239,54 +243,7 @@ body::before {
     height: 6px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Firefox Fallback — No backdrop-filter (WebRender tile seam fix)
-   ═══════════════════════════════════════════════════════════════
-   Firefox's WebRender tiles backdrop-filter computation per-element,
-   creating 1px colour seams at tile boundaries when a complex image
-   sits behind semi-transparent cards. The fix: disable the blur in
-   Firefox entirely and compensate with a more opaque surface +
-   rim-light box-shadow so cards still look premium.
 
-   CSS variables pierce Shadow DOM — this is the correct channel to
-   override BookmarkGrid card/section styles from outside.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Firefox — Light Mode */
-.is-firefox {
-    --glass-blur: none;
-
-    /* Reduced opacity (0.72 vs Chrome's 0.6) — close enough to let background
-       show through without exposing sharp edges from missing blur */
-    --surface: rgba(255, 255, 255, 0.72);
-
-    /* Rim-light on top edge simulates light refracting through glass */
-    --card-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.7),
-        0 2px 10px rgba(0, 0, 0, 0.06);
-
-    /* Slightly more visible border to define the panel edges */
-    --card-border: rgba(0, 0, 0, 0.07);
-}
-
-/* Firefox — Dark Mode */
-.is-firefox.dark-mode {
-    --glass-blur: none;
-
-    /* 0.70 opacity (vs Chrome's 0.50) + warm R tint (28 vs 36/36/36):
-       The tint approximates the warm red/amber that backdrop-filter would
-       'average in' from the sunset background image. Together they make
-       Firefox panels look much closer to Chrome's blurred glass. */
-    --surface: rgba(28, 22, 20, 0.70);
-
-    /* Subtle white rim on top edge — hallmark of premium dark glass panels */
-    --card-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.07),
-        0 2px 12px rgba(0, 0, 0, 0.35);
-
-    /* Slightly brighter border for dark mode panel definition */
-    --card-border: rgba(255, 255, 255, 0.09);
-}
 
 *::-webkit-scrollbar-track {
     background: transparent;

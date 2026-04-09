@@ -20,14 +20,6 @@
         };
     </script>
     <script type="module" src="bundle.js?v=54"></script>
-    <!-- Firefox detection: runs sync before first paint to avoid FOUC.
-         Adds .is-firefox to <html> so CSS variables override backdrop-filter
-         with a seam-free fallback that still looks premium. -->
-    <script>
-        if (/Firefox\//.test(navigator.userAgent)) {
-            document.documentElement.classList.add('is-firefox');
-        }
-    </script>
 </head>
 
 <body>

@@ -520,7 +520,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.5.1-Beta.07'; // Populated by checkForUpdates() from backend
+    private version = 'v1.5.1-Beta.08'; // Populated by checkForUpdates() from backend
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
     private isCheckingUpdates = false;
