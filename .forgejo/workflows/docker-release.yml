@@ -18,11 +18,10 @@ jobs:
 
       - name: Install Docker CLI
         run: |
-          apt-get update -qq
-          apt-get install -y -qq docker.io
-
-      - name: Fix Docker socket permissions
-        run: chmod 666 /var/run/docker.sock
+          curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz \
+            | tar -xz --strip-components=1 -C /usr/local/bin docker/docker
+          chmod 666 /var/run/docker.sock
+          docker version
 
       - name: Set lowercase image name
         id: vars
@@ -44,17 +43,7 @@ jobs:
       - name: Login to registry
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
-        run: |
-          echo "Actor: ${{ github.actor }}"
-          echo "Registry: ${{ env.REGISTRY }}"
-          echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
-      - name: Test registry push
-        run: |
-          docker pull alpine
-          docker tag alpine ${{ env.REGISTRY }}/codigosh/lastboard:ci-test
-          docker push ${{ env.REGISTRY }}/codigosh/lastboard:ci-test
-          echo "Test push OK"
+        run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker image
         run: docker build -t "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
