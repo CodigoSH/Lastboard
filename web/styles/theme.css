@@ -194,14 +194,28 @@ body {
 
 body {
     background-color: var(--canvas);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/*
+ * Firefox fix: backdrop-filter + background-attachment:fixed on the same
+ * stacking context causes compositing artefacts (flickering bands) in Firefox.
+ * Moving the custom background image to a fixed pseudo-element decouples the
+ * two compositing layers so Firefox renders them correctly while keeping the
+ * exact same "fixed / parallax-free" visual behaviour for the user.
+ */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
     background-image: var(--dashboard-background, none);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: var(--text-main);
-    font-family: var(--font-sans);
-    transition: background 0.3s ease, color 0.3s ease;
+    z-index: -1;
+    pointer-events: none;
 }
 
 /* Utilities */
