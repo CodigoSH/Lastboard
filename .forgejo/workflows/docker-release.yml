@@ -65,7 +65,7 @@ jobs:
             [ -z "$tag" ] && continue
             echo "Pushing ${tag}..."
             skopeo copy \
-              --multi-arch all \
+              --all \
               --dest-creds "${{ github.actor }}:${FORGEJO_TOKEN}" \
               oci-archive:/tmp/image.tar \
               "docker://${tag}"
