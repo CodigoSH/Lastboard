@@ -520,7 +520,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.5.1-Beta.06'; // Populated by checkForUpdates() from backend
+    private version = 'v1.5.1-Beta.07'; // Populated by checkForUpdates() from backend
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
     private isCheckingUpdates = false;
@@ -642,7 +642,14 @@ class SettingsContent extends HTMLElement {
         try {
             await apiService.postForm('/api/system/restore', formData);
             if (window.notifier) window.notifier.show(i18n.t('notifier.restore_success'));
-            setTimeout(() => window.location.reload(), 2000);
+            // Clear all localStorage so stale cached items/dashboard IDs don't
+            // survive into the fresh session. The server also sends Clear-Site-Data
+            // to wipe browser cache and cookies, but localStorage is cleared here
+            // as a fallback for browsers that don't support that header.
+            setTimeout(() => {
+                localStorage.clear();
+                window.location.href = '/';
+            }, 2000);
         } catch (e) {
             console.error('Restore error', e);
             if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');

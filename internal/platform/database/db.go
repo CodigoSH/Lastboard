@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -33,6 +34,20 @@ func InitDB(dsn string) (*DB, error) {
 		os.Remove(testFile)
 	}
 
+	// Embed per-connection pragmas into the DSN using SQLite URI format so they
+	// are applied to every connection the pool creates, not just the first one.
+	// A plain PRAGMA via db.Exec() only affects one connection; with MaxOpenConns>1
+	// new pool connections would silently bypass foreign_key enforcement, allowing
+	// DELETE operations that should cascade to leave orphaned child rows instead.
+	if !strings.HasPrefix(dsn, "file:") {
+		dsn = "file:" + dsn
+	}
+	if strings.Contains(dsn, "?") {
+		dsn += "&_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)"
+	} else {
+		dsn += "?_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)"
+	}
+
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, err
@@ -42,15 +57,9 @@ func InitDB(dsn string) (*DB, error) {
 		return nil, err
 	}
 
-	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		return nil, err
-	}
+	// WAL mode is a persistent DB-file property; set it once at startup.
 	if _, err := db.Exec("PRAGMA journal_mode = WAL"); err != nil {
 		slog.Warn("Failed to set WAL mode", "error", err)
-	}
-	// Busy timeout to prevent "database is locked" errors in high concurrency
-	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
-		slog.Warn("Failed to set busy_timeout", "error", err)
 	}
 
 	// Limit connection pool to prevent unbounded memory usage (modernc sqlite is pure go)

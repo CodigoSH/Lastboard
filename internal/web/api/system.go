@@ -466,6 +466,11 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		_, _ = h.DB.Exec("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('session_secret', ?)", newSecretHex)
 	}
 
+	// Instruct the browser to wipe all cached data (assets, cookies, localStorage).
+	// This ensures the client starts fresh after a restore — without this, stale
+	// session cookies and cached API responses cause the app to appear broken
+	// until the user manually clears browser storage.
+	w.Header().Set("Clear-Site-Data", `"cache", "cookies", "storage"`)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.restore_success"})
