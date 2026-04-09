@@ -30,7 +30,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             <offline-badge></offline-badge>
 
             <!-- Search Bar -->
-            <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${editMode ? 'search-wrapper--disabled' : ''}">
+            <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${editMode ? 'search-wrapper--disabled' : ''}" title="${i18n.t('general.search')}">
                 <input type="text" id="search-input" class="search-input" placeholder="${i18n.t('general.search')}" 
                        value="${searchQuery || ''}" onclick="event.stopPropagation()">
                 <div id="search-clear" class="search-clear" style="display: ${searchQuery ? 'flex' : 'none'};">×</div>

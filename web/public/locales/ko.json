@@ -277,7 +277,7 @@
   "status.unreachable": "연결할 수 없음",
   "topbar.add_tooltip": "항목 추가",
   "topbar.drawer_tooltip": "설정",
-  "topbar.edit_tooltip": "대시보드 편집",
+  "topbar.edit_tooltip": "패널 편집",
   "type.bookmark": "북마크",
   "type.section": "섹션",
   "type.widget": "위젯",
