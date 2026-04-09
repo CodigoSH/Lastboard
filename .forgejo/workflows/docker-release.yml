@@ -16,10 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker CLI
+      - name: Install dependencies
         run: |
           apt-get update -qq
-          apt-get install -y -qq docker.io
+          apt-get install -y -qq docker.io skopeo
 
       - name: Fix Docker socket permissions
         run: chmod 666 /var/run/docker.sock
@@ -47,21 +47,26 @@ jobs:
             type=raw,value=rc,enable=${{ contains(github.ref, 'RC') }}
             type=ref,event=tag
 
-      - name: Build and push Docker image
+      - name: Build multi-arch image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          platforms: linux/amd64,linux/arm64
+          outputs: type=oci,dest=/tmp/image.tar
+          provenance: false
+          sbom: false
+
+      - name: Push to registry
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
-          echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
-          TAG_ARGS=""
           while IFS= read -r tag; do
-            [ -n "$tag" ] && TAG_ARGS="$TAG_ARGS --tag $tag"
+            [ -z "$tag" ] && continue
+            echo "Pushing ${tag}..."
+            skopeo copy \
+              --multi-arch all \
+              --dest-creds "${{ github.actor }}:${FORGEJO_TOKEN}" \
+              oci-archive:/tmp/image.tar \
+              "docker://${tag}"
           done <<< "${{ steps.meta.outputs.tags }}"
-
-          docker buildx build \
-            $TAG_ARGS \
-            --platform linux/amd64,linux/arm64 \
-            --push \
-            --provenance=false \
-            --sbom=false \
-            .
