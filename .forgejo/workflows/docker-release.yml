@@ -41,15 +41,26 @@ jobs:
             type=raw,value=rc,enable=${{ contains(github.ref, 'RC') }}
             type=ref,event=tag
 
+      - name: Login to registry
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+        run: |
+          echo "Actor: ${{ github.actor }}"
+          echo "Registry: ${{ env.REGISTRY }}"
+          echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Test registry push
+        run: |
+          docker pull alpine
+          docker tag alpine ${{ env.REGISTRY }}/codigosh/lastboard:ci-test
+          docker push ${{ env.REGISTRY }}/codigosh/lastboard:ci-test
+          echo "Test push OK"
+
       - name: Build Docker image
         run: docker build -t "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
 
       - name: Push to registry
-        env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
-          echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
           while IFS= read -r tag; do
             [ -z "$tag" ] && continue
             docker tag "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" "$tag"
