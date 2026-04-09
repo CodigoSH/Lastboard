@@ -207,7 +207,7 @@ git push origin $NEW_TAG
 # Cleanup (Smart Cleanup: removes from main but stays in Tag)
 rm -f RELEASE_NOTES_*.md 2>/dev/null
 git add .
-git commit -m "chore(release): cleanup release notes"
+git commit -m "chore(release): cleanup release notes [skip ci]"
 git push origin main
 
 echo "✅ Successfully deployed $NEW_TAG!"
