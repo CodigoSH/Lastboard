@@ -38,7 +38,7 @@ jobs:
 
       - name: Build Backend
         run: |
-          VERSION=${{ gitea.ref_name }}
+          VERSION=${GITHUB_REF_NAME}
 
           export CGO_ENABLED=0
           export GOOS=${{ matrix.goos }}
@@ -77,7 +77,7 @@ jobs:
       - name: Debug - List Files
         run: |
           echo "Checking for release notes:"
-          ls -l RELEASE_NOTES_${{ gitea.ref_name }}.md || echo "Release notes file not found, will use default."
+          ls -l RELEASE_NOTES_${GITHUB_REF_NAME}.md || echo "Release notes file not found, will use default."
           echo "Checking for artifacts:"
           ls -R artifacts/
 
@@ -85,9 +85,9 @@ jobs:
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
-          VERSION="${{ gitea.ref_name }}"
-          REPO="${{ gitea.repository }}"
-          API="${{ gitea.server_url }}/api/v1"
+          VERSION="${GITHUB_REF_NAME}"
+          REPO="${GITHUB_REPOSITORY}"
+          API="${GITHUB_SERVER_URL}/api/v1"
           NOTES_FILE="RELEASE_NOTES_${VERSION}.md"
 
           # Detect prerelease
