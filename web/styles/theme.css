@@ -256,8 +256,9 @@ body::before {
 .is-firefox {
     --glass-blur: none;
 
-    /* More opaque surface to replace the depth lost without blur */
-    --surface: rgba(255, 255, 255, 0.88);
+    /* Reduced opacity (0.72 vs Chrome's 0.6) — close enough to let background
+       show through without exposing sharp edges from missing blur */
+    --surface: rgba(255, 255, 255, 0.72);
 
     /* Rim-light on top edge simulates light refracting through glass */
     --card-shadow:
@@ -272,8 +273,11 @@ body::before {
 .is-firefox.dark-mode {
     --glass-blur: none;
 
-    /* More opaque dark surface */
-    --surface: rgba(20, 20, 20, 0.92);
+    /* 0.70 opacity (vs Chrome's 0.50) + warm R tint (28 vs 36/36/36):
+       The tint approximates the warm red/amber that backdrop-filter would
+       'average in' from the sunset background image. Together they make
+       Firefox panels look much closer to Chrome's blurred glass. */
+    --surface: rgba(28, 22, 20, 0.70);
 
     /* Subtle white rim on top edge — hallmark of premium dark glass panels */
     --card-shadow:
