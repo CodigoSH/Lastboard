@@ -182,7 +182,10 @@ fi
 
 # Create temporary file for Forgejo Release Body
 NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
-cat <<EOF > $NOTES_FILE
+if [ -f "$NOTES_FILE" ]; then
+    echo "📝 Using existing release notes: $NOTES_FILE"
+else
+    cat <<EOF > $NOTES_FILE
 # Release: $NEW_TAG
 
 $( [ -n "$FEATS" ] && echo "### ✨ Features" && echo "$FEATS" && echo "" )
@@ -193,6 +196,7 @@ $( [ -n "$OTHER" ] && echo "### 📝 Other Changes" && echo "$OTHER" && echo "" 
 ---
 **Full Changelog**: [${LAST_TAG:-initial}...$NEW_TAG]($REPO_URL/compare/${LAST_TAG:-main}...$NEW_TAG)
 EOF
+fi
 
 # 6. Git Operations
 echo "📦 Committing Release..."

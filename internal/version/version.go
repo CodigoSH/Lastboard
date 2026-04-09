@@ -3,5 +3,5 @@ package version
 var (
 	// Current is the current version of the application.
 	// This usually gets overwritten by build flags (ldflags).
-	Current = "v1.5.0-Beta.30"
+	Current = "v1.5.0"
 )
