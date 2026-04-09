@@ -5,6 +5,8 @@
     if (localStorage.getItem('lastboard_theme') === 'dark') document.documentElement.classList.add('dark-mode');
     const accent = localStorage.getItem('lastboard_accent');
     if (accent) document.documentElement.style.setProperty('--accent', accent);
+    // Firefox: disable backdrop-filter to prevent WebRender tile seam artefacts
+    if (/Firefox\//.test(navigator.userAgent)) document.documentElement.classList.add('is-firefox');
 </script>
 
 <head>

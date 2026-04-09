@@ -112,37 +112,51 @@ func NewSystemHandler(db *sql.DB) *SystemHandler {
 
 // Data Structures for Backup
 type BackupData struct {
-	Version   string       `json:"version"`
-	Timestamp time.Time    `json:"timestamp"`
-	Users     []BackupUser `json:"users"`
-	Items     []BackupItem `json:"items"`
+	Version    string           `json:"version"`
+	Timestamp  time.Time        `json:"timestamp"`
+	Users      []BackupUser     `json:"users"`
+	Dashboards []BackupDashboard `json:"dashboards"`
+	Items      []BackupItem     `json:"items"`
 }
 
 type BackupUser struct {
-	Username          string  `json:"username"`
-	Password          string  `json:"password"`
-	Role              string  `json:"role"`
-	Theme             *string `json:"theme"`
-	AccentColor       *string `json:"accent_color"`
-	Language          *string `json:"language"`
-	GridColumnsPC     *int    `json:"grid_columns_pc"`
-	GridColumnsTablet *int    `json:"grid_columns_tablet"`
-	GridColumnsMobile *int    `json:"grid_columns_mobile"`
-	AvatarUrl         *string `json:"avatar_url"`
-	ProjectName       *string `json:"project_name"`
-	BetaUpdates       *bool   `json:"beta_updates"`
+	Username            string  `json:"username"`
+	Password            string  `json:"password"`
+	Role                string  `json:"role"`
+	Theme               *string `json:"theme"`
+	AccentColor         *string `json:"accent_color"`
+	Language            *string `json:"language"`
+	GridColumnsPC       *int    `json:"grid_columns_pc"`
+	GridColumnsTablet   *int    `json:"grid_columns_tablet"`
+	GridColumnsMobile   *int    `json:"grid_columns_mobile"`
+	AvatarUrl           *string `json:"avatar_url"`
+	ProjectName         *string `json:"project_name"`
+	ProjectLogo         *string `json:"project_logo"`
+	BetaUpdates         *bool   `json:"beta_updates"`
+	UnitSystem          *string `json:"unit_system"`
+	DashboardBackground *string `json:"dashboard_background"`
+	WidgetMinWidth      *int    `json:"widget_min_width"`
+}
+
+type BackupDashboard struct {
+	ID        int    `json:"id"`
+	Owner     string `json:"owner"`
+	Name      string `json:"name"`
+	Position  int    `json:"position"`
+	IsDefault bool   `json:"is_default"`
 }
 
 type BackupItem struct {
-	ID       int     `json:"id"`
-	Owner    string  `json:"owner"`
-	ParentID *int    `json:"parent_id,omitempty"`
-	Type     string  `json:"type"`
-	X        int     `json:"x"`
-	Y        int     `json:"y"`
-	W        int     `json:"w"`
-	H        int     `json:"h"`
-	Content  *string `json:"content"`
+	ID          int     `json:"id"`
+	Owner       string  `json:"owner"`
+	DashboardID *int    `json:"dashboard_id,omitempty"`
+	ParentID    *int    `json:"parent_id,omitempty"`
+	Type        string  `json:"type"`
+	X           int     `json:"x"`
+	Y           int     `json:"y"`
+	W           int     `json:"w"`
+	H           int     `json:"h"`
+	Content     *string `json:"content"`
 }
 
 // GET /api/system/backup
@@ -174,7 +188,9 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Fetch Users
 	rows, err := h.DB.Query(`SELECT username, password, role, theme, accent_color, language,
-		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, COALESCE(beta_updates, 0) FROM users`)
+		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name,
+		COALESCE(project_logo, ''), COALESCE(beta_updates, 0), COALESCE(unit_system, 'metric'),
+		COALESCE(dashboard_background, ''), COALESCE(widget_min_width, 140) FROM users`)
 	if err != nil {
 		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
 		return
@@ -184,7 +200,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var u BackupUser
 		if err := rows.Scan(&u.Username, &u.Password, &u.Role, &u.Theme, &u.AccentColor, &u.Language,
-			&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl, &u.ProjectName, &u.BetaUpdates); err != nil {
+			&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl, &u.ProjectName,
+			&u.ProjectLogo, &u.BetaUpdates, &u.UnitSystem, &u.DashboardBackground, &u.WidgetMinWidth); err != nil {
 			continue
 		}
 		backup.Users = append(backup.Users, u)
@@ -194,9 +211,30 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Fetch Items — join users to store owner username; backups must be
+	// 2. Fetch Dashboards — join users to store owner username for portability.
+	dashRows, err := h.DB.Query(`SELECT d.id, COALESCE(u.username, ''), d.name, d.position, d.is_default
+		FROM dashboards d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id ASC`)
+	if err != nil {
+		http.Error(w, "Failed to fetch dashboards", http.StatusInternalServerError)
+		return
+	}
+	defer dashRows.Close()
+
+	for dashRows.Next() {
+		var d BackupDashboard
+		if err := dashRows.Scan(&d.ID, &d.Owner, &d.Name, &d.Position, &d.IsDefault); err != nil {
+			continue
+		}
+		backup.Dashboards = append(backup.Dashboards, d)
+	}
+	if err := dashRows.Err(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Fetch Items — join users to store owner username; backups must be
 	// portable across restores where numeric IDs will differ.
-	itemRows, err := h.DB.Query(`SELECT i.id, COALESCE(u.username, ''), i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content
+	itemRows, err := h.DB.Query(`SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content
 		FROM items i LEFT JOIN users u ON i.user_id = u.id`)
 	if err != nil {
 		http.Error(w, "Failed to fetch items", http.StatusInternalServerError)
@@ -206,7 +244,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	for itemRows.Next() {
 		var i BackupItem
-		if err := itemRows.Scan(&i.ID, &i.Owner, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
+		if err := itemRows.Scan(&i.ID, &i.Owner, &i.DashboardID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
 			continue
 		}
 		backup.Items = append(backup.Items, i)
@@ -267,9 +305,13 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	// 1. Clear Data
+	// 1. Clear Data (order matters: items → dashboards → users due to FK)
 	if _, err := tx.Exec("DELETE FROM items"); err != nil {
 		http.Error(w, "Failed to clear items", http.StatusInternalServerError)
+		return
+	}
+	if _, err := tx.Exec("DELETE FROM dashboards"); err != nil {
+		http.Error(w, "Failed to clear dashboards", http.StatusInternalServerError)
 		return
 	}
 	if _, err := tx.Exec("DELETE FROM users"); err != nil {
@@ -277,9 +319,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Insert Users
+	// 2. Insert Users (with all preference columns)
 	userStmt, err := tx.Prepare(`INSERT INTO users (username, password, role, theme, accent_color, language,
-		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, beta_updates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, project_logo,
+		beta_updates, unit_system, dashboard_background, widget_min_width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
 		return
@@ -287,21 +330,37 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	defer userStmt.Close()
 
 	for _, u := range backup.Users {
-		// Handle nil for new fields if restoring from old backup
 		betaUpdates := false
 		if u.BetaUpdates != nil {
 			betaUpdates = *u.BetaUpdates
 		}
+		unitSystem := "metric"
+		if u.UnitSystem != nil {
+			unitSystem = *u.UnitSystem
+		}
+		dashBg := ""
+		if u.DashboardBackground != nil {
+			dashBg = *u.DashboardBackground
+		}
+		widgetMinWidth := 140
+		if u.WidgetMinWidth != nil {
+			widgetMinWidth = *u.WidgetMinWidth
+		}
+		projectLogo := ""
+		if u.ProjectLogo != nil {
+			projectLogo = *u.ProjectLogo
+		}
 
 		_, err := userStmt.Exec(u.Username, u.Password, u.Role, u.Theme, u.AccentColor, u.Language,
-			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName, betaUpdates)
+			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName, projectLogo,
+			betaUpdates, unitSystem, dashBg, widgetMinWidth)
 		if err != nil {
 			http.Error(w, "Failed to restore backup", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	// 3. Build username → restored-id map so item ownership survives the restore.
+	// 3. Build username → restored-id map so dashboard/item ownership survives the restore.
 	ownerMap := make(map[string]int)
 	for _, u := range backup.Users {
 		var uid int
@@ -316,8 +375,35 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Insert Items with resolved user_id (two-pass for parent_id)
-	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+	// 4. Insert Dashboards, build old_dash_id → new_dash_id map
+	oldToNewDashID := make(map[int]int64)
+	if len(backup.Dashboards) > 0 {
+		dashStmt, err := tx.Prepare(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, ?, ?, ?)`)
+		if err != nil {
+			http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
+			return
+		}
+		defer dashStmt.Close()
+
+		for _, d := range backup.Dashboards {
+			uid := ownerMap[d.Owner]
+			if uid == 0 {
+				uid = fallbackOwner
+			}
+			res, err := dashStmt.Exec(uid, d.Name, d.Position, d.IsDefault)
+			if err != nil {
+				http.Error(w, "Failed to restore dashboard", http.StatusInternalServerError)
+				return
+			}
+			if d.ID > 0 {
+				newID, _ := res.LastInsertId()
+				oldToNewDashID[d.ID] = newID
+			}
+		}
+	}
+
+	// 5. Insert Items with resolved user_id and dashboard_id (two-pass for parent_id)
+	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, dashboard_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
 		return
@@ -331,7 +417,13 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		if uid == 0 {
 			uid = fallbackOwner
 		}
-		res, err := itemStmt.Exec(uid, i.Type, i.X, i.Y, i.W, i.H, i.Content)
+		var newDashID interface{}
+		if i.DashboardID != nil {
+			if mapped, ok := oldToNewDashID[*i.DashboardID]; ok {
+				newDashID = mapped
+			}
+		}
+		res, err := itemStmt.Exec(uid, newDashID, i.Type, i.X, i.Y, i.W, i.H, i.Content)
 		if err != nil {
 			http.Error(w, "Failed to restore item", http.StatusInternalServerError)
 			return
