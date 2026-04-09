@@ -24,81 +24,44 @@ jobs:
       - name: Fix Docker socket permissions
         run: chmod 666 /var/run/docker.sock
 
-      - name: Set image name and tag
+      - name: Set lowercase image name
         id: vars
-        run: |
-          IMAGE=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
-          TAG=${GITHUB_REF_NAME}
-          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        run: echo "image=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Log in to registry
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ !contains(github.ref, '-') }}
+            type=raw,value=beta,enable=${{ contains(github.ref, 'Beta') }}
+            type=raw,value=rc,enable=${{ contains(github.ref, 'RC') }}
+            type=ref,event=tag
+
+      - name: Build and push Docker image
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
-          echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} \
-            -u "${{ github.actor }}" --password-stdin
+          echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
-      - name: Set up QEMU
-        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          TAG_ARGS=""
+          while IFS= read -r tag; do
+            [ -n "$tag" ] && TAG_ARGS="$TAG_ARGS --tag $tag"
+          done <<< "${{ steps.meta.outputs.tags }}"
 
-      - name: Build and push amd64
-        run: |
-          IMAGE=${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}
-          TAG=${{ steps.vars.outputs.tag }}
-          docker build --platform linux/amd64 \
-            -t ${IMAGE}:${TAG}-amd64 \
-            -t ${IMAGE}:amd64 \
+          docker buildx build \
+            $TAG_ARGS \
+            --platform linux/amd64,linux/arm64 \
+            --push \
+            --provenance=false \
+            --sbom=false \
             .
-          docker push ${IMAGE}:${TAG}-amd64
-          docker push ${IMAGE}:amd64
-
-      - name: Build and push arm64
-        run: |
-          IMAGE=${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}
-          TAG=${{ steps.vars.outputs.tag }}
-          docker build --platform linux/arm64 \
-            -t ${IMAGE}:${TAG}-arm64 \
-            -t ${IMAGE}:arm64 \
-            .
-          docker push ${IMAGE}:${TAG}-arm64
-          docker push ${IMAGE}:arm64
-
-      - name: Create and push multi-arch manifest
-        run: |
-          IMAGE=${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}
-          TAG=${{ steps.vars.outputs.tag }}
-          VERSION=$(echo ${TAG} | sed 's/^v//')
-
-          # Enable experimental features for manifest
-          export DOCKER_CLI_EXPERIMENTAL=enabled
-
-          # Main version tag
-          docker manifest create ${IMAGE}:${TAG} \
-            ${IMAGE}:${TAG}-amd64 \
-            ${IMAGE}:${TAG}-arm64
-          docker manifest push ${IMAGE}:${TAG}
-
-          # Semver without v prefix
-          docker manifest create ${IMAGE}:${VERSION} \
-            ${IMAGE}:${TAG}-amd64 \
-            ${IMAGE}:${TAG}-arm64
-          docker manifest push ${IMAGE}:${VERSION}
-
-          # Channel tag (beta/rc/latest)
-          if echo "${TAG}" | grep -qi "Beta"; then
-            docker manifest create ${IMAGE}:beta \
-              ${IMAGE}:${TAG}-amd64 \
-              ${IMAGE}:${TAG}-arm64
-            docker manifest push ${IMAGE}:beta
-          elif echo "${TAG}" | grep -qi "RC"; then
-            docker manifest create ${IMAGE}:rc \
-              ${IMAGE}:${TAG}-amd64 \
-              ${IMAGE}:${TAG}-arm64
-            docker manifest push ${IMAGE}:rc
-          else
-            docker manifest create ${IMAGE}:latest \
-              ${IMAGE}:${TAG}-amd64 \
-              ${IMAGE}:${TAG}-arm64
-            docker manifest push ${IMAGE}:latest
-          fi
