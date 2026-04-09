@@ -21,6 +21,12 @@ jobs:
           apt-get update -qq
           apt-get install -y -qq docker.io
 
+      - name: Fix Docker socket permissions
+        run: |
+          ls -la /var/run/docker.sock
+          chmod 666 /var/run/docker.sock
+          docker info
+
       - name: Set lowercase image name
         id: vars
         run: echo "image=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
