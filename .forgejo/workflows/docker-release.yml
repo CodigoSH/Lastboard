@@ -18,15 +18,15 @@ jobs:
 
       - name: Install Docker CLI and Buildx
         run: |
-          # Install Docker CLI as a static binary (avoids systemd dep from docker.io apt package)
-          DOCKER_VERSION=$(curl -s https://api.github.com/repos/moby/moby/releases/latest | grep -oP '"tag_name": "v\K[^"]+')
-          curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
+          apt-get update -qq && apt-get install -y -qq --no-install-recommends curl ca-certificates
+
+          # Docker CLI static binary (pinned, no apt/systemd deps)
+          curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz" \
             | tar xz --strip-components=1 -C /usr/local/bin docker/docker
 
-          # Install Buildx plugin
-          BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep -oP '"tag_name": "\K[^"]+')
+          # Buildx plugin (pinned)
           mkdir -p /usr/lib/docker/cli-plugins
-          curl -sSL "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64" \
+          curl -fsSL "https://github.com/docker/buildx/releases/download/v0.23.0/buildx-v0.23.0.linux-amd64" \
             -o /usr/lib/docker/cli-plugins/docker-buildx
           chmod +x /usr/lib/docker/cli-plugins/docker-buildx
 
