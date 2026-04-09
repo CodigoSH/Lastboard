@@ -1,73 +1,19 @@
-# Contributing to Lastboard
+# Contributing
 
-First off, thanks for taking the time to contribute! Lastboard aims to be the fastest and most beautiful personal dashboard, and your help makes that possible.
+Lastboard is open source and available for everyone to use, study, and build upon under the terms of its license.
 
-## Development Setup
+## How Development Works
 
-### Prerequisites
-- **Go 1.23+**
-- **Bun** (Latest)
-- **Docker** (Optional, for container testing)
-- **Air** (Optional, for backend hot-reloading)
+Active development happens within the CodigoSH team. We do not follow the standard open-source contribution model (fork → PR → merge). Instead, development is coordinated internally among team members with direct repository access.
 
-### Quick Start
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/CodigoSH/Lastboard.git
-   cd Lastboard
-   ```
+This means:
 
-2. **Install dependencies**
-   ```bash
-   bun install
-   ```
+- **The source code is fully open.** You can read it, fork it, run it, and learn from it.
+- **We do not accept pull requests** from outside the team at this time.
+- **Issues and bug reports are welcome.** If you find something broken or have a feature idea, open an issue on our [Forgejo repository](https://git.codigosh.com/CodigoSH/Lastboard/issues) — we read everything.
 
-3. **Run in Dev Mode**
-   If you have `air` installed (recommended):
-   ```bash
-   make dev
-   ```
-   Or manually:
-   ```bash
-   # Terminal 1 (Frontend Watch)
-   bun run dev
-   
-   # Terminal 2 (Backend)
-   go run ./cmd/lastboard/main.go
-   ```
+## Join the Team
 
-## Project Structure
-- `cmd/lastboard`: Main entry point.
-- `internal`: Backend logic (handlers, storage, services).
-- `web`: Frontend application (TypeScript, CSS).
-- `scripts`: Utilities for release and i18n.
+> **Coming soon.** We are working on a formal process for developers who want to actively contribute to Lastboard as part of the CodigoSH development team.
 
-## Releasing Support
-We use a unified script to handle versioning and changelogs.
-
-**Do not manually edit `package.json` version.** Use the script:
-
-```bash
-# For Beta versions (e.g., 1.2.1-Beta.01)
-./scripts/release.sh beta
-
-# For Release Candidates
-./scripts/release.sh rc
-
-# For Official Stable Releases
-./scripts/release.sh stable
-```
-
-## Translations (i18n)
-If you want to add or update translations:
-1. Edit the master file `scripts/i18n-sync.ts`.
-2. Run `bun run i18n:sync` to propagate changes to all `locales/*.json` files.
-3. Commit both the script and the generated json files.
-
-## Code Style
-- **Go**: Follow standard Go idioms. Run `go fmt ./...` before committing.
-- **TypeScript**: We use standard prettier/eslint rules.
-- **Commits**: Please follow [Conventional Commits](https://www.conventionalcommits.org/).
-  - `feat: add new widget`
-  - `fix: resolve layout bug`
-  - `docs: update readme`
+If you are interested in joining, stay tuned to our [Forgejo](https://git.codigosh.com/CodigoSH/Lastboard) for announcements.

@@ -1,0 +1,162 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.1'
+
+      - name: Setup Bun (Frontend)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build Frontend
+        run: |
+          bun install
+          bun run web/build.ts
+
+      - name: Build Backend
+        run: |
+          VERSION=${{ gitea.ref_name }}
+
+          export CGO_ENABLED=0
+          export GOOS=${{ matrix.goos }}
+          export GOARCH=${{ matrix.goarch }}
+
+          go build -ldflags "-s -w -extldflags '-static' -X github.com/CodigoSH/Lastboard/internal/version.Current=$VERSION" -o lastboard ./cmd/lastboard/main.go
+
+      - name: Package
+        run: tar -czvf lastboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz lastboard
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: lastboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+
+  release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate Checksums
+        run: |
+          find artifacts -name "*.tar.gz" | sort | while read f; do
+            sha256sum "$f" | awk '{print $1 "  " $2}' | sed 's|artifacts/[^/]*/||'
+          done > artifacts/checksums.txt
+          cat artifacts/checksums.txt
+
+      - name: Debug - List Files
+        run: |
+          echo "Checking for release notes:"
+          ls -l RELEASE_NOTES_${{ gitea.ref_name }}.md || echo "Release notes file not found, will use default."
+          echo "Checking for artifacts:"
+          ls -R artifacts/
+
+      - name: Create or Update Release
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+        run: |
+          VERSION="${{ gitea.ref_name }}"
+          REPO="${{ gitea.repository }}"
+          API="${{ gitea.server_url }}/api/v1"
+          NOTES_FILE="RELEASE_NOTES_${VERSION}.md"
+
+          # Detect prerelease
+          IS_PRERELEASE=false
+          if [[ "$VERSION" == *"Beta"* || "$VERSION" == *"RC"* || "$VERSION" == *"beta"* || "$VERSION" == *"rc"* ]]; then
+            IS_PRERELEASE=true
+          fi
+
+          # Read release notes
+          if [ -f "$NOTES_FILE" ]; then
+            NOTES=$(cat "$NOTES_FILE")
+          else
+            NOTES="Release $VERSION"
+          fi
+
+          NOTES_JSON=$(echo "$NOTES" | jq -Rs .)
+
+          # Check if release already exists
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token $FORGEJO_TOKEN" \
+            "$API/repos/$REPO/releases/tags/$VERSION")
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Release exists, updating..."
+
+            RELEASE_ID=$(curl -s \
+              -H "Authorization: token $FORGEJO_TOKEN" \
+              "$API/repos/$REPO/releases/tags/$VERSION" | jq -r '.id')
+
+            curl -s -X PATCH \
+              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE}" \
+              "$API/repos/$REPO/releases/$RELEASE_ID"
+
+            # Delete existing assets before re-uploading
+            ASSET_IDS=$(curl -s \
+              -H "Authorization: token $FORGEJO_TOKEN" \
+              "$API/repos/$REPO/releases/$RELEASE_ID/assets" | jq -r '.[].id')
+            for asset_id in $ASSET_IDS; do
+              curl -s -X DELETE \
+                -H "Authorization: token $FORGEJO_TOKEN" \
+                "$API/repos/$REPO/releases/$RELEASE_ID/assets/$asset_id"
+            done
+          else
+            echo "Creating new release..."
+
+            RELEASE_ID=$(curl -s -X POST \
+              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\": \"$VERSION\", \"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE}" \
+              "$API/repos/$REPO/releases" | jq -r '.id')
+          fi
+
+          echo "Release ID: $RELEASE_ID"
+
+          # Upload tar.gz files
+          find artifacts -name "*.tar.gz" | while read f; do
+            filename=$(basename "$f")
+            echo "Uploading $filename..."
+            curl -s -X POST \
+              -H "Authorization: token $FORGEJO_TOKEN" \
+              -F "attachment=@$f;filename=$filename" \
+              "$API/repos/$REPO/releases/$RELEASE_ID/assets"
+          done
+
+          # Upload checksums
+          echo "Uploading checksums.txt..."
+          curl -s -X POST \
+            -H "Authorization: token $FORGEJO_TOKEN" \
+            -F "attachment=@artifacts/checksums.txt;filename=checksums.txt" \
+            "$API/repos/$REPO/releases/$RELEASE_ID/assets"

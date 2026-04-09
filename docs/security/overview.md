@@ -11,19 +11,19 @@ Lastboard is built from the ground up with defense-in-depth principles. We prior
 - **XSS Prevention:** User-submitted content (like templates or Markdown blobs) is processed via DOMPurify to sanitize HTML payloads before attachment to the DOM.
 - **TRUST_PROXY:** For reverse proxy deployments, Lastboard safely reads the `X-Forwarded-For` header for IP blacklisting/rate-limiting, only when explicitly configured via the `TRUST_PROXY=true` flag.
 
-## Update Proxy Transparency
+## Update Delivery
 
-To provide a secure, reliable update experience, our web installer and UI update mechanism communicate with a private proxy server (`api-updates.codigosh.com`) rather than hitting the GitHub API directly.
+The web installer and in-app update mechanism communicate directly with our self-hosted Forgejo instance (`git.codigosh.com`). There are no intermediaries or third-party services involved in the update path.
 
-- **No Tracking:** The proxy does not store IP addresses, user identifiers, or telemetry.
-- **No Modification:** It strictly parses JSON metadata from the official repository release channels. Binaries are never modified.
-- **Token Protection:** It prevents exposure of organization GitHub Personal Access Tokens (PATs) used to bypass rate limits.
+- **No Tracking:** No IP addresses, user identifiers, or telemetry are collected at any point.
+- **No Modification:** Release metadata and binaries are fetched directly from the official `CodigoSH/Lastboard` repository. Nothing is modified in transit.
+- **Checksum Verification:** Every binary is verified against a `checksums.txt` published with each release. Mismatches abort the installation immediately.
 
 ## Reporting Vulnerabilities
 
 If you discover a security vulnerability within this project, please contact us directly. 
 
-We ask that you do not report security vulnerabilities through public GitHub issues to prevent zero-day exposure. We will acknowledge your report within 48 hours and provide a timeline for resolution.
+We ask that you do not report security vulnerabilities through public issue trackers to prevent zero-day exposure. We will acknowledge your report within 48 hours and provide a timeline for resolution.
 
 ---
 [← Previous page](../widgets/docker.md) | [Next page →](headers.md)

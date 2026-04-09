@@ -1,6 +1,6 @@
 services:
   lastboard:
-    image: ghcr.io/codigosh/lastboard:latest
+    image: git.codigosh.com/codigosh/lastboard:latest
     container_name: lastboard
     ports:
       - "8080:8080"

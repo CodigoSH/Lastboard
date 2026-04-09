@@ -11,18 +11,15 @@ GREEN='\033[1;32m'
 BLUE='\033[1;34m'
 CYAN='\033[0;36m'
 GRAY='\033[0;90m'
+BOLD='\033[1m'
 NC='\033[0m'
 
 # Configuration
-# Configuration
-REPO="CodigoSH/Lastboard"
 INSTALL_DIR="/opt/lastboard"
 BIN_DIR="/usr/local/bin"
 BINARY_NAME="lastboard"
 DATA_DIR="/var/lib/lastboard"
 SERVICE_FILE="/etc/systemd/system/lastboard.service"
-
-# ... (Helper functions omitted for brevity in diff, keeping existing code if possible or rewriting the changed parts)
 
 # Helper for friendly status
 function status_msg() {
@@ -34,8 +31,7 @@ function success_msg() {
 }
 
 # Fetch latest version for banner (Fail gracefully)
-# Using Proxy to avoid GitHub Rate Limits
-LATEST_VERSION=$(curl -s "https://api-updates.codigosh.com/api/v1/check-update?beta=true" | sed -n 's/.*"latest_version":"\([^"]*\)".*/\1/p')
+LATEST_VERSION=$(curl -s "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases?limit=1" | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')
 if [ -z "$LATEST_VERSION" ]; then
     LATEST_VERSION="latest"
 fi
@@ -136,22 +132,22 @@ status_msg "Downloading latest version..."
 # Determine release tag based on user preference
 if [ "$RELEASE_CHANNEL" = "beta" ]; then
     # Fetch latest beta from Proxy
-    status_msg "Checking for latest beta version via Proxy..."
-    RELEASE_TAG=$(curl -s "https://api-updates.codigosh.com/api/v1/check-update?beta=true" | sed -n 's/.*"latest_version":"\([^"]*\)".*/\1/p')
+    status_msg "Checking for latest beta version..."
+    RELEASE_TAG=$(curl -s "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases?limit=1" | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')
     status_msg "Installing latest beta: $RELEASE_TAG"
 else
     # Fetch latest stable from Proxy
-    status_msg "Checking for latest stable version via Proxy..."
-    RELEASE_TAG=$(curl -s "https://api-updates.codigosh.com/api/v1/check-update?beta=false" | sed -n 's/.*"latest_version":"\([^"]*\)".*/\1/p')
+    status_msg "Checking for latest stable version..."
+    RELEASE_TAG=$(curl -s "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases/latest" | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')
     status_msg "Installing latest stable: $RELEASE_TAG"
 fi
 
 if [ -z "$RELEASE_TAG" ]; then
-    echo -e "${RED}  Failed to fetch release information from GitHub.${NC}"
+    echo -e "${RED}  Failed to fetch release information.${NC}"
     exit 1
 fi
 
-BASE_URL="https://github.com/CodigoSH/Lastboard/releases/download/$RELEASE_TAG"
+BASE_URL="https://git.codigosh.com/CodigoSH/Lastboard/releases/download/$RELEASE_TAG"
 ARCHIVE_NAME="lastboard-linux-$ARCH_TAG.tar.gz"
 URL="$BASE_URL/$ARCHIVE_NAME"
 CHECKSUM_URL="$BASE_URL/checksums.txt"

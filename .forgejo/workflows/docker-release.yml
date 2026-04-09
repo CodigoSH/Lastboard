@@ -6,19 +6,19 @@ on:
       - 'v*'
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: git.codigosh.com
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set lowercase image name
+        id: vars
+        run: echo "image=$(echo '${{ gitea.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -30,27 +30,27 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ gitea.actor }}
+          password: ${{ secrets.FORGEJO_TOKEN }}
 
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}
           tags: |
             # Semver tags (v1.0.0 -> 1.0.0, 1.0, 1) - Only for stable releases
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            
+
             # Latest tag - Only if it's NOT a pre-release (doesn't contain hyphen)
-            type=raw,value=latest,enable=${{ !contains(github.ref, '-') }}
+            type=raw,value=latest,enable=${{ !contains(gitea.ref, '-') }}
 
             # Beta tag - If version string contains 'Beta'
-            type=raw,value=beta,enable=${{ contains(github.ref, 'Beta') }}
-            
+            type=raw,value=beta,enable=${{ contains(gitea.ref, 'Beta') }}
+
             # RC tag - If version string contains 'RC'
-            type=raw,value=rc,enable=${{ contains(github.ref, 'RC') }}
+            type=raw,value=rc,enable=${{ contains(gitea.ref, 'RC') }}
 
             # Always tag with the full ref name (e.g. 1.1.1-Beta.01)
             type=ref,event=tag
@@ -63,5 +63,3 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max

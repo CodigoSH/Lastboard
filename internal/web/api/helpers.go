@@ -72,8 +72,8 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	}
 
 	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
-		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "GitHub", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/git.png"}', 'https://github.com/CodigoSH/Lastboard'),
-		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Wiki", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png"}', 'https://github.com/CodigoSH/Lastboard/wiki')
+		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Forgejo", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/git.png"}', 'https://git.codigosh.com/CodigoSH/Lastboard'),
+		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Wiki", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png"}', 'https://git.codigosh.com/CodigoSH/Lastboard/wiki')
 	`, userID, projectLinksID, userID, projectLinksID); err != nil {
 		return err
 	}

@@ -71,9 +71,8 @@ func (h *UpdateHandler) CheckForUpdatesBackground(hub *Hub) {
 	defer ticker.Stop()
 
 	check := func() {
-		// We check for both stable and beta since we don't know user prefs here
-		// We'll notify if ANY newer version is available, frontend will filter based on user prefs.
-		latest, err := h.fetchLatestVersionFromProxy()
+		// Fetch latest release (including pre-releases) — frontend filters based on user prefs.
+		latest, err := h.fetchLatestVersion()
 		if err != nil {
 			slog.Warn("Background update check failed", "error", err)
 			return
@@ -98,27 +97,30 @@ func (h *UpdateHandler) CheckForUpdatesBackground(hub *Hub) {
 	}
 }
 
-func (h *UpdateHandler) fetchLatestVersionFromProxy() (string, error) {
-	// Check Stable first
-	proxyUrl := "https://api-updates.codigosh.com/api/v1/check-update?beta=true"
-	resp, err := http.Get(proxyUrl)
+func (h *UpdateHandler) fetchLatestVersion() (string, error) {
+	// Fetch latest release including pre-releases from Forgejo
+	url := "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases?limit=1"
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("proxy returned status %d", resp.StatusCode)
+		return "", fmt.Errorf("forgejo returned status %d", resp.StatusCode)
 	}
 
-	var data struct {
-		LatestVersion string `json:"latest_version"`
+	var releases []struct {
+		TagName string `json:"tag_name"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
 		return "", err
 	}
+	if len(releases) == 0 {
+		return "", fmt.Errorf("no releases found")
+	}
 
-	return data.LatestVersion, nil
+	return releases[0].TagName, nil
 }
 
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +150,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parsedURL, err := url.Parse(req.AssetUrl)
-	if err != nil || parsedURL.Host != "github.com" || !strings.HasPrefix(path.Clean(parsedURL.Path), "/CodigoSH/Lastboard/releases/") {
+	if err != nil || parsedURL.Host != "git.codigosh.com" || !strings.HasPrefix(path.Clean(parsedURL.Path), "/CodigoSH/Lastboard/releases/") {
 		http.Error(w, "Invalid asset URL", http.StatusBadRequest)
 		return
 	}

@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ gitea.workflow }}-${{ gitea.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,20 +37,20 @@ jobs:
         run: bun run build
 
       - name: Run Go tests
-        run: |
-          go test ./internal/... -v -cover -coverprofile=coverage.out
+        run: go test ./internal/... -v -cover -coverprofile=coverage.out
 
       - name: Generate coverage report
         run: |
           go tool cover -func=coverage.out -o=coverage.txt
           cat coverage.txt
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
         with:
-          files: ./coverage.out
-          flags: unittests
-          name: codecov-lastboard
+          name: coverage-report
+          path: |
+            coverage.out
+            coverage.txt
 
       - name: Run Frontend Tests
         run: bun test web/src/services/collisionService.test.ts
@@ -100,10 +100,6 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -121,7 +117,8 @@ jobs:
         with:
           args: '-no-fail -fmt sarif -out results.sarif ./...'
 
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload SARIF results
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: results.sarif
+          name: gosec-results
+          path: results.sarif

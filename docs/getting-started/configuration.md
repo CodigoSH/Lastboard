@@ -67,9 +67,9 @@ Tools for keeping your Lastboard instance healthy and up to date.
   - **Export**: Download your entire dashboard configuration as a portable `.json` file.
   - **Import**: Restore a previous setup from a backup file. *Warning: This overwrites current data.*
 - **System Updates**:
-  - **Check for Updates**: Manually trigger a check against the official release repository.
-  - **Docker Mode**: If running via Docker, instructions are provided to pull the latest image.
-  - **Native Update**: For Linux installs, updates can be performed directly from the UI.
+  - **Check for Updates**: Manually trigger a version check against the official [Forgejo repository](https://git.codigosh.com/CodigoSH/Lastboard).
+  - **Docker Mode**: If running via Docker, instructions are provided to pull the latest image from `git.codigosh.com`.
+  - **Native Update**: For Linux installs, updates can be applied directly from the UI — the binary is downloaded from Forgejo and verified by checksum before replacing the current installation.
 - **Beta Updates**: Toggle this setting to participate in the beta testing program and receive early access to new features.
 - **Factory Reset**: A safe-guarded option to wipe all data and return the instance to its original state (Setup Wizard).
 

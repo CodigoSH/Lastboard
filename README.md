@@ -11,9 +11,7 @@
       <img src="https://img.shields.io/badge/Live_Demo-FF4B4B?style=for-the-badge&logo=google-chrome&logoColor=white" />
     </a>
     &nbsp;
-    <img src="https://img.shields.io/badge/dynamic/json?url=https://api-updates.codigosh.com/api/v1/stats&query=%24.version&label=Latest&style=for-the-badge&color=blue" />
-    &nbsp;
-    <img src="https://img.shields.io/badge/dynamic/json?url=https://api-updates.codigosh.com/api/v1/stats&query=%24.downloads&label=Installations&style=for-the-badge&color=3178C6" />
+    <img src="https://img.shields.io/badge/dynamic/json?url=https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases/latest&query=%24.tag_name&label=Latest&style=for-the-badge&color=blue" />
     &nbsp;
     <img src="https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge" />
   </p>
@@ -87,13 +85,13 @@ For a detailed breakdown of our security measures, please refer to our [Security
 ## Installation Methods
 
 ### Quick Start with Docker (Recommended)
-The easiest way to get started is using Docker. Images are automatically built and published to GHCR.
+The easiest way to get started is using Docker. Images are automatically built and published to our Forgejo registry.
 
 **Using Docker Compose:**
 ```yaml
 services:
   lastboard:
-    image: ghcr.io/codigosh/lastboard:latest
+    image: git.codigosh.com/codigosh/lastboard:latest
     container_name: lastboard
     ports:
       - "8080:8080"
@@ -119,7 +117,7 @@ docker run -d \
   -e TZ=America/New_York \
   -v $(pwd)/data:/var/lib/lastboard \
   --restart unless-stopped \
-  ghcr.io/codigosh/lastboard:latest
+  git.codigosh.com/codigosh/lastboard:latest
 ```
 
 For advanced configuration options, environment variables, and data backups, please refer to the [Configuration Guide](./docs/getting-started/configuration.md).
@@ -130,10 +128,10 @@ For advanced configuration options, environment variables, and data backups, ple
 Run this command to install or update Lastboard automatically:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
+curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash
 ```
 
-For more details on manual installations or building from source, check our [Development Guide](./docs/contributing/development.md).
+For more details on building from source, check the [Development Guide](./docs/contributing/development.md).
 
 ---
 
@@ -180,5 +178,5 @@ We appreciate the organizations that support us as a gesture of goodwill to help
 
 ---
 
-A project by [CodigoSH](https://github.com/CodigoSH) — built to last.
+A project by [CodigoSH](https://git.codigosh.com/CodigoSH) — built to last.
 

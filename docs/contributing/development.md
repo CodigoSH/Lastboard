@@ -1,6 +1,6 @@
-# Development
+# Development Guide
 
-Want to compile Lastboard from source or contribute code? Follow this guide to get your development environment set up.
+This guide is intended for CodigoSH team members. It covers how to set up a local development environment for Lastboard.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Want to compile Lastboard from source or contribute code? Follow this guide to g
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/CodigoSH/Lastboard.git
+   git clone https://git.codigosh.com/CodigoSH/Lastboard.git
    cd Lastboard
    ```
 
@@ -69,7 +69,7 @@ Lastboard supports translations for over 20 languages. To add or update translat
 
 ## Release Process
 
-We use a unified shell script to handle branching, building, tagging, and compiling changelogs automatically. 
+We use a unified shell script to handle version bumping, changelog generation, and tagging. Once a tag is pushed to Forgejo, the CI pipeline handles everything else automatically.
 
 **Do not manually edit versions.**
 
@@ -84,6 +84,12 @@ To draft a release:
 # For Official Stable releases
 ./scripts/release.sh stable
 ```
+
+The script bumps the version, updates the changelog, commits, and pushes a new tag. This triggers the Forgejo Actions workflows which:
+
+1. Build the Go binary for `linux/amd64` and `linux/arm64`
+2. Create the release on Forgejo with the compiled binaries and `checksums.txt`
+3. Build and push the multi-arch Docker image to `git.codigosh.com`
 
 ---
 [← Previous page](../security/headers.md) | [Back to Top](../README.md)

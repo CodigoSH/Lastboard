@@ -49,7 +49,6 @@ class UpdateService {
 
         try {
             // 1. Get System Info (Version & Context) from Backend
-            // The backend NO LONGER checks GitHub, it just returns local info.
             const systemRes = await fetch('/api/system/update/check');
             let systemInfo: any = {
                 current_version: 'v0.0.0',
@@ -74,19 +73,23 @@ class UpdateService {
                 };
             }
 
-            // 2. Proxy Check
+            // 2. Forgejo Release Check
             try {
-                const proxyUrl = `https://api-updates.codigosh.com/api/v1/check-update?beta=${betaUpdates}`;
-                const proxyRes = await fetch(proxyUrl);
+                const FORGEJO_API = 'https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard';
+                const releaseUrl = betaUpdates
+                    ? `${FORGEJO_API}/releases?limit=1`
+                    : `${FORGEJO_API}/releases/latest`;
+                const releaseRes = await fetch(releaseUrl);
 
-                if (proxyRes.ok) {
-                    const proxyData = await proxyRes.json();
-                    const isNewer = this.compareVersions(proxyData.latest_version, this.version);
+                if (releaseRes.ok) {
+                    const releaseData = await releaseRes.json();
+                    const latestVersion: string = betaUpdates
+                        ? releaseData[0]?.tag_name
+                        : releaseData.tag_name;
+
+                    const isNewer = this.compareVersions(latestVersion, this.version);
 
                     if (isNewer) {
-                        // Construct Dynamic Asset URL
-                        // Standard GoReleaser format: lastboard-linux-amd64.tar.gz
-                        // Backend now returns correct runtime.GOOS and runtime.GOARCH
                         const os = systemInfo.os || 'linux';
                         const arch = systemInfo.arch || 'amd64';
                         const assetName = `lastboard-${os}-${arch}.tar.gz`;
@@ -94,14 +97,14 @@ class UpdateService {
                         return {
                             available: true,
                             current_version: this.version,
-                            latest_version: proxyData.latest_version,
-                            asset_url: `https://github.com/CodigoSH/Lastboard/releases/download/${proxyData.latest_version}/${assetName}`,
+                            latest_version: latestVersion,
+                            asset_url: `https://git.codigosh.com/CodigoSH/Lastboard/releases/download/${latestVersion}/${assetName}`,
                             is_docker: false
                         };
                     }
                 }
             } catch (e) {
-                console.error('[UpdateService] Proxy check failed', e);
+                console.error('[UpdateService] Release check failed', e);
             }
 
             // Fallback: No update available

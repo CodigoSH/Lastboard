@@ -40,7 +40,7 @@ The Lastboard Agent is a lightweight proxy that exposes specific Docker endpoint
 ```yaml
 services:
   lastboard-agent:
-    image: ghcr.io/codigosh/lastboard-agent:latest
+    image: git.codigosh.com/codigosh/lastboard-agent:latest
     container_name: lastboard-agent
     ports:
       - "2375:2375"
@@ -59,7 +59,7 @@ docker run -d \
   -e TOKEN=your_secure_random_token \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   --restart unless-stopped \
-  ghcr.io/codigosh/lastboard-agent:latest
+  git.codigosh.com/codigosh/lastboard-agent:latest
 ```
 
 ### Environment Variables

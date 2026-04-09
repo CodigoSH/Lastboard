@@ -180,7 +180,7 @@ if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
 fi
 
-# Also create temporary file for GitHub Release Body if needed
+# Create temporary file for Forgejo Release Body
 NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
 cat <<EOF > $NOTES_FILE
 # Release: $NEW_TAG

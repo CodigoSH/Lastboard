@@ -18,8 +18,8 @@ Welcome to the official Lastboard documentation. Here you will find everything y
 - **Security**
   - [Overview](security/overview.md)
   - [Headers](security/headers.md)
-- **Contributing**
-  - [Development](contributing/development.md)
+- **Development**
+  - [Development Guide](contributing/development.md)
 
 ---
-[Live Demo](https://lb-demo.codigosh.com) | [GitHub](https://github.com/CodigoSH/Lastboard) | [Report a Bug](https://github.com/CodigoSH/Lastboard/issues)
+[Live Demo](https://lb-demo.codigosh.com) | [Forgejo](https://git.codigosh.com/CodigoSH/Lastboard) | [Report a Bug](https://git.codigosh.com/CodigoSH/Lastboard/issues)

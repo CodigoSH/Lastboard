@@ -127,4 +127,4 @@ To submit your domain to browser preload lists:
 - [RFC 6797 - HSTS Specification](https://tools.ietf.org/html/rfc6797)
 
 ---
-[← Previous page](overview.md) | [Next page →](../contributing/development.md)
+[← Previous page](overview.md) | [Next page →](../contributing/development.md "Development Guide")

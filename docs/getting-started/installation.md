@@ -9,14 +9,19 @@ Get Lastboard up and running using your preferred method. We officially support 
 
 ## Method 1: Docker (Recommended)
 
-The easiest way to install Lastboard is via Docker Compose.
+The easiest way to install Lastboard is via Docker Compose. Images are published to our self-hosted registry at `git.codigosh.com`.
+
+> **Note:** If your Docker daemon returns an authentication error when pulling the image, log in first:
+> ```bash
+> docker login git.codigosh.com
+> ```
 
 Create a `docker-compose.yml` file with the following content:
 
 ```yaml
 services:
   lastboard:
-    image: ghcr.io/codigosh/lastboard:latest
+    image: git.codigosh.com/codigosh/lastboard:latest
     container_name: lastboard
     ports:
       - "8080:8080"
@@ -44,7 +49,7 @@ You can install Lastboard directly on your host machine using our automated scri
 
 Run the following command:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
+curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash
 ```
 
 ## First Run

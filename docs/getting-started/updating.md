@@ -24,13 +24,13 @@ docker compose up -d
 ### Native Installation
 Run the native installation script again. It detects your existing installation and updates the binary while preserving your configuration.
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CodigoSH/Lastboard/main/install.sh | sudo bash
+curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash
 ```
 
 ## What Happens During an Update?
 
 When updating natively or via the web interface:
-1. The new release binary is downloaded from GitHub.
+1. The new release binary is downloaded from Forgejo.
 2. The checksum is verified.
 3. The existing `lastboard` binary is replaced.
 4. The systemd service (or container process) automatically restarts.

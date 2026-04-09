@@ -322,7 +322,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"script-src 'self' 'unsafe-inline'; "+
 			"style-src 'self' 'unsafe-inline'; "+
 			"img-src 'self' data: https:; "+
-			"connect-src 'self' wss: ws: https://cdn.jsdelivr.net https://unpkg.com https://api.github.com https://api-updates.codigosh.com https://*.open-meteo.com https://timeapi.io; "+
+			"connect-src 'self' wss: ws: https://cdn.jsdelivr.net https://unpkg.com https://api.github.com https://git.codigosh.com https://*.open-meteo.com https://timeapi.io; "+
 			"font-src 'self'; "+
 			"object-src 'none'; "+
 			"frame-ancestors 'self'")

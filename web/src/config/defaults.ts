@@ -77,11 +77,11 @@ export const DEFAULT_ITEMS: GridItem[] = [
     },
     {
         id: 5, parent_id: 4, type: 'bookmark', x: 1, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'GitHub', url: 'https://github.com/CodigoSH/Lastboard', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/git.png' })
+        content: JSON.stringify({ label: 'Forgejo', url: 'https://git.codigosh.com/CodigoSH/Lastboard', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/git.png' })
     },
     {
         id: 6, parent_id: 4, type: 'bookmark', x: 2, y: 1, w: 1, h: 1,
-        content: JSON.stringify({ label: 'Wiki', url: 'https://github.com/CodigoSH/Lastboard/wiki', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png' })
+        content: JSON.stringify({ label: 'Wiki', url: 'https://git.codigosh.com/CodigoSH/Lastboard/wiki', icon: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png' })
     },
 
     // --- ROW 1-2: Media Services (w:3, h:2) ---
