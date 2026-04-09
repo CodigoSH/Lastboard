@@ -6,7 +6,8 @@ on:
       - 'v*'
 
 env:
-  REGISTRY: git.codigosh.com
+  PUSH_REGISTRY: 192.168.50.5:3000
+  PUBLIC_REGISTRY: git.codigosh.com
 
 jobs:
   build-and-push:
@@ -32,7 +33,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}
+          images: ${{ env.PUSH_REGISTRY }}/${{ steps.vars.outputs.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -44,15 +45,15 @@ jobs:
       - name: Login to registry
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
-        run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+        run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.PUSH_REGISTRY }} -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker image
-        run: docker build -t "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
+        run: docker build -t "${{ env.PUSH_REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
 
       - name: Push to registry
         run: |
           while IFS= read -r tag; do
             [ -z "$tag" ] && continue
-            docker tag "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" "$tag"
+            docker tag "${{ env.PUSH_REGISTRY }}/${{ steps.vars.outputs.image }}:build" "$tag"
             docker push "$tag"
           done <<< "${{ steps.meta.outputs.tags }}"
