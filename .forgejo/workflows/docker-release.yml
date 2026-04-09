@@ -19,7 +19,7 @@ jobs:
       - name: Install Docker CLI
         run: |
           apt-get update -qq
-          apt-get install -y -qq docker.io docker-buildx
+          apt-get install -y -qq docker.io
 
       - name: Set lowercase image name
         id: vars
