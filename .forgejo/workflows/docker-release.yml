@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  REGISTRY: git.codigosh.com:3000
+  REGISTRY: 192.168.50.5:3000
 
 jobs:
   build-and-push:
