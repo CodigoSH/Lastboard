@@ -38,11 +38,16 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
           mkdir -p /root/.docker
-          AUTH=$(echo -n "${{ github.actor }}:${{ secrets.FORGEJO_TOKEN }}" | base64 -w0)
-          echo "{\"auths\":{\"git.codigosh.com\":{\"auth\":\"${AUTH}\"}}}" > /root/.docker/config.json
-          docker login git.codigosh.com -u "${{ github.actor }}" --password-stdin <<< "${{ secrets.FORGEJO_TOKEN }}"
+          AUTH=$(echo -n "${{ github.actor }}:${FORGEJO_TOKEN}" | base64 -w0)
+          printf '{"auths":{"git.codigosh.com":{"auth":"%s"}}}\n' "${AUTH}" > /root/.docker/config.json
+          echo "Docker config written. Auth present: $(cat /root/.docker/config.json | grep -c git.codigosh.com)"
+          # Also write to host via docker socket so buildx builder can access it
+          docker run --rm -v /root/.docker:/hostdocker alpine \
+            sh -c "cp /hostdocker/config.json /tmp/verify.json && cat /tmp/verify.json" || true
 
       - name: Extract metadata (tags, labels)
         id: meta
