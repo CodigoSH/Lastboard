@@ -36,10 +36,13 @@ COPY --from=frontend-builder /app/web/dist /app/internal/web/dist
 # Cross-compile for target platform
 ARG TARGETOS
 ARG TARGETARCH
+ARG VERSION=dev
 
 # Build main binary (timetzdata embeds timezone DB in the binary)
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go build -tags timetzdata -ldflags="-s -w" -o /app/lastboard ./cmd/lastboard
+    go build -tags timetzdata \
+    -ldflags="-s -w -X github.com/CodigoSH/Lastboard/internal/version.Current=${VERSION}" \
+    -o /app/lastboard ./cmd/lastboard
 
 # Build healthcheck binary for target platform
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
