@@ -16,12 +16,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker CLI
+      - name: Install dependencies
         run: |
-          curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz \
-            | tar -xz --strip-components=1 -C /usr/local/bin docker/docker
-          chmod 666 /var/run/docker.sock
-          docker version
+          apt-get update -qq
+          apt-get install -y -qq docker.io skopeo
+
+      - name: Fix Docker socket permissions
+        run: chmod 666 /var/run/docker.sock
 
       - name: Set lowercase image name
         id: vars
@@ -40,18 +41,22 @@ jobs:
             type=raw,value=rc,enable=${{ contains(github.ref, 'RC') }}
             type=ref,event=tag
 
-      - name: Login to registry
-        env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
-        run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
       - name: Build Docker image
-        run: DOCKER_BUILDKIT=1 docker build -t "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" .
+        run: docker build -t lastboard:build .
+
+      - name: Save image
+        run: docker save lastboard:build -o /tmp/image.tar
 
       - name: Push to registry
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
         run: |
           while IFS= read -r tag; do
             [ -z "$tag" ] && continue
-            docker tag "${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}:build" "$tag"
-            docker push "$tag"
+            echo "Pushing ${tag}..."
+            skopeo copy \
+              --dest-tls-verify=false \
+              --dest-creds "${{ github.actor }}:${FORGEJO_TOKEN}" \
+              docker-archive:/tmp/image.tar \
+              "docker://${tag}"
           done <<< "${{ steps.meta.outputs.tags }}"
