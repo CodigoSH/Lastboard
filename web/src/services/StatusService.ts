@@ -14,7 +14,6 @@ class StatusService {
     private interval: number | null = null;
     private wakeTimer: number | null = null;
     private checkFrequency = 60000 * 5; // Every 5 minutes
-    private _isChecking = false;
 
     start() {
         if (this.interval) return;
@@ -60,13 +59,12 @@ class StatusService {
     private onVisibilityChange = () => {
         if (document.visibilityState !== 'visible') return;
 
-        // Cancel any previous pending wake check
         if (this.wakeTimer) {
             clearTimeout(this.wakeTimer);
             this.wakeTimer = null;
         }
 
-        // Wait for the network to stabilise before checking
+        // Wait for the network to stabilise after wake/suspend before checking
         this.wakeTimer = window.setTimeout(() => {
             this.wakeTimer = null;
             this.checkAll();
@@ -74,11 +72,7 @@ class StatusService {
     };
 
     async checkAll() {
-        if (this._isChecking) return;
         if (!navigator.onLine) return;
-
-        this._isChecking = true;
-        try {
 
         const state = dashboardStore.getState();
         const items = state.items.filter(item => {
@@ -90,65 +84,45 @@ class StatusService {
             return content && content.statusCheck === true;
         });
 
-        // 1. Set ALL to pending immediately for visual feedback
-        // BATCH UPDATE to avoid O(N^2) notify() cycle
+        if (items.length === 0) return;
+
+        // Set all to pending immediately for visual feedback
         const pendingUpdates = items.map(item => ({ id: item.id, status: 'pending' as const }));
         dashboardStore.setItemStatuses(pendingUpdates);
 
-        // 2. Process in batches to avoid network congestion but remain fast
-        const CONCURRENCY = 5;
-        const queue = [...items];
-
-        const worker = async () => {
-            while (queue.length > 0) {
-                const item = queue.shift();
-                if (item) {
-                    await this.checkItem(item);
-                }
+        // Collect URLs (items with no valid URL are marked down immediately)
+        const urlMap = new Map<string, number[]>(); // url → [itemIds]
+        for (const item of items) {
+            let content = item.content;
+            if (typeof content === 'string') {
+                try { content = JSON.parse(content); } catch { continue; }
             }
-        };
-
-        // Start N workers
-        const workers = Array(Math.min(items.length, CONCURRENCY)).fill(null).map(() => worker());
-        await Promise.all(workers);
-        } finally {
-            this._isChecking = false;
-        }
-    }
-
-    private async checkItem(item: any) {
-        let content = item.content;
-        if (typeof content === 'string') {
-            try { content = JSON.parse(content); } catch (e) { return; }
+            const url = content?.url;
+            if (!url || url === '#' || url.startsWith('javascript:')) {
+                this.updateUIStatus(item.id, 'down');
+                continue;
+            }
+            const ids = urlMap.get(url) ?? [];
+            ids.push(item.id);
+            urlMap.set(url, ids);
         }
 
-        const url = content.url;
-        if (!url || url === '#' || url.startsWith('javascript:')) {
-            this.updateUIStatus(item.id, 'down');
-            return;
-        }
+        if (urlMap.size === 0) return;
 
         try {
-            // ROUTE THROUGH BACKEND PROXY
-            const result = await dashboardService.checkHealth(url);
-
-            if (result.status === 'up') {
-                this.updateUIStatus(item.id, 'up');
-            } else {
-                this.updateUIStatus(item.id, 'down');
-            }
+            // Single request — backend fans out with one goroutine per URL
+            const results = await dashboardService.checkHealthBatch(Array.from(urlMap.keys()));
+            const statusUpdates = Array.from(urlMap.entries()).map(([url, ids]) => {
+                const status = (results[url] === 'up' ? 'up' : 'down') as 'up' | 'down';
+                return ids.map(id => ({ id, status }));
+            }).flat();
+            dashboardStore.setItemStatuses(statusUpdates);
         } catch (error) {
-            // Network-level error (offline, DNS failure, server unreachable after wake):
-            // do not mark as down — the service may still be up, we just can't reach it yet.
             if (!navigator.onLine || error instanceof TypeError) {
-                console.warn(`[StatusService] Network error for ${url}, keeping current status`);
-                // Restore to the status before we set it to pending
-                // (unknown / no data) — use pending so the UI shows "checking" rather than red
-                this.updateUIStatus(item.id, 'pending');
+                dashboardStore.setItemStatuses(items.map(item => ({ id: item.id, status: 'pending' as const })));
                 return;
             }
-            console.warn(`[StatusService] ${url} health check failed:`, error);
-            this.updateUIStatus(item.id, 'down');
+            dashboardStore.setItemStatuses(items.map(item => ({ id: item.id, status: 'down' as const })));
         }
     }
 

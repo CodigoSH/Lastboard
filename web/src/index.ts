@@ -48,20 +48,26 @@ bootstrap(async () => {
     ThemeService.init();
 
     // ── Parallel Initialization ─────────────────────────────────────
-    // 1. Fetch User FIRST to get ID for scoped storage keys
-    await userStore.fetchUser();
-    const u = userStore.getUser();
-    if (u && u.id) {
-        dashboardStore.setUserId(u.id);
-    }
+    // fetchUser and fetchDashboards are independent — run in parallel.
+    // setUserId must happen before fetchItems so the localStorage key is correct.
+    await Promise.all([
+        userStore.fetchUser(),
+        dashboardStore.fetchDashboards()
+    ]);
 
-    // 2. Fetch dashboards first to resolve the active dashboard ID,
-    //    then fetch items so the localStorage key and backend query are correct.
-    //    Running them in parallel causes fetchItems() to read from the stale
-    //    "default" cache key (currentDashboardId = null) and show the wrong content.
-    await dashboardStore.fetchDashboards();
+    const u = userStore.getUser();
+    if (u?.id) dashboardStore.setUserId(u.id);
+
+    // 3. Mount the grid BEFORE fetchItems so it is subscribed when fetchItems fires
+    //    its synchronous stale-cache notify → instant first render from localStorage.
+    //    BookmarkGrid.connectedCallback() also starts statusService, so no need here.
+    renderDashboard();
+
+    // 4. Await fetchItems so the boot sequence waits for the backend revalidation.
+    //    This prevents a double re-render (stale→backend) that would cause the
+    //    "venetian blind" icon loading effect and wipe status dot classes.
     await dashboardStore.fetchItems();
-    
+
     // ── Per-user sync ──────────────────────────────────────────────
     if (u) {
         // Language: overwrite i18n with the backend preference.
@@ -108,11 +114,8 @@ bootstrap(async () => {
         });
     }
 
-    // Render dashboard components
-    renderDashboard();
-
-    // Start status monitoring
-    statusService.start();
+    // renderDashboard() was already called above. statusService is started by
+    // BookmarkGrid.connectedCallback() — no separate call needed here.
 
     // Create and append modals
     addBookmarkModal = document.createElement('add-bookmark-modal');

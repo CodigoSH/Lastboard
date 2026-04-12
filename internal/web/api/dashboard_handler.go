@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
@@ -13,11 +12,57 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/core/dashboard"
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
+
+// dnsCache caches hostname→IP resolutions for 30s to avoid repeated lookups
+// across concurrent health checks.
+type dnsCacheEntry struct {
+	ip        string
+	expiresAt time.Time
+}
+
+var (
+	dnsCache   sync.Map
+	dnsCacheTTL = 30 * time.Second
+)
+
+func resolveHostCached(hostname string) (string, error) {
+	if v, ok := dnsCache.Load(hostname); ok {
+		entry := v.(dnsCacheEntry)
+		if time.Now().Before(entry.expiresAt) {
+			return entry.ip, nil
+		}
+	}
+	ips, err := net.LookupIP(hostname)
+	if err != nil || len(ips) == 0 {
+		return "", fmt.Errorf("could not resolve %s", hostname)
+	}
+	ip := ips[0].String()
+	dnsCache.Store(hostname, dnsCacheEntry{ip: ip, expiresAt: time.Now().Add(dnsCacheTTL)})
+	return ip, nil
+}
+
+// healthClient is a shared HTTP client with a pooled transport that reuses
+// TCP/TLS connections across concurrent health checks.
+var healthClient = &http.Client{
+	Timeout: time.Second * 5,
+	Transport: &http.Transport{
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 10,
+		IdleConnTimeout:     60 * time.Second,
+		DisableKeepAlives:   false,
+		DialContext: (&net.Dialer{
+			Timeout:   3 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+	},
+}
 
 type DashboardHandler struct {
 	DB *sql.DB
@@ -313,40 +358,66 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// CheckHealth proxies a HEAD request to a URL, allowing self-signed certs.
-// Falls back to TCP ping if HTTP fails. Pins connections to pre-resolved IPs
-// to prevent DNS rebinding attacks.
-func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
-	rawUrl := r.URL.Query().Get("url")
-	if rawUrl == "" {
-		http.Error(w, "error.missing_url", http.StatusBadRequest)
+// CheckHealthBatch checks multiple URLs in parallel and returns all results in
+// one response. Each URL is checked concurrently in its own goroutine so the
+// total time equals the slowest single check, not the sum of all checks.
+func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		URLs []string `json:"urls"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.URLs) == 0 {
+		http.Error(w, "error.invalid_input", http.StatusBadRequest)
 		return
 	}
 
+	type result struct {
+		url    string
+		status string
+	}
+
+	results := make([]result, len(body.URLs))
+	var wg sync.WaitGroup
+
+	for i, rawUrl := range body.URLs {
+		wg.Add(1)
+		go func(idx int, u string) {
+			defer wg.Done()
+			results[idx] = result{url: u, status: probeURL(u)}
+		}(i, rawUrl)
+	}
+
+	wg.Wait()
+
+	out := make(map[string]string, len(results))
+	for _, r := range results {
+		out[r.url] = r.status
+	}
+	h.respondJson(w, out)
+}
+
+// probeURL performs a HEAD request with TCP fallback and returns "up" or "down".
+func probeURL(rawUrl string) string {
 	u, err := url.Parse(rawUrl)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
-		http.Error(w, "error.invalid_url", http.StatusBadRequest)
-		return
+		return "down"
 	}
 
 	hostname := u.Hostname()
-	ips, err := net.LookupIP(hostname)
-	if err != nil || len(ips) == 0 {
-		http.Error(w, "error.could_not_resolve_host", http.StatusBadRequest)
-		return
+	pinnedIP, err := resolveHostCached(hostname)
+	if err != nil {
+		return "down"
 	}
 
-	// SSRF: validate all resolved IPs
-	// Lastboard is designed to monitor local services, so we ALLOW private IPs.
-	// We logged them before, but blocking them breaks the feature "Monitor Status" for local labs.
-	for _, ip := range ips {
-		if isPrivateIP(ip) {
-			slog.Info("Health check: allowing local access", "hostname", hostname, "ip", ip.String())
-		}
+	req, _ := http.NewRequest("HEAD", rawUrl, nil)
+	resp, err := healthClient.Do(req)
+	if err == nil && resp.StatusCode < 500 {
+		resp.Body.Close()
+		return "up"
+	}
+	if resp != nil {
+		resp.Body.Close()
 	}
 
-	// Pick first valid IP and pin all connections to it
-	pinnedIP := ips[0].String()
 	port := u.Port()
 	if port == "" {
 		if u.Scheme == "https" {
@@ -355,79 +426,28 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 			port = "80"
 		}
 	}
-
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-			ServerName:         hostname,
-		},
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			// Ignore addr (which would re-resolve hostname); connect to pinned IP
-			return net.DialTimeout(network, net.JoinHostPort(pinnedIP, port), time.Second*3)
-		},
-	}
-	client := &http.Client{
-		Transport: tr,
-		Timeout:   time.Second * 3,
-	}
-
-	req, _ := http.NewRequest("HEAD", rawUrl, nil)
-	resp, err := client.Do(req)
-	if err == nil && resp.StatusCode < 500 {
-		defer resp.Body.Close()
-		slog.Info("Health check UP (HTTP)", "url", rawUrl, "status", resp.StatusCode)
-		h.respondJson(w, map[string]string{"status": "up"})
-		return
-	}
-
-	// TCP fallback using the same pinned IP
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", pinnedIP, port), time.Second*2)
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(pinnedIP, port), time.Second*2)
 	if err == nil {
-		defer conn.Close()
-		slog.Info("Health check UP (TCP)", "url", rawUrl)
-		h.respondJson(w, map[string]string{"status": "up"})
+		conn.Close()
+		return "up"
+	}
+	return "down"
+}
+
+// CheckHealth single-URL endpoint kept for backwards compatibility.
+func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
+	rawUrl := r.URL.Query().Get("url")
+	if rawUrl == "" {
+		http.Error(w, "error.missing_url", http.StatusBadRequest)
 		return
 	}
-
-	slog.Info("Health check DOWN", "url", rawUrl)
-	w.WriteHeader(http.StatusServiceUnavailable)
-	h.respondJson(w, map[string]string{"status": "down"})
+	status := probeURL(rawUrl)
+	if status == "down" {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}
+	h.respondJson(w, map[string]string{"status": status})
 }
 
-func isPrivateIP(ip net.IP) bool {
-	if ip.IsLoopback() || ip.IsUnspecified() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-		return true
-	}
-
-	// IPv6 unique local (fc00::/7)
-	if ip.To4() == nil && len(ip) == net.IPv6len && (ip[0]&0xfe) == 0xfc {
-		return true
-	}
-
-	ip4 := ip.To4()
-	if ip4 == nil {
-		return false
-	}
-
-	// 10.0.0.0/8
-	if ip4[0] == 10 {
-		return true
-	}
-	// 172.16.0.0/12
-	if ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31 {
-		return true
-	}
-	// 192.168.0.0/16
-	if ip4[0] == 192 && ip4[1] == 168 {
-		return true
-	}
-	// 169.254.0.0/16 (link-local, already caught above but explicit)
-	if ip4[0] == 169 && ip4[1] == 254 {
-		return true
-	}
-
-	return false
-}
 
 func (h *DashboardHandler) respondJson(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")

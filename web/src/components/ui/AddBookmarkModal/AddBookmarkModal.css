@@ -4,8 +4,8 @@
 
 dialog {
     background: var(--paper-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
     border: 1px solid var(--paper-border);
     border-top: 1px solid var(--paper-border-top);
     border-radius: var(--radius);
@@ -25,8 +25,8 @@ dialog[open] {
 
 dialog::backdrop {
     background: var(--overlay-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
 }
 
 dialog[open] {

@@ -309,7 +309,6 @@ dashboard-switcher.disabled {
 @media (pointer: coarse),
 (max-width: 1024px) {
 
-    #edit-toggle,
     #add-toggle,
     #drawer-toggle {
         display: none !important;

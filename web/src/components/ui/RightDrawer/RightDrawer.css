@@ -45,8 +45,8 @@
     width: clamp(180px, 12cqi, 250px);
     height: 100%;
     background: var(--surface-solid);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
     border-left: 1px solid var(--border);
     z-index: 2;
     display: flex;

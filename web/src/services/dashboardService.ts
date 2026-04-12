@@ -37,5 +37,9 @@ export const dashboardService = {
 
     async checkHealth(url: string): Promise<{ status: string }> {
         return apiService.get<{ status: string }>(`/api/dashboard/health?url=${encodeURIComponent(url)}`);
+    },
+
+    async checkHealthBatch(urls: string[]): Promise<Record<string, string>> {
+        return apiService.post<Record<string, string>>('/api/dashboard/health/batch', { urls });
     }
 };
