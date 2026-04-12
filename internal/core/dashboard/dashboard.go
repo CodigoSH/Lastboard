@@ -13,6 +13,7 @@ type Item struct {
 	Url         string    `json:"url,omitempty"` // Added for widget compatibility
 	Content     string    `json:"content,omitempty"`
 	DashboardID *int      `json:"dashboard_id,omitempty"`
+	MobileOrder *int      `json:"mobile_order,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 

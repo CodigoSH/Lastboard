@@ -57,12 +57,12 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 			http.Error(w, "error.invalid_id", http.StatusBadRequest)
 			return
 		}
-		query = "SELECT id, parent_id, type, x, y, w, h, content, url FROM items WHERE user_id = ? AND dashboard_id = ?"
+		query = "SELECT id, parent_id, type, x, y, w, h, content, url, mobile_order FROM items WHERE user_id = ? AND dashboard_id = ?"
 		args = []interface{}{userID, dashID}
 	} else {
 		// Backwards-compatible fallback: items that are either NULL (legacy) or
 		// assigned to the user's default dashboard.
-		query = `SELECT id, parent_id, type, x, y, w, h, content, url FROM items
+		query = `SELECT id, parent_id, type, x, y, w, h, content, url, mobile_order FROM items
 			WHERE user_id = ?
 			AND (dashboard_id IS NULL
 			     OR dashboard_id = (SELECT id FROM dashboards WHERE user_id = ? AND is_default = 1 LIMIT 1))`
@@ -80,12 +80,17 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 	for rows.Next() {
 		var i dashboard.Item
 		var urlSql sql.NullString
-		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &urlSql); err != nil {
+		var mobileOrderSql sql.NullInt64
+		if err := rows.Scan(&i.ID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &urlSql, &mobileOrderSql); err != nil {
 			slog.Warn("Scan error reading items", "error", err)
 			continue
 		}
 		if urlSql.Valid {
 			i.Url = urlSql.String
+		}
+		if mobileOrderSql.Valid {
+			v := int(mobileOrderSql.Int64)
+			i.MobileOrder = &v
 		}
 		items = append(items, i)
 	}
@@ -190,6 +195,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		ParentID    *int    `json:"parent_id"`
 		ClearParent bool    `json:"clear_parent"`
 		Content     *string `json:"content"`
+		MobileOrder *int    `json:"mobile_order"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		slog.Warn("JSON Decode error in UpdateItem", "error", err)
@@ -236,6 +242,10 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		// Explicit request to clear parent (move to root)
 		sets = append(sets, "parent_id=NULL")
 		// No arg needed for NULL constant
+	}
+	if input.MobileOrder != nil {
+		sets = append(sets, "mobile_order=?")
+		args = append(args, *input.MobileOrder)
 	}
 	if input.Content != nil {
 		// If content is being updated, valid it based on existing type or new type (if type were updatable, but it's not here)

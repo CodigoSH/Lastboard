@@ -48,6 +48,7 @@ export interface GridItem {
     h: number;
     url?: string; // Added for widget compatibility
     content: any; // JSON string or object depending on context
+    mobile_order?: number | null;
     status?: 'up' | 'down' | 'pending';
     created_at?: string;
 }

@@ -3,6 +3,7 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { i18n } from '../../../services/i18n';
 import '../RenameDashboardModal/RenameDashboardModal';
+import '../MobileReorderModal/MobileReorderModal';
 // @ts-ignore
 import css from './TopBar.css' with { type: 'text' };
 
@@ -17,6 +18,7 @@ interface TopBarState {
     isDemo?: boolean;
     currentDashboardId?: number | null;
     projectLogo?: string;
+    isTouchDevice?: boolean;
 }
 
 class TopBar extends HTMLElement {
@@ -39,7 +41,8 @@ class TopBar extends HTMLElement {
             drawerOpen: false,
             searchQuery: '',
             // @ts-ignore
-            isDemo: window.LASTBOARD_CONFIG?.demo_mode || false
+            isDemo: window.LASTBOARD_CONFIG?.demo_mode || false,
+            isTouchDevice: window.innerWidth < 768 && window.matchMedia('(pointer: coarse)').matches
         };
     }
 
@@ -146,6 +149,14 @@ class TopBar extends HTMLElement {
                         composed: true
                     }));
                 }
+                return;
+            }
+
+            const mobileReorderBtn = target.closest('#mobile-reorder-btn');
+            if (mobileReorderBtn) {
+                e.stopPropagation();
+                const modal = document.createElement('mobile-reorder-modal');
+                document.body.appendChild(modal);
                 return;
             }
 
@@ -266,7 +277,8 @@ class TopBar extends HTMLElement {
             updateAvailable: this.state.updateAvailable,
             isDemo: this.state.isDemo,
             currentDashboardId: this.state.currentDashboardId,
-            projectLogo: this.state.projectLogo
+            projectLogo: this.state.projectLogo,
+            isTouchDevice: this.state.isTouchDevice
         })}
         `;
     }

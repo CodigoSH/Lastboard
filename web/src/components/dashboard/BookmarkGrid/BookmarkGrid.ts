@@ -98,6 +98,18 @@ class BookmarkGrid extends HTMLElement {
 
                 return true;
             });
+
+            // In touch mode sort by mobile_order (nulls last, then fallback to y/x)
+            if (isTouch) {
+                this.bookmarks.sort((a, b) => {
+                    const aHas = a.mobile_order != null;
+                    const bHas = b.mobile_order != null;
+                    if (aHas && bHas) return a.mobile_order! - b.mobile_order!;
+                    if (aHas) return -1;
+                    if (bHas) return 1;
+                    return a.y !== b.y ? a.y - b.y : a.x - b.x;
+                });
+            }
         } else {
             // Desktop Mode (Non-Touch, Non-Search) -> Show All (Grid)
             this.bookmarks = this.allItems;

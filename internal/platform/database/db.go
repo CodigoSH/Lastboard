@@ -171,6 +171,12 @@ func migrateSchema(db *sql.DB) error {
 		return fmt.Errorf("migration 4 (demote secondary admins) failed: %w", err)
 	}
 
+	// Migration 5: add mobile_order column to items for touch/mobile reordering (safe to re-run)
+	_, err = db.Exec(`ALTER TABLE items ADD COLUMN mobile_order INTEGER`)
+	if err != nil && !containsAny(err.Error(), "duplicate column name") {
+		return err
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.
