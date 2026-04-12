@@ -701,7 +701,7 @@ class BookmarkGrid extends HTMLElement {
         // 1. Drag Start/End must be caught inside Shadow DOM to see the specific card
         root.addEventListener('dragstart', (ev) => {
             const e = ev as DragEvent;
-            if (!this.isEditing) {
+            if (this.isTouchDevice || !this.isEditing) {
                 e.preventDefault();
                 return;
             }
@@ -764,6 +764,7 @@ class BookmarkGrid extends HTMLElement {
     }
 
     processDragOver(e: DragEvent, host: HTMLElement) {
+        if (this.isTouchDevice) return; // Mobile reordering is handled by MobileReorderModal only
         // Auto-Scroll Logic
         const SCROLL_THRESHOLD = 100; // px from edge
         const SCROLL_SPEED = 15;
@@ -880,6 +881,7 @@ class BookmarkGrid extends HTMLElement {
     }
 
     async handleDrop(e: DragEvent, host: HTMLElement) {
+        if (this.isTouchDevice) return; // Mobile reordering is handled by MobileReorderModal only
         if (!this.isEditing || !this.dragTargetId) return;
         e.preventDefault();
 

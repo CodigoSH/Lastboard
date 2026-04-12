@@ -59,7 +59,7 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
             <div class="bookmark-grid__section"
                data-id="${b.id}"
                data-orig-x="${b.x}" data-orig-y="${b.y}"
-               draggable="${isEditing}"
+               draggable="${isEditing && !isTouchDevice}"
                style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH}; ${borderColorStyle} ${borderWidthStyle}">
                ${title ? `<div class="section-title">${esc(title)}</div>` : ''}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
@@ -104,7 +104,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
 
         return `
         <div class="bookmark-grid__card"
-            draggable="${isEditing}"
+            draggable="${isEditing && !isTouchDevice}"
             data-id="${b.id}"
             data-type="${b.type}"
             data-orig-x="${b.x}" data-orig-y="${b.y}"
@@ -141,7 +141,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
 
     return `
         <a ${hrefAttr} class="bookmark-grid__card ${labelPosClass}"
-           draggable="${isEditing}"
+           draggable="${isEditing && !isTouchDevice}"
            data-id="${b.id}"
            data-type="${b.type}"
            data-orig-x="${b.x}" data-orig-y="${b.y}"

@@ -59,6 +59,7 @@ const CSS = `
     flex: 1;
     overflow-y: auto;
     padding: 8px 0;
+    position: relative;
 }
 
 .item {
@@ -308,6 +309,14 @@ export class MobileReorderModal extends HTMLElement {
         let touchSrcIndex = -1;
         let ghost: HTMLElement | null = null;
         let startY = 0;
+        // Position of the list's top edge at drag start (viewport coords)
+        let listTopAtStart = 0;
+        // Pre-cached item midpoints relative to the list's scrollable content.
+        // Using offsetTop (relative to list, which has position:relative) avoids
+        // getBoundingClientRect() drift that occurs inside fixed-position shadow DOM
+        // overlays on mobile browsers.
+        interface CachedItem { el: HTMLElement; midY: number; }
+        let cachedItems: CachedItem[] = [];
 
         list.addEventListener('touchstart', (e) => {
             const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
@@ -315,6 +324,14 @@ export class MobileReorderModal extends HTMLElement {
             e.preventDefault();
             touchSrcIndex = parseInt(el.dataset.index!);
             startY = e.touches[0].clientY;
+
+            // Snapshot list top and item positions once at drag start.
+            // These don't change during the drag since items don't reflow.
+            listTopAtStart = list.getBoundingClientRect().top;
+            cachedItems = Array.from(list.querySelectorAll<HTMLElement>('.item')).map(item => ({
+                el: item,
+                midY: item.offsetTop + item.offsetHeight / 2
+            }));
 
             const rect = el.getBoundingClientRect();
             ghost = el.cloneNode(true) as HTMLElement;
@@ -337,16 +354,16 @@ export class MobileReorderModal extends HTMLElement {
             const touchY = e.touches[0].clientY;
             ghost.style.transform = `translateY(${touchY - startY}px)`;
 
-            // Find the item whose center is closest to the finger — more reliable
-            // than exact bounds check inside shadow DOM on mobile browsers.
-            const items = list.querySelectorAll<HTMLElement>('.item');
-            items.forEach(el => el.classList.remove('drag-over'));
+            list.querySelectorAll('.item').forEach(el => el.classList.remove('drag-over'));
+
+            // Convert touch viewport Y to a position within the list's scrollable content.
+            // This is reliable even when the overlay is position:fixed and scrolled.
+            const relY = touchY - listTopAtStart + list.scrollTop;
 
             let closestEl: HTMLElement | null = null;
             let closestDist = Infinity;
-            items.forEach(el => {
-                const r = el.getBoundingClientRect();
-                const dist = Math.abs(touchY - (r.top + r.bottom) / 2);
+            cachedItems.forEach(({ el, midY }) => {
+                const dist = Math.abs(relY - midY);
                 if (dist < closestDist) {
                     closestDist = dist;
                     closestEl = el;
