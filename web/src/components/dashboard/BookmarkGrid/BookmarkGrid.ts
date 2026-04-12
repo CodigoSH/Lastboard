@@ -219,7 +219,8 @@ class BookmarkGrid extends HTMLElement {
                         oldItem.w !== newItem.w ||
                         oldItem.h !== newItem.h ||
                         oldItem.parent_id !== newItem.parent_id ||
-                        oldItem.content !== newItem.content) {
+                        oldItem.content !== newItem.content ||
+                        oldItem.mobile_order !== newItem.mobile_order) {
                         structuralChange = true;
                         break;
                     }

@@ -155,6 +155,7 @@ const CSS = `
 export class MobileReorderModal extends HTMLElement {
     private _items: GridItem[] = [];
     private _dragSrcIndex: number = -1;
+    private _dragAbortController: AbortController | null = null;
 
     constructor() {
         super();
@@ -253,6 +254,13 @@ export class MobileReorderModal extends HTMLElement {
     }
 
     private _bindDrag() {
+        // Abort any previous listeners to prevent stacking after re-renders
+        if (this._dragAbortController) {
+            this._dragAbortController.abort();
+        }
+        this._dragAbortController = new AbortController();
+        const signal = this._dragAbortController.signal;
+
         const list = this.shadowRoot!.getElementById('list')!;
 
         list.addEventListener('dragstart', (e) => {
@@ -261,13 +269,13 @@ export class MobileReorderModal extends HTMLElement {
             this._dragSrcIndex = parseInt(el.dataset.index!);
             el.classList.add('dragging');
             e.dataTransfer!.effectAllowed = 'move';
-        });
+        }, { signal });
 
         list.addEventListener('dragend', (e) => {
             const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
             if (el) el.classList.remove('dragging');
             list.querySelectorAll('.item').forEach(i => i.classList.remove('drag-over'));
-        });
+        }, { signal });
 
         list.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -276,7 +284,7 @@ export class MobileReorderModal extends HTMLElement {
             if (!el) return;
             list.querySelectorAll('.item').forEach(i => i.classList.remove('drag-over'));
             el.classList.add('drag-over');
-        });
+        }, { signal });
 
         list.addEventListener('drop', (e) => {
             e.preventDefault();
@@ -285,21 +293,18 @@ export class MobileReorderModal extends HTMLElement {
             const destIndex = parseInt(el.dataset.index!);
             if (this._dragSrcIndex === destIndex) return;
 
-            // Reorder the array
             const moved = this._items.splice(this._dragSrcIndex, 1)[0];
             this._items.splice(destIndex, 0, moved);
 
-            // Re-render with new indices
-            const listEl = this.shadowRoot!.getElementById('list')!;
-            listEl.innerHTML = this._items.map((item, i) => this._renderItem(item, i)).join('');
+            list.innerHTML = this._items.map((item, i) => this._renderItem(item, i)).join('');
             this._bindDrag();
-        });
+        }, { signal });
 
-        // Touch support
-        this._bindTouchDrag(list);
+        // Touch support (uses same AbortController signal)
+        this._bindTouchDrag(list, signal);
     }
 
-    private _bindTouchDrag(list: HTMLElement) {
+    private _bindTouchDrag(list: HTMLElement, signal: AbortSignal) {
         let touchSrcIndex = -1;
         let ghost: HTMLElement | null = null;
         let startY = 0;
@@ -307,38 +312,48 @@ export class MobileReorderModal extends HTMLElement {
         list.addEventListener('touchstart', (e) => {
             const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
             if (!el) return;
+            e.preventDefault();
             touchSrcIndex = parseInt(el.dataset.index!);
             startY = e.touches[0].clientY;
 
+            const rect = el.getBoundingClientRect();
             ghost = el.cloneNode(true) as HTMLElement;
             ghost.style.cssText = `
-                position: fixed; left: ${el.getBoundingClientRect().left}px;
-                top: ${el.getBoundingClientRect().top}px;
-                width: ${el.offsetWidth}px; opacity: 0.85;
+                position: fixed; left: ${rect.left}px; top: ${rect.top}px;
+                width: ${rect.width}px; opacity: 0.85;
                 background: var(--panel, #1a1a2e); border-radius: 8px;
                 z-index: 99999; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+                transition: none;
             `;
-            document.body.appendChild(ghost);
+            // Append inside shadow root so CSS variables resolve correctly
+            this.shadowRoot!.appendChild(ghost);
             el.classList.add('dragging');
-        }, { passive: true });
+        }, { passive: false, signal });
 
         list.addEventListener('touchmove', (e) => {
             if (touchSrcIndex === -1 || !ghost) return;
             e.preventDefault();
 
-            const dy = e.touches[0].clientY - startY;
-            ghost.style.transform = `translateY(${dy}px)`;
-
-            // Find which item we're hovering over
             const touchY = e.touches[0].clientY;
-            list.querySelectorAll<HTMLElement>('.item').forEach(el => {
-                el.classList.remove('drag-over');
-                const rect = el.getBoundingClientRect();
-                if (touchY >= rect.top && touchY <= rect.bottom) {
-                    el.classList.add('drag-over');
+            ghost.style.transform = `translateY(${touchY - startY}px)`;
+
+            // Find the item whose center is closest to the finger — more reliable
+            // than exact bounds check inside shadow DOM on mobile browsers.
+            const items = list.querySelectorAll<HTMLElement>('.item');
+            items.forEach(el => el.classList.remove('drag-over'));
+
+            let closestEl: HTMLElement | null = null;
+            let closestDist = Infinity;
+            items.forEach(el => {
+                const r = el.getBoundingClientRect();
+                const dist = Math.abs(touchY - (r.top + r.bottom) / 2);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestEl = el;
                 }
             });
-        }, { passive: false });
+            if (closestEl) (closestEl as HTMLElement).classList.add('drag-over');
+        }, { passive: false, signal });
 
         list.addEventListener('touchend', () => {
             if (touchSrcIndex === -1) return;
@@ -362,7 +377,7 @@ export class MobileReorderModal extends HTMLElement {
             }
 
             touchSrcIndex = -1;
-        });
+        }, { signal });
     }
 
     private async _save() {
