@@ -128,7 +128,13 @@ class TopBar extends HTMLElement {
 
             const editToggle = target.closest('#edit-toggle');
             if (editToggle) {
-                dashboardStore.toggleEditMode();
+                if (this.state.isTouchDevice) {
+                    // On mobile: open reorder sheet directly — no edit-mode grid confusion
+                    const modal = document.createElement('mobile-reorder-modal');
+                    document.body.appendChild(modal);
+                } else {
+                    dashboardStore.toggleEditMode();
+                }
             }
 
             const addToggle = target.closest('#add-toggle');
@@ -149,14 +155,6 @@ class TopBar extends HTMLElement {
                         composed: true
                     }));
                 }
-                return;
-            }
-
-            const mobileReorderBtn = target.closest('#mobile-reorder-btn');
-            if (mobileReorderBtn) {
-                e.stopPropagation();
-                const modal = document.createElement('mobile-reorder-modal');
-                document.body.appendChild(modal);
                 return;
             }
 

@@ -74,16 +74,6 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
                 </div>
             </div>
 
-            <!-- Mobile Reorder Button (touch + edit mode only) -->
-            ${editMode && isTouchDevice ? `
-            <div id="mobile-reorder-btn" class="top-bar__toggle" title="${i18n.t('mobile_reorder.title') || 'Reorder for mobile'}" style="margin-right: -6px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                    <path d="M8 6h8M8 12h8M8 18h8"/>
-                    <path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="2"/>
-                </svg>
-            </div>
-            ` : ''}
-
             <!-- Edit Mode Toggle -->
             <div id="edit-toggle" class="top-bar__toggle" title="${i18n.t('topbar.edit_tooltip')}"
                  style="margin-right: -6px; ${editMode ? 'color: var(--accent);' : ''}">
