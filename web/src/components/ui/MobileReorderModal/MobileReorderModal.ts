@@ -67,13 +67,12 @@ const CSS = `
     align-items: center;
     gap: 12px;
     padding: 10px 16px;
-    cursor: grab;
+    cursor: default;
     user-select: none;
     transition: background 0.15s;
     border-radius: 8px;
     margin: 2px 8px;
 }
-.item:active { cursor: grabbing; }
 .item.drag-over {
     background: var(--accent-muted, rgba(99,102,241,0.15));
     outline: 1px dashed var(--accent, #6366f1);
@@ -116,7 +115,12 @@ const CSS = `
 .drag-handle {
     color: var(--text-dim, rgba(255,255,255,0.3));
     flex-shrink: 0;
+    cursor: grab;
+    touch-action: none;
+    padding: 4px;
+    margin: -4px;
 }
+.drag-handle:active { cursor: grabbing; }
 
 .footer {
     padding: 12px 16px;
@@ -265,7 +269,10 @@ export class MobileReorderModal extends HTMLElement {
         const list = this.shadowRoot!.getElementById('list')!;
 
         list.addEventListener('dragstart', (e) => {
-            const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
+            // Only allow drag when initiated from the drag handle
+            const handle = (e.target as HTMLElement).closest('.drag-handle');
+            if (!handle) { e.preventDefault(); return; }
+            const el = handle.closest('[data-index]') as HTMLElement | null;
             if (!el) return;
             this._dragSrcIndex = parseInt(el.dataset.index!);
             el.classList.add('dragging');
@@ -319,7 +326,10 @@ export class MobileReorderModal extends HTMLElement {
         let cachedItems: CachedItem[] = [];
 
         list.addEventListener('touchstart', (e) => {
-            const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
+            // Only start drag when the finger lands on the drag handle
+            const handle = (e.target as HTMLElement).closest('.drag-handle');
+            if (!handle) return; // Allow normal scroll on the rest of the row
+            const el = handle.closest('[data-index]') as HTMLElement | null;
             if (!el) return;
             e.preventDefault();
             touchSrcIndex = parseInt(el.dataset.index!);
