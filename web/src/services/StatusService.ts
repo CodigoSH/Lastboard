@@ -1,17 +1,20 @@
 import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
-import { i18n } from './i18n';
 
 /**
  * StatusService
  * Periodically checks the health of bookmarks that have "Monitor Status" enabled.
  */
+
+const WAKE_DELAY_MS = 5000; // Time to wait after tab becomes visible before re-checking
+
 class StatusService {
     private lastDashboardId: number | null = null;
-    private lastItemsCount: number = 0;
     private unsubscribe: (() => void) | null = null;
     private interval: number | null = null;
+    private wakeTimer: number | null = null;
     private checkFrequency = 60000 * 5; // Every 5 minutes
+    private _isChecking = false;
 
     start() {
         if (this.interval) return;
@@ -26,7 +29,6 @@ class StatusService {
 
             if (loadFinished && (dashboardChanged || hashChanged)) {
                 this.lastDashboardId = state.currentDashboardId;
-                this.lastItemsCount = state.items.length;
                 lastItemsHash = itemsHash;
                 this.checkAll();
             }
@@ -35,6 +37,8 @@ class StatusService {
         this.interval = window.setInterval(() => {
             this.checkAll();
         }, this.checkFrequency);
+
+        document.addEventListener('visibilitychange', this.onVisibilityChange);
     }
 
     stop() {
@@ -42,9 +46,40 @@ class StatusService {
             clearInterval(this.interval);
             this.interval = null;
         }
+        if (this.wakeTimer) {
+            clearTimeout(this.wakeTimer);
+            this.wakeTimer = null;
+        }
+        if (this.unsubscribe) {
+            this.unsubscribe();
+            this.unsubscribe = null;
+        }
+        document.removeEventListener('visibilitychange', this.onVisibilityChange);
     }
 
+    private onVisibilityChange = () => {
+        if (document.visibilityState !== 'visible') return;
+
+        // Cancel any previous pending wake check
+        if (this.wakeTimer) {
+            clearTimeout(this.wakeTimer);
+            this.wakeTimer = null;
+        }
+
+        // Wait for the network to stabilise before checking
+        this.wakeTimer = window.setTimeout(() => {
+            this.wakeTimer = null;
+            this.checkAll();
+        }, WAKE_DELAY_MS);
+    };
+
     async checkAll() {
+        if (this._isChecking) return;
+        if (!navigator.onLine) return;
+
+        this._isChecking = true;
+        try {
+
         const state = dashboardStore.getState();
         const items = state.items.filter(item => {
             if (item.type !== 'bookmark') return false;
@@ -76,6 +111,9 @@ class StatusService {
         // Start N workers
         const workers = Array(Math.min(items.length, CONCURRENCY)).fill(null).map(() => worker());
         await Promise.all(workers);
+        } finally {
+            this._isChecking = false;
+        }
     }
 
     private async checkItem(item: any) {
@@ -100,6 +138,15 @@ class StatusService {
                 this.updateUIStatus(item.id, 'down');
             }
         } catch (error) {
+            // Network-level error (offline, DNS failure, server unreachable after wake):
+            // do not mark as down — the service may still be up, we just can't reach it yet.
+            if (!navigator.onLine || error instanceof TypeError) {
+                console.warn(`[StatusService] Network error for ${url}, keeping current status`);
+                // Restore to the status before we set it to pending
+                // (unknown / no data) — use pending so the UI shows "checking" rather than red
+                this.updateUIStatus(item.id, 'pending');
+                return;
+            }
             console.warn(`[StatusService] ${url} health check failed:`, error);
             this.updateUIStatus(item.id, 'down');
         }

@@ -288,14 +288,12 @@
 
     border-radius: 50%;
     background-color: var(--text-dim);
-    /* Border scales slightly for visual weight */
-    border: clamp(1px, 1.2cqi, 2px) solid var(--panel);
+    box-shadow: 0 0 0 clamp(1px, 1.2cqi, 2px) var(--panel);
 
-    /* Light effect shadow scales slightly */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     z-index: 5;
     transition: background-color 0.3s ease;
 }
+
 
 /* Status Positions */
 .status-indicator.status-pos-top-right {

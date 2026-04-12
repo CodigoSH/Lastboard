@@ -54,7 +54,9 @@ const ICONS = {
     // System
     lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
     unlock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`,
-    resize: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 9V6a2 2 0 0 0-2-2h-3"/><path d="M3 15v3a2 2 0 0 0 2 2h3"/><path d="M16 20h3a2 2 0 0 0 2-2v-3"/><path d="M8 4H5a2 2 0 0 0-2 2v3"/></svg>`
+    resize: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 9V6a2 2 0 0 0-2-2h-3"/><path d="M3 15v3a2 2 0 0 0 2 2h3"/><path d="M16 20h3a2 2 0 0 0 2-2v-3"/><path d="M8 4H5a2 2 0 0 0-2 2v3"/></svg>`,
+    dockMinimize: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
+    dockMaximize: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`
 };
 
 // ============================================================================
@@ -66,8 +68,7 @@ const CSS = `
     flex-direction: column;
     width: 100%;
     height: 100%;
-    /* V10: Allow dock to overlap parent padding */
-    overflow: visible !important;
+    overflow: visible;
     position: relative;
     
     --lb-bg: var(--bg-card, #1a1a1a);
@@ -91,6 +92,8 @@ const CSS = `
     background: transparent !important;
     outline: none;
     position: relative;
+    min-height: 0;
+    overflow-x: hidden;
 }
 
 .editor-container.locked {
@@ -108,9 +111,9 @@ const CSS = `
     outline: none !important;
     box-shadow: none !important;
     
-    padding: 12px 14px 40px 14px !important; 
-    
-    min-height: calc(100% - 52px); /* 12px top + 40px bottom */
+    padding: 12px 14px 36px 14px !important;
+
+    min-height: 100%;
     line-height: 1.6;
     font-size: 0.95rem;
     color: var(--lb-text);
@@ -172,39 +175,76 @@ const CSS = `
 .checkbox-char { cursor: pointer; font-family: 'Inter', sans-serif; margin-right: 6px; user-select: none; display: inline-block; vertical-align: middle; font-size: 1.1em; }
 .checkbox-char.checked { color: var(--lb-accent); }
 
-/* ── "Dock" (Transparent) ──────────────────────────────────── */
+/* ── "Dock" (absolute, flush with card bottom) ──────────────────── */
 .glass-dock {
     position: absolute;
-    /* V11: Extreme Negative bottom to consume parent padding */
-    bottom: -25px; 
-    left: 8px; right: 8px; 
-    margin-bottom: 0 !important;
-    
+    bottom: -25px;
+    left: 8px; right: 8px;
+
     display: flex;
-    flex-wrap: wrap; 
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 2px; 
-    
+    gap: 2px;
+
     background: rgba(20, 20, 20, 0.95);
-    /* Reduced border radius so it sits flatter */
-    border-radius: 8px; 
-    border: 1px solid rgba(255,255,255,0.06); 
-    /* Minimal padding */
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
     padding: 2px 4px;
-    
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    transition: opacity 0.2s ease;
     opacity: 0.95;
     z-index: 100;
 }
 .glass-dock:hover, .glass-dock:focus-within {
     opacity: 1;
     background: rgba(20, 20, 20, 1);
-    /* REMOVED translateY so it doesn't jump up */
-    transform: none; 
 }
 .glass-dock.hidden {
-    opacity: 0; pointer-events: none; transform: translateY(20px);
+    display: none;
+}
+
+/* Minimized: hide all groups, show only the toggle button, shrink to right */
+.glass-dock.minimized {
+    left: auto;
+    width: auto;
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-color: rgba(255,255,255,0.1);
+    padding: 2px;
+}
+.glass-dock.minimized .dock-group {
+    display: none;
+}
+.glass-dock.minimized .dock-minimize-btn {
+    opacity: 1;
+    margin-left: 0;
+}
+
+/* ── Dock minimize button ─────────────────────────────────────── */
+.dock-minimize-btn {
+    background: transparent;
+    border: none;
+    color: var(--lb-text-dim);
+    width: 22px;
+    height: 26px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: all 0.1s;
+    padding: 0;
+}
+.dock-minimize-btn svg { width: 12px; height: 12px; }
+.dock-minimize-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--lb-text);
+    opacity: 1;
 }
 
 .dock-group {
@@ -275,18 +315,6 @@ const CSS = `
 .top-lock-btn:hover { background: rgba(255,255,255,0.2); color: var(--lb-text); transform:scale(1.05); }
 .top-lock-btn.locked { color: #ff453a; background: rgba(255, 69, 58, 0.15); border-color: rgba(255, 69, 58, 0.3); }
 
-/* ── Sync Indicator ───────────────────────────────────────────────── */
-.sync-status {
-    position: absolute; bottom: 12px; right: 12px;
-    display: flex; align-items: center; gap: 8px;
-    pointer-events: none; opacity: 0; transition: opacity 0.3s;
-}
-.sync-status.visible { opacity: 1; }
-.sync-dot { width: 5px; height: 5px; border-radius: 50%; background-color: var(--lb-text-dim); transition: background-color 0.3s; }
-.sync-status.saving .sync-dot { background-color: var(--lb-accent); box-shadow: 0 0 6px var(--lb-accent); animation: pulse 1.5s infinite; }
-.sync-status.saved .sync-dot { background-color: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
-.sync-status.dirty .sync-dot { background-color: #e67e22; transform: scale(0.9); }
-.sync-status.error .sync-dot { background-color: #e74c3c; }
 
 /* ── Image Resizer Button ────────────────────────────────────────── */
 .img-resizer {
@@ -317,9 +345,11 @@ export class NotepadWidget extends HTMLElement {
     private _isSaving: boolean = false;
     private _lastLockTime: number = 0;
 
+    private _isDockMinimized: boolean = false;
+
     private _editor: HTMLDivElement | null = null;
-    private _syncStatus: HTMLDivElement | null = null;
     private _dock: HTMLDivElement | null = null;
+    private _minimizeBtn: HTMLButtonElement | null = null;
     private _editorContainer: HTMLDivElement | null = null;
     private _modal: HTMLDivElement | null = null;
     private _imgResizer: HTMLButtonElement | null = null;
@@ -337,6 +367,9 @@ export class NotepadWidget extends HTMLElement {
     }
 
     connectedCallback() {
+        if (this._itemId) {
+            this._isDockMinimized = localStorage.getItem(`lb-notepad-dock-${this._itemId}`) === 'minimized';
+        }
         this.render();
         this.loadContent();
         window.addEventListener('beforeunload', this._boundBeforeUnload);
@@ -365,7 +398,7 @@ export class NotepadWidget extends HTMLElement {
         // Inverted Lock Colors (Locked = Quiet, Unlocked = Alert)
         const lockClass = this._isLocked ? 'locked' : 'unlocked';
         const containerClass = this._isLocked ? 'locked' : '';
-        const dockClass = this._isLocked ? 'hidden' : '';
+        const dockClass = this._isLocked ? 'hidden' : (this._isDockMinimized ? 'minimized' : '');
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -448,6 +481,8 @@ export class NotepadWidget extends HTMLElement {
                      <button class="dock-btn" data-fmt="formatBlock:PRE" title="${i18n.t('widget.notepad.tool.code')}">${ICONS.code}</button>
                     <button class="dock-btn" data-fmt="removeFormat" title="${i18n.t('widget.notepad.tool.clear')}">${ICONS.eraser_clean}</button>
                 </div>
+
+                <button class="dock-minimize-btn" id="dock-minimize-btn" title="Minimizar barra de herramientas">${ICONS.dockMinimize}</button>
             </div>
 
             <div class="glass-modal" id="glass-modal">
@@ -462,10 +497,6 @@ export class NotepadWidget extends HTMLElement {
                 </div>
             </div>
 
-            <div class="sync-status" id="sync-status">
-                <div class="sync-dot"></div>
-            </div>
-
              <button class="img-resizer" id="img-resizer" title="${i18n.t('widget.notepad.tool.update_image')}">
                 ${ICONS.resize}
              </button>
@@ -473,8 +504,8 @@ export class NotepadWidget extends HTMLElement {
 
         this._editor = this.shadowRoot.querySelector('.editor');
         this._editorContainer = this.shadowRoot.querySelector('.editor-container');
-        this._syncStatus = this.shadowRoot.querySelector('#sync-status');
         this._dock = this.shadowRoot.querySelector('#glass-dock');
+        this._minimizeBtn = this.shadowRoot.querySelector('#dock-minimize-btn');
         this._modal = this.shadowRoot.querySelector('#glass-modal');
         this._imgResizer = this.shadowRoot.querySelector('#img-resizer');
 
@@ -528,6 +559,12 @@ export class NotepadWidget extends HTMLElement {
                 this.executeFormat('foreColor', color);
             });
         }
+
+        this.shadowRoot?.querySelector('#dock-minimize-btn')?.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleDockMinimize();
+        });
 
         this.shadowRoot?.querySelector('#btn-link')?.addEventListener('click', () => this.openModal('link'));
         this.shadowRoot?.querySelector('#btn-image')?.addEventListener('click', () => this.openModal('image'));
@@ -610,7 +647,6 @@ export class NotepadWidget extends HTMLElement {
             if (val2) this._activeImage.style.width = val2;
             else this._activeImage.style.width = '';
             this._isDirty = true;
-            this.setStatus('dirty');
         }
 
         this.closeModal();
@@ -633,6 +669,31 @@ export class NotepadWidget extends HTMLElement {
         }
     }
 
+    private toggleDockMinimize() {
+        this._isDockMinimized = !this._isDockMinimized;
+        if (this._itemId) {
+            localStorage.setItem(`lb-notepad-dock-${this._itemId}`, this._isDockMinimized ? 'minimized' : 'expanded');
+        }
+        this.applyDockVisibility();
+    }
+
+    private applyDockVisibility() {
+        if (!this._dock) return;
+
+        if (this._isLocked) {
+            this._dock.classList.add('hidden');
+            this._dock.classList.remove('minimized');
+        } else if (this._isDockMinimized) {
+            this._dock.classList.remove('hidden');
+            this._dock.classList.add('minimized');
+            if (this._minimizeBtn) this._minimizeBtn.innerHTML = ICONS.dockMaximize;
+        } else {
+            this._dock.classList.remove('hidden');
+            this._dock.classList.remove('minimized');
+            if (this._minimizeBtn) this._minimizeBtn.innerHTML = ICONS.dockMinimize;
+        }
+    }
+
     private toggleLock() {
         this._isLocked = !this._isLocked;
         this.updateLockState();
@@ -649,10 +710,7 @@ export class NotepadWidget extends HTMLElement {
             lockBtn.setAttribute('title', this._isLocked ? i18n.t('widget.notepad.tool.unlock') : i18n.t('widget.notepad.tool.lock'));
         }
 
-        if (this._dock) {
-            if (this._isLocked) this._dock.classList.add('hidden');
-            else this._dock.classList.remove('hidden');
-        }
+        this.applyDockVisibility();
 
         if (this._editorContainer) this._editorContainer.classList.toggle('locked', this._isLocked);
 
@@ -671,7 +729,6 @@ export class NotepadWidget extends HTMLElement {
         this.hideResizer();
         this.checkPlaceholder();
         this._isDirty = true;
-        this.setStatus('dirty');
         this.checkInputRules();
     }
 
@@ -697,7 +754,7 @@ export class NotepadWidget extends HTMLElement {
             } else {
                 target.textContent = '☐'; target.classList.remove('checked');
             }
-            this._isDirty = true; this.setStatus('dirty');
+            this._isDirty = true;
         }
     }
 
@@ -930,7 +987,6 @@ export class NotepadWidget extends HTMLElement {
         const currentHTML = this._editor.innerHTML;
 
         this._isSaving = true;
-        this.setStatus('saving');
 
         try {
             const state = dashboardStore.getState();
@@ -939,31 +995,12 @@ export class NotepadWidget extends HTMLElement {
                 const newContent = WidgetContentHelper.setNotepadText(currentItem.content, currentHTML);
                 dashboardStore.updateItem({ ...currentItem, content: newContent }).then(() => {
                     this._isDirty = false;
-                    this.setStatus('saved');
                 });
             }
         } catch (e) {
             console.error(e);
-            this.setStatus('error');
         } finally {
             this._isSaving = false;
-        }
-    }
-
-    private setStatus(state: 'saving' | 'saved' | 'error' | 'dirty' | 'idle') {
-        if (!this._syncStatus) return;
-        this._syncStatus.className = 'sync-status';
-        this._syncStatus.classList.add('visible');
-
-        switch (state) {
-            case 'saving': this._syncStatus.classList.add('saving'); break;
-            case 'saved':
-                this._syncStatus.classList.add('saved');
-                setTimeout(() => { this._syncStatus?.classList.remove('visible'); }, 2000);
-                break;
-            case 'dirty': this._syncStatus.classList.add('dirty'); break;
-            case 'error': this._syncStatus.classList.add('error'); break;
-            case 'idle': this._syncStatus.classList.remove('visible'); break;
         }
     }
 
