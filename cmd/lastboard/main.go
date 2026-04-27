@@ -56,11 +56,11 @@ func main() {
 	}
 
 	server := &http.Server{
-		Addr:              ":" + port,
-		Handler:           srv,
-		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      15 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		Addr:    ":" + port,
+		Handler: srv,
+		// ReadTimeout/WriteTimeout/IdleTimeout intentionally unset:
+		// the /ws WebSocket needs a long-lived connection. ReadHeaderTimeout
+		// still protects against slow-loris attacks on regular HTTP routes.
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

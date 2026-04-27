@@ -56,12 +56,12 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
             const borderWidthStyle = (data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : '';
 
             return `
-            <div class="bookmark-grid__section"
+            <fieldset class="bookmark-grid__section"
                data-id="${b.id}"
                data-orig-x="${b.x}" data-orig-y="${b.y}"
                draggable="${isEditing && !isTouchDevice}"
                style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH}; ${borderColorStyle} ${borderWidthStyle}">
-               ${title ? `<div class="section-title">${esc(title)}</div>` : ''}
+               ${title ? `<legend class="section-title">${esc(title)}</legend>` : ''}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
                    ${renderBookmarks(children, isEditing, true, clampedW, isTouchDevice)}
                </div>
@@ -72,7 +72,7 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
                 </div>
                 <div class="resize-handle"></div>
                ` : ''}
-            </div>`;
+            </fieldset>`;
         }
 
         return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice);
