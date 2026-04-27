@@ -156,3 +156,32 @@
     background: var(--border);
     margin: 4px 0;
 }
+
+.switcher-manage-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: color 0.2s, background 0.2s;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+}
+
+.switcher-manage-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.switcher-manage-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    stroke-width: 1.5;
+}

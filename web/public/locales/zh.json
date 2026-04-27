@@ -59,6 +59,8 @@
   "dashboard.name_label": "仪表板名称",
   "dashboard.rename": "重命名",
   "dashboard.save": "保存",
+  "dashboard.manage_order": "管理顺序",
+  "dashboard.save_order": "保存顺序",
   "docker.action_error": "操作失败",
   "docker.action_restart": "重启",
   "docker.action_start": "启动",

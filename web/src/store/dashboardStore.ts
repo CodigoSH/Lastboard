@@ -667,6 +667,15 @@ class DashboardStore {
             await this.fetchDashboards();
         }
     }
+
+    /**
+     * Saves a new order for the dashboards list.
+     */
+    async reorderDashboards(ids: number[]): Promise<void> {
+        const { multiDashboardService } = await import('../services/multiDashboardService');
+        await multiDashboardService.reorder(ids);
+        await this.fetchDashboards();
+    }
 }
 
 export const dashboardStore = new DashboardStore();

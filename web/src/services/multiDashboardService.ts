@@ -25,4 +25,8 @@ export const multiDashboardService = {
     async setDefault(id: number): Promise<void> {
         await apiService.post<{ status: string }>(`/api/dashboards/${id}/default`, {});
     },
+
+    async reorder(ids: number[]): Promise<void> {
+        await apiService.put<{ status: string }>('/api/dashboards/reorder', { ids });
+    },
 };

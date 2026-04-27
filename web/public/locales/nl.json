@@ -59,6 +59,8 @@
   "dashboard.name_label": "Dashboard naam",
   "dashboard.rename": "Hernoemen",
   "dashboard.save": "Opslaan",
+  "dashboard.manage_order": "Volgorde beheren",
+  "dashboard.save_order": "Volgorde opslaan",
   "docker.action_error": "Actie mislukt",
   "docker.action_restart": "Herstart",
   "docker.action_start": "Starten",

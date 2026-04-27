@@ -59,6 +59,8 @@
   "dashboard.name_label": "Panel adı",
   "dashboard.rename": "Yeniden adlandır",
   "dashboard.save": "Kaydet",
+  "dashboard.manage_order": "Sırayı yönet",
+  "dashboard.save_order": "Sırayı kaydet",
   "docker.action_error": "İşlem başarısız oldu",
   "docker.action_restart": "Yeniden Başlat",
   "docker.action_start": "Başlat",

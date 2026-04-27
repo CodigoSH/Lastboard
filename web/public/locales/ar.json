@@ -59,6 +59,8 @@
   "dashboard.name_label": "اسم لوحة القيادة",
   "dashboard.rename": "إعادة تسمية",
   "dashboard.save": "حفظ",
+  "dashboard.manage_order": "إدارة الترتيب",
+  "dashboard.save_order": "حفظ الترتيب",
   "docker.action_error": "Failed to perform action",
   "docker.action_restart": "إعادة التشغيل",
   "docker.action_start": "بدء",

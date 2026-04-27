@@ -59,6 +59,8 @@
   "dashboard.name_label": "نام داشبورد",
   "dashboard.rename": "تغییر نام",
   "dashboard.save": "ذخیره",
+  "dashboard.manage_order": "مدیریت ترتیب",
+  "dashboard.save_order": "ذخیره ترتیب",
   "docker.action_error": "خطا در انجام تراکنش",
   "docker.action_restart": "راه اندازی مجدد",
   "docker.action_start": "شروع",

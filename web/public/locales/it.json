@@ -59,6 +59,8 @@
   "dashboard.name_label": "Nome dashboard",
   "dashboard.rename": "Rinomina",
   "dashboard.save": "Salva",
+  "dashboard.manage_order": "Gestisci ordine",
+  "dashboard.save_order": "Salva ordine",
   "docker.action_error": "Azione non riuscita",
   "docker.action_restart": "Riavvia",
   "docker.action_start": "Avvia",

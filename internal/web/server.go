@@ -230,6 +230,7 @@ func (s *Server) routes() {
 	s.Router.Handle("DELETE /api/dashboards/", protect(http.HandlerFunc(multiDashHandler.DeleteDashboard)))
 	s.Router.Handle("PATCH /api/dashboards/", protect(http.HandlerFunc(multiDashHandler.RenameDashboard)))
 	s.Router.Handle("POST /api/dashboards/{id}/default", protect(http.HandlerFunc(multiDashHandler.SetDefaultDashboard)))
+	s.Router.Handle("PUT /api/dashboards/reorder", protect(http.HandlerFunc(multiDashHandler.ReorderDashboards)))
 
 	// Docker API
 	dockerHandler := api.NewDockerHandler(s.DB)

@@ -67,13 +67,24 @@ class DashboardSwitcher extends HTMLElement {
                 return;
             }
 
+            // Manage order button
+            const manageBtn = target.closest('.switcher-manage-btn') as HTMLElement;
+            if (manageBtn) {
+                e.stopPropagation();
+                this.state.dropdownActive = false;
+                this.render();
+                const modal = document.createElement('dashboard-manager-modal');
+                document.body.appendChild(modal);
+                return;
+            }
+
             // Inside dropdown
             const btn = target.closest('.switcher-action-btn') as HTMLElement;
             if (btn) {
                 e.stopPropagation();
                 const action = btn.dataset.action;
                 const id = Number(btn.dataset.id);
-                
+
                 if (action === 'rename') {
                     const dashName = this.state.dashboards.find(d => d.id === id)?.name || '';
                     this.dispatchEvent(new CustomEvent('dashboard-rename', {
@@ -95,7 +106,7 @@ class DashboardSwitcher extends HTMLElement {
                         }));
                     }
                 }
-                
+
                 this.state.dropdownActive = false;
                 this.render();
                 return;

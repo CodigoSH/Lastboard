@@ -59,6 +59,8 @@
   "dashboard.name_label": "ড্যাশবোর্ডের নাম",
   "dashboard.rename": "নাম পরিবর্তন করুন",
   "dashboard.save": "সংরক্ষণ করুন",
+  "dashboard.manage_order": "ক্রম পরিচালনা করুন",
+  "dashboard.save_order": "ক্রম সংরক্ষণ করুন",
   "docker.action_error": "অ্যাকশন করতে ব্যর্থ",
   "docker.action_restart": "পুনরায় চালু করুন",
   "docker.action_start": "শুরু করুন",

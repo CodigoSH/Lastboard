@@ -41,6 +41,15 @@ export const template = ({ dashboards, currentDashboardId, dropdownActive }: {
                     </div>
                 </div>
             `).join('')}
+            ${dashboards.length > 1 ? `
+                <div class="switcher-separator"></div>
+                <button class="switcher-manage-btn" data-action="manage">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <path d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                    ${i18n.t('dashboard.manage_order')}
+                </button>
+            ` : ''}
         </div>
     `;
 };

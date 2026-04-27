@@ -340,6 +340,37 @@ func (h *MultiDashboardHandler) SetDefaultDashboard(w http.ResponseWriter, r *ht
 	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
 }
 
+// ReorderDashboards handles PUT /api/dashboards/reorder
+// Accepts {"ids": [3,1,2]} and updates position for each dashboard.
+func (h *MultiDashboardHandler) ReorderDashboards(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
+	userID := middleware.GetUserIDFromContext(r)
+
+	var body struct {
+		IDs []int `json:"ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.IDs) == 0 {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+
+	for i, id := range body.IDs {
+		var exists int
+		if err := h.DB.QueryRow("SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?", id, userID).Scan(&exists); err != nil {
+			http.Error(w, "error.not_found", http.StatusNotFound)
+			return
+		}
+		if _, err := h.DB.Exec("UPDATE dashboards SET position = ? WHERE id = ? AND user_id = ?", i, id, userID); err != nil {
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+}
+
 // lastPathSegment returns the last non-empty segment of a URL path.
 // e.g. "/api/dashboards/42" → "42"
 func lastPathSegment(path string) string {

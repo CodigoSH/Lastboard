@@ -59,6 +59,8 @@
   "dashboard.name_label": "Nombre del tablero",
   "dashboard.rename": "Renombrar",
   "dashboard.save": "Guardar",
+  "dashboard.manage_order": "Gestionar orden",
+  "dashboard.save_order": "Guardar orden",
   "docker.action_error": "Error al realizar la acción",
   "docker.action_restart": "Reiniciar",
   "docker.action_start": "Iniciar",

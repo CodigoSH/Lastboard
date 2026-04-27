@@ -59,6 +59,8 @@
   "dashboard.name_label": "ڈیش بورڈ کا نام",
   "dashboard.rename": "نام تبدیل کریں",
   "dashboard.save": "محفوظ کریں",
+  "dashboard.manage_order": "ترتیب منظم کریں",
+  "dashboard.save_order": "ترتیب محفوظ کریں",
   "docker.action_error": "عمل کرنے میں ناکامی",
   "docker.action_restart": "دوبارہ شروع کریں",
   "docker.action_start": "شروع کریں",

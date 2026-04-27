@@ -19,6 +19,7 @@ import './components/ui/IconPicker/IconPicker';
 import './components/ui/AddBookmarkModal/AddBookmarkModal';
 import './components/ui/AddWidgetModal/AddWidgetModal';
 import './components/ui/AddDashboardModal/AddDashboardModal';
+import './components/ui/DashboardManagerModal/DashboardManagerModal';
 import './components/ui/WidgetConfigModal/WidgetConfigModal';
 import './components/ui/ConfirmationModal/ConfirmationModal';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
