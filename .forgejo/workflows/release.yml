@@ -86,7 +86,7 @@ jobs:
 
       - name: Create or Update Release
         env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME}"
           REPO="${GITHUB_REPOSITORY}"
@@ -110,36 +110,36 @@ jobs:
 
           # Check if release already exists
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token $FORGEJO_TOKEN" \
+            -H "Authorization: token $CI_TOKEN" \
             "$API/repos/$REPO/releases/tags/$VERSION")
 
           if [ "$HTTP_CODE" = "200" ]; then
             echo "Release exists, updating..."
 
             RELEASE_ID=$(curl -s \
-              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Authorization: token $CI_TOKEN" \
               "$API/repos/$REPO/releases/tags/$VERSION" | jq -r '.id')
 
             curl -s -X PATCH \
-              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Authorization: token $CI_TOKEN" \
               -H "Content-Type: application/json" \
               -d "{\"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE}" \
               "$API/repos/$REPO/releases/$RELEASE_ID"
 
             # Delete existing assets before re-uploading
             ASSET_IDS=$(curl -s \
-              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Authorization: token $CI_TOKEN" \
               "$API/repos/$REPO/releases/$RELEASE_ID/assets" | jq -r '.[].id')
             for asset_id in $ASSET_IDS; do
               curl -s -X DELETE \
-                -H "Authorization: token $FORGEJO_TOKEN" \
+                -H "Authorization: token $CI_TOKEN" \
                 "$API/repos/$REPO/releases/$RELEASE_ID/assets/$asset_id"
             done
           else
             echo "Creating new release..."
 
             RELEASE_ID=$(curl -s -X POST \
-              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Authorization: token $CI_TOKEN" \
               -H "Content-Type: application/json" \
               -d "{\"tag_name\": \"$VERSION\", \"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE}" \
               "$API/repos/$REPO/releases" | jq -r '.id')
@@ -152,7 +152,7 @@ jobs:
             filename=$(basename "$f")
             echo "Uploading $filename..."
             curl -s -X POST \
-              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Authorization: token $CI_TOKEN" \
               -F "attachment=@$f;filename=$filename" \
               "$API/repos/$REPO/releases/$RELEASE_ID/assets"
           done
@@ -160,6 +160,6 @@ jobs:
           # Upload checksums
           echo "Uploading checksums.txt..."
           curl -s -X POST \
-            -H "Authorization: token $FORGEJO_TOKEN" \
+            -H "Authorization: token $CI_TOKEN" \
             -F "attachment=@artifacts/checksums.txt;filename=checksums.txt" \
             "$API/repos/$REPO/releases/$RELEASE_ID/assets"

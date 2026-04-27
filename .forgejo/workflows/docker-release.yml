@@ -52,8 +52,8 @@ jobs:
 
       - name: Login to registry
         env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
-        run: echo "${FORGEJO_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: echo "${CI_TOKEN}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
       - name: Set up Docker Buildx
         run: |
