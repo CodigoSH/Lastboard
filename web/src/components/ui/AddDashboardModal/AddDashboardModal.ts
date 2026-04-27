@@ -25,7 +25,7 @@ class AddDashboardModal extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupListeners();
-        
+
         // Auto-focus input when opened
         requestAnimationFrame(() => {
             const input = this.shadowRoot!.getElementById('dashboard-name');
@@ -101,12 +101,9 @@ class AddDashboardModal extends HTMLElement {
             <style>${css}</style>
             ${template({ name: this.state.name, error: this.state.error })}
         `;
-        
+
         this.dialog = this.shadowRoot!.getElementById('modal') as HTMLDialogElement;
-        
-        // Setup listeners again since DOM was replaced
-        this.setupListeners();
-        
+
         this.dialog.showModal();
         
         requestAnimationFrame(() => {

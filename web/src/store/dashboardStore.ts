@@ -53,6 +53,7 @@ class DashboardStore {
         currentDashboardId: null
     };
     private listeners: Listener[] = [];
+    private _addItemQueue: Promise<void> = Promise.resolve();
     private userId: number = 0;
 
     // Returns a cache key scoped to the authenticated user and the active dashboard.
@@ -446,6 +447,13 @@ class DashboardStore {
             return createdItem;
         }
 
+        // Serialize concurrent addItem calls so collision detection always reads
+        // the up-to-date items array and two rapid adds never land on the same slot.
+        const prev = this._addItemQueue;
+        let resolveCurrent!: () => void;
+        this._addItemQueue = new Promise(r => { resolveCurrent = r; });
+        await prev;
+
         try {
             this.ensureItemsIsArray();
 
@@ -518,6 +526,8 @@ class DashboardStore {
         } catch (error) {
             console.error('[DashboardStore] Error adding item', error);
             return undefined;
+        } finally {
+            resolveCurrent();
         }
     }
 

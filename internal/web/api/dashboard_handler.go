@@ -201,13 +201,13 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		slog.Error("DB Insert error in CreateItem", "error", err)
-		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		http.Error(w, "setup.failed_create_user", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	item.ID = int(id)
@@ -367,6 +367,10 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.URLs) == 0 {
 		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		return
+	}
+	if len(body.URLs) > 100 {
+		http.Error(w, "error.too_many_urls", http.StatusBadRequest)
 		return
 	}
 

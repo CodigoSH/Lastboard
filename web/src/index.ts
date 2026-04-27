@@ -223,8 +223,9 @@ if (topbar) {
             const currentState = dashboardStore.getState();
             // @ts-ignore
             const items = currentState.items || [];
+            const gridColumns = currentState.gridColumns || 12;
             const { collisionService } = await import('./services/collisionService');
-            const slot = collisionService.findCompactPosition(1, 1, items, 12);
+            const slot = collisionService.findCompactPosition(1, 1, items, gridColumns);
 
             const newItem = {
                 type: 'section',
@@ -265,8 +266,9 @@ window.addEventListener('widget-selected', async (e: Event) => {
     // @ts-ignore
     const items = currentState.items || [];
 
+    const gridColumns = currentState.gridColumns || 12;
     const { collisionService } = await import('./services/collisionService');
-    const slot = collisionService.findCompactPosition(widgetDef.defaultW, widgetDef.defaultH, items, 12);
+    const slot = collisionService.findCompactPosition(widgetDef.defaultW, widgetDef.defaultH, items, gridColumns);
 
     const newItem = {
         type: 'widget',
