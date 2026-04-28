@@ -13,10 +13,9 @@ type User struct {
 	UnitSystem  string `json:"unit_system"`
 	// Grid Preferences
 	WidgetMinWidth int `json:"widget_min_width"`
-	// Deprecated: GridColumns* fields are replaced by auto-fill grid
-	GridColumnsPC     int       `json:"grid_columns"` // Re-enabled for manual override
-	GridColumnsTablet int       `json:"grid_columns_tablet"`
-	GridColumnsMobile int       `json:"grid_columns_mobile"`
+	GridColumnsPC     int `json:"grid_columns"`
+	GridColumnsTablet int `json:"grid_columns_tablet"`
+	GridColumnsMobile int `json:"grid_columns_mobile"`
 	ProjectName         string    `json:"project_name"`
 	ProjectLogo         string    `json:"project_logo"`
 	AvatarUrl           string    `json:"avatar_url"`

@@ -185,7 +185,9 @@ func compareVersions(v1, v2 string) bool {
 
 	core := func(s string) [3]int {
 		var a, b, c int
-		fmt.Sscanf(s, "%d.%d.%d", &a, &b, &c)
+		if _, err := fmt.Sscanf(s, "%d.%d.%d", &a, &b, &c); err != nil {
+			slog.Warn("Failed to parse version core", "value", s, "error", err)
+		}
 		return [3]int{a, b, c}
 	}
 	n1, n2 := core(p1[0]), core(p2[0])
@@ -302,13 +304,16 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// Move new to current
 	if err := h.moveFile(binaryPath, currentExe); err != nil {
-		// Rollback attempt
-		h.moveFile(oldExe, currentExe)
+		// Rollback attempt — surface failure so an operator can recover manually.
+		if rbErr := h.moveFile(oldExe, currentExe); rbErr != nil {
+			slog.Error("Update install failed AND rollback failed — binary may be missing",
+				"install_error", err, "rollback_error", rbErr, "old_exe", oldExe, "current_exe", currentExe)
+		}
 		http.Error(w, "Failed to install new binary: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := os.Chmod(currentExe, 0755); err != nil {
+	if err := os.Chmod(currentExe, 0700); err != nil {
 		http.Error(w, "Failed to set permissions", http.StatusInternalServerError)
 		return
 	}
@@ -326,47 +331,46 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 
 // moveFile tries os.Rename, falls back to Copy+Delete for cross-device
 func (h *UpdateHandler) moveFile(src, dst string) error {
-	err := os.Rename(src, dst)
-	if err == nil {
+	if err := os.Rename(src, dst); err == nil {
 		return nil
 	}
 
-	// Check if cross-device error (syscall.EXDEV)
-	// Or just try copy anyway if rename failed
-
-	// Open Source
 	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	defer in.Close()
 
-	// Create Dest
 	out, err := os.Create(dst)
 	if err != nil {
+		in.Close()
 		return err
 	}
-	defer out.Close()
 
-	// Copy
 	if _, err = io.Copy(out, in); err != nil {
+		out.Close()
+		in.Close()
 		return err
 	}
 
-	// Persist to disk before closing
 	if err = out.Sync(); err != nil {
+		out.Close()
+		in.Close()
 		return err
 	}
 
-	// Persist Permissions
-	si, err := os.Stat(src)
-	if err == nil {
-		os.Chmod(dst, si.Mode())
+	if si, statErr := os.Stat(src); statErr == nil {
+		if chmodErr := os.Chmod(dst, si.Mode()); chmodErr != nil {
+			slog.Warn("Failed to preserve permissions on copy", "dst", dst, "error", chmodErr)
+		}
 	}
 
-	// Close files before removing source
-	in.Close()
-	out.Close()
+	if err := out.Close(); err != nil {
+		in.Close()
+		return err
+	}
+	if err := in.Close(); err != nil {
+		return err
+	}
 
 	return os.Remove(src)
 }
@@ -482,11 +486,23 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath, expectedName string)
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(out, tr); err != nil {
+		// Cap decompression to avoid zip-bomb in a malicious release archive.
+		// Lastboard binary is ~30MB; 250MB leaves ample room for future growth.
+		const maxBinarySize int64 = 250 * 1024 * 1024
+		n, err := io.CopyN(out, tr, maxBinarySize+1)
+		if err != nil && err != io.EOF {
 			out.Close()
+			os.Remove(destPath)
 			return err
 		}
-		out.Close()
+		if n > maxBinarySize {
+			out.Close()
+			os.Remove(destPath)
+			return fmt.Errorf("binary in archive exceeds %d bytes (possible zip bomb)", maxBinarySize)
+		}
+		if err := out.Close(); err != nil {
+			return err
+		}
 		return nil
 	}
 	return fmt.Errorf("binary not found in archive (expected %s, lastboard, or dashboard)", expectedName)

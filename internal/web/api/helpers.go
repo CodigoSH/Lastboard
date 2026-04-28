@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"github.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 // isAdminUser checks whether the currently authenticated user is the first admin
@@ -30,14 +31,18 @@ func isFirstAdmin(db *sql.DB, userID int) bool {
 }
 
 // invalidateSession expires the session and CSRF cookies, forcing the client to re-login.
-func invalidateSession(w http.ResponseWriter) {
+// Flags must mirror those used at login (auth.go) so browsers accept the deletion cookie.
+func invalidateSession(w http.ResponseWriter, r *http.Request) {
 	expired := time.Now().Add(-1 * time.Hour)
+	secure := util.IsSecureRequest(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
 		Path:     "/",
 		Expires:  expired,
 		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "csrf_token",
@@ -45,6 +50,8 @@ func invalidateSession(w http.ResponseWriter) {
 		Path:     "/",
 		Expires:  expired,
 		HttpOnly: false,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
 	})
 }
 

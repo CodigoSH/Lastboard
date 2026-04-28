@@ -20,7 +20,7 @@ type DB struct {
 func InitDB(dsn string) (*DB, error) {
 	// 1. Ensure the directory for the database exists
 	dir := filepath.Dir(dsn)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create database directory %s: %v", dir, err)
 	}
 
