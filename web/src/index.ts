@@ -48,8 +48,12 @@ bootstrap(async () => {
     // from the DB; this call only matters for the 'system' edge case.
     ThemeService.init();
 
+    // 3. Mount the grid immediately so skeletons appear while API calls are in-flight.
+    //    BookmarkGrid starts with isLoading=true and renders skeleton cards.
+    renderDashboard();
+
     // ── Parallel Initialization ─────────────────────────────────────
-    // fetchUser and fetchDashboards are independent — run in parallel.
+    // fetchUser and fetchDashboards run in parallel while skeletons are visible.
     // setUserId must happen before fetchItems so the localStorage key is correct.
     await Promise.all([
         userStore.fetchUser(),
@@ -59,14 +63,8 @@ bootstrap(async () => {
     const u = userStore.getUser();
     if (u?.id) dashboardStore.setUserId(u.id);
 
-    // 3. Mount the grid BEFORE fetchItems so it is subscribed when fetchItems fires
-    //    its synchronous stale-cache notify → instant first render from localStorage.
-    //    BookmarkGrid.connectedCallback() also starts statusService, so no need here.
-    renderDashboard();
-
-    // 4. Await fetchItems so the boot sequence waits for the backend revalidation.
-    //    This prevents a double re-render (stale→backend) that would cause the
-    //    "venetian blind" icon loading effect and wipe status dot classes.
+    // 4. Await fetchItems: fires stale-cache notify instantly (localStorage → real content),
+    //    then revalidates from backend in background.
     await dashboardStore.fetchItems();
 
     // ── Per-user sync ──────────────────────────────────────────────

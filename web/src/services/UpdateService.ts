@@ -16,8 +16,8 @@ class UpdateService {
         if (window.LASTBOARD_CONFIG?.demo_mode === true) {
             return {
                 available: false,
-                current_version: 'v1.5.1-Beta.21', // Mock version for demo
-                latest_version: 'v1.5.1-Beta.21',
+                current_version: 'v1.5.1-Beta.22', // Mock version for demo
+                latest_version: 'v1.5.1-Beta.22',
                 is_docker: false
             };
         }
