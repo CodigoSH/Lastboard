@@ -1,5 +1,4 @@
 import { layout } from './IconSelectionModal.template';
-// @ts-ignore
 import css from './IconSelectionModal.css' with { type: 'text' };
 import '../IconPicker/IconPicker'; // Ensure IconPicker is registered
 

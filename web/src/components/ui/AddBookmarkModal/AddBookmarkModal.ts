@@ -3,7 +3,6 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
 import '../ColorPicker/ColorPicker';
-// @ts-ignore
 import css from './AddBookmarkModal.css' with { type: 'text' };
 
 const premiumColors = [
@@ -195,7 +194,6 @@ class AddBookmarkModal extends HTMLElement {
                         id: this.currentItemId,
                         content: content
                     });
-                    // @ts-ignore
                     if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_updated'));
                 } else {
                     const { collisionService } = await import('../../../services/collisionService');
@@ -211,13 +209,11 @@ class AddBookmarkModal extends HTMLElement {
                         h: 1,
                         content: content
                     });
-                    // @ts-ignore
                     if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_added'));
                 }
                 this.close();
             } catch (error) {
                 console.error('[Modal] Error:', error);
-                // @ts-ignore
                 if (window.notifier) window.notifier.show(i18n.t('notifier.bookmark_error'), 'error');
             }
         };

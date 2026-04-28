@@ -1,5 +1,4 @@
 import { template } from './ReferenceHeader.template';
-// @ts-ignore
 import css from './ReferenceHeader.css' with { type: 'text' };
 
 class ReferenceHeader extends HTMLElement {

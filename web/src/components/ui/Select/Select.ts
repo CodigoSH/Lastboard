@@ -1,5 +1,4 @@
 
-// @ts-ignore
 import css from './Select.css' with { type: 'text' };
 
 export class AppSelect extends HTMLElement {

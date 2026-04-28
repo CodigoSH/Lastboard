@@ -61,6 +61,7 @@ export interface ApiResponse<T> {
 
 export interface MessageResponse {
     message: string;
+    session_invalidated?: boolean;
 }
 
 declare global {

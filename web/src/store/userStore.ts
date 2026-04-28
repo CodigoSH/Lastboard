@@ -11,7 +11,6 @@ class UserStore {
 
     // Returns true when running in pure-frontend demo mode.
     private isDemo(): boolean {
-        // @ts-ignore
         return window.LASTBOARD_CONFIG?.demo_mode === true;
     }
 
@@ -217,7 +216,6 @@ class UserStore {
             const response = await userService.updateProfile(data);
 
             // Check if session was invalidated (username changed)
-            // @ts-ignore
             if (response && response.session_invalidated) {
                 // Clear local storage
                 localStorage.removeItem('lastboard_user_cache');

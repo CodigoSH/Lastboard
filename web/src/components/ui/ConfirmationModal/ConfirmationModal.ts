@@ -1,6 +1,5 @@
 import { template } from './ConfirmationModal.template';
 import { i18n } from '../../../services/i18n';
-// @ts-ignore
 import css from './ConfirmationModal.css' with { type: 'text' };
 
 export class ConfirmationModal extends HTMLElement {

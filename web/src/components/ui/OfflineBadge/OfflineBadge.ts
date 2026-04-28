@@ -1,5 +1,4 @@
 import { template } from './OfflineBadge.template';
-// @ts-ignore
 import css from './OfflineBadge.css' with { type: 'text' };
 import { dashboardStore } from '../../../store/dashboardStore';
 

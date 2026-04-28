@@ -1,6 +1,5 @@
 import { template } from './PasswordConfirmModal.template';
 import { i18n } from '../../../services/i18n';
-// @ts-ignore
 import css from './PasswordConfirmModal.css' with { type: 'text' };
 
 export class PasswordConfirmModal extends HTMLElement {
@@ -46,9 +45,7 @@ export class PasswordConfirmModal extends HTMLElement {
             const val = passwordInput?.value || '';
             if (val.trim() === '') {
                 // Use Toast instead of inline error
-                // @ts-ignore
                 if (window.notifier) {
-                    // @ts-ignore
                     window.notifier.show(i18n.t('notifier.password_required'), 'error');
                 }
 

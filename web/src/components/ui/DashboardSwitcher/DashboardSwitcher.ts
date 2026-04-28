@@ -3,7 +3,6 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { i18n } from '../../../services/i18n';
 import { Dashboard } from '../../../types';
-// @ts-ignore
 import css from './DashboardSwitcher.css' with { type: 'text' };
 
 interface DashboardSwitcherState {

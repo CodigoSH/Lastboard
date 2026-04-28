@@ -1,5 +1,4 @@
 import { template } from './Avatar.template';
-// @ts-ignore
 import css from './Avatar.css' with { type: 'text' };
 import { i18n } from '../../../services/i18n';
 

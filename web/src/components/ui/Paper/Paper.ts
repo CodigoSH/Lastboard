@@ -1,5 +1,4 @@
 import { template } from './Paper.template';
-// @ts-ignore
 import css from './Paper.css' with { type: 'text' };
 
 class AppPaper extends HTMLElement {

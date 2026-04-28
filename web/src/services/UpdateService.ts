@@ -12,12 +12,11 @@ class UpdateService {
 
     async check(betaUpdates: boolean): Promise<UpdateInfo> {
         // --- DEMO MODE: skip backend check (API is protected) ---
-        // @ts-ignore
         if (window.LASTBOARD_CONFIG?.demo_mode === true) {
             return {
                 available: false,
-                current_version: 'v1.5.1-Beta.22', // Mock version for demo
-                latest_version: 'v1.5.1-Beta.22',
+                current_version: 'v1.5.1-Beta.23', // Mock version for demo
+                latest_version: 'v1.5.1-Beta.23',
                 is_docker: false
             };
         }

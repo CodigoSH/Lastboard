@@ -4,7 +4,6 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { i18n } from '../../../services/i18n';
 import '../RenameDashboardModal/RenameDashboardModal';
 import '../MobileReorderModal/MobileReorderModal';
-// @ts-ignore
 import css from './TopBar.css' with { type: 'text' };
 
 interface TopBarState {
@@ -40,7 +39,6 @@ class TopBar extends HTMLElement {
             addMenuActive: false,
             drawerOpen: false,
             searchQuery: '',
-            // @ts-ignore
             isDemo: window.LASTBOARD_CONFIG?.demo_mode || false,
             isTouchDevice: window.innerWidth < 768 && window.matchMedia('(pointer: coarse)').matches
         };

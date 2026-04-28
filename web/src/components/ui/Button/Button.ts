@@ -1,5 +1,4 @@
 import { template } from './Button.template';
-// @ts-ignore
 import css from './Button.css' with { type: 'text' };
 import { i18n } from '../../../services/i18n';
 

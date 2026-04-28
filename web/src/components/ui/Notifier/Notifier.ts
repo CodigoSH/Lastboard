@@ -1,5 +1,4 @@
 import { template } from './Notifier.template';
-// @ts-ignore
 import css from './Notifier.css' with { type: 'text' };
 
 class AppNotifier extends HTMLElement {
@@ -15,7 +14,6 @@ class AppNotifier extends HTMLElement {
 
     connectedCallback() {
         this.render();
-        // @ts-ignore
         window.notifier = this;
 
         window.addEventListener('drawer-open', this._boundOpen);

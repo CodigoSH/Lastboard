@@ -220,7 +220,6 @@ if (topbar) {
             // "Section" -> Resizable Box, No Name
             // Smart Placement
             const currentState = dashboardStore.getState();
-            // @ts-ignore
             const items = currentState.items || [];
             const gridColumns = currentState.gridColumns || 12;
             const { collisionService } = await import('./services/collisionService');
@@ -262,7 +261,6 @@ window.addEventListener('widget-selected', async (e: Event) => {
     const widgetDef = customEvent.detail;
 
     const currentState = dashboardStore.getState();
-    // @ts-ignore
     const items = currentState.items || [];
 
     const gridColumns = currentState.gridColumns || 12;

@@ -73,7 +73,6 @@ class DashboardStore {
 
     // Returns true when running in pure-frontend demo mode (no real backend used).
     private isDemo(): boolean {
-        // @ts-ignore
         return window.LASTBOARD_CONFIG?.demo_mode === true;
     }
 

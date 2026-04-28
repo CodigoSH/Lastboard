@@ -1,7 +1,6 @@
 import { i18n } from '../../../services/i18n';
 import { layoutContainer, gridTemplate } from './IconPicker.template';
 import { iconService, IconInfo } from '../../../services/iconService';
-// @ts-ignore
 import css from './IconPicker.css' with { type: 'text' };
 
 class IconPicker extends HTMLElement {

@@ -8,7 +8,6 @@ import { User, UserPreferences } from '../../../types';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
-// @ts-ignore
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
@@ -171,7 +170,6 @@ class SettingsContent extends HTMLElement {
 
     commitDensity(value: string) {
         const val = parseInt(value);
-        // @ts-ignore
         userStore.updatePreferences({ widget_min_width: val });
     }
 
@@ -183,7 +181,6 @@ class SettingsContent extends HTMLElement {
 
     commitColumns(value: string) {
         const val = parseInt(value);
-        // @ts-ignore
         userStore.updatePreferences({ grid_columns: val });
     }
 
@@ -520,7 +517,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.5.1-Beta.22'; // Populated by checkForUpdates() from backend
+    private version = 'v1.5.1-Beta.23'; // Populated by checkForUpdates() from backend
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
     private isCheckingUpdates = false;

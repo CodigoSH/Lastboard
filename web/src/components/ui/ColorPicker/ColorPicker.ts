@@ -1,4 +1,3 @@
-// @ts-ignore
 import css from './ColorPicker.css' with { type: 'text' };
 
 export class ColorPicker extends HTMLElement {

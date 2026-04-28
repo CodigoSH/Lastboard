@@ -1,6 +1,5 @@
 import { template } from './RenameDashboardModal.template';
 import { dashboardStore } from '../../../store/dashboardStore';
-// @ts-ignore
 import css from './RenameDashboardModal.css' with { type: 'text' };
 
 interface RenameDashboardModalState {

@@ -1,7 +1,6 @@
 import { userStore } from '../../../store/userStore';
 import { template } from './RightDrawer.template';
 import { i18n } from '../../../services/i18n';
-// @ts-ignore
 import css from './RightDrawer.css' with { type: 'text' };
 
 class RightDrawer extends HTMLElement {
@@ -27,7 +26,6 @@ class RightDrawer extends HTMLElement {
         this.setupListeners();
 
         // Subscribe to user changes
-        // @ts-ignore
         this._unsubscribe = userStore.subscribe((user) => {
             if (this.isOpen) this.render();
         });
@@ -122,8 +120,15 @@ class RightDrawer extends HTMLElement {
     }
 
     render() {
-        // @ts-ignore
-        const user = userStore.getUser() || { username: 'Guest', initials: '??', role: 'Viewer' };
+        const stored = userStore.getUser();
+        const user = stored ?? {
+            username: 'Guest',
+            initials: '??',
+            role: 'Viewer',
+            avatar_url: '',
+            accent_color: '',
+            language: 'en'
+        };
 
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>

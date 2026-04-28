@@ -1,6 +1,5 @@
 import { template } from './AddDashboardModal.template';
 import { dashboardStore } from '../../../store/dashboardStore';
-// @ts-ignore
 import css from './AddDashboardModal.css' with { type: 'text' };
 
 interface AddDashboardModalState {
