@@ -109,9 +109,8 @@ func (s *Server) routes() {
 		return middleware.RateLimit(setupCheck(authCheck(h)))
 	}
 
-	// File Server for static assets
-	// Since we are using a Single Page App (SPA) / or hybrid, we serve assets.
-	fileServer := http.FileServer(http.FS(s.assets))
+	// File Server for static assets with gzip compression and cache headers.
+	fileServer := middleware.StaticAssets(http.FileServer(http.FS(s.assets)))
 
 	// Dynamic Index Handler (UNPROTECTED wrapper to check for static files first)
 	// We need 'protect' middleware available for the fallback
