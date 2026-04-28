@@ -26,7 +26,7 @@ class RightDrawer extends HTMLElement {
         this.setupListeners();
 
         // Subscribe to user changes
-        this._unsubscribe = userStore.subscribe((user) => {
+        this._unsubscribe = userStore.subscribe(() => {
             if (this.isOpen) this.render();
         });
 

@@ -1,12 +1,11 @@
 interface ConfirmationModalData {
-    isOpen: boolean;
     title: string;
     message: string;
 }
 
 import { i18n } from '../../../services/i18n';
 
-export const template = ({ isOpen, title, message }: ConfirmationModalData) => `
+export const template = ({ title, message }: ConfirmationModalData) => `
     <dialog id="modal">
         <div class="modal-header">
             <h3 class="modal-title">${title}</h3>

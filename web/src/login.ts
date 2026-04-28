@@ -70,7 +70,6 @@ bootstrap(async () => {
 
         if (submitBtn) {
             submitBtn.disabled = true;
-            const originalText = submitBtn.textContent;
             submitBtn.textContent = i18n.t('general.pinging') || "Signing in...";
         }
 

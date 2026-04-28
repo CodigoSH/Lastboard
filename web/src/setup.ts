@@ -15,7 +15,6 @@ bootstrap(async () => {
 
     // --- Elements ---
     const container = document.querySelector('.setup-container') as HTMLElement;
-    const form = document.getElementById('setupForm') as HTMLFormElement;
     const nextBtn = document.getElementById('nextBtn') as HTMLElement;
     const backBtn = document.getElementById('backBtn') as HTMLElement;
     const feedback = document.getElementById('feedback') as HTMLElement;
@@ -87,12 +86,6 @@ bootstrap(async () => {
     });
 
     // --- 2. Avatar Picker ---
-    const avatars = [
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/proxmox.webp', // Generic/Default
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/pi-hole.webp',
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/home-assistant.webp',
-        'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/docker.webp'
-    ];
     // Avatar Upload Logic
     const avatarInput = document.getElementById('avatarInput') as HTMLInputElement;
     const avatarTrigger = document.getElementById('avatarTrigger');
@@ -243,12 +236,6 @@ bootstrap(async () => {
         }
 
         return true;
-    }
-
-    function showError(msg: string) {
-        feedback.style.display = 'block';
-        feedback.textContent = msg;
-        // Shake animation?
     }
 
     // Handlers

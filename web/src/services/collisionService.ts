@@ -194,7 +194,6 @@ export const collisionService = {
      */
     findCompactPosition(w: number, h: number, existingItems: GridItem[], gridCols: number, excludeId?: number): { x: number, y: number } {
         let y = 1;
-        let x = 1;
 
         // Loop until we find a spot
         while (true) {

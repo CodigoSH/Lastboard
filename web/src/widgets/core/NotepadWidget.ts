@@ -339,10 +339,8 @@ const CSS = `
 
 export class NotepadWidget extends HTMLElement {
     private _itemId: number = 0;
-    private _content: string = '';
     private _isDirty: boolean = false;
     private _isLocked: boolean = true;
-    private _isSaving: boolean = false;
     private _lastLockTime: number = 0;
 
     private _isDockMinimized: boolean = false;
@@ -381,7 +379,7 @@ export class NotepadWidget extends HTMLElement {
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
 
-    attributeChangedCallback(name: string, old: string, val: string) {
+    attributeChangedCallback(name: string, _old: string, val: string) {
         if (name === 'item-id') {
             this._itemId = parseInt(val);
             this.loadContent();
@@ -515,7 +513,7 @@ export class NotepadWidget extends HTMLElement {
     private bindEvents() {
         if (!this._editor) return;
 
-        this._editor.addEventListener('input', (e) => this.handleInput(e));
+        this._editor.addEventListener('input', () => this.handleInput());
         this._editor.addEventListener('keydown', (e) => this.handleKeydown(e));
         this._editor.addEventListener('paste', (e) => this.handlePaste(e));
         this._editor.addEventListener('click', (e) => this.handleEditorClick(e));
@@ -724,7 +722,7 @@ export class NotepadWidget extends HTMLElement {
         }
     }
 
-    private handleInput(e: Event) {
+    private handleInput() {
         if (this._isLocked) return;
         this.hideResizer();
         this.checkPlaceholder();
@@ -977,16 +975,13 @@ export class NotepadWidget extends HTMLElement {
             if (this._editor && this._editor.innerHTML !== html) {
                 this._editor.innerHTML = html;
             }
-            this._content = html;
             this.checkPlaceholder();
         }
     }
 
-    private async save(sync: boolean = false) {
+    private async save() {
         if (!this._itemId || !this._editor) return;
         const currentHTML = this._editor.innerHTML;
-
-        this._isSaving = true;
 
         try {
             const state = dashboardStore.getState();
@@ -999,8 +994,6 @@ export class NotepadWidget extends HTMLElement {
             }
         } catch (e) {
             console.error(e);
-        } finally {
-            this._isSaving = false;
         }
     }
 

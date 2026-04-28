@@ -1,5 +1,5 @@
 import { DEFAULT_ITEMS, DEFAULT_USER } from '../config/defaults';
-import { GridItem, User, ApiResponse } from '../types';
+import { GridItem, User } from '../types';
 
 /**
  * Demo Service ("Backend in Browser")

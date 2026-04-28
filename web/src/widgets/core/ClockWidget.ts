@@ -17,7 +17,6 @@ class ClockWidget extends HTMLElement {
 
 
     private isEditing: boolean = false;
-    private configMode: boolean = false;
     private _config: { timezone: string, hour12: boolean, showDate: boolean, showCity: boolean, city: string, showSeconds: boolean } = { timezone: 'local', hour12: false, showDate: true, showCity: true, city: '', showSeconds: false };
     private _itemId: number = 0;
 
@@ -25,7 +24,7 @@ class ClockWidget extends HTMLElement {
         return ['item-id', 'content', 'mode'];
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         if (name === 'item-id') {
             this._itemId = parseInt(newValue);
             this.syncFromStore();
@@ -94,7 +93,6 @@ class ClockWidget extends HTMLElement {
 
     private _lastTimeHTML = '';
     private _lastDateStr = '';
-    private _lastCityStr = '';
 
     updateTime() {
         if (!this.timeEl || !this.dateEl || !this.cityEl) return;
@@ -277,7 +275,6 @@ class ClockWidget extends HTMLElement {
         // Reset dirty check cache since the DOM was just wiped out
         this._lastTimeHTML = '';
         this._lastDateStr = '';
-        this._lastCityStr = '';
         this.updateTime();
     }
 }

@@ -1,6 +1,5 @@
 import { userStore } from './store/userStore';
 import { dashboardStore } from './store/dashboardStore';
-import { statusService } from './services/StatusService';
 import { ThemeService } from './services/ThemeService';
 import { i18n } from './services/i18n';
 

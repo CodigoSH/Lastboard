@@ -1,6 +1,6 @@
 module github.com/CodigoSH/Lastboard
 
-go 1.26.1
+go 1.26.2
 
 require (
 	golang.org/x/crypto v0.47.0

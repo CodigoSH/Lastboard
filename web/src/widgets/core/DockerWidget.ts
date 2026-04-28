@@ -447,7 +447,6 @@ class DockerWidget extends HTMLElement {
     private _unsubscribeI18n: (() => void) | null = null;
 
     private _pendingAction: Set<string> = new Set();
-    private _pendingIconContainerId: string | null = null;
 
     // Edit mode (in-memory only — resets on unmount)
     private _editMode = false;
@@ -698,9 +697,7 @@ class DockerWidget extends HTMLElement {
         const modal = this.shadowRoot?.querySelector('icon-selection-modal') as any;
         if (!modal) return;
 
-        this._pendingIconContainerId = sid;
         const result: string | null = await modal.open();
-        this._pendingIconContainerId = null;
 
         if (!result) return;
 

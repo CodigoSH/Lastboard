@@ -15,7 +15,6 @@ export const template = ({ dashboards, currentDashboardId, dropdownActive }: {
     currentDashboardId: number | null,
     dropdownActive: boolean
 }): string => {
-    const currentDashboard = dashboards.find(d => d.id === currentDashboardId);
     const resolveName = (name: string) => escapeHtml(i18n.t(name));
     return `
         <button class="switcher-trigger ${dropdownActive ? 'active' : ''}" title="${i18n.t('topbar.dashboard_switcher')}">

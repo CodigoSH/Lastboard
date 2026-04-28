@@ -47,10 +47,6 @@ export class IconSelectionModal extends HTMLElement {
 
         this.dialog.showModal();
 
-        // Reset picker if needed or focus search
-        const picker = this.shadowRoot!.querySelector('icon-picker');
-        // (Optional: Expose a reset method on IconPicker if we want to clear previous searches)
-
         return new Promise((resolve) => {
             this.resolvePromise = resolve;
         });

@@ -45,7 +45,6 @@ if (result.success && resultSetup.success && resultLogin.success) {
     // Copy Locales
     const { cp, mkdir, readFile, writeFile } = await import('fs/promises');
     const { existsSync } = await import('fs');
-    const path = await import('path');
 
     try {
         const allowedLocales = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'bn', 'pt', 'ru', 'de', 'ja', 'it', 'tr', 'ko', 'id', 'pl', 'ur', 'nl', 'fa', 'el'];

@@ -67,7 +67,6 @@ export class ConfirmationModal extends HTMLElement {
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
             ${template({
-            isOpen: true,
             title: this.titleText,
             message: this.messageText
         })}

@@ -18,7 +18,7 @@ interface TopBarData {
 import { i18n } from '../../../services/i18n';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, user, updateAvailable, isDemo, currentDashboardId, projectLogo, isTouchDevice }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
+export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">

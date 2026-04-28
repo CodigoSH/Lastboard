@@ -5,13 +5,6 @@
 import { IconInfo } from '../../../services/iconService';
 import { i18n } from '../../../services/i18n';
 
-interface IconPickerData {
-    icons: IconInfo[];
-    selectedIcon: string;
-    searchQuery: string;
-    isLoading: boolean;
-}
-
 // Static layout shell
 export const layoutContainer = () => `
     <div class="icon-picker">

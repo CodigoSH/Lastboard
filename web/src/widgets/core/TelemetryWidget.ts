@@ -3,38 +3,6 @@ import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
 import { userStore } from '../../store/userStore';
 
-// ── Icons (Lucide — stroke-width 1.5, round caps, matching project) ────────────
-
-const ICONS: Record<string, string> = {
-    cpu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="4" y="4" width="16" height="16" rx="2"/>
-        <rect x="9" y="9" width="6" height="6"/>
-        <line x1="9"  y1="1"  x2="9"  y2="4"/>
-        <line x1="15" y1="1"  x2="15" y2="4"/>
-        <line x1="9"  y1="20" x2="9"  y2="23"/>
-        <line x1="15" y1="20" x2="15" y2="23"/>
-        <line x1="20" y1="9"  x2="23" y2="9"/>
-        <line x1="20" y1="15" x2="23" y2="15"/>
-        <line x1="1"  y1="9"  x2="4"  y2="9"/>
-        <line x1="1"  y1="15" x2="4"  y2="15"/>
-    </svg>`,
-
-    ram: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="7" width="20" height="10" rx="1"/>
-        <line x1="6"  y1="17" x2="6"  y2="20"/>
-        <line x1="10" y1="17" x2="10" y2="20"/>
-        <line x1="14" y1="17" x2="14" y2="20"/>
-        <line x1="18" y1="17" x2="18" y2="20"/>
-        <line x1="5"  y1="10" x2="5"  y2="14"/>
-        <line x1="9"  y1="10" x2="9"  y2="14"/>
-        <line x1="13" y1="10" x2="13"  y2="14"/>
-    </svg>`,
-
-    temp: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
-    </svg>`,
-};
-
 // ── Thresholds ─────────────────────────────────────────────────────────────────
 
 function percentState(v: number): 'ok' | 'warn' | 'crit' {

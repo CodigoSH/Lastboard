@@ -3,8 +3,6 @@
  */
 
 interface AddBookmarkModalData {
-    isOpen: boolean;
-    isEditMode: boolean;
     title: string;
     url: string;
     protocol: string;
@@ -80,8 +78,6 @@ const renderAppearanceControls = (color: string, borderWidth: number) => {
 };
 
 export const template = ({
-    isOpen,
-    isEditMode,
     title,
     url,
     protocol,

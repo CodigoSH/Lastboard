@@ -1,4 +1,3 @@
-import { template } from './Button.template';
 import css from './Button.css' with { type: 'text' };
 import { i18n } from '../../../services/i18n';
 
@@ -17,7 +16,7 @@ class AppButton extends HTMLElement {
         this.addEventListener('click', this.handleClick.bind(this));
     }
 
-    handleClick(e: Event) {
+    handleClick() {
         if (this.getAttribute('type') === 'submit') {
             // Manually find parent form and submit
             const form = this.closest('form');

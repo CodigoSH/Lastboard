@@ -148,27 +148,6 @@ export class AppSelect extends HTMLElement {
         });
     }
 
-    private positionPortal() {
-        if (!this.dropdownEl || !this.shadowRoot) return;
-        const trigger = this.shadowRoot.getElementById('trigger');
-        if (!trigger) return;
-
-        const rect = trigger.getBoundingClientRect();
-        let top = rect.bottom + 6;
-        let left = rect.left;
-
-        const dropdownHeight = 300;
-        if (top + dropdownHeight > window.innerHeight && rect.top - dropdownHeight > 0) {
-            top = rect.top - 6 - dropdownHeight;
-        }
-
-        this.dropdownEl.style.position = 'fixed';
-        this.dropdownEl.style.top = `${top}px`;
-        this.dropdownEl.style.left = `${left}px`;
-        this.dropdownEl.style.width = `${rect.width}px`;
-        this.dropdownEl.style.zIndex = '99999';
-    }
-
     private close() {
         if (this.dropdownEl) {
             this.dropdownEl.remove();

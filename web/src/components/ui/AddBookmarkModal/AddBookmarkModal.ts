@@ -220,7 +220,6 @@ class AddBookmarkModal extends HTMLElement {
 
         this.escapeHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                const iconModal = this.shadowRoot!.querySelector('icon-selection-modal') as any;
                 if (this.dialog?.open) this.close();
             }
         };
@@ -449,8 +448,6 @@ class AddBookmarkModal extends HTMLElement {
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
             ${template({
-            isOpen: true,
-            isEditMode: this.isEditMode,
             title: this.bookmarkTitle,
             url: this.url,
             protocol: this.protocol,

@@ -41,7 +41,6 @@ class BookmarkGrid extends HTMLElement {
 
     // Responsive State
     private isTouchDevice: boolean = false;
-    private currentDashboardId: number | null = null;
 
     constructor() {
         // CRITICAL: Custom Element constructors must NOT modify attributes or
@@ -55,7 +54,6 @@ class BookmarkGrid extends HTMLElement {
 
 
 
-    private _widgetModal: any; // widget-config-modal
     private _boundActionClick = this.handleActionClick.bind(this);
     private _boundMouseMove = this.handleWindowMouseMove.bind(this);
     private _boundMouseUp = this.handleWindowMouseUp.bind(this);
@@ -230,14 +228,10 @@ class BookmarkGrid extends HTMLElement {
                 }
             }
 
-            const dashboardChanged = this.currentDashboardId !== state.currentDashboardId;
-            const loadFinished = this.isLoading && !state.loading;
-
             if (structuralChange || shouldRerender) {
                 // Hard layout change: Re-render everything
                 this.allItems = newAllItems;
                 this.isLoading = state.loading;
-                this.currentDashboardId = state.currentDashboardId;
                 this.applyFilters();
                 this.render();
             } else if (statusOnlyChange) {

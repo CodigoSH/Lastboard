@@ -17,11 +17,9 @@ const ICONS = {
 
 export class MarkdownWidget extends HTMLElement {
     private _itemId: number = 0;
-    private _content: string = '';
     private _isPreviewMode: boolean = true;
     private _isLocked: boolean = true; // Default to locked (read-only)
     private _isDirty: boolean = false;
-    private _isSaving: boolean = false;
 
     private _editor: HTMLTextAreaElement | null = null;
     private _preview: HTMLDivElement | null = null;
@@ -406,7 +404,6 @@ export class MarkdownWidget extends HTMLElement {
 
         if (item) {
             const content = WidgetContentHelper.getMarkdownText(item.content);
-            this._content = content;
             if (this._editor) this._editor.value = content;
         }
 
@@ -417,10 +414,7 @@ export class MarkdownWidget extends HTMLElement {
     private async save() {
         if (!this._itemId || !this._editor) return;
 
-        this._isSaving = true;
-
         const newText = this._editor.value;
-        this._content = newText;
 
         try {
             const state = dashboardStore.getState();
@@ -434,8 +428,6 @@ export class MarkdownWidget extends HTMLElement {
             }
         } catch (e) {
             console.error(e);
-        } finally {
-            this._isSaving = false;
         }
     }
 }

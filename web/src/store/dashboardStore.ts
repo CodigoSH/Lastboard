@@ -100,7 +100,7 @@ class DashboardStore {
             });
 
 
-            socketService.subscribeNotification((type, payload) => {
+            socketService.subscribeNotification((type) => {
                 if (type === 'update_available') {
                     this.checkSystemUpdate(); // Re-validate with user preferences (beta toggle)
                 }
@@ -139,23 +139,6 @@ class DashboardStore {
             if (error.name === 'QuotaExceededError' || error.code === 22) {
                 this.sanitizeStorage();
             }
-        }
-    }
-
-    private loadFromLocalStorage() {
-        try {
-            // 1. Sanitize first to prevent issues
-            this.sanitizeStorage();
-
-            const serialized = localStorage.getItem(this.getStorageKey());
-            if (serialized) {
-                const items = JSON.parse(serialized);
-                if (Array.isArray(items) && items.length > 0) {
-                    this.state.items = items;
-                }
-            }
-        } catch (error) {
-            console.error('[DashboardStore] Failed to load from localStorage', error);
         }
     }
 
@@ -371,7 +354,6 @@ class DashboardStore {
                 return;
             }
 
-            const previousItem = { ...this.state.items[itemIndex] };
             this.state.items[itemIndex] = { ...this.state.items[itemIndex], ...updatedItem };
             this.saveToLocalStorage();
             this.notify();

@@ -607,8 +607,6 @@ class WidgetConfigModal extends HTMLElement {
 
                 // --- SECTION ---
             } else if (widgetId === 'notepad') {
-                const text = content.text || '';
-
                 const generalTab = `
                     <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
                         <p>${i18n.t('widget.config.check_personalize')} </p>
@@ -619,8 +617,6 @@ class WidgetConfigModal extends HTMLElement {
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
 
             } else if (widgetId === 'markdown') {
-                const text = content.text || '';
-
                 const generalTab = `
                     <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
                         <p>${i18n.t('widget.config.check_personalize')}</p>
@@ -655,13 +651,6 @@ class WidgetConfigModal extends HTMLElement {
             };
         };
 
-
-        const getTitle = () => {
-            if (this.currentItem?.type === 'section') {
-                return i18n.t('section.edit_title');
-            }
-            return i18n.t('widget.config.title');
-        };
 
         const formData = renderForm();
 

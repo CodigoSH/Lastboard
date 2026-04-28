@@ -14,7 +14,7 @@ interface RightDrawerProps {
     updateAvailable?: boolean;
 }
 
-export const template = ({ user, isOpen, selectedSection, updateAvailable }: RightDrawerProps) => `
+export const template = ({ user, selectedSection, updateAvailable }: RightDrawerProps) => `
     <div class="right-drawer__overlay"></div>
     
     <div class="right-drawer__content-panel ${selectedSection ? '' : 'right-drawer__content-panel--closed'}">

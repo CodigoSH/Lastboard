@@ -3,7 +3,7 @@ import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateStatusTemplate, updateZoneTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
@@ -215,7 +215,7 @@ class SettingsContent extends HTMLElement {
         }
 
         try {
-            const response = await userStore.changePassword({
+            await userStore.changePassword({
                 current_password: currentPw,
                 new_password: newPw
             });
@@ -452,7 +452,6 @@ class SettingsContent extends HTMLElement {
 
             try {
                 // Optimistic UI Update
-                const previousUsers = [...this.users];
                 this.users = this.users.filter(u => u.id !== id);
                 this.render();
 
@@ -517,7 +516,7 @@ class SettingsContent extends HTMLElement {
     }
 
     // --- Update System Logic ---
-    private version = 'v1.5.1-Beta.23'; // Populated by checkForUpdates() from backend
+    private version = 'v1.5.1-Beta.24'; // Populated by checkForUpdates() from backend
     private updateInfo: any = null;
     private checkUpdatesPromise: Promise<void> | null = null;
     private isCheckingUpdates = false;
