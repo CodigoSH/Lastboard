@@ -362,7 +362,7 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 
 // serveLoginPage renders login.html as a Go template, injecting server-side flags.
 // DemoOnly: when true, the "Try Demo" button is rendered; otherwise completely absent.
-func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
+func (s *Server) serveLoginPage(w http.ResponseWriter, _ *http.Request) {
 	tmpl, err := htmltemplate.ParseFS(s.assets, "login.html")
 	if err != nil {
 		slog.Error("Error loading login template", "error", err)
@@ -405,11 +405,12 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	// the DB row is already scoped to the authenticated session.
 	// "system" or empty → dark-mode default; the client-side ThemeService
 	// corrects this to the real OS preference after the page loads.
-	if dbTheme == "dark" {
+	switch dbTheme {
+	case "dark":
 		themeClass = "dark-mode"
-	} else if dbTheme == "light" {
+	case "light":
 		themeClass = ""
-	} else {
+	default:
 		themeClass = "dark-mode"
 	}
 
@@ -438,7 +439,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 // serveIndexDemo serves the dashboard in fully isolated demo mode.
 // No authentication is required. All data is stored in the visitor's localStorage
 // via demoService.ts — the production database is never touched.
-func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
+func (s *Server) serveIndexDemo(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
