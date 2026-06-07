@@ -1,7 +1,7 @@
 .PHONY: all build run clean test test-verbose test-coverage test-quick benchmark help
 
 APP_NAME := lastboard
-CMD_PATH := ./cmd/lastboard/main.go
+CMD_PATH := ./cmd/lastboard
 BUILD_DIR := ./bin
 
 all: build
