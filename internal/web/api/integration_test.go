@@ -273,6 +273,124 @@ func TestBackupAndRestore(t *testing.T) {
 	}
 }
 
+// TestRestoreBackup_DashboardsAndParents characterizes the complex restore paths
+// that the basic TestBackupAndRestore does not exercise: dashboard remapping,
+// parent_id two-pass remapping, and multi-user ownership. It freezes the current
+// behavior so a future refactor of RestoreBackup is caught if it diverges.
+func TestRestoreBackup_DashboardsAndParents(t *testing.T) {
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	createUser(t, db, "adminBackup", "password", "admin") // id 1
+	createUser(t, db, "user2", "password", "user")        // id 2
+
+	// Dashboard owned by the admin.
+	if _, err := db.Exec(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (1, 'Main', 0, 1)`); err != nil {
+		t.Fatalf("seed dashboard: %v", err)
+	}
+	var dashID int
+	db.QueryRow("SELECT id FROM dashboards WHERE name='Main'").Scan(&dashID)
+
+	// Parent (group) + child (bookmark with parent_id) inside that dashboard.
+	res, err := db.Exec(`INSERT INTO items (user_id, dashboard_id, type, x, y, w, h, content) VALUES (1, ?, 'group', 1, 1, 4, 4, '{}')`, dashID)
+	if err != nil {
+		t.Fatalf("seed parent: %v", err)
+	}
+	parentID, _ := res.LastInsertId()
+	if _, err := db.Exec(`INSERT INTO items (user_id, dashboard_id, parent_id, type, x, y, w, h, content) VALUES (1, ?, ?, 'bookmark', 1, 1, 1, 1, '{}')`, dashID, parentID); err != nil {
+		t.Fatalf("seed child: %v", err)
+	}
+	// An item owned by the second (non-admin) user.
+	if _, err := db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (2, 'bookmark', 5, 5, 1, 1, '{}')`); err != nil {
+		t.Fatalf("seed user2 item: %v", err)
+	}
+
+	cookie := loginAndGetCookie(t, server, "adminBackup", "password")
+
+	// Download the backup (real serialization, including owners/dashboards/parent_id).
+	req, _ := http.NewRequest("GET", server.URL+"/api/system/backup", nil)
+	req.AddCookie(cookie)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("backup request: %v", err)
+	}
+	defer resp.Body.Close()
+	var backupData map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&backupData)
+	backupJSON, _ := json.Marshal(backupData)
+
+	// Wipe everything that the restore must rebuild.
+	db.Exec("DELETE FROM items")
+	db.Exec("DELETE FROM dashboards")
+	db.Exec("DELETE FROM users WHERE username='user2'")
+
+	// Restore.
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+	part, _ := writer.CreateFormFile("backup_file", "backup.json")
+	part.Write(backupJSON)
+	writer.Close()
+
+	reqRestore, _ := http.NewRequest("POST", server.URL+"/api/system/restore", &b)
+	reqRestore.AddCookie(cookie)
+	reqRestore.AddCookie(&http.Cookie{Name: "csrf_token", Value: "test-csrf-token"})
+	reqRestore.Header.Set("X-CSRF-Token", "test-csrf-token")
+	reqRestore.Header.Set("Content-Type", writer.FormDataContentType())
+	respRestore, err := http.DefaultClient.Do(reqRestore)
+	if err != nil {
+		t.Fatalf("restore request: %v", err)
+	}
+	defer respRestore.Body.Close()
+	if respRestore.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(respRestore.Body)
+		t.Fatalf("expected 200 for restore, got %d. Body: %s", respRestore.StatusCode, string(body))
+	}
+
+	// Both users restored.
+	var userCount int
+	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
+	if userCount != 2 {
+		t.Errorf("expected 2 users after restore, got %d", userCount)
+	}
+
+	// Dashboard restored and still owned by the admin.
+	var adminID, dashOwner int
+	db.QueryRow("SELECT id FROM users WHERE username='adminBackup'").Scan(&adminID)
+	if err := db.QueryRow("SELECT user_id FROM dashboards WHERE name='Main'").Scan(&dashOwner); err != nil {
+		t.Fatalf("dashboard not restored: %v", err)
+	}
+	if dashOwner != adminID {
+		t.Errorf("dashboard owner = %d, want admin %d", dashOwner, adminID)
+	}
+
+	// All three items restored.
+	var itemCount int
+	db.QueryRow("SELECT COUNT(*) FROM items").Scan(&itemCount)
+	if itemCount != 3 {
+		t.Errorf("expected 3 items after restore, got %d", itemCount)
+	}
+
+	// Child's parent_id remapped to the restored parent (two-pass logic).
+	var newParentID int
+	db.QueryRow("SELECT id FROM items WHERE type='group'").Scan(&newParentID)
+	var childParent sql.NullInt64
+	if err := db.QueryRow("SELECT parent_id FROM items WHERE type='bookmark' AND x=1 AND y=1").Scan(&childParent); err != nil {
+		t.Fatalf("child item not found: %v", err)
+	}
+	if !childParent.Valid || int(childParent.Int64) != newParentID {
+		t.Errorf("child parent_id = %v, want restored parent %d", childParent, newParentID)
+	}
+
+	// Parent item's dashboard_id remapped to the restored dashboard.
+	var newDashID int
+	db.QueryRow("SELECT id FROM dashboards WHERE name='Main'").Scan(&newDashID)
+	var parentDash sql.NullInt64
+	db.QueryRow("SELECT dashboard_id FROM items WHERE type='group'").Scan(&parentDash)
+	if !parentDash.Valid || int(parentDash.Int64) != newDashID {
+		t.Errorf("parent dashboard_id = %v, want restored dashboard %d", parentDash, newDashID)
+	}
+}
+
 func TestDashboardIsolation(t *testing.T) {
 	server, db, cleanup := setupTestServer(t)
 	defer cleanup()

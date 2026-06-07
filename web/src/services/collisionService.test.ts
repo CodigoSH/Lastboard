@@ -51,5 +51,80 @@ describe('Collision Service', () => {
             const result = collisionService.calculateDropValidity(draggedItem, items, 12);
             expect(result.valid).toBe(true);
         });
+
+        it('y below 1 is out of bounds -> valid: false', () => {
+            const draggedItem = { id: 99, x: 1, y: 0, w: 1, h: 1 };
+            const result = collisionService.calculateDropValidity(draggedItem, [], 12);
+            expect(result.valid).toBe(false);
+        });
+
+        it('overlapping a plain item -> valid: false', () => {
+            const items = [{ id: 1, x: 1, y: 1, w: 2, h: 2, type: 'bookmark' }];
+            const draggedItem = { id: 99, x: 2, y: 2, w: 1, h: 1 };
+            const result = collisionService.calculateDropValidity(draggedItem, items as any, 12);
+            expect(result.valid).toBe(false);
+        });
+
+        it('dropping a non-section fully inside an empty section nests it (targetGroup set)', () => {
+            const items = [{ id: 1, x: 1, y: 1, w: 4, h: 4, type: 'section' }];
+            const draggedItem = { id: 99, x: 2, y: 2, w: 1, h: 1 };
+            const result = collisionService.calculateDropValidity(draggedItem, items as any, 12);
+            expect(result.valid).toBe(true);
+            expect(result.targetGroup?.id).toBe(1);
+        });
+
+        it('dropping a non-section that sticks out of a section -> valid: false', () => {
+            const items = [{ id: 1, x: 1, y: 1, w: 2, h: 2, type: 'section' }];
+            // Dragged item overlaps the section but extends beyond its right edge.
+            const draggedItem = { id: 99, x: 2, y: 1, w: 3, h: 1 };
+            const result = collisionService.calculateDropValidity(draggedItem, items as any, 12);
+            expect(result.valid).toBe(false);
+        });
+    });
+
+    describe('snapToGrid', () => {
+        it('snaps origin pixels to cell { x: 1, y: 1 }', () => {
+            expect(collisionService.snapToGrid(0, 0, 100, 10)).toEqual({ x: 1, y: 1 });
+        });
+
+        it('snaps one cell + gap to the next column/row', () => {
+            // totalCell = 100 + 10 = 110 -> floor(110/110)+1 = 2
+            expect(collisionService.snapToGrid(110, 220, 100, 10)).toEqual({ x: 2, y: 3 });
+        });
+
+        it('clamps negative pixels to a minimum of 1', () => {
+            expect(collisionService.snapToGrid(-50, -50, 100, 10)).toEqual({ x: 1, y: 1 });
+        });
+    });
+
+    describe('findAvailableSlot', () => {
+        it('returns { x: 1, y: 1 } on an empty container', () => {
+            expect(collisionService.findAvailableSlot(1, 1, [], 12)).toEqual({ x: 1, y: 1 });
+        });
+
+        it('skips an occupied cell and returns the next free column', () => {
+            const obstacles = [{ x: 1, y: 1, w: 1, h: 1 }];
+            expect(collisionService.findAvailableSlot(1, 1, obstacles, 12)).toEqual({ x: 2, y: 1 });
+        });
+
+        it('wraps to the next row when the first row is full', () => {
+            const obstacles = [{ x: 1, y: 1, w: 2, h: 1 }];
+            // container of 2 cols, a 2-wide item only fits on row 2
+            expect(collisionService.findAvailableSlot(2, 1, obstacles, 2)).toEqual({ x: 1, y: 2 });
+        });
+    });
+
+    describe('isOverlap (additional cases)', () => {
+        it('full containment overlaps', () => {
+            const outer = { x: 1, y: 1, w: 4, h: 4 };
+            const inner = { x: 2, y: 2, w: 1, h: 1 };
+            expect(collisionService.isOverlap(outer, inner)).toBe(true);
+        });
+
+        it('vertically adjacent rectangles do not overlap', () => {
+            const a = { x: 1, y: 1, w: 2, h: 2 };
+            const b = { x: 1, y: 3, w: 2, h: 2 };
+            expect(collisionService.isOverlap(a, b)).toBe(false);
+        });
     });
 });
