@@ -10,6 +10,7 @@ Lastboard is built from the ground up with defense-in-depth principles. We prior
 - **Rate Limiting:** A token-bucket algorithm strictly throttles protected API routes (20 req/s, burst 50) and auth paths (5 req/s) to prevent bruteforce attacks, with automatic cleanup of stale IP entries.
 - **XSS Prevention:** User-submitted content (like templates or Markdown blobs) is processed via DOMPurify to sanitize HTML payloads before attachment to the DOM.
 - **TRUST_PROXY:** For reverse proxy deployments, Lastboard safely reads the `X-Forwarded-For` header for IP blacklisting/rate-limiting, only when explicitly configured via the `TRUST_PROXY=true` flag.
+- **Unprivileged Execution:** Lastboard can run as a non-root user via `PUID`/`PGID`. It defaults to root to avoid bind-mount permission issues (common on Proxmox/LXC); when `PUID`/`PGID` are set, it fixes the data-directory ownership automatically and then drops privileges before serving any request. See [Configuration](../getting-started/configuration.md#puid--pgid-running-unprivileged).
 
 ## Update Delivery
 

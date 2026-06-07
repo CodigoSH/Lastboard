@@ -12,6 +12,8 @@ The easiest way to update is directly from the Lastboard web interface. This fea
 
 > **💡 Tip:** You can opt-in to Beta updates in your user preferences to receive the latest pre-release versions.
 
+> **Running unprivileged?** If you run Lastboard as a non-root user (by setting `PUID`/`PGID`), the in-app web updater is unavailable — the process cannot replace its own binary. Use the **Manual Update** steps below instead (`docker compose pull` for Docker, or re-running the install script for native installs).
+
 ## Manual Update
 
 ### Docker Installation

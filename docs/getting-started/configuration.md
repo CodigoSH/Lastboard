@@ -14,8 +14,24 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 | `TRUST_PROXY` | `false` | Enable reading the real client IP from `X-Forwarded-For`. Set to `true` if behind a proxy. |
 | `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. Enforced by the backend API. |
 | `DATA_DIR` | `/var/lib/lastboard` | The directory where Lastboard installs persistent files in a native Linux setup. |
+| `PUID` | `0` | User id to run as. When non-zero (and started as root) the app chowns the data dir and drops privileges to it. |
+| `PGID` | `0` | Group id to run as. Used together with `PUID`. |
 
 > **Note:** `SESSION_SECRET` is automatically generated and securely stored in the database on first run.
+
+## PUID / PGID (running unprivileged)
+
+By default Lastboard runs as `root` (`PUID=0`). This is the safest default for **Proxmox/LXC** setups, where bind-mount ownership often makes a non-root container unable to write its database.
+
+To run the container as a non-root user, set `PUID`/`PGID` to your host user's id and group (find them with `id`):
+
+```yaml
+environment:
+  - PUID=1000
+  - PGID=1000
+```
+
+On startup the binary will `chown` the data directory to that user and then permanently drop to it — so you get an unprivileged process **and** correct file permissions, without manual `chown` on the host. If you ever hit "database directory is not writable", revert to the default (remove `PUID`/`PGID`).
 
 ## TRUST_PROXY
 
