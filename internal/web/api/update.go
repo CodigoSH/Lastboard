@@ -233,6 +233,21 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Auto-update replaces the binary in place. When running unprivileged (PUID
+	// set, or a non-root service) the binary is usually root-owned and its
+	// directory not writable, so bail out early with an actionable message
+	// instead of a cryptic permission error mid-swap. The binary can still be
+	// updated externally: `docker pull` (Docker) or re-running the install script.
+	if exe, err := os.Executable(); err == nil {
+		if real, e := filepath.EvalSymlinks(exe); e == nil {
+			exe = real
+		}
+		if e := checkDirWritable(filepath.Dir(exe)); e != nil {
+			http.Error(w, "Auto-update unavailable: the app cannot replace its own binary (running unprivileged). Update with 'docker pull' (Docker) or by re-running the install script.", http.StatusForbidden)
+			return
+		}
+	}
+
 	// 1. Get Asset URL from request
 	var req struct {
 		AssetUrl string `json:"asset_url"`
@@ -327,6 +342,19 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "notifier.update_verified"})
+}
+
+// checkDirWritable verifies the process can create files in dir, i.e. it can
+// perform the in-place binary swap. Returns an error if the directory is not
+// writable (typical when the app runs unprivileged and the binary is root-owned).
+func checkDirWritable(dir string) error {
+	f, err := os.CreateTemp(dir, ".lb_update_perm")
+	if err != nil {
+		return err
+	}
+	name := f.Name()
+	f.Close()
+	return os.Remove(name)
 }
 
 // moveFile tries os.Rename, falls back to Copy+Delete for cross-device
