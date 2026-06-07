@@ -52,17 +52,17 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := map[string]interface{}{
-		"id":               u.ID,
-		"username":         u.Username,
-		"initials":         safeInitials(u.Username),
-		"avatar_url":       u.AvatarUrl,
-		"role":             u.Role,
-		"is_admin":         isFirstAdmin(h.DB, u.ID),
-		"accent_color":     u.AccentColor,
-		"language":         u.Language,
-		"theme":            u.Theme,
-		"unit_system":      u.UnitSystem,
-		"widget_min_width": u.WidgetMinWidth,
+		"id":                   u.ID,
+		"username":             u.Username,
+		"initials":             safeInitials(u.Username),
+		"avatar_url":           u.AvatarUrl,
+		"role":                 u.Role,
+		"is_admin":             isFirstAdmin(h.DB, u.ID),
+		"accent_color":         u.AccentColor,
+		"language":             u.Language,
+		"theme":                u.Theme,
+		"unit_system":          u.UnitSystem,
+		"widget_min_width":     u.WidgetMinWidth,
 		"project_name":         u.ProjectName,
 		"project_logo":         u.ProjectLogo,
 		"beta_updates":         u.BetaUpdates,
@@ -78,12 +78,12 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	username := middleware.GetUserFromContext(r)
 
 	var input struct {
-		AccentColor    string `json:"accent_color"`
-		Language       string `json:"language"`
-		Theme          string `json:"theme"`
-		UnitSystem     string `json:"unit_system"`
-		WidgetMinWidth int    `json:"widget_min_width"`
-		ProjectName    string `json:"project_name"`
+		AccentColor         string  `json:"accent_color"`
+		Language            string  `json:"language"`
+		Theme               string  `json:"theme"`
+		UnitSystem          string  `json:"unit_system"`
+		WidgetMinWidth      int     `json:"widget_min_width"`
+		ProjectName         string  `json:"project_name"`
 		ProjectLogo         *string `json:"project_logo"`
 		BetaUpdates         *bool   `json:"beta_updates"`
 		GridColumns         *int    `json:"grid_columns"`
