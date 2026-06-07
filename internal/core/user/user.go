@@ -12,10 +12,10 @@ type User struct {
 	Theme       string `json:"theme"`
 	UnitSystem  string `json:"unit_system"`
 	// Grid Preferences
-	WidgetMinWidth int `json:"widget_min_width"`
-	GridColumnsPC     int `json:"grid_columns"`
-	GridColumnsTablet int `json:"grid_columns_tablet"`
-	GridColumnsMobile int `json:"grid_columns_mobile"`
+	WidgetMinWidth      int       `json:"widget_min_width"`
+	GridColumnsPC       int       `json:"grid_columns"`
+	GridColumnsTablet   int       `json:"grid_columns_tablet"`
+	GridColumnsMobile   int       `json:"grid_columns_mobile"`
 	ProjectName         string    `json:"project_name"`
 	ProjectLogo         string    `json:"project_logo"`
 	AvatarUrl           string    `json:"avatar_url"`
@@ -23,4 +23,3 @@ type User struct {
 	BetaUpdates         bool      `json:"beta_updates"`
 	CreatedAt           time.Time `json:"created_at"`
 }
-

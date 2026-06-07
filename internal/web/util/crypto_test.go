@@ -28,11 +28,11 @@ func TestVerifyToken(t *testing.T) {
 	secret := []byte("test-secret-key-32-bytes-long!!")
 
 	tests := []struct {
-		name     string
-		data     string
-		expiry   time.Time
-		wantErr  bool
-		errMsg   string
+		name    string
+		data    string
+		expiry  time.Time
+		wantErr bool
+		errMsg  string
 	}{
 		{
 			name:    "Valid token - not expired",
@@ -164,7 +164,7 @@ func TestTokenRoundtrip(t *testing.T) {
 		"admin@example.com",
 		"user:with:colons",
 		"用户", // Chinese
-		"😀",   // Emoji
+		"😀",  // Emoji
 		"a very long username with spaces and special chars!@#$%",
 	}
 

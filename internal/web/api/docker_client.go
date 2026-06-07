@@ -42,11 +42,11 @@ type DockerPort struct {
 
 // DockerContainer holds the normalised representation of a Docker container.
 type DockerContainer struct {
-	ID      string       // Short 12-char container ID
-	Name    string       // Name without leading "/"
+	ID      string // Short 12-char container ID
+	Name    string // Name without leading "/"
 	Image   string
-	Status  string       // "running" | "stopped" | "paused" | "exited" | "restarting"
-	State   string       // Raw state string returned by Docker
+	Status  string // "running" | "stopped" | "paused" | "exited" | "restarting"
+	State   string // Raw state string returned by Docker
 	Created int64
 	Ports   []DockerPort // Host-exposed port mappings
 }
@@ -195,19 +195,19 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 		}
 
 		// Build port list — only include host-exposed ports (PublicPort > 0).
-			var ports []DockerPort
-			for _, p := range c.Ports {
-				if p.PublicPort > 0 {
-					ports = append(ports, DockerPort{
-						PublicPort:  p.PublicPort,
-						PrivatePort: p.PrivatePort,
-						Type:        p.Type,
-					})
-				}
+		var ports []DockerPort
+		for _, p := range c.Ports {
+			if p.PublicPort > 0 {
+				ports = append(ports, DockerPort{
+					PublicPort:  p.PublicPort,
+					PrivatePort: p.PrivatePort,
+					Type:        p.Type,
+				})
 			}
-			if ports == nil {
-				ports = []DockerPort{}
-			}
+		}
+		if ports == nil {
+			ports = []DockerPort{}
+		}
 
 		containers = append(containers, DockerContainer{
 			ID:      shortID,

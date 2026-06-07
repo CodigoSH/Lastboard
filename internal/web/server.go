@@ -338,7 +338,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.Router.ServeHTTP(w, r)
 }
 
-
 func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename string) {
 	f, err := s.assets.Open(filename)
 	if err != nil {

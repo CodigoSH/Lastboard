@@ -3,8 +3,8 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
-	"net/http"
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"net/http"
 )
 
 type DockerHandler struct {

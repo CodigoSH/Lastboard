@@ -67,8 +67,6 @@ func TestMigrations(t *testing.T) {
 	}
 }
 
-
-
 // TestUsersTableSchema tests users table structure
 func TestUsersTableSchema(t *testing.T) {
 	db, cleanup := setupTestDB(t)
@@ -226,8 +224,6 @@ func TestItemsForeignKeyConstraint(t *testing.T) {
 		t.Errorf("Items were not cascade deleted (count: %d)", count)
 	}
 }
-
-
 
 // Benchmark database operations
 func BenchmarkUserInsert(b *testing.B) {
