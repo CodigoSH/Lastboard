@@ -4,8 +4,10 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
 import '../Select/Select';
+import type { AppSelect } from '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import css from './WidgetConfigModal.css' with { type: 'text' };
+import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
@@ -421,52 +423,7 @@ class WidgetConfigModal extends HTMLElement {
         const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
         const renderForm = () => {
-            const renderAppearanceControls = () => {
-                const color = this._selectedColor;
-                const borderWidth = this._selectedBorderWidth;
-                const isCustom = !this.premiumColors.includes(color) && color !== '';
-
-                return `
-                <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
-                    <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
-                    <div class="premium-color-grid">
-                        ${this.premiumColors.map(c => `
-                            <div class="premium-color-swatch ${color === c ? 'active' : ''}" 
-                                style="background-color: ${c}"
-                                data-color="${c}">
-                                ${color === c ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>' : ''}
-                            </div>
-                        `).join('')}
-                        
-                        <div class="premium-color-swatch premium-color-swatch--custom ${isCustom ? 'active' : ''}" 
-                            style="background-color: ${isCustom ? color : 'transparent'}">
-                            <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events: none;">
-                                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
-                            </svg>
-                            <app-color-picker class="premium-swatch-picker" id="widget-borderColor" trigger-opacity="0" value="${isCustom ? color : '#0078D4'}"></app-color-picker>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="field-group" style="margin-top: 20px;">
-                    <label>${i18n.t('bookmark.border_width') || 'Border Width'}</label>
-                    <div class="segmented-control">
-                        <button type="button" class="border-width-btn ${borderWidth === 1 ? 'active' : ''}" data-width="1">
-                            <div style="height: 1px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                            <span>${i18n.t('general.thin') || 'Thin'}</span>
-                        </button>
-                        <button type="button" class="border-width-btn ${borderWidth === 2 ? 'active' : ''}" data-width="2">
-                            <div style="height: 2px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                            <span>${i18n.t('general.regular') || 'Regular'}</span>
-                        </button>
-                        <button type="button" class="border-width-btn ${borderWidth === 3 ? 'active' : ''}" data-width="3">
-                            <div style="height: 3px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                            <span>${i18n.t('general.thick') || 'Thick'}</span>
-                        </button>
-                    </div>
-                </div>
-                `;
-            };
+            const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
 
             if (!this.currentItem) return { general: '', customization: '' };
 
@@ -691,7 +648,7 @@ class WidgetConfigModal extends HTMLElement {
         this.dialog = this.shadowRoot.querySelector('dialog');
 
         // Init Selects (if any in DOM)
-        const telSelect = this.shadowRoot.getElementById('telemetry-interval') as any;
+        const telSelect = this.shadowRoot.getElementById('telemetry-interval') as AppSelect | null;
         if (telSelect) {
             telSelect.options = [
                 { value: '1000', label: '1s' },
@@ -907,7 +864,7 @@ class WidgetConfigModal extends HTMLElement {
 
         overlay.style.display = 'flex';
 
-        const typeSelect = this.shadowRoot.getElementById('docker-type') as any;
+        const typeSelect = this.shadowRoot.getElementById('docker-type') as AppSelect | null;
         if (typeSelect) {
             typeSelect.options = [
                 { value: 'local', label: i18n.t('docker.host_type_local') || 'Local socket' },
@@ -923,7 +880,7 @@ class WidgetConfigModal extends HTMLElement {
                 if (url) url.style.display = t === 'local' ? 'none' : '';
                 if (token) token.style.display = t === 'agent' ? '' : 'none';
             };
-            typeSelect.addEventListener('change', (e: any) => toggle(e.detail.value));
+            typeSelect.addEventListener('change', (e: Event) => toggle((e as CustomEvent).detail.value));
             toggle();
         }
 
@@ -933,7 +890,7 @@ class WidgetConfigModal extends HTMLElement {
 
         this.shadowRoot.getElementById('docker-save-overlay-btn')?.addEventListener('click', () => {
             const name = (this.shadowRoot!.getElementById('docker-name') as HTMLInputElement).value.trim();
-            const type = (this.shadowRoot!.getElementById('docker-type') as any).value;
+            const type = (this.shadowRoot!.getElementById('docker-type') as AppSelect).value;
             const urlInput = this.shadowRoot!.getElementById('docker-url') as HTMLInputElement;
             const url = urlInput ? urlInput.value.trim() : '';
             const tokenInput = this.shadowRoot!.getElementById('docker-token') as HTMLInputElement;
@@ -965,52 +922,7 @@ class WidgetConfigModal extends HTMLElement {
     }
 
     private renderDockerForm(content: any) {
-        const renderAppearanceControls = () => {
-            const color = this._selectedColor;
-            const borderWidth = this._selectedBorderWidth;
-            const isCustom = !this.premiumColors.includes(color) && color !== '';
-
-            return `
-            <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
-                <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
-                <div class="premium-color-grid">
-                    ${this.premiumColors.map(c => `
-                        <div class="premium-color-swatch ${color === c ? 'active' : ''}" 
-                            style="background-color: ${c}"
-                            data-color="${c}">
-                            ${color === c ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>' : ''}
-                        </div>
-                    `).join('')}
-                    
-                    <div class="premium-color-swatch premium-color-swatch--custom ${isCustom ? 'active' : ''}" 
-                        style="background-color: ${isCustom ? color : 'transparent'}">
-                        <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events: none;">
-                            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
-                        </svg>
-                        <app-color-picker class="premium-swatch-picker" id="widget-borderColor" trigger-opacity="0" value="${isCustom ? color : '#0078D4'}"></app-color-picker>
-                    </div>
-                </div>
-            </div>
-
-            <div class="field-group" style="margin-top: 20px;">
-                <label>${i18n.t('bookmark.border_width') || 'Border Width'}</label>
-                <div class="segmented-control">
-                    <button type="button" class="border-width-btn ${borderWidth === 1 ? 'active' : ''}" data-width="1">
-                        <div style="height: 1px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                        <span>${i18n.t('general.thin') || 'Thin'}</span>
-                    </button>
-                    <button type="button" class="border-width-btn ${borderWidth === 2 ? 'active' : ''}" data-width="2">
-                        <div style="height: 2px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                        <span>${i18n.t('general.regular') || 'Regular'}</span>
-                    </button>
-                    <button type="button" class="border-width-btn ${borderWidth === 3 ? 'active' : ''}" data-width="3">
-                        <div style="height: 3px; width: 24px; background: currentColor; opacity: 0.8;"></div>
-                        <span>${i18n.t('general.thick') || 'Thick'}</span>
-                    </button>
-                </div>
-            </div>
-            `;
-        };
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
 
         const hosts = content.hosts || [];
         let generalTab = '';

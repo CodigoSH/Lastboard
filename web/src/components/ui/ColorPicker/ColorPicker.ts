@@ -1,4 +1,5 @@
 import css from './ColorPicker.css' with { type: 'text' };
+import { colorPickerTemplate } from './ColorPicker.template';
 
 export class ColorPicker extends HTMLElement {
     static get observedAttributes() {
@@ -72,31 +73,7 @@ export class ColorPicker extends HTMLElement {
 
     render() {
         if (!this.shadowRoot) return;
-        this.shadowRoot.innerHTML = `
-            <style>${css}</style>
-
-            <button class="color-trigger" id="trigger">
-                <slot></slot>
-            </button>
-
-            <dialog class="popover" id="popover">
-                <style>${css}</style>
-                <div class="saturation-area" id="sat-area">
-                    <div class="saturation-white"></div>
-                    <div class="saturation-black"></div>
-                    <div class="saturation-cursor" id="sat-cursor"></div>
-                </div>
-
-                <div class="hue-slider" id="hue-slider">
-                    <div class="hue-cursor" id="hue-cursor"></div>
-                </div>
-
-                <div class="controls">
-                    <div class="color-preview" id="preview"></div>
-                    <input type="text" class="hex-input" id="hex-input" value="${this._value}" maxlength="7">
-                </div>
-            </dialog>
-        `;
+        this.shadowRoot.innerHTML = colorPickerTemplate(this._value, css);
 
         this._popover = this.shadowRoot.querySelector('#popover');
         this._satArea = this.shadowRoot.querySelector('#sat-area');

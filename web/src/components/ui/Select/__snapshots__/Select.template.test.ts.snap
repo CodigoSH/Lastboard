@@ -1,0 +1,28 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`Select templates renders the closed trigger with the display label 1`] = `
+"
+            <div class="select-wrapper">
+                <div class="select-trigger" id="trigger">
+                    <div class="select-value">
+                        English
+                    </div>
+                    <svg class="select-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+            </div>
+        "
+`;
+
+exports[`Select templates renders the option list, marking the selected option 1`] = `
+"
+            <div class="select-option "
+                 data-value="en">
+                 English
+            </div>
+        
+            <div class="select-option selected"
+                 data-value="es">
+                 Espanol
+            </div>
+        "
+`;

@@ -1,0 +1,29 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`ColorPicker template renders the trigger and popover with the current hex value 1`] = `
+"
+            <style></style>
+
+            <button class="color-trigger" id="trigger">
+                <slot></slot>
+            </button>
+
+            <dialog class="popover" id="popover">
+                <style></style>
+                <div class="saturation-area" id="sat-area">
+                    <div class="saturation-white"></div>
+                    <div class="saturation-black"></div>
+                    <div class="saturation-cursor" id="sat-cursor"></div>
+                </div>
+
+                <div class="hue-slider" id="hue-slider">
+                    <div class="hue-cursor" id="hue-cursor"></div>
+                </div>
+
+                <div class="controls">
+                    <div class="color-preview" id="preview"></div>
+                    <input type="text" class="hex-input" id="hex-input" value="#0078D4" maxlength="7">
+                </div>
+            </dialog>
+        "
+`;

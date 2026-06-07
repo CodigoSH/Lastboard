@@ -1,14 +1,15 @@
 
 import css from './Select.css' with { type: 'text' };
+import { SelectOption, selectTriggerTemplate, selectOptionsTemplate } from './Select.template';
 
 export class AppSelect extends HTMLElement {
-    private _options: { value: string; label: string; icon?: string }[] = [];
+    private _options: SelectOption[] = [];
     private _value: string = '';
     private isOpen: boolean = false;
-    private _boundOutsideClick: any;
+    private _boundOutsideClick: (e: Event) => void;
     private dropdownEl: HTMLElement | null = null;
-    private _boundScroll: any;
-    private _boundResize: any;
+    private _boundScroll: (e: Event) => void;
+    private _boundResize: () => void;
     private isInsideDialog: boolean = false;
 
     static get observedAttributes() {
@@ -64,7 +65,7 @@ export class AppSelect extends HTMLElement {
         }
     }
 
-    set options(opts: { value: string; label: string; icon?: string }[]) {
+    set options(opts: SelectOption[]) {
         this._options = opts;
         this.updateTriggerDisplay();
     }
@@ -103,12 +104,7 @@ export class AppSelect extends HTMLElement {
         this.dropdownEl = document.createElement('div');
         this.dropdownEl.className = 'select-dropdown';
 
-        this.dropdownEl.innerHTML = this._options.map(opt => `
-            <div class="select-option ${opt.value === this._value ? 'selected' : ''}" 
-                 data-value="${opt.value}">
-                 ${opt.label}
-            </div>
-        `).join('');
+        this.dropdownEl.innerHTML = selectOptionsTemplate(this._options, this._value);
 
         this.dropdownEl.querySelectorAll('.select-option').forEach(el => {
             el.addEventListener('click', (e) => {
@@ -182,16 +178,7 @@ export class AppSelect extends HTMLElement {
         const displayLabel = selectedOpt ? selectedOpt.label : 'Select...';
 
         this.shadowRoot.innerHTML = `
-            <style>${css}</style>
-            <div class="select-wrapper">
-                <div class="select-trigger" id="trigger">
-                    <div class="select-value">
-                        ${displayLabel}
-                    </div>
-                    <svg class="select-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </div>
-            </div>
-        `;
+            <style>${css}</style>${selectTriggerTemplate(displayLabel)}`;
 
         this.shadowRoot.getElementById('trigger')?.addEventListener('click', (e) => {
             e.stopPropagation();
