@@ -1,5 +1,5 @@
 import { userStore } from '../../../store/userStore';
-import { template } from './RightDrawer.template';
+import { template, panelInnerTemplate } from './RightDrawer.template';
 import { i18n } from '../../../services/i18n';
 import css from './RightDrawer.css' with { type: 'text' };
 
@@ -25,9 +25,10 @@ class RightDrawer extends HTMLElement {
         this.render();
         this.setupListeners();
 
-        // Subscribe to user changes
+        // Subscribe to user changes. Only the side menu needs refreshing; the
+        // content panel is left untouched to avoid re-mounting <settings-content>.
         this._unsubscribe = userStore.subscribe(() => {
-            if (this.isOpen) this.render();
+            if (this.isOpen) this.refreshChrome();
         });
 
         // Subscribe to dashboard changes (for updates)
@@ -35,14 +36,14 @@ class RightDrawer extends HTMLElement {
             this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
                 if (this.updateAvailable !== state.updateAvailable) {
                     this.updateAvailable = state.updateAvailable;
-                    this.render();
+                    this.refreshChrome();
                 }
             });
         });
 
-        // Subscribe to i18n changes
+        // Subscribe to i18n changes (language switch re-translates the menu only).
         this._unsubscribeI18n = i18n.subscribe(() => {
-            this.render();
+            this.refreshChrome();
         });
     }
 
@@ -57,6 +58,8 @@ class RightDrawer extends HTMLElement {
 
     open() {
         this.isOpen = true;
+        // Default to the first section ("My profile") so the panel is never empty.
+        if (!this.selectedSection) this.selectedSection = 'account';
         this.setAttribute('open', '');
         this.render();
         document.body.style.overflow = 'hidden';
@@ -73,12 +76,46 @@ class RightDrawer extends HTMLElement {
     }
 
     selectSection(section: string) {
-        if (this.selectedSection === section) {
-            this.selectedSection = null;
-        } else {
-            this.selectedSection = section;
+        // Re-selecting the active section is a no-op: the panel stays open.
+        if (this.selectedSection === section) return;
+        this.selectedSection = section;
+        // Surgical update instead of rebuilding the whole shadow DOM, so the
+        // content panel and the side menu persist and are not re-animated.
+        this.updateSelection();
+    }
+
+    /**
+     * Updates only what changes when switching sections: the active menu item
+     * and the content panel's section. The panel element itself is preserved,
+     * which keeps the CSS transition smooth and avoids the re-mount "zoom".
+     */
+    private updateSelection() {
+        const root = this.shadowRoot;
+        if (!root) return;
+
+        root.querySelectorAll('.right-drawer__menu-item').forEach(item => {
+            const el = item as HTMLElement;
+            el.classList.toggle(
+                'right-drawer__menu-item--active',
+                el.dataset.section === this.selectedSection
+            );
+        });
+
+        const panel = root.querySelector('.right-drawer__content-panel');
+        const body = root.querySelector('.right-drawer__content-body');
+        if (!panel || !body) return;
+
+        panel.classList.toggle('right-drawer__content-panel--closed', !this.selectedSection);
+
+        if (this.selectedSection) {
+            const existing = body.querySelector('settings-content');
+            if (existing) {
+                // SettingsContent observes the `section` attribute and re-renders itself.
+                existing.setAttribute('section', this.selectedSection);
+            } else {
+                body.innerHTML = `<settings-content section="${this.selectedSection}"></settings-content>`;
+            }
         }
-        this.render();
     }
 
     async performLogout() {
@@ -119,9 +156,8 @@ class RightDrawer extends HTMLElement {
         window.addEventListener('keydown', this._keydownHandler);
     }
 
-    render() {
-        const stored = userStore.getUser();
-        const user = stored ?? {
+    private currentUser() {
+        return userStore.getUser() ?? {
             username: 'Guest',
             initials: '??',
             role: 'Viewer',
@@ -129,11 +165,33 @@ class RightDrawer extends HTMLElement {
             accent_color: '',
             language: 'en'
         };
+    }
 
+    render() {
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
-            ${template({ user, isOpen: this.isOpen, selectedSection: this.selectedSection, updateAvailable: this.updateAvailable })}
+            ${template({ user: this.currentUser(), isOpen: this.isOpen, selectedSection: this.selectedSection, updateAvailable: this.updateAvailable })}
         `;
+    }
+
+    /**
+     * Re-renders only the side menu panel (header, nav, footer) in place, leaving
+     * the content panel and its <settings-content> untouched. Used for live
+     * updates (user, language, available update) so switching them never replays
+     * the content panel's entry animation.
+     */
+    private refreshChrome() {
+        const panel = this.shadowRoot?.querySelector('.right-drawer__panel');
+        if (!panel) {
+            this.render();
+            return;
+        }
+        panel.innerHTML = panelInnerTemplate({
+            user: this.currentUser(),
+            isOpen: this.isOpen,
+            selectedSection: this.selectedSection,
+            updateAvailable: this.updateAvailable
+        });
     }
 }
 

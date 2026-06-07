@@ -14,16 +14,13 @@ interface RightDrawerProps {
     updateAvailable?: boolean;
 }
 
-export const template = ({ user, selectedSection, updateAvailable }: RightDrawerProps) => `
-    <div class="right-drawer__overlay"></div>
-    
-    <div class="right-drawer__content-panel ${selectedSection ? '' : 'right-drawer__content-panel--closed'}">
-        <div class="right-drawer__content-body">
-            ${selectedSection ? `<settings-content section="${selectedSection}"></settings-content>` : ''}
-        </div>
-    </div>
-
-    <div class="right-drawer__panel">
+/**
+ * Inner content of the side menu panel (header + nav + footer). Extracted so it
+ * can be re-rendered on its own when user / language / update state changes,
+ * without recreating the content panel (which would re-mount <settings-content>
+ * and replay its entry animation — the "zoom" effect).
+ */
+export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: RightDrawerProps) => `
         <div class="right-drawer__header">
             <app-avatar class="right-drawer__avatar" initials="${user.initials}" src="${user.avatar_url || ''}"></app-avatar>
             <div class="right-drawer__user-info">
@@ -78,5 +75,17 @@ export const template = ({ user, selectedSection, updateAvailable }: RightDrawer
                 <span>${i18n.t('auth.logout')}</span>
             </button>
         </div>
+`;
+
+export const template = (props: RightDrawerProps) => `
+    <div class="right-drawer__overlay"></div>
+
+    <div class="right-drawer__content-panel ${props.selectedSection ? '' : 'right-drawer__content-panel--closed'}">
+        <div class="right-drawer__content-body">
+            ${props.selectedSection ? `<settings-content section="${props.selectedSection}"></settings-content>` : ''}
+        </div>
+    </div>
+
+    <div class="right-drawer__panel">${panelInnerTemplate(props)}
     </div>
 `;
