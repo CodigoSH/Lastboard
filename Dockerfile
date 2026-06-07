@@ -68,6 +68,11 @@ EXPOSE 8080
 # Environment Defaults
 ENV DB_FILE=/var/lib/lastboard/lastboard.db
 ENV PORT=8080
+# PUID/PGID: when set to a non-zero value the binary chowns the data dir and
+# drops to that user/group at startup. Default 0 (root) keeps the historical
+# behavior and avoids bind-mount permission issues on Proxmox/LXC.
+ENV PUID=0
+ENV PGID=0
 
 # Healthcheck (uses cross-compiled Go binary instead of curl)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

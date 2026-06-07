@@ -6,6 +6,11 @@ services:
       - "8080:8080"
     environment:
       - TZ=America/New_York
+      # Run unprivileged (recommended outside Proxmox/LXC): set these to your
+      # host user's id/group. The app chowns ./data and drops to them at startup.
+      # Leave commented (default 0 = root) if you hit bind-mount permission issues.
+      # - PUID=1000
+      # - PGID=1000
     volumes:
       - ./data:/var/lib/lastboard
       # Uncomment the line below to enable the Docker widget with local socket access.

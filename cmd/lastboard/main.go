@@ -33,11 +33,19 @@ func main() {
 		os.Exit(0)
 	}
 
-	// 1. Initialize Database
+	// 1. Resolve DB path, then drop privileges if requested (PUID/PGID).
+	// Done before opening the DB so the database file is created as the target
+	// user. No-op by default (PUID=0), preserving the historical root behavior.
 	dbFile := os.Getenv("DB_FILE")
 	if dbFile == "" {
 		dbFile = "./lastboard.db"
 	}
+	if err := dropPrivileges(dbFile); err != nil {
+		slog.Error("Failed to drop privileges", "error", err)
+		os.Exit(1)
+	}
+
+	// 2. Initialize Database
 	db, err := database.InitDB(dbFile)
 	if err != nil {
 		slog.Error("Failed to initialize database", "error", err)
