@@ -27,7 +27,7 @@ export const userService = {
         return apiService.post<MessageResponse>('/api/user/preferences', preferences);
     },
 
-    async changePassword(data: any): Promise<MessageResponse> {
+    async changePassword(data: unknown): Promise<MessageResponse> {
         return apiService.post<MessageResponse>('/api/user/change-password', data);
     },
 
@@ -36,11 +36,11 @@ export const userService = {
         return apiService.get<User[]>('/api/users');
     },
 
-    async createUser(data: any): Promise<MessageResponse> {
+    async createUser(data: unknown): Promise<MessageResponse> {
         return apiService.post<MessageResponse>('/api/users', data);
     },
 
-    async adminUpdateUser(data: any): Promise<MessageResponse> {
+    async adminUpdateUser(data: unknown): Promise<MessageResponse> {
         return apiService.put<MessageResponse>('/api/users', data);
     },
 

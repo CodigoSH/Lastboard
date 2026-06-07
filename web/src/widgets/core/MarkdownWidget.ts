@@ -400,7 +400,7 @@ export class MarkdownWidget extends HTMLElement {
     private async loadContent() {
         if (!this._itemId) return;
         const state = dashboardStore.getState();
-        const item = state.items.find((i: any) => i.id === this._itemId);
+        const item = state.items.find((i) => i.id === this._itemId);
 
         if (item) {
             const content = WidgetContentHelper.getMarkdownText(item.content);
@@ -418,7 +418,7 @@ export class MarkdownWidget extends HTMLElement {
 
         try {
             const state = dashboardStore.getState();
-            const currentItem = state.items.find((i: any) => i.id === this._itemId);
+            const currentItem = state.items.find((i) => i.id === this._itemId);
 
             if (currentItem) {
                 const newContent = WidgetContentHelper.setMarkdownText(currentItem.content, newText);

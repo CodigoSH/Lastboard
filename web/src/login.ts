@@ -74,7 +74,7 @@ bootstrap(async () => {
         }
 
         const formData = new FormData(form);
-        const data: any = Object.fromEntries(formData.entries());
+        const data: Record<string, unknown> = Object.fromEntries(formData.entries());
 
         // Convert checkbox to boolean
         data.remember_me = formData.get('remember_me') === 'on';

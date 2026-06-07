@@ -489,10 +489,10 @@ class DockerWidget extends HTMLElement {
         this.render();
         this.loadContainers();
 
-        this._unsubscribeDashboard = dashboardStore.subscribe((state: any) => {
+        this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
             if (this._itemId) {
                 const item = (Array.isArray(state.items) ? state.items : [])
-                    .find((i: any) => i.id === this._itemId);
+                    .find((i) => i.id === this._itemId);
                 if (item?.content) {
                     try {
                         const c = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
@@ -676,9 +676,9 @@ class DockerWidget extends HTMLElement {
     private async onHostChange(id: string) {
         this._config.activeHost = id;
         if (this._itemId) {
-            const state: any = dashboardStore.getState();
+            const state = dashboardStore.getState();
             const item = (Array.isArray(state.items) ? state.items : [])
-                .find((i: any) => i.id === this._itemId);
+                .find((i) => i.id === this._itemId);
             if (item?.content) {
                 try {
                     const parsed = typeof item.content === 'string'
@@ -776,9 +776,9 @@ class DockerWidget extends HTMLElement {
     private async saveContainerConfig(cfg: Record<string, ContainerCfgEntry>) {
         if (!this._itemId) return;
         try {
-            const state: any = dashboardStore.getState();
+            const state = dashboardStore.getState();
             const item = (Array.isArray(state.items) ? state.items : [])
-                .find((i: any) => i.id === this._itemId);
+                .find((i) => i.id === this._itemId);
             if (!item?.content) return;
             const parsed = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
             const merged = { ...parsed, containerConfig: cfg };

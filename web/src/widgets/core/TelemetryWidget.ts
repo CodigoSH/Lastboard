@@ -69,10 +69,10 @@ class TelemetryWidget extends HTMLElement {
             }
         });
 
-        this._unsubscribe = dashboardStore.subscribe((state: any) => {
+        this._unsubscribe = dashboardStore.subscribe((state) => {
             if (this._itemId) {
                 const item = (Array.isArray(state.items) ? state.items : [])
-                    .find((i: any) => i.id === this._itemId);
+                    .find((i) => i.id === this._itemId);
                 if (item?.content) {
                     try {
                         const c = typeof item.content === 'string'

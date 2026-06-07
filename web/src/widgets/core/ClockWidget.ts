@@ -3,7 +3,7 @@ import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
 
 class ClockWidget extends HTMLElement {
-    private timer: any;
+    private timer?: ReturnType<typeof setInterval>;
     private timeEl: HTMLElement | null = null;
     private dateEl: HTMLElement | null = null;
     private cityEl: HTMLElement | null = null;

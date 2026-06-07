@@ -33,8 +33,6 @@ export interface MarkdownWidgetContent extends BaseWidgetContent {
     text: string;
 }
 
-export type WidgetContent = NotepadWidgetContent | ClockWidgetContent | TelemetryWidgetContent | MarkdownWidgetContent;
-
 export class WidgetContentHelper {
     /**
      * Parse raw content (string or object) into structured object

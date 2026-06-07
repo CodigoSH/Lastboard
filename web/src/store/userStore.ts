@@ -239,7 +239,7 @@ class UserStore {
         }
     }
 
-    async changePassword(data: any) {
+    async changePassword(data: unknown) {
         try {
             const response = await userService.changePassword(data);
             return response;

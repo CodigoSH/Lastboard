@@ -18,7 +18,7 @@ class SocketService {
     private socket: WebSocket | null = null;
     private statsListeners: ((stats: SystemStats) => void)[] = [];
     private notificationListeners: NotificationListener[] = [];
-    private reconnectTimeout: any;
+    private reconnectTimeout?: ReturnType<typeof setTimeout>;
     private reconnectDelay: number = 1000;
     private static readonly MAX_DELAY = 30000;
 

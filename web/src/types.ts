@@ -53,12 +53,6 @@ export interface GridItem {
     created_at?: string;
 }
 
-export interface ApiResponse<T> {
-    success: boolean;
-    data?: T;
-    error?: string;
-}
-
 export interface MessageResponse {
     message: string;
     session_invalidated?: boolean;

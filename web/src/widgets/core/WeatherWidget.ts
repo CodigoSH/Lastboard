@@ -153,8 +153,8 @@ class WeatherWidget extends HTMLElement {
     private _unsubscribeI18n: (() => void) | undefined;
     private _unsubscribeUser: (() => void) | undefined;
     private _weatherData: any = null;
-    private _refreshTimer: any = null;
-    private _retryTimer: any = null;
+    private _refreshTimer: ReturnType<typeof setTimeout> | null = null;
+    private _retryTimer: ReturnType<typeof setTimeout> | null = null;
     private _retryCount = 0;
     private _loading = false;
     private _error = false;
@@ -182,7 +182,7 @@ class WeatherWidget extends HTMLElement {
 
         this._unsubscribe = dashboardStore.subscribe((state) => {
             if (!this._itemId) return;
-            const item = state.items.find((i: any) => i.id === this._itemId);
+            const item = state.items.find((i) => i.id === this._itemId);
             if (!item?.content) return;
             try {
                 const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;

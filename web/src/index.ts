@@ -136,7 +136,7 @@ bootstrap(async () => {
 import { eventBus, EVENTS } from './services/EventBus';
 
 // Centralized Event Listeners
-eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: any) => {
+eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: CustomEvent) => {
     const { title, message, onConfirm } = e.detail;
     if (confirmationModal) {
         const confirmed = await confirmationModal.confirm(title, message);
@@ -146,7 +146,7 @@ eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: any) => {
     }
 });
 
-eventBus.on(EVENTS.SHOW_PASSWORD_CONFIRM, async (e: any) => {
+eventBus.on(EVENTS.SHOW_PASSWORD_CONFIRM, async (e: CustomEvent) => {
     const { title, message, onConfirm } = e.detail;
     if (passwordConfirmModal) {
         const password = await passwordConfirmModal.prompt(title, message);
@@ -156,7 +156,7 @@ eventBus.on(EVENTS.SHOW_PASSWORD_CONFIRM, async (e: any) => {
     }
 });
 
-eventBus.on(EVENTS.SHOW_WIDGET_CONFIG, (e: any) => {
+eventBus.on(EVENTS.SHOW_WIDGET_CONFIG, (e: CustomEvent) => {
     const { item, type } = e.detail;
     if (type === 'bookmark') {
         if (addBookmarkModal) addBookmarkModal.openForEdit(item);
@@ -166,7 +166,7 @@ eventBus.on(EVENTS.SHOW_WIDGET_CONFIG, (e: any) => {
     }
 });
 
-eventBus.on(EVENTS.NOTIFY, (e: any) => {
+eventBus.on(EVENTS.NOTIFY, (e: CustomEvent) => {
     // Assuming Notifier component listens or we trigger it here if it's singleton
     // For now, if Notifier is web-component based and self-contained, 
     // we might need to find it and call .show().

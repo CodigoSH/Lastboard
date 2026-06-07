@@ -968,7 +968,7 @@ export class NotepadWidget extends HTMLElement {
     private async loadContent() {
         if (!this._itemId) return;
         const state = dashboardStore.getState();
-        const item = state.items.find((i: any) => i.id === this._itemId);
+        const item = state.items.find((i) => i.id === this._itemId);
         if (item) {
             const contentObj = WidgetContentHelper.parse(item.content);
             const html = (contentObj as any).text || '';
@@ -985,7 +985,7 @@ export class NotepadWidget extends HTMLElement {
 
         try {
             const state = dashboardStore.getState();
-            const currentItem = state.items.find((i: any) => i.id === this._itemId);
+            const currentItem = state.items.find((i) => i.id === this._itemId);
             if (currentItem) {
                 const newContent = WidgetContentHelper.setNotepadText(currentItem.content, currentHTML);
                 dashboardStore.updateItem({ ...currentItem, content: newContent }).then(() => {

@@ -6,5 +6,3 @@ export interface Locale {
         [key: string]: string;
     };
 }
-
-export type TranslationKey = string;
