@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -112,11 +113,11 @@ func NewSystemHandler(db *sql.DB) *SystemHandler {
 
 // Data Structures for Backup
 type BackupData struct {
-	Version    string           `json:"version"`
-	Timestamp  time.Time        `json:"timestamp"`
-	Users      []BackupUser     `json:"users"`
+	Version    string            `json:"version"`
+	Timestamp  time.Time         `json:"timestamp"`
+	Users      []BackupUser      `json:"users"`
 	Dashboards []BackupDashboard `json:"dashboards"`
-	Items      []BackupItem     `json:"items"`
+	Items      []BackupItem      `json:"items"`
 }
 
 type BackupUser struct {
@@ -284,20 +285,11 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate users before writing to DB
-	for _, u := range backup.Users {
-		if !strings.HasPrefix(u.Password, "$2a$") && !strings.HasPrefix(u.Password, "$2b$") {
-			http.Error(w, "Invalid backup data", http.StatusBadRequest)
-			return
-		}
-		role := strings.ToLower(u.Role)
-		if role != "admin" && role != "user" {
-			http.Error(w, "Invalid backup data", http.StatusBadRequest)
-			return
-		}
+	if err := validateBackupUsers(backup); err != nil {
+		writeRestoreError(w, err)
+		return
 	}
 
-	// Transaction
 	tx, err := h.DB.Begin()
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -305,27 +297,107 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	// 1. Clear Data (order matters: items → dashboards → users due to FK)
-	if _, err := tx.Exec("DELETE FROM items"); err != nil {
-		http.Error(w, "Failed to clear items", http.StatusInternalServerError)
+	if err := clearExistingData(tx); err != nil {
+		writeRestoreError(w, err)
 		return
 	}
-	if _, err := tx.Exec("DELETE FROM dashboards"); err != nil {
-		http.Error(w, "Failed to clear dashboards", http.StatusInternalServerError)
+	if err := restoreUsers(tx, backup); err != nil {
+		writeRestoreError(w, err)
 		return
 	}
-	if _, err := tx.Exec("DELETE FROM users"); err != nil {
-		http.Error(w, "Failed to clear users", http.StatusInternalServerError)
+	ownerMap, fallbackOwner, err := buildOwnerMap(tx, backup)
+	if err != nil {
+		writeRestoreError(w, err)
+		return
+	}
+	dashMap, err := restoreDashboards(tx, backup, ownerMap, fallbackOwner)
+	if err != nil {
+		writeRestoreError(w, err)
+		return
+	}
+	if err := restoreItems(tx, backup, ownerMap, fallbackOwner, dashMap); err != nil {
+		writeRestoreError(w, err)
 		return
 	}
 
-	// 2. Insert Users (with all preference columns)
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Commit failed", http.StatusInternalServerError)
+		return
+	}
+
+	// Regenerate session secret to invalidate all active sessions.
+	// After a restore, all users must re-authenticate to ensure they
+	// are accessing data consistent with the restored state.
+	newSecret := make([]byte, 32)
+	if _, err := rand.Read(newSecret); err == nil {
+		newSecretHex := hex.EncodeToString(newSecret)
+		_, _ = h.DB.Exec("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('session_secret', ?)", newSecretHex)
+	}
+
+	// Instruct the browser to wipe all cached data (assets, cookies, localStorage).
+	// This ensures the client starts fresh after a restore — without this, stale
+	// session cookies and cached API responses cause the app to appear broken
+	// until the user manually clears browser storage.
+	w.Header().Set("Clear-Site-Data", `"cache", "cookies", "storage"`)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.restore_success"})
+}
+
+// restoreError carries an HTTP status and message through the restore steps so
+// the handler can translate a failure into the exact same response as before.
+type restoreError struct {
+	status int
+	msg    string
+}
+
+func (e *restoreError) Error() string { return e.msg }
+
+func writeRestoreError(w http.ResponseWriter, err error) {
+	var re *restoreError
+	if errors.As(err, &re) {
+		http.Error(w, re.msg, re.status)
+		return
+	}
+	http.Error(w, "Failed to restore backup", http.StatusInternalServerError)
+}
+
+// validateBackupUsers rejects backups whose users have non-bcrypt passwords or
+// an unknown role, before any data is written.
+func validateBackupUsers(backup BackupData) error {
+	for _, u := range backup.Users {
+		if !strings.HasPrefix(u.Password, "$2a$") && !strings.HasPrefix(u.Password, "$2b$") {
+			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+		}
+		role := strings.ToLower(u.Role)
+		if role != "admin" && role != "user" {
+			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+		}
+	}
+	return nil
+}
+
+// clearExistingData wipes items, dashboards and users in FK-safe order.
+func clearExistingData(tx *sql.Tx) error {
+	if _, err := tx.Exec("DELETE FROM items"); err != nil {
+		return &restoreError{http.StatusInternalServerError, "Failed to clear items"}
+	}
+	if _, err := tx.Exec("DELETE FROM dashboards"); err != nil {
+		return &restoreError{http.StatusInternalServerError, "Failed to clear dashboards"}
+	}
+	if _, err := tx.Exec("DELETE FROM users"); err != nil {
+		return &restoreError{http.StatusInternalServerError, "Failed to clear users"}
+	}
+	return nil
+}
+
+// restoreUsers inserts all users from the backup with their preference columns.
+func restoreUsers(tx *sql.Tx, backup BackupData) error {
 	userStmt, err := tx.Prepare(`INSERT INTO users (username, password, role, theme, accent_color, language,
 		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, project_logo,
 		beta_updates, unit_system, dashboard_background, widget_min_width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
-		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
-		return
+		return &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
 	}
 	defer userStmt.Close()
 
@@ -355,12 +427,15 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName, projectLogo,
 			betaUpdates, unitSystem, dashBg, widgetMinWidth)
 		if err != nil {
-			http.Error(w, "Failed to restore backup", http.StatusInternalServerError)
-			return
+			return &restoreError{http.StatusInternalServerError, "Failed to restore backup"}
 		}
 	}
+	return nil
+}
 
-	// 3. Build username → restored-id map so dashboard/item ownership survives the restore.
+// buildOwnerMap maps each restored username to its new id, plus a fallback admin
+// id for items/dashboards from old backups that have no owner field.
+func buildOwnerMap(tx *sql.Tx, backup BackupData) (map[string]int, int, error) {
 	ownerMap := make(map[string]int)
 	for _, u := range backup.Users {
 		var uid int
@@ -368,49 +443,53 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 			ownerMap[u.Username] = uid
 		}
 	}
-	// Fallback for items from old backups that have no owner field.
 	var fallbackOwner int
 	if err := tx.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&fallbackOwner); err != nil {
-		http.Error(w, "No admin found for item assignment", http.StatusInternalServerError)
-		return
+		return nil, 0, &restoreError{http.StatusInternalServerError, "No admin found for item assignment"}
 	}
+	return ownerMap, fallbackOwner, nil
+}
 
-	// 4. Insert Dashboards, build old_dash_id → new_dash_id map
+// restoreDashboards inserts dashboards and returns an old to new dashboard id map.
+func restoreDashboards(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallbackOwner int) (map[int]int64, error) {
 	oldToNewDashID := make(map[int]int64)
-	if len(backup.Dashboards) > 0 {
-		dashStmt, err := tx.Prepare(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, ?, ?, ?)`)
-		if err != nil {
-			http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
-			return
-		}
-		defer dashStmt.Close()
-
-		for _, d := range backup.Dashboards {
-			uid := ownerMap[d.Owner]
-			if uid == 0 {
-				uid = fallbackOwner
-			}
-			res, err := dashStmt.Exec(uid, d.Name, d.Position, d.IsDefault)
-			if err != nil {
-				http.Error(w, "Failed to restore dashboard", http.StatusInternalServerError)
-				return
-			}
-			if d.ID > 0 {
-				newID, _ := res.LastInsertId()
-				oldToNewDashID[d.ID] = newID
-			}
-		}
+	if len(backup.Dashboards) == 0 {
+		return oldToNewDashID, nil
 	}
 
-	// 5. Insert Items with resolved user_id and dashboard_id (two-pass for parent_id)
+	dashStmt, err := tx.Prepare(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, ?, ?, ?)`)
+	if err != nil {
+		return nil, &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
+	}
+	defer dashStmt.Close()
+
+	for _, d := range backup.Dashboards {
+		uid := ownerMap[d.Owner]
+		if uid == 0 {
+			uid = fallbackOwner
+		}
+		res, err := dashStmt.Exec(uid, d.Name, d.Position, d.IsDefault)
+		if err != nil {
+			return nil, &restoreError{http.StatusInternalServerError, "Failed to restore dashboard"}
+		}
+		if d.ID > 0 {
+			newID, _ := res.LastInsertId()
+			oldToNewDashID[d.ID] = newID
+		}
+	}
+	return oldToNewDashID, nil
+}
+
+// restoreItems inserts items in two passes: first the items themselves (building
+// an old to new id map), then the parent_id relationships using that map.
+func restoreItems(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallbackOwner int, oldToNewDashID map[int]int64) error {
 	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, dashboard_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
-		http.Error(w, "DB Prepare Error", http.StatusInternalServerError)
-		return
+		return &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
 	}
 	defer itemStmt.Close()
 
-	// Pass 1: Insert all items without parent_id, build old_id → new_id map
+	// Pass 1: Insert all items without parent_id, build old_id to new_id map
 	oldToNewID := make(map[int]int64)
 	for _, i := range backup.Items {
 		uid := ownerMap[i.Owner]
@@ -425,8 +504,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		}
 		res, err := itemStmt.Exec(uid, newDashID, i.Type, i.X, i.Y, i.W, i.H, i.Content)
 		if err != nil {
-			http.Error(w, "Failed to restore item", http.StatusInternalServerError)
-			return
+			return &restoreError{http.StatusInternalServerError, "Failed to restore item"}
 		}
 		if i.ID > 0 {
 			newID, _ := res.LastInsertId()
@@ -434,7 +512,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Pass 2: Restore parent_id relationships using the old→new ID map
+	// Pass 2: Restore parent_id relationships using the old to new ID map
 	for _, i := range backup.Items {
 		if i.ParentID == nil || i.ID == 0 {
 			continue
@@ -451,29 +529,7 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 			slog.Warn("Restore: failed to set parent_id", "item_id", newID, "error", err)
 		}
 	}
-
-	if err := tx.Commit(); err != nil {
-		http.Error(w, "Commit failed", http.StatusInternalServerError)
-		return
-	}
-
-	// Regenerate session secret to invalidate all active sessions.
-	// After a restore, all users must re-authenticate to ensure they
-	// are accessing data consistent with the restored state.
-	newSecret := make([]byte, 32)
-	if _, err := rand.Read(newSecret); err == nil {
-		newSecretHex := hex.EncodeToString(newSecret)
-		_, _ = h.DB.Exec("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('session_secret', ?)", newSecretHex)
-	}
-
-	// Instruct the browser to wipe all cached data (assets, cookies, localStorage).
-	// This ensures the client starts fresh after a restore — without this, stale
-	// session cookies and cached API responses cause the app to appear broken
-	// until the user manually clears browser storage.
-	w.Header().Set("Clear-Site-Data", `"cache", "cookies", "storage"`)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "notifier.restore_success"})
+	return nil
 }
 
 // Helpers

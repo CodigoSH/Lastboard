@@ -38,7 +38,9 @@ func NewAuthHandler(db *sql.DB, secret []byte) *AuthHandler {
 	return &AuthHandler{DB: db, Secret: secret}
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+// resolveClientIP returns the client IP from RemoteAddr, honoring the first
+// X-Forwarded-For entry only when TRUST_PROXY is enabled and it is a valid IP.
+func resolveClientIP(r *http.Request) string {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	if os.Getenv("TRUST_PROXY") == "true" {
 		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
@@ -49,6 +51,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	return ip
+}
+
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	ip := resolveClientIP(r)
 	now := time.Now()
 
 	// Inline cleanup: remove expired lockouts to keep the table lean
@@ -196,7 +203,6 @@ func (h *AuthHandler) recordFailedAttempt(ip string, currentCount int) {
 		}
 	}
 }
-
 
 func generateCSRFToken() (string, error) {
 	b := make([]byte, 32)

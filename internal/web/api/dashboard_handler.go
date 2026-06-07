@@ -27,7 +27,7 @@ type dnsCacheEntry struct {
 }
 
 var (
-	dnsCache   sync.Map
+	dnsCache    sync.Map
 	dnsCacheTTL = 30 * time.Second
 )
 
@@ -216,6 +216,17 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(item)
 }
 
+// gridInputValid reports whether every provided grid coordinate (when set) is
+// within the allowed 1..100 range.
+func gridInputValid(values ...*int) bool {
+	for _, v := range values {
+		if v != nil && (*v < 1 || *v > 100) {
+			return false
+		}
+	}
+	return true
+}
+
 func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 512*1024)
 	userID := middleware.GetUserIDFromContext(r)
@@ -249,13 +260,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate Grid Coordinates (if being updated)
-	if (input.X != nil && *input.X < 1) || (input.Y != nil && *input.Y < 1) ||
-		(input.W != nil && *input.W < 1) || (input.H != nil && *input.H < 1) {
-		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
-		return
-	}
-	if (input.X != nil && *input.X > 100) || (input.Y != nil && *input.Y > 100) ||
-		(input.W != nil && *input.W > 100) || (input.H != nil && *input.H > 100) {
+	if !gridInputValid(input.X, input.Y, input.W, input.H) {
 		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
 		return
 	}
@@ -451,7 +456,6 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	}
 	h.respondJson(w, map[string]string{"status": status})
 }
-
 
 func (h *DashboardHandler) respondJson(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
