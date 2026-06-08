@@ -302,7 +302,7 @@
   "widget.config.check_personalize": "Periksa tab 'Personalisasi' untuk gaya lainnya",
   "widget.config.no_config": "Tidak ada konfigurasi untuk item ini.",
   "widget.config.title": "Pengaturan",
-  "widget.docker.description": "Monitor and control your Docker containers",
+  "widget.docker.description": "Pantau dan kendalikan kontainer Docker Anda",
   "widget.docker.name": "Docker",
   "widget.markdown.description": "Editor Markdown dengan pratinjau langsung",
   "widget.markdown.error.preview": "Ups! Pratinjau Markdown gagal.",
