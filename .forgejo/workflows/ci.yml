@@ -34,7 +34,7 @@ jobs:
         run: bun run build
 
       - name: Build backend
-        run: go build -v -o bin/lastboard ./cmd/lastboard/main.go
+        run: go build -v -o bin/lastboard ./cmd/lastboard
 
       - name: Vet
         run: go vet ./...

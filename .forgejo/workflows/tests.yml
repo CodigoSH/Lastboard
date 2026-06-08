@@ -56,7 +56,7 @@ jobs:
         run: bun test web/src/services/collisionService.test.ts
 
       - name: Build backend
-        run: go build -v -o bin/lastboard ./cmd/lastboard/main.go
+        run: go build -v -o bin/lastboard ./cmd/lastboard
 
       - name: Verify binary
         run: ./bin/lastboard --version
