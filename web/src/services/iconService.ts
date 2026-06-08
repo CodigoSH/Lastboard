@@ -4,6 +4,8 @@
  * Sources: https://github.com/homarr-labs/dashboard-icons
  */
 
+import { searchIcons as searchIconsPure } from './iconSearch';
+
 export interface IconInfo {
     name: string;
     url: string;
@@ -161,25 +163,7 @@ class IconService {
     }
 
     searchIcons(query: string, limit: number = 12): IconInfo[] {
-        let results = query.trim()
-            ? this.icons.filter(icon => icon.name.toLowerCase().includes(query.toLowerCase().trim()))
-            : this.icons;
-
-        // Group by provider to ensure we get results from all providers
-        // without one provider dominating the top N
-        const grouped = results.reduce((acc, icon) => {
-            if (!acc[icon.provider]) acc[icon.provider] = [];
-            acc[icon.provider].push(icon);
-            return acc;
-        }, {} as Record<string, IconInfo[]>);
-
-        // Take up to `limit` per provider
-        const finalResults: IconInfo[] = [];
-        for (const providerIcons of Object.values(grouped)) {
-            finalResults.push(...providerIcons.slice(0, limit));
-        }
-
-        return finalResults;
+        return searchIconsPure(this.icons, query, limit);
     }
 
     getIconUrl(iconName: string): string {

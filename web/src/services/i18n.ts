@@ -1,5 +1,6 @@
 import { availableLocales } from '../locales/metadata';
 import { Locale } from '../locales/types';
+import { translate, sortLocales, resolveLanguage } from './i18n.helpers';
 
 class I18nService {
     private currentLanguage: string = 'en';
@@ -19,13 +20,7 @@ class I18nService {
         // Detect language
         const saved = localStorage.getItem('lastboard_lang');
         const browserLang = navigator.language.split('-')[0];
-        let targetLang = 'en';
-
-        if (saved && availableLocales.find(l => l.code === saved)) {
-            targetLang = saved;
-        } else if (availableLocales.find(l => l.code === browserLang)) {
-            targetLang = browserLang;
-        }
+        const targetLang = resolveLanguage(saved, browserLang, availableLocales.map(l => l.code));
 
         if (targetLang !== 'en') {
             await this.loadLocale(targetLang);
@@ -51,20 +46,8 @@ class I18nService {
     }
 
     public getAvailableLocales() {
-        // Sort locales: Latin first (alphabetical), then Non-Latin (alphabetical)
-        const isLatin = (str: string) => /^[a-zA-Z]/.test(str);
-
-        const sorted = [...availableLocales].sort((a, b) => {
-            const aIsLatin = isLatin(a.name);
-            const bIsLatin = isLatin(b.name);
-
-            if (aIsLatin && !bIsLatin) return -1;
-            if (!aIsLatin && bIsLatin) return 1;
-
-            return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
-        });
-
-        return sorted;
+        // Latin-script names first (alphabetical), then non-Latin (alphabetical).
+        return sortLocales(availableLocales);
     }
 
     public async loadLocale(code: string): Promise<void> {
@@ -93,27 +76,7 @@ class I18nService {
     }
 
     public t(key: string, params?: Record<string, string>): string {
-        const currentParams = this.cache.get(this.currentLanguage);
-        const enParams = this.cache.get('en');
-
-        let text = currentParams?.[key];
-
-        // Fallback to EN if missing
-        if (!text && enParams) {
-            text = enParams[key];
-        }
-
-        // Return key if still missing
-        if (!text) return key;
-
-        // Replace params
-        if (params) {
-            Object.keys(params).forEach(k => {
-                text = text!.replace(`{${k}}`, params[k]);
-            });
-        }
-
-        return text;
+        return translate(key, this.cache.get(this.currentLanguage), this.cache.get('en'), params);
     }
 
     public subscribe(listener: (locale: Locale) => void): () => void {
