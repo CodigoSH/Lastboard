@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-06-08### Added
+- Block the in-app updater when the binary isn't writable
+- Minor updates
+- Optional unprivileged execution via PUID/PGID### Fixed
+- Preselect profile, stop toggle-close, remove section-switch zoom### Changed
+- Extract templates and stylesheets from components
+- Remove dead types and tighten any usage
+- Split long handlers into cohesive helpers### Changed
+- Add native characterization tests for core logic
+- Apply gofmt (struct tag alignment, Go 1.26)
+- Compile the cmd/lastboard package instead of main.go only
+- Docs(security): replace DOMPurify reference with actual htmlSanitizer
+- Document PUID/PGID and unprivileged-mode updates
+- Gofmt api/user.go (struct tag alignment, Go 1.26)
 ## [1.5.1] - 2026-04-28### Added
 - Add mobile reorder — drag-to-reorder bookmarks on touch devices
 - Eliminate all 40 ts-ignore directives via proper type declarations
