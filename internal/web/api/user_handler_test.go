@@ -48,6 +48,7 @@ func setupFullServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 
 	authHandler := api.NewAuthHandler(db.DB, testSecret)
 	userHandler := api.NewUserHandler(db.DB)
+	updateHandler := api.NewUpdateHandler(db.DB)
 
 	mux.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
 	mux.Handle("GET /api/me", protect(http.HandlerFunc(userHandler.GetMe)))
@@ -56,6 +57,8 @@ func setupFullServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
 	mux.Handle("POST /api/users/delete", protect(http.HandlerFunc(userHandler.DeleteUser)))
 	mux.Handle("POST /api/user/change-password", protect(http.HandlerFunc(userHandler.ChangePassword)))
+	mux.Handle("POST /api/user/preferences", protect(http.HandlerFunc(userHandler.UpdatePreferences)))
+	mux.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
 
 	server := httptest.NewServer(mux)
 
