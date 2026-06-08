@@ -26,13 +26,16 @@ func TestCompareVersions(t *testing.T) {
 		{"prerelease loses to stable", "v1.5.2-Beta.1", "v1.5.2", false},
 		{"equal prerelease", "v1.5.2-Beta.1", "v1.5.2-Beta.1", false},
 
-		// Same core, two pre-releases: compared lexically (lowercased).
-		{"prerelease lexical higher", "v1.5.2-Beta.2", "v1.5.2-Beta.1", true},
-		{"rc beats beta lexically", "v1.5.2-RC.1", "v1.5.2-Beta.1", true},
+		// Same core, two pre-releases: label alphabetical, number numeric.
+		{"prerelease number higher", "v1.5.2-Beta.2", "v1.5.2-Beta.1", true},
+		{"rc beats beta", "v1.5.2-RC.1", "v1.5.2-Beta.1", true},
+		{"beta loses to rc", "v1.5.2-Beta.9", "v1.5.2-RC.1", false},
 
-		// KNOWN LIMITATION (documented, not fixed here): pre-release numbers are
-		// compared as strings, so "beta.10" sorts BEFORE "beta.9".
-		{"lexical limitation double digit", "v1.5.2-Beta.10", "v1.5.2-Beta.9", false},
+		// Multi-digit pre-release numbers are compared numerically, so
+		// "Beta.10" correctly sorts AFTER "Beta.9".
+		{"double digit newer", "v1.5.2-Beta.10", "v1.5.2-Beta.9", true},
+		{"double digit older", "v1.5.2-Beta.9", "v1.5.2-Beta.10", false},
+		{"same prerelease equal", "v1.5.2-Beta.10", "v1.5.2-Beta.10", false},
 	}
 
 	for _, tc := range cases {

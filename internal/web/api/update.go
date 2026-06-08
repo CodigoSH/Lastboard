@@ -15,6 +15,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -201,7 +202,7 @@ func compareVersions(v1, v2 string) bool {
 		}
 	}
 
-	// Same core: stable > pre-release, pre-release compared lexically
+	// Same core: a stable release is newer than any pre-release of it.
 	hasSuf1 := len(p1) > 1
 	hasSuf2 := len(p2) > 1
 	if !hasSuf1 && hasSuf2 {
@@ -213,7 +214,33 @@ func compareVersions(v1, v2 string) bool {
 	if !hasSuf1 && !hasSuf2 {
 		return false
 	}
-	return strings.ToLower(p1[1]) > strings.ToLower(p2[1])
+	// Both pre-releases: compare by type, then numerically.
+	return comparePreRelease(p1[1], p2[1])
+}
+
+// comparePreRelease reports whether pre-release suffix s1 is strictly newer
+// than s2. A suffix looks like "Beta.27" or "RC.1": the label is compared
+// alphabetically (so "beta" < "rc") and the trailing number numerically, so
+// that "Beta.10" correctly sorts AFTER "Beta.9".
+func comparePreRelease(s1, s2 string) bool {
+	l1, n1 := splitPreRelease(strings.ToLower(s1))
+	l2, n2 := splitPreRelease(strings.ToLower(s2))
+	if l1 != l2 {
+		return l1 > l2
+	}
+	return n1 > n2
+}
+
+// splitPreRelease separates a suffix like "beta.27" into its label ("beta")
+// and trailing number (27). If there is no numeric tail, the whole string is
+// the label and the number is 0.
+func splitPreRelease(s string) (string, int) {
+	if i := strings.LastIndex(s, "."); i >= 0 {
+		if n, err := strconv.Atoi(s[i+1:]); err == nil {
+			return s[:i], n
+		}
+	}
+	return s, 0
 }
 
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
