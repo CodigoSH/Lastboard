@@ -8,7 +8,7 @@ Lastboard is built from the ground up with defense-in-depth principles. We prior
 - **CSRF Protection:** All state-changing methods (`POST`, `PUT`, `PATCH`, `DELETE`) require a matching `csrf_token` cookie and `X-CSRF-Token` header. Mismatches strictly return `403 Forbidden`.
 - **CSP Headers:** A strict Content-Security-Policy is enforced, restricting resource loading to `self` alongside specific trusted domains (e.g., Open-Meteo, jsdelivr). `X-Frame-Options` and `X-Content-Type-Options: nosniff` are applied to all responses.
 - **Rate Limiting:** A token-bucket algorithm strictly throttles protected API routes (20 req/s, burst 50) and auth paths (5 req/s) to prevent bruteforce attacks, with automatic cleanup of stale IP entries.
-- **XSS Prevention:** User-submitted content (like templates or Markdown blobs) is processed via DOMPurify to sanitize HTML payloads before attachment to the DOM.
+- **XSS Prevention:** User-submitted content (like templates or Markdown blobs) is passed through a built-in HTML sanitizer (`htmlSanitizer.ts`) that strips disallowed tags and attributes before attachment to the DOM. No third-party sanitization library is used.
 - **TRUST_PROXY:** For reverse proxy deployments, Lastboard safely reads the `X-Forwarded-For` header for IP blacklisting/rate-limiting, only when explicitly configured via the `TRUST_PROXY=true` flag.
 - **Unprivileged Execution:** Lastboard can run as a non-root user via `PUID`/`PGID`. It defaults to root to avoid bind-mount permission issues (common on Proxmox/LXC); when `PUID`/`PGID` are set, it fixes the data-directory ownership automatically and then drops privileges before serving any request. See [Configuration](../getting-started/configuration.md#puid--pgid-running-unprivileged).
 
