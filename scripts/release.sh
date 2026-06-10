@@ -169,8 +169,10 @@ if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     NEW_ENTRY=$(echo -e "## [$VERSION_DISPLAY] - $DATE\n")
     [ -n "$FEATS" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Added\n${FEATS}\n")"
     [ -n "$FIXES" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Fixed\n${FIXES}\n")"
-    [ -n "$REFACTORS" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${REFACTORS}\n")"
-    [ -n "$OTHER" ] && [ "$OTHER" != "" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${OTHER}\n")"
+    CL_CHANGED=""
+    [ -n "$REFACTORS" ] && CL_CHANGED="$REFACTORS"
+    [ -n "$OTHER" ] && CL_CHANGED="${CL_CHANGED:+$CL_CHANGED$'\n'}$OTHER"
+    [ -n "$CL_CHANGED" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${CL_CHANGED}\n")"
 
     # Insert before the first version header
     awk -v new_entry="$NEW_ENTRY" '
@@ -186,19 +188,21 @@ fi
 # Create temporary file for Forgejo Release Body
 NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
 if [ -f "$NOTES_FILE" ]; then
-    echo "📝 Using existing release notes: $NOTES_FILE"
+    echo "Using existing release notes: $NOTES_FILE"
 else
-    cat <<EOF > $NOTES_FILE
-# Release: $NEW_TAG
-
-$( [ -n "$FEATS" ] && echo "### ✨ Features" && echo "$FEATS" && echo "" )
-$( [ -n "$FIXES" ] && echo "### 🐛 Bug Fixes" && echo "$FIXES" && echo "" )
-$( [ -n "$REFACTORS" ] && echo "### 🛠️ Refactors & Performance" && echo "$REFACTORS" && echo "" )
-$( [ -n "$OTHER" ] && echo "### 📝 Other Changes" && echo "$OTHER" && echo "" )
-
----
-**Full Changelog**: [${LAST_TAG:-initial}...$NEW_TAG]($REPO_URL/compare/${LAST_TAG:-main}...$NEW_TAG)
-EOF
+    NOTES_CHANGED=""
+    if [ -n "$REFACTORS" ] && [ -n "$OTHER" ]; then
+        NOTES_CHANGED=$(printf '%s\n%s' "$REFACTORS" "$OTHER")
+    elif [ -n "$REFACTORS" ]; then
+        NOTES_CHANGED="$REFACTORS"
+    else
+        NOTES_CHANGED="$OTHER"
+    fi
+    {
+        [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
+        [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
+        [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
+    } > "$NOTES_FILE"
 fi
 
 # 6. Git Operations
