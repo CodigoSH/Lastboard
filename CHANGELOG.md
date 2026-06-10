@@ -110,7 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement smart cleanup for release notes while preserving tag history
 - Implement user management, fix auth security, and restrict access
 - Implementar sistema i18n global y corregir textos hardcodeados en Preferencias
-- Implemented public health check endpoint for coolify/docker
+- Implemented public health check endpoint for container orchestrators
 - Improve settings UI labels and fix release script
 - Improve settings UI labels and remove background size hint
 - Individual dashboard background with preview, auto-resize, and translations
@@ -221,7 +221,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Force mobile layout on small screens (Beta 4)
 - Grant security-events write permission for sarif upload
 - Handle LastInsertId errors, log rate-limit failures, cleanup stale refs
-- Implement public health check endpoint for docker/coolify
+- Implement public health check endpoint for container orchestrators
 - Implement --version flag to prevent CI hang
 - Include manifest.json in build output
 - Increase input height to 46px to prevent text clipping
@@ -684,7 +684,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement premium color picker with presets
 - Implement professional plug-and-play docker permissions with smart entrypoint
 - Implement smart cleanup for release notes while preserving tag history
-- Implemented public health check endpoint for coolify/docker
+- Implemented public health check endpoint for container orchestrators
 - Premium Color Picker & Border Width Control
 - Professional i18n refinements, UI glassmorphism fixes, and Docker config sync
 - Professionalize demo mode aesthetics and content, update README docker docs
@@ -705,7 +705,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Correct telemetry label to TEMP and sync all languages
 - Fix modal grays clashing in light mode with adaptive CSS variables
 - Force Installations badge cache refresh
-- Implement public health check endpoint for docker/coolify
+- Implement public health check endpoint for container orchestrators
 - Increase input height to 46px to prevent text clipping
 - Replace broken ghcr badge with reliable downloads counter
 - Restore accidentally deleted collisionService test file
