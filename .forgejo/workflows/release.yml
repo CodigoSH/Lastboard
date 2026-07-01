@@ -120,10 +120,12 @@ jobs:
               -H "Authorization: token $CI_TOKEN" \
               "$API/repos/$REPO/releases/tags/$VERSION" | jq -r '.id')
 
+            # Hide the release while we swap assets so clients don't see it
+            # (and prompt an update) with missing/partial downloads.
             curl -s -X PATCH \
               -H "Authorization: token $CI_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "{\"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE}" \
+              -d "{\"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE, \"draft\": true}" \
               "$API/repos/$REPO/releases/$RELEASE_ID"
 
             # Delete existing assets before re-uploading
@@ -138,10 +140,12 @@ jobs:
           else
             echo "Creating new release..."
 
+            # Create as draft: not returned by /releases/latest or /releases,
+            # so the update check won't surface it until assets are uploaded.
             RELEASE_ID=$(curl -s -X POST \
               -H "Authorization: token $CI_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "{\"tag_name\": \"$VERSION\", \"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE}" \
+              -d "{\"tag_name\": \"$VERSION\", \"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE, \"draft\": true}" \
               "$API/repos/$REPO/releases" | jq -r '.id')
           fi
 
@@ -163,3 +167,13 @@ jobs:
             -H "Authorization: token $CI_TOKEN" \
             -F "attachment=@artifacts/checksums.txt;filename=checksums.txt" \
             "$API/repos/$REPO/releases/$RELEASE_ID/assets"
+
+          # Publish: all assets are uploaded, so flip draft off. Only now does the
+          # release become visible to the update check, guaranteeing the binary and
+          # checksums.txt exist before any client can attempt to download them.
+          echo "Publishing release (draft -> false)..."
+          curl -s -X PATCH \
+            -H "Authorization: token $CI_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"draft\": false}" \
+            "$API/repos/$REPO/releases/$RELEASE_ID"
