@@ -295,6 +295,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Download Binary
 	if err := h.downloadFile(req.AssetUrl, tmpFile); err != nil {
+		slog.Error("Update failed: could not download binary", "asset_url", req.AssetUrl, "tmp_file", tmpFile, "error", err)
 		http.Error(w, "notifier.update_failed", http.StatusInternalServerError)
 		return
 	}
@@ -312,6 +313,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
+		slog.Error("Update failed: checksum verification failed", "asset_url", req.AssetUrl, "error", err)
 		http.Error(w, "notifier.update_failed", http.StatusInternalServerError)
 		return
 	}
