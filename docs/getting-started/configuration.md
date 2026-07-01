@@ -35,7 +35,7 @@ On startup the binary will `chown` the data directory to that user and then perm
 
 ## TRUST_PROXY
 
-By default, Lastboard ignores the `X-Forwarded-For` header to prevent IP spoofing attacks. If you run Lastboard behind a reverse proxy (such as Nginx, Traefik, Caddy, Cloudflare, Coolify, or Pangolin), you **must** enable this flag.
+By default, Lastboard ignores the `X-Forwarded-For` header to prevent IP spoofing attacks. If you run Lastboard behind a reverse proxy (such as Nginx, Traefik, Caddy, Cloudflare, or Pangolin), you **must** enable this flag.
 
 ```bash
 TRUST_PROXY=true

@@ -160,7 +160,7 @@ func (s *Server) routes() {
 	// Mount UNPROTECTED handler because it handles its own static file exemption
 	s.Router.Handle("/", indexHandler)
 
-	// Public Health Check (Docker/Coolify)
+	// Public Health Check (Docker / orchestrator)
 	s.Router.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
