@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2026-07-01### Added
+- Localized, informative update error messages### Fixed
+- Log the underlying cause when download/checksum fails
+- Publish the Forgejo release as draft until assets are uploaded
+- Show real, localized messages when an update fails### Changed
+- Ci(forgejo): revert upload-artifact to v3 (v4 unsupported on Forgejo)
 ## [1.5.3] - 2026-07-01### Added
 - Minor updates### Fixed
 - Normalize release notes to Keep-a-Changelog format### Changed
