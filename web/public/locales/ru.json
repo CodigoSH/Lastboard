@@ -184,7 +184,7 @@
   "notifier.save_error": "Ошибка сохранения настроек",
   "notifier.system_restarting": "Перезапуск...",
   "notifier.update_downloading": "Загрузка обновления...",
-  "notifier.update_failed": "Ошибка обновления",
+  "notifier.update_failed": "Не удалось завершить обновление.",
   "notifier.update_start_confirm": "Готовы к обновлению? Мы перезапустимся.",
   "notifier.update_verified": "Обновление проверено. Перезапуск...",
   "notifier.user_create_error": "Не удалось создать пользователя",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Гроза",
   "widget.weather.thunderstorm_hail": "Гроза с градом",
   "widget.weather.unknown": "Неизвестно",
-  "widget.weather.wind": "Ветер"
+  "widget.weather.wind": "Ветер",
+  "notifier.update_download_failed": "Не удалось загрузить обновление. Проверьте подключение сервера и повторите попытку.",
+  "notifier.update_checksum_failed": "Загруженное обновление не прошло проверку целостности. Повторите попытку.",
+  "notifier.update_extract_failed": "Не удалось распаковать пакет обновления. Повторите попытку.",
+  "notifier.update_install_failed": "Загружено, но не удалось установить новую версию. Проверьте логи сервера.",
+  "notifier.update_unprivileged": "Автоматическое обновление недоступно: приложение не может заменить свои файлы. Обновите через 'docker pull' или повторно запустив скрипт установки.",
+  "notifier.update_invalid_url": "Недопустимый источник обновления. Повторите попытку или обновите вручную.",
+  "auth.unauthorized": "У вас нет прав для этого действия."
 }

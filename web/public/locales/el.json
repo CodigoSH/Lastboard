@@ -184,7 +184,7 @@
   "notifier.save_error": "Σφάλμα αποθήκευσης ρυθμίσεων",
   "notifier.system_restarting": "Επανεκκίνηση...",
   "notifier.update_downloading": "Λήψη ενημέρωσης...",
-  "notifier.update_failed": "Η ενημέρωση απέτυψε",
+  "notifier.update_failed": "Η ενημέρωση δεν ολοκληρώθηκε.",
   "notifier.update_start_confirm": "Έτοιμοι για ενημέρωση; Θα κάνουμε επανεκκίνηση.",
   "notifier.update_verified": "Η ενημέρωση επαληθεύτηκε. Επανεκκίνηση...",
   "notifier.user_create_error": "Αδυναμία δημιουργίας αυτού του χρήστη",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Καταιγίδα",
   "widget.weather.thunderstorm_hail": "Καταιγίδα με χαλάζι",
   "widget.weather.unknown": "Άγνωστο",
-  "widget.weather.wind": "Άνεμος"
+  "widget.weather.wind": "Άνεμος",
+  "notifier.update_download_failed": "Δεν ήταν δυνατή η λήψη της ενημέρωσης. Ελέγξτε τη σύνδεση του διακομιστή και δοκιμάστε ξανά.",
+  "notifier.update_checksum_failed": "Η ενημέρωση που λήφθηκε απέτυχε στον έλεγχο ακεραιότητας. Δοκιμάστε ξανά.",
+  "notifier.update_extract_failed": "Δεν ήταν δυνατή η αποσυμπίεση του πακέτου ενημέρωσης. Δοκιμάστε ξανά.",
+  "notifier.update_install_failed": "Λήφθηκε, αλλά δεν ήταν δυνατή η εγκατάσταση της νέας έκδοσης. Ελέγξτε τα αρχεία καταγραφής του διακομιστή.",
+  "notifier.update_unprivileged": "Η αυτόματη ενημέρωση δεν είναι διαθέσιμη: η εφαρμογή δεν μπορεί να αντικαταστήσει τα αρχεία της. Ενημερώστε με 'docker pull' ή εκτελώντας ξανά το script εγκατάστασης.",
+  "notifier.update_invalid_url": "Μη έγκυρη πηγή ενημέρωσης. Δοκιμάστε ξανά ή ενημερώστε χειροκίνητα.",
+  "auth.unauthorized": "Δεν έχετε εξουσιοδότηση για αυτήν την ενέργεια."
 }

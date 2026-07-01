@@ -184,7 +184,7 @@
   "notifier.save_error": "সেটিংস সংরক্ষণে ত্রুটি",
   "notifier.system_restarting": "পুনরায় চালু হচ্ছে...",
   "notifier.update_downloading": "আপডেট ডাউনলোড হচ্ছে...",
-  "notifier.update_failed": "আপডেট ব্যর্থ",
+  "notifier.update_failed": "আপডেট সম্পূর্ণ করা যায়নি।",
   "notifier.update_start_confirm": "আপডেট করার জন্য প্রস্তুত? আমরা পুনরায় চালু করব।",
   "notifier.update_verified": "আপডেট যাচাই করা হয়েছে। পুনরায় চালু হচ্ছে...",
   "notifier.user_create_error": "সেই ব্যবহারকারী তৈরি করা যায়নি",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "বজ্রঝড়",
   "widget.weather.thunderstorm_hail": "শিলাবৃষ্টি ঝড়",
   "widget.weather.unknown": "অজানা",
-  "widget.weather.wind": "বাতাস"
+  "widget.weather.wind": "বাতাস",
+  "notifier.update_download_failed": "আপডেট ডাউনলোড করা যায়নি। সার্ভারের সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।",
+  "notifier.update_checksum_failed": "ডাউনলোড করা আপডেটটি অখণ্ডতা যাচাইয়ে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+  "notifier.update_extract_failed": "আপডেট প্যাকেজটি আনপ্যাক করা যায়নি। আবার চেষ্টা করুন।",
+  "notifier.update_install_failed": "ডাউনলোড হয়েছে, কিন্তু নতুন সংস্করণ ইনস্টল করা যায়নি। সার্ভার লগ দেখুন।",
+  "notifier.update_unprivileged": "স্বয়ংক্রিয় আপডেট উপলব্ধ নয়: অ্যাপ নিজের ফাইল প্রতিস্থাপন করতে পারে না। 'docker pull' দিয়ে বা ইনস্টল স্ক্রিপ্ট পুনরায় চালিয়ে আপডেট করুন।",
+  "notifier.update_invalid_url": "অবৈধ আপডেট উৎস। আবার চেষ্টা করুন বা ম্যানুয়ালি আপডেট করুন।",
+  "auth.unauthorized": "এটি করার অনুমতি আপনার নেই।"
 }

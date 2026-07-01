@@ -184,7 +184,7 @@
   "notifier.save_error": "सेटिंग सहेजने में त्रुटि",
   "notifier.system_restarting": "रीस्टार्ट हो रहा है...",
   "notifier.update_downloading": "अपडेट डाउनलोड हो रहा है...",
-  "notifier.update_failed": "अपडेट विफल",
+  "notifier.update_failed": "अपडेट पूरा नहीं हो सका।",
   "notifier.update_start_confirm": "अपडेट के लिए तैयार? हम पुनः आरंभ करेंगे।",
   "notifier.update_verified": "अपडेट सत्यापित। पुनः आरंभ हो रहा है...",
   "notifier.user_create_error": "वह उपयोगकर्ता नहीं बनाया जा सका",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "आंधी",
   "widget.weather.thunderstorm_hail": "ओलावृष्टि तूफान",
   "widget.weather.unknown": "अप्रत्यक्ष",
-  "widget.weather.wind": "हवा"
+  "widget.weather.wind": "हवा",
+  "notifier.update_download_failed": "अपडेट डाउनलोड नहीं हो सका। सर्वर का कनेक्शन जांचें और फिर से प्रयास करें।",
+  "notifier.update_checksum_failed": "डाउनलोड किया गया अपडेट अखंडता जांच में विफल रहा। कृपया फिर से प्रयास करें।",
+  "notifier.update_extract_failed": "अपडेट पैकेज को अनपैक नहीं किया जा सका। कृपया फिर से प्रयास करें।",
+  "notifier.update_install_failed": "डाउनलोड हो गया, लेकिन नया संस्करण इंस्टॉल नहीं हो सका। सर्वर लॉग देखें।",
+  "notifier.update_unprivileged": "स्वचालित अपडेट उपलब्ध नहीं है: ऐप अपनी ही फ़ाइलें नहीं बदल सकता। 'docker pull' से या इंस्टॉल स्क्रिप्ट दोबारा चलाकर अपडेट करें।",
+  "notifier.update_invalid_url": "अमान्य अपडेट स्रोत। फिर से प्रयास करें या मैन्युअल रूप से अपडेट करें।",
+  "auth.unauthorized": "आपके पास ऐसा करने की अनुमति नहीं है।"
 }

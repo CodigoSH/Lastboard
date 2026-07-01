@@ -184,7 +184,7 @@
   "notifier.save_error": "設定の保存エラー",
   "notifier.system_restarting": "再起動しています...",
   "notifier.update_downloading": "更新をダウンロードしています...",
-  "notifier.update_failed": "更新に失敗しました",
+  "notifier.update_failed": "アップデートを完了できませんでした。",
   "notifier.update_start_confirm": "更新の準備はできましたか？再起動します。",
   "notifier.update_verified": "更新が確認されました。再起動中...",
   "notifier.user_create_error": "そのユーザーを作成できませんでした",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "雷雨",
   "widget.weather.thunderstorm_hail": "雹を伴う雷雨",
   "widget.weather.unknown": "不明",
-  "widget.weather.wind": "風"
+  "widget.weather.wind": "風",
+  "notifier.update_download_failed": "アップデートをダウンロードできませんでした。サーバーの接続を確認して再試行してください。",
+  "notifier.update_checksum_failed": "ダウンロードしたアップデートの整合性チェックに失敗しました。もう一度お試しください。",
+  "notifier.update_extract_failed": "アップデートパッケージを展開できませんでした。もう一度お試しください。",
+  "notifier.update_install_failed": "ダウンロードしましたが、新しいバージョンをインストールできませんでした。サーバーのログを確認してください。",
+  "notifier.update_unprivileged": "自動アップデートは利用できません：アプリが自身のファイルを置き換えられません。「docker pull」またはインストールスクリプトの再実行で更新してください。",
+  "notifier.update_invalid_url": "更新元が無効です。もう一度試すか、手動で更新してください。",
+  "auth.unauthorized": "この操作を行う権限がありません。"
 }

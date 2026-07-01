@@ -184,7 +184,7 @@
   "notifier.save_error": "Fout bij opslaan instellingen",
   "notifier.system_restarting": "Opnieuw opstarten...",
   "notifier.update_downloading": "Update downloaden...",
-  "notifier.update_failed": "Update mislukt",
+  "notifier.update_failed": "De update kon niet worden voltooid.",
   "notifier.update_start_confirm": "Klaar om bij te werken? We gaan opnieuw opstarten.",
   "notifier.update_verified": "Update geverifieerd. Opnieuw opstarten...",
   "notifier.user_create_error": "Kon die gebruiker niet maken",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Onweer",
   "widget.weather.thunderstorm_hail": "Onweer met hagel",
   "widget.weather.unknown": "Onbekend",
-  "widget.weather.wind": "Wind"
+  "widget.weather.wind": "Wind",
+  "notifier.update_download_failed": "Kan de update niet downloaden. Controleer de serververbinding en probeer het opnieuw.",
+  "notifier.update_checksum_failed": "De gedownloade update is niet door de integriteitscontrole gekomen. Probeer het opnieuw.",
+  "notifier.update_extract_failed": "Het updatepakket kon niet worden uitgepakt. Probeer het opnieuw.",
+  "notifier.update_install_failed": "Gedownload, maar de nieuwe versie kon niet worden geïnstalleerd. Controleer de serverlogs.",
+  "notifier.update_unprivileged": "Automatische update niet beschikbaar: de app kan zijn eigen bestanden niet vervangen. Update met 'docker pull' of door het installatiescript opnieuw uit te voeren.",
+  "notifier.update_invalid_url": "Ongeldige updatebron. Probeer het opnieuw of update handmatig.",
+  "auth.unauthorized": "Je bent hiervoor niet gemachtigd."
 }

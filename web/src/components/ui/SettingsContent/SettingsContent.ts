@@ -599,7 +599,12 @@ class SettingsContent extends HTMLElement {
                 const statusText = status.querySelector('p');
                 if (statusText) {
                     statusText.style.color = 'var(--danger-color)';
-                    statusText.textContent = i18n.t('notifier.update_failed') + (e?.message ? ': ' + e.message : '');
+                    // The backend returns an i18n key (e.g. notifier.update_download_failed)
+                    // as the error body. Translate it into a real, localized message;
+                    // fall back to the generic one for anything that isn't a known key.
+                    const code = (e?.message || '').trim();
+                    const key = /^(notifier\.|auth\.)/.test(code) ? code : 'notifier.update_failed';
+                    statusText.textContent = i18n.t(key);
                 }
             }
             if (btn) btn.loading = false;

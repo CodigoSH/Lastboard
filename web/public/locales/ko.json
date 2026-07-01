@@ -184,7 +184,7 @@
   "notifier.save_error": "설정 저장 오류",
   "notifier.system_restarting": "재시작 중...",
   "notifier.update_downloading": "업데이트 다운로드 중...",
-  "notifier.update_failed": "업데이트 실패",
+  "notifier.update_failed": "업데이트를 완료하지 못했습니다.",
   "notifier.update_start_confirm": "업데이트할 준비가 되셨습니까? 재시작합니다.",
   "notifier.update_verified": "업데이트가 확인되었습니다. 재시작 중...",
   "notifier.user_create_error": "해당 사용자를 만들 수 없습니다",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "뇌우",
   "widget.weather.thunderstorm_hail": "우박 뇌우",
   "widget.weather.unknown": "알 수 없음",
-  "widget.weather.wind": "바람"
+  "widget.weather.wind": "바람",
+  "notifier.update_download_failed": "업데이트를 다운로드하지 못했습니다. 서버 연결을 확인하고 다시 시도하세요.",
+  "notifier.update_checksum_failed": "다운로드한 업데이트의 무결성 검사에 실패했습니다. 다시 시도하세요.",
+  "notifier.update_extract_failed": "업데이트 패키지의 압축을 풀지 못했습니다. 다시 시도하세요.",
+  "notifier.update_install_failed": "다운로드했지만 새 버전을 설치하지 못했습니다. 서버 로그를 확인하세요.",
+  "notifier.update_unprivileged": "자동 업데이트를 사용할 수 없습니다: 앱이 자체 파일을 교체할 수 없습니다. 'docker pull' 또는 설치 스크립트를 다시 실행하여 업데이트하세요.",
+  "notifier.update_invalid_url": "업데이트 소스가 잘못되었습니다. 다시 시도하거나 수동으로 업데이트하세요.",
+  "auth.unauthorized": "이 작업을 수행할 권한이 없습니다."
 }

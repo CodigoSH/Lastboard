@@ -184,7 +184,7 @@
   "notifier.save_error": "Échec de l'enregistrement des paramètres",
   "notifier.system_restarting": "Redémarrage...",
   "notifier.update_downloading": "Téléchargement de la mise à jour...",
-  "notifier.update_failed": "Échec de la mise à jour",
+  "notifier.update_failed": "La mise à jour n'a pas pu être effectuée.",
   "notifier.update_start_confirm": "Prêt à mettre à jour ? On va redémarrer.",
   "notifier.update_verified": "Mise à jour vérifiée. Redémarrage...",
   "notifier.user_create_error": "Impossible de créer cet utilisateur",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Orage",
   "widget.weather.thunderstorm_hail": "Orage de grêle",
   "widget.weather.unknown": "Inconnu",
-  "widget.weather.wind": "Vent"
+  "widget.weather.wind": "Vent",
+  "notifier.update_download_failed": "Impossible de télécharger la mise à jour. Vérifiez la connexion du serveur et réessayez.",
+  "notifier.update_checksum_failed": "La mise à jour téléchargée a échoué au contrôle d'intégrité. Veuillez réessayer.",
+  "notifier.update_extract_failed": "Impossible de décompresser le paquet de mise à jour. Veuillez réessayer.",
+  "notifier.update_install_failed": "Téléchargée, mais la nouvelle version n'a pas pu être installée. Consultez les journaux du serveur.",
+  "notifier.update_unprivileged": "La mise à jour automatique n'est pas disponible : l'application ne peut pas remplacer ses propres fichiers. Mettez à jour avec 'docker pull' ou en relançant le script d'installation.",
+  "notifier.update_invalid_url": "Source de mise à jour invalide. Réessayez ou mettez à jour manuellement.",
+  "auth.unauthorized": "Vous n'êtes pas autorisé à effectuer cette action."
 }

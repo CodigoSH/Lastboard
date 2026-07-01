@@ -184,7 +184,7 @@
   "notifier.save_error": "Kesalahan menyimpan pengaturan",
   "notifier.system_restarting": "Memulai ulang...",
   "notifier.update_downloading": "Mengunduh pembaruan...",
-  "notifier.update_failed": "Pembaruan gagal",
+  "notifier.update_failed": "Pembaruan tidak dapat diselesaikan.",
   "notifier.update_start_confirm": "Siap memperbarui? Kami akan restart.",
   "notifier.update_verified": "Pembaruan diverifikasi. Memulai ulang...",
   "notifier.user_create_error": "Tidak dapat membuat pengguna itu",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Badai petir",
   "widget.weather.thunderstorm_hail": "Badai hujan es",
   "widget.weather.unknown": "Tidak diketahui",
-  "widget.weather.wind": "Angin"
+  "widget.weather.wind": "Angin",
+  "notifier.update_download_failed": "Gagal mengunduh pembaruan. Periksa koneksi server dan coba lagi.",
+  "notifier.update_checksum_failed": "Pembaruan yang diunduh gagal pemeriksaan integritas. Silakan coba lagi.",
+  "notifier.update_extract_failed": "Paket pembaruan tidak dapat diekstrak. Silakan coba lagi.",
+  "notifier.update_install_failed": "Terunduh, tetapi versi baru tidak dapat dipasang. Periksa log server.",
+  "notifier.update_unprivileged": "Pembaruan otomatis tidak tersedia: aplikasi tidak dapat mengganti berkasnya sendiri. Perbarui dengan 'docker pull' atau menjalankan ulang skrip instalasi.",
+  "notifier.update_invalid_url": "Sumber pembaruan tidak valid. Coba lagi atau perbarui secara manual.",
+  "auth.unauthorized": "Anda tidak berwenang melakukan ini."
 }

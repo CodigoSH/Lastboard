@@ -184,7 +184,7 @@
   "notifier.save_error": "Fehler beim Speichern der Einstellungen",
   "notifier.system_restarting": "Wird neu gestartet...",
   "notifier.update_downloading": "Update wird heruntergeladen...",
-  "notifier.update_failed": "Update fehlgeschlagen",
+  "notifier.update_failed": "Das Update konnte nicht abgeschlossen werden.",
   "notifier.update_start_confirm": "Bereit zum Aktualisieren? Wir starten neu.",
   "notifier.update_verified": "Update verifiziert. Neustart...",
   "notifier.user_create_error": "Benutzer konnte nicht erstellt werden",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Gewitter",
   "widget.weather.thunderstorm_hail": "Hagelgewitter",
   "widget.weather.unknown": "Unbekannt",
-  "widget.weather.wind": "Wind"
+  "widget.weather.wind": "Wind",
+  "notifier.update_download_failed": "Update konnte nicht heruntergeladen werden. Prüfe die Serververbindung und versuche es erneut.",
+  "notifier.update_checksum_failed": "Die heruntergeladene Aktualisierung hat die Integritätsprüfung nicht bestanden. Bitte erneut versuchen.",
+  "notifier.update_extract_failed": "Das Update-Paket konnte nicht entpackt werden. Bitte erneut versuchen.",
+  "notifier.update_install_failed": "Heruntergeladen, aber die neue Version konnte nicht installiert werden. Prüfe die Serverprotokolle.",
+  "notifier.update_unprivileged": "Automatisches Update nicht verfügbar: Die App kann ihre eigenen Dateien nicht ersetzen. Aktualisiere mit 'docker pull' oder durch erneutes Ausführen des Installationsskripts.",
+  "notifier.update_invalid_url": "Ungültige Update-Quelle. Versuche es erneut oder aktualisiere manuell.",
+  "auth.unauthorized": "Du bist dazu nicht berechtigt."
 }

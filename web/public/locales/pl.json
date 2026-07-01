@@ -184,7 +184,7 @@
   "notifier.save_error": "Błąd zapisu ustawień",
   "notifier.system_restarting": "Ponowne uruchamianie...",
   "notifier.update_downloading": "Pobieranie aktualizacji...",
-  "notifier.update_failed": "Aktualizacja nie powiodła się",
+  "notifier.update_failed": "Nie udało się ukończyć aktualizacji.",
   "notifier.update_start_confirm": "Gotowy do aktualizacji? Uruchomimy ponownie.",
   "notifier.update_verified": "Aktualizacja zweryfikowana. Ponowne uruchamianie...",
   "notifier.user_create_error": "Nie można utworzyć tego użytkownika",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Burza",
   "widget.weather.thunderstorm_hail": "Burza gradowa",
   "widget.weather.unknown": "Nieznany",
-  "widget.weather.wind": "Wiatr"
+  "widget.weather.wind": "Wiatr",
+  "notifier.update_download_failed": "Nie można pobrać aktualizacji. Sprawdź połączenie serwera i spróbuj ponownie.",
+  "notifier.update_checksum_failed": "Pobrana aktualizacja nie przeszła weryfikacji integralności. Spróbuj ponownie.",
+  "notifier.update_extract_failed": "Nie można rozpakować pakietu aktualizacji. Spróbuj ponownie.",
+  "notifier.update_install_failed": "Pobrano, ale nie udało się zainstalować nowej wersji. Sprawdź logi serwera.",
+  "notifier.update_unprivileged": "Automatyczna aktualizacja niedostępna: aplikacja nie może zastąpić własnych plików. Zaktualizuj przez 'docker pull' lub ponownie uruchamiając skrypt instalacyjny.",
+  "notifier.update_invalid_url": "Nieprawidłowe źródło aktualizacji. Spróbuj ponownie lub zaktualizuj ręcznie.",
+  "auth.unauthorized": "Nie masz uprawnień do tej operacji."
 }

@@ -184,7 +184,7 @@
   "notifier.save_error": "ترتیبات محفوظ کرنے میں خرابی",
   "notifier.system_restarting": "دوبارہ شروع ہو رہا ہے...",
   "notifier.update_downloading": "اپ ڈیٹ ڈاؤن لوڈ ہو رہی ہے...",
-  "notifier.update_failed": "اپ ڈیٹ ناکام",
+  "notifier.update_failed": "اپ ڈیٹ مکمل نہیں ہو سکی۔",
   "notifier.update_start_confirm": "اپ ڈیٹ کے لیے تیار ہیں؟ ہم دوبارہ شروع کریں گے۔",
   "notifier.update_verified": "اپ ڈیٹ تصدیق شدہ۔ دوبارہ شروع ہو رہا ہے...",
   "notifier.user_create_error": "وہ صارف نہیں بنایا جا سکا",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "طوفان",
   "widget.weather.thunderstorm_hail": "اولوں کا طوفان",
   "widget.weather.unknown": "نامعلوم",
-  "widget.weather.wind": "ہوا"
+  "widget.weather.wind": "ہوا",
+  "notifier.update_download_failed": "اپ ڈیٹ ڈاؤن لوڈ نہیں ہو سکی۔ سرور کا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+  "notifier.update_checksum_failed": "ڈاؤن لوڈ کردہ اپ ڈیٹ سالمیت کی جانچ میں ناکام رہی۔ براہِ کرم دوبارہ کوشش کریں۔",
+  "notifier.update_extract_failed": "اپ ڈیٹ پیکیج کو کھولا نہیں جا سکا۔ براہِ کرم دوبارہ کوشش کریں۔",
+  "notifier.update_install_failed": "ڈاؤن لوڈ ہو گیا، لیکن نیا ورژن انسٹال نہیں ہو سکا۔ سرور لاگز دیکھیں۔",
+  "notifier.update_unprivileged": "خودکار اپ ڈیٹ دستیاب نہیں: ایپ اپنی فائلیں تبدیل نہیں کر سکتی۔ 'docker pull' سے یا انسٹال اسکرپٹ دوبارہ چلا کر اپ ڈیٹ کریں۔",
+  "notifier.update_invalid_url": "غلط اپ ڈیٹ ذریعہ۔ دوبارہ کوشش کریں یا دستی طور پر اپ ڈیٹ کریں۔",
+  "auth.unauthorized": "آپ کو یہ کرنے کی اجازت نہیں ہے۔"
 }

@@ -184,7 +184,7 @@
   "notifier.save_error": "Ayarlar kaydedilirken hata",
   "notifier.system_restarting": "Yeniden başlatılıyor...",
   "notifier.update_downloading": "Güncelleme indiriliyor...",
-  "notifier.update_failed": "Güncelleme başarısız",
+  "notifier.update_failed": "Güncelleme tamamlanamadı.",
   "notifier.update_start_confirm": "Güncellemeye hazır mısınız? Yeniden başlatacağız.",
   "notifier.update_verified": "Güncelleme doğrulandı. Yeniden başlatılıyor...",
   "notifier.user_create_error": "Bu kullanıcı oluşturulamadı",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Fırtına",
   "widget.weather.thunderstorm_hail": "Dolu fırtınası",
   "widget.weather.unknown": "Bilinmeyen",
-  "widget.weather.wind": "Rüzgar"
+  "widget.weather.wind": "Rüzgar",
+  "notifier.update_download_failed": "Güncelleme indirilemedi. Sunucunun bağlantısını kontrol edip tekrar deneyin.",
+  "notifier.update_checksum_failed": "İndirilen güncelleme bütünlük denetiminden geçemedi. Lütfen tekrar deneyin.",
+  "notifier.update_extract_failed": "Güncelleme paketi açılamadı. Lütfen tekrar deneyin.",
+  "notifier.update_install_failed": "İndirildi ancak yeni sürüm kurulamadı. Sunucu günlüklerini kontrol edin.",
+  "notifier.update_unprivileged": "Otomatik güncelleme kullanılamıyor: uygulama kendi dosyalarını değiştiremiyor. 'docker pull' ile veya kurulum betiğini yeniden çalıştırarak güncelleyin.",
+  "notifier.update_invalid_url": "Geçersiz güncelleme kaynağı. Tekrar deneyin veya elle güncelleyin.",
+  "auth.unauthorized": "Bunu yapmaya yetkiniz yok."
 }

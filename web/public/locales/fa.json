@@ -184,7 +184,7 @@
   "notifier.save_error": "خطا در ذخیره تنظیمات",
   "notifier.system_restarting": "در حال راه‌اندازی مجدد...",
   "notifier.update_downloading": "در حال دانلود به‌روزرسانی...",
-  "notifier.update_failed": "به‌روزرسانی ناموفق بود",
+  "notifier.update_failed": "به‌روزرسانی کامل نشد.",
   "notifier.update_start_confirm": "آماده به‌روزرسانی هستید؟ راه‌اندازی مجدد می‌کنیم.",
   "notifier.update_verified": "به‌روزرسانی تایید شد. راه‌اندازی مجدد...",
   "notifier.user_create_error": "امکان ایجاد آن کاربر وجود ندارد",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "طوفان تندری",
   "widget.weather.thunderstorm_hail": "طوفان تگرگ",
   "widget.weather.unknown": "ناشناخته",
-  "widget.weather.wind": "باد"
+  "widget.weather.wind": "باد",
+  "notifier.update_download_failed": "دانلود به‌روزرسانی ممکن نشد. اتصال سرور را بررسی کنید و دوباره تلاش کنید.",
+  "notifier.update_checksum_failed": "بررسی صحت به‌روزرسانی دانلودشده ناموفق بود. لطفاً دوباره تلاش کنید.",
+  "notifier.update_extract_failed": "بسته به‌روزرسانی باز نشد. لطفاً دوباره تلاش کنید.",
+  "notifier.update_install_failed": "دانلود شد، اما نسخه جدید نصب نشد. گزارش‌های سرور را بررسی کنید.",
+  "notifier.update_unprivileged": "به‌روزرسانی خودکار در دسترس نیست: برنامه نمی‌تواند فایل‌های خود را جایگزین کند. با 'docker pull' یا اجرای دوباره اسکریپت نصب به‌روزرسانی کنید.",
+  "notifier.update_invalid_url": "منبع به‌روزرسانی نامعتبر است. دوباره تلاش کنید یا به‌صورت دستی به‌روزرسانی کنید.",
+  "auth.unauthorized": "شما مجاز به انجام این کار نیستید."
 }

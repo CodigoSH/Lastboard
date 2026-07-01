@@ -256,7 +256,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isFirstAdmin(h.DB, userID) {
-		http.Error(w, "Forbidden: Admin only", http.StatusForbidden)
+		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
 
@@ -270,7 +270,8 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 			exe = real
 		}
 		if e := checkDirWritable(filepath.Dir(exe)); e != nil {
-			http.Error(w, "Auto-update unavailable: the app cannot replace its own binary (running unprivileged). Update with 'docker pull' (Docker) or by re-running the install script.", http.StatusForbidden)
+			slog.Warn("Update unavailable: binary directory not writable (unprivileged)", "dir", filepath.Dir(exe), "error", e)
+			http.Error(w, "notifier.update_unprivileged", http.StatusForbidden)
 			return
 		}
 	}
@@ -280,13 +281,14 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		AssetUrl string `json:"asset_url"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		http.Error(w, "notifier.update_failed", http.StatusBadRequest)
 		return
 	}
 
 	parsedURL, err := url.Parse(req.AssetUrl)
 	if err != nil || parsedURL.Host != "git.codigosh.com" || !strings.HasPrefix(path.Clean(parsedURL.Path), "/CodigoSH/Lastboard/releases/") {
-		http.Error(w, "Invalid asset URL", http.StatusBadRequest)
+		slog.Warn("Update rejected: invalid asset URL", "asset_url", req.AssetUrl)
+		http.Error(w, "notifier.update_invalid_url", http.StatusBadRequest)
 		return
 	}
 
@@ -296,7 +298,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	// 2. Download Binary
 	if err := h.downloadFile(req.AssetUrl, tmpFile); err != nil {
 		slog.Error("Update failed: could not download binary", "asset_url", req.AssetUrl, "tmp_file", tmpFile, "error", err)
-		http.Error(w, "notifier.update_failed", http.StatusInternalServerError)
+		http.Error(w, "notifier.update_download_failed", http.StatusInternalServerError)
 		return
 	}
 
@@ -308,20 +310,22 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(checksumFile)
 
 	if err := h.downloadFile(checksumUrl, checksumFile); err != nil {
-		http.Error(w, "Failed to download checksums.txt", http.StatusInternalServerError)
+		slog.Error("Update failed: could not download checksums.txt", "checksum_url", checksumUrl, "error", err)
+		http.Error(w, "notifier.update_download_failed", http.StatusInternalServerError)
 		return
 	}
 
 	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
 		slog.Error("Update failed: checksum verification failed", "asset_url", req.AssetUrl, "error", err)
-		http.Error(w, "notifier.update_failed", http.StatusInternalServerError)
+		http.Error(w, "notifier.update_checksum_failed", http.StatusInternalServerError)
 		return
 	}
 
 	// Resolve current executable path (needed for binary name matching and atomic swap)
 	currentExe, err := os.Executable()
 	if err != nil {
-		http.Error(w, "Could not determine executable path", http.StatusInternalServerError)
+		slog.Error("Update failed: could not determine executable path", "error", err)
+		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
 		return
 	}
 	if realExe, err := filepath.EvalSymlinks(currentExe); err == nil {
@@ -332,7 +336,8 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	binaryPath := filepath.Join(os.TempDir(), "dashboard_new")
 	defer os.Remove(binaryPath)
 	if err := h.extractTarGz(tmpFile, binaryPath, filepath.Base(currentExe)); err != nil {
-		http.Error(w, "Extraction failed: "+err.Error(), http.StatusInternalServerError)
+		slog.Error("Update failed: could not extract binary from archive", "error", err)
+		http.Error(w, "notifier.update_extract_failed", http.StatusInternalServerError)
 		return
 	}
 
@@ -342,7 +347,8 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// Move current to old
 	if err := h.moveFile(currentExe, oldExe); err != nil {
-		http.Error(w, "Failed to backup current binary: "+err.Error(), http.StatusInternalServerError)
+		slog.Error("Update failed: could not back up current binary", "current_exe", currentExe, "error", err)
+		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
 		return
 	}
 
@@ -352,13 +358,16 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		if rbErr := h.moveFile(oldExe, currentExe); rbErr != nil {
 			slog.Error("Update install failed AND rollback failed — binary may be missing",
 				"install_error", err, "rollback_error", rbErr, "old_exe", oldExe, "current_exe", currentExe)
+		} else {
+			slog.Error("Update failed: could not install new binary (rolled back)", "current_exe", currentExe, "error", err)
 		}
-		http.Error(w, "Failed to install new binary: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
 		return
 	}
 
 	if err := os.Chmod(currentExe, 0700); err != nil {
-		http.Error(w, "Failed to set permissions", http.StatusInternalServerError)
+		slog.Error("Update failed: could not set permissions on new binary", "current_exe", currentExe, "error", err)
+		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
 		return
 	}
 

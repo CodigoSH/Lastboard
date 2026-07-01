@@ -184,7 +184,7 @@
   "notifier.save_error": "خطأ في حفظ الإعدادات",
   "notifier.system_restarting": "جارٍ إعادة التشغيل...",
   "notifier.update_downloading": "جاري تنزيل التحديث...",
-  "notifier.update_failed": "فشل التحديث",
+  "notifier.update_failed": "تعذّر إكمال التحديث.",
   "notifier.update_start_confirm": "هل أنت مستعد للتحديث؟ سنقوم بإعادة التشغيل.",
   "notifier.update_verified": "تم التحقق من التحديث. إعادة التشغيل...",
   "notifier.user_create_error": "تعذر إنشاء هذا المستخدم",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "عاصفة رعدية",
   "widget.weather.thunderstorm_hail": "عاصفة برد",
   "widget.weather.unknown": "غير معروف",
-  "widget.weather.wind": "رياح"
+  "widget.weather.wind": "رياح",
+  "notifier.update_download_failed": "تعذّر تنزيل التحديث. تحقّق من اتصال الخادم وحاول مرة أخرى.",
+  "notifier.update_checksum_failed": "فشل التحقق من سلامة التحديث الذي تم تنزيله. يُرجى المحاولة مرة أخرى.",
+  "notifier.update_extract_failed": "تعذّر فك ضغط حزمة التحديث. يُرجى المحاولة مرة أخرى.",
+  "notifier.update_install_failed": "تم التنزيل، لكن تعذّر تثبيت الإصدار الجديد. راجِع سجلّات الخادم.",
+  "notifier.update_unprivileged": "التحديث التلقائي غير متاح: لا يمكن للتطبيق استبدال ملفاته. حدِّث باستخدام 'docker pull' أو بإعادة تشغيل سكربت التثبيت.",
+  "notifier.update_invalid_url": "مصدر التحديث غير صالح. حاول مرة أخرى أو حدِّث يدويًا.",
+  "auth.unauthorized": "ليست لديك صلاحية للقيام بذلك."
 }

@@ -184,7 +184,7 @@
   "notifier.save_error": "Couldn't save settings",
   "notifier.system_restarting": "Restarting...",
   "notifier.update_downloading": "Downloading update...",
-  "notifier.update_failed": "Update failed: ",
+  "notifier.update_failed": "The update couldn't be completed.",
   "notifier.update_start_confirm": "Ready to update? We'll restart.",
   "notifier.update_verified": "Verified! Installing...",
   "notifier.user_create_error": "Couldn't create that user",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Thunderstorm",
   "widget.weather.thunderstorm_hail": "Hail Storm",
   "widget.weather.unknown": "Unknown",
-  "widget.weather.wind": "Wind"
+  "widget.weather.wind": "Wind",
+  "notifier.update_download_failed": "Couldn't download the update. Check the server's connection and try again.",
+  "notifier.update_checksum_failed": "The downloaded update failed its integrity check. Please try again.",
+  "notifier.update_extract_failed": "The update package couldn't be unpacked. Please try again.",
+  "notifier.update_install_failed": "Downloaded, but the new version couldn't be installed. Check the server logs.",
+  "notifier.update_unprivileged": "Automatic update isn't available: the app can't replace its own files. Update with 'docker pull' or by re-running the install script.",
+  "notifier.update_invalid_url": "Invalid update source. Try again or update manually.",
+  "auth.unauthorized": "You're not authorized to do this."
 }

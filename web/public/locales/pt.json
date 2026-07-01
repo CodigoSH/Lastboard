@@ -184,7 +184,7 @@
   "notifier.save_error": "Erro ao guardar as definições",
   "notifier.system_restarting": "Reiniciando...",
   "notifier.update_downloading": "Baixando atualização...",
-  "notifier.update_failed": "Atualização falhada",
+  "notifier.update_failed": "Não foi possível concluir a atualização.",
   "notifier.update_start_confirm": "Pronto para atualizar? Vamos reiniciar.",
   "notifier.update_verified": "Atualização verificada. Reiniciando...",
   "notifier.user_create_error": "Não foi possível criar o utilizador",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Trovoada",
   "widget.weather.thunderstorm_hail": "Trovoada com granizo",
   "widget.weather.unknown": "Desconhecido",
-  "widget.weather.wind": "Vento"
+  "widget.weather.wind": "Vento",
+  "notifier.update_download_failed": "Não foi possível baixar a atualização. Verifique a conexão do servidor e tente novamente.",
+  "notifier.update_checksum_failed": "A atualização baixada falhou na verificação de integridade. Tente novamente.",
+  "notifier.update_extract_failed": "Não foi possível descompactar o pacote de atualização. Tente novamente.",
+  "notifier.update_install_failed": "Baixado, mas não foi possível instalar a nova versão. Verifique os logs do servidor.",
+  "notifier.update_unprivileged": "Atualização automática indisponível: o app não pode substituir os próprios arquivos. Atualize com 'docker pull' ou executando novamente o script de instalação.",
+  "notifier.update_invalid_url": "Origem de atualização inválida. Tente novamente ou atualize manualmente.",
+  "auth.unauthorized": "Você não tem autorização para isso."
 }

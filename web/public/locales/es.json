@@ -184,7 +184,7 @@
   "notifier.save_error": "Error al guardar los ajustes",
   "notifier.system_restarting": "Reiniciando...",
   "notifier.update_downloading": "Descargando actualización...",
-  "notifier.update_failed": "Error en la actualización",
+  "notifier.update_failed": "No se pudo completar la actualización.",
   "notifier.update_start_confirm": "¿Listo para actualizar? Vamos a reiniciar.",
   "notifier.update_verified": "Actualización verificada. Reiniciando...",
   "notifier.user_create_error": "No se pudo crear ese usuario",
@@ -393,5 +393,12 @@
   "widget.weather.thunderstorm": "Tormenta",
   "widget.weather.thunderstorm_hail": "Tormenta de granizo",
   "widget.weather.unknown": "Desconocido",
-  "widget.weather.wind": "Viento"
+  "widget.weather.wind": "Viento",
+  "notifier.update_download_failed": "No se pudo descargar la actualización. Revisa la conexión del servidor e inténtalo de nuevo.",
+  "notifier.update_checksum_failed": "La actualización descargada no pasó la verificación de integridad. Inténtalo de nuevo.",
+  "notifier.update_extract_failed": "No se pudo descomprimir el paquete de actualización. Inténtalo de nuevo.",
+  "notifier.update_install_failed": "Se descargó, pero no se pudo instalar la nueva versión. Revisa los registros del servidor.",
+  "notifier.update_unprivileged": "La actualización automática no está disponible: la app no puede reemplazar sus propios archivos. Actualiza con 'docker pull' o volviendo a ejecutar el script de instalación.",
+  "notifier.update_invalid_url": "Origen de actualización no válido. Inténtalo de nuevo o actualiza manualmente.",
+  "auth.unauthorized": "No tienes autorización para hacer esto."
 }
