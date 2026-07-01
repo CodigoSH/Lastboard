@@ -45,7 +45,7 @@ jobs:
           cat coverage.txt
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: |
@@ -53,7 +53,7 @@ jobs:
             coverage.txt
 
       - name: Run Frontend Tests
-        run: bun test web/src/services/collisionService.test.ts
+        run: bun test
 
       - name: Build backend
         run: go build -v -o bin/lastboard ./cmd/lastboard
@@ -92,7 +92,7 @@ jobs:
           cat benchmark.txt
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: benchmark-results
           path: benchmark.txt
@@ -118,7 +118,7 @@ jobs:
           gosec -no-fail -fmt sarif -out results.sarif ./...
 
       - name: Upload SARIF results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gosec-results
           path: results.sarif
