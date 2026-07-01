@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2026-07-01### Added
+- Minor updates### Fixed
+- Normalize release notes to Keep-a-Changelog format### Changed
+- Extract pure i18n/icon-search logic into testable helpers
+- Ci(forgejo): drop dead develop branch triggers
+- Ci(forgejo): run full frontend test suite and bump upload-artifact to v4
+- Docs(changelog): remove deployment platform references
+- I18n: translate remaining English phrases (el, ur, hi, fa, id, ar, bn)
+- Style(widgets): capitalize clock/weather text instead of uppercase
+- Test(api): add characterization tests for UpdatePreferences, PerformUpdate guards and compareVersions
 ## [1.5.2] - 2026-06-08### Added
 - Block the in-app updater when the binary isn't writable
 - Minor updates
