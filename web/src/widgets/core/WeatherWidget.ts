@@ -416,6 +416,7 @@ const CSS = `
     color: var(--text-main);
     font-weight: 700;
     margin-top: 1%;
+    text-transform: capitalize;
 }
 
 /* ── Forecast header ── */
@@ -430,7 +431,7 @@ const CSS = `
 .fc-h-info { flex:1; min-width:0; }
 .fc-h-temp { font-size:clamp(.9rem,9cqi,2rem); font-weight:700; letter-spacing:-.03em; line-height:1.1; }
 .fc-h-desc { font-size:clamp(.45rem,3.5cqi,.75rem); color:var(--text-dim); text-transform:capitalize; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.fc-h-city { font-size:clamp(.7rem,5.5cqi,1.1rem); color:var(--text-main); font-weight:700; text-align:right; flex-shrink:0; }
+.fc-h-city { font-size:clamp(.7rem,5.5cqi,1.1rem); color:var(--text-main); font-weight:700; text-align:right; flex-shrink:0; text-transform:capitalize; }
 
 /* ── Forecast row ── */
 .fc-row {

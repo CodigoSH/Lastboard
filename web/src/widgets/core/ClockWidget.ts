@@ -242,7 +242,7 @@ class ClockWidget extends HTMLElement {
                     font-weight: 600;
                     letter-spacing: -0.01em;
                     white-space: nowrap;
-                    text-transform: uppercase;
+                    text-transform: capitalize;
                     text-align: center;
                 }
                 .state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; height:100%; width:100%; opacity:.5; }
