@@ -177,3 +177,24 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"draft\": false}" \
             "$API/repos/$REPO/releases/$RELEASE_ID"
+
+  # Retention: only after the release is successfully published (needs: release)
+  # do we dispatch the pruner. Gating on success guarantees we never delete the
+  # cycle's betas for a release that failed to ship, and by now the releases API
+  # already lists this version (no race — the previous tag-push trigger was the bug).
+  trigger-prune:
+    name: Trigger retention prune
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch prune-releases (live) after successful publish
+        env:
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: |
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: token $CI_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"main","inputs":{"dry_run":"false"}}' \
+            "${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}/actions/workflows/prune-releases.yml/dispatches")
+          echo "Prune dispatch HTTP $CODE"
+          [ "$CODE" = "204" ] || { echo "Prune dispatch failed (HTTP $CODE)"; exit 1; }

@@ -8,9 +8,13 @@ name: Prune old releases and images
 #             docker. Betas leave no trace; their changes still land in the
 #             stable changelog because that is built from git commits.
 #
-# Safety: runs in DRY-RUN by default. A manual run (workflow_dispatch) honours
-# the dry_run input. On tag push it only goes live if the repo variable
-# PRUNE_LIVE == 'true'; otherwise it just logs the plan.
+# Trigger: workflow_dispatch only. release.yml auto-dispatches this (dry_run=false)
+# from its final job, which runs ONLY after the release is successfully published
+# (needs: release) — so betas are never deleted for a release that failed to ship,
+# and the releases API already lists the new version (no race with the tag push,
+# which was the previous bug).
+#
+# Safety: DRY-RUN by default; goes live only when dry_run is explicitly false.
 
 on:
   workflow_dispatch:
@@ -19,9 +23,6 @@ on:
         description: "Only log what would be deleted (no deletion)"
         type: boolean
         default: true
-  push:
-    tags:
-      - 'v*'
 
 env:
   KEEP_STABLE: "2"
@@ -36,7 +37,6 @@ jobs:
           CI_TOKEN: ${{ secrets.CI_TOKEN }}
           EVENT: ${{ github.event_name }}
           INPUT_DRY: ${{ inputs.dry_run }}
-          PRUNE_LIVE: ${{ vars.PRUNE_LIVE }}
         run: |
           python3 - <<'PY'
           import os, re, json, urllib.request, urllib.error
@@ -50,10 +50,9 @@ jobs:
           KEEP_BETA   = int(os.environ.get("KEEP_BETA", "1"))
 
           event = os.environ.get("EVENT", "")
-          if event == "workflow_dispatch":
-              DRY = os.environ.get("INPUT_DRY", "true").strip().lower() != "false"
-          else:  # push
-              DRY = os.environ.get("PRUNE_LIVE", "").strip().lower() != "true"
+          # Sole trigger is workflow_dispatch (manual, or auto-dispatched by
+          # release.yml after a successful publish). Live only when dry_run=false.
+          DRY = os.environ.get("INPUT_DRY", "true").strip().lower() != "false"
 
           def req(method, path, expect_json=True):
               r = urllib.request.Request(BASE + path, method=method)
