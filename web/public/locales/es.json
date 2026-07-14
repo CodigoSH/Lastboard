@@ -160,7 +160,7 @@
   "mobile_reorder.save": "Guardar cambios",
   "mobile_reorder.title": "Reordenar ítems",
   "mobile_reorder.cancel": "Cancelar",
-  "mobile_reorder.visible_section": "Visibles en móvil",
+  "mobile_reorder.visible_section": "Visibles",
   "mobile_reorder.hidden_section": "Ocultos",
   "mobile_reorder.empty_visible": "No hay marcadores visibles en móvil",
   "mobile_reorder.show": "Mostrar",

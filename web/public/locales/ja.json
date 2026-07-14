@@ -160,7 +160,7 @@
   "mobile_reorder.save": "変更を保存",
   "mobile_reorder.title": "項目を並べ替え",
   "mobile_reorder.cancel": "キャンセル",
-  "mobile_reorder.visible_section": "モバイルで表示",
+  "mobile_reorder.visible_section": "表示",
   "mobile_reorder.hidden_section": "非表示",
   "mobile_reorder.empty_visible": "モバイルで表示されるブックマークがありません",
   "mobile_reorder.show": "表示",

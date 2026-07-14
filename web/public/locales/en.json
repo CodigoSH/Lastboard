@@ -160,7 +160,7 @@
   "mobile_reorder.save": "Save Changes",
   "mobile_reorder.title": "Reorder Items",
   "mobile_reorder.cancel": "Cancel",
-  "mobile_reorder.visible_section": "Visible on mobile",
+  "mobile_reorder.visible_section": "Visible",
   "mobile_reorder.hidden_section": "Hidden",
   "mobile_reorder.empty_visible": "No bookmarks visible on mobile",
   "mobile_reorder.show": "Show",

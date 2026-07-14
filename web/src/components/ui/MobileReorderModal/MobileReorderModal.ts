@@ -60,8 +60,8 @@ export class MobileReorderModal extends HTMLElement {
             if (bHas) return 1;
             return a.item.y !== b.item.y ? a.item.y - b.item.y : a.item.x - b.item.x;
         });
-        // Hidden: order among themselves is irrelevant; keep a stable y/x sort.
-        hidden.sort((a, b) => a.item.y !== b.item.y ? a.item.y - b.item.y : a.item.x - b.item.x);
+        // Hidden: sort alphabetically by label so users can find them quickly.
+        hidden.sort((a, b) => this._labelOf(a).localeCompare(this._labelOf(b)));
 
         this._visible = visible;
         this._hidden = hidden;
@@ -86,7 +86,7 @@ export class MobileReorderModal extends HTMLElement {
         const visibleRows = this._visible.map((r, i) => this._renderRow(r, i, true)).join('');
         const visibleSection = `
             <div class="section">
-                <div class="section-title">${i18n.t('mobile_reorder.visible_section') || 'Visible on mobile'}</div>
+                <div class="section-title">${i18n.t('mobile_reorder.visible_section') || 'Visible'}</div>
                 ${this._visible.length
                     ? `<div class="rows" id="visible-list">${visibleRows}</div>`
                     : `<div class="empty-hint">${i18n.t('mobile_reorder.empty_visible') || 'No bookmarks visible on mobile'}</div>`}
@@ -102,6 +102,10 @@ export class MobileReorderModal extends HTMLElement {
             </div>`;
 
         return visibleSection + hiddenSection;
+    }
+
+    private _labelOf(r: RowState): string {
+        return (r.content.label || `Item ${r.item.id}`).toString();
     }
 
     private _renderRow(r: RowState, index: number, isVisible: boolean): string {
@@ -162,7 +166,11 @@ export class MobileReorderModal extends HTMLElement {
         if (vIdx >= 0) {
             const [moved] = this._visible.splice(vIdx, 1);
             moved.content.visibleTouch = false;
-            this._hidden.unshift(moved); // lands at the top of the hidden list
+            // Insert alphabetically so the hidden list stays sorted.
+            const label = this._labelOf(moved);
+            let at = this._hidden.findIndex(r => this._labelOf(r).localeCompare(label) > 0);
+            if (at < 0) at = this._hidden.length;
+            this._hidden.splice(at, 0, moved);
             direction = 'down';
         } else {
             const hIdx = this._hidden.findIndex(r => r.item.id === id);
@@ -185,12 +193,22 @@ export class MobileReorderModal extends HTMLElement {
             return;
         }
 
+        // Clear any leftover animation class so the new one always plays. Without
+        // this, a lingering `entering-*` class wins the CSS `animation` property
+        // over the freshly-added `leaving-*` one, so no animation (and no
+        // animationend) fires and the toggle silently does nothing.
+        node.classList.remove('entering-top', 'entering-bottom', 'leaving-down', 'leaving-up');
+        void node.offsetWidth; // reflow so re-adding an animation restarts it
+
         node.classList.add(direction === 'down' ? 'leaving-down' : 'leaving-up');
         node.addEventListener('animationend', () => {
             this._updateBody();
             const moved = this.shadowRoot!.querySelector<HTMLElement>(`.item[data-id="${id}"]`);
             if (moved) {
-                moved.classList.add(direction === 'down' ? 'entering-top' : 'entering-bottom');
+                const enterClass = direction === 'down' ? 'entering-top' : 'entering-bottom';
+                moved.classList.add(enterClass);
+                // Drop the class once it finishes so it can't block a later toggle.
+                moved.addEventListener('animationend', () => moved.classList.remove(enterClass), { once: true });
             }
         }, { once: true });
     }

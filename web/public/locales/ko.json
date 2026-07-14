@@ -160,7 +160,7 @@
   "mobile_reorder.save": "변경사항 저장",
   "mobile_reorder.title": "항목 순서 변경",
   "mobile_reorder.cancel": "취소",
-  "mobile_reorder.visible_section": "모바일에 표시",
+  "mobile_reorder.visible_section": "표시",
   "mobile_reorder.hidden_section": "숨김",
   "mobile_reorder.empty_visible": "모바일에 표시된 북마크가 없습니다",
   "mobile_reorder.show": "표시",

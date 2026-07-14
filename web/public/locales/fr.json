@@ -160,7 +160,7 @@
   "mobile_reorder.save": "Enregistrer les modifications",
   "mobile_reorder.title": "Réorganiser les éléments",
   "mobile_reorder.cancel": "Annuler",
-  "mobile_reorder.visible_section": "Visibles sur mobile",
+  "mobile_reorder.visible_section": "Visibles",
   "mobile_reorder.hidden_section": "Masqués",
   "mobile_reorder.empty_visible": "Aucun signet visible sur mobile",
   "mobile_reorder.show": "Afficher",

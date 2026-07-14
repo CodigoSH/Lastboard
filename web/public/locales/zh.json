@@ -160,7 +160,7 @@
   "mobile_reorder.save": "保存更改",
   "mobile_reorder.title": "重新排列项目",
   "mobile_reorder.cancel": "取消",
-  "mobile_reorder.visible_section": "在移动端显示",
+  "mobile_reorder.visible_section": "可见",
   "mobile_reorder.hidden_section": "已隐藏",
   "mobile_reorder.empty_visible": "没有在移动端显示的书签",
   "mobile_reorder.show": "显示",
