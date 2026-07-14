@@ -1,9 +1,6 @@
 # Claude Code
 .claude/
 
-# IDE
-.vscode/
-
 # Go binaries and build artifacts
 bin/
 dist/
@@ -73,9 +70,9 @@ tmp/
 # Agent/Coding assistant files
 AGENTS.md
 CLAUDE.md
- cursor_rules/
- .cursorrules
- .github/copilot-instructions.md
+cursor_rules/
+.cursorrules
+.github/copilot-instructions.md
 
 # Temporary development notes
 /*_FIXED.md
