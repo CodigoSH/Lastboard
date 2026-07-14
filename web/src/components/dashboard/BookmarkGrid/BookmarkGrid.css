@@ -134,6 +134,15 @@
         padding: 1.6% 0.8% !important;
     }
 
+    /* Content widgets manage their own internal padding, so the card's
+       percentage padding is redundant and wastes interior space (it also
+       scales with widget size). Let them fill the tile. */
+    &:has(widget-docker),
+    &:has(widget-notepad),
+    &:has(widget-markdown) {
+        padding: 0 !important;
+    }
+
     position: relative;
     aspect-ratio: calc(var(--w, 1) / var(--h, 1)) !important;
     height: auto !important;
