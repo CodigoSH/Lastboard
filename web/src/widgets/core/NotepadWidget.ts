@@ -104,6 +104,12 @@ const CSS = `
     overflow-y: auto;
 }
 
+/* Read-only mode hides the dock, so drop its 36px bottom reserve for minimal,
+   even padding. The reserve stays in edit mode so text never sits under the dock. */
+.editor-container.locked .editor {
+    padding-bottom: 14px !important;
+}
+
 /* ── ContentEditable ───────────────────────────────────────────────── */
 .editor {
     background: transparent !important;
