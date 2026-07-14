@@ -1,0 +1,137 @@
+name: Prune old releases and images
+
+# Retention policy (keeps storage bounded forever, no manual work):
+#   Stables : keep the entry (tag + notes + on-demand source) for ALL of them,
+#             but keep binaries/checksums + docker only on the last KEEP_STABLE.
+#   Betas   : keep only the latest one (and only while its stable hasn't shipped);
+#             every other beta is deleted completely — release + tag + assets +
+#             docker. Betas leave no trace; their changes still land in the
+#             stable changelog because that is built from git commits.
+#
+# Safety: runs in DRY-RUN by default. A manual run (workflow_dispatch) honours
+# the dry_run input. On tag push it only goes live if the repo variable
+# PRUNE_LIVE == 'true'; otherwise it just logs the plan.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only log what would be deleted (no deletion)"
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'v*'
+
+env:
+  KEEP_STABLE: "2"
+  KEEP_BETA: "1"
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prune old releases and images
+        env:
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          INPUT_DRY: ${{ inputs.dry_run }}
+          PRUNE_LIVE: ${{ vars.PRUNE_LIVE }}
+        run: |
+          python3 - <<'PY'
+          import os, re, json, urllib.request, urllib.error
+
+          BASE      = "https://git.codigosh.com/api/v1"
+          REPO      = "CodigoSH/Lastboard"
+          PKG_OWNER = "CodigoSH"
+          PKG_NAME  = "lastboard"
+          TOKEN     = os.environ["CI_TOKEN"]
+          KEEP_STABLE = int(os.environ.get("KEEP_STABLE", "2"))
+          KEEP_BETA   = int(os.environ.get("KEEP_BETA", "1"))
+
+          event = os.environ.get("EVENT", "")
+          if event == "workflow_dispatch":
+              DRY = os.environ.get("INPUT_DRY", "true").strip().lower() != "false"
+          else:  # push
+              DRY = os.environ.get("PRUNE_LIVE", "").strip().lower() != "true"
+
+          def req(method, path, expect_json=True):
+              r = urllib.request.Request(BASE + path, method=method)
+              r.add_header("Authorization", "token " + TOKEN)
+              r.add_header("Accept", "application/json")
+              try:
+                  with urllib.request.urlopen(r, timeout=30) as resp:
+                      body = resp.read()
+                      return json.loads(body) if (expect_json and body) else None
+              except urllib.error.HTTPError as e:
+                  print(f"    ! HTTP {e.code} {method} {path}: {e.read()[:160]!r}")
+              except Exception as e:
+                  print(f"    ! error {method} {path}: {e}")
+              return None
+
+          def all_releases():
+              out, page = [], 1
+              while True:
+                  d = req("GET", f"/repos/{REPO}/releases?limit=50&page={page}")
+                  if not d:
+                      break
+                  out.extend(d)
+                  if len(d) < 50:
+                      break
+                  page += 1
+              return out
+
+          def vt(tag):
+              m = re.match(r"(\d+)\.(\d+)\.(\d+)", tag.lstrip("vV"))
+              return tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
+
+          def pn(tag):
+              m = re.search(r"(?:beta|rc)\.(\d+)", tag.lower())
+              return int(m.group(1)) if m else 0
+
+          rels    = all_releases()
+          stables = sorted([r for r in rels if not r.get("prerelease")],
+                           key=lambda r: vt(r["tag_name"]), reverse=True)
+          betas   = sorted([r for r in rels if r.get("prerelease")],
+                           key=lambda r: (vt(r["tag_name"]), pn(r["tag_name"])), reverse=True)
+
+          latest_stable = vt(stables[0]["tag_name"]) if stables else (0, 0, 0)
+
+          # Betas to keep: the newest one, only if its base version is ahead of the
+          # newest stable (i.e. that cycle's stable hasn't shipped yet).
+          keep_beta = set()
+          if betas and vt(betas[0]["tag_name"]) > latest_stable:
+              keep_beta = {r["id"] for r in betas[:KEEP_BETA]}
+
+          del_betas    = [r for r in betas if r["id"] not in keep_beta]
+          strip_stable = stables[KEEP_STABLE:]   # keep entry+tag, drop binaries + old docker
+
+          mode = "DRY-RUN (no deletion)" if DRY else "LIVE"
+          print(f"== Prune [{mode}] event={event} ==")
+          print(f"Releases: {len(rels)} | stables={len(stables)} betas={len(betas)}")
+          print(f"Keep stable binaries: {[r['tag_name'] for r in stables[:KEEP_STABLE]]}")
+          print(f"Keep beta: {[r['tag_name'] for r in betas if r['id'] in keep_beta] or 'none'}")
+
+          def del_container(tag):
+              # Only ever deletes the version-specific ref tag (v1.5.5-beta.07 / v1.5.4);
+              # never the moving tags latest / beta / <major.minor>.
+              req("DELETE", f"/packages/{PKG_OWNER}/container/{PKG_NAME}/{tag.lower()}", expect_json=False)
+
+          for r in del_betas:
+              tag, rid = r["tag_name"], r["id"]
+              print(f"  DELETE beta fully: {tag}")
+              if not DRY:
+                  req("DELETE", f"/repos/{REPO}/releases/{rid}", expect_json=False)
+                  req("DELETE", f"/repos/{REPO}/tags/{tag}", expect_json=False)
+                  del_container(tag)
+
+          for r in strip_stable:
+              tag, rid, assets = r["tag_name"], r["id"], r.get("assets", [])
+              print(f"  STRIP stable assets: {tag} ({len(assets)} assets; keep entry+tag+source)")
+              if not DRY:
+                  for a in assets:
+                      req("DELETE", f"/repos/{REPO}/releases/{rid}/assets/{a['id']}", expect_json=False)
+                  del_container(tag)
+
+          print("Done.")
+          PY
