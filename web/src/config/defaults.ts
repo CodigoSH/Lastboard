@@ -135,19 +135,17 @@ fav(1, 12, 4, 'cloudflare', 'Cloudflare', 'https://dash.cloudflare.com');
 // ── Dashboard 2: Servers ─────────────────────────────────────────────────────
 // Docker at its real size (4x3), two curated sections, small widgets. ~3 rows.
 
-widget(2, 1, 1, 4, 3, { widgetId: 'docker', hosts: [{ id: 'demo', name: 'Demo Server', type: 'local' }], activeHost: 'demo' });
+widget(2, 1, 1, 5, 3, { widgetId: 'docker', hosts: [{ id: 'demo', name: 'Demo Server', type: 'local' }], activeHost: 'demo' });
 
-const infra = section(2, 5, 1, 5, 2, 'Infrastructure');
+const infra = section(2, 6, 1, 4, 2, 'Infrastructure');
 bookmark(2, infra, 1, 1, 'proxmox', 'Proxmox', 'https://www.proxmox.com', { statusCheck: true, statusPos: 'top-right' });
 bookmark(2, infra, 2, 1, 'portainer', 'Portainer', 'https://www.portainer.io');
 bookmark(2, infra, 3, 1, 'traefik', 'Traefik', 'https://traefik.io');
 bookmark(2, infra, 4, 1, 'nginx-proxy-manager', 'Nginx PM', 'https://nginxproxymanager.com');
-bookmark(2, infra, 5, 1, 'pi-hole', 'Pi-hole', 'https://pi-hole.net', { statusCheck: true, statusPos: 'top-right' });
-bookmark(2, infra, 1, 2, 'home-assistant', 'Home Assistant', 'https://www.home-assistant.io');
-bookmark(2, infra, 2, 2, 'adguard-home', 'AdGuard', 'https://adguard.com');
-bookmark(2, infra, 3, 2, 'unifi', 'UniFi', 'https://ui.com');
-bookmark(2, infra, 4, 2, 'watchtower', 'Watchtower', 'https://containrrr.dev/watchtower');
-bookmark(2, infra, 5, 2, 'node-red', 'Node-RED', 'https://nodered.org');
+bookmark(2, infra, 1, 2, 'pi-hole', 'Pi-hole', 'https://pi-hole.net', { statusCheck: true, statusPos: 'top-right' });
+bookmark(2, infra, 2, 2, 'home-assistant', 'Home Assistant', 'https://www.home-assistant.io');
+bookmark(2, infra, 3, 2, 'adguard-home', 'AdGuard', 'https://adguard.com');
+bookmark(2, infra, 4, 2, 'unifi', 'UniFi', 'https://ui.com');
 
 const monitoring = section(2, 10, 1, 3, 2, 'Monitoring');
 bookmark(2, monitoring, 1, 1, 'grafana', 'Grafana', 'https://grafana.com');
@@ -157,7 +155,7 @@ bookmark(2, monitoring, 1, 2, 'netdata', 'Netdata', 'https://netdata.cloud');
 bookmark(2, monitoring, 2, 2, 'glances', 'Glances', 'https://nicolargo.github.io/glances');
 bookmark(2, monitoring, 3, 2, 'dozzle', 'Dozzle', 'https://dozzle.dev');
 
-widget(2, 5, 3, 4, 1, { widgetId: 'markdown', text: '**🖥️ Server room** — the Docker stats here are simulated.' });
+widget(2, 6, 3, 3, 1, { widgetId: 'markdown', text: '**🖥️ Server room** — Docker stats simulated.' });
 widget(2, 9, 3, 2, 1, { widgetId: 'clock', timezone: 'UTC', hour12: false, showDate: false, showSeconds: false, showCity: true, city: 'UTC' });
 fav(2, 11, 3, 'cloudflare', 'Cloudflare', 'https://dash.cloudflare.com');
 fav(2, 12, 3, 'github', 'GitHub', 'https://github.com');
