@@ -125,6 +125,3 @@ To submit your domain to browser preload lists:
 - [OWASP HSTS Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Strict_Transport_Security_Cheat_Sheet.html)
 - [MDN HSTS Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security)
 - [RFC 6797 - HSTS Specification](https://tools.ietf.org/html/rfc6797)
-
----
-[← Previous page](overview.md) | [Next page →](../contributing/development.md "Development Guide")

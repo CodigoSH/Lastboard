@@ -91,6 +91,3 @@ Tools for keeping your Lastboard instance healthy and up to date.
 
 ## Data Persistence
 All state—including users, dashboard layouts, preferences, and system settings—is stored in a single SQLite database file (`lastboard.db`) located in your defined data directory.
-
----
-[← Previous page](installation.md) | [Next page →](updating.md)

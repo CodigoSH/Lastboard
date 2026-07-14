@@ -17,6 +17,3 @@ A clean, responsive analog/digital clock that can show local time or time from a
 | **12-Hour Clock** | Disabled | Toggle between 12-hour (AM/PM) and 24-hour display. |
 | **Show Date** | Enabled | Display the current date beneath the time. |
 | **Show Seconds** | Disabled | Display seconds in the time readout. |
-
----
-[← Previous page](../getting-started/updating.md) | [Next page →](telemetry.md)

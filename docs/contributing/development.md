@@ -53,10 +53,11 @@ The application will be available at `http://localhost:8080`.
 
 ## Localization (i18n)
 
-Lastboard supports translations for over 20 languages. To add or update translations:
-1. Edit the master sync file: `scripts/i18n-sync.ts`.
-2. Run the sync command: `bun run i18n:sync`. This updates all `locales/*.json` files.
-3. Commit both the script file and all updated JSON files.
+Lastboard ships translations for 20 languages. The master locale file is `web/public/locales/en.json`; every other language lives alongside it as `web/public/locales/<lang>.json`. To add or update translations:
+1. Add or edit the English keys in `web/public/locales/en.json`.
+2. Run the sync command: `bun run i18n:sync`. This copies any missing keys into every other locale file using the English text as a **placeholder fallback** — it does not translate anything, and it also prunes keys that no longer exist in the master.
+3. Replace those English placeholders with real translations by hand in each `web/public/locales/<lang>.json`.
+4. Commit `en.json` together with all updated locale files.
 
 ## Code Style
 
@@ -90,6 +91,3 @@ The script bumps the version, updates the changelog, commits, and pushes a new t
 1. Build the Go binary for `linux/amd64` and `linux/arm64`
 2. Create the release on Forgejo with the compiled binaries and `checksums.txt`
 3. Build and push the multi-arch Docker image to `git.codigosh.com`
-
----
-[← Previous page](../security/headers.md) | [Back to Top](../README.md)

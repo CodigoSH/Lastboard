@@ -87,6 +87,3 @@ In the widget's settings, you can add multiple hosts. Supported URL formats incl
 - **Visibility:** Click the eye icon to enter Edit Mode. From here, you can hide specific containers from view.
 - **Customization:** Rename containers or assign custom icons.
 - **Admin Actions:** Users with the `admin` role can start, stop, or restart containers directly from the widget overlay.
-
----
-[← Previous page](markdown.md) | [Next page →](../security/overview.md)

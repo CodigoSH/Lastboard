@@ -36,6 +36,3 @@ When updating natively or via the web interface:
 2. The checksum is verified.
 3. The existing `lastboard` binary is replaced.
 4. The systemd service (or container process) automatically restarts.
-
----
-[← Previous page](configuration.md) | [Next page →](../widgets/clock.md)

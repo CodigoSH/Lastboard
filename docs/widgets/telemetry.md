@@ -23,6 +23,3 @@ The widget can display the following metrics:
 | :--- | :--- | :--- |
 | **Update Interval** | 5s | How often the widget updates the displayed data. |
 | **Metrics to Show** | All | Choose which specific metrics (CPU, RAM, Temp) to render. |
-
----
-[← Previous page](clock.md) | [Next page →](weather.md)
