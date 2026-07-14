@@ -7,6 +7,7 @@ Welcome to the official Lastboard documentation. Here you will find everything y
 - **Getting Started**
   - [Installation](getting-started/installation.md)
   - [Configuration](getting-started/configuration.md)
+  - [Bookmarks](getting-started/bookmarks.md)
   - [Updating](getting-started/updating.md)
 - **Widgets**
   - [Clock](widgets/clock.md)
