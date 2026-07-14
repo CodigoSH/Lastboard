@@ -104,12 +104,6 @@ const CSS = `
     overflow-y: auto;
 }
 
-/* Read-only mode hides the dock, so drop its 36px bottom reserve for minimal,
-   even padding. The reserve stays in edit mode so text never sits under the dock. */
-.editor-container.locked .editor {
-    padding-bottom: 14px !important;
-}
-
 /* ── ContentEditable ───────────────────────────────────────────────── */
 .editor {
     background: transparent !important;
@@ -117,7 +111,7 @@ const CSS = `
     outline: none !important;
     box-shadow: none !important;
     
-    padding: 12px 14px 36px 14px !important;
+    padding: 12px 14px !important;
 
     min-height: 100%;
     line-height: 1.6;
@@ -181,11 +175,9 @@ const CSS = `
 .checkbox-char { cursor: pointer; font-family: 'Inter', sans-serif; margin-right: 6px; user-select: none; display: inline-block; vertical-align: middle; font-size: 1.1em; }
 .checkbox-char.checked { color: var(--lb-accent); }
 
-/* ── "Dock" (absolute, flush with card bottom) ──────────────────── */
+/* ── Toolbar (docked to the widget's bottom edge, inside the card) ──── */
 .glass-dock {
-    position: absolute;
-    bottom: -25px;
-    left: 8px; right: 8px;
+    flex-shrink: 0;
 
     display: flex;
     flex-wrap: wrap;
@@ -193,32 +185,33 @@ const CSS = `
     align-items: center;
     gap: 2px;
 
-    background: rgba(20, 20, 20, 0.95);
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 2px 4px;
+    padding: 4px 6px;
+    background: rgba(0, 0, 0, 0.18);
+    border-top: 1px solid var(--lb-border, rgba(255, 255, 255, 0.08));
 
-    transition: opacity 0.2s ease;
-    opacity: 0.95;
-    z-index: 100;
+    transition: background 0.2s ease;
 }
 .glass-dock:hover, .glass-dock:focus-within {
-    opacity: 1;
-    background: rgba(20, 20, 20, 1);
+    background: rgba(0, 0, 0, 0.28);
 }
 .glass-dock.hidden {
     display: none;
 }
 
-/* Minimized: hide all groups, show only the toggle button, shrink to right */
+/* Minimized: collapse to a small floating toggle so the editor reclaims the
+   full height (useful on a small notepad). */
 .glass-dock.minimized {
-    left: auto;
-    width: auto;
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    padding: 0;
     background: rgba(20, 20, 20, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border-color: rgba(255,255,255,0.1);
-    padding: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    z-index: 100;
 }
 .glass-dock.minimized .dock-group {
     display: none;
