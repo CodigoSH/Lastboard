@@ -89,11 +89,11 @@ const bookmark = (
 
 // ── Dashboard 1: Home ────────────────────────────────────────────────────────
 
-widget(1, 1, 1, 6, 2, { widgetId: 'markdown', text: WELCOME_MD });
-widget(1, 7, 1, 2, 1, { widgetId: 'clock', city: 'Madrid', timezone: 'Europe/Madrid', hour12: false, showDate: true, showSeconds: true, showCity: true });
-widget(1, 9, 1, 4, 1, { widgetId: 'telemetry', interval: 2000 });
-widget(1, 7, 2, 3, 2, { widgetId: 'weather', city: 'Madrid', latitude: 40.4168, longitude: -3.7038, showForecast: true, forecastDays: 4 });
-widget(1, 10, 2, 3, 2, { widgetId: 'notepad', text: NOTEPAD_HOME });
+widget(1, 1, 1, 7, 2, { widgetId: 'markdown', text: WELCOME_MD });
+widget(1, 8, 1, 2, 1, { widgetId: 'clock', city: 'Madrid', timezone: 'Europe/Madrid', hour12: false, showDate: true, showSeconds: true, showCity: true });
+widget(1, 10, 1, 3, 1, { widgetId: 'telemetry', interval: 2000 });
+widget(1, 8, 2, 3, 2, { widgetId: 'weather', city: 'Madrid', latitude: 40.4168, longitude: -3.7038, showForecast: true, forecastDays: 4 });
+widget(1, 11, 2, 2, 2, { widgetId: 'notepad', text: NOTEPAD_HOME });
 
 const media = section(1, 1, 3, 6, 2, 'Media');
 bookmark(1, media, 1, 1, 'plex', 'Plex', 'https://plex.tv', { statusCheck: true, statusPos: 'top-right' });
