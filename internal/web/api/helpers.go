@@ -64,7 +64,7 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 1, 2, 2, 1, ?)`, userID, `{"widgetId":"telemetry","interval":2000}`); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 3, 1, 3, 2, ?)`, userID, `{"widgetId":"weather","city":"Madrid","latitude":40.4168,"longitude":-3.7038,"unit":"celsius","showForecast":true,"forecastDays":3}`); err != nil {
+	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 3, 1, 3, 2, ?)`, userID, `{"widgetId":"weather","city":"Madrid","latitude":40.4168,"longitude":-3.7038,"unit":"celsius","showForecast":true,"forecastDays":6}`); err != nil {
 		return err
 	}
 

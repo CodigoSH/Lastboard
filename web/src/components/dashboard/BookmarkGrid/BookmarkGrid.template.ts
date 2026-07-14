@@ -121,7 +121,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
                  ${['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>` : ''}
                  <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
             </div>
-            ${['clock', 'telemetry'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}
+            ${['clock', 'telemetry', 'weather'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}
             ` : ''}
         </div>
     `;
