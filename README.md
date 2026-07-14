@@ -38,7 +38,7 @@
 
 ---
 
-📖 **[Read the Official Documentation](./docs/README.md)** for detailed guides on installation, configuration, security, and widget usage.
+📖 **[Read the Official Documentation](https://codigosh.com/docs/lastboard/)** for detailed guides on installation, configuration, security, and widget usage.
 
 ---
 
@@ -67,7 +67,7 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 
 Lastboard is built from the ground up with defense-in-depth principles, including strict CSP headers, CSRF protection, secure session tokens, aggressive rate limiting, and optional unprivileged execution (`PUID`/`PGID`).
 
-For a detailed breakdown of our security measures, please refer to our [Security Overview](./docs/security/overview.md).
+For a detailed breakdown of our security measures, please refer to our [Security Overview](https://codigosh.com/docs/lastboard/security/overview/).
 
 ### Widgets (6)
 
@@ -120,7 +120,7 @@ docker run -d \
   git.codigosh.com/codigosh/lastboard:latest
 ```
 
-For advanced configuration options, environment variables, and data backups, please refer to the [Configuration Guide](./docs/getting-started/configuration.md).
+For advanced configuration options, environment variables, and data backups, please refer to the [Configuration Guide](https://codigosh.com/docs/lastboard/getting-started/configuration/).
 
 ---
 
@@ -131,7 +131,7 @@ Run this command to install or update Lastboard automatically:
 curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash
 ```
 
-For more details on building from source, check the [Development Guide](./docs/contributing/development.md).
+For more details on building from source, check the [Development Guide](https://codigosh.com/docs/lastboard/contributing/development/).
 
 ---
 
@@ -139,7 +139,7 @@ For more details on building from source, check the [Development Guide](./docs/c
 
 Lastboard updates are handled securely via a dedicated proxy to guarantee performance and protect our infrastructure. 
 
-For detailed updating instructions, visit the [Updates Guide](./docs/getting-started/updating.md), or see our [Security Policy](./SECURITY.md) for info about our proxy infrastructure.
+For detailed updating instructions, visit the [Updates Guide](https://codigosh.com/docs/lastboard/getting-started/updating/), or see our [Security Policy](./SECURITY.md) for info about our proxy infrastructure.
 
 ---
 
