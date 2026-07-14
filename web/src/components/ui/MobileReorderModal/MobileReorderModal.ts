@@ -1,12 +1,33 @@
 import { dashboardStore } from '../../../store/dashboardStore';
+import { i18n } from '../../../services/i18n';
 import { GridItem } from '../../../types';
 import { mobileReorderTemplate } from './MobileReorderModal.template';
 import css from './MobileReorderModal.css' with { type: 'text' };
 
+/** A row's runtime state inside the sheet. `content` is a parsed, local copy. */
+interface RowState {
+    item: GridItem;
+    content: any;
+}
+
+const EYE_OPEN = `<svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_OFF = `<svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+const DRAG_HANDLE = `<svg class="drag-handle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="6" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="6" r="1.5" fill="currentColor"/>
+                    <circle cx="9" cy="12" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
+                    <circle cx="9" cy="18" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="18" r="1.5" fill="currentColor"/>
+                </svg>`;
+
 export class MobileReorderModal extends HTMLElement {
-    private _items: GridItem[] = [];
+    // Deferred model: these arrays are edited locally and only committed on Save.
+    private _visible: RowState[] = [];
+    private _hidden: RowState[] = [];
+    // Original visibility per item id, to detect changes on save.
+    private _origVisible = new Map<number, boolean>();
     private _dragSrcIndex: number = -1;
-    private _dragAbortController: AbortController | null = null;
 
     constructor() {
         super();
@@ -15,57 +36,95 @@ export class MobileReorderModal extends HTMLElement {
 
     connectedCallback() {
         const state = dashboardStore.getState();
-        // Get all visible touch bookmarks sorted by current mobile_order
-        this._items = state.items
-            .filter(item => {
-                if (item.type !== 'bookmark') return false;
+
+        // All touch bookmarks (visible AND hidden), so hidden ones can be recovered.
+        const rows: RowState[] = state.items
+            .filter(item => item.type === 'bookmark')
+            .map(item => {
                 let content: any = item.content;
                 if (typeof content === 'string') {
-                    try { content = JSON.parse(content); } catch { return false; }
+                    try { content = JSON.parse(content); } catch { content = {}; }
                 }
-                return content?.visibleTouch !== false;
-            })
-            .sort((a, b) => {
-                const aHas = a.mobile_order != null;
-                const bHas = b.mobile_order != null;
-                if (aHas && bHas) return a.mobile_order! - b.mobile_order!;
-                if (aHas) return -1;
-                if (bHas) return 1;
-                return a.y !== b.y ? a.y - b.y : a.x - b.x;
+                return { item, content: content || {} };
             });
+
+        const visible = rows.filter(r => r.content.visibleTouch !== false);
+        const hidden = rows.filter(r => r.content.visibleTouch === false);
+
+        // Visible: sort by mobile_order (nulls last, then y/x).
+        visible.sort((a, b) => {
+            const aHas = a.item.mobile_order != null;
+            const bHas = b.item.mobile_order != null;
+            if (aHas && bHas) return a.item.mobile_order! - b.item.mobile_order!;
+            if (aHas) return -1;
+            if (bHas) return 1;
+            return a.item.y !== b.item.y ? a.item.y - b.item.y : a.item.x - b.item.x;
+        });
+        // Hidden: order among themselves is irrelevant; keep a stable y/x sort.
+        hidden.sort((a, b) => a.item.y !== b.item.y ? a.item.y - b.item.y : a.item.x - b.item.x);
+
+        this._visible = visible;
+        this._hidden = hidden;
+        rows.forEach(r => this._origVisible.set(r.item.id, r.content.visibleTouch !== false));
 
         this.render();
         this.bindEvents();
     }
 
     private render() {
-        const itemsHtml = this._items.map((item, i) => this._renderItem(item, i)).join('');
-        this.shadowRoot!.innerHTML = mobileReorderTemplate(itemsHtml, css);
+        this.shadowRoot!.innerHTML = mobileReorderTemplate(this._renderBody(), css);
     }
 
-    private _renderItem(item: GridItem, index: number): string {
-        let content: any = item.content;
-        if (typeof content === 'string') {
-            try { content = JSON.parse(content); } catch { content = {}; }
-        }
-        const label = content.label || `Item ${item.id}`;
-        const icon = content.icon || '';
+    /** Rebuilds only the scrollable body (both sections). Listeners live on the
+     *  stable #list container, so they survive innerHTML swaps of its children. */
+    private _updateBody() {
+        const list = this.shadowRoot!.getElementById('list');
+        if (list) list.innerHTML = this._renderBody();
+    }
+
+    private _renderBody(): string {
+        const visibleRows = this._visible.map((r, i) => this._renderRow(r, i, true)).join('');
+        const visibleSection = `
+            <div class="section">
+                <div class="section-title">${i18n.t('mobile_reorder.visible_section') || 'Visible on mobile'}</div>
+                ${this._visible.length
+                    ? `<div class="rows" id="visible-list">${visibleRows}</div>`
+                    : `<div class="empty-hint">${i18n.t('mobile_reorder.empty_visible') || 'No bookmarks visible on mobile'}</div>`}
+            </div>`;
+
+        if (!this._hidden.length) return visibleSection;
+
+        const hiddenRows = this._hidden.map(r => this._renderRow(r, -1, false)).join('');
+        const hiddenSection = `
+            <div class="section">
+                <div class="section-title">${i18n.t('mobile_reorder.hidden_section') || 'Hidden'}</div>
+                <div class="rows" id="hidden-list">${hiddenRows}</div>
+            </div>`;
+
+        return visibleSection + hiddenSection;
+    }
+
+    private _renderRow(r: RowState, index: number, isVisible: boolean): string {
+        const label = r.content.label || `Item ${r.item.id}`;
+        const icon = r.content.icon || '';
         const iconHtml = icon
             ? `<img class="item-icon" src="${icon}" alt="" draggable="false">`
             : `<div class="item-icon-placeholder">${label.charAt(0).toUpperCase()}</div>`;
 
+        const eyeLabel = isVisible
+            ? (i18n.t('mobile_reorder.hide') || 'Hide')
+            : (i18n.t('mobile_reorder.show') || 'Show');
+
+        const dragAttrs = isVisible ? `draggable="true" data-index="${index}"` : '';
+
         return `
-            <div class="item" draggable="true" data-index="${index}">
+            <div class="item ${isVisible ? '' : 'is-hidden'}" data-id="${r.item.id}" ${dragAttrs}>
                 ${iconHtml}
                 <span class="item-label">${label}</span>
-                <svg class="drag-handle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="9" cy="6" r="1.5" fill="currentColor"/>
-                    <circle cx="15" cy="6" r="1.5" fill="currentColor"/>
-                    <circle cx="9" cy="12" r="1.5" fill="currentColor"/>
-                    <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
-                    <circle cx="9" cy="18" r="1.5" fill="currentColor"/>
-                    <circle cx="15" cy="18" r="1.5" fill="currentColor"/>
-                </svg>
+                <button class="eye-btn" data-id="${r.item.id}" aria-label="${eyeLabel}" aria-pressed="${isVisible}" title="${eyeLabel}">
+                    ${isVisible ? EYE_OPEN : EYE_OFF}
+                </button>
+                ${isVisible ? DRAG_HANDLE : ''}
             </div>
         `;
     }
@@ -74,28 +133,70 @@ export class MobileReorderModal extends HTMLElement {
         const sr = this.shadowRoot!;
 
         sr.getElementById('btn-close')!.addEventListener('click', () => this._close());
+        sr.getElementById('btn-cancel')!.addEventListener('click', () => this._close());
         sr.getElementById('overlay')!.addEventListener('click', (e) => {
             if (e.target === sr.getElementById('overlay')) this._close();
         });
-
         sr.getElementById('btn-save')!.addEventListener('click', () => this._save());
-        sr.getElementById('btn-reset')!.addEventListener('click', () => this._reset());
 
-        this._bindDrag();
+        const list = sr.getElementById('list')!;
+
+        // Eye toggle (delegated on the stable #list container).
+        list.addEventListener('click', (e) => {
+            const btn = (e.target as HTMLElement).closest('.eye-btn') as HTMLElement | null;
+            if (!btn) return;
+            e.stopPropagation();
+            this._toggleVisibility(parseInt(btn.dataset.id!));
+        });
+
+        this._bindDrag(list);
+        this._bindTouchDrag(list);
     }
 
-    private _bindDrag() {
-        // Abort any previous listeners to prevent stacking after re-renders
-        if (this._dragAbortController) {
-            this._dragAbortController.abort();
+    /** Moves an item between the visible/hidden sections with a slide animation
+     *  (down when hiding, up when showing). Deferred: nothing persists until Save. */
+    private _toggleVisibility(id: number) {
+        const vIdx = this._visible.findIndex(r => r.item.id === id);
+        let direction: 'down' | 'up';
+
+        if (vIdx >= 0) {
+            const [moved] = this._visible.splice(vIdx, 1);
+            moved.content.visibleTouch = false;
+            this._hidden.unshift(moved); // lands at the top of the hidden list
+            direction = 'down';
+        } else {
+            const hIdx = this._hidden.findIndex(r => r.item.id === id);
+            if (hIdx < 0) return;
+            const [moved] = this._hidden.splice(hIdx, 1);
+            moved.content.visibleTouch = true;
+            this._visible.push(moved); // reappears at the end of the visible list
+            direction = 'up';
         }
-        this._dragAbortController = new AbortController();
-        const signal = this._dragAbortController.signal;
 
-        const list = this.shadowRoot!.getElementById('list')!;
+        this._animateMove(id, direction);
+    }
 
+    private _animateMove(id: number, direction: 'down' | 'up') {
+        const node = this.shadowRoot!.querySelector<HTMLElement>(`.item[data-id="${id}"]`);
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+        if (!node || reduceMotion) {
+            this._updateBody();
+            return;
+        }
+
+        node.classList.add(direction === 'down' ? 'leaving-down' : 'leaving-up');
+        node.addEventListener('animationend', () => {
+            this._updateBody();
+            const moved = this.shadowRoot!.querySelector<HTMLElement>(`.item[data-id="${id}"]`);
+            if (moved) {
+                moved.classList.add(direction === 'down' ? 'entering-top' : 'entering-bottom');
+            }
+        }, { once: true });
+    }
+
+    private _bindDrag(list: HTMLElement) {
         list.addEventListener('dragstart', (e) => {
-            // Only allow drag when initiated from the drag handle
             const handle = (e.target as HTMLElement).closest('.drag-handle');
             if (!handle) { e.preventDefault(); return; }
             const el = handle.closest('[data-index]') as HTMLElement | null;
@@ -103,68 +204,57 @@ export class MobileReorderModal extends HTMLElement {
             this._dragSrcIndex = parseInt(el.dataset.index!);
             el.classList.add('dragging');
             e.dataTransfer!.effectAllowed = 'move';
-        }, { signal });
+        });
 
         list.addEventListener('dragend', (e) => {
             const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
             if (el) el.classList.remove('dragging');
-            list.querySelectorAll('.item').forEach(i => i.classList.remove('drag-over'));
-        }, { signal });
+            list.querySelectorAll('[data-index]').forEach(i => i.classList.remove('drag-over'));
+        });
 
         list.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer!.dropEffect = 'move';
             const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
             if (!el) return;
-            list.querySelectorAll('.item').forEach(i => i.classList.remove('drag-over'));
+            list.querySelectorAll('[data-index]').forEach(i => i.classList.remove('drag-over'));
             el.classList.add('drag-over');
-        }, { signal });
+        });
 
         list.addEventListener('drop', (e) => {
             e.preventDefault();
             const el = (e.target as HTMLElement).closest('[data-index]') as HTMLElement | null;
             if (!el) return;
             const destIndex = parseInt(el.dataset.index!);
-            if (this._dragSrcIndex === destIndex) return;
+            if (this._dragSrcIndex === destIndex || this._dragSrcIndex < 0) return;
 
-            const moved = this._items.splice(this._dragSrcIndex, 1)[0];
-            this._items.splice(destIndex, 0, moved);
-
-            list.innerHTML = this._items.map((item, i) => this._renderItem(item, i)).join('');
-            this._bindDrag();
-        }, { signal });
-
-        // Touch support (uses same AbortController signal)
-        this._bindTouchDrag(list, signal);
+            const moved = this._visible.splice(this._dragSrcIndex, 1)[0];
+            this._visible.splice(destIndex, 0, moved);
+            this._dragSrcIndex = -1;
+            this._updateBody();
+        });
     }
 
-    private _bindTouchDrag(list: HTMLElement, signal: AbortSignal) {
+    private _bindTouchDrag(list: HTMLElement) {
         let touchSrcIndex = -1;
         let ghost: HTMLElement | null = null;
         let startY = 0;
-        // Position of the list's top edge at drag start (viewport coords)
         let listTopAtStart = 0;
-        // Pre-cached item midpoints relative to the list's scrollable content.
-        // Using offsetTop (relative to list, which has position:relative) avoids
-        // getBoundingClientRect() drift that occurs inside fixed-position shadow DOM
-        // overlays on mobile browsers.
         interface CachedItem { el: HTMLElement; midY: number; }
         let cachedItems: CachedItem[] = [];
 
         list.addEventListener('touchstart', (e) => {
-            // Only start drag when the finger lands on the drag handle
             const handle = (e.target as HTMLElement).closest('.drag-handle');
-            if (!handle) return; // Allow normal scroll on the rest of the row
+            if (!handle) return; // Allow normal scroll / eye taps elsewhere
             const el = handle.closest('[data-index]') as HTMLElement | null;
             if (!el) return;
             e.preventDefault();
             touchSrcIndex = parseInt(el.dataset.index!);
             startY = e.touches[0].clientY;
 
-            // Snapshot list top and item positions once at drag start.
-            // These don't change during the drag since items don't reflow.
             listTopAtStart = list.getBoundingClientRect().top;
-            cachedItems = Array.from(list.querySelectorAll<HTMLElement>('.item')).map(item => ({
+            // Only visible rows ([data-index]) are valid drop targets.
+            cachedItems = Array.from(list.querySelectorAll<HTMLElement>('[data-index]')).map(item => ({
                 el: item,
                 midY: item.offsetTop + item.offsetHeight / 2
             }));
@@ -178,10 +268,9 @@ export class MobileReorderModal extends HTMLElement {
                 z-index: 99999; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
                 transition: none;
             `;
-            // Append inside shadow root so CSS variables resolve correctly
             this.shadowRoot!.appendChild(ghost);
             el.classList.add('dragging');
-        }, { passive: false, signal });
+        }, { passive: false });
 
         list.addEventListener('touchmove', (e) => {
             if (touchSrcIndex === -1 || !ghost) return;
@@ -190,10 +279,8 @@ export class MobileReorderModal extends HTMLElement {
             const touchY = e.touches[0].clientY;
             ghost.style.transform = `translateY(${touchY - startY}px)`;
 
-            list.querySelectorAll('.item').forEach(el => el.classList.remove('drag-over'));
+            list.querySelectorAll('[data-index]').forEach(el => el.classList.remove('drag-over'));
 
-            // Convert touch viewport Y to a position within the list's scrollable content.
-            // This is reliable even when the overlay is position:fixed and scrolled.
             const relY = touchY - listTopAtStart + list.scrollTop;
 
             let closestEl: HTMLElement | null = null;
@@ -206,15 +293,15 @@ export class MobileReorderModal extends HTMLElement {
                 }
             });
             if (closestEl) (closestEl as HTMLElement).classList.add('drag-over');
-        }, { passive: false, signal });
+        }, { passive: false });
 
         list.addEventListener('touchend', () => {
             if (touchSrcIndex === -1) return;
 
             if (ghost) { ghost.remove(); ghost = null; }
 
-            const overEl = list.querySelector<HTMLElement>('.item.drag-over');
-            list.querySelectorAll('.item').forEach(i => {
+            const overEl = list.querySelector<HTMLElement>('[data-index].drag-over');
+            list.querySelectorAll('[data-index]').forEach(i => {
                 i.classList.remove('drag-over');
                 i.classList.remove('dragging');
             });
@@ -222,37 +309,37 @@ export class MobileReorderModal extends HTMLElement {
             if (overEl) {
                 const destIndex = parseInt(overEl.dataset.index!);
                 if (touchSrcIndex !== destIndex) {
-                    const moved = this._items.splice(touchSrcIndex, 1)[0];
-                    this._items.splice(destIndex, 0, moved);
-                    list.innerHTML = this._items.map((item, i) => this._renderItem(item, i)).join('');
-                    this._bindDrag();
+                    const moved = this._visible.splice(touchSrcIndex, 1)[0];
+                    this._visible.splice(destIndex, 0, moved);
+                    this._updateBody();
                 }
             }
 
             touchSrcIndex = -1;
-        }, { signal });
+        });
     }
 
+    /** Commits both the visibility toggles and the mobile order in one pass. */
     private async _save() {
-        // Assign sequential mobile_order values
-        const updates = this._items.map((item, i) => ({ id: item.id, mobile_order: i }));
-        for (const u of updates) {
-            await dashboardStore.updateItem(u);
-        }
-        this._close();
-    }
+        const ops: (Partial<GridItem> & { id: number })[] = [];
 
-    private async _reset() {
-        // Clear mobile_order for all items (set to null by sending -1 sentinel...
-        // actually, backend won't handle null via current PATCH. Use a dedicated clear.)
-        // Simplest approach: set mobile_order to very large numbers to push all to "unordered",
-        // but actually we need to clear. Let's just re-sort to default y/x and assign fresh.
-        // Better: send mobile_order: null — but backend doesn't handle null sentinel yet.
-        // For now, sort by y/x and reassign sequential order so users can start fresh.
-        this._items.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
-        const updates = this._items.map((item, i) => ({ id: item.id, mobile_order: i }));
-        for (const u of updates) {
-            await dashboardStore.updateItem(u);
+        this._visible.forEach((r, i) => {
+            const orderChanged = r.item.mobile_order !== i;
+            const visChanged = this._origVisible.get(r.item.id) !== true;
+            if (!orderChanged && !visChanged) return;
+            const op: Partial<GridItem> & { id: number } = { id: r.item.id, mobile_order: i };
+            if (visChanged) op.content = JSON.stringify(r.content);
+            ops.push(op);
+        });
+
+        this._hidden.forEach(r => {
+            const visChanged = this._origVisible.get(r.item.id) !== false;
+            if (!visChanged) return;
+            ops.push({ id: r.item.id, content: JSON.stringify(r.content) });
+        });
+
+        for (const op of ops) {
+            await dashboardStore.updateItem(op);
         }
         this._close();
     }
