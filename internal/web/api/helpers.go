@@ -58,7 +58,7 @@ func invalidateSession(w http.ResponseWriter, r *http.Request) {
 // SeedDefaultItems inserts the default dashboard items for a new user.
 func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	// 1-3. Core Widgets
-	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 1, 1, 2, 1, ?)`, userID, `{"widgetId":"clock","timezone":"local","hour12":false,"showDate":true,"showSeconds":true}`); err != nil {
+	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 1, 1, 2, 1, ?)`, userID, `{"widgetId":"clock","city":"Madrid","timezone":"Europe/Madrid","hour12":false,"showDate":true,"showSeconds":true,"showCity":true}`); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 1, 2, 2, 1, ?)`, userID, `{"widgetId":"telemetry","interval":2000}`); err != nil {
@@ -79,8 +79,8 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	}
 
 	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
-		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Forgejo", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/git.png"}', 'https://git.codigosh.com/CodigoSH/Lastboard'),
-		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Wiki", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/bookstack.png"}', 'https://git.codigosh.com/CodigoSH/Lastboard/wiki')
+		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Forgejo", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/git.webp"}', 'https://git.codigosh.com/CodigoSH/Lastboard'),
+		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Wiki", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/bookstack.webp"}', 'https://git.codigosh.com/CodigoSH/Lastboard/wiki')
 	`, userID, projectLinksID, userID, projectLinksID); err != nil {
 		return err
 	}
@@ -96,11 +96,11 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	}
 
 	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
-		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Plex", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png"}', 'https://plex.tv'),
-		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Sonarr", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/sonarr.png"}', 'https://sonarr.tv'),
-		(?, ?, 'bookmark', 3, 1, 1, 1, '{"label": "Radarr", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/radarr.png"}', 'https://radarr.video'),
-		(?, ?, 'bookmark', 1, 2, 1, 1, '{"label": "Jellyfin", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png"}', 'https://jellyfin.org'),
-		(?, ?, 'bookmark', 2, 2, 1, 1, '{"label": "Tautulli", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tautulli.png"}', 'https://tautulli.com')
+		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Plex", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/plex.webp"}', 'https://plex.tv'),
+		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Sonarr", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/sonarr.webp"}', 'https://sonarr.tv'),
+		(?, ?, 'bookmark', 3, 1, 1, 1, '{"label": "Radarr", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/radarr.webp"}', 'https://radarr.video'),
+		(?, ?, 'bookmark', 1, 2, 1, 1, '{"label": "Jellyfin", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/jellyfin.webp"}', 'https://jellyfin.org'),
+		(?, ?, 'bookmark', 2, 2, 1, 1, '{"label": "Tautulli", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/tautulli.webp"}', 'https://tautulli.com')
 	`, userID, mediaServicesID, userID, mediaServicesID, userID, mediaServicesID, userID, mediaServicesID, userID, mediaServicesID); err != nil {
 		return err
 	}
@@ -116,11 +116,11 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 	}
 
 	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
-		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Proxmox", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/proxmox.png"}', 'https://proxmox.com'),
-		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Pi-hole", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png"}', 'https://pi-hole.net'),
-		(?, ?, 'bookmark', 1, 2, 1, 1, '{"label": "Home Assistant", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png"}', 'https://home-assistant.io'),
-		(?, ?, 'bookmark', 2, 2, 1, 1, '{"label": "Portainer", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png"}', 'https://portainer.io'),
-		(?, ?, 'bookmark', 1, 3, 1, 1, '{"label": "NPM", "icon": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png"}', 'https://nginxproxymanager.com')
+		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Proxmox", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/proxmox.webp"}', 'https://proxmox.com'),
+		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Pi-hole", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/pi-hole.webp"}', 'https://pi-hole.net'),
+		(?, ?, 'bookmark', 1, 2, 1, 1, '{"label": "Home Assistant", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/home-assistant.webp"}', 'https://home-assistant.io'),
+		(?, ?, 'bookmark', 2, 2, 1, 1, '{"label": "Portainer", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/portainer.webp"}', 'https://portainer.io'),
+		(?, ?, 'bookmark', 1, 3, 1, 1, '{"label": "NPM", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/nginx-proxy-manager.webp"}', 'https://nginxproxymanager.com')
 	`, userID, infraID, userID, infraID, userID, infraID, userID, infraID, userID, infraID); err != nil {
 		return err
 	}
