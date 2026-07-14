@@ -51,8 +51,11 @@ class ApiService {
                     return { message: 'Item deleted (Demo)' } as any;
                 }
 
-                // Health Check (Mock success)
-                if (url.startsWith('/api/dashboard/health')) return { status: 200 } as any;
+                // Health Check (Demo: report every bookmark as reachable/"up")
+                if (url === '/api/dashboard/health/batch' && method === 'POST') {
+                    return Object.fromEntries((body.urls || []).map((u: string) => [u, 'up'])) as any;
+                }
+                if (url.startsWith('/api/dashboard/health')) return { status: 'up' } as any;
 
                 // Multi-Dashboard (Demo: persisted in localStorage via demoService)
                 if (url === '/api/dashboards' && method === 'GET') return demoService.fetchDashboards() as any;
