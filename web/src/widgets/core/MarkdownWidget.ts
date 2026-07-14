@@ -183,8 +183,7 @@ export class MarkdownWidget extends HTMLElement {
                     left: 0;
                     width: 100%;
                     height: 100%;
-                    padding: 16px;
-                    padding-top: 36px; 
+                    padding: 12px 14px;
                     overflow-y: auto;
                     box-sizing: border-box;
                     display: none;
@@ -204,6 +203,8 @@ export class MarkdownWidget extends HTMLElement {
 
                 /* Markdown Styles for Preview */
                 .preview h1, .preview h2, .preview h3 { margin-top: 1em; margin-bottom: 0.5em; color: var(--lb-text-header); font-weight: 600; }
+                /* Hug the top: no dead space above the first block (the lock button floats over the corner). */
+                .preview > *:first-child { margin-top: 0; }
                 .preview h1 { font-size: 1.6em; border-bottom: 1px solid var(--lb-border); padding-bottom: 0.3em; }
                 .preview h2 { font-size: 1.4em; }
                 .preview h3 { font-size: 1.2em; }
