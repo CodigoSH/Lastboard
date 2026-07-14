@@ -1,5 +1,5 @@
-import { DEFAULT_ITEMS, DEFAULT_USER } from '../config/defaults';
-import { GridItem, User } from '../types';
+import { DEFAULT_ITEMS, DEFAULT_USER, DEFAULT_DASHBOARDS } from '../config/defaults';
+import { Dashboard, GridItem, User } from '../types';
 
 /**
  * Demo Service ("Backend in Browser")
@@ -7,11 +7,17 @@ import { GridItem, User } from '../types';
  * Simulates API responses and networking delay.
  */
 
-const STORAGE_KEY_ITEMS = 'lastboard_demo_items';
-const STORAGE_KEY_USER = 'lastboard_demo_user';
-const STORAGE_KEY_TIMESTAMP = 'lastboard_demo_start';
+// Bump this when the seeded demo content changes so returning visitors get a
+// clean reset instead of stale localStorage from a previous version.
+const VERSION = 'v2';
+
+const STORAGE_KEY_ITEMS = `lastboard_demo_items_${VERSION}`;
+const STORAGE_KEY_USER = `lastboard_demo_user_${VERSION}`;
+const STORAGE_KEY_DASHBOARDS = `lastboard_demo_dashboards_${VERSION}`;
+const STORAGE_KEY_TIMESTAMP = `lastboard_demo_start_${VERSION}`;
 
 const DEMO_TTL_MS = 3600 * 1000; // 1 Hour
+const DEFAULT_DASHBOARD_ID = 1;
 
 class DemoService {
 
@@ -21,7 +27,7 @@ class DemoService {
 
     /**
      * Checks if the demo session has expired.
-     * If expired (> 1 hour), resets all data to defaults.
+     * If expired (> 1 hour) or never seeded, resets all data to defaults.
      */
     private checkTTL() {
         if (!window.LASTBOARD_CONFIG?.demo_mode) return;
@@ -37,6 +43,7 @@ class DemoService {
     private resetDemo() {
         localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(DEFAULT_ITEMS));
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(DEFAULT_USER));
+        localStorage.setItem(STORAGE_KEY_DASHBOARDS, JSON.stringify(DEFAULT_DASHBOARDS));
         localStorage.setItem(STORAGE_KEY_TIMESTAMP, Date.now().toString());
     }
 
@@ -58,11 +65,23 @@ class DemoService {
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
     }
 
+    private getDashboards(): Dashboard[] {
+        const stored = localStorage.getItem(STORAGE_KEY_DASHBOARDS);
+        return stored ? JSON.parse(stored) : DEFAULT_DASHBOARDS;
+    }
+
+    private saveDashboards(dashboards: Dashboard[]) {
+        localStorage.setItem(STORAGE_KEY_DASHBOARDS, JSON.stringify(dashboards));
+    }
+
     // --- Simulated API Methods ---
 
-    async fetchItems(): Promise<GridItem[]> {
+    /** Returns items for a dashboard. Untagged items belong to the default one. */
+    async fetchItems(dashboardId?: number): Promise<GridItem[]> {
         await this.simulateDelay();
-        return this.getItems();
+        const items = this.getItems();
+        if (dashboardId == null) return items;
+        return items.filter(i => (i.dashboard_id ?? DEFAULT_DASHBOARD_ID) === dashboardId);
     }
 
     async saveItem(item: GridItem): Promise<GridItem> {
@@ -129,6 +148,65 @@ class DemoService {
         if (prefs.theme) user.theme = prefs.theme;
 
         this.saveUser(user);
+    }
+
+    // --- Multi-Dashboard (Demo) ---
+
+    async fetchDashboards(): Promise<Dashboard[]> {
+        await this.simulateDelay();
+        return this.getDashboards().sort((a, b) => a.position - b.position);
+    }
+
+    async createDashboard(name: string): Promise<Dashboard> {
+        await this.simulateDelay();
+        const dashboards = this.getDashboards();
+        const dash: Dashboard = {
+            id: Date.now(),
+            name,
+            position: dashboards.length,
+            is_default: false,
+            created_at: ''
+        };
+        dashboards.push(dash);
+        this.saveDashboards(dashboards);
+        return dash;
+    }
+
+    async renameDashboard(id: number, name: string): Promise<void> {
+        await this.simulateDelay();
+        const dashboards = this.getDashboards();
+        const dash = dashboards.find(d => d.id === id);
+        if (dash) dash.name = name;
+        this.saveDashboards(dashboards);
+    }
+
+    async deleteDashboard(id: number): Promise<void> {
+        await this.simulateDelay();
+        let dashboards = this.getDashboards().filter(d => d.id !== id);
+        // Ensure at least one default remains
+        if (dashboards.length && !dashboards.some(d => d.is_default)) {
+            dashboards[0].is_default = true;
+        }
+        this.saveDashboards(dashboards);
+        // Drop the deleted dashboard's items
+        this.saveItems(this.getItems().filter(i => (i.dashboard_id ?? DEFAULT_DASHBOARD_ID) !== id));
+    }
+
+    async setDefaultDashboard(id: number): Promise<void> {
+        await this.simulateDelay();
+        const dashboards = this.getDashboards();
+        dashboards.forEach(d => { d.is_default = d.id === id; });
+        this.saveDashboards(dashboards);
+    }
+
+    async reorderDashboards(ids: number[]): Promise<void> {
+        await this.simulateDelay();
+        const dashboards = this.getDashboards();
+        ids.forEach((id, index) => {
+            const dash = dashboards.find(d => d.id === id);
+            if (dash) dash.position = index;
+        });
+        this.saveDashboards(dashboards);
     }
 
     // --- Helpers ---

@@ -61,6 +61,35 @@ function hostParam(host: DockerHost): string {
     return host.url ?? '';
 }
 
+// ── Demo mode ─────────────────────────────────────────────────────────────
+// In DEMO_ONLY mode there is no Docker daemon, so the widget would be empty.
+// These synthetic containers + stats let visitors see it working. Real installs
+// never take this path (guarded by window.LASTBOARD_CONFIG.demo_mode).
+function isDemoMode(): boolean {
+    return typeof window !== 'undefined' && window.LASTBOARD_CONFIG?.demo_mode === true;
+}
+
+const DEMO_CONTAINERS: DockerContainer[] = [
+    { ID: 'demo-lastboard', Name: 'lastboard', Image: 'git.codigosh.com/codigosh/lastboard:latest', Status: 'running', State: 'running', Created: 1717000000, Ports: [{ PublicPort: 8080, PrivatePort: 8080, Type: 'tcp' }] },
+    { ID: 'demo-postgres', Name: 'postgres', Image: 'postgres:16-alpine', Status: 'running', State: 'running', Created: 1716000000, Ports: [{ PublicPort: 5432, PrivatePort: 5432, Type: 'tcp' }] },
+    { ID: 'demo-traefik', Name: 'traefik', Image: 'traefik:v3.1', Status: 'running', State: 'running', Created: 1715000000, Ports: [{ PublicPort: 443, PrivatePort: 443, Type: 'tcp' }] },
+    { ID: 'demo-jellyfin', Name: 'jellyfin', Image: 'jellyfin/jellyfin:latest', Status: 'running', State: 'running', Created: 1716500000, Ports: [{ PublicPort: 8096, PrivatePort: 8096, Type: 'tcp' }] },
+    { ID: 'demo-redis', Name: 'redis', Image: 'redis:7-alpine', Status: 'running', State: 'running', Created: 1716800000, Ports: [] },
+    { ID: 'demo-backup', Name: 'nightly-backup', Image: 'offen/docker-volume-backup:v2', Status: 'stopped', State: 'stopped', Created: 1714000000, Ports: [] },
+];
+
+function demoStats(): DockerStats {
+    const cpu = Math.random() * 18 + 0.4;      // 0.4% – 18%
+    const memPct = Math.random() * 40 + 8;     // 8% – 48%
+    const memLimit = 2 * 1024 * 1024 * 1024;   // 2 GiB
+    return {
+        CPUPercent: cpu,
+        MemPercent: memPct,
+        MemUsed: (memPct / 100) * memLimit,
+        MemLimit: memLimit,
+    };
+}
+
 function isAdmin(): boolean {
     const user = userStore.getUser();
     if (!user) return false;
@@ -540,6 +569,17 @@ class DockerWidget extends HTMLElement {
     // ── Data fetching ────────────────────────────────────────────────────────
 
     private async loadContainers() {
+        if (isDemoMode()) {
+            this.stopPolling();
+            this._loading = false;
+            this._error = false;
+            this._containers = DEMO_CONTAINERS;
+            this._stats.clear();
+            this.render();
+            this.startStatsPolling();
+            return;
+        }
+
         const host = this.getActiveHost();
 
         if (!host) {
@@ -593,6 +633,13 @@ class DockerWidget extends HTMLElement {
     }
 
     private async fetchAllStats() {
+        if (isDemoMode()) {
+            this._containers
+                .filter(c => c.Status === 'running')
+                .forEach(c => this.updateStatsDOM(c.ID, demoStats()));
+            return;
+        }
+
         const host = this.getActiveHost();
         if (!host) return;
         const param = hostParam(host);

@@ -54,12 +54,25 @@ class ApiService {
                 // Health Check (Mock success)
                 if (url.startsWith('/api/dashboard/health')) return { status: 200 } as any;
 
-                // Multi-Dashboard (Demo: single default dashboard)
-                if (url === '/api/dashboards' && method === 'GET') return [{ id: 1, name: 'dashboard.default_name', position: 0, is_default: true, created_at: '' }] as any;
-                if (url.startsWith('/api/dashboards') && method === 'POST' && url.endsWith('/default')) return { status: 'updated' } as any;
-                if (url.startsWith('/api/dashboards') && method === 'POST') return { id: 1, name: 'Dashboard', position: 0, is_default: false, created_at: '' } as any;
-                if (url.startsWith('/api/dashboards') && method === 'PATCH') return { status: 'updated' } as any;
-                if (url.startsWith('/api/dashboards') && method === 'DELETE') return { status: 'deleted' } as any;
+                // Multi-Dashboard (Demo: persisted in localStorage via demoService)
+                if (url === '/api/dashboards' && method === 'GET') return demoService.fetchDashboards() as any;
+                if (url === '/api/dashboards/reorder' && method === 'PUT') {
+                    await demoService.reorderDashboards(body.ids || []);
+                    return { status: 'reordered' } as any;
+                }
+                if (url.startsWith('/api/dashboards/') && url.endsWith('/default') && method === 'POST') {
+                    await demoService.setDefaultDashboard(parseInt(url.split('/')[3] || '0'));
+                    return { status: 'updated' } as any;
+                }
+                if (url === '/api/dashboards' && method === 'POST') return demoService.createDashboard(body.name) as any;
+                if (url.startsWith('/api/dashboards/') && method === 'PATCH') {
+                    await demoService.renameDashboard(parseInt(url.split('/').pop() || '0'), body.name);
+                    return { status: 'updated' } as any;
+                }
+                if (url.startsWith('/api/dashboards/') && method === 'DELETE') {
+                    await demoService.deleteDashboard(parseInt(url.split('/').pop() || '0'));
+                    return { status: 'deleted' } as any;
+                }
 
                 // Admin (Mock success)
                 if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;

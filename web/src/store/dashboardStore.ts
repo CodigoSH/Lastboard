@@ -84,7 +84,33 @@ class DashboardStore {
         if (!this.isDemo()) {
             this.initSocket();
             this.checkSystemUpdate();
+        } else {
+            this.startDemoStats();
         }
+    }
+
+    // In demo mode there is no backend WebSocket, so the Telemetry widget would
+    // sit at 0. Feed it a gentle synthetic random-walk so visitors see the
+    // widget working. Real installs never call this (guarded by isDemo()).
+    private startDemoStats() {
+        let cpu = 22, ram = 48, temp = 46;
+        const step = (v: number, min: number, max: number, amp: number) => {
+            v += (Math.random() - 0.5) * amp;
+            return Math.max(min, Math.min(max, v));
+        };
+        const tick = () => {
+            cpu = step(cpu, 6, 72, 10);
+            ram = step(ram, 38, 70, 5);
+            temp = step(temp, 40, 60, 3);
+            this.state.stats = {
+                cpu_usage: cpu,
+                ram_usage: ram,
+                temperature: temp
+            };
+            this.notify();
+        };
+        tick();
+        setInterval(tick, 2000);
     }
 
     private initSocket() {
@@ -263,7 +289,7 @@ class DashboardStore {
     async fetchItems() {
         // --- DEMO MODE: use localStorage via demoService ---
         if (this.isDemo()) {
-            const items = await demoService.fetchItems();
+            const items = await demoService.fetchItems(this.state.currentDashboardId ?? undefined);
             this.state.items = items;
             this.state.loading = false;
             this.notify();
@@ -422,7 +448,12 @@ class DashboardStore {
     async addItem(newItem: Omit<GridItem, 'id' | 'created_at'>): Promise<GridItem | undefined> {
         // --- DEMO MODE ---
         if (this.isDemo()) {
-            const createdItem = await demoService.saveItem(newItem as GridItem);
+            const tagged = { ...newItem } as GridItem;
+            // Tag with the active dashboard so new items stay on the right one.
+            if (this.state.currentDashboardId != null && tagged.dashboard_id == null) {
+                tagged.dashboard_id = this.state.currentDashboardId;
+            }
+            const createdItem = await demoService.saveItem(tagged);
             this.state.items.push(createdItem);
             this.notify();
             return createdItem;
