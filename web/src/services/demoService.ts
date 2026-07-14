@@ -9,7 +9,7 @@ import { Dashboard, GridItem, User } from '../types';
 
 // Bump this when the seeded demo content changes so returning visitors get a
 // clean reset instead of stale localStorage from a previous version.
-const VERSION = 'v8';
+const VERSION = 'v9';
 
 const STORAGE_KEY_ITEMS = `lastboard_demo_items_${VERSION}`;
 const STORAGE_KEY_USER = `lastboard_demo_user_${VERSION}`;
