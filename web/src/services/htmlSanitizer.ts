@@ -196,5 +196,35 @@ export class HTMLSanitizer {
     }
 }
 
-// Singleton instance
+// Singleton instance (Markdown / general use)
 export const htmlSanitizer = new HTMLSanitizer();
+
+/**
+ * Sanitizer for the Notepad's rich contenteditable output. It allows the extra
+ * formatting the editor legitimately produces (horizontal rules, font colors,
+ * inline styles for text color / image sizing) that the default config would
+ * strip. Event handlers (onerror, onclick, …) and <script> are still removed —
+ * any attribute/tag outside the allowlist is dropped, and style values pass
+ * through sanitizeStyle(). This closes the stored-XSS in the Notepad without
+ * losing the user's formatting.
+ */
+export const notepadSanitizer = new HTMLSanitizer({
+    allowedTags: [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'p', 'br', 'div', 'span', 'hr', 'font',
+        'strong', 'b', 'em', 'i', 'u', 's', 'strike',
+        'a', 'img',
+        'ul', 'ol', 'li',
+        'pre', 'code', 'blockquote',
+        'label', 'input'
+    ],
+    allowedAttrs: {
+        '*': ['class', 'style'],
+        'a': ['href', 'title', 'target'],
+        'img': ['src', 'alt', 'title', 'width', 'height', 'style'],
+        'font': ['color', 'face'],
+        'input': ['type', 'id', 'checked'],
+        'label': ['for']
+    },
+    allowedSchemes: ['http', 'https', 'mailto']
+});

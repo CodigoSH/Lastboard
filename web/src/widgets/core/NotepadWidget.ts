@@ -10,6 +10,7 @@
 import { dashboardStore } from '../../store/dashboardStore';
 import { i18n } from '../../services/i18n';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
+import { notepadSanitizer } from '../../services/htmlSanitizer';
 
 // ============================================================================
 // ICONS (V14: Pro Minimalist - 1.5px Stroke, Lucide Style)
@@ -970,7 +971,7 @@ export class NotepadWidget extends HTMLElement {
         const item = state.items.find((i) => i.id === this._itemId);
         if (item) {
             const contentObj = WidgetContentHelper.parse(item.content);
-            const html = (contentObj as any).text || '';
+            const html = notepadSanitizer.sanitize((contentObj as any).text || '');
             if (this._editor && this._editor.innerHTML !== html) {
                 this._editor.innerHTML = html;
             }
