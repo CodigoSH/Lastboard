@@ -7,24 +7,24 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-// IsSecureRequest reports whether the request arrived over HTTPS, either via
-// a direct TLS connection or through a trusted reverse proxy header.
+// IsSecureRequest reports whether the request arrived over HTTPS, either via a
+// direct TLS connection or a reverse-proxy protocol header.
+//
+// This deliberately trusts X-Forwarded-Proto / CloudFront-Forwarded-Proto
+// WITHOUT gating on TRUST_PROXY. Lastboard is self-hosted and most operators
+// run it behind a reverse proxy (Pangolin/Traefik/NPM/Caddy) in Docker or LXC;
+// staying lax here lets the Secure cookie flag work out of the box without
+// requiring TRUST_PROXY=true. The risk is low: spoofing this header only sets
+// Secure=true on cookies. Trusting X-Forwarded-For to bypass the rate limiter
+// is a different risk profile and IS gated on TRUST_PROXY — do not unify them.
 func IsSecureRequest(r *http.Request) bool {
 	if r.TLS != nil {
 		return true
-	}
-	// Only honor proxy-supplied protocol headers when a reverse proxy is
-	// explicitly trusted; otherwise a direct client could spoof them to make
-	// the server believe the connection is secure. Consistent with the
-	// rate-limiter's IP resolution, which also gates on TRUST_PROXY.
-	if os.Getenv("TRUST_PROXY") != "true" {
-		return false
 	}
 	if proto := r.Header.Get("X-Forwarded-Proto"); proto == "https" {
 		return true
