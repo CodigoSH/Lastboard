@@ -1,4 +1,19 @@
 export class MarkdownParser {
+    /**
+     * Allow only http/https/mailto (and relative) URLs in generated links and
+     * images; anything else (javascript:, data:, vbscript:, …) collapses to '#'.
+     * Makes the parser safe by itself instead of relying on the downstream
+     * sanitizer (defense in depth). The input is already HTML-entity escaped by
+     * parse(), so quotes cannot break out of the attribute here.
+     */
+    private static safeLinkUrl(url: string): string {
+        const lower = url.trim().toLowerCase();
+        const scheme = lower.match(/^([a-z][a-z0-9+.-]*):/);
+        if (!scheme) return url; // relative path or anchor
+        if (scheme[1] === 'http' || scheme[1] === 'https' || scheme[1] === 'mailto') return url;
+        return '#';
+    }
+
     static parse(markdown: string): string {
         if (!markdown) return '';
 
@@ -40,10 +55,12 @@ export class MarkdownParser {
         html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');
 
         // Images
-        html = html.replace(/!\[([^\]]+)\]\(([^)]+)\)/gim, '<img src="$2" alt="$1" style="max-width:100%"/>');
+        html = html.replace(/!\[([^\]]+)\]\(([^)]+)\)/gim, (_m, alt, url) =>
+            `<img src="${MarkdownParser.safeLinkUrl(url)}" alt="${alt}" style="max-width:100%"/>`);
 
         // Links
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>');
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, (_m, text, url) =>
+            `<a href="${MarkdownParser.safeLinkUrl(url)}" target="_blank">${text}</a>`);
 
         // Bold
         html = html.replace(/\*\*([^*]+)\*\*/gim, '<strong>$1</strong>');

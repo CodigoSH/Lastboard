@@ -3,7 +3,9 @@ package api
 import (
 	"log/slog"
 	"net/http"
+	"net/url"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,12 +38,19 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan WSMessage, 10),
-		register:   make(chan *websocket.Conn),
-		unregister: make(chan *websocket.Conn),
+		broadcast: make(chan WSMessage, 10),
+		// Buffered so a (dis)connection does not block on Run() while it is busy
+		// sending to a slow client. Pairs with the per-send write deadline below.
+		register:   make(chan *websocket.Conn, 16),
+		unregister: make(chan *websocket.Conn, 16),
 		clients:    make(map[*websocket.Conn]bool),
 	}
 }
+
+// wsWriteTimeout bounds how long a single slow client can stall the broadcast
+// loop. Past it the send fails and the client is dropped, so one stuck peer
+// cannot block telemetry for everyone.
+const wsWriteTimeout = 5 * time.Second
 
 func (h *Hub) Run() {
 	for {
@@ -70,8 +79,10 @@ func (h *Hub) Run() {
 			}
 			h.mu.Unlock()
 
-			// Send without holding the lock so a slow client doesn't block others
+			// Send without holding the lock so a slow client doesn't block others.
+			// The write deadline caps the stall a single slow client can cause.
 			for _, client := range snapshot {
+				_ = client.SetWriteDeadline(time.Now().Add(wsWriteTimeout))
 				if err := websocket.JSON.Send(client, message); err != nil {
 					slog.Warn("WebSocket send error", "error", err)
 					client.Close()
@@ -147,7 +158,27 @@ func gatherStats() (SystemStats, error) {
 	return stats, nil
 }
 
+// sameOriginWS reports whether the WebSocket handshake originates from the same
+// host it is served on. Browsers always send Origin on WS upgrades; a mismatch
+// indicates a cross-site connection attempt (CSWSH). A missing Origin (e.g. a
+// non-browser client) is allowed since there is no cross-site risk there.
+func sameOriginWS(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return true
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	return strings.EqualFold(u.Host, r.Host)
+}
+
 func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+	if !sameOriginWS(r) {
+		http.Error(w, "forbidden origin", http.StatusForbidden)
+		return
+	}
 	handler := func(ws *websocket.Conn) {
 		h.register <- ws
 		defer func() { h.unregister <- ws }()

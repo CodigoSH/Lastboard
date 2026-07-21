@@ -97,6 +97,23 @@ describe('MarkdownParser', () => {
             expect(MarkdownParser.parse('![alt](https://example.com/i.png)'))
                 .toBe('<img src="https://example.com/i.png" alt="alt" style="max-width:100%"/>');
         });
+
+        it('collapses a javascript: link to # (XSS-10)', () => {
+            expect(MarkdownParser.parse('[x](javascript:alert`1`)'))
+                .toBe('<a href="#" target="_blank">x</a>');
+        });
+
+        it('collapses a data: image URL to # (XSS-10)', () => {
+            expect(MarkdownParser.parse('![x](data:text/html,<b>y</b>)'))
+                .toContain('src="#"');
+        });
+
+        it('keeps http/mailto and relative URLs', () => {
+            expect(MarkdownParser.parse('[m](mailto:a@b.com)'))
+                .toBe('<a href="mailto:a@b.com" target="_blank">m</a>');
+            expect(MarkdownParser.parse('[r](/local/path)'))
+                .toBe('<a href="/local/path" target="_blank">r</a>');
+        });
     });
 
     describe('line breaks', () => {
