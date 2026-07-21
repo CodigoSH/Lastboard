@@ -8,6 +8,7 @@ set -e
 
 # Colors
 GREEN='\033[1;32m'
+RED='\033[1;31m'
 BLUE='\033[1;34m'
 CYAN='\033[0;36m'
 GRAY='\033[0;90m'

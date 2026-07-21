@@ -6,7 +6,11 @@ import (
 )
 
 func main() {
-	resp, err := http.Get("http://localhost:8080/api/health")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	resp, err := http.Get("http://localhost:" + port + "/api/health")
 	if err != nil || resp.StatusCode != http.StatusOK {
 		os.Exit(1)
 	}

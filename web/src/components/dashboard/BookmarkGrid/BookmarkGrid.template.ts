@@ -133,7 +133,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
         ? `<img src="${esc(icon)}" alt="${esc(data.label)}" class="bookmark-grid__icon-img" draggable="false" />`
         : (icon ? esc(icon) : `<svg class="bookmark-grid__icon-svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`);
 
-    const hrefAttr = isEditing ? 'role="button"' : `href="${safeUrl(data.url)}" target="_blank"`;
+    const hrefAttr = isEditing ? 'role="button"' : `href="${safeUrl(data.url)}" target="_blank" rel="noopener noreferrer"`;
 
     const vPosStyle = !isTouchDevice ? `--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH};` : '';
     const borderColorStyle = (data.borderColor && data.borderColor !== '#333333' && !isEditing) ? `border-color: ${data.borderColor} !important;` : '';

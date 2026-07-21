@@ -150,13 +150,13 @@ func initSchema(db *sql.DB) error {
 func migrateSchema(db *sql.DB) error {
 	// Migration 1: add dashboard_id column to items (safe to re-run)
 	_, err := db.Exec(`ALTER TABLE items ADD COLUMN dashboard_id INTEGER REFERENCES dashboards(id) ON DELETE CASCADE`)
-	if err != nil && !containsAny(err.Error(), "duplicate column name") {
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return err
 	}
 
 	// Migration 3: add project_logo column to users (safe to re-run)
 	_, err = db.Exec(`ALTER TABLE users ADD COLUMN project_logo TEXT DEFAULT ''`)
-	if err != nil && !containsAny(err.Error(), "duplicate column name") {
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return err
 	}
 
@@ -173,7 +173,7 @@ func migrateSchema(db *sql.DB) error {
 
 	// Migration 5: add mobile_order column to items for touch/mobile reordering (safe to re-run)
 	_, err = db.Exec(`ALTER TABLE items ADD COLUMN mobile_order INTEGER`)
-	if err != nil && !containsAny(err.Error(), "duplicate column name") {
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 		return err
 	}
 
@@ -287,17 +287,4 @@ func resolveDefaultDashboard(db *sql.DB, userID int) (int, error) {
 	}
 	slog.Info("Created default dashboard for legacy user", "user_id", userID, "dashboard_id", newID)
 	return int(newID), nil
-}
-
-func containsAny(s string, substrings ...string) bool {
-	for _, sub := range substrings {
-		if len(s) >= len(sub) {
-			for i := 0; i <= len(s)-len(sub); i++ {
-				if s[i:i+len(sub)] == sub {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }
