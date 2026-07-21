@@ -162,6 +162,11 @@ func gatherStats() (SystemStats, error) {
 // host it is served on. Browsers always send Origin on WS upgrades; a mismatch
 // indicates a cross-site connection attempt (CSWSH). A missing Origin (e.g. a
 // non-browser client) is allowed since there is no cross-site risk there.
+//
+// Self-hosted note: most operators run behind a reverse proxy, where the
+// backend's Host may be the internal address while the browser's Origin is the
+// public hostname. We therefore also accept the proxy-forwarded X-Forwarded-Host
+// so telemetry keeps working behind Pangolin/Traefik/NPM/Caddy without config.
 func sameOriginWS(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 	if origin == "" {
@@ -171,7 +176,13 @@ func sameOriginWS(r *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	return strings.EqualFold(u.Host, r.Host)
+	if strings.EqualFold(u.Host, r.Host) {
+		return true
+	}
+	if fwd := r.Header.Get("X-Forwarded-Host"); fwd != "" && strings.EqualFold(u.Host, fwd) {
+		return true
+	}
+	return false
 }
 
 func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
