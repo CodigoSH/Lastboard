@@ -405,14 +405,12 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.DB.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID)
-	if err != nil {
+	// Idempotent delete: a missing row returns 200, not 404. The frontend does
+	// an optimistic delete and rolls back (re-adds the item) on any error, so
+	// 404-ing an already-deleted item (e.g. stale multi-device cache) would make
+	// it reappear. The user_id clause already guarantees ownership.
+	if _, err = h.DB.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-	if affected, _ := result.RowsAffected(); affected == 0 {
-		// Nothing deleted: the item does not exist or belongs to another user.
-		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
