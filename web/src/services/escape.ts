@@ -40,6 +40,11 @@ export const safeImageSrc = (url: string): string => {
     if (!url) return '';
     const trimmed = String(url).trim();
     const lower = trimmed.toLowerCase();
+    const scheme = lower.match(/^([a-z][a-z0-9+.-]*):/);
+    if (!scheme) {
+        // Relative path (e.g. /images/logo.png) — no scheme, safe.
+        return escapeHtml(trimmed);
+    }
     if (
         lower.startsWith('http://') ||
         lower.startsWith('https://') ||

@@ -4,6 +4,7 @@
 
 import { IconInfo } from '../../../services/iconService';
 import { i18n } from '../../../services/i18n';
+import { escapeHtml, safeImageSrc } from '../../../services/escape';
 
 // Static layout shell
 export const layoutContainer = () => `
@@ -52,14 +53,14 @@ export const gridTemplate = (icons: IconInfo[], selectedIcon: string, isLoading:
     for (const [provider, providerIcons] of Object.entries(grouped)) {
         html += `
             <div class="icon-picker__group">
-                <div class="icon-picker__group-header">${provider} <span style="opacity:0.5;font-weight:400;">(${providerIcons.length})</span></div>
+                <div class="icon-picker__group-header">${escapeHtml(provider)} <span style="opacity:0.5;font-weight:400;">(${providerIcons.length})</span></div>
                 <div class="icon-picker__group-grid">
                     ${providerIcons.map(icon => `
                         <div class="icon-picker__item ${selectedIcon === icon.url ? 'icon-picker__item--selected' : ''}"
-                             data-iconurl="${icon.url}"
-                             data-iconname="${icon.name}"
-                             title="${icon.name}">
-                            <img src="${icon.url}" alt="${icon.name}" loading="lazy" />
+                             data-iconurl="${safeImageSrc(icon.url)}"
+                             data-iconname="${escapeHtml(icon.name)}"
+                             title="${escapeHtml(icon.name)}">
+                            <img src="${safeImageSrc(icon.url)}" alt="${escapeHtml(icon.name)}" loading="lazy" />
                         </div>
                     `).join('')}
                 </div>

@@ -16,14 +16,15 @@ interface TopBarData {
 }
 
 import { i18n } from '../../../services/i18n';
+import { escapeHtml, safeImageSrc } from '../../../services/escape';
 import '../DashboardSwitcher/DashboardSwitcher';
 
 export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="${projectLogo || '/images/logo.png'}" class="top-bar__logo" alt="" aria-hidden="true">
-            <div class="top-bar__title">${title}</div>
+            <img src="${safeImageSrc(projectLogo || '/images/logo.png')}" class="top-bar__logo" alt="" aria-hidden="true">
+            <div class="top-bar__title">${escapeHtml(title)}</div>
             ${isDemo ? `<div class="top-bar__demo-badge">${i18n.t('general.demo_mode')}</div>` : ''}
         </div>
         <div class="top-bar__actions">
@@ -33,7 +34,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             <!-- Search Bar -->
             <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${editMode ? 'search-wrapper--disabled' : ''}" title="${i18n.t('general.search')}">
                 <input type="text" id="search-input" class="search-input" placeholder="${i18n.t('general.search')}" 
-                       value="${searchQuery || ''}" onclick="event.stopPropagation()">
+                       value="${escapeHtml(searchQuery || '')}" onclick="event.stopPropagation()">
                 <div id="search-clear" class="search-clear" style="display: ${searchQuery ? 'flex' : 'none'};">×</div>
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <circle cx="11" cy="11" r="8" />

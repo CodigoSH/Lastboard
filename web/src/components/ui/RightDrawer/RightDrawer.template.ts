@@ -1,4 +1,5 @@
 import { i18n } from '../../../services/i18n';
+import { escapeHtml, safeImageSrc } from '../../../services/escape';
 
 interface User {
     initials?: string;
@@ -22,9 +23,9 @@ interface RightDrawerProps {
  */
 export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: RightDrawerProps) => `
         <div class="right-drawer__header">
-            <app-avatar class="right-drawer__avatar" initials="${user.initials}" src="${user.avatar_url || ''}"></app-avatar>
+            <app-avatar class="right-drawer__avatar" initials="${escapeHtml(user.initials)}" src="${safeImageSrc(user.avatar_url || '')}"></app-avatar>
             <div class="right-drawer__user-info">
-                <span class="right-drawer__username">${user.username}</span>
+                <span class="right-drawer__username">${escapeHtml(user.username)}</span>
                 ${(user.role?.toLowerCase() === 'admin') ? `<span class="right-drawer__role">${i18n.t('settings.role_admin')}</span>` : ''}
             </div>
         </div>

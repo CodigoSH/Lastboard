@@ -1,4 +1,5 @@
 import { i18n } from '../../../services/i18n';
+import { escapeHtml } from '../../../services/escape';
 
 export const template = ({ name, error }: { name: string; error: string }) => `
     <dialog id="modal">
@@ -12,8 +13,8 @@ export const template = ({ name, error }: { name: string; error: string }) => `
         <div class="modal-body">
             <div class="form-group">
                 <label for="dashboard-name">${i18n.t('dashboard.name_label') || 'Name'}</label>
-                <input type="text" id="dashboard-name" value="${name}" autofocus autocomplete="off" />
-                <div class="error-message ${error ? 'visible' : ''}">${error}</div>
+                <input type="text" id="dashboard-name" value="${escapeHtml(name)}" autofocus autocomplete="off" />
+                <div class="error-message ${error ? 'visible' : ''}">${escapeHtml(error)}</div>
             </div>
         </div>
         

@@ -2,6 +2,7 @@
 import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
 import { userStore } from '../../store/userStore';
+import { escapeHtml as esc } from '../../services/escape';
 import '../../components/ui/IconSelectionModal/IconSelectionModal';
 import '../../components/ui/Select/Select';
 
@@ -99,10 +100,6 @@ function isAdmin(): boolean {
 
 function shortId(id: string): string {
     return id.substring(0, 8);
-}
-
-function esc(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ── SVG Icons ────────────────────────────────────────────────────────────────

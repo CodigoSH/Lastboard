@@ -2,6 +2,7 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import { GridItem } from '../../../types';
 import { mobileReorderTemplate } from './MobileReorderModal.template';
+import { escapeHtml, safeImageSrc } from '../../../services/escape';
 import css from './MobileReorderModal.css' with { type: 'text' };
 
 /** A row's runtime state inside the sheet. `content` is a parsed, local copy. */
@@ -112,8 +113,8 @@ export class MobileReorderModal extends HTMLElement {
         const label = r.content.label || `Item ${r.item.id}`;
         const icon = r.content.icon || '';
         const iconHtml = icon
-            ? `<img class="item-icon" src="${icon}" alt="" draggable="false">`
-            : `<div class="item-icon-placeholder">${label.charAt(0).toUpperCase()}</div>`;
+            ? `<img class="item-icon" src="${safeImageSrc(icon)}" alt="" draggable="false">`
+            : `<div class="item-icon-placeholder">${escapeHtml(label.charAt(0).toUpperCase())}</div>`;
 
         const eyeLabel = isVisible
             ? (i18n.t('mobile_reorder.hide') || 'Hide')
@@ -124,7 +125,7 @@ export class MobileReorderModal extends HTMLElement {
         return `
             <div class="item ${isVisible ? '' : 'is-hidden'}" data-id="${r.item.id}" ${dragAttrs}>
                 ${iconHtml}
-                <span class="item-label">${label}</span>
+                <span class="item-label">${escapeHtml(label)}</span>
                 <button class="eye-btn" data-id="${r.item.id}" aria-label="${eyeLabel}" aria-pressed="${isVisible}" title="${eyeLabel}">
                     ${isVisible ? EYE_OPEN : EYE_OFF}
                 </button>

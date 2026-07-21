@@ -1,3 +1,5 @@
+import { escapeHtml } from '../../../services/escape';
+
 export interface SelectOption {
     value: string;
     label: string;
@@ -13,7 +15,7 @@ export const selectTriggerTemplate = (displayLabel: string): string => `
             <div class="select-wrapper">
                 <div class="select-trigger" id="trigger">
                     <div class="select-value">
-                        ${displayLabel}
+                        ${escapeHtml(displayLabel)}
                     </div>
                     <svg class="select-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
@@ -26,7 +28,7 @@ export const selectTriggerTemplate = (displayLabel: string): string => `
 export const selectOptionsTemplate = (options: SelectOption[], selectedValue: string): string =>
     options.map(opt => `
             <div class="select-option ${opt.value === selectedValue ? 'selected' : ''}"
-                 data-value="${opt.value}">
-                 ${opt.label}
+                 data-value="${escapeHtml(opt.value)}">
+                 ${escapeHtml(opt.label)}
             </div>
         `).join('');

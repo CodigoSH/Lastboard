@@ -16,6 +16,7 @@ interface AddBookmarkModalData {
 }
 
 import { i18n } from '../../../services/i18n';
+import { escapeHtml, safeImageSrc } from '../../../services/escape';
 
 const premiumColors = [
     '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -28,7 +29,7 @@ const renderIconPreview = (selectedIcon: string | null) => {
     }
     const isDirectUrl = selectedIcon.startsWith('http') || selectedIcon.startsWith('/') || selectedIcon.startsWith('data:');
     const iconUrl = isDirectUrl ? selectedIcon : `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${selectedIcon}.webp`;
-    return `<img src="${iconUrl}" alt="icon" style="width: 36px; height: 36px; object-fit: contain;">`;
+    return `<img src="${safeImageSrc(iconUrl)}" alt="icon" style="width: 36px; height: 36px; object-fit: contain;">`;
 };
 
 const renderAppearanceControls = (color: string, borderWidth: number) => {
@@ -169,7 +170,7 @@ export const template = ({
                                 <input type="hidden" name="protocol" id="bookmark-protocol" value="${protocol}">
                             </div>
 
-                            <input type="text" id="bookmark-url" name="url" placeholder="google.com" value="${url}" required />
+                            <input type="text" id="bookmark-url" name="url" placeholder="google.com" value="${escapeHtml(url)}" required />
                         </div>
                     </div>
                     

@@ -681,9 +681,9 @@ class WidgetConfigModal extends HTMLElement {
             }
 
             resultsEl.innerHTML = data.results.map((r: any) => `
-                <button class="city-result" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${r.name}">
-                    <span class="city-name">${r.name}</span>
-                    <span class="city-detail">${[r.admin1, r.country].filter(Boolean).join(', ')}</span>
+                <button class="city-result" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${esc(r.name)}">
+                    <span class="city-name">${esc(r.name)}</span>
+                    <span class="city-detail">${esc([r.admin1, r.country].filter(Boolean).join(', '))}</span>
                 </button>
             `).join('');
 
@@ -727,9 +727,9 @@ class WidgetConfigModal extends HTMLElement {
             }
 
             resultsEl.innerHTML = data.results.map((r: any) => `
-                <button class="city-result" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${r.name}">
-                    <span class="city-name">${r.name}</span>
-                    <span class="city-detail">${[r.admin1, r.country].filter(Boolean).join(', ')}</span>
+                <button class="city-result" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${esc(r.name)}">
+                    <span class="city-name">${esc(r.name)}</span>
+                    <span class="city-detail">${esc([r.admin1, r.country].filter(Boolean).join(', '))}</span>
                 </button>
             `).join('');
 

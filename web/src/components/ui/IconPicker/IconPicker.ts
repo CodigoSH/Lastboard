@@ -1,6 +1,7 @@
 import { i18n } from '../../../services/i18n';
 import { layoutContainer, gridTemplate } from './IconPicker.template';
 import { iconService, IconInfo } from '../../../services/iconService';
+import { safeImageSrc } from '../../../services/escape';
 import css from './IconPicker.css' with { type: 'text' };
 
 class IconPicker extends HTMLElement {
@@ -72,7 +73,7 @@ class IconPicker extends HTMLElement {
             if (this.searchQuery.startsWith('http://') || this.searchQuery.startsWith('https://') || this.searchQuery.startsWith('data:image/')) {
                 this.customUrl = this.searchQuery;
                 if (this.previewElement) {
-                    this.previewElement.innerHTML = `<img src="${this.customUrl}" alt="preview" />`;
+                    this.previewElement.innerHTML = `<img src="${safeImageSrc(this.customUrl)}" alt="preview" />`;
                 }
 
                 // Truncate search so the UI shows '0 results' 
@@ -193,8 +194,8 @@ class IconPicker extends HTMLElement {
                     <div class="icon-picker__group">
                         <div class="icon-picker__group-header">${i18n.t('general.custom_url')}</div>
                         <div class="icon-picker__group-grid" style="grid-template-columns: repeat(4, 1fr);">
-                            <div class="icon-picker__item" style="grid-column: span 4; display: flex; gap: 12px; padding: 12px;" data-icon="${this.customUrl}">
-                                <img src="${this.customUrl}" alt="Custom Icon" style="width: 32px; height: 32px;" />
+                            <div class="icon-picker__item" style="grid-column: span 4; display: flex; gap: 12px; padding: 12px;" data-icon="${safeImageSrc(this.customUrl)}">
+                                <img src="${safeImageSrc(this.customUrl)}" alt="Custom Icon" style="width: 32px; height: 32px;" />
                                 <span style="font-size: 13px; color: var(--text-main); word-break: break-all;">${i18n.t('general.click_to_use_url')}</span>
                             </div>
                         </div>

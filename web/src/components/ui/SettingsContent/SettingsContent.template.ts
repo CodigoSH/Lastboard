@@ -1,6 +1,5 @@
 import { i18n } from '../../../services/i18n';
-
-const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
@@ -29,7 +28,7 @@ export const accountTemplate = (user: User) => `
             <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.profile')}</div>
             <div class="settings-content__profile-header">
                 <div class="settings-content__avatar-container" style="cursor: pointer;" onclick="this.nextElementSibling.click()">
-                    <app-avatar initials="${user.initials || '??'}" src="${user.avatar_url || ''}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
+                    <app-avatar initials="${esc(user.initials || '??')}" src="${safeImageSrc(user.avatar_url || '')}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
                     <div class="settings-content__edit-overlay">${i18n.t('action.change_image')}</div>
                 </div>
                 <input type="file" id="avatar-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleAvatarChange(event)">
@@ -225,9 +224,9 @@ export const usersTemplate = (users: any[]) => `
                 ${(users || []).map(u => `
                     <div class="settings-content__user-item">
                         <div class="user-info">
-                            <app-avatar 
-                                initials="${u.username.substring(0, 2).toUpperCase()}" 
-                                src="${u.avatar_url || ''}" 
+                            <app-avatar
+                                initials="${esc(u.username.substring(0, 2).toUpperCase())}"
+                                src="${safeImageSrc(u.avatar_url || '')}"
                                 style="margin: 0; width: 36px; height: 36px; font-size: 13px; border-radius: 50%; outline: 1px solid var(--border);">
                             </app-avatar>
                             <div class="user-details">

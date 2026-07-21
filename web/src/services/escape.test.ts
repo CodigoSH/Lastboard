@@ -55,6 +55,11 @@ describe('safeImageSrc', () => {
         expect(safeImageSrc('data:image/png;base64,AAAA')).toBe('data:image/png;base64,AAAA');
     });
 
+    it('allows relative paths (no scheme)', () => {
+        expect(safeImageSrc('/images/logo.png')).toBe('/images/logo.png');
+        expect(safeImageSrc('icons/git.webp')).toBe('icons/git.webp');
+    });
+
     it('rejects non-image data URIs and scripts to empty', () => {
         expect(safeImageSrc('data:text/html,<script>alert(1)</script>')).toBe('');
         expect(safeImageSrc('javascript:alert(1)')).toBe('');

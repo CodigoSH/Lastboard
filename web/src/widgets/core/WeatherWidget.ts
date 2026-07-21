@@ -2,6 +2,7 @@
 import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
 import { userStore } from '../../store/userStore';
+import { escapeHtml } from '../../services/escape';
 
 // --- Cache ---
 const weatherCache = new Map<string, { data: any; timestamp: number }>();
@@ -297,7 +298,7 @@ class WeatherWidget extends HTMLElement {
             <div class="temp-main">${formatTemp(cur.temperature, u)}</div>
             <div class="desc">${getWeatherDescription(cur.weathercode)}</div>
             ${daily ? `<div class="minmax"><span class="hi">${formatTemp(daily.temperature_2m_max[0], u)}</span><span class="lo">${formatTemp(daily.temperature_2m_min[0], u)}</span></div>` : ''}
-            ${this._config.city ? `<div class="city">${this._config.city}</div>` : ''}
+            ${this._config.city ? `<div class="city">${escapeHtml(this._config.city)}</div>` : ''}
         `;
     }
 
@@ -337,7 +338,7 @@ class WeatherWidget extends HTMLElement {
                     <div class="fc-h-temp">${formatTemp(cur.temperature, u)}</div>
                     <div class="fc-h-desc">${getWeatherDescription(cur.weathercode)}</div>
                 </div>
-                ${this._config.city ? `<div class="fc-h-city">${this._config.city}</div>` : ''}
+                ${this._config.city ? `<div class="fc-h-city">${escapeHtml(this._config.city)}</div>` : ''}
             </div>
             <div class="minmax compact"><span class="hi">${formatTemp(daily.temperature_2m_max[0], u)}</span><span class="lo">${formatTemp(daily.temperature_2m_min[0], u)}</span></div>
             <div class="fc-row">${cards}</div>
