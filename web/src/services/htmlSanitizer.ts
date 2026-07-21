@@ -28,8 +28,30 @@ const DEFAULT_CONFIG: SanitizerConfig = {
         'input': ['type', 'id', 'checked'],
         'label': ['for']
     },
-    allowedSchemes: ['http', 'https', 'data', 'mailto']
+    allowedSchemes: ['http', 'https', 'mailto']
 };
+
+/**
+ * Pure URL-safety check used by the sanitizer. Extracted so it can be unit
+ * tested without a DOM (the rest of the sanitizer depends on DOMParser).
+ *
+ * Rules: relative/anchor URLs (no scheme) are safe; `data:` is allowed ONLY for
+ * images (`data:image/…`); any other scheme must appear in `allowedSchemes`.
+ * This replaces the previous naive `data:` + substring-'script' heuristic.
+ */
+export function isSafeSanitizerUrl(url: string, allowedSchemes: string[]): boolean {
+    const lower = url.toLowerCase().trim();
+    const schemeMatch = lower.match(/^([a-z][a-z0-9+.-]*):/);
+    if (!schemeMatch) {
+        // No scheme → relative path or in-page anchor, safe.
+        return true;
+    }
+    const scheme = schemeMatch[1];
+    if (scheme === 'data') {
+        return lower.startsWith('data:image/');
+    }
+    return allowedSchemes.includes(scheme);
+}
 
 export class HTMLSanitizer {
     private config: SanitizerConfig;
@@ -146,32 +168,7 @@ export class HTMLSanitizer {
     }
 
     private isDangerousUrl(url: string): boolean {
-        const lower = url.toLowerCase().trim();
-
-        // Block javascript: protocol
-        if (lower.startsWith('javascript:')) {
-            return true;
-        }
-
-        // Block data: URLs that contain scripts
-        if (lower.startsWith('data:') && lower.includes('script')) {
-            return true;
-        }
-
-        // Block vbscript: protocol
-        if (lower.startsWith('vbscript:')) {
-            return true;
-        }
-
-        // Only allow specific schemes if it has a protocol
-        if (lower.includes(':')) {
-            const scheme = lower.split(':')[0];
-            if (!this.config.allowedSchemes.includes(scheme)) {
-                return true;
-            }
-        }
-
-        return false;
+        return !isSafeSanitizerUrl(url, this.config.allowedSchemes);
     }
 
     private sanitizeStyle(style: string): string {
