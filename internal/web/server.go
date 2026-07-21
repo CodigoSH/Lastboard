@@ -77,7 +77,11 @@ func initSessionSecret(db *sql.DB) []byte {
 		secretHex = hex.EncodeToString(bytes)
 		_, err := db.Exec("INSERT INTO system_settings (key, value) VALUES ('session_secret', ?)", secretHex)
 		if err != nil {
-			slog.Warn("Failed to persist session secret", "error", err)
+			// Fatal: a non-persisted secret lives only in memory, so the next
+			// restart generates a new one and silently invalidates every
+			// session. Fail loudly instead of logging a warning nobody sees.
+			slog.Error("Failed to persist session secret", "error", err)
+			os.Exit(1)
 		}
 	} else if err != nil {
 		slog.Error("Failed to load session secret", "error", err)

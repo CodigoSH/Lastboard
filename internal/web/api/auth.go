@@ -58,8 +58,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ip := resolveClientIP(r)
 	now := time.Now()
 
-	// Inline cleanup: remove expired lockouts to keep the table lean
-	h.DB.Exec("DELETE FROM login_attempts WHERE locked_until IS NOT NULL AND locked_until < ?", now)
+	// Inline cleanup: remove expired lockouts to keep the table lean. Best-effort,
+	// but log failures so a persistently stuck lockout leaves a diagnostic trail.
+	if _, err := h.DB.Exec("DELETE FROM login_attempts WHERE locked_until IS NOT NULL AND locked_until < ?", now); err != nil {
+		log.Printf("login: failed to clean expired lockouts: %v", err)
+	}
 
 	// Check current state for this IP
 	var count int
@@ -83,7 +86,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		}
 		// Attempt window expired — reset stale record
 		if !lockedUntil.Valid && now.Sub(firstSeen) > attemptWindow {
-			h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip)
+			if _, err := h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip); err != nil {
+				log.Printf("login: failed to reset stale attempts for %s: %v", ip, err)
+			}
 			count = 0
 		}
 	}
@@ -124,7 +129,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Success: clear rate limit record for this IP
-	h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip)
+	if _, err := h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip); err != nil {
+		log.Printf("login: failed to clear attempts for %s: %v", ip, err)
+	}
 
 	duration := defaultSession
 	if input.RememberMe {

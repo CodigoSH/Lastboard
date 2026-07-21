@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,13 @@ import (
 func IsSecureRequest(r *http.Request) bool {
 	if r.TLS != nil {
 		return true
+	}
+	// Only honor proxy-supplied protocol headers when a reverse proxy is
+	// explicitly trusted; otherwise a direct client could spoof them to make
+	// the server believe the connection is secure. Consistent with the
+	// rate-limiter's IP resolution, which also gates on TRUST_PROXY.
+	if os.Getenv("TRUST_PROXY") != "true" {
+		return false
 	}
 	if proto := r.Header.Get("X-Forwarded-Proto"); proto == "https" {
 		return true

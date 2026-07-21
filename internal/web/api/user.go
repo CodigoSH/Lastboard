@@ -75,6 +75,9 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) {
+	// Carries base64 background + logo images (each capped at 2MB below); allow
+	// generous headroom for both plus the other fields, but keep it bounded.
+	r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
 	username := middleware.GetUserFromContext(r)
 
 	var input struct {
@@ -161,6 +164,10 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Dashboard Background: accept any string (Base64 or URL). Empty string clears it.
+	if len(input.DashboardBackground) > 2*1024*1024 {
+		http.Error(w, "Background too large (max 2MB)", http.StatusBadRequest)
+		return
+	}
 	current.DashboardBackground = input.DashboardBackground
 
 	// Project Logo: only update when explicitly provided (nil = not sent = keep current)
@@ -190,6 +197,8 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	// Carries a base64 avatar (capped at 2MB below); bound the raw body too.
+	r.Body = http.MaxBytesReader(w, r.Body, 5*1024*1024)
 	username := middleware.GetUserFromContext(r)
 
 	var input struct {
@@ -258,6 +267,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	username := middleware.GetUserFromContext(r)
 
 	var input struct {
@@ -353,6 +363,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
 	if !isAdminUser(h.DB, r) {
 		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
 		return
@@ -418,6 +429,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
 	if !isAdminUser(h.DB, r) {
 		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
 		return

@@ -3,7 +3,6 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 	"net/http"
 )
 
@@ -69,9 +68,9 @@ func (h *DockerHandler) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Role check: only admin may perform container actions.
-	role := middleware.GetUserRoleFromContext(r)
-	if role != "admin" {
+	// Role check: only admin may perform container actions. Use the shared
+	// isAdminUser helper so admin authorization is defined in exactly one place.
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "docker.forbidden", http.StatusForbidden)
 		return
 	}

@@ -31,6 +31,25 @@ var (
 	dnsCacheTTL = 30 * time.Second
 )
 
+func init() {
+	// Periodically evict expired entries so hosts that stop being probed do not
+	// linger in the map forever. Without this the cache only ever grows, unlike
+	// the rate-limiter which already prunes itself.
+	go func() {
+		ticker := time.NewTicker(dnsCacheTTL * 2)
+		defer ticker.Stop()
+		for range ticker.C {
+			now := time.Now()
+			dnsCache.Range(func(key, value any) bool {
+				if entry, ok := value.(dnsCacheEntry); ok && now.After(entry.expiresAt) {
+					dnsCache.Delete(key)
+				}
+				return true
+			})
+		}
+	}()
+}
+
 func resolveHostCached(hostname string) (string, error) {
 	if v, ok := dnsCache.Load(hostname); ok {
 		entry := v.(dnsCacheEntry)
@@ -151,6 +170,21 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(items)
 }
 
+// userOwnsDashboard reports whether dashboardID belongs to userID. Used to stop
+// a user from attaching items to another user's dashboard (the FK only ensures
+// the dashboard exists, not that it is theirs).
+func (h *DashboardHandler) userOwnsDashboard(userID, dashboardID int) bool {
+	var one int
+	return h.DB.QueryRow("SELECT 1 FROM dashboards WHERE id=? AND user_id=?", dashboardID, userID).Scan(&one) == nil
+}
+
+// userOwnsItem reports whether itemID belongs to userID. Used to stop a user
+// from nesting an item under another user's item via parent_id.
+func (h *DashboardHandler) userOwnsItem(userID, itemID int) bool {
+	var one int
+	return h.DB.QueryRow("SELECT 1 FROM items WHERE id=? AND user_id=?", itemID, userID).Scan(&one) == nil
+}
+
 func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 512*1024)
 	var item dashboard.Item
@@ -192,6 +226,17 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	}
 	if itemCount >= maxItems {
 		http.Error(w, "error.item_limit_reached", http.StatusTooManyRequests)
+		return
+	}
+
+	// Ownership checks: a client-supplied dashboard_id / parent_id must belong to
+	// the current user, otherwise items could be attached to another user's board.
+	if item.DashboardID != nil && !h.userOwnsDashboard(userID, *item.DashboardID) {
+		http.Error(w, "error.not_found", http.StatusNotFound)
+		return
+	}
+	if item.ParentID != nil && !h.userOwnsItem(userID, *item.ParentID) {
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 
@@ -286,6 +331,11 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		args = append(args, *input.H)
 	}
 	if input.ParentID != nil {
+		// A supplied parent must belong to the current user.
+		if !h.userOwnsItem(userID, *input.ParentID) {
+			http.Error(w, "error.not_found", http.StatusNotFound)
+			return
+		}
 		sets = append(sets, "parent_id=?")
 		args = append(args, *input.ParentID)
 	} else if input.ClearParent {
@@ -355,9 +405,14 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.DB.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID)
+	result, err := h.DB.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID)
 	if err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if affected, _ := result.RowsAffected(); affected == 0 {
+		// Nothing deleted: the item does not exist or belongs to another user.
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
