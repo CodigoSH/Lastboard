@@ -12,7 +12,7 @@
     <title>{{if .ProjectName}}{{.ProjectName}}{{else}}Lastboard{{end}}</title>
     <link rel="stylesheet" href="/styles/theme.css?v=54">
     <link rel="stylesheet" href="/styles/components.css?v=54">
-    <script>
+    <script nonce="{{.Nonce}}">
         window.LASTBOARD_CONFIG = {
             API_BASE_URL: '', // Root-relative for local Go server
             DEBUG_MODE: false,

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- Prevent FOUC: set dark-mode class before CSS parses so variables resolve correctly -->
-<script>
+<script nonce="{{.Nonce}}">
     if (localStorage.getItem('lastboard_theme') === 'dark') document.documentElement.classList.add('dark-mode');
     const accent = localStorage.getItem('lastboard_accent');
     if (accent) document.documentElement.style.setProperty('--accent', accent);

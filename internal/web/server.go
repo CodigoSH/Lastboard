@@ -1,9 +1,11 @@
 package web
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"embed"
+	"encoding/base64"
 	"encoding/hex"
 	htmltemplate "html/template"
 	"io"
@@ -19,6 +21,17 @@ import (
 	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 	"github.com/CodigoSH/Lastboard/internal/web/util"
 )
+
+// nonceCtxKey carries the per-request CSP nonce through the request context.
+type nonceCtxKey struct{}
+
+// cspNonce returns the per-request CSP nonce set by ServeHTTP, or "" if absent.
+func cspNonce(r *http.Request) string {
+	if v, ok := r.Context().Value(nonceCtxKey{}).(string); ok {
+		return v
+	}
+	return ""
+}
 
 //go:embed dist/*
 var content embed.FS
@@ -295,7 +308,7 @@ func (s *Server) routes() {
 			return
 		}
 
-		s.serveFile(w, r, "setup.html")
+		s.serveSetupPage(w, r)
 	})
 
 	// Setup API
@@ -318,13 +331,23 @@ func (s *Server) routes() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Per-request CSP nonce for the handful of inline <script> blocks (the
+	// runtime config and the theme bootstrap). This lets script-src drop
+	// 'unsafe-inline', so injected markup can no longer execute as script.
+	// style-src keeps 'unsafe-inline' intentionally: the UI relies on inline
+	// style attributes and per-component <style> injected into shadow roots.
+	nonceBytes := make([]byte, 16)
+	_, _ = rand.Read(nonceBytes)
+	nonce := base64.StdEncoding.EncodeToString(nonceBytes)
+	r = r.WithContext(context.WithValue(r.Context(), nonceCtxKey{}, nonce))
+
 	// Security Headers
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 	w.Header().Set("Content-Security-Policy",
 		"default-src 'self'; "+
-			"script-src 'self' 'unsafe-inline'; "+
+			"script-src 'self' 'nonce-"+nonce+"'; "+
 			"style-src 'self' 'unsafe-inline'; "+
 			"img-src 'self' data: https:; "+
 			"connect-src 'self' wss: ws: https://cdn.jsdelivr.net https://unpkg.com https://api.github.com https://git.codigosh.com https://*.open-meteo.com https://timeapi.io; "+
@@ -365,7 +388,7 @@ func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename stri
 
 // serveLoginPage renders login.html as a Go template, injecting server-side flags.
 // DemoOnly: when true, the "Try Demo" button is rendered; otherwise completely absent.
-func (s *Server) serveLoginPage(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := htmltemplate.ParseFS(s.assets, "login.html")
 	if err != nil {
 		slog.Error("Error loading login template", "error", err)
@@ -375,12 +398,36 @@ func (s *Server) serveLoginPage(w http.ResponseWriter, _ *http.Request) {
 
 	data := struct {
 		DemoOnly bool
+		Nonce    string
 	}{
 		DemoOnly: os.Getenv("DEMO_ONLY") == "true",
+		Nonce:    cspNonce(r),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("Error executing login template", "error", err)
+	}
+}
+
+// serveSetupPage renders setup.html as a Go template so its inline theme-bootstrap
+// script can carry the per-request CSP nonce (served as a template, not a static
+// file, for that reason). Callers must have already verified no users exist.
+func (s *Server) serveSetupPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := htmltemplate.ParseFS(s.assets, "setup.html")
+	if err != nil {
+		slog.Error("Error loading setup template", "error", err)
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		Nonce string
+	}{
+		Nonce: cspNonce(r),
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		slog.Error("Error executing setup template", "error", err)
 	}
 }
 
@@ -428,10 +475,12 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 		ProjectName string
 		ThemeClass  string
 		DemoMode    bool
+		Nonce       string
 	}{
 		ProjectName: projectName,
 		ThemeClass:  themeClass,
 		DemoMode:    false,
+		Nonce:       cspNonce(r),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -442,7 +491,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 // serveIndexDemo serves the dashboard in fully isolated demo mode.
 // No authentication is required. All data is stored in the visitor's localStorage
 // via demoService.ts — the production database is never touched.
-func (s *Server) serveIndexDemo(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
@@ -458,10 +507,12 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, _ *http.Request) {
 		ProjectName string
 		ThemeClass  string
 		DemoMode    bool
+		Nonce       string
 	}{
 		ProjectName: "Lastboard",
 		ThemeClass:  "dark-mode",
 		DemoMode:    true,
+		Nonce:       cspNonce(r),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
