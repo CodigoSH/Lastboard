@@ -20,7 +20,12 @@ class SocketService {
     private notificationListeners: NotificationListener[] = [];
     private reconnectTimeout?: ReturnType<typeof setTimeout>;
     private reconnectDelay: number = 1000;
+    private reconnectAttempts: number = 0;
     private static readonly MAX_DELAY = 30000;
+    // Only surface a warning after several *consecutive* failures, so a normal
+    // close (page refresh, brief network blip) stays quiet. A successful
+    // connection resets the counter.
+    private static readonly WARN_AFTER = 3;
 
     constructor() {
         this.connect();
@@ -34,8 +39,9 @@ class SocketService {
         this.socket = new WebSocket(url);
 
         this.socket.onopen = () => {
-            // Reset backoff on successful connection
+            // Reset backoff and failure counter on a successful connection.
             this.reconnectDelay = 1000;
+            this.reconnectAttempts = 0;
         };
 
         this.socket.onmessage = (event) => {
@@ -52,7 +58,14 @@ class SocketService {
         };
 
         this.socket.onclose = () => {
-            console.warn('[SocketService] WebSocket closed. Reconnecting...');
+            this.reconnectAttempts++;
+            // A single close (e.g. a page refresh tearing down the socket) is
+            // normal and stays at debug level; only warn if it keeps failing.
+            if (this.reconnectAttempts >= SocketService.WARN_AFTER) {
+                console.warn('[SocketService] WebSocket keeps closing; reconnecting…');
+            } else {
+                console.debug('[SocketService] WebSocket closed; reconnecting…');
+            }
             this.scheduleReconnect();
         };
 
