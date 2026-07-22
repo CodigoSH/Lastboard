@@ -335,7 +335,7 @@ class BookmarkGrid extends HTMLElement {
             if (!container) return;
 
             const id = parseInt(container.dataset.id || '0');
-            const item = (this as any).allItems.find((b: any) => b.id === id);
+            const item = this.allItems.find(b => b.id === id);
             if (!item) return;
 
             const typeLabel = item.type === 'section'
@@ -360,7 +360,7 @@ class BookmarkGrid extends HTMLElement {
             if (!container) return;
 
             const id = parseInt(container.dataset.id || '0');
-            const item = (this as any).allItems.find((b: any) => b.id === id);
+            const item = this.allItems.find(b => b.id === id);
 
             if (item) {
                 const { eventBus, EVENTS } = await import('../../../services/EventBus');
