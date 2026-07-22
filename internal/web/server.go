@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	htmltemplate "html/template"
-	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -363,27 +362,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.Router.ServeHTTP(w, r)
-}
-
-func (s *Server) serveFile(w http.ResponseWriter, r *http.Request, filename string) {
-	f, err := s.assets.Open(filename)
-	if err != nil {
-		http.Error(w, "File not found", http.StatusNotFound)
-		return
-	}
-	defer f.Close()
-
-	stat, err := f.Stat()
-	if err != nil {
-		http.Error(w, "Internal error", http.StatusInternalServerError)
-		return
-	}
-	rs, ok := f.(io.ReadSeeker)
-	if !ok {
-		http.Error(w, "Internal error", http.StatusInternalServerError)
-		return
-	}
-	http.ServeContent(w, r, filename, stat.ModTime(), rs)
 }
 
 // serveLoginPage renders login.html as a Go template, injecting server-side flags.
