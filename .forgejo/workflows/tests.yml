@@ -37,7 +37,8 @@ jobs:
         run: bun run build
 
       - name: Run Go tests
-        run: go test ./internal/... -v -cover -coverprofile=coverage.out
+        # -race catches data races (the WS hub and stores use goroutines).
+        run: go test ./internal/... -race -v -cover -coverprofile=coverage.out
 
       - name: Generate coverage report
         run: |
@@ -115,6 +116,9 @@ jobs:
         run: go mod download
 
       - name: Run Gosec Security Scanner
+        # Non-blocking (-no-fail): the SARIF is reviewed manually because the
+        # codebase has several triaged, accepted gosec findings (G124/G202/G204/
+        # G304/G402) that are false positives in this self-hosted context.
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@v2.25.0
           gosec -no-fail -fmt sarif -out results.sarif ./...
@@ -124,3 +128,16 @@ jobs:
         with:
           name: gosec-results
           path: results.sarif
+
+      - name: Run govulncheck
+        # Blocking: fails the build when the code calls a known-vulnerable
+        # symbol in the stdlib or a dependency. Currently clean.
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Run staticcheck
+        # Blocking static analysis (dead code, misuse, simplifications).
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./...
