@@ -401,6 +401,7 @@
   "widget.weather.wind": "Rüzgar",
   "notifier.update_download_failed": "Güncelleme indirilemedi. Sunucunun bağlantısını kontrol edip tekrar deneyin.",
   "notifier.update_checksum_failed": "İndirilen güncelleme bütünlük denetiminden geçemedi. Lütfen tekrar deneyin.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "Güncelleme paketi açılamadı. Lütfen tekrar deneyin.",
   "notifier.update_install_failed": "İndirildi ancak yeni sürüm kurulamadı. Sunucu günlüklerini kontrol edin.",
   "notifier.update_unprivileged": "Otomatik güncelleme kullanılamıyor: uygulama kendi dosyalarını değiştiremiyor. 'docker pull' ile veya kurulum betiğini yeniden çalıştırarak güncelleyin.",

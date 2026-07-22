@@ -401,6 +401,7 @@
   "widget.weather.wind": "বাতাস",
   "notifier.update_download_failed": "আপডেট ডাউনলোড করা যায়নি। সার্ভারের সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।",
   "notifier.update_checksum_failed": "ডাউনলোড করা আপডেটটি অখণ্ডতা যাচাইয়ে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "আপডেট প্যাকেজটি আনপ্যাক করা যায়নি। আবার চেষ্টা করুন।",
   "notifier.update_install_failed": "ডাউনলোড হয়েছে, কিন্তু নতুন সংস্করণ ইনস্টল করা যায়নি। সার্ভার লগ দেখুন।",
   "notifier.update_unprivileged": "স্বয়ংক্রিয় আপডেট উপলব্ধ নয়: অ্যাপ নিজের ফাইল প্রতিস্থাপন করতে পারে না। 'docker pull' দিয়ে বা ইনস্টল স্ক্রিপ্ট পুনরায় চালিয়ে আপডেট করুন।",

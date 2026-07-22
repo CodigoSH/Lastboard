@@ -401,6 +401,7 @@
   "widget.weather.wind": "Wiatr",
   "notifier.update_download_failed": "Nie można pobrać aktualizacji. Sprawdź połączenie serwera i spróbuj ponownie.",
   "notifier.update_checksum_failed": "Pobrana aktualizacja nie przeszła weryfikacji integralności. Spróbuj ponownie.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "Nie można rozpakować pakietu aktualizacji. Spróbuj ponownie.",
   "notifier.update_install_failed": "Pobrano, ale nie udało się zainstalować nowej wersji. Sprawdź logi serwera.",
   "notifier.update_unprivileged": "Automatyczna aktualizacja niedostępna: aplikacja nie może zastąpić własnych plików. Zaktualizuj przez 'docker pull' lub ponownie uruchamiając skrypt instalacyjny.",

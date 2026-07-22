@@ -77,6 +77,25 @@ jobs:
           done > artifacts/checksums.txt
           cat artifacts/checksums.txt
 
+      - name: Set up Go (for signing)
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.5'
+
+      - name: Sign checksums.txt
+        # Opt-in: if RELEASE_SIGNING_KEY is unset the release ships unsigned
+        # (the updater falls back to checksum-only). When set, we attach
+        # checksums.txt.sig, verified client-side against the embedded public key.
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "$RELEASE_SIGNING_KEY" ]; then
+            echo "RELEASE_SIGNING_KEY not set — shipping an unsigned release."
+            exit 0
+          fi
+          go run ./cmd/sign artifacts/checksums.txt
+          echo "Signature:"; cat artifacts/checksums.txt.sig
+
       - name: Debug - List Files
         run: |
           echo "Checking for release notes:"
@@ -167,6 +186,15 @@ jobs:
             -H "Authorization: token $CI_TOKEN" \
             -F "attachment=@artifacts/checksums.txt;filename=checksums.txt" \
             "$API/repos/$REPO/releases/$RELEASE_ID/assets"
+
+          # Upload the signature too, when the release was signed.
+          if [ -f artifacts/checksums.txt.sig ]; then
+            echo "Uploading checksums.txt.sig..."
+            curl -s -X POST \
+              -H "Authorization: token $CI_TOKEN" \
+              -F "attachment=@artifacts/checksums.txt.sig;filename=checksums.txt.sig" \
+              "$API/repos/$REPO/releases/$RELEASE_ID/assets"
+          fi
 
           # Publish: all assets are uploaded, so flip draft off. Only now does the
           # release become visible to the update check, guaranteeing the binary and

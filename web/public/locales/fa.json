@@ -401,6 +401,7 @@
   "widget.weather.wind": "باد",
   "notifier.update_download_failed": "دانلود به‌روزرسانی ممکن نشد. اتصال سرور را بررسی کنید و دوباره تلاش کنید.",
   "notifier.update_checksum_failed": "بررسی صحت به‌روزرسانی دانلودشده ناموفق بود. لطفاً دوباره تلاش کنید.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "بسته به‌روزرسانی باز نشد. لطفاً دوباره تلاش کنید.",
   "notifier.update_install_failed": "دانلود شد، اما نسخه جدید نصب نشد. گزارش‌های سرور را بررسی کنید.",
   "notifier.update_unprivileged": "به‌روزرسانی خودکار در دسترس نیست: برنامه نمی‌تواند فایل‌های خود را جایگزین کند. با 'docker pull' یا اجرای دوباره اسکریپت نصب به‌روزرسانی کنید.",

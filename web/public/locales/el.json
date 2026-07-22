@@ -401,6 +401,7 @@
   "widget.weather.wind": "Άνεμος",
   "notifier.update_download_failed": "Δεν ήταν δυνατή η λήψη της ενημέρωσης. Ελέγξτε τη σύνδεση του διακομιστή και δοκιμάστε ξανά.",
   "notifier.update_checksum_failed": "Η ενημέρωση που λήφθηκε απέτυχε στον έλεγχο ακεραιότητας. Δοκιμάστε ξανά.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "Δεν ήταν δυνατή η αποσυμπίεση του πακέτου ενημέρωσης. Δοκιμάστε ξανά.",
   "notifier.update_install_failed": "Λήφθηκε, αλλά δεν ήταν δυνατή η εγκατάσταση της νέας έκδοσης. Ελέγξτε τα αρχεία καταγραφής του διακομιστή.",
   "notifier.update_unprivileged": "Η αυτόματη ενημέρωση δεν είναι διαθέσιμη: η εφαρμογή δεν μπορεί να αντικαταστήσει τα αρχεία της. Ενημερώστε με 'docker pull' ή εκτελώντας ξανά το script εγκατάστασης.",

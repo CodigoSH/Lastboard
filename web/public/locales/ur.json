@@ -401,6 +401,7 @@
   "widget.weather.wind": "ہوا",
   "notifier.update_download_failed": "اپ ڈیٹ ڈاؤن لوڈ نہیں ہو سکی۔ سرور کا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
   "notifier.update_checksum_failed": "ڈاؤن لوڈ کردہ اپ ڈیٹ سالمیت کی جانچ میں ناکام رہی۔ براہِ کرم دوبارہ کوشش کریں۔",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "اپ ڈیٹ پیکیج کو کھولا نہیں جا سکا۔ براہِ کرم دوبارہ کوشش کریں۔",
   "notifier.update_install_failed": "ڈاؤن لوڈ ہو گیا، لیکن نیا ورژن انسٹال نہیں ہو سکا۔ سرور لاگز دیکھیں۔",
   "notifier.update_unprivileged": "خودکار اپ ڈیٹ دستیاب نہیں: ایپ اپنی فائلیں تبدیل نہیں کر سکتی۔ 'docker pull' سے یا انسٹال اسکرپٹ دوبارہ چلا کر اپ ڈیٹ کریں۔",

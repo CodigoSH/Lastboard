@@ -401,6 +401,7 @@
   "widget.weather.wind": "हवा",
   "notifier.update_download_failed": "अपडेट डाउनलोड नहीं हो सका। सर्वर का कनेक्शन जांचें और फिर से प्रयास करें।",
   "notifier.update_checksum_failed": "डाउनलोड किया गया अपडेट अखंडता जांच में विफल रहा। कृपया फिर से प्रयास करें।",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "अपडेट पैकेज को अनपैक नहीं किया जा सका। कृपया फिर से प्रयास करें।",
   "notifier.update_install_failed": "डाउनलोड हो गया, लेकिन नया संस्करण इंस्टॉल नहीं हो सका। सर्वर लॉग देखें।",
   "notifier.update_unprivileged": "स्वचालित अपडेट उपलब्ध नहीं है: ऐप अपनी ही फ़ाइलें नहीं बदल सकता। 'docker pull' से या इंस्टॉल स्क्रिप्ट दोबारा चलाकर अपडेट करें।",

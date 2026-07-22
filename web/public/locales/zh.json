@@ -401,6 +401,7 @@
   "widget.weather.wind": "风",
   "notifier.update_download_failed": "无法下载更新。请检查服务器连接后重试。",
   "notifier.update_checksum_failed": "下载的更新未通过完整性校验。请重试。",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "无法解压更新包。请重试。",
   "notifier.update_install_failed": "已下载，但无法安装新版本。请查看服务器日志。",
   "notifier.update_unprivileged": "自动更新不可用：应用无法替换自身文件。请使用 'docker pull' 或重新运行安装脚本进行更新。",

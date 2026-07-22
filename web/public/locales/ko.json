@@ -401,6 +401,7 @@
   "widget.weather.wind": "바람",
   "notifier.update_download_failed": "업데이트를 다운로드하지 못했습니다. 서버 연결을 확인하고 다시 시도하세요.",
   "notifier.update_checksum_failed": "다운로드한 업데이트의 무결성 검사에 실패했습니다. 다시 시도하세요.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "업데이트 패키지의 압축을 풀지 못했습니다. 다시 시도하세요.",
   "notifier.update_install_failed": "다운로드했지만 새 버전을 설치하지 못했습니다. 서버 로그를 확인하세요.",
   "notifier.update_unprivileged": "자동 업데이트를 사용할 수 없습니다: 앱이 자체 파일을 교체할 수 없습니다. 'docker pull' 또는 설치 스크립트를 다시 실행하여 업데이트하세요.",

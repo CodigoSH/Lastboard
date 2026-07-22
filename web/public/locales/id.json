@@ -401,6 +401,7 @@
   "widget.weather.wind": "Angin",
   "notifier.update_download_failed": "Gagal mengunduh pembaruan. Periksa koneksi server dan coba lagi.",
   "notifier.update_checksum_failed": "Pembaruan yang diunduh gagal pemeriksaan integritas. Silakan coba lagi.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "Paket pembaruan tidak dapat diekstrak. Silakan coba lagi.",
   "notifier.update_install_failed": "Terunduh, tetapi versi baru tidak dapat dipasang. Periksa log server.",
   "notifier.update_unprivileged": "Pembaruan otomatis tidak tersedia: aplikasi tidak dapat mengganti berkasnya sendiri. Perbarui dengan 'docker pull' atau menjalankan ulang skrip instalasi.",

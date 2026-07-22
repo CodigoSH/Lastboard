@@ -401,6 +401,7 @@
   "widget.weather.wind": "風",
   "notifier.update_download_failed": "アップデートをダウンロードできませんでした。サーバーの接続を確認して再試行してください。",
   "notifier.update_checksum_failed": "ダウンロードしたアップデートの整合性チェックに失敗しました。もう一度お試しください。",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "アップデートパッケージを展開できませんでした。もう一度お試しください。",
   "notifier.update_install_failed": "ダウンロードしましたが、新しいバージョンをインストールできませんでした。サーバーのログを確認してください。",
   "notifier.update_unprivileged": "自動アップデートは利用できません：アプリが自身のファイルを置き換えられません。「docker pull」またはインストールスクリプトの再実行で更新してください。",

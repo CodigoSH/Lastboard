@@ -401,6 +401,7 @@
   "widget.weather.wind": "Vento",
   "notifier.update_download_failed": "Não foi possível baixar a atualização. Verifique a conexão do servidor e tente novamente.",
   "notifier.update_checksum_failed": "A atualização baixada falhou na verificação de integridade. Tente novamente.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "Não foi possível descompactar o pacote de atualização. Tente novamente.",
   "notifier.update_install_failed": "Baixado, mas não foi possível instalar a nova versão. Verifique os logs do servidor.",
   "notifier.update_unprivileged": "Atualização automática indisponível: o app não pode substituir os próprios arquivos. Atualize com 'docker pull' ou executando novamente o script de instalação.",

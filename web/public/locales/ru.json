@@ -401,6 +401,7 @@
   "widget.weather.wind": "Ветер",
   "notifier.update_download_failed": "Не удалось загрузить обновление. Проверьте подключение сервера и повторите попытку.",
   "notifier.update_checksum_failed": "Загруженное обновление не прошло проверку целостности. Повторите попытку.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "Не удалось распаковать пакет обновления. Повторите попытку.",
   "notifier.update_install_failed": "Загружено, но не удалось установить новую версию. Проверьте логи сервера.",
   "notifier.update_unprivileged": "Автоматическое обновление недоступно: приложение не может заменить свои файлы. Обновите через 'docker pull' или повторно запустив скрипт установки.",

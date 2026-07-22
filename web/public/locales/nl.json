@@ -401,6 +401,7 @@
   "widget.weather.wind": "Wind",
   "notifier.update_download_failed": "Kan de update niet downloaden. Controleer de serververbinding en probeer het opnieuw.",
   "notifier.update_checksum_failed": "De gedownloade update is niet door de integriteitscontrole gekomen. Probeer het opnieuw.",
+  "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",
   "notifier.update_extract_failed": "Het updatepakket kon niet worden uitgepakt. Probeer het opnieuw.",
   "notifier.update_install_failed": "Gedownload, maar de nieuwe versie kon niet worden geïnstalleerd. Controleer de serverlogs.",
   "notifier.update_unprivileged": "Automatische update niet beschikbaar: de app kan zijn eigen bestanden niet vervangen. Update met 'docker pull' of door het installatiescript opnieuw uit te voeren.",
