@@ -541,6 +541,11 @@ type MemInfo struct {
 	Used  uint64
 }
 
+// readMemInfo reports HOST memory, by design: the telemetry widget is a
+// host/server monitor for a self-hosted box, so it reads /proc directly rather
+// than the container's cgroup limits. Inside Docker with a MemoryMax set, the
+// numbers therefore reflect the host, not the container's cap — this is
+// intentional, not a bug.
 func readMemInfo() (MemInfo, error) {
 	// Parse /proc/meminfo
 	// MemTotal:       32768400 kB

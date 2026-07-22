@@ -147,6 +147,13 @@ func initSchema(db *sql.DB) error {
 	return nil
 }
 
+// migrateSchema applies the idempotent schema migrations at startup.
+//
+// The "Migration N" labels are the historical order in which each migration was
+// introduced, not the execution order. Migration 2 (migrateOrphanedItems) runs
+// LAST on purpose: it backfills dashboard_id, so it depends on the column added
+// by Migration 1 and must run after all the ALTER TABLEs. The labels are kept
+// stable (rather than renumbered) so they stay traceable to the changelog.
 func migrateSchema(db *sql.DB) error {
 	// Migration 1: add dashboard_id column to items (safe to re-run)
 	_, err := db.Exec(`ALTER TABLE items ADD COLUMN dashboard_id INTEGER REFERENCES dashboards(id) ON DELETE CASCADE`)
