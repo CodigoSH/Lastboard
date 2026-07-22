@@ -220,7 +220,7 @@ func BenchmarkSignToken(b *testing.B) {
 	data := "testuser"
 	expiry := time.Now().Add(24 * time.Hour)
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		SignToken(data, secret, expiry)
 	}
 }
@@ -232,7 +232,7 @@ func BenchmarkVerifyToken(b *testing.B) {
 	token := SignToken(data, secret, expiry)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		VerifyToken(token, secret)
 	}
 }
@@ -242,7 +242,7 @@ func BenchmarkTokenRoundtrip(b *testing.B) {
 	data := "testuser"
 	expiry := time.Now().Add(24 * time.Hour)
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		token := SignToken(data, secret, expiry)
 		VerifyToken(token, secret)
 	}
