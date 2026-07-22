@@ -112,8 +112,20 @@ jobs:
         with:
           go-version: '1.26.5'
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+
       - name: Install dependencies
-        run: go mod download
+        run: |
+          go mod download
+          bun install
+
+      # The frontend is embedded via //go:embed dist/*, so govulncheck and
+      # staticcheck (which compile the code) need it built first.
+      - name: Build frontend
+        run: bun run build
 
       - name: Run Gosec Security Scanner
         # Non-blocking (-no-fail): the SARIF is reviewed manually because the
