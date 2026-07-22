@@ -6,8 +6,10 @@ import './components/ui/Select/Select';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
 import { ThemeService } from './services/ThemeService';
+import { setupPasswordToggles } from './services/passwordToggle';
 
 bootstrap(async () => {
+    setupPasswordToggles(document.body);
     // --- State ---
     let currentStep = 1;
     const TOTAL_STEPS = 3;

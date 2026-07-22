@@ -5,6 +5,7 @@ import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
+import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
@@ -31,6 +32,117 @@ class SettingsContent extends HTMLElement {
             unit_system: 'metric',
             dashboard_background: ''
         };
+        // Delegated listeners attached once to the stable shadow root (they
+        // survive every render() innerHTML swap). Replaces the inline on* handlers
+        // that required CSP 'unsafe-inline'.
+        setupPasswordToggles(this.shadowRoot!);
+        this.setupDelegation();
+    }
+
+    /**
+     * Single set of delegated listeners driving every control in the settings
+     * panel via data-action / data-change / data-input attributes.
+     */
+    private setupDelegation() {
+        const root = this.shadowRoot!;
+
+        root.addEventListener('click', (e) => {
+            const el = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
+            if (!el) return;
+            switch (el.dataset.action) {
+                case 'click-file':
+                    (root.getElementById(el.dataset.file!) as HTMLElement | null)?.click();
+                    break;
+                case 'close-modal':
+                    (root.getElementById(el.dataset.modal!) as HTMLDialogElement | null)?.close();
+                    break;
+                case 'update-username':
+                    this.updateUsername((root.getElementById('username-input') as HTMLInputElement).value);
+                    break;
+                case 'update-password':
+                    this.updatePassword();
+                    break;
+                case 'set-accent':
+                    this.savePrefs({ accent_color: el.dataset.color! });
+                    break;
+                case 'set-theme':
+                    this.savePrefs({ theme: el.dataset.theme! });
+                    break;
+                case 'remove-background':
+                    this.removeBackground();
+                    break;
+                case 'open-logo-picker':
+                    this.openLogoPicker();
+                    break;
+                case 'remove-logo':
+                    this.savePrefs({ project_logo: '' });
+                    break;
+                case 'save-project-name':
+                    this.savePrefs({ project_name: (root.getElementById('project-name-input') as HTMLInputElement).value });
+                    break;
+                case 'open-add-user':
+                    this.openAddUserModal();
+                    break;
+                case 'edit-user':
+                    this.openEditUserModal(Number(el.dataset.userId), el.dataset.username || '');
+                    break;
+                case 'delete-user':
+                    this.deleteUser(Number(el.dataset.userId));
+                    break;
+                case 'create-user':
+                    this.createUser();
+                    break;
+                case 'update-admin-user':
+                    this.updateAdminUser();
+                    break;
+                case 'download-backup':
+                    this.downloadBackup();
+                    break;
+                case 'factory-reset':
+                    this.executeFactoryReset();
+                    break;
+                case 'perform-update':
+                    this.performUpdate(el.dataset.assetUrl || '');
+                    break;
+                case 'check-updates':
+                    this.handleManualCheckUpdates();
+                    break;
+            }
+        });
+
+        root.addEventListener('change', (e) => {
+            const el = (e.target as HTMLElement).closest('[data-change]') as HTMLElement | null;
+            if (!el) return;
+            switch (el.dataset.change) {
+                case 'avatar':
+                    this.handleAvatarChange(e);
+                    break;
+                case 'background':
+                    this.handleBackgroundChange(e);
+                    break;
+                case 'accent-picker':
+                    this.savePrefs({ accent_color: (el as unknown as { value: string }).value });
+                    break;
+                case 'commit-columns':
+                    this.commitColumns((el as HTMLInputElement).value);
+                    break;
+                case 'restore-backup': {
+                    const file = (el as HTMLInputElement).files?.[0];
+                    if (file) this.restoreBackup(file);
+                    break;
+                }
+                case 'beta-toggle':
+                    this.handleBetaToggle((el as HTMLInputElement).checked);
+                    break;
+            }
+        });
+
+        root.addEventListener('input', (e) => {
+            const el = (e.target as HTMLElement).closest('[data-input]') as HTMLElement | null;
+            if (el && el.dataset.input === 'update-columns') {
+                this.updateColumns((el as HTMLInputElement).value);
+            }
+        });
     }
 
     private unsubscribe: (() => void) | null = null;

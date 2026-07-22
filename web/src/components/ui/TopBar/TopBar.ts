@@ -99,6 +99,13 @@ class TopBar extends HTMLElement {
         this.shadowRoot!.addEventListener('click', (e: Event) => {
             const target = e.target as HTMLElement;
 
+            // Clicking inside the search input must not bubble to the window
+            // handler that closes the search (replaces the old inline onclick).
+            if (target.id === 'search-input') {
+                e.stopPropagation();
+                return;
+            }
+
             const searchClear = target.closest('#search-clear');
             if (searchClear) {
                 e.stopPropagation();

@@ -3,8 +3,7 @@ import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
-const PW_TOGGLE_ONCLICK = `var w=this.closest('.pw-wrap'),i=w.querySelector('input'),v=i.type==='password';i.type=v?'text':'password';w.querySelectorAll('svg')[0].style.display=v?'block':'none';w.querySelectorAll('svg')[1].style.display=v?'none':'block'`;
-const pwToggle = () => `<button type="button" class="pw-toggle" aria-label="Toggle password visibility" onclick="${PW_TOGGLE_ONCLICK}">
+const pwToggle = () => `<button type="button" class="pw-toggle" aria-label="Toggle password visibility">
     <svg style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
     <svg style="display:block" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
 </button>`;
@@ -27,11 +26,11 @@ export const accountTemplate = (user: User) => `
         <div class="bento-card">
             <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.profile')}</div>
             <div class="settings-content__profile-header">
-                <div class="settings-content__avatar-container" style="cursor: pointer;" onclick="this.nextElementSibling.click()">
+                <div class="settings-content__avatar-container" style="cursor: pointer;" data-action="click-file" data-file="avatar-upload">
                     <app-avatar initials="${esc(user.initials || '??')}" src="${safeImageSrc(user.avatar_url || '')}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
                     <div class="settings-content__edit-overlay">${i18n.t('action.change_image')}</div>
                 </div>
-                <input type="file" id="avatar-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleAvatarChange(event)">
+                <input type="file" id="avatar-upload" style="display: none;" accept="image/*" data-change="avatar">
                 <div class="settings-content__profile-info">
                     <span class="settings-content__profile-name">${user.username || i18n.t('settings.default_user')}</span>
                     <span class="mono-tag">
@@ -45,7 +44,7 @@ export const accountTemplate = (user: User) => `
                     <label class="settings-content__label">${i18n.t('settings.display_username')}</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('settings.display_username')}">
-                        <app-button variant="primary" onclick="this.getRootNode().host.updateUsername(this.getRootNode().getElementById('username-input').value)">${i18n.t('action.update')}</app-button>
+                        <app-button variant="primary" data-action="update-username">${i18n.t('action.update')}</app-button>
                     </div>
                 </div>
             </div>
@@ -76,7 +75,7 @@ export const accountTemplate = (user: User) => `
                 </div>
             </div>
             <div style="margin-top: 32px;">
-                <app-button variant="primary" onclick="this.getRootNode().host.updatePassword()">${i18n.t('general.save')}</app-button>
+                <app-button variant="primary" data-action="update-password">${i18n.t('general.save')}</app-button>
             </div>
         </div>
     </div>
@@ -89,9 +88,9 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
              <h3 class="settings-content__title">${i18n.t('settings.studio_accent')}</h3>
              <div class="settings-content__color-grid">
                 ${colors.map(c => `
-                    <div class="settings-content__color-swatch ${prefs.accent_color === c ? 'settings-content__color-swatch--active' : ''}" 
+                    <div class="settings-content__color-swatch ${prefs.accent_color === c ? 'settings-content__color-swatch--active' : ''}"
                          style="background-color: ${colorMap[c]}"
-                         onclick="this.getRootNode().host.savePrefs({accent_color: '${c}'})">
+                         data-action="set-accent" data-color="${esc(c)}">
                          ${prefs.accent_color === c ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.42L9 19 21 7l-1.42-1.42z"/></svg>' : ''}
                     </div>
                 `).join('')}
@@ -100,8 +99,8 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                      <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events: none;">
                         <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                      </svg>
-                     <app-color-picker class="settings-content__swatch-picker" trigger-opacity="0" value="${prefs.accent_color.startsWith('#') ? prefs.accent_color : '#0078D4'}" 
-                            onchange="this.getRootNode().host.savePrefs({accent_color: this.value})"></app-color-picker>
+                     <app-color-picker class="settings-content__swatch-picker" trigger-opacity="0" value="${prefs.accent_color.startsWith('#') ? prefs.accent_color : '#0078D4'}"
+                            data-change="accent-picker"></app-color-picker>
                 </div>
              </div>
         </div>
@@ -114,7 +113,7 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                 <!-- Dashboard Background -->
                 <div class="settings-content__flex-col">
                     <label class="settings-content__label">${i18n.t('settings.dashboard_background')}</label>
-                    <div class="settings-content__background-container" onclick="this.nextElementSibling.click()">
+                    <div class="settings-content__background-container" data-action="click-file" data-file="background-upload">
                         <img class="settings-content__background-preview ${prefs.dashboard_background ? 'active' : ''}" 
                              src="${prefs.dashboard_background || ''}" alt="Background Preview">
                         <div class="settings-content__background-placeholder ${prefs.dashboard_background ? 'hidden' : ''}">
@@ -122,14 +121,14 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                             <span>${i18n.t('action.change_image')}</span>
                         </div>
                         ${prefs.dashboard_background ? `
-                            <button class="settings-content__background-remove" 
-                                    onclick="event.stopPropagation(); this.getRootNode().host.removeBackground()" 
+                            <button class="settings-content__background-remove"
+                                    data-action="remove-background"
                                     title="${i18n.t('settings.remove_background')}">
                                 <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/></svg>
                             </button>
                         ` : ''}
                     </div>
-                    <input type="file" id="background-upload" style="display: none;" accept="image/*" onchange="this.getRootNode().host.handleBackgroundChange(event)">
+                    <input type="file" id="background-upload" style="display: none;" accept="image/*" data-change="background">
                     <p style="font-size: 10px; color: var(--text-dim); margin: 4px 0 0 0;">${i18n.t('settings.background_size_hint')}</p>
                 </div>
 
@@ -143,11 +142,11 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                         <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
                         <div class="settings-content__segmented-control">
                             <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}"
-                                    onclick="this.getRootNode().host.savePrefs({theme: 'dark'})">
+                                    data-action="set-theme" data-theme="dark">
                                 🌙 ${i18n.t('settings.dark')}
                             </button>
                             <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}"
-                                    onclick="this.getRootNode().host.savePrefs({theme: 'light'})">
+                                    data-action="set-theme" data-theme="light">
                                 ☀️ ${i18n.t('settings.light')}
                             </button>
                         </div>
@@ -168,11 +167,11 @@ export const personalizationTemplate = (prefs: Prefs) => `
                 <label class="settings-content__label">${i18n.t('settings.project_name_and_logo')}</label>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <div style="position: relative; flex-shrink: 0;">
-                        <button type="button" class="settings-logo-btn" onclick="this.getRootNode().host.openLogoPicker()" title="${i18n.t('settings.project_logo')}">
-                            <img src="${prefs.project_logo || '/images/logo.png'}" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:4px;">
+                        <button type="button" class="settings-logo-btn" data-action="open-logo-picker" title="${i18n.t('settings.project_logo')}">
+                            <img src="${safeImageSrc(prefs.project_logo || '/images/logo.png')}" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:4px;">
                         </button>
                         ${prefs.project_logo ? `
-                        <button type="button" class="settings-logo-remove" onclick="event.stopPropagation();this.getRootNode().host.savePrefs({project_logo:''})" title="${i18n.t('action.remove')}">×</button>
+                        <button type="button" class="settings-logo-remove" data-action="remove-logo" title="${i18n.t('action.remove')}">×</button>
                         ` : ''}
                     </div>
                     <input type="text"
@@ -180,7 +179,7 @@ export const personalizationTemplate = (prefs: Prefs) => `
                            class="settings-content__input"
                            value="${prefs.project_name || 'Lastboard'}"
                            placeholder="Lastboard">
-                    <app-button variant="primary" onclick="this.getRootNode().host.savePrefs({project_name: this.getRootNode().getElementById('project-name-input').value})">${i18n.t('action.update')}</app-button>
+                    <app-button variant="primary" data-action="save-project-name">${i18n.t('action.update')}</app-button>
                 </div>
             </div>
 
@@ -196,11 +195,11 @@ export const personalizationTemplate = (prefs: Prefs) => `
                         <label class="settings-content__slider-label">${i18n.t('settings.grid_columns')}</label>
                         <span class="settings-content__slider-value" id="val-grid_columns">${prefs.grid_columns || 12}</span>
                     </div>
-                    <input type="range" 
+                    <input type="range"
                            min="3" max="16" step="1"
                            value="${prefs.grid_columns || 12}"
-                           oninput="this.getRootNode().host.updateColumns(this.value)"
-                           onchange="this.getRootNode().host.commitColumns(this.value)">
+                           data-input="update-columns"
+                           data-change="commit-columns">
                 </div>
             </div>
             
@@ -217,7 +216,7 @@ export const usersTemplate = (users: any[]) => `
             <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.admin_section')}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h3 class="settings-content__title" style="margin: 0;">${i18n.t('settings.user_management')}</h3>
-                <app-button variant="primary" onclick="this.getRootNode().host.openAddUserModal()" style="width: auto; padding: 0 16px;">+ ${i18n.t('action.add_user')}</app-button>
+                <app-button variant="primary" data-action="open-add-user" style="width: auto; padding: 0 16px;">+ ${i18n.t('action.add_user')}</app-button>
             </div>
 
             <div class="settings-content__user-list">
@@ -237,10 +236,10 @@ export const usersTemplate = (users: any[]) => `
                             </div>
                         </div>
                         <div class="user-actions">
-                             <button class="user-action-btn edit" onclick="this.getRootNode().host.openEditUserModal(${u.id}, '${u.username}')" title="${i18n.t('general.edit')}">
+                             <button class="user-action-btn edit" data-action="edit-user" data-user-id="${u.id}" data-username="${esc(u.username)}" title="${i18n.t('general.edit')}">
                                 ${ICON_EDIT}
                              </button>
-                             <button class="user-action-btn delete" onclick="this.getRootNode().host.deleteUser(${u.id})" title="${i18n.t('general.delete')}">
+                             <button class="user-action-btn delete" data-action="delete-user" data-user-id="${u.id}" title="${i18n.t('general.delete')}">
                                 ${ICON_TRASH}
                              </button>
                         </div>
@@ -254,7 +253,7 @@ export const usersTemplate = (users: any[]) => `
      <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
             <h3 class="modal-title">${i18n.t('action.add_new_user')}</h3>
-            <button class="modal-close" onclick="this.getRootNode().getElementById('add-user-modal').close()">
+            <button class="modal-close" data-action="close-modal" data-modal="add-user-modal">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
@@ -270,14 +269,14 @@ export const usersTemplate = (users: any[]) => `
             </div>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" onclick="this.getRootNode().host.createUser()">${i18n.t('general.save')}</app-button>
+            <app-button variant="primary" data-action="create-user">${i18n.t('general.save')}</app-button>
         </div>
     </dialog>
 
     <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
             <h3 class="modal-title">${i18n.t('action.edit_user')}</h3>
-            <button class="modal-close" onclick="this.getRootNode().getElementById('edit-user-modal').close()">
+            <button class="modal-close" data-action="close-modal" data-modal="edit-user-modal">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
@@ -294,7 +293,7 @@ export const usersTemplate = (users: any[]) => `
             </div>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" onclick="this.getRootNode().host.updateAdminUser()">${i18n.t('action.save_changes')}</app-button>
+            <app-button variant="primary" data-action="update-admin-user">${i18n.t('action.save_changes')}</app-button>
         </div>
     </dialog>
 `;
@@ -312,7 +311,7 @@ export const advancedTemplate = () => `
                         <h3>${i18n.t('settings.export_db')}</h3>
                         <p>${i18n.t('settings.export_desc')}</p>
                     </div>
-                    <app-button variant="primary" onclick="this.getRootNode().host.downloadBackup()">
+                    <app-button variant="primary" data-action="download-backup">
                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                         ${i18n.t('action.download_backup')}
                     </app-button>
@@ -325,8 +324,8 @@ export const advancedTemplate = () => `
                         <p>${i18n.t('settings.import_desc')} <br><span style="color: var(--accent); font-weight: 500;">${i18n.t('settings.import_warn')}</span></p>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                         <input type="file" id="backup-upload" accept=".json" style="display: none;" onchange="this.getRootNode().host.restoreBackup(this.files[0])">
-                         <app-button variant="primary" onclick="this.getRootNode().getElementById('backup-upload').click()">
+                         <input type="file" id="backup-upload" accept=".json" style="display: none;" data-change="restore-backup">
+                         <app-button variant="primary" data-action="click-file" data-file="backup-upload">
                             <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
                             ${i18n.t('action.select_file')}
                          </app-button>
@@ -348,7 +347,7 @@ export const advancedTemplate = () => `
                     ${i18n.t('settings.reset_desc')}
                 </p>
              </div>
-             <app-button onclick="this.getRootNode().host.executeFactoryReset()" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent; transition: all 0.2s;">
+             <app-button data-action="factory-reset" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent; transition: all 0.2s;">
                 ${i18n.t('action.reset_system')}
              </app-button>
         </div>
@@ -390,7 +389,7 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
                     </div>
                     
                     <div class="update-modal__footer">
-                        <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" onclick="this.getRootNode().host.performUpdate('${updateInfo.asset_url}')">
+                        <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" data-action="perform-update" data-asset-url="${esc(updateInfo.asset_url)}">
                             ${i18n.t('action.download_install')}
                         </app-button>
                         <a href="https://git.codigosh.com/CodigoSH/Lastboard/releases" target="_blank" style="text-decoration: none;">
@@ -421,10 +420,10 @@ export const updateZoneTemplate = (isAdmin: boolean, updateInfo: any, isChecking
 
         ${isAdmin ? `
         <div style="margin-top: 16px;">
-            <app-button variant="ghost" 
+            <app-button variant="ghost"
                         id="btn-check-updates"
                         ?loading="${isCheckingUpdates}"
-                        onclick="this.getRootNode().host.handleManualCheckUpdates()">
+                        data-action="check-updates">
                 <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 ${i18n.t('action.check_updates')}
             </app-button>
@@ -443,7 +442,7 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
                     ${i18n.t('settings.beta_tester')}
                 </span>
                 <label class="toggle-switch">
-                    <input type="checkbox" id="beta-updates-toggle-badge" onchange="this.getRootNode().host.handleBetaToggle(this.checked)">
+                    <input type="checkbox" id="beta-updates-toggle-badge" data-change="beta-toggle">
                     <span class="slider"></span>
                 </label>
             </div>

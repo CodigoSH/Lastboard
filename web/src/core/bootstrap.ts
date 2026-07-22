@@ -29,7 +29,7 @@ export async function bootstrap(initCallback: () => void | Promise<void>) {
                 <h1 style="color: #fa5252;">${i18n.t('error.system_error')}</h1>
                 <p>${i18n.t('error.init_failed')}</p>
                 <p style="opacity: 0.7; font-size: 0.9em;">${i18n.t('error.check_console')}</p>
-                <button onclick="window.location.reload()" style="
+                <button id="bootstrap-reload" style="
                     margin-top: 20px;
                     padding: 10px 20px;
                     background: #333;
@@ -40,5 +40,7 @@ export async function bootstrap(initCallback: () => void | Promise<void>) {
                 ">${i18n.t('general.reload')}</button>
             </div>
         `;
+        document.getElementById('bootstrap-reload')
+            ?.addEventListener('click', () => window.location.reload());
     }
 }

@@ -2,10 +2,12 @@
 import { ThemeService } from './services/ThemeService';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
+import { setupPasswordToggles } from './services/passwordToggle';
 import './components/ui/Notifier/Notifier';
 
 // Logic
 bootstrap(async () => {
+    setupPasswordToggles(document.body);
     const form = document.getElementById('loginForm') as HTMLFormElement;
     const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
 

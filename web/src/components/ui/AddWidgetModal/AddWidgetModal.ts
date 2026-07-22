@@ -39,6 +39,8 @@ class AddWidgetModal extends HTMLElement {
 
         this.dialog = this.shadowRoot.querySelector('dialog');
 
+        this.shadowRoot.getElementById('close-btn')?.addEventListener('click', () => this.close());
+
         this.shadowRoot.querySelectorAll('.card').forEach(card => {
             card.addEventListener('click', () => {
                 const id = card.getAttribute('data-id');

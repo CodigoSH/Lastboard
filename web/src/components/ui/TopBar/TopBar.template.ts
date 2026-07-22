@@ -34,7 +34,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
             <!-- Search Bar -->
             <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${editMode ? 'search-wrapper--disabled' : ''}" title="${i18n.t('general.search')}">
                 <input type="text" id="search-input" class="search-input" placeholder="${i18n.t('general.search')}" 
-                       value="${escapeHtml(searchQuery || '')}" onclick="event.stopPropagation()">
+                       value="${escapeHtml(searchQuery || '')}">
                 <div id="search-clear" class="search-clear" style="display: ${searchQuery ? 'flex' : 'none'};">×</div>
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <circle cx="11" cy="11" r="8" />

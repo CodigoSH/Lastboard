@@ -1,5 +1,6 @@
 import { template } from './PasswordConfirmModal.template';
 import { i18n } from '../../../services/i18n';
+import { setupPasswordToggles } from '../../../services/passwordToggle';
 import css from './PasswordConfirmModal.css' with { type: 'text' };
 
 export class PasswordConfirmModal extends HTMLElement {
@@ -12,6 +13,7 @@ export class PasswordConfirmModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        setupPasswordToggles(this.shadowRoot!);
     }
 
     connectedCallback() {
