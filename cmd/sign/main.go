@@ -10,6 +10,11 @@
 //	sign <file>        Sign <file> with the key in $RELEASE_SIGNING_KEY and write
 //	                   the detached base64 signature to <file>.sig. Used by the
 //	                   release workflow on checksums.txt.
+//
+//	sign verify <file> <sig>
+//	                   Verify <sig> over <file> against the PUBLIC key embedded in
+//	                   the binary (internal/web/util). Handy to self-test the
+//	                   keypair before cutting a release.
 package main
 
 import (
@@ -18,6 +23,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 func main() {
@@ -28,6 +36,11 @@ func main() {
 	switch os.Args[1] {
 	case "keygen":
 		keygen()
+	case "verify":
+		if len(os.Args) != 4 {
+			usage()
+		}
+		verify(os.Args[2], os.Args[3])
 	default:
 		signFile(os.Args[1])
 	}
@@ -35,9 +48,28 @@ func main() {
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "usage:")
-	fmt.Fprintln(os.Stderr, "  sign keygen        generate a keypair")
-	fmt.Fprintln(os.Stderr, "  sign <file>        sign <file> -> <file>.sig using $RELEASE_SIGNING_KEY")
+	fmt.Fprintln(os.Stderr, "  sign keygen              generate a keypair")
+	fmt.Fprintln(os.Stderr, "  sign <file>              sign <file> -> <file>.sig using $RELEASE_SIGNING_KEY")
+	fmt.Fprintln(os.Stderr, "  sign verify <file> <sig> verify <sig> over <file> against the embedded public key")
 	os.Exit(2)
+}
+
+func verify(filePath, sigPath string) {
+	if !util.SigningConfigured() {
+		fail(fmt.Errorf("no public key embedded (releasePublicKey is empty)"))
+	}
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fail(err)
+	}
+	sig, err := os.ReadFile(sigPath)
+	if err != nil {
+		fail(err)
+	}
+	if err := util.VerifyReleaseSignature(data, strings.TrimSpace(string(sig))); err != nil {
+		fail(fmt.Errorf("verification FAILED: %w", err))
+	}
+	fmt.Println("signature OK")
 }
 
 func keygen() {

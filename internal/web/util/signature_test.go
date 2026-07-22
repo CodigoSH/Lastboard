@@ -51,9 +51,18 @@ func TestVerifyEd25519(t *testing.T) {
 	})
 }
 
-func TestSigningConfigured_DefaultOff(t *testing.T) {
-	// Ships disabled: no key embedded until the operator completes the ceremony.
-	if SigningConfigured() {
-		t.Fatal("release signing should be off by default (empty embedded key)")
+func TestEmbeddedReleaseKey(t *testing.T) {
+	// A release public key is embedded, so signing is active.
+	if !SigningConfigured() {
+		t.Fatal("expected release signing to be configured (public key embedded)")
+	}
+	// The embedded key must decode to a valid 32-byte Ed25519 public key,
+	// otherwise every signature verification would fail at runtime.
+	pub, err := base64.StdEncoding.DecodeString(releasePublicKey)
+	if err != nil {
+		t.Fatalf("embedded releasePublicKey is not valid base64: %v", err)
+	}
+	if len(pub) != ed25519.PublicKeySize {
+		t.Fatalf("embedded releasePublicKey is %d bytes, want %d", len(pub), ed25519.PublicKeySize)
 	}
 }

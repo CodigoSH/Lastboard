@@ -18,7 +18,7 @@ import (
 // Verification is decoupled from the download server: even if the release host
 // is compromised, an attacker cannot forge checksums.txt without the private
 // key, which never lives on that server.
-const releasePublicKey = ""
+const releasePublicKey = "kip44L4a8PBJ7CVWJSOJx5AaBTcpgM1tu9x05r+1Rz0="
 
 // SigningConfigured reports whether a release public key has been embedded, i.e.
 // whether update/install should verify signatures.
