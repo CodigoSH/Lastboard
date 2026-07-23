@@ -125,7 +125,6 @@ func initSchema(db *sql.DB) error {
 			first_seen   DATETIME NOT NULL,
 			locked_until DATETIME
 		);`,
-		`CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id);`,
 		`CREATE TABLE IF NOT EXISTS dashboards (
 			id         INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id    INTEGER NOT NULL,
@@ -155,6 +154,45 @@ func initSchema(db *sql.DB) error {
 // by Migration 1 and must run after all the ALTER TABLEs. The labels are kept
 // stable (rather than renumbered) so they stay traceable to the changelog.
 func migrateSchema(db *sql.DB) error {
+	// Migration 0 (column backfill): re-add the per-column ALTERs that an earlier
+	// refactor (eb6ceb1) folded into the CREATE TABLE statements. CREATE TABLE IF
+	// NOT EXISTS is a no-op on an already-existing table, so a database created
+	// before a given column existed never received it once it upgraded past that
+	// refactor — and a read like /api/me's SELECT then fails with "no such column",
+	// which surfaced (misleadingly) as "user not found". These must stay here in
+	// perpetuity: removing a column's migration re-breaks every DB old enough to
+	// still need it. Idempotent — an ALTER on an existing column returns
+	// "duplicate column name", which we ignore.
+	backfill := []string{
+		`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system'`,
+		`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'blue'`,
+		`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'`,
+		`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12`,
+		`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4`,
+		`ALTER TABLE users ADD COLUMN grid_columns_mobile INTEGER DEFAULT 2`,
+		`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''`,
+		`ALTER TABLE users ADD COLUMN project_name TEXT DEFAULT 'Lastboard'`,
+		`ALTER TABLE users ADD COLUMN beta_updates BOOLEAN DEFAULT 0`,
+		`ALTER TABLE users ADD COLUMN widget_min_width INTEGER DEFAULT 140`,
+		`ALTER TABLE users ADD COLUMN password_version INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE users ADD COLUMN unit_system TEXT DEFAULT 'metric'`,
+		`ALTER TABLE users ADD COLUMN dashboard_background TEXT DEFAULT ''`,
+		`ALTER TABLE items ADD COLUMN url TEXT`,
+		`ALTER TABLE items ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0`,
+	}
+	for _, q := range backfill {
+		if _, err := db.Exec(q); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+			return err
+		}
+	}
+
+	// idx_items_user_id is created here (not in initSchema) so it runs only after
+	// the user_id backfill above: an items table old enough to predate the column
+	// would otherwise fail the CREATE INDEX with "no such column: user_id".
+	if _, err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id)`); err != nil {
+		return err
+	}
+
 	// Migration 1: add dashboard_id column to items (safe to re-run)
 	_, err := db.Exec(`ALTER TABLE items ADD COLUMN dashboard_id INTEGER REFERENCES dashboards(id) ON DELETE CASCADE`)
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {

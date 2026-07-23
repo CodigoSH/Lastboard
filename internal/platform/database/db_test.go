@@ -225,6 +225,99 @@ func TestItemsForeignKeyConstraint(t *testing.T) {
 	}
 }
 
+// TestMigrateSchemaBackfillsLegacyColumns simulates a database created by an old
+// version — its users/items tables predate the columns that a later refactor
+// (eb6ceb1) folded into CREATE TABLE — and verifies migrateSchema backfills every
+// one of them without touching existing data, and is safe to re-run. Regression
+// guard: this is exactly the path that made /api/me fail with "no such column"
+// (surfaced as "user not found") on upgraded instances.
+func TestMigrateSchemaBackfillsLegacyColumns(t *testing.T) {
+	tmpfile, err := os.CreateTemp("", "legacy_*.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpfile.Close()
+	defer os.Remove(tmpfile.Name())
+
+	db, err := sql.Open("sqlite", tmpfile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	// Legacy schema: users/items as they existed before the later columns were
+	// added, plus the sibling tables migrateSchema touches.
+	legacy := []string{
+		`CREATE TABLE users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			username TEXT NOT NULL UNIQUE,
+			password TEXT NOT NULL,
+			role TEXT NOT NULL DEFAULT 'user',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE items (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			parent_id INTEGER,
+			type TEXT NOT NULL,
+			x INTEGER NOT NULL, y INTEGER NOT NULL, w INTEGER NOT NULL, h INTEGER NOT NULL,
+			content TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE dashboards (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			name TEXT NOT NULL,
+			position INTEGER DEFAULT 0,
+			is_default BOOLEAN DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+	}
+	for _, q := range legacy {
+		if _, err := db.Exec(q); err != nil {
+			t.Fatalf("legacy schema setup failed: %v", err)
+		}
+	}
+	if _, err := db.Exec(`INSERT INTO users (username, password, role) VALUES ('olduser', 'hash', 'admin')`); err != nil {
+		t.Fatalf("seeding legacy user failed: %v", err)
+	}
+
+	if err := migrateSchema(db); err != nil {
+		t.Fatalf("migrateSchema on a legacy DB failed: %v", err)
+	}
+
+	// Every column the current /api/me SELECT reads must now exist.
+	userCols := []string{
+		"theme", "accent_color", "language", "grid_columns_pc",
+		"grid_columns_tablet", "grid_columns_mobile", "avatar_url", "project_name",
+		"beta_updates", "widget_min_width", "password_version", "unit_system",
+		"dashboard_background", "project_logo",
+	}
+	for _, col := range userCols {
+		if _, err := db.Query("SELECT " + col + " FROM users LIMIT 0"); err != nil {
+			t.Errorf("users.%s was not backfilled by migrateSchema: %v", col, err)
+		}
+	}
+	for _, col := range []string{"url", "user_id", "dashboard_id", "mobile_order"} {
+		if _, err := db.Query("SELECT " + col + " FROM items LIMIT 0"); err != nil {
+			t.Errorf("items.%s was not backfilled by migrateSchema: %v", col, err)
+		}
+	}
+
+	// Existing data must survive the migration untouched.
+	var username, role string
+	if err := db.QueryRow("SELECT username, role FROM users WHERE username='olduser'").Scan(&username, &role); err != nil {
+		t.Fatalf("legacy user row lost after migration: %v", err)
+	}
+	if username != "olduser" || role != "admin" {
+		t.Errorf("legacy user row altered: got username=%q role=%q", username, role)
+	}
+
+	// Idempotent: a second run (every startup re-runs it) must not error.
+	if err := migrateSchema(db); err != nil {
+		t.Fatalf("migrateSchema is not idempotent on re-run: %v", err)
+	}
+}
+
 // Benchmark database operations
 func BenchmarkUserInsert(b *testing.B) {
 	db, cleanup := setupTestDB(&testing.T{})

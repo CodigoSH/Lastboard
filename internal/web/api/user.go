@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -47,7 +48,14 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		&u.BetaUpdates, &u.GridColumnsPC, &u.UnitSystem, &u.DashboardBackground, &u.ProjectLogo,
 	)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		// A real query error (e.g. a missing column on an un-migrated DB) must not
+		// masquerade as "user not found" — log it so it is diagnosable.
+		slog.Error("GetMe: failed to load user", "username", username, "error", err)
+		http.Error(w, "Failed to load profile", http.StatusInternalServerError)
 		return
 	}
 
@@ -103,7 +111,12 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC, &current.UnitSystem, &current.DashboardBackground, &current.ProjectLogo)
 
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		slog.Error("UpdatePreferences: failed to load current preferences", "username", username, "error", err)
+		http.Error(w, "Failed to load preferences", http.StatusInternalServerError)
 		return
 	}
 
@@ -282,7 +295,12 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	var storedHash string
 	err := h.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		slog.Error("ChangePassword: failed to load user", "username", username, "error", err)
+		http.Error(w, "Failed to load user", http.StatusInternalServerError)
 		return
 	}
 
