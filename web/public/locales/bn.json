@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "ডাউনলোড হয়েছে, কিন্তু নতুন সংস্করণ ইনস্টল করা যায়নি। সার্ভার লগ দেখুন।",
   "notifier.update_unprivileged": "স্বয়ংক্রিয় আপডেট উপলব্ধ নয়: অ্যাপ নিজের ফাইল প্রতিস্থাপন করতে পারে না। 'docker pull' দিয়ে বা ইনস্টল স্ক্রিপ্ট পুনরায় চালিয়ে আপডেট করুন।",
   "notifier.update_invalid_url": "অবৈধ আপডেট উৎস। আবার চেষ্টা করুন বা ম্যানুয়ালি আপডেট করুন।",
-  "auth.unauthorized": "এটি করার অনুমতি আপনার নেই।"
+  "auth.unauthorized": "এটি করার অনুমতি আপনার নেই।",
+  "settings.change_password": "পাসওয়ার্ড পরিবর্তন করুন",
+  "settings.save_username": "নাম সংরক্ষণ করুন",
+  "settings.username_relogin_hint": "ব্যবহারকারীর নাম পরিবর্তন করলে আপনি সাইন আউট হয়ে যাবেন।",
+  "settings.saved": "সংরক্ষিত হয়েছে"
 }

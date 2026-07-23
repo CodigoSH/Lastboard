@@ -56,6 +56,11 @@ class SettingsContent extends HTMLElement {
             if (el.matches?.('[role="button"]')) {
                 e.preventDefault();
                 el.click();
+                return;
+            }
+            // Enter on an auto-saving text field commits it (blur fires 'change').
+            if (key === 'Enter' && el instanceof HTMLInputElement && el.dataset.change) {
+                el.blur();
             }
         });
 
@@ -89,9 +94,6 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'remove-logo':
                     this.savePrefs({ project_logo: '' });
-                    break;
-                case 'save-project-name':
-                    this.savePrefs({ project_name: (root.getElementById('project-name-input') as HTMLInputElement).value });
                     break;
                 case 'open-add-user':
                     this.openAddUserModal();
@@ -132,6 +134,10 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'background':
                     this.handleBackgroundChange(e);
+                    break;
+                case 'project-name':
+                    // Auto-save on blur/Enter (a text input fires 'change' then).
+                    this.savePrefs({ project_name: (el as HTMLInputElement).value.trim() || 'Lastboard' }, { notify: true });
                     break;
                 case 'accent-picker':
                     this.savePrefs({ accent_color: (el as unknown as { value: string }).value });
@@ -227,7 +233,10 @@ class SettingsContent extends HTMLElement {
 
     // --- Logic Layer Delegates ---
 
-    async savePrefs(newPrefs: Partial<UserPreferences>) {
+    // notify: show a "Saved"/error toast. Used for auto-saved text fields (e.g.
+    // the project name) where the change isn't otherwise visually obvious; the
+    // aesthetic prefs (theme/accent/language) stay silent since the UI reacts.
+    async savePrefs(newPrefs: Partial<UserPreferences>, opts: { notify?: boolean } = {}) {
         const previousPrefs = { ...this.prefs };
 
         // Optimistic UI state update
@@ -247,16 +256,22 @@ class SettingsContent extends HTMLElement {
             }
         }
 
+        let ok = true;
         try {
             await userStore.updatePreferences(newPrefs);
         } catch {
             // userStore already rolled back aesthetics; restore local state and language
+            ok = false;
             this.prefs = previousPrefs;
             if (newPrefs.language && previousPrefs.language) {
                 i18n.setLanguage(previousPrefs.language);
             }
         }
         this.render();
+        if (opts.notify && window.notifier) {
+            if (ok) window.notifier.show(i18n.t('settings.saved'));
+            else window.notifier.show(i18n.t('notifier.profile_error'), 'error');
+        }
     }
 
     applyAccent(color: string) {

@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "Se descargó, pero no se pudo instalar la nueva versión. Revisa los registros del servidor.",
   "notifier.update_unprivileged": "La actualización automática no está disponible: la app no puede reemplazar sus propios archivos. Actualiza con 'docker pull' o volviendo a ejecutar el script de instalación.",
   "notifier.update_invalid_url": "Origen de actualización no válido. Inténtalo de nuevo o actualiza manualmente.",
-  "auth.unauthorized": "No tienes autorización para hacer esto."
+  "auth.unauthorized": "No tienes autorización para hacer esto.",
+  "settings.change_password": "Cambiar contraseña",
+  "settings.save_username": "Guardar nombre",
+  "settings.username_relogin_hint": "Cambiar el nombre cerrará tu sesión.",
+  "settings.saved": "Guardado"
 }

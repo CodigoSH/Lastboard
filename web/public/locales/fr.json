@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "Téléchargée, mais la nouvelle version n'a pas pu être installée. Consultez les journaux du serveur.",
   "notifier.update_unprivileged": "La mise à jour automatique n'est pas disponible : l'application ne peut pas remplacer ses propres fichiers. Mettez à jour avec 'docker pull' ou en relançant le script d'installation.",
   "notifier.update_invalid_url": "Source de mise à jour invalide. Réessayez ou mettez à jour manuellement.",
-  "auth.unauthorized": "Vous n'êtes pas autorisé à effectuer cette action."
+  "auth.unauthorized": "Vous n'êtes pas autorisé à effectuer cette action.",
+  "settings.change_password": "Changer le mot de passe",
+  "settings.save_username": "Enregistrer le nom",
+  "settings.username_relogin_hint": "Changer votre nom d'utilisateur vous déconnectera.",
+  "settings.saved": "Enregistré"
 }

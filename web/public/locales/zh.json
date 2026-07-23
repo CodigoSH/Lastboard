@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "已下载，但无法安装新版本。请查看服务器日志。",
   "notifier.update_unprivileged": "自动更新不可用：应用无法替换自身文件。请使用 'docker pull' 或重新运行安装脚本进行更新。",
   "notifier.update_invalid_url": "更新来源无效。请重试或手动更新。",
-  "auth.unauthorized": "您无权执行此操作。"
+  "auth.unauthorized": "您无权执行此操作。",
+  "settings.change_password": "修改密码",
+  "settings.save_username": "保存名称",
+  "settings.username_relogin_hint": "修改用户名将使您退出登录。",
+  "settings.saved": "已保存"
 }

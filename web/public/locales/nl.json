@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "Gedownload, maar de nieuwe versie kon niet worden geïnstalleerd. Controleer de serverlogs.",
   "notifier.update_unprivileged": "Automatische update niet beschikbaar: de app kan zijn eigen bestanden niet vervangen. Update met 'docker pull' of door het installatiescript opnieuw uit te voeren.",
   "notifier.update_invalid_url": "Ongeldige updatebron. Probeer het opnieuw of update handmatig.",
-  "auth.unauthorized": "Je bent hiervoor niet gemachtigd."
+  "auth.unauthorized": "Je bent hiervoor niet gemachtigd.",
+  "settings.change_password": "Wachtwoord wijzigen",
+  "settings.save_username": "Naam opslaan",
+  "settings.username_relogin_hint": "Als je je gebruikersnaam wijzigt, word je afgemeld.",
+  "settings.saved": "Opgeslagen"
 }

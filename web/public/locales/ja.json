@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "ダウンロードしましたが、新しいバージョンをインストールできませんでした。サーバーのログを確認してください。",
   "notifier.update_unprivileged": "自動アップデートは利用できません：アプリが自身のファイルを置き換えられません。「docker pull」またはインストールスクリプトの再実行で更新してください。",
   "notifier.update_invalid_url": "更新元が無効です。もう一度試すか、手動で更新してください。",
-  "auth.unauthorized": "この操作を行う権限がありません。"
+  "auth.unauthorized": "この操作を行う権限がありません。",
+  "settings.change_password": "パスワードを変更",
+  "settings.save_username": "名前を保存",
+  "settings.username_relogin_hint": "ユーザー名を変更するとサインアウトされます。",
+  "settings.saved": "保存しました"
 }

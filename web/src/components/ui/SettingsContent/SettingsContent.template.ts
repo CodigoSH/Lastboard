@@ -44,8 +44,9 @@ export const accountTemplate = (user: User) => `
                     <label class="settings-content__label">${i18n.t('settings.display_username')}</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('settings.display_username')}">
-                        <app-button variant="primary" data-action="update-username">${i18n.t('action.update')}</app-button>
+                        <app-button variant="primary" data-action="update-username">${i18n.t('settings.save_username')}</app-button>
                     </div>
+                    <p class="settings-content__text-dim" style="font-size: 10px; margin: 4px 0 0 0;">${i18n.t('settings.username_relogin_hint')}</p>
                 </div>
             </div>
         </div>
@@ -75,7 +76,7 @@ export const accountTemplate = (user: User) => `
                 </div>
             </div>
             <div style="margin-top: 32px;">
-                <app-button variant="primary" data-action="update-password">${i18n.t('general.save')}</app-button>
+                <app-button variant="primary" data-action="update-password">${i18n.t('settings.change_password')}</app-button>
             </div>
         </div>
     </div>
@@ -178,8 +179,8 @@ export const personalizationTemplate = (prefs: Prefs) => `
                            id="project-name-input"
                            class="settings-content__input"
                            value="${prefs.project_name || 'Lastboard'}"
-                           placeholder="Lastboard">
-                    <app-button variant="primary" data-action="save-project-name">${i18n.t('action.update')}</app-button>
+                           placeholder="Lastboard"
+                           data-change="project-name">
                 </div>
             </div>
 

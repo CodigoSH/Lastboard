@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "دانلود شد، اما نسخه جدید نصب نشد. گزارش‌های سرور را بررسی کنید.",
   "notifier.update_unprivileged": "به‌روزرسانی خودکار در دسترس نیست: برنامه نمی‌تواند فایل‌های خود را جایگزین کند. با 'docker pull' یا اجرای دوباره اسکریپت نصب به‌روزرسانی کنید.",
   "notifier.update_invalid_url": "منبع به‌روزرسانی نامعتبر است. دوباره تلاش کنید یا به‌صورت دستی به‌روزرسانی کنید.",
-  "auth.unauthorized": "شما مجاز به انجام این کار نیستید."
+  "auth.unauthorized": "شما مجاز به انجام این کار نیستید.",
+  "settings.change_password": "تغییر رمز عبور",
+  "settings.save_username": "ذخیره نام",
+  "settings.username_relogin_hint": "تغییر نام کاربری شما را از حساب خارج می‌کند.",
+  "settings.saved": "ذخیره شد"
 }

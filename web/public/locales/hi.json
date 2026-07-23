@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "डाउनलोड हो गया, लेकिन नया संस्करण इंस्टॉल नहीं हो सका। सर्वर लॉग देखें।",
   "notifier.update_unprivileged": "स्वचालित अपडेट उपलब्ध नहीं है: ऐप अपनी ही फ़ाइलें नहीं बदल सकता। 'docker pull' से या इंस्टॉल स्क्रिप्ट दोबारा चलाकर अपडेट करें।",
   "notifier.update_invalid_url": "अमान्य अपडेट स्रोत। फिर से प्रयास करें या मैन्युअल रूप से अपडेट करें।",
-  "auth.unauthorized": "आपके पास ऐसा करने की अनुमति नहीं है।"
+  "auth.unauthorized": "आपके पास ऐसा करने की अनुमति नहीं है।",
+  "settings.change_password": "पासवर्ड बदलें",
+  "settings.save_username": "नाम सहेजें",
+  "settings.username_relogin_hint": "उपयोगकर्ता नाम बदलने पर आप साइन आउट हो जाएंगे।",
+  "settings.saved": "सहेजा गया"
 }

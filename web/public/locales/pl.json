@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "Pobrano, ale nie udało się zainstalować nowej wersji. Sprawdź logi serwera.",
   "notifier.update_unprivileged": "Automatyczna aktualizacja niedostępna: aplikacja nie może zastąpić własnych plików. Zaktualizuj przez 'docker pull' lub ponownie uruchamiając skrypt instalacyjny.",
   "notifier.update_invalid_url": "Nieprawidłowe źródło aktualizacji. Spróbuj ponownie lub zaktualizuj ręcznie.",
-  "auth.unauthorized": "Nie masz uprawnień do tej operacji."
+  "auth.unauthorized": "Nie masz uprawnień do tej operacji.",
+  "settings.change_password": "Zmień hasło",
+  "settings.save_username": "Zapisz nazwę",
+  "settings.username_relogin_hint": "Zmiana nazwy użytkownika spowoduje wylogowanie.",
+  "settings.saved": "Zapisano"
 }

@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "Downloaded, but the new version couldn't be installed. Check the server logs.",
   "notifier.update_unprivileged": "Automatic update isn't available: the app can't replace its own files. Update with 'docker pull' or by re-running the install script.",
   "notifier.update_invalid_url": "Invalid update source. Try again or update manually.",
-  "auth.unauthorized": "You're not authorized to do this."
+  "auth.unauthorized": "You're not authorized to do this.",
+  "settings.change_password": "Change password",
+  "settings.save_username": "Save name",
+  "settings.username_relogin_hint": "Changing your username signs you out.",
+  "settings.saved": "Saved"
 }

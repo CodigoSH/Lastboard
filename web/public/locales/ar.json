@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "تم التنزيل، لكن تعذّر تثبيت الإصدار الجديد. راجِع سجلّات الخادم.",
   "notifier.update_unprivileged": "التحديث التلقائي غير متاح: لا يمكن للتطبيق استبدال ملفاته. حدِّث باستخدام 'docker pull' أو بإعادة تشغيل سكربت التثبيت.",
   "notifier.update_invalid_url": "مصدر التحديث غير صالح. حاول مرة أخرى أو حدِّث يدويًا.",
-  "auth.unauthorized": "ليست لديك صلاحية للقيام بذلك."
+  "auth.unauthorized": "ليست لديك صلاحية للقيام بذلك.",
+  "settings.change_password": "تغيير كلمة المرور",
+  "settings.save_username": "حفظ الاسم",
+  "settings.username_relogin_hint": "تغيير اسم المستخدم سيؤدي إلى تسجيل خروجك.",
+  "settings.saved": "تم الحفظ"
 }

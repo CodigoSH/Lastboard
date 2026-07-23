@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "Terunduh, tetapi versi baru tidak dapat dipasang. Periksa log server.",
   "notifier.update_unprivileged": "Pembaruan otomatis tidak tersedia: aplikasi tidak dapat mengganti berkasnya sendiri. Perbarui dengan 'docker pull' atau menjalankan ulang skrip instalasi.",
   "notifier.update_invalid_url": "Sumber pembaruan tidak valid. Coba lagi atau perbarui secara manual.",
-  "auth.unauthorized": "Anda tidak berwenang melakukan ini."
+  "auth.unauthorized": "Anda tidak berwenang melakukan ini.",
+  "settings.change_password": "Ubah kata sandi",
+  "settings.save_username": "Simpan nama",
+  "settings.username_relogin_hint": "Mengubah nama pengguna akan mengeluarkan Anda.",
+  "settings.saved": "Tersimpan"
 }

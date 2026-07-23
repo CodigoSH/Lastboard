@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "İndirildi ancak yeni sürüm kurulamadı. Sunucu günlüklerini kontrol edin.",
   "notifier.update_unprivileged": "Otomatik güncelleme kullanılamıyor: uygulama kendi dosyalarını değiştiremiyor. 'docker pull' ile veya kurulum betiğini yeniden çalıştırarak güncelleyin.",
   "notifier.update_invalid_url": "Geçersiz güncelleme kaynağı. Tekrar deneyin veya elle güncelleyin.",
-  "auth.unauthorized": "Bunu yapmaya yetkiniz yok."
+  "auth.unauthorized": "Bunu yapmaya yetkiniz yok.",
+  "settings.change_password": "Şifreyi değiştir",
+  "settings.save_username": "Adı kaydet",
+  "settings.username_relogin_hint": "Kullanıcı adını değiştirmek oturumunuzu kapatır.",
+  "settings.saved": "Kaydedildi"
 }

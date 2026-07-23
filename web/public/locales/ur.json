@@ -406,5 +406,9 @@
   "notifier.update_install_failed": "ڈاؤن لوڈ ہو گیا، لیکن نیا ورژن انسٹال نہیں ہو سکا۔ سرور لاگز دیکھیں۔",
   "notifier.update_unprivileged": "خودکار اپ ڈیٹ دستیاب نہیں: ایپ اپنی فائلیں تبدیل نہیں کر سکتی۔ 'docker pull' سے یا انسٹال اسکرپٹ دوبارہ چلا کر اپ ڈیٹ کریں۔",
   "notifier.update_invalid_url": "غلط اپ ڈیٹ ذریعہ۔ دوبارہ کوشش کریں یا دستی طور پر اپ ڈیٹ کریں۔",
-  "auth.unauthorized": "آپ کو یہ کرنے کی اجازت نہیں ہے۔"
+  "auth.unauthorized": "آپ کو یہ کرنے کی اجازت نہیں ہے۔",
+  "settings.change_password": "پاس ورڈ تبدیل کریں",
+  "settings.save_username": "نام محفوظ کریں",
+  "settings.username_relogin_hint": "صارف نام تبدیل کرنے سے آپ سائن آؤٹ ہو جائیں گے۔",
+  "settings.saved": "محفوظ ہو گیا"
 }
