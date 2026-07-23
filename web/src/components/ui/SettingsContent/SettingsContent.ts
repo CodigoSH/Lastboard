@@ -301,17 +301,6 @@ class SettingsContent extends HTMLElement {
         this.savePrefs({ beta_updates: checked }, { notify: true });
     }
 
-    updateDensity(value: string) {
-        const valSpan = this.shadowRoot!.getElementById('val-widget_min_width');
-        if (valSpan) valSpan.textContent = value + 'px';
-        document.documentElement.style.setProperty('--widget-min-size', value + 'px');
-    }
-
-    commitDensity(value: string) {
-        const val = parseInt(value);
-        userStore.updatePreferences({ widget_min_width: val });
-    }
-
     updateColumns(value: string) {
         const valSpan = this.shadowRoot!.getElementById('val-grid_columns');
         if (valSpan) valSpan.textContent = value;
