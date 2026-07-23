@@ -168,13 +168,18 @@ We appreciate the organizations that support us as a gesture of goodwill to help
 
 ## Credits
 
-- **Icons**: 
-  - Tabler Icons (MIT License - https://github.com/tabler/tabler-icons)
+- **Interface icons**:
+  - Feather Icons (MIT - https://github.com/feathericons/feather)
+  - Material Design Icons (Apache 2.0 - https://github.com/google/material-design-icons)
+- **Icon sets in the picker** (fetched from jsDelivr, not bundled):
   - Homarr Labs Dashboard Icons (Apache 2.0 - https://github.com/homarr-labs/dashboard-icons)
-  - Selfhst Icons (MIT License - https://github.com/selfhst/icons)
-  - Homelab SVG Assets (MIT License - https://github.com/loganmarchione/homelab-svg-assets)
+  - Selfhst Icons (CC BY 4.0 - https://github.com/selfhst/icons)
+  - Homelab SVG Assets (MIT - https://github.com/loganmarchione/homelab-svg-assets)
   - Papirus Icon Theme (GPL-3.0 - https://github.com/PapirusDevelopmentTeam/papirus-icon-theme)
+- **Weather data**: Open-Meteo (CC BY 4.0 - https://open-meteo.com)
 - **Design Inspiration**: Homarr Dashboard (Apache 2.0 - https://github.com/homarr-labs/homarr)
+
+Full attribution, including the Go modules compiled into the binaries, lives in [NOTICE](NOTICE).
 
 ---
 

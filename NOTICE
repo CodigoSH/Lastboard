@@ -15,16 +15,67 @@ limitations under the License.
 
 ---
 
-**Third-party components:**
+THIRD-PARTY COMPONENTS
 
-1. Design Inspiration: Homarr Dashboard
-   - https://github.com/homarr-labs/homarr
-   - Apache License 2.0
+1. Go modules compiled into the released binaries and Docker images
 
-2. Homarr Dashboard Icons (Service Logos)
+   golang.org/x/crypto            BSD-3-Clause  Copyright 2009 The Go Authors
+   golang.org/x/net               BSD-3-Clause  Copyright 2009 The Go Authors
+   golang.org/x/time              BSD-3-Clause  Copyright 2009 The Go Authors
+   golang.org/x/sys               BSD-3-Clause  Copyright 2009 The Go Authors
+   golang.org/x/exp               BSD-3-Clause  Copyright 2009 The Go Authors
+   modernc.org/sqlite             BSD-3-Clause  Copyright (c) 2017 The Sqlite Authors
+   modernc.org/libc               BSD-3-Clause  Copyright (c) 2017 The Libc Authors
+   modernc.org/mathutil           BSD-3-Clause  Copyright (c) 2014 The mathutil Authors
+   modernc.org/memory             BSD-3-Clause  Copyright (c) 2017 The Memory Authors
+   github.com/google/uuid         BSD-3-Clause  Copyright (c) 2009, 2014 Google Inc.
+   github.com/remyoudompheng/bigfft  BSD-3-Clause  Copyright (c) 2012 The Go Authors
+   github.com/dustin/go-humanize  MIT           Copyright (c) 2005-2008 Dustin Sallings
+
+   Two further modules are linked only when building for macOS or Windows;
+   the published Linux binaries and Docker images do not contain them:
+
+   github.com/mattn/go-isatty     MIT           Copyright (c) Yasuhiro Matsumoto
+   github.com/ncruces/go-strftime MIT           Copyright (c) 2022 Nuno Cruces
+
+   modernc.org/sqlite is a pure-Go translation of SQLite, which is itself in
+   the public domain (https://sqlite.org/copyright.html).
+
+   The frontend is built with Bun and ships no runtime JavaScript dependencies.
+
+2. Icons embedded in the interface
+
+   Feather Icons                  MIT           Copyright (c) 2013-2023 Cole Bemis
+   - https://github.com/feathericons/feather
+
+   Material Design Icons          Apache-2.0    Copyright Google Inc.
+   - https://github.com/google/material-design-icons
+
+3. Icon sets fetched by the browser when you pick an icon
+
+   The browser requests these from public CDNs (jsDelivr, plus the GitHub API
+   for one index) at runtime. They are neither bundled nor redistributed with
+   Lastboard.
+
+   homarr-labs/dashboard-icons                Apache-2.0
    - https://github.com/homarr-labs/dashboard-icons
-   - Apache License 2.0
 
-3. Tabler Icons (System UI)
-   - https://github.com/tabler/tabler-icons
-   - MIT License
+   selfhst/icons                              CC BY 4.0
+   - https://github.com/selfhst/icons
+
+   loganmarchione/homelab-svg-assets          MIT
+   - https://github.com/loganmarchione/homelab-svg-assets
+
+   PapirusDevelopmentTeam/papirus-icon-theme  GPL-3.0
+   - https://github.com/PapirusDevelopmentTeam/papirus-icon-theme
+
+4. Data services
+
+   Weather forecasts and city search come from Open-Meteo. Its data is
+   published under CC BY 4.0.
+   - https://open-meteo.com
+
+5. Design inspiration
+
+   Homarr Dashboard                           Apache-2.0
+   - https://github.com/homarr-labs/homarr
