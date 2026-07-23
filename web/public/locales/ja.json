@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "ユーザー名を変更するとサインアウトされます。",
   "settings.saved": "保存しました",
   "settings.language_region": "言語と地域",
-  "settings.grid_layout": "グリッドレイアウト"
+  "settings.grid_layout": "グリッドレイアウト",
+  "auth.toggle_password": "パスワードの表示/非表示",
+  "action.upload_icon": "アイコンをアップロード",
+  "notifier.backup_confirm": "このバックアップには、全ユーザーのパスワードハッシュを含む機密データが含まれます。安全な場所に保管し、絶対に共有しないでください。続行しますか？"
 }

@@ -138,6 +138,10 @@ class UserStore {
         return map[color] || '#0078D4';
     }
 
+    // Success is NOT announced here: the settings panel decides, per control,
+    // whether a save needs a toast (a change with no visible effect) or stays
+    // quiet (accent, theme, language — the UI already reacts). Failures always
+    // surface, since a silent rollback would look like the change stuck.
     async updatePreferences(newPrefs: Partial<UserPreferences>) {
         if (!this.user || !this.user.preferences) return;
 
@@ -154,7 +158,6 @@ class UserStore {
             await demoService.updatePreferences(newPrefs);
             this.applyAesthetics();
             this.notify();
-            if (window.notifier) window.notifier.show(i18n.t('general.success') || 'Preferences saved');
             return;
         }
 
@@ -197,8 +200,6 @@ class UserStore {
             };
 
             await userService.updatePreferences(payload);
-
-            if (window.notifier) window.notifier.show(i18n.t('general.success') || 'Preferences saved');
         } catch (e) {
             console.error('[UserStore] Failed to sync preferences, rolling back', e);
             // 3. Rollback on failure

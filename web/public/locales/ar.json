@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "تغيير اسم المستخدم سيؤدي إلى تسجيل خروجك.",
   "settings.saved": "تم الحفظ",
   "settings.language_region": "اللغة والمنطقة",
-  "settings.grid_layout": "تخطيط الشبكة"
+  "settings.grid_layout": "تخطيط الشبكة",
+  "auth.toggle_password": "إظهار أو إخفاء كلمة المرور",
+  "action.upload_icon": "رفع أيقونة",
+  "notifier.backup_confirm": "تحتوي هذه النسخة الاحتياطية على بيانات حساسة، منها بصمات كلمات مرور جميع المستخدمين. احفظها في مكان آمن ولا تشاركها أبدًا. هل تريد المتابعة؟"
 }

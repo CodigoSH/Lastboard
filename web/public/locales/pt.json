@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Alterar o nome de utilizador irá terminar a sua sessão.",
   "settings.saved": "Guardado",
   "settings.language_region": "Idioma e região",
-  "settings.grid_layout": "Layout da grade"
+  "settings.grid_layout": "Layout da grade",
+  "auth.toggle_password": "Mostrar ou ocultar a senha",
+  "action.upload_icon": "Enviar ícone",
+  "notifier.backup_confirm": "Esta cópia contém dados sensíveis, incluindo os hashes das senhas de todos os utilizadores. Guarde-a num local seguro e nunca a partilhe. Continuar?"
 }

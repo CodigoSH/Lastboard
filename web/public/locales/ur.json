@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "صارف نام تبدیل کرنے سے آپ سائن آؤٹ ہو جائیں گے۔",
   "settings.saved": "محفوظ ہو گیا",
   "settings.language_region": "زبان اور علاقہ",
-  "settings.grid_layout": "گرڈ لے آؤٹ"
+  "settings.grid_layout": "گرڈ لے آؤٹ",
+  "auth.toggle_password": "پاس ورڈ دکھائیں یا چھپائیں",
+  "action.upload_icon": "آئیکن اپ لوڈ کریں",
+  "notifier.backup_confirm": "اس بیک اپ میں حساس ڈیٹا ہے، بشمول تمام صارفین کے پاس ورڈ ہیش۔ اسے محفوظ جگہ رکھیں اور کبھی شیئر نہ کریں۔ جاری رکھیں؟"
 }

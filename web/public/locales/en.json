@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Changing your username signs you out.",
   "settings.saved": "Saved",
   "settings.language_region": "Language & Region",
-  "settings.grid_layout": "Grid Layout"
+  "settings.grid_layout": "Grid Layout",
+  "auth.toggle_password": "Show or hide password",
+  "action.upload_icon": "Upload icon",
+  "notifier.backup_confirm": "This backup holds sensitive data, including every user's password hash. Keep it somewhere safe and never share it. Continue?"
 }

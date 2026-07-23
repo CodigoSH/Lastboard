@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Als je je gebruikersnaam wijzigt, word je afgemeld.",
   "settings.saved": "Opgeslagen",
   "settings.language_region": "Taal & Regio",
-  "settings.grid_layout": "Rasterindeling"
+  "settings.grid_layout": "Rasterindeling",
+  "auth.toggle_password": "Wachtwoord tonen of verbergen",
+  "action.upload_icon": "Pictogram uploaden",
+  "notifier.backup_confirm": "Deze back-up bevat gevoelige gegevens, waaronder de wachtwoord-hashes van alle gebruikers. Bewaar hem veilig en deel hem nooit. Doorgaan?"
 }

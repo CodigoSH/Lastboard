@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Cambiare il nome utente ti disconnetterà.",
   "settings.saved": "Salvato",
   "settings.language_region": "Lingua e regione",
-  "settings.grid_layout": "Disposizione della griglia"
+  "settings.grid_layout": "Disposizione della griglia",
+  "auth.toggle_password": "Mostra o nascondi la password",
+  "action.upload_icon": "Carica icona",
+  "notifier.backup_confirm": "Questo backup contiene dati sensibili, inclusi gli hash delle password di tutti gli utenti. Conservalo in un luogo sicuro e non condividerlo mai. Continuare?"
 }

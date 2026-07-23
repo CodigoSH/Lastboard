@@ -49,6 +49,9 @@ bootstrap(async () => {
         const rememberText = document.getElementById('rememberMeText');
         if (rememberText) rememberText.textContent = i18n.t('auth.remember_me');
         if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
+        document.querySelectorAll('.pw-toggle').forEach(btn => {
+            btn.setAttribute('aria-label', i18n.t('auth.toggle_password'));
+        });
 
         // Show UI after text update
         requestAnimationFrame(() => {

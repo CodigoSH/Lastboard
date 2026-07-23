@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Changer votre nom d'utilisateur vous déconnectera.",
   "settings.saved": "Enregistré",
   "settings.language_region": "Langue et région",
-  "settings.grid_layout": "Disposition de la grille"
+  "settings.grid_layout": "Disposition de la grille",
+  "auth.toggle_password": "Afficher ou masquer le mot de passe",
+  "action.upload_icon": "Téléverser une icône",
+  "notifier.backup_confirm": "Cette sauvegarde contient des données sensibles, dont les empreintes des mots de passe de tous les utilisateurs. Conservez-la en lieu sûr et ne la partagez jamais. Continuer ?"
 }

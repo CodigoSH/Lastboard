@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "उपयोगकर्ता नाम बदलने पर आप साइन आउट हो जाएंगे।",
   "settings.saved": "सहेजा गया",
   "settings.language_region": "भाषा और क्षेत्र",
-  "settings.grid_layout": "ग्रिड लेआउट"
+  "settings.grid_layout": "ग्रिड लेआउट",
+  "auth.toggle_password": "पासवर्ड दिखाएँ या छिपाएँ",
+  "action.upload_icon": "आइकन अपलोड करें",
+  "notifier.backup_confirm": "इस बैकअप में संवेदनशील डेटा है, जिसमें सभी उपयोगकर्ताओं के पासवर्ड हैश शामिल हैं। इसे सुरक्षित जगह रखें और कभी साझा न करें। जारी रखें?"
 }

@@ -93,7 +93,7 @@ class SettingsContent extends HTMLElement {
                     this.openLogoPicker();
                     break;
                 case 'remove-logo':
-                    this.savePrefs({ project_logo: '' });
+                    this.savePrefs({ project_logo: '' }, { notify: true });
                     break;
                 case 'open-add-user':
                     this.openAddUserModal();
@@ -260,7 +260,8 @@ class SettingsContent extends HTMLElement {
         try {
             await userStore.updatePreferences(newPrefs);
         } catch {
-            // userStore already rolled back aesthetics; restore local state and language
+            // userStore already rolled back aesthetics and reported the failure;
+            // restore local state and language here.
             ok = false;
             this.prefs = previousPrefs;
             if (newPrefs.language && previousPrefs.language) {
@@ -268,9 +269,8 @@ class SettingsContent extends HTMLElement {
             }
         }
         this.render();
-        if (opts.notify && window.notifier) {
-            if (ok) window.notifier.show(i18n.t('settings.saved'));
-            else window.notifier.show(i18n.t('notifier.profile_error'), 'error');
+        if (ok && opts.notify && window.notifier) {
+            window.notifier.show(i18n.t('settings.saved'));
         }
     }
 
@@ -297,9 +297,8 @@ class SettingsContent extends HTMLElement {
     }
 
     async handleBetaToggle(checked: boolean) {
-        this.savePrefs({ beta_updates: checked });
-        // Force a re-render to update the badge if needed
-        this.render();
+        // savePrefs re-renders, which repaints the badge.
+        this.savePrefs({ beta_updates: checked }, { notify: true });
     }
 
     updateDensity(value: string) {
@@ -319,9 +318,18 @@ class SettingsContent extends HTMLElement {
         document.documentElement.style.setProperty('--user-preferred-columns', value);
     }
 
-    commitColumns(value: string) {
+    // Saved without going through savePrefs on purpose: that re-renders the
+    // panel, and rebuilding the slider mid-drag (or between arrow keys) would
+    // steal the focus the user is still holding.
+    async commitColumns(value: string) {
         const val = parseInt(value);
-        userStore.updatePreferences({ grid_columns: val });
+        this.prefs = { ...this.prefs, grid_columns: val };
+        try {
+            await userStore.updatePreferences({ grid_columns: val });
+            if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
+        } catch {
+            // userStore rolled back and already told the user.
+        }
     }
 
     async updateUsername(newUsername: string) {
@@ -430,7 +438,7 @@ class SettingsContent extends HTMLElement {
 
             await this.savePrefs({
                 dashboard_background: resizedDataUrl
-            });
+            }, { notify: true });
 
             this.render();
         } catch (error) {
@@ -444,7 +452,7 @@ class SettingsContent extends HTMLElement {
             this.prefs.dashboard_background = '';
             await this.savePrefs({
                 dashboard_background: ''
-            });
+            }, { notify: true });
             this.render();
         } catch (error) {
             if (window.notifier) window.notifier.show(i18n.t('notifier.save_error'), 'error');
@@ -460,7 +468,7 @@ class SettingsContent extends HTMLElement {
         const result: string | null = await modal.open();
         if (result) {
             this.prefs.project_logo = result;
-            await this.savePrefs({ project_logo: result });
+            await this.savePrefs({ project_logo: result }, { notify: true });
         }
     }
 
@@ -758,7 +766,7 @@ class SettingsContent extends HTMLElement {
         if (confirmationModal) {
             const confirmed = await confirmationModal.confirm(
                 i18n.t('action.download_backup'),
-                'This backup file contains sensitive data including password hashes for all users. Store it in a secure location and never share it. Continue?'
+                i18n.t('notifier.backup_confirm')
             );
             if (!confirmed) return;
         }
@@ -914,8 +922,10 @@ class SettingsContent extends HTMLElement {
                 { value: 'imperial', label: i18n.t('settings.unit_imperial') }
             ];
 
+            // Unlike the language or the theme, switching units changes nothing
+            // on screen until a widget refreshes, so confirm the save.
             unitSelect.addEventListener('change', (e: CustomEvent) => {
-                this.savePrefs({ unit_system: e.detail });
+                this.savePrefs({ unit_system: e.detail }, { notify: true });
             });
         }
 

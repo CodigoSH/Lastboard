@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Изменение имени пользователя приведёт к выходу из системы.",
   "settings.saved": "Сохранено",
   "settings.language_region": "Язык и регион",
-  "settings.grid_layout": "Макет сетки"
+  "settings.grid_layout": "Макет сетки",
+  "auth.toggle_password": "Показать или скрыть пароль",
+  "action.upload_icon": "Загрузить значок",
+  "notifier.backup_confirm": "Эта резервная копия содержит конфиденциальные данные, включая хеши паролей всех пользователей. Храните её в надёжном месте и никому не передавайте. Продолжить?"
 }

@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "修改用户名将使您退出登录。",
   "settings.saved": "已保存",
   "settings.language_region": "语言和地区",
-  "settings.grid_layout": "网格布局"
+  "settings.grid_layout": "网格布局",
+  "auth.toggle_password": "显示或隐藏密码",
+  "action.upload_icon": "上传图标",
+  "notifier.backup_confirm": "此备份包含敏感数据，其中有所有用户的密码哈希。请妥善保管，切勿分享。是否继续？"
 }

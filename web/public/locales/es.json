@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Cambiar el nombre cerrará tu sesión.",
   "settings.saved": "Guardado",
   "settings.language_region": "Idioma y región",
-  "settings.grid_layout": "Diseño de la rejilla"
+  "settings.grid_layout": "Diseño de la rejilla",
+  "auth.toggle_password": "Mostrar u ocultar la contraseña",
+  "action.upload_icon": "Subir icono",
+  "notifier.backup_confirm": "Esta copia contiene datos sensibles, incluidos los hashes de contraseña de todos los usuarios. Guárdala en un lugar seguro y no la compartas nunca. ¿Continuar?"
 }

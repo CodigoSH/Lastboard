@@ -149,6 +149,10 @@ bootstrap(async () => {
 
         if (backBtn) backBtn.textContent = i18n.t('general.back');
 
+        document.querySelectorAll('.pw-toggle').forEach(btn => {
+            btn.setAttribute('aria-label', i18n.t('auth.toggle_password'));
+        });
+
         // Dynamic Texts
         setText('changeImageText', 'action.change_image');
         setText('readyMsg', 'setup.ready_msg');

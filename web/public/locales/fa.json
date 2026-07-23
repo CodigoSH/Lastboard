@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "تغییر نام کاربری شما را از حساب خارج می‌کند.",
   "settings.saved": "ذخیره شد",
   "settings.language_region": "زبان و منطقه",
-  "settings.grid_layout": "چیدمان شبکه"
+  "settings.grid_layout": "چیدمان شبکه",
+  "auth.toggle_password": "نمایش یا پنهان کردن رمز عبور",
+  "action.upload_icon": "بارگذاری آیکون",
+  "notifier.backup_confirm": "این پشتیبان شامل داده‌های حساس است، از جمله هش رمز عبور همهٔ کاربران. آن را در جای امن نگه دارید و هرگز به اشتراک نگذارید. ادامه می‌دهید؟"
 }

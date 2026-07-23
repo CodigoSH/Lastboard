@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Mengubah nama pengguna akan mengeluarkan Anda.",
   "settings.saved": "Tersimpan",
   "settings.language_region": "Bahasa & Wilayah",
-  "settings.grid_layout": "Tata Letak Grid"
+  "settings.grid_layout": "Tata Letak Grid",
+  "auth.toggle_password": "Tampilkan atau sembunyikan kata sandi",
+  "action.upload_icon": "Unggah ikon",
+  "notifier.backup_confirm": "Cadangan ini berisi data sensitif, termasuk hash kata sandi semua pengguna. Simpan di tempat aman dan jangan pernah dibagikan. Lanjutkan?"
 }

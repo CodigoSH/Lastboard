@@ -405,5 +405,8 @@
   "settings.username_relogin_hint": "Kullanıcı adını değiştirmek oturumunuzu kapatır.",
   "settings.saved": "Kaydedildi",
   "settings.language_region": "Dil ve Bölge",
-  "settings.grid_layout": "Izgara Düzeni"
+  "settings.grid_layout": "Izgara Düzeni",
+  "auth.toggle_password": "Parolayı göster veya gizle",
+  "action.upload_icon": "Simge yükle",
+  "notifier.backup_confirm": "Bu yedek, tüm kullanıcıların parola özetleri dahil hassas veriler içerir. Güvenli bir yerde saklayın ve asla paylaşmayın. Devam edilsin mi?"
 }
