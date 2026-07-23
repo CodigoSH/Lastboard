@@ -615,13 +615,13 @@ class WidgetConfigModal extends HTMLElement {
 
         this.shadowRoot.innerHTML = `
             <style>${css}</style>
-            <dialog id="modal">
+            <dialog id="modal" aria-label="${i18n.t('widget.add_title') || 'Widget'}">
                 <div class="modal-header">
                     <div class="integrated-tabs">
                         <button class="tab-btn active" data-tab="general">${i18n.t('general.general')}</button>
                         <button class="tab-btn" data-tab="customization">${i18n.t('general.customization')}</button>
                     </div>
-                    <button class="modal-close" id="close-btn">
+                    <button class="modal-close" id="close-btn" aria-label="${i18n.t('general.close')}">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
                 </div>

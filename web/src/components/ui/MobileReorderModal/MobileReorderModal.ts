@@ -3,6 +3,7 @@ import { i18n } from '../../../services/i18n';
 import { GridItem } from '../../../types';
 import { mobileReorderTemplate } from './MobileReorderModal.template';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
+import { createFocusTrap, FocusTrap } from '../../../services/focusTrap';
 import css from './MobileReorderModal.css' with { type: 'text' };
 
 /** A row's runtime state inside the sheet. `content` is a parsed, local copy. */
@@ -29,6 +30,7 @@ export class MobileReorderModal extends HTMLElement {
     // Original visibility per item id, to detect changes on save.
     private _origVisible = new Map<number, boolean>();
     private _dragSrcIndex: number = -1;
+    private _focusTrap: FocusTrap | null = null;
 
     constructor() {
         super();
@@ -143,6 +145,11 @@ export class MobileReorderModal extends HTMLElement {
             if (e.target === sr.getElementById('overlay')) this._close();
         });
         sr.getElementById('btn-save')!.addEventListener('click', () => this._save());
+
+        const sheet = sr.querySelector<HTMLElement>('.sheet');
+        if (sheet) {
+            this._focusTrap = createFocusTrap(sheet, { onEscape: () => this._close() });
+        }
 
         const list = sr.getElementById('list')!;
 
@@ -364,6 +371,8 @@ export class MobileReorderModal extends HTMLElement {
     }
 
     private _close() {
+        this._focusTrap?.release();
+        this._focusTrap = null;
         this.remove();
     }
 }

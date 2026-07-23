@@ -26,7 +26,7 @@ export const accountTemplate = (user: User) => `
         <div class="bento-card">
             <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.profile')}</div>
             <div class="settings-content__profile-header">
-                <div class="settings-content__avatar-container" style="cursor: pointer;" data-action="click-file" data-file="avatar-upload">
+                <div class="settings-content__avatar-container" style="cursor: pointer;" data-action="click-file" data-file="avatar-upload" role="button" tabindex="0" aria-label="${i18n.t('action.change_image')}">
                     <app-avatar initials="${esc(user.initials || '??')}" src="${safeImageSrc(user.avatar_url || '')}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
                     <div class="settings-content__edit-overlay">${i18n.t('action.change_image')}</div>
                 </div>
@@ -113,7 +113,7 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                 <!-- Dashboard Background -->
                 <div class="settings-content__flex-col">
                     <label class="settings-content__label">${i18n.t('settings.dashboard_background')}</label>
-                    <div class="settings-content__background-container" data-action="click-file" data-file="background-upload">
+                    <div class="settings-content__background-container" data-action="click-file" data-file="background-upload" role="button" tabindex="0" aria-label="${i18n.t('settings.dashboard_background')}">
                         <img class="settings-content__background-preview ${prefs.dashboard_background ? 'active' : ''}" 
                              src="${prefs.dashboard_background || ''}" alt="Background Preview">
                         <div class="settings-content__background-placeholder ${prefs.dashboard_background ? 'hidden' : ''}">
@@ -253,7 +253,7 @@ export const usersTemplate = (users: any[]) => `
      <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
             <h3 class="modal-title">${i18n.t('action.add_new_user')}</h3>
-            <button class="modal-close" data-action="close-modal" data-modal="add-user-modal">
+            <button class="modal-close" data-action="close-modal" data-modal="add-user-modal" aria-label="${i18n.t('general.close')}">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
@@ -276,7 +276,7 @@ export const usersTemplate = (users: any[]) => `
     <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
         <div class="modal-header">
             <h3 class="modal-title">${i18n.t('action.edit_user')}</h3>
-            <button class="modal-close" data-action="close-modal" data-modal="edit-user-modal">
+            <button class="modal-close" data-action="close-modal" data-modal="edit-user-modal" aria-label="${i18n.t('general.close')}">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>

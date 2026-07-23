@@ -1,9 +1,9 @@
 import { i18n } from '../../../services/i18n';
 
 export const layout = () => `
-<dialog id="icon-modal">
+<dialog id="icon-modal" aria-labelledby="icon-modal-title">
     <div class="modal-header">
-        <h3 class="modal-title">${i18n.t('general.select_icon')}</h3>
+        <h3 class="modal-title" id="icon-modal-title">${i18n.t('general.select_icon')}</h3>
         <button class="modal-close" id="close-btn" aria-label="${i18n.t('general.close')}">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>

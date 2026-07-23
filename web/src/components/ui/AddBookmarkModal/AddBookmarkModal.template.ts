@@ -90,13 +90,13 @@ export const template = ({
     visibleTouch,
     borderWidth
 }: AddBookmarkModalData) => `
-    <dialog id="modal">
+    <dialog id="modal" aria-label="${i18n.t('bookmark.add')}">
         <div class="modal-header">
             <div class="integrated-tabs">
                 <button class="tab-btn active" data-tab="general">${i18n.t('general.general')}</button>
                 <button class="tab-btn" data-tab="customization">${i18n.t('general.customization')}</button>
             </div>
-            <button class="modal-close" id="modal-close">
+            <button class="modal-close" id="modal-close" aria-label="${i18n.t('general.close')}">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
@@ -178,7 +178,7 @@ export const template = ({
                     <div class="form-group" style="margin-top: 12px;">
                         <div class="input-group">
                             <div class="icon-dropdown">
-                                <button type="button" class="icon-dropdown-btn" id="touch-pos-btn" style="position: relative;">
+                                <button type="button" class="icon-dropdown-btn" id="touch-pos-btn" style="position: relative;" aria-label="${i18n.t('bookmark.visible_touch')}">
                                     ${visibleTouch ?
         `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /></svg>` :
         `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2" stroke-opacity="0.5" /><path d="M12 18h.01" stroke-width="3" stroke-linecap="round" /><path d="M5 5l14 14" opacity="0.7" /></svg>`

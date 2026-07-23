@@ -1,6 +1,7 @@
 import { dashboardStore } from '../../../store/dashboardStore';
 import { Dashboard } from '../../../types';
 import { dashboardManagerTemplate } from './DashboardManagerModal.template';
+import { createFocusTrap, FocusTrap } from '../../../services/focusTrap';
 import css from './DashboardManagerModal.css' with { type: 'text' };
 
 export class DashboardManagerModal extends HTMLElement {
@@ -8,6 +9,7 @@ export class DashboardManagerModal extends HTMLElement {
     private _dragSrcIndex: number = -1;
     private _dragAbortController: AbortController | null = null;
     private _dragFromHandle: boolean = false;
+    private _focusTrap: FocusTrap | null = null;
 
     constructor() {
         super();
@@ -56,6 +58,11 @@ export class DashboardManagerModal extends HTMLElement {
             if (e.target === sr.getElementById('overlay')) this._close();
         });
         sr.getElementById('btn-save')!.addEventListener('click', () => this._save());
+
+        const sheet = sr.querySelector<HTMLElement>('.sheet');
+        if (sheet) {
+            this._focusTrap = createFocusTrap(sheet, { onEscape: () => this._close() });
+        }
 
         this._bindDrag();
     }
@@ -204,6 +211,8 @@ export class DashboardManagerModal extends HTMLElement {
     }
 
     private _close() {
+        this._focusTrap?.release();
+        this._focusTrap = null;
         this.remove();
     }
 }

@@ -46,6 +46,19 @@ class SettingsContent extends HTMLElement {
     private setupDelegation() {
         const root = this.shadowRoot!;
 
+        // Keyboard activation for the non-native controls (the avatar / background
+        // upload tiles are focusable role="button" divs). matches() (not closest())
+        // so a real <button> nested inside — e.g. remove-background — never double-fires.
+        root.addEventListener('keydown', (e) => {
+            const key = (e as KeyboardEvent).key;
+            if (key !== 'Enter' && key !== ' ') return;
+            const el = e.target as HTMLElement;
+            if (el.matches?.('[role="button"]')) {
+                e.preventDefault();
+                el.click();
+            }
+        });
+
         root.addEventListener('click', (e) => {
             const el = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
             if (!el) return;

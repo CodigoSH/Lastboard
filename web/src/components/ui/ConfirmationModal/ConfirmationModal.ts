@@ -46,6 +46,9 @@ export class ConfirmationModal extends HTMLElement {
             this.dialog.onclick = (e) => {
                 if (e.target === this.dialog) close(false);
             };
+            // Escape triggers the native 'cancel' event; resolve the promise so
+            // the awaiting caller doesn't hang after the dialog closes itself.
+            this.dialog.oncancel = () => close(false);
         }
     }
 

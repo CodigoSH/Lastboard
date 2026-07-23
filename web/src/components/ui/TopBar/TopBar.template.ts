@@ -51,7 +51,7 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
 
             <!-- Add Menu Dropdown -->
             <div id="add-menu" class="add-menu ${addMenuActive ? 'add-menu--active' : ''}">
-                <div class="add-menu-item" data-action="add-dashboard">
+                <div class="add-menu-item" data-action="add-dashboard" role="button" tabindex="0">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon">
                         <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
                         <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
@@ -61,15 +61,15 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
                     ${i18n.t('action.add_dashboard')}
                 </div>
                 <div style="height: 1px; background: var(--border); margin: 2px 0;"></div>
-                <div class="add-menu-item" data-action="add-bookmark">
+                <div class="add-menu-item" data-action="add-bookmark" role="button" tabindex="0">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     ${i18n.t('action.add_bookmark')}
                 </div>
-                <div class="add-menu-item" data-action="add-section">
+                <div class="add-menu-item" data-action="add-section" role="button" tabindex="0">
                      <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon" style="stroke-dasharray: 4 2;"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/></svg>
                     ${i18n.t('action.add_section')}
                 </div>
-                <div class="add-menu-item" data-action="add-widget">
+                <div class="add-menu-item" data-action="add-widget" role="button" tabindex="0">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/></svg>
                     ${i18n.t('action.add_widget')}
                 </div>

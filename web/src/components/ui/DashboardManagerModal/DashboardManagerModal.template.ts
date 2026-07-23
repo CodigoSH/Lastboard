@@ -8,9 +8,9 @@ import { i18n } from '../../../services/i18n';
 export const dashboardManagerTemplate = (itemsHtml: string, css: string): string => `
             <style>${css}</style>
             <div class="overlay" id="overlay">
-                <div class="sheet">
+                <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dm-title">
                     <div class="header">
-                        <span class="header-title">${i18n.t('dashboard.manage_order')}</span>
+                        <span class="header-title" id="dm-title">${i18n.t('dashboard.manage_order')}</span>
                         <button class="btn-close" id="btn-close" aria-label="Close">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                                 <path d="M18 6L6 18M6 6l12 12"/>

@@ -198,6 +198,19 @@ class TopBar extends HTMLElement {
         this.shadowRoot!.addEventListener('keydown', (e: Event) => {
             const target = e.target as HTMLInputElement;
             const keyEvent = e as KeyboardEvent;
+
+            // Activate role="button" elements (e.g. the add-menu items) with
+            // Enter/Space, reusing the click delegation above. matches() (not
+            // closest()) so a real <button> nested inside never double-fires.
+            if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+                const activatable = e.target as HTMLElement;
+                if (activatable.matches?.('[role="button"]')) {
+                    keyEvent.preventDefault();
+                    activatable.click();
+                    return;
+                }
+            }
+
             if (target.id === 'search-input' && keyEvent.key === 'Escape') {
                 target.value = '';
                 this.setState({ searchActive: false });
