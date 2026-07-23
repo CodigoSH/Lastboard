@@ -318,10 +318,11 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// 3b. Verify the checksums.txt signature when release signing is enabled.
 	// This decouples trust from the download server: a compromised release host
-	// cannot forge checksums.txt without the private signing key. Additive by
-	// design — if the .sig is missing (e.g. a pre-signing release) we fall back
-	// to checksum-only with a warning, so enabling signing never breaks updates.
-	// Once every reachable release is signed, turn the missing-sig branch fatal.
+	// cannot forge checksums.txt without the private signing key. When signing is
+	// configured the signature is MANDATORY — a missing .sig aborts the update
+	// instead of falling back to checksum-only, so a tampered host cannot strip
+	// the signature to weaken the check. The release pipeline signs every
+	// published release, so this only rejects genuinely unsigned artifacts.
 	if util.SigningConfigured() {
 		sigCopy := *parsedURL
 		sigCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt.sig"
@@ -329,27 +330,28 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		defer os.Remove(sigFile)
 
 		if err := h.downloadFile(sigCopy.String(), sigFile); err != nil {
-			slog.Warn("Update: checksums.txt.sig not found, falling back to checksum-only", "error", err)
-		} else {
-			checksumData, err := os.ReadFile(checksumFile)
-			if err != nil {
-				slog.Error("Update failed: could not read checksums.txt for signature check", "error", err)
-				http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
-				return
-			}
-			sigData, err := os.ReadFile(sigFile)
-			if err != nil {
-				slog.Error("Update failed: could not read checksums.txt.sig", "error", err)
-				http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
-				return
-			}
-			if err := util.VerifyReleaseSignature(checksumData, strings.TrimSpace(string(sigData))); err != nil {
-				slog.Error("Update failed: checksums.txt signature invalid", "error", err)
-				http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
-				return
-			}
-			slog.Info("Update: checksums.txt signature verified")
+			slog.Error("Update failed: checksums.txt.sig missing; refusing to install an unsigned release", "error", err)
+			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
+			return
 		}
+		checksumData, err := os.ReadFile(checksumFile)
+		if err != nil {
+			slog.Error("Update failed: could not read checksums.txt for signature check", "error", err)
+			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
+			return
+		}
+		sigData, err := os.ReadFile(sigFile)
+		if err != nil {
+			slog.Error("Update failed: could not read checksums.txt.sig", "error", err)
+			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
+			return
+		}
+		if err := util.VerifyReleaseSignature(checksumData, strings.TrimSpace(string(sigData))); err != nil {
+			slog.Error("Update failed: checksums.txt signature invalid", "error", err)
+			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
+			return
+		}
+		slog.Info("Update: checksums.txt signature verified")
 	}
 
 	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
