@@ -24,7 +24,7 @@ interface Prefs {
 export const accountTemplate = (user: User) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.profile')}</div>
+            <h3 class="settings-content__title">${i18n.t('settings.profile')}</h3>
             <div class="settings-content__profile-header">
                 <div class="settings-content__avatar-container" style="cursor: pointer;" data-action="click-file" data-file="avatar-upload" role="button" tabindex="0" aria-label="${i18n.t('action.change_image')}">
                     <app-avatar initials="${esc(user.initials || '??')}" src="${safeImageSrc(user.avatar_url || '')}" style="width: 80px; height: 80px; font-size: 32px;"></app-avatar>
@@ -41,9 +41,9 @@ export const accountTemplate = (user: User) => `
             
             <div class="settings-content__form-container" style="margin-top: 32px;">
                 <div class="settings-content__form-group">
-                    <label class="settings-content__label">${i18n.t('settings.display_username')}</label>
+                    <label class="settings-content__label">${i18n.t('auth.username')}</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('settings.display_username')}">
+                        <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('auth.username')}">
                         <app-button variant="primary" data-action="update-username">${i18n.t('settings.save_username')}</app-button>
                     </div>
                     <p class="settings-content__text-dim" style="font-size: 10px; margin: 4px 0 0 0;">${i18n.t('settings.username_relogin_hint')}</p>
@@ -52,7 +52,6 @@ export const accountTemplate = (user: User) => `
         </div>
 
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('auth.password')}</div>
             <h3 class="settings-content__title">${i18n.t('settings.system_password')}</h3>
             <div class="settings-content__form-group">
                 <label class="settings-content__label">${i18n.t('settings.current_password')}</label>
@@ -82,11 +81,14 @@ export const accountTemplate = (user: User) => `
     </div>
 `;
 
+// Look & Feel: everything that changes how the dashboard looks (accent, theme,
+// background) lives in one card. Language and units moved to Personalization,
+// which is where the rest of the per-panel preferences are.
 export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, colors: string[]) => `
-    <div class="bento-grid">
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-             <div class="mono-tag" style="margin-bottom: 8px;">${i18n.t('settings.appearance')}</div>
-             <h3 class="settings-content__title">${i18n.t('settings.studio_accent')}</h3>
+             <h3 class="settings-content__title">${i18n.t('settings.appearance')}</h3>
+             <label class="settings-content__label">${i18n.t('settings.studio_accent')}</label>
              <div class="settings-content__color-grid">
                 ${colors.map(c => `
                     <div class="settings-content__color-swatch ${prefs.accent_color === c ? 'settings-content__color-swatch--active' : ''}"
@@ -104,13 +106,8 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                             data-change="accent-picker"></app-color-picker>
                 </div>
              </div>
-        </div>
 
-        <div class="bento-card">
-            <div class="mono-tag settings-content__section-spacer" style="margin-bottom: 8px;">${i18n.t('settings.system_locale')}</div>
-            <h3 class="settings-content__title">${i18n.t('settings.localization')}</h3>
-
-            <div class="settings-content__flex-row">
+            <div class="settings-content__flex-row settings-content__section-spacer">
                 <!-- Dashboard Background -->
                 <div class="settings-content__flex-col">
                     <label class="settings-content__label">${i18n.t('settings.dashboard_background')}</label>
@@ -134,13 +131,8 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                 </div>
 
                 <div class="settings-content__flex-col">
-                    <div class="settings-content__form-group">
-                        <label class="settings-content__label">${i18n.t('settings.language')}</label>
-                        <app-select id="language-select" value="${prefs.language}"></app-select>
-                    </div>
-
                     <div class="settings-content__form-group" style="margin-bottom: 0;">
-                        <label class="settings-content__label">${i18n.t('settings.theme_mode')}</label>
+                        <label class="settings-content__label">${i18n.t('settings.theme')}</label>
                         <div class="settings-content__segmented-control">
                             <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}"
                                     data-action="set-theme" data-theme="dark">
@@ -158,14 +150,15 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
     </div>
 `;
 
+// One card per topic, each titled after what it holds: the panel's identity,
+// its language/units, and its grid.
 export const personalizationTemplate = (prefs: Prefs) => `
     <div class="bento-grid">
+        <!-- Branding -->
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.fluid_grid_architecture')}</div>
-            
-            <!-- Project Name + Logo -->
-            <div class="settings-content__form-group" style="margin-bottom: 24px;">
-                <label class="settings-content__label">${i18n.t('settings.project_name_and_logo')}</label>
+            <h3 class="settings-content__title">${i18n.t('settings.project_name_and_logo')}</h3>
+
+            <div class="settings-content__form-group" style="margin-bottom: 0;">
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <div style="position: relative; flex-shrink: 0;">
                         <button type="button" class="settings-logo-btn" data-action="open-logo-picker" title="${i18n.t('settings.project_logo')}">
@@ -183,12 +176,26 @@ export const personalizationTemplate = (prefs: Prefs) => `
                            data-change="project-name">
                 </div>
             </div>
+        </div>
 
-            <!-- Unit System -->
-            <div class="settings-content__form-group" style="margin-bottom: 24px;">
+        <!-- Language & Region -->
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.language_region')}</h3>
+
+            <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('settings.language')}</label>
+                <app-select id="language-select" value="${prefs.language}"></app-select>
+            </div>
+
+            <div class="settings-content__form-group" style="margin-bottom: 0;">
                 <label class="settings-content__label">${i18n.t('settings.unit_system')}</label>
                 <app-select id="unit-system-select" value="${prefs.unit_system || 'metric'}"></app-select>
             </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.grid_layout')}</h3>
 
             <div class="settings-content__personalization-grid">
                 <div class="settings-content__slider-group">
@@ -214,7 +221,6 @@ export const personalizationTemplate = (prefs: Prefs) => `
 export const usersTemplate = (users: any[]) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 12px;">${i18n.t('settings.admin_section')}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h3 class="settings-content__title" style="margin: 0;">${i18n.t('settings.user_management')}</h3>
                 <app-button variant="primary" data-action="open-add-user" style="width: auto; padding: 0 16px;">+ ${i18n.t('action.add_user')}</app-button>
@@ -294,7 +300,7 @@ export const usersTemplate = (users: any[]) => `
             </div>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" data-action="update-admin-user">${i18n.t('action.save_changes')}</app-button>
+            <app-button variant="primary" data-action="update-admin-user">${i18n.t('general.save')}</app-button>
         </div>
     </dialog>
 `;
@@ -303,8 +309,8 @@ export const advancedTemplate = () => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <!-- System Migration Section -->
         <div class="bento-card">
-            <div class="mono-tag" style="margin-bottom: 24px;">${i18n.t('settings.system_data')}</div>
-            
+            <h3 class="settings-content__title">${i18n.t('settings.system_data')}</h3>
+
             <div class="settings-content__action-group">
                 <!-- Export -->
                 <div class="settings-content__action-row">

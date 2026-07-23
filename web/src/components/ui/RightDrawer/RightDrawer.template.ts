@@ -39,7 +39,7 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                 </div>
                 <div class="right-drawer__menu-item ${selectedSection === 'theme' ? 'right-drawer__menu-item--active' : ''}" data-section="theme">
                     <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z"/></svg>
-                    <span>${i18n.t('settings.theme')}</span>
+                    <span>${i18n.t('settings.appearance')}</span>
                 </div>
                 <div class="right-drawer__menu-item ${selectedSection === 'personalization' ? 'right-drawer__menu-item--active' : ''}" data-section="personalization">
                     <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
