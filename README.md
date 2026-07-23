@@ -65,7 +65,7 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 
 ### Security
 
-Lastboard is built from the ground up with defense-in-depth principles, including strict CSP headers, CSRF protection, secure session tokens, aggressive rate limiting, and optional unprivileged execution (`PUID`/`PGID`).
+Lastboard is built from the ground up with defense-in-depth principles, including strict CSP headers, CSRF protection, secure session tokens, aggressive rate limiting, signature-verified updates, and optional unprivileged execution (`PUID`/`PGID`).
 
 For a detailed breakdown of our security measures, please refer to our [Security Overview](https://codigosh.com/docs/lastboard/security/overview/).
 

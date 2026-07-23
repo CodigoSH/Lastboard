@@ -13,11 +13,12 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 | `DEMO_ONLY` | `false` | Set to `true` to run purely in a frontend-only demo mode (no auth, no persistence). |
 | `TRUST_PROXY` | `false` | Enable reading the real client IP from `X-Forwarded-For`. Set to `true` if behind a proxy. |
 | `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. Enforced by the backend API. |
-| `DATA_DIR` | `/var/lib/lastboard` | The directory where Lastboard installs persistent files in a native Linux setup. |
 | `PUID` | `0` | User id to run as. When non-zero (and started as root) the app chowns the data dir and drops privileges to it. |
 | `PGID` | `0` | Group id to run as. Used together with `PUID`. |
 
 > **Note:** `SESSION_SECRET` is automatically generated and securely stored in the database on first run.
+
+> **Native installs:** the install script keeps everything under `/var/lib/lastboard` and points `DB_FILE` at `/var/lib/lastboard/lastboard.db`. This is a convention of `install.sh`, not an environment variable the binary reads — to move the data, set `DB_FILE`.
 
 ## PUID / PGID (running unprivileged)
 
@@ -47,22 +48,30 @@ TRUST_PROXY=true
 
 Lastboard offers a wide range of settings to personalize your experience and manage the system. These are accessible via the **Settings** icon in the top navigation bar.
 
-### Account
+Preferences save the moment you change them — there is no "Save" button for
+them. Only actions with a real consequence (changing your password or username,
+managing users, backup/restore, updates) keep an explicit button.
+
+### My Profile
 Manage your personal profile and security.
 - **Avatar**: Upload a custom profile picture. Supported formats: PNG, JPG, WebP.
+- **Username**: Change your display name. This signs you out, since the session is tied to it.
 - **Change Password**: Update your login credentials. We recommend using a strong, unique password.
 
-### Dashboard & Appearance
-Tailor the look and feel of your personal dashboard.
-- **Dashboard Background**: 
+### Look & Feel
+Everything that changes how the dashboard looks.
+- **Accent Color**: Pick one of the presets or set a custom color with the picker.
+- **Theme**: Toggle between **Light** and **Dark** modes to suit your preference.
+- **Dashboard Background**:
   - **Custom Image**: Upload any image to use as your dashboard background.
   - **Auto-Optimization**: Images are automatically resized to 1080p for faster load times.
   - **Cover Logic**: The background uses "Cover" logic, ensuring it fills the screen without stretching or distortion.
-- **Interface Language**: Choose from **20 supported languages**, including English, Spanish, German, French, Chinese, and more.
-- **Theme Mode**: Toggle between **Light** and **Dark** modes to suit your preference.
-- **Project Name & Logo**: Customize the title and logo displayed in the browser tab and top bar. Both are configured from a single settings row.
-- **Global Unit System**: Select between **Metric** (°C, km/h) and **Imperial** (°F, mph). This setting automatically updates all compatible widgets (Weather, Telemetry, etc.).
-- **Grid Density**: Use the slider to adjust the number of columns in your dashboard grid (from 3 to 16), allowing for tighter or more spacious layouts.
+
+### Personalization
+- **Logo & Panel Name**: Customize the title and logo displayed in the browser tab and top bar. Both are configured from a single settings row.
+- **Language**: Choose from **20 supported languages**, including English, Spanish, German, French, Chinese, and more.
+- **Measurement Units**: Select between **Metric** (°C, km/h) and **Imperial** (°F, mph). This setting automatically updates all compatible widgets (Weather, Telemetry, etc.).
+- **Grid Layout**: Use the **Columns** slider to set how many columns your dashboard grid uses (from 3 to 16), allowing for tighter or more spacious layouts.
 
 ### Multi-Dashboard
 Lastboard supports multiple independent dashboards per user. Each dashboard has its own layout, widgets, and background.
@@ -85,7 +94,7 @@ Tools for keeping your Lastboard instance healthy and up to date.
 - **System Updates**:
   - **Check for Updates**: Manually trigger a version check against the official [Forgejo repository](https://git.codigosh.com/CodigoSH/Lastboard).
   - **Docker Mode**: If running via Docker, instructions are provided to pull the latest image from `git.codigosh.com`.
-  - **Native Update**: For Linux installs, updates can be applied directly from the UI — the binary is downloaded from Forgejo and verified by checksum before replacing the current installation.
+  - **Native Update**: For Linux installs, updates can be applied directly from the UI — the binary is downloaded from Forgejo and its checksum verified against a signed `checksums.txt` before replacing the current installation.
 - **Beta Updates**: Toggle this setting to participate in the beta testing program and receive early access to new features.
 - **Factory Reset**: A safe-guarded option to wipe all data and return the instance to its original state (Setup Wizard).
 

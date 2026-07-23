@@ -19,6 +19,7 @@ The web installer and in-app update mechanism communicate directly with our self
 - **No Tracking:** No IP addresses, user identifiers, or telemetry are collected at any point.
 - **No Modification:** Release metadata and binaries are fetched directly from the official `CodigoSH/Lastboard` repository. Nothing is modified in transit.
 - **Checksum Verification:** Every binary is verified against a `checksums.txt` published with each release. Mismatches abort the installation immediately.
+- **Signature Verification:** When release signing is enabled, `checksums.txt` is signed with an Ed25519 key whose public half is embedded in the binary. A missing or invalid signature aborts the update — a tampered mirror cannot strip the signature to fall back to a weaker check. See [Release Signing](release-signing.md).
 
 ## Reporting Vulnerabilities
 

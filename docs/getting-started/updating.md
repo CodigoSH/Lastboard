@@ -33,6 +33,11 @@ curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.s
 
 When updating natively or via the web interface:
 1. The new release binary is downloaded from Forgejo.
-2. The checksum is verified.
-3. The existing `lastboard` binary is replaced.
-4. The systemd service (or container process) automatically restarts.
+2. Its checksum is verified against the release's `checksums.txt`.
+3. When release signing is enabled, `checksums.txt` must carry a valid
+   signature (`checksums.txt.sig`) — a missing or invalid signature aborts the
+   update, so a tampered mirror cannot serve a forged binary.
+4. The existing `lastboard` binary is replaced.
+5. The systemd service (or container process) automatically restarts.
+
+See [Release Signing](../security/release-signing.md) for how the signature is produced and verified.

@@ -62,7 +62,7 @@ Lastboard ships translations for 20 languages. The master locale file is `web/pu
 ## Code Style
 
 - **Go:** Follow standard Go idioms. Always run `go fmt ./...` before committing.
-- **TypeScript:** Rely on the configured Prettier/ESLint rules for project consistency. Formatting is enforced via bun tooling.
+- **TypeScript:** The project ships no runtime dependencies and no Prettier/ESLint config — match the style of the surrounding code. Types are checked with `bunx tsc --noEmit` and tests run with `bun test`.
 - **Commits:** We follow [Conventional Commits](https://www.conventionalcommits.org/):
   - `feat: add new widget`
   - `fix: resolve layout bug`
@@ -89,5 +89,7 @@ To draft a release:
 The script bumps the version, updates the changelog, commits, and pushes a new tag. This triggers the Forgejo Actions workflows which:
 
 1. Build the Go binary for `linux/amd64` and `linux/arm64`
-2. Create the release on Forgejo with the compiled binaries and `checksums.txt`
+2. Create the release on Forgejo with the compiled binaries and `checksums.txt`, signing `checksums.txt` with the `RELEASE_SIGNING_KEY` secret when it is set (uploading `checksums.txt.sig` alongside)
 3. Build and push the multi-arch Docker image to `git.codigosh.com`
+
+See [Release Signing](../security/release-signing.md) for the signing key setup.
