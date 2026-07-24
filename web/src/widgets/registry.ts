@@ -8,6 +8,9 @@ export interface WidgetDefinition {
     defaultW: number;
     defaultH: number;
     componentTag: string;
+    /** Open the config modal right after adding — for widgets that are useless
+     *  until set up (location, endpoint, host…). */
+    configOnAdd?: boolean;
 }
 
 export const WIDGET_REGISTRY: WidgetDefinition[] = [
@@ -18,7 +21,8 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         get description() { return i18n.t('widget.clock.description'); },
         defaultW: 2,
         defaultH: 1,
-        componentTag: 'widget-clock'
+        componentTag: 'widget-clock',
+        configOnAdd: true
     },
     {
         id: 'notepad',
@@ -45,7 +49,8 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         get description() { return i18n.t('widget.weather.description'); },
         defaultW: 3,
         defaultH: 2,
-        componentTag: 'widget-weather'
+        componentTag: 'widget-weather',
+        configOnAdd: true
     },
     {
         id: 'markdown',
@@ -63,7 +68,8 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         get description() { return i18n.t('widget.docker.description'); },
         defaultW: 5,
         defaultH: 3,
-        componentTag: 'widget-docker'
+        componentTag: 'widget-docker',
+        configOnAdd: true
     },
     {
         id: 'api',
@@ -72,6 +78,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         get description() { return i18n.t('widget.api.description'); },
         defaultW: 2,
         defaultH: 1,
-        componentTag: 'widget-api'
+        componentTag: 'widget-api',
+        configOnAdd: true
     }
 ];

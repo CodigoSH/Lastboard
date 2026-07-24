@@ -142,22 +142,17 @@ dialog[open] {
     box-shadow: var(--input-focus-shadow);
 }
 
-.field-group textarea,
-.field-group select.api-select {
+.field-group textarea {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     color: var(--input-text);
     padding: 12px 16px;
     border-radius: var(--radius);
-    font-family: var(--font-sans);
     font-size: 14px;
     width: 100%;
     box-sizing: border-box;
     outline: none;
     transition: all 0.2s;
-}
-
-.field-group textarea {
     resize: vertical;
     min-height: 44px;
     font-family: var(--font-mono, monospace);
@@ -166,16 +161,11 @@ dialog[open] {
     overflow-x: auto;
 }
 
-.field-group select.api-select {
-    cursor: pointer;
-}
-
 .field-group textarea::placeholder {
     color: var(--input-placeholder);
 }
 
-.field-group textarea:focus,
-.field-group select.api-select:focus {
+.field-group textarea:focus {
     border-color: var(--input-focus-border);
     box-shadow: var(--input-focus-shadow);
 }

@@ -199,6 +199,19 @@ class WidgetConfigModal extends HTMLElement {
                 });
             } else if (widgetId === 'docker') {
                 this.setupDockerEvents();
+            } else if (widgetId === 'api') {
+                const methodSel = this.shadowRoot.getElementById('api-method') as AppSelect | null;
+                if (methodSel) methodSel.options = [
+                    { value: 'GET', label: 'GET' },
+                    { value: 'POST', label: 'POST' },
+                ];
+                const refreshSel = this.shadowRoot.getElementById('api-refresh') as AppSelect | null;
+                if (refreshSel) refreshSel.options = [
+                    { value: '30', label: '30s' },
+                    { value: '60', label: '1m' },
+                    { value: '300', label: '5m' },
+                    { value: '600', label: '10m' },
+                ];
             }
         }
 
@@ -631,7 +644,6 @@ class WidgetConfigModal extends HTMLElement {
                     .map(([k, v]) => `${k}: ${v}`).join('\n');
                 const fieldsText = (Array.isArray(content.mappings) ? content.mappings : [])
                     .map((m: any) => `${m.label || ''} = ${m.path || ''}${m.format ? ' | ' + m.format : ''}`).join('\n');
-                const refreshOpts = [[30, '30s'], [60, '1m'], [300, '5m'], [600, '10m']] as [number, string][];
 
                 const generalTab = `
                     <div class="field-group">
@@ -645,10 +657,7 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
                     <div class="field-group row-aligned">
                         <label>${i18n.t('widget.api.method_label') || 'Method'}</label>
-                        <select id="api-method" class="api-select">
-                            <option value="GET" ${method === 'GET' ? 'selected' : ''}>GET</option>
-                            <option value="POST" ${method === 'POST' ? 'selected' : ''}>POST</option>
-                        </select>
+                        <app-select id="api-method" value="${method}"></app-select>
                     </div>
                     <div class="field-group">
                         <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
@@ -662,9 +671,7 @@ class WidgetConfigModal extends HTMLElement {
                     </div>
                     <div class="field-group row-aligned">
                         <label>${i18n.t('widget.api.refresh_label') || 'Refresh'}</label>
-                        <select id="api-refresh" class="api-select">
-                            ${refreshOpts.map(([v, l]) => `<option value="${v}" ${refreshSec === v ? 'selected' : ''}>${l}</option>`).join('')}
-                        </select>
+                        <app-select id="api-refresh" value="${refreshSec}"></app-select>
                     </div>
                 `;
 
@@ -727,7 +734,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
 
                 <div class="actions">
-                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
+                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker', 'api'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
                 <div id="docker-host-overlay" class="docker-overlay" style="display: none;"></div>
             </dialog>

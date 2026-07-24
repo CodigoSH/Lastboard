@@ -317,7 +317,14 @@ window.addEventListener('widget-selected', async (e: Event) => {
             text: (widgetDef.id === 'notepad' || widgetDef.id === 'markdown') ? '' : undefined
         })
     };
-    await dashboardStore.addItem(newItem);
+    const created = await dashboardStore.addItem(newItem);
+
+    // Widgets that need first-time setup (location, endpoint, host…) open their
+    // config right away — see WidgetDefinition.configOnAdd.
+    if (created && widgetDef.configOnAdd) {
+        const { eventBus, EVENTS } = await import('./services/EventBus');
+        eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item: created, type: 'widget' });
+    }
 });
 
 window.addEventListener('drawer-close', () => {
