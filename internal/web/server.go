@@ -72,6 +72,10 @@ func NewServer(db *sql.DB) *Server {
 	updateHandler := api.NewUpdateHandler(db)
 	go updateHandler.CheckForUpdatesBackground(s.WSHub)
 
+	// Start background monitoring scheduler. Idle unless monitoring_mode is
+	// "background"; then it records status history 24/7 on its own interval.
+	go api.NewMonitorScheduler(db).Run()
+
 	s.routes()
 	return s
 }
