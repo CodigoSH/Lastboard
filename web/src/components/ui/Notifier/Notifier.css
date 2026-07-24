@@ -1,30 +1,49 @@
 .toast-container {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 10px;
-    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.toast-container--shifted {
-    right: 340px;
-    /* 320px drawer + 20px gap */
+    width: max-content;
+    max-width: min(92vw, 420px);
+    /* The empty container must not intercept clicks on the dashboard below;
+       each toast re-enables pointer events for itself. */
+    pointer-events: none;
 }
 
 .toast {
+    pointer-events: auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
     background-color: var(--surface);
     color: var(--text-main);
-    padding: 12px 20px;
+    padding: 12px 12px 12px 16px;
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
-    font-size: 14px;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 300ms, transform 300ms;
     border-left: 4px solid var(--accent);
+    font-size: 14px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.toast--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast--leaving {
+    opacity: 0;
+    transform: translateY(16px);
 }
 
 .toast--success {
@@ -33,4 +52,97 @@
 
 .toast--error {
     border-left-color: var(--danger-color);
+}
+
+.toast--info {
+    border-left-color: var(--accent);
+}
+
+.toast--warning {
+    border-left-color: var(--warning-color, #e0a800);
+}
+
+.toast__msg {
+    flex: 1 1 auto;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.toast__action {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: calc(var(--radius) - 4px);
+    white-space: nowrap;
+}
+
+.toast__action:hover {
+    background: rgba(128, 128, 128, 0.15);
+}
+
+.toast__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim, var(--text-main));
+    padding: 3px;
+    border-radius: 4px;
+    line-height: 0;
+}
+
+.toast__close:hover {
+    color: var(--text-main);
+    background: rgba(128, 128, 128, 0.15);
+}
+
+.toast__progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 100%;
+    transform-origin: left center;
+    background: var(--accent);
+    opacity: 0.7;
+    animation: toast-progress var(--toast-duration, 3000ms) linear forwards;
+}
+
+.toast--success .toast__progress {
+    background: var(--success-color);
+}
+
+.toast--error .toast__progress {
+    background: var(--danger-color);
+}
+
+/* Pause the countdown bar while the pointer is over the toast (the JS timer is
+   paused in tandem on mouseenter/mouseleave). */
+.toast:hover .toast__progress {
+    animation-play-state: paused;
+}
+
+@keyframes toast-progress {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Keep the functional countdown bar, drop the decorative slide. */
+    .toast {
+        transform: none;
+        transition: opacity 120ms linear;
+    }
+    .toast--visible,
+    .toast--leaving {
+        transform: none;
+    }
 }
