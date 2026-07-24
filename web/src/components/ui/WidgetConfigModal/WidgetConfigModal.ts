@@ -9,6 +9,7 @@ import '../ColorPicker/ColorPicker';
 import css from './WidgetConfigModal.css' with { type: 'text' };
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
+import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
@@ -212,6 +213,36 @@ class WidgetConfigModal extends HTMLElement {
                     { value: '300', label: '5m' },
                     { value: '600', label: '10m' },
                 ];
+
+                const presetSel = this.shadowRoot.getElementById('api-preset') as AppSelect | null;
+                if (presetSel) {
+                    presetSel.options = [
+                        { value: '', label: i18n.t('widget.api.preset_custom') || 'Advanced (custom)' },
+                        ...API_PRESETS.map(p => ({ value: p.id, label: p.name })),
+                    ];
+                }
+
+                const applyPresetUI = (id: string) => {
+                    const simple = this.shadowRoot!.getElementById('api-simple') as HTMLElement | null;
+                    const advanced = this.shadowRoot!.getElementById('api-advanced') as HTMLElement | null;
+                    const p = getPreset(id);
+                    if (simple) simple.style.display = p ? 'block' : 'none';
+                    if (advanced) advanced.style.display = p ? 'none' : 'block';
+                    if (p) {
+                        const keyLabel = this.shadowRoot!.getElementById('api-key-label');
+                        const keyHint = this.shadowRoot!.getElementById('api-key-hint');
+                        const keyGroup = this.shadowRoot!.getElementById('api-key-group') as HTMLElement | null;
+                        const baseInput = this.shadowRoot!.getElementById('api-baseurl') as HTMLInputElement | null;
+                        if (keyLabel) keyLabel.textContent = i18n.t(p.keyLabelKey);
+                        if (keyHint) keyHint.textContent = p.keyHintKey ? i18n.t(p.keyHintKey) : '';
+                        if (keyGroup) keyGroup.style.display = p.needsKey ? 'block' : 'none';
+                        if (baseInput) baseInput.placeholder = p.urlPlaceholder;
+                    }
+                };
+                if (presetSel) {
+                    presetSel.addEventListener('change', (e: any) => applyPresetUI(e.detail));
+                    applyPresetUI(presetSel.value || '');
+                }
             }
         }
 
@@ -372,40 +403,59 @@ class WidgetConfigModal extends HTMLElement {
             newContent.text = textInput ? textInput.value : '';
         } else if (widgetId === 'api') {
             const val = (id: string) => (this.shadowRoot?.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)?.value ?? '';
-
-            // Headers: one "Name: value" per line.
-            const headers: Record<string, string> = {};
-            val('api-headers').split('\n').forEach(line => {
-                const i = line.indexOf(':');
-                if (i > 0) {
-                    const k = line.slice(0, i).trim();
-                    if (k) headers[k] = line.slice(i + 1).trim();
-                }
-            });
-
-            // Fields: one "Label = path" (optional "| format") per line.
-            const mappings: { label: string; path: string; format?: string }[] = [];
-            val('api-fields').split('\n').forEach(line => {
-                if (!line.trim()) return;
-                const eq = line.indexOf('=');
-                if (eq < 0) return;
-                const label = line.slice(0, eq).trim();
-                let rest = line.slice(eq + 1).trim();
-                let format: string | undefined;
-                const pipe = rest.lastIndexOf('|');
-                if (pipe >= 0) {
-                    format = rest.slice(pipe + 1).trim().toLowerCase() || undefined;
-                    rest = rest.slice(0, pipe).trim();
-                }
-                if (rest) mappings.push({ label, path: rest, format });
-            });
-
             newContent.title = val('api-title').trim();
-            newContent.url = val('api-url').trim();
-            newContent.method = val('api-method') || 'GET';
-            newContent.headers = headers;
-            newContent.mappings = mappings;
-            newContent.refreshSec = parseInt(val('api-refresh')) || 60;
+            const presetId = val('api-preset');
+
+            if (presetId) {
+                // Guided preset: compose the whole config from base URL + key.
+                const preset = getPreset(presetId);
+                const base = val('api-baseurl').trim();
+                const key = val('api-key');
+                if (preset) {
+                    const cfg = preset.build(base, key);
+                    newContent.preset = presetId;
+                    newContent.baseUrl = base;
+                    newContent.apiKey = key;
+                    newContent.url = cfg.url;
+                    newContent.method = cfg.method || 'GET';
+                    newContent.headers = cfg.headers || {};
+                    newContent.arrayPath = cfg.arrayPath || '';
+                    newContent.mappings = cfg.mappings || [];
+                    newContent.refreshSec = cfg.refreshSec || 60;
+                }
+            } else {
+                // Advanced (manual).
+                const headers: Record<string, string> = {};
+                val('api-headers').split('\n').forEach(line => {
+                    const i = line.indexOf(':');
+                    if (i > 0) {
+                        const k = line.slice(0, i).trim();
+                        if (k) headers[k] = line.slice(i + 1).trim();
+                    }
+                });
+                const mappings: { label: string; path: string; format?: string }[] = [];
+                val('api-fields').split('\n').forEach(line => {
+                    if (!line.trim()) return;
+                    const eq = line.indexOf('=');
+                    if (eq < 0) return;
+                    const label = line.slice(0, eq).trim();
+                    let rest = line.slice(eq + 1).trim();
+                    let format: string | undefined;
+                    const pipe = rest.lastIndexOf('|');
+                    if (pipe >= 0) {
+                        format = rest.slice(pipe + 1).trim().toLowerCase() || undefined;
+                        rest = rest.slice(0, pipe).trim();
+                    }
+                    if (rest) mappings.push({ label, path: rest, format });
+                });
+                newContent.preset = '';
+                newContent.url = val('api-url').trim();
+                newContent.method = val('api-method') || 'GET';
+                newContent.headers = headers;
+                newContent.arrayPath = val('api-array').trim();
+                newContent.mappings = mappings;
+                newContent.refreshSec = parseInt(val('api-refresh')) || 60;
+            }
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 5000;
@@ -640,38 +690,67 @@ class WidgetConfigModal extends HTMLElement {
                 const url = content.url || '';
                 const method = content.method || 'GET';
                 const refreshSec = content.refreshSec || 60;
+                const arrayPath = content.arrayPath || '';
+                const preset = content.preset || '';
+                const baseUrl = content.baseUrl || '';
+                const apiKey = content.apiKey || '';
                 const headersText = Object.entries(content.headers || {})
                     .map(([k, v]) => `${k}: ${v}`).join('\n');
                 const fieldsText = (Array.isArray(content.mappings) ? content.mappings : [])
                     .map((m: any) => `${m.label || ''} = ${m.path || ''}${m.format ? ' | ' + m.format : ''}`).join('\n');
 
                 const generalTab = `
+                    <div class="field-group row-aligned">
+                        <label>${i18n.t('widget.api.preset_label') || 'Service'}</label>
+                        <app-select id="api-preset" value="${esc(preset)}"></app-select>
+                    </div>
                     <div class="field-group">
                         <label>${i18n.t('widget.api.title_label') || 'Title'}</label>
                         <input type="text" id="api-title" value="${esc(title)}" placeholder="Pi-hole" />
                     </div>
-                    <div class="field-group">
-                        <label>${i18n.t('widget.api.url_label') || 'Endpoint URL'}</label>
-                        <input type="text" id="api-url" value="${esc(url)}" placeholder="http://10.0.0.5/admin/api.php?summary" />
-                        <small>${i18n.t('widget.api.url_hint') || 'The server fetches this JSON URL for you (reaches private IPs, no CORS).'}</small>
+
+                    <div id="api-simple" style="display:${preset ? 'block' : 'none'}">
+                        <div class="field-group">
+                            <label>${i18n.t('widget.api.base_url_label') || 'Base URL'}</label>
+                            <input type="text" id="api-baseurl" value="${esc(baseUrl)}" placeholder="http://10.0.0.5:8080" />
+                            <small>${i18n.t('widget.api.base_url_hint') || 'Just the address of the service — the rest is filled in for you.'}</small>
+                        </div>
+                        <div class="field-group" id="api-key-group">
+                            <label id="api-key-label">${i18n.t('widget.api.key_apikey') || 'API Key'}</label>
+                            <input type="text" id="api-key" value="${esc(apiKey)}" spellcheck="false" placeholder="" />
+                            <small id="api-key-hint"></small>
+                        </div>
                     </div>
-                    <div class="field-group row-aligned">
-                        <label>${i18n.t('widget.api.method_label') || 'Method'}</label>
-                        <app-select id="api-method" value="${method}"></app-select>
-                    </div>
-                    <div class="field-group">
-                        <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
-                        <textarea id="api-headers" rows="2" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
-                        <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
-                    </div>
-                    <div class="field-group">
-                        <label>${i18n.t('widget.api.fields_label') || 'Fields'}</label>
-                        <textarea id="api-fields" rows="4" spellcheck="false" placeholder="Queries = dns_queries_today | number&#10;Blocked = ads_percentage_today | percent">${esc(fieldsText)}</textarea>
-                        <small>${i18n.t('widget.api.fields_hint') || 'One per line: "Label = path". Path is dot/bracket (a.b[0].c). Optional "| number|bytes|percent".'}</small>
-                    </div>
-                    <div class="field-group row-aligned">
-                        <label>${i18n.t('widget.api.refresh_label') || 'Refresh'}</label>
-                        <app-select id="api-refresh" value="${refreshSec}"></app-select>
+
+                    <div id="api-advanced" style="display:${preset ? 'none' : 'block'}">
+                        <div class="field-group">
+                            <label>${i18n.t('widget.api.url_label') || 'Endpoint URL'}</label>
+                            <input type="text" id="api-url" value="${esc(url)}" placeholder="http://10.0.0.5/admin/api.php?summary" />
+                            <small>${i18n.t('widget.api.url_hint') || 'The server fetches this JSON URL for you (reaches private IPs, no CORS).'}</small>
+                        </div>
+                        <div class="field-group row-aligned">
+                            <label>${i18n.t('widget.api.method_label') || 'Method'}</label>
+                            <app-select id="api-method" value="${method}"></app-select>
+                        </div>
+                        <div class="field-group">
+                            <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
+                            <textarea id="api-headers" rows="2" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
+                            <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
+                        </div>
+                        <div class="field-group">
+                            <label>${i18n.t('widget.api.array_label') || 'List array (optional)'}</label>
+                            <input type="text" id="api-array" value="${esc(arrayPath)}" placeholder="queue.records" />
+                            <small>${i18n.t('widget.api.array_hint') || 'Fill to show a LIST: path to an array. Then the fields below are relative to each item. Leave empty for metrics.'}</small>
+                        </div>
+                        <div class="field-group">
+                            <label>${i18n.t('widget.api.fields_label') || 'Fields'}</label>
+                            <textarea id="api-fields" rows="4" spellcheck="false" placeholder="Queries = dns_queries_today | number&#10;Blocked = ads_percentage_today | percent">${esc(fieldsText)}</textarea>
+                            <small>${i18n.t('widget.api.fields_hint') || 'One per line: "Label = path". Path is dot/bracket (a.b[0].c). Optional "| number|bytes|percent".'}</small>
+                        </div>
+                        <div class="field-group row-aligned">
+                            <label>${i18n.t('widget.api.refresh_label') || 'Refresh'}</label>
+                            <app-select id="api-refresh" value="${refreshSec}"></app-select>
+                        </div>
                     </div>
                 `;
 
