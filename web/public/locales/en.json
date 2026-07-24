@@ -412,5 +412,6 @@
   "settings.grid_layout": "Grid Layout",
   "auth.toggle_password": "Show or hide password",
   "action.upload_icon": "Upload icon",
-  "notifier.backup_confirm": "This backup holds sensitive data, including every user's password hash. Keep it somewhere safe and never share it. Continue?"
+  "notifier.backup_confirm": "This backup holds sensitive data, including every user's password hash. Keep it somewhere safe and never share it. Continue?",
+  "bookmark.select": "Select"
 }

@@ -19,7 +19,7 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean }) => {
+export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -30,6 +30,19 @@ export const template = ({ title, editMode, searchActive, addMenuActive, drawerO
         <div class="top-bar__actions">
             <!-- Offline Indicator -->
             <offline-badge></offline-badge>
+
+            <!-- Select / bulk-move (edit mode only) -->
+            ${editMode ? (selectMode ? `
+            <div class="tb-bulk">
+                <span class="tb-bulk__count">${selectedCount || 0}</span>
+                <button id="bulk-move" class="tb-bulk__move"${(selectedCount || 0) === 0 ? ' disabled' : ''}>${i18n.t('bookmark.move')}</button>
+                <button id="bulk-clear" class="tb-bulk__clear" title="${i18n.t('general.cancel')}" aria-label="${i18n.t('general.cancel')}">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            ` : `
+            <button id="select-toggle" class="tb-select-btn">${i18n.t('bookmark.select')}</button>
+            `) : ''}
 
             <!-- Search Bar -->
             <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${editMode ? 'search-wrapper--disabled' : ''}" title="${i18n.t('general.search')}">

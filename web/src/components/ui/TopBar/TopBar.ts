@@ -8,6 +8,8 @@ import css from './TopBar.css' with { type: 'text' };
 
 interface TopBarState {
     editMode: boolean;
+    selectMode: boolean;
+    selectedCount: number;
     searchActive: boolean;
     addMenuActive: boolean;
     drawerOpen: boolean;
@@ -35,6 +37,8 @@ class TopBar extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.state = {
             editMode: false,
+            selectMode: false,
+            selectedCount: 0,
             searchActive: false,
             addMenuActive: false,
             drawerOpen: false,
@@ -54,13 +58,18 @@ class TopBar extends HTMLElement {
         this.render();
         this.setupListeners();
         this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
+            const selectedCount = state.selectedIds?.length || 0;
             const changed =
                 this.state.editMode !== state.isEditing ||
+                this.state.selectMode !== state.selectMode ||
+                this.state.selectedCount !== selectedCount ||
                 this.state.updateAvailable !== state.updateAvailable ||
                 this.state.currentDashboardId !== state.currentDashboardId;
             if (changed) {
                 this.setState({
                     editMode: state.isEditing,
+                    selectMode: state.selectMode,
+                    selectedCount,
                     updateAvailable: state.updateAvailable,
                     currentDashboardId: state.currentDashboardId
                 });
@@ -140,6 +149,27 @@ class TopBar extends HTMLElement {
                 } else {
                     dashboardStore.toggleEditMode();
                 }
+            }
+
+            const selectToggle = target.closest('#select-toggle');
+            if (selectToggle) {
+                e.stopPropagation();
+                dashboardStore.toggleSelectMode();
+            }
+
+            const bulkMove = target.closest('#bulk-move');
+            if (bulkMove) {
+                e.stopPropagation();
+                const ids = dashboardStore.getState().selectedIds;
+                if (ids.length) {
+                    eventBus.emit(EVENTS.SHOW_MOVE_DASHBOARD, { itemIds: ids });
+                }
+            }
+
+            const bulkClear = target.closest('#bulk-clear');
+            if (bulkClear) {
+                e.stopPropagation();
+                dashboardStore.setSelectMode(false);
             }
 
             const addToggle = target.closest('#add-toggle');
@@ -285,6 +315,8 @@ class TopBar extends HTMLElement {
             ${template({
             title,
             editMode: this.state.editMode,
+            selectMode: this.state.selectMode,
+            selectedCount: this.state.selectedCount,
             searchActive: this.state.searchActive,
             addMenuActive: this.state.addMenuActive,
             drawerOpen: this.state.drawerOpen,

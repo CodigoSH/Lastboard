@@ -16,6 +16,14 @@ class BookmarkGrid extends HTMLElement {
     private bookmarks: GridItem[] = [];
     private allItems: GridItem[] = []; // Store all items for filtering
     private isEditing: boolean = false;
+    // Ids selected for a bulk move (mirror of the store's selection).
+    private _selectedIds = new Set<number>();
+    private _selKey = '';
+    private _selectMode = false;
+    private _menuTargetId = 0;
+    private _menuDismissBound = false;
+    private _boundMenuDismiss = () => this._closeKebabMenu();
+    private _boundMenuKey = (e: KeyboardEvent) => { if (e.key === 'Escape') this._closeKebabMenu(); };
     private isLoading: boolean = true;
     private searchQuery: string = '';
     private _unsubscribe: (() => void) | undefined;
@@ -186,6 +194,18 @@ class BookmarkGrid extends HTMLElement {
                 shouldRerender = true;
             }
 
+            if (this._selectMode !== state.selectMode) {
+                this._selectMode = state.selectMode;
+                shouldRerender = true;
+            }
+
+            const selKey = (state.selectedIds || []).join(',');
+            if (selKey !== this._selKey) {
+                this._selKey = selKey;
+                this._selectedIds = new Set(state.selectedIds || []);
+                shouldRerender = true;
+            }
+
             if (this.isLoading !== state.loading) {
                 this.isLoading = state.loading;
                 shouldRerender = true;
@@ -313,79 +333,129 @@ class BookmarkGrid extends HTMLElement {
         const target = e.target as HTMLElement;
         if (!target) return;
 
-        const deleteBtn = target.closest('.btn-delete');
-        const editBtn = target.closest('.btn-edit');
-        const moveBtn = target.closest('.btn-move');
+        const kebabBtn = target.closest('.kebab-btn');
+        const menuEdit = target.closest('.menu-edit');
+        const menuMove = target.closest('.menu-move');
+        const menuDelete = target.closest('.menu-delete');
+        const selectBox = target.closest('.select-box');
 
-        // Requested: stop propagation and prevent default for buttons
-        if (deleteBtn || editBtn || moveBtn) {
+        if (kebabBtn || menuEdit || menuMove || menuDelete || selectBox) {
             e.preventDefault();
             e.stopPropagation();
         } else {
             // Still stop navigation for anchors in Edit Mode
             const anchor = target.closest('a');
-            if (anchor) {
-                e.preventDefault();
-            }
+            if (anchor) e.preventDefault();
         }
 
-        // Move Button Logic — opens the shared dashboard picker.
-        if (moveBtn) {
-            const container = moveBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
-            if (!container) return;
-            const id = parseInt(container.dataset.id || '0');
-            if (!id) return;
-            const { eventBus, EVENTS } = await import('../../../services/EventBus');
-            eventBus.emit(EVENTS.SHOW_MOVE_DASHBOARD, { itemId: id, gridCols: this.currentGridCols });
+        // Kebab button: open the per-item actions menu.
+        if (kebabBtn) {
+            const id = parseInt((kebabBtn as HTMLElement).dataset.id || '0');
+            if (id) this._openKebabMenu(id, kebabBtn as HTMLElement);
             return;
         }
 
-        // Delete Button Logic
-        if (deleteBtn) {
-            // Find container (card, group, or section)
-            const container = deleteBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
-            if (!container) return;
-
-            const id = parseInt(container.dataset.id || '0');
-            const item = this.allItems.find(b => b.id === id);
-            if (!item) return;
-
-            const typeLabel = item.type === 'section'
-                ? i18n.t('type.section')
-                : (item.type === 'widget' ? i18n.t('type.widget') : i18n.t('type.bookmark'));
-
-            // Dispatch Event via EventBus
-            const { eventBus, EVENTS } = await import('../../../services/EventBus');
-            eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
-                title: `${i18n.t('general.delete')} ${typeLabel}`,
-                message: i18n.t('bookmark.delete_confirm_message'),
-                onConfirm: () => {
-                    dashboardStore.deleteItem(id);
-                }
-            });
-            return;
-        }
-
-        // Edit Button Logic
-        if (editBtn) {
-            const container = editBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
-            if (!container) return;
-
-            const id = parseInt(container.dataset.id || '0');
-            const item = this.allItems.find(b => b.id === id);
-
-            if (item) {
+        // Kebab menu actions (operate on the item the menu was opened for).
+        if (menuEdit) { const id = this._menuTargetId; this._closeKebabMenu(); this._editItem(id); return; }
+        if (menuDelete) { const id = this._menuTargetId; this._closeKebabMenu(); this._deleteItem(id); return; }
+        if (menuMove) {
+            const id = this._menuTargetId;
+            this._closeKebabMenu();
+            if (id) {
                 const { eventBus, EVENTS } = await import('../../../services/EventBus');
-                if (item.type === 'widget') {
-                    eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'widget' });
-                } else if (item.type === 'section') {
-                    eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'section' }); // Re-use widget config for now
-                } else {
-                    eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'bookmark' });
-                }
+                eventBus.emit(EVENTS.SHOW_MOVE_DASHBOARD, { itemId: id, gridCols: this.currentGridCols });
             }
             return;
         }
+
+        // Selection checkbox: toggle this item in the shared selection.
+        if (selectBox) {
+            const id = parseInt((selectBox as HTMLElement).dataset.id || '0');
+            if (id) dashboardStore.toggleSelectedItem(id);
+            return;
+        }
+    }
+
+    private async _editItem(id: number) {
+        const item = this.allItems.find(b => b.id === id);
+        if (!item) return;
+        const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        if (item.type === 'widget') {
+            eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'widget' });
+        } else if (item.type === 'section') {
+            eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'section' });
+        } else {
+            eventBus.emit(EVENTS.SHOW_WIDGET_CONFIG, { item, type: 'bookmark' });
+        }
+    }
+
+    private async _deleteItem(id: number) {
+        const item = this.allItems.find(b => b.id === id);
+        if (!item) return;
+        const typeLabel = item.type === 'section'
+            ? i18n.t('type.section')
+            : (item.type === 'widget' ? i18n.t('type.widget') : i18n.t('type.bookmark'));
+        const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+            title: `${i18n.t('general.delete')} ${typeLabel}`,
+            message: i18n.t('bookmark.delete_confirm_message'),
+            onConfirm: () => { dashboardStore.deleteItem(id); }
+        });
+    }
+
+    /** Positions the shared kebab menu next to the clicked button, flipping it
+     *  above / right-aligning it so it stays on screen. */
+    private _openKebabMenu(id: number, anchor: HTMLElement) {
+        const menu = this.shadowRoot!.getElementById('kebab-menu') as HTMLElement | null;
+        if (!menu) return;
+        this._menuTargetId = id;
+
+        const r = anchor.getBoundingClientRect();
+        menu.hidden = false;
+        const mw = menu.offsetWidth || 180;
+        const mh = menu.offsetHeight || 130;
+
+        let left = r.right - mw;                 // right-align to the button
+        if (left < 8) left = 8;
+        if (left + mw > window.innerWidth - 8) left = window.innerWidth - 8 - mw;
+
+        let top = r.bottom + 6;                   // below the button…
+        if (top + mh > window.innerHeight - 8) top = r.top - mh - 6; // …or flip above
+        if (top < 8) top = 8;
+
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+
+        this._bindMenuDismiss();
+    }
+
+    private _closeKebabMenu() {
+        const menu = this.shadowRoot!.getElementById('kebab-menu') as HTMLElement | null;
+        if (menu) menu.hidden = true;
+        this._menuTargetId = 0;
+        this._unbindMenuDismiss();
+    }
+
+    private _bindMenuDismiss() {
+        if (this._menuDismissBound) return;
+        this._menuDismissBound = true;
+        // Defer so the click that opened the menu doesn't immediately close it.
+        setTimeout(() => {
+            if (!this._menuDismissBound) return;
+            // Bubble phase: the grid's own click handler (on the shadow root)
+            // runs first for menu items, reads the target id and stops the
+            // event, so this outside-dismiss never wipes it mid-click.
+            document.addEventListener('click', this._boundMenuDismiss, false);
+            document.addEventListener('keydown', this._boundMenuKey, true);
+            window.addEventListener('scroll', this._boundMenuDismiss, true);
+        }, 0);
+    }
+
+    private _unbindMenuDismiss() {
+        this._menuDismissBound = false;
+        document.removeEventListener('click', this._boundMenuDismiss, false);
+        document.removeEventListener('keydown', this._boundMenuKey, true);
+        window.removeEventListener('scroll', this._boundMenuDismiss, true);
     }
 
     disconnectedCallback() {
@@ -395,6 +465,7 @@ class BookmarkGrid extends HTMLElement {
         if (this._resizeObserver) this._resizeObserver.disconnect();
         if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
         if (this._updateGhostTimeout) clearTimeout(this._updateGhostTimeout);
+        this._unbindMenuDismiss();
         window.removeEventListener('mousemove', this._boundMouseMove);
         window.removeEventListener('mouseup', this._boundMouseUp);
         window.removeEventListener('resize', this._boundUpdateTouchState);
@@ -1015,6 +1086,10 @@ class BookmarkGrid extends HTMLElement {
             this.classList.remove('edit-mode');
         }
 
+        // The kebab menu lives in this markup; a re-render recreates it hidden,
+        // so drop any stale open-menu listeners.
+        if (this._menuDismissBound) this._unbindMenuDismiss();
+
         this.shadowRoot!.innerHTML = `
             <style>${css}</style>
             ${template({
@@ -1023,7 +1098,9 @@ class BookmarkGrid extends HTMLElement {
             isLoading: this.isLoading,
             isSearching: !!this.searchQuery,
             isTouchDevice: this.isTouchDevice,
-            maxCols: this.currentGridCols
+            maxCols: this.currentGridCols,
+            selectedIds: this._selectedIds,
+            selectMode: this._selectMode
         })}
         `;
 

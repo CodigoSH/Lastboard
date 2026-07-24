@@ -349,3 +349,77 @@ dashboard-switcher.disabled {
         transform: scale(1);
     }
 }
+
+/* Select / bulk-move controls (edit mode) */
+.tb-select-btn {
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.tb-select-btn:hover {
+    border-color: rgba(var(--accent-rgb), 0.5);
+    color: var(--accent);
+}
+
+.tb-bulk {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 10px;
+    background: var(--surface-solid);
+    border: 1px solid rgba(var(--accent-rgb), 0.4);
+    border-radius: 999px;
+}
+
+.tb-bulk__count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.tb-bulk__move {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+}
+
+.tb-bulk__move:hover:not(:disabled) { color: var(--accent); }
+.tb-bulk__move:disabled { opacity: 0.5; cursor: default; }
+
+.tb-bulk__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+    line-height: 0;
+}
+
+.tb-bulk__clear:hover { color: var(--text-main); }

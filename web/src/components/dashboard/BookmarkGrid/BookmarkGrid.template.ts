@@ -8,6 +8,20 @@ import { i18n } from '../../../services/i18n';
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const ICON_TRASH = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
 const ICON_MOVE = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`;
+const ICON_CHECK = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+const ICON_KEBAB = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg>`;
+
+/** Selection checkbox shown on each card in selection mode (top-left corner). */
+const selectBox = (id: number, selected: boolean) =>
+    `<button class="select-box${selected ? ' checked' : ''}" data-id="${id}" aria-pressed="${selected}" title="${i18n.t('bookmark.select') || 'Select'}">${selected ? ICON_CHECK : ''}</button>`;
+
+/** The per-card control in edit mode: a kebab (opens the actions menu) in normal
+ *  edit, or a selection checkbox in selection mode. */
+const cardControl = (id: number, isEditing: boolean, selecting: boolean, selected: boolean) => {
+    if (!isEditing) return '';
+    if (selecting) return selectBox(id, selected);
+    return `<button class="kebab-btn" data-id="${id}" aria-label="${i18n.t('general.edit')}" title="${i18n.t('general.edit')}">${ICON_KEBAB}</button>`;
+};
 
 const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 const safeUrl = (url: string): string => {
@@ -21,8 +35,10 @@ const safeUrl = (url: string): string => {
 // Only strict coordinate rendering is used.
 
 
-export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouchDevice, maxCols = 12 }: { bookmarks: GridItem[], isEditing: boolean, isLoading: boolean, isSearching?: boolean, isTouchDevice?: boolean, maxCols?: number }) => {
+export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouchDevice, maxCols = 12, selectedIds, selectMode }: { bookmarks: GridItem[], isEditing: boolean, isLoading: boolean, isSearching?: boolean, isTouchDevice?: boolean, maxCols?: number, selectedIds?: Set<number>, selectMode?: boolean }) => {
     const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];
+    const sel = selectedIds ?? new Set<number>();
+    const selecting = !!selectMode;
 
     if (isLoading && safeBookmarks.length === 0) {
         return renderSkeletons(maxCols);
@@ -57,34 +73,35 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
             const borderWidthStyle = (data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : '';
 
             return `
-            <fieldset class="bookmark-grid__section"
+            <fieldset class="bookmark-grid__section${sel.has(b.id) ? ' is-selected' : ''}"
                data-id="${b.id}"
                data-orig-x="${b.x}" data-orig-y="${b.y}"
                draggable="${isEditing && !isTouchDevice}"
                style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${displayH}; ${borderColorStyle} ${borderWidthStyle}">
+               ${cardControl(b.id, isEditing, selecting, sel.has(b.id))}
                ${title ? `<legend class="section-title">${esc(title)}</legend>` : ''}
                <div class="bookmark-grid__nested-content" style="width: 100%; height: 100%;">
-                   ${renderBookmarks(children, isEditing, true, clampedW, isTouchDevice)}
+                   ${renderBookmarks(children, isEditing, true, clampedW, isTouchDevice, selecting, sel)}
                </div>
-               ${isEditing ? `
-                <div class="bookmark-actions">
-                    <button class="action-btn btn-move" title="${i18n.t('bookmark.move')}">${ICON_MOVE}</button>
-                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
-                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
-                </div>
-                <div class="resize-handle"></div>
-               ` : ''}
+               ${isEditing && !selecting ? `<div class="resize-handle"></div>` : ''}
             </fieldset>`;
         }
 
-        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice);
+        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice, sel.has(b.id), selecting);
     }).join('')}
 
     <div id="ghost-element" class="bookmark-grid__ghost" style="display: none;"></div>
+
+    ${isEditing && !selecting ? `
+    <div class="kebab-menu" id="kebab-menu" role="menu" hidden>
+        <button class="kebab-item menu-edit" role="menuitem">${ICON_EDIT}<span>${i18n.t('general.edit')}</span></button>
+        <button class="kebab-item menu-move" role="menuitem">${ICON_MOVE}<span>${i18n.t('bookmark.move')}</span></button>
+        <button class="kebab-item menu-delete" role="menuitem">${ICON_TRASH}<span>${i18n.t('general.delete')}</span></button>
+    </div>` : ''}
     `;
 };
 
-function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { x: number; y: number }, clampedW: number, displayH: number = 0, isTouchDevice: boolean = false) {
+function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { x: number; y: number }, clampedW: number, displayH: number = 0, isTouchDevice: boolean = false, selected: boolean = false, selecting: boolean = false) {
     const finalH = displayH || b.h || 1;
 
     if (b.type === 'widget') {
@@ -105,27 +122,21 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
         const borderWidthStyle = (data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : '';
 
         return `
-        <div class="bookmark-grid__card"
+        <div class="bookmark-grid__card${selected ? ' is-selected' : ''}"
             draggable="${isEditing && !isTouchDevice}"
             data-id="${b.id}"
             data-type="${b.type}"
             data-orig-x="${b.x}" data-orig-y="${b.y}"
             ${!isTouchDevice ? `style="--x: ${vPos.x}; --y: ${vPos.y}; --w: ${clampedW}; --h: ${finalH}; ${borderColorStyle} ${borderWidthStyle}"` : ''}>
 
+            ${cardControl(b.id, isEditing, selecting, selected)}
             <${tagName}
                 item-id="${b.id}"
                 data-editing="${isEditing}"
                 ${widgetId === 'notepad' ? `content="${dataContent}"` : ''}
             ></${tagName}>
 
-            ${isEditing ? `
-            <div class="bookmark-actions">
-                 <button class="action-btn btn-move" title="${i18n.t('bookmark.move')}">${ICON_MOVE}</button>
-                 ${['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker'].includes(widgetId) ? `<button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>` : ''}
-                 <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
-            </div>
-            ${['clock', 'telemetry', 'weather'].includes(widgetId) ? '' : '<div class="resize-handle"></div>'}
-            ` : ''}
+            ${isEditing && !selecting && !['clock', 'telemetry', 'weather'].includes(widgetId) ? '<div class="resize-handle"></div>' : ''}
         </div>
     `;
     }
@@ -143,20 +154,14 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
     const labelPosClass = data.labelPos === 'top' ? 'label-top' : (data.labelPos === 'section' ? 'label-section' : (data.labelPos === 'off' ? 'label-off' : ''));
 
     return `
-        <a ${hrefAttr} class="bookmark-grid__card ${labelPosClass}"
+        <a ${hrefAttr} class="bookmark-grid__card ${labelPosClass}${selected ? ' is-selected' : ''}"
            draggable="${isEditing && !isTouchDevice}"
            data-id="${b.id}"
            data-type="${b.type}"
            data-orig-x="${b.x}" data-orig-y="${b.y}"
            style="${vPosStyle} ${borderColorStyle} ${(data.borderWidth !== undefined && !isEditing) ? `border-width: ${data.borderWidth}px !important;` : ''}">
-            
-            ${isEditing ? `
-                <div class="bookmark-actions">
-                    <button class="action-btn btn-move" title="${i18n.t('bookmark.move')}">${ICON_MOVE}</button>
-                    <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
-                    <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
-                </div>
-            ` : ''}
+
+            ${cardControl(b.id, isEditing, selecting, selected)}
 
             <div class="bookmark-grid__icon-container">
                 ${iconHtml}
@@ -174,7 +179,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
     `;
 }
 
-function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, _isNested: boolean = false, parentCols: number = 12, isTouchDevice: boolean = false) {
+function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, _isNested: boolean = false, parentCols: number = 12, isTouchDevice: boolean = false, selecting: boolean = false, selectedIds?: Set<number>) {
     // Strictly render children at their relative coordinates
     return bookmarks.map(b => {
         let data: any = {};
@@ -188,7 +193,7 @@ function renderBookmarks(bookmarks: GridItem[], isEditing: boolean, _isNested: b
         const displayH = b.h || 1;
         const clampedW = Math.min(b.w || 1, parentCols);
 
-        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice);
+        return renderBookmarkCard(b, data, isEditing, vPos, clampedW, displayH, isTouchDevice, selectedIds?.has(b.id) ?? false, selecting);
     }).join('');
 }
 

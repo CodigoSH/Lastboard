@@ -412,5 +412,6 @@
   "settings.grid_layout": "Układ siatki",
   "auth.toggle_password": "Pokaż lub ukryj hasło",
   "action.upload_icon": "Prześlij ikonę",
-  "notifier.backup_confirm": "Ta kopia zapasowa zawiera dane wrażliwe, w tym skróty haseł wszystkich użytkowników. Przechowuj ją w bezpiecznym miejscu i nigdy jej nie udostępniaj. Kontynuować?"
+  "notifier.backup_confirm": "Ta kopia zapasowa zawiera dane wrażliwe, w tym skróty haseł wszystkich użytkowników. Przechowuj ją w bezpiecznym miejscu i nigdy jej nie udostępniaj. Kontynuować?",
+  "bookmark.select": "Zaznacz"
 }

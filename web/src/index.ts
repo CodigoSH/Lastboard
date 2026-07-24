@@ -162,28 +162,32 @@ eventBus.on(EVENTS.SHOW_PASSWORD_CONFIRM, async (e: CustomEvent) => {
 });
 
 eventBus.on(EVENTS.SHOW_MOVE_DASHBOARD, async (e: CustomEvent) => {
-    const { itemId, gridCols } = e.detail;
+    const { itemId, itemIds, gridCols } = e.detail;
     if (!moveModal) return;
 
     const state = dashboardStore.getState();
     const targetId = await moveModal.pick(state.dashboards, state.currentDashboardId);
     if (targetId == null) return;
 
-    const ok = await dashboardStore.moveItemToDashboard(itemId, targetId, gridCols);
-    if (!ok) return;
-
     // Success feedback is owned by the caller, not the store: a toast naming the
     // destination, with a "Go" action that switches to it.
     const target = state.dashboards.find((d: any) => d.id === targetId);
+    const name = target ? target.name : '';
     const notifier = (window as any).notifier;
-    if (notifier) {
-        notifier.show({
-            message: `${i18n.t('notifier.moved_to')} «${target ? target.name : ''}»`,
-            action: {
-                label: i18n.t('general.go'),
-                onClick: () => { dashboardStore.switchDashboard(targetId); },
-            },
-        });
+    const go = {
+        label: i18n.t('general.go'),
+        onClick: () => { dashboardStore.switchDashboard(targetId); },
+    };
+
+    if (Array.isArray(itemIds) && itemIds.length) {
+        const moved = await dashboardStore.moveItemsToDashboard(itemIds, targetId, gridCols);
+        if (!moved) return;
+        dashboardStore.setSelectMode(false); // leave selection mode after a bulk move
+        if (notifier) notifier.show({ message: `${i18n.t('notifier.moved_to')} «${name}» (${moved})`, action: go });
+    } else {
+        const ok = await dashboardStore.moveItemToDashboard(itemId, targetId, gridCols);
+        if (!ok) return;
+        if (notifier) notifier.show({ message: `${i18n.t('notifier.moved_to')} «${name}»`, action: go });
     }
 });
 

@@ -412,5 +412,6 @@
   "settings.grid_layout": "Izgara Düzeni",
   "auth.toggle_password": "Parolayı göster veya gizle",
   "action.upload_icon": "Simge yükle",
-  "notifier.backup_confirm": "Bu yedek, tüm kullanıcıların parola özetleri dahil hassas veriler içerir. Güvenli bir yerde saklayın ve asla paylaşmayın. Devam edilsin mi?"
+  "notifier.backup_confirm": "Bu yedek, tüm kullanıcıların parola özetleri dahil hassas veriler içerir. Güvenli bir yerde saklayın ve asla paylaşmayın. Devam edilsin mi?",
+  "bookmark.select": "Seç"
 }

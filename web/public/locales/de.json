@@ -412,5 +412,6 @@
   "settings.grid_layout": "Raster-Layout",
   "auth.toggle_password": "Passwort ein- oder ausblenden",
   "action.upload_icon": "Symbol hochladen",
-  "notifier.backup_confirm": "Diese Sicherung enthält sensible Daten, darunter die Passwort-Hashes aller Benutzer. Bewahre sie sicher auf und teile sie niemals. Fortfahren?"
+  "notifier.backup_confirm": "Diese Sicherung enthält sensible Daten, darunter die Passwort-Hashes aller Benutzer. Bewahre sie sicher auf und teile sie niemals. Fortfahren?",
+  "bookmark.select": "Auswählen"
 }

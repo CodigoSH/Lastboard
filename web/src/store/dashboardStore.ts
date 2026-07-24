@@ -6,6 +6,8 @@ type Listener = (state: DashboardState) => void;
 
 interface DashboardState {
     isEditing: boolean;
+    selectMode: boolean;
+    selectedIds: number[];
     items: GridItem[];
     searchQuery: string;
     isOffline: boolean;
@@ -41,6 +43,8 @@ const INITIAL_ITEMS: GridItem[] = [
 class DashboardStore {
     private state: DashboardState = {
         isEditing: false,
+        selectMode: false,
+        selectedIds: [],
         items: [],
         searchQuery: '',
         isOffline: false,
@@ -266,11 +270,40 @@ class DashboardStore {
 
     setEditMode(isEditing: boolean) {
         this.state.isEditing = isEditing;
+        // Selection is an edit-mode concept; leaving edit mode ends it.
+        if (!isEditing) {
+            this.state.selectMode = false;
+            this.state.selectedIds = [];
+        }
         this.notify();
     }
 
     toggleEditMode() {
         this.setEditMode(!this.state.isEditing);
+    }
+
+    setSelectMode(on: boolean) {
+        if (this.state.selectMode === on) return;
+        this.state.selectMode = on;
+        if (!on) this.state.selectedIds = [];
+        this.notify();
+    }
+
+    toggleSelectMode() {
+        this.setSelectMode(!this.state.selectMode);
+    }
+
+    toggleSelectedItem(id: number) {
+        this.state.selectedIds = this.state.selectedIds.includes(id)
+            ? this.state.selectedIds.filter(x => x !== id)
+            : [...this.state.selectedIds, id];
+        this.notify();
+    }
+
+    clearSelectedItems() {
+        if (!this.state.selectedIds.length) return;
+        this.state.selectedIds = [];
+        this.notify();
     }
 
     setSearchQuery(query: string) {
@@ -468,6 +501,35 @@ class DashboardStore {
             this.notify();
             return false;
         }
+    }
+
+    /**
+     * Moves several items to another dashboard in one action. Items whose
+     * ancestor is also selected are skipped (a moved section already carries its
+     * children). Each remaining top-level item is moved in turn — placement
+     * accounts for the ones moved just before it. Returns how many were moved.
+     */
+    async moveItemsToDashboard(ids: number[], targetDashboardId: number, gridCols: number = 12): Promise<number> {
+        if (targetDashboardId === this.state.currentDashboardId) return 0;
+
+        const idSet = new Set(ids);
+        const topLevel = ids.filter(id => {
+            const it = this.state.items.find(i => i.id === id);
+            if (!it) return false;
+            // Drop it if any ancestor is also in the selection.
+            let p = it.parent_id ?? null;
+            while (p != null) {
+                if (idSet.has(p)) return false;
+                p = this.state.items.find(i => i.id === p)?.parent_id ?? null;
+            }
+            return true;
+        });
+
+        let moved = 0;
+        for (const id of topLevel) {
+            if (await this.moveItemToDashboard(id, targetDashboardId, gridCols)) moved++;
+        }
+        return moved;
     }
 
     /** Collects an item id together with every descendant id (any depth). */

@@ -412,5 +412,6 @@
   "settings.grid_layout": "그리드 레이아웃",
   "auth.toggle_password": "비밀번호 표시 또는 숨기기",
   "action.upload_icon": "아이콘 업로드",
-  "notifier.backup_confirm": "이 백업에는 모든 사용자의 비밀번호 해시를 포함한 민감한 데이터가 들어 있습니다. 안전한 곳에 보관하고 절대 공유하지 마세요. 계속할까요?"
+  "notifier.backup_confirm": "이 백업에는 모든 사용자의 비밀번호 해시를 포함한 민감한 데이터가 들어 있습니다. 안전한 곳에 보관하고 절대 공유하지 마세요. 계속할까요?",
+  "bookmark.select": "선택"
 }
