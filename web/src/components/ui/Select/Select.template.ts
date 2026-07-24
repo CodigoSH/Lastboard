@@ -4,6 +4,8 @@ export interface SelectOption {
     value: string;
     label: string;
     icon?: string;
+    /** When true this entry is a non-selectable category heading, not an option. */
+    header?: boolean;
 }
 
 /**
@@ -26,7 +28,9 @@ export const selectTriggerTemplate = (displayLabel: string): string => `
  * Markup for the open dropdown's option list.
  */
 export const selectOptionsTemplate = (options: SelectOption[], selectedValue: string): string =>
-    options.map(opt => `
+    options.map(opt => opt.header
+        ? `<div class="select-header">${escapeHtml(opt.label)}</div>`
+        : `
             <div class="select-option ${opt.value === selectedValue ? 'selected' : ''}"
                  data-value="${escapeHtml(opt.value)}">
                  ${escapeHtml(opt.label)}

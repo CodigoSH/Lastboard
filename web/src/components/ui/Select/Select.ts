@@ -81,7 +81,8 @@ export class AppSelect extends HTMLElement {
         if (!this.shadowRoot) return;
         const valueEl = this.shadowRoot.querySelector('.select-value');
         if (valueEl) {
-            const selectedOpt = this._options.find(o => o.value === this._value) || this._options[0];
+            const selectedOpt = this._options.find(o => !o.header && o.value === this._value)
+            || this._options.find(o => !o.header);
             valueEl.textContent = selectedOpt ? selectedOpt.label : 'Select...';
         }
     }
@@ -174,7 +175,8 @@ export class AppSelect extends HTMLElement {
     render() {
         if (!this.shadowRoot) return;
 
-        const selectedOpt = this._options.find(o => o.value === this._value) || this._options[0];
+        const selectedOpt = this._options.find(o => !o.header && o.value === this._value)
+            || this._options.find(o => !o.header);
         const displayLabel = selectedOpt ? selectedOpt.label : 'Select...';
 
         this.shadowRoot.innerHTML = `
