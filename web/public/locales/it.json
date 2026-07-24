@@ -30,7 +30,7 @@
   "auth.welcome": "Benvenuto",
   "bookmark.add": "Aggiungi segnalibro",
   "bookmark.move": "Sposta",
-  "bookmark.move_to": "Sposta in…",
+  "bookmark.move_to": "Sposta in… (Dashboard)",
   "bookmark.move_no_targets": "Nessun'altra dashboard disponibile.",
   "bookmark.border_color": "Colore del bordo",
   "bookmark.border_width": "Spessore del bordo",

@@ -30,7 +30,7 @@
   "auth.welcome": "Добро пожаловать",
   "bookmark.add": "Добавить закладку",
   "bookmark.move": "Переместить",
-  "bookmark.move_to": "Переместить в…",
+  "bookmark.move_to": "Переместить в… (Панель)",
   "bookmark.move_no_targets": "Нет других панелей для перемещения.",
   "bookmark.border_color": "Цвет границы",
   "bookmark.border_width": "Толщина границы",

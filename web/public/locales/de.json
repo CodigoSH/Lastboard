@@ -30,7 +30,7 @@
   "auth.welcome": "Willkommen",
   "bookmark.add": "Lesezeichen hinzufügen",
   "bookmark.move": "Verschieben",
-  "bookmark.move_to": "Verschieben nach…",
+  "bookmark.move_to": "Verschieben nach… (Dashboard)",
   "bookmark.move_no_targets": "Keine anderen Dashboards zum Verschieben.",
   "bookmark.border_color": "Rahmenfarbe",
   "bookmark.border_width": "Rahmenbreite",

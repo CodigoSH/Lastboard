@@ -30,7 +30,7 @@
   "auth.welcome": "أهلا بك",
   "bookmark.add": "إضافة إشارة مرجعية",
   "bookmark.move": "نقل",
-  "bookmark.move_to": "نقل إلى…",
+  "bookmark.move_to": "نقل إلى… (لوحة القيادة)",
   "bookmark.move_no_targets": "لا توجد لوحات أخرى للنقل إليها.",
   "bookmark.border_color": "لون الحدود",
   "bookmark.border_width": "عرض الحدود",

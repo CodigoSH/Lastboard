@@ -30,7 +30,7 @@
   "auth.welcome": "Welcome back!",
   "bookmark.add": "Add Bookmark",
   "bookmark.move": "Move",
-  "bookmark.move_to": "Move to…",
+  "bookmark.move_to": "Move to… (Dashboard)",
   "bookmark.move_no_targets": "No other dashboards to move to.",
   "bookmark.border_color": "Border Color",
   "bookmark.border_width": "Border Width",

@@ -30,7 +30,7 @@
   "auth.welcome": "স্বাগতম",
   "bookmark.add": "বুকমার্ক যোগ করুন",
   "bookmark.move": "সরান",
-  "bookmark.move_to": "সরান…",
+  "bookmark.move_to": "সরান… (ড্যাশবোর্ড)",
   "bookmark.move_no_targets": "সরানোর জন্য অন্য কোনো ড্যাশবোর্ড নেই।",
   "bookmark.border_color": "সীমানা রঙ",
   "bookmark.border_width": "সীমানা প্রস্থ",

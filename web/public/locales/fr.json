@@ -30,7 +30,7 @@
   "auth.welcome": "Bienvenue",
   "bookmark.add": "Ajouter un signet",
   "bookmark.move": "Déplacer",
-  "bookmark.move_to": "Déplacer vers…",
+  "bookmark.move_to": "Déplacer vers… (Tableau de bord)",
   "bookmark.move_no_targets": "Aucun autre tableau de bord disponible.",
   "bookmark.border_color": "Couleur de la bordure",
   "bookmark.border_width": "Épaisseur de la bordure",

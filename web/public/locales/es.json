@@ -30,7 +30,7 @@
   "auth.welcome": "Bienvenido de nuevo",
   "bookmark.add": "Agregar marcador",
   "bookmark.move": "Mover",
-  "bookmark.move_to": "Mover a…",
+  "bookmark.move_to": "Mover a… (Tablero)",
   "bookmark.move_no_targets": "No hay otros tableros a los que mover.",
   "bookmark.border_color": "Color del borde",
   "bookmark.border_width": "Grosor del borde",

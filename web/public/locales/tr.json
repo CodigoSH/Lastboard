@@ -30,7 +30,7 @@
   "auth.welcome": "Hoş geldiniz",
   "bookmark.add": "Yer imi ekle",
   "bookmark.move": "Taşı",
-  "bookmark.move_to": "Şuraya taşı…",
+  "bookmark.move_to": "Şuraya taşı… (Panel)",
   "bookmark.move_no_targets": "Taşınacak başka pano yok.",
   "bookmark.border_color": "Kenarlık rengi",
   "bookmark.border_width": "Kenarlık genişliği",

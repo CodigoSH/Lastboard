@@ -30,7 +30,7 @@
   "auth.welcome": "Welkom",
   "bookmark.add": "Bladwijzer toevoegen",
   "bookmark.move": "Verplaatsen",
-  "bookmark.move_to": "Verplaatsen naar…",
+  "bookmark.move_to": "Verplaatsen naar… (Dashboard)",
   "bookmark.move_no_targets": "Geen andere dashboards beschikbaar.",
   "bookmark.border_color": "Kleur van de rand",
   "bookmark.border_width": "Breedte van de rand",

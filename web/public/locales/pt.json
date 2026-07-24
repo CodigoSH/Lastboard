@@ -30,7 +30,7 @@
   "auth.welcome": "Bem-vindo",
   "bookmark.add": "Adicionar favorito",
   "bookmark.move": "Mover",
-  "bookmark.move_to": "Mover para…",
+  "bookmark.move_to": "Mover para… (Painel)",
   "bookmark.move_no_targets": "Não há outros painéis para onde mover.",
   "bookmark.border_color": "Cor da borda",
   "bookmark.border_width": "Espessura da borda",
