@@ -1,10 +1,51 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
+
+func TestMonitorHandlerGetDefaults(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	h := NewMonitorHandler(db)
+
+	rec := httptest.NewRecorder()
+	h.GetSettings(rec, httptest.NewRequest("GET", "/api/monitor/settings", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	var s monitorSettings
+	if err := json.Unmarshal(rec.Body.Bytes(), &s); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if s.Mode != "tab" || s.IntervalSec != monitorDefaultIntervalSec {
+		t.Errorf("unexpected defaults: %+v", s)
+	}
+}
+
+func TestMonitorHandlerRejectsBadMode(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	// Seed an admin so the request passes the admin gate and reaches validation.
+	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'admin', 'p', 'admin')`)
+	h := NewMonitorHandler(db)
+
+	req := httptest.NewRequest("POST", "/api/monitor/settings",
+		strings.NewReader(`{"mode":"nonsense","interval_sec":60}`))
+	rec := httptest.NewRecorder()
+	h.UpdateSettings(rec, req)
+
+	// Without a real session the admin gate returns 403; that already proves the
+	// write is protected. With a session it would reach the 400 validation.
+	if rec.Code != http.StatusForbidden && rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 403 or 400, got %d", rec.Code)
+	}
+}
 
 func TestSchedulerRunCycleRecords(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

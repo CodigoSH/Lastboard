@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -92,6 +94,86 @@ func (s *MonitorStore) MonitoredItems() ([]MonitoredItem, error) {
 		}
 	}
 	return out, rows.Err()
+}
+
+// MonitorHandler exposes the global monitoring configuration to the frontend.
+// The mode/interval live in system_settings (server-wide, not per-user); the
+// scheduler reads them each cycle.
+type MonitorHandler struct {
+	DB    *sql.DB
+	store *MonitorStore
+}
+
+// NewMonitorHandler builds the monitoring settings handler.
+func NewMonitorHandler(db *sql.DB) *MonitorHandler {
+	return &MonitorHandler{DB: db, store: NewMonitorStore(db)}
+}
+
+type monitorSettings struct {
+	Mode        string `json:"mode"`         // off | tab | background
+	IntervalSec int    `json:"interval_sec"` // probe cadence for background mode
+}
+
+// GetSettings returns the current monitoring configuration, filling defaults
+// when unset (mode "tab" = today's frontend-driven behavior).
+func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
+	mode := h.getSetting("monitoring_mode")
+	if mode == "" {
+		mode = "tab"
+	}
+	interval, _ := strconv.Atoi(h.getSetting("monitoring_interval_sec"))
+	if interval <= 0 {
+		interval = monitorDefaultIntervalSec
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(monitorSettings{Mode: mode, IntervalSec: interval})
+}
+
+// UpdateSettings persists the monitoring configuration. Admin-only, since the
+// mode is a server-wide setting affecting all users.
+func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
+	if !isAdminUser(h.DB, r) {
+		http.Error(w, "error.forbidden", http.StatusForbidden)
+		return
+	}
+	var s monitorSettings
+	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
+		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		return
+	}
+	switch s.Mode {
+	case "off", "tab", "background":
+	default:
+		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		return
+	}
+	if s.IntervalSec < monitorMinIntervalSec {
+		s.IntervalSec = monitorMinIntervalSec
+	}
+	h.setSetting("monitoring_mode", s.Mode)
+	h.setSetting("monitoring_interval_sec", strconv.Itoa(s.IntervalSec))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s)
+}
+
+func (h *MonitorHandler) getSetting(key string) string {
+	var v sql.NullString
+	if err := h.DB.QueryRow(
+		`SELECT value FROM system_settings WHERE key = ?`, key).Scan(&v); err != nil {
+		return ""
+	}
+	if v.Valid {
+		return v.String
+	}
+	return ""
+}
+
+func (h *MonitorHandler) setSetting(key, value string) {
+	if _, err := h.DB.Exec(
+		`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`, key, value); err != nil {
+		slog.Error("monitor: persisting setting failed", "key", key, "error", err)
+	}
 }
 
 // probeTimed checks a URL and reports whether it is up, the round-trip latency
