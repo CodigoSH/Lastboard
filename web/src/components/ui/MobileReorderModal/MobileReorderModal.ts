@@ -22,7 +22,6 @@ const DRAG_HANDLE = `<svg class="drag-handle" width="18" height="18" viewBox="0 
                     <circle cx="9" cy="18" r="1.5" fill="currentColor"/>
                     <circle cx="15" cy="18" r="1.5" fill="currentColor"/>
                 </svg>`;
-const MOVE_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`;
 
 export class MobileReorderModal extends HTMLElement {
     // Deferred model: these arrays are edited locally and only committed on Save.
@@ -129,9 +128,6 @@ export class MobileReorderModal extends HTMLElement {
             <div class="item ${isVisible ? '' : 'is-hidden'}" data-id="${r.item.id}" ${dragAttrs}>
                 ${iconHtml}
                 <span class="item-label">${escapeHtml(label)}</span>
-                <button class="move-btn" data-id="${r.item.id}" aria-label="${i18n.t('bookmark.move') || 'Move'}" title="${i18n.t('bookmark.move') || 'Move'}">
-                    ${MOVE_ICON}
-                </button>
                 <button class="eye-btn" data-id="${r.item.id}" aria-label="${eyeLabel}" aria-pressed="${isVisible}" title="${eyeLabel}">
                     ${isVisible ? EYE_OPEN : EYE_OFF}
                 </button>
@@ -163,14 +159,6 @@ export class MobileReorderModal extends HTMLElement {
             if (!btn) return;
             e.stopPropagation();
             this._toggleVisibility(parseInt(btn.dataset.id!));
-        });
-
-        // Move to another dashboard (delegated).
-        list.addEventListener('click', (e) => {
-            const btn = (e.target as HTMLElement).closest('.move-btn') as HTMLElement | null;
-            if (!btn) return;
-            e.stopPropagation();
-            this._moveItem(parseInt(btn.dataset.id!));
         });
 
         this._bindDrag(list);
@@ -355,38 +343,6 @@ export class MobileReorderModal extends HTMLElement {
 
             touchSrcIndex = -1;
         });
-    }
-
-    /** Opens the shared dashboard picker for a row and, on a successful move,
-     *  drops that row from the sheet's local model (its pending reorder/visibility
-     *  edits for the other rows are preserved). */
-    private async _moveItem(id: number) {
-        const moveModal = document.querySelector('move-to-dashboard-modal') as any;
-        if (!moveModal) return;
-
-        const state = dashboardStore.getState();
-        const targetId = await moveModal.pick(state.dashboards, state.currentDashboardId);
-        if (targetId == null) return;
-
-        const ok = await dashboardStore.moveItemToDashboard(id, targetId);
-        if (!ok) return;
-
-        this._visible = this._visible.filter(r => r.item.id !== id);
-        this._hidden = this._hidden.filter(r => r.item.id !== id);
-        this._origVisible.delete(id);
-        this._updateBody();
-
-        const target = state.dashboards.find(d => d.id === targetId);
-        const notifier = (window as any).notifier;
-        if (notifier) {
-            notifier.show({
-                message: `${i18n.t('notifier.moved_to')} «${target ? target.name : ''}»`,
-                action: {
-                    label: i18n.t('general.go'),
-                    onClick: () => { dashboardStore.switchDashboard(targetId); },
-                },
-            });
-        }
     }
 
     /** Commits both the visibility toggles and the mobile order in one pass. */

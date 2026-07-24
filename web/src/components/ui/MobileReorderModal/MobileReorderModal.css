@@ -169,21 +169,6 @@
 .eye-btn:hover { color: var(--text, #fff); }
 .eye-btn[aria-pressed="false"] { color: var(--text-dim, rgba(255,255,255,0.35)); }
 
-.move-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-dim, rgba(255,255,255,0.45));
-    flex-shrink: 0;
-    padding: 6px;
-    margin: -6px 0;
-    display: flex;
-    align-items: center;
-    border-radius: 6px;
-    transition: color 0.15s, background 0.15s;
-}
-.move-btn:hover { color: var(--text, #fff); }
-
 .drag-handle {
     color: var(--text-dim, rgba(255,255,255,0.3));
     flex-shrink: 0;
