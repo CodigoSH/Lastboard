@@ -51,31 +51,17 @@ THIRD-PARTY COMPONENTS
    Material Design Icons          Apache-2.0    Copyright Google Inc.
    - https://github.com/google/material-design-icons
 
-3. Icon sets fetched by the browser when you pick an icon
+3. Icons fetched by the browser when you pick an icon
 
-   The browser requests these from public CDNs (jsDelivr, plus the GitHub API
-   for one index) at runtime. They are neither bundled nor redistributed with
-   Lastboard.
+   These are neither bundled nor redistributed with Lastboard; the browser
+   requests them from a public CDN (jsDelivr) at runtime. Listed here because
+   CC BY 4.0 requires attribution wherever the work is displayed.
 
-   homarr-labs/dashboard-icons                Apache-2.0
-   - https://github.com/homarr-labs/dashboard-icons
-
-   selfhst/icons                              CC BY 4.0
+   selfhst/icons                  CC BY 4.0     Copyright (c) selfh.st
    - https://github.com/selfhst/icons
-
-   loganmarchione/homelab-svg-assets          MIT
-   - https://github.com/loganmarchione/homelab-svg-assets
-
-   PapirusDevelopmentTeam/papirus-icon-theme  GPL-3.0
-   - https://github.com/PapirusDevelopmentTeam/papirus-icon-theme
 
 4. Data services
 
    Weather forecasts and city search come from Open-Meteo. Its data is
    published under CC BY 4.0.
    - https://open-meteo.com
-
-5. Design inspiration
-
-   Homarr Dashboard                           Apache-2.0
-   - https://github.com/homarr-labs/homarr
