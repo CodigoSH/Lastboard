@@ -348,10 +348,17 @@ class BookmarkGrid extends HTMLElement {
             if (anchor) e.preventDefault();
         }
 
-        // Kebab button: open the per-item actions menu.
+        // Kebab button: toggle the per-item actions menu (a second click on the
+        // same item's kebab closes it; clicking another item's switches to it).
         if (kebabBtn) {
             const id = parseInt((kebabBtn as HTMLElement).dataset.id || '0');
-            if (id) this._openKebabMenu(id, kebabBtn as HTMLElement);
+            if (!id) return;
+            const menu = this.shadowRoot!.getElementById('kebab-menu') as HTMLElement | null;
+            if (menu && !menu.hidden && this._menuTargetId === id) {
+                this._closeKebabMenu();
+            } else {
+                this._openKebabMenu(id, kebabBtn as HTMLElement);
+            }
             return;
         }
 
@@ -412,19 +419,36 @@ class BookmarkGrid extends HTMLElement {
 
         const r = anchor.getBoundingClientRect();
         menu.hidden = false;
+
+        // The menu is position:fixed, but an ancestor (transform / filter /
+        // hidden-scrollbar container) can become its containing block, so
+        // top/left 0 may NOT be the viewport origin. Measure where 0,0 actually
+        // lands and correct for that offset — robust regardless of ancestors.
+        menu.style.left = '0px';
+        menu.style.top = '0px';
+        const origin = menu.getBoundingClientRect();
         const mw = menu.offsetWidth || 180;
         const mh = menu.offsetHeight || 130;
 
-        let left = r.right - mw;                 // right-align to the button
-        if (left < 8) left = 8;
-        if (left + mw > window.innerWidth - 8) left = window.innerWidth - 8 - mw;
+        let desiredLeft = r.right - mw;                        // right-align to the button
+        if (desiredLeft < 8) desiredLeft = 8;
+        if (desiredLeft + mw > window.innerWidth - 8) desiredLeft = window.innerWidth - 8 - mw;
 
-        let top = r.bottom + 6;                   // below the button…
-        if (top + mh > window.innerHeight - 8) top = r.top - mh - 6; // …or flip above
-        if (top < 8) top = 8;
+        let flippedAbove = false;
+        let desiredTop = r.bottom + 6;                         // below the button…
+        if (desiredTop + mh > window.innerHeight - 8) { desiredTop = r.top - mh - 6; flippedAbove = true; } // …or flip above
+        if (desiredTop < 8) desiredTop = 8;
 
-        menu.style.left = `${left}px`;
-        menu.style.top = `${top}px`;
+        menu.classList.toggle('kebab-menu--above', flippedAbove);
+        menu.style.left = `${desiredLeft - origin.left}px`;
+        menu.style.top = `${desiredTop - origin.top}px`;
+
+        // Point the callout arrow at the kebab button's centre (the menu ends up
+        // at viewport-left = desiredLeft), clamped clear of the rounded corners
+        // (radius 12px + half the arrow) so it sits on the flat edge.
+        const buttonCenterX = (r.left + r.right) / 2;
+        const arrowX = Math.max(20, Math.min(mw - 20, buttonCenterX - desiredLeft));
+        menu.style.setProperty('--arrow-x', `${arrowX}px`);
 
         this._bindMenuDismiss();
     }

@@ -813,6 +813,30 @@
 
 .kebab-menu[hidden] { display: none; }
 
+/* Callout pointer toward the kebab button (menu is right-aligned to it). */
+.kebab-menu::before {
+    content: '';
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    left: var(--arrow-x, 50%);
+    margin-left: -5.5px;
+    top: -6px;
+    background: var(--surface-solid, var(--surface));
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    transform: rotate(45deg);
+}
+
+.kebab-menu.kebab-menu--above::before {
+    top: auto;
+    bottom: -6px;
+    border-top: none;
+    border-left: none;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+}
+
 .kebab-item {
     display: flex;
     align-items: center;
