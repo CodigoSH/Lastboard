@@ -14,8 +14,44 @@ interface ApiConfig {
     url?: string;
     method?: string;
     headers?: Record<string, string>;
+    arrayPath?: string;
     mappings?: Mapping[];
     refreshSec?: number;
+}
+
+/** Dot/bracket path resolver (mirrors the backend's, used for list-item fields). */
+function tokenizePath(path: string): (string | number)[] {
+    const tokens: (string | number)[] = [];
+    for (const seg of path.split('.')) {
+        const i = seg.indexOf('[');
+        if (i < 0) { if (seg) tokens.push(seg); continue; }
+        const name = seg.slice(0, i);
+        if (name) tokens.push(name);
+        let rest = seg.slice(i);
+        while (rest.startsWith('[')) {
+            const end = rest.indexOf(']');
+            if (end < 0) break;
+            const n = parseInt(rest.slice(1, end), 10);
+            if (!isNaN(n)) tokens.push(n);
+            rest = rest.slice(end + 1);
+        }
+    }
+    return tokens;
+}
+
+function extractPath(data: any, path: string): any {
+    let cur = data;
+    for (const tok of tokenizePath(path)) {
+        if (cur == null) return undefined;
+        if (typeof tok === 'number') {
+            if (!Array.isArray(cur) || tok < 0 || tok >= cur.length) return undefined;
+            cur = cur[tok];
+        } else {
+            if (typeof cur !== 'object' || Array.isArray(cur)) return undefined;
+            cur = cur[tok];
+        }
+    }
+    return cur;
 }
 
 const MIN_REFRESH_SEC = 15;
@@ -78,7 +114,7 @@ class ApiWidget extends HTMLElement {
 
             const prevKey = this._fetchKey;
             this._config = data;
-            this._fetchKey = JSON.stringify([data.url, data.method, data.headers, data.mappings, data.refreshSec]);
+            this._fetchKey = JSON.stringify([data.url, data.method, data.headers, data.arrayPath, data.mappings, data.refreshSec]);
 
             if (this._fetchKey !== prevKey) {
                 this._scheduleRefresh();
@@ -106,7 +142,7 @@ class ApiWidget extends HTMLElement {
             const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
             if (data.widgetId === 'api') {
                 this._config = data;
-                this._fetchKey = JSON.stringify([data.url, data.method, data.headers, data.mappings, data.refreshSec]);
+                this._fetchKey = JSON.stringify([data.url, data.method, data.headers, data.arrayPath, data.mappings, data.refreshSec]);
             }
         } catch { /* ignore */ }
     }
@@ -126,7 +162,11 @@ class ApiWidget extends HTMLElement {
         this._loading = this._values === null;
         this.render();
         try {
-            const paths = (this._config.mappings || []).map(m => m.path).filter(Boolean);
+            const mappings = this._config.mappings || [];
+            // List mode fetches the array; metric mode fetches each field path.
+            const paths = this._config.arrayPath
+                ? [this._config.arrayPath]
+                : mappings.map(m => m.path).filter(Boolean);
             const res = await apiService.post<{ ok: boolean; values: Record<string, any> }>(
                 '/api/widget/api-fetch',
                 { url: this._config.url, method: this._config.method || 'GET', headers: this._config.headers || {}, paths }
@@ -154,6 +194,15 @@ class ApiWidget extends HTMLElement {
             body = `<div class="state state--err">${i18n.t('widget.api.unreachable') || 'Unreachable'}</div>`;
         } else if (!mappings.length) {
             body = `<div class="state">${i18n.t('widget.api.no_fields') || 'No fields mapped'}</div>`;
+        } else if (c.arrayPath) {
+            // List mode: iterate the fetched array, extracting each field per item.
+            const arr = (this._values || {})[c.arrayPath];
+            if (!Array.isArray(arr) || arr.length === 0) {
+                body = `<div class="state">${i18n.t('widget.api.empty_list') || 'Empty'}</div>`;
+            } else {
+                body = `<div class="list">${arr.slice(0, 50).map(item => `
+                    <div class="row">${mappings.map((m, i) => `<span class="cell${i === 0 ? ' cell--primary' : ''}">${escapeHtml(formatValue(extractPath(item, m.path), m.format))}</span>`).join('')}</div>`).join('')}</div>`;
+            }
         } else {
             const vals = this._values || {};
             body = `<div class="metrics">${mappings.map(m => `
@@ -172,6 +221,13 @@ class ApiWidget extends HTMLElement {
                 .metric { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; }
                 .metric__val { font-size:clamp(1rem,11cqi,2rem); font-weight:700; color:var(--text-main); line-height:1.1; }
                 .metric__label { font-size:clamp(.5rem,3.4cqi,.72rem); color:var(--text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+                .list { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:2px; scrollbar-width:thin; }
+                .list::-webkit-scrollbar { width:6px; }
+                .list::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+                .row { display:flex; align-items:baseline; gap:8px; padding:5px 6px; border-radius:6px; }
+                .row:nth-child(odd) { background:rgba(128,128,128,.06); }
+                .cell { font-size:clamp(.55rem,3.4cqi,.8rem); color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:0 1 auto; }
+                .cell--primary { color:var(--text-main); font-weight:600; flex:1 1 auto; }
                 .state { flex:1; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--text-dim); font-size:clamp(.6rem,4cqi,.85rem); opacity:.7; padding:4px; }
                 .state--err { color:var(--danger-color); opacity:.85; }
             </style>
