@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "صندوق ورودی",
   "widget.api.label.photos": "عکس‌ها",
   "widget.api.label.videos": "ویدیوها",
-  "widget.api.key_immich_hint": "کلید را در Immich با مجوز 'asset.statistics' فعال بسازید."
+  "widget.api.key_immich_hint": "کلید را در Immich با مجوز 'asset.statistics' فعال بسازید.",
+  "widget.api.label.movies": "فیلم‌ها",
+  "widget.api.label.series": "سریال‌ها",
+  "widget.api.label.queue": "صف",
+  "widget.api.label.speed": "سرعت",
+  "widget.api.label.streams": "استریم‌ها",
+  "widget.api.label.download": "دانلود",
+  "widget.api.label.upload": "آپلود",
+  "widget.api.label.files": "فایل‌ها",
+  "widget.api.label.freespace": "فضای آزاد"
 }

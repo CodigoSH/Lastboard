@@ -87,6 +87,151 @@ export const API_PRESETS: ApiPreset[] = [
             refreshSec: 600,
         }),
     },
+    {
+        id: 'jellyfin',
+        name: 'Jellyfin',
+        category: 'media',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.7:8096',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/Items/Counts',
+            method: 'GET',
+            headers: key ? h({ 'X-Emby-Token': key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.movies'), path: 'MovieCount', format: 'number' },
+                { label: i18n.t('widget.api.label.series'), path: 'SeriesCount', format: 'number' },
+            ],
+            refreshSec: 300,
+        }),
+    },
+    {
+        id: 'sonarr',
+        name: 'Sonarr',
+        category: 'media',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.8:8989',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/api/v3/queue?pageSize=1',
+            method: 'GET',
+            headers: key ? h({ 'X-Api-Key': key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.queue'), path: 'totalRecords', format: 'number' },
+            ],
+            refreshSec: 120,
+        }),
+    },
+    {
+        id: 'radarr',
+        name: 'Radarr',
+        category: 'media',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.8:7878',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/api/v3/queue?pageSize=1',
+            method: 'GET',
+            headers: key ? h({ 'X-Api-Key': key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.queue'), path: 'totalRecords', format: 'number' },
+            ],
+            refreshSec: 120,
+        }),
+    },
+    {
+        id: 'sabnzbd',
+        name: 'SABnzbd',
+        category: 'download',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.9:8080',
+        build: (base, key) => ({
+            // SABnzbd authenticates via ?apikey= query param, not a header.
+            url: stripSlash(base) + '/api?mode=queue&output=json&apikey=' + encodeURIComponent(key),
+            method: 'GET',
+            headers: {},
+            mappings: [
+                { label: i18n.t('widget.api.label.queue'), path: 'queue.noofslots_total', format: 'number' },
+                { label: i18n.t('widget.api.label.speed'), path: 'queue.speed' },
+            ],
+            refreshSec: 30,
+        }),
+    },
+    {
+        id: 'tautulli',
+        name: 'Tautulli',
+        category: 'media',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.10:8181',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/api/v2?apikey=' + encodeURIComponent(key) + '&cmd=get_activity',
+            method: 'GET',
+            headers: {},
+            mappings: [
+                { label: i18n.t('widget.api.label.streams'), path: 'response.data.stream_count', format: 'number' },
+            ],
+            refreshSec: 30,
+        }),
+    },
+    {
+        id: 'forgejo',
+        name: 'Forgejo / Gitea',
+        category: 'git',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_token',
+        urlPlaceholder: 'http://10.0.0.11:3000',
+        build: (base, key) => ({
+            // List mode: most recently updated repos the token can see.
+            url: stripSlash(base) + '/api/v1/repos/search?limit=30&sort=updated&order=desc',
+            method: 'GET',
+            headers: key ? h({ Authorization: 'token ' + key }) : {},
+            arrayPath: 'data',
+            mappings: [
+                { label: '', path: 'full_name' },
+                { label: '', path: 'stars_count', format: 'number' },
+            ],
+            refreshSec: 300,
+        }),
+    },
+    {
+        id: 'speedtest-tracker',
+        name: 'Speedtest Tracker (beta)',
+        category: 'network',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_token',
+        urlPlaceholder: 'http://10.0.0.12:8080',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/api/v1/results/latest',
+            method: 'GET',
+            headers: key ? h({ Authorization: 'Bearer ' + key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.download'), path: 'data.download', format: 'bytes' },
+                { label: i18n.t('widget.api.label.upload'), path: 'data.upload', format: 'bytes' },
+            ],
+            refreshSec: 600,
+        }),
+    },
+    {
+        id: 'nextcloud',
+        name: 'Nextcloud (beta)',
+        category: 'cloud',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_userpass',
+        keyHintKey: 'widget.api.key_userpass_hint',
+        urlPlaceholder: 'http://10.0.0.13',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/ocs/v2.php/apps/serverinfo/api/v1/info?format=json',
+            method: 'GET',
+            headers: key ? h({ Authorization: 'Basic ' + btoa(key), 'OCS-APIRequest': 'true' }) : { 'OCS-APIRequest': 'true' },
+            mappings: [
+                { label: i18n.t('widget.api.label.files'), path: 'ocs.data.nextcloud.storage.num_files', format: 'number' },
+                { label: i18n.t('widget.api.label.freespace'), path: 'ocs.data.nextcloud.system.freespace', format: 'bytes' },
+            ],
+            refreshSec: 600,
+        }),
+    },
 ];
 
 export const getPreset = (id: string): ApiPreset | undefined =>

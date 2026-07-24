@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "受信箱",
   "widget.api.label.photos": "写真",
   "widget.api.label.videos": "動画",
-  "widget.api.key_immich_hint": "Immich で 'asset.statistics' 権限を有効にしてキーを作成してください。"
+  "widget.api.key_immich_hint": "Immich で 'asset.statistics' 権限を有効にしてキーを作成してください。",
+  "widget.api.label.movies": "映画",
+  "widget.api.label.series": "シリーズ",
+  "widget.api.label.queue": "キュー",
+  "widget.api.label.speed": "速度",
+  "widget.api.label.streams": "ストリーム",
+  "widget.api.label.download": "ダウンロード",
+  "widget.api.label.upload": "アップロード",
+  "widget.api.label.files": "ファイル",
+  "widget.api.label.freespace": "空き容量"
 }

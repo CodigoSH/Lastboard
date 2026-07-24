@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "Postvak IN",
   "widget.api.label.photos": "Foto's",
   "widget.api.label.videos": "Video's",
-  "widget.api.key_immich_hint": "Maak de sleutel in Immich met de rechten 'asset.statistics' ingeschakeld."
+  "widget.api.key_immich_hint": "Maak de sleutel in Immich met de rechten 'asset.statistics' ingeschakeld.",
+  "widget.api.label.movies": "Films",
+  "widget.api.label.series": "Series",
+  "widget.api.label.queue": "Wachtrij",
+  "widget.api.label.speed": "Snelheid",
+  "widget.api.label.streams": "Streams",
+  "widget.api.label.download": "Download",
+  "widget.api.label.upload": "Upload",
+  "widget.api.label.files": "Bestanden",
+  "widget.api.label.freespace": "Vrije ruimte"
 }

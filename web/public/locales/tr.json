@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "Gelen kutusu",
   "widget.api.label.photos": "Fotoğraflar",
   "widget.api.label.videos": "Videolar",
-  "widget.api.key_immich_hint": "Immich'te anahtarı 'asset.statistics' izni etkin olacak şekilde oluşturun."
+  "widget.api.key_immich_hint": "Immich'te anahtarı 'asset.statistics' izni etkin olacak şekilde oluşturun.",
+  "widget.api.label.movies": "Filmler",
+  "widget.api.label.series": "Diziler",
+  "widget.api.label.queue": "Kuyruk",
+  "widget.api.label.speed": "Hız",
+  "widget.api.label.streams": "Yayınlar",
+  "widget.api.label.download": "İndirme",
+  "widget.api.label.upload": "Yükleme",
+  "widget.api.label.files": "Dosyalar",
+  "widget.api.label.freespace": "Boş alan"
 }

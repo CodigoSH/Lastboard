@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "收件箱",
   "widget.api.label.photos": "照片",
   "widget.api.label.videos": "视频",
-  "widget.api.key_immich_hint": "在 Immich 中创建密钥时启用 'asset.statistics' 权限。"
+  "widget.api.key_immich_hint": "在 Immich 中创建密钥时启用 'asset.statistics' 权限。",
+  "widget.api.label.movies": "电影",
+  "widget.api.label.series": "剧集",
+  "widget.api.label.queue": "队列",
+  "widget.api.label.speed": "速度",
+  "widget.api.label.streams": "串流",
+  "widget.api.label.download": "下载",
+  "widget.api.label.upload": "上传",
+  "widget.api.label.files": "文件",
+  "widget.api.label.freespace": "可用空间"
 }

@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "Posteingang",
   "widget.api.label.photos": "Fotos",
   "widget.api.label.videos": "Videos",
-  "widget.api.key_immich_hint": "Erstelle den Schlüssel in Immich mit aktivierter Berechtigung 'asset.statistics'."
+  "widget.api.key_immich_hint": "Erstelle den Schlüssel in Immich mit aktivierter Berechtigung 'asset.statistics'.",
+  "widget.api.label.movies": "Filme",
+  "widget.api.label.series": "Serien",
+  "widget.api.label.queue": "Warteschlange",
+  "widget.api.label.speed": "Geschwindigkeit",
+  "widget.api.label.streams": "Streams",
+  "widget.api.label.download": "Download",
+  "widget.api.label.upload": "Upload",
+  "widget.api.label.files": "Dateien",
+  "widget.api.label.freespace": "Freier Speicher"
 }

@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "ইনবক্স",
   "widget.api.label.photos": "ছবি",
   "widget.api.label.videos": "ভিডিও",
-  "widget.api.key_immich_hint": "Immich-এ 'asset.statistics' অনুমতি সক্রিয় করে কী তৈরি করুন।"
+  "widget.api.key_immich_hint": "Immich-এ 'asset.statistics' অনুমতি সক্রিয় করে কী তৈরি করুন।",
+  "widget.api.label.movies": "সিনেমা",
+  "widget.api.label.series": "সিরিজ",
+  "widget.api.label.queue": "সারি",
+  "widget.api.label.speed": "গতি",
+  "widget.api.label.streams": "স্ট্রিম",
+  "widget.api.label.download": "ডাউনলোড",
+  "widget.api.label.upload": "আপলোড",
+  "widget.api.label.files": "ফাইল",
+  "widget.api.label.freespace": "খালি জায়গা"
 }

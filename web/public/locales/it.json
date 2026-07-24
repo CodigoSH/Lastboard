@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "In arrivo",
   "widget.api.label.photos": "Foto",
   "widget.api.label.videos": "Video",
-  "widget.api.key_immich_hint": "Crea la chiave in Immich con il permesso 'asset.statistics' attivo."
+  "widget.api.key_immich_hint": "Crea la chiave in Immich con il permesso 'asset.statistics' attivo.",
+  "widget.api.label.movies": "Film",
+  "widget.api.label.series": "Serie",
+  "widget.api.label.queue": "Coda",
+  "widget.api.label.speed": "Velocità",
+  "widget.api.label.streams": "Stream",
+  "widget.api.label.download": "Download",
+  "widget.api.label.upload": "Upload",
+  "widget.api.label.files": "File",
+  "widget.api.label.freespace": "Spazio libero"
 }

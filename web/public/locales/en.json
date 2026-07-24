@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "Inbox",
   "widget.api.label.photos": "Photos",
   "widget.api.label.videos": "Videos",
-  "widget.api.key_immich_hint": "Create the key in Immich with the 'asset.statistics' permission enabled."
+  "widget.api.key_immich_hint": "Create the key in Immich with the 'asset.statistics' permission enabled.",
+  "widget.api.label.movies": "Movies",
+  "widget.api.label.series": "Series",
+  "widget.api.label.queue": "Queue",
+  "widget.api.label.speed": "Speed",
+  "widget.api.label.streams": "Streams",
+  "widget.api.label.download": "Download",
+  "widget.api.label.upload": "Upload",
+  "widget.api.label.files": "Files",
+  "widget.api.label.freespace": "Free space"
 }

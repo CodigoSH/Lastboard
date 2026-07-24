@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "ان باکس",
   "widget.api.label.photos": "تصاویر",
   "widget.api.label.videos": "ویڈیوز",
-  "widget.api.key_immich_hint": "Immich میں 'asset.statistics' اجازت فعال کرکے کلید بنائیں۔"
+  "widget.api.key_immich_hint": "Immich میں 'asset.statistics' اجازت فعال کرکے کلید بنائیں۔",
+  "widget.api.label.movies": "فلمیں",
+  "widget.api.label.series": "سیریز",
+  "widget.api.label.queue": "قطار",
+  "widget.api.label.speed": "رفتار",
+  "widget.api.label.streams": "اسٹریمز",
+  "widget.api.label.download": "ڈاؤن لوڈ",
+  "widget.api.label.upload": "اپ لوڈ",
+  "widget.api.label.files": "فائلیں",
+  "widget.api.label.freespace": "خالی جگہ"
 }

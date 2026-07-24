@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "इनबॉक्स",
   "widget.api.label.photos": "तस्वीरें",
   "widget.api.label.videos": "वीडियो",
-  "widget.api.key_immich_hint": "Immich में 'asset.statistics' अनुमति सक्षम करके कुंजी बनाएँ।"
+  "widget.api.key_immich_hint": "Immich में 'asset.statistics' अनुमति सक्षम करके कुंजी बनाएँ।",
+  "widget.api.label.movies": "फ़िल्में",
+  "widget.api.label.series": "सीरीज़",
+  "widget.api.label.queue": "क़तार",
+  "widget.api.label.speed": "गति",
+  "widget.api.label.streams": "स्ट्रीम",
+  "widget.api.label.download": "डाउनलोड",
+  "widget.api.label.upload": "अपलोड",
+  "widget.api.label.files": "फ़ाइलें",
+  "widget.api.label.freespace": "खाली जगह"
 }

@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "Εισερχόμενα",
   "widget.api.label.photos": "Φωτογραφίες",
   "widget.api.label.videos": "Βίντεο",
-  "widget.api.key_immich_hint": "Δημιούργησε το κλειδί στο Immich με ενεργοποιημένο το δικαίωμα 'asset.statistics'."
+  "widget.api.key_immich_hint": "Δημιούργησε το κλειδί στο Immich με ενεργοποιημένο το δικαίωμα 'asset.statistics'.",
+  "widget.api.label.movies": "Ταινίες",
+  "widget.api.label.series": "Σειρές",
+  "widget.api.label.queue": "Ουρά",
+  "widget.api.label.speed": "Ταχύτητα",
+  "widget.api.label.streams": "Ροές",
+  "widget.api.label.download": "Λήψη",
+  "widget.api.label.upload": "Αποστολή",
+  "widget.api.label.files": "Αρχεία",
+  "widget.api.label.freespace": "Ελεύθερος χώρος"
 }

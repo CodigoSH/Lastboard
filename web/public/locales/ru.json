@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "Входящие",
   "widget.api.label.photos": "Фото",
   "widget.api.label.videos": "Видео",
-  "widget.api.key_immich_hint": "Создайте ключ в Immich с включённым разрешением 'asset.statistics'."
+  "widget.api.key_immich_hint": "Создайте ключ в Immich с включённым разрешением 'asset.statistics'.",
+  "widget.api.label.movies": "Фильмы",
+  "widget.api.label.series": "Сериалы",
+  "widget.api.label.queue": "Очередь",
+  "widget.api.label.speed": "Скорость",
+  "widget.api.label.streams": "Потоки",
+  "widget.api.label.download": "Загрузка",
+  "widget.api.label.upload": "Отдача",
+  "widget.api.label.files": "Файлы",
+  "widget.api.label.freespace": "Свободно"
 }

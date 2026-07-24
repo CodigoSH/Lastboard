@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "صندوق الوارد",
   "widget.api.label.photos": "الصور",
   "widget.api.label.videos": "مقاطع الفيديو",
-  "widget.api.key_immich_hint": "أنشئ المفتاح في Immich مع تفعيل صلاحية 'asset.statistics'."
+  "widget.api.key_immich_hint": "أنشئ المفتاح في Immich مع تفعيل صلاحية 'asset.statistics'.",
+  "widget.api.label.movies": "أفلام",
+  "widget.api.label.series": "مسلسلات",
+  "widget.api.label.queue": "الطابور",
+  "widget.api.label.speed": "السرعة",
+  "widget.api.label.streams": "البثوث",
+  "widget.api.label.download": "التنزيل",
+  "widget.api.label.upload": "الرفع",
+  "widget.api.label.files": "الملفات",
+  "widget.api.label.freespace": "مساحة حرة"
 }

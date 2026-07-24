@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "받은편지함",
   "widget.api.label.photos": "사진",
   "widget.api.label.videos": "동영상",
-  "widget.api.key_immich_hint": "Immich에서 'asset.statistics' 권한을 켜고 키를 생성하세요."
+  "widget.api.key_immich_hint": "Immich에서 'asset.statistics' 권한을 켜고 키를 생성하세요.",
+  "widget.api.label.movies": "영화",
+  "widget.api.label.series": "시리즈",
+  "widget.api.label.queue": "대기열",
+  "widget.api.label.speed": "속도",
+  "widget.api.label.streams": "스트림",
+  "widget.api.label.download": "다운로드",
+  "widget.api.label.upload": "업로드",
+  "widget.api.label.files": "파일",
+  "widget.api.label.freespace": "여유 공간"
 }

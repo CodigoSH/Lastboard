@@ -445,5 +445,14 @@
   "widget.api.label.inbox": "Skrzynka",
   "widget.api.label.photos": "Zdjęcia",
   "widget.api.label.videos": "Filmy",
-  "widget.api.key_immich_hint": "Utwórz klucz w Immich z włączonym uprawnieniem 'asset.statistics'."
+  "widget.api.key_immich_hint": "Utwórz klucz w Immich z włączonym uprawnieniem 'asset.statistics'.",
+  "widget.api.label.movies": "Filmy",
+  "widget.api.label.series": "Seriale",
+  "widget.api.label.queue": "Kolejka",
+  "widget.api.label.speed": "Prędkość",
+  "widget.api.label.streams": "Strumienie",
+  "widget.api.label.download": "Pobieranie",
+  "widget.api.label.upload": "Wysyłanie",
+  "widget.api.label.files": "Pliki",
+  "widget.api.label.freespace": "Wolne miejsce"
 }
