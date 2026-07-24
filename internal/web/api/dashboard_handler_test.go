@@ -248,6 +248,85 @@ func TestUpdateItem_OtherUserCannotUpdate(t *testing.T) {
 	}
 }
 
+func TestUpdateItem_MoveToOwnDashboard(t *testing.T) {
+	server, db, cleanup := setupDashServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	var aliceID int
+	db.DB.QueryRow("SELECT id FROM users WHERE username='alice'").Scan(&aliceID)
+
+	res, _ := db.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'bookmark', 1, 1, 1, 1, '{}')`, aliceID)
+	itemID, _ := res.LastInsertId()
+
+	dres, _ := db.DB.Exec(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Media', 1, 0)`, aliceID)
+	dashID, _ := dres.LastInsertId()
+
+	s := doLogin(t, server.URL, "alice", "password")
+
+	body := fmt.Sprintf(`{"dashboard_id":%d,"x":1,"y":1}`, dashID)
+	req, _ := http.NewRequest("PATCH", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, itemID), strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var got int64
+	db.DB.QueryRow("SELECT dashboard_id FROM items WHERE id=?", itemID).Scan(&got)
+	if got != dashID {
+		t.Errorf("dashboard_id not updated: got %d, want %d", got, dashID)
+	}
+}
+
+func TestUpdateItem_CannotMoveToOthersDashboard(t *testing.T) {
+	server, db, cleanup := setupDashServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	createUser(t, db.DB, "bob", "password", "user")
+
+	var aliceID, bobID int
+	db.DB.QueryRow("SELECT id FROM users WHERE username='alice'").Scan(&aliceID)
+	db.DB.QueryRow("SELECT id FROM users WHERE username='bob'").Scan(&bobID)
+
+	res, _ := db.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'bookmark', 1, 1, 1, 1, '{}')`, aliceID)
+	itemID, _ := res.LastInsertId()
+
+	// A dashboard that belongs to bob, not alice.
+	dres, _ := db.DB.Exec(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Bob', 1, 0)`, bobID)
+	bobDashID, _ := dres.LastInsertId()
+
+	s := doLogin(t, server.URL, "alice", "password")
+
+	body := fmt.Sprintf(`{"dashboard_id":%d}`, bobDashID)
+	req, _ := http.NewRequest("PATCH", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, itemID), strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		t.Error("alice should not be able to move her item to bob's dashboard")
+	}
+
+	// The item must stay on its original board (dashboard_id unchanged / NULL).
+	var stillNull int
+	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id=? AND dashboard_id IS NULL", itemID).Scan(&stillNull)
+	if stillNull != 1 {
+		t.Errorf("dashboard_id should be unchanged (NULL), COUNT=%d", stillNull)
+	}
+}
+
 // ── DeleteItem ────────────────────────────────────────────────────────────────
 
 func TestDeleteItem_Success(t *testing.T) {

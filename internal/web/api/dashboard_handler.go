@@ -297,6 +297,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		ClearParent bool    `json:"clear_parent"`
 		Content     *string `json:"content"`
 		MobileOrder *int    `json:"mobile_order"`
+		DashboardID *int    `json:"dashboard_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		slog.Warn("JSON Decode error in UpdateItem", "error", err)
@@ -342,6 +343,17 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		// Explicit request to clear parent (move to root)
 		sets = append(sets, "parent_id=NULL")
 		// No arg needed for NULL constant
+	}
+	if input.DashboardID != nil {
+		// Moving the item to another dashboard: the target must belong to the
+		// current user. The frontend also sends fresh x/y (auto-placed against
+		// the target board) and, for an item leaving a section, clear_parent.
+		if !h.userOwnsDashboard(userID, *input.DashboardID) {
+			http.Error(w, "error.not_found", http.StatusNotFound)
+			return
+		}
+		sets = append(sets, "dashboard_id=?")
+		args = append(args, *input.DashboardID)
 	}
 	if input.MobileOrder != nil {
 		sets = append(sets, "mobile_order=?")
