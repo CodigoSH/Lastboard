@@ -233,6 +233,7 @@ func (s *Server) routes() {
 	dashHandler := api.NewDashboardHandler(s.DB)
 	s.Router.Handle("/api/dashboard", protect(http.HandlerFunc(dashHandler.GetDashboard)))
 	s.Router.Handle("POST /api/dashboard/item", protect(http.HandlerFunc(dashHandler.CreateItem)))
+	s.Router.Handle("PATCH /api/dashboard/item/{id}/move", protect(http.HandlerFunc(dashHandler.MoveItem)))
 	s.Router.Handle("PATCH /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.UpdateItem)))
 	s.Router.Handle("DELETE /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.DeleteItem)))
 	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))

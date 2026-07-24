@@ -407,6 +407,94 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
 }
 
+// MoveItem relocates an item to another dashboard, taking its whole subtree
+// with it (so a moved section carries its children). Everything happens in one
+// transaction: the item gets the new dashboard_id + auto-placed x/y and is
+// detached from any parent, then every descendant is reassigned to the same
+// dashboard. This is the section-aware counterpart to UpdateItem's single-item
+// dashboard_id move.
+func (h *DashboardHandler) MoveItem(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+	userID := middleware.GetUserIDFromContext(r)
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "error.invalid_id", http.StatusBadRequest)
+		return
+	}
+
+	var input struct {
+		DashboardID int `json:"dashboard_id"`
+		X           int `json:"x"`
+		Y           int `json:"y"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	if input.X < 1 || input.Y < 1 {
+		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		return
+	}
+	// The destination dashboard must belong to the caller.
+	if !h.userOwnsDashboard(userID, input.DashboardID) {
+		http.Error(w, "error.not_found", http.StatusNotFound)
+		return
+	}
+
+	tx, err := h.DB.Begin()
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Move the item itself and detach it from any parent (a nested item leaving
+	// its section; a section has no parent, so this is a no-op for it).
+	res, err := tx.Exec(
+		`UPDATE items SET dashboard_id=?, x=?, y=?, parent_id=NULL WHERE id=? AND user_id=?`,
+		input.DashboardID, input.X, input.Y, id, userID,
+	)
+	if err != nil {
+		slog.Error("MoveItem: update item failed", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if n == 0 {
+		http.Error(w, "error.not_found", http.StatusNotFound)
+		return
+	}
+
+	// Reassign the whole subtree (any depth) to the target dashboard.
+	if _, err := tx.Exec(
+		`WITH RECURSIVE sub(id) AS (
+			SELECT id FROM items WHERE parent_id=? AND user_id=?
+			UNION
+			SELECT i.id FROM items i JOIN sub ON i.parent_id = sub.id WHERE i.user_id=?
+		)
+		UPDATE items SET dashboard_id=? WHERE id IN (SELECT id FROM sub) AND user_id=?`,
+		id, userID, userID, input.DashboardID, userID,
+	); err != nil {
+		slog.Error("MoveItem: reassign subtree failed", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "moved"})
+}
+
 func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserIDFromContext(r)
 	parts := strings.Split(r.URL.Path, "/")

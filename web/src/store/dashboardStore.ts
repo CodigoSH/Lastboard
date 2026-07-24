@@ -412,13 +412,22 @@ class DashboardStore {
         if (!item) return false;
         if (targetDashboardId === this.state.currentDashboardId) return false;
 
-        const wasNested = item.parent_id != null;
+        // A section takes its whole subtree; a plain item is just itself.
+        const subtreeIds = this._collectSubtreeIds(itemId);
 
         // --- DEMO MODE ---
         if (this.isDemo()) {
-            const updated: GridItem = { ...item, dashboard_id: targetDashboardId, parent_id: undefined };
-            await demoService.saveItem(updated);
-            this.state.items = this.state.items.filter(i => i.id !== itemId);
+            for (const id of subtreeIds) {
+                const it = this.state.items.find(i => i.id === id);
+                if (it) {
+                    await demoService.saveItem({
+                        ...it,
+                        dashboard_id: targetDashboardId,
+                        parent_id: id === itemId ? undefined : it.parent_id,
+                    });
+                }
+            }
+            this.state.items = this.state.items.filter(i => !subtreeIds.has(i.id));
             this.notify();
             return true;
         }
@@ -430,21 +439,25 @@ class DashboardStore {
             const rootItems = targetItems.filter(i => i.parent_id == null);
             const pos = collisionService.findCompactPosition(item.w || 1, item.h || 1, rootItems, gridCols);
 
-            const update: Partial<GridItem> & { id: number } = {
-                id: itemId,
-                dashboard_id: targetDashboardId,
-                x: pos.x,
-                y: pos.y,
-            };
-            // Leaving a section: detach from the parent that stays on the old
-            // board (parent_id: undefined signals clear_parent to the backend).
-            if (wasNested) {
-                update.parent_id = undefined;
+            if (item.type === 'section') {
+                // Sections move as a subtree through the dedicated atomic endpoint.
+                await dashboardService.moveItem(itemId, { dashboard_id: targetDashboardId, x: pos.x, y: pos.y });
+            } else {
+                const update: Partial<GridItem> & { id: number } = {
+                    id: itemId,
+                    dashboard_id: targetDashboardId,
+                    x: pos.x,
+                    y: pos.y,
+                };
+                // Leaving a section: detach from the parent that stays behind
+                // (parent_id: undefined signals clear_parent to the backend).
+                if (item.parent_id != null) {
+                    update.parent_id = undefined;
+                }
+                await dashboardService.updateItem(update);
             }
 
-            await dashboardService.updateItem(update);
-
-            this.state.items = this.state.items.filter(i => i.id !== itemId);
+            this.state.items = this.state.items.filter(i => !subtreeIds.has(i.id));
             this.state.isOffline = false;
             this.saveToLocalStorage();
             this.notify();
@@ -455,6 +468,22 @@ class DashboardStore {
             this.notify();
             return false;
         }
+    }
+
+    /** Collects an item id together with every descendant id (any depth). */
+    private _collectSubtreeIds(rootId: number): Set<number> {
+        const ids = new Set<number>([rootId]);
+        let added = true;
+        while (added) {
+            added = false;
+            for (const it of this.state.items) {
+                if (it.parent_id != null && ids.has(it.parent_id) && !ids.has(it.id)) {
+                    ids.add(it.id);
+                    added = true;
+                }
+            }
+        }
+        return ids;
     }
 
     /**

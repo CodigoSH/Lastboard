@@ -31,6 +31,14 @@ export const dashboardService = {
         return apiService.post<GridItem>('/api/dashboard/item', item);
     },
 
+    /**
+     * Moves an item to another dashboard, carrying its whole subtree (used for
+     * sections). The backend reassigns every descendant in one transaction.
+     */
+    async moveItem(id: number, payload: { dashboard_id: number; x: number; y: number }): Promise<MessageResponse> {
+        return apiService.patch<MessageResponse>(`/api/dashboard/item/${id}/move`, payload);
+    },
+
     async deleteItem(id: number): Promise<MessageResponse> {
         return apiService.delete<MessageResponse>(`/api/dashboard/item/${id}`);
     },

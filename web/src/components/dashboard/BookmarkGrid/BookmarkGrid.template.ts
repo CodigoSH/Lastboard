@@ -68,6 +68,7 @@ export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouch
                </div>
                ${isEditing ? `
                 <div class="bookmark-actions">
+                    <button class="action-btn btn-move" title="${i18n.t('bookmark.move')}">${ICON_MOVE}</button>
                     <button class="action-btn btn-edit" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
                     <button class="action-btn btn-delete" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
                 </div>

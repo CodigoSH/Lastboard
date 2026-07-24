@@ -37,6 +37,7 @@ func setupDashServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
 	mux.Handle("GET /api/dashboard", protect(http.HandlerFunc(dashHandler.GetDashboard)))
 	mux.Handle("POST /api/dashboard/item", protect(http.HandlerFunc(dashHandler.CreateItem)))
+	mux.Handle("PATCH /api/dashboard/item/{id}/move", protect(http.HandlerFunc(dashHandler.MoveItem)))
 	mux.Handle("PATCH /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.UpdateItem)))
 	mux.Handle("DELETE /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.DeleteItem)))
 
@@ -324,6 +325,86 @@ func TestUpdateItem_CannotMoveToOthersDashboard(t *testing.T) {
 	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id=? AND dashboard_id IS NULL", itemID).Scan(&stillNull)
 	if stillNull != 1 {
 		t.Errorf("dashboard_id should be unchanged (NULL), COUNT=%d", stillNull)
+	}
+}
+
+func TestMoveItem_SectionCarriesChildren(t *testing.T) {
+	server, db, cleanup := setupDashServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	var aliceID int
+	db.DB.QueryRow("SELECT id FROM users WHERE username='alice'").Scan(&aliceID)
+
+	sres, _ := db.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'section', 1, 1, 4, 4, '{}')`, aliceID)
+	sectionID, _ := sres.LastInsertId()
+	cres, _ := db.DB.Exec(`INSERT INTO items (user_id, type, parent_id, x, y, w, h, content) VALUES (?, 'bookmark', ?, 1, 1, 1, 1, '{}')`, aliceID, sectionID)
+	childID, _ := cres.LastInsertId()
+
+	dres, _ := db.DB.Exec(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Media', 1, 0)`, aliceID)
+	dashID, _ := dres.LastInsertId()
+
+	s := doLogin(t, server.URL, "alice", "password")
+
+	body := fmt.Sprintf(`{"dashboard_id":%d,"x":1,"y":1}`, dashID)
+	req, _ := http.NewRequest("PATCH", fmt.Sprintf("%s/api/dashboard/item/%d/move", server.URL, sectionID), strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var sectionDash, childDash int64
+	db.DB.QueryRow("SELECT dashboard_id FROM items WHERE id=?", sectionID).Scan(&sectionDash)
+	db.DB.QueryRow("SELECT dashboard_id FROM items WHERE id=?", childID).Scan(&childDash)
+	if sectionDash != dashID || childDash != dashID {
+		t.Errorf("subtree not fully moved: section=%d child=%d, want %d", sectionDash, childDash, dashID)
+	}
+
+	// The child must still belong to its section after the move.
+	var childParent int64
+	db.DB.QueryRow("SELECT parent_id FROM items WHERE id=?", childID).Scan(&childParent)
+	if childParent != sectionID {
+		t.Errorf("child detached from section: parent_id=%d, want %d", childParent, sectionID)
+	}
+}
+
+func TestMoveItem_RejectsForeignDashboard(t *testing.T) {
+	server, db, cleanup := setupDashServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	createUser(t, db.DB, "bob", "password", "user")
+
+	var aliceID, bobID int
+	db.DB.QueryRow("SELECT id FROM users WHERE username='alice'").Scan(&aliceID)
+	db.DB.QueryRow("SELECT id FROM users WHERE username='bob'").Scan(&bobID)
+
+	res, _ := db.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'section', 1, 1, 2, 2, '{}')`, aliceID)
+	itemID, _ := res.LastInsertId()
+	dres, _ := db.DB.Exec(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Bob', 1, 0)`, bobID)
+	bobDashID, _ := dres.LastInsertId()
+
+	s := doLogin(t, server.URL, "alice", "password")
+
+	body := fmt.Sprintf(`{"dashboard_id":%d,"x":1,"y":1}`, bobDashID)
+	req, _ := http.NewRequest("PATCH", fmt.Sprintf("%s/api/dashboard/item/%d/move", server.URL, itemID), strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		t.Error("alice should not move an item to bob's dashboard")
 	}
 }
 
