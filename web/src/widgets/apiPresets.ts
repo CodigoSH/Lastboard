@@ -34,7 +34,7 @@ export const API_PRESETS: ApiPreset[] = [
     {
         id: 'adguard',
         name: 'AdGuard Home',
-        category: 'dns',
+        category: 'network',
         needsKey: true,
         keyLabelKey: 'widget.api.key_userpass',
         keyHintKey: 'widget.api.key_userpass_hint',
@@ -71,7 +71,7 @@ export const API_PRESETS: ApiPreset[] = [
     {
         id: 'immich',
         name: 'Immich',
-        category: 'photos',
+        category: 'media',
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         keyHintKey: 'widget.api.key_immich_hint',
@@ -142,7 +142,7 @@ export const API_PRESETS: ApiPreset[] = [
     {
         id: 'sabnzbd',
         name: 'SABnzbd',
-        category: 'download',
+        category: 'downloads',
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.9:8080',
@@ -178,7 +178,7 @@ export const API_PRESETS: ApiPreset[] = [
     {
         id: 'forgejo',
         name: 'Forgejo / Gitea',
-        category: 'git',
+        category: 'dev',
         needsKey: true,
         keyLabelKey: 'widget.api.key_token',
         urlPlaceholder: 'http://10.0.0.11:3000',
@@ -216,7 +216,7 @@ export const API_PRESETS: ApiPreset[] = [
     {
         id: 'nextcloud',
         name: 'Nextcloud (beta)',
-        category: 'cloud',
+        category: 'files',
         needsKey: true,
         keyLabelKey: 'widget.api.key_userpass',
         keyHintKey: 'widget.api.key_userpass_hint',

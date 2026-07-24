@@ -454,5 +454,10 @@
   "widget.api.label.download": "다운로드",
   "widget.api.label.upload": "업로드",
   "widget.api.label.files": "파일",
-  "widget.api.label.freespace": "여유 공간"
+  "widget.api.label.freespace": "여유 공간",
+  "widget.api.cat.media": "미디어",
+  "widget.api.cat.network": "네트워크",
+  "widget.api.cat.files": "파일",
+  "widget.api.cat.downloads": "다운로드",
+  "widget.api.cat.dev": "개발"
 }

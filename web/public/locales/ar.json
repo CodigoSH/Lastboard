@@ -454,5 +454,10 @@
   "widget.api.label.download": "التنزيل",
   "widget.api.label.upload": "الرفع",
   "widget.api.label.files": "الملفات",
-  "widget.api.label.freespace": "مساحة حرة"
+  "widget.api.label.freespace": "مساحة حرة",
+  "widget.api.cat.media": "الوسائط",
+  "widget.api.cat.network": "الشبكة",
+  "widget.api.cat.files": "الملفات",
+  "widget.api.cat.downloads": "التنزيلات",
+  "widget.api.cat.dev": "التطوير"
 }

@@ -454,5 +454,10 @@
   "widget.api.label.download": "ডাউনলোড",
   "widget.api.label.upload": "আপলোড",
   "widget.api.label.files": "ফাইল",
-  "widget.api.label.freespace": "খালি জায়গা"
+  "widget.api.label.freespace": "খালি জায়গা",
+  "widget.api.cat.media": "মিডিয়া",
+  "widget.api.cat.network": "নেটওয়ার্ক",
+  "widget.api.cat.files": "ফাইল",
+  "widget.api.cat.downloads": "ডাউনলোড",
+  "widget.api.cat.dev": "ডেভেলপমেন্ট"
 }

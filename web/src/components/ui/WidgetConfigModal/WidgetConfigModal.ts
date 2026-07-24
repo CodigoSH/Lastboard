@@ -5,6 +5,7 @@ import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
 import '../Select/Select';
 import type { AppSelect } from '../Select/Select';
+import type { SelectOption } from '../Select/Select.template';
 import '../ColorPicker/ColorPicker';
 import css from './WidgetConfigModal.css' with { type: 'text' };
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
@@ -216,10 +217,18 @@ class WidgetConfigModal extends HTMLElement {
 
                 const presetSel = this.shadowRoot.getElementById('api-preset') as AppSelect | null;
                 if (presetSel) {
-                    presetSel.options = [
+                    // Advanced first, then presets grouped under category headers.
+                    const catOrder = ['media', 'network', 'files', 'downloads', 'dev'];
+                    const opts: SelectOption[] = [
                         { value: '', label: i18n.t('widget.api.preset_custom') || 'Advanced (custom)' },
-                        ...API_PRESETS.map(p => ({ value: p.id, label: p.name })),
                     ];
+                    for (const cat of catOrder) {
+                        const inCat = API_PRESETS.filter(p => p.category === cat);
+                        if (!inCat.length) continue;
+                        opts.push({ value: '', label: i18n.t('widget.api.cat.' + cat), header: true });
+                        for (const p of inCat) opts.push({ value: p.id, label: p.name });
+                    }
+                    presetSel.options = opts;
                 }
 
                 const applyPresetUI = (id: string) => {

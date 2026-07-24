@@ -454,5 +454,10 @@
   "widget.api.label.download": "ダウンロード",
   "widget.api.label.upload": "アップロード",
   "widget.api.label.files": "ファイル",
-  "widget.api.label.freespace": "空き容量"
+  "widget.api.label.freespace": "空き容量",
+  "widget.api.cat.media": "メディア",
+  "widget.api.cat.network": "ネットワーク",
+  "widget.api.cat.files": "ファイル",
+  "widget.api.cat.downloads": "ダウンロード",
+  "widget.api.cat.dev": "開発"
 }

@@ -454,5 +454,10 @@
   "widget.api.label.download": "ڈاؤن لوڈ",
   "widget.api.label.upload": "اپ لوڈ",
   "widget.api.label.files": "فائلیں",
-  "widget.api.label.freespace": "خالی جگہ"
+  "widget.api.label.freespace": "خالی جگہ",
+  "widget.api.cat.media": "میڈیا",
+  "widget.api.cat.network": "نیٹ ورک",
+  "widget.api.cat.files": "فائلیں",
+  "widget.api.cat.downloads": "ڈاؤن لوڈز",
+  "widget.api.cat.dev": "ڈیولپمنٹ"
 }

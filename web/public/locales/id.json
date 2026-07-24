@@ -454,5 +454,10 @@
   "widget.api.label.download": "Unduh",
   "widget.api.label.upload": "Unggah",
   "widget.api.label.files": "Berkas",
-  "widget.api.label.freespace": "Ruang bebas"
+  "widget.api.label.freespace": "Ruang bebas",
+  "widget.api.cat.media": "Media",
+  "widget.api.cat.network": "Jaringan",
+  "widget.api.cat.files": "Berkas",
+  "widget.api.cat.downloads": "Unduhan",
+  "widget.api.cat.dev": "Pengembangan"
 }

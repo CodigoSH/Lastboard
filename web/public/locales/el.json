@@ -454,5 +454,10 @@
   "widget.api.label.download": "Λήψη",
   "widget.api.label.upload": "Αποστολή",
   "widget.api.label.files": "Αρχεία",
-  "widget.api.label.freespace": "Ελεύθερος χώρος"
+  "widget.api.label.freespace": "Ελεύθερος χώρος",
+  "widget.api.cat.media": "Πολυμέσα",
+  "widget.api.cat.network": "Δίκτυο",
+  "widget.api.cat.files": "Αρχεία",
+  "widget.api.cat.downloads": "Λήψεις",
+  "widget.api.cat.dev": "Ανάπτυξη"
 }

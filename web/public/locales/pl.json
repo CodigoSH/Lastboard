@@ -454,5 +454,10 @@
   "widget.api.label.download": "Pobieranie",
   "widget.api.label.upload": "Wysyłanie",
   "widget.api.label.files": "Pliki",
-  "widget.api.label.freespace": "Wolne miejsce"
+  "widget.api.label.freespace": "Wolne miejsce",
+  "widget.api.cat.media": "Multimedia",
+  "widget.api.cat.network": "Sieć",
+  "widget.api.cat.files": "Pliki",
+  "widget.api.cat.downloads": "Pobrane",
+  "widget.api.cat.dev": "Programowanie"
 }

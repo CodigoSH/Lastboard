@@ -454,5 +454,10 @@
   "widget.api.label.download": "डाउनलोड",
   "widget.api.label.upload": "अपलोड",
   "widget.api.label.files": "फ़ाइलें",
-  "widget.api.label.freespace": "खाली जगह"
+  "widget.api.label.freespace": "खाली जगह",
+  "widget.api.cat.media": "मीडिया",
+  "widget.api.cat.network": "नेटवर्क",
+  "widget.api.cat.files": "फ़ाइलें",
+  "widget.api.cat.downloads": "डाउनलोड",
+  "widget.api.cat.dev": "डेवलपमेंट"
 }

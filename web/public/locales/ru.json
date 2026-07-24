@@ -454,5 +454,10 @@
   "widget.api.label.download": "Загрузка",
   "widget.api.label.upload": "Отдача",
   "widget.api.label.files": "Файлы",
-  "widget.api.label.freespace": "Свободно"
+  "widget.api.label.freespace": "Свободно",
+  "widget.api.cat.media": "Медиа",
+  "widget.api.cat.network": "Сеть",
+  "widget.api.cat.files": "Файлы",
+  "widget.api.cat.downloads": "Загрузки",
+  "widget.api.cat.dev": "Разработка"
 }

@@ -454,5 +454,10 @@
   "widget.api.label.download": "دانلود",
   "widget.api.label.upload": "آپلود",
   "widget.api.label.files": "فایل‌ها",
-  "widget.api.label.freespace": "فضای آزاد"
+  "widget.api.label.freespace": "فضای آزاد",
+  "widget.api.cat.media": "رسانه",
+  "widget.api.cat.network": "شبکه",
+  "widget.api.cat.files": "فایل‌ها",
+  "widget.api.cat.downloads": "دانلودها",
+  "widget.api.cat.dev": "توسعه"
 }

@@ -454,5 +454,10 @@
   "widget.api.label.download": "Descarga",
   "widget.api.label.upload": "Subida",
   "widget.api.label.files": "Archivos",
-  "widget.api.label.freespace": "Espacio libre"
+  "widget.api.label.freespace": "Espacio libre",
+  "widget.api.cat.media": "Multimedia",
+  "widget.api.cat.network": "Red",
+  "widget.api.cat.files": "Archivos",
+  "widget.api.cat.downloads": "Descargas",
+  "widget.api.cat.dev": "Desarrollo"
 }

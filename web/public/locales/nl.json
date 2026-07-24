@@ -454,5 +454,10 @@
   "widget.api.label.download": "Download",
   "widget.api.label.upload": "Upload",
   "widget.api.label.files": "Bestanden",
-  "widget.api.label.freespace": "Vrije ruimte"
+  "widget.api.label.freespace": "Vrije ruimte",
+  "widget.api.cat.media": "Media",
+  "widget.api.cat.network": "Netwerk",
+  "widget.api.cat.files": "Bestanden",
+  "widget.api.cat.downloads": "Downloads",
+  "widget.api.cat.dev": "Ontwikkeling"
 }

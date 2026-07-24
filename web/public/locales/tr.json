@@ -454,5 +454,10 @@
   "widget.api.label.download": "İndirme",
   "widget.api.label.upload": "Yükleme",
   "widget.api.label.files": "Dosyalar",
-  "widget.api.label.freespace": "Boş alan"
+  "widget.api.label.freespace": "Boş alan",
+  "widget.api.cat.media": "Medya",
+  "widget.api.cat.network": "Ağ",
+  "widget.api.cat.files": "Dosyalar",
+  "widget.api.cat.downloads": "İndirmeler",
+  "widget.api.cat.dev": "Geliştirme"
 }
