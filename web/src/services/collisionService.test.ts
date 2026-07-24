@@ -127,4 +127,54 @@ describe('Collision Service', () => {
             expect(collisionService.isOverlap(a, b)).toBe(false);
         });
     });
+
+    describe('packItems', () => {
+        it('empty list returns an empty result', () => {
+            expect(collisionService.packItems([], [], 12)).toEqual([]);
+        });
+
+        it('packs three 1x1 items left-to-right on an empty grid', () => {
+            const items = [{ w: 1, h: 1 }, { w: 1, h: 1 }, { w: 1, h: 1 }];
+            const result = collisionService.packItems(items, [], 12);
+            expect(result.map(r => ({ x: r.x, y: r.y }))).toEqual([
+                { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 1 }
+            ]);
+        });
+
+        it('places items around an existing obstacle', () => {
+            const existing = [{ x: 1, y: 1, w: 1, h: 1 }];
+            const result = collisionService.packItems([{ w: 1, h: 1 }], existing, 12);
+            expect(result[0]).toMatchObject({ x: 2, y: 1 });
+        });
+
+        it('preserves the other fields of each item', () => {
+            const items = [{ id: 5, w: 1, h: 1, type: 'bookmark' }];
+            const result = collisionService.packItems(items, [], 12);
+            expect(result[0]).toMatchObject({ id: 5, type: 'bookmark', x: 1, y: 1 });
+        });
+    });
+
+    describe('findBlockPosition', () => {
+        it('empty block returns a zero offset', () => {
+            expect(collisionService.findBlockPosition([], [], 12)).toEqual({ dx: 0, dy: 0 });
+        });
+
+        it('a block already at the origin lands with no offset on an empty grid', () => {
+            const block = [{ x: 1, y: 1, w: 2, h: 1 }, { x: 1, y: 2, w: 2, h: 1 }];
+            expect(collisionService.findBlockPosition(block, [], 12)).toEqual({ dx: 0, dy: 0 });
+        });
+
+        it('shifts a block back to the origin, preserving internal offsets', () => {
+            // Block bounding box starts at (3,3); on an empty grid it should land at (1,1).
+            const block = [{ x: 3, y: 3, w: 1, h: 1 }, { x: 4, y: 3, w: 1, h: 1 }];
+            expect(collisionService.findBlockPosition(block, [], 12)).toEqual({ dx: -2, dy: -2 });
+        });
+
+        it('moves the whole block below an obstacle that fills the first row', () => {
+            const existing = [{ x: 1, y: 1, w: 2, h: 2 }];
+            const block = [{ x: 1, y: 1, w: 2, h: 2 }];
+            // On a 2-col grid the 2x2 block only fits from row 3 down.
+            expect(collisionService.findBlockPosition(block, existing, 2)).toEqual({ dx: 0, dy: 2 });
+        });
+    });
 });

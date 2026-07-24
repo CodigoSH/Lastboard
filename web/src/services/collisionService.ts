@@ -232,5 +232,60 @@ export const collisionService = {
                 return { x: 1, y: 500 }; // Safety limit
             }
         }
+    },
+
+    /**
+     * Packs a list of loose items into a container, placing each at the first
+     * free compact slot while accumulating already-placed items as obstacles.
+     * Returns the same items with fresh x/y. Used by the importer materializer
+     * and when bulk-moving items onto another dashboard. The source arrangement
+     * is NOT preserved (items are compacted); use findBlockPosition to relocate
+     * a set while keeping its internal layout.
+     */
+    packItems<T extends { w?: number; h?: number }>(
+        items: T[],
+        existingItems: { x: number; y: number; w?: number; h?: number }[],
+        gridCols: number
+    ): (T & { x: number; y: number })[] {
+        const obstacles = existingItems.map(i => ({
+            x: Number(i.x), y: Number(i.y), w: Number(i.w || 1), h: Number(i.h || 1)
+        }));
+        const result: (T & { x: number; y: number })[] = [];
+        for (const item of items) {
+            const w = Number(item.w || 1);
+            const h = Number(item.h || 1);
+            const pos = this.findAvailableSlot(w, h, obstacles, gridCols);
+            obstacles.push({ x: pos.x, y: pos.y, w, h });
+            result.push({ ...item, x: pos.x, y: pos.y });
+        }
+        return result;
+    },
+
+    /**
+     * Treats a set of items with relative positions as a rigid block: finds a
+     * free area on the target grid for the block's bounding box and returns the
+     * offset { dx, dy } to add to every item's x/y so the block lands without
+     * collision while keeping its internal arrangement. Used when relocating a
+     * multi-item selection (or a group) as a unit between dashboards.
+     */
+    findBlockPosition(
+        blockItems: { x: number; y: number; w?: number; h?: number }[],
+        existingItems: { x: number; y: number; w?: number; h?: number }[],
+        gridCols: number
+    ): { dx: number; dy: number } {
+        if (!blockItems.length) return { dx: 0, dy: 0 };
+
+        const minX = Math.min(...blockItems.map(i => Number(i.x)));
+        const minY = Math.min(...blockItems.map(i => Number(i.y)));
+        const maxX = Math.max(...blockItems.map(i => Number(i.x) + Number(i.w || 1)));
+        const maxY = Math.max(...blockItems.map(i => Number(i.y) + Number(i.h || 1)));
+        const blockW = maxX - minX;
+        const blockH = maxY - minY;
+
+        const obstacles = existingItems.map(i => ({
+            x: Number(i.x), y: Number(i.y), w: Number(i.w || 1), h: Number(i.h || 1)
+        }));
+        const pos = this.findAvailableSlot(blockW, blockH, obstacles, gridCols);
+        return { dx: pos.x - minX, dy: pos.y - minY };
     }
 };
