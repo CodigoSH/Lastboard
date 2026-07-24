@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -119,3 +121,74 @@ func TestMonitorStoreCascadeOnItemDelete(t *testing.T) {
 }
 
 func intPtr(v int) *int { return &v }
+
+func TestMonitoredItems(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := NewMonitorStore(db)
+
+	res, _ := db.Exec(`INSERT INTO users (username, password) VALUES ('u', 'p')`)
+	uid, _ := res.LastInsertId()
+	ins := func(url, content string) {
+		if _, err := db.Exec(
+			`INSERT INTO items (user_id, type, x, y, w, h, url, content) VALUES (?, 'bookmark', 0, 0, 1, 1, ?, ?)`,
+			uid, url, content); err != nil {
+			t.Fatalf("insert item: %v", err)
+		}
+	}
+	ins("https://a.example", `{"statusCheck":true}`)  // monitored
+	ins("https://b.example", `{"statusCheck":false}`) // opted out
+	ins("https://c.example", `{}`)                    // no flag
+	ins("", `{"statusCheck":true}`)                   // no URL → skipped
+
+	items, err := store.MonitoredItems()
+	if err != nil {
+		t.Fatalf("MonitoredItems: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 monitored item, got %d", len(items))
+	}
+	if items[0].URL != "https://a.example" {
+		t.Errorf("wrong item enumerated: %q", items[0].URL)
+	}
+}
+
+func TestProbeTimedUp(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	up, latency, code := probeTimed(srv.URL)
+	if !up {
+		t.Fatalf("expected up for a 200 server")
+	}
+	if latency == nil {
+		t.Errorf("up check must carry a latency")
+	}
+	if code != 200 {
+		t.Errorf("expected status 200, got %d", code)
+	}
+}
+
+func TestProbeTimedDown(t *testing.T) {
+	// Reserve a port then close it, so nothing is listening.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	url := srv.URL
+	srv.Close()
+
+	up, latency, _ := probeTimed(url)
+	if up {
+		t.Fatalf("expected down for a closed server")
+	}
+	if latency != nil {
+		t.Errorf("down check must have nil latency, got %d", *latency)
+	}
+}
+
+func TestProbeTimedBadScheme(t *testing.T) {
+	up, latency, code := probeTimed("ftp://example.com")
+	if up || latency != nil || code != 0 {
+		t.Errorf("non-http scheme should be down/nil/0, got up=%v code=%d", up, code)
+	}
+}
