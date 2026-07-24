@@ -315,9 +315,10 @@ class BookmarkGrid extends HTMLElement {
 
         const deleteBtn = target.closest('.btn-delete');
         const editBtn = target.closest('.btn-edit');
+        const moveBtn = target.closest('.btn-move');
 
         // Requested: stop propagation and prevent default for buttons
-        if (deleteBtn || editBtn) {
+        if (deleteBtn || editBtn || moveBtn) {
             e.preventDefault();
             e.stopPropagation();
         } else {
@@ -326,6 +327,17 @@ class BookmarkGrid extends HTMLElement {
             if (anchor) {
                 e.preventDefault();
             }
+        }
+
+        // Move Button Logic — opens the shared dashboard picker.
+        if (moveBtn) {
+            const container = moveBtn.closest('.bookmark-grid__card, .bookmark-grid__group, .bookmark-grid__section') as HTMLElement;
+            if (!container) return;
+            const id = parseInt(container.dataset.id || '0');
+            if (!id) return;
+            const { eventBus, EVENTS } = await import('../../../services/EventBus');
+            eventBus.emit(EVENTS.SHOW_MOVE_DASHBOARD, { itemId: id, gridCols: this.currentGridCols });
+            return;
         }
 
         // Delete Button Logic

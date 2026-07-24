@@ -21,6 +21,7 @@ import './components/ui/AddDashboardModal/AddDashboardModal';
 import './components/ui/DashboardManagerModal/DashboardManagerModal';
 import './components/ui/WidgetConfigModal/WidgetConfigModal';
 import './components/ui/ConfirmationModal/ConfirmationModal';
+import './components/ui/MoveToDashboardModal/MoveToDashboardModal';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
 // Widget Components
 import './widgets/core/NotepadWidget';
@@ -36,6 +37,7 @@ const dashboardRoot = document.getElementById('dashboard-root') as HTMLElement;
 let addBookmarkModal: any;
 let addWidgetModal: any;
 let confirmationModal: any;
+let moveModal: any;
 let passwordConfirmModal: any;
 
 import { bootstrap } from './core/bootstrap';
@@ -130,6 +132,9 @@ bootstrap(async () => {
 
     const widgetConfigModal = document.createElement('widget-config-modal');
     document.body.appendChild(widgetConfigModal);
+
+    moveModal = document.createElement('move-to-dashboard-modal');
+    document.body.appendChild(moveModal);
 });
 
 // 2. Handle Component Events (TopBar)
@@ -153,6 +158,32 @@ eventBus.on(EVENTS.SHOW_PASSWORD_CONFIRM, async (e: CustomEvent) => {
         if (password !== null && onConfirm) {
             onConfirm(password);
         }
+    }
+});
+
+eventBus.on(EVENTS.SHOW_MOVE_DASHBOARD, async (e: CustomEvent) => {
+    const { itemId, gridCols } = e.detail;
+    if (!moveModal) return;
+
+    const state = dashboardStore.getState();
+    const targetId = await moveModal.pick(state.dashboards, state.currentDashboardId);
+    if (targetId == null) return;
+
+    const ok = await dashboardStore.moveItemToDashboard(itemId, targetId, gridCols);
+    if (!ok) return;
+
+    // Success feedback is owned by the caller, not the store: a toast naming the
+    // destination, with a "Go" action that switches to it.
+    const target = state.dashboards.find((d: any) => d.id === targetId);
+    const notifier = (window as any).notifier;
+    if (notifier) {
+        notifier.show({
+            message: `${i18n.t('notifier.moved_to')} «${target ? target.name : ''}»`,
+            action: {
+                label: i18n.t('general.go'),
+                onClick: () => { dashboardStore.switchDashboard(targetId); },
+            },
+        });
     }
 });
 

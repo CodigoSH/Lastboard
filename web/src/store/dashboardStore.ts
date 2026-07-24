@@ -402,6 +402,62 @@ class DashboardStore {
     }
 
     /**
+     * Moves an item to another dashboard. Fetches the target board's items,
+     * auto-places the item there (compact, collision-free), persists the new
+     * dashboard_id + x/y (and detaches from its parent if it was nested), then
+     * drops it from the current board's view. Returns true on success.
+     */
+    async moveItemToDashboard(itemId: number, targetDashboardId: number, gridCols: number = 12): Promise<boolean> {
+        const item = this.state.items.find(i => i.id === itemId);
+        if (!item) return false;
+        if (targetDashboardId === this.state.currentDashboardId) return false;
+
+        const wasNested = item.parent_id != null;
+
+        // --- DEMO MODE ---
+        if (this.isDemo()) {
+            const updated: GridItem = { ...item, dashboard_id: targetDashboardId, parent_id: undefined };
+            await demoService.saveItem(updated);
+            this.state.items = this.state.items.filter(i => i.id !== itemId);
+            this.notify();
+            return true;
+        }
+
+        try {
+            const { collisionService } = await import('../services/collisionService');
+            // Auto-place against the TARGET board's root items.
+            const targetItems = await dashboardService.getItems(targetDashboardId);
+            const rootItems = targetItems.filter(i => i.parent_id == null);
+            const pos = collisionService.findCompactPosition(item.w || 1, item.h || 1, rootItems, gridCols);
+
+            const update: Partial<GridItem> & { id: number } = {
+                id: itemId,
+                dashboard_id: targetDashboardId,
+                x: pos.x,
+                y: pos.y,
+            };
+            // Leaving a section: detach from the parent that stays on the old
+            // board (parent_id: undefined signals clear_parent to the backend).
+            if (wasNested) {
+                update.parent_id = undefined;
+            }
+
+            await dashboardService.updateItem(update);
+
+            this.state.items = this.state.items.filter(i => i.id !== itemId);
+            this.state.isOffline = false;
+            this.saveToLocalStorage();
+            this.notify();
+            return true;
+        } catch (apiError) {
+            console.error('[DashboardStore] Failed to move item to dashboard', apiError);
+            this.state.isOffline = true;
+            this.notify();
+            return false;
+        }
+    }
+
+    /**
      * Specialized action for resizing items.
      * Handles complex logic like reflowing children for sections.
      */

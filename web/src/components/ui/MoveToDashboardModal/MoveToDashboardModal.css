@@ -1,0 +1,141 @@
+:host {
+    display: contents;
+}
+
+dialog {
+    background: var(--surface-solid);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    width: clamp(280px, 85cqi, 400px);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--paper-shadow);
+}
+
+dialog::backdrop {
+    background: var(--overlay-bg);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
+}
+
+dialog[open] {
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.modal-close {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.modal-close:focus { outline: none; }
+
+.modal-close:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    transform: rotate(90deg);
+    color: var(--accent);
+    border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+.modal-empty {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+}
+
+.dash-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: min(50vh, 360px);
+    overflow-y: auto;
+}
+
+.dash-option {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 15px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    text-align: left;
+}
+
+.dash-option:hover,
+.dash-option:focus-visible {
+    background: rgba(var(--accent-rgb), 0.1);
+    border-color: rgba(var(--accent-rgb), 0.3);
+    outline: none;
+}
+
+.dash-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dash-arrow {
+    flex: 0 0 auto;
+    color: var(--text-dim);
+}
+
+.dash-option:hover .dash-arrow {
+    color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    dialog[open] { animation: none; }
+    .modal-close:hover { transform: none; }
+    .dash-option { transition: none; }
+}
