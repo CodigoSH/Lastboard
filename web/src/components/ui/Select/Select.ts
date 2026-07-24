@@ -110,7 +110,7 @@ export class AppSelect extends HTMLElement {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const val = (e.currentTarget as HTMLElement).dataset.value;
-                if (val) this.selectOption(val);
+                if (val !== undefined) this.selectOption(val);
             });
         });
 
