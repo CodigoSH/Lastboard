@@ -239,6 +239,10 @@ func (s *Server) routes() {
 	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))
 	s.Router.Handle("POST /api/dashboard/health/batch", protect(http.HandlerFunc(dashHandler.CheckHealthBatch)))
 
+	// Generic API widget (server-side fetch + field extraction)
+	widgetHandler := api.NewWidgetHandler()
+	s.Router.Handle("POST /api/widget/api-fetch", protect(http.HandlerFunc(widgetHandler.ApiFetch)))
+
 	// Multi-Dashboard API
 	multiDashHandler := api.NewMultiDashboardHandler(s.DB)
 	s.Router.Handle("GET /api/dashboards", protect(http.HandlerFunc(multiDashHandler.GetDashboards)))
