@@ -135,6 +135,19 @@ func initSchema(db *sql.DB) error {
 			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_dashboards_user_id ON dashboards(user_id);`,
+		// Append-only monitoring history. Keyed by item_id (the monitor IS the
+		// bookmark), so ON DELETE CASCADE prunes a bookmark's history with it.
+		// latency_ms is NULL when the check failed; status_code is 0 with no response.
+		`CREATE TABLE IF NOT EXISTS monitor_checks (
+			id          INTEGER PRIMARY KEY AUTOINCREMENT,
+			item_id     INTEGER NOT NULL,
+			checked_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			up          BOOLEAN NOT NULL,
+			latency_ms  INTEGER,
+			status_code INTEGER NOT NULL DEFAULT 0,
+			FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_monitor_checks_item ON monitor_checks(item_id, checked_at);`,
 	}
 
 	for _, q := range queries {
