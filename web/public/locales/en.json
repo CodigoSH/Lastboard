@@ -413,5 +413,19 @@
   "auth.toggle_password": "Show or hide password",
   "action.upload_icon": "Upload icon",
   "notifier.backup_confirm": "This backup holds sensitive data, including every user's password hash. Keep it somewhere safe and never share it. Continue?",
-  "bookmark.select": "Select"
+  "bookmark.select": "Select",
+  "widget.api.name": "API",
+  "widget.api.description": "Show data from any service's JSON API",
+  "widget.api.title_label": "Title",
+  "widget.api.url_label": "Endpoint URL",
+  "widget.api.url_hint": "The server fetches this JSON URL for you — reaches private IPs, no CORS.",
+  "widget.api.method_label": "Method",
+  "widget.api.headers_label": "Headers",
+  "widget.api.headers_hint": "One per line, \"Name: value\" (e.g. an API key).",
+  "widget.api.fields_label": "Fields",
+  "widget.api.fields_hint": "One per line: \"Label = path\". Path uses dots/brackets (a.b[0].c). Optional \"| number\", \"| bytes\" or \"| percent\".",
+  "widget.api.refresh_label": "Refresh",
+  "widget.api.needs_config": "Configure an endpoint",
+  "widget.api.unreachable": "Unreachable",
+  "widget.api.no_fields": "No fields mapped"
 }

@@ -413,5 +413,19 @@
   "auth.toggle_password": "Afficher ou masquer le mot de passe",
   "action.upload_icon": "Téléverser une icône",
   "notifier.backup_confirm": "Cette sauvegarde contient des données sensibles, dont les empreintes des mots de passe de tous les utilisateurs. Conservez-la en lieu sûr et ne la partagez jamais. Continuer ?",
-  "bookmark.select": "Sélectionner"
+  "bookmark.select": "Sélectionner",
+  "widget.api.name": "API",
+  "widget.api.description": "Affiche les données de l'API JSON de n'importe quel service",
+  "widget.api.title_label": "Titre",
+  "widget.api.url_label": "URL du point de terminaison",
+  "widget.api.url_hint": "Le serveur récupère cette URL JSON pour vous — atteint les IP privées, sans CORS.",
+  "widget.api.method_label": "Méthode",
+  "widget.api.headers_label": "En-têtes",
+  "widget.api.headers_hint": "Un par ligne, « Nom : valeur » (p. ex. une clé API).",
+  "widget.api.fields_label": "Champs",
+  "widget.api.fields_hint": "Un par ligne : « Libellé = chemin ». Le chemin utilise points/crochets (a.b[0].c). Optionnel « | number », « | bytes » ou « | percent ».",
+  "widget.api.refresh_label": "Actualiser",
+  "widget.api.needs_config": "Configurez un point de terminaison",
+  "widget.api.unreachable": "Injoignable",
+  "widget.api.no_fields": "Aucun champ défini"
 }

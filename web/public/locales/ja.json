@@ -413,5 +413,19 @@
   "auth.toggle_password": "パスワードの表示/非表示",
   "action.upload_icon": "アイコンをアップロード",
   "notifier.backup_confirm": "このバックアップには、全ユーザーのパスワードハッシュを含む機密データが含まれます。安全な場所に保管し、絶対に共有しないでください。続行しますか？",
-  "bookmark.select": "選択"
+  "bookmark.select": "選択",
+  "widget.api.name": "API",
+  "widget.api.description": "任意のサービスのJSON APIからデータを表示",
+  "widget.api.title_label": "タイトル",
+  "widget.api.url_label": "エンドポイントURL",
+  "widget.api.url_hint": "サーバーがこのJSON URLを取得します — プライベートIPに到達、CORSなし。",
+  "widget.api.method_label": "メソッド",
+  "widget.api.headers_label": "ヘッダー",
+  "widget.api.headers_hint": "1行に1つ、「名前: 値」（例: APIキー）。",
+  "widget.api.fields_label": "フィールド",
+  "widget.api.fields_hint": "1行に1つ:「ラベル = パス」。パスはドット/角括弧を使用 (a.b[0].c)。任意で「| number」「| bytes」「| percent」。",
+  "widget.api.refresh_label": "更新",
+  "widget.api.needs_config": "エンドポイントを設定",
+  "widget.api.unreachable": "到達不可",
+  "widget.api.no_fields": "フィールド未設定"
 }

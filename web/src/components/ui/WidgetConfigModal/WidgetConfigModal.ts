@@ -357,6 +357,42 @@ class WidgetConfigModal extends HTMLElement {
         } else if (widgetId === 'markdown') {
             const textInput = this.shadowRoot?.getElementById('markdown-text') as HTMLTextAreaElement;
             newContent.text = textInput ? textInput.value : '';
+        } else if (widgetId === 'api') {
+            const val = (id: string) => (this.shadowRoot?.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)?.value ?? '';
+
+            // Headers: one "Name: value" per line.
+            const headers: Record<string, string> = {};
+            val('api-headers').split('\n').forEach(line => {
+                const i = line.indexOf(':');
+                if (i > 0) {
+                    const k = line.slice(0, i).trim();
+                    if (k) headers[k] = line.slice(i + 1).trim();
+                }
+            });
+
+            // Fields: one "Label = path" (optional "| format") per line.
+            const mappings: { label: string; path: string; format?: string }[] = [];
+            val('api-fields').split('\n').forEach(line => {
+                if (!line.trim()) return;
+                const eq = line.indexOf('=');
+                if (eq < 0) return;
+                const label = line.slice(0, eq).trim();
+                let rest = line.slice(eq + 1).trim();
+                let format: string | undefined;
+                const pipe = rest.lastIndexOf('|');
+                if (pipe >= 0) {
+                    format = rest.slice(pipe + 1).trim().toLowerCase() || undefined;
+                    rest = rest.slice(0, pipe).trim();
+                }
+                if (rest) mappings.push({ label, path: rest, format });
+            });
+
+            newContent.title = val('api-title').trim();
+            newContent.url = val('api-url').trim();
+            newContent.method = val('api-method') || 'GET';
+            newContent.headers = headers;
+            newContent.mappings = mappings;
+            newContent.refreshSec = parseInt(val('api-refresh')) || 60;
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 5000;
@@ -579,6 +615,56 @@ class WidgetConfigModal extends HTMLElement {
                 const generalTab = `
                     <div style="text-align: center; padding: 32px 20px; color: var(--text-dim);">
                         <p>${i18n.t('widget.config.check_personalize')}</p>
+                    </div>
+                `;
+
+                const customizationTab = ``;
+                return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
+
+                // --- API ---
+            } else if (widgetId === 'api') {
+                const title = content.title || '';
+                const url = content.url || '';
+                const method = content.method || 'GET';
+                const refreshSec = content.refreshSec || 60;
+                const headersText = Object.entries(content.headers || {})
+                    .map(([k, v]) => `${k}: ${v}`).join('\n');
+                const fieldsText = (Array.isArray(content.mappings) ? content.mappings : [])
+                    .map((m: any) => `${m.label || ''} = ${m.path || ''}${m.format ? ' | ' + m.format : ''}`).join('\n');
+                const refreshOpts = [[30, '30s'], [60, '1m'], [300, '5m'], [600, '10m']] as [number, string][];
+
+                const generalTab = `
+                    <div class="field-group">
+                        <label>${i18n.t('widget.api.title_label') || 'Title'}</label>
+                        <input type="text" id="api-title" value="${esc(title)}" placeholder="Pi-hole" />
+                    </div>
+                    <div class="field-group">
+                        <label>${i18n.t('widget.api.url_label') || 'Endpoint URL'}</label>
+                        <input type="text" id="api-url" value="${esc(url)}" placeholder="http://10.0.0.5/admin/api.php?summary" />
+                        <small>${i18n.t('widget.api.url_hint') || 'The server fetches this JSON URL for you (reaches private IPs, no CORS).'}</small>
+                    </div>
+                    <div class="field-group row-aligned">
+                        <label>${i18n.t('widget.api.method_label') || 'Method'}</label>
+                        <select id="api-method" class="api-select">
+                            <option value="GET" ${method === 'GET' ? 'selected' : ''}>GET</option>
+                            <option value="POST" ${method === 'POST' ? 'selected' : ''}>POST</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
+                        <textarea id="api-headers" rows="2" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
+                        <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
+                    </div>
+                    <div class="field-group">
+                        <label>${i18n.t('widget.api.fields_label') || 'Fields'}</label>
+                        <textarea id="api-fields" rows="4" spellcheck="false" placeholder="Queries = dns_queries_today | number&#10;Blocked = ads_percentage_today | percent">${esc(fieldsText)}</textarea>
+                        <small>${i18n.t('widget.api.fields_hint') || 'One per line: "Label = path". Path is dot/bracket (a.b[0].c). Optional "| number|bytes|percent".'}</small>
+                    </div>
+                    <div class="field-group row-aligned">
+                        <label>${i18n.t('widget.api.refresh_label') || 'Refresh'}</label>
+                        <select id="api-refresh" class="api-select">
+                            ${refreshOpts.map(([v, l]) => `<option value="${v}" ${refreshSec === v ? 'selected' : ''}>${l}</option>`).join('')}
+                        </select>
                     </div>
                 `;
 

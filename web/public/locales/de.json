@@ -413,5 +413,19 @@
   "auth.toggle_password": "Passwort ein- oder ausblenden",
   "action.upload_icon": "Symbol hochladen",
   "notifier.backup_confirm": "Diese Sicherung enthält sensible Daten, darunter die Passwort-Hashes aller Benutzer. Bewahre sie sicher auf und teile sie niemals. Fortfahren?",
-  "bookmark.select": "Auswählen"
+  "bookmark.select": "Auswählen",
+  "widget.api.name": "API",
+  "widget.api.description": "Daten aus der JSON-API eines beliebigen Dienstes anzeigen",
+  "widget.api.title_label": "Titel",
+  "widget.api.url_label": "Endpunkt-URL",
+  "widget.api.url_hint": "Der Server ruft diese JSON-URL für dich ab – erreicht private IPs, kein CORS.",
+  "widget.api.method_label": "Methode",
+  "widget.api.headers_label": "Header",
+  "widget.api.headers_hint": "Eins pro Zeile, „Name: Wert“ (z. B. ein API-Schlüssel).",
+  "widget.api.fields_label": "Felder",
+  "widget.api.fields_hint": "Eins pro Zeile: „Label = Pfad“. Der Pfad nutzt Punkte/Klammern (a.b[0].c). Optional „| number“, „| bytes“ oder „| percent“.",
+  "widget.api.refresh_label": "Aktualisieren",
+  "widget.api.needs_config": "Endpunkt konfigurieren",
+  "widget.api.unreachable": "Nicht erreichbar",
+  "widget.api.no_fields": "Keine Felder zugeordnet"
 }

@@ -413,5 +413,19 @@
   "auth.toggle_password": "Показать или скрыть пароль",
   "action.upload_icon": "Загрузить значок",
   "notifier.backup_confirm": "Эта резервная копия содержит конфиденциальные данные, включая хеши паролей всех пользователей. Храните её в надёжном месте и никому не передавайте. Продолжить?",
-  "bookmark.select": "Выбрать"
+  "bookmark.select": "Выбрать",
+  "widget.api.name": "API",
+  "widget.api.description": "Показывать данные из JSON API любого сервиса",
+  "widget.api.title_label": "Заголовок",
+  "widget.api.url_label": "URL эндпоинта",
+  "widget.api.url_hint": "Сервер сам запрашивает этот JSON-URL — доступ к приватным IP, без CORS.",
+  "widget.api.method_label": "Метод",
+  "widget.api.headers_label": "Заголовки",
+  "widget.api.headers_hint": "По одному в строке, «Имя: значение» (например, ключ API).",
+  "widget.api.fields_label": "Поля",
+  "widget.api.fields_hint": "По одному в строке: «Метка = путь». Путь использует точки/скобки (a.b[0].c). Необязательно «| number», «| bytes» или «| percent».",
+  "widget.api.refresh_label": "Обновление",
+  "widget.api.needs_config": "Настройте эндпоинт",
+  "widget.api.unreachable": "Недоступно",
+  "widget.api.no_fields": "Поля не заданы"
 }

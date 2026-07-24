@@ -413,5 +413,19 @@
   "auth.toggle_password": "비밀번호 표시 또는 숨기기",
   "action.upload_icon": "아이콘 업로드",
   "notifier.backup_confirm": "이 백업에는 모든 사용자의 비밀번호 해시를 포함한 민감한 데이터가 들어 있습니다. 안전한 곳에 보관하고 절대 공유하지 마세요. 계속할까요?",
-  "bookmark.select": "선택"
+  "bookmark.select": "선택",
+  "widget.api.name": "API",
+  "widget.api.description": "모든 서비스의 JSON API에서 데이터 표시",
+  "widget.api.title_label": "제목",
+  "widget.api.url_label": "엔드포인트 URL",
+  "widget.api.url_hint": "서버가 이 JSON URL을 대신 가져옵니다 — 사설 IP에 접근, CORS 없음.",
+  "widget.api.method_label": "메서드",
+  "widget.api.headers_label": "헤더",
+  "widget.api.headers_hint": "한 줄에 하나, \"이름: 값\" (예: API 키).",
+  "widget.api.fields_label": "필드",
+  "widget.api.fields_hint": "한 줄에 하나: \"레이블 = 경로\". 경로는 점/대괄호 사용 (a.b[0].c). 선택 \"| number\", \"| bytes\" 또는 \"| percent\".",
+  "widget.api.refresh_label": "새로고침",
+  "widget.api.needs_config": "엔드포인트를 설정하세요",
+  "widget.api.unreachable": "연결할 수 없음",
+  "widget.api.no_fields": "매핑된 필드 없음"
 }

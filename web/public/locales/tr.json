@@ -413,5 +413,19 @@
   "auth.toggle_password": "Parolayı göster veya gizle",
   "action.upload_icon": "Simge yükle",
   "notifier.backup_confirm": "Bu yedek, tüm kullanıcıların parola özetleri dahil hassas veriler içerir. Güvenli bir yerde saklayın ve asla paylaşmayın. Devam edilsin mi?",
-  "bookmark.select": "Seç"
+  "bookmark.select": "Seç",
+  "widget.api.name": "API",
+  "widget.api.description": "Herhangi bir servisin JSON API'sinden veri gösterir",
+  "widget.api.title_label": "Başlık",
+  "widget.api.url_label": "Uç nokta URL'si",
+  "widget.api.url_hint": "Sunucu bu JSON URL'sini senin için getirir — özel IP'lere ulaşır, CORS yok.",
+  "widget.api.method_label": "Yöntem",
+  "widget.api.headers_label": "Başlıklar",
+  "widget.api.headers_hint": "Her satırda bir tane, \"Ad: değer\" (örn. bir API anahtarı).",
+  "widget.api.fields_label": "Alanlar",
+  "widget.api.fields_hint": "Her satırda bir tane: \"Etiket = yol\". Yol nokta/köşeli parantez kullanır (a.b[0].c). İsteğe bağlı \"| number\", \"| bytes\" veya \"| percent\".",
+  "widget.api.refresh_label": "Yenile",
+  "widget.api.needs_config": "Bir uç nokta yapılandırın",
+  "widget.api.unreachable": "Erişilemiyor",
+  "widget.api.no_fields": "Alan tanımlanmadı"
 }

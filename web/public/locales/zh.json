@@ -413,5 +413,19 @@
   "auth.toggle_password": "显示或隐藏密码",
   "action.upload_icon": "上传图标",
   "notifier.backup_confirm": "此备份包含敏感数据，其中有所有用户的密码哈希。请妥善保管，切勿分享。是否继续？",
-  "bookmark.select": "选择"
+  "bookmark.select": "选择",
+  "widget.api.name": "API",
+  "widget.api.description": "显示任何服务的 JSON API 数据",
+  "widget.api.title_label": "标题",
+  "widget.api.url_label": "端点 URL",
+  "widget.api.url_hint": "服务器为你抓取此 JSON URL——可访问私有 IP，无需 CORS。",
+  "widget.api.method_label": "方法",
+  "widget.api.headers_label": "请求头",
+  "widget.api.headers_hint": "每行一个，\"名称: 值\"（例如 API 密钥）。",
+  "widget.api.fields_label": "字段",
+  "widget.api.fields_hint": "每行一个：\"标签 = 路径\"。路径使用点/方括号 (a.b[0].c)。可选 \"| number\"、\"| bytes\" 或 \"| percent\"。",
+  "widget.api.refresh_label": "刷新",
+  "widget.api.needs_config": "配置一个端点",
+  "widget.api.unreachable": "无法访问",
+  "widget.api.no_fields": "未映射字段"
 }

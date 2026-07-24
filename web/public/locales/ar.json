@@ -413,5 +413,19 @@
   "auth.toggle_password": "إظهار أو إخفاء كلمة المرور",
   "action.upload_icon": "رفع أيقونة",
   "notifier.backup_confirm": "تحتوي هذه النسخة الاحتياطية على بيانات حساسة، منها بصمات كلمات مرور جميع المستخدمين. احفظها في مكان آمن ولا تشاركها أبدًا. هل تريد المتابعة؟",
-  "bookmark.select": "تحديد"
+  "bookmark.select": "تحديد",
+  "widget.api.name": "API",
+  "widget.api.description": "عرض بيانات من واجهة JSON API لأي خدمة",
+  "widget.api.title_label": "العنوان",
+  "widget.api.url_label": "عنوان URL للنقطة النهائية",
+  "widget.api.url_hint": "يجلب الخادم عنوان JSON هذا نيابةً عنك — يصل إلى عناوين IP الخاصة، بدون CORS.",
+  "widget.api.method_label": "الطريقة",
+  "widget.api.headers_label": "الترويسات",
+  "widget.api.headers_hint": "واحد لكل سطر، «الاسم: القيمة» (مثل مفتاح API).",
+  "widget.api.fields_label": "الحقول",
+  "widget.api.fields_hint": "واحد لكل سطر: «التسمية = المسار». يستخدم المسار النقاط/الأقواس (a.b[0].c). اختياري «| number» أو «| bytes» أو «| percent».",
+  "widget.api.refresh_label": "التحديث",
+  "widget.api.needs_config": "قم بتكوين نقطة نهاية",
+  "widget.api.unreachable": "غير قابل للوصول",
+  "widget.api.no_fields": "لا توجد حقول محددة"
 }

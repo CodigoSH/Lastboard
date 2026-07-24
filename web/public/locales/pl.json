@@ -413,5 +413,19 @@
   "auth.toggle_password": "Pokaż lub ukryj hasło",
   "action.upload_icon": "Prześlij ikonę",
   "notifier.backup_confirm": "Ta kopia zapasowa zawiera dane wrażliwe, w tym skróty haseł wszystkich użytkowników. Przechowuj ją w bezpiecznym miejscu i nigdy jej nie udostępniaj. Kontynuować?",
-  "bookmark.select": "Zaznacz"
+  "bookmark.select": "Zaznacz",
+  "widget.api.name": "API",
+  "widget.api.description": "Pokaż dane z API JSON dowolnej usługi",
+  "widget.api.title_label": "Tytuł",
+  "widget.api.url_label": "Adres URL punktu końcowego",
+  "widget.api.url_hint": "Serwer pobiera ten adres JSON za Ciebie — sięga prywatnych IP, bez CORS.",
+  "widget.api.method_label": "Metoda",
+  "widget.api.headers_label": "Nagłówki",
+  "widget.api.headers_hint": "Jeden na wiersz, „Nazwa: wartość“ (np. klucz API).",
+  "widget.api.fields_label": "Pola",
+  "widget.api.fields_hint": "Jeden na wiersz: „Etykieta = ścieżka“. Ścieżka używa kropek/nawiasów (a.b[0].c). Opcjonalnie „| number“, „| bytes“ lub „| percent“.",
+  "widget.api.refresh_label": "Odśwież",
+  "widget.api.needs_config": "Skonfiguruj punkt końcowy",
+  "widget.api.unreachable": "Nieosiągalny",
+  "widget.api.no_fields": "Brak zdefiniowanych pól"
 }

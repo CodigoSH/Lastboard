@@ -413,5 +413,19 @@
   "auth.toggle_password": "Tampilkan atau sembunyikan kata sandi",
   "action.upload_icon": "Unggah ikon",
   "notifier.backup_confirm": "Cadangan ini berisi data sensitif, termasuk hash kata sandi semua pengguna. Simpan di tempat aman dan jangan pernah dibagikan. Lanjutkan?",
-  "bookmark.select": "Pilih"
+  "bookmark.select": "Pilih",
+  "widget.api.name": "API",
+  "widget.api.description": "Tampilkan data dari API JSON layanan apa pun",
+  "widget.api.title_label": "Judul",
+  "widget.api.url_label": "URL Endpoint",
+  "widget.api.url_hint": "Server mengambil URL JSON ini untukmu — menjangkau IP privat, tanpa CORS.",
+  "widget.api.method_label": "Metode",
+  "widget.api.headers_label": "Header",
+  "widget.api.headers_hint": "Satu per baris, \"Nama: nilai\" (mis. kunci API).",
+  "widget.api.fields_label": "Bidang",
+  "widget.api.fields_hint": "Satu per baris: \"Label = path\". Path memakai titik/kurung (a.b[0].c). Opsional \"| number\", \"| bytes\" atau \"| percent\".",
+  "widget.api.refresh_label": "Segarkan",
+  "widget.api.needs_config": "Konfigurasikan endpoint",
+  "widget.api.unreachable": "Tidak terjangkau",
+  "widget.api.no_fields": "Tidak ada bidang"
 }

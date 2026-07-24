@@ -413,5 +413,19 @@
   "auth.toggle_password": "पासवर्ड दिखाएँ या छिपाएँ",
   "action.upload_icon": "आइकन अपलोड करें",
   "notifier.backup_confirm": "इस बैकअप में संवेदनशील डेटा है, जिसमें सभी उपयोगकर्ताओं के पासवर्ड हैश शामिल हैं। इसे सुरक्षित जगह रखें और कभी साझा न करें। जारी रखें?",
-  "bookmark.select": "चुनें"
+  "bookmark.select": "चुनें",
+  "widget.api.name": "API",
+  "widget.api.description": "किसी भी सेवा के JSON API से डेटा दिखाएँ",
+  "widget.api.title_label": "शीर्षक",
+  "widget.api.url_label": "एंडपॉइंट URL",
+  "widget.api.url_hint": "सर्वर यह JSON URL आपके लिए लाता है — निजी IP तक पहुँचता है, कोई CORS नहीं।",
+  "widget.api.method_label": "मेथड",
+  "widget.api.headers_label": "हेडर",
+  "widget.api.headers_hint": "प्रति पंक्ति एक, \"नाम: मान\" (जैसे एक API कुंजी)।",
+  "widget.api.fields_label": "फ़ील्ड",
+  "widget.api.fields_hint": "प्रति पंक्ति एक: \"लेबल = पथ\"। पथ डॉट/ब्रैकेट का उपयोग करता है (a.b[0].c)। वैकल्पिक \"| number\", \"| bytes\" या \"| percent\"।",
+  "widget.api.refresh_label": "रीफ़्रेश",
+  "widget.api.needs_config": "एक एंडपॉइंट कॉन्फ़िगर करें",
+  "widget.api.unreachable": "पहुँच से बाहर",
+  "widget.api.no_fields": "कोई फ़ील्ड मैप नहीं"
 }

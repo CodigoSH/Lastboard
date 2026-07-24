@@ -413,5 +413,19 @@
   "auth.toggle_password": "Mostra o nascondi la password",
   "action.upload_icon": "Carica icona",
   "notifier.backup_confirm": "Questo backup contiene dati sensibili, inclusi gli hash delle password di tutti gli utenti. Conservalo in un luogo sicuro e non condividerlo mai. Continuare?",
-  "bookmark.select": "Seleziona"
+  "bookmark.select": "Seleziona",
+  "widget.api.name": "API",
+  "widget.api.description": "Mostra i dati dall'API JSON di qualsiasi servizio",
+  "widget.api.title_label": "Titolo",
+  "widget.api.url_label": "URL endpoint",
+  "widget.api.url_hint": "Il server recupera questo URL JSON per te — raggiunge IP privati, senza CORS.",
+  "widget.api.method_label": "Metodo",
+  "widget.api.headers_label": "Intestazioni",
+  "widget.api.headers_hint": "Uno per riga, \"Nome: valore\" (es. una chiave API).",
+  "widget.api.fields_label": "Campi",
+  "widget.api.fields_hint": "Uno per riga: \"Etichetta = percorso\". Il percorso usa punti/parentesi (a.b[0].c). Opzionale \"| number\", \"| bytes\" o \"| percent\".",
+  "widget.api.refresh_label": "Aggiorna",
+  "widget.api.needs_config": "Configura un endpoint",
+  "widget.api.unreachable": "Irraggiungibile",
+  "widget.api.no_fields": "Nessun campo definito"
 }
