@@ -208,14 +208,14 @@ func TestSafeInitials(t *testing.T) {
 // Benchmark tests
 func BenchmarkValidateUsername(b *testing.B) {
 	username := "testuser123"
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		validateUsername(username)
 	}
 }
 
 func BenchmarkValidatePassword(b *testing.B) {
 	password := "testpassword123"
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		validatePassword(password)
 	}
 }
