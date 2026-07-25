@@ -412,6 +412,35 @@ export const notificationsTemplate = (monitoring: {
 export const advancedTemplate = () => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
 
+        <!-- Import / Export dashboards -->
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.import_export')}</h3>
+            <div class="settings-content__action-group">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.export_native')}</h3>
+                        <p>${i18n.t('settings.export_native_desc')}</p>
+                    </div>
+                    <app-button variant="primary" data-action="export-native">${i18n.t('settings.export_native_btn')}</app-button>
+                </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.import_dashboards')}</h3>
+                        <p>${i18n.t('settings.import_dashboards_desc')}</p>
+                    </div>
+                    <app-select id="import-format" value="native" style="min-width: 220px;"></app-select>
+                </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.import_file')}</h3>
+                        <p>${i18n.t('settings.import_file_desc')}</p>
+                    </div>
+                    <input type="file" id="import-file" accept=".yaml,.yml" style="display: none;" data-change="import-file">
+                    <app-button data-action="click-file" data-file="import-file">${i18n.t('action.select_file')}</app-button>
+                </div>
+            </div>
+        </div>
+
         <!-- System Migration Section -->
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.system_data')}</h3>

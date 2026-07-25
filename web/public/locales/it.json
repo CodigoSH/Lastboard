@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Notifica di prova inviata",
   "settings.notify_test_fail": "Impossibile inviare la prova",
   "settings.notifications": "Notifiche",
-  "settings.alerts_requires_247": "Gli avvisi vengono inviati solo con il monitoraggio 24/7 attivo (sezione Monitoraggio)."
+  "settings.alerts_requires_247": "Gli avvisi vengono inviati solo con il monitoraggio 24/7 attivo (sezione Monitoraggio).",
+  "settings.import_export": "Importa / Esporta",
+  "settings.export_native": "Esporta (YAML)",
+  "settings.export_native_desc": "La tua configurazione in YAML aperto e documentato — senza lock-in.",
+  "settings.export_native_btn": "Esporta YAML",
+  "settings.import_dashboards": "Importa dashboard",
+  "settings.import_dashboards_desc": "Da Homepage, Dashy o un export nativo. Crea nuove dashboard.",
+  "settings.import_native": "Nativo (Lastboard YAML)",
+  "settings.import_file": "File",
+  "settings.import_file_desc": "Scegli il file YAML per il formato selezionato.",
+  "settings.import_confirm": "Verranno importati {count} elementi in nuove dashboard. Continuare?",
+  "settings.import_ok": "Importazione completata",
+  "settings.import_fail": "Impossibile importare il file",
+  "settings.import_empty": "Il file non contiene elementi",
+  "settings.import_ungrouped": "Senza gruppo"
 }

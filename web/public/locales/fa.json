@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "اعلان آزمایشی ارسال شد",
   "settings.notify_test_fail": "ارسال آزمایش ناموفق بود",
   "settings.notifications": "اعلان‌ها",
-  "settings.alerts_requires_247": "هشدارها فقط زمانی ارسال می‌شوند که نظارت ۲۴/۷ فعال باشد (بخش نظارت)."
+  "settings.alerts_requires_247": "هشدارها فقط زمانی ارسال می‌شوند که نظارت ۲۴/۷ فعال باشد (بخش نظارت).",
+  "settings.import_export": "ورود / خروج",
+  "settings.export_native": "خروجی (YAML)",
+  "settings.export_native_desc": "پیکربندی شما در YAML باز و مستند — بدون قفل‌شدن.",
+  "settings.export_native_btn": "خروجی YAML",
+  "settings.import_dashboards": "وارد کردن داشبوردها",
+  "settings.import_dashboards_desc": "از Homepage، Dashy یا خروجی بومی. داشبوردهای جدید می‌سازد.",
+  "settings.import_native": "بومی (Lastboard YAML)",
+  "settings.import_file": "فایل",
+  "settings.import_file_desc": "فایل YAML قالب انتخاب‌شده را انتخاب کنید.",
+  "settings.import_confirm": "{count} مورد به داشبوردهای جدید وارد می‌شود. ادامه؟",
+  "settings.import_ok": "وارد کردن کامل شد",
+  "settings.import_fail": "وارد کردن فایل ناموفق بود",
+  "settings.import_empty": "فایل هیچ موردی ندارد",
+  "settings.import_ungrouped": "بدون گروه"
 }

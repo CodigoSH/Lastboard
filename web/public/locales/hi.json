@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "परीक्षण सूचना भेजी गई",
   "settings.notify_test_fail": "परीक्षण नहीं भेजा जा सका",
   "settings.notifications": "सूचनाएँ",
-  "settings.alerts_requires_247": "अलर्ट केवल 24/7 निगरानी चालू होने पर भेजे जाते हैं (निगरानी अनुभाग)।"
+  "settings.alerts_requires_247": "अलर्ट केवल 24/7 निगरानी चालू होने पर भेजे जाते हैं (निगरानी अनुभाग)।",
+  "settings.import_export": "आयात / निर्यात",
+  "settings.export_native": "निर्यात (YAML)",
+  "settings.export_native_desc": "आपका कॉन्फ़िग खुले, प्रलेखित YAML में — कोई लॉक-इन नहीं।",
+  "settings.export_native_btn": "YAML निर्यात करें",
+  "settings.import_dashboards": "डैशबोर्ड आयात करें",
+  "settings.import_dashboards_desc": "Homepage, Dashy या नेटिव एक्सपोर्ट से। नए डैशबोर्ड बनाता है।",
+  "settings.import_native": "नेटिव (Lastboard YAML)",
+  "settings.import_file": "फ़ाइल",
+  "settings.import_file_desc": "चयनित प्रारूप के लिए YAML फ़ाइल चुनें।",
+  "settings.import_confirm": "{count} आइटम नए डैशबोर्ड में आयात होंगे। जारी रखें?",
+  "settings.import_ok": "आयात पूर्ण",
+  "settings.import_fail": "फ़ाइल आयात नहीं हो सकी",
+  "settings.import_empty": "फ़ाइल में कोई आइटम नहीं",
+  "settings.import_ungrouped": "बिना समूह"
 }

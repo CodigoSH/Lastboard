@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "ٹیسٹ نوٹیفکیشن بھیج دی گئی",
   "settings.notify_test_fail": "ٹیسٹ نہیں بھیجا جا سکا",
   "settings.notifications": "اطلاعات",
-  "settings.alerts_requires_247": "الرٹس صرف اسی وقت بھیجے جاتے ہیں جب 24/7 نگرانی فعال ہو (مانیٹرنگ سیکشن)۔"
+  "settings.alerts_requires_247": "الرٹس صرف اسی وقت بھیجے جاتے ہیں جب 24/7 نگرانی فعال ہو (مانیٹرنگ سیکشن)۔",
+  "settings.import_export": "امپورٹ / ایکسپورٹ",
+  "settings.export_native": "ایکسپورٹ (YAML)",
+  "settings.export_native_desc": "آپ کی کنفیگ کھلے، دستاویزی YAML میں — کوئی لاک اِن نہیں۔",
+  "settings.export_native_btn": "YAML ایکسپورٹ",
+  "settings.import_dashboards": "ڈیش بورڈز امپورٹ کریں",
+  "settings.import_dashboards_desc": "Homepage، Dashy یا نیٹو ایکسپورٹ سے۔ نئے ڈیش بورڈز بناتا ہے۔",
+  "settings.import_native": "نیٹو (Lastboard YAML)",
+  "settings.import_file": "فائل",
+  "settings.import_file_desc": "منتخب فارمیٹ کے لیے YAML فائل چنیں۔",
+  "settings.import_confirm": "{count} آئٹمز نئے ڈیش بورڈز میں امپورٹ ہوں گے۔ جاری رکھیں؟",
+  "settings.import_ok": "امپورٹ مکمل",
+  "settings.import_fail": "فائل امپورٹ نہیں ہو سکی",
+  "settings.import_empty": "فائل میں کوئی آئٹم نہیں",
+  "settings.import_ungrouped": "بلا گروپ"
 }

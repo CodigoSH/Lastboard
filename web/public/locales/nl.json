@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Testmelding verzonden",
   "settings.notify_test_fail": "Kon de test niet versturen",
   "settings.notifications": "Meldingen",
-  "settings.alerts_requires_247": "Meldingen worden alleen verzonden als 24/7-monitoring aan staat (sectie Monitoring)."
+  "settings.alerts_requires_247": "Meldingen worden alleen verzonden als 24/7-monitoring aan staat (sectie Monitoring).",
+  "settings.import_export": "Importeren / Exporteren",
+  "settings.export_native": "Exporteren (YAML)",
+  "settings.export_native_desc": "Je configuratie als open, gedocumenteerd YAML — geen lock-in.",
+  "settings.export_native_btn": "YAML exporteren",
+  "settings.import_dashboards": "Dashboards importeren",
+  "settings.import_dashboards_desc": "Vanuit Homepage, Dashy of een native export. Maakt nieuwe dashboards.",
+  "settings.import_native": "Native (Lastboard YAML)",
+  "settings.import_file": "Bestand",
+  "settings.import_file_desc": "Kies het YAML-bestand voor het gekozen formaat.",
+  "settings.import_confirm": "Er worden {count} items geïmporteerd in nieuwe dashboards. Doorgaan?",
+  "settings.import_ok": "Import voltooid",
+  "settings.import_fail": "Kon het bestand niet importeren",
+  "settings.import_empty": "Het bestand bevat geen items",
+  "settings.import_ungrouped": "Zonder groep"
 }

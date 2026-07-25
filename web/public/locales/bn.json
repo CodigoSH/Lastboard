@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "টেস্ট নোটিফিকেশন পাঠানো হয়েছে",
   "settings.notify_test_fail": "টেস্ট পাঠানো যায়নি",
   "settings.notifications": "নোটিফিকেশন",
-  "settings.alerts_requires_247": "অ্যালার্ট শুধু 24/7 মনিটরিং চালু থাকলে পাঠানো হয় (মনিটরিং বিভাগ)।"
+  "settings.alerts_requires_247": "অ্যালার্ট শুধু 24/7 মনিটরিং চালু থাকলে পাঠানো হয় (মনিটরিং বিভাগ)।",
+  "settings.import_export": "ইমপোর্ট / এক্সপোর্ট",
+  "settings.export_native": "এক্সপোর্ট (YAML)",
+  "settings.export_native_desc": "আপনার কনফিগ খোলা, ডকুমেন্টেড YAML হিসেবে — কোনো লক-ইন নেই।",
+  "settings.export_native_btn": "YAML এক্সপোর্ট",
+  "settings.import_dashboards": "ড্যাশবোর্ড ইমপোর্ট",
+  "settings.import_dashboards_desc": "Homepage, Dashy বা নেটিভ এক্সপোর্ট থেকে। নতুন ড্যাশবোর্ড তৈরি করে।",
+  "settings.import_native": "নেটিভ (Lastboard YAML)",
+  "settings.import_file": "ফাইল",
+  "settings.import_file_desc": "নির্বাচিত ফরম্যাটের YAML ফাইল বেছে নিন।",
+  "settings.import_confirm": "{count}টি আইটেম নতুন ড্যাশবোর্ডে ইমপোর্ট হবে। চালিয়ে যাবেন?",
+  "settings.import_ok": "ইমপোর্ট সম্পন্ন",
+  "settings.import_fail": "ফাইল ইমপোর্ট করা যায়নি",
+  "settings.import_empty": "ফাইলে কোনো আইটেম নেই",
+  "settings.import_ungrouped": "গ্রুপবিহীন"
 }

@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Wysłano powiadomienie testowe",
   "settings.notify_test_fail": "Nie udało się wysłać testu",
   "settings.notifications": "Powiadomienia",
-  "settings.alerts_requires_247": "Alerty są wysyłane tylko przy włączonym monitorowaniu 24/7 (sekcja Monitorowanie)."
+  "settings.alerts_requires_247": "Alerty są wysyłane tylko przy włączonym monitorowaniu 24/7 (sekcja Monitorowanie).",
+  "settings.import_export": "Import / Eksport",
+  "settings.export_native": "Eksport (YAML)",
+  "settings.export_native_desc": "Twoja konfiguracja w otwartym, udokumentowanym YAML — bez uzależnienia.",
+  "settings.export_native_btn": "Eksportuj YAML",
+  "settings.import_dashboards": "Importuj pulpity",
+  "settings.import_dashboards_desc": "Z Homepage, Dashy lub eksportu natywnego. Tworzy nowe pulpity.",
+  "settings.import_native": "Natywny (Lastboard YAML)",
+  "settings.import_file": "Plik",
+  "settings.import_file_desc": "Wybierz plik YAML dla wybranego formatu.",
+  "settings.import_confirm": "Zostanie zaimportowanych {count} elementów do nowych pulpitów. Kontynuować?",
+  "settings.import_ok": "Import zakończony",
+  "settings.import_fail": "Nie udało się zaimportować pliku",
+  "settings.import_empty": "Plik nie zawiera elementów",
+  "settings.import_ungrouped": "Bez grupy"
 }

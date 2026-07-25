@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "테스트 알림을 보냈습니다",
   "settings.notify_test_fail": "테스트를 보내지 못했습니다",
   "settings.notifications": "알림",
-  "settings.alerts_requires_247": "알림은 24/7 모니터링이 켜져 있을 때만 전송됩니다(모니터링 섹션)."
+  "settings.alerts_requires_247": "알림은 24/7 모니터링이 켜져 있을 때만 전송됩니다(모니터링 섹션).",
+  "settings.import_export": "가져오기 / 내보내기",
+  "settings.export_native": "내보내기 (YAML)",
+  "settings.export_native_desc": "설정을 개방적이고 문서화된 YAML로 — 잠금 없음.",
+  "settings.export_native_btn": "YAML 내보내기",
+  "settings.import_dashboards": "대시보드 가져오기",
+  "settings.import_dashboards_desc": "Homepage, Dashy 또는 네이티브 내보내기에서. 새 대시보드를 만듭니다.",
+  "settings.import_native": "네이티브 (Lastboard YAML)",
+  "settings.import_file": "파일",
+  "settings.import_file_desc": "선택한 형식의 YAML 파일을 고르세요.",
+  "settings.import_confirm": "{count}개 항목을 새 대시보드로 가져옵니다. 계속할까요?",
+  "settings.import_ok": "가져오기 완료",
+  "settings.import_fail": "파일을 가져오지 못했습니다",
+  "settings.import_empty": "파일에 항목이 없습니다",
+  "settings.import_ungrouped": "그룹 없음"
 }

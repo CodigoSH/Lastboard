@@ -3,6 +3,7 @@ import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
+import { importService } from '../../../services/importService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, monitoringTemplate, notificationsTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
@@ -14,6 +15,7 @@ import css from './SettingsContent.css' with { type: 'text' };
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
     private users: User[] = [];
+    private importFormat = 'native';
     private monitoring: {
         mode: string; interval_sec: number; alerts_enabled: boolean;
         notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
@@ -109,6 +111,9 @@ class SettingsContent extends HTMLElement {
                 case 'test-notify':
                     this.testNotify();
                     break;
+                case 'export-native':
+                    importService.exportNative();
+                    break;
                 case 'open-add-user':
                     this.openAddUserModal();
                     break;
@@ -166,6 +171,9 @@ class SettingsContent extends HTMLElement {
                 }
                 case 'beta-toggle':
                     this.handleBetaToggle((el as HTMLInputElement).checked);
+                    break;
+                case 'import-file':
+                    this.handleImport(e);
                     break;
                 case 'monitoring-toggle':
                     this.saveMonitoring({ mode: (el as HTMLInputElement).checked ? 'background' : 'off' });
@@ -245,6 +253,37 @@ class SettingsContent extends HTMLElement {
             this.render();
         } catch (e) {
             console.error("Failed to fetch users", e);
+        }
+    }
+
+    async handleImport(e: Event) {
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
+        input.value = ''; // allow re-importing the same file
+        if (!file) return;
+        try {
+            const cfg = await importService.parseFile(file, this.importFormat);
+            const count = importService.countItems(cfg);
+            if (!count) {
+                if (window.notifier) window.notifier.show(i18n.t('settings.import_empty'), 'error');
+                return;
+            }
+            const { eventBus, EVENTS } = await import('../../../services/EventBus');
+            eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+                title: i18n.t('settings.import_dashboards'),
+                message: i18n.t('settings.import_confirm').replace('{count}', String(count)),
+                onConfirm: async () => {
+                    try {
+                        const gridCols = userStore.getUser()?.preferences?.grid_columns || 12;
+                        await importService.materialize(cfg, gridCols, i18n.t('settings.import_ungrouped'));
+                        if (window.notifier) window.notifier.show(i18n.t('settings.import_ok'));
+                    } catch {
+                        if (window.notifier) window.notifier.show(i18n.t('settings.import_fail'), 'error');
+                    }
+                },
+            });
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.import_fail'), 'error');
         }
     }
 
@@ -1033,6 +1072,20 @@ class SettingsContent extends HTMLElement {
             ];
             notifyTypeSelect.addEventListener('change', (e: CustomEvent) => {
                 this.saveMonitoring({ notify_type: e.detail });
+            });
+        }
+
+        const importFormatSelect = this.shadowRoot!.getElementById('import-format') as any;
+        if (importFormatSelect) {
+            importFormatSelect.options = [
+                { value: 'native', label: i18n.t('settings.import_native') },
+                { value: 'homepage-services', label: 'Homepage — services.yaml' },
+                { value: 'homepage-bookmarks', label: 'Homepage — bookmarks.yaml' },
+                { value: 'dashy', label: 'Dashy — conf.yml' },
+            ];
+            importFormatSelect.value = this.importFormat;
+            importFormatSelect.addEventListener('change', (e: CustomEvent) => {
+                this.importFormat = e.detail;
             });
         }
 

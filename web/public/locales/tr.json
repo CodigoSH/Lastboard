@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Test bildirimi gönderildi",
   "settings.notify_test_fail": "Test gönderilemedi",
   "settings.notifications": "Bildirimler",
-  "settings.alerts_requires_247": "Uyarılar yalnızca 7/24 izleme açıkken gönderilir (İzleme bölümü)."
+  "settings.alerts_requires_247": "Uyarılar yalnızca 7/24 izleme açıkken gönderilir (İzleme bölümü).",
+  "settings.import_export": "İçe / Dışa aktarma",
+  "settings.export_native": "Dışa aktar (YAML)",
+  "settings.export_native_desc": "Yapılandırmanız açık, belgelenmiş YAML olarak — bağımlılık yok.",
+  "settings.export_native_btn": "YAML dışa aktar",
+  "settings.import_dashboards": "Panoları içe aktar",
+  "settings.import_dashboards_desc": "Homepage, Dashy veya yerel dışa aktarımdan. Yeni panolar oluşturur.",
+  "settings.import_native": "Yerel (Lastboard YAML)",
+  "settings.import_file": "Dosya",
+  "settings.import_file_desc": "Seçili biçim için YAML dosyasını seç.",
+  "settings.import_confirm": "{count} öğe yeni panolara aktarılacak. Devam edilsin mi?",
+  "settings.import_ok": "İçe aktarma tamamlandı",
+  "settings.import_fail": "Dosya içe aktarılamadı",
+  "settings.import_empty": "Dosyada öğe yok",
+  "settings.import_ungrouped": "Grupsuz"
 }

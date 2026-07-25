@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Test notification sent",
   "settings.notify_test_fail": "Couldn't send the test",
   "settings.notifications": "Notifications",
-  "settings.alerts_requires_247": "Alerts are only sent while 24/7 monitoring is on (Monitoring section)."
+  "settings.alerts_requires_247": "Alerts are only sent while 24/7 monitoring is on (Monitoring section).",
+  "settings.import_export": "Import / Export",
+  "settings.export_native": "Export (YAML)",
+  "settings.export_native_desc": "Your config as open, documented YAML — no lock-in.",
+  "settings.export_native_btn": "Export YAML",
+  "settings.import_dashboards": "Import dashboards",
+  "settings.import_dashboards_desc": "From Homepage, Dashy or a native export. Creates new dashboards.",
+  "settings.import_native": "Native (Lastboard YAML)",
+  "settings.import_file": "File",
+  "settings.import_file_desc": "Pick the YAML file for the selected format.",
+  "settings.import_confirm": "This will import {count} items into new dashboards. Continue?",
+  "settings.import_ok": "Import complete",
+  "settings.import_fail": "Couldn't import the file",
+  "settings.import_empty": "The file has no items",
+  "settings.import_ungrouped": "Ungrouped"
 }

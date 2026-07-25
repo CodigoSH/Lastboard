@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "تم إرسال إشعار الاختبار",
   "settings.notify_test_fail": "تعذّر إرسال الاختبار",
   "settings.notifications": "الإشعارات",
-  "settings.alerts_requires_247": "تُرسَل التنبيهات فقط عند تفعيل المراقبة على مدار الساعة (قسم المراقبة)."
+  "settings.alerts_requires_247": "تُرسَل التنبيهات فقط عند تفعيل المراقبة على مدار الساعة (قسم المراقبة).",
+  "settings.import_export": "الاستيراد / التصدير",
+  "settings.export_native": "التصدير (YAML)",
+  "settings.export_native_desc": "إعداداتك بصيغة YAML مفتوحة وموثّقة — دون احتكار.",
+  "settings.export_native_btn": "تصدير YAML",
+  "settings.import_dashboards": "استيراد اللوحات",
+  "settings.import_dashboards_desc": "من Homepage أو Dashy أو تصدير أصلي. يُنشئ لوحات جديدة.",
+  "settings.import_native": "أصلي (Lastboard YAML)",
+  "settings.import_file": "الملف",
+  "settings.import_file_desc": "اختر ملف YAML للصيغة المحددة.",
+  "settings.import_confirm": "سيتم استيراد {count} عنصرًا إلى لوحات جديدة. متابعة؟",
+  "settings.import_ok": "اكتمل الاستيراد",
+  "settings.import_fail": "تعذّر استيراد الملف",
+  "settings.import_empty": "الملف لا يحتوي على عناصر",
+  "settings.import_ungrouped": "بدون مجموعة"
 }

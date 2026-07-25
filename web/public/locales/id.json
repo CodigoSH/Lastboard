@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Notifikasi uji terkirim",
   "settings.notify_test_fail": "Gagal mengirim uji",
   "settings.notifications": "Notifikasi",
-  "settings.alerts_requires_247": "Peringatan hanya dikirim saat pemantauan 24/7 aktif (bagian Pemantauan)."
+  "settings.alerts_requires_247": "Peringatan hanya dikirim saat pemantauan 24/7 aktif (bagian Pemantauan).",
+  "settings.import_export": "Impor / Ekspor",
+  "settings.export_native": "Ekspor (YAML)",
+  "settings.export_native_desc": "Konfigurasi Anda dalam YAML terbuka dan terdokumentasi — tanpa lock-in.",
+  "settings.export_native_btn": "Ekspor YAML",
+  "settings.import_dashboards": "Impor dasbor",
+  "settings.import_dashboards_desc": "Dari Homepage, Dashy atau ekspor asli. Membuat dasbor baru.",
+  "settings.import_native": "Asli (Lastboard YAML)",
+  "settings.import_file": "Berkas",
+  "settings.import_file_desc": "Pilih berkas YAML untuk format yang dipilih.",
+  "settings.import_confirm": "{count} item akan diimpor ke dasbor baru. Lanjutkan?",
+  "settings.import_ok": "Impor selesai",
+  "settings.import_fail": "Gagal mengimpor berkas",
+  "settings.import_empty": "Berkas tidak berisi item",
+  "settings.import_ungrouped": "Tanpa grup"
 }

@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "テスト通知を送信しました",
   "settings.notify_test_fail": "テストを送信できませんでした",
   "settings.notifications": "通知",
-  "settings.alerts_requires_247": "アラートは24/7監視が有効なときのみ送信されます（監視セクション）。"
+  "settings.alerts_requires_247": "アラートは24/7監視が有効なときのみ送信されます（監視セクション）。",
+  "settings.import_export": "インポート / エクスポート",
+  "settings.export_native": "エクスポート (YAML)",
+  "settings.export_native_desc": "設定を開かれた文書化済みの YAML で — ロックインなし。",
+  "settings.export_native_btn": "YAML をエクスポート",
+  "settings.import_dashboards": "ダッシュボードをインポート",
+  "settings.import_dashboards_desc": "Homepage、Dashy、またはネイティブ export から。新しいダッシュボードを作成します。",
+  "settings.import_native": "ネイティブ (Lastboard YAML)",
+  "settings.import_file": "ファイル",
+  "settings.import_file_desc": "選択した形式の YAML ファイルを選んでください。",
+  "settings.import_confirm": "{count} 件の項目を新しいダッシュボードにインポートします。続けますか？",
+  "settings.import_ok": "インポート完了",
+  "settings.import_fail": "ファイルをインポートできませんでした",
+  "settings.import_empty": "ファイルに項目がありません",
+  "settings.import_ungrouped": "グループなし"
 }

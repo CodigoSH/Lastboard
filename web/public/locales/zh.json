@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "测试通知已发送",
   "settings.notify_test_fail": "无法发送测试",
   "settings.notifications": "通知",
-  "settings.alerts_requires_247": "仅在开启 24/7 监控时才会发送警报（监控部分）。"
+  "settings.alerts_requires_247": "仅在开启 24/7 监控时才会发送警报（监控部分）。",
+  "settings.import_export": "导入 / 导出",
+  "settings.export_native": "导出 (YAML)",
+  "settings.export_native_desc": "你的配置以开放、有文档的 YAML 导出——无锁定。",
+  "settings.export_native_btn": "导出 YAML",
+  "settings.import_dashboards": "导入仪表板",
+  "settings.import_dashboards_desc": "来自 Homepage、Dashy 或原生导出。会创建新的仪表板。",
+  "settings.import_native": "原生 (Lastboard YAML)",
+  "settings.import_file": "文件",
+  "settings.import_file_desc": "选择所选格式的 YAML 文件。",
+  "settings.import_confirm": "将把 {count} 个项目导入到新的仪表板。是否继续？",
+  "settings.import_ok": "导入完成",
+  "settings.import_fail": "无法导入文件",
+  "settings.import_empty": "文件中没有项目",
+  "settings.import_ungrouped": "未分组"
 }

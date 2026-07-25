@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Notification de test envoyée",
   "settings.notify_test_fail": "Impossible d'envoyer le test",
   "settings.notifications": "Notifications",
-  "settings.alerts_requires_247": "Les alertes ne sont envoyées que si la surveillance 24/7 est active (section Surveillance)."
+  "settings.alerts_requires_247": "Les alertes ne sont envoyées que si la surveillance 24/7 est active (section Surveillance).",
+  "settings.import_export": "Import / Export",
+  "settings.export_native": "Exporter (YAML)",
+  "settings.export_native_desc": "Votre configuration en YAML ouvert et documenté — sans verrouillage.",
+  "settings.export_native_btn": "Exporter le YAML",
+  "settings.import_dashboards": "Importer des tableaux",
+  "settings.import_dashboards_desc": "Depuis Homepage, Dashy ou un export natif. Crée de nouveaux tableaux.",
+  "settings.import_native": "Natif (Lastboard YAML)",
+  "settings.import_file": "Fichier",
+  "settings.import_file_desc": "Choisis le fichier YAML du format sélectionné.",
+  "settings.import_confirm": "{count} éléments seront importés dans de nouveaux tableaux. Continuer ?",
+  "settings.import_ok": "Importation terminée",
+  "settings.import_fail": "Impossible d'importer le fichier",
+  "settings.import_empty": "Le fichier ne contient aucun élément",
+  "settings.import_ungrouped": "Sans groupe"
 }

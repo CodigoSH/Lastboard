@@ -526,5 +526,19 @@
   "settings.notify_test_ok": "Тестовое уведомление отправлено",
   "settings.notify_test_fail": "Не удалось отправить тест",
   "settings.notifications": "Уведомления",
-  "settings.alerts_requires_247": "Оповещения отправляются только при включённом мониторинге 24/7 (раздел «Мониторинг»)."
+  "settings.alerts_requires_247": "Оповещения отправляются только при включённом мониторинге 24/7 (раздел «Мониторинг»).",
+  "settings.import_export": "Импорт / Экспорт",
+  "settings.export_native": "Экспорт (YAML)",
+  "settings.export_native_desc": "Ваша конфигурация в открытом документированном YAML — без привязки.",
+  "settings.export_native_btn": "Экспорт YAML",
+  "settings.import_dashboards": "Импорт панелей",
+  "settings.import_dashboards_desc": "Из Homepage, Dashy или нативного экспорта. Создаёт новые панели.",
+  "settings.import_native": "Нативный (Lastboard YAML)",
+  "settings.import_file": "Файл",
+  "settings.import_file_desc": "Выберите YAML-файл для выбранного формата.",
+  "settings.import_confirm": "Будет импортировано {count} элементов в новые панели. Продолжить?",
+  "settings.import_ok": "Импорт завершён",
+  "settings.import_fail": "Не удалось импортировать файл",
+  "settings.import_empty": "В файле нет элементов",
+  "settings.import_ungrouped": "Без группы"
 }
