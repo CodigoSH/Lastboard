@@ -459,5 +459,18 @@
   "widget.api.cat.network": "الشبكة",
   "widget.api.cat.files": "الملفات",
   "widget.api.cat.downloads": "التنزيلات",
-  "widget.api.cat.dev": "التطوير"
+  "widget.api.cat.dev": "التطوير",
+  "settings.monitoring": "المراقبة",
+  "settings.monitoring_mode": "فحوصات الحالة",
+  "settings.monitoring_mode_desc": "كيف يتحقق Lastboard مما إذا كانت خدماتك المفضلة تعمل.",
+  "settings.monitoring_interval": "فترة الفحص",
+  "settings.monitoring_interval_desc": "عدد مرات فحص الخادم لكل خدمة في وضع 24/7.",
+  "settings.monitoring_off": "متوقف",
+  "settings.monitoring_tab": "أثناء فتح التبويب",
+  "settings.monitoring_background": "24/7 (من جهة الخادم)",
+  "settings.interval_1m": "كل دقيقة",
+  "settings.interval_5m": "كل 5 دقائق",
+  "settings.interval_10m": "كل 10 دقائق",
+  "settings.interval_30m": "كل 30 دقيقة",
+  "settings.save_error": "تعذّر الحفظ"
 }

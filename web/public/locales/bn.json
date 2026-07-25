@@ -459,5 +459,18 @@
   "widget.api.cat.network": "নেটওয়ার্ক",
   "widget.api.cat.files": "ফাইল",
   "widget.api.cat.downloads": "ডাউনলোড",
-  "widget.api.cat.dev": "ডেভেলপমেন্ট"
+  "widget.api.cat.dev": "ডেভেলপমেন্ট",
+  "settings.monitoring": "মনিটরিং",
+  "settings.monitoring_mode": "স্ট্যাটাস চেক",
+  "settings.monitoring_mode_desc": "Lastboard কীভাবে আপনার বুকমার্ক করা সার্ভিস চালু আছে কিনা যাচাই করে।",
+  "settings.monitoring_interval": "চেক ব্যবধান",
+  "settings.monitoring_interval_desc": "24/7 মোডে সার্ভার কত ঘন ঘন প্রতিটি সার্ভিস পরীক্ষা করে।",
+  "settings.monitoring_off": "বন্ধ",
+  "settings.monitoring_tab": "ট্যাব খোলা থাকাকালীন",
+  "settings.monitoring_background": "24/7 (সার্ভার-সাইড)",
+  "settings.interval_1m": "প্রতি মিনিটে",
+  "settings.interval_5m": "প্রতি 5 মিনিটে",
+  "settings.interval_10m": "প্রতি 10 মিনিটে",
+  "settings.interval_30m": "প্রতি 30 মিনিটে",
+  "settings.save_error": "সংরক্ষণ করা যায়নি"
 }

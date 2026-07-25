@@ -1,9 +1,14 @@
 import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
+import { apiService } from './apiService';
 
 /**
  * StatusService
  * Periodically checks the health of bookmarks that have "Monitor Status" enabled.
+ *
+ * Honors the global monitoring_mode: "off" disables live checks entirely, while
+ * "tab" and "background" both keep the frontend probing for live dots (in
+ * "background" the backend scheduler additionally records history 24/7).
  */
 
 const WAKE_DELAY_MS = 5000; // Time to wait after tab becomes visible before re-checking
@@ -14,9 +19,31 @@ class StatusService {
     private interval: number | null = null;
     private wakeTimer: number | null = null;
     private checkFrequency = 60000 * 5; // Every 5 minutes
+    private mode: 'off' | 'tab' | 'background' = 'tab';
+
+    /** Read the current monitoring mode from the backend (best-effort). */
+    async refreshMode() {
+        try {
+            const s = await apiService.get<{ mode: string }>('/api/monitor/settings');
+            if (s.mode === 'off' || s.mode === 'tab' || s.mode === 'background') {
+                this.mode = s.mode;
+            }
+        } catch {
+            // Keep the last known / default mode on failure.
+        }
+    }
+
+    /** Apply a mode change made in settings without a round-trip. */
+    setMode(mode: 'off' | 'tab' | 'background') {
+        const wasOff = this.mode === 'off';
+        this.mode = mode;
+        if (mode !== 'off' && wasOff) this.checkAll();
+    }
 
     start() {
         if (this.interval) return;
+
+        this.refreshMode();
 
         let lastItemsHash = '';
 
@@ -72,6 +99,7 @@ class StatusService {
     };
 
     async checkAll() {
+        if (this.mode === 'off') return;
         if (!navigator.onLine) return;
 
         const state = dashboardStore.getState();

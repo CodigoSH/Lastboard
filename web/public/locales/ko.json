@@ -459,5 +459,18 @@
   "widget.api.cat.network": "네트워크",
   "widget.api.cat.files": "파일",
   "widget.api.cat.downloads": "다운로드",
-  "widget.api.cat.dev": "개발"
+  "widget.api.cat.dev": "개발",
+  "settings.monitoring": "모니터링",
+  "settings.monitoring_mode": "상태 확인",
+  "settings.monitoring_mode_desc": "Lastboard가 즐겨찾기한 서비스의 작동 여부를 확인하는 방식.",
+  "settings.monitoring_interval": "확인 간격",
+  "settings.monitoring_interval_desc": "24/7 모드에서 서버가 각 서비스를 확인하는 빈도.",
+  "settings.monitoring_off": "끄기",
+  "settings.monitoring_tab": "탭이 열려 있는 동안",
+  "settings.monitoring_background": "24/7 (서버 측)",
+  "settings.interval_1m": "1분마다",
+  "settings.interval_5m": "5분마다",
+  "settings.interval_10m": "10분마다",
+  "settings.interval_30m": "30분마다",
+  "settings.save_error": "저장하지 못했습니다"
 }

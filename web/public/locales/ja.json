@@ -459,5 +459,18 @@
   "widget.api.cat.network": "ネットワーク",
   "widget.api.cat.files": "ファイル",
   "widget.api.cat.downloads": "ダウンロード",
-  "widget.api.cat.dev": "開発"
+  "widget.api.cat.dev": "開発",
+  "settings.monitoring": "監視",
+  "settings.monitoring_mode": "ステータスチェック",
+  "settings.monitoring_mode_desc": "ブックマークしたサービスが稼働しているかを Lastboard が確認する方法。",
+  "settings.monitoring_interval": "チェック間隔",
+  "settings.monitoring_interval_desc": "24/7 モードでサーバーが各サービスを確認する頻度。",
+  "settings.monitoring_off": "オフ",
+  "settings.monitoring_tab": "タブが開いている間",
+  "settings.monitoring_background": "24/7（サーバー側）",
+  "settings.interval_1m": "1分ごと",
+  "settings.interval_5m": "5分ごと",
+  "settings.interval_10m": "10分ごと",
+  "settings.interval_30m": "30分ごと",
+  "settings.save_error": "保存できませんでした"
 }

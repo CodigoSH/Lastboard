@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Jaringan",
   "widget.api.cat.files": "Berkas",
   "widget.api.cat.downloads": "Unduhan",
-  "widget.api.cat.dev": "Pengembangan"
+  "widget.api.cat.dev": "Pengembangan",
+  "settings.monitoring": "Pemantauan",
+  "settings.monitoring_mode": "Pemeriksaan status",
+  "settings.monitoring_mode_desc": "Cara Lastboard memeriksa apakah layanan Anda aktif.",
+  "settings.monitoring_interval": "Interval pemeriksaan",
+  "settings.monitoring_interval_desc": "Seberapa sering server memeriksa tiap layanan dalam mode 24/7.",
+  "settings.monitoring_off": "Mati",
+  "settings.monitoring_tab": "Selama tab terbuka",
+  "settings.monitoring_background": "24/7 (sisi server)",
+  "settings.interval_1m": "Setiap menit",
+  "settings.interval_5m": "Setiap 5 menit",
+  "settings.interval_10m": "Setiap 10 menit",
+  "settings.interval_30m": "Setiap 30 menit",
+  "settings.save_error": "Gagal menyimpan"
 }

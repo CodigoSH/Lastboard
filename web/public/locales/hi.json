@@ -459,5 +459,18 @@
   "widget.api.cat.network": "नेटवर्क",
   "widget.api.cat.files": "फ़ाइलें",
   "widget.api.cat.downloads": "डाउनलोड",
-  "widget.api.cat.dev": "डेवलपमेंट"
+  "widget.api.cat.dev": "डेवलपमेंट",
+  "settings.monitoring": "निगरानी",
+  "settings.monitoring_mode": "स्थिति जाँच",
+  "settings.monitoring_mode_desc": "Lastboard कैसे जाँचता है कि आपकी सेवाएँ चालू हैं या नहीं।",
+  "settings.monitoring_interval": "जाँच अंतराल",
+  "settings.monitoring_interval_desc": "24/7 मोड में सर्वर हर सेवा को कितनी बार जाँचता है।",
+  "settings.monitoring_off": "बंद",
+  "settings.monitoring_tab": "जब तक टैब खुला है",
+  "settings.monitoring_background": "24/7 (सर्वर-साइड)",
+  "settings.interval_1m": "हर मिनट",
+  "settings.interval_5m": "हर 5 मिनट",
+  "settings.interval_10m": "हर 10 मिनट",
+  "settings.interval_30m": "हर 30 मिनट",
+  "settings.save_error": "सहेजा नहीं जा सका"
 }

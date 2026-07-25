@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Netzwerk",
   "widget.api.cat.files": "Dateien",
   "widget.api.cat.downloads": "Downloads",
-  "widget.api.cat.dev": "Entwicklung"
+  "widget.api.cat.dev": "Entwicklung",
+  "settings.monitoring": "Überwachung",
+  "settings.monitoring_mode": "Statusprüfungen",
+  "settings.monitoring_mode_desc": "Wie Lastboard prüft, ob deine gespeicherten Dienste erreichbar sind.",
+  "settings.monitoring_interval": "Prüfintervall",
+  "settings.monitoring_interval_desc": "Wie oft der Server im 24/7-Modus jeden Dienst prüft.",
+  "settings.monitoring_off": "Aus",
+  "settings.monitoring_tab": "Solange der Tab offen ist",
+  "settings.monitoring_background": "24/7 (serverseitig)",
+  "settings.interval_1m": "Jede Minute",
+  "settings.interval_5m": "Alle 5 Minuten",
+  "settings.interval_10m": "Alle 10 Minuten",
+  "settings.interval_30m": "Alle 30 Minuten",
+  "settings.save_error": "Speichern fehlgeschlagen"
 }

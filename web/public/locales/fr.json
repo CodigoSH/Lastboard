@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Réseau",
   "widget.api.cat.files": "Fichiers",
   "widget.api.cat.downloads": "Téléchargements",
-  "widget.api.cat.dev": "Développement"
+  "widget.api.cat.dev": "Développement",
+  "settings.monitoring": "Surveillance",
+  "settings.monitoring_mode": "Vérifications d'état",
+  "settings.monitoring_mode_desc": "Comment Lastboard vérifie si vos services sont en ligne.",
+  "settings.monitoring_interval": "Intervalle de vérification",
+  "settings.monitoring_interval_desc": "À quelle fréquence le serveur teste chaque service en mode 24/7.",
+  "settings.monitoring_off": "Désactivé",
+  "settings.monitoring_tab": "Tant que l'onglet est ouvert",
+  "settings.monitoring_background": "24/7 (côté serveur)",
+  "settings.interval_1m": "Chaque minute",
+  "settings.interval_5m": "Toutes les 5 minutes",
+  "settings.interval_10m": "Toutes les 10 minutes",
+  "settings.interval_30m": "Toutes les 30 minutes",
+  "settings.save_error": "Échec de l'enregistrement"
 }

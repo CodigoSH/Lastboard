@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Rete",
   "widget.api.cat.files": "File",
   "widget.api.cat.downloads": "Download",
-  "widget.api.cat.dev": "Sviluppo"
+  "widget.api.cat.dev": "Sviluppo",
+  "settings.monitoring": "Monitoraggio",
+  "settings.monitoring_mode": "Controlli di stato",
+  "settings.monitoring_mode_desc": "Come Lastboard verifica se i tuoi servizi sono raggiungibili.",
+  "settings.monitoring_interval": "Intervallo di controllo",
+  "settings.monitoring_interval_desc": "Ogni quanto il server controlla ciascun servizio in modalità 24/7.",
+  "settings.monitoring_off": "Disattivato",
+  "settings.monitoring_tab": "Mentre la scheda è aperta",
+  "settings.monitoring_background": "24/7 (lato server)",
+  "settings.interval_1m": "Ogni minuto",
+  "settings.interval_5m": "Ogni 5 minuti",
+  "settings.interval_10m": "Ogni 10 minuti",
+  "settings.interval_30m": "Ogni 30 minuti",
+  "settings.save_error": "Salvataggio non riuscito"
 }

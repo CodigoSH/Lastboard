@@ -459,5 +459,18 @@
   "widget.api.cat.network": "شبکه",
   "widget.api.cat.files": "فایل‌ها",
   "widget.api.cat.downloads": "دانلودها",
-  "widget.api.cat.dev": "توسعه"
+  "widget.api.cat.dev": "توسعه",
+  "settings.monitoring": "نظارت",
+  "settings.monitoring_mode": "بررسی وضعیت",
+  "settings.monitoring_mode_desc": "نحوه بررسی Lastboard برای در دسترس بودن سرویس‌های نشان‌شده.",
+  "settings.monitoring_interval": "بازه بررسی",
+  "settings.monitoring_interval_desc": "هر چند وقت یک‌بار سرور در حالت ۲۴/۷ هر سرویس را بررسی می‌کند.",
+  "settings.monitoring_off": "خاموش",
+  "settings.monitoring_tab": "تا زمانی که تب باز است",
+  "settings.monitoring_background": "۲۴/۷ (سمت سرور)",
+  "settings.interval_1m": "هر دقیقه",
+  "settings.interval_5m": "هر ۵ دقیقه",
+  "settings.interval_10m": "هر ۱۰ دقیقه",
+  "settings.interval_30m": "هر ۳۰ دقیقه",
+  "settings.save_error": "ذخیره نشد"
 }

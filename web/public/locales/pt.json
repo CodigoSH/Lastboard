@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Rede",
   "widget.api.cat.files": "Ficheiros",
   "widget.api.cat.downloads": "Downloads",
-  "widget.api.cat.dev": "Desenvolvimento"
+  "widget.api.cat.dev": "Desenvolvimento",
+  "settings.monitoring": "Monitorização",
+  "settings.monitoring_mode": "Verificações de estado",
+  "settings.monitoring_mode_desc": "Como o Lastboard verifica se os teus serviços estão disponíveis.",
+  "settings.monitoring_interval": "Intervalo de verificação",
+  "settings.monitoring_interval_desc": "Com que frequência o servidor verifica cada serviço no modo 24/7.",
+  "settings.monitoring_off": "Desativado",
+  "settings.monitoring_tab": "Com o separador aberto",
+  "settings.monitoring_background": "24/7 (no servidor)",
+  "settings.interval_1m": "A cada minuto",
+  "settings.interval_5m": "A cada 5 minutos",
+  "settings.interval_10m": "A cada 10 minutos",
+  "settings.interval_30m": "A cada 30 minutos",
+  "settings.save_error": "Não foi possível guardar"
 }

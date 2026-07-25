@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Сеть",
   "widget.api.cat.files": "Файлы",
   "widget.api.cat.downloads": "Загрузки",
-  "widget.api.cat.dev": "Разработка"
+  "widget.api.cat.dev": "Разработка",
+  "settings.monitoring": "Мониторинг",
+  "settings.monitoring_mode": "Проверки состояния",
+  "settings.monitoring_mode_desc": "Как Lastboard проверяет доступность ваших сервисов.",
+  "settings.monitoring_interval": "Интервал проверки",
+  "settings.monitoring_interval_desc": "Как часто сервер проверяет каждый сервис в режиме 24/7.",
+  "settings.monitoring_off": "Выкл",
+  "settings.monitoring_tab": "Пока вкладка открыта",
+  "settings.monitoring_background": "24/7 (на сервере)",
+  "settings.interval_1m": "Каждую минуту",
+  "settings.interval_5m": "Каждые 5 минут",
+  "settings.interval_10m": "Каждые 10 минут",
+  "settings.interval_30m": "Каждые 30 минут",
+  "settings.save_error": "Не удалось сохранить"
 }

@@ -459,5 +459,18 @@
   "widget.api.cat.network": "网络",
   "widget.api.cat.files": "文件",
   "widget.api.cat.downloads": "下载",
-  "widget.api.cat.dev": "开发"
+  "widget.api.cat.dev": "开发",
+  "settings.monitoring": "监控",
+  "settings.monitoring_mode": "状态检查",
+  "settings.monitoring_mode_desc": "Lastboard 如何检查你收藏的服务是否在线。",
+  "settings.monitoring_interval": "检查间隔",
+  "settings.monitoring_interval_desc": "在 24/7 模式下服务器检查每个服务的频率。",
+  "settings.monitoring_off": "关闭",
+  "settings.monitoring_tab": "标签页打开时",
+  "settings.monitoring_background": "24/7（服务器端）",
+  "settings.interval_1m": "每分钟",
+  "settings.interval_5m": "每5分钟",
+  "settings.interval_10m": "每10分钟",
+  "settings.interval_30m": "每30分钟",
+  "settings.save_error": "保存失败"
 }

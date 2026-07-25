@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Sieć",
   "widget.api.cat.files": "Pliki",
   "widget.api.cat.downloads": "Pobrane",
-  "widget.api.cat.dev": "Programowanie"
+  "widget.api.cat.dev": "Programowanie",
+  "settings.monitoring": "Monitorowanie",
+  "settings.monitoring_mode": "Sprawdzanie stanu",
+  "settings.monitoring_mode_desc": "Jak Lastboard sprawdza, czy Twoje usługi działają.",
+  "settings.monitoring_interval": "Odstęp sprawdzania",
+  "settings.monitoring_interval_desc": "Jak często serwer sprawdza każdą usługę w trybie 24/7.",
+  "settings.monitoring_off": "Wyłączone",
+  "settings.monitoring_tab": "Gdy karta jest otwarta",
+  "settings.monitoring_background": "24/7 (po stronie serwera)",
+  "settings.interval_1m": "Co minutę",
+  "settings.interval_5m": "Co 5 minut",
+  "settings.interval_10m": "Co 10 minut",
+  "settings.interval_30m": "Co 30 minut",
+  "settings.save_error": "Nie udało się zapisać"
 }

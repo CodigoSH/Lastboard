@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Netwerk",
   "widget.api.cat.files": "Bestanden",
   "widget.api.cat.downloads": "Downloads",
-  "widget.api.cat.dev": "Ontwikkeling"
+  "widget.api.cat.dev": "Ontwikkeling",
+  "settings.monitoring": "Monitoring",
+  "settings.monitoring_mode": "Statuscontroles",
+  "settings.monitoring_mode_desc": "Hoe Lastboard controleert of je diensten bereikbaar zijn.",
+  "settings.monitoring_interval": "Controle-interval",
+  "settings.monitoring_interval_desc": "Hoe vaak de server elke dienst controleert in 24/7-modus.",
+  "settings.monitoring_off": "Uit",
+  "settings.monitoring_tab": "Zolang het tabblad open is",
+  "settings.monitoring_background": "24/7 (serverzijde)",
+  "settings.interval_1m": "Elke minuut",
+  "settings.interval_5m": "Elke 5 minuten",
+  "settings.interval_10m": "Elke 10 minuten",
+  "settings.interval_30m": "Elke 30 minuten",
+  "settings.save_error": "Opslaan mislukt"
 }

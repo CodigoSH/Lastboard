@@ -3,6 +3,7 @@ import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
+import { statusService } from '../../../services/StatusService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
@@ -14,6 +15,7 @@ import css from './SettingsContent.css' with { type: 'text' };
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
     private users: User[] = [];
+    private monitoring = { mode: 'tab', interval_sec: 300 };
 
 
     static get observedAttributes() {
@@ -185,6 +187,9 @@ class SettingsContent extends HTMLElement {
         if (section === 'users') {
             this.fetchUsers();
         }
+        if (section === 'advanced') {
+            this.fetchMonitoring();
+        }
         if (section === 'about') {
             // No longer checking automatically here. Using background + manual button.
         }
@@ -219,10 +224,38 @@ class SettingsContent extends HTMLElement {
         }
     }
 
+    async fetchMonitoring() {
+        try {
+            const s = await apiService.get<{ mode: string; interval_sec: number }>('/api/monitor/settings');
+            this.monitoring = { mode: s.mode, interval_sec: s.interval_sec };
+            this.render();
+        } catch (e) {
+            console.error("Failed to fetch monitoring settings", e);
+        }
+    }
+
+    // Global (system-wide) setting, so it goes through the monitor endpoint
+    // rather than savePrefs. Re-renders to toggle the interval row.
+    async saveMonitoring(patch: Partial<{ mode: string; interval_sec: number }>) {
+        const next = { ...this.monitoring, ...patch };
+        try {
+            const saved = await apiService.post<{ mode: string; interval_sec: number }>('/api/monitor/settings', next);
+            this.monitoring = { mode: saved.mode, interval_sec: saved.interval_sec };
+            statusService.setMode(saved.mode as 'off' | 'tab' | 'background');
+            this.render();
+            if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+        }
+    }
+
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         if (name === 'section' && oldValue !== newValue) {
             if (newValue === 'users') {
                 this.fetchUsers();
+            }
+            if (newValue === 'advanced') {
+                this.fetchMonitoring();
             }
             if (newValue === 'about') {
                 this.checkForUpdates();
@@ -639,7 +672,7 @@ class SettingsContent extends HTMLElement {
             }
 
             case 'advanced':
-                return advancedTemplate();
+                return advancedTemplate(this.monitoring);
 
             case 'users':
                 return usersTemplate(this.users);
@@ -918,6 +951,30 @@ class SettingsContent extends HTMLElement {
             });
         }
 
+        const monitoringModeSelect = this.shadowRoot!.getElementById('monitoring-mode') as any;
+        if (monitoringModeSelect) {
+            monitoringModeSelect.options = [
+                { value: 'off', label: i18n.t('settings.monitoring_off') },
+                { value: 'tab', label: i18n.t('settings.monitoring_tab') },
+                { value: 'background', label: i18n.t('settings.monitoring_background') },
+            ];
+            monitoringModeSelect.addEventListener('change', (e: CustomEvent) => {
+                this.saveMonitoring({ mode: e.detail });
+            });
+        }
+
+        const monitoringIntervalSelect = this.shadowRoot!.getElementById('monitoring-interval') as any;
+        if (monitoringIntervalSelect) {
+            monitoringIntervalSelect.options = [
+                { value: '60', label: i18n.t('settings.interval_1m') },
+                { value: '300', label: i18n.t('settings.interval_5m') },
+                { value: '600', label: i18n.t('settings.interval_10m') },
+                { value: '1800', label: i18n.t('settings.interval_30m') },
+            ];
+            monitoringIntervalSelect.addEventListener('change', (e: CustomEvent) => {
+                this.saveMonitoring({ interval_sec: parseInt(e.detail, 10) });
+            });
+        }
     }
 
     updateBetaBadgeVisuals() {

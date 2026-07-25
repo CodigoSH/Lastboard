@@ -459,5 +459,18 @@
   "widget.api.cat.network": "Δίκτυο",
   "widget.api.cat.files": "Αρχεία",
   "widget.api.cat.downloads": "Λήψεις",
-  "widget.api.cat.dev": "Ανάπτυξη"
+  "widget.api.cat.dev": "Ανάπτυξη",
+  "settings.monitoring": "Παρακολούθηση",
+  "settings.monitoring_mode": "Έλεγχοι κατάστασης",
+  "settings.monitoring_mode_desc": "Πώς το Lastboard ελέγχει αν οι υπηρεσίες σου είναι διαθέσιμες.",
+  "settings.monitoring_interval": "Διάστημα ελέγχου",
+  "settings.monitoring_interval_desc": "Πόσο συχνά ελέγχει ο διακομιστής κάθε υπηρεσία στη λειτουργία 24/7.",
+  "settings.monitoring_off": "Ανενεργό",
+  "settings.monitoring_tab": "Όσο η καρτέλα είναι ανοιχτή",
+  "settings.monitoring_background": "24/7 (από τον διακομιστή)",
+  "settings.interval_1m": "Κάθε λεπτό",
+  "settings.interval_5m": "Κάθε 5 λεπτά",
+  "settings.interval_10m": "Κάθε 10 λεπτά",
+  "settings.interval_30m": "Κάθε 30 λεπτά",
+  "settings.save_error": "Αποτυχία αποθήκευσης"
 }

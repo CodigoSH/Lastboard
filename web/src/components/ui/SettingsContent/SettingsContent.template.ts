@@ -305,8 +305,30 @@ export const usersTemplate = (users: any[]) => `
     </dialog>
 `;
 
-export const advancedTemplate = () => `
+export const advancedTemplate = (monitoring: { mode: string; interval_sec: number }) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <!-- Monitoring Section -->
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.monitoring')}</h3>
+            <div class="settings-content__action-group">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.monitoring_mode')}</h3>
+                        <p>${i18n.t('settings.monitoring_mode_desc')}</p>
+                    </div>
+                    <app-select id="monitoring-mode" value="${monitoring.mode}" style="min-width: 200px;"></app-select>
+                </div>
+                <div class="settings-content__action-row" id="monitoring-interval-row"
+                     style="display: ${monitoring.mode === 'background' ? 'flex' : 'none'};">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.monitoring_interval')}</h3>
+                        <p>${i18n.t('settings.monitoring_interval_desc')}</p>
+                    </div>
+                    <app-select id="monitoring-interval" value="${monitoring.interval_sec}" style="min-width: 200px;"></app-select>
+                </div>
+            </div>
+        </div>
+
         <!-- System Migration Section -->
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.system_data')}</h3>
