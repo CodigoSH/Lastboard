@@ -477,5 +477,6 @@
   "monitor.uptime": "اپ ٹائم",
   "monitor.latency": "لیٹنسی",
   "monitor.recent_checks": "حالیہ چیکس",
-  "monitor.status_unknown": "کوئی ڈیٹا نہیں"
+  "monitor.status_unknown": "کوئی ڈیٹا نہیں",
+  "monitor.click_for_history": "ہسٹری کے لیے کلک کریں"
 }

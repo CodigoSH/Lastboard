@@ -477,5 +477,6 @@
   "monitor.uptime": "Verfügbarkeit",
   "monitor.latency": "Latenz",
   "monitor.recent_checks": "Letzte Prüfungen",
-  "monitor.status_unknown": "Keine Daten"
+  "monitor.status_unknown": "Keine Daten",
+  "monitor.click_for_history": "Zum Verlauf klicken"
 }

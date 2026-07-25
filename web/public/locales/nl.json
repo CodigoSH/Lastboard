@@ -477,5 +477,6 @@
   "monitor.uptime": "Uptime",
   "monitor.latency": "Latentie",
   "monitor.recent_checks": "Recente controles",
-  "monitor.status_unknown": "Geen gegevens"
+  "monitor.status_unknown": "Geen gegevens",
+  "monitor.click_for_history": "Klik voor geschiedenis"
 }

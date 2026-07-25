@@ -477,5 +477,6 @@
   "monitor.uptime": "Dostępność",
   "monitor.latency": "Opóźnienie",
   "monitor.recent_checks": "Ostatnie sprawdzenia",
-  "monitor.status_unknown": "Brak danych"
+  "monitor.status_unknown": "Brak danych",
+  "monitor.click_for_history": "Kliknij, aby zobaczyć historię"
 }

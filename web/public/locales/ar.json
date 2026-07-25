@@ -477,5 +477,6 @@
   "monitor.uptime": "مدة التشغيل",
   "monitor.latency": "زمن الاستجابة",
   "monitor.recent_checks": "الفحوصات الأخيرة",
-  "monitor.status_unknown": "لا توجد بيانات"
+  "monitor.status_unknown": "لا توجد بيانات",
+  "monitor.click_for_history": "انقر لعرض السجل"
 }

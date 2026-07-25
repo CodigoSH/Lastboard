@@ -477,5 +477,6 @@
   "monitor.uptime": "在线率",
   "monitor.latency": "延迟",
   "monitor.recent_checks": "最近检查",
-  "monitor.status_unknown": "无数据"
+  "monitor.status_unknown": "无数据",
+  "monitor.click_for_history": "点击查看历史"
 }

@@ -477,5 +477,6 @@
   "monitor.uptime": "가동 시간",
   "monitor.latency": "지연 시간",
   "monitor.recent_checks": "최근 확인",
-  "monitor.status_unknown": "데이터 없음"
+  "monitor.status_unknown": "데이터 없음",
+  "monitor.click_for_history": "기록 보려면 클릭"
 }

@@ -477,5 +477,6 @@
   "monitor.uptime": "Χρόνος λειτουργίας",
   "monitor.latency": "Καθυστέρηση",
   "monitor.recent_checks": "Πρόσφατοι έλεγχοι",
-  "monitor.status_unknown": "Χωρίς δεδομένα"
+  "monitor.status_unknown": "Χωρίς δεδομένα",
+  "monitor.click_for_history": "Κλικ για ιστορικό"
 }

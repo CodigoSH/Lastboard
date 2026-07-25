@@ -4,6 +4,8 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { collisionService } from '../../../services/collisionService';
 import { statusService } from '../../../services/StatusService';
 import { i18n } from '../../../services/i18n';
+import { apiService } from '../../../services/apiService';
+import { showStatusTip, updateStatusTip, hideStatusTip } from './statusTooltip';
 // Widgets
 import '../../../widgets/core/ClockWidget';
 import '../../../widgets/core/NotepadWidget';
@@ -304,13 +306,15 @@ class BookmarkGrid extends HTMLElement {
                             indicator.classList.add(`status-${newItem.status}`);
                         }
 
-                        // Update tooltip
+                        // Update the accessible label (the rich hover info is the custom tooltip).
                         let title = i18n.t('general.pinging');
                         if (newItem.status === 'up') title = i18n.t('status.online');
                         else if (newItem.status === 'down') title = i18n.t('status.unreachable');
                         else if (newItem.status === 'pending') title = i18n.t('status.checking');
 
-                        indicator.setAttribute('title', title);
+                        indicator.setAttribute('aria-label', title);
+                        // Invalidate cached history so the tooltip reflects the new status next hover.
+                        this._tipCache.delete(newItem.id);
                     }
                 }
             }
@@ -325,6 +329,99 @@ class BookmarkGrid extends HTMLElement {
         // Ensure we don't double-attach by using a bound method reference
         root.removeEventListener('click', this._boundActionClick);
         root.addEventListener('click', this._boundActionClick);
+
+        root.removeEventListener('mouseover', this._boundStatusOver);
+        root.addEventListener('mouseover', this._boundStatusOver);
+        root.removeEventListener('mouseout', this._boundStatusOut);
+        root.addEventListener('mouseout', this._boundStatusOut);
+    }
+
+    // --- Status dot hover tooltip (quick glance; click opens the full drawer) ---
+    private _boundStatusOver = (e: Event) => this._onStatusOver(e);
+    private _boundStatusOut = (e: Event) => this._onStatusOut(e);
+    private _tipTimer: number | null = null;
+    private _tipHoverId = 0;
+    private _tipCache = new Map<number, { data: any; ts: number }>();
+    private static readonly TIP_TTL = 30000; // ms
+
+    private _onStatusOver(e: Event) {
+        const dot = (e.target as HTMLElement)?.closest?.('.status-indicator');
+        if (!dot) return;
+        const card = dot.closest('[data-id]') as HTMLElement | null;
+        const id = parseInt(card?.dataset.id || '0');
+        if (!id) return;
+
+        this._tipHoverId = id;
+        if (this._tipTimer) clearTimeout(this._tipTimer);
+        this._tipTimer = window.setTimeout(() => {
+            if (this._tipHoverId !== id) return;
+            const status = this._statusOf(id);
+            // Show the status instantly; fill uptime/latency once history loads.
+            showStatusTip(dot, this._renderTip(status, this._tipCache.get(id)?.data ?? null, true));
+            this._loadTipData(id).then(data => {
+                if (this._tipHoverId === id) {
+                    updateStatusTip(this._renderTip(status, data, false));
+                }
+            });
+        }, 250);
+    }
+
+    private _onStatusOut(e: Event) {
+        const dot = (e.target as HTMLElement)?.closest?.('.status-indicator');
+        if (!dot) return;
+        // Ignore moves within the same dot.
+        const to = (e as MouseEvent).relatedTarget as Node | null;
+        if (to && dot.contains(to)) return;
+        this._tipHoverId = 0;
+        if (this._tipTimer) { clearTimeout(this._tipTimer); this._tipTimer = null; }
+        hideStatusTip();
+    }
+
+    private _statusOf(id: number): string {
+        const item = this.allItems.find(b => b.id === id) as any;
+        return item?.status || 'unknown';
+    }
+
+    private async _loadTipData(id: number): Promise<any | null> {
+        const cached = this._tipCache.get(id);
+        if (cached && Date.now() - cached.ts < BookmarkGrid.TIP_TTL) return cached.data;
+        try {
+            const data = await apiService.get<any>(`/api/monitor/history?item_id=${id}&range=24h`);
+            this._tipCache.set(id, { data, ts: Date.now() });
+            return data;
+        } catch {
+            return null;
+        }
+    }
+
+    private _renderTip(status: string, data: any | null, loading: boolean): string {
+        const cls = status === 'up' ? 'up' : status === 'down' ? 'down' : status === 'pending' ? 'pending' : 'unknown';
+        const label = status === 'up' ? i18n.t('status.online')
+            : status === 'down' ? i18n.t('status.unreachable')
+                : status === 'pending' ? i18n.t('status.checking')
+                    : i18n.t('monitor.status_unknown');
+
+        const hasData = data && data.total > 0;
+        const dash = loading ? '…' : '—';
+        const uptime = hasData && data.uptime_pct >= 0 ? `${data.uptime_pct.toFixed(1)}%` : dash;
+        const latency = hasData && data.current?.up && data.current.latency_ms != null
+            ? `${data.current.latency_ms} ms` : dash;
+
+        return `
+            <div class="status-tooltip__status status-tooltip__status--${cls}">
+                <span class="status-tooltip__dot"></span>${label}
+            </div>
+            <div class="status-tooltip__rows">
+                <div class="status-tooltip__row">
+                    <span class="status-tooltip__row-label">${i18n.t('monitor.uptime')} (24h)</span>
+                    <span class="status-tooltip__row-value">${uptime}</span>
+                </div>
+                <div class="status-tooltip__row">
+                    <span class="status-tooltip__row-label">${i18n.t('monitor.latency')}</span>
+                    <span class="status-tooltip__row-value">${latency}</span>
+                </div>
+            </div>
+            <div class="status-tooltip__hint">${i18n.t('monitor.click_for_history')}</div>`;
     }
 
     private async handleActionClick(e: Event) {
@@ -336,6 +433,7 @@ class BookmarkGrid extends HTMLElement {
         if (statusDot) {
             e.preventDefault();
             e.stopPropagation();
+            hideStatusTip();
             const card = statusDot.closest('[data-id]') as HTMLElement | null;
             const id = parseInt(card?.dataset.id || '0');
             if (id) {
@@ -514,6 +612,8 @@ class BookmarkGrid extends HTMLElement {
         window.removeEventListener('mouseup', this._boundMouseUp);
         window.removeEventListener('resize', this._boundUpdateTouchState);
         window.removeEventListener('orientationchange', this._boundUpdateTouchState);
+        if (this._tipTimer) clearTimeout(this._tipTimer);
+        hideStatusTip();
         statusService.stop();
     }
 

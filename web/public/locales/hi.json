@@ -477,5 +477,6 @@
   "monitor.uptime": "अपटाइम",
   "monitor.latency": "विलंबता",
   "monitor.recent_checks": "हाल की जाँच",
-  "monitor.status_unknown": "कोई डेटा नहीं"
+  "monitor.status_unknown": "कोई डेटा नहीं",
+  "monitor.click_for_history": "इतिहास के लिए क्लिक करें"
 }

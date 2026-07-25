@@ -477,5 +477,6 @@
   "monitor.uptime": "در دسترس‌بودن",
   "monitor.latency": "تأخیر",
   "monitor.recent_checks": "بررسی‌های اخیر",
-  "monitor.status_unknown": "بدون داده"
+  "monitor.status_unknown": "بدون داده",
+  "monitor.click_for_history": "برای تاریخچه کلیک کنید"
 }

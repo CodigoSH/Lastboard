@@ -477,5 +477,6 @@
   "monitor.uptime": "稼働率",
   "monitor.latency": "レイテンシ",
   "monitor.recent_checks": "最近のチェック",
-  "monitor.status_unknown": "データなし"
+  "monitor.status_unknown": "データなし",
+  "monitor.click_for_history": "クリックで履歴"
 }

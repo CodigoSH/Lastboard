@@ -477,5 +477,6 @@
   "monitor.uptime": "আপটাইম",
   "monitor.latency": "লেটেন্সি",
   "monitor.recent_checks": "সাম্প্রতিক চেক",
-  "monitor.status_unknown": "কোনো ডেটা নেই"
+  "monitor.status_unknown": "কোনো ডেটা নেই",
+  "monitor.click_for_history": "ইতিহাস দেখতে ক্লিক করুন"
 }

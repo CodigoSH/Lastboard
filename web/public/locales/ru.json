@@ -477,5 +477,6 @@
   "monitor.uptime": "Аптайм",
   "monitor.latency": "Задержка",
   "monitor.recent_checks": "Последние проверки",
-  "monitor.status_unknown": "Нет данных"
+  "monitor.status_unknown": "Нет данных",
+  "monitor.click_for_history": "Нажмите для истории"
 }

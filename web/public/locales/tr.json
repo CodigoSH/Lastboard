@@ -477,5 +477,6 @@
   "monitor.uptime": "Çalışma süresi",
   "monitor.latency": "Gecikme",
   "monitor.recent_checks": "Son kontroller",
-  "monitor.status_unknown": "Veri yok"
+  "monitor.status_unknown": "Veri yok",
+  "monitor.click_for_history": "Geçmiş için tıkla"
 }
