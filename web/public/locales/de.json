@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Noch kein Verlauf aufgezeichnet. Prüfungen erscheinen in Kürze.",
   "monitor.incidents": "Ausfälle",
   "monitor.no_incidents": "Keine Ausfälle in diesem Zeitraum.",
-  "monitor.ongoing": "Andauernd"
+  "monitor.ongoing": "Andauernd",
+  "monitor.updated": "Aktualisiert",
+  "monitor.refresh": "Aktualisieren"
 }

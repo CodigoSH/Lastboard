@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "ابھی کوئی ہسٹری ریکارڈ نہیں ہوئی۔ چیکس جلد ظاہر ہوں گی۔",
   "monitor.incidents": "آؤٹیجز",
   "monitor.no_incidents": "اس مدت میں کوئی آؤٹیج نہیں۔",
-  "monitor.ongoing": "جاری"
+  "monitor.ongoing": "جاری",
+  "monitor.updated": "اپ ڈیٹڈ",
+  "monitor.refresh": "ریفریش"
 }

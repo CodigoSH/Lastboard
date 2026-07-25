@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "尚未记录历史。检查结果将很快出现。",
   "monitor.incidents": "故障",
   "monitor.no_incidents": "此期间无故障。",
-  "monitor.ongoing": "进行中"
+  "monitor.ongoing": "进行中",
+  "monitor.updated": "已更新",
+  "monitor.refresh": "刷新"
 }

@@ -42,6 +42,14 @@ const rangeBar = (current: string) => `
         ${RANGES.map(r => `<button class="mhd__range ${r === current ? 'mhd__range--active' : ''}" data-range="${r}">${r}</button>`).join('')}
     </div>`;
 
+const freshnessBar = () => `
+    <div class="mhd__freshness">
+        <span class="mhd__ago" id="mhd-ago"></span>
+        <button class="mhd__refresh" aria-label="${i18n.t('monitor.refresh')}" title="${i18n.t('monitor.refresh')}">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.96 7.96 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>
+        </button>
+    </div>`;
+
 export const shell = (open: boolean, inner: string) => `
     <div class="mhd__overlay ${open ? 'mhd__overlay--open' : ''}"></div>
     <aside class="mhd__panel ${open ? 'mhd__panel--open' : ''}" role="dialog" aria-modal="true" aria-label="${i18n.t('settings.monitoring') || 'Monitoring'}">
@@ -186,6 +194,7 @@ export const dataInner = (name: string, data: HistoryData): string => {
     return `
         ${header(name)}
         ${rangeBar(data.range)}
+        ${freshnessBar()}
         <div class="mhd__body">
             <div class="mhd__status mhd__status--${status}">
                 <span class="mhd__dot"></span>${escapeHtml(statusLabel)}

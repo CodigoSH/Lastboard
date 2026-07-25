@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "No history recorded yet. Checks will appear shortly.",
   "monitor.incidents": "Outages",
   "monitor.no_incidents": "No outages in this period.",
-  "monitor.ongoing": "Ongoing"
+  "monitor.ongoing": "Ongoing",
+  "monitor.updated": "Updated",
+  "monitor.refresh": "Refresh"
 }

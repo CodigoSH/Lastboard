@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Henüz kayıtlı geçmiş yok. Kontroller birazdan görünecek.",
   "monitor.incidents": "Kesintiler",
   "monitor.no_incidents": "Bu dönemde kesinti yok.",
-  "monitor.ongoing": "Devam ediyor"
+  "monitor.ongoing": "Devam ediyor",
+  "monitor.updated": "Güncellendi",
+  "monitor.refresh": "Yenile"
 }

@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Belum ada riwayat terekam. Pemeriksaan akan segera muncul.",
   "monitor.incidents": "Gangguan",
   "monitor.no_incidents": "Tidak ada gangguan pada periode ini.",
-  "monitor.ongoing": "Berlangsung"
+  "monitor.ongoing": "Berlangsung",
+  "monitor.updated": "Diperbarui",
+  "monitor.refresh": "Segarkan"
 }

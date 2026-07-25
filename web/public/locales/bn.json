@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "এখনও কোনো ইতিহাস রেকর্ড হয়নি। শীঘ্রই চেক দেখা যাবে।",
   "monitor.incidents": "বিভ্রাট",
   "monitor.no_incidents": "এই সময়ে কোনো বিভ্রাট নেই।",
-  "monitor.ongoing": "চলমান"
+  "monitor.ongoing": "চলমান",
+  "monitor.updated": "আপডেট",
+  "monitor.refresh": "রিফ্রেশ"
 }

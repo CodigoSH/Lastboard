@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Aucun historique enregistré pour l'instant. Les vérifications apparaîtront bientôt.",
   "monitor.incidents": "Pannes",
   "monitor.no_incidents": "Aucune panne sur cette période.",
-  "monitor.ongoing": "En cours"
+  "monitor.ongoing": "En cours",
+  "monitor.updated": "Mis à jour",
+  "monitor.refresh": "Actualiser"
 }

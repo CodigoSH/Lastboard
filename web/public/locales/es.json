@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Aún no hay historial registrado. Las comprobaciones aparecerán en breve.",
   "monitor.incidents": "Incidencias",
   "monitor.no_incidents": "Sin incidencias en este periodo.",
-  "monitor.ongoing": "En curso"
+  "monitor.ongoing": "En curso",
+  "monitor.updated": "Actualizado",
+  "monitor.refresh": "Actualizar"
 }

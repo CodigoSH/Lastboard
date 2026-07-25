@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "아직 기록된 이력이 없습니다. 곧 확인 결과가 표시됩니다.",
   "monitor.incidents": "장애",
   "monitor.no_incidents": "이 기간에 장애가 없습니다.",
-  "monitor.ongoing": "진행 중"
+  "monitor.ongoing": "진행 중",
+  "monitor.updated": "업데이트됨",
+  "monitor.refresh": "새로 고침"
 }

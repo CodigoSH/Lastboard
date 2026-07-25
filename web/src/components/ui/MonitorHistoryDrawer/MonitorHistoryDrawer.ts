@@ -20,6 +20,11 @@ class MonitorHistoryDrawer extends HTMLElement {
     private data: HistoryData | null = null;
     private loading = false;
     private _sparkPoints: SparkPoint[] = [];
+    private _lastFetch = 0;
+    private _lastSig = '';
+    private _refreshTimer: number | null = null;
+    private _agoTimer: number | null = null;
+    private static readonly REFRESH_MS = 30000;
     private _keydown: (e: KeyboardEvent) => void;
     private _unsubI18n: (() => void) | undefined;
 
@@ -42,6 +47,10 @@ class MonitorHistoryDrawer extends HTMLElement {
             const rangeBtn = t.closest('.mhd__range') as HTMLElement | null;
             if (rangeBtn && rangeBtn.dataset.range) {
                 this.setRange(rangeBtn.dataset.range);
+                return;
+            }
+            if (t.closest('.mhd__refresh')) {
+                this._reload(false);
             }
         });
         this.shadowRoot!.addEventListener('mouseover', (e) => this._onHover(e));
@@ -54,6 +63,7 @@ class MonitorHistoryDrawer extends HTMLElement {
     disconnectedCallback() {
         window.removeEventListener('keydown', this._keydown);
         if (this._unsubI18n) this._unsubI18n();
+        this._stopTimers();
     }
 
     async open(itemId: number, name: string) {
@@ -67,33 +77,82 @@ class MonitorHistoryDrawer extends HTMLElement {
         apiService.get<{ mode: string }>('/api/monitor/settings')
             .then(s => { this.mode = s.mode || 'tab'; })
             .catch(() => { /* keep default */ });
-        this.refetch();
+        this._reload(true);
+        this._startTimers();
     }
 
     setRange(range: string) {
         if (range === this.range) return;
         this.range = range;
-        this.refetch();
+        this._reload(true);
     }
 
-    private async refetch() {
-        this.data = null;
-        this.loading = true;
-        this.render();
+    // showLoading=true for explicit actions (open, range switch); false for the
+    // background auto-refresh, which only re-renders when the data actually
+    // changed so it never disrupts scrolling or a hover the user is reading.
+    private async _reload(showLoading: boolean) {
+        if (showLoading) {
+            this.data = null;
+            this.loading = true;
+            this.render();
+        }
+        let d: HistoryData | null = null;
         try {
-            this.data = await apiService.get<HistoryData>(
+            d = await apiService.get<HistoryData>(
                 `/api/monitor/history?item_id=${this.itemId}&range=${this.range}`);
         } catch {
-            this.data = null;
+            d = null;
         }
+        if (!this.isOpen) return;
+
         this.loading = false;
-        if (this.isOpen) this.render();
+        const sig = this._sig(d);
+        if (showLoading || sig !== this._lastSig) {
+            this.data = d;
+            this._lastSig = sig;
+            this.render();
+        } else {
+            this.data = d; // keep internal data fresh without a disruptive repaint
+        }
+        this._lastFetch = Date.now();
+        this._updateAgoLabel();
+    }
+
+    private _sig(d: HistoryData | null): string {
+        if (!d) return 'null';
+        return `${d.range}|${d.total}|${d.current?.checked_at || ''}`;
+    }
+
+    private _startTimers() {
+        this._stopTimers();
+        this._refreshTimer = window.setInterval(() => this._reload(false), MonitorHistoryDrawer.REFRESH_MS);
+        this._agoTimer = window.setInterval(() => this._updateAgoLabel(), 10000);
+    }
+
+    private _stopTimers() {
+        if (this._refreshTimer) { clearInterval(this._refreshTimer); this._refreshTimer = null; }
+        if (this._agoTimer) { clearInterval(this._agoTimer); this._agoTimer = null; }
+    }
+
+    private _updateAgoLabel() {
+        const el = this.shadowRoot?.getElementById('mhd-ago');
+        if (!el || !this._lastFetch) return;
+        const secs = Math.round((Date.now() - this._lastFetch) / 1000);
+        let rel: string;
+        try {
+            const rtf = new Intl.RelativeTimeFormat(i18n.getLocale().code, { numeric: 'auto' });
+            rel = secs < 60 ? rtf.format(-secs, 'second') : rtf.format(-Math.round(secs / 60), 'minute');
+        } catch {
+            rel = `${secs}s`;
+        }
+        el.textContent = `${i18n.t('monitor.updated')} ${rel}`;
     }
 
     close() {
         this.isOpen = false;
         this.removeAttribute('open');
         document.body.style.overflow = '';
+        this._stopTimers();
         this.render();
     }
 
@@ -185,6 +244,7 @@ class MonitorHistoryDrawer extends HTMLElement {
                 <div class="mhd__state">${i18n.t('widget.api.unreachable') || 'Error'}</div>`;
         }
         this.shadowRoot!.innerHTML = `<style>${css}</style>${shell(this.isOpen, inner)}`;
+        this._updateAgoLabel();
     }
 }
 

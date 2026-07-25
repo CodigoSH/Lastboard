@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Nessuno storico registrato ancora. I controlli appariranno a breve.",
   "monitor.incidents": "Disservizi",
   "monitor.no_incidents": "Nessun disservizio in questo periodo.",
-  "monitor.ongoing": "In corso"
+  "monitor.ongoing": "In corso",
+  "monitor.updated": "Aggiornato",
+  "monitor.refresh": "Aggiorna"
 }

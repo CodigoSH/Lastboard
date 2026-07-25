@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "هنوز تاریخچه‌ای ثبت نشده. بررسی‌ها به‌زودی نمایش داده می‌شوند.",
   "monitor.incidents": "قطعی‌ها",
   "monitor.no_incidents": "در این بازه قطعی‌ای نبوده است.",
-  "monitor.ongoing": "در جریان"
+  "monitor.ongoing": "در جریان",
+  "monitor.updated": "به‌روزشده",
+  "monitor.refresh": "تازه‌سازی"
 }

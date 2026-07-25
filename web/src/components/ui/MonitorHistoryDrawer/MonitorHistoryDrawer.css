@@ -106,6 +106,41 @@
     color: var(--accent);
 }
 
+.mhd__freshness {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px 0;
+    flex-shrink: 0;
+}
+
+.mhd__ago {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.mhd__refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mhd__refresh:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.mhd__refresh:active svg { transform: rotate(-90deg); transition: transform 0.2s; }
+
 .mhd__body {
     padding: 20px;
     overflow-y: auto;

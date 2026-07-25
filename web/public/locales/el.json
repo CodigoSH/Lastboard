@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Δεν έχει καταγραφεί ιστορικό ακόμη. Οι έλεγχοι θα εμφανιστούν σύντομα.",
   "monitor.incidents": "Διακοπές",
   "monitor.no_incidents": "Καμία διακοπή σε αυτό το διάστημα.",
-  "monitor.ongoing": "Σε εξέλιξη"
+  "monitor.ongoing": "Σε εξέλιξη",
+  "monitor.updated": "Ενημερώθηκε",
+  "monitor.refresh": "Ανανέωση"
 }

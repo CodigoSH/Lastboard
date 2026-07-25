@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "まだ履歴が記録されていません。まもなくチェックが表示されます。",
   "monitor.incidents": "障害",
   "monitor.no_incidents": "この期間に障害はありません。",
-  "monitor.ongoing": "継続中"
+  "monitor.ongoing": "継続中",
+  "monitor.updated": "更新",
+  "monitor.refresh": "更新"
 }

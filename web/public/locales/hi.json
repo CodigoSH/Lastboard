@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "अभी कोई इतिहास दर्ज नहीं। जाँच जल्द ही दिखेंगी।",
   "monitor.incidents": "आउटेज",
   "monitor.no_incidents": "इस अवधि में कोई आउटेज नहीं।",
-  "monitor.ongoing": "जारी"
+  "monitor.ongoing": "जारी",
+  "monitor.updated": "अपडेटेड",
+  "monitor.refresh": "ताज़ा करें"
 }

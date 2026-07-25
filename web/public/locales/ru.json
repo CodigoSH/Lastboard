@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "История ещё не записана. Проверки появятся вскоре.",
   "monitor.incidents": "Сбои",
   "monitor.no_incidents": "Сбоев за этот период нет.",
-  "monitor.ongoing": "Продолжается"
+  "monitor.ongoing": "Продолжается",
+  "monitor.updated": "Обновлено",
+  "monitor.refresh": "Обновить"
 }

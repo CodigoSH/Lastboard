@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Nog geen geschiedenis vastgelegd. Controles verschijnen binnenkort.",
   "monitor.incidents": "Storingen",
   "monitor.no_incidents": "Geen storingen in deze periode.",
-  "monitor.ongoing": "Lopend"
+  "monitor.ongoing": "Lopend",
+  "monitor.updated": "Bijgewerkt",
+  "monitor.refresh": "Vernieuwen"
 }

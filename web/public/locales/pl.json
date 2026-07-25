@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "Brak zarejestrowanej historii. Sprawdzenia pojawią się wkrótce.",
   "monitor.incidents": "Awarie",
   "monitor.no_incidents": "Brak awarii w tym okresie.",
-  "monitor.ongoing": "Trwa"
+  "monitor.ongoing": "Trwa",
+  "monitor.updated": "Zaktualizowano",
+  "monitor.refresh": "Odśwież"
 }

@@ -482,5 +482,7 @@
   "monitor.no_data_yet": "لم يُسجَّل سجل بعد. ستظهر الفحوصات قريبًا.",
   "monitor.incidents": "الأعطال",
   "monitor.no_incidents": "لا توجد أعطال في هذه الفترة.",
-  "monitor.ongoing": "جارٍ الآن"
+  "monitor.ongoing": "جارٍ الآن",
+  "monitor.updated": "محدّث",
+  "monitor.refresh": "تحديث"
 }
