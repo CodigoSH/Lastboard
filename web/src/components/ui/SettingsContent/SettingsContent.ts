@@ -3,7 +3,6 @@ import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
-import { statusService } from '../../../services/StatusService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
@@ -159,6 +158,9 @@ class SettingsContent extends HTMLElement {
                 case 'beta-toggle':
                     this.handleBetaToggle((el as HTMLInputElement).checked);
                     break;
+                case 'monitoring-toggle':
+                    this.saveMonitoring({ mode: (el as HTMLInputElement).checked ? 'background' : 'off' });
+                    break;
             }
         });
 
@@ -245,8 +247,10 @@ class SettingsContent extends HTMLElement {
         try {
             const saved = await apiService.post<{ mode: string; interval_sec: number }>('/api/monitor/settings', next);
             this.monitoring = { mode: saved.mode, interval_sec: saved.interval_sec };
-            statusService.setMode(saved.mode as 'off' | 'tab' | 'background');
             this.render();
+            // Let the topbar show/hide its monitoring icon.
+            const { eventBus, EVENTS } = await import('../../../services/EventBus');
+            eventBus.emit(EVENTS.MONITORING_CHANGED, { mode: saved.mode });
             if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
         } catch {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
@@ -952,18 +956,6 @@ class SettingsContent extends HTMLElement {
             // on screen until a widget refreshes, so confirm the save.
             unitSelect.addEventListener('change', (e: CustomEvent) => {
                 this.savePrefs({ unit_system: e.detail }, { notify: true });
-            });
-        }
-
-        const monitoringModeSelect = this.shadowRoot!.getElementById('monitoring-mode') as any;
-        if (monitoringModeSelect) {
-            monitoringModeSelect.options = [
-                { value: 'off', label: i18n.t('settings.monitoring_off') },
-                { value: 'tab', label: i18n.t('settings.monitoring_tab') },
-                { value: 'background', label: i18n.t('settings.monitoring_background') },
-            ];
-            monitoringModeSelect.addEventListener('change', (e: CustomEvent) => {
-                this.saveMonitoring({ mode: e.detail });
             });
         }
 

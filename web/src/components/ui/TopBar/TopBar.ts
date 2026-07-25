@@ -1,6 +1,7 @@
 import { template } from './TopBar.template';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { eventBus, EVENTS } from '../../../services/EventBus';
+import { apiService } from '../../../services/apiService';
 import { i18n } from '../../../services/i18n';
 import '../RenameDashboardModal/RenameDashboardModal';
 import '../MobileReorderModal/MobileReorderModal';
@@ -20,6 +21,7 @@ interface TopBarState {
     currentDashboardId?: number | null;
     projectLogo?: string;
     isTouchDevice?: boolean;
+    monitoringOn?: boolean;
 }
 
 class TopBar extends HTMLElement {
@@ -27,6 +29,7 @@ class TopBar extends HTMLElement {
     _unsubscribeDashboard: (() => void) | undefined;
     _unsubscribeI18n: (() => void) | undefined;
     _windowClickHandler: ((e: Event) => void) | undefined;
+    _monitoringHandler: ((e: CustomEvent) => void) | undefined;
 
     static get observedAttributes() {
         return ['title'];
@@ -80,6 +83,16 @@ class TopBar extends HTMLElement {
         this._unsubscribeI18n = i18n.subscribe(() => {
             this.render();
         });
+
+        // Monitoring icon visibility: on when 24/7 is enabled. Fetch once, then
+        // react to changes made in settings.
+        apiService.get<{ mode: string }>('/api/monitor/settings')
+            .then(s => this.setState({ monitoringOn: s.mode === 'background' }))
+            .catch(() => { /* leave hidden */ });
+        this._monitoringHandler = (e: CustomEvent) => {
+            this.setState({ monitoringOn: e.detail?.mode === 'background' });
+        };
+        eventBus.on(EVENTS.MONITORING_CHANGED, this._monitoringHandler);
     }
 
     disconnectedCallback() {
@@ -88,6 +101,7 @@ class TopBar extends HTMLElement {
         if (this._windowClickHandler) {
             window.removeEventListener('click', this._windowClickHandler);
         }
+        if (this._monitoringHandler) eventBus.off(EVENTS.MONITORING_CHANGED, this._monitoringHandler);
     }
 
     setState(newState: Partial<TopBarState>) {
@@ -190,6 +204,13 @@ class TopBar extends HTMLElement {
                         composed: true
                     }));
                 }
+                return;
+            }
+
+            const monitorBtn = target.closest('#monitor-toggle');
+            if (monitorBtn) {
+                e.stopPropagation();
+                eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW);
                 return;
             }
 
@@ -326,7 +347,8 @@ class TopBar extends HTMLElement {
             isDemo: this.state.isDemo,
             currentDashboardId: this.state.currentDashboardId,
             projectLogo: this.state.projectLogo,
-            isTouchDevice: this.state.isTouchDevice
+            isTouchDevice: this.state.isTouchDevice,
+            monitoringOn: this.state.monitoringOn
         })}
         `;
     }

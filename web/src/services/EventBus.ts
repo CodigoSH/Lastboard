@@ -6,6 +6,7 @@ export const EVENTS = {
     SHOW_MOVE_DASHBOARD: 'lastboard:show-move-dashboard',
     SHOW_MONITOR_HISTORY: 'lastboard:show-monitor-history',
     SHOW_MONITOR_OVERVIEW: 'lastboard:show-monitor-overview',
+    MONITORING_CHANGED: 'lastboard:monitoring-changed',
     NOTIFY: 'lastboard:notify'
 };
 

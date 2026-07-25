@@ -13,13 +13,14 @@ interface TopBarData {
     currentDashboardId?: number | null;
     projectLogo?: string;
     isTouchDevice?: boolean;
+    monitoringOn?: boolean;
 }
 
 import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
+export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -104,6 +105,13 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
             </div>
 
             <dashboard-switcher class="${editMode ? 'disabled' : ''}"></dashboard-switcher>
+
+            ${monitoringOn ? `
+            <!-- Monitoring status page -->
+            <div id="monitor-toggle" class="top-bar__toggle ${editMode ? 'top-bar__toggle--disabled' : ''}"
+                 title="${i18n.t('monitor.overview_title')}" aria-label="${i18n.t('monitor.overview_title')}" role="button" tabindex="0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>` : ''}
 
             <!-- Sidebar Toggle Icon -->
             <div id="drawer-toggle" class="top-bar__toggle ${editMode ? 'top-bar__toggle--disabled' : ''}" 

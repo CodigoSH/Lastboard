@@ -316,7 +316,10 @@ export const advancedTemplate = (monitoring: { mode: string; interval_sec: numbe
                         <h3>${i18n.t('settings.monitoring_mode')}</h3>
                         <p>${i18n.t('settings.monitoring_mode_desc')}</p>
                     </div>
-                    <app-select id="monitoring-mode" value="${monitoring.mode}" style="min-width: 200px;"></app-select>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="monitoring-toggle" data-change="monitoring-toggle" ${monitoring.mode === 'background' ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
                 </div>
                 <div class="settings-content__action-row" id="monitoring-interval-row"
                      style="display: ${monitoring.mode === 'background' ? 'flex' : 'none'};">
