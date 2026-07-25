@@ -78,9 +78,118 @@
 
 .mhd__close:hover { color: var(--text-main); }
 
+.mhd__ranges {
+    display: flex;
+    gap: 6px;
+    padding: 14px 20px 0;
+    flex-shrink: 0;
+}
+
+.mhd__range {
+    flex: 1;
+    padding: 7px 0;
+    background: rgba(128, 128, 128, 0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mhd__range:hover { color: var(--text-main); }
+
+.mhd__range--active {
+    background: rgba(var(--accent-rgb), 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .mhd__body {
     padding: 20px;
     overflow-y: auto;
+}
+
+.mhd__spark-wrap {
+    margin-bottom: 24px;
+}
+
+.mhd__spark {
+    width: 100%;
+    height: 60px;
+    display: block;
+}
+
+.mhd__spark-line {
+    fill: none;
+    stroke: var(--accent, #4c8bf5);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    stroke-linejoin: round;
+}
+
+.mhd__spark-fill {
+    fill: rgba(var(--accent-rgb), 0.12);
+    stroke: none;
+}
+
+.mhd__spark-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+}
+
+.mhd__spark-empty {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+}
+
+.mhd__incidents {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mhd__incident {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(128, 128, 128, 0.06);
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.mhd__incident-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger-color, #e5484d);
+    flex-shrink: 0;
+}
+
+.mhd__incident-range {
+    color: var(--text-main);
+    flex: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.mhd__incident-dur {
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.mhd__no-incidents {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 4px 0;
 }
 
 .mhd__status {

@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Vérifications récentes",
   "monitor.status_unknown": "Aucune donnée",
   "monitor.click_for_history": "Cliquez pour l'historique",
-  "monitor.no_data_yet": "Aucun historique enregistré pour l'instant. Les vérifications apparaîtront bientôt."
+  "monitor.no_data_yet": "Aucun historique enregistré pour l'instant. Les vérifications apparaîtront bientôt.",
+  "monitor.incidents": "Pannes",
+  "monitor.no_incidents": "Aucune panne sur cette période.",
+  "monitor.ongoing": "En cours"
 }

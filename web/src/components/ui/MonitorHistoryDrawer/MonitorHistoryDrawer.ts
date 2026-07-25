@@ -12,6 +12,8 @@ class MonitorHistoryDrawer extends HTMLElement {
     private isOpen = false;
     private name = '';
     private mode = 'tab';
+    private itemId = 0;
+    private range = '24h';
     private data: HistoryData | null = null;
     private loading = false;
     private _keydown: (e: KeyboardEvent) => void;
@@ -31,6 +33,11 @@ class MonitorHistoryDrawer extends HTMLElement {
             const t = e.target as HTMLElement;
             if (t.closest('.mhd__close') || t.classList.contains('mhd__overlay')) {
                 this.close();
+                return;
+            }
+            const rangeBtn = t.closest('.mhd__range') as HTMLElement | null;
+            if (rangeBtn && rangeBtn.dataset.range) {
+                this.setRange(rangeBtn.dataset.range);
             }
         });
         window.addEventListener('keydown', this._keydown);
@@ -43,21 +50,32 @@ class MonitorHistoryDrawer extends HTMLElement {
     }
 
     async open(itemId: number, name: string) {
+        this.itemId = itemId;
         this.name = name;
+        this.range = '24h';
         this.isOpen = true;
-        this.data = null;
-        this.loading = true;
         this.setAttribute('open', '');
         document.body.style.overflow = 'hidden';
-        this.render();
+        // Fetch mode once per open (drives the empty-state message).
+        apiService.get<{ mode: string }>('/api/monitor/settings')
+            .then(s => { this.mode = s.mode || 'tab'; })
+            .catch(() => { /* keep default */ });
+        this.refetch();
+    }
 
+    setRange(range: string) {
+        if (range === this.range) return;
+        this.range = range;
+        this.refetch();
+    }
+
+    private async refetch() {
+        this.data = null;
+        this.loading = true;
+        this.render();
         try {
-            const [data, settings] = await Promise.all([
-                apiService.get<HistoryData>(`/api/monitor/history?item_id=${itemId}&range=24h`),
-                apiService.get<{ mode: string }>('/api/monitor/settings').catch(() => ({ mode: 'tab' })),
-            ]);
-            this.data = data;
-            this.mode = settings.mode || 'tab';
+            this.data = await apiService.get<HistoryData>(
+                `/api/monitor/history?item_id=${this.itemId}&range=${this.range}`);
         } catch {
             this.data = null;
         }
@@ -77,7 +95,7 @@ class MonitorHistoryDrawer extends HTMLElement {
         if (this.loading) {
             inner = loadingInner(this.name);
         } else if (!this.data || this.data.total === 0) {
-            inner = emptyInner(this.name, this.mode);
+            inner = emptyInner(this.name, this.mode, this.range);
         } else {
             inner = dataInner(this.name, this.data);
         }

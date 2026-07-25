@@ -479,5 +479,8 @@
   "monitor.recent_checks": "最近检查",
   "monitor.status_unknown": "无数据",
   "monitor.click_for_history": "点击查看历史",
-  "monitor.no_data_yet": "尚未记录历史。检查结果将很快出现。"
+  "monitor.no_data_yet": "尚未记录历史。检查结果将很快出现。",
+  "monitor.incidents": "故障",
+  "monitor.no_incidents": "此期间无故障。",
+  "monitor.ongoing": "进行中"
 }

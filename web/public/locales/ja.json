@@ -479,5 +479,8 @@
   "monitor.recent_checks": "最近のチェック",
   "monitor.status_unknown": "データなし",
   "monitor.click_for_history": "クリックで履歴",
-  "monitor.no_data_yet": "まだ履歴が記録されていません。まもなくチェックが表示されます。"
+  "monitor.no_data_yet": "まだ履歴が記録されていません。まもなくチェックが表示されます。",
+  "monitor.incidents": "障害",
+  "monitor.no_incidents": "この期間に障害はありません。",
+  "monitor.ongoing": "継続中"
 }

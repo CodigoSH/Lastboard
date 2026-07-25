@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Последние проверки",
   "monitor.status_unknown": "Нет данных",
   "monitor.click_for_history": "Нажмите для истории",
-  "monitor.no_data_yet": "История ещё не записана. Проверки появятся вскоре."
+  "monitor.no_data_yet": "История ещё не записана. Проверки появятся вскоре.",
+  "monitor.incidents": "Сбои",
+  "monitor.no_incidents": "Сбоев за этот период нет.",
+  "monitor.ongoing": "Продолжается"
 }

@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Πρόσφατοι έλεγχοι",
   "monitor.status_unknown": "Χωρίς δεδομένα",
   "monitor.click_for_history": "Κλικ για ιστορικό",
-  "monitor.no_data_yet": "Δεν έχει καταγραφεί ιστορικό ακόμη. Οι έλεγχοι θα εμφανιστούν σύντομα."
+  "monitor.no_data_yet": "Δεν έχει καταγραφεί ιστορικό ακόμη. Οι έλεγχοι θα εμφανιστούν σύντομα.",
+  "monitor.incidents": "Διακοπές",
+  "monitor.no_incidents": "Καμία διακοπή σε αυτό το διάστημα.",
+  "monitor.ongoing": "Σε εξέλιξη"
 }

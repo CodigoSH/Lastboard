@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Recente controles",
   "monitor.status_unknown": "Geen gegevens",
   "monitor.click_for_history": "Klik voor geschiedenis",
-  "monitor.no_data_yet": "Nog geen geschiedenis vastgelegd. Controles verschijnen binnenkort."
+  "monitor.no_data_yet": "Nog geen geschiedenis vastgelegd. Controles verschijnen binnenkort.",
+  "monitor.incidents": "Storingen",
+  "monitor.no_incidents": "Geen storingen in deze periode.",
+  "monitor.ongoing": "Lopend"
 }

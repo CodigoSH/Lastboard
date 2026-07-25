@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Pemeriksaan terbaru",
   "monitor.status_unknown": "Tidak ada data",
   "monitor.click_for_history": "Klik untuk riwayat",
-  "monitor.no_data_yet": "Belum ada riwayat terekam. Pemeriksaan akan segera muncul."
+  "monitor.no_data_yet": "Belum ada riwayat terekam. Pemeriksaan akan segera muncul.",
+  "monitor.incidents": "Gangguan",
+  "monitor.no_incidents": "Tidak ada gangguan pada periode ini.",
+  "monitor.ongoing": "Berlangsung"
 }

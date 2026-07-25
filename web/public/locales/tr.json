@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Son kontroller",
   "monitor.status_unknown": "Veri yok",
   "monitor.click_for_history": "Geçmiş için tıkla",
-  "monitor.no_data_yet": "Henüz kayıtlı geçmiş yok. Kontroller birazdan görünecek."
+  "monitor.no_data_yet": "Henüz kayıtlı geçmiş yok. Kontroller birazdan görünecek.",
+  "monitor.incidents": "Kesintiler",
+  "monitor.no_incidents": "Bu dönemde kesinti yok.",
+  "monitor.ongoing": "Devam ediyor"
 }

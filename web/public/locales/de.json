@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Letzte Prüfungen",
   "monitor.status_unknown": "Keine Daten",
   "monitor.click_for_history": "Zum Verlauf klicken",
-  "monitor.no_data_yet": "Noch kein Verlauf aufgezeichnet. Prüfungen erscheinen in Kürze."
+  "monitor.no_data_yet": "Noch kein Verlauf aufgezeichnet. Prüfungen erscheinen in Kürze.",
+  "monitor.incidents": "Ausfälle",
+  "monitor.no_incidents": "Keine Ausfälle in diesem Zeitraum.",
+  "monitor.ongoing": "Andauernd"
 }

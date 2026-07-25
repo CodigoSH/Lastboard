@@ -479,5 +479,8 @@
   "monitor.recent_checks": "حالیہ چیکس",
   "monitor.status_unknown": "کوئی ڈیٹا نہیں",
   "monitor.click_for_history": "ہسٹری کے لیے کلک کریں",
-  "monitor.no_data_yet": "ابھی کوئی ہسٹری ریکارڈ نہیں ہوئی۔ چیکس جلد ظاہر ہوں گی۔"
+  "monitor.no_data_yet": "ابھی کوئی ہسٹری ریکارڈ نہیں ہوئی۔ چیکس جلد ظاہر ہوں گی۔",
+  "monitor.incidents": "آؤٹیجز",
+  "monitor.no_incidents": "اس مدت میں کوئی آؤٹیج نہیں۔",
+  "monitor.ongoing": "جاری"
 }

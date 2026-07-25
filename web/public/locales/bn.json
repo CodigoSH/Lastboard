@@ -479,5 +479,8 @@
   "monitor.recent_checks": "সাম্প্রতিক চেক",
   "monitor.status_unknown": "কোনো ডেটা নেই",
   "monitor.click_for_history": "ইতিহাস দেখতে ক্লিক করুন",
-  "monitor.no_data_yet": "এখনও কোনো ইতিহাস রেকর্ড হয়নি। শীঘ্রই চেক দেখা যাবে।"
+  "monitor.no_data_yet": "এখনও কোনো ইতিহাস রেকর্ড হয়নি। শীঘ্রই চেক দেখা যাবে।",
+  "monitor.incidents": "বিভ্রাট",
+  "monitor.no_incidents": "এই সময়ে কোনো বিভ্রাট নেই।",
+  "monitor.ongoing": "চলমান"
 }

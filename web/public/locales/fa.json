@@ -479,5 +479,8 @@
   "monitor.recent_checks": "بررسی‌های اخیر",
   "monitor.status_unknown": "بدون داده",
   "monitor.click_for_history": "برای تاریخچه کلیک کنید",
-  "monitor.no_data_yet": "هنوز تاریخچه‌ای ثبت نشده. بررسی‌ها به‌زودی نمایش داده می‌شوند."
+  "monitor.no_data_yet": "هنوز تاریخچه‌ای ثبت نشده. بررسی‌ها به‌زودی نمایش داده می‌شوند.",
+  "monitor.incidents": "قطعی‌ها",
+  "monitor.no_incidents": "در این بازه قطعی‌ای نبوده است.",
+  "monitor.ongoing": "در جریان"
 }

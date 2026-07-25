@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Recent checks",
   "monitor.status_unknown": "No data",
   "monitor.click_for_history": "Click for history",
-  "monitor.no_data_yet": "No history recorded yet. Checks will appear shortly."
+  "monitor.no_data_yet": "No history recorded yet. Checks will appear shortly.",
+  "monitor.incidents": "Outages",
+  "monitor.no_incidents": "No outages in this period.",
+  "monitor.ongoing": "Ongoing"
 }

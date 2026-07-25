@@ -479,5 +479,8 @@
   "monitor.recent_checks": "Verificações recentes",
   "monitor.status_unknown": "Sem dados",
   "monitor.click_for_history": "Clica para ver o histórico",
-  "monitor.no_data_yet": "Ainda sem histórico registado. As verificações aparecerão em breve."
+  "monitor.no_data_yet": "Ainda sem histórico registado. As verificações aparecerão em breve.",
+  "monitor.incidents": "Interrupções",
+  "monitor.no_incidents": "Sem interrupções neste período.",
+  "monitor.ongoing": "Em curso"
 }
