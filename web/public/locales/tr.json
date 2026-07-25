@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Veriler temizlendi",
   "settings.monitoring_clear_desc": "Kaydedilen tüm durum geçmişini siler. İzleme açık kalır.",
   "monitor.clear_this": "Bu servis",
-  "monitor.clear_all_services": "Tüm servisler"
+  "monitor.clear_all_services": "Tüm servisler",
+  "monitor.now": "şimdi"
 }

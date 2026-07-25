@@ -130,9 +130,14 @@ class MonitorPage extends HTMLElement {
         box.innerHTML = this.rows.map(r => this._row(r)).join('');
     }
 
+    private static readonly BEATS_N = 30;
+
     private _row(r: OverviewRow): string {
         const uptime = r.uptime_pct < 0 ? '—' : `${Math.round(r.uptime_pct)}%`;
-        const beats = (r.heartbeat || []).map(b => `<span class="mp-row__beat mp-row__beat--${b.status}"></span>`).join('');
+        const real = r.heartbeat || [];
+        const pad = Math.max(0, MonitorPage.BEATS_N - real.length);
+        const beats = '<span class="mp-row__beat mp-row__beat--empty"></span>'.repeat(pad)
+            + real.map(b => `<span class="mp-row__beat mp-row__beat--${b.status}"></span>`).join('');
         return `
             <button class="mp-row ${r.item_id === this.selectedId ? 'mp-row--active' : ''}" data-id="${r.item_id}" data-name="${escapeHtml(r.name)}">
                 <span class="mp-row__uptime mp-row__uptime--${r.status}">${uptime}</span>

@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Dados apagados",
   "settings.monitoring_clear_desc": "Apaga todo o histórico de estado registado. A monitorização continua ativa.",
   "monitor.clear_this": "Este serviço",
-  "monitor.clear_all_services": "Todos os serviços"
+  "monitor.clear_all_services": "Todos os serviços",
+  "monitor.now": "agora"
 }

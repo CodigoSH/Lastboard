@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Данные очищены",
   "settings.monitoring_clear_desc": "Удаляет всю записанную историю состояния. Мониторинг остаётся включённым.",
   "monitor.clear_this": "Этот сервис",
-  "monitor.clear_all_services": "Все сервисы"
+  "monitor.clear_all_services": "Все сервисы",
+  "monitor.now": "сейчас"
 }

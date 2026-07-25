@@ -499,5 +499,6 @@
   "monitor.data_cleared": "数据已清除",
   "settings.monitoring_clear_desc": "删除所有已记录的状态历史。监控保持开启。",
   "monitor.clear_this": "此服务",
-  "monitor.clear_all_services": "所有服务"
+  "monitor.clear_all_services": "所有服务",
+  "monitor.now": "现在"
 }

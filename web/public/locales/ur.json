@@ -499,5 +499,6 @@
   "monitor.data_cleared": "ڈیٹا صاف ہو گیا",
   "settings.monitoring_clear_desc": "ریکارڈ شدہ تمام اسٹیٹس ہسٹری حذف کرتا ہے۔ نگرانی چالو رہتی ہے۔",
   "monitor.clear_this": "یہ سروس",
-  "monitor.clear_all_services": "تمام سروسز"
+  "monitor.clear_all_services": "تمام سروسز",
+  "monitor.now": "اب"
 }

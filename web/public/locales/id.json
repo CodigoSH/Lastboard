@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Data dihapus",
   "settings.monitoring_clear_desc": "Menghapus semua riwayat status terekam. Pemantauan tetap aktif.",
   "monitor.clear_this": "Layanan ini",
-  "monitor.clear_all_services": "Semua layanan"
+  "monitor.clear_all_services": "Semua layanan",
+  "monitor.now": "sekarang"
 }

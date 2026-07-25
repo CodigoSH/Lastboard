@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Daten gelöscht",
   "settings.monitoring_clear_desc": "Löscht den gesamten aufgezeichneten Statusverlauf. Die Überwachung bleibt aktiv.",
   "monitor.clear_this": "Dieser Dienst",
-  "monitor.clear_all_services": "Alle Dienste"
+  "monitor.clear_all_services": "Alle Dienste",
+  "monitor.now": "jetzt"
 }

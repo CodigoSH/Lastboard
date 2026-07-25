@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Dati cancellati",
   "settings.monitoring_clear_desc": "Elimina tutto lo storico di stato registrato. Il monitoraggio resta attivo.",
   "monitor.clear_this": "Questo servizio",
-  "monitor.clear_all_services": "Tutti i servizi"
+  "monitor.clear_all_services": "Tutti i servizi",
+  "monitor.now": "ora"
 }

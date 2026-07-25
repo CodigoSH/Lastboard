@@ -499,5 +499,6 @@
   "monitor.data_cleared": "داده‌ها پاک شد",
   "settings.monitoring_clear_desc": "همه تاریخچه وضعیت ثبت‌شده را حذف می‌کند. نظارت فعال می‌ماند.",
   "monitor.clear_this": "این سرویس",
-  "monitor.clear_all_services": "همه سرویس‌ها"
+  "monitor.clear_all_services": "همه سرویس‌ها",
+  "monitor.now": "اکنون"
 }

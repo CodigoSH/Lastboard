@@ -499,5 +499,6 @@
   "monitor.data_cleared": "डेटा साफ़ हो गया",
   "settings.monitoring_clear_desc": "सभी दर्ज स्थिति इतिहास हटाता है। निगरानी चालू रहती है।",
   "monitor.clear_this": "यह सेवा",
-  "monitor.clear_all_services": "सभी सेवाएँ"
+  "monitor.clear_all_services": "सभी सेवाएँ",
+  "monitor.now": "अभी"
 }

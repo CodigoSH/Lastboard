@@ -499,5 +499,6 @@
   "monitor.data_cleared": "تم مسح البيانات",
   "settings.monitoring_clear_desc": "حذف كل سجل الحالة المسجَّل. تبقى المراقبة مفعّلة.",
   "monitor.clear_this": "هذه الخدمة",
-  "monitor.clear_all_services": "جميع الخدمات"
+  "monitor.clear_all_services": "جميع الخدمات",
+  "monitor.now": "الآن"
 }

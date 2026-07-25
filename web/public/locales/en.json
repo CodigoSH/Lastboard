@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Data cleared",
   "settings.monitoring_clear_desc": "Delete all recorded status history. Monitoring stays on.",
   "monitor.clear_this": "This service",
-  "monitor.clear_all_services": "All services"
+  "monitor.clear_all_services": "All services",
+  "monitor.now": "now"
 }

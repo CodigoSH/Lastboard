@@ -154,6 +154,28 @@ const incidentList = (incidents: Incident[]): string => {
     }).join('');
 };
 
+// Heartbeat = the most recent beats, padded on the left with faint placeholders
+// so the strip always fills from the right as data accrues (Uptime-Kuma style).
+const HEARTBEAT_N = 40;
+
+const heartbeatStrip = (beats: HeartbeatBucket[]): string => {
+    const real = beats || [];
+    const pad = Math.max(0, HEARTBEAT_N - real.length);
+    const empties = `<span class="mhd__beat mhd__beat--empty"></span>`.repeat(pad);
+    const bars = real.map(b =>
+        `<span class="mhd__beat mhd__beat--${b.status}" data-status="${b.status}" data-at="${escapeHtml(b.at)}"></span>`
+    ).join('');
+    return empties + bars;
+};
+
+const heartbeatScale = (beats: HeartbeatBucket[]): string => {
+    const real = beats || [];
+    if (!real.length) return '';
+    const mins = Math.max(0, Math.round((Date.now() - parseTs(real[0].at).getTime()) / 60000));
+    const left = mins < 1 ? i18n.t('monitor.now') : mins < 60 ? `${mins}m` : `${Math.round(mins / 60)}h`;
+    return `<div class="mhd__hb-scale"><span>${escapeHtml(left)}</span><span>${escapeHtml(i18n.t('monitor.now'))}</span></div>`;
+};
+
 export const noSelectionInner = () => `
     <div class="mhd__state">
         <div class="mhd__state-icon">📈</div>
@@ -192,10 +214,6 @@ export const dataInner = (name: string, data: HistoryData): string => {
     const incidents = data.incidents || [];
     const heartbeat = data.heartbeat || [];
 
-    const bars = heartbeat.map(b =>
-        `<span class="mhd__beat mhd__beat--${b.status}" data-status="${b.status}" data-at="${escapeHtml(b.at)}"></span>`
-    ).join('');
-
     return `
         ${header(name)}
         ${rangeBar(data.range)}
@@ -219,7 +237,8 @@ export const dataInner = (name: string, data: HistoryData): string => {
             <div class="mhd__spark-wrap">${sparkline(checks)}</div>
 
             <div class="mhd__section-label">${i18n.t('monitor.recent_checks')}</div>
-            <div class="mhd__heartbeat">${bars}</div>
+            <div class="mhd__heartbeat">${heartbeatStrip(heartbeat)}</div>
+            ${heartbeatScale(heartbeat)}
 
             <div class="mhd__section-label">${i18n.t('monitor.incidents')}</div>
             <div class="mhd__incidents">${incidentList(incidents)}</div>

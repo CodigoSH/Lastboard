@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Datos borrados",
   "settings.monitoring_clear_desc": "Borra todo el historial de estado registrado. La monitorización sigue activa.",
   "monitor.clear_this": "Este servicio",
-  "monitor.clear_all_services": "Todos los servicios"
+  "monitor.clear_all_services": "Todos los servicios",
+  "monitor.now": "ahora"
 }

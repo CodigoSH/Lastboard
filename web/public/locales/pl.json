@@ -499,5 +499,6 @@
   "monitor.data_cleared": "Dane wyczyszczone",
   "settings.monitoring_clear_desc": "Usuwa całą zapisaną historię stanu. Monitorowanie pozostaje włączone.",
   "monitor.clear_this": "Ta usługa",
-  "monitor.clear_all_services": "Wszystkie usługi"
+  "monitor.clear_all_services": "Wszystkie usługi",
+  "monitor.now": "teraz"
 }
