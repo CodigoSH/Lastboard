@@ -46,7 +46,51 @@ export const shell = (open: boolean, inner: string) => `
     <div class="mhd__overlay ${open ? 'mhd__overlay--open' : ''}"></div>
     <aside class="mhd__panel ${open ? 'mhd__panel--open' : ''}" role="dialog" aria-modal="true" aria-label="${i18n.t('settings.monitoring') || 'Monitoring'}">
         ${inner}
-    </aside>`;
+    </aside>
+    <div class="mhd__tip" hidden></div>`;
+
+export interface SparkPoint { xPct: number; yPct: number; value: number; at: string; }
+
+// Compute latency chart points (up checks only) as viewBox percentages so the
+// component can overlay a hover marker without SVG aspect-ratio distortion.
+const SPARK_MAX_POINTS = 150;
+
+export function computeSpark(checks: HistoryCheck[]): { min: number; max: number; points: SparkPoint[] } {
+    let up = (checks || []).filter(c => c.up && c.latency_ms != null);
+    if (up.length < 2) return { min: 0, max: 0, points: [] };
+
+    // Downsample so the SVG and hover stay light regardless of range/interval.
+    if (up.length > SPARK_MAX_POINTS) {
+        const sampled: HistoryCheck[] = [];
+        for (let k = 0; k < SPARK_MAX_POINTS; k++) {
+            sampled.push(up[Math.round(k * (up.length - 1) / (SPARK_MAX_POINTS - 1))]);
+        }
+        up = sampled;
+    }
+
+    const vals = up.map(c => c.latency_ms as number);
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const range = max - min || 1;
+    const points = up.map((c, i) => ({
+        xPct: (i / (up.length - 1)) * 100,
+        yPct: (1 - ((c.latency_ms as number) - min) / range) * 100,
+        value: c.latency_ms as number,
+        at: c.checked_at,
+    }));
+    return { min, max, points };
+}
+
+const statusLabelOf = (status: string) => status === 'down'
+    ? i18n.t('status.unreachable')
+    : status === 'up' ? i18n.t('status.online') : i18n.t('monitor.status_unknown');
+
+export const barTooltipHtml = (status: string, at: string) => `
+    <div class="mhd__tip-status mhd__tip-status--${status}"><span class="mhd__tip-dot"></span>${escapeHtml(statusLabelOf(status))}</div>
+    <div class="mhd__tip-sub">${escapeHtml(parseTs(at).toLocaleString())}</div>`;
+
+export const sparkTooltipHtml = (value: number, at: string) => `
+    <div class="mhd__tip-value">${value} ms</div>
+    <div class="mhd__tip-sub">${escapeHtml(parseTs(at).toLocaleString())}</div>`;
 
 export const loadingInner = (name: string) => `
     ${header(name)}
@@ -76,24 +120,24 @@ const fmtDuration = (sec: number): string => {
     return rm ? `${h} h ${rm} min` : `${h} h`;
 };
 
-// Latency line chart as an inline SVG polyline (up checks only).
+// Latency line chart as an inline SVG polyline (up checks only), with an HTML
+// overlay layer (crosshair + dot) the component drives on hover.
 const sparkline = (checks: HistoryCheck[]): string => {
-    const pts = checks.filter(c => c.up && c.latency_ms != null).map(c => c.latency_ms as number);
-    if (pts.length < 2) return `<div class="mhd__spark-empty">—</div>`;
+    const { min, max, points } = computeSpark(checks);
+    if (points.length < 2) return `<div class="mhd__spark-empty">—</div>`;
 
-    const w = 100, h = 34;
-    const min = Math.min(...pts), max = Math.max(...pts);
-    const range = max - min || 1;
-    const step = w / (pts.length - 1);
-    const coords = pts.map((v, i) => `${(i * step).toFixed(1)},${(h - ((v - min) / range) * h).toFixed(2)}`);
-    const line = coords.join(' ');
-    const area = `0,${h} ${line} ${w},${h}`;
+    const line = points.map(p => `${p.xPct.toFixed(2)},${p.yPct.toFixed(2)}`).join(' ');
+    const area = `0,100 ${line} 100,100`;
 
     return `
-        <svg class="mhd__spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
-            <polygon points="${area}" class="mhd__spark-fill"></polygon>
-            <polyline points="${line}" class="mhd__spark-line"></polyline>
-        </svg>
+        <div class="mhd__spark-plot">
+            <svg class="mhd__spark" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polygon points="${area}" class="mhd__spark-fill"></polygon>
+                <polyline points="${line}" class="mhd__spark-line"></polyline>
+            </svg>
+            <div class="mhd__spark-cross" hidden></div>
+            <div class="mhd__spark-dot" hidden></div>
+        </div>
         <div class="mhd__spark-scale"><span>${max} ms</span><span>${min} ms</span></div>`;
 };
 
@@ -133,14 +177,11 @@ export const dataInner = (name: string, data: HistoryData): string => {
     const heartbeat = data.heartbeat || [];
 
     // Each bar spans a slice of the range: red if any check failed in it, green
-    // if all checks passed, neutral if the bucket had no data.
-    const bars = heartbeat.map(b => {
-        const when = parseTs(b.at).toLocaleString();
-        const label = b.status === 'down' ? i18n.t('status.unreachable')
-            : b.status === 'up' ? i18n.t('status.online')
-                : i18n.t('monitor.status_unknown');
-        return `<span class="mhd__beat mhd__beat--${b.status}" title="${escapeHtml(`${label} · ${when}`)}"></span>`;
-    }).join('');
+    // if all checks passed, neutral if the bucket had no data. Data attributes
+    // feed the component's hover tooltip.
+    const bars = heartbeat.map(b =>
+        `<span class="mhd__beat mhd__beat--${b.status}" data-status="${b.status}" data-at="${escapeHtml(b.at)}"></span>`
+    ).join('');
 
     return `
         ${header(name)}

@@ -176,7 +176,19 @@ type heartbeatBucket struct {
 	At     time.Time `json:"at"`     // bucket start
 }
 
-const heartbeatBuckets = 60
+// rangeBuckets returns how many heartbeat segments a range is split into, so
+// each bar maps to a meaningful unit: one per hour for 24h, one per day for
+// 7d/30d. Keeps the strip coordinated with the selected range.
+func rangeBuckets(label string) int {
+	switch label {
+	case "7d":
+		return 7
+	case "30d":
+		return 30
+	default:
+		return 24
+	}
+}
 
 type historyResponse struct {
 	Range     string            `json:"range"`
@@ -306,7 +318,7 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 		Total:     len(checks),
 		Checks:    checks,
 		Incidents: incidents,
-		Heartbeat: buildHeartbeat(checks, since, now, heartbeatBuckets),
+		Heartbeat: buildHeartbeat(checks, since, now, rangeBuckets(label)),
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)

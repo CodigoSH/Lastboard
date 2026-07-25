@@ -1,6 +1,9 @@
 import { apiService } from '../../../services/apiService';
 import { i18n } from '../../../services/i18n';
-import { shell, loadingInner, emptyInner, dataInner, HistoryData } from './MonitorHistoryDrawer.template';
+import {
+    shell, loadingInner, emptyInner, dataInner, HistoryData,
+    computeSpark, barTooltipHtml, sparkTooltipHtml, SparkPoint,
+} from './MonitorHistoryDrawer.template';
 import css from './MonitorHistoryDrawer.css' with { type: 'text' };
 
 /**
@@ -16,6 +19,7 @@ class MonitorHistoryDrawer extends HTMLElement {
     private range = '24h';
     private data: HistoryData | null = null;
     private loading = false;
+    private _sparkPoints: SparkPoint[] = [];
     private _keydown: (e: KeyboardEvent) => void;
     private _unsubI18n: (() => void) | undefined;
 
@@ -40,6 +44,9 @@ class MonitorHistoryDrawer extends HTMLElement {
                 this.setRange(rangeBtn.dataset.range);
             }
         });
+        this.shadowRoot!.addEventListener('mouseover', (e) => this._onHover(e));
+        this.shadowRoot!.addEventListener('mousemove', (e) => this._onMove(e as MouseEvent));
+        this.shadowRoot!.addEventListener('mouseout', (e) => this._onOut(e as MouseEvent));
         window.addEventListener('keydown', this._keydown);
         this._unsubI18n = i18n.subscribe(() => { if (this.isOpen) this.render(); });
     }
@@ -90,7 +97,74 @@ class MonitorHistoryDrawer extends HTMLElement {
         this.render();
     }
 
+    // --- Hover interactions (heartbeat bars + latency chart) ---
+    private _onHover(e: Event) {
+        const beat = (e.target as HTMLElement).closest?.('.mhd__beat') as HTMLElement | null;
+        if (beat) {
+            const r = beat.getBoundingClientRect();
+            this._showTip(barTooltipHtml(beat.dataset.status || '', beat.dataset.at || ''), r.left + r.width / 2, r.top);
+        }
+    }
+
+    private _onMove(e: MouseEvent) {
+        const plot = (e.target as HTMLElement).closest?.('.mhd__spark-plot') as HTMLElement | null;
+        if (!plot || this._sparkPoints.length === 0) return;
+
+        const rect = plot.getBoundingClientRect();
+        const fx = (e.clientX - rect.left) / rect.width;
+        let nearest = this._sparkPoints[0];
+        let best = Infinity;
+        for (const p of this._sparkPoints) {
+            const d = Math.abs(p.xPct / 100 - fx);
+            if (d < best) { best = d; nearest = p; }
+        }
+
+        const dot = plot.querySelector('.mhd__spark-dot') as HTMLElement | null;
+        const cross = plot.querySelector('.mhd__spark-cross') as HTMLElement | null;
+        if (dot) { dot.style.left = `${nearest.xPct}%`; dot.style.top = `${nearest.yPct}%`; dot.hidden = false; }
+        if (cross) { cross.style.left = `${nearest.xPct}%`; cross.hidden = false; }
+
+        const px = rect.left + (nearest.xPct / 100) * rect.width;
+        const py = rect.top + (nearest.yPct / 100) * rect.height;
+        this._showTip(sparkTooltipHtml(nearest.value, nearest.at), px, py);
+    }
+
+    private _onOut(e: MouseEvent) {
+        const to = e.relatedTarget as Node | null;
+        const beat = (e.target as HTMLElement).closest?.('.mhd__beat') as HTMLElement | null;
+        if (beat && (!to || !beat.contains(to))) this._hideTip();
+
+        const plot = (e.target as HTMLElement).closest?.('.mhd__spark-plot') as HTMLElement | null;
+        if (plot && (!to || !plot.contains(to))) {
+            (plot.querySelector('.mhd__spark-dot') as HTMLElement | null)?.setAttribute('hidden', '');
+            (plot.querySelector('.mhd__spark-cross') as HTMLElement | null)?.setAttribute('hidden', '');
+            this._hideTip();
+        }
+    }
+
+    private _showTip(html: string, x: number, y: number) {
+        const tip = this.shadowRoot!.querySelector('.mhd__tip') as HTMLElement | null;
+        if (!tip) return;
+        tip.innerHTML = html;
+        tip.hidden = false;
+        const tw = tip.offsetWidth, th = tip.offsetHeight;
+        let left = x - tw / 2;
+        left = Math.max(8, Math.min(window.innerWidth - tw - 8, left));
+        let top = y - th - 12;
+        if (top < 8) top = y + 16;
+        tip.style.left = `${left}px`;
+        tip.style.top = `${top}px`;
+    }
+
+    private _hideTip() {
+        const tip = this.shadowRoot!.querySelector('.mhd__tip') as HTMLElement | null;
+        if (tip) tip.hidden = true;
+    }
+
     private render() {
+        this._sparkPoints = (this.data && this.data.total > 0)
+            ? computeSpark(this.data.checks || []).points
+            : [];
         let inner: string;
         try {
             if (this.loading) {
