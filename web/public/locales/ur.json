@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "ریکارڈ شدہ تمام اسٹیٹس ہسٹری حذف کرتا ہے۔ نگرانی چالو رہتی ہے۔",
   "monitor.clear_this": "یہ سروس",
   "monitor.clear_all_services": "تمام سروسز",
-  "monitor.now": "اب"
+  "monitor.now": "اب",
+  "monitor.response": "رسپانس",
+  "monitor.current": "موجودہ",
+  "monitor.avg_24h": "اوسط 24گھنٹے",
+  "monitor.ev_status": "حالت",
+  "monitor.ev_when": "تاریخ و وقت",
+  "monitor.ev_duration": "دورانیہ",
+  "monitor.ev_recovered": "بحال"
 }

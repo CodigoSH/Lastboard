@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Удаляет всю записанную историю состояния. Мониторинг остаётся включённым.",
   "monitor.clear_this": "Этот сервис",
   "monitor.clear_all_services": "Все сервисы",
-  "monitor.now": "сейчас"
+  "monitor.now": "сейчас",
+  "monitor.response": "Отклик",
+  "monitor.current": "Текущий",
+  "monitor.avg_24h": "Средн. 24ч",
+  "monitor.ev_status": "Статус",
+  "monitor.ev_when": "Дата и время",
+  "monitor.ev_duration": "Длительность",
+  "monitor.ev_recovered": "Восстановлено"
 }

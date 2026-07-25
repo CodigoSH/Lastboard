@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "기록된 모든 상태 이력을 삭제합니다. 모니터링은 계속 켜져 있습니다.",
   "monitor.clear_this": "이 서비스",
   "monitor.clear_all_services": "모든 서비스",
-  "monitor.now": "지금"
+  "monitor.now": "지금",
+  "monitor.response": "응답",
+  "monitor.current": "현재",
+  "monitor.avg_24h": "평균 24시간",
+  "monitor.ev_status": "상태",
+  "monitor.ev_when": "날짜 및 시간",
+  "monitor.ev_duration": "지속 시간",
+  "monitor.ev_recovered": "복구됨"
 }

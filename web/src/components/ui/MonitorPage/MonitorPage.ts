@@ -11,8 +11,10 @@ interface OverviewRow {
     status: string;
     uptime_pct: number;
     latency_ms: number | null;
-    heartbeat: { status: string }[];
+    heartbeat: { status: string; at: string }[];
 }
+
+const parseTs = (s: string) => new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z');
 
 /**
  * MonitorPage
@@ -136,8 +138,9 @@ class MonitorPage extends HTMLElement {
         const uptime = r.uptime_pct < 0 ? '—' : `${Math.round(r.uptime_pct)}%`;
         const real = r.heartbeat || [];
         const pad = Math.max(0, MonitorPage.BEATS_N - real.length);
+        const label = (st: string) => st === 'down' ? i18n.t('status.unreachable') : i18n.t('status.online');
         const beats = '<span class="mp-row__beat mp-row__beat--empty"></span>'.repeat(pad)
-            + real.map(b => `<span class="mp-row__beat mp-row__beat--${b.status}"></span>`).join('');
+            + real.map(b => `<span class="mp-row__beat mp-row__beat--${b.status}" title="${escapeHtml(`${label(b.status)} · ${parseTs(b.at).toLocaleString()}`)}"></span>`).join('');
         return `
             <button class="mp-row ${r.item_id === this.selectedId ? 'mp-row--active' : ''}" data-id="${r.item_id}" data-name="${escapeHtml(r.name)}">
                 <span class="mp-row__uptime mp-row__uptime--${r.status}">${uptime}</span>

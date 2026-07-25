@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Apaga todo o histórico de estado registado. A monitorização continua ativa.",
   "monitor.clear_this": "Este serviço",
   "monitor.clear_all_services": "Todos os serviços",
-  "monitor.now": "agora"
+  "monitor.now": "agora",
+  "monitor.response": "Resposta",
+  "monitor.current": "Atual",
+  "monitor.avg_24h": "Média 24h",
+  "monitor.ev_status": "Estado",
+  "monitor.ev_when": "Data e hora",
+  "monitor.ev_duration": "Duração",
+  "monitor.ev_recovered": "Recuperado"
 }

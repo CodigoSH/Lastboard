@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Borra todo el historial de estado registrado. La monitorización sigue activa.",
   "monitor.clear_this": "Este servicio",
   "monitor.clear_all_services": "Todos los servicios",
-  "monitor.now": "ahora"
+  "monitor.now": "ahora",
+  "monitor.response": "Respuesta",
+  "monitor.current": "Actual",
+  "monitor.avg_24h": "Media 24h",
+  "monitor.ev_status": "Estado",
+  "monitor.ev_when": "Fecha y hora",
+  "monitor.ev_duration": "Duración",
+  "monitor.ev_recovered": "Recuperado"
 }

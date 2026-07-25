@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "حذف كل سجل الحالة المسجَّل. تبقى المراقبة مفعّلة.",
   "monitor.clear_this": "هذه الخدمة",
   "monitor.clear_all_services": "جميع الخدمات",
-  "monitor.now": "الآن"
+  "monitor.now": "الآن",
+  "monitor.response": "الاستجابة",
+  "monitor.current": "الحالي",
+  "monitor.avg_24h": "متوسط 24س",
+  "monitor.ev_status": "الحالة",
+  "monitor.ev_when": "التاريخ والوقت",
+  "monitor.ev_duration": "المدة",
+  "monitor.ev_recovered": "تم التعافي"
 }

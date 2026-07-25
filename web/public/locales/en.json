@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Delete all recorded status history. Monitoring stays on.",
   "monitor.clear_this": "This service",
   "monitor.clear_all_services": "All services",
-  "monitor.now": "now"
+  "monitor.now": "now",
+  "monitor.response": "Response",
+  "monitor.current": "Current",
+  "monitor.avg_24h": "Avg 24h",
+  "monitor.ev_status": "Status",
+  "monitor.ev_when": "Date & time",
+  "monitor.ev_duration": "Duration",
+  "monitor.ev_recovered": "Recovered"
 }

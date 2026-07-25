@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "删除所有已记录的状态历史。监控保持开启。",
   "monitor.clear_this": "此服务",
   "monitor.clear_all_services": "所有服务",
-  "monitor.now": "现在"
+  "monitor.now": "现在",
+  "monitor.response": "响应",
+  "monitor.current": "当前",
+  "monitor.avg_24h": "24小时均值",
+  "monitor.ev_status": "状态",
+  "monitor.ev_when": "日期和时间",
+  "monitor.ev_duration": "时长",
+  "monitor.ev_recovered": "已恢复"
 }

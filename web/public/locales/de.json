@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Löscht den gesamten aufgezeichneten Statusverlauf. Die Überwachung bleibt aktiv.",
   "monitor.clear_this": "Dieser Dienst",
   "monitor.clear_all_services": "Alle Dienste",
-  "monitor.now": "jetzt"
+  "monitor.now": "jetzt",
+  "monitor.response": "Antwort",
+  "monitor.current": "Aktuell",
+  "monitor.avg_24h": "Ø 24 h",
+  "monitor.ev_status": "Status",
+  "monitor.ev_when": "Datum & Zeit",
+  "monitor.ev_duration": "Dauer",
+  "monitor.ev_recovered": "Behoben"
 }

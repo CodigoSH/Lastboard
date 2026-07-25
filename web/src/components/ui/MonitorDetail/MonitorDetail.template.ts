@@ -19,6 +19,13 @@ export interface HeartbeatBucket {
     at: string;
 }
 
+export interface MonitorStats {
+    avg_ms_24h: number | null;
+    uptime_24h: number;
+    uptime_7d: number;
+    uptime_30d: number;
+}
+
 export interface HistoryData {
     range: string;
     current: HistoryCheck | null;
@@ -27,9 +34,8 @@ export interface HistoryData {
     checks: HistoryCheck[];
     incidents: Incident[];
     heartbeat: HeartbeatBucket[];
+    stats: MonitorStats;
 }
-
-export interface SparkPoint { xPct: number; yPct: number; value: number; at: string; }
 
 export const RANGES = ['24h', '7d', '30d'];
 
@@ -68,8 +74,6 @@ const footerBar = () => `
 // The API sends RFC3339 ("…T…Z"); tolerate the raw "YYYY-MM-DD HH:MM:SS" form too.
 const parseTs = (s: string) => new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z');
 
-const fmtTime = (s: string) => parseTs(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
 const fmtDuration = (sec: number): string => {
     if (sec < 60) return `${sec}s`;
     const m = Math.round(sec / 60);
@@ -79,33 +83,9 @@ const fmtDuration = (sec: number): string => {
     return rm ? `${h} h ${rm} min` : `${h} h`;
 };
 
-const SPARK_MAX_POINTS = 150;
-
-// Compute latency chart points (up checks only) as viewBox percentages so the
-// component can overlay a hover marker without SVG aspect-ratio distortion.
-export function computeSpark(checks: HistoryCheck[]): { min: number; max: number; points: SparkPoint[] } {
-    let up = (checks || []).filter(c => c.up && c.latency_ms != null);
-    if (up.length < 2) return { min: 0, max: 0, points: [] };
-
-    if (up.length > SPARK_MAX_POINTS) {
-        const sampled: HistoryCheck[] = [];
-        for (let k = 0; k < SPARK_MAX_POINTS; k++) {
-            sampled.push(up[Math.round(k * (up.length - 1) / (SPARK_MAX_POINTS - 1))]);
-        }
-        up = sampled;
-    }
-
-    const vals = up.map(c => c.latency_ms as number);
-    const min = Math.min(...vals), max = Math.max(...vals);
-    const range = max - min || 1;
-    const points = up.map((c, i) => ({
-        xPct: (i / (up.length - 1)) * 100,
-        yPct: (1 - ((c.latency_ms as number) - min) / range) * 100,
-        value: c.latency_ms as number,
-        at: c.checked_at,
-    }));
-    return { min, max, points };
-}
+const fmtDateTime = (s: string) => parseTs(s).toLocaleString([], {
+    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+});
 
 const statusLabelOf = (status: string) => status === 'down'
     ? i18n.t('status.unreachable')
@@ -119,39 +99,50 @@ export const sparkTooltipHtml = (value: number, at: string) => `
     <div class="mhd__tip-value">${value} ms</div>
     <div class="mhd__tip-sub">${escapeHtml(parseTs(at).toLocaleString())}</div>`;
 
-const sparkline = (checks: HistoryCheck[]): string => {
-    const { min, max, points } = computeSpark(checks);
-    if (points.length < 2) return `<div class="mhd__spark-empty">—</div>`;
-
-    const line = points.map(p => `${p.xPct.toFixed(2)},${p.yPct.toFixed(2)}`).join(' ');
-    const area = `0,100 ${line} 100,100`;
-
-    return `
-        <div class="mhd__spark-plot">
-            <svg class="mhd__spark" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                <polygon points="${area}" class="mhd__spark-fill"></polygon>
-                <polyline points="${line}" class="mhd__spark-line"></polyline>
-            </svg>
-            <div class="mhd__spark-cross" hidden></div>
-            <div class="mhd__spark-dot" hidden></div>
-        </div>
-        <div class="mhd__spark-scale"><span>${max} ms</span><span>${min} ms</span></div>`;
-};
-
-const incidentList = (incidents: Incident[]): string => {
+// Outage log as a table (Uptime-Kuma "Events"): status, when, duration.
+const incidentTable = (incidents: Incident[]): string => {
+    const head = `
+        <div class="mhd__ev-head">
+            <span>${i18n.t('monitor.ev_status')}</span>
+            <span>${i18n.t('monitor.ev_when')}</span>
+            <span>${i18n.t('monitor.ev_duration')}</span>
+        </div>`;
     if (!incidents.length) {
-        return `<div class="mhd__no-incidents">${i18n.t('monitor.no_incidents')}</div>`;
+        return `<div class="mhd__events">${head}<div class="mhd__ev-empty">${i18n.t('monitor.no_incidents')}</div></div>`;
     }
-    return incidents.slice().reverse().map(inc => {
-        const start = fmtTime(inc.start);
-        const end = inc.end ? fmtTime(inc.end) : i18n.t('monitor.ongoing');
+    const rows = incidents.slice().reverse().map(inc => {
+        const ongoing = !inc.end;
         return `
-            <div class="mhd__incident">
-                <span class="mhd__incident-dot"></span>
-                <span class="mhd__incident-range">${escapeHtml(start)} – ${escapeHtml(end)}</span>
-                <span class="mhd__incident-dur">${escapeHtml(fmtDuration(inc.duration_sec))}</span>
+            <div class="mhd__ev-row">
+                <span class="mhd__ev-badge ${ongoing ? 'mhd__ev-badge--down' : 'mhd__ev-badge--recovered'}">${escapeHtml(ongoing ? i18n.t('status.unreachable') : i18n.t('monitor.ev_recovered'))}</span>
+                <span class="mhd__ev-when">${escapeHtml(fmtDateTime(inc.start))}</span>
+                <span class="mhd__ev-dur">${escapeHtml(fmtDuration(inc.duration_sec))}</span>
             </div>`;
     }).join('');
+    return `<div class="mhd__events">${head}${rows}</div>`;
+};
+
+const statCard = (value: string, label: string, sub: string) => `
+    <div class="mhd__stat">
+        <div class="mhd__stat-value">${escapeHtml(value)}</div>
+        <div class="mhd__stat-label">${escapeHtml(label)}</div>
+        <div class="mhd__stat-sub">${escapeHtml(sub)}</div>
+    </div>`;
+
+const pct = (v: number) => (v < 0 ? '—' : `${v.toFixed(2)}%`);
+
+const statsGrid = (data: HistoryData): string => {
+    const s = data.stats || { avg_ms_24h: null, uptime_24h: -1, uptime_7d: -1, uptime_30d: -1 };
+    const current = data.current?.up && data.current.latency_ms != null ? `${data.current.latency_ms} ms` : '—';
+    const avg = s.avg_ms_24h != null ? `${s.avg_ms_24h} ms` : '—';
+    return `
+        <div class="mhd__stats">
+            ${statCard(current, i18n.t('monitor.response'), i18n.t('monitor.current'))}
+            ${statCard(avg, i18n.t('monitor.response'), i18n.t('monitor.avg_24h'))}
+            ${statCard(pct(s.uptime_24h), i18n.t('monitor.uptime'), '24h')}
+            ${statCard(pct(s.uptime_7d), i18n.t('monitor.uptime'), '7d')}
+            ${statCard(pct(s.uptime_30d), i18n.t('monitor.uptime'), '30d')}
+        </div>`;
 };
 
 // Heartbeat = the most recent beats, padded on the left with faint placeholders
@@ -199,18 +190,7 @@ export const emptyInner = (name: string, mode: string, range: string) => `
 
 export const dataInner = (name: string, data: HistoryData): string => {
     const status = data.current ? (data.current.up ? 'up' : 'down') : 'unknown';
-    const statusLabel = status === 'up'
-        ? i18n.t('status.online')
-        : status === 'down'
-            ? i18n.t('status.unreachable')
-            : i18n.t('monitor.status_unknown');
-
-    const uptime = data.uptime_pct < 0 ? '—' : `${data.uptime_pct.toFixed(1)}%`;
-    const latency = data.current?.up && data.current.latency_ms != null
-        ? `${data.current.latency_ms} ms`
-        : '—';
-
-    const checks = data.checks || [];
+    const statusLabel = statusLabelOf(status);
     const incidents = data.incidents || [];
     const heartbeat = data.heartbeat || [];
 
@@ -218,30 +198,24 @@ export const dataInner = (name: string, data: HistoryData): string => {
         ${header(name)}
         ${rangeBar(data.range)}
         <div class="mhd__body">
-            <div class="mhd__status mhd__status--${status}">
-                <span class="mhd__dot"></span>${escapeHtml(statusLabel)}
+            <div class="mhd__statuspill mhd__statuspill--${status}">
+                <span class="mhd__statuspill-dot"></span>${escapeHtml(statusLabel)}
             </div>
 
-            <div class="mhd__stats">
-                <div class="mhd__stat">
-                    <div class="mhd__stat-value">${uptime}</div>
-                    <div class="mhd__stat-label">${i18n.t('monitor.uptime')} (${escapeHtml(data.range)})</div>
-                </div>
-                <div class="mhd__stat">
-                    <div class="mhd__stat-value">${latency}</div>
-                    <div class="mhd__stat-label">${i18n.t('monitor.latency')}</div>
-                </div>
-            </div>
+            ${statsGrid(data)}
 
-            <div class="mhd__section-label">${i18n.t('monitor.latency')}</div>
-            <div class="mhd__spark-wrap">${sparkline(checks)}</div>
+            <div class="mhd__chart-head">
+                <span class="mhd__section-label">${i18n.t('monitor.latency')}</span>
+                <span class="mhd__legend"><span class="mhd__legend-dot"></span>${i18n.t('monitor.latency')} (ms)</span>
+            </div>
+            <div class="mhd__chart" id="mhd-chart"></div>
 
             <div class="mhd__section-label">${i18n.t('monitor.recent_checks')}</div>
             <div class="mhd__heartbeat">${heartbeatStrip(heartbeat)}</div>
             ${heartbeatScale(heartbeat)}
 
             <div class="mhd__section-label">${i18n.t('monitor.incidents')}</div>
-            <div class="mhd__incidents">${incidentList(incidents)}</div>
+            ${incidentTable(incidents)}
         </div>
         ${footerBar()}`;
 };

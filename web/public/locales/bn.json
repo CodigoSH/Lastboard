@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "রেকর্ড করা সব স্ট্যাটাস ইতিহাস মুছুন। মনিটরিং চালু থাকে।",
   "monitor.clear_this": "এই সার্ভিস",
   "monitor.clear_all_services": "সব সার্ভিস",
-  "monitor.now": "এখন"
+  "monitor.now": "এখন",
+  "monitor.response": "রেসপন্স",
+  "monitor.current": "বর্তমান",
+  "monitor.avg_24h": "গড় 24ঘ",
+  "monitor.ev_status": "স্ট্যাটাস",
+  "monitor.ev_when": "তারিখ ও সময়",
+  "monitor.ev_duration": "সময়কাল",
+  "monitor.ev_recovered": "পুনরুদ্ধার"
 }

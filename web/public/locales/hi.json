@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "सभी दर्ज स्थिति इतिहास हटाता है। निगरानी चालू रहती है।",
   "monitor.clear_this": "यह सेवा",
   "monitor.clear_all_services": "सभी सेवाएँ",
-  "monitor.now": "अभी"
+  "monitor.now": "अभी",
+  "monitor.response": "प्रतिक्रिया",
+  "monitor.current": "वर्तमान",
+  "monitor.avg_24h": "औसत 24घं",
+  "monitor.ev_status": "स्थिति",
+  "monitor.ev_when": "दिनांक व समय",
+  "monitor.ev_duration": "अवधि",
+  "monitor.ev_recovered": "पुनःप्राप्त"
 }

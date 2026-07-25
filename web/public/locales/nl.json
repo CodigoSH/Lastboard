@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Verwijdert alle vastgelegde statusgeschiedenis. Monitoring blijft aan.",
   "monitor.clear_this": "Deze dienst",
   "monitor.clear_all_services": "Alle diensten",
-  "monitor.now": "nu"
+  "monitor.now": "nu",
+  "monitor.response": "Reactie",
+  "monitor.current": "Huidig",
+  "monitor.avg_24h": "Gem. 24u",
+  "monitor.ev_status": "Status",
+  "monitor.ev_when": "Datum & tijd",
+  "monitor.ev_duration": "Duur",
+  "monitor.ev_recovered": "Hersteld"
 }

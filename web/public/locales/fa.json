@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "همه تاریخچه وضعیت ثبت‌شده را حذف می‌کند. نظارت فعال می‌ماند.",
   "monitor.clear_this": "این سرویس",
   "monitor.clear_all_services": "همه سرویس‌ها",
-  "monitor.now": "اکنون"
+  "monitor.now": "اکنون",
+  "monitor.response": "پاسخ",
+  "monitor.current": "فعلی",
+  "monitor.avg_24h": "میانگین ۲۴س",
+  "monitor.ev_status": "وضعیت",
+  "monitor.ev_when": "تاریخ و زمان",
+  "monitor.ev_duration": "مدت",
+  "monitor.ev_recovered": "بازیابی‌شده"
 }

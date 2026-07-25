@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Kaydedilen tüm durum geçmişini siler. İzleme açık kalır.",
   "monitor.clear_this": "Bu servis",
   "monitor.clear_all_services": "Tüm servisler",
-  "monitor.now": "şimdi"
+  "monitor.now": "şimdi",
+  "monitor.response": "Yanıt",
+  "monitor.current": "Şu anki",
+  "monitor.avg_24h": "Ort. 24s",
+  "monitor.ev_status": "Durum",
+  "monitor.ev_when": "Tarih ve saat",
+  "monitor.ev_duration": "Süre",
+  "monitor.ev_recovered": "Düzeldi"
 }

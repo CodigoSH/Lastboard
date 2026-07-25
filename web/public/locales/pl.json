@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Usuwa całą zapisaną historię stanu. Monitorowanie pozostaje włączone.",
   "monitor.clear_this": "Ta usługa",
   "monitor.clear_all_services": "Wszystkie usługi",
-  "monitor.now": "teraz"
+  "monitor.now": "teraz",
+  "monitor.response": "Odpowiedź",
+  "monitor.current": "Bieżący",
+  "monitor.avg_24h": "Śr. 24h",
+  "monitor.ev_status": "Stan",
+  "monitor.ev_when": "Data i godzina",
+  "monitor.ev_duration": "Czas trwania",
+  "monitor.ev_recovered": "Przywrócono"
 }

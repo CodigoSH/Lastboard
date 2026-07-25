@@ -500,5 +500,12 @@
   "settings.monitoring_clear_desc": "Διαγράφει όλο το καταγεγραμμένο ιστορικό κατάστασης. Η παρακολούθηση παραμένει ενεργή.",
   "monitor.clear_this": "Αυτή η υπηρεσία",
   "monitor.clear_all_services": "Όλες οι υπηρεσίες",
-  "monitor.now": "τώρα"
+  "monitor.now": "τώρα",
+  "monitor.response": "Απόκριση",
+  "monitor.current": "Τρέχον",
+  "monitor.avg_24h": "Μ.Ο. 24ω",
+  "monitor.ev_status": "Κατάσταση",
+  "monitor.ev_when": "Ημ/νία & ώρα",
+  "monitor.ev_duration": "Διάρκεια",
+  "monitor.ev_recovered": "Ανακτήθηκε"
 }

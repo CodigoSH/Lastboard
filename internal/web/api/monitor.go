@@ -199,6 +199,7 @@ type historyResponse struct {
 	Checks    []MonitorCheck    `json:"checks"` // oldest-first
 	Incidents []incident        `json:"incidents"`
 	Heartbeat []heartbeatBucket `json:"heartbeat"`
+	Stats     MonitorStats      `json:"stats"`
 }
 
 // rawBeats returns the most recent up-to-n checks as heartbeat beats, oldest
@@ -310,6 +311,9 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 		Checks:    checks,
 		Incidents: incidents,
 		Heartbeat: rawBeats(checks, 40),
+	}
+	if stats, err := h.store.Stats(itemID, now); err == nil {
+		resp.Stats = stats
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
@@ -461,6 +465,55 @@ func probeTimed(rawUrl string) (bool, *int, int) {
 		return true, &ms, statusCode
 	}
 	return false, nil, statusCode
+}
+
+// MonitorStats are the fixed-window figures shown in the detail stat cards,
+// independent of the selected chart range. Uptime is -1 when the window has no
+// data; AvgMs24h is nil when there were no successful checks in 24h.
+type MonitorStats struct {
+	AvgMs24h  *int    `json:"avg_ms_24h"`
+	Uptime24h float64 `json:"uptime_24h"`
+	Uptime7d  float64 `json:"uptime_7d"`
+	Uptime30d float64 `json:"uptime_30d"`
+}
+
+// Stats computes the uptime windows and 24h average latency for one item.
+func (s *MonitorStore) Stats(itemID int, now time.Time) (MonitorStats, error) {
+	uptime := func(dur time.Duration) (float64, error) {
+		since := now.Add(-dur).UTC().Format("2006-01-02 15:04:05")
+		var total, up int
+		if err := s.DB.QueryRow(
+			`SELECT COUNT(*), COALESCE(SUM(up), 0) FROM monitor_checks WHERE item_id = ? AND checked_at >= ?`,
+			itemID, since).Scan(&total, &up); err != nil {
+			return -1, err
+		}
+		if total == 0 {
+			return -1, nil
+		}
+		return float64(up) / float64(total) * 100, nil
+	}
+
+	var st MonitorStats
+	var err error
+	if st.Uptime24h, err = uptime(24 * time.Hour); err != nil {
+		return st, err
+	}
+	if st.Uptime7d, err = uptime(7 * 24 * time.Hour); err != nil {
+		return st, err
+	}
+	if st.Uptime30d, err = uptime(30 * 24 * time.Hour); err != nil {
+		return st, err
+	}
+
+	since := now.Add(-24 * time.Hour).UTC().Format("2006-01-02 15:04:05")
+	var avg sql.NullFloat64
+	if err := s.DB.QueryRow(
+		`SELECT AVG(latency_ms) FROM monitor_checks WHERE item_id = ? AND checked_at >= ? AND up = 1 AND latency_ms IS NOT NULL`,
+		itemID, since).Scan(&avg); err == nil && avg.Valid {
+		v := int(avg.Float64 + 0.5)
+		st.AvgMs24h = &v
+	}
+	return st, nil
 }
 
 // ClearItem deletes all recorded history for one monitor. Returns rows removed.
