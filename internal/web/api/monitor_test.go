@@ -229,6 +229,50 @@ func TestMonitorStoreHistoryOrder(t *testing.T) {
 	}
 }
 
+func TestBuildHeartbeat(t *testing.T) {
+	now := time.Now()
+	since := now.Add(-60 * time.Minute) // 60 buckets → 1 min each
+	at := func(minAgo int) time.Time { return now.Add(time.Duration(-minAgo) * time.Minute) }
+
+	checks := []MonitorCheck{
+		{Up: true, CheckedAt: at(59)},  // bucket ~0
+		{Up: false, CheckedAt: at(30)}, // bucket ~30 → down
+		{Up: true, CheckedAt: at(30)},  // same bucket, must stay down
+		{Up: true, CheckedAt: at(1)},   // bucket ~59
+	}
+	hb := buildHeartbeat(checks, since, now, 60)
+	if len(hb) != 60 {
+		t.Fatalf("expected 60 buckets, got %d", len(hb))
+	}
+
+	up, down, none := 0, 0, 0
+	for _, b := range hb {
+		switch b.Status {
+		case "up":
+			up++
+		case "down":
+			down++
+		case "none":
+			none++
+		}
+	}
+	if down != 1 {
+		t.Errorf("expected exactly 1 down bucket, got %d", down)
+	}
+	if up != 2 {
+		t.Errorf("expected 2 up buckets, got %d", up)
+	}
+	if none != 57 {
+		t.Errorf("expected 57 empty buckets, got %d", none)
+	}
+	// Buckets are chronological.
+	for i := 1; i < len(hb); i++ {
+		if hb[i].At.Before(hb[i-1].At) {
+			t.Errorf("buckets not chronological at %d", i)
+		}
+	}
+}
+
 func TestSummarizeHistory(t *testing.T) {
 	now := time.Now()
 	at := func(min int) time.Time { return now.Add(time.Duration(-min) * time.Minute) }

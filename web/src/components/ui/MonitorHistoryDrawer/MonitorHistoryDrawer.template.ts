@@ -14,6 +14,11 @@ export interface Incident {
     duration_sec: number;
 }
 
+export interface HeartbeatBucket {
+    status: string; // up | down | none
+    at: string;
+}
+
 export interface HistoryData {
     range: string;
     current: HistoryCheck | null;
@@ -21,6 +26,7 @@ export interface HistoryData {
     total: number;
     checks: HistoryCheck[];
     incidents: Incident[];
+    heartbeat: HeartbeatBucket[];
 }
 
 export const RANGES = ['24h', '7d', '30d'];
@@ -121,14 +127,19 @@ export const dataInner = (name: string, data: HistoryData): string => {
         ? `${data.current.latency_ms} ms`
         : '—';
 
-    // Go marshals empty slices as null, so default both to [].
+    // Go marshals empty slices as null, so default all to [].
     const checks = data.checks || [];
     const incidents = data.incidents || [];
+    const heartbeat = data.heartbeat || [];
 
-    const bars = checks.slice(-60).map(c => {
-        const when = parseTs(c.checked_at).toLocaleString();
-        const t = c.up ? `${i18n.t('status.online')} · ${when}` : `${i18n.t('status.unreachable')} · ${when}`;
-        return `<span class="mhd__beat mhd__beat--${c.up ? 'up' : 'down'}" title="${escapeHtml(t)}"></span>`;
+    // Each bar spans a slice of the range: red if any check failed in it, green
+    // if all checks passed, neutral if the bucket had no data.
+    const bars = heartbeat.map(b => {
+        const when = parseTs(b.at).toLocaleString();
+        const label = b.status === 'down' ? i18n.t('status.unreachable')
+            : b.status === 'up' ? i18n.t('status.online')
+                : i18n.t('monitor.status_unknown');
+        return `<span class="mhd__beat mhd__beat--${b.status}" title="${escapeHtml(`${label} · ${when}`)}"></span>`;
     }).join('');
 
     return `

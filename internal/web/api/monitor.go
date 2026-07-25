@@ -168,13 +168,53 @@ type incident struct {
 	DurationSec int        `json:"duration_sec"`
 }
 
+// heartbeatBucket is one segment of the range for the heartbeat strip: red if
+// any check in it failed, green if it had checks and all passed, "none" if the
+// bucket had no data.
+type heartbeatBucket struct {
+	Status string    `json:"status"` // up | down | none
+	At     time.Time `json:"at"`     // bucket start
+}
+
+const heartbeatBuckets = 60
+
 type historyResponse struct {
-	Range     string         `json:"range"`
-	Current   *MonitorCheck  `json:"current"`    // latest check, or null if no data
-	UptimePct float64        `json:"uptime_pct"` // 0..100, -1 when no data
-	Total     int            `json:"total"`
-	Checks    []MonitorCheck `json:"checks"` // oldest-first
-	Incidents []incident     `json:"incidents"`
+	Range     string            `json:"range"`
+	Current   *MonitorCheck     `json:"current"`    // latest check, or null if no data
+	UptimePct float64           `json:"uptime_pct"` // 0..100, -1 when no data
+	Total     int               `json:"total"`
+	Checks    []MonitorCheck    `json:"checks"` // oldest-first
+	Incidents []incident        `json:"incidents"`
+	Heartbeat []heartbeatBucket `json:"heartbeat"`
+}
+
+// buildHeartbeat buckets checks across [since, now] into n segments so the strip
+// spans the whole selected range regardless of probe interval. A single failure
+// paints the bucket red; only checked-and-all-up buckets are green.
+func buildHeartbeat(checks []MonitorCheck, since, now time.Time, n int) []heartbeatBucket {
+	out := make([]heartbeatBucket, n)
+	total := now.Sub(since)
+	for i := range out {
+		out[i] = heartbeatBucket{Status: "none", At: since.Add(time.Duration(int64(total) * int64(i) / int64(n)))}
+	}
+	if total <= 0 {
+		return out
+	}
+	for _, c := range checks {
+		idx := int(float64(c.CheckedAt.Sub(since)) / float64(total) * float64(n))
+		if idx < 0 {
+			idx = 0
+		}
+		if idx >= n {
+			idx = n - 1
+		}
+		if !c.Up {
+			out[idx].Status = "down"
+		} else if out[idx].Status == "none" {
+			out[idx].Status = "up"
+		}
+	}
+	return out
 }
 
 // rangeSince maps a range label to its start time, clamped to the 30-day
@@ -266,6 +306,7 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 		Total:     len(checks),
 		Checks:    checks,
 		Incidents: incidents,
+		Heartbeat: buildHeartbeat(checks, since, now, heartbeatBuckets),
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
