@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 // seedItem creates a user and a bookmark item, returning the item id. The
@@ -190,5 +191,84 @@ func TestProbeTimedBadScheme(t *testing.T) {
 	up, latency, code := probeTimed("ftp://example.com")
 	if up || latency != nil || code != 0 {
 		t.Errorf("non-http scheme should be down/nil/0, got up=%v code=%d", up, code)
+	}
+}
+
+func TestMonitorStoreHistoryOrder(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := NewMonitorStore(db)
+	itemID := seedItem(t, store)
+
+	// Insert three checks at distinct timestamps, newest inserted first.
+	stamps := []string{
+		"datetime('now','-2 hours')",
+		"datetime('now','-1 hours')",
+		"datetime('now','-30 minutes')",
+	}
+	for _, ts := range stamps {
+		if _, err := db.Exec(
+			`INSERT INTO monitor_checks (item_id, checked_at, up, status_code) VALUES (?, `+ts+`, 1, 200)`, itemID); err != nil {
+			t.Fatalf("insert: %v", err)
+		}
+	}
+	// Older than the 24h window — must be excluded.
+	db.Exec(`INSERT INTO monitor_checks (item_id, checked_at, up, status_code) VALUES (?, datetime('now','-2 days'), 1, 200)`, itemID)
+
+	hist, err := store.History(itemID, time.Now().Add(-24*time.Hour))
+	if err != nil {
+		t.Fatalf("history: %v", err)
+	}
+	if len(hist) != 3 {
+		t.Fatalf("expected 3 in-window checks, got %d", len(hist))
+	}
+	for i := 1; i < len(hist); i++ {
+		if hist[i].CheckedAt.Before(hist[i-1].CheckedAt) {
+			t.Errorf("history not oldest-first at index %d", i)
+		}
+	}
+}
+
+func TestSummarizeHistory(t *testing.T) {
+	now := time.Now()
+	at := func(min int) time.Time { return now.Add(time.Duration(-min) * time.Minute) }
+
+	// up, up, DOWN, DOWN, up, up  → one recovered outage, 4/6 uptime.
+	checks := []MonitorCheck{
+		{Up: true, CheckedAt: at(50)},
+		{Up: true, CheckedAt: at(40)},
+		{Up: false, CheckedAt: at(30)},
+		{Up: false, CheckedAt: at(20)},
+		{Up: true, CheckedAt: at(10)},
+		{Up: true, CheckedAt: at(0)},
+	}
+	pct, incidents := summarizeHistory(checks, now)
+	if pct < 66.6 || pct > 66.7 {
+		t.Errorf("expected ~66.67%% uptime, got %.2f", pct)
+	}
+	if len(incidents) != 1 {
+		t.Fatalf("expected 1 incident, got %d", len(incidents))
+	}
+	if incidents[0].End == nil {
+		t.Errorf("recovered incident should have an end")
+	}
+	// Down at t-30 → recovered at t-10 = 1200s.
+	if incidents[0].DurationSec != 1200 {
+		t.Errorf("expected 1200s outage, got %d", incidents[0].DurationSec)
+	}
+
+	// Ongoing outage: last check is down → End nil.
+	ongoing := []MonitorCheck{
+		{Up: true, CheckedAt: at(20)},
+		{Up: false, CheckedAt: at(10)},
+	}
+	_, inc2 := summarizeHistory(ongoing, now)
+	if len(inc2) != 1 || inc2[0].End != nil {
+		t.Fatalf("expected 1 ongoing (End nil) incident, got %+v", inc2)
+	}
+
+	// No data → uptime -1, no incidents.
+	if pct, inc := summarizeHistory(nil, now); pct != -1 || inc != nil {
+		t.Errorf("empty history should be -1/nil, got %.0f/%v", pct, inc)
 	}
 }

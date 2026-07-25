@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // MonitorCheck is one recorded probe of a monitored bookmark. LatencyMs is nil
@@ -157,6 +159,110 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(s)
 }
 
+// incident is a contiguous down period within the queried window. End is nil
+// while the outage is still ongoing at the end of the window.
+type incident struct {
+	Start       time.Time  `json:"start"`
+	End         *time.Time `json:"end"`
+	DurationSec int        `json:"duration_sec"`
+}
+
+type historyResponse struct {
+	Range     string         `json:"range"`
+	Current   *MonitorCheck  `json:"current"`    // latest check, or null if no data
+	UptimePct float64        `json:"uptime_pct"` // 0..100, -1 when no data
+	Total     int            `json:"total"`
+	Checks    []MonitorCheck `json:"checks"` // oldest-first
+	Incidents []incident     `json:"incidents"`
+}
+
+// rangeSince maps a range label to its start time, clamped to the 30-day
+// retention window. Unknown labels fall back to 24h.
+func rangeSince(label string, now time.Time) (string, time.Time) {
+	switch label {
+	case "7d":
+		return "7d", now.Add(-7 * 24 * time.Hour)
+	case "30d":
+		return "30d", now.Add(-monitorRetentionDays * 24 * time.Hour)
+	default:
+		return "24h", now.Add(-24 * time.Hour)
+	}
+}
+
+// summarizeHistory computes the uptime percentage and the list of outages from
+// an oldest-first slice of checks. now bounds the duration of an ongoing outage.
+func summarizeHistory(checks []MonitorCheck, now time.Time) (uptimePct float64, incidents []incident) {
+	if len(checks) == 0 {
+		return -1, nil
+	}
+	up := 0
+	var start *time.Time
+	for _, c := range checks {
+		if c.Up {
+			up++
+			if start != nil {
+				end := c.CheckedAt
+				incidents = append(incidents, incident{
+					Start: *start, End: &end,
+					DurationSec: int(end.Sub(*start).Seconds()),
+				})
+				start = nil
+			}
+		} else if start == nil {
+			s := c.CheckedAt
+			start = &s
+		}
+	}
+	if start != nil { // still down at the end of the window
+		incidents = append(incidents, incident{
+			Start: *start, End: nil,
+			DurationSec: int(now.Sub(*start).Seconds()),
+		})
+	}
+	return float64(up) / float64(len(checks)) * 100, incidents
+}
+
+// GetHistory returns the availability history for one owned bookmark over the
+// requested range: the raw checks (for heartbeat + latency chart), uptime %,
+// the current status, and the list of outages.
+func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserIDFromContext(r)
+	itemID, err := strconv.Atoi(r.URL.Query().Get("item_id"))
+	if err != nil || itemID <= 0 {
+		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		return
+	}
+	var one int
+	if h.DB.QueryRow(`SELECT 1 FROM items WHERE id = ? AND user_id = ?`, itemID, userID).Scan(&one) != nil {
+		http.Error(w, "error.not_found", http.StatusNotFound)
+		return
+	}
+
+	now := time.Now()
+	label, since := rangeSince(r.URL.Query().Get("range"), now)
+	checks, err := h.store.History(itemID, since)
+	if err != nil {
+		http.Error(w, "error.internal", http.StatusInternalServerError)
+		return
+	}
+
+	uptime, incidents := summarizeHistory(checks, now)
+	var current *MonitorCheck
+	if n := len(checks); n > 0 {
+		current = &checks[n-1]
+	}
+	resp := historyResponse{
+		Range:     label,
+		Current:   current,
+		UptimePct: uptime,
+		Total:     len(checks),
+		Checks:    checks,
+		Incidents: incidents,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
 func (h *MonitorHandler) getSetting(key string) string {
 	var v sql.NullString
 	if err := h.DB.QueryRow(
@@ -238,6 +344,29 @@ func (s *MonitorStore) Recent(itemID, limit int) ([]MonitorCheck, error) {
 	}
 	defer rows.Close()
 
+	return scanChecks(rows)
+}
+
+// History returns the checks for one item recorded at or after since, oldest
+// first — the order the heartbeat bars and latency sparkline consume.
+func (s *MonitorStore) History(itemID int, since time.Time) ([]MonitorCheck, error) {
+	rows, err := s.DB.Query(
+		`SELECT item_id, checked_at, up, latency_ms, status_code
+		 FROM monitor_checks
+		 WHERE item_id = ? AND checked_at >= ?
+		 ORDER BY checked_at ASC, id ASC`,
+		itemID, since.UTC().Format("2006-01-02 15:04:05"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanChecks(rows)
+}
+
+// scanChecks reads MonitorCheck rows, decoding the nullable latency and the
+// integer-stored boolean.
+func scanChecks(rows *sql.Rows) ([]MonitorCheck, error) {
 	var out []MonitorCheck
 	for rows.Next() {
 		var c MonitorCheck
