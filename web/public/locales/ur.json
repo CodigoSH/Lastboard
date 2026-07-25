@@ -488,5 +488,8 @@
   "monitor.overview_title": "سروسز کی حالت",
   "monitor.overview_empty": "کوئی سروس زیر نگرانی نہیں۔",
   "monitor.view_overview": "حالت دیکھیں",
-  "settings.monitoring_overview_desc": "تمام زیر نگرانی سروسز کی حالت ایک جگہ دیکھیں۔"
+  "settings.monitoring_overview_desc": "تمام زیر نگرانی سروسز کی حالت ایک جگہ دیکھیں۔",
+  "monitor.back_home": "ہوم",
+  "monitor.search_placeholder": "سروس تلاش کریں…",
+  "monitor.select_service": "تفصیل دیکھنے کے لیے سروس منتخب کریں۔"
 }

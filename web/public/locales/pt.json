@@ -488,5 +488,8 @@
   "monitor.overview_title": "Estado dos serviços",
   "monitor.overview_empty": "Nenhum serviço monitorizado.",
   "monitor.view_overview": "Ver estado",
-  "settings.monitoring_overview_desc": "Vê o estado de todos os serviços monitorizados num só lugar."
+  "settings.monitoring_overview_desc": "Vê o estado de todos os serviços monitorizados num só lugar.",
+  "monitor.back_home": "Início",
+  "monitor.search_placeholder": "Procurar serviço…",
+  "monitor.select_service": "Seleciona um serviço para ver os detalhes."
 }

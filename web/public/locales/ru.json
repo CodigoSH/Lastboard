@@ -488,5 +488,8 @@
   "monitor.overview_title": "Состояние сервисов",
   "monitor.overview_empty": "Нет отслеживаемых сервисов.",
   "monitor.view_overview": "Смотреть статус",
-  "settings.monitoring_overview_desc": "Состояние всех отслеживаемых сервисов в одном месте."
+  "settings.monitoring_overview_desc": "Состояние всех отслеживаемых сервисов в одном месте.",
+  "monitor.back_home": "Главная",
+  "monitor.search_placeholder": "Поиск сервиса…",
+  "monitor.select_service": "Выберите сервис, чтобы увидеть детали."
 }

@@ -488,5 +488,8 @@
   "monitor.overview_title": "Servicestatus",
   "monitor.overview_empty": "Geen diensten worden gemonitord.",
   "monitor.view_overview": "Status bekijken",
-  "settings.monitoring_overview_desc": "Bekijk de status van alle gemonitorde diensten op één plek."
+  "settings.monitoring_overview_desc": "Bekijk de status van alle gemonitorde diensten op één plek.",
+  "monitor.back_home": "Start",
+  "monitor.search_placeholder": "Zoek een dienst…",
+  "monitor.select_service": "Kies een dienst om de details te zien."
 }

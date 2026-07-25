@@ -488,5 +488,8 @@
   "monitor.overview_title": "وضعیت سرویس‌ها",
   "monitor.overview_empty": "هیچ سرویسی تحت نظارت نیست.",
   "monitor.view_overview": "مشاهده وضعیت",
-  "settings.monitoring_overview_desc": "وضعیت همه سرویس‌های تحت نظارت را یکجا ببینید."
+  "settings.monitoring_overview_desc": "وضعیت همه سرویس‌های تحت نظارت را یکجا ببینید.",
+  "monitor.back_home": "خانه",
+  "monitor.search_placeholder": "جستجوی سرویس…",
+  "monitor.select_service": "برای دیدن جزئیات، یک سرویس را انتخاب کنید."
 }

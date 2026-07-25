@@ -488,5 +488,8 @@
   "monitor.overview_title": "सेवा स्थिति",
   "monitor.overview_empty": "कोई सेवा निगरानी में नहीं है।",
   "monitor.view_overview": "स्थिति देखें",
-  "settings.monitoring_overview_desc": "सभी निगरानी सेवाओं की स्थिति एक ही जगह देखें।"
+  "settings.monitoring_overview_desc": "सभी निगरानी सेवाओं की स्थिति एक ही जगह देखें।",
+  "monitor.back_home": "होम",
+  "monitor.search_placeholder": "सेवा खोजें…",
+  "monitor.select_service": "विवरण देखने के लिए एक सेवा चुनें।"
 }

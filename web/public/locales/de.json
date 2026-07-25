@@ -488,5 +488,8 @@
   "monitor.overview_title": "Dienststatus",
   "monitor.overview_empty": "Keine überwachten Dienste.",
   "monitor.view_overview": "Status ansehen",
-  "settings.monitoring_overview_desc": "Den Status aller überwachten Dienste an einem Ort ansehen."
+  "settings.monitoring_overview_desc": "Den Status aller überwachten Dienste an einem Ort ansehen.",
+  "monitor.back_home": "Startseite",
+  "monitor.search_placeholder": "Dienst suchen…",
+  "monitor.select_service": "Wähle einen Dienst, um Details zu sehen."
 }

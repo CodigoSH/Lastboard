@@ -488,5 +488,8 @@
   "monitor.overview_title": "সার্ভিসের অবস্থা",
   "monitor.overview_empty": "কোনো সার্ভিস মনিটর করা হচ্ছে না।",
   "monitor.view_overview": "স্ট্যাটাস দেখুন",
-  "settings.monitoring_overview_desc": "সব মনিটর করা সার্ভিসের অবস্থা এক জায়গায় দেখুন।"
+  "settings.monitoring_overview_desc": "সব মনিটর করা সার্ভিসের অবস্থা এক জায়গায় দেখুন।",
+  "monitor.back_home": "হোম",
+  "monitor.search_placeholder": "সার্ভিস খুঁজুন…",
+  "monitor.select_service": "বিস্তারিত দেখতে একটি সার্ভিস নির্বাচন করুন।"
 }

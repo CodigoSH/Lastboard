@@ -488,5 +488,8 @@
   "monitor.overview_title": "Servis durumu",
   "monitor.overview_empty": "İzlenen servis yok.",
   "monitor.view_overview": "Durumu gör",
-  "settings.monitoring_overview_desc": "İzlenen tüm servislerin durumunu tek yerde gör."
+  "settings.monitoring_overview_desc": "İzlenen tüm servislerin durumunu tek yerde gör.",
+  "monitor.back_home": "Ana sayfa",
+  "monitor.search_placeholder": "Servis ara…",
+  "monitor.select_service": "Ayrıntılar için bir servis seç."
 }

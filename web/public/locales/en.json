@@ -488,5 +488,8 @@
   "monitor.overview_title": "Service status",
   "monitor.overview_empty": "No services are being monitored.",
   "monitor.view_overview": "View status",
-  "settings.monitoring_overview_desc": "See the status of all monitored services in one place."
+  "settings.monitoring_overview_desc": "See the status of all monitored services in one place.",
+  "monitor.back_home": "Home",
+  "monitor.search_placeholder": "Search a service…",
+  "monitor.select_service": "Select a service to see its details."
 }

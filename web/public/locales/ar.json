@@ -488,5 +488,8 @@
   "monitor.overview_title": "حالة الخدمات",
   "monitor.overview_empty": "لا توجد خدمات قيد المراقبة.",
   "monitor.view_overview": "عرض الحالة",
-  "settings.monitoring_overview_desc": "عرض حالة جميع الخدمات المراقَبة في مكان واحد."
+  "settings.monitoring_overview_desc": "عرض حالة جميع الخدمات المراقَبة في مكان واحد.",
+  "monitor.back_home": "الرئيسية",
+  "monitor.search_placeholder": "بحث عن خدمة…",
+  "monitor.select_service": "اختر خدمة لعرض تفاصيلها."
 }

@@ -488,5 +488,8 @@
   "monitor.overview_title": "Status layanan",
   "monitor.overview_empty": "Tidak ada layanan yang dipantau.",
   "monitor.view_overview": "Lihat status",
-  "settings.monitoring_overview_desc": "Lihat status semua layanan yang dipantau di satu tempat."
+  "settings.monitoring_overview_desc": "Lihat status semua layanan yang dipantau di satu tempat.",
+  "monitor.back_home": "Beranda",
+  "monitor.search_placeholder": "Cari layanan…",
+  "monitor.select_service": "Pilih layanan untuk melihat detailnya."
 }

@@ -488,5 +488,8 @@
   "monitor.overview_title": "サービスの状態",
   "monitor.overview_empty": "監視中のサービスはありません。",
   "monitor.view_overview": "状態を見る",
-  "settings.monitoring_overview_desc": "監視中の全サービスの状態を一か所で確認。"
+  "settings.monitoring_overview_desc": "監視中の全サービスの状態を一か所で確認。",
+  "monitor.back_home": "ホーム",
+  "monitor.search_placeholder": "サービスを検索…",
+  "monitor.select_service": "詳細を見るにはサービスを選択してください。"
 }

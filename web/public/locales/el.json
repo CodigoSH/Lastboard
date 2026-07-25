@@ -488,5 +488,8 @@
   "monitor.overview_title": "Κατάσταση υπηρεσιών",
   "monitor.overview_empty": "Δεν παρακολουθούνται υπηρεσίες.",
   "monitor.view_overview": "Προβολή κατάστασης",
-  "settings.monitoring_overview_desc": "Δες την κατάσταση όλων των υπηρεσιών σε ένα μέρος."
+  "settings.monitoring_overview_desc": "Δες την κατάσταση όλων των υπηρεσιών σε ένα μέρος.",
+  "monitor.back_home": "Αρχική",
+  "monitor.search_placeholder": "Αναζήτηση υπηρεσίας…",
+  "monitor.select_service": "Επίλεξε μια υπηρεσία για λεπτομέρειες."
 }
