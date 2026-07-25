@@ -53,9 +53,8 @@ class MonitorPage extends HTMLElement {
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                         ${escapeHtml(i18n.t('monitor.overview_title'))}
                     </div>
-                    <button class="mp__home" id="mp-home">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                        <span>${escapeHtml(i18n.t('monitor.back_home'))}</span>
+                    <button class="mp__close" id="mp-close" aria-label="${escapeHtml(i18n.t('general.close'))}" title="${escapeHtml(i18n.t('general.close'))}">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
                 </header>
                 <div class="mp__layout">
@@ -67,7 +66,7 @@ class MonitorPage extends HTMLElement {
                 </div>
             </div>`;
 
-        this.shadowRoot!.getElementById('mp-home')!.addEventListener('click', () => this.close());
+        this.shadowRoot!.getElementById('mp-close')!.addEventListener('click', () => this.close());
         this.shadowRoot!.getElementById('mp-search')!.addEventListener('input', (e) =>
             this._filter((e.target as HTMLInputElement).value));
         this.shadowRoot!.getElementById('mp-rows')!.addEventListener('click', (e) => {
@@ -132,14 +131,13 @@ class MonitorPage extends HTMLElement {
     }
 
     private _row(r: OverviewRow): string {
-        const uptime = r.uptime_pct < 0 ? '—' : `${r.uptime_pct.toFixed(1)}%`;
+        const uptime = r.uptime_pct < 0 ? '—' : `${Math.round(r.uptime_pct)}%`;
         const beats = (r.heartbeat || []).map(b => `<span class="mp-row__beat mp-row__beat--${b.status}"></span>`).join('');
         return `
             <button class="mp-row ${r.item_id === this.selectedId ? 'mp-row--active' : ''}" data-id="${r.item_id}" data-name="${escapeHtml(r.name)}">
-                <span class="mp-row__status mp-row__status--${r.status}"></span>
+                <span class="mp-row__uptime mp-row__uptime--${r.status}">${uptime}</span>
                 <span class="mp-row__name">${escapeHtml(r.name) || '—'}</span>
                 <span class="mp-row__beats">${beats}</span>
-                <span class="mp-row__uptime">${uptime}</span>
             </button>`;
     }
 

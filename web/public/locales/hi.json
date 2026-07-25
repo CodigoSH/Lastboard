@@ -497,5 +497,7 @@
   "monitor.clear_all": "सभी डेटा साफ़ करें",
   "monitor.clear_all_confirm": "सभी निगरानी सेवाओं का दर्ज इतिहास हटाएँ? पूर्ववत नहीं किया जा सकता।",
   "monitor.data_cleared": "डेटा साफ़ हो गया",
-  "settings.monitoring_clear_desc": "सभी दर्ज स्थिति इतिहास हटाता है। निगरानी चालू रहती है।"
+  "settings.monitoring_clear_desc": "सभी दर्ज स्थिति इतिहास हटाता है। निगरानी चालू रहती है।",
+  "monitor.clear_this": "यह सेवा",
+  "monitor.clear_all_services": "सभी सेवाएँ"
 }

@@ -497,5 +497,7 @@
   "monitor.clear_all": "모든 데이터 지우기",
   "monitor.clear_all_confirm": "모니터링 중인 모든 서비스의 기록 이력을 삭제할까요? 되돌릴 수 없습니다.",
   "monitor.data_cleared": "데이터가 지워졌습니다",
-  "settings.monitoring_clear_desc": "기록된 모든 상태 이력을 삭제합니다. 모니터링은 계속 켜져 있습니다."
+  "settings.monitoring_clear_desc": "기록된 모든 상태 이력을 삭제합니다. 모니터링은 계속 켜져 있습니다.",
+  "monitor.clear_this": "이 서비스",
+  "monitor.clear_all_services": "모든 서비스"
 }

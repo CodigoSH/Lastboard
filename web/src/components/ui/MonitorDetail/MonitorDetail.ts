@@ -40,7 +40,10 @@ class MonitorDetail extends HTMLElement {
             const t = e.target as HTMLElement;
             const rangeBtn = t.closest('.mhd__range') as HTMLElement | null;
             if (rangeBtn && rangeBtn.dataset.range) { this.setRange(rangeBtn.dataset.range); return; }
-            if (t.closest('.mhd__clear')) { this._confirmClear(); return; }
+            if (t.closest('.mhd__clear')) { this._toggleClearMenu(); return; }
+            const clearItem = t.closest('.mhd__clear-item') as HTMLElement | null;
+            if (clearItem) { this._closeClearMenu(); this._doClear(clearItem.dataset.scope || 'item'); return; }
+            this._closeClearMenu();
             if (t.closest('.mhd__refresh')) this._reload(false);
         });
         this.shadowRoot!.addEventListener('mouseover', (e) => this._onHover(e));
@@ -86,7 +89,32 @@ class MonitorDetail extends HTMLElement {
         this._reload(true);
     }
 
-    private _confirmClear() {
+    private _toggleClearMenu() {
+        const menu = this.shadowRoot!.querySelector('.mhd__clear-menu') as HTMLElement | null;
+        if (menu) menu.hidden = !menu.hidden;
+    }
+
+    private _closeClearMenu() {
+        const menu = this.shadowRoot!.querySelector('.mhd__clear-menu') as HTMLElement | null;
+        if (menu && !menu.hidden) menu.hidden = true;
+    }
+
+    private _doClear(scope: string) {
+        if (scope === 'all') {
+            eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+                title: i18n.t('monitor.clear_all'),
+                message: i18n.t('monitor.clear_all_confirm'),
+                onConfirm: async () => {
+                    try {
+                        await apiService.delete('/api/monitor/history');
+                        this._lastSig = '';
+                        if (this.active) this._reload(true);
+                        if (window.notifier) window.notifier.show(i18n.t('monitor.data_cleared'));
+                    } catch { /* ignore */ }
+                },
+            });
+            return;
+        }
         if (!this.itemId) return;
         const id = this.itemId;
         eventBus.emit(EVENTS.SHOW_CONFIRMATION, {

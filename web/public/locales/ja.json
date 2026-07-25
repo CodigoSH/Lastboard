@@ -497,5 +497,7 @@
   "monitor.clear_all": "すべてのデータを削除",
   "monitor.clear_all_confirm": "監視中の全サービスの記録履歴を削除しますか？元に戻せません。",
   "monitor.data_cleared": "データを削除しました",
-  "settings.monitoring_clear_desc": "記録されたすべての状態履歴を削除します。監視は有効のままです。"
+  "settings.monitoring_clear_desc": "記録されたすべての状態履歴を削除します。監視は有効のままです。",
+  "monitor.clear_this": "このサービス",
+  "monitor.clear_all_services": "すべてのサービス"
 }

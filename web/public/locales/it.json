@@ -497,5 +497,7 @@
   "monitor.clear_all": "Cancella tutti i dati",
   "monitor.clear_all_confirm": "Eliminare lo storico di tutti i servizi monitorati? Non è reversibile.",
   "monitor.data_cleared": "Dati cancellati",
-  "settings.monitoring_clear_desc": "Elimina tutto lo storico di stato registrato. Il monitoraggio resta attivo."
+  "settings.monitoring_clear_desc": "Elimina tutto lo storico di stato registrato. Il monitoraggio resta attivo.",
+  "monitor.clear_this": "Questo servizio",
+  "monitor.clear_all_services": "Tutti i servizi"
 }
