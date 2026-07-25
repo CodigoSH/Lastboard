@@ -478,5 +478,6 @@
   "monitor.latency": "Gecikme",
   "monitor.recent_checks": "Son kontroller",
   "monitor.status_unknown": "Veri yok",
-  "monitor.click_for_history": "Geçmiş için tıkla"
+  "monitor.click_for_history": "Geçmiş için tıkla",
+  "monitor.no_data_yet": "Henüz kayıtlı geçmiş yok. Kontroller birazdan görünecek."
 }

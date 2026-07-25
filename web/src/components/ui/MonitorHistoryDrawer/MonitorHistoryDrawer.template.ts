@@ -33,11 +33,13 @@ export const loadingInner = (name: string) => `
     ${header(name)}
     <div class="mhd__state">${i18n.t('general.loading') || 'Loading…'}</div>`;
 
-export const emptyInner = (name: string) => `
+export const emptyInner = (name: string, mode: string) => `
     ${header(name)}
     <div class="mhd__state">
         <div class="mhd__state-icon">📡</div>
-        <p>${i18n.t('monitor.no_data') || 'No data yet. Enable 24/7 monitoring to record history.'}</p>
+        <p>${mode === 'background'
+        ? (i18n.t('monitor.no_data_yet') || 'No history recorded yet. Checks will appear shortly.')
+        : (i18n.t('monitor.no_data') || 'No history yet. Enable 24/7 monitoring to record it.')}</p>
     </div>`;
 
 export const dataInner = (name: string, data: HistoryData): string => {

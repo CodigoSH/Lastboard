@@ -478,5 +478,6 @@
   "monitor.latency": "지연 시간",
   "monitor.recent_checks": "최근 확인",
   "monitor.status_unknown": "데이터 없음",
-  "monitor.click_for_history": "기록 보려면 클릭"
+  "monitor.click_for_history": "기록 보려면 클릭",
+  "monitor.no_data_yet": "아직 기록된 이력이 없습니다. 곧 확인 결과가 표시됩니다."
 }

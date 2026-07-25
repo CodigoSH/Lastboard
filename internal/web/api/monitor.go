@@ -66,12 +66,13 @@ type MonitoredItem struct {
 	URL string
 }
 
-// MonitoredItems lists every bookmark with statusCheck enabled in its content
-// blob and a non-empty URL — the set the scheduler probes each cycle.
+// MonitoredItems lists every bookmark with statusCheck enabled — the set the
+// scheduler probes each cycle. Both the flag and the URL live in the content
+// JSON blob (the items.url column is unused for bookmarks), so parse them there.
 func (s *MonitorStore) MonitoredItems() ([]MonitoredItem, error) {
 	rows, err := s.DB.Query(
-		`SELECT id, url, content FROM items
-		 WHERE type = 'bookmark' AND url IS NOT NULL AND url != ''`)
+		`SELECT id, content FROM items
+		 WHERE type = 'bookmark' AND content IS NOT NULL`)
 	if err != nil {
 		return nil, err
 	}
@@ -80,19 +81,19 @@ func (s *MonitorStore) MonitoredItems() ([]MonitoredItem, error) {
 	var out []MonitoredItem
 	for rows.Next() {
 		var id int
-		var u string
 		var content sql.NullString
-		if err := rows.Scan(&id, &u, &content); err != nil {
+		if err := rows.Scan(&id, &content); err != nil {
 			return nil, err
 		}
 		if !content.Valid {
 			continue
 		}
 		var c struct {
-			StatusCheck bool `json:"statusCheck"`
+			StatusCheck bool   `json:"statusCheck"`
+			URL         string `json:"url"`
 		}
-		if json.Unmarshal([]byte(content.String), &c) == nil && c.StatusCheck {
-			out = append(out, MonitoredItem{ID: id, URL: u})
+		if json.Unmarshal([]byte(content.String), &c) == nil && c.StatusCheck && c.URL != "" {
+			out = append(out, MonitoredItem{ID: id, URL: c.URL})
 		}
 	}
 	return out, rows.Err()

@@ -478,5 +478,6 @@
   "monitor.latency": "Latenza",
   "monitor.recent_checks": "Controlli recenti",
   "monitor.status_unknown": "Nessun dato",
-  "monitor.click_for_history": "Clicca per lo storico"
+  "monitor.click_for_history": "Clicca per lo storico",
+  "monitor.no_data_yet": "Nessuno storico registrato ancora. I controlli appariranno a breve."
 }

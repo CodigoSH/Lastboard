@@ -11,6 +11,7 @@ import css from './MonitorHistoryDrawer.css' with { type: 'text' };
 class MonitorHistoryDrawer extends HTMLElement {
     private isOpen = false;
     private name = '';
+    private mode = 'tab';
     private data: HistoryData | null = null;
     private loading = false;
     private _keydown: (e: KeyboardEvent) => void;
@@ -51,7 +52,12 @@ class MonitorHistoryDrawer extends HTMLElement {
         this.render();
 
         try {
-            this.data = await apiService.get<HistoryData>(`/api/monitor/history?item_id=${itemId}&range=24h`);
+            const [data, settings] = await Promise.all([
+                apiService.get<HistoryData>(`/api/monitor/history?item_id=${itemId}&range=24h`),
+                apiService.get<{ mode: string }>('/api/monitor/settings').catch(() => ({ mode: 'tab' })),
+            ]);
+            this.data = data;
+            this.mode = settings.mode || 'tab';
         } catch {
             this.data = null;
         }
@@ -71,7 +77,7 @@ class MonitorHistoryDrawer extends HTMLElement {
         if (this.loading) {
             inner = loadingInner(this.name);
         } else if (!this.data || this.data.total === 0) {
-            inner = emptyInner(this.name);
+            inner = emptyInner(this.name, this.mode);
         } else {
             inner = dataInner(this.name, this.data);
         }

@@ -478,5 +478,6 @@
   "monitor.latency": "Opóźnienie",
   "monitor.recent_checks": "Ostatnie sprawdzenia",
   "monitor.status_unknown": "Brak danych",
-  "monitor.click_for_history": "Kliknij, aby zobaczyć historię"
+  "monitor.click_for_history": "Kliknij, aby zobaczyć historię",
+  "monitor.no_data_yet": "Brak zarejestrowanej historii. Sprawdzenia pojawią się wkrótce."
 }

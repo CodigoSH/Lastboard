@@ -478,5 +478,6 @@
   "monitor.latency": "লেটেন্সি",
   "monitor.recent_checks": "সাম্প্রতিক চেক",
   "monitor.status_unknown": "কোনো ডেটা নেই",
-  "monitor.click_for_history": "ইতিহাস দেখতে ক্লিক করুন"
+  "monitor.click_for_history": "ইতিহাস দেখতে ক্লিক করুন",
+  "monitor.no_data_yet": "এখনও কোনো ইতিহাস রেকর্ড হয়নি। শীঘ্রই চেক দেখা যাবে।"
 }

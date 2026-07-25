@@ -478,5 +478,6 @@
   "monitor.latency": "Latency",
   "monitor.recent_checks": "Recent checks",
   "monitor.status_unknown": "No data",
-  "monitor.click_for_history": "Click for history"
+  "monitor.click_for_history": "Click for history",
+  "monitor.no_data_yet": "No history recorded yet. Checks will appear shortly."
 }

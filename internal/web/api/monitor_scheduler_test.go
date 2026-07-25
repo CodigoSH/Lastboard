@@ -61,8 +61,9 @@ func TestSchedulerRunCycleRecords(t *testing.T) {
 	res, _ := db.Exec(`INSERT INTO users (username, password) VALUES ('u', 'p')`)
 	uid, _ := res.LastInsertId()
 	if _, err := db.Exec(
-		`INSERT INTO items (user_id, type, x, y, w, h, url, content)
-		 VALUES (?, 'bookmark', 0, 0, 1, 1, ?, '{"statusCheck":true}')`, uid, srv.URL); err != nil {
+		`INSERT INTO items (user_id, type, x, y, w, h, content)
+		 VALUES (?, 'bookmark', 0, 0, 1, 1, ?)`, uid,
+		`{"statusCheck":true,"url":"`+srv.URL+`"}`); err != nil {
 		t.Fatalf("seed item: %v", err)
 	}
 	var itemID int

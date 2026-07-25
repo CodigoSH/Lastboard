@@ -478,5 +478,6 @@
   "monitor.latency": "زمن الاستجابة",
   "monitor.recent_checks": "الفحوصات الأخيرة",
   "monitor.status_unknown": "لا توجد بيانات",
-  "monitor.click_for_history": "انقر لعرض السجل"
+  "monitor.click_for_history": "انقر لعرض السجل",
+  "monitor.no_data_yet": "لم يُسجَّل سجل بعد. ستظهر الفحوصات قريبًا."
 }

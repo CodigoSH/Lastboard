@@ -478,5 +478,6 @@
   "monitor.latency": "Latentie",
   "monitor.recent_checks": "Recente controles",
   "monitor.status_unknown": "Geen gegevens",
-  "monitor.click_for_history": "Klik voor geschiedenis"
+  "monitor.click_for_history": "Klik voor geschiedenis",
+  "monitor.no_data_yet": "Nog geen geschiedenis vastgelegd. Controles verschijnen binnenkort."
 }

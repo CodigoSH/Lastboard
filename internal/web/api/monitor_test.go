@@ -130,17 +130,17 @@ func TestMonitoredItems(t *testing.T) {
 
 	res, _ := db.Exec(`INSERT INTO users (username, password) VALUES ('u', 'p')`)
 	uid, _ := res.LastInsertId()
-	ins := func(url, content string) {
+	ins := func(content string) {
 		if _, err := db.Exec(
-			`INSERT INTO items (user_id, type, x, y, w, h, url, content) VALUES (?, 'bookmark', 0, 0, 1, 1, ?, ?)`,
-			uid, url, content); err != nil {
+			`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'bookmark', 0, 0, 1, 1, ?)`,
+			uid, content); err != nil {
 			t.Fatalf("insert item: %v", err)
 		}
 	}
-	ins("https://a.example", `{"statusCheck":true}`)  // monitored
-	ins("https://b.example", `{"statusCheck":false}`) // opted out
-	ins("https://c.example", `{}`)                    // no flag
-	ins("", `{"statusCheck":true}`)                   // no URL → skipped
+	ins(`{"statusCheck":true,"url":"https://a.example"}`)  // monitored
+	ins(`{"statusCheck":false,"url":"https://b.example"}`) // opted out
+	ins(`{"url":"https://c.example"}`)                     // no flag
+	ins(`{"statusCheck":true}`)                            // no URL → skipped
 
 	items, err := store.MonitoredItems()
 	if err != nil {
