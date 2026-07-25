@@ -248,6 +248,13 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uptime, incidents := summarizeHistory(checks, now)
+	// Return empty arrays (not null) so the JSON contract stays consistent.
+	if checks == nil {
+		checks = []MonitorCheck{}
+	}
+	if incidents == nil {
+		incidents = []incident{}
+	}
 	var current *MonitorCheck
 	if n := len(checks); n > 0 {
 		current = &checks[n-1]

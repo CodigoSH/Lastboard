@@ -121,7 +121,11 @@ export const dataInner = (name: string, data: HistoryData): string => {
         ? `${data.current.latency_ms} ms`
         : '—';
 
-    const bars = data.checks.slice(-60).map(c => {
+    // Go marshals empty slices as null, so default both to [].
+    const checks = data.checks || [];
+    const incidents = data.incidents || [];
+
+    const bars = checks.slice(-60).map(c => {
         const when = parseTs(c.checked_at).toLocaleString();
         const t = c.up ? `${i18n.t('status.online')} · ${when}` : `${i18n.t('status.unreachable')} · ${when}`;
         return `<span class="mhd__beat mhd__beat--${c.up ? 'up' : 'down'}" title="${escapeHtml(t)}"></span>`;
@@ -147,12 +151,12 @@ export const dataInner = (name: string, data: HistoryData): string => {
             </div>
 
             <div class="mhd__section-label">${i18n.t('monitor.latency')}</div>
-            <div class="mhd__spark-wrap">${sparkline(data.checks)}</div>
+            <div class="mhd__spark-wrap">${sparkline(checks)}</div>
 
             <div class="mhd__section-label">${i18n.t('monitor.recent_checks')}</div>
             <div class="mhd__heartbeat">${bars}</div>
 
             <div class="mhd__section-label">${i18n.t('monitor.incidents')}</div>
-            <div class="mhd__incidents">${incidentList(data.incidents)}</div>
+            <div class="mhd__incidents">${incidentList(incidents)}</div>
         </div>`;
 };

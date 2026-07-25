@@ -92,12 +92,23 @@ class MonitorHistoryDrawer extends HTMLElement {
 
     private render() {
         let inner: string;
-        if (this.loading) {
-            inner = loadingInner(this.name);
-        } else if (!this.data || this.data.total === 0) {
-            inner = emptyInner(this.name, this.mode, this.range);
-        } else {
-            inner = dataInner(this.name, this.data);
+        try {
+            if (this.loading) {
+                inner = loadingInner(this.name);
+            } else if (!this.data || this.data.total === 0) {
+                inner = emptyInner(this.name, this.mode, this.range);
+            } else {
+                inner = dataInner(this.name, this.data);
+            }
+        } catch (e) {
+            // Never let a template error brick the drawer: keep it closeable.
+            console.error('History drawer render failed', e);
+            inner = `
+                <header class="mhd__header">
+                    <h2 class="mhd__title"></h2>
+                    <button class="mhd__close" aria-label="Close">&times;</button>
+                </header>
+                <div class="mhd__state">${i18n.t('widget.api.unreachable') || 'Error'}</div>`;
         }
         this.shadowRoot!.innerHTML = `<style>${css}</style>${shell(this.isOpen, inner)}`;
     }
