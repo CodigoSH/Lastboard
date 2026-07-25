@@ -391,6 +391,37 @@ func (h *MonitorHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(rows)
 }
 
+// ClearHistory deletes recorded history: for one owned monitor when item_id is
+// given, otherwise for all of the user's monitors.
+func (h *MonitorHandler) ClearHistory(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserIDFromContext(r)
+	var deleted int64
+	var err error
+
+	if idStr := r.URL.Query().Get("item_id"); idStr != "" {
+		itemID, convErr := strconv.Atoi(idStr)
+		if convErr != nil || itemID <= 0 {
+			http.Error(w, "error.invalid_input", http.StatusBadRequest)
+			return
+		}
+		var one int
+		if h.DB.QueryRow(`SELECT 1 FROM items WHERE id = ? AND user_id = ?`, itemID, userID).Scan(&one) != nil {
+			http.Error(w, "error.not_found", http.StatusNotFound)
+			return
+		}
+		deleted, err = h.store.ClearItem(itemID)
+	} else {
+		deleted, err = h.store.ClearAllForUser(userID)
+	}
+	if err != nil {
+		http.Error(w, "error.internal", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"ok": true, "deleted": deleted})
+}
+
 func (h *MonitorHandler) getSetting(key string) string {
 	var v sql.NullString
 	if err := h.DB.QueryRow(
@@ -454,6 +485,25 @@ func probeTimed(rawUrl string) (bool, *int, int) {
 		return true, &ms, statusCode
 	}
 	return false, nil, statusCode
+}
+
+// ClearItem deletes all recorded history for one monitor. Returns rows removed.
+func (s *MonitorStore) ClearItem(itemID int) (int64, error) {
+	res, err := s.DB.Exec(`DELETE FROM monitor_checks WHERE item_id = ?`, itemID)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
+// ClearAllForUser deletes the recorded history of every monitor the user owns.
+func (s *MonitorStore) ClearAllForUser(userID int) (int64, error) {
+	res, err := s.DB.Exec(
+		`DELETE FROM monitor_checks WHERE item_id IN (SELECT id FROM items WHERE user_id = ?)`, userID)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
 }
 
 // Recent returns up to limit checks for one item, newest first. It backs the

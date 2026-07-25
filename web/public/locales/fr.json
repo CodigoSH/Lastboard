@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Aucun service surveillé.",
   "monitor.view_overview": "Voir l'état",
   "settings.monitoring_overview_desc": "Voir l'état de tous les services surveillés au même endroit.",
-  "monitor.back_home": "Accueil",
+  "monitor.back_home": "Quitter",
   "monitor.search_placeholder": "Rechercher un service…",
-  "monitor.select_service": "Sélectionne un service pour voir ses détails."
+  "monitor.select_service": "Sélectionne un service pour voir ses détails.",
+  "monitor.clear_data": "Effacer les données",
+  "monitor.clear_data_confirm": "Supprimer l'historique enregistré de ce service ? Action irréversible.",
+  "monitor.clear_all": "Tout effacer",
+  "monitor.clear_all_confirm": "Supprimer l'historique de tous les services surveillés ? Action irréversible.",
+  "monitor.data_cleared": "Données effacées",
+  "settings.monitoring_clear_desc": "Supprime tout l'historique d'état enregistré. La surveillance reste active."
 }

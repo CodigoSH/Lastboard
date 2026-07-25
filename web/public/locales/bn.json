@@ -489,7 +489,13 @@
   "monitor.overview_empty": "কোনো সার্ভিস মনিটর করা হচ্ছে না।",
   "monitor.view_overview": "স্ট্যাটাস দেখুন",
   "settings.monitoring_overview_desc": "সব মনিটর করা সার্ভিসের অবস্থা এক জায়গায় দেখুন।",
-  "monitor.back_home": "হোম",
+  "monitor.back_home": "প্রস্থান",
   "monitor.search_placeholder": "সার্ভিস খুঁজুন…",
-  "monitor.select_service": "বিস্তারিত দেখতে একটি সার্ভিস নির্বাচন করুন।"
+  "monitor.select_service": "বিস্তারিত দেখতে একটি সার্ভিস নির্বাচন করুন।",
+  "monitor.clear_data": "ডেটা মুছুন",
+  "monitor.clear_data_confirm": "এই সার্ভিসের রেকর্ড করা ইতিহাস মুছবেন? এটি ফেরানো যাবে না।",
+  "monitor.clear_all": "সব ডেটা মুছুন",
+  "monitor.clear_all_confirm": "সব মনিটর করা সার্ভিসের রেকর্ড করা ইতিহাস মুছবেন? ফেরানো যাবে না।",
+  "monitor.data_cleared": "ডেটা মুছে ফেলা হয়েছে",
+  "settings.monitoring_clear_desc": "রেকর্ড করা সব স্ট্যাটাস ইতিহাস মুছুন। মনিটরিং চালু থাকে।"
 }

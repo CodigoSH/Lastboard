@@ -54,7 +54,7 @@ class MonitorPage extends HTMLElement {
                         ${escapeHtml(i18n.t('monitor.overview_title'))}
                     </div>
                     <button class="mp__home" id="mp-home">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                         <span>${escapeHtml(i18n.t('monitor.back_home'))}</span>
                     </button>
                 </header>

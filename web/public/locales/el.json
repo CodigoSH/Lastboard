@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Δεν παρακολουθούνται υπηρεσίες.",
   "monitor.view_overview": "Προβολή κατάστασης",
   "settings.monitoring_overview_desc": "Δες την κατάσταση όλων των υπηρεσιών σε ένα μέρος.",
-  "monitor.back_home": "Αρχική",
+  "monitor.back_home": "Έξοδος",
   "monitor.search_placeholder": "Αναζήτηση υπηρεσίας…",
-  "monitor.select_service": "Επίλεξε μια υπηρεσία για λεπτομέρειες."
+  "monitor.select_service": "Επίλεξε μια υπηρεσία για λεπτομέρειες.",
+  "monitor.clear_data": "Διαγραφή δεδομένων",
+  "monitor.clear_data_confirm": "Διαγραφή του καταγεγραμμένου ιστορικού αυτής της υπηρεσίας; Δεν αναιρείται.",
+  "monitor.clear_all": "Διαγραφή όλων",
+  "monitor.clear_all_confirm": "Διαγραφή του ιστορικού όλων των παρακολουθούμενων υπηρεσιών; Δεν αναιρείται.",
+  "monitor.data_cleared": "Τα δεδομένα διαγράφηκαν",
+  "settings.monitoring_clear_desc": "Διαγράφει όλο το καταγεγραμμένο ιστορικό κατάστασης. Η παρακολούθηση παραμένει ενεργή."
 }

@@ -60,8 +60,8 @@
 }
 
 .mp__list {
-    width: 340px;
-    max-width: 42%;
+    width: 420px;
+    max-width: 46%;
     flex-shrink: 0;
     border-right: 1px solid var(--border);
     display: flex;

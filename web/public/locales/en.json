@@ -489,7 +489,13 @@
   "monitor.overview_empty": "No services are being monitored.",
   "monitor.view_overview": "View status",
   "settings.monitoring_overview_desc": "See the status of all monitored services in one place.",
-  "monitor.back_home": "Home",
+  "monitor.back_home": "Exit",
   "monitor.search_placeholder": "Search a service…",
-  "monitor.select_service": "Select a service to see its details."
+  "monitor.select_service": "Select a service to see its details.",
+  "monitor.clear_data": "Clear data",
+  "monitor.clear_data_confirm": "Delete the recorded history for this service? This can't be undone.",
+  "monitor.clear_all": "Clear all data",
+  "monitor.clear_all_confirm": "Delete the recorded history of all monitored services? This can't be undone.",
+  "monitor.data_cleared": "Data cleared",
+  "settings.monitoring_clear_desc": "Delete all recorded status history. Monitoring stays on."
 }

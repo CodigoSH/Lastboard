@@ -489,7 +489,13 @@
   "monitor.overview_empty": "監視中のサービスはありません。",
   "monitor.view_overview": "状態を見る",
   "settings.monitoring_overview_desc": "監視中の全サービスの状態を一か所で確認。",
-  "monitor.back_home": "ホーム",
+  "monitor.back_home": "終了",
   "monitor.search_placeholder": "サービスを検索…",
-  "monitor.select_service": "詳細を見るにはサービスを選択してください。"
+  "monitor.select_service": "詳細を見るにはサービスを選択してください。",
+  "monitor.clear_data": "データを削除",
+  "monitor.clear_data_confirm": "このサービスの記録履歴を削除しますか？元に戻せません。",
+  "monitor.clear_all": "すべてのデータを削除",
+  "monitor.clear_all_confirm": "監視中の全サービスの記録履歴を削除しますか？元に戻せません。",
+  "monitor.data_cleared": "データを削除しました",
+  "settings.monitoring_clear_desc": "記録されたすべての状態履歴を削除します。監視は有効のままです。"
 }

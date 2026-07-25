@@ -489,7 +489,13 @@
   "monitor.overview_empty": "没有正在监控的服务。",
   "monitor.view_overview": "查看状态",
   "settings.monitoring_overview_desc": "在一处查看所有受监控服务的状态。",
-  "monitor.back_home": "主页",
+  "monitor.back_home": "退出",
   "monitor.search_placeholder": "搜索服务…",
-  "monitor.select_service": "选择一个服务查看详情。"
+  "monitor.select_service": "选择一个服务查看详情。",
+  "monitor.clear_data": "清除数据",
+  "monitor.clear_data_confirm": "删除该服务的记录历史？此操作无法撤销。",
+  "monitor.clear_all": "清除所有数据",
+  "monitor.clear_all_confirm": "删除所有受监控服务的记录历史？此操作无法撤销。",
+  "monitor.data_cleared": "数据已清除",
+  "settings.monitoring_clear_desc": "删除所有已记录的状态历史。监控保持开启。"
 }

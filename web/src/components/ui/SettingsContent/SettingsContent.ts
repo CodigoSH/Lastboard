@@ -100,6 +100,9 @@ class SettingsContent extends HTMLElement {
                     import('../../../services/EventBus').then(({ eventBus, EVENTS }) =>
                         eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW));
                     break;
+                case 'clear-monitor-data':
+                    this.clearMonitorData();
+                    break;
                 case 'open-add-user':
                     this.openAddUserModal();
                     break;
@@ -228,6 +231,22 @@ class SettingsContent extends HTMLElement {
         } catch (e) {
             console.error("Failed to fetch users", e);
         }
+    }
+
+    async clearMonitorData() {
+        const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+            title: i18n.t('monitor.clear_all'),
+            message: i18n.t('monitor.clear_all_confirm'),
+            onConfirm: async () => {
+                try {
+                    await apiService.delete('/api/monitor/history');
+                    if (window.notifier) window.notifier.show(i18n.t('monitor.data_cleared'));
+                } catch {
+                    if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+                }
+            },
+        });
     }
 
     async fetchMonitoring() {

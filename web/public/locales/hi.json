@@ -489,7 +489,13 @@
   "monitor.overview_empty": "कोई सेवा निगरानी में नहीं है।",
   "monitor.view_overview": "स्थिति देखें",
   "settings.monitoring_overview_desc": "सभी निगरानी सेवाओं की स्थिति एक ही जगह देखें।",
-  "monitor.back_home": "होम",
+  "monitor.back_home": "बाहर निकलें",
   "monitor.search_placeholder": "सेवा खोजें…",
-  "monitor.select_service": "विवरण देखने के लिए एक सेवा चुनें।"
+  "monitor.select_service": "विवरण देखने के लिए एक सेवा चुनें।",
+  "monitor.clear_data": "डेटा साफ़ करें",
+  "monitor.clear_data_confirm": "इस सेवा का दर्ज इतिहास हटाएँ? इसे पूर्ववत नहीं किया जा सकता।",
+  "monitor.clear_all": "सभी डेटा साफ़ करें",
+  "monitor.clear_all_confirm": "सभी निगरानी सेवाओं का दर्ज इतिहास हटाएँ? पूर्ववत नहीं किया जा सकता।",
+  "monitor.data_cleared": "डेटा साफ़ हो गया",
+  "settings.monitoring_clear_desc": "सभी दर्ज स्थिति इतिहास हटाता है। निगरानी चालू रहती है।"
 }

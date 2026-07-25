@@ -489,7 +489,13 @@
   "monitor.overview_empty": "لا توجد خدمات قيد المراقبة.",
   "monitor.view_overview": "عرض الحالة",
   "settings.monitoring_overview_desc": "عرض حالة جميع الخدمات المراقَبة في مكان واحد.",
-  "monitor.back_home": "الرئيسية",
+  "monitor.back_home": "خروج",
   "monitor.search_placeholder": "بحث عن خدمة…",
-  "monitor.select_service": "اختر خدمة لعرض تفاصيلها."
+  "monitor.select_service": "اختر خدمة لعرض تفاصيلها.",
+  "monitor.clear_data": "مسح البيانات",
+  "monitor.clear_data_confirm": "حذف السجل المسجَّل لهذه الخدمة؟ لا يمكن التراجع.",
+  "monitor.clear_all": "مسح كل البيانات",
+  "monitor.clear_all_confirm": "حذف السجل المسجَّل لجميع الخدمات المراقَبة؟ لا يمكن التراجع.",
+  "monitor.data_cleared": "تم مسح البيانات",
+  "settings.monitoring_clear_desc": "حذف كل سجل الحالة المسجَّل. تبقى المراقبة مفعّلة."
 }

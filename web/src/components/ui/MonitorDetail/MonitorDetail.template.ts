@@ -46,10 +46,15 @@ const rangeBar = (current: string) => `
 const footerBar = () => `
     <div class="mhd__footer">
         <span class="mhd__ago" id="mhd-ago"></span>
-        <button class="mhd__refresh" aria-label="${i18n.t('monitor.refresh')}" title="${i18n.t('monitor.refresh')}">
-            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.96 7.96 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>
-            <span>${i18n.t('monitor.refresh')}</span>
-        </button>
+        <div class="mhd__footer-actions">
+            <button class="mhd__clear" aria-label="${i18n.t('monitor.clear_data')}" title="${i18n.t('monitor.clear_data')}">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+            <button class="mhd__refresh" aria-label="${i18n.t('monitor.refresh')}" title="${i18n.t('monitor.refresh')}">
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.96 7.96 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>
+                <span>${i18n.t('monitor.refresh')}</span>
+            </button>
+        </div>
     </div>`;
 
 // The API sends RFC3339 ("…T…Z"); tolerate the raw "YYYY-MM-DD HH:MM:SS" form too.

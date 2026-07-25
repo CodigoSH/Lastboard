@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Geen diensten worden gemonitord.",
   "monitor.view_overview": "Status bekijken",
   "settings.monitoring_overview_desc": "Bekijk de status van alle gemonitorde diensten op één plek.",
-  "monitor.back_home": "Start",
+  "monitor.back_home": "Afsluiten",
   "monitor.search_placeholder": "Zoek een dienst…",
-  "monitor.select_service": "Kies een dienst om de details te zien."
+  "monitor.select_service": "Kies een dienst om de details te zien.",
+  "monitor.clear_data": "Gegevens wissen",
+  "monitor.clear_data_confirm": "De vastgelegde geschiedenis van deze dienst verwijderen? Dit kan niet ongedaan worden gemaakt.",
+  "monitor.clear_all": "Alle gegevens wissen",
+  "monitor.clear_all_confirm": "De geschiedenis van alle gemonitorde diensten verwijderen? Dit kan niet ongedaan worden gemaakt.",
+  "monitor.data_cleared": "Gegevens gewist",
+  "settings.monitoring_clear_desc": "Verwijdert alle vastgelegde statusgeschiedenis. Monitoring blijft aan."
 }

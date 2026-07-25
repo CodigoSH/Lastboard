@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Nenhum serviço monitorizado.",
   "monitor.view_overview": "Ver estado",
   "settings.monitoring_overview_desc": "Vê o estado de todos os serviços monitorizados num só lugar.",
-  "monitor.back_home": "Início",
+  "monitor.back_home": "Sair",
   "monitor.search_placeholder": "Procurar serviço…",
-  "monitor.select_service": "Seleciona um serviço para ver os detalhes."
+  "monitor.select_service": "Seleciona um serviço para ver os detalhes.",
+  "monitor.clear_data": "Limpar dados",
+  "monitor.clear_data_confirm": "Eliminar o histórico registado deste serviço? Não pode ser desfeito.",
+  "monitor.clear_all": "Limpar todos os dados",
+  "monitor.clear_all_confirm": "Eliminar o histórico de todos os serviços monitorizados? Não pode ser desfeito.",
+  "monitor.data_cleared": "Dados apagados",
+  "settings.monitoring_clear_desc": "Apaga todo o histórico de estado registado. A monitorização continua ativa."
 }

@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Нет отслеживаемых сервисов.",
   "monitor.view_overview": "Смотреть статус",
   "settings.monitoring_overview_desc": "Состояние всех отслеживаемых сервисов в одном месте.",
-  "monitor.back_home": "Главная",
+  "monitor.back_home": "Выйти",
   "monitor.search_placeholder": "Поиск сервиса…",
-  "monitor.select_service": "Выберите сервис, чтобы увидеть детали."
+  "monitor.select_service": "Выберите сервис, чтобы увидеть детали.",
+  "monitor.clear_data": "Очистить данные",
+  "monitor.clear_data_confirm": "Удалить записанную историю этого сервиса? Отменить нельзя.",
+  "monitor.clear_all": "Очистить все данные",
+  "monitor.clear_all_confirm": "Удалить историю всех отслеживаемых сервисов? Отменить нельзя.",
+  "monitor.data_cleared": "Данные очищены",
+  "settings.monitoring_clear_desc": "Удаляет всю записанную историю состояния. Мониторинг остаётся включённым."
 }

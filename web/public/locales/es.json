@@ -489,7 +489,13 @@
   "monitor.overview_empty": "No hay servicios monitorizados.",
   "monitor.view_overview": "Ver estado",
   "settings.monitoring_overview_desc": "Ver el estado de todos los servicios monitorizados en un sitio.",
-  "monitor.back_home": "Inicio",
+  "monitor.back_home": "Salir",
   "monitor.search_placeholder": "Buscar servicio…",
-  "monitor.select_service": "Selecciona un servicio para ver su detalle."
+  "monitor.select_service": "Selecciona un servicio para ver su detalle.",
+  "monitor.clear_data": "Borrar datos",
+  "monitor.clear_data_confirm": "¿Borrar el historial registrado de este servicio? No se puede deshacer.",
+  "monitor.clear_all": "Borrar todos los datos",
+  "monitor.clear_all_confirm": "¿Borrar el historial de todos los servicios monitorizados? No se puede deshacer.",
+  "monitor.data_cleared": "Datos borrados",
+  "settings.monitoring_clear_desc": "Borra todo el historial de estado registrado. La monitorización sigue activa."
 }

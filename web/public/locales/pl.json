@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Brak monitorowanych usług.",
   "monitor.view_overview": "Zobacz stan",
   "settings.monitoring_overview_desc": "Zobacz stan wszystkich monitorowanych usług w jednym miejscu.",
-  "monitor.back_home": "Strona główna",
+  "monitor.back_home": "Wyjdź",
   "monitor.search_placeholder": "Szukaj usługi…",
-  "monitor.select_service": "Wybierz usługę, aby zobaczyć szczegóły."
+  "monitor.select_service": "Wybierz usługę, aby zobaczyć szczegóły.",
+  "monitor.clear_data": "Wyczyść dane",
+  "monitor.clear_data_confirm": "Usunąć zapisaną historię tej usługi? Nie można cofnąć.",
+  "monitor.clear_all": "Wyczyść wszystkie dane",
+  "monitor.clear_all_confirm": "Usunąć historię wszystkich monitorowanych usług? Nie można cofnąć.",
+  "monitor.data_cleared": "Dane wyczyszczone",
+  "settings.monitoring_clear_desc": "Usuwa całą zapisaną historię stanu. Monitorowanie pozostaje włączone."
 }

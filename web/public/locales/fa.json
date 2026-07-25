@@ -489,7 +489,13 @@
   "monitor.overview_empty": "هیچ سرویسی تحت نظارت نیست.",
   "monitor.view_overview": "مشاهده وضعیت",
   "settings.monitoring_overview_desc": "وضعیت همه سرویس‌های تحت نظارت را یکجا ببینید.",
-  "monitor.back_home": "خانه",
+  "monitor.back_home": "خروج",
   "monitor.search_placeholder": "جستجوی سرویس…",
-  "monitor.select_service": "برای دیدن جزئیات، یک سرویس را انتخاب کنید."
+  "monitor.select_service": "برای دیدن جزئیات، یک سرویس را انتخاب کنید.",
+  "monitor.clear_data": "پاک کردن داده‌ها",
+  "monitor.clear_data_confirm": "تاریخچه ثبت‌شده این سرویس حذف شود؟ قابل بازگردانی نیست.",
+  "monitor.clear_all": "پاک کردن همه داده‌ها",
+  "monitor.clear_all_confirm": "تاریخچه ثبت‌شده همه سرویس‌های تحت نظارت حذف شود؟ قابل بازگردانی نیست.",
+  "monitor.data_cleared": "داده‌ها پاک شد",
+  "settings.monitoring_clear_desc": "همه تاریخچه وضعیت ثبت‌شده را حذف می‌کند. نظارت فعال می‌ماند."
 }

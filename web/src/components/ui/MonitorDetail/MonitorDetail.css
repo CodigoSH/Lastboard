@@ -92,6 +92,28 @@
 
 .mhd__refresh:active svg { transform: rotate(-180deg); transition: transform 0.3s; }
 
+.mhd__footer-actions { display: flex; align-items: center; gap: 8px; }
+
+.mhd__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mhd__clear:hover {
+    color: var(--danger-color, #e5484d);
+    border-color: rgba(229, 72, 77, 0.4);
+    background: rgba(229, 72, 77, 0.08);
+}
+
 .mhd__body {
     flex: 1 1 auto;
     min-height: 0;

@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Nessun servizio monitorato.",
   "monitor.view_overview": "Vedi stato",
   "settings.monitoring_overview_desc": "Vedi lo stato di tutti i servizi monitorati in un unico posto.",
-  "monitor.back_home": "Home",
+  "monitor.back_home": "Esci",
   "monitor.search_placeholder": "Cerca un servizio…",
-  "monitor.select_service": "Seleziona un servizio per vederne i dettagli."
+  "monitor.select_service": "Seleziona un servizio per vederne i dettagli.",
+  "monitor.clear_data": "Cancella dati",
+  "monitor.clear_data_confirm": "Eliminare lo storico registrato di questo servizio? Non è reversibile.",
+  "monitor.clear_all": "Cancella tutti i dati",
+  "monitor.clear_all_confirm": "Eliminare lo storico di tutti i servizi monitorati? Non è reversibile.",
+  "monitor.data_cleared": "Dati cancellati",
+  "settings.monitoring_clear_desc": "Elimina tutto lo storico di stato registrato. Il monitoraggio resta attivo."
 }

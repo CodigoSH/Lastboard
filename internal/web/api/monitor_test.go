@@ -99,6 +99,26 @@ func TestMonitorStorePrune(t *testing.T) {
 	}
 }
 
+func TestMonitorStoreClear(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := NewMonitorStore(db)
+	itemID := seedItem(t, store)
+
+	for i := 0; i < 3; i++ {
+		if err := store.Record(itemID, true, intPtr(10), 200); err != nil {
+			t.Fatalf("record: %v", err)
+		}
+	}
+	n, err := store.ClearItem(itemID)
+	if err != nil || n != 3 {
+		t.Fatalf("ClearItem expected 3 removed, got %d (err %v)", n, err)
+	}
+	if recent, _ := store.Recent(itemID, 10); len(recent) != 0 {
+		t.Fatalf("expected no checks after clear, got %d", len(recent))
+	}
+}
+
 func TestMonitorStoreCascadeOnItemDelete(t *testing.T) {
 	db, _ := setupTestDB(t)
 	db.SetMaxOpenConns(1)

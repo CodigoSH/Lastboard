@@ -338,6 +338,15 @@ export const advancedTemplate = (monitoring: { mode: string; interval_sec: numbe
                         ${i18n.t('monitor.view_overview')}
                     </app-button>
                 </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('monitor.clear_all')}</h3>
+                        <p>${i18n.t('settings.monitoring_clear_desc')}</p>
+                    </div>
+                    <app-button data-action="clear-monitor-data" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent;">
+                        ${i18n.t('monitor.clear_data')}
+                    </app-button>
+                </div>
             </div>
         </div>
 

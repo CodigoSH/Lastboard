@@ -1,5 +1,6 @@
 import { apiService } from '../../../services/apiService';
 import { i18n } from '../../../services/i18n';
+import { eventBus, EVENTS } from '../../../services/EventBus';
 import {
     loadingInner, emptyInner, dataInner, noSelectionInner, HistoryData,
     computeSpark, barTooltipHtml, sparkTooltipHtml, SparkPoint,
@@ -39,6 +40,7 @@ class MonitorDetail extends HTMLElement {
             const t = e.target as HTMLElement;
             const rangeBtn = t.closest('.mhd__range') as HTMLElement | null;
             if (rangeBtn && rangeBtn.dataset.range) { this.setRange(rangeBtn.dataset.range); return; }
+            if (t.closest('.mhd__clear')) { this._confirmClear(); return; }
             if (t.closest('.mhd__refresh')) this._reload(false);
         });
         this.shadowRoot!.addEventListener('mouseover', (e) => this._onHover(e));
@@ -82,6 +84,22 @@ class MonitorDetail extends HTMLElement {
         if (range === this.range) return;
         this.range = range;
         this._reload(true);
+    }
+
+    private _confirmClear() {
+        if (!this.itemId) return;
+        const id = this.itemId;
+        eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+            title: i18n.t('monitor.clear_data'),
+            message: i18n.t('monitor.clear_data_confirm'),
+            onConfirm: async () => {
+                try {
+                    await apiService.delete(`/api/monitor/history?item_id=${id}`);
+                    this._lastSig = '';
+                    if (this.active && this.itemId === id) this._reload(true);
+                } catch { /* ignore */ }
+            },
+        });
     }
 
     private async _reload(showLoading: boolean) {

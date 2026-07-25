@@ -489,7 +489,13 @@
   "monitor.overview_empty": "Tidak ada layanan yang dipantau.",
   "monitor.view_overview": "Lihat status",
   "settings.monitoring_overview_desc": "Lihat status semua layanan yang dipantau di satu tempat.",
-  "monitor.back_home": "Beranda",
+  "monitor.back_home": "Keluar",
   "monitor.search_placeholder": "Cari layanan…",
-  "monitor.select_service": "Pilih layanan untuk melihat detailnya."
+  "monitor.select_service": "Pilih layanan untuk melihat detailnya.",
+  "monitor.clear_data": "Hapus data",
+  "monitor.clear_data_confirm": "Hapus riwayat terekam untuk layanan ini? Tidak bisa dibatalkan.",
+  "monitor.clear_all": "Hapus semua data",
+  "monitor.clear_all_confirm": "Hapus riwayat terekam semua layanan yang dipantau? Tidak bisa dibatalkan.",
+  "monitor.data_cleared": "Data dihapus",
+  "settings.monitoring_clear_desc": "Menghapus semua riwayat status terekam. Pemantauan tetap aktif."
 }

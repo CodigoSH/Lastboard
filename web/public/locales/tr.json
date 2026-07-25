@@ -489,7 +489,13 @@
   "monitor.overview_empty": "İzlenen servis yok.",
   "monitor.view_overview": "Durumu gör",
   "settings.monitoring_overview_desc": "İzlenen tüm servislerin durumunu tek yerde gör.",
-  "monitor.back_home": "Ana sayfa",
+  "monitor.back_home": "Çıkış",
   "monitor.search_placeholder": "Servis ara…",
-  "monitor.select_service": "Ayrıntılar için bir servis seç."
+  "monitor.select_service": "Ayrıntılar için bir servis seç.",
+  "monitor.clear_data": "Verileri temizle",
+  "monitor.clear_data_confirm": "Bu servisin kayıtlı geçmişi silinsin mi? Geri alınamaz.",
+  "monitor.clear_all": "Tüm verileri temizle",
+  "monitor.clear_all_confirm": "İzlenen tüm servislerin kayıtlı geçmişi silinsin mi? Geri alınamaz.",
+  "monitor.data_cleared": "Veriler temizlendi",
+  "settings.monitoring_clear_desc": "Kaydedilen tüm durum geçmişini siler. İzleme açık kalır."
 }

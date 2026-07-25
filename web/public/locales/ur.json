@@ -489,7 +489,13 @@
   "monitor.overview_empty": "کوئی سروس زیر نگرانی نہیں۔",
   "monitor.view_overview": "حالت دیکھیں",
   "settings.monitoring_overview_desc": "تمام زیر نگرانی سروسز کی حالت ایک جگہ دیکھیں۔",
-  "monitor.back_home": "ہوم",
+  "monitor.back_home": "باہر نکلیں",
   "monitor.search_placeholder": "سروس تلاش کریں…",
-  "monitor.select_service": "تفصیل دیکھنے کے لیے سروس منتخب کریں۔"
+  "monitor.select_service": "تفصیل دیکھنے کے لیے سروس منتخب کریں۔",
+  "monitor.clear_data": "ڈیٹا صاف کریں",
+  "monitor.clear_data_confirm": "اس سروس کی ریکارڈ شدہ ہسٹری حذف کریں؟ واپس نہیں ہو سکتا۔",
+  "monitor.clear_all": "تمام ڈیٹا صاف کریں",
+  "monitor.clear_all_confirm": "تمام زیر نگرانی سروسز کی ریکارڈ شدہ ہسٹری حذف کریں؟ واپس نہیں ہو سکتا۔",
+  "monitor.data_cleared": "ڈیٹا صاف ہو گیا",
+  "settings.monitoring_clear_desc": "ریکارڈ شدہ تمام اسٹیٹس ہسٹری حذف کرتا ہے۔ نگرانی چالو رہتی ہے۔"
 }
