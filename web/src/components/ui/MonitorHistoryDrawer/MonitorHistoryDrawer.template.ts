@@ -34,7 +34,9 @@ export const RANGES = ['24h', '7d', '30d'];
 const header = (name: string) => `
     <header class="mhd__header">
         <h2 class="mhd__title">${escapeHtml(name) || 'Monitor'}</h2>
-        <button class="mhd__close" aria-label="${i18n.t('action.close') || 'Close'}">&times;</button>
+        <button class="mhd__close" aria-label="${i18n.t('general.close') || i18n.t('action.close') || 'Close'}">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
     </header>`;
 
 const rangeBar = (current: string) => `
@@ -42,11 +44,12 @@ const rangeBar = (current: string) => `
         ${RANGES.map(r => `<button class="mhd__range ${r === current ? 'mhd__range--active' : ''}" data-range="${r}">${r}</button>`).join('')}
     </div>`;
 
-const freshnessBar = () => `
-    <div class="mhd__freshness">
+const footerBar = () => `
+    <div class="mhd__footer">
         <span class="mhd__ago" id="mhd-ago"></span>
         <button class="mhd__refresh" aria-label="${i18n.t('monitor.refresh')}" title="${i18n.t('monitor.refresh')}">
             <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.96 7.96 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>
+            <span>${i18n.t('monitor.refresh')}</span>
         </button>
     </div>`;
 
@@ -112,7 +115,8 @@ export const emptyInner = (name: string, mode: string, range: string) => `
         <p>${mode === 'background'
         ? (i18n.t('monitor.no_data_yet') || 'No history recorded yet. Checks will appear shortly.')
         : (i18n.t('monitor.no_data') || 'No history yet. Enable 24/7 monitoring to record it.')}</p>
-    </div>`;
+    </div>
+    ${footerBar()}`;
 
 // The API sends RFC3339 ("…T…Z"); tolerate the raw "YYYY-MM-DD HH:MM:SS" form too.
 const parseTs = (s: string) => new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z');
@@ -194,7 +198,6 @@ export const dataInner = (name: string, data: HistoryData): string => {
     return `
         ${header(name)}
         ${rangeBar(data.range)}
-        ${freshnessBar()}
         <div class="mhd__body">
             <div class="mhd__status mhd__status--${status}">
                 <span class="mhd__dot"></span>${escapeHtml(statusLabel)}
@@ -219,5 +222,6 @@ export const dataInner = (name: string, data: HistoryData): string => {
 
             <div class="mhd__section-label">${i18n.t('monitor.incidents')}</div>
             <div class="mhd__incidents">${incidentList(incidents)}</div>
-        </div>`;
+        </div>
+        ${footerBar()}`;
 };
