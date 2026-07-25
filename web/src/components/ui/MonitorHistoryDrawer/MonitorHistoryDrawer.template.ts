@@ -56,8 +56,8 @@ export const emptyInner = (name: string, mode: string, range: string) => `
         : (i18n.t('monitor.no_data') || 'No history yet. Enable 24/7 monitoring to record it.')}</p>
     </div>`;
 
-// Parse the UTC "YYYY-MM-DD HH:MM:SS" timestamp into a local Date.
-const parseTs = (s: string) => new Date(s.replace(' ', 'T') + 'Z');
+// The API sends RFC3339 ("…T…Z"); tolerate the raw "YYYY-MM-DD HH:MM:SS" form too.
+const parseTs = (s: string) => new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z');
 
 const fmtTime = (s: string) => parseTs(s).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
