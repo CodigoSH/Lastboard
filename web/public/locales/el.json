@@ -507,5 +507,22 @@
   "monitor.ev_status": "Κατάσταση",
   "monitor.ev_when": "Ημ/νία & ώρα",
   "monitor.ev_duration": "Διάρκεια",
-  "monitor.ev_recovered": "Ανακτήθηκε"
+  "monitor.ev_recovered": "Ανακτήθηκε",
+  "settings.alerts": "Ειδοποιήσεις",
+  "settings.alerts_desc": "Ειδοποίηση όταν μια υπηρεσία πέφτει ή ανακάμπτει.",
+  "settings.notify_method": "Μέθοδος ειδοποίησης",
+  "settings.notify_method_desc": "Πού στέλνονται οι ειδοποιήσεις.",
+  "settings.notify_none": "Καμία",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "URL θέματος ntfy, διακομιστή Gotify ή του webhook σου.",
+  "settings.notify_token": "Διακριτικό",
+  "settings.notify_token_desc": "Προαιρετικό. Διακριτικό Bearer (ntfy/webhook) ή εφαρμογής (Gotify).",
+  "settings.fail_threshold": "Όριο αποτυχιών",
+  "settings.fail_threshold_desc": "Διαδοχικοί αποτυχημένοι έλεγχοι πριν την ειδοποίηση διακοπής.",
+  "settings.notify_test": "Δοκιμή",
+  "settings.notify_test_desc": "Στείλε δοκιμαστική ειδοποίηση με τις τρέχουσες ρυθμίσεις.",
+  "settings.notify_test_btn": "Αποστολή δοκιμής",
+  "settings.notify_test_ok": "Η δοκιμαστική ειδοποίηση στάλθηκε",
+  "settings.notify_test_fail": "Αποτυχία αποστολής δοκιμής"
 }

@@ -128,8 +128,13 @@ func NewMonitorHandler(db *sql.DB) *MonitorHandler {
 }
 
 type monitorSettings struct {
-	Mode        string `json:"mode"`         // off | tab | background
-	IntervalSec int    `json:"interval_sec"` // probe cadence for background mode
+	Mode          string `json:"mode"`         // off | tab | background
+	IntervalSec   int    `json:"interval_sec"` // probe cadence for background mode
+	AlertsEnabled bool   `json:"alerts_enabled"`
+	NotifyType    string `json:"notify_type"` // none | ntfy | gotify | webhook
+	NotifyURL     string `json:"notify_url"`
+	NotifyToken   string `json:"notify_token"`
+	FailThreshold int    `json:"fail_threshold"` // consecutive fails before a down alert
 }
 
 // GetSettings returns the current monitoring configuration, filling defaults
@@ -143,8 +148,24 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	if interval <= 0 {
 		interval = monitorDefaultIntervalSec
 	}
+	threshold, _ := strconv.Atoi(h.getSetting("monitoring_fail_threshold"))
+	if threshold < 1 {
+		threshold = 1
+	}
+	notifyType := h.getSetting("monitoring_notify_type")
+	if notifyType == "" {
+		notifyType = "none"
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(monitorSettings{Mode: mode, IntervalSec: interval})
+	json.NewEncoder(w).Encode(monitorSettings{
+		Mode:          mode,
+		IntervalSec:   interval,
+		AlertsEnabled: h.getSetting("monitoring_alerts_enabled") == "1",
+		NotifyType:    notifyType,
+		NotifyURL:     h.getSetting("monitoring_notify_url"),
+		NotifyToken:   h.getSetting("monitoring_notify_token"),
+		FailThreshold: threshold,
+	})
 }
 
 // UpdateSettings persists the monitoring configuration. Admin-only, since the
@@ -165,14 +186,63 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "error.invalid_input", http.StatusBadRequest)
 		return
 	}
+	switch s.NotifyType {
+	case "", "none", "ntfy", "gotify", "webhook":
+	default:
+		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		return
+	}
 	if s.IntervalSec < monitorMinIntervalSec {
 		s.IntervalSec = monitorMinIntervalSec
 	}
+	if s.FailThreshold < 1 {
+		s.FailThreshold = 1
+	}
+	if s.NotifyType == "" {
+		s.NotifyType = "none"
+	}
 	h.setSetting("monitoring_mode", s.Mode)
 	h.setSetting("monitoring_interval_sec", strconv.Itoa(s.IntervalSec))
+	h.setSetting("monitoring_alerts_enabled", boolTo01(s.AlertsEnabled))
+	h.setSetting("monitoring_notify_type", s.NotifyType)
+	h.setSetting("monitoring_notify_url", s.NotifyURL)
+	h.setSetting("monitoring_notify_token", s.NotifyToken)
+	h.setSetting("monitoring_fail_threshold", strconv.Itoa(s.FailThreshold))
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(s)
+}
+
+func boolTo01(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
+}
+
+// TestNotify sends a one-off test alert using the config in the request body
+// (so it can be tried before saving). Admin-only.
+func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
+	if !isAdminUser(h.DB, r) {
+		http.Error(w, "error.forbidden", http.StatusForbidden)
+		return
+	}
+	var s monitorSettings
+	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
+		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		return
+	}
+	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: s.NotifyToken}
+	if !cfg.active() {
+		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		return
+	}
+	if err := sendNotification(cfg, "Lastboard", "Test notification", true); err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
 // incident is a contiguous down period within the queried window. End is nil

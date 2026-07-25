@@ -507,5 +507,22 @@
   "monitor.ev_status": "Durum",
   "monitor.ev_when": "Tarih ve saat",
   "monitor.ev_duration": "Süre",
-  "monitor.ev_recovered": "Düzeldi"
+  "monitor.ev_recovered": "Düzeldi",
+  "settings.alerts": "Uyarılar",
+  "settings.alerts_desc": "Bir servis çöktüğünde veya düzeldiğinde bildir.",
+  "settings.notify_method": "Bildirim yöntemi",
+  "settings.notify_method_desc": "Uyarıların gönderileceği yer.",
+  "settings.notify_none": "Yok",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy konu URL'si, Gotify sunucu URL'si veya webhook adresin.",
+  "settings.notify_token": "Belirteç",
+  "settings.notify_token_desc": "İsteğe bağlı. Bearer belirteci (ntfy/webhook) veya uygulama belirteci (Gotify).",
+  "settings.fail_threshold": "Hata eşiği",
+  "settings.fail_threshold_desc": "Çöküş uyarısından önceki ardışık başarısız kontrol sayısı.",
+  "settings.notify_test": "Test",
+  "settings.notify_test_desc": "Mevcut ayarlarla bir test bildirimi gönder.",
+  "settings.notify_test_btn": "Test gönder",
+  "settings.notify_test_ok": "Test bildirimi gönderildi",
+  "settings.notify_test_fail": "Test gönderilemedi"
 }

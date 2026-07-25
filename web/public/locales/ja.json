@@ -507,5 +507,22 @@
   "monitor.ev_status": "状態",
   "monitor.ev_when": "日時",
   "monitor.ev_duration": "継続時間",
-  "monitor.ev_recovered": "復旧"
+  "monitor.ev_recovered": "復旧",
+  "settings.alerts": "アラート",
+  "settings.alerts_desc": "サービスがダウン／復旧したときに通知します。",
+  "settings.notify_method": "通知方法",
+  "settings.notify_method_desc": "アラートの送信先。",
+  "settings.notify_none": "なし",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy トピック URL、Gotify サーバー URL、または webhook のエンドポイント。",
+  "settings.notify_token": "トークン",
+  "settings.notify_token_desc": "任意。Bearer トークン（ntfy/webhook）またはアプリトークン（Gotify）。",
+  "settings.fail_threshold": "失敗のしきい値",
+  "settings.fail_threshold_desc": "ダウン通知までの連続失敗回数。",
+  "settings.notify_test": "テスト",
+  "settings.notify_test_desc": "現在の設定でテスト通知を送信します。",
+  "settings.notify_test_btn": "テスト送信",
+  "settings.notify_test_ok": "テスト通知を送信しました",
+  "settings.notify_test_fail": "テストを送信できませんでした"
 }

@@ -507,5 +507,22 @@
   "monitor.ev_status": "状态",
   "monitor.ev_when": "日期和时间",
   "monitor.ev_duration": "时长",
-  "monitor.ev_recovered": "已恢复"
+  "monitor.ev_recovered": "已恢复",
+  "settings.alerts": "警报",
+  "settings.alerts_desc": "服务宕机或恢复时通知。",
+  "settings.notify_method": "通知方式",
+  "settings.notify_method_desc": "警报发送到哪里。",
+  "settings.notify_none": "无",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy 主题 URL、Gotify 服务器 URL 或你的 webhook 地址。",
+  "settings.notify_token": "令牌",
+  "settings.notify_token_desc": "可选。Bearer 令牌（ntfy/webhook）或应用令牌（Gotify）。",
+  "settings.fail_threshold": "失败阈值",
+  "settings.fail_threshold_desc": "触发宕机警报前的连续失败次数。",
+  "settings.notify_test": "测试",
+  "settings.notify_test_desc": "使用当前设置发送测试通知。",
+  "settings.notify_test_btn": "发送测试",
+  "settings.notify_test_ok": "测试通知已发送",
+  "settings.notify_test_fail": "无法发送测试"
 }

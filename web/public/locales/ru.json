@@ -507,5 +507,22 @@
   "monitor.ev_status": "Статус",
   "monitor.ev_when": "Дата и время",
   "monitor.ev_duration": "Длительность",
-  "monitor.ev_recovered": "Восстановлено"
+  "monitor.ev_recovered": "Восстановлено",
+  "settings.alerts": "Оповещения",
+  "settings.alerts_desc": "Уведомлять при падении или восстановлении сервиса.",
+  "settings.notify_method": "Способ уведомления",
+  "settings.notify_method_desc": "Куда отправлять оповещения.",
+  "settings.notify_none": "Нет",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "URL темы ntfy, сервера Gotify или вашего вебхука.",
+  "settings.notify_token": "Токен",
+  "settings.notify_token_desc": "Необязательно. Bearer-токен (ntfy/webhook) или токен приложения (Gotify).",
+  "settings.fail_threshold": "Порог сбоев",
+  "settings.fail_threshold_desc": "Сколько неудачных проверок подряд до оповещения о сбое.",
+  "settings.notify_test": "Проверка",
+  "settings.notify_test_desc": "Отправить тестовое уведомление с текущими настройками.",
+  "settings.notify_test_btn": "Отправить тест",
+  "settings.notify_test_ok": "Тестовое уведомление отправлено",
+  "settings.notify_test_fail": "Не удалось отправить тест"
 }

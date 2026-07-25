@@ -8,6 +8,32 @@ import (
 	"testing"
 )
 
+func TestSchedulerAlertTransitions(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	sched := NewMonitorScheduler(db)
+	// Enabled:false → no outbound send; we only assert the state machine.
+	cfg := notifyConfig{Enabled: false, Type: "webhook", URL: "http://x", FailThreshold: 2}
+	it := MonitoredItem{ID: 1, Name: "x", URL: "http://x"}
+
+	sched.evalAlert(it, true, cfg) // seed as up
+	if sched.alertState[1].down {
+		t.Fatal("seed up should not be down")
+	}
+	sched.evalAlert(it, false, cfg) // 1st fail (threshold 2)
+	if sched.alertState[1].down || sched.alertState[1].fails != 1 {
+		t.Fatalf("after 1 fail: fails=%d down=%v", sched.alertState[1].fails, sched.alertState[1].down)
+	}
+	sched.evalAlert(it, false, cfg) // 2nd fail → down
+	if !sched.alertState[1].down {
+		t.Fatal("should be down after reaching threshold")
+	}
+	sched.evalAlert(it, true, cfg) // recover
+	if sched.alertState[1].down || sched.alertState[1].fails != 0 {
+		t.Fatal("should recover on next up")
+	}
+}
+
 func TestMonitorHandlerGetDefaults(t *testing.T) {
 	db, _ := setupTestDB(t)
 	db.SetMaxOpenConns(1)

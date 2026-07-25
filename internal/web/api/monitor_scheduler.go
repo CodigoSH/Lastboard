@@ -21,12 +21,21 @@ const (
 // while monitoring_mode is "background"; in "off"/"tab" the loop stays idle and
 // writes nothing, so it is safe to start unconditionally at boot.
 type MonitorScheduler struct {
-	store *MonitorStore
+	store      *MonitorStore
+	alertMu    sync.Mutex
+	alertState map[int]*itemAlert
+}
+
+// itemAlert tracks a monitor's alerting state between cycles: consecutive
+// failures and whether we currently consider it down (already alerted).
+type itemAlert struct {
+	fails int
+	down  bool
 }
 
 // NewMonitorScheduler builds a scheduler over the given database handle.
 func NewMonitorScheduler(db *sql.DB) *MonitorScheduler {
-	return &MonitorScheduler{store: NewMonitorStore(db)}
+	return &MonitorScheduler{store: NewMonitorStore(db), alertState: map[int]*itemAlert{}}
 }
 
 // Run launches the probe loop and the daily prune. It is meant to be started in
@@ -72,6 +81,7 @@ func (m *MonitorScheduler) RunCycle() {
 		return
 	}
 
+	cfg := m.notifyCfg()
 	sem := make(chan struct{}, monitorMaxConcurrency)
 	var wg sync.WaitGroup
 	for _, it := range items {
@@ -84,9 +94,76 @@ func (m *MonitorScheduler) RunCycle() {
 			if err := m.store.Record(it.ID, up, latency, code); err != nil {
 				slog.Error("monitor: recording check failed", "item", it.ID, "error", err)
 			}
+			m.evalAlert(it, up, cfg)
 		}(it)
 	}
 	wg.Wait()
+}
+
+// notifyCfg reads the global alerting configuration from system_settings.
+func (m *MonitorScheduler) notifyCfg() notifyConfig {
+	th, _ := strconv.Atoi(m.setting("monitoring_fail_threshold"))
+	if th < 1 {
+		th = 1
+	}
+	return notifyConfig{
+		Enabled:       m.setting("monitoring_alerts_enabled") == "1",
+		Type:          m.setting("monitoring_notify_type"),
+		URL:           m.setting("monitoring_notify_url"),
+		Token:         m.setting("monitoring_notify_token"),
+		FailThreshold: th,
+	}
+}
+
+// evalAlert updates a monitor's alert state and fires a notification on a
+// down↔up transition. The first observation of an item seeds state silently so
+// a restart never re-alerts for services that were already down.
+func (m *MonitorScheduler) evalAlert(it MonitoredItem, up bool, cfg notifyConfig) {
+	m.alertMu.Lock()
+	st := m.alertState[it.ID]
+	if st == nil {
+		st = &itemAlert{down: !up}
+		if !up {
+			st.fails = cfg.FailThreshold
+		}
+		m.alertState[it.ID] = st
+		m.alertMu.Unlock()
+		return
+	}
+
+	var recovered bool
+	var fire bool
+	if up {
+		st.fails = 0
+		if st.down {
+			st.down = false
+			fire, recovered = true, true
+		}
+	} else {
+		st.fails++
+		if !st.down && st.fails >= cfg.FailThreshold {
+			st.down = true
+			fire = true
+		}
+	}
+	m.alertMu.Unlock()
+
+	if !fire || !cfg.active() {
+		return
+	}
+	name := it.Name
+	if name == "" {
+		name = it.URL
+	}
+	msg := "Service is down"
+	if recovered {
+		msg = "Service recovered"
+	}
+	go func() {
+		if err := sendNotification(cfg, name, msg, recovered); err != nil {
+			slog.Error("monitor: alert failed", "item", it.ID, "error", err)
+		}
+	}()
 }
 
 // mode returns the configured monitoring_mode, defaulting to "tab" (today's

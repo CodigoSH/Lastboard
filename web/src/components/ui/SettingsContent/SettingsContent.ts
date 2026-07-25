@@ -14,7 +14,10 @@ import css from './SettingsContent.css' with { type: 'text' };
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
     private users: User[] = [];
-    private monitoring = { mode: 'tab', interval_sec: 300 };
+    private monitoring: {
+        mode: string; interval_sec: number; alerts_enabled: boolean;
+        notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
+    } = { mode: 'tab', interval_sec: 300, alerts_enabled: false, notify_type: 'none', notify_url: '', notify_token: '', fail_threshold: 1 };
 
 
     static get observedAttributes() {
@@ -103,6 +106,9 @@ class SettingsContent extends HTMLElement {
                 case 'clear-monitor-data':
                     this.clearMonitorData();
                     break;
+                case 'test-notify':
+                    this.testNotify();
+                    break;
                 case 'open-add-user':
                     this.openAddUserModal();
                     break;
@@ -163,6 +169,15 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'monitoring-toggle':
                     this.saveMonitoring({ mode: (el as HTMLInputElement).checked ? 'background' : 'off' });
+                    break;
+                case 'alerts-toggle':
+                    this.saveMonitoring({ alerts_enabled: (el as HTMLInputElement).checked });
+                    break;
+                case 'notify-url':
+                    this.saveMonitoring({ notify_url: (el as HTMLInputElement).value.trim() });
+                    break;
+                case 'notify-token':
+                    this.saveMonitoring({ notify_token: (el as HTMLInputElement).value.trim() });
                     break;
             }
         });
@@ -251,8 +266,7 @@ class SettingsContent extends HTMLElement {
 
     async fetchMonitoring() {
         try {
-            const s = await apiService.get<{ mode: string; interval_sec: number }>('/api/monitor/settings');
-            this.monitoring = { mode: s.mode, interval_sec: s.interval_sec };
+            this.monitoring = await apiService.get<typeof this.monitoring>('/api/monitor/settings');
             this.render();
         } catch (e) {
             console.error("Failed to fetch monitoring settings", e);
@@ -260,19 +274,31 @@ class SettingsContent extends HTMLElement {
     }
 
     // Global (system-wide) setting, so it goes through the monitor endpoint
-    // rather than savePrefs. Re-renders to toggle the interval row.
-    async saveMonitoring(patch: Partial<{ mode: string; interval_sec: number }>) {
+    // rather than savePrefs. Re-renders to toggle dependent rows.
+    async saveMonitoring(patch: Partial<typeof this.monitoring>) {
         const next = { ...this.monitoring, ...patch };
         try {
-            const saved = await apiService.post<{ mode: string; interval_sec: number }>('/api/monitor/settings', next);
-            this.monitoring = { mode: saved.mode, interval_sec: saved.interval_sec };
+            const saved = await apiService.post<typeof this.monitoring>('/api/monitor/settings', next);
+            this.monitoring = saved;
             this.render();
-            // Let the topbar show/hide its monitoring icon.
             const { eventBus, EVENTS } = await import('../../../services/EventBus');
             eventBus.emit(EVENTS.MONITORING_CHANGED, { mode: saved.mode });
             if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
         } catch {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+        }
+    }
+
+    async testNotify() {
+        try {
+            await apiService.post('/api/monitor/test', {
+                notify_type: this.monitoring.notify_type,
+                notify_url: this.monitoring.notify_url,
+                notify_token: this.monitoring.notify_token,
+            });
+            if (window.notifier) window.notifier.show(i18n.t('settings.notify_test_ok'));
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.notify_test_fail'), 'error');
         }
     }
 
@@ -988,6 +1014,32 @@ class SettingsContent extends HTMLElement {
             ];
             monitoringIntervalSelect.addEventListener('change', (e: CustomEvent) => {
                 this.saveMonitoring({ interval_sec: parseInt(e.detail, 10) });
+            });
+        }
+
+        const notifyTypeSelect = this.shadowRoot!.getElementById('notify-type') as any;
+        if (notifyTypeSelect) {
+            notifyTypeSelect.options = [
+                { value: 'none', label: i18n.t('settings.notify_none') },
+                { value: 'ntfy', label: 'ntfy' },
+                { value: 'gotify', label: 'Gotify' },
+                { value: 'webhook', label: i18n.t('settings.notify_webhook') },
+            ];
+            notifyTypeSelect.addEventListener('change', (e: CustomEvent) => {
+                this.saveMonitoring({ notify_type: e.detail });
+            });
+        }
+
+        const failThresholdSelect = this.shadowRoot!.getElementById('fail-threshold') as any;
+        if (failThresholdSelect) {
+            failThresholdSelect.options = [
+                { value: '1', label: '1' },
+                { value: '2', label: '2' },
+                { value: '3', label: '3' },
+                { value: '5', label: '5' },
+            ];
+            failThresholdSelect.addEventListener('change', (e: CustomEvent) => {
+                this.saveMonitoring({ fail_threshold: parseInt(e.detail, 10) });
             });
         }
     }

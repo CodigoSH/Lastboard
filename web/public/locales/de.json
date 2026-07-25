@@ -507,5 +507,22 @@
   "monitor.ev_status": "Status",
   "monitor.ev_when": "Datum & Zeit",
   "monitor.ev_duration": "Dauer",
-  "monitor.ev_recovered": "Behoben"
+  "monitor.ev_recovered": "Behoben",
+  "settings.alerts": "Warnungen",
+  "settings.alerts_desc": "Benachrichtigen, wenn ein Dienst ausfällt oder sich erholt.",
+  "settings.notify_method": "Benachrichtigungsmethode",
+  "settings.notify_method_desc": "Wohin Warnungen gesendet werden.",
+  "settings.notify_none": "Keine",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy-Topic-URL, Gotify-Server-URL oder dein Webhook-Endpunkt.",
+  "settings.notify_token": "Token",
+  "settings.notify_token_desc": "Optional. Bearer-Token (ntfy/Webhook) oder App-Token (Gotify).",
+  "settings.fail_threshold": "Fehlerschwelle",
+  "settings.fail_threshold_desc": "Aufeinanderfolgende Fehlversuche vor einer Ausfallwarnung.",
+  "settings.notify_test": "Test",
+  "settings.notify_test_desc": "Sende eine Testbenachrichtigung mit den aktuellen Einstellungen.",
+  "settings.notify_test_btn": "Test senden",
+  "settings.notify_test_ok": "Testbenachrichtigung gesendet",
+  "settings.notify_test_fail": "Test konnte nicht gesendet werden"
 }

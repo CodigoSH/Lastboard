@@ -507,5 +507,22 @@
   "monitor.ev_status": "स्थिति",
   "monitor.ev_when": "दिनांक व समय",
   "monitor.ev_duration": "अवधि",
-  "monitor.ev_recovered": "पुनःप्राप्त"
+  "monitor.ev_recovered": "पुनःप्राप्त",
+  "settings.alerts": "अलर्ट",
+  "settings.alerts_desc": "सेवा डाउन या पुनःप्राप्त होने पर सूचित करें।",
+  "settings.notify_method": "सूचना विधि",
+  "settings.notify_method_desc": "अलर्ट कहाँ भेजें।",
+  "settings.notify_none": "कोई नहीं",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy टॉपिक URL, Gotify सर्वर URL, या आपका webhook एंडपॉइंट।",
+  "settings.notify_token": "टोकन",
+  "settings.notify_token_desc": "वैकल्पिक। Bearer टोकन (ntfy/webhook) या ऐप टोकन (Gotify)।",
+  "settings.fail_threshold": "विफलता सीमा",
+  "settings.fail_threshold_desc": "डाउन अलर्ट से पहले लगातार विफल जाँच।",
+  "settings.notify_test": "परीक्षण",
+  "settings.notify_test_desc": "मौजूदा सेटिंग्स के साथ एक परीक्षण सूचना भेजें।",
+  "settings.notify_test_btn": "परीक्षण भेजें",
+  "settings.notify_test_ok": "परीक्षण सूचना भेजी गई",
+  "settings.notify_test_fail": "परीक्षण नहीं भेजा जा सका"
 }

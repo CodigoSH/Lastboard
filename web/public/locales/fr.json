@@ -507,5 +507,22 @@
   "monitor.ev_status": "État",
   "monitor.ev_when": "Date et heure",
   "monitor.ev_duration": "Durée",
-  "monitor.ev_recovered": "Rétabli"
+  "monitor.ev_recovered": "Rétabli",
+  "settings.alerts": "Alertes",
+  "settings.alerts_desc": "Avertir quand un service tombe ou se rétablit.",
+  "settings.notify_method": "Méthode de notification",
+  "settings.notify_method_desc": "Où envoyer les alertes.",
+  "settings.notify_none": "Aucune",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "URL du sujet ntfy, du serveur Gotify ou de votre webhook.",
+  "settings.notify_token": "Jeton",
+  "settings.notify_token_desc": "Facultatif. Jeton Bearer (ntfy/webhook) ou jeton d'app (Gotify).",
+  "settings.fail_threshold": "Seuil d'échecs",
+  "settings.fail_threshold_desc": "Vérifications échouées consécutives avant une alerte de panne.",
+  "settings.notify_test": "Tester",
+  "settings.notify_test_desc": "Envoie une notification de test avec les réglages actuels.",
+  "settings.notify_test_btn": "Envoyer un test",
+  "settings.notify_test_ok": "Notification de test envoyée",
+  "settings.notify_test_fail": "Impossible d'envoyer le test"
 }

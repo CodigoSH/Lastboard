@@ -507,5 +507,22 @@
   "monitor.ev_status": "Status",
   "monitor.ev_when": "Tanggal & waktu",
   "monitor.ev_duration": "Durasi",
-  "monitor.ev_recovered": "Pulih"
+  "monitor.ev_recovered": "Pulih",
+  "settings.alerts": "Peringatan",
+  "settings.alerts_desc": "Beri tahu saat layanan mati atau pulih.",
+  "settings.notify_method": "Metode notifikasi",
+  "settings.notify_method_desc": "Ke mana peringatan dikirim.",
+  "settings.notify_none": "Tidak ada",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "URL topik ntfy, URL server Gotify, atau endpoint webhook Anda.",
+  "settings.notify_token": "Token",
+  "settings.notify_token_desc": "Opsional. Token Bearer (ntfy/webhook) atau token aplikasi (Gotify).",
+  "settings.fail_threshold": "Ambang kegagalan",
+  "settings.fail_threshold_desc": "Pemeriksaan gagal berturut-turut sebelum peringatan mati.",
+  "settings.notify_test": "Uji",
+  "settings.notify_test_desc": "Kirim notifikasi uji dengan pengaturan saat ini.",
+  "settings.notify_test_btn": "Kirim uji",
+  "settings.notify_test_ok": "Notifikasi uji terkirim",
+  "settings.notify_test_fail": "Gagal mengirim uji"
 }

@@ -507,5 +507,22 @@
   "monitor.ev_status": "وضعیت",
   "monitor.ev_when": "تاریخ و زمان",
   "monitor.ev_duration": "مدت",
-  "monitor.ev_recovered": "بازیابی‌شده"
+  "monitor.ev_recovered": "بازیابی‌شده",
+  "settings.alerts": "هشدارها",
+  "settings.alerts_desc": "هنگام قطع یا بازیابی سرویس اطلاع بده.",
+  "settings.notify_method": "روش اعلان",
+  "settings.notify_method_desc": "محل ارسال هشدارها.",
+  "settings.notify_none": "هیچ‌کدام",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "آدرس موضوع ntfy، سرور Gotify یا وب‌هوک شما.",
+  "settings.notify_token": "توکن",
+  "settings.notify_token_desc": "اختیاری. توکن Bearer (ntfy/webhook) یا توکن اپ (Gotify).",
+  "settings.fail_threshold": "آستانه خطا",
+  "settings.fail_threshold_desc": "تعداد بررسی‌های ناموفق پیاپی پیش از هشدار قطعی.",
+  "settings.notify_test": "آزمایش",
+  "settings.notify_test_desc": "با تنظیمات فعلی یک اعلان آزمایشی بفرست.",
+  "settings.notify_test_btn": "ارسال آزمایش",
+  "settings.notify_test_ok": "اعلان آزمایشی ارسال شد",
+  "settings.notify_test_fail": "ارسال آزمایش ناموفق بود"
 }

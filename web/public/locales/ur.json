@@ -507,5 +507,22 @@
   "monitor.ev_status": "حالت",
   "monitor.ev_when": "تاریخ و وقت",
   "monitor.ev_duration": "دورانیہ",
-  "monitor.ev_recovered": "بحال"
+  "monitor.ev_recovered": "بحال",
+  "settings.alerts": "الرٹس",
+  "settings.alerts_desc": "جب سروس ڈاؤن یا بحال ہو تو مطلع کریں۔",
+  "settings.notify_method": "اطلاع کا طریقہ",
+  "settings.notify_method_desc": "الرٹس کہاں بھیجیں۔",
+  "settings.notify_none": "کوئی نہیں",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy ٹاپک URL، Gotify سرور URL، یا آپ کا webhook اینڈ پوائنٹ۔",
+  "settings.notify_token": "ٹوکن",
+  "settings.notify_token_desc": "اختیاری۔ Bearer ٹوکن (ntfy/webhook) یا ایپ ٹوکن (Gotify)۔",
+  "settings.fail_threshold": "ناکامی کی حد",
+  "settings.fail_threshold_desc": "ڈاؤن الرٹ سے پہلے مسلسل ناکام چیکس۔",
+  "settings.notify_test": "ٹیسٹ",
+  "settings.notify_test_desc": "موجودہ سیٹنگز کے ساتھ ٹیسٹ نوٹیفکیشن بھیجیں۔",
+  "settings.notify_test_btn": "ٹیسٹ بھیجیں",
+  "settings.notify_test_ok": "ٹیسٹ نوٹیفکیشن بھیج دی گئی",
+  "settings.notify_test_fail": "ٹیسٹ نہیں بھیجا جا سکا"
 }

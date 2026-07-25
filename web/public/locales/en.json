@@ -507,5 +507,22 @@
   "monitor.ev_status": "Status",
   "monitor.ev_when": "Date & time",
   "monitor.ev_duration": "Duration",
-  "monitor.ev_recovered": "Recovered"
+  "monitor.ev_recovered": "Recovered",
+  "settings.alerts": "Alerts",
+  "settings.alerts_desc": "Notify when a service goes down or recovers.",
+  "settings.notify_method": "Notification method",
+  "settings.notify_method_desc": "Where to send alerts.",
+  "settings.notify_none": "None",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy topic URL, Gotify server URL, or your webhook endpoint.",
+  "settings.notify_token": "Token",
+  "settings.notify_token_desc": "Optional. Bearer token (ntfy/webhook) or app token (Gotify).",
+  "settings.fail_threshold": "Fail threshold",
+  "settings.fail_threshold_desc": "Consecutive failed checks before a down alert.",
+  "settings.notify_test": "Test",
+  "settings.notify_test_desc": "Send a test notification with the current settings.",
+  "settings.notify_test_btn": "Send test",
+  "settings.notify_test_ok": "Test notification sent",
+  "settings.notify_test_fail": "Couldn't send the test"
 }

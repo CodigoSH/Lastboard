@@ -507,5 +507,22 @@
   "monitor.ev_status": "Stato",
   "monitor.ev_when": "Data e ora",
   "monitor.ev_duration": "Durata",
-  "monitor.ev_recovered": "Ripristinato"
+  "monitor.ev_recovered": "Ripristinato",
+  "settings.alerts": "Avvisi",
+  "settings.alerts_desc": "Avvisa quando un servizio cade o si ripristina.",
+  "settings.notify_method": "Metodo di notifica",
+  "settings.notify_method_desc": "Dove inviare gli avvisi.",
+  "settings.notify_none": "Nessuno",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "URL dell'argomento ntfy, del server Gotify o del tuo webhook.",
+  "settings.notify_token": "Token",
+  "settings.notify_token_desc": "Facoltativo. Token Bearer (ntfy/webhook) o token app (Gotify).",
+  "settings.fail_threshold": "Soglia di errori",
+  "settings.fail_threshold_desc": "Controlli falliti consecutivi prima di un avviso di down.",
+  "settings.notify_test": "Prova",
+  "settings.notify_test_desc": "Invia una notifica di prova con le impostazioni attuali.",
+  "settings.notify_test_btn": "Invia prova",
+  "settings.notify_test_ok": "Notifica di prova inviata",
+  "settings.notify_test_fail": "Impossibile inviare la prova"
 }

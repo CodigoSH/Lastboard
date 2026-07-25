@@ -507,5 +507,22 @@
   "monitor.ev_status": "الحالة",
   "monitor.ev_when": "التاريخ والوقت",
   "monitor.ev_duration": "المدة",
-  "monitor.ev_recovered": "تم التعافي"
+  "monitor.ev_recovered": "تم التعافي",
+  "settings.alerts": "التنبيهات",
+  "settings.alerts_desc": "نبّهني عند تعطّل خدمة أو تعافيها.",
+  "settings.notify_method": "طريقة الإشعار",
+  "settings.notify_method_desc": "أين تُرسَل التنبيهات.",
+  "settings.notify_none": "بدون",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "رابط موضوع ntfy أو خادم Gotify أو نقطة webhook.",
+  "settings.notify_token": "الرمز",
+  "settings.notify_token_desc": "اختياري. رمز Bearer (ntfy/webhook) أو رمز التطبيق (Gotify).",
+  "settings.fail_threshold": "عتبة الفشل",
+  "settings.fail_threshold_desc": "عدد الفحوصات الفاشلة المتتالية قبل تنبيه التعطّل.",
+  "settings.notify_test": "اختبار",
+  "settings.notify_test_desc": "أرسل إشعار اختبار بالإعدادات الحالية.",
+  "settings.notify_test_btn": "إرسال اختبار",
+  "settings.notify_test_ok": "تم إرسال إشعار الاختبار",
+  "settings.notify_test_fail": "تعذّر إرسال الاختبار"
 }

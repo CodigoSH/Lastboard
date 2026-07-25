@@ -338,6 +338,7 @@ func (s *Server) routes() {
 	monitorHandler := api.NewMonitorHandler(s.DB)
 	s.Router.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.GetSettings)))
 	s.Router.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.UpdateSettings)))
+	s.Router.Handle("POST /api/monitor/test", protect(http.HandlerFunc(monitorHandler.TestNotify)))
 	s.Router.Handle("GET /api/monitor/history", protect(http.HandlerFunc(monitorHandler.GetHistory)))
 	s.Router.Handle("DELETE /api/monitor/history", protect(http.HandlerFunc(monitorHandler.ClearHistory)))
 	s.Router.Handle("GET /api/monitor/overview", protect(http.HandlerFunc(monitorHandler.GetOverview)))

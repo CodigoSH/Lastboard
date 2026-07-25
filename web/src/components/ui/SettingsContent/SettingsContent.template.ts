@@ -305,7 +305,10 @@ export const usersTemplate = (users: any[]) => `
     </dialog>
 `;
 
-export const advancedTemplate = (monitoring: { mode: string; interval_sec: number }) => `
+export const advancedTemplate = (monitoring: {
+    mode: string; interval_sec: number; alerts_enabled: boolean;
+    notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
+}) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <!-- Monitoring Section -->
         <div class="bento-card">
@@ -329,6 +332,53 @@ export const advancedTemplate = (monitoring: { mode: string; interval_sec: numbe
                     </div>
                     <app-select id="monitoring-interval" value="${monitoring.interval_sec}" style="min-width: 200px;"></app-select>
                 </div>
+                ${monitoring.mode === 'background' ? `
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.alerts')}</h3>
+                        <p>${i18n.t('settings.alerts_desc')}</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="alerts-toggle" data-change="alerts-toggle" ${monitoring.alerts_enabled ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                ${monitoring.alerts_enabled ? `
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.notify_method')}</h3>
+                        <p>${i18n.t('settings.notify_method_desc')}</p>
+                    </div>
+                    <app-select id="notify-type" value="${esc(monitoring.notify_type)}" style="min-width: 200px;"></app-select>
+                </div>
+                ${monitoring.notify_type && monitoring.notify_type !== 'none' ? `
+                <div class="field-group">
+                    <label>${i18n.t('settings.notify_url')}</label>
+                    <input type="text" id="notify-url" data-change="notify-url" value="${esc(monitoring.notify_url)}" spellcheck="false" placeholder="${monitoring.notify_type === 'ntfy' ? 'https://ntfy.sh/mi-tema' : monitoring.notify_type === 'gotify' ? 'https://gotify.midominio.com' : 'https://…'}" />
+                    <small>${i18n.t('settings.notify_url_desc')}</small>
+                </div>
+                <div class="field-group">
+                    <label>${i18n.t('settings.notify_token')}</label>
+                    <input type="text" id="notify-token" data-change="notify-token" value="${esc(monitoring.notify_token)}" spellcheck="false" placeholder="" />
+                    <small>${i18n.t('settings.notify_token_desc')}</small>
+                </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.fail_threshold')}</h3>
+                        <p>${i18n.t('settings.fail_threshold_desc')}</p>
+                    </div>
+                    <app-select id="fail-threshold" value="${monitoring.fail_threshold}" style="min-width: 120px;"></app-select>
+                </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.notify_test')}</h3>
+                        <p>${i18n.t('settings.notify_test_desc')}</p>
+                    </div>
+                    <app-button variant="primary" data-action="test-notify">${i18n.t('settings.notify_test_btn')}</app-button>
+                </div>
+                ` : ''}
+                ` : ''}
+                ` : ''}
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('monitor.overview_title')}</h3>

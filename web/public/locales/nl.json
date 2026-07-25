@@ -507,5 +507,22 @@
   "monitor.ev_status": "Status",
   "monitor.ev_when": "Datum & tijd",
   "monitor.ev_duration": "Duur",
-  "monitor.ev_recovered": "Hersteld"
+  "monitor.ev_recovered": "Hersteld",
+  "settings.alerts": "Meldingen",
+  "settings.alerts_desc": "Meld wanneer een dienst uitvalt of herstelt.",
+  "settings.notify_method": "Meldingsmethode",
+  "settings.notify_method_desc": "Waar meldingen naartoe gaan.",
+  "settings.notify_none": "Geen",
+  "settings.notify_webhook": "Webhook",
+  "settings.notify_url": "URL",
+  "settings.notify_url_desc": "ntfy-topic-URL, Gotify-server-URL of je webhook-endpoint.",
+  "settings.notify_token": "Token",
+  "settings.notify_token_desc": "Optioneel. Bearer-token (ntfy/webhook) of app-token (Gotify).",
+  "settings.fail_threshold": "Foutdrempel",
+  "settings.fail_threshold_desc": "Opeenvolgende mislukte controles vóór een storingsmelding.",
+  "settings.notify_test": "Testen",
+  "settings.notify_test_desc": "Stuur een testmelding met de huidige instellingen.",
+  "settings.notify_test_btn": "Test sturen",
+  "settings.notify_test_ok": "Testmelding verzonden",
+  "settings.notify_test_fail": "Kon de test niet versturen"
 }
