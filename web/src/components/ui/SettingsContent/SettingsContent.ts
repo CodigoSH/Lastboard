@@ -3,7 +3,7 @@ import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, monitoringTemplate, notificationsTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
@@ -211,7 +211,7 @@ class SettingsContent extends HTMLElement {
         if (section === 'users') {
             this.fetchUsers();
         }
-        if (section === 'advanced') {
+        if (section === 'monitoring' || section === 'notifications') {
             this.fetchMonitoring();
         }
         if (section === 'about') {
@@ -307,7 +307,7 @@ class SettingsContent extends HTMLElement {
             if (newValue === 'users') {
                 this.fetchUsers();
             }
-            if (newValue === 'advanced') {
+            if (newValue === 'monitoring' || newValue === 'notifications') {
                 this.fetchMonitoring();
             }
             if (newValue === 'about') {
@@ -725,7 +725,13 @@ class SettingsContent extends HTMLElement {
             }
 
             case 'advanced':
-                return advancedTemplate(this.monitoring);
+                return advancedTemplate();
+
+            case 'monitoring':
+                return monitoringTemplate(this.monitoring);
+
+            case 'notifications':
+                return notificationsTemplate(this.monitoring);
 
             case 'users':
                 return usersTemplate(this.users);

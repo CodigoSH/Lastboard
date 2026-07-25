@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "मौजूदा सेटिंग्स के साथ एक परीक्षण सूचना भेजें।",
   "settings.notify_test_btn": "परीक्षण भेजें",
   "settings.notify_test_ok": "परीक्षण सूचना भेजी गई",
-  "settings.notify_test_fail": "परीक्षण नहीं भेजा जा सका"
+  "settings.notify_test_fail": "परीक्षण नहीं भेजा जा सका",
+  "settings.notifications": "सूचनाएँ",
+  "settings.alerts_requires_247": "अलर्ट केवल 24/7 निगरानी चालू होने पर भेजे जाते हैं (निगरानी अनुभाग)।"
 }

@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "현재 설정으로 테스트 알림을 보냅니다.",
   "settings.notify_test_btn": "테스트 보내기",
   "settings.notify_test_ok": "테스트 알림을 보냈습니다",
-  "settings.notify_test_fail": "테스트를 보내지 못했습니다"
+  "settings.notify_test_fail": "테스트를 보내지 못했습니다",
+  "settings.notifications": "알림",
+  "settings.alerts_requires_247": "알림은 24/7 모니터링이 켜져 있을 때만 전송됩니다(모니터링 섹션)."
 }

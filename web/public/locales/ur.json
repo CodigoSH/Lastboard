@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "موجودہ سیٹنگز کے ساتھ ٹیسٹ نوٹیفکیشن بھیجیں۔",
   "settings.notify_test_btn": "ٹیسٹ بھیجیں",
   "settings.notify_test_ok": "ٹیسٹ نوٹیفکیشن بھیج دی گئی",
-  "settings.notify_test_fail": "ٹیسٹ نہیں بھیجا جا سکا"
+  "settings.notify_test_fail": "ٹیسٹ نہیں بھیجا جا سکا",
+  "settings.notifications": "اطلاعات",
+  "settings.alerts_requires_247": "الرٹس صرف اسی وقت بھیجے جاتے ہیں جب 24/7 نگرانی فعال ہو (مانیٹرنگ سیکشن)۔"
 }

@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "বর্তমান সেটিংস দিয়ে একটি টেস্ট নোটিফিকেশন পাঠান।",
   "settings.notify_test_btn": "টেস্ট পাঠান",
   "settings.notify_test_ok": "টেস্ট নোটিফিকেশন পাঠানো হয়েছে",
-  "settings.notify_test_fail": "টেস্ট পাঠানো যায়নি"
+  "settings.notify_test_fail": "টেস্ট পাঠানো যায়নি",
+  "settings.notifications": "নোটিফিকেশন",
+  "settings.alerts_requires_247": "অ্যালার্ট শুধু 24/7 মনিটরিং চালু থাকলে পাঠানো হয় (মনিটরিং বিভাগ)।"
 }

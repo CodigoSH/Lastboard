@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Kirim notifikasi uji dengan pengaturan saat ini.",
   "settings.notify_test_btn": "Kirim uji",
   "settings.notify_test_ok": "Notifikasi uji terkirim",
-  "settings.notify_test_fail": "Gagal mengirim uji"
+  "settings.notify_test_fail": "Gagal mengirim uji",
+  "settings.notifications": "Notifikasi",
+  "settings.alerts_requires_247": "Peringatan hanya dikirim saat pemantauan 24/7 aktif (bagian Pemantauan)."
 }

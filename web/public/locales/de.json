@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Sende eine Testbenachrichtigung mit den aktuellen Einstellungen.",
   "settings.notify_test_btn": "Test senden",
   "settings.notify_test_ok": "Testbenachrichtigung gesendet",
-  "settings.notify_test_fail": "Test konnte nicht gesendet werden"
+  "settings.notify_test_fail": "Test konnte nicht gesendet werden",
+  "settings.notifications": "Benachrichtigungen",
+  "settings.alerts_requires_247": "Warnungen werden nur bei aktiver 24/7-Überwachung gesendet (Bereich Überwachung)."
 }

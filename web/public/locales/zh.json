@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "使用当前设置发送测试通知。",
   "settings.notify_test_btn": "发送测试",
   "settings.notify_test_ok": "测试通知已发送",
-  "settings.notify_test_fail": "无法发送测试"
+  "settings.notify_test_fail": "无法发送测试",
+  "settings.notifications": "通知",
+  "settings.alerts_requires_247": "仅在开启 24/7 监控时才会发送警报（监控部分）。"
 }

@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Stuur een testmelding met de huidige instellingen.",
   "settings.notify_test_btn": "Test sturen",
   "settings.notify_test_ok": "Testmelding verzonden",
-  "settings.notify_test_fail": "Kon de test niet versturen"
+  "settings.notify_test_fail": "Kon de test niet versturen",
+  "settings.notifications": "Meldingen",
+  "settings.alerts_requires_247": "Meldingen worden alleen verzonden als 24/7-monitoring aan staat (sectie Monitoring)."
 }

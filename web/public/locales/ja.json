@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "現在の設定でテスト通知を送信します。",
   "settings.notify_test_btn": "テスト送信",
   "settings.notify_test_ok": "テスト通知を送信しました",
-  "settings.notify_test_fail": "テストを送信できませんでした"
+  "settings.notify_test_fail": "テストを送信できませんでした",
+  "settings.notifications": "通知",
+  "settings.alerts_requires_247": "アラートは24/7監視が有効なときのみ送信されます（監視セクション）。"
 }

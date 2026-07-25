@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "با تنظیمات فعلی یک اعلان آزمایشی بفرست.",
   "settings.notify_test_btn": "ارسال آزمایش",
   "settings.notify_test_ok": "اعلان آزمایشی ارسال شد",
-  "settings.notify_test_fail": "ارسال آزمایش ناموفق بود"
+  "settings.notify_test_fail": "ارسال آزمایش ناموفق بود",
+  "settings.notifications": "اعلان‌ها",
+  "settings.alerts_requires_247": "هشدارها فقط زمانی ارسال می‌شوند که نظارت ۲۴/۷ فعال باشد (بخش نظارت)."
 }

@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Mevcut ayarlarla bir test bildirimi gönder.",
   "settings.notify_test_btn": "Test gönder",
   "settings.notify_test_ok": "Test bildirimi gönderildi",
-  "settings.notify_test_fail": "Test gönderilemedi"
+  "settings.notify_test_fail": "Test gönderilemedi",
+  "settings.notifications": "Bildirimler",
+  "settings.alerts_requires_247": "Uyarılar yalnızca 7/24 izleme açıkken gönderilir (İzleme bölümü)."
 }

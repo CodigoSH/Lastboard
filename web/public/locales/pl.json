@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Wyślij testowe powiadomienie z bieżącymi ustawieniami.",
   "settings.notify_test_btn": "Wyślij test",
   "settings.notify_test_ok": "Wysłano powiadomienie testowe",
-  "settings.notify_test_fail": "Nie udało się wysłać testu"
+  "settings.notify_test_fail": "Nie udało się wysłać testu",
+  "settings.notifications": "Powiadomienia",
+  "settings.alerts_requires_247": "Alerty są wysyłane tylko przy włączonym monitorowaniu 24/7 (sekcja Monitorowanie)."
 }

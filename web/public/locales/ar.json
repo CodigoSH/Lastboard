@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "أرسل إشعار اختبار بالإعدادات الحالية.",
   "settings.notify_test_btn": "إرسال اختبار",
   "settings.notify_test_ok": "تم إرسال إشعار الاختبار",
-  "settings.notify_test_fail": "تعذّر إرسال الاختبار"
+  "settings.notify_test_fail": "تعذّر إرسال الاختبار",
+  "settings.notifications": "الإشعارات",
+  "settings.alerts_requires_247": "تُرسَل التنبيهات فقط عند تفعيل المراقبة على مدار الساعة (قسم المراقبة)."
 }

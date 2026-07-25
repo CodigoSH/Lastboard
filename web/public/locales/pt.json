@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Envia uma notificação de teste com as definições atuais.",
   "settings.notify_test_btn": "Enviar teste",
   "settings.notify_test_ok": "Notificação de teste enviada",
-  "settings.notify_test_fail": "Não foi possível enviar o teste"
+  "settings.notify_test_fail": "Não foi possível enviar o teste",
+  "settings.notifications": "Notificações",
+  "settings.alerts_requires_247": "Os alertas só são enviados com a monitorização 24/7 ativa (secção Monitorização)."
 }

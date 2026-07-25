@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Send a test notification with the current settings.",
   "settings.notify_test_btn": "Send test",
   "settings.notify_test_ok": "Test notification sent",
-  "settings.notify_test_fail": "Couldn't send the test"
+  "settings.notify_test_fail": "Couldn't send the test",
+  "settings.notifications": "Notifications",
+  "settings.alerts_requires_247": "Alerts are only sent while 24/7 monitoring is on (Monitoring section)."
 }

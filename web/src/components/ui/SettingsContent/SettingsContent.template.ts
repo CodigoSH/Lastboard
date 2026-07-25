@@ -305,12 +305,11 @@ export const usersTemplate = (users: any[]) => `
     </dialog>
 `;
 
-export const advancedTemplate = (monitoring: {
+export const monitoringTemplate = (monitoring: {
     mode: string; interval_sec: number; alerts_enabled: boolean;
     notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
 }) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
-        <!-- Monitoring Section -->
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.monitoring')}</h3>
             <div class="settings-content__action-group">
@@ -332,7 +331,34 @@ export const advancedTemplate = (monitoring: {
                     </div>
                     <app-select id="monitoring-interval" value="${monitoring.interval_sec}" style="min-width: 200px;"></app-select>
                 </div>
-                ${monitoring.mode === 'background' ? `
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('monitor.overview_title')}</h3>
+                        <p>${i18n.t('settings.monitoring_overview_desc')}</p>
+                    </div>
+                    <app-button variant="primary" data-action="open-monitor-overview">${i18n.t('monitor.view_overview')}</app-button>
+                </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('monitor.clear_all')}</h3>
+                        <p>${i18n.t('settings.monitoring_clear_desc')}</p>
+                    </div>
+                    <app-button data-action="clear-monitor-data" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent;">${i18n.t('monitor.clear_data')}</app-button>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+export const notificationsTemplate = (monitoring: {
+    mode: string; alerts_enabled: boolean;
+    notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
+}) => `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.notifications')}</h3>
+            ${monitoring.mode !== 'background' ? `<p class="settings-content__text-dim" style="font-size:13px;margin:0 0 14px;">${i18n.t('settings.alerts_requires_247')}</p>` : ''}
+            <div class="settings-content__action-group">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.alerts')}</h3>
@@ -378,27 +404,13 @@ export const advancedTemplate = (monitoring: {
                 </div>
                 ` : ''}
                 ` : ''}
-                ` : ''}
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('monitor.overview_title')}</h3>
-                        <p>${i18n.t('settings.monitoring_overview_desc')}</p>
-                    </div>
-                    <app-button variant="primary" data-action="open-monitor-overview">
-                        ${i18n.t('monitor.view_overview')}
-                    </app-button>
-                </div>
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('monitor.clear_all')}</h3>
-                        <p>${i18n.t('settings.monitoring_clear_desc')}</p>
-                    </div>
-                    <app-button data-action="clear-monitor-data" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent;">
-                        ${i18n.t('monitor.clear_data')}
-                    </app-button>
-                </div>
             </div>
         </div>
+    </div>
+`;
+
+export const advancedTemplate = () => `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
 
         <!-- System Migration Section -->
         <div class="bento-card">

@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Invia una notifica di prova con le impostazioni attuali.",
   "settings.notify_test_btn": "Invia prova",
   "settings.notify_test_ok": "Notifica di prova inviata",
-  "settings.notify_test_fail": "Impossibile inviare la prova"
+  "settings.notify_test_fail": "Impossibile inviare la prova",
+  "settings.notifications": "Notifiche",
+  "settings.alerts_requires_247": "Gli avvisi vengono inviati solo con il monitoraggio 24/7 attivo (sezione Monitoraggio)."
 }

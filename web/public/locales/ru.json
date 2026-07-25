@@ -524,5 +524,7 @@
   "settings.notify_test_desc": "Отправить тестовое уведомление с текущими настройками.",
   "settings.notify_test_btn": "Отправить тест",
   "settings.notify_test_ok": "Тестовое уведомление отправлено",
-  "settings.notify_test_fail": "Не удалось отправить тест"
+  "settings.notify_test_fail": "Не удалось отправить тест",
+  "settings.notifications": "Уведомления",
+  "settings.alerts_requires_247": "Оповещения отправляются только при включённом мониторинге 24/7 (раздел «Мониторинг»)."
 }
