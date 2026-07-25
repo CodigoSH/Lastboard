@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Sem interrupções neste período.",
   "monitor.ongoing": "Em curso",
   "monitor.updated": "Atualizado",
-  "monitor.refresh": "Atualizar"
+  "monitor.refresh": "Atualizar",
+  "monitor.overview_title": "Estado dos serviços",
+  "monitor.overview_empty": "Nenhum serviço monitorizado.",
+  "monitor.view_overview": "Ver estado",
+  "settings.monitoring_overview_desc": "Vê o estado de todos os serviços monitorizados num só lugar."
 }

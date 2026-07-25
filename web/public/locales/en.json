@@ -484,5 +484,9 @@
   "monitor.no_incidents": "No outages in this period.",
   "monitor.ongoing": "Ongoing",
   "monitor.updated": "Updated",
-  "monitor.refresh": "Refresh"
+  "monitor.refresh": "Refresh",
+  "monitor.overview_title": "Service status",
+  "monitor.overview_empty": "No services are being monitored.",
+  "monitor.view_overview": "View status",
+  "settings.monitoring_overview_desc": "See the status of all monitored services in one place."
 }

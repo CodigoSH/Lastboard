@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Καμία διακοπή σε αυτό το διάστημα.",
   "monitor.ongoing": "Σε εξέλιξη",
   "monitor.updated": "Ενημερώθηκε",
-  "monitor.refresh": "Ανανέωση"
+  "monitor.refresh": "Ανανέωση",
+  "monitor.overview_title": "Κατάσταση υπηρεσιών",
+  "monitor.overview_empty": "Δεν παρακολουθούνται υπηρεσίες.",
+  "monitor.view_overview": "Προβολή κατάστασης",
+  "settings.monitoring_overview_desc": "Δες την κατάσταση όλων των υπηρεσιών σε ένα μέρος."
 }

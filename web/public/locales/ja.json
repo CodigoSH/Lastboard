@@ -484,5 +484,9 @@
   "monitor.no_incidents": "この期間に障害はありません。",
   "monitor.ongoing": "継続中",
   "monitor.updated": "更新",
-  "monitor.refresh": "更新"
+  "monitor.refresh": "更新",
+  "monitor.overview_title": "サービスの状態",
+  "monitor.overview_empty": "監視中のサービスはありません。",
+  "monitor.view_overview": "状態を見る",
+  "settings.monitoring_overview_desc": "監視中の全サービスの状態を一か所で確認。"
 }

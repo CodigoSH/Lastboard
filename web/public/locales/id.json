@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Tidak ada gangguan pada periode ini.",
   "monitor.ongoing": "Berlangsung",
   "monitor.updated": "Diperbarui",
-  "monitor.refresh": "Segarkan"
+  "monitor.refresh": "Segarkan",
+  "monitor.overview_title": "Status layanan",
+  "monitor.overview_empty": "Tidak ada layanan yang dipantau.",
+  "monitor.view_overview": "Lihat status",
+  "settings.monitoring_overview_desc": "Lihat status semua layanan yang dipantau di satu tempat."
 }

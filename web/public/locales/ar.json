@@ -484,5 +484,9 @@
   "monitor.no_incidents": "لا توجد أعطال في هذه الفترة.",
   "monitor.ongoing": "جارٍ الآن",
   "monitor.updated": "محدّث",
-  "monitor.refresh": "تحديث"
+  "monitor.refresh": "تحديث",
+  "monitor.overview_title": "حالة الخدمات",
+  "monitor.overview_empty": "لا توجد خدمات قيد المراقبة.",
+  "monitor.view_overview": "عرض الحالة",
+  "settings.monitoring_overview_desc": "عرض حالة جميع الخدمات المراقَبة في مكان واحد."
 }

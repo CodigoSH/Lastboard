@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Geen storingen in deze periode.",
   "monitor.ongoing": "Lopend",
   "monitor.updated": "Bijgewerkt",
-  "monitor.refresh": "Vernieuwen"
+  "monitor.refresh": "Vernieuwen",
+  "monitor.overview_title": "Servicestatus",
+  "monitor.overview_empty": "Geen diensten worden gemonitord.",
+  "monitor.view_overview": "Status bekijken",
+  "settings.monitoring_overview_desc": "Bekijk de status van alle gemonitorde diensten op één plek."
 }

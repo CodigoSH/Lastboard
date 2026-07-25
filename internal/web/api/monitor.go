@@ -60,19 +60,33 @@ func (s *MonitorStore) Prune(days int) (int64, error) {
 }
 
 // MonitoredItem is a bookmark opted into status checking: its id (the monitor
-// key) and the URL to probe.
+// key), display name and the URL to probe.
 type MonitoredItem struct {
-	ID  int
-	URL string
+	ID   int
+	Name string
+	URL  string
 }
 
 // MonitoredItems lists every bookmark with statusCheck enabled — the set the
 // scheduler probes each cycle. Both the flag and the URL live in the content
 // JSON blob (the items.url column is unused for bookmarks), so parse them there.
 func (s *MonitorStore) MonitoredItems() ([]MonitoredItem, error) {
-	rows, err := s.DB.Query(
-		`SELECT id, content FROM items
-		 WHERE type = 'bookmark' AND content IS NOT NULL`)
+	return s.monitoredItems(0)
+}
+
+// MonitoredItemsForUser is MonitoredItems scoped to one owner, for the overview.
+func (s *MonitorStore) MonitoredItemsForUser(userID int) ([]MonitoredItem, error) {
+	return s.monitoredItems(userID)
+}
+
+func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
+	query := `SELECT id, content FROM items WHERE type = 'bookmark' AND content IS NOT NULL`
+	args := []any{}
+	if userID > 0 {
+		query += ` AND user_id = ?`
+		args = append(args, userID)
+	}
+	rows, err := s.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -91,9 +105,10 @@ func (s *MonitorStore) MonitoredItems() ([]MonitoredItem, error) {
 		var c struct {
 			StatusCheck bool   `json:"statusCheck"`
 			URL         string `json:"url"`
+			Label       string `json:"label"`
 		}
 		if json.Unmarshal([]byte(content.String), &c) == nil && c.StatusCheck && c.URL != "" {
-			out = append(out, MonitoredItem{ID: id, URL: c.URL})
+			out = append(out, MonitoredItem{ID: id, Name: c.Label, URL: c.URL})
 		}
 	}
 	return out, rows.Err()
@@ -322,6 +337,58 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+type overviewRow struct {
+	ItemID    int               `json:"item_id"`
+	Name      string            `json:"name"`
+	Status    string            `json:"status"` // up | down | none
+	UptimePct float64           `json:"uptime_pct"`
+	LatencyMs *int              `json:"latency_ms"`
+	Heartbeat []heartbeatBucket `json:"heartbeat"`
+}
+
+// GetOverview returns a 24h status summary for every monitored bookmark the user
+// owns — the status-page view. Each row carries current status, uptime %, latency
+// and a compact heartbeat, and rows link to the detail drawer by item_id.
+func (h *MonitorHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserIDFromContext(r)
+	items, err := h.store.MonitoredItemsForUser(userID)
+	if err != nil {
+		http.Error(w, "error.internal", http.StatusInternalServerError)
+		return
+	}
+
+	now := time.Now()
+	since := now.Add(-24 * time.Hour)
+	rows := make([]overviewRow, 0, len(items))
+	for _, it := range items {
+		checks, err := h.store.History(it.ID, since)
+		if err != nil {
+			continue
+		}
+		uptime, _ := summarizeHistory(checks, now)
+		row := overviewRow{
+			ItemID:    it.ID,
+			Name:      it.Name,
+			Status:    "none",
+			UptimePct: uptime,
+			Heartbeat: buildHeartbeat(checks, since, now, 24),
+		}
+		if n := len(checks); n > 0 {
+			last := checks[n-1]
+			if last.Up {
+				row.Status = "up"
+			} else {
+				row.Status = "down"
+			}
+			row.LatencyMs = last.LatencyMs
+		}
+		rows = append(rows, row)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(rows)
 }
 
 func (h *MonitorHandler) getSetting(key string) string {

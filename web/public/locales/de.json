@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Keine Ausfälle in diesem Zeitraum.",
   "monitor.ongoing": "Andauernd",
   "monitor.updated": "Aktualisiert",
-  "monitor.refresh": "Aktualisieren"
+  "monitor.refresh": "Aktualisieren",
+  "monitor.overview_title": "Dienststatus",
+  "monitor.overview_empty": "Keine überwachten Dienste.",
+  "monitor.view_overview": "Status ansehen",
+  "settings.monitoring_overview_desc": "Den Status aller überwachten Dienste an einem Ort ansehen."
 }

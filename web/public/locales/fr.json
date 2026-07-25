@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Aucune panne sur cette période.",
   "monitor.ongoing": "En cours",
   "monitor.updated": "Mis à jour",
-  "monitor.refresh": "Actualiser"
+  "monitor.refresh": "Actualiser",
+  "monitor.overview_title": "État des services",
+  "monitor.overview_empty": "Aucun service surveillé.",
+  "monitor.view_overview": "Voir l'état",
+  "settings.monitoring_overview_desc": "Voir l'état de tous les services surveillés au même endroit."
 }

@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Bu dönemde kesinti yok.",
   "monitor.ongoing": "Devam ediyor",
   "monitor.updated": "Güncellendi",
-  "monitor.refresh": "Yenile"
+  "monitor.refresh": "Yenile",
+  "monitor.overview_title": "Servis durumu",
+  "monitor.overview_empty": "İzlenen servis yok.",
+  "monitor.view_overview": "Durumu gör",
+  "settings.monitoring_overview_desc": "İzlenen tüm servislerin durumunu tek yerde gör."
 }

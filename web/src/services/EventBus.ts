@@ -5,6 +5,7 @@ export const EVENTS = {
     SHOW_WIDGET_CONFIG: 'lastboard:show-widget-config',
     SHOW_MOVE_DASHBOARD: 'lastboard:show-move-dashboard',
     SHOW_MONITOR_HISTORY: 'lastboard:show-monitor-history',
+    SHOW_MONITOR_OVERVIEW: 'lastboard:show-monitor-overview',
     NOTIFY: 'lastboard:notify'
 };
 

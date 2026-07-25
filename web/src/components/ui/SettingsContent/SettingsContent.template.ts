@@ -326,6 +326,15 @@ export const advancedTemplate = (monitoring: { mode: string; interval_sec: numbe
                     </div>
                     <app-select id="monitoring-interval" value="${monitoring.interval_sec}" style="min-width: 200px;"></app-select>
                 </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('monitor.overview_title')}</h3>
+                        <p>${i18n.t('settings.monitoring_overview_desc')}</p>
+                    </div>
+                    <app-button variant="primary" data-action="open-monitor-overview">
+                        ${i18n.t('monitor.view_overview')}
+                    </app-button>
+                </div>
             </div>
         </div>
 

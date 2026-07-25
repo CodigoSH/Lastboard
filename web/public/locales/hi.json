@@ -484,5 +484,9 @@
   "monitor.no_incidents": "इस अवधि में कोई आउटेज नहीं।",
   "monitor.ongoing": "जारी",
   "monitor.updated": "अपडेटेड",
-  "monitor.refresh": "ताज़ा करें"
+  "monitor.refresh": "ताज़ा करें",
+  "monitor.overview_title": "सेवा स्थिति",
+  "monitor.overview_empty": "कोई सेवा निगरानी में नहीं है।",
+  "monitor.view_overview": "स्थिति देखें",
+  "settings.monitoring_overview_desc": "सभी निगरानी सेवाओं की स्थिति एक ही जगह देखें।"
 }

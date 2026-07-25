@@ -484,5 +484,9 @@
   "monitor.no_incidents": "Сбоев за этот период нет.",
   "monitor.ongoing": "Продолжается",
   "monitor.updated": "Обновлено",
-  "monitor.refresh": "Обновить"
+  "monitor.refresh": "Обновить",
+  "monitor.overview_title": "Состояние сервисов",
+  "monitor.overview_empty": "Нет отслеживаемых сервисов.",
+  "monitor.view_overview": "Смотреть статус",
+  "settings.monitoring_overview_desc": "Состояние всех отслеживаемых сервисов в одном месте."
 }

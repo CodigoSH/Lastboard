@@ -97,6 +97,10 @@ class SettingsContent extends HTMLElement {
                 case 'remove-logo':
                     this.savePrefs({ project_logo: '' }, { notify: true });
                     break;
+                case 'open-monitor-overview':
+                    import('../../../services/EventBus').then(({ eventBus, EVENTS }) =>
+                        eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW));
+                    break;
                 case 'open-add-user':
                     this.openAddUserModal();
                     break;

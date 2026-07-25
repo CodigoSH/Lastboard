@@ -484,5 +484,9 @@
   "monitor.no_incidents": "이 기간에 장애가 없습니다.",
   "monitor.ongoing": "진행 중",
   "monitor.updated": "업데이트됨",
-  "monitor.refresh": "새로 고침"
+  "monitor.refresh": "새로 고침",
+  "monitor.overview_title": "서비스 상태",
+  "monitor.overview_empty": "모니터링 중인 서비스가 없습니다.",
+  "monitor.view_overview": "상태 보기",
+  "settings.monitoring_overview_desc": "모니터링 중인 모든 서비스 상태를 한곳에서 확인."
 }

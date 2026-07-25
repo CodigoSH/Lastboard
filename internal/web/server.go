@@ -339,6 +339,7 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.GetSettings)))
 	s.Router.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.UpdateSettings)))
 	s.Router.Handle("GET /api/monitor/history", protect(http.HandlerFunc(monitorHandler.GetHistory)))
+	s.Router.Handle("GET /api/monitor/overview", protect(http.HandlerFunc(monitorHandler.GetOverview)))
 
 	// WebSocket Endpoint
 	s.Router.Handle("/ws", protect(http.HandlerFunc(s.WSHub.HandleWebSocket)))

@@ -484,5 +484,9 @@
   "monitor.no_incidents": "এই সময়ে কোনো বিভ্রাট নেই।",
   "monitor.ongoing": "চলমান",
   "monitor.updated": "আপডেট",
-  "monitor.refresh": "রিফ্রেশ"
+  "monitor.refresh": "রিফ্রেশ",
+  "monitor.overview_title": "সার্ভিসের অবস্থা",
+  "monitor.overview_empty": "কোনো সার্ভিস মনিটর করা হচ্ছে না।",
+  "monitor.view_overview": "স্ট্যাটাস দেখুন",
+  "settings.monitoring_overview_desc": "সব মনিটর করা সার্ভিসের অবস্থা এক জায়গায় দেখুন।"
 }

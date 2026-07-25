@@ -484,5 +484,9 @@
   "monitor.no_incidents": "此期间无故障。",
   "monitor.ongoing": "进行中",
   "monitor.updated": "已更新",
-  "monitor.refresh": "刷新"
+  "monitor.refresh": "刷新",
+  "monitor.overview_title": "服务状态",
+  "monitor.overview_empty": "没有正在监控的服务。",
+  "monitor.view_overview": "查看状态",
+  "settings.monitoring_overview_desc": "在一处查看所有受监控服务的状态。"
 }

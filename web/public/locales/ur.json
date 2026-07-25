@@ -484,5 +484,9 @@
   "monitor.no_incidents": "اس مدت میں کوئی آؤٹیج نہیں۔",
   "monitor.ongoing": "جاری",
   "monitor.updated": "اپ ڈیٹڈ",
-  "monitor.refresh": "ریفریش"
+  "monitor.refresh": "ریفریش",
+  "monitor.overview_title": "سروسز کی حالت",
+  "monitor.overview_empty": "کوئی سروس زیر نگرانی نہیں۔",
+  "monitor.view_overview": "حالت دیکھیں",
+  "settings.monitoring_overview_desc": "تمام زیر نگرانی سروسز کی حالت ایک جگہ دیکھیں۔"
 }
