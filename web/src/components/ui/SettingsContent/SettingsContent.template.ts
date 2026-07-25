@@ -378,15 +378,15 @@ export const notificationsTemplate = (monitoring: {
                     <app-select id="notify-type" value="${esc(monitoring.notify_type)}" style="min-width: 200px;"></app-select>
                 </div>
                 ${monitoring.notify_type && monitoring.notify_type !== 'none' ? `
-                <div class="field-group">
-                    <label>${i18n.t('settings.notify_url')}</label>
-                    <input type="text" id="notify-url" data-change="notify-url" value="${esc(monitoring.notify_url)}" spellcheck="false" placeholder="${monitoring.notify_type === 'ntfy' ? 'https://ntfy.sh/mi-tema' : monitoring.notify_type === 'gotify' ? 'https://gotify.midominio.com' : 'https://…'}" />
-                    <small>${i18n.t('settings.notify_url_desc')}</small>
+                <div class="settings-content__form-group">
+                    <label class="settings-content__label">${i18n.t('settings.notify_url')}</label>
+                    <input type="text" id="notify-url" class="settings-content__input" data-change="notify-url" value="${esc(monitoring.notify_url)}" spellcheck="false" placeholder="${monitoring.notify_type === 'ntfy' ? 'https://ntfy.sh/mi-tema' : monitoring.notify_type === 'gotify' ? 'https://gotify.midominio.com' : 'https://…'}" />
+                    <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.notify_url_desc')}</p>
                 </div>
-                <div class="field-group">
-                    <label>${i18n.t('settings.notify_token')}</label>
-                    <input type="text" id="notify-token" data-change="notify-token" value="${esc(monitoring.notify_token)}" spellcheck="false" placeholder="" />
-                    <small>${i18n.t('settings.notify_token_desc')}</small>
+                <div class="settings-content__form-group" style="margin-top: 14px;">
+                    <label class="settings-content__label">${i18n.t('settings.notify_token')}</label>
+                    <input type="text" id="notify-token" class="settings-content__input" data-change="notify-token" value="${esc(monitoring.notify_token)}" spellcheck="false" placeholder="" />
+                    <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.notify_token_desc')}</p>
                 </div>
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
