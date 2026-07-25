@@ -472,5 +472,10 @@
   "settings.interval_5m": "हर 5 मिनट",
   "settings.interval_10m": "हर 10 मिनट",
   "settings.interval_30m": "हर 30 मिनट",
-  "settings.save_error": "सहेजा नहीं जा सका"
+  "settings.save_error": "सहेजा नहीं जा सका",
+  "monitor.no_data": "अभी कोई डेटा नहीं। इतिहास रिकॉर्ड करने के लिए 24/7 निगरानी सक्षम करें।",
+  "monitor.uptime": "अपटाइम",
+  "monitor.latency": "विलंबता",
+  "monitor.recent_checks": "हाल की जाँच",
+  "monitor.status_unknown": "कोई डेटा नहीं"
 }

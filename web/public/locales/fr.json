@@ -472,5 +472,10 @@
   "settings.interval_5m": "Toutes les 5 minutes",
   "settings.interval_10m": "Toutes les 10 minutes",
   "settings.interval_30m": "Toutes les 30 minutes",
-  "settings.save_error": "Échec de l'enregistrement"
+  "settings.save_error": "Échec de l'enregistrement",
+  "monitor.no_data": "Pas encore de données. Activez la surveillance 24/7 pour enregistrer l'historique.",
+  "monitor.uptime": "Disponibilité",
+  "monitor.latency": "Latence",
+  "monitor.recent_checks": "Vérifications récentes",
+  "monitor.status_unknown": "Aucune donnée"
 }

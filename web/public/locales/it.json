@@ -472,5 +472,10 @@
   "settings.interval_5m": "Ogni 5 minuti",
   "settings.interval_10m": "Ogni 10 minuti",
   "settings.interval_30m": "Ogni 30 minuti",
-  "settings.save_error": "Salvataggio non riuscito"
+  "settings.save_error": "Salvataggio non riuscito",
+  "monitor.no_data": "Ancora nessun dato. Attiva il monitoraggio 24/7 per registrare lo storico.",
+  "monitor.uptime": "Disponibilità",
+  "monitor.latency": "Latenza",
+  "monitor.recent_checks": "Controlli recenti",
+  "monitor.status_unknown": "Nessun dato"
 }

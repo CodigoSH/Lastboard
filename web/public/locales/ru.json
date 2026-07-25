@@ -472,5 +472,10 @@
   "settings.interval_5m": "Каждые 5 минут",
   "settings.interval_10m": "Каждые 10 минут",
   "settings.interval_30m": "Каждые 30 минут",
-  "settings.save_error": "Не удалось сохранить"
+  "settings.save_error": "Не удалось сохранить",
+  "monitor.no_data": "Пока нет данных. Включите мониторинг 24/7, чтобы вести историю.",
+  "monitor.uptime": "Аптайм",
+  "monitor.latency": "Задержка",
+  "monitor.recent_checks": "Последние проверки",
+  "monitor.status_unknown": "Нет данных"
 }

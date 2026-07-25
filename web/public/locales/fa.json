@@ -472,5 +472,10 @@
   "settings.interval_5m": "هر ۵ دقیقه",
   "settings.interval_10m": "هر ۱۰ دقیقه",
   "settings.interval_30m": "هر ۳۰ دقیقه",
-  "settings.save_error": "ذخیره نشد"
+  "settings.save_error": "ذخیره نشد",
+  "monitor.no_data": "هنوز داده‌ای نیست. برای ثبت تاریخچه، نظارت ۲۴/۷ را فعال کنید.",
+  "monitor.uptime": "در دسترس‌بودن",
+  "monitor.latency": "تأخیر",
+  "monitor.recent_checks": "بررسی‌های اخیر",
+  "monitor.status_unknown": "بدون داده"
 }

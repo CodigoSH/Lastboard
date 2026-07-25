@@ -472,5 +472,10 @@
   "settings.interval_5m": "প্রতি 5 মিনিটে",
   "settings.interval_10m": "প্রতি 10 মিনিটে",
   "settings.interval_30m": "প্রতি 30 মিনিটে",
-  "settings.save_error": "সংরক্ষণ করা যায়নি"
+  "settings.save_error": "সংরক্ষণ করা যায়নি",
+  "monitor.no_data": "এখনও কোনো ডেটা নেই। ইতিহাস রেকর্ড করতে 24/7 মনিটরিং চালু করুন।",
+  "monitor.uptime": "আপটাইম",
+  "monitor.latency": "লেটেন্সি",
+  "monitor.recent_checks": "সাম্প্রতিক চেক",
+  "monitor.status_unknown": "কোনো ডেটা নেই"
 }

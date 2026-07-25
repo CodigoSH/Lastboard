@@ -22,6 +22,7 @@ import './components/ui/DashboardManagerModal/DashboardManagerModal';
 import './components/ui/WidgetConfigModal/WidgetConfigModal';
 import './components/ui/ConfirmationModal/ConfirmationModal';
 import './components/ui/MoveToDashboardModal/MoveToDashboardModal';
+import './components/ui/MonitorHistoryDrawer/MonitorHistoryDrawer';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
 // Widget Components
 import './widgets/core/NotepadWidget';
@@ -136,6 +137,9 @@ bootstrap(async () => {
 
     moveModal = document.createElement('move-to-dashboard-modal');
     document.body.appendChild(moveModal);
+
+    const monitorHistoryDrawer = document.createElement('monitor-history-drawer');
+    document.body.appendChild(monitorHistoryDrawer);
 });
 
 // 2. Handle Component Events (TopBar)
@@ -190,6 +194,12 @@ eventBus.on(EVENTS.SHOW_MOVE_DASHBOARD, async (e: CustomEvent) => {
         if (!ok) return;
         if (notifier) notifier.show({ message: `${i18n.t('notifier.moved_to')} «${name}»`, action: go });
     }
+});
+
+eventBus.on(EVENTS.SHOW_MONITOR_HISTORY, (e: CustomEvent) => {
+    const { itemId, name } = e.detail;
+    const drawer = document.querySelector('monitor-history-drawer') as any;
+    if (drawer) drawer.open(itemId, name);
 });
 
 eventBus.on(EVENTS.SHOW_WIDGET_CONFIG, (e: CustomEvent) => {

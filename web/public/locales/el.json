@@ -472,5 +472,10 @@
   "settings.interval_5m": "Κάθε 5 λεπτά",
   "settings.interval_10m": "Κάθε 10 λεπτά",
   "settings.interval_30m": "Κάθε 30 λεπτά",
-  "settings.save_error": "Αποτυχία αποθήκευσης"
+  "settings.save_error": "Αποτυχία αποθήκευσης",
+  "monitor.no_data": "Δεν υπάρχουν ακόμη δεδομένα. Ενεργοποίησε την παρακολούθηση 24/7 για καταγραφή ιστορικού.",
+  "monitor.uptime": "Χρόνος λειτουργίας",
+  "monitor.latency": "Καθυστέρηση",
+  "monitor.recent_checks": "Πρόσφατοι έλεγχοι",
+  "monitor.status_unknown": "Χωρίς δεδομένα"
 }

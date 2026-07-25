@@ -472,5 +472,10 @@
   "settings.interval_5m": "5分ごと",
   "settings.interval_10m": "10分ごと",
   "settings.interval_30m": "30分ごと",
-  "settings.save_error": "保存できませんでした"
+  "settings.save_error": "保存できませんでした",
+  "monitor.no_data": "まだデータがありません。履歴を記録するには 24/7 監視を有効にしてください。",
+  "monitor.uptime": "稼働率",
+  "monitor.latency": "レイテンシ",
+  "monitor.recent_checks": "最近のチェック",
+  "monitor.status_unknown": "データなし"
 }

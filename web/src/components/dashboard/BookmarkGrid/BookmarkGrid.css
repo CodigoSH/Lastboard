@@ -298,6 +298,7 @@
     border-radius: 50%;
     background-color: var(--text-dim);
     box-shadow: 0 0 0 clamp(1px, 1.2cqi, 2px) var(--panel);
+    cursor: pointer;
 
     z-index: 5;
     transition: background-color 0.3s ease;

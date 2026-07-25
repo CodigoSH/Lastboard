@@ -328,10 +328,30 @@ class BookmarkGrid extends HTMLElement {
     }
 
     private async handleActionClick(e: Event) {
-        if (!this.isEditing) return;
-
         const target = e.target as HTMLElement;
         if (!target) return;
+
+        // Status dot → open the monitoring history drawer (works in any mode).
+        const statusDot = target.closest('.status-indicator');
+        if (statusDot) {
+            e.preventDefault();
+            e.stopPropagation();
+            const card = statusDot.closest('[data-id]') as HTMLElement | null;
+            const id = parseInt(card?.dataset.id || '0');
+            if (id) {
+                const item = this.allItems.find(b => b.id === id);
+                let name = '';
+                try {
+                    const c = typeof item?.content === 'string' ? JSON.parse(item.content) : item?.content;
+                    name = c?.label || '';
+                } catch { /* ignore */ }
+                const { eventBus, EVENTS } = await import('../../../services/EventBus');
+                eventBus.emit(EVENTS.SHOW_MONITOR_HISTORY, { itemId: id, name });
+            }
+            return;
+        }
+
+        if (!this.isEditing) return;
 
         const kebabBtn = target.closest('.kebab-btn');
         const menuEdit = target.closest('.menu-edit');

@@ -4,6 +4,7 @@ export const EVENTS = {
     SHOW_PASSWORD_CONFIRM: 'lastboard:show-password-confirm',
     SHOW_WIDGET_CONFIG: 'lastboard:show-widget-config',
     SHOW_MOVE_DASHBOARD: 'lastboard:show-move-dashboard',
+    SHOW_MONITOR_HISTORY: 'lastboard:show-monitor-history',
     NOTIFY: 'lastboard:notify'
 };
 

@@ -472,5 +472,10 @@
   "settings.interval_5m": "Cada 5 minutos",
   "settings.interval_10m": "Cada 10 minutos",
   "settings.interval_30m": "Cada 30 minutos",
-  "settings.save_error": "No se pudo guardar"
+  "settings.save_error": "No se pudo guardar",
+  "monitor.no_data": "Aún no hay datos. Activa la monitorización 24/7 para registrar el historial.",
+  "monitor.uptime": "Disponibilidad",
+  "monitor.latency": "Latencia",
+  "monitor.recent_checks": "Comprobaciones recientes",
+  "monitor.status_unknown": "Sin datos"
 }

@@ -472,5 +472,10 @@
   "settings.interval_5m": "每5分钟",
   "settings.interval_10m": "每10分钟",
   "settings.interval_30m": "每30分钟",
-  "settings.save_error": "保存失败"
+  "settings.save_error": "保存失败",
+  "monitor.no_data": "暂无数据。启用 24/7 监控以记录历史。",
+  "monitor.uptime": "在线率",
+  "monitor.latency": "延迟",
+  "monitor.recent_checks": "最近检查",
+  "monitor.status_unknown": "无数据"
 }

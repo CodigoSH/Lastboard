@@ -472,5 +472,10 @@
   "settings.interval_5m": "Alle 5 Minuten",
   "settings.interval_10m": "Alle 10 Minuten",
   "settings.interval_30m": "Alle 30 Minuten",
-  "settings.save_error": "Speichern fehlgeschlagen"
+  "settings.save_error": "Speichern fehlgeschlagen",
+  "monitor.no_data": "Noch keine Daten. Aktiviere 24/7-Überwachung, um Verlauf aufzuzeichnen.",
+  "monitor.uptime": "Verfügbarkeit",
+  "monitor.latency": "Latenz",
+  "monitor.recent_checks": "Letzte Prüfungen",
+  "monitor.status_unknown": "Keine Daten"
 }

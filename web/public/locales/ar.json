@@ -472,5 +472,10 @@
   "settings.interval_5m": "كل 5 دقائق",
   "settings.interval_10m": "كل 10 دقائق",
   "settings.interval_30m": "كل 30 دقيقة",
-  "settings.save_error": "تعذّر الحفظ"
+  "settings.save_error": "تعذّر الحفظ",
+  "monitor.no_data": "لا توجد بيانات بعد. فعّل المراقبة على مدار الساعة لتسجيل السجل.",
+  "monitor.uptime": "مدة التشغيل",
+  "monitor.latency": "زمن الاستجابة",
+  "monitor.recent_checks": "الفحوصات الأخيرة",
+  "monitor.status_unknown": "لا توجد بيانات"
 }

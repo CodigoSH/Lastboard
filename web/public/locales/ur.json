@@ -472,5 +472,10 @@
   "settings.interval_5m": "ہر 5 منٹ",
   "settings.interval_10m": "ہر 10 منٹ",
   "settings.interval_30m": "ہر 30 منٹ",
-  "settings.save_error": "محفوظ نہیں ہو سکا"
+  "settings.save_error": "محفوظ نہیں ہو سکا",
+  "monitor.no_data": "ابھی کوئی ڈیٹا نہیں۔ ہسٹری ریکارڈ کرنے کے لیے 24/7 نگرانی فعال کریں۔",
+  "monitor.uptime": "اپ ٹائم",
+  "monitor.latency": "لیٹنسی",
+  "monitor.recent_checks": "حالیہ چیکس",
+  "monitor.status_unknown": "کوئی ڈیٹا نہیں"
 }

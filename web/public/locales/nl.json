@@ -472,5 +472,10 @@
   "settings.interval_5m": "Elke 5 minuten",
   "settings.interval_10m": "Elke 10 minuten",
   "settings.interval_30m": "Elke 30 minuten",
-  "settings.save_error": "Opslaan mislukt"
+  "settings.save_error": "Opslaan mislukt",
+  "monitor.no_data": "Nog geen gegevens. Schakel 24/7-monitoring in om geschiedenis vast te leggen.",
+  "monitor.uptime": "Uptime",
+  "monitor.latency": "Latentie",
+  "monitor.recent_checks": "Recente controles",
+  "monitor.status_unknown": "Geen gegevens"
 }

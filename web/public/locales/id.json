@@ -472,5 +472,10 @@
   "settings.interval_5m": "Setiap 5 menit",
   "settings.interval_10m": "Setiap 10 menit",
   "settings.interval_30m": "Setiap 30 menit",
-  "settings.save_error": "Gagal menyimpan"
+  "settings.save_error": "Gagal menyimpan",
+  "monitor.no_data": "Belum ada data. Aktifkan pemantauan 24/7 untuk merekam riwayat.",
+  "monitor.uptime": "Uptime",
+  "monitor.latency": "Latensi",
+  "monitor.recent_checks": "Pemeriksaan terbaru",
+  "monitor.status_unknown": "Tidak ada data"
 }

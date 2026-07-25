@@ -472,5 +472,10 @@
   "settings.interval_5m": "Her 5 dakikada",
   "settings.interval_10m": "Her 10 dakikada",
   "settings.interval_30m": "Her 30 dakikada",
-  "settings.save_error": "Kaydedilemedi"
+  "settings.save_error": "Kaydedilemedi",
+  "monitor.no_data": "Henüz veri yok. Geçmişi kaydetmek için 24/7 izlemeyi aç.",
+  "monitor.uptime": "Çalışma süresi",
+  "monitor.latency": "Gecikme",
+  "monitor.recent_checks": "Son kontroller",
+  "monitor.status_unknown": "Veri yok"
 }
