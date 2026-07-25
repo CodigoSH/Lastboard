@@ -222,7 +222,7 @@ func BenchmarkValidatePassword(b *testing.B) {
 
 func BenchmarkSafeInitials(b *testing.B) {
 	username := "testuser"
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		safeInitials(username)
 	}
 }

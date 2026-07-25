@@ -323,12 +323,13 @@ func BenchmarkUserInsert(b *testing.B) {
 	db, cleanup := setupTestDB(&testing.T{})
 	defer cleanup()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	i := 0
+	for b.Loop() {
 		db.Exec(`
 			INSERT INTO users (username, password, role)
 			VALUES (?, 'hashedpassword', 'user')
 		`, "user"+string(rune(i)))
+		i++
 	}
 }
 
@@ -343,8 +344,7 @@ func BenchmarkItemInsert(b *testing.B) {
 	`)
 	userID, _ := result.LastInsertId()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		db.Exec(`
 			INSERT INTO items (user_id, type, x, y, w, h)
 			VALUES (?, 'bookmark', 1, 1, 1, 1)
