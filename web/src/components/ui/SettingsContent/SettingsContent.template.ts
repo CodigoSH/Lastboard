@@ -409,12 +409,44 @@ export const notificationsTemplate = (monitoring: {
     </div>
 `;
 
-export const advancedTemplate = () => `
+export const dataTemplate = () => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
 
-        <!-- Import / Export dashboards -->
+        <!-- Full backup (Lastboard-only, restore is destructive) -->
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.backup_full')}</h3>
+            <p class="settings-content__text-dim" style="font-size: 13px; margin: -6px 0 16px;">${i18n.t('settings.backup_full_desc')}</p>
+            <div class="settings-content__action-group">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.export_db')}</h3>
+                        <p>${i18n.t('settings.export_desc')}</p>
+                    </div>
+                    <app-button variant="primary" data-action="download-backup">
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        ${i18n.t('action.download_backup')}
+                    </app-button>
+                </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.import_db')}</h3>
+                        <p>${i18n.t('settings.import_desc')} <br><span style="color: var(--danger-color); font-weight: 600;">${i18n.t('settings.restore_overwrite_warn')}</span></p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="file" id="backup-upload" accept=".json" style="display: none;" data-change="restore-backup">
+                        <app-button data-action="click-file" data-file="backup-upload" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent;">
+                            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                            ${i18n.t('action.select_file')}
+                        </app-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portable dashboards import/export (safe: creates new) -->
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.import_export')}</h3>
+            <p class="settings-content__text-dim" style="font-size: 13px; margin: -6px 0 16px;">${i18n.t('settings.import_creates_new')}</p>
             <div class="settings-content__action-group">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
@@ -440,41 +472,11 @@ export const advancedTemplate = () => `
                 </div>
             </div>
         </div>
+    </div>
+`;
 
-        <!-- System Migration Section -->
-        <div class="bento-card">
-            <h3 class="settings-content__title">${i18n.t('settings.system_data')}</h3>
-
-            <div class="settings-content__action-group">
-                <!-- Export -->
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.export_db')}</h3>
-                        <p>${i18n.t('settings.export_desc')}</p>
-                    </div>
-                    <app-button variant="primary" data-action="download-backup">
-                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                        ${i18n.t('action.download_backup')}
-                    </app-button>
-                </div>
-
-                <!-- Import -->
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.import_db')}</h3>
-                        <p>${i18n.t('settings.import_desc')} <br><span style="color: var(--accent); font-weight: 500;">${i18n.t('settings.import_warn')}</span></p>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                         <input type="file" id="backup-upload" accept=".json" style="display: none;" data-change="restore-backup">
-                         <app-button variant="primary" data-action="click-file" data-file="backup-upload">
-                            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
-                            ${i18n.t('action.select_file')}
-                         </app-button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+export const advancedTemplate = () => `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
         <!-- Danger Zone -->
         <div class="settings-content__danger-zone">
              <div>
@@ -493,8 +495,6 @@ export const advancedTemplate = () => `
              </app-button>
         </div>
     </div>
-
-
 `;
 
 export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {

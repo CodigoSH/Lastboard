@@ -540,5 +540,10 @@
   "settings.import_ok": "インポート完了",
   "settings.import_fail": "ファイルをインポートできませんでした",
   "settings.import_empty": "ファイルに項目がありません",
-  "settings.import_ungrouped": "グループなし"
+  "settings.import_ungrouped": "グループなし",
+  "settings.data": "データ",
+  "settings.backup_full": "完全バックアップ",
+  "settings.backup_full_desc": "すべて（ユーザー、ダッシュボード、設定）を保存・復元します。復旧や別の Lastboard インスタンスへの移行用。",
+  "settings.restore_overwrite_warn": "復元すると現在のすべてのデータが上書きされます。元に戻せません。",
+  "settings.import_creates_new": "開かれた YAML のポータブルなダッシュボード。インポートは新しいダッシュボードを作成し、何も削除しません。"
 }

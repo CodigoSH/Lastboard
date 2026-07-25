@@ -540,5 +540,10 @@
   "settings.import_ok": "Importazione completata",
   "settings.import_fail": "Impossibile importare il file",
   "settings.import_empty": "Il file non contiene elementi",
-  "settings.import_ungrouped": "Senza gruppo"
+  "settings.import_ungrouped": "Senza gruppo",
+  "settings.data": "Dati",
+  "settings.backup_full": "Backup completo",
+  "settings.backup_full_desc": "Salva o ripristina tutto (utenti, dashboard, impostazioni). Per il ripristino o lo spostamento su un'altra istanza Lastboard.",
+  "settings.restore_overwrite_warn": "Il ripristino SOVRASCRIVE tutti i dati attuali. Non è reversibile.",
+  "settings.import_creates_new": "Dashboard portabili in YAML aperto. L'importazione crea nuove dashboard — non elimina nulla."
 }

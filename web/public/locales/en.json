@@ -540,5 +540,10 @@
   "settings.import_ok": "Import complete",
   "settings.import_fail": "Couldn't import the file",
   "settings.import_empty": "The file has no items",
-  "settings.import_ungrouped": "Ungrouped"
+  "settings.import_ungrouped": "Ungrouped",
+  "settings.data": "Data",
+  "settings.backup_full": "Full backup",
+  "settings.backup_full_desc": "Save or restore everything (users, dashboards, settings). For recovery or moving to another Lastboard instance.",
+  "settings.restore_overwrite_warn": "Restoring OVERWRITES all current data. Can't be undone.",
+  "settings.import_creates_new": "Portable dashboards in open YAML. Import creates new dashboards — nothing is deleted."
 }

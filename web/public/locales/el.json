@@ -540,5 +540,10 @@
   "settings.import_ok": "Η εισαγωγή ολοκληρώθηκε",
   "settings.import_fail": "Αδυναμία εισαγωγής του αρχείου",
   "settings.import_empty": "Το αρχείο δεν έχει στοιχεία",
-  "settings.import_ungrouped": "Χωρίς ομάδα"
+  "settings.import_ungrouped": "Χωρίς ομάδα",
+  "settings.data": "Δεδομένα",
+  "settings.backup_full": "Πλήρες αντίγραφο ασφαλείας",
+  "settings.backup_full_desc": "Αποθηκεύει ή επαναφέρει τα πάντα (χρήστες, πίνακες, ρυθμίσεις). Για ανάκτηση ή μεταφορά σε άλλη εγκατάσταση Lastboard.",
+  "settings.restore_overwrite_warn": "Η επαναφορά ΑΝΤΙΚΑΘΙΣΤΑ όλα τα τρέχοντα δεδομένα. Μη αναστρέψιμο.",
+  "settings.import_creates_new": "Φορητοί πίνακες σε ανοιχτό YAML. Η εισαγωγή δημιουργεί νέους πίνακες — τίποτα δεν διαγράφεται."
 }

@@ -540,5 +540,10 @@
   "settings.import_ok": "Importação concluída",
   "settings.import_fail": "Não foi possível importar o ficheiro",
   "settings.import_empty": "O ficheiro não tem elementos",
-  "settings.import_ungrouped": "Sem grupo"
+  "settings.import_ungrouped": "Sem grupo",
+  "settings.data": "Dados",
+  "settings.backup_full": "Cópia de segurança completa",
+  "settings.backup_full_desc": "Guarda ou restaura tudo (utilizadores, painéis, definições). Para recuperação ou mudança para outra instância Lastboard.",
+  "settings.restore_overwrite_warn": "Restaurar SOBRESCREVE todos os dados atuais. Não pode ser desfeito.",
+  "settings.import_creates_new": "Painéis portáteis em YAML aberto. Importar cria painéis novos — nada é apagado."
 }

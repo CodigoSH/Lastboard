@@ -540,5 +540,10 @@
   "settings.import_ok": "اكتمل الاستيراد",
   "settings.import_fail": "تعذّر استيراد الملف",
   "settings.import_empty": "الملف لا يحتوي على عناصر",
-  "settings.import_ungrouped": "بدون مجموعة"
+  "settings.import_ungrouped": "بدون مجموعة",
+  "settings.data": "البيانات",
+  "settings.backup_full": "نسخة احتياطية كاملة",
+  "settings.backup_full_desc": "يحفظ أو يستعيد كل شيء (المستخدمون، اللوحات، الإعدادات). للاسترداد أو النقل إلى نسخة أخرى من Lastboard.",
+  "settings.restore_overwrite_warn": "الاستعادة تستبدل جميع البيانات الحالية. لا يمكن التراجع.",
+  "settings.import_creates_new": "لوحات محمولة بصيغة YAML مفتوحة. الاستيراد يُنشئ لوحات جديدة — لا يُحذف شيء."
 }

@@ -540,5 +540,10 @@
   "settings.import_ok": "가져오기 완료",
   "settings.import_fail": "파일을 가져오지 못했습니다",
   "settings.import_empty": "파일에 항목이 없습니다",
-  "settings.import_ungrouped": "그룹 없음"
+  "settings.import_ungrouped": "그룹 없음",
+  "settings.data": "데이터",
+  "settings.backup_full": "전체 백업",
+  "settings.backup_full_desc": "모든 것(사용자, 대시보드, 설정)을 저장하거나 복원합니다. 복구 또는 다른 Lastboard 인스턴스로 이동용.",
+  "settings.restore_overwrite_warn": "복원하면 현재 모든 데이터를 덮어씁니다. 되돌릴 수 없습니다.",
+  "settings.import_creates_new": "개방형 YAML의 이식 가능한 대시보드. 가져오기는 새 대시보드를 만들며 아무것도 삭제하지 않습니다."
 }

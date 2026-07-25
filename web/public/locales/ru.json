@@ -540,5 +540,10 @@
   "settings.import_ok": "Импорт завершён",
   "settings.import_fail": "Не удалось импортировать файл",
   "settings.import_empty": "В файле нет элементов",
-  "settings.import_ungrouped": "Без группы"
+  "settings.import_ungrouped": "Без группы",
+  "settings.data": "Данные",
+  "settings.backup_full": "Полная резервная копия",
+  "settings.backup_full_desc": "Сохраняет или восстанавливает всё (пользователи, панели, настройки). Для восстановления или переноса на другой экземпляр Lastboard.",
+  "settings.restore_overwrite_warn": "Восстановление ПЕРЕЗАПИШЕТ все текущие данные. Отменить нельзя.",
+  "settings.import_creates_new": "Переносимые панели в открытом YAML. Импорт создаёт новые панели — ничего не удаляется."
 }

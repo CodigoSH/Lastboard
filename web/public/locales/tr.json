@@ -540,5 +540,10 @@
   "settings.import_ok": "İçe aktarma tamamlandı",
   "settings.import_fail": "Dosya içe aktarılamadı",
   "settings.import_empty": "Dosyada öğe yok",
-  "settings.import_ungrouped": "Grupsuz"
+  "settings.import_ungrouped": "Grupsuz",
+  "settings.data": "Veri",
+  "settings.backup_full": "Tam yedek",
+  "settings.backup_full_desc": "Her şeyi (kullanıcılar, panolar, ayarlar) kaydeder veya geri yükler. Kurtarma veya başka bir Lastboard örneğine taşıma için.",
+  "settings.restore_overwrite_warn": "Geri yükleme mevcut tüm verilerin ÜZERİNE YAZAR. Geri alınamaz.",
+  "settings.import_creates_new": "Açık YAML'de taşınabilir panolar. İçe aktarma yeni panolar oluşturur — hiçbir şey silinmez."
 }

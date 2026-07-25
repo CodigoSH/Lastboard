@@ -540,5 +540,10 @@
   "settings.import_ok": "Import abgeschlossen",
   "settings.import_fail": "Datei konnte nicht importiert werden",
   "settings.import_empty": "Die Datei enthält keine Elemente",
-  "settings.import_ungrouped": "Ohne Gruppe"
+  "settings.import_ungrouped": "Ohne Gruppe",
+  "settings.data": "Daten",
+  "settings.backup_full": "Vollständige Sicherung",
+  "settings.backup_full_desc": "Sichert oder stellt alles wieder her (Benutzer, Dashboards, Einstellungen). Für Wiederherstellung oder Umzug auf eine andere Lastboard-Instanz.",
+  "settings.restore_overwrite_warn": "Wiederherstellen ÜBERSCHREIBT alle aktuellen Daten. Nicht umkehrbar.",
+  "settings.import_creates_new": "Portable Dashboards in offenem YAML. Import erstellt neue Dashboards – nichts wird gelöscht."
 }

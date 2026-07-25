@@ -540,5 +540,10 @@
   "settings.import_ok": "导入完成",
   "settings.import_fail": "无法导入文件",
   "settings.import_empty": "文件中没有项目",
-  "settings.import_ungrouped": "未分组"
+  "settings.import_ungrouped": "未分组",
+  "settings.data": "数据",
+  "settings.backup_full": "完整备份",
+  "settings.backup_full_desc": "保存或恢复所有内容（用户、仪表板、设置）。用于恢复或迁移到另一个 Lastboard 实例。",
+  "settings.restore_overwrite_warn": "恢复会覆盖当前所有数据。此操作无法撤销。",
+  "settings.import_creates_new": "开放 YAML 中的可移植仪表板。导入会创建新仪表板——不会删除任何内容。"
 }

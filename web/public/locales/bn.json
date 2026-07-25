@@ -540,5 +540,10 @@
   "settings.import_ok": "ইমপোর্ট সম্পন্ন",
   "settings.import_fail": "ফাইল ইমপোর্ট করা যায়নি",
   "settings.import_empty": "ফাইলে কোনো আইটেম নেই",
-  "settings.import_ungrouped": "গ্রুপবিহীন"
+  "settings.import_ungrouped": "গ্রুপবিহীন",
+  "settings.data": "ডেটা",
+  "settings.backup_full": "সম্পূর্ণ ব্যাকআপ",
+  "settings.backup_full_desc": "সবকিছু (ইউজার, ড্যাশবোর্ড, সেটিংস) সংরক্ষণ বা পুনরুদ্ধার করে। পুনরুদ্ধার বা অন্য Lastboard ইনস্ট্যান্সে সরানোর জন্য।",
+  "settings.restore_overwrite_warn": "পুনরুদ্ধার করলে বর্তমান সব ডেটা মুছে যাবে। ফেরানো যাবে না।",
+  "settings.import_creates_new": "খোলা YAML-এ পোর্টেবল ড্যাশবোর্ড। ইমপোর্ট নতুন ড্যাশবোর্ড তৈরি করে — কিছু মুছে যায় না।"
 }

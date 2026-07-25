@@ -540,5 +540,10 @@
   "settings.import_ok": "وارد کردن کامل شد",
   "settings.import_fail": "وارد کردن فایل ناموفق بود",
   "settings.import_empty": "فایل هیچ موردی ندارد",
-  "settings.import_ungrouped": "بدون گروه"
+  "settings.import_ungrouped": "بدون گروه",
+  "settings.data": "داده‌ها",
+  "settings.backup_full": "پشتیبان کامل",
+  "settings.backup_full_desc": "همه چیز را ذخیره یا بازیابی می‌کند (کاربران، داشبوردها، تنظیمات). برای بازیابی یا انتقال به نمونه دیگر Lastboard.",
+  "settings.restore_overwrite_warn": "بازیابی همه داده‌های فعلی را بازنویسی می‌کند. قابل بازگشت نیست.",
+  "settings.import_creates_new": "داشبوردهای قابل‌حمل در YAML باز. وارد کردن داشبورد جدید می‌سازد — چیزی حذف نمی‌شود."
 }

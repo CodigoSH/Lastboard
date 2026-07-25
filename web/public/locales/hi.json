@@ -540,5 +540,10 @@
   "settings.import_ok": "आयात पूर्ण",
   "settings.import_fail": "फ़ाइल आयात नहीं हो सकी",
   "settings.import_empty": "फ़ाइल में कोई आइटम नहीं",
-  "settings.import_ungrouped": "बिना समूह"
+  "settings.import_ungrouped": "बिना समूह",
+  "settings.data": "डेटा",
+  "settings.backup_full": "पूर्ण बैकअप",
+  "settings.backup_full_desc": "सब कुछ सहेजता या पुनर्स्थापित करता है (उपयोक्ता, डैशबोर्ड, सेटिंग्स)। पुनर्प्राप्ति या किसी अन्य Lastboard इंस्टेंस पर ले जाने के लिए।",
+  "settings.restore_overwrite_warn": "पुनर्स्थापना सभी मौजूदा डेटा को अधिलेखित कर देती है। पूर्ववत नहीं किया जा सकता।",
+  "settings.import_creates_new": "खुले YAML में पोर्टेबल डैशबोर्ड। आयात नए डैशबोर्ड बनाता है — कुछ नहीं हटता।"
 }

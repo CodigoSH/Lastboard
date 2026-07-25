@@ -540,5 +540,10 @@
   "settings.import_ok": "Impor selesai",
   "settings.import_fail": "Gagal mengimpor berkas",
   "settings.import_empty": "Berkas tidak berisi item",
-  "settings.import_ungrouped": "Tanpa grup"
+  "settings.import_ungrouped": "Tanpa grup",
+  "settings.data": "Data",
+  "settings.backup_full": "Cadangan penuh",
+  "settings.backup_full_desc": "Menyimpan atau memulihkan semuanya (pengguna, dasbor, pengaturan). Untuk pemulihan atau pindah ke instance Lastboard lain.",
+  "settings.restore_overwrite_warn": "Memulihkan MENIMPA semua data saat ini. Tidak bisa dibatalkan.",
+  "settings.import_creates_new": "Dasbor portabel dalam YAML terbuka. Impor membuat dasbor baru — tidak ada yang dihapus."
 }

@@ -540,5 +540,10 @@
   "settings.import_ok": "امپورٹ مکمل",
   "settings.import_fail": "فائل امپورٹ نہیں ہو سکی",
   "settings.import_empty": "فائل میں کوئی آئٹم نہیں",
-  "settings.import_ungrouped": "بلا گروپ"
+  "settings.import_ungrouped": "بلا گروپ",
+  "settings.data": "ڈیٹا",
+  "settings.backup_full": "مکمل بیک اپ",
+  "settings.backup_full_desc": "سب کچھ (صارفین، ڈیش بورڈز، سیٹنگز) محفوظ یا بحال کرتا ہے۔ ریکوری یا دوسرے Lastboard انسٹینس پر منتقلی کے لیے۔",
+  "settings.restore_overwrite_warn": "بحال کرنے سے تمام موجودہ ڈیٹا اوور رائٹ ہو جاتا ہے۔ واپس نہیں ہو سکتا۔",
+  "settings.import_creates_new": "کھلے YAML میں پورٹیبل ڈیش بورڈز۔ امپورٹ نئے ڈیش بورڈز بناتا ہے — کچھ حذف نہیں ہوتا۔"
 }

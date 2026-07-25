@@ -540,5 +540,10 @@
   "settings.import_ok": "Importation terminée",
   "settings.import_fail": "Impossible d'importer le fichier",
   "settings.import_empty": "Le fichier ne contient aucun élément",
-  "settings.import_ungrouped": "Sans groupe"
+  "settings.import_ungrouped": "Sans groupe",
+  "settings.data": "Données",
+  "settings.backup_full": "Sauvegarde complète",
+  "settings.backup_full_desc": "Sauvegarde ou restaure tout (utilisateurs, tableaux, réglages). Pour la récupération ou le déplacement vers une autre instance Lastboard.",
+  "settings.restore_overwrite_warn": "La restauration ÉCRASE toutes les données actuelles. Irréversible.",
+  "settings.import_creates_new": "Tableaux portables en YAML ouvert. L'import crée de nouveaux tableaux — rien n'est supprimé."
 }

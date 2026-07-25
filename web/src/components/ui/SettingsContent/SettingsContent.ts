@@ -4,7 +4,7 @@ import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, monitoringTemplate, notificationsTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, notificationsTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
@@ -765,6 +765,9 @@ class SettingsContent extends HTMLElement {
 
             case 'advanced':
                 return advancedTemplate();
+
+            case 'data':
+                return dataTemplate();
 
             case 'monitoring':
                 return monitoringTemplate(this.monitoring);

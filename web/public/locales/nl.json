@@ -540,5 +540,10 @@
   "settings.import_ok": "Import voltooid",
   "settings.import_fail": "Kon het bestand niet importeren",
   "settings.import_empty": "Het bestand bevat geen items",
-  "settings.import_ungrouped": "Zonder groep"
+  "settings.import_ungrouped": "Zonder groep",
+  "settings.data": "Gegevens",
+  "settings.backup_full": "Volledige back-up",
+  "settings.backup_full_desc": "Slaat alles op of herstelt alles (gebruikers, dashboards, instellingen). Voor herstel of verhuizen naar een andere Lastboard-instantie.",
+  "settings.restore_overwrite_warn": "Herstellen OVERSCHRIJFT alle huidige gegevens. Kan niet ongedaan worden gemaakt.",
+  "settings.import_creates_new": "Draagbare dashboards in open YAML. Importeren maakt nieuwe dashboards — er wordt niets verwijderd."
 }
