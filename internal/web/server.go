@@ -339,6 +339,11 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.GetSettings)))
 	s.Router.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.UpdateSettings)))
 	s.Router.Handle("POST /api/monitor/test", protect(http.HandlerFunc(monitorHandler.TestNotify)))
+
+	// Import / export API
+	impExpHandler := api.NewImportExportHandler(s.DB)
+	s.Router.Handle("GET /api/export/native", protect(http.HandlerFunc(impExpHandler.ExportNative)))
+	s.Router.Handle("POST /api/import/parse", protect(http.HandlerFunc(impExpHandler.ImportParse)))
 	s.Router.Handle("GET /api/monitor/history", protect(http.HandlerFunc(monitorHandler.GetHistory)))
 	s.Router.Handle("DELETE /api/monitor/history", protect(http.HandlerFunc(monitorHandler.ClearHistory)))
 	s.Router.Handle("GET /api/monitor/overview", protect(http.HandlerFunc(monitorHandler.GetOverview)))
