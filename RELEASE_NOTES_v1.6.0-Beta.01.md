@@ -1,0 +1,62 @@
+### Added
+- 1.6.0 beta cycle: cross-dashboard item moves, generic API widget with presets, uptime monitoring with history and alerts, Homepage/Dashy import and native export, and a card motion system
+- Accept dashboard_id in UpdateItem to move items
+- Add 8 more service presets
+- Add a Move action to the reorder sheet
+- Add append-only monitor_checks history store
+- Add block auto-place primitives
+- Alerts via ntfy/Gotify/webhook
+- Always-on backend scheduler
+- Arrival highlight after moving between dashboards
+- Auto-refresh the open history drawer
+- Bucket the heartbeat across the whole range
+- Bulk-move items via a kebab menu and topbar selection
+- Clear-data action, Exit button, wider list
+- Coordinated ranges and Uptime-Kuma-style hover
+- Dissolve cards on delete
+- Full-screen status page with shared detail
+- Generic API widget (metric mode)
+- Group the service picker by category
+- Guided service presets (AdGuard, Paperless, Immich)
+- Import UI + materializer + native export button
+- Keep topbar, redesign list rows, red clear menu
+- Latency chart, incidents and range selector
+- Materialize newly-created cards
+- Move bookmarks and widgets between dashboards
+- Move sections between dashboards with their subtree
+- Native YAML export + competitor parsers
+- On/off toggle and topbar status icon
+- Per-item history and uptime endpoint
+- Redesign toasts (bottom-center, actions, progress bar)
+- Rich hover tooltip on status dots
+- Server-side fetch endpoint for the generic API widget
+- Settings endpoint for mode and interval
+- Status-checks toggle in settings
+- Status-history detail drawer
+- Status-page overview of all monitors
+- Support list mode via array path extraction
+- Support non-selectable category headers
+- Timed probe and monitored-item enumeration
+- Uptime-Kuma-grade detail redesign
+- Visible board entrance + stronger create/move/delete cues
+
+### Fixed
+- Allow selecting an option with an empty value
+- API config polish and config-on-add
+- History drawer crashed on services with no outages
+- Invalid Date in history timestamps
+- Probe the URL stored in bookmark content
+- Robust positioning, centered callout, click-to-toggle
+- Use the panel's own field styling for notify URL/token
+
+### Changed
+- Dedicated Data section, disambiguate backup vs import
+- Drawer footer and modal-style close button
+- Recent-beats heartbeat like Uptime Kuma
+- Split Monitoring and Notifications sections
+- Chore(lint): modernize remaining b.N benchmarks to b.Loop()
+- Chore(lint): satisfy sqlrowserr and modernize analyzers
+- I18n(dashboard): clarify move picker title as 'Move to… (Dashboard)'
+- I18n(dashboard): translate the move-to picker into all locales
+- Revert(mobile): drop move-to-dashboard from the reorder sheet
+- Style(monitoring): wider, column-aligned status-page list
