@@ -15,8 +15,8 @@ class UpdateService {
         if (window.LASTBOARD_CONFIG?.demo_mode === true) {
             return {
                 available: false,
-                current_version: 'v1.5.6', // Mock version for demo
-                latest_version: 'v1.5.6',
+                current_version: 'v1.6.0-Beta.01', // Mock version for demo
+                latest_version: 'v1.6.0-Beta.01',
                 is_docker: true // The public demo runs in Docker → show the Docker notice, not the updater
             };
         }
