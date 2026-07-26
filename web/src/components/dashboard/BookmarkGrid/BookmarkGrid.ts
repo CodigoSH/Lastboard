@@ -65,6 +65,9 @@ class BookmarkGrid extends HTMLElement {
 
 
     private _boundActionClick = this.handleActionClick.bind(this);
+    // Motion: ids of just-created items to materialize once on the next render.
+    private _materializeIds = new Set<number>();
+    private _lastDashId: number | null = null;
     private _boundMouseMove = this.handleWindowMouseMove.bind(this);
     private _boundMouseUp = this.handleWindowMouseUp.bind(this);
     private _boundUpdateTouchState: () => void = () => { };
@@ -247,6 +250,18 @@ class BookmarkGrid extends HTMLElement {
                     if (oldItem.status !== newItem.status) {
                         statusOnlyChange = true;
                     }
+                }
+            }
+
+            // Motion: flag freshly-created items to materialize once — but only for
+            // small in-place additions, never a dashboard switch or initial load.
+            const dashChanged = this._lastDashId !== (state.currentDashboardId ?? null);
+            this._lastDashId = state.currentDashboardId ?? null;
+            if (structuralChange && !dashChanged && this.allItems.length > 0) {
+                const oldIds = new Set(this.allItems.map(i => i.id));
+                const added = newAllItems.filter(i => !oldIds.has(i.id));
+                if (added.length > 0 && added.length <= 3) {
+                    for (const it of added) this._materializeIds.add(it.id);
                 }
             }
 
@@ -1253,6 +1268,30 @@ class BookmarkGrid extends HTMLElement {
 
         // Re-acquire ghost ref after render
         this.ghostEl = this.shadowRoot!.getElementById('ghost-element');
+
+        this._runMaterialize();
+    }
+
+    // Play a one-shot fade+scale entrance on freshly-created cards. WAAPI (not a
+    // CSS class) so a later full re-render never replays it — no ghost animations.
+    // Respects prefers-reduced-motion.
+    private _runMaterialize() {
+        if (this._materializeIds.size === 0) return;
+        const ids = Array.from(this._materializeIds);
+        this._materializeIds.clear();
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        for (const id of ids) {
+            const el = this.shadowRoot!.querySelector(`[data-id="${id}"]`) as HTMLElement | null;
+            if (!el || typeof el.animate !== 'function') continue;
+            el.animate(
+                [
+                    { opacity: 0, transform: 'scale(0.9)' },
+                    { opacity: 1, transform: 'scale(1)' },
+                ],
+                { duration: 240, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+            );
+        }
     }
 }
 
