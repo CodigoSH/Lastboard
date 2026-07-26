@@ -440,6 +440,12 @@ class DashboardStore {
      * dashboard_id + x/y (and detaches from its parent if it was nested), then
      * drops it from the current board's view. Returns true on success.
      */
+    // Ids of items just moved to another dashboard, to briefly highlight on
+    // arrival the next time that dashboard is shown ("Ir" or a manual switch).
+    private _arrivedIds: number[] = [];
+    getArrivedIds(): number[] { return this._arrivedIds; }
+    consumeArrived(ids: number[]) { this._arrivedIds = this._arrivedIds.filter(id => !ids.includes(id)); }
+
     async moveItemToDashboard(itemId: number, targetDashboardId: number, gridCols: number = 12): Promise<boolean> {
         const item = this.state.items.find(i => i.id === itemId);
         if (!item) return false;
@@ -461,6 +467,7 @@ class DashboardStore {
                 }
             }
             this.state.items = this.state.items.filter(i => !subtreeIds.has(i.id));
+            this._arrivedIds.push(itemId);
             this.notify();
             return true;
         }
@@ -492,6 +499,7 @@ class DashboardStore {
 
             this.state.items = this.state.items.filter(i => !subtreeIds.has(i.id));
             this.state.isOffline = false;
+            this._arrivedIds.push(itemId);
             this.saveToLocalStorage();
             this.notify();
             return true;

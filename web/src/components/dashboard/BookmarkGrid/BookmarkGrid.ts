@@ -1293,6 +1293,34 @@ class BookmarkGrid extends HTMLElement {
         this.ghostEl = this.shadowRoot!.getElementById('ghost-element');
 
         this._runMaterialize();
+        this._runArrival();
+    }
+
+    // Highlight items that just arrived from another dashboard, once, the first
+    // time this dashboard shows them (after a move + "Ir" or a manual switch).
+    private _runArrival() {
+        const arrived = dashboardStore.getArrivedIds();
+        if (arrived.length === 0) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            dashboardStore.consumeArrived(arrived);
+            return;
+        }
+        const rgb = getComputedStyle(this).getPropertyValue('--accent-rgb').trim() || '76,139,245';
+        const found: number[] = [];
+        for (const id of arrived) {
+            const el = this.shadowRoot!.querySelector(`[data-id="${id}"]`) as HTMLElement | null;
+            if (!el || typeof el.animate !== 'function') continue;
+            found.push(id);
+            el.animate(
+                [
+                    { boxShadow: `0 0 0 0 rgba(${rgb},0)` },
+                    { boxShadow: `0 0 0 4px rgba(${rgb},0.55)`, offset: 0.25 },
+                    { boxShadow: `0 0 0 0 rgba(${rgb},0)` },
+                ],
+                { duration: 1300, easing: 'ease-out' },
+            );
+        }
+        if (found.length) dashboardStore.consumeArrived(found);
     }
 
     // Play a one-shot fade+scale entrance on freshly-created cards. WAAPI (not a
