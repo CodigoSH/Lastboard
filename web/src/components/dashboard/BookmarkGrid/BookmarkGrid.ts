@@ -68,6 +68,9 @@ class BookmarkGrid extends HTMLElement {
     // Motion: ids of just-created items to materialize once on the next render.
     private _materializeIds = new Set<number>();
     private _lastDashId: number | null = null;
+    // Motion: queue a one-shot staggered entrance on the next render (dashboard
+    // load or switch). Consumed in render() like _materializeIds.
+    private _entranceQueued = false;
     private _boundMouseMove = this.handleWindowMouseMove.bind(this);
     private _boundMouseUp = this.handleWindowMouseUp.bind(this);
     private _boundUpdateTouchState: () => void = () => { };
@@ -256,8 +259,14 @@ class BookmarkGrid extends HTMLElement {
             // Motion: flag freshly-created items to materialize once — but only for
             // small in-place additions, never a dashboard switch or initial load.
             const dashChanged = this._lastDashId !== (state.currentDashboardId ?? null);
+            const initialLoad = this.allItems.length === 0 && newAllItems.length > 0;
             this._lastDashId = state.currentDashboardId ?? null;
-            if (structuralChange && !dashChanged && this.allItems.length > 0) {
+            if ((dashChanged || initialLoad) && newAllItems.length > 0) {
+                // Dashboard opened or switched: play a staggered entrance for the
+                // whole board instead of per-item pops.
+                this._entranceQueued = true;
+                this._materializeIds.clear();
+            } else if (structuralChange && this.allItems.length > 0) {
                 const oldIds = new Set(this.allItems.map(i => i.id));
                 const added = newAllItems.filter(i => !oldIds.has(i.id));
                 if (added.length > 0 && added.length <= 3) {
@@ -557,10 +566,10 @@ class BookmarkGrid extends HTMLElement {
         const finish = () => { if (done) return; done = true; del(); };
         const anim = el.animate(
             [
-                { opacity: 1, transform: 'scale(1)' },
-                { opacity: 0, transform: 'scale(0.85)' },
+                { opacity: 1, transform: 'scale(1)', filter: 'blur(0)' },
+                { opacity: 0, transform: 'scale(0.7) translateY(-6px)', filter: 'blur(2px)' },
             ],
-            { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' },
+            { duration: 280, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' },
         );
         anim.onfinish = finish;
         setTimeout(finish, 350); // safety net if onfinish never fires
@@ -1292,8 +1301,42 @@ class BookmarkGrid extends HTMLElement {
         // Re-acquire ghost ref after render
         this.ghostEl = this.shadowRoot!.getElementById('ghost-element');
 
+        this._runEntrance();
         this._runMaterialize();
         this._runArrival();
+    }
+
+    private get _reduceMotion(): boolean {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    // Top-level cards/sections in document order (nested cards excluded so a
+    // section and its children don't both animate).
+    private _topLevelItems(): HTMLElement[] {
+        return Array.from(
+            this.shadowRoot!.querySelectorAll<HTMLElement>('.bookmark-grid__card, .bookmark-grid__section'),
+        ).filter(el => !el.closest('.bookmark-grid__nested-content'));
+    }
+
+    // One-shot staggered entrance for the whole board on load / dashboard switch.
+    // WAAPI (not a CSS class) so a later full re-render never replays it.
+    private _runEntrance() {
+        if (!this._entranceQueued) return;
+        this._entranceQueued = false;
+        if (this._reduceMotion) return;
+
+        const items = this._topLevelItems();
+        items.forEach((el, i) => {
+            if (typeof el.animate !== 'function') return;
+            const delay = Math.min(i * 32, 380);
+            el.animate(
+                [
+                    { opacity: 0, transform: 'translateY(12px) scale(0.96)' },
+                    { opacity: 1, transform: 'none' },
+                ],
+                { duration: 320, delay, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'backwards' },
+            );
+        });
     }
 
     // Highlight items that just arrived from another dashboard, once, the first
@@ -1301,7 +1344,7 @@ class BookmarkGrid extends HTMLElement {
     private _runArrival() {
         const arrived = dashboardStore.getArrivedIds();
         if (arrived.length === 0) return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (this._reduceMotion) {
             dashboardStore.consumeArrived(arrived);
             return;
         }
@@ -1311,36 +1354,38 @@ class BookmarkGrid extends HTMLElement {
             const el = this.shadowRoot!.querySelector(`[data-id="${id}"]`) as HTMLElement | null;
             if (!el || typeof el.animate !== 'function') continue;
             found.push(id);
+            // A clear "just landed here" cue: a scale pop plus an accent ring pulse.
             el.animate(
                 [
-                    { boxShadow: `0 0 0 0 rgba(${rgb},0)` },
-                    { boxShadow: `0 0 0 4px rgba(${rgb},0.55)`, offset: 0.25 },
-                    { boxShadow: `0 0 0 0 rgba(${rgb},0)` },
+                    { transform: 'scale(1)', boxShadow: `0 0 0 0 rgba(${rgb},0)` },
+                    { transform: 'scale(1.05)', boxShadow: `0 0 0 5px rgba(${rgb},0.75)`, offset: 0.18 },
+                    { transform: 'scale(1)', boxShadow: `0 0 0 3px rgba(${rgb},0.35)`, offset: 0.55 },
+                    { transform: 'scale(1)', boxShadow: `0 0 0 0 rgba(${rgb},0)` },
                 ],
-                { duration: 1300, easing: 'ease-out' },
+                { duration: 1500, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
             );
         }
         if (found.length) dashboardStore.consumeArrived(found);
     }
 
-    // Play a one-shot fade+scale entrance on freshly-created cards. WAAPI (not a
-    // CSS class) so a later full re-render never replays it — no ghost animations.
-    // Respects prefers-reduced-motion.
+    // Play a one-shot pop-in on freshly-created cards. WAAPI (not a CSS class)
+    // so a later full re-render never replays it — no ghost animations.
     private _runMaterialize() {
         if (this._materializeIds.size === 0) return;
         const ids = Array.from(this._materializeIds);
         this._materializeIds.clear();
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (this._reduceMotion) return;
 
         for (const id of ids) {
             const el = this.shadowRoot!.querySelector(`[data-id="${id}"]`) as HTMLElement | null;
             if (!el || typeof el.animate !== 'function') continue;
             el.animate(
                 [
-                    { opacity: 0, transform: 'scale(0.9)' },
-                    { opacity: 1, transform: 'scale(1)' },
+                    { opacity: 0, transform: 'translateY(8px) scale(0.85)' },
+                    { opacity: 1, transform: 'translateY(0) scale(1.03)', offset: 0.7 },
+                    { opacity: 1, transform: 'none' },
                 ],
-                { duration: 240, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+                { duration: 400, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
             );
         }
     }
