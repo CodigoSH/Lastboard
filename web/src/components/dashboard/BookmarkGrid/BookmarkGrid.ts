@@ -539,8 +539,31 @@ class BookmarkGrid extends HTMLElement {
         eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
             title: `${i18n.t('general.delete')} ${typeLabel}`,
             message: i18n.t('bookmark.delete_confirm_message'),
-            onConfirm: () => { dashboardStore.deleteItem(id); }
+            onConfirm: () => { this._dissolveThenDelete(id); }
         });
+    }
+
+    // Dissolve a card (fade + slight scale-down) before removing it, so deletion
+    // reads as a deliberate exit rather than a snap. Falls back to an instant
+    // delete under reduced-motion or if WAAPI is unavailable.
+    private _dissolveThenDelete(id: number) {
+        const del = () => dashboardStore.deleteItem(id);
+        const el = this.shadowRoot!.querySelector(`[data-id="${id}"]`) as HTMLElement | null;
+        if (!el || typeof el.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            del();
+            return;
+        }
+        let done = false;
+        const finish = () => { if (done) return; done = true; del(); };
+        const anim = el.animate(
+            [
+                { opacity: 1, transform: 'scale(1)' },
+                { opacity: 0, transform: 'scale(0.85)' },
+            ],
+            { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' },
+        );
+        anim.onfinish = finish;
+        setTimeout(finish, 350); // safety net if onfinish never fires
     }
 
     /** Positions the shared kebab menu next to the clicked button, flipping it
