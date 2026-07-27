@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.6] - 2026-07-24### Added
+## [1.5.6] - 2026-07-24
+
+### Added
 - Accessibility improvements for modals and keyboard navigation
 - Clearer, consistent save model in preferences
 - Ed25519 release signing, verified in the auto-updater (OPS-02)
@@ -17,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Regroup preferences so every card says what it holds
 - Require a valid signature on every update (OPS-02)
 - Security and reliability improvements with updated dependencies
-- Signed updates, security hardening, accessibility and a redesigned preferences panel### Fixed
+- Signed updates, security hardening, accessibility and a redesigned preferences panel
+
+### Fixed
 - Accept X-Forwarded-Host in WS origin check for reverse proxies
 - Body limits, IDOR checks, proxy-header gating and robustness
 - Dispatch retention prune after a successful release, not on tag push
@@ -27,7 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick wins — healthcheck PORT, install RED, noopener, strings.Contains
 - Quieter WebSocket reconnect logging
 - Restore dropped column migrations so upgrades never break
-- Sanitize Notepad content on load (XSS-01)### Changed
+- Sanitize Notepad content on load (XSS-01)
+
+### Changed
 - Add shared escape helpers and harden sanitizer URL scheme
 - Drop now-unused serveFile helper
 - Drop unnecessary 'as any' casts in BookmarkGrid (CAL-03)
@@ -45,7 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Revert(api): keep IsSecureRequest lax on X-Forwarded-Proto (undo SEC-02)
 - Sync guides with the current settings panel and update path
 - Trim credits to licence-required attributions
-## [1.5.5] - 2026-07-14### Added
+
+## [1.5.5] - 2026-07-14
+
+### Added
 - Content widgets fill their tile (no redundant card padding); docker widget 5x3 for a legible container list
 - Demo telemetry widget uses its real 1x3 size
 - Fix mobile edit sheet (eye toggle, alphabetical hidden) and demo clock, status pings and Docker update notice
@@ -61,14 +70,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tighten widget padding to use the interior space
 - Toggle bookmark visibility from the reorder sheet
 - Verify the automated release/image retention pipeline end-to-end
-- Weather widget fixed 3x2 with 6-day forecast, and a leaner curated demo at real widget sizes### Fixed
+- Weather widget fixed 3x2 with 6-day forecast, and a leaner curated demo at real widget sizes
+
+### Fixed
 - Clock size, green status pings and Docker update notice
 - Dock the toolbar inside the widget
 - Give the telemetry widget its real 1x3 size
 - Let content widgets fill their tile
 - Minimal padding in read-only mode
 - Repair eye-toggle, sort hidden alphabetically, shorten label
-- Size the welcome markdown to its content and rebalance Home### Changed
+- Size the welcome markdown to its content and rebalance Home
+
+### Changed
 - Docker widget at 5x3 for a legible container list
 - Leaner, curated dashboards at real widget sizes
 - Add automated release/image retention (prune-releases)
@@ -77,15 +90,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix ineffective .gitignore patterns
 - Point README documentation links to codigosh.com
 - Remove deployment platform reference
-## [1.5.4] - 2026-07-01### Added
-- Localized, informative update error messages### Fixed
+
+## [1.5.4] - 2026-07-01
+
+### Added
+- Localized, informative update error messages
+
+### Fixed
 - Log the underlying cause when download/checksum fails
 - Publish the Forgejo release as draft until assets are uploaded
-- Show real, localized messages when an update fails### Changed
+- Show real, localized messages when an update fails
+
+### Changed
 - Ci(forgejo): revert upload-artifact to v3 (v4 unsupported on Forgejo)
-## [1.5.3] - 2026-07-01### Added
-- Minor updates### Fixed
-- Normalize release notes to Keep-a-Changelog format### Changed
+
+## [1.5.3] - 2026-07-01
+
+### Added
+- Minor updates
+
+### Fixed
+- Normalize release notes to Keep-a-Changelog format
+
+### Changed
 - Extract pure i18n/icon-search logic into testable helpers
 - Ci(forgejo): drop dead develop branch triggers
 - Ci(forgejo): run full frontend test suite and bump upload-artifact to v4
@@ -93,21 +120,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - I18n: translate remaining English phrases (el, ur, hi, fa, id, ar, bn)
 - Style(widgets): capitalize clock/weather text instead of uppercase
 - Test(api): add characterization tests for UpdatePreferences, PerformUpdate guards and compareVersions
-## [1.5.2] - 2026-06-08### Added
+
+## [1.5.2] - 2026-06-08
+
+### Added
 - Block the in-app updater when the binary isn't writable
 - Minor updates
-- Optional unprivileged execution via PUID/PGID### Fixed
-- Preselect profile, stop toggle-close, remove section-switch zoom### Changed
+- Optional unprivileged execution via PUID/PGID
+
+### Fixed
+- Preselect profile, stop toggle-close, remove section-switch zoom
+
+### Changed
 - Extract templates and stylesheets from components
 - Remove dead types and tighten any usage
-- Split long handlers into cohesive helpers### Changed
+- Split long handlers into cohesive helpers
 - Add native characterization tests for core logic
 - Apply gofmt (struct tag alignment, Go 1.26)
 - Compile the cmd/lastboard package instead of main.go only
 - Docs(security): replace DOMPurify reference with actual htmlSanitizer
 - Document PUID/PGID and unprivileged-mode updates
 - Gofmt api/user.go (struct tag alignment, Go 1.26)
-## [1.5.1] - 2026-04-28### Added
+
+## [1.5.1] - 2026-04-28
+
+### Added
 - Add mobile reorder — drag-to-reorder bookmarks on touch devices
 - Eliminate all 40 ts-ignore directives via proper type declarations
 - Fix gopls warnings: unused params in serveLoginPage/serveIndexDemo and tagged switch on dbTheme
@@ -119,10 +156,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Show skeleton cards immediately on page load instead of blank screen
 - Stable release 1.5.1 - auditoria QA completa, Go 1.26.2, security hardening
 - Test release for update system verification
-- Upgrade Go 1.26.2, eliminate 49 unused variables/imports, enforce noUnusedLocals in tsconfig### Changed
-- Batch health checks, modal blur, faster boot sequence### Changed
+- Upgrade Go 1.26.2, eliminate 49 unused variables/imports, enforce noUnusedLocals in tsconfig
+
+### Changed
+- Batch health checks, modal blur, faster boot sequence
 - Rename FORGEJO_TOKEN secret to CI_TOKEN
-## [1.5.0] - 2026-04-09### Added
+
+## [1.5.0] - 2026-04-09
+
+### Added
 - Add automated release cleanup workflow
 - Add beta/stable release channel selection
 - Add favicon to all pages
@@ -260,7 +302,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update docker widget translations and UI
 - Use official github cli and persistent notes for reliable releases
 - V1.3.0 release: border customization, public demo, and unified feedback
-- V1.3.1 stable: demo mode overhaul, minor bug fixes and visual improvements### Fixed
+- V1.3.1 stable: demo mode overhaul, minor bug fixes and visual improvements
+
+### Fixed
 - Adaptive modals and sidebar with clamp() container queries
 - Add auto-migration from Lashboard to Lastboard
 - Add default value for download count in update-stats workflow
@@ -375,7 +419,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use upload/download-artifact@v3 in release workflow
 - Whitelist internal/web/dist for IDE compatibility
 - Write docker config directly without login, debug credential passing
-- Write docker credentials directly for buildx builder access### Changed
+- Write docker credentials directly for buildx builder access
+
+### Changed
 - Event-driven architecture, telemetry fixes, and optimizations
 - Finalize UI polish (Z-Index fix, Notepad/Markdown setup, Task cleanup)
 - Fix memory leaks in global event listeners
@@ -394,7 +440,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rewrite API polling to sequential queue to fix 429 rate limit and UI flickering
 - Simplified detection logic & cleanup (Beta 5)
 - Simplify schema initialization with CREATE TABLE IF NOT EXISTS
-- Unify release scripts into single release.sh### Changed
+- Unify release scripts into single release.sh
 - Add .agent to .gitignore to keep assistant workflows local
 - Add comprehensive backend and frontend tests
 - Add concurrency to auto-cancel redundant runs
@@ -604,11 +650,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use english label for installations badge
 - Use standard CHANGELOG.md and include full project history
 - Use target=_blank for demo link
-## [1.4.1] - 2026-03-19### Added
+
+## [1.4.1] - 2026-03-19
+
+### Added
 - Adjust telemetry padding to 1/5th of standard
 - Unificated glassmorphism and telemetry standardization
-- Unified glassmorphism effects and telemetry widget standardization### Changed
+- Unified glassmorphism effects and telemetry widget standardization
+
+### Changed
 - Update README.md
+
 ## [1.4.0] - 2026-03-10
 
 ### 🚀 Major Highlights
@@ -680,12 +732,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use standard CHANGELOG.md and include full project history
 
 ## [1.3.3] - 2026-03-03
+
 ### Added
 - Core fixes: transparent hover, native backup modal, TRUST_PROXY support, SQL locks resolved.n
 - Critical fix for redirect loops (DB Version 4) and UI layout improvements in update modal.n
 - Fix manifest.json build error and mobile view bookmark aspect ration
 - Release 1.3.3-Beta.01
 - Stable release 1.3.3
+
 ### Fixed
 - Address multiple backend issues: IPv6 parsing, dead comments, and unused fields
 - Fix formatting and update API call in update-stats.yml
@@ -695,6 +749,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include manifest.json in build output
 - Resolve redirect loop after update and UI clipping in update modal
 - Resolve SQL locks, improve backup modal, adjust UI hovers and fix accent DB population
+
 ### Changed
 - Add .gitkeep to dist so go embed does not fail during tests before a build
 - Add Security & Widgets section, remove duplicate Key Features
@@ -714,6 +769,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update credits in README and adjust air config
 
 ## [1.3.2] - 2026-02-23
+
 ### Added
 - Audit findings fixes (Tasks 1-10)
 - Clean development and demo logs from console
@@ -736,8 +792,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Translate missing strings across all 20 locales
 - UI tweaks for Notepad and Markdown widgets (lock position and scrollbar)
 - Unified login routing and diagnostic logs for remote debugging
+
 ### Fixed
 - Fix bookmark custom icon rendering, modal duplicate selections and Papirus symlink handling
+
 ### Changed
 - Add .agent to .gitignore to keep assistant workflows local
 - Add GitHub Actions CI and remove redundant front-end console.logs
@@ -747,11 +805,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace heavy box-shadow animations with GPU-accelerated pseudo-elements
 
 ## [1.3.1] - 2026-02-19
+
 ### Added
 - Demo mode overhaul: isolated localStorage demo, DEMO_ONLY env var, and demo route gating
 - V1.3.1 stable: demo mode overhaul, minor bug fixes and visual improvements
 
 ## [1.3.0] - 2026-02-19
+
 ### Added
 - Added docker installations counter to readme
 - Added official live demo link to readme
@@ -788,6 +848,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unify shake effect and toast messaging in login and password modal
 - Use official github cli and persistent notes for reliable releases
 - V1.3.0 release: border customization, public demo, and unified feedback
+
 ### Fixed
 - Adjust core widget sizes to 1x2 parity standard
 - Complete dashboard reset to professional parity standard (1x1 and 1x2)
@@ -803,6 +864,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unify docker persistence paths to /var/lib/lastboard
 - Use exact repository casing for badges to resolve invalid status
 - Use robust v/tag endpoint for release badge
+
 ### Changed
 - Add docker pulls counter to README
 - Add official live demo link to readme
@@ -832,32 +894,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use target=_blank for demo link
 
 ## [1.2.5] - 2026-02-15
+
 ### Added
 - Fix: Client-side avatar resizing to prevent LocalStorage quota errors.
 - Implement client-side avatar resizing to prevent storage quota issues
 
 ## [1.2.4] - 2026-02-15
+
 ### Added
 - Style: Enhance Login UI with glassmorphism Remember Me checkbox.
+
 ### Changed
 - Enhance remember me checkbox with glassmorphism and fix localization
 - Highlight quick install command
 - Restructure installation instructions for visibility
 
 ## [1.2.3] - 2026-02-14
+
 ### Added
 - Optimization: Enable native cross-compilation (CGO disabled) for faster Docker builds.
+
 ### Fixed
 - Disable CGO to fix arm64 build hang
 - Enable native cross-compilation (fast build)
 
 ## [1.2.2] - 2026-02-14
+
 ### Added
 - Hotfix: Update Dockerfile base image to Go 1.24
+
 ### Fixed
 - Update base image to go 1.24
 
 ## [1.2.1] - 2026-02-14
+
 ### Added
 - Add 'Remember Me' translations for all 20 supported languages
 - Enhance security with non-root user and healthcheck
@@ -865,6 +935,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement 'remember me' functionality with 30-day session option
 - Professionalize distribution (multi-stage build, ghcr workflow, fixed port)
 - Security hardening, performance optimization (DB pool, telemetry), and comprehensive test suite.
+
 ### Fixed
 - Add missing dependencies to benchmark and security jobs
 - Configure explicit HTTP timeouts to prevent memory leaks from idle connections
@@ -877,6 +948,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove redundant cp command incompatible with new build script
 - Unify frontend build process across all environments
 - Use dynamic port in healthcheck
+
 ### Changed
 - Add concurrency to auto-cancel redundant runs
 - Add gallery, config, and data sections to README
@@ -896,36 +968,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade artifact actions to v4/v3
 
 ## [1.2.0] - 2026-02-11
+
 ### Added
 - Implement professional release notes with categorization and cleanup commits
 - Minor updates and synchronization
+
 ### Fixed
 - Add missing weather/clock translations and remove image feature from notepad
+
 ### Changed
 - Add FUNDING.yml
 - Remove release notes file
 
 ## [1.1.8] - 2026-02-08
+
 ### Fixed
 - Add sanitizer and relax mobile filters (Beta 7)
 - Force mobile layout on small screens (Beta 4)
 - Remove inline grid styles in mobile mode (Beta 6)
+
 ### Changed
 - Simplified detection logic & cleanup (Beta 5)
 
 ## [1.1.6] - 2026-02-08
 
 ## [1.1.5] - 2026-02-08
+
 ### Changed
 - Remove tracked binary Lastboard and update gitignore
 - Update frontend artifacts for v1.1.4
 
 ## [1.1.4] - 2026-02-08
+
 ### Added
 - Add beta/stable release channel selection
 - Implement fixed grid layout and touch mode architecture
 - Implement fluid content scaling with container queries
 - Implement responsive scaling for large screens (<27 inch monitors)
+
 ### Fixed
 - Add auto-migration from Lashboard to Lastboard
 - Add fluid grid architecture translation to all 20 languages
@@ -936,6 +1016,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Force kill process on target port before start
 - Strict release channel selection
 - Use Type=exec and show logs on failure
+
 ### Changed
 - Add release notes for v1.1.4-beta.2
 - Add release notes for v1.1.4-beta.3
@@ -950,16 +1031,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use professional block ASCII banner
 
 ## [1.1.3] - 2026-02-06
+
 ### Changed
 - Release v1.1.3 (stability fix)
 
 ## [1.1.2] - 2026-02-06
+
 ### Fixed
 - Release v1.1.2 hotfix for update logic
 
 ## [1.1.1] - 2026-02-06
+
 ### Fixed
 - Rename changelog to RELEASE_NOTES_v1.1.1-beta.2.md for build script
+
 ### Changed
 - Add release notes for v1.1.1-beta
 - Fixed Coordinate Fluid Grid & Layout Cleanup
@@ -969,66 +1054,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release v1.1.1-beta.2
 
 ## [1.1.0] - 2026-02-05
+
 ### Changed
 - Release v1.1.0: Dynamic Login, Setup Fixes, and UI Polish
 
 ## [1.0.11] - 2026-02-03
+
 ### Changed
 - Release v1.0.11
 
 ## [1.0.10] - 2026-02-03
+
 ### Changed
 - Release v1.0.10
 
 ## [1.0.9] - 2026-02-03
+
 ### Changed
 - Release v1.0.9
 
 ## [1.0.8] - 2026-02-03
+
 ### Changed
 - Release v1.0.8
 
 ## [1.0.7] - 2026-02-03
+
 ### Added
 - Display dynamic version in installer banner
+
 ### Changed
 - Release v1.0.7
 
 ## [1.0.6] - 2026-02-03
+
 ### Changed
 - Release v1.0.6
 
 ## [1.0.5] - 2026-02-03
+
 ### Fixed
 - Move binary to /opt/kashboard to fix permission issues
+
 ### Changed
 - Release v1.0.5
 - Remove release notes after release
 
 ## [1.0.4] - 2026-02-03
+
 ### Changed
 - Release v1.0.4 with release notes integration
 - Update release notes for v1.0.4
 
 ## [1.0.3] - 2026-02-03
+
 ### Fixed
 - Update checksum generation and release v1.0.3
 
 ## [1.0.2] - 2026-02-02
+
 ### Added
 - Smart port detection in install script
+
 ### Changed
 - Release v1.0.2
 
 ## [1.0.1] - 2026-02-02
+
 ### Added
 - Add favicon to all pages
 - Adopt Apache 2.0 license with proper attribution
+
 ### Fixed
 - Allow resizing sections containing items
 - Copy favicon.png to dist root
 - Disable CGO and remove Zig from release workflow
 - Update bun action to v2 and add debug steps
+
 ### Changed
 - Credit Homarr and Glassmorphism for theme inspiration
 - Fix ASCII art legibility
@@ -1042,6 +1144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use robust standard ASCII font
 
 ## [1.0.0] - 2026-02-02
+
 ### Added
 - Add offline indicator and strict backend validation
 - Apply accent color to personalization sliders
@@ -1073,6 +1176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Robust health monitoring, premium UI animations, and UX refinements
 - Smooth resizing and refined bookmark hover animations
 - Switch to tar.gz artifacts for better performance
+
 ### Fixed
 - Add non-hidden file to dist for go:embed compatibility
 - Fix drag marker overlap issue by increasing z-index
@@ -1084,6 +1188,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevent dashboard overlaps and invalid nesting using global collision logic
 - Stabilize drag ghost layout and enforce square rows
 - Whitelist internal/web/dist for IDE compatibility
+
 ### Changed
 - Add dynamic release badge
 - Add missing icon to build section
@@ -1099,4 +1204,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include install script and icon credits
 - Increase edit button to 30px and icons to 16px
 - Polish UI for better user experience
-
