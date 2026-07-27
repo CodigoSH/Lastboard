@@ -165,24 +165,27 @@ if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     DATE=$(date +%Y-%m-%d)
     VERSION_DISPLAY=$(echo $NEW_TAG | sed 's/^v//')
     
-    # Prepare the new section
-    NEW_ENTRY=$(echo -e "## [$VERSION_DISPLAY] - $DATE\n")
-    [ -n "$FEATS" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Added\n${FEATS}\n")"
-    [ -n "$FIXES" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Fixed\n${FIXES}\n")"
     CL_CHANGED=""
     [ -n "$REFACTORS" ] && CL_CHANGED="$REFACTORS"
     [ -n "$OTHER" ] && CL_CHANGED="${CL_CHANGED:+$CL_CHANGED$'\n'}$OTHER"
-    [ -n "$CL_CHANGED" ] && NEW_ENTRY="${NEW_ENTRY}$(echo -e "### Changed\n${CL_CHANGED}\n")"
+
+    # Build the entry in a temp file with REAL newlines. (Composing it in a
+    # shell var via $(echo -e '…\n') strips trailing newlines and runs the
+    # section headers together, e.g. "…home### Fixed".)
+    ENTRY_FILE=$(mktemp)
+    {
+        printf '## [%s] - %s\n\n' "$VERSION_DISPLAY" "$DATE"
+        [ -n "$FEATS" ]      && printf '### Added\n%s\n\n' "$FEATS"
+        [ -n "$FIXES" ]      && printf '### Fixed\n%s\n\n' "$FIXES"
+        [ -n "$CL_CHANGED" ] && printf '### Changed\n%s\n\n' "$CL_CHANGED"
+    } > "$ENTRY_FILE"
 
     # Insert before the first version header
-    awk -v new_entry="$NEW_ENTRY" '
-    BEGIN { done = 0 }
-    /^## \[/ && !done {
-        print new_entry
-        done = 1
-    }
-    { print $0 }
-    ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+    awk 'NR==FNR { entry = entry $0 "\n"; next }
+         /^## \[/ && !done { printf "%s", entry; done=1 }
+         { print }' "$ENTRY_FILE" CHANGELOG.md > CHANGELOG.md.tmp \
+        && mv CHANGELOG.md.tmp CHANGELOG.md
+    rm -f "$ENTRY_FILE"
 fi
 
 # Create temporary file for Forgejo Release Body
