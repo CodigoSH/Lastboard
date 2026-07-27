@@ -4,14 +4,18 @@ Lastboard gives each user **multiple independent dashboards**. Every dashboard h
 
 ![Dashboard switcher](../assets/m-dashboards.png)
 
+## Creating a Dashboard
+
+New dashboards are **not** created from the switcher. Enter **Edit Mode**, open the **Add (+) menu** in the top bar, and choose **Add dashboard** — the same menu you use to add bookmarks, sections, and widgets.
+
 ## Managing Dashboards
 
 Use the **dashboard switcher** in the top bar:
 
-- **Create** — add a new, empty dashboard.
 - **Switch** — click any dashboard to open it instantly.
-- **Rename** — change a dashboard's name at any time.
-- **Delete** — remove a dashboard and everything on it.
+- **Rename** — rename a dashboard from its entry in the switcher.
+- **Delete** — remove a dashboard and everything on it (you always keep at least one).
+- **Manage order** — open the reorder view and drag dashboards into the order you want.
 
 ## Moving Items Between Dashboards
 
