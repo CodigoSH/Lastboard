@@ -4,7 +4,9 @@ Bookmarks are the core of Lastboard: quick-launch tiles that link to your apps, 
 
 ## Adding a Bookmark
 
-Enter **Edit Mode** (the pencil/edit toggle in the top bar) and use the **Add** menu to create a new bookmark. A dialog opens with two tabs: **General** and **Customization**.
+Enter **Edit Mode** (the pencil/edit toggle in the top bar) and use the **Add (+)** menu to create a new bookmark. A dialog opens with two tabs: **General** and **Customization**.
+
+![Add menu](../assets/m-addnew.png)
 
 ## General Options
 

@@ -6,7 +6,9 @@ Lastboard gives each user **multiple independent dashboards**. Every dashboard h
 
 ## Creating a Dashboard
 
-New dashboards are **not** created from the switcher. Enter **Edit Mode**, open the **Add (+) menu** in the top bar, and choose **Add dashboard** — the same menu you use to add bookmarks, sections, and widgets.
+New dashboards are **not** created from the switcher. Enter **Edit Mode**, open the **Add (+) menu** in the top bar, and choose **New dashboard** — the same menu you use to add bookmarks, sections, and widgets.
+
+![Add menu](../assets/m-addnew.png)
 
 ## Managing Dashboards
 
