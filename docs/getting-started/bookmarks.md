@@ -28,6 +28,8 @@ The **Customization** tab controls the tile's appearance:
 
 A **Section** is a container that groups related bookmarks together under a title. Create one from the **Add** menu, then drag bookmarks into it to nest them. Sections keep large dashboards organized and can be resized like any other item.
 
+> Bookmarks and sections can also be **moved to another dashboard** — individually or in bulk. See [Dashboards](../using/dashboards.md#moving-items-between-dashboards).
+
 ## Reordering & Search
 
 - **Drag to reorder**: In Edit Mode, drag any bookmark (or section) to reposition it on the grid. The layout is saved automatically.
@@ -36,6 +38,8 @@ A **Section** is a container that groups related bookmarks together under a titl
 ## Mobile Visibility and Ordering
 
 Lastboard renders a simplified, touch-friendly layout on phones. You have full control over which bookmarks appear there and in what order.
+
+![Lastboard on mobile](../assets/mobile.png)
 
 ### Hiding a bookmark from mobile (desktop editor)
 

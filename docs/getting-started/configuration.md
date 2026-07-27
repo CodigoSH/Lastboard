@@ -2,6 +2,8 @@
 
 Lastboard is designed to work out-of-the-box, but you can customize its behavior using environment variables.
 
+> Looking for the in-app settings (theme, language, monitoring, backups)? Those are covered in **[Preferences](../using/preferences.md)**. This page is about deployment and environment configuration.
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -44,59 +46,6 @@ TRUST_PROXY=true
 
 > **Warning:** Without this flag enabled behind a proxy, all users will share the same IP for rate limiting and login lockout purposes, which may cause false 429 errors. **Do not enable this flag** if Lastboard is exposed directly to the internet.
 
-## Dashboard Settings & Customization
-
-Lastboard offers a wide range of settings to personalize your experience and manage the system. These are accessible via the **Settings** icon in the top navigation bar.
-
-Preferences save the moment you change them — there is no "Save" button for
-them. Only actions with a real consequence (changing your password or username,
-managing users, backup/restore, updates) keep an explicit button.
-
-### My Profile
-Manage your personal profile and security.
-- **Avatar**: Upload a custom profile picture. Supported formats: PNG, JPG, WebP.
-- **Username**: Change your display name. This signs you out, since the session is tied to it.
-- **Change Password**: Update your login credentials. We recommend using a strong, unique password.
-
-### Look & Feel
-Everything that changes how the dashboard looks.
-- **Accent Color**: Pick one of the presets or set a custom color with the picker.
-- **Theme**: Toggle between **Light** and **Dark** modes to suit your preference.
-- **Dashboard Background**:
-  - **Custom Image**: Upload any image to use as your dashboard background.
-  - **Auto-Optimization**: Images are automatically resized to 1080p for faster load times.
-  - **Cover Logic**: The background uses "Cover" logic, ensuring it fills the screen without stretching or distortion.
-
-### Personalization
-- **Logo & Panel Name**: Customize the title and logo displayed in the browser tab and top bar. Both are configured from a single settings row.
-- **Language**: Choose from **20 supported languages**, including English, Spanish, German, French, Chinese, and more.
-- **Measurement Units**: Select between **Metric** (°C, km/h) and **Imperial** (°F, mph). This setting automatically updates all compatible widgets (Weather, Telemetry, etc.).
-- **Grid Layout**: Use the **Columns** slider to set how many columns your dashboard grid uses (from 3 to 16), allowing for tighter or more spacious layouts.
-
-### Multi-Dashboard
-Lastboard supports multiple independent dashboards per user. Each dashboard has its own layout, widgets, and background.
-- **Create**: Use the dashboard switcher in the top bar to add a new dashboard.
-- **Switch**: Click any dashboard in the switcher to navigate to it instantly.
-- **Rename**: Rename dashboards at any time from the switcher menu.
-- **Delete**: Remove a dashboard and all its contents from the switcher menu.
-
-### User Management (Admin Only)
-Administrators can manage access to the Lastboard instance.
-- **Add/Edit Users**: Create new accounts or modify existing ones.
-- **Roles**: Two roles exist — **Admin** (the instance owner, full control) and **User** (standard access).
-- **Delete Users**: Remove access for specific accounts.
-
-### System & Maintenance
-Tools for keeping your Lastboard instance healthy and up to date.
-- **Data Backup & Restore**:
-  - **Export**: Download your entire dashboard configuration as a portable `.json` file.
-  - **Import**: Restore a previous setup from a backup file. *Warning: This overwrites current data.*
-- **System Updates**:
-  - **Check for Updates**: Manually trigger a version check against the official [Forgejo repository](https://git.codigosh.com/CodigoSH/Lastboard).
-  - **Docker Mode**: If running via Docker, instructions are provided to pull the latest image from `git.codigosh.com`.
-  - **Native Update**: For Linux installs, updates can be applied directly from the UI — the binary is downloaded from Forgejo and its checksum verified against a signed `checksums.txt` before replacing the current installation.
-- **Beta Updates**: Toggle this setting to participate in the beta testing program and receive early access to new features.
-- **Factory Reset**: A safe-guarded option to wipe all data and return the instance to its original state (Setup Wizard).
-
 ## Data Persistence
-All state—including users, dashboard layouts, preferences, and system settings—is stored in a single SQLite database file (`lastboard.db`) located in your defined data directory.
+
+All state — including users, dashboard layouts, preferences, and system settings — is stored in a single SQLite database file (`lastboard.db`) located in your defined data directory. Back it up (or the whole instance) from **Settings → Data**; see **[Import, Export & Backup](../using/import-export.md)**.
