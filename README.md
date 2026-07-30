@@ -52,7 +52,9 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 - **Peace of mind** — Backup and restore directly from the website.
 - **Single SQLite file** — your entire dashboard state in one portable file. Backup = `cp lastboard.db`.
 - **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
-- **Multi-dashboard system** — create and switch between multiple independent dashboards, each with its own layout and widgets.
+- **Multi-dashboard system** — create and switch between multiple independent dashboards, each with its own layout and widgets. Move items between them without rebuilding anything.
+- **Uptime monitoring** — server-side checks around the clock, with history, latency charts, outage logs, and alerts via ntfy, Gotify or a webhook.
+- **No lock-in** — export your dashboards as open, documented YAML, and import straight from Homepage or Dashy.
 - **Multi-user support** — per-user preferences and password management.
 - **Personalized backgrounds** — Set a custom image for your dashboard, optimized and saved per user.
 - **Global unit system** — Choose between Metric and Imperial units globally for all widgets.
@@ -69,7 +71,7 @@ Lastboard is built from the ground up with defense-in-depth principles, includin
 
 For a detailed breakdown of our security measures, please refer to our [Security Overview](https://codigosh.com/docs/lastboard/security/overview/).
 
-### Widgets (6)
+### Widgets (7)
 
 | Widget | Description |
 | :--- | :--- |
@@ -79,6 +81,9 @@ For a detailed breakdown of our security measures, please refer to our [Security
 | **Weather** | Current conditions and forecast via Open-Meteo |
 | **Markdown** | Freeform Markdown renderer for notes and links |
 | **Docker** | Live monitoring and lifecycle management (Start/Stop/Restart) of your containers |
+| **API** | Any JSON endpoint on a tile — guided presets for common self-hosted services, or a fully custom request |
+
+Remote Docker hosts are reached through [Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent), a tiny token-authenticated bridge, so you never have to expose the Docker daemon over TCP.
 
 ---
 
