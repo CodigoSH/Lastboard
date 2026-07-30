@@ -90,6 +90,9 @@ class MonitorPage extends HTMLElement {
         this._build();
         this.setAttribute('open', '');
         document.body.style.overflow = 'hidden';
+        // The topbar locks its other actions while the status page is up, the
+        // same way it does in edit mode.
+        eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: true });
         try {
             this.rows = await apiService.get<OverviewRow[]>('/api/monitor/overview');
         } catch {
@@ -107,6 +110,7 @@ class MonitorPage extends HTMLElement {
         this.removeAttribute('open');
         document.body.style.overflow = '';
         this._detail()?.stop();
+        eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: false });
     }
 
     private _select(id: number, name: string) {

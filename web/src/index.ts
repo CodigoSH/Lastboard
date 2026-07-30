@@ -211,6 +211,11 @@ eventBus.on(EVENTS.SHOW_MONITOR_OVERVIEW, () => {
     if (page) page.open();
 });
 
+eventBus.on(EVENTS.HIDE_MONITOR_OVERVIEW, () => {
+    const page = document.querySelector('monitor-page') as any;
+    if (page) page.close();
+});
+
 eventBus.on(EVENTS.SHOW_WIDGET_CONFIG, (e: CustomEvent) => {
     const { item, type } = e.detail;
     if (type === 'bookmark') {

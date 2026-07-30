@@ -22,6 +22,7 @@ interface TopBarState {
     projectLogo?: string;
     isTouchDevice?: boolean;
     monitoringOn?: boolean;
+    monitorOpen?: boolean;
 }
 
 class TopBar extends HTMLElement {
@@ -30,6 +31,7 @@ class TopBar extends HTMLElement {
     _unsubscribeI18n: (() => void) | undefined;
     _windowClickHandler: ((e: Event) => void) | undefined;
     _monitoringHandler: ((e: CustomEvent) => void) | undefined;
+    _monitorOpenHandler: ((e: CustomEvent) => void) | undefined;
 
     static get observedAttributes() {
         return ['title'];
@@ -46,6 +48,7 @@ class TopBar extends HTMLElement {
             addMenuActive: false,
             drawerOpen: false,
             searchQuery: '',
+            monitorOpen: false,
             isDemo: window.LASTBOARD_CONFIG?.demo_mode || false,
             isTouchDevice: window.innerWidth < 768 && window.matchMedia('(pointer: coarse)').matches
         };
@@ -93,6 +96,13 @@ class TopBar extends HTMLElement {
             this.setState({ monitoringOn: e.detail?.mode === 'background' });
         };
         eventBus.on(EVENTS.MONITORING_CHANGED, this._monitoringHandler);
+
+        // While the status page is up the rest of the topbar is locked, so the
+        // only way out is the status icon itself or the page's own close button.
+        this._monitorOpenHandler = (e: CustomEvent) => {
+            this.setState({ monitorOpen: !!e.detail?.open });
+        };
+        eventBus.on(EVENTS.MONITOR_OVERVIEW_CHANGED, this._monitorOpenHandler);
     }
 
     disconnectedCallback() {
@@ -102,6 +112,7 @@ class TopBar extends HTMLElement {
             window.removeEventListener('click', this._windowClickHandler);
         }
         if (this._monitoringHandler) eventBus.off(EVENTS.MONITORING_CHANGED, this._monitoringHandler);
+        if (this._monitorOpenHandler) eventBus.off(EVENTS.MONITOR_OVERVIEW_CHANGED, this._monitorOpenHandler);
     }
 
     setState(newState: Partial<TopBarState>) {
@@ -121,6 +132,18 @@ class TopBar extends HTMLElement {
     setupListeners() {
         this.shadowRoot!.addEventListener('click', (e: Event) => {
             const target = e.target as HTMLElement;
+
+            // While an exclusive mode is up, only the toggle that closes it
+            // answers — the status page wins over the drawer because it is the
+            // one opened last (from inside the drawer's own settings). The
+            // greyed-out controls are inert in CSS too; this keeps them inert
+            // for clicks that never went through the pointer.
+            const exclusiveToggle = this.state.monitorOpen ? '#monitor-toggle'
+                : this.state.drawerOpen ? '#drawer-toggle'
+                    : null;
+            if (exclusiveToggle && !target.closest(exclusiveToggle)) {
+                return;
+            }
 
             // Clicking inside the search input must not bubble to the window
             // handler that closes the search (replaces the old inline onclick).
@@ -210,7 +233,9 @@ class TopBar extends HTMLElement {
             const monitorBtn = target.closest('#monitor-toggle');
             if (monitorBtn) {
                 e.stopPropagation();
-                eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW);
+                eventBus.emit(this.state.monitorOpen
+                    ? EVENTS.HIDE_MONITOR_OVERVIEW
+                    : EVENTS.SHOW_MONITOR_OVERVIEW);
                 return;
             }
 
@@ -348,7 +373,8 @@ class TopBar extends HTMLElement {
             currentDashboardId: this.state.currentDashboardId,
             projectLogo: this.state.projectLogo,
             isTouchDevice: this.state.isTouchDevice,
-            monitoringOn: this.state.monitoringOn
+            monitoringOn: this.state.monitoringOn,
+            monitorOpen: this.state.monitorOpen
         })}
         `;
     }

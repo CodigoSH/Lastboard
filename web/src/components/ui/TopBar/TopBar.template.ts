@@ -14,13 +14,18 @@ interface TopBarData {
     projectLogo?: string;
     isTouchDevice?: boolean;
     monitoringOn?: boolean;
+    monitorOpen?: boolean;
 }
 
 import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
+export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn, monitorOpen }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
+    // Edit mode, the settings drawer and the status page are exclusive: each one
+    // takes over the UI, so while any of them is active every unrelated control
+    // is greyed out and only the one that leads back out stays clickable.
+    const locked = editMode || drawerOpen || monitorOpen;
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -46,7 +51,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
             `) : ''}
 
             <!-- Search Bar -->
-            <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${editMode ? 'search-wrapper--disabled' : ''}" title="${i18n.t('general.search')}">
+            <div id="search-wrapper" class="search-wrapper ${searchActive ? 'search-wrapper--active' : ''} ${locked ? 'search-wrapper--disabled' : ''}" title="${i18n.t('general.search')}">
                 <input type="text" id="search-input" class="search-input" placeholder="${i18n.t('general.search')}" 
                        value="${escapeHtml(searchQuery || '')}">
                 <div id="search-clear" class="search-clear" style="display: ${searchQuery ? 'flex' : 'none'};">×</div>
@@ -90,7 +95,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
             </div>
 
             <!-- Edit Mode Toggle -->
-            <div id="edit-toggle" class="top-bar__toggle" title="${i18n.t('topbar.edit_tooltip')}"
+            <div id="edit-toggle" class="top-bar__toggle ${drawerOpen || monitorOpen ? 'top-bar__toggle--disabled' : ''}" title="${i18n.t('topbar.edit_tooltip')}"
                  style="margin-right: -6px; ${editMode ? 'color: var(--accent);' : ''}">
                 <svg id="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     ${editMode ? `
@@ -104,17 +109,18 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
                 </svg>
             </div>
 
-            <dashboard-switcher class="${editMode ? 'disabled' : ''}"></dashboard-switcher>
+            <dashboard-switcher class="${locked ? 'disabled' : ''}"></dashboard-switcher>
 
             ${monitoringOn ? `
-            <!-- Monitoring status page -->
-            <div id="monitor-toggle" class="top-bar__toggle ${editMode ? 'top-bar__toggle--disabled' : ''}"
+            <!-- Monitoring status page — stays clickable while open: it is the way out -->
+            <div id="monitor-toggle" class="top-bar__toggle ${(editMode || drawerOpen) && !monitorOpen ? 'top-bar__toggle--disabled' : ''}"
+                 style="${monitorOpen ? 'color: var(--accent);' : ''}"
                  title="${i18n.t('monitor.overview_title')}" aria-label="${i18n.t('monitor.overview_title')}" role="button" tabindex="0">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </div>` : ''}
 
-            <!-- Sidebar Toggle Icon -->
-            <div id="drawer-toggle" class="top-bar__toggle ${editMode ? 'top-bar__toggle--disabled' : ''}" 
+            <!-- Sidebar Toggle Icon — stays clickable while open: it is the way out -->
+            <div id="drawer-toggle" class="top-bar__toggle ${editMode || monitorOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="position: relative;" 
                  title="${i18n.t('topbar.drawer_tooltip')}">
                 ${updateAvailable ? '<div class="notification-dot"></div>' : ''}
