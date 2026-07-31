@@ -148,9 +148,9 @@ bookmark(2, infra, 3, 2, 'adguard-home', 'AdGuard', 'https://adguard.com');
 bookmark(2, infra, 4, 2, 'unifi', 'UniFi', 'https://ui.com');
 
 const monitoring = section(2, 10, 1, 3, 2, 'Monitoring');
-bookmark(2, monitoring, 1, 1, 'grafana', 'Grafana', 'https://grafana.com');
+bookmark(2, monitoring, 1, 1, 'grafana', 'Grafana', 'https://grafana.com', { statusCheck: true, statusPos: 'top-right' });
 bookmark(2, monitoring, 2, 1, 'prometheus', 'Prometheus', 'https://prometheus.io');
-bookmark(2, monitoring, 3, 1, 'uptime-kuma', 'Uptime Kuma', 'https://github.com/louislam/uptime-kuma', { statusCheck: true, statusPos: 'top-right' });
+bookmark(2, monitoring, 3, 1, 'uptime-kuma', 'Uptime Kuma', 'https://github.com/louislam/uptime-kuma');
 bookmark(2, monitoring, 1, 2, 'netdata', 'Netdata', 'https://netdata.cloud');
 bookmark(2, monitoring, 2, 2, 'glances', 'Glances', 'https://nicolargo.github.io/glances');
 bookmark(2, monitoring, 3, 2, 'dozzle', 'Dozzle', 'https://dozzle.dev');

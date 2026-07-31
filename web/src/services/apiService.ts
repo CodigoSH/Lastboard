@@ -51,11 +51,30 @@ class ApiService {
                     return { message: 'Item deleted (Demo)' } as any;
                 }
 
-                // Health Check (Demo: report every bookmark as reachable/"up")
+                // Health Check (Demo: "up", except services in a synthetic outage)
                 if (url === '/api/dashboard/health/batch' && method === 'POST') {
-                    return Object.fromEntries((body.urls || []).map((u: string) => [u, 'up'])) as any;
+                    return demoService.healthFor(body.urls || []) as any;
                 }
                 if (url.startsWith('/api/dashboard/health')) return { status: 'up' } as any;
+
+                // Monitoring (Demo: synthetic history, see demoMonitor)
+                if (url === '/api/monitor/settings' && method === 'GET') {
+                    return demoService.fetchMonitorSettings() as any;
+                }
+                if (url === '/api/monitor/settings' && method === 'POST') {
+                    return demoService.saveMonitorSettings(body) as any;
+                }
+                if (url === '/api/monitor/overview') return demoService.fetchMonitorOverview() as any;
+                if (url.startsWith('/api/monitor/history') && method === 'GET') {
+                    const params = new URLSearchParams(url.split('?')[1] || '');
+                    return demoService.fetchMonitorHistory(
+                        parseInt(params.get('item_id') || '0', 10),
+                        params.get('range') || '24h') as any;
+                }
+                if (url.startsWith('/api/monitor/history') && method === 'DELETE') {
+                    return { ok: true, deleted: 0 } as any;
+                }
+                if (url === '/api/monitor/test') return { ok: true } as any;
 
                 // Multi-Dashboard (Demo: persisted in localStorage via demoService)
                 if (url === '/api/dashboards' && method === 'GET') return demoService.fetchDashboards() as any;
