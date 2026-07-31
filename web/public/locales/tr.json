@@ -546,5 +546,20 @@
   "settings.backup_full": "Tam yedek",
   "settings.backup_full_desc": "Her şeyi (kullanıcılar, panolar, ayarlar) kaydeder veya geri yükler. Kurtarma veya başka bir Lastboard örneğine taşıma için.",
   "settings.restore_overwrite_warn": "Geri yükleme mevcut tüm verilerin ÜZERİNE YAZAR. Geri alınamaz.",
-  "settings.import_creates_new": "Açık YAML'de taşınabilir panolar. İçe aktarma yeni panolar oluşturur — hiçbir şey silinmez."
+  "settings.import_creates_new": "Açık YAML'de taşınabilir panolar. İçe aktarma yeni panolar oluşturur — hiçbir şey silinmez.",
+  "widget.api.cat.infra": "Altyapı",
+  "widget.api.extra_node": "Düğüm",
+  "widget.api.extra_node_hint": "Proxmox arayüzünde göründüğü şekliyle düğüm adı.",
+  "widget.api.extra_entity": "Varlık kimliği",
+  "widget.api.extra_entity_hint": "Home Assistant'ta Geliştirici araçları → Durumlar bölümünde bulabilirsiniz.",
+  "widget.api.extra_slug": "Durum sayfası",
+  "widget.api.extra_slug_hint": "Uptime Kuma durum sayfanızın adresinin son bölümü.",
+  "widget.api.key_pve_hint": "Biçim: user@realm!tokenid=secret",
+  "widget.api.key_ha_hint": "Home Assistant profilinizde oluşturulan uzun ömürlü erişim anahtarı.",
+  "widget.api.label.ram": "Kullanılan RAM",
+  "widget.api.label.disk": "Kullanılan disk",
+  "widget.api.label.state": "Durum",
+  "widget.api.label.pending": "Bekleyen",
+  "widget.api.label.total": "Toplam",
+  "widget.api.label.episodes": "Bölümler"
 }

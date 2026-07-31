@@ -92,6 +92,42 @@
     overflow-y: auto;
 }
 
+/* Searchable variant: the filter box stays put and only the results scroll. */
+
+.select-dropdown--searchable.open {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.select-search {
+    flex-shrink: 0;
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.select-search input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text-main);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+}
+
+.select-search input:focus {
+    border-color: var(--accent-color);
+}
+
+.select-list {
+    overflow-y: auto;
+    min-height: 0;
+}
+
 /* Scrollbar styling */
 
 .select-header {

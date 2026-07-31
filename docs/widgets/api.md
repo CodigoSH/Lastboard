@@ -98,11 +98,25 @@ Presets fill in the endpoint and authentication for you. Items marked *(beta)* a
 | **Radarr** | Media | API key | Queue size |
 | **SABnzbd** | Downloads | API key | Queue, speed |
 | **Tautulli** | Media | API key | Active streams |
+| **Overseerr / Jellyseerr** | Media | API key | Pending, total requests |
+| **Bazarr** | Media | API key | Episodes, movies missing subtitles |
+| **Proxmox VE** | Infrastructure | API token + node | RAM and disk used |
+| **Home Assistant** | Infrastructure | Access token + entity | Entity state |
+| **Uptime Kuma** | Infrastructure | None + status page | Monitor list |
 | **Forgejo / Gitea** | Dev | Access token | Repository list |
 | **Speedtest Tracker** *(beta)* | Network | Bearer token | Download, upload |
 | **Nextcloud** *(beta)* | Files | `user:password` | Files, free space |
+| **Prowlarr** *(beta)* | Downloads | API key | Indexer list with query counts |
 
 > Where to find the credential varies per service — usually under Settings → API / Access Tokens. For AdGuard and Nextcloud, use the same username and password you log in with.
+
+Three presets need one extra detail because they read a specific thing rather than the whole server:
+
+- **Proxmox VE** — the **node** name shown in its web interface (for example `pve`). The token goes in as `user@realm!tokenid=secret`.
+- **Home Assistant** — the **entity ID** to display, found under *Developer tools → States*.
+- **Uptime Kuma** — the **status page** slug, the last part of that page's address. Status pages are public, so no credential is needed.
+
+The picker has a search box: start typing the service name instead of scrolling the list.
 
 ## How the Fetch Works
 

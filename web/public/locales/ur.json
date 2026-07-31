@@ -546,5 +546,20 @@
   "settings.backup_full": "مکمل بیک اپ",
   "settings.backup_full_desc": "سب کچھ (صارفین، ڈیش بورڈز، سیٹنگز) محفوظ یا بحال کرتا ہے۔ ریکوری یا دوسرے Lastboard انسٹینس پر منتقلی کے لیے۔",
   "settings.restore_overwrite_warn": "بحال کرنے سے تمام موجودہ ڈیٹا اوور رائٹ ہو جاتا ہے۔ واپس نہیں ہو سکتا۔",
-  "settings.import_creates_new": "کھلے YAML میں پورٹیبل ڈیش بورڈز۔ امپورٹ نئے ڈیش بورڈز بناتا ہے — کچھ حذف نہیں ہوتا۔"
+  "settings.import_creates_new": "کھلے YAML میں پورٹیبل ڈیش بورڈز۔ امپورٹ نئے ڈیش بورڈز بناتا ہے — کچھ حذف نہیں ہوتا۔",
+  "widget.api.cat.infra": "انفراسٹرکچر",
+  "widget.api.extra_node": "نوڈ",
+  "widget.api.extra_node_hint": "نوڈ کا وہی نام جو Proxmox انٹرفیس میں دکھائی دیتا ہے۔",
+  "widget.api.extra_entity": "اینٹیٹی آئی ڈی",
+  "widget.api.extra_entity_hint": "اسے Home Assistant میں Developer tools ← States کے تحت تلاش کریں۔",
+  "widget.api.extra_slug": "اسٹیٹس پیج",
+  "widget.api.extra_slug_hint": "آپ کے Uptime Kuma اسٹیٹس پیج کے پتے کا آخری حصہ۔",
+  "widget.api.key_pve_hint": "فارمیٹ: user@realm!tokenid=secret",
+  "widget.api.key_ha_hint": "ایک طویل المدت رسائی ٹوکن، جو آپ کے Home Assistant پروفائل میں بنتا ہے۔",
+  "widget.api.label.ram": "استعمال شدہ RAM",
+  "widget.api.label.disk": "استعمال شدہ ڈسک",
+  "widget.api.label.state": "حالت",
+  "widget.api.label.pending": "زیر التوا",
+  "widget.api.label.total": "کل",
+  "widget.api.label.episodes": "اقساط"
 }

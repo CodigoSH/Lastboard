@@ -26,3 +26,12 @@ exports[`Select templates renders the option list, marking the selected option 1
             </div>
         "
 `;
+
+exports[`Select templates renders the search box with an escaped placeholder 1`] = `
+"
+            <div class="select-search">
+                <input type="text" id="select-search-input" autocomplete="off" spellcheck="false"
+                       placeholder="Search a service…" />
+            </div>
+        "
+`;

@@ -24,11 +24,21 @@ export interface ApiPreset {
     keyLabelKey: string;      // i18n key for the credential field label
     keyHintKey?: string;      // i18n key for the credential field hint
     urlPlaceholder: string;
-    build: (baseUrl: string, key: string) => ApiPresetConfig;
+    /**
+     * Some services need one more piece to address the thing being read — a
+     * Proxmox node, a Home Assistant entity, an Uptime Kuma status page. Set
+     * the label to ask for it; the value arrives as build()'s third argument.
+     */
+    extraLabelKey?: string;
+    extraHintKey?: string;
+    extraPlaceholder?: string;
+    build: (baseUrl: string, key: string, extra?: string) => ApiPresetConfig;
 }
 
 const stripSlash = (u: string) => u.trim().replace(/\/+$/, '');
 const h = (o: Record<string, string>): Record<string, string> => o;
+/** Trims a user-typed path segment and makes it safe to splice into a URL. */
+const seg = (s?: string) => encodeURIComponent((s || '').trim());
 
 export const API_PRESETS: ApiPreset[] = [
     {
@@ -209,6 +219,127 @@ export const API_PRESETS: ApiPreset[] = [
             mappings: [
                 { label: i18n.t('widget.api.label.download'), path: 'data.download', format: 'bytes' },
                 { label: i18n.t('widget.api.label.upload'), path: 'data.upload', format: 'bytes' },
+            ],
+            refreshSec: 600,
+        }),
+    },
+    {
+        id: 'proxmox',
+        name: 'Proxmox VE',
+        category: 'infra',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_token',
+        keyHintKey: 'widget.api.key_pve_hint',
+        urlPlaceholder: 'https://10.0.0.3:8006',
+        extraLabelKey: 'widget.api.extra_node',
+        extraHintKey: 'widget.api.extra_node_hint',
+        extraPlaceholder: 'pve',
+        build: (base, key, extra) => ({
+            url: stripSlash(base) + '/api2/json/nodes/' + seg(extra) + '/status',
+            method: 'GET',
+            headers: key ? h({ Authorization: 'PVEAPIToken=' + key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.ram'), path: 'data.memory.used', format: 'bytes' },
+                { label: i18n.t('widget.api.label.disk'), path: 'data.rootfs.used', format: 'bytes' },
+            ],
+            refreshSec: 60,
+        }),
+    },
+    {
+        id: 'home-assistant',
+        name: 'Home Assistant',
+        category: 'infra',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_token',
+        keyHintKey: 'widget.api.key_ha_hint',
+        urlPlaceholder: 'http://10.0.0.4:8123',
+        extraLabelKey: 'widget.api.extra_entity',
+        extraHintKey: 'widget.api.extra_entity_hint',
+        extraPlaceholder: 'sensor.living_room_temperature',
+        build: (base, key, extra) => ({
+            url: stripSlash(base) + '/api/states/' + seg(extra),
+            method: 'GET',
+            headers: key ? h({ Authorization: 'Bearer ' + key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.state'), path: 'state' },
+            ],
+            refreshSec: 60,
+        }),
+    },
+    {
+        id: 'uptime-kuma',
+        name: 'Uptime Kuma',
+        category: 'infra',
+        // Status pages are public by design, so no credential is involved.
+        needsKey: false,
+        keyLabelKey: 'widget.api.key_token',
+        urlPlaceholder: 'http://10.0.0.14:3001',
+        extraLabelKey: 'widget.api.extra_slug',
+        extraHintKey: 'widget.api.extra_slug_hint',
+        extraPlaceholder: 'default',
+        build: (base, _key, extra) => ({
+            url: stripSlash(base) + '/api/status-page/' + seg(extra),
+            method: 'GET',
+            headers: {},
+            arrayPath: 'publicGroupList[0].monitorList',
+            mappings: [
+                { label: '', path: 'name' },
+            ],
+            refreshSec: 120,
+        }),
+    },
+    {
+        id: 'overseerr',
+        name: 'Overseerr / Jellyseerr',
+        category: 'media',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.15:5055',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/api/v1/request/count',
+            method: 'GET',
+            headers: key ? h({ 'X-Api-Key': key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.pending'), path: 'pending', format: 'number' },
+                { label: i18n.t('widget.api.label.total'), path: 'total', format: 'number' },
+            ],
+            refreshSec: 300,
+        }),
+    },
+    {
+        id: 'bazarr',
+        name: 'Bazarr',
+        category: 'media',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.16:6767',
+        build: (base, key) => ({
+            url: stripSlash(base) + '/api/badges',
+            method: 'GET',
+            headers: key ? h({ 'X-API-KEY': key }) : {},
+            mappings: [
+                { label: i18n.t('widget.api.label.episodes'), path: 'episodes', format: 'number' },
+                { label: i18n.t('widget.api.label.movies'), path: 'movies', format: 'number' },
+            ],
+            refreshSec: 300,
+        }),
+    },
+    {
+        id: 'prowlarr',
+        name: 'Prowlarr (beta)',
+        category: 'downloads',
+        needsKey: true,
+        keyLabelKey: 'widget.api.key_apikey',
+        urlPlaceholder: 'http://10.0.0.17:9696',
+        build: (base, key) => ({
+            // List mode: one row per indexer with its query count.
+            url: stripSlash(base) + '/api/v1/indexerstats',
+            method: 'GET',
+            headers: key ? h({ 'X-Api-Key': key }) : {},
+            arrayPath: 'indexers',
+            mappings: [
+                { label: '', path: 'indexerName' },
+                { label: '', path: 'numberOfQueries', format: 'number' },
             ],
             refreshSec: 600,
         }),

@@ -546,5 +546,20 @@
   "settings.backup_full": "전체 백업",
   "settings.backup_full_desc": "모든 것(사용자, 대시보드, 설정)을 저장하거나 복원합니다. 복구 또는 다른 Lastboard 인스턴스로 이동용.",
   "settings.restore_overwrite_warn": "복원하면 현재 모든 데이터를 덮어씁니다. 되돌릴 수 없습니다.",
-  "settings.import_creates_new": "개방형 YAML의 이식 가능한 대시보드. 가져오기는 새 대시보드를 만들며 아무것도 삭제하지 않습니다."
+  "settings.import_creates_new": "개방형 YAML의 이식 가능한 대시보드. 가져오기는 새 대시보드를 만들며 아무것도 삭제하지 않습니다.",
+  "widget.api.cat.infra": "인프라",
+  "widget.api.extra_node": "노드",
+  "widget.api.extra_node_hint": "Proxmox 화면에 표시되는 노드 이름입니다.",
+  "widget.api.extra_entity": "엔티티 ID",
+  "widget.api.extra_entity_hint": "Home Assistant의 개발자 도구 → 상태에서 확인할 수 있습니다.",
+  "widget.api.extra_slug": "상태 페이지",
+  "widget.api.extra_slug_hint": "Uptime Kuma 상태 페이지 주소의 마지막 부분입니다.",
+  "widget.api.key_pve_hint": "형식: user@realm!tokenid=secret",
+  "widget.api.key_ha_hint": "Home Assistant 프로필에서 만드는 장기 액세스 토큰입니다.",
+  "widget.api.label.ram": "사용 중 RAM",
+  "widget.api.label.disk": "사용 중 디스크",
+  "widget.api.label.state": "상태",
+  "widget.api.label.pending": "대기 중",
+  "widget.api.label.total": "전체",
+  "widget.api.label.episodes": "에피소드"
 }

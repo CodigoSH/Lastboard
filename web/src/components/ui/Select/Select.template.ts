@@ -25,6 +25,28 @@ export const selectTriggerTemplate = (displayLabel: string): string => `
         `;
 
 /**
+ * Search box shown at the top of a searchable dropdown. Sits outside the
+ * scrolling list so it stays put while the results move.
+ */
+export const selectSearchTemplate = (placeholder: string): string => `
+            <div class="select-search">
+                <input type="text" id="select-search-input" autocomplete="off" spellcheck="false"
+                       placeholder="${escapeHtml(placeholder)}" />
+            </div>
+        `;
+
+/**
+ * Narrows a list of options to those matching a query. Category headers are
+ * dropped while searching: a flat list of hits reads better than groups that
+ * may have gone empty. An empty query returns the list untouched.
+ */
+export const filterSelectOptions = (options: SelectOption[], query: string): SelectOption[] => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter(opt => !opt.header && opt.label.toLowerCase().includes(q));
+};
+
+/**
  * Markup for the open dropdown's option list.
  */
 export const selectOptionsTemplate = (options: SelectOption[], selectedValue: string): string =>

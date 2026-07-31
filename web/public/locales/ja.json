@@ -546,5 +546,20 @@
   "settings.backup_full": "完全バックアップ",
   "settings.backup_full_desc": "すべて（ユーザー、ダッシュボード、設定）を保存・復元します。復旧や別の Lastboard インスタンスへの移行用。",
   "settings.restore_overwrite_warn": "復元すると現在のすべてのデータが上書きされます。元に戻せません。",
-  "settings.import_creates_new": "開かれた YAML のポータブルなダッシュボード。インポートは新しいダッシュボードを作成し、何も削除しません。"
+  "settings.import_creates_new": "開かれた YAML のポータブルなダッシュボード。インポートは新しいダッシュボードを作成し、何も削除しません。",
+  "widget.api.cat.infra": "インフラ",
+  "widget.api.extra_node": "ノード",
+  "widget.api.extra_node_hint": "Proxmox の画面に表示されているノード名です。",
+  "widget.api.extra_entity": "エンティティ ID",
+  "widget.api.extra_entity_hint": "Home Assistant の「開発者ツール」→「状態」で確認できます。",
+  "widget.api.extra_slug": "ステータスページ",
+  "widget.api.extra_slug_hint": "Uptime Kuma のステータスページのアドレス末尾の部分です。",
+  "widget.api.key_pve_hint": "形式：user@realm!tokenid=secret",
+  "widget.api.key_ha_hint": "Home Assistant のプロフィールで作成する長期アクセストークンです。",
+  "widget.api.label.ram": "使用中のRAM",
+  "widget.api.label.disk": "使用中のディスク",
+  "widget.api.label.state": "状態",
+  "widget.api.label.pending": "保留中",
+  "widget.api.label.total": "合計",
+  "widget.api.label.episodes": "エピソード"
 }

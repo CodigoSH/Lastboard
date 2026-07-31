@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'bun:test';
-import { selectTriggerTemplate, selectOptionsTemplate, SelectOption } from './Select.template';
+import {
+    selectTriggerTemplate, selectOptionsTemplate, selectSearchTemplate,
+    filterSelectOptions, SelectOption,
+} from './Select.template';
 
 /**
  * Snapshot characterization for the Select templates. Freezes the rendered
@@ -29,5 +32,41 @@ describe('Select templates', () => {
 
     it('renders an empty string for no options', () => {
         expect(selectOptionsTemplate([], '')).toBe('');
+    });
+
+    it('renders the search box with an escaped placeholder', () => {
+        const out = selectSearchTemplate('Search a service…');
+        expect(out).toContain('id="select-search-input"');
+        expect(out).toContain('placeholder="Search a service…"');
+        expect(out).toMatchSnapshot();
+    });
+});
+
+describe('filterSelectOptions', () => {
+    const options: SelectOption[] = [
+        { value: '', label: 'Advanced (custom)' },
+        { value: '', label: 'Media', header: true },
+        { value: 'jellyfin', label: 'Jellyfin' },
+        { value: 'sonarr', label: 'Sonarr' },
+        { value: '', label: 'Infrastructure', header: true },
+        { value: 'proxmox', label: 'Proxmox VE' },
+    ];
+
+    it('returns the list untouched for an empty query', () => {
+        expect(filterSelectOptions(options, '')).toEqual(options);
+        expect(filterSelectOptions(options, '   ')).toEqual(options);
+    });
+
+    it('matches case-insensitively on any part of the label', () => {
+        expect(filterSelectOptions(options, 'PROX').map(o => o.value)).toEqual(['proxmox']);
+        expect(filterSelectOptions(options, 'arr').map(o => o.value)).toEqual(['sonarr']);
+    });
+
+    it('drops category headers while searching', () => {
+        expect(filterSelectOptions(options, 'a').some(o => o.header)).toBe(false);
+    });
+
+    it('returns nothing when no option matches', () => {
+        expect(filterSelectOptions(options, 'zzz')).toEqual([]);
     });
 });

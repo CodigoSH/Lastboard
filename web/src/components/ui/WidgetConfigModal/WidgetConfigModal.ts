@@ -218,7 +218,7 @@ class WidgetConfigModal extends HTMLElement {
                 const presetSel = this.shadowRoot.getElementById('api-preset') as AppSelect | null;
                 if (presetSel) {
                     // Advanced first, then presets grouped under category headers.
-                    const catOrder = ['media', 'network', 'files', 'downloads', 'dev'];
+                    const catOrder = ['media', 'network', 'infra', 'files', 'downloads', 'dev'];
                     const opts: SelectOption[] = [
                         { value: '', label: i18n.t('widget.api.preset_custom') || 'Advanced (custom)' },
                     ];
@@ -229,6 +229,11 @@ class WidgetConfigModal extends HTMLElement {
                         for (const p of inCat) opts.push({ value: p.id, label: p.name });
                     }
                     presetSel.options = opts;
+                    // The list is long enough that scanning it is slower than
+                    // typing the service name. Same wording as the status page
+                    // search, which does the same job.
+                    presetSel.searchable = true;
+                    presetSel.searchPlaceholder = i18n.t('monitor.search_placeholder');
                 }
 
                 const applyPresetUI = (id: string) => {
@@ -246,6 +251,17 @@ class WidgetConfigModal extends HTMLElement {
                         if (keyHint) keyHint.textContent = p.keyHintKey ? i18n.t(p.keyHintKey) : '';
                         if (keyGroup) keyGroup.style.display = p.needsKey ? 'block' : 'none';
                         if (baseInput) baseInput.placeholder = p.urlPlaceholder;
+
+                        // Third field: only the presets that address a specific
+                        // node/entity/page ask for it.
+                        const extraGroup = this.shadowRoot!.getElementById('api-extra-group') as HTMLElement | null;
+                        const extraLabel = this.shadowRoot!.getElementById('api-extra-label');
+                        const extraHint = this.shadowRoot!.getElementById('api-extra-hint');
+                        const extraInput = this.shadowRoot!.getElementById('api-extra') as HTMLInputElement | null;
+                        if (extraGroup) extraGroup.style.display = p.extraLabelKey ? 'block' : 'none';
+                        if (extraLabel && p.extraLabelKey) extraLabel.textContent = i18n.t(p.extraLabelKey);
+                        if (extraHint) extraHint.textContent = p.extraHintKey ? i18n.t(p.extraHintKey) : '';
+                        if (extraInput) extraInput.placeholder = p.extraPlaceholder || '';
                     }
                 };
                 if (presetSel) {
@@ -420,11 +436,13 @@ class WidgetConfigModal extends HTMLElement {
                 const preset = getPreset(presetId);
                 const base = val('api-baseurl').trim();
                 const key = val('api-key');
+                const extra = val('api-extra').trim();
                 if (preset) {
-                    const cfg = preset.build(base, key);
+                    const cfg = preset.build(base, key, extra);
                     newContent.preset = presetId;
                     newContent.baseUrl = base;
                     newContent.apiKey = key;
+                    newContent.apiExtra = extra;
                     newContent.url = cfg.url;
                     newContent.method = cfg.method || 'GET';
                     newContent.headers = cfg.headers || {};
@@ -703,6 +721,7 @@ class WidgetConfigModal extends HTMLElement {
                 const preset = content.preset || '';
                 const baseUrl = content.baseUrl || '';
                 const apiKey = content.apiKey || '';
+                const apiExtra = content.apiExtra || '';
                 const headersText = Object.entries(content.headers || {})
                     .map(([k, v]) => `${k}: ${v}`).join('\n');
                 const fieldsText = (Array.isArray(content.mappings) ? content.mappings : [])
@@ -728,6 +747,11 @@ class WidgetConfigModal extends HTMLElement {
                             <label id="api-key-label">${i18n.t('widget.api.key_apikey') || 'API Key'}</label>
                             <input type="text" id="api-key" value="${esc(apiKey)}" spellcheck="false" placeholder="" />
                             <small id="api-key-hint"></small>
+                        </div>
+                        <div class="field-group" id="api-extra-group" style="display:none">
+                            <label id="api-extra-label"></label>
+                            <input type="text" id="api-extra" value="${esc(apiExtra)}" spellcheck="false" placeholder="" />
+                            <small id="api-extra-hint"></small>
                         </div>
                     </div>
 

@@ -546,5 +546,20 @@
   "settings.backup_full": "Cópia de segurança completa",
   "settings.backup_full_desc": "Guarda ou restaura tudo (utilizadores, painéis, definições). Para recuperação ou mudança para outra instância Lastboard.",
   "settings.restore_overwrite_warn": "Restaurar SOBRESCREVE todos os dados atuais. Não pode ser desfeito.",
-  "settings.import_creates_new": "Painéis portáteis em YAML aberto. Importar cria painéis novos — nada é apagado."
+  "settings.import_creates_new": "Painéis portáteis em YAML aberto. Importar cria painéis novos — nada é apagado.",
+  "widget.api.cat.infra": "Infraestrutura",
+  "widget.api.extra_node": "Nó",
+  "widget.api.extra_node_hint": "O nome do nó tal como aparece na interface do Proxmox.",
+  "widget.api.extra_entity": "ID da entidade",
+  "widget.api.extra_entity_hint": "Encontra-o no Home Assistant em Ferramentas de programador → Estados.",
+  "widget.api.extra_slug": "Página de estado",
+  "widget.api.extra_slug_hint": "A última parte do endereço da sua página de estado do Uptime Kuma.",
+  "widget.api.key_pve_hint": "Formato: user@realm!tokenid=secret",
+  "widget.api.key_ha_hint": "Um token de acesso de longa duração, criado no seu perfil do Home Assistant.",
+  "widget.api.label.ram": "RAM usada",
+  "widget.api.label.disk": "Disco usado",
+  "widget.api.label.state": "Estado",
+  "widget.api.label.pending": "Pendentes",
+  "widget.api.label.total": "Total",
+  "widget.api.label.episodes": "Episódios"
 }

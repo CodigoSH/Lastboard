@@ -546,5 +546,20 @@
   "settings.backup_full": "پشتیبان کامل",
   "settings.backup_full_desc": "همه چیز را ذخیره یا بازیابی می‌کند (کاربران، داشبوردها، تنظیمات). برای بازیابی یا انتقال به نمونه دیگر Lastboard.",
   "settings.restore_overwrite_warn": "بازیابی همه داده‌های فعلی را بازنویسی می‌کند. قابل بازگشت نیست.",
-  "settings.import_creates_new": "داشبوردهای قابل‌حمل در YAML باز. وارد کردن داشبورد جدید می‌سازد — چیزی حذف نمی‌شود."
+  "settings.import_creates_new": "داشبوردهای قابل‌حمل در YAML باز. وارد کردن داشبورد جدید می‌سازد — چیزی حذف نمی‌شود.",
+  "widget.api.cat.infra": "زیرساخت",
+  "widget.api.extra_node": "گره",
+  "widget.api.extra_node_hint": "نام گره همان‌طور که در رابط Proxmox نمایش داده می‌شود.",
+  "widget.api.extra_entity": "شناسه موجودیت",
+  "widget.api.extra_entity_hint": "آن را در Home Assistant در بخش ابزارهای توسعه‌دهنده ← وضعیت‌ها پیدا می‌کنید.",
+  "widget.api.extra_slug": "صفحه وضعیت",
+  "widget.api.extra_slug_hint": "بخش پایانی نشانی صفحه وضعیت Uptime Kuma شما.",
+  "widget.api.key_pve_hint": "قالب: user@realm!tokenid=secret",
+  "widget.api.key_ha_hint": "یک توکن دسترسی بلندمدت که در نمایه Home Assistant خود می‌سازید.",
+  "widget.api.label.ram": "رم مصرف‌شده",
+  "widget.api.label.disk": "دیسک مصرف‌شده",
+  "widget.api.label.state": "وضعیت",
+  "widget.api.label.pending": "در انتظار",
+  "widget.api.label.total": "مجموع",
+  "widget.api.label.episodes": "قسمت‌ها"
 }

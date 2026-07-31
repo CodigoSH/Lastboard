@@ -546,5 +546,20 @@
   "settings.backup_full": "Vollständige Sicherung",
   "settings.backup_full_desc": "Sichert oder stellt alles wieder her (Benutzer, Dashboards, Einstellungen). Für Wiederherstellung oder Umzug auf eine andere Lastboard-Instanz.",
   "settings.restore_overwrite_warn": "Wiederherstellen ÜBERSCHREIBT alle aktuellen Daten. Nicht umkehrbar.",
-  "settings.import_creates_new": "Portable Dashboards in offenem YAML. Import erstellt neue Dashboards – nichts wird gelöscht."
+  "settings.import_creates_new": "Portable Dashboards in offenem YAML. Import erstellt neue Dashboards – nichts wird gelöscht.",
+  "widget.api.cat.infra": "Infrastruktur",
+  "widget.api.extra_node": "Knoten",
+  "widget.api.extra_node_hint": "Der Knotenname, wie er in der Proxmox-Oberfläche erscheint.",
+  "widget.api.extra_entity": "Entitäts-ID",
+  "widget.api.extra_entity_hint": "Zu finden in Home Assistant unter Entwicklerwerkzeuge → Zustände.",
+  "widget.api.extra_slug": "Statusseite",
+  "widget.api.extra_slug_hint": "Der letzte Teil der Adresse Ihrer Uptime-Kuma-Statusseite.",
+  "widget.api.key_pve_hint": "Format: user@realm!tokenid=secret",
+  "widget.api.key_ha_hint": "Ein langlebiges Zugriffstoken, das Sie in Ihrem Home-Assistant-Profil erstellen.",
+  "widget.api.label.ram": "Genutzter RAM",
+  "widget.api.label.disk": "Belegter Speicher",
+  "widget.api.label.state": "Zustand",
+  "widget.api.label.pending": "Ausstehend",
+  "widget.api.label.total": "Gesamt",
+  "widget.api.label.episodes": "Folgen"
 }

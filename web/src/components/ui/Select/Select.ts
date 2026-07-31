@@ -1,10 +1,16 @@
 
 import css from './Select.css' with { type: 'text' };
-import { SelectOption, selectTriggerTemplate, selectOptionsTemplate } from './Select.template';
+import {
+    SelectOption, selectTriggerTemplate, selectOptionsTemplate,
+    selectSearchTemplate, filterSelectOptions,
+} from './Select.template';
 
 export class AppSelect extends HTMLElement {
     private _options: SelectOption[] = [];
     private _value: string = '';
+    private _searchable = false;
+    private _searchPlaceholder = '';
+    private listEl: HTMLElement | null = null;
     private isOpen: boolean = false;
     private _boundOutsideClick: (e: Event) => void;
     private dropdownEl: HTMLElement | null = null;
@@ -70,6 +76,18 @@ export class AppSelect extends HTMLElement {
         this.updateTriggerDisplay();
     }
 
+    /**
+     * Opt-in filter box for long lists. Off by default so every other select in
+     * the app keeps behaving exactly as before.
+     */
+    set searchable(on: boolean) {
+        this._searchable = !!on;
+    }
+
+    set searchPlaceholder(text: string) {
+        this._searchPlaceholder = text || '';
+    }
+
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         if (name === 'value' && oldValue !== newValue) {
             this._value = newValue;
@@ -103,17 +121,30 @@ export class AppSelect extends HTMLElement {
         this.setAttribute('open', '');
 
         this.dropdownEl = document.createElement('div');
-        this.dropdownEl.className = 'select-dropdown';
+        this.dropdownEl.className = 'select-dropdown' + (this._searchable ? ' select-dropdown--searchable' : '');
 
-        this.dropdownEl.innerHTML = selectOptionsTemplate(this._options, this._value);
+        if (this._searchable) {
+            this.dropdownEl.innerHTML =
+                selectSearchTemplate(this._searchPlaceholder) + `<div class="select-list"></div>`;
+            this.listEl = this.dropdownEl.querySelector('.select-list');
+            this.paintOptions(this._options);
 
-        this.dropdownEl.querySelectorAll('.select-option').forEach(el => {
-            el.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const val = (e.currentTarget as HTMLElement).dataset.value;
+            const input = this.dropdownEl.querySelector('#select-search-input') as HTMLInputElement | null;
+            input?.addEventListener('click', (e) => e.stopPropagation());
+            input?.addEventListener('input', () => {
+                this.paintOptions(filterSelectOptions(this._options, input.value));
+            });
+            input?.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                const first = this.listEl?.querySelector('.select-option') as HTMLElement | null;
+                const val = first?.dataset.value;
                 if (val !== undefined) this.selectOption(val);
             });
-        });
+        } else {
+            this.listEl = this.dropdownEl;
+            this.paintOptions(this._options);
+        }
 
         if (this.isInsideDialog) {
             // Inside dialog: append to shadow DOM to avoid inertness
@@ -141,7 +172,21 @@ export class AppSelect extends HTMLElement {
         requestAnimationFrame(() => {
             if (this.dropdownEl) {
                 this.dropdownEl.classList.add('open');
+                (this.dropdownEl.querySelector('#select-search-input') as HTMLInputElement | null)?.focus();
             }
+        });
+    }
+
+    /** Fills the option list and wires the click handlers for those options. */
+    private paintOptions(options: SelectOption[]) {
+        if (!this.listEl) return;
+        this.listEl.innerHTML = selectOptionsTemplate(options, this._value);
+        this.listEl.querySelectorAll('.select-option').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const val = (e.currentTarget as HTMLElement).dataset.value;
+                if (val !== undefined) this.selectOption(val);
+            });
         });
     }
 
@@ -150,6 +195,7 @@ export class AppSelect extends HTMLElement {
             this.dropdownEl.remove();
             this.dropdownEl = null;
         }
+        this.listEl = null;
         this.isOpen = false;
         this.removeAttribute('open');
     }
