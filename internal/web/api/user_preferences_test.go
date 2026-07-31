@@ -250,3 +250,66 @@ func TestUpdatePreferences_LogoTooLarge(t *testing.T) {
 		t.Errorf("expected 400, got %d", code)
 	}
 }
+
+// Omitting project_logo entirely keeps whatever is stored; only an explicit
+// value replaces it, and an explicit empty string clears it.
+func TestUpdatePreferences_OmittedLogoIsPreserved(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	s := doLogin(t, server.URL, "alice", "password")
+
+	if code := postPrefs(t, server.URL, s, `{"project_logo":"data:image/png;base64,AAA"}`); code != http.StatusOK {
+		t.Fatalf("seed failed: %d", code)
+	}
+	if code := postPrefs(t, server.URL, s, `{"accent_color":"teal"}`); code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", code)
+	}
+	if got := prefString(t, db.DB, "alice", "project_logo"); got != "data:image/png;base64,AAA" {
+		t.Errorf("project_logo = %q, want the seeded logo preserved", got)
+	}
+
+	if code := postPrefs(t, server.URL, s, `{"project_logo":""}`); code != http.StatusOK {
+		t.Fatalf("expected 200 when clearing, got %d", code)
+	}
+	if got := prefString(t, db.DB, "alice", "project_logo"); got != "" {
+		t.Errorf("project_logo = %q, want it cleared", got)
+	}
+}
+
+// The background is always written, so omitting it clears whatever was stored.
+func TestUpdatePreferences_OmittedBackgroundIsCleared(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	s := doLogin(t, server.URL, "alice", "password")
+
+	if code := postPrefs(t, server.URL, s, `{"dashboard_background":"#123456"}`); code != http.StatusOK {
+		t.Fatalf("seed failed: %d", code)
+	}
+	if got := prefString(t, db.DB, "alice", "dashboard_background"); got != "#123456" {
+		t.Fatalf("dashboard_background = %q, want #123456", got)
+	}
+
+	if code := postPrefs(t, server.URL, s, `{"accent_color":"teal"}`); code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", code)
+	}
+	if got := prefString(t, db.DB, "alice", "dashboard_background"); got != "" {
+		t.Errorf("dashboard_background = %q, want it cleared", got)
+	}
+}
+
+func TestUpdatePreferences_BackgroundTooLarge(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	s := doLogin(t, server.URL, "alice", "password")
+
+	bigBackground := strings.Repeat("x", 2*1024*1024+1)
+	if code := postPrefs(t, server.URL, s, `{"dashboard_background":"`+bigBackground+`"}`); code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", code)
+	}
+}

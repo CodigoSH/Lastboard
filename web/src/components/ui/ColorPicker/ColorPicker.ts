@@ -1,5 +1,6 @@
 import css from './ColorPicker.css' with { type: 'text' };
 import { colorPickerTemplate } from './ColorPicker.template';
+import { hexToHsv, hsvToHex } from '../../../services/colorMath';
 
 export class ColorPicker extends HTMLElement {
     static get observedAttributes() {
@@ -280,7 +281,7 @@ export class ColorPicker extends HTMLElement {
     }
 
     private updateColorFromHsv() {
-        this._value = this.hsvToHex(this._h, this._s, this._v);
+        this._value = hsvToHex(this._h, this._s, this._v);
     }
 
     private updateUI() {
@@ -293,7 +294,7 @@ export class ColorPicker extends HTMLElement {
 
         // Update Backgrounds
         // Saturation area bg color is purely Hue
-        const hueColor = this.hsvToHex(this._h, 100, 100);
+        const hueColor = hsvToHex(this._h, 100, 100);
         this._satArea.style.backgroundColor = hueColor;
 
         this._hexInput.value = this._value;
@@ -304,67 +305,13 @@ export class ColorPicker extends HTMLElement {
 
     // --- Helpers ---
 
+    /** Loads a hex colour into the picker's state, ignoring unparseable input. */
     private hexToHsv(hex: string) {
-        // Expand shorthand
-        const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-        hex = hex.replace(shorthandRegex, (_m, r, g, b) => r + r + g + g + b + b);
-
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        if (!result) return;
-
-        const r = parseInt(result[1], 16) / 255;
-        const g = parseInt(result[2], 16) / 255;
-        const b = parseInt(result[3], 16) / 255;
-
-        const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h = 0, s, v = max;
-
-        const d = max - min;
-        s = max === 0 ? 0 : d / max;
-
-        if (max === min) {
-            h = 0; // achromatic
-        } else {
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
-        }
-
-        this._h = h * 360;
-        this._s = s * 100;
-        this._v = v * 100;
-    }
-
-    private hsvToHex(h: number, s: number, v: number) {
-        s /= 100;
-        v /= 100;
-
-        const i = Math.floor(h / 60);
-        const f = h / 60 - i;
-        const p = v * (1 - s);
-        const q = v * (1 - f * s);
-        const t = v * (1 - (1 - f) * s);
-
-        let r = 0, g = 0, b = 0;
-
-        switch (i % 6) {
-            case 0: r = v; g = t; b = p; break;
-            case 1: r = q; g = v; b = p; break;
-            case 2: r = p; g = v; b = t; break;
-            case 3: r = p; g = q; b = v; break;
-            case 4: r = t; g = p; b = v; break;
-            case 5: r = v; g = p; b = q; break;
-        }
-
-        const toHex = (x: number) => {
-            const hex = Math.round(x * 255).toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
-        };
-
-        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        const hsv = hexToHsv(hex);
+        if (!hsv) return;
+        this._h = hsv.h;
+        this._s = hsv.s;
+        this._v = hsv.v;
     }
 }
 
