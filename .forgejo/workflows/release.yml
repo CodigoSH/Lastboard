@@ -226,3 +226,34 @@ jobs:
             "${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}/actions/workflows/prune-releases.yml/dispatches")
           echo "Prune dispatch HTTP $CODE"
           [ "$CODE" = "204" ] || { echo "Prune dispatch failed (HTTP $CODE)"; exit 1; }
+
+  # The website reads the latest release from the Forgejo API at build time, and
+  # its Coolify deploy webhook fires on push — which happens minutes before this
+  # release exists (and while it is still a draft). A site built then advertises
+  # the previous version until some unrelated push rebuilds it. Rebuilding here,
+  # gated on a published release, is the only trigger that sees this version.
+  trigger-site-rebuild:
+    name: Rebuild the website
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Redeploy codigosh-web after successful publish
+        env:
+          COOLIFY_DEPLOY_URL: ${{ secrets.COOLIFY_DEPLOY_URL }}
+          COOLIFY_DEPLOY_TOKEN: ${{ secrets.COOLIFY_DEPLOY_TOKEN }}
+        run: |
+          # Optional: releases must not fail because the hook is not configured.
+          if [ -z "$COOLIFY_DEPLOY_URL" ] || [ -z "$COOLIFY_DEPLOY_TOKEN" ]; then
+            echo "Coolify deploy secrets not set — skipping website rebuild."
+            exit 0
+          fi
+          # The endpoint authenticates with a Coolify API token; without the
+          # header it answers 401.
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
+            "$COOLIFY_DEPLOY_URL")
+          echo "Website rebuild HTTP $CODE"
+          case "$CODE" in
+            2*) echo "Website rebuild requested." ;;
+            *)  echo "Website rebuild failed (HTTP $CODE)"; exit 1 ;;
+          esac
