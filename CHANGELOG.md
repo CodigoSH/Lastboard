@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-08-01
+
+### Added
+- Add six API presets and a searchable service picker
+- Show uptime monitoring in the demo
+- Six more API widget presets, a searchable service picker and uptime monitoring in the demo
+
+### Changed
+- Chore(go): point the module path at the real repository
+- Cover the updater file helpers and extract the colour maths
+- Docs(api-widget): cover the third preset field and the list-mode limit
+
 ## [1.6.0] - 2026-07-31
 
 ### Added
