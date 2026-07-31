@@ -8,7 +8,7 @@ The API widget turns any JSON HTTP endpoint into a live tile on your dashboard. 
 
 Most self-hosted apps expose a JSON API. The API widget fetches one and renders selected fields, either as **big metric numbers** or as a **scrolling list**. The request runs **on the Lastboard server**, not in your browser — so it can reach services on private IPs and accept self-signed certificates, which a browser can't do because of CORS and network isolation.
 
-Typical uses: AdGuard blocked-queries, Paperless document counts, Immich photo/video totals, Sonarr/Radarr queue size, a Forgejo repo list, and anything else with a JSON endpoint.
+Typical uses: AdGuard blocked-queries, Paperless document counts, Immich photo/video totals, Sonarr/Radarr queue size, memory and disk on a Proxmox node, a Home Assistant sensor reading, a Forgejo repo list, and anything else with a JSON endpoint.
 
 ## Two Ways to Configure It
 
@@ -16,12 +16,13 @@ When you add an API widget, its configuration offers two approaches:
 
 ### 1. Service preset (guided)
 
-Pick a known service from the list and you only fill **one or two fields** — usually the base URL and an API key or token. Lastboard composes the full request (endpoint path, auth header, field mappings) for you.
+Pick a known service from the list and you only fill **one to three fields** — the base URL, usually an API key or token, and for a few services one extra detail. Lastboard composes the full request (endpoint path, auth header, field mappings) for you. The picker has a search box: start typing the service name instead of scrolling the list.
 
 | Field | Example |
 | :--- | :--- |
 | **Base URL** | `http://10.0.0.5:8000` (host and port, no trailing path) |
 | **Credential** | An API key, token, or `user:password`, depending on the service |
+| **Extra detail** *(a few services)* | The specific node, entity or status page to read — see [Supported Service Presets](#supported-service-presets) |
 
 ### 2. Advanced (manual)
 
@@ -39,6 +40,8 @@ Full control for any endpoint that has no preset. Set the **Service** selector t
 | **Refresh** | How often to re-fetch (minimum **15s**). |
 
 > Services that authenticate with a login session rather than a token or API key (for example qBittorrent, Deluge, or UniFi) are not offered as presets and must be configured in Advanced mode if their API supports header/token auth.
+
+> **List mode needs a nested array.** The **List array** field takes a path to an array *inside* the response object, so an endpoint that answers with a **top-level array** (Portainer's `/api/endpoints`, for example) can't be shown as a list — there is no path to point at. If the API offers an alternative endpoint that wraps its array in an object, use that one; otherwise the endpoint only works in metric mode with indexed paths such as `[0].name`.
 
 ## Display Modes
 
@@ -116,8 +119,6 @@ Three presets need one extra detail because they read a specific thing rather th
 - **Home Assistant** — the **entity ID** to display, found under *Developer tools → States*.
 - **Uptime Kuma** — the **status page** slug, the last part of that page's address. Status pages are public, so no credential is needed.
 
-The picker has a search box: start typing the service name instead of scrolling the list.
-
 ## How the Fetch Works
 
 - **Server-side.** Lastboard's backend makes the request, so the target can be a **private IP** (`10.x`, `192.168.x`, `.local`) unreachable from your browser.
@@ -134,4 +135,5 @@ The picker has a search box: start typing the service name instead of scrolling 
 | **Unreachable** | Wrong host/port, service down, or the credential is missing/invalid. Confirm the URL works with `curl` from the Lastboard host. |
 | **All values show `—`** | The **path** doesn't match the JSON. Check the real response shape and adjust the path. |
 | **Empty list** | The **array path** doesn't point at an array, or the array is empty. |
+| **A list is impossible to configure** | The response is a **top-level array** rather than an object, so there is no path to give the **List array** field. See the note in [Advanced](#2-advanced-manual). |
 | **A number looks wrong** | The field isn't numeric — remove the **Number/Bytes/Percent** format, or pick the correct one. |
