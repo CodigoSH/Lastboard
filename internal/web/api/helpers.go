@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
-	"github.com/CodigoSH/Lastboard/internal/web/util"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 // isAdminUser checks whether the currently authenticated user is the first admin

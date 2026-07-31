@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/core/dashboard"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/dashboard"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // dnsCache caches hostname→IP resolutions for 30s to avoid repeated lookups

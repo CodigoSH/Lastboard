@@ -1,4 +1,4 @@
-module github.com/CodigoSH/Lastboard
+module git.codigosh.com/CodigoSH/Lastboard
 
 go 1.26.5
 

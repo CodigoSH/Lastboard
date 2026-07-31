@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/CodigoSH/Lastboard/internal/core/dashboard"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/dashboard"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // MultiDashboardHandler handles CRUD operations for dashboards.

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/CodigoSH/Lastboard/internal/web/util"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 type contextKey string

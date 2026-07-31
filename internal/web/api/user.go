@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/core/user"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/user"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 

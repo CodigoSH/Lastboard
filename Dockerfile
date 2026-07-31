@@ -41,7 +41,7 @@ ARG VERSION=dev
 # Build main binary (timetzdata embeds timezone DB in the binary)
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -tags timetzdata \
-    -ldflags="-s -w -X github.com/CodigoSH/Lastboard/internal/version.Current=${VERSION}" \
+    -ldflags="-s -w -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=${VERSION}" \
     -o /app/lastboard ./cmd/lastboard
 
 # Build healthcheck binary for target platform

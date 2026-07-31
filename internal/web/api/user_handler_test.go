@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/CodigoSH/Lastboard/internal/platform/database"
-	"github.com/CodigoSH/Lastboard/internal/web/api"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // userSession holds both cookies needed for authenticated requests.

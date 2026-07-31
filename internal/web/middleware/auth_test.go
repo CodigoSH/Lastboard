@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/platform/database"
-	"github.com/CodigoSH/Lastboard/internal/web/util"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	_ "modernc.org/sqlite"
 )
 

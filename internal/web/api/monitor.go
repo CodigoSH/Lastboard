@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // MonitorCheck is one recorded probe of a monitored bookmark. LatencyMs is nil

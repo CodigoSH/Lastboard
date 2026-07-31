@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"gopkg.in/yaml.v3"
 )
 

@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/CodigoSH/Lastboard/internal/web/util"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 const (

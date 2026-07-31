@@ -11,9 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/platform/database"
-	"github.com/CodigoSH/Lastboard/internal/version"
-	"github.com/CodigoSH/Lastboard/internal/web"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web"
 )
 
 func main() {

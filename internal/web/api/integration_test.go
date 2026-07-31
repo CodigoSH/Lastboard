@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/platform/database"
-	"github.com/CodigoSH/Lastboard/internal/web/api"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 

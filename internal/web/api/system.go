@@ -15,8 +15,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/CodigoSH/Lastboard/internal/version"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 

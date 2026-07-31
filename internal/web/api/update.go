@@ -22,9 +22,9 @@ import (
 
 	"database/sql"
 
-	"github.com/CodigoSH/Lastboard/internal/version"
-	"github.com/CodigoSH/Lastboard/internal/web/middleware"
-	"github.com/CodigoSH/Lastboard/internal/web/util"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 type UpdateHandler struct {
