@@ -3,11 +3,15 @@
  * string function so its structure can be snapshot-tested without a DOM. The
  * stylesheet is injected by the caller (the popover needs its own copy because
  * it renders in the top layer).
+ *
+ * triggerLabel is passed in rather than translated here so this stays a pure
+ * function: importing the i18n singleton would drag fetch/localStorage into
+ * every snapshot test.
  */
-export const colorPickerTemplate = (value: string, css: string): string => `
+export const colorPickerTemplate = (value: string, css: string, triggerLabel = ''): string => `
             <style>${css}</style>
 
-            <button class="color-trigger" id="trigger">
+            <button class="color-trigger" id="trigger" aria-label="${triggerLabel}">
                 <slot></slot>
             </button>
 

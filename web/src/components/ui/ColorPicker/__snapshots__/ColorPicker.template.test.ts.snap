@@ -4,7 +4,7 @@ exports[`ColorPicker template renders the trigger and popover with the current h
 "
             <style></style>
 
-            <button class="color-trigger" id="trigger">
+            <button class="color-trigger" id="trigger" aria-label="">
                 <slot></slot>
             </button>
 

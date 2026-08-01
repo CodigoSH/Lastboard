@@ -1,6 +1,7 @@
 import css from './ColorPicker.css' with { type: 'text' };
 import { colorPickerTemplate } from './ColorPicker.template';
 import { hexToHsv, hsvToHex } from '../../../services/colorMath';
+import { i18n } from '../../../services/i18n';
 
 export class ColorPicker extends HTMLElement {
     static get observedAttributes() {
@@ -39,10 +40,8 @@ export class ColorPicker extends HTMLElement {
     disconnectedCallback() {
         window.removeEventListener('resize', this.updatePositionRef);
         window.removeEventListener('scroll', this.updatePositionRef, true);
-        window.removeEventListener('mousemove', this.onMouseMoveSat);
-        window.removeEventListener('mouseup', this.onMouseUpSat);
-        window.removeEventListener('mousemove', this.onMouseMoveHue);
-        window.removeEventListener('mouseup', this.onMouseUpHue);
+        this.stopSatDrag();
+        this.stopHueDrag();
     }
 
     get value() { return this._value; }
@@ -74,7 +73,9 @@ export class ColorPicker extends HTMLElement {
 
     render() {
         if (!this.shadowRoot) return;
-        this.shadowRoot.innerHTML = colorPickerTemplate(this._value, css);
+        // The trigger shows only a colour swatch, so it needs an explicit
+        // accessible name for screen readers.
+        this.shadowRoot.innerHTML = colorPickerTemplate(this._value, css, i18n.t('action.choose_color'));
 
         this._popover = this.shadowRoot.querySelector('#popover');
         this._satArea = this.shadowRoot.querySelector('#sat-area');
@@ -101,20 +102,26 @@ export class ColorPicker extends HTMLElement {
             }
         });
 
-        // Saturation Events
-        this._satArea?.addEventListener('mousedown', (e) => {
+        // Saturation and hue use pointer events so the same code path serves
+        // mouse, touch and pen. With mouse events a finger drag produced no
+        // mousemove, so dragging did nothing at all on touch devices.
+        this._satArea?.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); // stop the browser turning the drag into a scroll
             this._isDraggingSat = true;
             this.handleSatDrag(e);
-            window.addEventListener('mousemove', this.onMouseMoveSat);
-            window.addEventListener('mouseup', this.onMouseUpSat);
+            window.addEventListener('pointermove', this.onPointerMoveSat);
+            window.addEventListener('pointerup', this.onPointerUpSat);
+            window.addEventListener('pointercancel', this.onPointerUpSat);
         });
 
         // Hue Events
-        this._hueSlider?.addEventListener('mousedown', (e) => {
+        this._hueSlider?.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
             this._isDraggingHue = true;
             this.handleHueDrag(e);
-            window.addEventListener('mousemove', this.onMouseMoveHue);
-            window.addEventListener('mouseup', this.onMouseUpHue);
+            window.addEventListener('pointermove', this.onPointerMoveHue);
+            window.addEventListener('pointerup', this.onPointerUpHue);
+            window.addEventListener('pointercancel', this.onPointerUpHue);
         });
 
         // Hex Input
@@ -131,25 +138,33 @@ export class ColorPicker extends HTMLElement {
 
     // --- Drag Handlers ---
 
-    private onMouseMoveSat = (e: MouseEvent) => {
+    private onPointerMoveSat = (e: PointerEvent) => {
         if (this._isDraggingSat) this.handleSatDrag(e);
     }
-    private onMouseUpSat = () => {
+    private stopSatDrag = () => {
         this._isDraggingSat = false;
-        window.removeEventListener('mousemove', this.onMouseMoveSat);
-        window.removeEventListener('mouseup', this.onMouseUpSat);
+        window.removeEventListener('pointermove', this.onPointerMoveSat);
+        window.removeEventListener('pointerup', this.onPointerUpSat);
+        window.removeEventListener('pointercancel', this.onPointerUpSat);
+    }
+    private onPointerUpSat = () => {
+        this.stopSatDrag();
         this.emitChange();
         // Close picker after selecting a color
         setTimeout(() => this.closePopover(), 150);
     }
 
-    private onMouseMoveHue = (e: MouseEvent) => {
+    private onPointerMoveHue = (e: PointerEvent) => {
         if (this._isDraggingHue) this.handleHueDrag(e);
     }
-    private onMouseUpHue = () => {
+    private stopHueDrag = () => {
         this._isDraggingHue = false;
-        window.removeEventListener('mousemove', this.onMouseMoveHue);
-        window.removeEventListener('mouseup', this.onMouseUpHue);
+        window.removeEventListener('pointermove', this.onPointerMoveHue);
+        window.removeEventListener('pointerup', this.onPointerUpHue);
+        window.removeEventListener('pointercancel', this.onPointerUpHue);
+    }
+    private onPointerUpHue = () => {
+        this.stopHueDrag();
         this.emitChange();
         // Close picker after selecting a color
         setTimeout(() => this.closePopover(), 150);

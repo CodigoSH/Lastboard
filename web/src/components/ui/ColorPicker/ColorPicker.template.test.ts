@@ -15,4 +15,11 @@ describe('ColorPicker template', () => {
         expect(out).toContain('value="#0078D4"');
         expect(out).toMatchSnapshot();
     });
+
+    it('gives the trigger an accessible name when one is supplied', () => {
+        // The trigger renders only a colour swatch, so without this label a
+        // screen reader announces a nameless button.
+        const out = colorPickerTemplate('#0078D4', '', 'Elegir color');
+        expect(out).toContain('aria-label="Elegir color"');
+    });
 });
