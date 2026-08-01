@@ -45,15 +45,17 @@ async function getCityTimezone(city: string): Promise<string> {
 
     try {
         // 1. Geocoding con Nominatim (OpenStreetMap)
+        // No User-Agent header: it is a forbidden header name, so the browser
+        // drops it silently and setting it only looked like we identified
+        // ourselves. From a page, Nominatim identifies the caller by Referer,
+        // which the browser sends on its own.
         const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`;
-        const geocodeResponse = await fetch(geocodeUrl, {
-            headers: { 'User-Agent': 'Lastboard/1.0' }
-        });
+        const geocodeResponse = await fetch(geocodeUrl);
 
         if (!geocodeResponse.ok) throw new Error('Geocoding failed');
 
         const geocodeData = await geocodeResponse.json();
-        if (geocodeData.length === 0) {
+        if (!Array.isArray(geocodeData) || geocodeData.length === 0) {
             return 'local';
         }
 
