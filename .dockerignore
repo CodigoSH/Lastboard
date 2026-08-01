@@ -38,6 +38,7 @@ install.sh
 Makefile
 docs/
 scripts/
+assets/
 README.md
 LICENSE
 NOTICE

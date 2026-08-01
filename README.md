@@ -18,7 +18,7 @@
 
   <br />
 
-  <img src="web/public/images/mockup.png" alt="Lastboard Dashboard" width="92%" style="border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" />
+  <img src="assets/mockup.png" alt="Lastboard Dashboard" width="92%" style="border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" />
 
   <br /><br />
 

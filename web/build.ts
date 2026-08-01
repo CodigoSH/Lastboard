@@ -1,6 +1,12 @@
 import { build } from "bun";
+import { cp, mkdir, readFile, rm, writeFile } from "fs/promises";
+import { existsSync } from "fs";
 
 console.log("🚀 Starting Build...");
+
+// Start from a clean output directory: cp() never removes files, so leftovers
+// from earlier builds would linger here and get embedded into the binary.
+await rm('./web/dist', { recursive: true, force: true });
 
 const result = await build({
     entrypoints: ["./web/src/index.ts"],
@@ -41,11 +47,8 @@ const resultLogin = await build({
 if (result.success && resultSetup.success && resultLogin.success) {
     console.log("📂 Output: web/dist/bundle.js, web/dist/setup.js & web/dist/login.js");
 
-    // Copy Locales
-    const { cp, mkdir, readFile, writeFile } = await import('fs/promises');
-    const { existsSync } = await import('fs');
-
     try {
+        // Copy Locales
         const allowedLocales = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'bn', 'pt', 'ru', 'de', 'ja', 'it', 'tr', 'ko', 'id', 'pl', 'ur', 'nl', 'fa', 'el'];
         await mkdir('./web/dist/locales', { recursive: true });
 
@@ -88,11 +91,11 @@ if (result.success && resultSetup.success && resultLogin.success) {
             console.log("✅ Manifest copied to web/dist/manifest.json");
         }
 
-        // Copy Public folder (CSS, Icons, etc)
-        // Check availability to avoid errors
-        if (existsSync('./web/public')) {
-            await cp('./web/public', './web/dist/public', { recursive: true });
-        }
+        // NOTE: web/public is deliberately NOT copied wholesale. Everything it
+        // holds (images, locales, favicon) is already copied to the dist root
+        // above, which is where the app requests it from (/images/…, /locales/…,
+        // /favicon.png). A second copy under /public would only inflate the
+        // embedded binary.
 
         // Copy Styles folder
         if (existsSync('./web/styles')) {
@@ -104,6 +107,7 @@ if (result.success && resultSetup.success && resultLogin.success) {
         // SYNC TO INTERNAL GO EMBED DIRECTORY
         console.log("🔄 Syncing to internal/web/dist...");
         const internalDist = './internal/web/dist';
+        await rm(internalDist, { recursive: true, force: true });
         await mkdir(internalDist, { recursive: true });
         await cp('./web/dist', internalDist, { recursive: true });
         console.log("✅ Synced to internal/web/dist");
