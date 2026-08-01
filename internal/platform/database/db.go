@@ -148,6 +148,11 @@ func initSchema(db *sql.DB) error {
 			FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_monitor_checks_item ON monitor_checks(item_id, checked_at);`,
+		// The retention prune filters on checked_at alone, which the index above
+		// cannot serve (item_id is its leading column), so it would scan the
+		// whole table. CREATE INDEX IF NOT EXISTS runs on every boot, so
+		// existing databases pick this up without a dedicated migration.
+		`CREATE INDEX IF NOT EXISTS idx_monitor_checks_time ON monitor_checks(checked_at);`,
 	}
 
 	for _, q := range queries {

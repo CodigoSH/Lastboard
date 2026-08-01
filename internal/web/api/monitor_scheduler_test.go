@@ -140,3 +140,44 @@ func TestSchedulerSettingsDefaults(t *testing.T) {
 		t.Errorf("mode should read back as background, got %q", got)
 	}
 }
+
+// TestForgetStaleAlerts checks that alert state for monitors that no longer
+// exist is dropped, while live monitors keep theirs.
+func TestForgetStaleAlerts(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	sched := NewMonitorScheduler(db)
+	cfg := notifyConfig{Enabled: false, FailThreshold: 1}
+
+	sched.evalAlert(MonitoredItem{ID: 1, URL: "http://a"}, false, cfg)
+	sched.evalAlert(MonitoredItem{ID: 2, URL: "http://b"}, false, cfg)
+	if len(sched.alertState) != 2 {
+		t.Fatalf("expected 2 seeded entries, got %d", len(sched.alertState))
+	}
+
+	// Item 2 is gone from the monitored set (bookmark deleted).
+	sched.forgetStaleAlerts([]MonitoredItem{{ID: 1, URL: "http://a"}})
+
+	if _, ok := sched.alertState[1]; !ok {
+		t.Error("live monitor 1 should keep its alert state")
+	}
+	if _, ok := sched.alertState[2]; ok {
+		t.Error("deleted monitor 2 should have been forgotten")
+	}
+}
+
+// TestForgetStaleAlertsClearsAllWhenNoneMonitored covers turning monitoring off
+// for every bookmark: nothing should be retained.
+func TestForgetStaleAlertsClearsAllWhenNoneMonitored(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	sched := NewMonitorScheduler(db)
+	cfg := notifyConfig{Enabled: false, FailThreshold: 1}
+
+	sched.evalAlert(MonitoredItem{ID: 7, URL: "http://x"}, false, cfg)
+	sched.forgetStaleAlerts(nil)
+
+	if len(sched.alertState) != 0 {
+		t.Fatalf("expected empty alert state, got %d entries", len(sched.alertState))
+	}
+}

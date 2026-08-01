@@ -58,14 +58,17 @@ func (m *MonitorScheduler) probeLoop() {
 	}
 }
 
+// pruneLoop enforces the retention window. It prunes before sleeping: waiting a
+// full day first meant an instance restarted more often than that (a routine
+// homelab update cadence) never pruned at all, and history grew unbounded.
 func (m *MonitorScheduler) pruneLoop() {
 	for {
-		time.Sleep(24 * time.Hour)
 		if n, err := m.store.Prune(monitorRetentionDays); err != nil {
 			slog.Error("monitor: prune failed", "error", err)
 		} else if n > 0 {
 			slog.Info("monitor: pruned old history", "rows", n)
 		}
+		time.Sleep(24 * time.Hour)
 	}
 }
 
@@ -80,6 +83,8 @@ func (m *MonitorScheduler) RunCycle() {
 	if len(items) == 0 {
 		return
 	}
+
+	m.forgetStaleAlerts(items)
 
 	cfg := m.notifyCfg()
 	sem := make(chan struct{}, monitorMaxConcurrency)
@@ -112,6 +117,23 @@ func (m *MonitorScheduler) notifyCfg() notifyConfig {
 		URL:           m.setting("monitoring_notify_url"),
 		Token:         m.setting("monitoring_notify_token"),
 		FailThreshold: th,
+	}
+}
+
+// forgetStaleAlerts drops alert state for monitors that no longer exist, so a
+// long-running instance does not accumulate an entry per bookmark ever
+// monitored. Items that come back are re-seeded silently by evalAlert.
+func (m *MonitorScheduler) forgetStaleAlerts(items []MonitoredItem) {
+	live := make(map[int]struct{}, len(items))
+	for _, it := range items {
+		live[it.ID] = struct{}{}
+	}
+	m.alertMu.Lock()
+	defer m.alertMu.Unlock()
+	for id := range m.alertState {
+		if _, ok := live[id]; !ok {
+			delete(m.alertState, id)
+		}
 	}
 }
 
