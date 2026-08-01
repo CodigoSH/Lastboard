@@ -11,7 +11,6 @@ import './components/ui/SettingsContent/SettingsContent';
 import './components/ui/RightDrawer/RightDrawer';
 import './components/ui/TopBar/TopBar';
 import './components/ui/OfflineBadge/OfflineBadge';
-import './components/ui/ReferenceHeader/ReferenceHeader';
 import './components/dashboard/BookmarkGrid/BookmarkGrid';
 import './components/ui/Notifier/Notifier';
 import './components/ui/IconPicker/IconPicker';
