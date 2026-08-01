@@ -209,6 +209,19 @@ class WidgetConfigModal extends HTMLElement {
                     { value: 'GET', label: 'GET' },
                     { value: 'POST', label: 'POST' },
                 ];
+                const viewSel = this.shadowRoot.getElementById('api-view') as AppSelect | null;
+                if (viewSel) {
+                    viewSel.options = [
+                        { value: 'metrics', label: i18n.t('widget.api.view_metrics') || 'Metrics' },
+                        { value: 'list', label: i18n.t('widget.api.view_list') || 'List' },
+                    ];
+                    // The array path only means anything in list view.
+                    viewSel.addEventListener('change', () => {
+                        const group = this.shadowRoot?.getElementById('api-array-group');
+                        if (group) group.style.display = viewSel.value === 'list' ? 'block' : 'none';
+                    });
+                }
+
                 const refreshSel = this.shadowRoot.getElementById('api-refresh') as AppSelect | null;
                 if (refreshSel) refreshSel.options = [
                     { value: '30', label: '30s' },
@@ -449,6 +462,9 @@ class WidgetConfigModal extends HTMLElement {
                     newContent.method = cfg.method || 'GET';
                     newContent.headers = cfg.headers || {};
                     newContent.arrayPath = cfg.arrayPath || '';
+                    // Presets that point at an array are list widgets; state it
+                    // rather than leaving the widget to infer it.
+                    newContent.viewMode = cfg.arrayPath ? 'list' : 'metrics';
                     newContent.mappings = cfg.mappings || [];
                     newContent.refreshSec = cfg.refreshSec || 60;
                 }
@@ -481,7 +497,10 @@ class WidgetConfigModal extends HTMLElement {
                 newContent.url = val('api-url').trim();
                 newContent.method = val('api-method') || 'GET';
                 newContent.headers = headers;
-                newContent.arrayPath = val('api-array').trim();
+                newContent.viewMode = val('api-view') === 'list' ? 'list' : 'metrics';
+                // Only meaningful in list view; clearing it keeps the saved config
+                // honest about what the widget will render.
+                newContent.arrayPath = newContent.viewMode === 'list' ? val('api-array').trim() : '';
                 newContent.mappings = mappings;
                 newContent.refreshSec = parseInt(val('api-refresh')) || 60;
             }
@@ -720,6 +739,9 @@ class WidgetConfigModal extends HTMLElement {
                 const method = content.method || 'GET';
                 const refreshSec = content.refreshSec || 60;
                 const arrayPath = content.arrayPath || '';
+                // Widgets saved before the view was an explicit choice inferred it
+                // from arrayPath; keep showing them the mode they actually get.
+                const viewMode = content.viewMode || (arrayPath ? 'list' : 'metrics');
                 const preset = content.preset || '';
                 const baseUrl = content.baseUrl || '';
                 const apiKey = content.apiKey || '';
@@ -772,10 +794,14 @@ class WidgetConfigModal extends HTMLElement {
                             <textarea id="api-headers" rows="2" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
                             <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
                         </div>
-                        <div class="field-group">
-                            <label>${i18n.t('widget.api.array_label') || 'List array (optional)'}</label>
+                        <div class="field-group row-aligned">
+                            <label>${i18n.t('widget.api.view_label') || 'View'}</label>
+                            <app-select id="api-view" value="${viewMode}"></app-select>
+                        </div>
+                        <div class="field-group" id="api-array-group" style="display:${viewMode === 'list' ? 'block' : 'none'}">
+                            <label>${i18n.t('widget.api.array_label') || 'List array'}</label>
                             <input type="text" id="api-array" value="${esc(arrayPath)}" placeholder="queue.records" />
-                            <small>${i18n.t('widget.api.array_hint') || 'Fill to show a LIST: path to an array. Then the fields below are relative to each item. Leave empty for metrics.'}</small>
+                            <small>${i18n.t('widget.api.array_hint_list') || 'Path to the array to list. The fields below are then relative to each item.'}</small>
                         </div>
                         <div class="field-group">
                             <label>${i18n.t('widget.api.fields_label') || 'Fields'}</label>

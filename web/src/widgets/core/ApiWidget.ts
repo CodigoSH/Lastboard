@@ -17,6 +17,21 @@ interface ApiConfig {
     arrayPath?: string;
     mappings?: Mapping[];
     refreshSec?: number;
+    /** How to lay the data out. Absent on widgets created before this existed. */
+    viewMode?: ViewMode;
+}
+
+type ViewMode = 'metrics' | 'list';
+
+/**
+ * The layout used to be inferred from whether arrayPath was filled in, which
+ * meant the user had to deduce what they would get. It is an explicit choice
+ * now, but widgets saved before that keep working: with no viewMode stored,
+ * fall back to the old inference.
+ */
+function resolveViewMode(c: ApiConfig): ViewMode {
+    if (c.viewMode === 'list' || c.viewMode === 'metrics') return c.viewMode;
+    return c.arrayPath ? 'list' : 'metrics';
 }
 
 /** Dot/bracket path resolver (mirrors the backend's, used for list-item fields). */
@@ -164,7 +179,7 @@ class ApiWidget extends HTMLElement {
         try {
             const mappings = this._config.mappings || [];
             // List mode fetches the array; metric mode fetches each field path.
-            const paths = this._config.arrayPath
+            const paths = resolveViewMode(this._config) === 'list' && this._config.arrayPath
                 ? [this._config.arrayPath]
                 : mappings.map(m => m.path).filter(Boolean);
             const res = await apiService.post<{ ok: boolean; values: Record<string, any> }>(
@@ -194,10 +209,14 @@ class ApiWidget extends HTMLElement {
             body = `<div class="state state--err">${i18n.t('widget.api.unreachable') || 'Unreachable'}</div>`;
         } else if (!mappings.length) {
             body = `<div class="state">${i18n.t('widget.api.no_fields') || 'No fields mapped'}</div>`;
-        } else if (c.arrayPath) {
+        } else if (resolveViewMode(c) === 'list') {
             // List mode: iterate the fetched array, extracting each field per item.
-            const arr = (this._values || {})[c.arrayPath];
-            if (!Array.isArray(arr) || arr.length === 0) {
+            const arr = c.arrayPath ? (this._values || {})[c.arrayPath] : undefined;
+            if (!c.arrayPath) {
+                // Picking the list view without saying where the array lives used
+                // to render an empty box with no clue as to why.
+                body = `<div class="state">${i18n.t('widget.api.needs_array') || 'Set the array path'}</div>`;
+            } else if (!Array.isArray(arr) || arr.length === 0) {
                 body = `<div class="state">${i18n.t('widget.api.empty_list') || 'Empty'}</div>`;
             } else {
                 body = `<div class="list">${arr.slice(0, 50).map(item => `
