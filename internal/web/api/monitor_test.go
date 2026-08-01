@@ -249,7 +249,6 @@ func TestMonitorStoreHistoryOrder(t *testing.T) {
 	}
 }
 
-
 func TestSummarizeHistory(t *testing.T) {
 	now := time.Now()
 	at := func(min int) time.Time { return now.Add(time.Duration(-min) * time.Minute) }
