@@ -1,6 +1,7 @@
 
 import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
+import { resolveTimeZone } from '../../services/timeZone';
 
 class ClockWidget extends HTMLElement {
     private timer?: ReturnType<typeof setInterval>;
@@ -109,10 +110,9 @@ class ClockWidget extends HTMLElement {
             opts.second = '2-digit';
         }
 
-        let timeZone = undefined;
-        if (this._config.timezone && this._config.timezone !== 'local') {
-            timeZone = this._config.timezone;
-        }
+        // Validated once here so the clock, the date and everything after them
+        // agree on the same zone and none of them can throw.
+        const timeZone = resolveTimeZone(this._config.timezone);
 
         // Use current locale for proper localization
         const currentLocale = i18n.getLocale().code;
