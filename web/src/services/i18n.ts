@@ -56,7 +56,10 @@ class I18nService {
         try {
             // Versioned with the build stamp, not the clock: a per-load timestamp
             // made every request a cache miss, re-downloading the whole locale.
-            const res = await fetch(`/locales/${code}.json?v=${__BUILD_STAMP__}`);
+            // The stamp is substituted at build time, so guard the identifier for
+            // contexts that run the sources directly (tests, ts-node).
+            const stamp = typeof __BUILD_STAMP__ !== 'undefined' ? __BUILD_STAMP__ : 'dev';
+            const res = await fetch(`/locales/${code}.json?v=${stamp}`);
             if (!res.ok) throw new Error(`Failed to load locale ${code}`);
             const translations = await res.json();
             this.cache.set(code, translations);
