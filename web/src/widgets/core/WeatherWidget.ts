@@ -277,14 +277,28 @@ class WeatherWidget extends HTMLElement {
             return;
         }
 
+        // A 200 response that isn't shaped like we expect would otherwise throw
+        // in the views below, and the throw would leave the widget stuck on the
+        // previous markup. Treat it as an error state instead.
         const cur = this._weatherData.current_weather;
         const daily = this._weatherData.daily;
+        if (!cur) {
+            el.innerHTML = this.emptyState(getWeatherIcon(-1), i18n.t('general.error'));
+            return;
+        }
         const u = userStore.getUser()?.preferences?.unit_system || 'metric';
 
-        if (this._config.showForecast && daily) {
+        // Both views index into these arrays, so require them rather than just
+        // a truthy `daily`. simpleView already skips its min/max block on null.
+        const hasDaily = !!daily
+            && Array.isArray(daily.time)
+            && Array.isArray(daily.temperature_2m_max)
+            && Array.isArray(daily.temperature_2m_min);
+
+        if (this._config.showForecast && hasDaily) {
             el.innerHTML = this.forecastView(cur, daily, u);
         } else {
-            el.innerHTML = this.simpleView(cur, daily, u);
+            el.innerHTML = this.simpleView(cur, hasDaily ? daily : null, u);
         }
     }
 
