@@ -278,6 +278,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Get Asset URL from request
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var req struct {
 		AssetUrl string `json:"asset_url"`
 	}

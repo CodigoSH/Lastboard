@@ -18,7 +18,23 @@ func NewSetupHandler(db *sql.DB) *SetupHandler {
 }
 
 func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
+	// Reject an already-initialised instance before spending any work on the
+	// request. This endpoint is public, so without the early exit every call
+	// would decode an unbounded body and run bcrypt (tens of ms of CPU) only to
+	// return 403 at the end. The authoritative check still happens inside the
+	// transaction below, which is what makes concurrent setup attempts safe.
+	var alreadySetUp bool
+	if err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&alreadySetUp); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if alreadySetUp {
+		http.Error(w, "setup.already_initialized", http.StatusForbidden)
+		return
+	}
+
 	// Parse and validate input before touching the database
+	r.Body = http.MaxBytesReader(w, r.Body, 5*1024*1024)
 	var input struct {
 		Username    string `json:"username"`
 		Password    string `json:"password"`

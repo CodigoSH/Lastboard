@@ -319,9 +319,9 @@ func (s *Server) routes() {
 		s.serveSetupPage(w, r)
 	})
 
-	// Setup API
+	// Setup API — public and state-changing, so rate limited like /api/login.
 	setupHandler := api.NewSetupHandler(s.DB)
-	s.Router.Handle("POST /api/setup", http.HandlerFunc(setupHandler.SetupSystem))
+	s.Router.Handle("POST /api/setup", middleware.RateLimit(http.HandlerFunc(setupHandler.SetupSystem)))
 
 	// System API
 	systemHandler := api.NewSystemHandler(s.DB)

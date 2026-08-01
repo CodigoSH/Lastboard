@@ -175,6 +175,7 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var s monitorSettings
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
 		http.Error(w, "error.invalid_input", http.StatusBadRequest)
@@ -227,6 +228,7 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var s monitorSettings
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
 		http.Error(w, "error.invalid_input", http.StatusBadRequest)
