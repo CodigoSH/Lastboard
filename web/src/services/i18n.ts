@@ -54,7 +54,9 @@ class I18nService {
         if (this.cache.has(code)) return;
 
         try {
-            const res = await fetch(`/locales/${code}.json?v=${new Date().getTime()}`);
+            // Versioned with the build stamp, not the clock: a per-load timestamp
+            // made every request a cache miss, re-downloading the whole locale.
+            const res = await fetch(`/locales/${code}.json?v=${__BUILD_STAMP__}`);
             if (!res.ok) throw new Error(`Failed to load locale ${code}`);
             const translations = await res.json();
             this.cache.set(code, translations);

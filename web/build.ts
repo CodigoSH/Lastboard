@@ -4,6 +4,16 @@ import { existsSync } from "fs";
 
 console.log("🚀 Starting Build...");
 
+// One stamp per build, shared by the HTML cache-busting query and the bundle.
+// Anything fetched with ?v=<stamp> is served immutable, so the stamp must stay
+// identical across every asset of a single build and change on the next one.
+const buildStamp = String(Math.floor(Date.now() / 1000));
+
+const define = {
+    "process.env.NODE_ENV": JSON.stringify("production"),
+    "__BUILD_STAMP__": JSON.stringify(buildStamp),
+};
+
 // Start from a clean output directory: cp() never removes files, so leftovers
 // from earlier builds would linger here and get embedded into the binary.
 await rm('./web/dist', { recursive: true, force: true });
@@ -15,9 +25,7 @@ const result = await build({
     sourcemap: "none",
     target: "browser",
     naming: "bundle.js",
-    define: {
-        "process.env.NODE_ENV": JSON.stringify("production"),
-    },
+    define,
 });
 
 const resultSetup = await build({
@@ -27,9 +35,7 @@ const resultSetup = await build({
     sourcemap: "none",
     target: "browser",
     naming: "setup.js",
-    define: {
-        "process.env.NODE_ENV": JSON.stringify("production"),
-    },
+    define,
 });
 
 const resultLogin = await build({
@@ -39,9 +45,7 @@ const resultLogin = await build({
     sourcemap: "none",
     target: "browser",
     naming: "login.js",
-    define: {
-        "process.env.NODE_ENV": JSON.stringify("production"),
-    },
+    define,
 });
 
 if (result.success && resultSetup.success && resultLogin.success) {
@@ -64,8 +68,7 @@ if (result.success && resultSetup.success && resultLogin.success) {
         // Copy HTML & Public Assets with Cache Busting
         const copyWithVersion = async (src: string, dest: string) => {
             let content = await readFile(src, 'utf-8');
-            const version = Math.floor(Date.now() / 1000);
-            content = content.replace(/(\?v=)[0-9]+/g, `$1${version}`);
+            content = content.replace(/(\?v=)[0-9]+/g, `$1${buildStamp}`);
             await writeFile(dest, content);
         };
 

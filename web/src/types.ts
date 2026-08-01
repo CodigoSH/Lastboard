@@ -67,6 +67,8 @@ declare global {
         notifier?: any;
         demoService?: any;
     }
+    /** Build timestamp injected by web/build.ts. Used to cache-bust assets fetched at runtime. */
+    const __BUILD_STAMP__: string;
 }
 
 export interface Dashboard {
