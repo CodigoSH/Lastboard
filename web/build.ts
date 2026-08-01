@@ -39,7 +39,6 @@ const resultLogin = await build({
 });
 
 if (result.success && resultSetup.success && resultLogin.success) {
-    console.log("✅ Build Complete!");
     console.log("📂 Output: web/dist/bundle.js, web/dist/setup.js & web/dist/login.js");
 
     // Copy Locales
@@ -57,7 +56,6 @@ if (result.success && resultSetup.success && resultLogin.success) {
                 await cp(src, dest);
             }
         }
-        console.log("✅ Locales copied to web/dist/locales");
         console.log("✅ Locales copied to web/dist/locales");
 
         // Copy HTML & Public Assets with Cache Busting
@@ -109,12 +107,17 @@ if (result.success && resultSetup.success && resultLogin.success) {
         await mkdir(internalDist, { recursive: true });
         await cp('./web/dist', internalDist, { recursive: true });
         console.log("✅ Synced to internal/web/dist");
+
+        console.log("✅ Build Complete!");
     } catch (e) {
-        console.error("❌ Failed to copy locales:", e);
+        // The Go binary embeds internal/web/dist, so a half-finished copy would
+        // silently ship stale assets. Fail loudly instead.
+        console.error("❌ Failed to copy assets:", e);
+        process.exit(1);
     }
 } else {
     // Combine logs
-    const logs = [...result.logs, ...resultSetup.logs];
+    const logs = [...result.logs, ...resultSetup.logs, ...resultLogin.logs];
 
     console.error("❌ Build Failed:");
     for (const message of logs) {
