@@ -1,4 +1,5 @@
 import { i18n } from '../../../services/i18n';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { layoutContainer, gridTemplate } from './IconPicker.template';
 import { iconService, IconInfo } from '../../../services/iconService';
 import { safeImageSrc } from '../../../services/escape';
@@ -22,6 +23,7 @@ class IconPicker extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
 
     }
 

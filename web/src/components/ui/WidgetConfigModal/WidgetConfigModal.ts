@@ -8,6 +8,7 @@ import type { AppSelect } from '../Select/Select';
 import type { SelectOption } from '../Select/Select.template';
 import '../ColorPicker/ColorPicker';
 import css from './WidgetConfigModal.css' with { type: 'text' };
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
@@ -91,6 +92,7 @@ class WidgetConfigModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
         setupPasswordToggles(this.shadowRoot!);
     }
 
@@ -798,12 +800,12 @@ class WidgetConfigModal extends HTMLElement {
                         </div>
                         <div class="field-group">
                             <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
-                            <textarea id="api-headers" rows="4" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
+                            <textarea class="field-textarea" id="api-headers" rows="4" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
                             <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
                         </div>
                         <div class="field-group">
                             <label>${i18n.t('widget.api.fields_label') || 'Fields'}</label>
-                            <textarea id="api-fields" rows="4" spellcheck="false" placeholder="Queries = dns_queries_today | number&#10;Blocked = ads_percentage_today | percent">${esc(fieldsText)}</textarea>
+                            <textarea class="field-textarea" id="api-fields" rows="4" spellcheck="false" placeholder="Queries = dns_queries_today | number&#10;Blocked = ads_percentage_today | percent">${esc(fieldsText)}</textarea>
                             <small>${i18n.t('widget.api.fields_hint') || 'One per line: "Label = path". Path is dot/bracket (a.b[0].c). Optional "| number|bytes|percent".'}</small>
                         </div>
                         <div class="field-group field-span" id="api-array-group" style="display:${viewMode === 'list' ? 'flex' : 'none'}">

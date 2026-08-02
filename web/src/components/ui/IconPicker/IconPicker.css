@@ -110,8 +110,6 @@
     border-radius: var(--radius);
     margin: 0;
     box-sizing: border-box;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
 }
 
 .icon-picker__group {

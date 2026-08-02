@@ -1,4 +1,5 @@
 import '../MonitorDetail/MonitorDetail';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { apiService } from '../../../services/apiService';
 import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
@@ -31,6 +32,7 @@ class MonitorPage extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
         this._keydown = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && this.hasAttribute('open')) this.close();
         };

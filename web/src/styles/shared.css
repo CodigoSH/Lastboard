@@ -1,0 +1,77 @@
+/**
+ * Primitives shared by every shadow-DOM component.
+ *
+ * Custom properties (theme.css) cross shadow boundaries, but *rules* do not, so
+ * each component used to restate how an input or a scrollbar looks — the input
+ * block alone was written out 14 times. That is why the same control could end
+ * up looking slightly different depending on which component drew it.
+ *
+ * This sheet is adopted by each shadow root through services/sharedStyles.ts,
+ * so it exists once in memory and is defined in exactly one place. Components
+ * keep their own stylesheet for their own layout; anything here is meant to be
+ * the single definition of a primitive.
+ */
+
+/* --- Scrollbars ---------------------------------------------------------- */
+
+/* Slim bars instead of the OS default, which is far chunkier than the rest of
+   the UI. Applied to everything in the shadow root rather than through a class,
+   so a component gets the house style without having to opt in — and without
+   touching its markup. A component that genuinely needs something else (the
+   dashboard grid hides its bars) overrides it from its own stylesheet, which
+   comes later in the cascade.
+   Deliberately no `scrollbar-width`/`scrollbar-color`: declaring either makes
+   Chrome ignore these ::-webkit-scrollbar rules and fall back to a ~12px bar.
+   Firefox draws slim bars by default. */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* --- Text inputs --------------------------------------------------------- */
+
+.field-input {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.field-input::placeholder {
+    color: var(--input-placeholder);
+}
+
+.field-input:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: var(--input-focus-shadow);
+}
+
+/* Multi-line variant: monospace, no OS resize grip (it clashes with the
+   theme), and the slim scrollbars above. */
+.field-textarea {
+    font-family: var(--font-mono, monospace);
+    line-height: 1.5;
+    resize: none;
+    min-height: 44px;
+    overflow: auto;
+}

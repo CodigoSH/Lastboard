@@ -135,30 +135,6 @@
     min-height: 0;
 }
 
-/* Slim scrollbars for the dropdown, wherever it ends up: the plain variant
-   scrolls on itself, the searchable one scrolls its inner list. Otherwise they
-   fall back to the OS scrollbar, far chunkier than the rest of the UI.
-   Deliberately no scrollbar-width/scrollbar-color here — declaring those makes
-   Chrome ignore these ::-webkit-scrollbar rules, leaving a ~12px bar. Firefox
-   draws slim bars by default. */
-.select-dropdown::-webkit-scrollbar,
-.select-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.select-dropdown::-webkit-scrollbar-track,
-.select-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.select-dropdown::-webkit-scrollbar-thumb,
-.select-list::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 3px;
-}
-
-/* Scrollbar styling */
-
 .select-header {
     padding: 10px 16px 4px;
     font-size: 11px;

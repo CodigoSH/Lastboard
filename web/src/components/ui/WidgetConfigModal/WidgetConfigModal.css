@@ -153,21 +153,7 @@ dialog[open] {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    /* Slim scrollbar, matching the select dropdowns. The OS default is much
-       chunkier than anything else in the UI. */
-}
-
-.tab-container > .content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.tab-container > .content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.tab-container > .content::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 3px;
+    /* Slim scrollbar comes from styles/shared.css. */
 }
 
 /* Header and footer stay put while the body scrolls. */
@@ -239,28 +225,10 @@ dialog[open] {
     box-sizing: border-box;
     outline: none;
     transition: all 0.2s;
-    /* No native resizer: its grip is an OS-drawn artefact that clashes with the
-       rest of the theme. The box is tall enough and scrolls instead. */
-    resize: none;
-    min-height: 44px;
-    font-family: var(--font-mono, monospace);
-    line-height: 1.5;
+    /* Monospace, no resize grip and slim scrollbars come from styles/shared.css.
+       Only the wrapping is ours: each line is one config entry, so they must
+       not fold. */
     white-space: pre;
-    overflow: auto;
-}
-
-.field-group textarea::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-.field-group textarea::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.field-group textarea::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 3px;
 }
 
 .field-group textarea::placeholder {

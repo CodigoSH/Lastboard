@@ -1,4 +1,5 @@
 import { template } from './AddBookmarkModal.template';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import { safeImageSrc } from '../../../services/escape';
@@ -40,6 +41,7 @@ class AddBookmarkModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
         this.setupHandlers();
     }
 

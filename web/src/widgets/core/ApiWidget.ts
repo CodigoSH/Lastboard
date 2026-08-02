@@ -1,4 +1,5 @@
 import { dashboardStore } from '../../store/dashboardStore';
+import { adoptSharedStyles } from '../../services/sharedStyles';
 import { i18n } from '../../services/i18n';
 import { apiService } from '../../services/apiService';
 import { escapeHtml } from '../../services/escape';
@@ -104,6 +105,7 @@ class ApiWidget extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     static get observedAttributes() { return ['item-id']; }
@@ -240,9 +242,7 @@ class ApiWidget extends HTMLElement {
                 .metric { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; }
                 .metric__val { font-size:clamp(1rem,11cqi,2rem); font-weight:700; color:var(--text-main); line-height:1.1; }
                 .metric__label { font-size:clamp(.5rem,3.4cqi,.72rem); color:var(--text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
-                .list { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:2px; scrollbar-width:thin; }
-                .list::-webkit-scrollbar { width:6px; }
-                .list::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+                .list { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
                 .row { display:flex; align-items:baseline; gap:8px; padding:5px 6px; border-radius:6px; }
                 .row:nth-child(odd) { background:rgba(128,128,128,.06); }
                 .cell { font-size:clamp(.55rem,3.4cqi,.8rem); color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:0 1 auto; }

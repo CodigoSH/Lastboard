@@ -4,6 +4,7 @@ import {
     SelectOption, selectTriggerTemplate, selectOptionsTemplate,
     selectSearchTemplate, filterSelectOptions,
 } from './Select.template';
+import { adoptSharedStyles, ensureSharedStylesInDocument } from '../../../services/sharedStyles';
 
 /** Mirrors `.select-dropdown.open { max-height }` in Select.css. */
 const DROPDOWN_MAX_HEIGHT = 300;
@@ -40,6 +41,10 @@ export class AppSelect extends HTMLElement {
 
     connectedCallback() {
         this.ensureGlobalStyles();
+        adoptSharedStyles(this.shadowRoot);
+        // The dropdown is portalled into <body> when outside a dialog, where an
+        // adopted sheet on our shadow root would not reach it.
+        ensureSharedStylesInDocument();
         this.render();
         // Check if inside a dialog
         this.isInsideDialog = !!this.closest('dialog');

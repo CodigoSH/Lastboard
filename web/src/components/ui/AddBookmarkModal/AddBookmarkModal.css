@@ -119,15 +119,6 @@ dialog[open] {
     gap: 12px;
 }
 
-.tab-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.tab-content::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-}
-
 /* --- Sticky Footer --- */
 .actions {
     padding: 16px 24px 24px 24px;
@@ -421,7 +412,6 @@ dialog[open] {
     padding: 4px;
     max-height: 200px;
     overflow-y: auto;
-    scrollbar-width: thin;
     pointer-events: auto;
     /* Re-enable pointer events since parent has none */
 }
