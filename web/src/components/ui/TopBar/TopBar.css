@@ -65,7 +65,7 @@
     border-radius: inherit;
     box-shadow: 0 0 12px rgba(var(--accent-rgb, 0, 122, 255), 0.5);
     opacity: 0;
-    animation: demo-glow-gpu 2s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    animation: demo-glow-gpu 2s infinite alternate var(--ease-standard);
     z-index: -1;
     pointer-events: none;
     will-change: opacity;
@@ -164,7 +164,7 @@ dashboard-switcher.disabled {
     border-radius: 20px;
     padding: 0;
     height: 32px;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.3s var(--ease-out);
     width: 32px;
     overflow: hidden;
     cursor: pointer;
@@ -282,7 +282,7 @@ dashboard-switcher.disabled {
     color: var(--text-dim);
     cursor: pointer;
     border-radius: 3px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-standard);
     display: flex;
     align-items: center;
 }

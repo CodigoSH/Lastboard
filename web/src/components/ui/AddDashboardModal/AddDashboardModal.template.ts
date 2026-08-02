@@ -2,7 +2,7 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml } from '../../../services/escape';
 
 export const template = ({ name, error }: { name: string; error: string }) => `
-    <dialog id="modal" aria-labelledby="add-dashboard-title">
+    <dialog class="dialog-base" id="modal" aria-labelledby="add-dashboard-title">
         <div class="modal-header">
             <div class="modal-title" id="add-dashboard-title">${i18n.t('dashboard.modal_title')}</div>
             <button class="modal-close" id="modal-close" type="button" aria-label="${i18n.t('general.close')}">

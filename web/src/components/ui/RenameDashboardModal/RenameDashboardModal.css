@@ -8,12 +8,8 @@ dialog {
     -webkit-backdrop-filter: var(--modal-blur);
     border: 1px solid var(--paper-border);
     border-top: 1px solid var(--paper-border-top);
-    border-radius: var(--radius);
     padding: 0;
-    width: clamp(300px, 85cqi, 400px);
-    box-shadow: var(--paper-shadow);
     overflow: visible;
-    color: var(--text-main);
     display: none;
     flex-direction: column;
 }
@@ -29,7 +25,7 @@ dialog::backdrop {
 }
 
 dialog[open] {
-    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: modalIn 0.3s var(--ease-bounce);
 }
 
 @keyframes modalIn {

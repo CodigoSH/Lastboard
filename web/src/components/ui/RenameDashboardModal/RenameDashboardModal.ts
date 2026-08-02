@@ -1,4 +1,5 @@
 import { template } from './RenameDashboardModal.template';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import css from './RenameDashboardModal.css' with { type: 'text' };
 
@@ -21,6 +22,7 @@ class RenameDashboardModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

@@ -557,6 +557,9 @@ class BookmarkGrid extends HTMLElement {
     // delete under reduced-motion or if WAAPI is unavailable.
     private _dissolveThenDelete(id: number) {
         const del = () => dashboardStore.deleteItem(id);
+        // The easing strings in this file stay spelled out: element.animate()
+        // takes a plain string and cannot read the --ease-* custom properties the
+        // stylesheets use. Same curves, different API.
         const el = this.shadowRoot!.querySelector(`[data-id="${id}"]`) as HTMLElement | null;
         if (!el || typeof el.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             del();

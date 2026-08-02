@@ -4,13 +4,9 @@
 
 dialog {
     background: var(--surface-solid);
-    color: var(--text-main);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
     padding: 28px;
-    width: clamp(280px, 85cqi, 400px);
     backdrop-filter: blur(20px);
-    box-shadow: var(--paper-shadow);
 }
 
 dialog::backdrop {
@@ -20,7 +16,7 @@ dialog::backdrop {
 }
 
 dialog[open] {
-    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: modalIn 0.3s var(--ease-bounce);
 }
 
 @keyframes modalIn {

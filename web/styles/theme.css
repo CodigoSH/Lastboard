@@ -96,6 +96,14 @@
     --spacing-sm: 12px;
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Motion — the three curves the UI actually uses. They were written out by
+       hand ~45 times across components, which is how variants crept in; custom
+       properties cross the shadow boundary, so components can use these
+       directly. */
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* --- Dark Mode Overrides (.dark-mode) --- */

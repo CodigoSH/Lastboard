@@ -1,5 +1,6 @@
 
 import { WIDGET_REGISTRY, WidgetDefinition } from '../../../widgets/registry';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { addWidgetTemplate } from './AddWidgetModal.template';
 import css from './AddWidgetModal.css' with { type: 'text' };
 
@@ -9,6 +10,7 @@ class AddWidgetModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

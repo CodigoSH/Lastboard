@@ -1,9 +1,10 @@
 :host {
     display: contents;
 }
-dialog {
+/* Wider than the shared default (it is a gallery of widget cards), so it must
+   out-specify .dialog-base from styles/shared.css. */
+dialog.dialog-base {
     background: var(--surface);
-    color: var(--text-main);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 32px;
@@ -12,7 +13,7 @@ dialog {
     backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: modalIn 0.3s var(--ease-bounce);
 }
 @keyframes modalIn {
     from { opacity: 0; transform: scale(0.95) translateY(10px); }
@@ -74,7 +75,7 @@ dialog::backdrop {
     border-radius: 20px;
     padding: 24px;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s var(--ease-bounce);
     display: flex;
     flex-direction: column;
     align-items: center;

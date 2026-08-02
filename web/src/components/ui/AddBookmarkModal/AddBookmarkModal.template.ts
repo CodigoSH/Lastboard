@@ -90,7 +90,7 @@ export const template = ({
     visibleTouch,
     borderWidth
 }: AddBookmarkModalData) => `
-    <dialog id="modal" aria-label="${i18n.t('bookmark.add')}">
+    <dialog class="dialog-base" id="modal" aria-label="${i18n.t('bookmark.add')}">
         <div class="modal-header">
             <div class="integrated-tabs">
                 <button class="tab-btn active" data-tab="general">${i18n.t('general.general')}</button>

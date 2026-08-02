@@ -1,4 +1,5 @@
 import { template } from './PasswordConfirmModal.template';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import css from './PasswordConfirmModal.css' with { type: 'text' };
@@ -13,6 +14,7 @@ export class PasswordConfirmModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
         setupPasswordToggles(this.shadowRoot!);
     }
 

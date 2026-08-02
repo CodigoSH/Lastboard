@@ -1,7 +1,7 @@
 import { i18n } from '../../../services/i18n';
 
 export const layout = () => `
-<dialog id="icon-modal" aria-labelledby="icon-modal-title">
+<dialog class="dialog-base" id="icon-modal" aria-labelledby="icon-modal-title">
     <div class="modal-header">
         <h3 class="modal-title" id="icon-modal-title">${i18n.t('general.select_icon')}</h3>
         <button class="modal-close" id="close-btn" aria-label="${i18n.t('general.close')}">

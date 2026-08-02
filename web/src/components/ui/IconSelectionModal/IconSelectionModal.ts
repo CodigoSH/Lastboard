@@ -1,4 +1,5 @@
 import { layout } from './IconSelectionModal.template';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import css from './IconSelectionModal.css' with { type: 'text' };
 import '../IconPicker/IconPicker'; // Ensure IconPicker is registered
 
@@ -9,6 +10,7 @@ export class IconSelectionModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

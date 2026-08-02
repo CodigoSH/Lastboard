@@ -326,7 +326,7 @@ const CSS = `
     border-radius: 6px;
     color: white; cursor: pointer;
     display: none; align-items: center; justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-standard);
     z-index: 400;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }

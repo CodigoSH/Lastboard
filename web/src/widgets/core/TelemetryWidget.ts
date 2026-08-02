@@ -226,7 +226,7 @@ class TelemetryWidget extends HTMLElement {
                 justify-content: center;
                 overflow: hidden;
                 position: relative;
-                transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+                transition: transform 0.2s var(--ease-bounce);
             }
             
             .gauge-svg {
@@ -246,7 +246,7 @@ class TelemetryWidget extends HTMLElement {
                 stroke: url(#grad-cpu); /* We override this below */
                 stroke-width: 4;
                 stroke-linecap: round;
-                transition: stroke-dasharray 0.6s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.2s;
+                transition: stroke-dasharray 0.6s var(--ease-out), stroke 0.2s;
             }
 
             .value-text {

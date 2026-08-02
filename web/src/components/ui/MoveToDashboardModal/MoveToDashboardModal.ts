@@ -1,4 +1,5 @@
 import { template } from './MoveToDashboardModal.template';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { Dashboard } from '../../../types';
 import css from './MoveToDashboardModal.css' with { type: 'text' };
 
@@ -15,6 +16,7 @@ export class MoveToDashboardModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     pick(dashboards: Dashboard[], currentId: number | null): Promise<number | null> {

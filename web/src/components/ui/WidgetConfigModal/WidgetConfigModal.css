@@ -8,11 +8,7 @@ dialog {
     -webkit-backdrop-filter: var(--modal-blur);
     border: 1px solid var(--paper-border);
     border-top: 1px solid var(--paper-border-top);
-    border-radius: var(--radius);
     padding: 0;
-    width: clamp(300px, 85cqi, 400px);
-    box-shadow: var(--paper-shadow);
-    color: var(--text-main);
     /* Cap the height and scroll the body, so the footer with Save is always
        reachable no matter how tall the form gets. This only works because the
        select dropdowns are positioned fixed inside dialogs (see Select.ts);
@@ -78,7 +74,7 @@ dialog::backdrop {
 }
 
 dialog[open] {
-    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: modalIn 0.3s var(--ease-bounce);
 }
 
 @keyframes modalIn {
@@ -474,7 +470,7 @@ dialog[open] {
     font-weight: 500;
     color: var(--text-dim);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-standard);
     opacity: 0.7;
     letter-spacing: 0.02em;
 }
@@ -507,7 +503,7 @@ dialog[open] {
     background: var(--accent);
     box-shadow: 0 -2px 10px rgba(var(--accent-rgb), 0.5);
     border-radius: 2px 2px 0 0;
-    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideIn 0.3s var(--ease-standard);
 }
 
 @keyframes slideIn {
@@ -581,7 +577,7 @@ dialog[open] {
     border-radius: 4px;
     cursor: pointer;
     position: relative;
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s var(--ease-standard);
     border: 2px solid rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
@@ -605,7 +601,7 @@ dialog[open] {
     height: 20px;
     fill: #fff;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: popIn 0.3s var(--ease-bounce);
 }
 
 .premium-color-swatch--custom {
@@ -755,7 +751,7 @@ dialog[open] {
     height: 16px;
     background: white;
     border-radius: 50%;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s var(--ease-standard);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
@@ -789,7 +785,7 @@ dialog[open] {
     border: 1px solid var(--border);
     padding: 12px 16px;
     border-radius: var(--radius);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-standard);
     animation: slideIn 0.3s ease-out;
 }
 

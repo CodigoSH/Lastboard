@@ -8,7 +8,7 @@ import { WIDGET_REGISTRY } from '../../../widgets/registry';
  */
 export const addWidgetTemplate = (css: string): string => `
             <style>${css}</style>
-            <dialog id="modal" aria-labelledby="add-widget-title">
+            <dialog class="dialog-base" id="modal" aria-labelledby="add-widget-title">
                 <div class="header">
                     <div class="title-group">
                         <h3 id="add-widget-title">${i18n.t('widget.add_title') || 'Add Widget'}</h3>

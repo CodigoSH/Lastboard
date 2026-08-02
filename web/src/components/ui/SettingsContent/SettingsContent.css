@@ -164,7 +164,7 @@ dialog {
     font-size: clamp(12px, 1.8cqi, 14px);
     width: 100%;
     outline: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-standard);
     box-sizing: border-box;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -219,7 +219,7 @@ dialog {
     border: 1px solid var(--border);
     padding: clamp(10px, 2cqi, 12px) clamp(12px, 2.5cqi, 16px);
     border-radius: var(--radius);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-standard);
     width: 100%;
     box-sizing: border-box;
 }
@@ -306,7 +306,7 @@ dialog {
     border-radius: 4px;
     cursor: pointer;
     position: relative;
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s var(--ease-standard);
     border: 2px solid rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
@@ -459,7 +459,7 @@ dialog {
 }
 
 .fade-in {
-    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeIn 0.4s var(--ease-out);
 }
 
 @keyframes fadeIn {
@@ -484,7 +484,7 @@ dialog {
     border-radius: var(--radius);
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--ease-standard);
     margin-bottom: 8px;
 }
 

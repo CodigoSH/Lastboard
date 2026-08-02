@@ -14,35 +14,68 @@
 
 /* --- Scrollbars ---------------------------------------------------------- */
 
-/* Slim bars instead of the OS default, which is far chunkier than the rest of
-   the UI. Applied to everything in the shadow root rather than through a class,
-   so a component gets the house style without having to opt in — and without
-   touching its markup. A component that genuinely needs something else (the
-   dashboard grid hides its bars) overrides it from its own stylesheet, which
-   comes later in the cascade.
-   Deliberately no `scrollbar-width`/`scrollbar-color`: declaring either makes
-   Chrome ignore these ::-webkit-scrollbar rules and fall back to a ~12px bar.
-   Firefox draws slim bars by default. */
-::-webkit-scrollbar {
+/* One scrollbar look everywhere. Applied to every element rather than through
+   an opt-in class, so a component inherits the house style without touching its
+   markup; anything that genuinely needs otherwise (the dashboard grid hides its
+   bars) overrides it from its own stylesheet, later in the cascade.
+ *
+ * scrollbar-width/scrollbar-color are the ones that actually take effect:
+ * current Chrome ignores ::-webkit-scrollbar entirely — verified by measuring a
+ * bar that stayed 12px with the webkit rules, without them, and even with them
+ * forced !important. Those rules are kept underneath for older engines that
+ * only understand them; where both are supported the standard ones win, which
+ * is the outcome we want anyway. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
-::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
     background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 3px;
 }
 
-::-webkit-scrollbar-corner {
+*::-webkit-scrollbar-corner {
     background: transparent;
+}
+
+/* --- Dialogs -------------------------------------------------------------- */
+
+/* Ten components declare their own `dialog`, and they fall into two deliberate
+ * families: "paper" ones with their own header (padding 0, --paper-bg) and
+ * plain confirmation ones (padding 28px, --surface-solid). Those differences
+ * are intentional, so this holds only what every dialog agrees on. The width
+ * lived as clamp(300px…) in five of them and clamp(280px…) in three — that gap
+ * was drift, not intent, so it settles on the majority.
+ *
+ * Note `display` is not set here: putting it on a bare `dialog` overrides the
+ * browser's `dialog:not([open]) { display: none }` and leaves a ghost painted
+ * after closing. Components that need a flex body set it on `dialog[open]`. */
+.dialog-base {
+    border-radius: var(--radius);
+    box-shadow: var(--paper-shadow);
+    color: var(--text-main);
+    width: clamp(300px, 85cqi, 400px);
 }
 
 /* --- Text inputs --------------------------------------------------------- */
 
+/* Applied by element as well as by class, so a component inherits the house
+   input without touching its markup. Components whose fields genuinely differ
+   keep their own rule, which out-specifies this one (`.field-group input[…]`
+   beats a bare element selector). */
+input[type="text"],
+input[type="password"],
+input[type="number"],
 .field-input {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
@@ -57,10 +90,16 @@
     transition: all 0.2s;
 }
 
+input[type="text"]::placeholder,
+input[type="password"]::placeholder,
+input[type="number"]::placeholder,
 .field-input::placeholder {
     color: var(--input-placeholder);
 }
 
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
 .field-input:focus {
     border-color: var(--input-focus-border);
     box-shadow: var(--input-focus-shadow);

@@ -7,7 +7,7 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml } from '../../../services/escape';
 
 export const template = ({ title, message }: PasswordConfirmModalData) => `
-    <dialog id="modal" aria-labelledby="pc-title">
+    <dialog class="dialog-base" id="modal" aria-labelledby="pc-title">
         <div class="modal-header">
             <h3 class="modal-title" id="pc-title">${escapeHtml(title)}</h3>
             <button class="modal-close" id="modal-close" aria-label="${i18n.t('general.close')}">

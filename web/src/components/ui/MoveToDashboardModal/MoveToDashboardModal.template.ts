@@ -8,7 +8,7 @@ import { Dashboard } from '../../../types';
  * mobile reorder sheet.
  */
 export const template = (dashboards: Dashboard[]) => `
-    <dialog id="modal" aria-labelledby="mv-title">
+    <dialog class="dialog-base" id="modal" aria-labelledby="mv-title">
         <div class="modal-header">
             <h3 class="modal-title" id="mv-title">${i18n.t('bookmark.move_to')}</h3>
             <button class="modal-close" id="modal-close" aria-label="${i18n.t('general.close')}">

@@ -1,4 +1,5 @@
 import { template } from './ConfirmationModal.template';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
 import css from './ConfirmationModal.css' with { type: 'text' };
 
@@ -12,6 +13,7 @@ export class ConfirmationModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

@@ -1,4 +1,5 @@
 import { template } from './AddDashboardModal.template';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import css from './AddDashboardModal.css' with { type: 'text' };
 
@@ -19,6 +20,7 @@ class AddDashboardModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

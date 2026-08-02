@@ -853,7 +853,7 @@ class WidgetConfigModal extends HTMLElement {
 
         this.shadowRoot.innerHTML = `
             <style>${css}</style>
-            <dialog id="modal" aria-label="${i18n.t('widget.add_title') || 'Widget'}">
+            <dialog class="dialog-base" id="modal" aria-label="${i18n.t('widget.add_title') || 'Widget'}">
                 <div class="modal-header">
                     <div class="integrated-tabs">
                         <button class="tab-btn active" data-tab="general">${i18n.t('general.general')}</button>
