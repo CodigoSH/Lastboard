@@ -12,8 +12,44 @@ dialog {
     padding: 0;
     width: clamp(300px, 85cqi, 400px);
     box-shadow: var(--paper-shadow);
+    /* Deliberate: inside a <dialog> the app-select dropdown is positioned
+       absolutely within the select (it cannot portal to <body>, the dialog
+       would make it inert), so any scrolling ancestor clips it. Keep the
+       overflow visible and control the height by making forms shorter. */
     overflow: visible;
     color: var(--text-main);
+}
+
+/* Forms with many fields (the API widget's advanced mode) get more room so the
+   short fields can sit two per row. This modal is desktop-only — touch devices
+   have no edit mode and never render widgets — so the extra width is safe. */
+dialog.dialog--wide {
+    width: clamp(300px, 92cqi, 680px);
+}
+
+/* Two-up rows for short controls. Anything that needs the full width (URLs,
+   textareas) opts out with .field-span. */
+.field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.field-grid > .field-span {
+    grid-column: 1 / -1;
+}
+
+/* Narrow desktop windows and tablets in landscape: back to a single column. */
+@media (max-width: 720px) {
+    .field-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* At 400px a full-width Save reads fine; stretched across 680px it does not. */
+dialog.dialog--wide .actions app-button {
+    max-width: 260px;
 }
 
 dialog::backdrop {

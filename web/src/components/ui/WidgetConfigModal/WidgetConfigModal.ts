@@ -218,7 +218,7 @@ class WidgetConfigModal extends HTMLElement {
                     // The array path only means anything in list view.
                     viewSel.addEventListener('change', () => {
                         const group = this.shadowRoot?.getElementById('api-array-group');
-                        if (group) group.style.display = viewSel.value === 'list' ? 'block' : 'none';
+                        if (group) group.style.display = viewSel.value === 'list' ? 'flex' : 'none';
                     });
                 }
 
@@ -256,7 +256,10 @@ class WidgetConfigModal extends HTMLElement {
                     const advanced = this.shadowRoot!.getElementById('api-advanced') as HTMLElement | null;
                     const p = getPreset(id);
                     if (simple) simple.style.display = p ? 'block' : 'none';
-                    if (advanced) advanced.style.display = p ? 'none' : 'block';
+                    if (advanced) advanced.style.display = p ? 'none' : 'grid';
+                    // Only the advanced form needs the two-column layout; the
+                    // preset form is four fields and looks lost when stretched.
+                    this.shadowRoot!.getElementById('modal')?.classList.toggle('dialog--wide', !p);
                     if (p) {
                         const keyLabel = this.shadowRoot!.getElementById('api-key-label');
                         const keyHint = this.shadowRoot!.getElementById('api-key-hint');
@@ -779,8 +782,8 @@ class WidgetConfigModal extends HTMLElement {
                         </div>
                     </div>
 
-                    <div id="api-advanced" style="display:${preset ? 'none' : 'block'}">
-                        <div class="field-group">
+                    <div id="api-advanced" class="field-grid" style="display:${preset ? 'none' : 'grid'}">
+                        <div class="field-group field-span">
                             <label>${i18n.t('widget.api.url_label') || 'Endpoint URL'}</label>
                             <input type="text" id="api-url" value="${esc(url)}" placeholder="http://10.0.0.5/admin/api.php?summary" />
                             <small>${i18n.t('widget.api.url_hint') || 'The server fetches this JSON URL for you (reaches private IPs, no CORS).'}</small>
@@ -789,26 +792,26 @@ class WidgetConfigModal extends HTMLElement {
                             <label>${i18n.t('widget.api.method_label') || 'Method'}</label>
                             <app-select id="api-method" value="${method}"></app-select>
                         </div>
-                        <div class="field-group">
-                            <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
-                            <textarea id="api-headers" rows="2" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
-                            <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
-                        </div>
                         <div class="field-group row-aligned">
                             <label>${i18n.t('widget.api.view_label') || 'View'}</label>
                             <app-select id="api-view" value="${viewMode}"></app-select>
                         </div>
-                        <div class="field-group" id="api-array-group" style="display:${viewMode === 'list' ? 'block' : 'none'}">
-                            <label>${i18n.t('widget.api.array_label') || 'List array'}</label>
-                            <input type="text" id="api-array" value="${esc(arrayPath)}" placeholder="queue.records" />
-                            <small>${i18n.t('widget.api.array_hint_list') || 'Path to the array to list. The fields below are then relative to each item.'}</small>
+                        <div class="field-group">
+                            <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
+                            <textarea id="api-headers" rows="4" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
+                            <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
                         </div>
                         <div class="field-group">
                             <label>${i18n.t('widget.api.fields_label') || 'Fields'}</label>
                             <textarea id="api-fields" rows="4" spellcheck="false" placeholder="Queries = dns_queries_today | number&#10;Blocked = ads_percentage_today | percent">${esc(fieldsText)}</textarea>
                             <small>${i18n.t('widget.api.fields_hint') || 'One per line: "Label = path". Path is dot/bracket (a.b[0].c). Optional "| number|bytes|percent".'}</small>
                         </div>
-                        <div class="field-group row-aligned">
+                        <div class="field-group field-span" id="api-array-group" style="display:${viewMode === 'list' ? 'flex' : 'none'}">
+                            <label>${i18n.t('widget.api.array_label') || 'List array'}</label>
+                            <input type="text" id="api-array" value="${esc(arrayPath)}" placeholder="queue.records" />
+                            <small>${i18n.t('widget.api.array_hint_list') || 'Path to the array to list. The fields below are then relative to each item.'}</small>
+                        </div>
+                        <div class="field-group row-aligned field-span">
                             <label>${i18n.t('widget.api.refresh_label') || 'Refresh'}</label>
                             <app-select id="api-refresh" value="${refreshSec}"></app-select>
                         </div>
