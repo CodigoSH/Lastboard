@@ -148,8 +148,9 @@ dialog[open] {
 .tab-container > .content {
     flex: 1;
     min-height: 0;
-    /* overflow-y and the slim scrollbar come from styles/shared.css: the body
-       starts hidden and reveals the bar once the layout settles. */
+    /* The dialog is height-capped, so the body is what scrolls. The slim
+       scrollbar look comes from styles/shared.css. */
+    overflow-y: auto;
 }
 
 /* Header and footer stay put while the body scrolls. */
@@ -550,10 +551,15 @@ dialog[open] {
     display: block;
 }
 
+/* Enters from above, not below. The scrolling body is this element's parent, so
+   a downward offset makes the content stick out past the bottom and the browser
+   shows a scrollbar for the length of the animation, which then vanishes once
+   the offset reaches zero — a flash on every open. Overflow above the top edge
+   never produces a bar, so the same movement upwards is free of it. */
 @keyframes fadeContent {
     from {
         opacity: 0;
-        transform: translateY(5px);
+        transform: translateY(-5px);
     }
 
     to {

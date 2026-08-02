@@ -104,7 +104,7 @@ export const template = ({
         <div class="tab-container">
             <form class="modal-form" id="bookmark-form">
                 <!-- TAB: GENERAL -->
-                <div id="tab-general" class="tab-content scroll-when-settled active">
+                <div id="tab-general" class="tab-content active">
                     <div class="form-row" style="display: flex; gap: 12px; align-items: flex-end;">
                         <!-- Icon Box (Independent) -->
                         <div class="form-group" style="width: 52px;">
@@ -197,7 +197,7 @@ export const template = ({
                 </div>
 
                 <!-- TAB: CUSTOMIZATION -->
-                <div id="tab-customization" class="tab-content scroll-when-settled scroll-when-settled">
+                <div id="tab-customization" class="tab-content">
                     <!-- Appearance Controls -->
                     ${renderAppearanceControls(color, borderWidth)}
                 </div>

@@ -50,21 +50,6 @@
 
 /* --- Dialogs -------------------------------------------------------------- */
 
-/* A dialog's first layout can come out a few pixels taller than its settled
- * one: the scrollbar appears, narrows the content, a line of text wraps, and
- * the next pass fits again without it. The browser resolves this in a frame or
- * two, but the bar is visible while it does, which reads as a glitch on every
- * open. So the scroll starts hidden and the component adds .is-settled once the
- * layout has stopped moving (overflow is not an animatable property, so this
- * cannot be done from CSS alone). */
-.scroll-when-settled {
-    overflow-y: hidden;
-}
-
-.scroll-when-settled.is-settled {
-    overflow-y: auto;
-}
-
 /* Ten components declare their own `dialog`, and they fall into two deliberate
  * families: "paper" ones with their own header (padding 0, --paper-bg) and
  * plain confirmation ones (padding 28px, --surface-solid). Those differences

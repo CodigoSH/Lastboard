@@ -1,5 +1,5 @@
 import { template } from './AddBookmarkModal.template';
-import { adoptSharedStyles, revealScrollWhenSettled } from '../../../services/sharedStyles';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import { safeImageSrc } from '../../../services/escape';
@@ -474,7 +474,6 @@ class AddBookmarkModal extends HTMLElement {
 
         // Restore open state
         if (wasOpen) this.dialog?.showModal();
-        revealScrollWhenSettled(this.shadowRoot);
     }
 
     open() {
