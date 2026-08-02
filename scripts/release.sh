@@ -3,16 +3,47 @@
 # ==========================================
 # 🚀 Unified Release Script
 # Handles: Stable, Beta, and RC releases
-# Usage: ./scripts/release.sh [stable|beta|rc]
+#
+# Usage: ./scripts/release.sh [stable|beta|rc] ["release title"] [--dry-run]
+#                                              [--skip-checks]
+#
+# The title is the one-line summary of the release. It ends up as the `feat:`
+# commit the changelog is built from, so give it a real sentence; passing it as
+# an argument is what keeps it from falling back to "minor updates".
+#
+# --dry-run prints the version it would produce, checks every file it would
+# rewrite, renders the changelog and lists the git commands — without touching
+# a single file. Use it to inspect a release before making it.
 # ==========================================
 
-TYPE=$1
+# Fail loudly: an unchecked error here means a tag pushed against a broken tree.
+set -euo pipefail
+
+# --- Arguments ------------------------------------------------------------
+
+TYPE=""
+TITLE=""
+DRY_RUN=0
+SKIP_CHECKS=0
+
+for arg in "$@"; do
+    case "$arg" in
+        stable|beta|rc)  TYPE="$arg" ;;
+        --dry-run)       DRY_RUN=1 ;;
+        --skip-checks)   SKIP_CHECKS=1 ;;
+        --*)             echo "❌ Unknown option: $arg"; exit 1 ;;
+        *)               TITLE="$arg" ;;
+    esac
+done
 
 if [[ "$TYPE" != "stable" && "$TYPE" != "beta" && "$TYPE" != "rc" ]]; then
-    echo "Usage: ./scripts/release.sh [stable|beta|rc]"
+    echo "Usage: ./scripts/release.sh [stable|beta|rc] [\"release title\"] [--dry-run] [--skip-checks]"
     echo "  stable : Promotes current version to stable (removes suffixes)"
     echo "  beta   : Bumps Beta version (creates new patch-Beta.01 if current is stable)"
     echo "  rc     : Bumps RC version"
+    echo
+    echo "  --dry-run      Show what would happen, change nothing"
+    echo "  --skip-checks  Skip the test/build preflight (emergencies only)"
     exit 1
 fi
 
@@ -22,37 +53,120 @@ GO_VERSION_FILE="internal/version/version.go"
 SETTINGS_FILE="web/src/components/ui/SettingsContent/SettingsContent.ts"
 UPDATE_SERVICE_FILE="web/src/services/UpdateService.ts"
 
-# 1. Get current version
-if [ ! -f "$VERSION_FILE" ]; then
-    echo "❌ package.json not found!"
-    exit 1
+RELEASE_BRANCH="main"
+
+die() { echo "❌ $1" >&2; exit 1; }
+
+# Runs a command, or prints it when doing a dry run.
+run() {
+    if [ "$DRY_RUN" = "1" ]; then
+        echo "   [dry-run] $*"
+    else
+        "$@"
+    fi
+}
+
+if [ "$DRY_RUN" = "1" ]; then
+    echo "🧪 DRY RUN — nothing will be written, committed or pushed."
+    echo
 fi
-CURRENT_FULL=$(grep -oP '"version": "\K[^"]+' $VERSION_FILE)
+
+# --- 0. Preconditions ------------------------------------------------------
+
+# A release must be reproducible from what is published, so the tree has to be
+# clean and level with the remote before anything is rewritten. The old script
+# swept whatever was lying around into the release commit with `git add .`.
+echo "🔍 Checking the repository..."
+
+[ -f "$VERSION_FILE" ] || die "package.json not found — run this from the project root."
+git rev-parse --git-dir >/dev/null 2>&1 || die "Not a git repository."
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+[ "$CURRENT_BRANCH" = "$RELEASE_BRANCH" ] || \
+    die "On branch '$CURRENT_BRANCH'. Releases are cut from '$RELEASE_BRANCH'."
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "   Uncommitted changes:"
+    git status --short | sed 's/^/     /'
+    # A dry run is for inspecting a release before making it, so it reports the
+    # dirty tree and carries on; a real run stops.
+    [ "$DRY_RUN" = "1" ] || \
+        die "Commit or stash them first — a release commit should only carry the version bump."
+    echo "   ⚠️  A real run would stop here."
+    TREE_DIRTY=1
+fi
+TREE_DIRTY=${TREE_DIRTY:-0}
+
+git fetch origin "$RELEASE_BRANCH" --quiet 2>/dev/null || \
+    echo "   ⚠️  Could not reach origin; skipping the sync check."
+if git rev-parse --verify --quiet "origin/$RELEASE_BRANCH" >/dev/null; then
+    BEHIND=$(git rev-list --count "HEAD..origin/$RELEASE_BRANCH")
+    [ "$BEHIND" = "0" ] || \
+        die "Local $RELEASE_BRANCH is $BEHIND commit(s) behind origin. Pull first."
+fi
+
+if [ "$TREE_DIRTY" = "0" ]; then
+    echo "   ✅ On $RELEASE_BRANCH, clean and up to date."
+else
+    echo "   ✅ On $RELEASE_BRANCH, up to date with origin."
+fi
+
+# --- 1. Preflight ----------------------------------------------------------
+
+# Tag and push happen further down and cannot be taken back cheaply, so the
+# suite runs *before* anything is written rather than by hand beforehand.
+if [ "$SKIP_CHECKS" = "1" ]; then
+    echo "⏭️  Preflight skipped (--skip-checks)."
+else
+    echo "🧪 Preflight..."
+
+    UNFORMATTED=$(gofmt -l . 2>/dev/null | grep -v '^vendor/' || true)
+    [ -z "$UNFORMATTED" ] || die "gofmt reports unformatted files:"$'\n'"$UNFORMATTED"
+    echo "   ✅ gofmt"
+
+    go vet ./... || die "go vet failed."
+    echo "   ✅ go vet"
+
+    go test ./... >/dev/null || die "Go tests failed. Run 'go test ./...' to see why."
+    echo "   ✅ go test"
+
+    bun test >/dev/null 2>&1 || die "Frontend tests failed. Run 'bun test' to see why."
+    echo "   ✅ bun test"
+
+    bun run build >/dev/null || die "Frontend build failed. Run 'bun run build' to see why."
+    echo "   ✅ bun run build"
+
+    # The build writes into web/dist and internal/web/dist; both are committed,
+    # so a diff here means the tree was built from stale sources.
+    if [ -n "$(git status --porcelain)" ]; then
+        echo "   Build output differs from what is committed:"
+        git status --short | sed 's/^/     /'
+        [ "$DRY_RUN" = "1" ] || die "Commit the rebuilt assets first."
+        echo "   ⚠️  A real run would stop here."
+    fi
+fi
+
+# --- 2. Calculate the new version -----------------------------------------
+
+CURRENT_FULL=$(grep -oP '"version": "\K[^"]+' "$VERSION_FILE") || \
+    die "Could not read the version from $VERSION_FILE."
 echo "ℹ️  Current Version: $CURRENT_FULL"
 
-# 2. Calculate New Version
-BASE_VERSION=$(echo $CURRENT_FULL | sed -E 's/-(Beta|RC)\.[0-9]+$//')
+BASE_VERSION=$(echo "$CURRENT_FULL" | sed -E 's/-(Beta|RC)\.[0-9]+$//')
 
 case $TYPE in
     beta)
         if [[ "$CURRENT_FULL" == *"-Beta."* ]]; then
             # Increment existing Beta
-            LAST_NUM=$(echo $CURRENT_FULL | grep -oP 'Beta\.\K[0-9]+')
+            LAST_NUM=$(echo "$CURRENT_FULL" | grep -oP 'Beta\.\K[0-9]+')
             NEXT_NUM=$((10#$LAST_NUM + 1))
         elif [[ "$CURRENT_FULL" == *"-RC."* ]]; then
-             # Switching from RC back to Beta (Unusual but possible)
-             NEXT_NUM=1
+            # Switching from RC back to Beta (unusual but possible)
+            NEXT_NUM=1
         else
-            # From Stable to Beta -> Increment Patch version first? 
-            # Usually: 1.2.0 -> 1.2.1-Beta.01
-            # But simplistic logic might just append. 
-            # Let's check semantic versioning. 
-            # If I am on 1.2.0, next beta is 1.2.1-Beta.01 usually. 
-            # However, the previous script simplistic logic for Beta was:
-            # NEW_BASE=$BASE_VERSION (which extracts 1.2.0 from 1.2.0)
-            # So 1.2.0 -> 1.2.0-Beta.01? That's technically a "lower" version.
-            # Let's perform a PATCH bump if starting from stable.
-            
+            # From stable, bump the patch first: 1.2.0 -> 1.2.1-Beta.01.
+            # Reusing the same base would produce a version that sorts *below*
+            # the stable it came from.
             IFS='.' read -r -a PARTS <<< "$BASE_VERSION"
             MAJOR="${PARTS[0]}"
             MINOR="${PARTS[1]}"
@@ -62,7 +176,7 @@ case $TYPE in
             NEXT_NUM=1
             echo "ℹ️  Bumping patch for new Beta cycle: $BASE_VERSION"
         fi
-        
+
         PADDED=$(printf "%02d" $NEXT_NUM)
         NEW_VERSION="$BASE_VERSION-Beta.$PADDED"
         NEW_TAG="v$NEW_VERSION"
@@ -70,14 +184,13 @@ case $TYPE in
 
     rc)
         if [[ "$CURRENT_FULL" == *"-RC."* ]]; then
-            LAST_NUM=$(echo $CURRENT_FULL | grep -oP 'RC\.\K[0-9]+')
+            LAST_NUM=$(echo "$CURRENT_FULL" | grep -oP 'RC\.\K[0-9]+')
             NEXT_NUM=$((10#$LAST_NUM + 1))
         else
-            # From Beta or Stable to RC
-            # Keep the same Base Version
+            # From Beta or Stable to RC: keep the same base version
             NEXT_NUM=1
         fi
-        
+
         PADDED=$(printf "%02d" $NEXT_NUM)
         NEW_VERSION="$BASE_VERSION-RC.$PADDED"
         NEW_TAG="v$NEW_VERSION"
@@ -87,64 +200,104 @@ case $TYPE in
         # 1.1.8-Beta.07 -> 1.1.8
         NEW_VERSION="$BASE_VERSION"
         NEW_TAG="v$NEW_VERSION"
-        
+
         echo "Current Version: $CURRENT_FULL"
         echo "Proposed Stable: $NEW_VERSION"
-        echo "Press ENTER to confirm or type a manual version:"
-        read MANUAL_INPUT
-        if [ ! -z "$MANUAL_INPUT" ]; then
-            NEW_VERSION=$MANUAL_INPUT
-            NEW_TAG="v$NEW_VERSION"
+        if [ "$DRY_RUN" = "0" ]; then
+            echo "Press ENTER to confirm or type a manual version:"
+            read -r MANUAL_INPUT || MANUAL_INPUT=""
+            if [ -n "$MANUAL_INPUT" ]; then
+                NEW_VERSION=$MANUAL_INPUT
+                NEW_TAG="v$NEW_VERSION"
+            fi
         fi
         ;;
 esac
 
+git rev-parse --verify --quiet "refs/tags/$NEW_TAG" >/dev/null && \
+    die "Tag $NEW_TAG already exists."
+
 echo "🚀 Preparing Release: $NEW_TAG ($TYPE)"
-if [ "$TYPE" == "stable" ]; then
-    read -p "Are you sure? This will push to production. (y/N) " confirm
+
+if [ "$TYPE" == "stable" ] && [ "$DRY_RUN" = "0" ]; then
+    read -r -p "Are you sure? This will push to production. (y/N) " confirm || confirm=""
     if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
         echo "❌ Cancelled"
         exit 1
     fi
 fi
 
-# 3. Update Files
-echo "📝 Updating version files..."
-sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" $VERSION_FILE
-sed -i "s/Current = \".*\"/Current = \"$NEW_TAG\"/" $GO_VERSION_FILE
-sed -i "s/private version = '.*'/private version = '$NEW_TAG'/" $SETTINGS_FILE
-sed -i "s/current_version: 'v[^']*', \/\/ Mock version for demo/current_version: '$NEW_TAG', \/\/ Mock version for demo/" $UPDATE_SERVICE_FILE
-sed -i "s/latest_version: 'v[^']*',/latest_version: '$NEW_TAG',/" $UPDATE_SERVICE_FILE
+# --- 3. Release title ------------------------------------------------------
 
-# 4. Handle Pending Changes
-if [ -n "$(git status --porcelain)" ]; then
-    echo "⚠️  You have uncommitted changes."
-    echo "Enter brief description for release notes (default: 'minor updates'):"
-    read USER_DESC
-    if [ -z "$USER_DESC" ]; then
-        USER_DESC="minor updates"
-    fi
-    git add .
-    git commit -m "feat: $USER_DESC"
+# This becomes the `feat:` commit the changelog reads, i.e. the one-line summary
+# of the release. It used to be prompted for as if it were about uncommitted
+# changes, which is why it so often ended up as the "minor updates" default.
+if [ -z "$TITLE" ] && [ "$DRY_RUN" = "0" ]; then
+    echo "Title for this release (one line, shown in the changelog):"
+    read -r TITLE || TITLE=""
 fi
+[ -n "$TITLE" ] || TITLE="minor updates"
+echo "🏷️  Title: $TITLE"
 
-# 5. Generate Changelog
+# --- 4. Update the version files -------------------------------------------
+
+# Every rewrite is checked: a silent no-op here leaves the version disagreeing
+# between package.json, the Go binary and the UI, which only shows up once
+# someone reports that the app reports a version they never installed.
+apply_version() {
+    local file=$1 pattern=$2 replacement=$3 label=$4
+
+    [ -f "$file" ] || die "$label: $file not found."
+    grep -qE "$pattern" "$file" || \
+        die "$label: no line matching /$pattern/ in $file — the file changed shape, update this script."
+
+    if [ "$DRY_RUN" = "1" ]; then
+        echo "   [dry-run] would rewrite $label in $file"
+        echo "             $(grep -m1 -E "$pattern" "$file" | sed 's/^[[:space:]]*//')"
+        return
+    fi
+
+    sed -i "$replacement" "$file"
+    grep -qF "$NEW_TAG" "$file" || grep -qF "$NEW_VERSION" "$file" || \
+        die "$label: the rewrite of $file did not take effect."
+    echo "   ✅ $label"
+}
+
+echo "📝 Updating version files..."
+apply_version "$VERSION_FILE" '"version": ".*"' \
+    "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" "package.json"
+apply_version "$GO_VERSION_FILE" 'Current = ".*"' \
+    "s/Current = \".*\"/Current = \"$NEW_TAG\"/" "version.go"
+apply_version "$SETTINGS_FILE" "private version = '.*'" \
+    "s/private version = '.*'/private version = '$NEW_TAG'/" "SettingsContent.ts"
+apply_version "$UPDATE_SERVICE_FILE" "current_version: 'v[^']*', // Mock version for demo" \
+    "s/current_version: 'v[^']*', \/\/ Mock version for demo/current_version: '$NEW_TAG', \/\/ Mock version for demo/" \
+    "UpdateService.ts (current)"
+apply_version "$UPDATE_SERVICE_FILE" "latest_version: 'v[^']*'," \
+    "s/latest_version: 'v[^']*',/latest_version: '$NEW_TAG',/" "UpdateService.ts (latest)"
+
+# Named explicitly: `git add .` would sweep in anything else in the tree.
+echo "📦 Committing the version bump..."
+run git add "$VERSION_FILE" "$GO_VERSION_FILE" "$SETTINGS_FILE" "$UPDATE_SERVICE_FILE"
+run git commit -m "feat: $TITLE"
+
+# --- 5. Generate the changelog ---------------------------------------------
+
 if [ "$TYPE" == "stable" ]; then
-    LAST_TAG=$(git tag -l "v*" --sort=-v:refname | grep -v -E 'Beta|RC' | head -n 1)
+    LAST_TAG=$(git tag -l "v*" --sort=-v:refname | grep -v -E 'Beta|RC' | head -n 1 || true)
     if [ -z "$LAST_TAG" ]; then
-        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
     fi
     echo "📝 Generating stable changelog (aggregating since $LAST_TAG)..."
 else
-    LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+    LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
     echo "📝 Generating changelog from $LAST_TAG..."
 fi
-
-REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//')
+[ -n "$LAST_TAG" ] || die "No previous tag found to build a changelog from."
 
 get_log() {
     local pattern=$1
-    git log $LAST_TAG..HEAD --oneline --pretty=format:"%s" | \
+    git log "$LAST_TAG..HEAD" --oneline --pretty=format:"%s" | \
     grep -iE "$pattern" | \
     grep -vE "chore\(release\)|chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | \
     sed -E 's/^(feat|fix|refactor|perf|chore|docs|style)(\([a-z0-9_-]+\))?: //i' | \
@@ -157,14 +310,14 @@ get_log() {
 FEATS=$(get_log "^feat")
 FIXES=$(get_log "^fix")
 REFACTORS=$(get_log "^refactor|^perf")
-OTHER=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"%s" | grep -vE "^feat|^fix|^refactor|^perf|^chore\(release\)|^chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | sed 's/^[a-z]*: //' | awk '{$1=toupper(substr($1,1,1))substr($1,2)}1' | sed 's/^/- /' | sort -u || echo "")
+OTHER=$(git log "$LAST_TAG..HEAD" --oneline --pretty=format:"%s" | grep -vE "^feat|^fix|^refactor|^perf|^chore\(release\)|^chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | sed 's/^[a-z]*: //' | awk '{$1=toupper(substr($1,1,1))substr($1,2)}1' | sed 's/^/- /' | sort -u || echo "")
 
 # Update CHANGELOG.md
 if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     echo "📝 Updating CHANGELOG.md..."
     DATE=$(date +%Y-%m-%d)
-    VERSION_DISPLAY=$(echo $NEW_TAG | sed 's/^v//')
-    
+    VERSION_DISPLAY=$(echo "$NEW_TAG" | sed 's/^v//')
+
     CL_CHANGED=""
     [ -n "$REFACTORS" ] && CL_CHANGED="$REFACTORS"
     [ -n "$OTHER" ] && CL_CHANGED="${CL_CHANGED:+$CL_CHANGED$'\n'}$OTHER"
@@ -178,20 +331,27 @@ if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
         [ -n "$FEATS" ]      && printf '### Added\n%s\n\n' "$FEATS"
         [ -n "$FIXES" ]      && printf '### Fixed\n%s\n\n' "$FIXES"
         [ -n "$CL_CHANGED" ] && printf '### Changed\n%s\n\n' "$CL_CHANGED"
+        true
     } > "$ENTRY_FILE"
 
-    # Insert before the first version header
-    awk 'NR==FNR { entry = entry $0 "\n"; next }
-         /^## \[/ && !done { printf "%s", entry; done=1 }
-         { print }' "$ENTRY_FILE" CHANGELOG.md > CHANGELOG.md.tmp \
-        && mv CHANGELOG.md.tmp CHANGELOG.md
+    if [ "$DRY_RUN" = "1" ]; then
+        echo "   [dry-run] CHANGELOG.md entry that would be inserted:"
+        sed 's/^/     /' "$ENTRY_FILE"
+    else
+        # Insert before the first version header
+        awk 'NR==FNR { entry = entry $0 "\n"; next }
+             /^## \[/ && !done { printf "%s", entry; done=1 }
+             { print }' "$ENTRY_FILE" CHANGELOG.md > CHANGELOG.md.tmp \
+            && mv CHANGELOG.md.tmp CHANGELOG.md
+    fi
     rm -f "$ENTRY_FILE"
 fi
 
-# Create temporary file for Forgejo Release Body
+# Release body for Forgejo. A hand-written file always wins: the generated one
+# is a list of commit subjects, which is not what a reader wants.
 NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
 if [ -f "$NOTES_FILE" ]; then
-    echo "Using existing release notes: $NOTES_FILE"
+    echo "📄 Using existing release notes: $NOTES_FILE"
 else
     NOTES_CHANGED=""
     if [ -n "$REFACTORS" ] && [ -n "$OTHER" ]; then
@@ -201,27 +361,62 @@ else
     else
         NOTES_CHANGED="$OTHER"
     fi
-    {
-        [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
-        [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
-        [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
-    } > "$NOTES_FILE"
+
+    if [ "$DRY_RUN" = "1" ]; then
+        echo "   [dry-run] $NOTES_FILE would be generated as:"
+        {
+            [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
+            [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
+            [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
+            true
+        } | sed 's/^/     /'
+    else
+        {
+            [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
+            [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
+            [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
+            true
+        } > "$NOTES_FILE"
+    fi
 fi
 
-# 6. Git Operations
-echo "📦 Committing Release..."
-git add .
-git commit -m "chore(release): bump to $NEW_TAG"
-git tag $NEW_TAG
+# --- 6. Commit, tag, push --------------------------------------------------
+
+if [ "$DRY_RUN" = "1" ]; then
+    echo "📦 Would commit the notes, tag $NEW_TAG and push:"
+    echo "   [dry-run] git add CHANGELOG.md $NOTES_FILE"
+    echo "   [dry-run] git commit -m 'chore(release): bump to $NEW_TAG'"
+    echo "   [dry-run] git tag $NEW_TAG"
+    echo "   [dry-run] git push origin $RELEASE_BRANCH && git push origin $NEW_TAG"
+    echo "   [dry-run] rm $NOTES_FILE, commit cleanup, push"
+    echo
+    echo "🧪 Dry run complete — the working tree is untouched."
+    exit 0
+fi
+
+echo "📦 Committing release notes..."
+[ -f "CHANGELOG.md" ] && git add CHANGELOG.md
+[ -f "$NOTES_FILE" ] && git add "$NOTES_FILE"
+# The notes may already be committed, in which case there is nothing staged.
+if ! git diff --cached --quiet; then
+    git commit -m "chore(release): bump to $NEW_TAG"
+fi
+
+git tag "$NEW_TAG"
 
 echo "📤 Pushing to Remote..."
-git push origin main
-git push origin $NEW_TAG
+# The tag goes last on purpose: it is what the CI builds from, so it must never
+# point at commits the branch has not accepted.
+git push origin "$RELEASE_BRANCH" || die "Push to $RELEASE_BRANCH failed. The tag $NEW_TAG stays local; delete it with 'git tag -d $NEW_TAG' once resolved."
+git push origin "$NEW_TAG" || die "Tag push failed. $RELEASE_BRANCH is already pushed; retry with 'git push origin $NEW_TAG'."
 
-# Cleanup (Smart Cleanup: removes from main but stays in Tag)
-rm -f RELEASE_NOTES_*.md 2>/dev/null
-git add .
-git commit -m "chore(release): cleanup release notes [skip ci]"
-git push origin main
+# Cleanup: the notes live on in the tag, but are removed from the branch so the
+# root does not collect one file per release. Only this release's file.
+if [ -f "$NOTES_FILE" ]; then
+    rm -f "$NOTES_FILE"
+    git add "$NOTES_FILE"
+    git commit -m "chore(release): cleanup release notes [skip ci]"
+    git push origin "$RELEASE_BRANCH"
+fi
 
 echo "✅ Successfully deployed $NEW_TAG!"

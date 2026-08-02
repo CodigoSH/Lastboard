@@ -77,14 +77,26 @@ We use a unified shell script to handle version bumping, changelog generation, a
 To draft a release:
 ```bash
 # For Beta releases
-./scripts/release.sh beta
+./scripts/release.sh beta "One-line summary of the release"
 
 # For Release Candidates
-./scripts/release.sh rc
+./scripts/release.sh rc "One-line summary of the release"
 
 # For Official Stable releases
-./scripts/release.sh stable
+./scripts/release.sh stable "One-line summary of the release"
 ```
+
+The title is the summary the changelog is built from. Pass it as an argument, or the script will ask for one.
+
+**Preview a release before making it.** `--dry-run` prints the version it would produce, checks every file it would rewrite, renders the changelog and lists the git commands, without touching the working tree:
+
+```bash
+./scripts/release.sh beta "Summary" --dry-run
+```
+
+Before anything is written, the script requires a clean tree on `main` that is level with the remote, and runs `gofmt`, `go vet`, `go test`, `bun test` and `bun run build`. If any of them fails it stops, so a broken tree can never reach a published tag. `--skip-checks` bypasses the preflight and is meant for emergencies.
+
+If you write `RELEASE_NOTES_<tag>.md` before running the script, those notes are used as the release body instead of the generated list of commit subjects. The file is removed from the branch afterwards but lives on in the tag.
 
 The script bumps the version, updates the changelog, commits, and pushes a new tag. This triggers the Forgejo Actions workflows which:
 

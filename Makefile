@@ -81,14 +81,19 @@ docker:
 	@docker build -t lastboard:local .
 
 # --- Release Shortcuts ---
+# Usage: make release-beta TITLE="One-line summary of the release" [DRY=1]
+# TITLE becomes the changelog entry; without it the script asks for one.
+# DRY=1 shows what the release would do without changing anything.
+RELEASE_OPTS = $(if $(TITLE),"$(TITLE)") $(if $(DRY),--dry-run)
+
 release-beta:
-	@./scripts/release.sh beta
+	@./scripts/release.sh beta $(RELEASE_OPTS)
 
 release-rc:
-	@./scripts/release.sh rc
+	@./scripts/release.sh rc $(RELEASE_OPTS)
 
 release-stable:
-	@./scripts/release.sh stable
+	@./scripts/release.sh stable $(RELEASE_OPTS)
 
 # --- Dev ---
 dev:
