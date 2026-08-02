@@ -9,8 +9,12 @@ import shared from '../styles/shared.css' with { type: 'text' };
  *
  * Adopted sheets are independent of innerHTML, so components can keep
  * rewriting their markup — including their own <style> — without losing these.
- * They also sit *before* the component's own rules in the cascade, so a
- * component can still override a primitive when it genuinely needs to.
+ *
+ * They are ordered *after* the shadow root's own <style>, which matters more
+ * than it looks: an equal-specificity tie goes to this sheet, not to the
+ * component. So primitives meant as a fallback have to score below anything a
+ * component would write — see the `:where()` in styles/shared.css — or they
+ * quietly win ties they were never supposed to enter.
  */
 let sheet: CSSStyleSheet | null = null;
 

@@ -2,9 +2,9 @@
  * Primitives shared by every shadow-DOM component.
  *
  * Custom properties (theme.css) cross shadow boundaries, but *rules* do not, so
- * each component used to restate how an input or a scrollbar looks — the input
- * block alone was written out 14 times. That is why the same control could end
- * up looking slightly different depending on which component drew it.
+ * each component had to restate how a scrollbar or a dialog looks, and the same
+ * control ended up looking slightly different depending on which component drew
+ * it: the scrollbar was declared in four stylesheets, at two different widths.
  *
  * This sheet is adopted by each shadow root through services/sharedStyles.ts,
  * so it exists once in memory and is defined in exactly one place. Components
@@ -69,41 +69,16 @@
 
 /* --- Text inputs --------------------------------------------------------- */
 
-/* Applied by element as well as by class, so a component inherits the house
-   input without touching its markup. Components whose fields genuinely differ
-   keep their own rule, which out-specifies this one (`.field-group input[…]`
-   beats a bare element selector). */
-input[type="text"],
-input[type="password"],
-input[type="number"],
-.field-input {
-    background: var(--input-bg);
-    border: 1px solid var(--input-border);
-    color: var(--input-text);
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    width: 100%;
-    box-sizing: border-box;
-    outline: none;
-    transition: all 0.2s;
-}
-
-input[type="text"]::placeholder,
-input[type="password"]::placeholder,
-input[type="number"]::placeholder,
-.field-input::placeholder {
-    color: var(--input-placeholder);
-}
-
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-.field-input:focus {
-    border-color: var(--input-focus-border);
-    box-shadow: var(--input-focus-shadow);
-}
+/* There is deliberately no `input` rule here. One lived here briefly and turned
+ * out to be all cost and no benefit: every text field in the app is already
+ * styled by its own component, so it replaced nothing — and because an adopted
+ * sheet is ordered after the shadow root's own <style>, its `input[type=…]`
+ * selector won equal-specificity ties against rules like `.form-group input`
+ * and flattened fields that deliberately differ, including the asymmetric
+ * padding that reserves room for the search icon and the reveal-password eye.
+ *
+ * Should a genuinely unstyled field ever need a baseline, wrap the selector in
+ * `:where()` so it scores (0,0,1) and stays below any component rule. */
 
 /* Multi-line variant: monospace, no OS resize grip (it clashes with the
    theme), and the slim scrollbars above. */
