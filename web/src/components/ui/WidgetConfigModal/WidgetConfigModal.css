@@ -52,6 +52,16 @@ dialog.dialog--wide .actions app-button {
     max-width: 260px;
 }
 
+/* The service picker holds the longest labels of the modal ("Advanced
+   (custom)", full product names), so the shared 150px cap truncated them. */
+#api-preset {
+    max-width: 240px;
+}
+
+dialog.dialog--wide #api-preset {
+    max-width: 320px;
+}
+
 dialog::backdrop {
     background: var(--overlay-bg);
     backdrop-filter: var(--modal-blur);
@@ -189,12 +199,36 @@ dialog[open] {
     box-sizing: border-box;
     outline: none;
     transition: all 0.2s;
-    resize: vertical;
+    /* No native resizer: its grip is an OS-drawn artefact that clashes with the
+       rest of the theme. The box is tall enough and scrolls instead. */
+    resize: none;
     min-height: 44px;
     font-family: var(--font-mono, monospace);
     line-height: 1.5;
     white-space: pre;
-    overflow-x: auto;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+/* Match the slim scrollbars used elsewhere in the app instead of the chunky
+   default ones, which stood out inside the panel. */
+.field-group textarea::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.field-group textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.field-group textarea::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.field-group textarea::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 .field-group textarea::placeholder {

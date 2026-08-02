@@ -39,9 +39,11 @@
 }
 
 .select-value {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    /* Block, not flex: text-overflow never applies to a flex container, so a
+       long label used to be chopped mid-word instead of getting an ellipsis.
+       min-width lets it shrink inside the flex trigger. */
+    display: block;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
