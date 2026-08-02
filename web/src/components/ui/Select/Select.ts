@@ -5,6 +5,9 @@ import {
     selectSearchTemplate, filterSelectOptions,
 } from './Select.template';
 
+/** Mirrors `.select-dropdown.open { max-height }` in Select.css. */
+const DROPDOWN_MAX_HEIGHT = 300;
+
 export class AppSelect extends HTMLElement {
     private _options: SelectOption[] = [];
     private _value: string = '';
@@ -17,6 +20,8 @@ export class AppSelect extends HTMLElement {
     private _boundScroll: (e: Event) => void;
     private _boundResize: () => void;
     private isInsideDialog: boolean = false;
+    /** Set while a dialog dropdown is waiting to be anchored on the next frame. */
+    private _pendingAnchor = false;
 
     static get observedAttributes() {
         return ['value'];
@@ -48,6 +53,69 @@ export class AppSelect extends HTMLElement {
         document.removeEventListener('click', this._boundOutsideClick, true);
         window.removeEventListener('scroll', this._boundScroll, true);
         window.removeEventListener('resize', this._boundResize);
+    }
+
+    /**
+     * Positions a dropdown opened inside a <dialog>, where it stays in our
+     * shadow root (portalling to <body> would make it inert) and is positioned
+     * fixed so no scrolling ancestor can clip it.
+     *
+     * Two corrections are needed. A dialog with backdrop-filter — ours has one —
+     * becomes the containing block for fixed children, so viewport coordinates
+     * land offset; rather than guess which ancestor did it, place the element,
+     * measure where it actually went and shift by the difference. And when the
+     * trigger sits near the bottom of the screen the list is flipped above it
+     * instead of running off-screen.
+     */
+    private anchorInsideDialog() {
+        const pending = this._pendingAnchor;
+        this._pendingAnchor = false;
+        if (!pending || !this.dropdownEl) return;
+
+        // Measure the trigger now, not when the dropdown was created: opening it
+        // can scroll the modal body (focus moves), which would leave a rect
+        // captured earlier pointing at the wrong place.
+        const trigger = this.shadowRoot!.getElementById('trigger');
+        if (!trigger) return;
+        const anchor = trigger.getBoundingClientRect();
+
+        const gap = 6;
+        // scrollHeight, not offsetHeight: the open animation transitions
+        // max-height, so the rendered height is still growing at this point and
+        // a flipped dropdown would be placed far too high. Cap it the same way
+        // the stylesheet does.
+        const height = Math.min(this.dropdownEl.scrollHeight, DROPDOWN_MAX_HEIGHT);
+
+        // Fit inside the dialog, not just the viewport. The dialog is usually
+        // shorter than the screen, so measuring against the window let the list
+        // open downwards and spill out over the backdrop, past the modal's own
+        // edge, where it reads as detached and overlaps the footer.
+        const dialog = this.closest('dialog');
+        const bounds = dialog ? dialog.getBoundingClientRect() : null;
+        const limitBottom = bounds ? Math.min(bounds.bottom, window.innerHeight) : window.innerHeight;
+        const limitTop = bounds ? Math.max(bounds.top, 0) : 0;
+
+        const roomBelow = limitBottom - anchor.bottom;
+        const roomAbove = anchor.top - limitTop;
+        const flipAbove = roomBelow < height + gap && roomAbove > roomBelow;
+        const wantTop = flipAbove ? anchor.top - gap - height : anchor.bottom + gap;
+
+        // Work out the containing block's offset with a throwaway probe rather
+        // than by measuring the dropdown: the dropdown carries the entry
+        // transform while it animates, so measuring it would fold those pixels
+        // into the correction and leave the list sitting too far from its
+        // trigger once the animation settled.
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;';
+        this.shadowRoot!.appendChild(probe);
+        const origin = probe.getBoundingClientRect();
+        probe.remove();
+
+        this.dropdownEl.style.top = `${wantTop - origin.top}px`;
+        this.dropdownEl.style.left = `${anchor.left - origin.left}px`;
+        // With right:auto the box would shrink to its content, so match the
+        // trigger explicitly (the stylesheet's left/right pair did this before).
+        this.dropdownEl.style.width = `${anchor.width}px`;
     }
 
     private ensureGlobalStyles() {
@@ -147,13 +215,16 @@ export class AppSelect extends HTMLElement {
         }
 
         if (this.isInsideDialog) {
-            // Inside dialog: append to shadow DOM to avoid inertness
-            this.dropdownEl.style.position = 'absolute';
-            this.dropdownEl.style.left = '0';
-            this.dropdownEl.style.right = '0';
-            this.dropdownEl.style.top = '100%';
-            this.dropdownEl.style.marginTop = '6px';
+            // Inside a dialog the dropdown stays in our shadow root — portalling
+            // it to <body> would make it inert. It used to be positioned
+            // absolutely against the select, which meant any scrolling ancestor
+            // clipped it, and that is why those modals could not scroll at all.
+            // Fixed positioning escapes the clip.
+            this.dropdownEl.style.position = 'fixed';
+            this.dropdownEl.style.right = 'auto';
+            this.dropdownEl.style.marginTop = '0';
             this.shadowRoot!.appendChild(this.dropdownEl);
+            this._pendingAnchor = true;
         } else {
             // Outside dialog: append to body as portal for proper overflow
             // Position BEFORE appending to prevent animation glitch
@@ -172,6 +243,10 @@ export class AppSelect extends HTMLElement {
         requestAnimationFrame(() => {
             if (this.dropdownEl) {
                 this.dropdownEl.classList.add('open');
+                // Anchor after 'open' is applied: while closed the dropdown
+                // carries the entry transform, so measuring first placed it a
+                // few pixels off.
+                this.anchorInsideDialog();
                 (this.dropdownEl.querySelector('#select-search-input') as HTMLInputElement | null)?.focus();
             }
         });

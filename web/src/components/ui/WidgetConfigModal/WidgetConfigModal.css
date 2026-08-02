@@ -12,12 +12,21 @@ dialog {
     padding: 0;
     width: clamp(300px, 85cqi, 400px);
     box-shadow: var(--paper-shadow);
-    /* Deliberate: inside a <dialog> the app-select dropdown is positioned
-       absolutely within the select (it cannot portal to <body>, the dialog
-       would make it inert), so any scrolling ancestor clips it. Keep the
-       overflow visible and control the height by making forms shorter. */
-    overflow: visible;
     color: var(--text-main);
+    /* Cap the height and scroll the body, so the footer with Save is always
+       reachable no matter how tall the form gets. This only works because the
+       select dropdowns are positioned fixed inside dialogs (see Select.ts);
+       with the old absolute positioning a scrolling ancestor clipped them. */
+    max-height: min(88vh, 900px);
+    overflow: hidden;
+}
+
+/* The column layout goes on [open] only: setting `display` on the bare dialog
+   overrides the browser's `dialog:not([open]) { display: none }`, which left a
+   ghost of the modal painted after closing it. */
+dialog[open] {
+    display: flex;
+    flex-direction: column;
 }
 
 /* Forms with many fields (the API widget's advanced mode) get more room so the
@@ -133,7 +142,38 @@ dialog[open] {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    overflow: visible;
+    /* Takes the leftover height between header and footer, and lets the
+       content inside it scroll rather than pushing the footer off-screen. */
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.tab-container > .content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    /* Slim scrollbar, matching the select dropdowns. The OS default is much
+       chunkier than anything else in the UI. */
+}
+
+.tab-container > .content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tab-container > .content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tab-container > .content::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+/* Header and footer stay put while the body scrolls. */
+.modal-header,
+.actions {
+    flex-shrink: 0;
 }
 
 .tab-content {
@@ -207,12 +247,8 @@ dialog[open] {
     line-height: 1.5;
     white-space: pre;
     overflow: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
 }
 
-/* Match the slim scrollbars used elsewhere in the app instead of the chunky
-   default ones, which stood out inside the panel. */
 .field-group textarea::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -225,10 +261,6 @@ dialog[open] {
 .field-group textarea::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 3px;
-}
-
-.field-group textarea::-webkit-scrollbar-corner {
-    background: transparent;
 }
 
 .field-group textarea::placeholder {
