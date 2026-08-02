@@ -1,5 +1,6 @@
 
 import { htmlSanitizer } from '../../services/htmlSanitizer';
+import { adoptSharedStyles } from '../../services/sharedStyles';
 import { dashboardStore } from '../../store/dashboardStore';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
 import { MarkdownParser } from '../../services/MarkdownParser';
@@ -32,6 +33,7 @@ export class MarkdownWidget extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

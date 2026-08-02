@@ -86,7 +86,6 @@ dialog[open] {
     flex-direction: column;
     gap: 8px;
     max-height: min(50vh, 360px);
-    overflow-y: auto;
 }
 
 .dash-option {

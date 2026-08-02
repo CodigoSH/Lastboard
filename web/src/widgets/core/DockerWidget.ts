@@ -1,5 +1,6 @@
 
 import { i18n } from '../../services/i18n';
+import { adoptSharedStyles } from '../../services/sharedStyles';
 import { dashboardStore } from '../../store/dashboardStore';
 import { userStore } from '../../store/userStore';
 import { escapeHtml as esc } from '../../services/escape';
@@ -482,6 +483,7 @@ class DockerWidget extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     attributeChangedCallback(name: string, _old: string, val: string) {

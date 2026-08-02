@@ -39,6 +39,39 @@ export function adoptSharedStyles(root: ShadowRoot | null): void {
 }
 
 /**
+ * Reveals scrollbars once a dialog's body has stopped resizing.
+ *
+ * A dialog's first layout can come out a few pixels taller than its settled
+ * one: the bar appears, narrows the content, a line of text wraps, and the next
+ * pass fits without it. The browser sorts this out in a few frames, but the bar
+ * is visible meanwhile and reads as a glitch on every open.
+ *
+ * Elements marked `.scroll-when-settled` start with the scroll hidden; this
+ * watches their height and reveals it when two consecutive frames agree,
+ * capped so it can never wait indefinitely. Call it right after showModal().
+ */
+export function revealScrollWhenSettled(root: ShadowRoot | null): void {
+    if (!root || typeof requestAnimationFrame === 'undefined') return;
+    const bodies = Array.from(root.querySelectorAll<HTMLElement>('.scroll-when-settled'));
+    if (!bodies.length) return;
+
+    bodies.forEach(b => b.classList.remove('is-settled'));
+
+    let previous = -1;
+    let frames = 0;
+    const check = () => {
+        const height = bodies.reduce((sum, b) => sum + b.scrollHeight, 0);
+        if (height === previous || frames++ > 40) {
+            bodies.forEach(b => b.classList.add('is-settled'));
+            return;
+        }
+        previous = height;
+        requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
+}
+
+/**
  * Same primitives, but in the main document.
  *
  * Needed for nodes a component portals out of its shadow root — the select

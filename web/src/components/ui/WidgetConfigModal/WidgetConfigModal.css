@@ -148,8 +148,8 @@ dialog[open] {
 .tab-container > .content {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    /* Slim scrollbar comes from styles/shared.css. */
+    /* overflow-y and the slim scrollbar come from styles/shared.css: the body
+       starts hidden and reveals the bar once the layout settles. */
 }
 
 /* Header and footer stay put while the body scrolls. */

@@ -1,4 +1,5 @@
 import { apiService } from '../../../services/apiService';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import {
@@ -46,6 +47,7 @@ class MonitorDetail extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

@@ -1,4 +1,5 @@
 import { dashboardStore } from '../../../store/dashboardStore';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
 import { GridItem } from '../../../types';
 import { mobileReorderTemplate } from './MobileReorderModal.template';
@@ -35,6 +36,7 @@ export class MobileReorderModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

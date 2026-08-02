@@ -1,4 +1,5 @@
 import { userStore } from '../../../store/userStore';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { template, panelInnerTemplate } from './RightDrawer.template';
 import { i18n } from '../../../services/i18n';
 import css from './RightDrawer.css' with { type: 'text' };
@@ -16,6 +17,7 @@ class RightDrawer extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
         this.isOpen = false;
         this.selectedSection = null;
         this.updateAvailable = false;

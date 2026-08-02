@@ -1,4 +1,5 @@
 import { i18n } from '../../../services/i18n';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { userStore } from '../../../store/userStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
@@ -29,6 +30,7 @@ class SettingsContent extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
         // Safe initial state while loading
         this.prefs = {
             accent_color: '#0078D4',

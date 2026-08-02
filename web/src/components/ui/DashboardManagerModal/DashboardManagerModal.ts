@@ -1,4 +1,5 @@
 import { dashboardStore } from '../../../store/dashboardStore';
+import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { Dashboard } from '../../../types';
 import { dashboardManagerTemplate } from './DashboardManagerModal.template';
 import { createFocusTrap, FocusTrap } from '../../../services/focusTrap';
@@ -14,6 +15,7 @@ export class DashboardManagerModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     connectedCallback() {

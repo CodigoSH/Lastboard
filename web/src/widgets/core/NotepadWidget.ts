@@ -8,6 +8,7 @@
  */
 
 import { dashboardStore } from '../../store/dashboardStore';
+import { adoptSharedStyles } from '../../services/sharedStyles';
 import { i18n } from '../../services/i18n';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
 import { notepadSanitizer } from '../../services/htmlSanitizer';
@@ -361,6 +362,7 @@ export class NotepadWidget extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
         this._boundBeforeUnload = this.handleBeforeUnload.bind(this);
     }
 

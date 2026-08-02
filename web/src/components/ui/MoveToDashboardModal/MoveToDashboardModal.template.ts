@@ -17,7 +17,7 @@ export const template = (dashboards: Dashboard[]) => `
         </div>
         ${dashboards.length === 0
         ? `<p class="modal-empty">${i18n.t('bookmark.move_no_targets')}</p>`
-        : `<ul class="dash-list">
+        : `<ul class="dash-list scroll-when-settled scroll-when-settled">
                 ${dashboards.map(d => `
                     <li>
                         <button class="dash-option" data-id="${d.id}">

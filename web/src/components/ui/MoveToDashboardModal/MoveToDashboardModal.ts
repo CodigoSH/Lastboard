@@ -1,5 +1,5 @@
 import { template } from './MoveToDashboardModal.template';
-import { adoptSharedStyles } from '../../../services/sharedStyles';
+import { adoptSharedStyles, revealScrollWhenSettled } from '../../../services/sharedStyles';
 import { Dashboard } from '../../../types';
 import css from './MoveToDashboardModal.css' with { type: 'text' };
 
@@ -26,6 +26,7 @@ export class MoveToDashboardModal extends HTMLElement {
         return new Promise<number | null>((resolve) => {
             this.resolvePromise = resolve;
             this.dialog?.showModal();
+        revealScrollWhenSettled(this.shadowRoot);
         });
     }
 

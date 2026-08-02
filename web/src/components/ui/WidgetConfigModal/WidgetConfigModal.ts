@@ -8,7 +8,7 @@ import type { AppSelect } from '../Select/Select';
 import type { SelectOption } from '../Select/Select.template';
 import '../ColorPicker/ColorPicker';
 import css from './WidgetConfigModal.css' with { type: 'text' };
-import { adoptSharedStyles } from '../../../services/sharedStyles';
+import { adoptSharedStyles, revealScrollWhenSettled } from '../../../services/sharedStyles';
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
@@ -119,12 +119,15 @@ class WidgetConfigModal extends HTMLElement {
         // Re-bind listeners after render
         this.setupEventListeners();
 
-        if (this.dialog) {
-            this.dialog.showModal();
-            // Reset to general tab
-            this.switchTab('general');
-        }
+        // Pick the tab before showing, so the modal is laid out once instead of
+        // being reflowed while already on screen.
+        this.switchTab('general');
+
+        if (this.dialog) this.dialog.showModal();
+
+        revealScrollWhenSettled(this.shadowRoot);
     }
+
 
     close() {
         if (this.dialog) this.dialog.close();
@@ -865,7 +868,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
                 
                 <div class="tab-container">
-                    <div class="content">
+                    <div class="content scroll-when-settled">
                          <!-- TAB: GENERAL -->
                         <div id="tab-general" class="tab-content active">
                             ${formData.general}

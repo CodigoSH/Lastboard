@@ -103,7 +103,6 @@ dialog[open] {
 
 .tab-content {
     flex: 1;
-    overflow-y: auto;
     display: none;
     animation: fadeIn 0.15s ease-out;
     padding: 24px;
