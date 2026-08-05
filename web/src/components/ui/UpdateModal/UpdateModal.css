@@ -1,0 +1,373 @@
+:host {
+    display: contents;
+}
+
+dialog {
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    padding: 28px;
+    width: clamp(320px, 90vw, 460px);
+    backdrop-filter: blur(20px);
+}
+
+dialog::backdrop {
+    background: var(--overlay-bg);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
+}
+
+dialog[open] {
+    animation: modalIn 0.3s var(--ease-bounce);
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.modal-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.badge {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.12);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+.badge--error {
+    color: var(--danger-color);
+    background: rgba(var(--danger-rgb), 0.12);
+    border-color: rgba(var(--danger-rgb), 0.3);
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.modal-close {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.modal-close:focus {
+    outline: none;
+}
+
+.modal-close:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    transform: rotate(90deg);
+    color: var(--accent);
+    border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+/* ── Versions ───────────────────────────────────────────────────────────── */
+
+.versions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.versions__from {
+    color: var(--text-dim);
+}
+
+.versions__arrow {
+    color: var(--text-dim);
+    opacity: 0.6;
+}
+
+.versions__to {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.modal-message {
+    margin: 0 0 20px 0;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+}
+
+/* ── Docker notice ──────────────────────────────────────────────────────── */
+
+.notice {
+    background: rgba(var(--info-rgb), 0.1);
+    border: 1px solid rgba(var(--info-rgb), 0.3);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+}
+
+.notice__title {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.notice__text {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+/* ── Timeline ───────────────────────────────────────────────────────────── */
+
+.timeline {
+    list-style: none;
+    margin: 0 0 4px 0;
+    padding: 0;
+}
+
+.tl-step {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 18px;
+}
+
+/* Connector between one dot and the next. The last step has no line below it. */
+.tl-step::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 22px;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+    transition: background 0.3s ease;
+}
+
+.tl-step:last-child {
+    padding-bottom: 0;
+}
+
+.tl-step:last-child::before {
+    display: none;
+}
+
+/* A completed step also paints the segment leading to the next one, so the
+   green grows down the list as the update advances. */
+.tl-step.is-ok::before,
+.tl-step.is-skipped::before {
+    background: rgba(var(--success-rgb), 0.5);
+}
+
+.tl-dot {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface-solid);
+    color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+
+.tl-dot svg {
+    width: 12px;
+    height: 12px;
+}
+
+.tl-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding-top: 1px;
+}
+
+.tl-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    transition: color 0.3s ease;
+}
+
+.tl-note {
+    font-size: 11px;
+    color: var(--text-dim);
+    opacity: 0.75;
+}
+
+.tl-note:empty {
+    display: none;
+}
+
+/* Running: accent ring with a pulse, so the eye lands on the current step. */
+.tl-step.is-running .tl-dot {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.15);
+    animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.tl-step.is-running .tl-label {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+/* Done */
+.tl-step.is-ok .tl-dot {
+    border-color: var(--success-color);
+    background: var(--success-color);
+    color: #06240f;
+    animation: dotPop 0.35s var(--ease-bounce);
+}
+
+.tl-step.is-ok .tl-label {
+    color: var(--text-main);
+}
+
+/* Skipped: acknowledged, but not a success — muted, never green. */
+.tl-step.is-skipped .tl-dot {
+    border-color: var(--border);
+    background: var(--border);
+    color: var(--text-dim);
+}
+
+/* Failed */
+.tl-step.is-error .tl-dot {
+    border-color: var(--danger-color);
+    background: var(--danger-color);
+    color: #2a0a0a;
+    animation: dotPop 0.35s var(--ease-bounce);
+}
+
+.tl-step.is-error .tl-label {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
+/* Steps after a failure stay visibly untouched: they were never attempted. */
+.tl-step.is-pending .tl-label {
+    opacity: 0.55;
+}
+
+@keyframes dotPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.15);
+    }
+
+    50% {
+        box-shadow: 0 0 0 7px rgba(var(--accent-rgb), 0.05);
+    }
+}
+
+@keyframes dotPop {
+    from {
+        transform: scale(0.4);
+    }
+
+    60% {
+        transform: scale(1.15);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    dialog[open],
+    .tl-step.is-running .tl-dot,
+    .tl-step.is-ok .tl-dot,
+    .tl-step.is-error .tl-dot {
+        animation: none;
+    }
+}
+
+/* ── Failure block ──────────────────────────────────────────────────────── */
+
+.failure {
+    margin-top: 16px;
+    background: rgba(var(--danger-rgb), 0.1);
+    border: 1px solid rgba(var(--danger-rgb), 0.3);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+}
+
+.failure[hidden] {
+    display: none;
+}
+
+.failure__text {
+    margin: 0;
+    font-size: 13px;
+    color: var(--danger-color);
+    line-height: 1.5;
+}
+
+.failure__detail {
+    margin: 6px 0 0 0;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────── */
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.link-button {
+    text-decoration: none;
+}

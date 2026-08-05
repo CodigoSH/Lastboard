@@ -24,6 +24,7 @@ import './components/ui/MoveToDashboardModal/MoveToDashboardModal';
 import './components/ui/MonitorHistoryDrawer/MonitorHistoryDrawer';
 import './components/ui/MonitorPage/MonitorPage';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
+import './components/ui/UpdateModal/UpdateModal';
 // Widget Components
 import './widgets/core/NotepadWidget';
 import './widgets/core/ClockWidget';
@@ -143,6 +144,11 @@ bootstrap(async () => {
 
     const monitorPage = document.createElement('monitor-page');
     document.body.appendChild(monitorPage);
+
+    // Lives outside the settings panel so an update keeps running (and keeps
+    // being visible) no matter what happens to the drawer behind it.
+    const updateModal = document.createElement('update-modal');
+    document.body.appendChild(updateModal);
 });
 
 // 2. Handle Component Events (TopBar)

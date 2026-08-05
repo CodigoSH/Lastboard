@@ -7,6 +7,20 @@ export interface UpdateInfo {
     is_docker: boolean;
 }
 
+/** One progress notification streamed by the backend while it updates. */
+export interface UpdateEvent {
+    step: string;
+    status: 'running' | 'ok' | 'skipped' | 'error';
+    /** i18n key of the failure, only on status 'error'. */
+    error?: string;
+    /** i18n key of a secondary outcome, e.g. whether a failed install rolled back. */
+    detail?: string;
+}
+
+/** Steps the backend reports, in the order they run. Mirrors update.go. */
+export const UPDATE_STEPS = ['download', 'signature', 'checksum', 'extract', 'install', 'restart'] as const;
+export type UpdateStepId = typeof UPDATE_STEPS[number];
+
 class UpdateService {
     private version: string = '';
 
@@ -45,6 +59,90 @@ class UpdateService {
                 latest_version: this.version || 'v0.0.0',
                 is_docker: false
             };
+        }
+    }
+
+    /**
+     * Reads the version the server is currently running.
+     *
+     * Deliberately calls the check endpoint with no query string: in that shape
+     * it answers straight from the running binary without contacting Forgejo, so
+     * it is cheap enough to poll while waiting for a restart.
+     */
+    async runningVersion(): Promise<string> {
+        const res = await fetch('/api/system/update/check', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const info = await res.json();
+        return info.current_version as string;
+    }
+
+    /**
+     * Starts the update and reports each step as the backend completes it.
+     *
+     * Asking for text/event-stream is what turns the endpoint into a stream;
+     * anything rejected before the update begins (not an admin, bad asset URL)
+     * still comes back as a normal HTTP error, and is thrown from here.
+     *
+     * Resolves when the stream ends. That happens either because a step failed —
+     * the caller sees it through onEvent — or because the server announced the
+     * restart and is now replacing itself.
+     */
+    async perform(assetUrl: string, onEvent: (event: UpdateEvent) => void): Promise<void> {
+        const csrf = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream',
+        };
+        if (csrf) headers['X-CSRF-Token'] = decodeURIComponent(csrf.split('=')[1]);
+
+        const res = await fetch('/api/system/update/perform', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ asset_url: assetUrl }),
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            // The backend answers with a bare i18n key for these.
+            throw new Error((await res.text()).trim() || `HTTP ${res.status}`);
+        }
+
+        if (!res.body) {
+            // No streaming support in this browser: the update is still running
+            // server-side, so let the caller fall back to waiting for the restart.
+            return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        for (; ;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            // SSE frames are separated by a blank line; a partial one stays in
+            // the buffer until the rest of it arrives.
+            let sep = buffer.indexOf('\n\n');
+            while (sep !== -1) {
+                const frame = buffer.slice(0, sep);
+                buffer = buffer.slice(sep + 2);
+                const payload = frame
+                    .split('\n')
+                    .filter(line => line.startsWith('data:'))
+                    .map(line => line.slice(5).trim())
+                    .join('');
+                if (payload) {
+                    try {
+                        onEvent(JSON.parse(payload) as UpdateEvent);
+                    } catch (e) {
+                        console.error('[UpdateService] Malformed progress event', payload, e);
+                    }
+                }
+                sep = buffer.indexOf('\n\n');
+            }
         }
     }
 }

@@ -1,0 +1,177 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`UpdateModal template offers the install action and both versions before starting 1`] = `
+"
+        <div class="modal-header">
+            <div class="modal-heading">
+                <span class="badge ">New update!</span>
+                <h3 class="modal-title" id="um-title">Software update</h3>
+            </div>
+            
+        <button class="modal-close" id="modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        </div>
+
+        <div class="versions">
+            <span class="versions__from">v1.6.2</span>
+            <span class="versions__arrow" aria-hidden="true">→</span>
+            <span class="versions__to">v1.7.0</span>
+        </div>
+
+        <p class="modal-message" id="modal-message">It downloads, verifies and installs.</p>
+
+        
+        
+    <ol class="timeline" id="timeline" role="list" aria-live="polite" aria-busy="false">
+        
+    <li class="tl-step is-pending" data-step="download">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">download</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="signature">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">signature</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="checksum">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">checksum</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="extract">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">extract</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="install">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">install</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="restart">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">restart</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    </ol>
+
+
+        <div class="failure" id="failure" hidden>
+            <p class="failure__text" id="failure-text"></p>
+            
+        </div>
+
+        <div class="modal-actions">
+            <a class="link-button" href="https://example.test/releases" target="_blank" rel="noopener noreferrer">
+                <app-button variant="ghost">Changelog</app-button>
+            </a>
+            <app-button variant="primary" id="btn-install">Download &amp; install</app-button></div>
+"
+`;
+
+exports[`UpdateModal template marks the failed step and leaves the later ones untouched 1`] = `
+"
+        <div class="modal-header">
+            <div class="modal-heading">
+                <span class="badge badge--error">Update failed</span>
+                <h3 class="modal-title" id="um-title">Software update</h3>
+            </div>
+            
+        <button class="modal-close" id="modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        </div>
+
+        <div class="versions">
+            <span class="versions__from">v1.6.2</span>
+            <span class="versions__arrow" aria-hidden="true">→</span>
+            <span class="versions__to">v1.7.0</span>
+        </div>
+
+        
+
+        
+        
+    <ol class="timeline" id="timeline" role="list" aria-live="polite" aria-busy="false">
+        
+    <li class="tl-step is-ok" data-step="download">
+        <span class="tl-dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <span class="tl-body">
+            <span class="tl-label">download</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-ok" data-step="signature">
+        <span class="tl-dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <span class="tl-body">
+            <span class="tl-label">signature</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-error" data-step="checksum">
+        <span class="tl-dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+        <span class="tl-body">
+            <span class="tl-label">checksum</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="extract">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">extract</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="install">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">install</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    <li class="tl-step is-pending" data-step="restart">
+        <span class="tl-dot" aria-hidden="true"></span>
+        <span class="tl-body">
+            <span class="tl-label">restart</span>
+            <span class="tl-note"></span>
+        </span>
+    </li>
+
+    </ol>
+
+
+        <div class="failure" id="failure" >
+            <p class="failure__text" id="failure-text">Integrity check failed</p>
+            <p class="failure__detail" id="failure-detail">The previous version was restored.</p>
+        </div>
+
+        <div class="modal-actions">
+                <app-button variant="ghost" id="btn-dismiss">Close</app-button>
+                <app-button variant="primary" id="btn-retry">Retry</app-button></div>
+"
+`;

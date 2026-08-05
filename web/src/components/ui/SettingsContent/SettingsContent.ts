@@ -1,6 +1,7 @@
 import { i18n } from '../../../services/i18n';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { userStore } from '../../../store/userStore';
+import { updateStore } from '../../../store/updateStore';
 import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
@@ -138,7 +139,7 @@ class SettingsContent extends HTMLElement {
                     this.executeFactoryReset();
                     break;
                 case 'perform-update':
-                    this.performUpdate(el.dataset.assetUrl || '');
+                    this.openUpdateModal();
                     break;
                 case 'check-updates':
                     this.handleManualCheckUpdates();
@@ -821,6 +822,10 @@ class SettingsContent extends HTMLElement {
                 this.updateInfo = await updateService.check(isBeta);
                 if (this.updateInfo) {
                     this.version = this.updateInfo.current_version;
+                    // Keep the store current so the modal always opens on the
+                    // latest result — including a check that ran while it was
+                    // already open.
+                    updateStore.setInfo(this.updateInfo);
                     this.updateUpdateUI();
                 }
             } catch (e) {
@@ -835,53 +840,19 @@ class SettingsContent extends HTMLElement {
 
 
 
-    async performUpdate(assetUrl: string) {
-        const confirmationModal = document.querySelector('confirmation-modal') as any;
-        if (confirmationModal) {
-            const confirmed = await confirmationModal.confirm(
-                i18n.t('settings.update_available'),
-                i18n.t('notifier.update_start_confirm')
-            );
-            if (!confirmed) return;
-        }
-
-        const btn = this.shadowRoot!.getElementById('btn-update-now') as any;
-        const status = this.shadowRoot!.getElementById('update-status');
-        if (btn) btn.loading = true;
-
-        if (status) {
-            status.style.display = 'block';
-            const statusText = status.querySelector('p');
-            if (statusText) statusText.textContent = i18n.t('notifier.update_downloading');
-        }
-
-        try {
-            await apiService.post('/api/system/update/perform', { asset_url: assetUrl });
-            if (status) {
-                const statusText = status.querySelector('p');
-                if (statusText) statusText.textContent = i18n.t('notifier.update_verified');
-            }
-            setTimeout(() => {
-                window.location.reload();
-            }, 5000);
-        } catch (e: any) {
-            console.error("Update failed", e);
-            if (status) {
-                status.style.background = 'rgba(var(--danger-rgb), 0.1)';
-                status.style.borderColor = 'rgba(var(--danger-rgb), 0.3)';
-                const statusText = status.querySelector('p');
-                if (statusText) {
-                    statusText.style.color = 'var(--danger-color)';
-                    // The backend returns an i18n key (e.g. notifier.update_download_failed)
-                    // as the error body. Translate it into a real, localized message;
-                    // fall back to the generic one for anything that isn't a known key.
-                    const code = (e?.message || '').trim();
-                    const key = /^(notifier\.|auth\.)/.test(code) ? code : 'notifier.update_failed';
-                    statusText.textContent = i18n.t(key);
-                }
-            }
-            if (btn) btn.loading = false;
-        }
+    /**
+     * Hands the update over to the modal.
+     *
+     * This panel used to run the whole thing inline, which meant the progress
+     * lived in markup that any re-render of this section wiped, and it vanished
+     * altogether if the drawer was closed. Here it only opens the modal; the
+     * process itself belongs to updateStore.
+     */
+    private openUpdateModal() {
+        const modal = document.querySelector('update-modal') as any;
+        if (!modal) return;
+        updateStore.setInfo(this.updateInfo);
+        modal.open();
     }
 
     // --- System Logic ---

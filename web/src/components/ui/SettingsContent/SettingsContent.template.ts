@@ -537,9 +537,6 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
                             <app-button variant="ghost" style="height: 100%;">${i18n.t('general.changelog')}</app-button>
                         </a>
                     </div>
-                    <div id="update-status" style="display: none; margin-top: 12px; padding: 12px; background: rgba(var(--accent-rgb), 0.1); border: 1px solid rgba(var(--accent-rgb), 0.3); border-radius: 8px; text-align: center;">
-                        <p style="margin: 0; font-size: 13px; color: var(--accent); font-weight: 500;">${i18n.t('notifier.downloading_secure')}</p>
-                    </div>
                 </div>
             </div>
         `;
