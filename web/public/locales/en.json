@@ -408,6 +408,7 @@
   "update.step.install": "Install",
   "update.step.restart": "Restart service",
   "notifier.update_restart_timeout": "The new version didn't respond in time. Check the server logs — it may still be starting.",
+  "notifier.update_session_expired": "Your session is no longer valid, so the server refused to start the update. Reload the page, sign in again and retry.",
   "notifier.update_rolled_back": "The previous version was restored.",
   "notifier.update_rollback_failed": "The previous version could not be restored. Check the server before restarting it.",
   "notifier.update_signature_failed": "The update's signature could not be verified. The release may be tampered with; aborting.",

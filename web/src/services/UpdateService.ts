@@ -17,6 +17,11 @@ export interface UpdateEvent {
     detail?: string;
 }
 
+/** An update the server refused to start, carrying the HTTP status it answered with. */
+export class UpdateRequestError extends Error {
+    status = 0;
+}
+
 /** Steps the backend reports, in the order they run. Mirrors update.go. */
 export const UPDATE_STEPS = ['download', 'signature', 'checksum', 'extract', 'install', 'restart'] as const;
 export type UpdateStepId = typeof UPDATE_STEPS[number];
@@ -103,8 +108,13 @@ class UpdateService {
         });
 
         if (!res.ok) {
-            // The backend answers with a bare i18n key for these.
-            throw new Error((await res.text()).trim() || `HTTP ${res.status}`);
+            // The updater's own refusals arrive as a bare i18n key. Anything the
+            // middleware rejects first ("Unauthorized", "Forbidden") is plain
+            // English, so the status travels with the error and the caller can
+            // tell an expired session from a failed update.
+            const failure = new UpdateRequestError((await res.text()).trim() || `HTTP ${res.status}`);
+            failure.status = res.status;
+            throw failure;
         }
 
         if (!res.body) {

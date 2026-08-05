@@ -36,6 +36,24 @@ const RESTART_POLL_INTERVAL_MS = 1000;
 const RESTART_TIMEOUT_MS = 90_000;
 
 /**
+ * Translates a refusal that arrived before the update started.
+ *
+ * The updater states its own reasons as i18n keys — not the first admin, a
+ * directory it cannot write to, a rejected asset URL — and those are passed
+ * straight through. What the auth middleware turns down never gets that far: it
+ * answers 401/403 with plain English, which used to land on the generic "the
+ * update failed" and sent the user looking for a problem with the release. An
+ * expired session or a stale CSRF cookie is a different thing entirely, and the
+ * way out of it is to reload, so it says so.
+ */
+function refusalKey(error: any): string {
+    const code = (error?.message || '').trim();
+    if (/^(notifier\.|auth\.)/.test(code)) return code;
+    if (error?.status === 401 || error?.status === 403) return 'notifier.update_session_expired';
+    return 'notifier.update_failed';
+}
+
+/**
  * Holds the state of an update while it runs.
  *
  * It lives outside the settings panel on purpose: the panel re-renders itself
@@ -140,11 +158,7 @@ class UpdateStore {
         try {
             await updateService.perform(assetUrl, ev => this.applyEvent(ev));
         } catch (e: any) {
-            // Rejected before the update began (not the first admin, unwritable
-            // directory, bad asset URL): the backend sends a bare i18n key.
-            const code = (e?.message || '').trim();
-            const key = /^(notifier\.|auth\.)/.test(code) ? code : 'notifier.update_failed';
-            this.set({ phase: 'error', errorKey: key });
+            this.set({ phase: 'error', errorKey: refusalKey(e) });
             return;
         }
 

@@ -139,6 +139,34 @@ describe('updateStore', () => {
         expect(updateStore.getState().errorKey).toBe('notifier.update_failed');
     });
 
+    // What the auth middleware turns down never carries an i18n key — it answers
+    // 401/403 with plain English. Reported as a generic failure it sends the user
+    // looking for a problem with the release instead of reloading the page.
+    it.each([401, 403])('names an expired session behind a %i', async (status) => {
+        performImpl = async () => {
+            const e = new Error('Forbidden') as Error & { status?: number };
+            e.status = status;
+            throw e;
+        };
+
+        await updateStore.start(INFO.asset_url);
+
+        expect(updateStore.getState().errorKey).toBe('notifier.update_session_expired');
+    });
+
+    // A 403 the updater itself raises does carry a key, and it must survive.
+    it('keeps the updater own reason on a 403 it explains', async () => {
+        performImpl = async () => {
+            const e = new Error('notifier.update_unprivileged') as Error & { status?: number };
+            e.status = 403;
+            throw e;
+        };
+
+        await updateStore.start(INFO.asset_url);
+
+        expect(updateStore.getState().errorKey).toBe('notifier.update_unprivileged');
+    });
+
     it('refuses to be reset while an update is in flight', async () => {
         let release: () => void = () => { };
         performImpl = () => new Promise<void>(resolve => { release = resolve; });

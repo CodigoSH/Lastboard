@@ -408,6 +408,7 @@
   "update.step.install": "التثبيت",
   "update.step.restart": "إعادة تشغيل الخدمة",
   "notifier.update_restart_timeout": "لم يستجب الإصدار الجديد في الوقت المحدد. راجع سجلات الخادم؛ قد يكون لا يزال قيد البدء.",
+  "notifier.update_session_expired": "لم تعد جلستك صالحة، لذلك رفض الخادم بدء التحديث. أعد تحميل الصفحة وسجّل الدخول مرة أخرى ثم أعد المحاولة.",
   "notifier.update_rolled_back": "تمت استعادة الإصدار السابق.",
   "notifier.update_rollback_failed": "تعذّرت استعادة الإصدار السابق. تحقّق من الخادم قبل إعادة تشغيله.",
   "notifier.update_signature_failed": "تعذّر التحقق من توقيع التحديث. قد يكون الإصدار متلاعبًا به؛ تم الإلغاء.",

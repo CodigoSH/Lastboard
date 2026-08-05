@@ -408,6 +408,7 @@
   "update.step.install": "Installare",
   "update.step.restart": "Riavviare il servizio",
   "notifier.update_restart_timeout": "La nuova versione non ha risposto in tempo. Controlla i log del server: potrebbe essere ancora in avvio.",
+  "notifier.update_session_expired": "La tua sessione non è più valida, quindi il server ha rifiutato di avviare l'aggiornamento. Ricarica la pagina, accedi di nuovo e riprova.",
   "notifier.update_rolled_back": "È stata ripristinata la versione precedente.",
   "notifier.update_rollback_failed": "Non è stato possibile ripristinare la versione precedente. Controlla il server prima di riavviarlo.",
   "notifier.update_signature_failed": "Non è stato possibile verificare la firma dell'aggiornamento. La release potrebbe essere manomessa; operazione annullata.",

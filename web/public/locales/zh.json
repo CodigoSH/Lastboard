@@ -408,6 +408,7 @@
   "update.step.install": "安装",
   "update.step.restart": "重启服务",
   "notifier.update_restart_timeout": "新版本未在规定时间内响应。请查看服务器日志，它可能仍在启动。",
+  "notifier.update_session_expired": "你的会话已失效，服务器拒绝开始更新。请重新加载页面并重新登录后再试。",
   "notifier.update_rolled_back": "已恢复到之前的版本。",
   "notifier.update_rollback_failed": "无法恢复到之前的版本。重启前请检查服务器。",
   "notifier.update_signature_failed": "无法验证更新的签名。该版本可能已被篡改，已中止。",

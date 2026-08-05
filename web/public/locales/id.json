@@ -408,6 +408,7 @@
   "update.step.install": "Pasang",
   "update.step.restart": "Mulai ulang layanan",
   "notifier.update_restart_timeout": "Versi baru tidak merespons tepat waktu. Periksa log server; mungkin masih dalam proses start.",
+  "notifier.update_session_expired": "Sesi Anda sudah tidak berlaku, jadi server menolak memulai pembaruan. Muat ulang halaman, masuk lagi, lalu coba sekali lagi.",
   "notifier.update_rolled_back": "Versi sebelumnya telah dipulihkan.",
   "notifier.update_rollback_failed": "Versi sebelumnya tidak dapat dipulihkan. Periksa server sebelum memulainya ulang.",
   "notifier.update_signature_failed": "Tanda tangan pembaruan tidak dapat diverifikasi. Rilis mungkin telah dimanipulasi; dibatalkan.",

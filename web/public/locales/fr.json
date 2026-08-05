@@ -408,6 +408,7 @@
   "update.step.install": "Installer",
   "update.step.restart": "Redémarrer le service",
   "notifier.update_restart_timeout": "La nouvelle version n'a pas répondu à temps. Consulte les journaux du serveur : elle démarre peut-être encore.",
+  "notifier.update_session_expired": "Ta session n'est plus valide, le serveur a donc refusé de lancer la mise à jour. Recharge la page, reconnecte-toi et réessaie.",
   "notifier.update_rolled_back": "La version précédente a été restaurée.",
   "notifier.update_rollback_failed": "Impossible de restaurer la version précédente. Vérifie le serveur avant de le redémarrer.",
   "notifier.update_signature_failed": "La signature de la mise à jour n'a pas pu être vérifiée. La publication est peut-être altérée ; abandon.",

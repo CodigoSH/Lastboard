@@ -408,6 +408,7 @@
   "update.step.install": "Zainstaluj",
   "update.step.restart": "Uruchom usługę ponownie",
   "notifier.update_restart_timeout": "Nowa wersja nie odpowiedziała na czas. Sprawdź logi serwera — może wciąż się uruchamiać.",
+  "notifier.update_session_expired": "Twoja sesja nie jest już ważna, więc serwer odmówił rozpoczęcia aktualizacji. Odśwież stronę, zaloguj się ponownie i spróbuj jeszcze raz.",
   "notifier.update_rolled_back": "Przywrócono poprzednią wersję.",
   "notifier.update_rollback_failed": "Nie udało się przywrócić poprzedniej wersji. Sprawdź serwer przed ponownym uruchomieniem.",
   "notifier.update_signature_failed": "Nie udało się zweryfikować podpisu aktualizacji. Wydanie mogło zostać zmodyfikowane; przerwano.",

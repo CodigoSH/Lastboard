@@ -408,6 +408,7 @@
   "update.step.install": "Kur",
   "update.step.restart": "Hizmeti yeniden başlat",
   "notifier.update_restart_timeout": "Yeni sürüm zamanında yanıt vermedi. Sunucu günlüklerini kontrol et; hâlâ başlıyor olabilir.",
+  "notifier.update_session_expired": "Oturumun artık geçerli değil, bu yüzden sunucu güncellemeyi başlatmayı reddetti. Sayfayı yenile, yeniden giriş yap ve tekrar dene.",
   "notifier.update_rolled_back": "Önceki sürüm geri yüklendi.",
   "notifier.update_rollback_failed": "Önceki sürüm geri yüklenemedi. Sunucuyu yeniden başlatmadan önce kontrol et.",
   "notifier.update_signature_failed": "Güncellemenin imzası doğrulanamadı. Sürüm değiştirilmiş olabilir; işlem durduruldu.",

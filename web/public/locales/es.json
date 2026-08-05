@@ -408,6 +408,7 @@
   "update.step.install": "Instalar",
   "update.step.restart": "Reiniciar servicio",
   "notifier.update_restart_timeout": "La nueva versión no respondió a tiempo. Revisa los registros del servidor; puede que aún esté arrancando.",
+  "notifier.update_session_expired": "Tu sesión ya no es válida, así que el servidor rechazó iniciar la actualización. Recarga la página, vuelve a iniciar sesión e inténtalo otra vez.",
   "notifier.update_rolled_back": "Se restauró la versión anterior.",
   "notifier.update_rollback_failed": "No se pudo restaurar la versión anterior. Revisa el servidor antes de reiniciarlo.",
   "notifier.update_signature_failed": "No se pudo verificar la firma de la actualización. La publicación podría estar manipulada; se cancela.",

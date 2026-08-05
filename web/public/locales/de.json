@@ -408,6 +408,7 @@
   "update.step.install": "Installieren",
   "update.step.restart": "Dienst neu starten",
   "notifier.update_restart_timeout": "Die neue Version hat nicht rechtzeitig geantwortet. Prüfe die Server-Logs – möglicherweise startet sie noch.",
+  "notifier.update_session_expired": "Deine Sitzung ist nicht mehr gültig, deshalb hat der Server das Update abgelehnt. Lade die Seite neu, melde dich erneut an und versuche es noch einmal.",
   "notifier.update_rolled_back": "Die vorherige Version wurde wiederhergestellt.",
   "notifier.update_rollback_failed": "Die vorherige Version konnte nicht wiederhergestellt werden. Prüfe den Server, bevor du ihn neu startest.",
   "notifier.update_signature_failed": "Die Signatur des Updates konnte nicht überprüft werden. Die Veröffentlichung ist möglicherweise manipuliert; Abbruch.",

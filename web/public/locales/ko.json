@@ -408,6 +408,7 @@
   "update.step.install": "설치",
   "update.step.restart": "서비스 다시 시작",
   "notifier.update_restart_timeout": "새 버전이 제때 응답하지 않았습니다. 서버 로그를 확인하세요. 아직 시작 중일 수 있습니다.",
+  "notifier.update_session_expired": "세션이 더 이상 유효하지 않아 서버가 업데이트 시작을 거부했습니다. 페이지를 새로 고치고 다시 로그인한 뒤 시도하세요.",
   "notifier.update_rolled_back": "이전 버전으로 되돌렸습니다.",
   "notifier.update_rollback_failed": "이전 버전을 되돌리지 못했습니다. 다시 시작하기 전에 서버를 확인하세요.",
   "notifier.update_signature_failed": "업데이트 서명을 확인할 수 없습니다. 릴리스가 변조되었을 수 있어 중단합니다.",

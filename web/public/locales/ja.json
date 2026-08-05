@@ -408,6 +408,7 @@
   "update.step.install": "インストール",
   "update.step.restart": "サービスを再起動",
   "notifier.update_restart_timeout": "新しいバージョンが時間内に応答しませんでした。サーバーのログを確認してください。まだ起動中の可能性があります。",
+  "notifier.update_session_expired": "セッションが無効になったため、サーバーが更新の開始を拒否しました。ページを再読み込みし、ログインし直してからもう一度お試しください。",
   "notifier.update_rolled_back": "以前のバージョンに戻しました。",
   "notifier.update_rollback_failed": "以前のバージョンに戻せませんでした。再起動する前にサーバーを確認してください。",
   "notifier.update_signature_failed": "更新の署名を検証できませんでした。リリースが改ざんされている可能性があるため中止します。",

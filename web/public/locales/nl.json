@@ -408,6 +408,7 @@
   "update.step.install": "Installeren",
   "update.step.restart": "Service herstarten",
   "notifier.update_restart_timeout": "De nieuwe versie reageerde niet op tijd. Controleer de serverlogs; mogelijk start hij nog op.",
+  "notifier.update_session_expired": "Je sessie is niet meer geldig, dus de server weigerde de update te starten. Herlaad de pagina, log opnieuw in en probeer het nog eens.",
   "notifier.update_rolled_back": "De vorige versie is teruggezet.",
   "notifier.update_rollback_failed": "De vorige versie kon niet worden teruggezet. Controleer de server voordat je hem herstart.",
   "notifier.update_signature_failed": "De handtekening van de update kon niet worden geverifieerd. De release is mogelijk gemanipuleerd; afgebroken.",
