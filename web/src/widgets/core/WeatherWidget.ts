@@ -7,6 +7,8 @@ import { escapeHtml } from '../../services/escape';
 // --- Cache ---
 const weatherCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 15 * 60 * 1000; // 15 min
+/** Gap between a forecast day and its tooltip — must match `.fc-tooltip` in CSS. */
+const TOOLTIP_GAP = 8;
 
 // --- Types ---
 interface WeatherConfig {
@@ -175,6 +177,8 @@ class WeatherWidget extends HTMLElement {
         this.render();
         this.loadWeather();
 
+        this.shadowRoot?.addEventListener('pointerover', this._onPointerOver);
+
         this._refreshTimer = setInterval(() => this.loadWeather(), CACHE_DURATION);
 
         this._unsubscribeUser = userStore.subscribe(() => {
@@ -212,6 +216,7 @@ class WeatherWidget extends HTMLElement {
     }
 
     disconnectedCallback() {
+        this.shadowRoot?.removeEventListener('pointerover', this._onPointerOver);
         if (this._unsubscribe) this._unsubscribe();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._unsubscribeUser) this._unsubscribeUser();
@@ -359,6 +364,56 @@ class WeatherWidget extends HTMLElement {
         `;
     }
 
+    // ── Tooltip placement ──
+    /**
+     * Returns the rect of the nearest ancestor that clips overflow, hopping out
+     * of shadow roots on the way up. The dashboard scroller (.main-content)
+     * starts right below the top bar, so a tooltip that grows past its top edge
+     * is cut off instead of floating over the bar.
+     */
+    private clipRect(): DOMRect {
+        let node: Element = this;
+        while (node) {
+            const parent = node.parentElement
+                ?? ((node.getRootNode() as ShadowRoot).host as Element | undefined);
+            if (!parent) break;
+            const overflowY = getComputedStyle(parent).overflowY;
+            if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') {
+                return parent.getBoundingClientRect();
+            }
+            node = parent;
+        }
+        return new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+
+    /**
+     * Flips the forecast tooltip below its day when there isn't room above it.
+     * Delegated so it keeps working after every re-render.
+     */
+    private _onPointerOver = (e: Event) => {
+        const target = e.target as HTMLElement | null;
+        const day = target?.closest?.('.fc-day') as HTMLElement | null;
+        if (!day) return;
+        const tip = day.querySelector('.fc-tooltip') as HTMLElement | null;
+        if (!tip) return;
+
+        // Measure in the default (above) placement. The tooltip is only shown by
+        // :hover, so force it visible for the read instead of depending on the
+        // hover state having been applied before this event fires.
+        tip.classList.remove('below');
+        const prevDisplay = tip.style.display;
+        tip.style.display = 'block';
+        const needed = tip.offsetHeight + TOOLTIP_GAP;
+        tip.style.display = prevDisplay;
+
+        const dayRect = day.getBoundingClientRect();
+        const clip = this.clipRect();
+        const spaceAbove = dayRect.top - clip.top;
+        const spaceBelow = clip.bottom - dayRect.bottom;
+
+        if (spaceAbove < needed && spaceBelow > spaceAbove) tip.classList.add('below');
+    };
+
     render() {
         if (!this.shadowRoot) return;
         this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="weather-body"></div>`;
@@ -494,6 +549,18 @@ const CSS = `
     transform: translateX(-50%);
     border: 6px solid transparent;
     border-top-color: var(--border);
+}
+/* Flipped below the day when there is no room above (widget near the top of
+   the dashboard, where the top bar would otherwise cut the tooltip off) */
+.fc-tooltip.below {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+.fc-tooltip.below::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--border);
 }
 .fc-day:hover .fc-tooltip {
     display: block;
