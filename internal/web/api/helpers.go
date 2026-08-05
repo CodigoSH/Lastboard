@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -55,75 +56,149 @@ func invalidateSession(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// iconURL builds the CDN URL for a dashboard icon name.
+func iconURL(name string) string {
+	return "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/" + name + ".webp"
+}
+
+// bookmarkContent builds the JSON content of a bookmark. The URL must live
+// inside the content (the frontend reads it from there); the `url` column is
+// kept in sync only for compatibility with older exports.
+func bookmarkContent(label, url, icon string) string {
+	payload, _ := json.Marshal(map[string]any{
+		"label":        label,
+		"url":          url,
+		"icon":         iconURL(icon),
+		"iconName":     icon,
+		"openInNewTab": true,
+	})
+	return string(payload)
+}
+
+// seedBookmark is one starter bookmark, either loose on the grid or inside a section.
+type seedBookmark struct {
+	x, y  int
+	icon  string
+	label string
+	url   string
+}
+
+// Blank lines render as <br><br> (see MarkdownParser), which eats a lot of the
+// 4x2 tile — keep the copy on single lines so it fits without scrolling.
+const seedWelcomeMarkdown = "# Welcome 👋\n" +
+	"Open **edit mode** in the top bar to drag tiles and add your own bookmarks " +
+	"and widgets.\n" +
+	"[Read the docs →](https://codigosh.com/docs/lastboard/)"
+
+const seedNotepadHTML = "<div><b>Quick notes</b> ✍️</div><div><br></div>" +
+	"<div>• Open edit mode from the top bar</div>" +
+	"<div>• Drag any tile to rearrange it</div>" +
+	"<div>• Add your own bookmarks &amp; widgets</div>"
+
 // SeedDefaultItems inserts the default dashboard items for a new user.
+//
+// This is the starter board for real installs. Its layout mirrors the "Home"
+// dashboard of web/src/config/defaults.ts (the demo/offline template): same
+// widgets at the same sizes as web/src/widgets/registry.ts, three sections and
+// a column of loose bookmarks. Keep the widget sizes in sync with both files —
+// a stale seed is how new installs ended up with a 2x1 telemetry widget.
+//
+// Items are inserted with a NULL dashboard_id on purpose: they are adopted by
+// the user's default dashboard the first time the dashboard list is requested.
 func SeedDefaultItems(tx *sql.Tx, userID int) error {
-	// 1-3. Core Widgets
-	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 1, 1, 2, 1, ?)`, userID, `{"widgetId":"clock","city":"Madrid","timezone":"Europe/Madrid","hour12":false,"showDate":true,"showSeconds":true,"showCity":true}`); err != nil {
-		return err
+	// ── Widgets (row 1-2) ────────────────────────────────────────────────
+	widgets := []struct {
+		x, y, w, h int
+		content    string
+	}{
+		{1, 1, 4, 2, `{"widgetId":"markdown","text":` + jsonString(seedWelcomeMarkdown) + `}`},
+		{5, 1, 3, 2, `{"widgetId":"weather","city":"Madrid","latitude":40.4168,"longitude":-3.7038,"unit":"celsius","showForecast":true,"forecastDays":6}`},
+		{8, 1, 2, 2, `{"widgetId":"notepad","text":` + jsonString(seedNotepadHTML) + `}`},
+		{10, 1, 2, 1, `{"widgetId":"clock","city":"Madrid","timezone":"Europe/Madrid","hour12":false,"showDate":true,"showSeconds":true,"showCity":true}`},
+		{10, 2, 3, 1, `{"widgetId":"telemetry","interval":2000}`},
 	}
-	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 1, 2, 2, 1, ?)`, userID, `{"widgetId":"telemetry","interval":2000}`); err != nil {
-		return err
-	}
-	if _, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', 3, 1, 3, 2, ?)`, userID, `{"widgetId":"weather","city":"Madrid","latitude":40.4168,"longitude":-3.7038,"unit":"celsius","showForecast":true,"forecastDays":6}`); err != nil {
-		return err
-	}
-
-	// 4. Project Links Section
-	res, err := tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'section', 6, 1, 2, 2, ?)`, userID, `{"title":"Project Links"}`)
-	if err != nil {
-		return err
-	}
-	projectLinksID, err := res.LastInsertId()
-	if err != nil {
-		return err
+	for _, wgt := range widgets {
+		if _, err := tx.Exec(
+			`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'widget', ?, ?, ?, ?, ?)`,
+			userID, wgt.x, wgt.y, wgt.w, wgt.h, wgt.content); err != nil {
+			return err
+		}
 	}
 
-	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
-		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Forgejo", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/git.webp"}', 'https://git.codigosh.com/CodigoSH/Lastboard'),
-		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Wiki", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/bookstack.webp"}', 'https://git.codigosh.com/CodigoSH/Lastboard/wiki')
-	`, userID, projectLinksID, userID, projectLinksID); err != nil {
-		return err
+	// ── Sections with their bookmarks (row 3-4) ──────────────────────────
+	sections := []struct {
+		x, y, w, h int
+		title      string
+		bookmarks  []seedBookmark
+	}{
+		{1, 3, 3, 2, "Media", []seedBookmark{
+			{1, 1, "plex", "Plex", "https://plex.tv"},
+			{2, 1, "jellyfin", "Jellyfin", "https://jellyfin.org"},
+			{3, 1, "sonarr", "Sonarr", "https://sonarr.tv"},
+			{1, 2, "radarr", "Radarr", "https://radarr.video"},
+			{2, 2, "prowlarr", "Prowlarr", "https://prowlarr.com"},
+			{3, 2, "overseerr", "Overseerr", "https://overseerr.dev"},
+		}},
+		{4, 3, 4, 2, "Self-Hosted Apps", []seedBookmark{
+			{1, 1, "nextcloud", "Nextcloud", "https://nextcloud.com"},
+			{2, 1, "immich", "Immich", "https://immich.app"},
+			{3, 1, "vaultwarden", "Vaultwarden", "https://github.com/dani-garcia/vaultwarden"},
+			{4, 1, "open-webui", "Open WebUI", "https://openwebui.com"},
+			{1, 2, "paperless-ngx", "Paperless", "https://docs.paperless-ngx.com"},
+			{2, 2, "audiobookshelf", "Audiobookshelf", "https://www.audiobookshelf.org"},
+			{3, 2, "linkwarden", "Linkwarden", "https://linkwarden.app"},
+			{4, 2, "freshrss", "FreshRSS", "https://freshrss.org"},
+		}},
+		{8, 3, 3, 2, "Infrastructure", []seedBookmark{
+			{1, 1, "proxmox", "Proxmox", "https://www.proxmox.com"},
+			{2, 1, "portainer", "Portainer", "https://www.portainer.io"},
+			{3, 1, "pi-hole", "Pi-hole", "https://pi-hole.net"},
+			{1, 2, "home-assistant", "Home Assistant", "https://www.home-assistant.io"},
+			{2, 2, "grafana", "Grafana", "https://grafana.com"},
+			{3, 2, "uptime-kuma", "Uptime Kuma", "https://github.com/louislam/uptime-kuma"},
+		}},
+	}
+	for _, sec := range sections {
+		res, err := tx.Exec(
+			`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'section', ?, ?, ?, ?, ?)`,
+			userID, sec.x, sec.y, sec.w, sec.h, `{"title":`+jsonString(sec.title)+`}`)
+		if err != nil {
+			return err
+		}
+		sectionID, err := res.LastInsertId()
+		if err != nil {
+			return err
+		}
+		for _, b := range sec.bookmarks {
+			if _, err := tx.Exec(
+				`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES (?, ?, 'bookmark', ?, ?, 1, 1, ?, ?)`,
+				userID, sectionID, b.x, b.y, bookmarkContent(b.label, b.url, b.icon), b.url); err != nil {
+				return err
+			}
+		}
 	}
 
-	// 7. Media Services Section
-	res, err = tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'section', 8, 1, 3, 2, ?)`, userID, `{"title":"Media Services"}`)
-	if err != nil {
-		return err
+	// ── Loose bookmarks (no section) ─────────────────────────────────────
+	loose := []seedBookmark{
+		{12, 1, "github", "GitHub", "https://github.com"},
+		{11, 3, "google", "Google", "https://google.com"},
+		{12, 3, "youtube", "YouTube", "https://youtube.com"},
+		{11, 4, "gmail", "Gmail", "https://mail.google.com"},
+		{12, 4, "cloudflare", "Cloudflare", "https://dash.cloudflare.com"},
 	}
-	mediaServicesID, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
-		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Plex", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/plex.webp"}', 'https://plex.tv'),
-		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Sonarr", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/sonarr.webp"}', 'https://sonarr.tv'),
-		(?, ?, 'bookmark', 3, 1, 1, 1, '{"label": "Radarr", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/radarr.webp"}', 'https://radarr.video'),
-		(?, ?, 'bookmark', 1, 2, 1, 1, '{"label": "Jellyfin", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/jellyfin.webp"}', 'https://jellyfin.org'),
-		(?, ?, 'bookmark', 2, 2, 1, 1, '{"label": "Tautulli", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/tautulli.webp"}', 'https://tautulli.com')
-	`, userID, mediaServicesID, userID, mediaServicesID, userID, mediaServicesID, userID, mediaServicesID, userID, mediaServicesID); err != nil {
-		return err
-	}
-
-	// 13. Infrastructure Section
-	res, err = tx.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'section', 11, 1, 2, 3, ?)`, userID, `{"title":"Infrastructure"}`)
-	if err != nil {
-		return err
-	}
-	infraID, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	if _, err := tx.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content, url) VALUES
-		(?, ?, 'bookmark', 1, 1, 1, 1, '{"label": "Proxmox", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/proxmox.webp"}', 'https://proxmox.com'),
-		(?, ?, 'bookmark', 2, 1, 1, 1, '{"label": "Pi-hole", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/pi-hole.webp"}', 'https://pi-hole.net'),
-		(?, ?, 'bookmark', 1, 2, 1, 1, '{"label": "Home Assistant", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/home-assistant.webp"}', 'https://home-assistant.io'),
-		(?, ?, 'bookmark', 2, 2, 1, 1, '{"label": "Portainer", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/portainer.webp"}', 'https://portainer.io'),
-		(?, ?, 'bookmark', 1, 3, 1, 1, '{"label": "NPM", "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/nginx-proxy-manager.webp"}', 'https://nginxproxymanager.com')
-	`, userID, infraID, userID, infraID, userID, infraID, userID, infraID, userID, infraID); err != nil {
-		return err
+	for _, b := range loose {
+		if _, err := tx.Exec(
+			`INSERT INTO items (user_id, type, x, y, w, h, content, url) VALUES (?, 'bookmark', ?, ?, 1, 1, ?, ?)`,
+			userID, b.x, b.y, bookmarkContent(b.label, b.url, b.icon), b.url); err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+// jsonString quotes and escapes s so it can be embedded in a JSON literal.
+func jsonString(s string) string {
+	b, _ := json.Marshal(s)
+	return string(b)
 }

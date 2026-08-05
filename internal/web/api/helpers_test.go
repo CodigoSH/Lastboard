@@ -107,6 +107,39 @@ func TestSeedDefaultItems(t *testing.T) {
 	if orphans > 0 {
 		t.Errorf("SeedDefaultItems created %d orphan bookmarks (invalid parent_id)", orphans)
 	}
+
+	// Every bookmark must carry its URL inside the content JSON — the frontend
+	// reads it from there, so a bookmark without it renders as a dead link.
+	var linkless int
+	db.QueryRow(`
+		SELECT COUNT(*) FROM items
+		WHERE user_id = ? AND type = 'bookmark'
+		  AND json_extract(content, '$.url') IS NULL
+	`, userID).Scan(&linkless)
+	if linkless > 0 {
+		t.Errorf("%d seeded bookmarks have no url in their content", linkless)
+	}
+
+	// Widget sizes must match the registry defaults (web/src/widgets/registry.ts).
+	for _, tc := range []struct {
+		widgetID string
+		w, h     int
+	}{
+		{"telemetry", 3, 1},
+		{"clock", 2, 1},
+		{"weather", 3, 2},
+	} {
+		var count int
+		db.QueryRow(`
+			SELECT COUNT(*) FROM items
+			WHERE user_id = ? AND type = 'widget'
+			  AND json_extract(content, '$.widgetId') = ?
+			  AND w = ? AND h = ?
+		`, userID, tc.widgetID, tc.w, tc.h).Scan(&count)
+		if count != 1 {
+			t.Errorf("expected one %s widget sized %dx%d, found %d", tc.widgetID, tc.w, tc.h, count)
+		}
+	}
 }
 
 // TestSeedDefaultItems_Idempotent verifies seeding can be called twice
