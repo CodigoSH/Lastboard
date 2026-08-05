@@ -270,8 +270,11 @@ app-avatar img {
 .main-content {
     margin-top: 0px !important;
     padding: 20px !important;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
     height: calc(100vh - 48px);
-    /* Full height minus header */
+    /* Full height minus header — dvh so mobile browser UI doesn't push the
+       bottom of the scroller off screen (see html/body in theme.css) */
+    height: calc(100dvh - 48px);
     overflow-y: auto;
     /* Internal Scroll */
     box-sizing: border-box;

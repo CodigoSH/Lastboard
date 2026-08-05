@@ -200,6 +200,12 @@
 html,
 body {
     height: 100vh;
+    /* Mobile: the visual viewport shrinks when the browser UI (URL bar, gesture
+       bar) is on screen, but 100vh keeps measuring the *large* viewport. Since
+       the shell is locked (overflow:hidden) that surplus is unreachable and the
+       bottom of the dashboard can never be scrolled into view. 100dvh tracks the
+       viewport that is actually visible. */
+    height: 100dvh;
     margin: 0;
     padding: 0;
     overflow: hidden;

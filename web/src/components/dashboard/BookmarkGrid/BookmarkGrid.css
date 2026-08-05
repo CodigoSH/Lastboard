@@ -43,7 +43,9 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 12px;
+    /* Extra bottom padding so the last cards clear the browser UI / gesture bar
+       instead of ending flush against the edge of the scroller */
+    padding: 12px 12px calc(4rem + env(safe-area-inset-bottom, 0px));
     /* Remove layout containment — it can interfere with flex height
        resolution on some mobile browsers */
     contain: none;
