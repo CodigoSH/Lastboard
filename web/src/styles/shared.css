@@ -80,6 +80,22 @@
  * Should a genuinely unstyled field ever need a baseline, wrap the selector in
  * `:where()` so it scores (0,0,1) and stays below any component rule. */
 
+/* Autofill is the exception: Chrome paints its own background on an autofilled
+   field, `background-color` doesn't touch it, and the document-level rule in
+   styles/components.css cannot reach inside a shadow root — so without this the
+   password field of a modal turns white in dark mode. It only ever applies in
+   the autofill state and only sets colours, so it can't flatten a component's
+   own geometry the way a bare `input` rule would. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--surface-solid) inset !important;
+    -webkit-text-fill-color: var(--input-text) !important;
+    caret-color: var(--input-text);
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 /* Multi-line variant: monospace, no OS resize grip (it clashes with the
    theme), and the slim scrollbars above. */
 .field-textarea {

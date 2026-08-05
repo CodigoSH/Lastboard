@@ -149,24 +149,22 @@ select:focus {
     transform: translateY(-1px);
 }
 
-/* Autofill Dark Mode Fix */
+/* Autofill.
+   Chrome paints its own background on an autofilled field and ignores
+   `background-color`; an inset shadow is the only way to mask it.
+   One rule for both themes on purpose: --surface-solid already resolves to the
+   right colour. Do NOT split this into `.dark-mode` / `:not(.dark-mode)` pairs —
+   `:not(.dark-mode) input` also matches in dark mode (body, form and every
+   wrapper lack the class, which only sits on <html>), so the light variant tied
+   on specificity, won on source order and left white text on a white field. */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #242424 inset !important;
-    -webkit-text-fill-color: var(--text-main) !important;
+    -webkit-box-shadow: 0 0 0 30px var(--surface-solid) inset !important;
+    -webkit-text-fill-color: var(--input-text) !important;
+    caret-color: var(--input-text);
     transition: background-color 5000s ease-in-out 0s;
-}
-
-/* Light mode adjustment if needed, but #242424 is dark-only optimization. 
-   Ideally we match theme. For now, solid dark is better than bright white in dark mode. */
-.dark-mode input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 30px #242424 inset !important;
-}
-
-:not(.dark-mode) input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
 }
 
 /* 5. Avatar Components */
