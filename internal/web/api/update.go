@@ -244,6 +244,173 @@ func splitPreRelease(s string) (string, int) {
 	return s, 0
 }
 
+// Steps of an update, in the order they are performed. The client draws one
+// timeline entry per step, so these ids are part of the contract with the UI.
+const (
+	StepDownload  = "download"
+	StepSignature = "signature"
+	StepChecksum  = "checksum"
+	StepExtract   = "extract"
+	StepInstall   = "install"
+	StepRestart   = "restart"
+)
+
+// Status values a step can report.
+const (
+	StatusRunning = "running"
+	StatusOK      = "ok"
+	StatusSkipped = "skipped"
+	StatusError   = "error"
+)
+
+// UpdateEvent is one progress notification streamed to the client.
+// Error and Detail carry i18n keys, never prose: the UI translates them.
+type UpdateEvent struct {
+	Step   string `json:"step"`
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
+	Detail string `json:"detail,omitempty"`
+}
+
+// runUpdate performs the update, reporting every step through emit. It returns
+// the failing event, or nil once the new binary is installed and only the
+// restart is left.
+//
+// Splitting this out of the handler is what lets the same sequence answer both
+// a streaming client (an event per step) and a plain one (a single status at
+// the end): the handler decides how to report, this decides what happens.
+func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func(UpdateEvent)) (currentExe string, failure *UpdateEvent) {
+	fail := func(step, key, detail string) (string, *UpdateEvent) {
+		ev := UpdateEvent{Step: step, Status: StatusError, Error: key, Detail: detail}
+		emit(ev)
+		return "", &ev
+	}
+
+	// 1. Download the release archive and the checksums that describe it.
+	emit(UpdateEvent{Step: StepDownload, Status: StatusRunning})
+
+	tmpFile := filepath.Join(os.TempDir(), "dashboard_update.tar.gz")
+	defer os.Remove(tmpFile)
+
+	if err := h.downloadFile(assetURL, tmpFile); err != nil {
+		slog.Error("Update failed: could not download binary", "asset_url", assetURL, "tmp_file", tmpFile, "error", err)
+		return fail(StepDownload, "notifier.update_download_failed", "")
+	}
+
+	checksumCopy := *parsedURL
+	checksumCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt"
+	checksumURL := checksumCopy.String()
+	checksumFile := filepath.Join(os.TempDir(), "checksums.txt")
+	defer os.Remove(checksumFile)
+
+	if err := h.downloadFile(checksumURL, checksumFile); err != nil {
+		slog.Error("Update failed: could not download checksums.txt", "checksum_url", checksumURL, "error", err)
+		return fail(StepDownload, "notifier.update_download_failed", "")
+	}
+	emit(UpdateEvent{Step: StepDownload, Status: StatusOK})
+
+	// 2. Verify the checksums.txt signature when release signing is enabled.
+	// This decouples trust from the download server: a compromised release host
+	// cannot forge checksums.txt without the private signing key. When signing is
+	// configured the signature is MANDATORY — a missing .sig aborts the update
+	// instead of falling back to checksum-only, so a tampered host cannot strip
+	// the signature to weaken the check. The release pipeline signs every
+	// published release, so this only rejects genuinely unsigned artifacts.
+	if util.SigningConfigured() {
+		emit(UpdateEvent{Step: StepSignature, Status: StatusRunning})
+
+		sigCopy := *parsedURL
+		sigCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt.sig"
+		sigFile := filepath.Join(os.TempDir(), "checksums.txt.sig")
+		defer os.Remove(sigFile)
+
+		if err := h.downloadFile(sigCopy.String(), sigFile); err != nil {
+			slog.Error("Update failed: checksums.txt.sig missing; refusing to install an unsigned release", "error", err)
+			return fail(StepSignature, "notifier.update_signature_failed", "")
+		}
+		checksumData, err := os.ReadFile(checksumFile)
+		if err != nil {
+			slog.Error("Update failed: could not read checksums.txt for signature check", "error", err)
+			return fail(StepSignature, "notifier.update_signature_failed", "")
+		}
+		sigData, err := os.ReadFile(sigFile)
+		if err != nil {
+			slog.Error("Update failed: could not read checksums.txt.sig", "error", err)
+			return fail(StepSignature, "notifier.update_signature_failed", "")
+		}
+		if err := util.VerifyReleaseSignature(checksumData, strings.TrimSpace(string(sigData))); err != nil {
+			slog.Error("Update failed: checksums.txt signature invalid", "error", err)
+			return fail(StepSignature, "notifier.update_signature_failed", "")
+		}
+		slog.Info("Update: checksums.txt signature verified")
+		emit(UpdateEvent{Step: StepSignature, Status: StatusOK})
+	} else {
+		// Reported rather than hidden: the user should see that this build has
+		// no signing key configured, not a step that silently disappears.
+		emit(UpdateEvent{Step: StepSignature, Status: StatusSkipped})
+	}
+
+	// 3. Verify the archive against the (now trusted) checksums.
+	emit(UpdateEvent{Step: StepChecksum, Status: StatusRunning})
+	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
+		slog.Error("Update failed: checksum verification failed", "asset_url", assetURL, "error", err)
+		return fail(StepChecksum, "notifier.update_checksum_failed", "")
+	}
+	emit(UpdateEvent{Step: StepChecksum, Status: StatusOK})
+
+	// Resolve current executable path (needed for binary name matching and atomic swap)
+	currentExe, err := os.Executable()
+	if err != nil {
+		slog.Error("Update failed: could not determine executable path", "error", err)
+		return fail(StepExtract, "notifier.update_install_failed", "")
+	}
+	if realExe, err := filepath.EvalSymlinks(currentExe); err == nil {
+		currentExe = realExe
+	}
+
+	// 4. Extract
+	emit(UpdateEvent{Step: StepExtract, Status: StatusRunning})
+	binaryPath := filepath.Join(os.TempDir(), "dashboard_new")
+	defer os.Remove(binaryPath)
+	if err := h.extractTarGz(tmpFile, binaryPath, filepath.Base(currentExe)); err != nil {
+		slog.Error("Update failed: could not extract binary from archive", "error", err)
+		return fail(StepExtract, "notifier.update_extract_failed", "")
+	}
+	emit(UpdateEvent{Step: StepExtract, Status: StatusOK})
+
+	// 5. Atomic swap
+	emit(UpdateEvent{Step: StepInstall, Status: StatusRunning})
+	oldExe := currentExe + ".old"
+	os.Remove(oldExe) // clear previous backup if any
+
+	// Move current to old
+	if err := h.moveFile(currentExe, oldExe); err != nil {
+		slog.Error("Update failed: could not back up current binary", "current_exe", currentExe, "error", err)
+		return fail(StepInstall, "notifier.update_install_failed", "notifier.update_rolled_back")
+	}
+
+	// Move new to current
+	if err := h.moveFile(binaryPath, currentExe); err != nil {
+		// Rollback attempt — the two outcomes are very different for whoever is
+		// watching, so they are reported apart instead of as one generic failure.
+		if rbErr := h.moveFile(oldExe, currentExe); rbErr != nil {
+			slog.Error("Update install failed AND rollback failed — binary may be missing",
+				"install_error", err, "rollback_error", rbErr, "old_exe", oldExe, "current_exe", currentExe)
+			return fail(StepInstall, "notifier.update_install_failed", "notifier.update_rollback_failed")
+		}
+		slog.Error("Update failed: could not install new binary (rolled back)", "current_exe", currentExe, "error", err)
+		return fail(StepInstall, "notifier.update_install_failed", "notifier.update_rolled_back")
+	}
+
+	if err := os.Chmod(currentExe, 0700); err != nil {
+		slog.Error("Update failed: could not set permissions on new binary", "current_exe", currentExe, "error", err)
+		return fail(StepInstall, "notifier.update_install_failed", "")
+	}
+	emit(UpdateEvent{Step: StepInstall, Status: StatusOK})
+
+	return currentExe, nil
+}
+
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	// Verify first admin only
 	if !isAdminUser(h.DB, r) {
@@ -294,132 +461,60 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpFile := filepath.Join(os.TempDir(), "dashboard_update.tar.gz")
-	defer os.Remove(tmpFile)
+	// A client that asks for the stream gets one event per step; anyone else
+	// gets the single final status this endpoint has always returned.
+	flusher, canFlush := w.(http.Flusher)
+	streaming := canFlush && strings.Contains(r.Header.Get("Accept"), "text/event-stream")
 
-	// 2. Download Binary
-	if err := h.downloadFile(req.AssetUrl, tmpFile); err != nil {
-		slog.Error("Update failed: could not download binary", "asset_url", req.AssetUrl, "tmp_file", tmpFile, "error", err)
-		http.Error(w, "notifier.update_download_failed", http.StatusInternalServerError)
-		return
-	}
-
-	// 3. Download and verify checksum (mandatory)
-	checksumCopy := *parsedURL
-	checksumCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt"
-	checksumUrl := checksumCopy.String()
-	checksumFile := filepath.Join(os.TempDir(), "checksums.txt")
-	defer os.Remove(checksumFile)
-
-	if err := h.downloadFile(checksumUrl, checksumFile); err != nil {
-		slog.Error("Update failed: could not download checksums.txt", "checksum_url", checksumUrl, "error", err)
-		http.Error(w, "notifier.update_download_failed", http.StatusInternalServerError)
-		return
-	}
-
-	// 3b. Verify the checksums.txt signature when release signing is enabled.
-	// This decouples trust from the download server: a compromised release host
-	// cannot forge checksums.txt without the private signing key. When signing is
-	// configured the signature is MANDATORY — a missing .sig aborts the update
-	// instead of falling back to checksum-only, so a tampered host cannot strip
-	// the signature to weaken the check. The release pipeline signs every
-	// published release, so this only rejects genuinely unsigned artifacts.
-	if util.SigningConfigured() {
-		sigCopy := *parsedURL
-		sigCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt.sig"
-		sigFile := filepath.Join(os.TempDir(), "checksums.txt.sig")
-		defer os.Remove(sigFile)
-
-		if err := h.downloadFile(sigCopy.String(), sigFile); err != nil {
-			slog.Error("Update failed: checksums.txt.sig missing; refusing to install an unsigned release", "error", err)
-			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
+	if !streaming {
+		currentExe, failure := h.runUpdate(req.AssetUrl, parsedURL, func(UpdateEvent) {})
+		if failure != nil {
+			http.Error(w, failure.Error, http.StatusInternalServerError)
 			return
 		}
-		checksumData, err := os.ReadFile(checksumFile)
+		h.scheduleRestart(currentExe)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "notifier.update_verified"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	// Tell reverse proxies not to buffer, or the whole point of streaming is lost.
+	w.Header().Set("X-Accel-Buffering", "no")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	emit := func(ev UpdateEvent) {
+		payload, err := json.Marshal(ev)
 		if err != nil {
-			slog.Error("Update failed: could not read checksums.txt for signature check", "error", err)
-			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
 			return
 		}
-		sigData, err := os.ReadFile(sigFile)
-		if err != nil {
-			slog.Error("Update failed: could not read checksums.txt.sig", "error", err)
-			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
-			return
-		}
-		if err := util.VerifyReleaseSignature(checksumData, strings.TrimSpace(string(sigData))); err != nil {
-			slog.Error("Update failed: checksums.txt signature invalid", "error", err)
-			http.Error(w, "notifier.update_signature_failed", http.StatusInternalServerError)
-			return
-		}
-		slog.Info("Update: checksums.txt signature verified")
+		fmt.Fprintf(w, "data: %s\n\n", payload)
+		flusher.Flush()
 	}
 
-	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
-		slog.Error("Update failed: checksum verification failed", "asset_url", req.AssetUrl, "error", err)
-		http.Error(w, "notifier.update_checksum_failed", http.StatusInternalServerError)
+	currentExe, failure := h.runUpdate(req.AssetUrl, parsedURL, emit)
+	if failure != nil {
 		return
 	}
 
-	// Resolve current executable path (needed for binary name matching and atomic swap)
-	currentExe, err := os.Executable()
-	if err != nil {
-		slog.Error("Update failed: could not determine executable path", "error", err)
-		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
-		return
-	}
-	if realExe, err := filepath.EvalSymlinks(currentExe); err == nil {
-		currentExe = realExe
-	}
+	// The restart is announced but never confirmed from here: this process is
+	// about to be replaced. The client closes the step by polling until the new
+	// version answers.
+	emit(UpdateEvent{Step: StepRestart, Status: StatusRunning})
+	h.scheduleRestart(currentExe)
+}
 
-	// 5. Extract
-	binaryPath := filepath.Join(os.TempDir(), "dashboard_new")
-	defer os.Remove(binaryPath)
-	if err := h.extractTarGz(tmpFile, binaryPath, filepath.Base(currentExe)); err != nil {
-		slog.Error("Update failed: could not extract binary from archive", "error", err)
-		http.Error(w, "notifier.update_extract_failed", http.StatusInternalServerError)
-		return
-	}
-
-	// 6. Atomic Swap
-	oldExe := currentExe + ".old"
-	os.Remove(oldExe) // clear previous backup if any
-
-	// Move current to old
-	if err := h.moveFile(currentExe, oldExe); err != nil {
-		slog.Error("Update failed: could not back up current binary", "current_exe", currentExe, "error", err)
-		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
-		return
-	}
-
-	// Move new to current
-	if err := h.moveFile(binaryPath, currentExe); err != nil {
-		// Rollback attempt — surface failure so an operator can recover manually.
-		if rbErr := h.moveFile(oldExe, currentExe); rbErr != nil {
-			slog.Error("Update install failed AND rollback failed — binary may be missing",
-				"install_error", err, "rollback_error", rbErr, "old_exe", oldExe, "current_exe", currentExe)
-		} else {
-			slog.Error("Update failed: could not install new binary (rolled back)", "current_exe", currentExe, "error", err)
-		}
-		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
-		return
-	}
-
-	if err := os.Chmod(currentExe, 0700); err != nil {
-		slog.Error("Update failed: could not set permissions on new binary", "current_exe", currentExe, "error", err)
-		http.Error(w, "notifier.update_install_failed", http.StatusInternalServerError)
-		return
-	}
-
-	// 7. Restart
+// scheduleRestart re-executes the freshly installed binary, leaving enough time
+// for the response to reach the client first.
+func (h *UpdateHandler) scheduleRestart(currentExe string) {
 	go func() {
-		time.Sleep(1 * time.Second) // Give HTTP request time to finish
+		time.Sleep(1 * time.Second)
 		h.restartSelf(currentExe)
 	}()
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "notifier.update_verified"})
 }
 
 // checkDirWritable verifies the process can create files in dir, i.e. it can
