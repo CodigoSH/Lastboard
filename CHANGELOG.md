@@ -35,12 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make locale files cacheable
 - Stop embedding duplicate and unused assets
 - Unify motion curves, dialogs and inputs
-- Cover outbound alerts and the import parser
 - Describe the update window
 - Drop an unused component and its dead translations
 - Lay the API widget's advanced form out in two columns
 - Make the release script fail safely and preview itself
-- Rebuild the website once the release is published
 - Stop truncating long select labels and drop the native resizer
 - Translate the update window into every locale
 

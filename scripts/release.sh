@@ -336,7 +336,10 @@ fi
 # is the title of every version tagged in this range: for a stable that spans a
 # beta cycle, every one of those betas contributed its own, and they are the
 # headline of their own notes, not a change.
-HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chore: bump|pre-release|^Merge branch|^Merge remote-tracking'
+#
+# `test:` and `ci:` are dropped too: the notes are read by someone deciding
+# whether to update, and neither changes anything they run.
+HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chore: bump|pre-release|^Merge branch|^Merge remote-tracking|^test(\([a-z0-9_ -]+\))?!?:|^ci(\([a-z0-9_ -]+\))?!?:'
 
 # One normalizer for every section. The previous code had two — a decent regex
 # for the typed buckets and `sed 's/^[a-z]*: //'` for everything else, which only
