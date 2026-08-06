@@ -54,10 +54,9 @@ const footerBar = () => `
         <span class="mhd__ago" id="mhd-ago"></span>
         <div class="mhd__footer-actions">
             <div class="mhd__clear-wrap">
-                <button class="mhd__clear" aria-haspopup="true">
+                <button class="mhd__clear" aria-haspopup="true"
+                        aria-label="${i18n.t('monitor.clear_data')}" title="${i18n.t('monitor.clear_data')}">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    <span>${i18n.t('monitor.clear_data')}</span>
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
                 <div class="mhd__clear-menu" hidden>
                     <button class="mhd__clear-item" data-scope="item">${i18n.t('monitor.clear_this')}</button>
@@ -66,7 +65,6 @@ const footerBar = () => `
             </div>
             <button class="mhd__refresh" aria-label="${i18n.t('monitor.refresh')}" title="${i18n.t('monitor.refresh')}">
                 <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.96 7.96 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>
-                <span>${i18n.t('monitor.refresh')}</span>
             </button>
         </div>
     </div>`;

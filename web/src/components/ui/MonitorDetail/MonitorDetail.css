@@ -205,11 +205,15 @@
 
 .mhd__clear-wrap { position: relative; }
 
+/* Icon-only: the wording moved into the menu these open, where it can say what
+   each option actually clears instead of repeating the button's own label. */
 .mhd__clear {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
     border: 1px solid rgba(229, 72, 77, 0.5);
     border-radius: 8px;
     background: rgba(229, 72, 77, 0.08);
@@ -226,8 +230,10 @@
 .mhd__clear-menu {
     position: absolute;
     bottom: calc(100% + 6px);
-    left: 0;
-    min-width: 100%;
+    /* Anchored to the right edge: the button is now a 34px square, so a menu
+       that started at its left would hang off the panel. */
+    right: 0;
+    min-width: max-content;
     background: var(--surface-solid);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -259,8 +265,10 @@
 .mhd__refresh {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: transparent;
