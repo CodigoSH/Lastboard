@@ -37,6 +37,8 @@ The **Service status** page lists every monitored service in one place, each wit
 
 Click any service to open its detail view. You can also click the **status indicator on a bookmark tile** to jump straight to that service's history.
 
+To keep the same information on the dashboard itself, without opening the page, add the [Monitoring widget](../widgets/monitoring.md).
+
 ## Service Detail
 
 Selecting a service (right-hand panel above) shows its history for a chosen time range (**24 hours, 7 days, or 30 days**):

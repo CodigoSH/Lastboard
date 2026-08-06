@@ -23,6 +23,7 @@ Welcome to the official Lastboard documentation. Here you will find everything y
   - [Weather](widgets/weather.md)
   - [Notepad](widgets/notepad.md)
   - [Markdown](widgets/markdown.md)
+  - [Monitoring](widgets/monitoring.md)
   - [Docker](widgets/docker.md)
   - [API](widgets/api.md)
 - **Security**
