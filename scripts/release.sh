@@ -23,27 +23,47 @@ set -euo pipefail
 
 TYPE=""
 TITLE=""
+FORCED_VERSION=""
 DRY_RUN=0
 SKIP_CHECKS=0
+ASSUME_YES=0
 
 for arg in "$@"; do
     case "$arg" in
         stable|beta|rc)  TYPE="$arg" ;;
         --dry-run)       DRY_RUN=1 ;;
         --skip-checks)   SKIP_CHECKS=1 ;;
+        --yes|-y)        ASSUME_YES=1 ;;
         --*)             echo "❌ Unknown option: $arg"; exit 1 ;;
+        # A bare X.Y.Z is the target version, not a title. This is the
+        # stable-from-stable case, where the computed version is the one already
+        # tagged and the real one has to be stated.
+        [0-9]*.[0-9]*.[0-9]*) FORCED_VERSION="$arg" ;;
         *)               TITLE="$arg" ;;
     esac
 done
 
 if [[ "$TYPE" != "stable" && "$TYPE" != "beta" && "$TYPE" != "rc" ]]; then
-    echo "Usage: ./scripts/release.sh [stable|beta|rc] [\"release title\"] [--dry-run] [--skip-checks]"
+    echo "Usage: ./scripts/release.sh [stable|beta|rc] [X.Y.Z] [\"release title\"] [options]"
     echo "  stable : Promotes current version to stable (removes suffixes)"
     echo "  beta   : Bumps Beta version (creates new patch-Beta.01 if current is stable)"
     echo "  rc     : Bumps RC version"
     echo
+    echo "  X.Y.Z          Target version, for when the computed one is not the one you want"
+    echo "                 (stable-from-stable: 1.6.2 is already tagged, so pass 1.6.3)"
     echo "  --dry-run      Show what would happen, change nothing"
+    echo "  --yes, -y      Don't ask for confirmation (required to run stable without a terminal)"
     echo "  --skip-checks  Skip the test/build preflight (emergencies only)"
+    exit 1
+fi
+
+# A stable moves the Docker `latest` tag and offers itself to everyone on the
+# stable channel, so it asks before pushing. Without a terminal that question
+# cannot be answered — fail here rather than after two minutes of preflight,
+# which is what used to happen.
+if [ "$TYPE" = "stable" ] && [ "$DRY_RUN" = "0" ] && [ "$ASSUME_YES" = "0" ] && [ ! -t 0 ]; then
+    echo "❌ 'stable' asks for confirmation and there is no terminal to ask on."
+    echo "   Re-run with --yes to confirm up front."
     exit 1
 fi
 
@@ -203,37 +223,49 @@ case $TYPE in
 
         echo "Current Version: $CURRENT_FULL"
         echo "Proposed Stable: $NEW_VERSION"
-        if [ "$DRY_RUN" = "0" ]; then
-            echo "Press ENTER to confirm or type a manual version:"
-            read -r MANUAL_INPUT || MANUAL_INPUT=""
-            if [ -n "$MANUAL_INPUT" ]; then
-                NEW_VERSION=$MANUAL_INPUT
-                NEW_TAG="v$NEW_VERSION"
-            fi
-        fi
         ;;
 esac
 
+# An explicit X.Y.Z wins over the computed one. Stable-from-stable needs it: the
+# computed version is the one already tagged.
+if [ -n "$FORCED_VERSION" ]; then
+    NEW_VERSION="$FORCED_VERSION"
+    NEW_TAG="v$NEW_VERSION"
+    echo "ℹ️  Version given on the command line: $NEW_VERSION"
+fi
+
 git rev-parse --verify --quiet "refs/tags/$NEW_TAG" >/dev/null && \
-    die "Tag $NEW_TAG already exists."
+    die "Tag $NEW_TAG already exists. Pass the target version, e.g. '$0 $TYPE 1.2.3'."
 
 echo "🚀 Preparing Release: $NEW_TAG ($TYPE)"
 
-if [ "$TYPE" == "stable" ] && [ "$DRY_RUN" = "0" ]; then
-    read -r -p "Are you sure? This will push to production. (y/N) " confirm || confirm=""
-    if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
-        echo "❌ Cancelled"
-        exit 1
+if [ "$TYPE" == "stable" ]; then
+    # Spelled out rather than "this will push to production": a beta pushes too.
+    # What only a stable does is move Docker's `latest` and offer itself to every
+    # installation on the stable channel.
+    echo "   This tags $NEW_TAG, moves the Docker 'latest' tag and offers the"
+    echo "   update to every installation on the stable channel."
+    if [ "$DRY_RUN" = "1" ]; then
+        echo "   [dry-run] would ask for confirmation here (skip it with --yes)"
+    elif [ "$ASSUME_YES" = "1" ]; then
+        echo "   Confirmed with --yes."
+    else
+        read -r -p "   Continue? (y/N) " confirm || confirm=""
+        if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
+            echo "❌ Cancelled"
+            exit 1
+        fi
     fi
 fi
 
 # --- 3. Release title ------------------------------------------------------
 
-# This becomes the `feat:` commit the changelog reads, i.e. the one-line summary
-# of the release. It used to be prompted for as if it were about uncommitted
-# changes, which is why it so often ended up as the "minor updates" default.
+# The one-line summary of the release. It heads the notes; it is NOT a changelog
+# entry. It used to be committed as `feat: <title>`, which meant every beta title
+# came back as a feature of the next stable — v1.6.2 shipped with four of them in
+# its Added section, two of which duplicated the commit they were summarising.
 if [ -z "$TITLE" ] && [ "$DRY_RUN" = "0" ]; then
-    echo "Title for this release (one line, shown in the changelog):"
+    echo "Title for this release (one line, shown at the top of the notes):"
     read -r TITLE || TITLE=""
 fi
 [ -n "$TITLE" ] || TITLE="minor updates"
