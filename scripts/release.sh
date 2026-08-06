@@ -4,16 +4,21 @@
 # 🚀 Unified Release Script
 # Handles: Stable, Beta, and RC releases
 #
-# Usage: ./scripts/release.sh [stable|beta|rc] ["release title"] [--dry-run]
-#                                              [--skip-checks]
+# Usage: ./scripts/release.sh [stable|beta|rc] [X.Y.Z] ["release title"]
+#                                              [--dry-run] [--yes] [--skip-checks]
 #
-# The title is the one-line summary of the release. It ends up as the `feat:`
-# commit the changelog is built from, so give it a real sentence; passing it as
-# an argument is what keeps it from falling back to "minor updates".
+# The title is the one-line summary of the release. It heads the notes — it is
+# not a changelog entry — and it is committed as `release: <title>`, which is
+# also how the aggregation of a stable knows to leave the beta titles out.
+# Passing it as an argument is what keeps it from falling back to "minor updates".
+#
+# X.Y.Z overrides the computed version. Needed for stable-from-stable, where the
+# computed one is the version already tagged.
 #
 # --dry-run prints the version it would produce, checks every file it would
 # rewrite, renders the changelog and lists the git commands — without touching
-# a single file. Use it to inspect a release before making it.
+# a single file. Use it to inspect a release before making it. It also states
+# where a real run would stop to ask for confirmation.
 # ==========================================
 
 # Fail loudly: an unchecked error here means a tag pushed against a broken tree.
@@ -311,7 +316,7 @@ apply_version "$UPDATE_SERVICE_FILE" "latest_version: 'v[^']*'," \
 # Named explicitly: `git add .` would sweep in anything else in the tree.
 echo "📦 Committing the version bump..."
 run git add "$VERSION_FILE" "$GO_VERSION_FILE" "$SETTINGS_FILE" "$UPDATE_SERVICE_FILE"
-run git commit -m "feat: $TITLE"
+run git commit -m "release: $TITLE"
 
 # --- 5. Generate the changelog ---------------------------------------------
 
@@ -327,22 +332,32 @@ else
 fi
 [ -n "$LAST_TAG" ] || die "No previous tag found to build a changelog from."
 
-get_log() {
-    local pattern=$1
-    git log "$LAST_TAG..HEAD" --oneline --pretty=format:"%s" | \
-    grep -iE "$pattern" | \
-    grep -vE "chore\(release\)|chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | \
-    sed -E 's/^(feat|fix|refactor|perf|chore|docs|style)(\([a-z0-9_-]+\))?: //i' | \
-    sed 's/^[a-z]*: //' | \
-    awk '{$1=toupper(substr($1,1,1))substr($1,2)}1' | \
-    sed 's/^/- /' | \
-    sort -u || echo ""
+# Commits that describe the release process rather than the release. `release:`
+# is the title of every version tagged in this range: for a stable that spans a
+# beta cycle, every one of those betas contributed its own, and they are the
+# headline of their own notes, not a change.
+HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chore: bump|pre-release|^Merge branch|^Merge remote-tracking'
+
+# One normalizer for every section. The previous code had two — a decent regex
+# for the typed buckets and `sed 's/^[a-z]*: //'` for everything else, which only
+# matched a bare `word:`. Anything with a scope survived and got capitalized on
+# its way into the public notes: "Ci(release): …", "Docs(update): …", "I18n: …".
+CONVENTIONAL_TYPES='feat|fix|refactor|perf|chore|docs|style|build|ci|test|i18n|revert'
+
+clean_subjects() {
+    grep -vE "$HOUSEKEEPING" | \
+    grep -viE '^(feat|fix|chore)?(\([a-z0-9_-]+\))?:? *minor updates$' | \
+    sed -E "s/^($CONVENTIONAL_TYPES)(\([a-z0-9_ -]+\))?(!)?: *//I" | \
+    awk 'NF {$1=toupper(substr($1,1,1))substr($1,2); print "- " $0}' | \
+    sort -u
 }
 
-FEATS=$(get_log "^feat")
-FIXES=$(get_log "^fix")
-REFACTORS=$(get_log "^refactor|^perf")
-OTHER=$(git log "$LAST_TAG..HEAD" --oneline --pretty=format:"%s" | grep -vE "^feat|^fix|^refactor|^perf|^chore\(release\)|^chore: cleanup|pre-release|chore: bump|Merge branch|Merge remote-tracking" | sed 's/^[a-z]*: //' | awk '{$1=toupper(substr($1,1,1))substr($1,2)}1' | sed 's/^/- /' | sort -u || echo "")
+subjects() { git log "$LAST_TAG..HEAD" --pretty=format:"%s"; }
+
+FEATS=$(subjects | grep -iE "^feat" | clean_subjects || echo "")
+FIXES=$(subjects | grep -iE "^fix" | clean_subjects || echo "")
+REFACTORS=$(subjects | grep -iE "^(refactor|perf)" | clean_subjects || echo "")
+OTHER=$(subjects | grep -viE "^(feat|fix|refactor|perf)" | clean_subjects || echo "")
 
 # Update CHANGELOG.md
 if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
@@ -394,21 +409,22 @@ else
         NOTES_CHANGED="$OTHER"
     fi
 
+    # The title leads the notes. It is the one line a reader sees first, and
+    # keeping it out of the sections is what stops it from also being counted as
+    # a feature of the next stable.
+    compose_notes() {
+        printf '**%s**\n\n' "$TITLE"
+        [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
+        [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
+        [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
+        true
+    }
+
     if [ "$DRY_RUN" = "1" ]; then
         echo "   [dry-run] $NOTES_FILE would be generated as:"
-        {
-            [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
-            [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
-            [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
-            true
-        } | sed 's/^/     /'
+        compose_notes | sed 's/^/     /'
     else
-        {
-            [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
-            [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
-            [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
-            true
-        } > "$NOTES_FILE"
+        compose_notes > "$NOTES_FILE"
     fi
 fi
 

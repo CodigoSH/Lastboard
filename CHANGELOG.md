@@ -7,14 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.6.2] - 2026-08-06
 
 ### Added
-- An explicit view selector for the API widget
 - Let the API widget's view be chosen explicitly
-- Minor updates
 - Put the whole update behind one modal with a timeline
-- Reliability fixes across the widgets, a lighter binary and faster repeat visits
 - Report the update progress step by step
-- Update window, mobile scrolling and UI polish
-- Update window with a step-by-step timeline
 
 ### Fixed
 - Degrade gracefully on an unexpected weather payload
@@ -40,15 +35,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make locale files cacheable
 - Stop embedding duplicate and unused assets
 - Unify motion curves, dialogs and inputs
-- Build(release): make the release script fail safely and preview itself
-- Chore(web): drop an unused component and its dead translations
-- Ci(release): rebuild the website once the release is published
-- Docs(release): notes for v1.6.2-Beta.03
-- Docs(update): describe the update window
-- I18n: translate the update window into every locale
-- Style(ui): stop truncating long select labels and drop the native resizer
-- Style(widgets): lay the API widget's advanced form out in two columns
-- Test(api): cover outbound alerts and the import parser
+- Cover outbound alerts and the import parser
+- Describe the update window
+- Drop an unused component and its dead translations
+- Lay the API widget's advanced form out in two columns
+- Make the release script fail safely and preview itself
+- Rebuild the website once the release is published
+- Stop truncating long select labels and drop the native resizer
+- Translate the update window into every locale
 
 ## [1.6.1] - 2026-08-01
 
