@@ -211,9 +211,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    padding: 0;
+    gap: 2px;
+    width: auto;
+    height: 26px;
+    padding: 0 6px;
     border: 1px solid rgba(229, 72, 77, 0.5);
     border-radius: 8px;
     background: rgba(229, 72, 77, 0.08);
@@ -248,6 +249,14 @@
 
 .mhd__clear-menu[hidden] { display: none; }
 
+.mhd__caret { flex-shrink: 0; opacity: 0.75; }
+
+/* On a phone the drawer is the whole screen and these two are housekeeping, not
+   what you opened it for; the same actions live in Settings → Monitoring. */
+@media (max-width: 768px) {
+    .mhd__footer-actions { display: none; }
+}
+
 .mhd__clear-item {
     text-align: left;
     padding: 9px 12px;
@@ -266,8 +275,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
+    width: 26px;
+    height: 26px;
     padding: 0;
     border: 1px solid var(--border);
     border-radius: 8px;
