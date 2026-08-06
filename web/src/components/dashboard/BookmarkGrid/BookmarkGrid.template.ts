@@ -113,7 +113,8 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             'weather': 'widget-weather',
             'markdown': 'widget-markdown',
             'docker': 'widget-docker',
-            'api': 'widget-api'
+            'api': 'widget-api',
+            'monitor': 'widget-monitor'
         };
         const tagName = tagMap[widgetId] || 'div';
         const rawContent = data.text || '';

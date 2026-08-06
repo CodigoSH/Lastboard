@@ -43,6 +43,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
         componentTag: 'widget-telemetry'
     },
     {
+        id: 'monitor',
+        get name() { return i18n.t('widget.monitor.name'); },
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>',
+        get description() { return i18n.t('widget.monitor.description'); },
+        defaultW: 3,
+        defaultH: 2,
+        componentTag: 'widget-monitor',
+        configOnAdd: true
+    },
+    {
         id: 'weather',
         get name() { return i18n.t('widget.weather.name'); },
         icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="14.7" y1="3.3" x2="13.3" y2="4.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><path d="M10 19 Q10 15 14 15 Q14 11 18 11 Q22 11 22 15 Q24 15 24 18 Q24 21 21 21 L12 21 Q10 21 10 19Z"/></svg>',

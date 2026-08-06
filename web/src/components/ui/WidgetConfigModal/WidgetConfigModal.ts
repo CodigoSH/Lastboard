@@ -3,6 +3,7 @@
 import { dashboardStore } from '../../../store/dashboardStore';
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
+import { apiService } from '../../../services/apiService';
 import '../Select/Select';
 import type { AppSelect } from '../Select/Select';
 import type { SelectOption } from '../Select/Select.template';
@@ -204,6 +205,8 @@ class WidgetConfigModal extends HTMLElement {
                         }
                     });
                 });
+            } else if (widgetId === 'monitor') {
+                this.setupMonitorEvents(content);
             } else if (widgetId === 'docker') {
                 this.setupDockerEvents();
             } else if (widgetId === 'api') {
@@ -510,6 +513,18 @@ class WidgetConfigModal extends HTMLElement {
                 newContent.mappings = mappings;
                 newContent.refreshSec = parseInt(val('api-refresh')) || 60;
             }
+        } else if (widgetId === 'monitor') {
+            // An empty selection means "every monitored service", which is also
+            // what a fresh widget starts with — so it keeps working when the
+            // user adds services later without reopening this screen.
+            const checked = Array.from(
+                this.shadowRoot?.querySelectorAll<HTMLInputElement>('.monitor-service:checked') || []
+            ).map(cb => parseInt(cb.dataset.id || '0', 10)).filter(id => id > 0);
+            const total = this.shadowRoot?.querySelectorAll('.monitor-service').length || 0;
+            newContent.items = (checked.length === total) ? [] : checked;
+
+            const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
+            newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 5000;
@@ -840,6 +855,8 @@ class WidgetConfigModal extends HTMLElement {
                 const customizationTab = ``; // Section customization tab is empty by default, only appearance controls are added.
 
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
+            } else if (widgetId === 'monitor') {
+                return this.renderMonitorForm(content);
             } else if (widgetId === 'docker') {
                 return this.renderDockerForm(content);
             }
@@ -880,7 +897,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
 
                 <div class="actions">
-                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker', 'api'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
+                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker', 'api', 'monitor'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
                 <div id="docker-host-overlay" class="docker-overlay" style="display: none;"></div>
             </dialog>
@@ -1160,6 +1177,69 @@ class WidgetConfigModal extends HTMLElement {
             overlay.style.display = 'none';
             this.refreshDockerContent();
         });
+    }
+
+    /**
+     * The monitor widget picks from services that are already being monitored,
+     * so the list cannot be known until it is fetched. The form renders a
+     * placeholder and setupMonitorEvents fills it in — the same shape the docker
+     * form uses for its hosts.
+     */
+    private renderMonitorForm(content: any) {
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
+        const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
+        const options = [30, 60, 300, 600];
+
+        const generalTab = `
+            <div class="field-group">
+                <label>${i18n.t('monitor.select_services')}</label>
+                <div id="monitor-services" class="monitor-services">
+                    <p class="monitor-services__state">${i18n.t('general.loading')}</p>
+                </div>
+                <small>${i18n.t('monitor.select_services_desc')}</small>
+            </div>
+            <div class="field-group">
+                <label for="monitor-refresh">${i18n.t('widget.api.refresh_label')}</label>
+                <select id="monitor-refresh">
+                    ${options.map(o => `<option value="${o}" ${o === refresh ? 'selected' : ''}>${o < 60 ? `${o} s` : `${o / 60} min`}</option>`).join('')}
+                </select>
+            </div>
+        `;
+
+        return { general: generalTab, customization: renderAppearanceControls() };
+    }
+
+    /**
+     * Fills the service list. Everything is pre-checked when the widget has no
+     * explicit selection, because that is what it renders: all of them.
+     */
+    private async setupMonitorEvents(content: any) {
+        const box = this.shadowRoot?.getElementById('monitor-services');
+        if (!box) return;
+
+        let rows: { item_id: number; name: string }[] = [];
+        try {
+            rows = await apiService.get<{ item_id: number; name: string }[]>('/api/monitor/overview');
+        } catch {
+            box.innerHTML = `<p class="monitor-services__state">${esc(i18n.t('general.error'))}</p>`;
+            return;
+        }
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+            box.innerHTML = `<p class="monitor-services__state">${esc(i18n.t('monitor.overview_empty'))}</p>`;
+            return;
+        }
+
+        const selected: number[] = Array.isArray(content.items) ? content.items : [];
+        const all = selected.length === 0;
+
+        box.innerHTML = rows.map(r => `
+            <label class="monitor-service-row">
+                <input type="checkbox" class="monitor-service" data-id="${r.item_id}"
+                       ${all || selected.includes(r.item_id) ? 'checked' : ''} />
+                <span>${esc(r.name) || '—'}</span>
+            </label>
+        `).join('');
     }
 
     private renderDockerForm(content: any) {

@@ -967,3 +967,42 @@ dialog[open] {
     height: 18px;
     fill: currentColor;
 }
+/* ── Monitor widget: service picker ─────────────────────────────────────── */
+
+.monitor-services {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+}
+
+.monitor-services__state {
+    margin: 0;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.monitor-service-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.monitor-service-row:hover {
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.monitor-service-row input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+}

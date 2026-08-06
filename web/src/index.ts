@@ -33,6 +33,7 @@ import './widgets/core/WeatherWidget';
 import './widgets/core/MarkdownWidget';
 import './widgets/core/DockerWidget';
 import './widgets/core/ApiWidget';
+import './widgets/core/MonitorWidget';
 
 const topbar = document.getElementById('main-topbar') as any;
 const drawer = document.getElementById('right-drawer') as any;
