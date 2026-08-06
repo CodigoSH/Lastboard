@@ -523,6 +523,9 @@ class WidgetConfigModal extends HTMLElement {
             const total = this.shadowRoot?.querySelectorAll('.monitor-service').length || 0;
             newContent.items = (checked.length === total) ? [] : checked;
 
+            const titleInput = this.shadowRoot?.getElementById('monitor-title') as HTMLInputElement | null;
+            newContent.title = (titleInput?.value || '').trim();
+
             const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
         } else if (widgetId === 'telemetry') {
@@ -1188,9 +1191,13 @@ class WidgetConfigModal extends HTMLElement {
     private renderMonitorForm(content: any) {
         const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
-        const options = [30, 60, 300, 600];
 
         const generalTab = `
+            <div class="field-group">
+                <label>${i18n.t('widget.api.title_label')}</label>
+                <input type="text" id="monitor-title" value="${esc(content.title || '')}"
+                       placeholder="${esc(i18n.t('widget.monitor.name'))}" />
+            </div>
             <div class="field-group">
                 <label>${i18n.t('monitor.select_services')}</label>
                 <div id="monitor-services" class="monitor-services">
@@ -1198,11 +1205,9 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
                 <small>${i18n.t('monitor.select_services_desc')}</small>
             </div>
-            <div class="field-group">
-                <label for="monitor-refresh">${i18n.t('widget.api.refresh_label')}</label>
-                <select id="monitor-refresh">
-                    ${options.map(o => `<option value="${o}" ${o === refresh ? 'selected' : ''}>${o < 60 ? `${o} s` : `${o / 60} min`}</option>`).join('')}
-                </select>
+            <div class="field-group row-aligned">
+                <label>${i18n.t('widget.api.refresh_label')}</label>
+                <app-select id="monitor-refresh" value="${refresh}"></app-select>
             </div>
         `;
 
@@ -1214,6 +1219,14 @@ class WidgetConfigModal extends HTMLElement {
      * explicit selection, because that is what it renders: all of them.
      */
     private async setupMonitorEvents(content: any) {
+        const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as AppSelect | null;
+        if (refreshSel) refreshSel.options = [
+            { value: '30', label: '30s' },
+            { value: '60', label: '1m' },
+            { value: '300', label: '5m' },
+            { value: '600', label: '10m' },
+        ];
+
         const box = this.shadowRoot?.getElementById('monitor-services');
         if (!box) return;
 

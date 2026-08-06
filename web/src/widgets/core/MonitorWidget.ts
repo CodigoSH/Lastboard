@@ -18,9 +18,13 @@ interface MonitorConfig {
     /** Item ids to show. Empty means every monitored service. */
     items: number[];
     refreshSec: number;
+    /** Header text. Empty falls back to the widget's own name. */
+    title: string;
 }
 
-const DEFAULT_CONFIG: MonitorConfig = { items: [], refreshSec: 60 };
+const DEFAULT_CONFIG: MonitorConfig = { items: [], refreshSec: 60, title: '' };
+
+const ICON_PULSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>';
 
 /** How many bars a row draws. Matches what the endpoint returns. */
 const BEATS = 30;
@@ -73,14 +77,16 @@ class MonitorWidget extends HTMLElement {
                 const next: MonitorConfig = {
                     items: Array.isArray(data.items) ? data.items : [],
                     refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
+                    title: typeof data.title === 'string' ? data.title : '',
                 };
                 const selectionChanged = next.items.join(',') !== this._config.items.join(',');
                 const intervalChanged = next.refreshSec !== this._config.refreshSec;
+                const titleChanged = next.title !== this._config.title;
                 this._config = next;
 
                 // Stats tick every second through this same store; repainting on
                 // every one of them would fight the heartbeat animation.
-                if (selectionChanged) this.render();
+                if (selectionChanged || titleChanged) this.render();
                 if (intervalChanged) this.restartTimer();
             } catch { /* keep the current config */ }
         });
@@ -103,6 +109,7 @@ class MonitorWidget extends HTMLElement {
             this._config = {
                 items: Array.isArray(data.items) ? data.items : [],
                 refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
+                title: typeof data.title === 'string' ? data.title : '',
             };
         } catch { /* defaults */ }
     }
@@ -187,7 +194,13 @@ class MonitorWidget extends HTMLElement {
 
     render() {
         if (!this.shadowRoot) return;
-        this.shadowRoot.innerHTML = `<style>${CSS}</style>${this.body()}`;
+        const title = this._config.title || i18n.t('widget.monitor.name');
+        const header = `
+            <div class="mw-header">
+                <span class="mw-header-icon">${ICON_PULSE}</span>
+                <span class="mw-header-title">${escapeHtml(title)}</span>
+            </div>`;
+        this.shadowRoot.innerHTML = `<style>${CSS}</style>${header}<div class="mw-body">${this.body()}</div>`;
     }
 }
 
@@ -196,7 +209,8 @@ class MonitorWidget extends HTMLElement {
 // =============================================================
 const CSS = `
 :host {
-    display: block;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
     box-sizing: border-box;
@@ -204,6 +218,42 @@ const CSS = `
     color: var(--text-main);
     container-type: inline-size;
     overflow: hidden;
+}
+
+/* Fixed header, scrolling body — otherwise the title scrolls away with the
+   services on a short widget. */
+.mw-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px 6px;
+    flex-shrink: 0;
+}
+
+.mw-header-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--accent);
+    display: flex;
+    flex-shrink: 0;
+}
+
+.mw-header-icon svg { width: 100%; height: 100%; }
+
+.mw-header-title {
+    font-size: clamp(10px, 3cqi, 12px);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mw-body {
+    flex: 1;
+    min-height: 0;
 }
 
 .mw-rows {
@@ -221,7 +271,7 @@ const CSS = `
    how many services fit — measured: 3 rows visible in a 4x2 before, 7 after. */
 .mw-row {
     display: grid;
-    grid-template-columns: 8px minmax(0, 1fr) auto auto;
+    grid-template-columns: 8px minmax(0, 1fr) 4.5em 2.8em;
     grid-template-areas: "dot name latency uptime" "beats beats beats beats";
     align-items: center;
     gap: 2px 8px;
@@ -266,6 +316,7 @@ const CSS = `
     font-size: clamp(9px, 2.6cqi, 11px);
     color: var(--text-dim);
     font-variant-numeric: tabular-nums;
+    text-align: right;
 }
 
 .mw-uptime {
@@ -274,6 +325,7 @@ const CSS = `
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     color: var(--text-dim);
+    text-align: right;
 }
 
 .mw-uptime--up { color: var(--success-color); }
@@ -289,7 +341,10 @@ const CSS = `
 
 @container (min-width: 300px) {
     .mw-row {
-        grid-template-columns: 8px minmax(70px, 1fr) minmax(60px, 1.4fr) auto auto;
+        /* Fixed widths for the two numeric columns. Sized to their content,
+           "532 ms" and "65 ms" pushed the bars to different places and their
+           right edge came out ragged. */
+        grid-template-columns: 8px minmax(70px, 1fr) minmax(60px, 1.4fr) 4.5em 2.8em;
         grid-template-areas: "dot name beats latency uptime";
     }
 
