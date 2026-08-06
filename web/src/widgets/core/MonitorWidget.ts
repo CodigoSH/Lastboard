@@ -3,6 +3,7 @@ import { apiService } from '../../services/apiService';
 import { dashboardStore } from '../../store/dashboardStore';
 import { escapeHtml } from '../../services/escape';
 import { eventBus, EVENTS } from '../../services/EventBus';
+import { adoptSharedStyles } from '../../services/sharedStyles';
 
 /** One service as /api/monitor/overview reports it. */
 interface OverviewRow {
@@ -50,6 +51,7 @@ class MonitorWidget extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        adoptSharedStyles(this.shadowRoot);
     }
 
     static get observedAttributes() { return ['item-id']; }
@@ -196,9 +198,11 @@ class MonitorWidget extends HTMLElement {
         if (!this.shadowRoot) return;
         const title = this._config.title || i18n.t('widget.monitor.name');
         const header = `
-            <div class="mw-header">
-                <span class="mw-header-icon">${ICON_PULSE}</span>
-                <span class="mw-header-title">${escapeHtml(title)}</span>
+            <div class="widget-header">
+                <div class="widget-header__top">
+                    <span class="widget-header__icon">${ICON_PULSE}</span>
+                    <span class="widget-header__title">${escapeHtml(title)}</span>
+                </div>
             </div>`;
         this.shadowRoot.innerHTML = `<style>${CSS}</style>${header}<div class="mw-body">${this.body()}</div>`;
     }
@@ -214,46 +218,17 @@ const CSS = `
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    padding: 8px;
     color: var(--text-main);
     container-type: inline-size;
     overflow: hidden;
 }
 
-/* Fixed header, scrolling body — otherwise the title scrolls away with the
-   services on a short widget. */
-.mw-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 4px 6px;
-    flex-shrink: 0;
-}
-
-.mw-header-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--accent);
-    display: flex;
-    flex-shrink: 0;
-}
-
-.mw-header-icon svg { width: 100%; height: 100%; }
-
-.mw-header-title {
-    font-size: clamp(10px, 3cqi, 12px);
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--text-main);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
+/* The header comes from the shared sheet (styles/shared.css), the same one the
+   Docker widget uses. */
 .mw-body {
     flex: 1;
     min-height: 0;
+    padding: 6px 8px 8px;
 }
 
 .mw-rows {

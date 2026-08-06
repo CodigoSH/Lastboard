@@ -141,7 +141,8 @@
        scales with widget size). Let them fill the tile. */
     &:has(widget-docker),
     &:has(widget-notepad),
-    &:has(widget-markdown) {
+    &:has(widget-markdown),
+    &:has(widget-monitor) {
         padding: 0 !important;
     }
 

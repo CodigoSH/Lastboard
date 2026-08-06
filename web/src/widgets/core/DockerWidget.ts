@@ -135,35 +135,10 @@ const CSS = `
 }
 
 /* ── Header ── */
-.widget-header {
-    display: flex;
-    flex-direction: column;
-    padding: 16px 16px 12px 16px;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: transparent;
-    gap: 8px;
-}
-.header-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.widget-header-icon {
-    width: 16px; height: 16px;
-    color: var(--accent);
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-}
-.widget-header-icon svg { width: 16px; height: 16px; }
-.widget-title {
-    font-size: 13px; font-weight: 600;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--text-main); flex: 1;
-}
+/* .widget-header / __top / __icon / __title come from the shared sheet — see
+   styles/shared.css. They used to be declared here, and the monitor widget grew
+   its own smaller variant, which is how two widgets side by side ended up with
+   different headers. */
 .host-select {
     width: 150px;
     flex-shrink: 0;
@@ -968,9 +943,9 @@ class DockerWidget extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>${CSS}</style>
             <div class="widget-header">
-                <div class="header-top">
-                    <div class="widget-header-icon">${ICON.docker}</div>
-                    <span class="widget-title">${i18n.t('widget.docker.name')}</span>
+                <div class="widget-header__top">
+                    <span class="widget-header__icon">${ICON.docker}</span>
+                    <span class="widget-header__title">${i18n.t('widget.docker.name')}</span>
                     ${hostSelector}
                     <button class="header-btn refresh-btn" id="refresh-btn" data-title="${i18n.t('docker.refresh') || 'Refresh'}">${ICON.refresh}</button>
                     ${editBtn}

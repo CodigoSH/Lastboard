@@ -105,3 +105,60 @@ input:-webkit-autofill:active {
     min-height: 44px;
     overflow: auto;
 }
+
+/* --- Widget header ------------------------------------------------------- */
+
+/* One header for every widget that has one. There were three looks for the same
+   thing — Docker's (16px padding, bordered, sticky), the API widget's bare
+   uppercase line and the monitor's smaller variant — which is what made a board
+   with several widgets look assembled from parts.
+ *
+ * Wrapped in :where() so it scores (0,0,1): a widget that genuinely needs to
+ * differ still wins with a plain class selector, and this never overrides one
+ * by surprise from the adopted sheet (see the ordering note at the top). */
+:where(.widget-header) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 14px 10px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+:where(.widget-header__top) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+:where(.widget-header__icon) {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:where(.widget-header__icon svg) {
+    width: 16px;
+    height: 16px;
+}
+
+:where(.widget-header__title) {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
