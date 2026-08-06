@@ -292,3 +292,186 @@ func TestSummarizeHistory(t *testing.T) {
 		t.Errorf("empty history should be -1/nil, got %.0f/%v", pct, inc)
 	}
 }
+
+// ── OverviewStats ───────────────────────────────────────────────────────────
+//
+// The overview is now summarised by the database instead of by reading every
+// check into memory, so these pin the four things a row shows: uptime, the
+// current status, the latency of the last check, and the heartbeat — including
+// the cases where the shortcut of "just look at the rows" no longer applies.
+
+// seedItemFor creates a bookmark owned by an existing user.
+func seedItemFor(t *testing.T, store *MonitorStore, userID int) int {
+	t.Helper()
+	res, err := store.DB.Exec(
+		`INSERT INTO items (user_id, type, x, y, w, h) VALUES (?, 'bookmark', 0, 0, 1, 1)`, userID)
+	if err != nil {
+		t.Fatalf("seed item: %v", err)
+	}
+	id, _ := res.LastInsertId()
+	return int(id)
+}
+
+func ownerOf(t *testing.T, store *MonitorStore, itemID int) int {
+	t.Helper()
+	var uid int
+	if err := store.DB.QueryRow(`SELECT user_id FROM items WHERE id = ?`, itemID).Scan(&uid); err != nil {
+		t.Fatalf("owner: %v", err)
+	}
+	return uid
+}
+
+// record inserts one check at an explicit time.
+func record(t *testing.T, store *MonitorStore, itemID int, at time.Time, up bool, latency *int) {
+	t.Helper()
+	_, err := store.DB.Exec(
+		`INSERT INTO monitor_checks (item_id, checked_at, up, latency_ms, status_code)
+		 VALUES (?, ?, ?, ?, 200)`,
+		itemID, at.UTC().Format("2006-01-02 15:04:05"), up, latency)
+	if err != nil {
+		t.Fatalf("record check: %v", err)
+	}
+}
+
+func TestOverviewStatsUptimeAndLastCheck(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := &MonitorStore{DB: db}
+	itemID := seedItem(t, store)
+	userID := ownerOf(t, store, itemID)
+
+	now := time.Now()
+	lat := 55
+	record(t, store, itemID, now.Add(-30*time.Minute), true, &lat)
+	record(t, store, itemID, now.Add(-20*time.Minute), false, nil)
+	record(t, store, itemID, now.Add(-10*time.Minute), true, &lat)
+	// Outside the 24h window: must not count towards uptime.
+	record(t, store, itemID, now.Add(-30*time.Hour), false, nil)
+
+	stats, err := store.OverviewStats(userID, now.Add(-24*time.Hour))
+	if err != nil {
+		t.Fatalf("OverviewStats: %v", err)
+	}
+	st := stats[itemID]
+	if st == nil {
+		t.Fatal("no stats for the seeded item")
+	}
+	if st.Total != 3 || st.Up != 2 {
+		t.Errorf("total/up = %d/%d, want 3/2 (the 30h-old check must be excluded)", st.Total, st.Up)
+	}
+	if !st.LastUp {
+		t.Error("last check was up, LastUp says otherwise")
+	}
+	if st.LastLatency == nil || *st.LastLatency != 55 {
+		t.Errorf("LastLatency = %v, want 55", st.LastLatency)
+	}
+}
+
+// A failed check stores no latency; the row must report none rather than
+// carrying the latency of an earlier, successful one.
+func TestOverviewStatsDropsLatencyWhenLastCheckFailed(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := &MonitorStore{DB: db}
+	itemID := seedItem(t, store)
+	userID := ownerOf(t, store, itemID)
+
+	now := time.Now()
+	lat := 42
+	record(t, store, itemID, now.Add(-10*time.Minute), true, &lat)
+	record(t, store, itemID, now.Add(-1*time.Minute), false, nil)
+
+	stats, _ := store.OverviewStats(userID, now.Add(-24*time.Hour))
+	st := stats[itemID]
+	if st.LastUp {
+		t.Error("last check failed, LastUp says up")
+	}
+	if st.LastLatency != nil {
+		t.Errorf("LastLatency = %v, want nil after a failed check", *st.LastLatency)
+	}
+}
+
+// The bars show the most recent checks, oldest first — the order they are drawn
+// in. Everything older than that window is summarised, never returned.
+func TestOverviewStatsHeartbeatIsCappedAndOldestFirst(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := &MonitorStore{DB: db}
+	itemID := seedItem(t, store)
+	userID := ownerOf(t, store, itemID)
+
+	now := time.Now()
+	const total = overviewBeats + 15
+	for i := total; i >= 1; i-- {
+		// The oldest checks are the failures, so a capped list must be all "up".
+		record(t, store, itemID, now.Add(-time.Duration(i)*time.Minute), i <= overviewBeats, nil)
+	}
+
+	stats, _ := store.OverviewStats(userID, now.Add(-24*time.Hour))
+	st := stats[itemID]
+
+	if st.Total != total {
+		t.Errorf("uptime still counts every check: total = %d, want %d", st.Total, total)
+	}
+	if len(st.Beats) != overviewBeats {
+		t.Fatalf("beats = %d, want %d", len(st.Beats), overviewBeats)
+	}
+	for i, b := range st.Beats {
+		if b.Status != "up" {
+			t.Fatalf("beat %d is %q: the cap kept the oldest checks instead of the newest", i, b.Status)
+		}
+	}
+	for i := 1; i < len(st.Beats); i++ {
+		if st.Beats[i].At.Before(st.Beats[i-1].At) {
+			t.Fatalf("beats are not oldest-first at index %d", i)
+		}
+	}
+}
+
+// The query is scoped by owner: one user's monitors never appear in another's
+// overview, which a bulk query makes easy to get wrong.
+func TestOverviewStatsIsScopedToTheOwner(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := &MonitorStore{DB: db}
+
+	mine := seedItem(t, store)
+	myUser := ownerOf(t, store, mine)
+
+	res, err := store.DB.Exec(`INSERT INTO users (username, password) VALUES ('other', 'p')`)
+	if err != nil {
+		t.Fatalf("seed other user: %v", err)
+	}
+	otherUID, _ := res.LastInsertId()
+	theirs := seedItemFor(t, store, int(otherUID))
+
+	now := time.Now()
+	record(t, store, mine, now.Add(-5*time.Minute), true, nil)
+	record(t, store, theirs, now.Add(-5*time.Minute), true, nil)
+
+	stats, _ := store.OverviewStats(myUser, now.Add(-24*time.Hour))
+	if _, leaked := stats[theirs]; leaked {
+		t.Error("another user's monitor leaked into the overview")
+	}
+	if _, ok := stats[mine]; !ok {
+		t.Error("the user's own monitor is missing")
+	}
+}
+
+// No checks in the window means the item simply has no entry; the handler turns
+// that into "none" / -1 rather than a fake 0% uptime.
+func TestOverviewStatsOmitsItemsWithoutChecks(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := &MonitorStore{DB: db}
+	itemID := seedItem(t, store)
+	userID := ownerOf(t, store, itemID)
+
+	now := time.Now()
+	record(t, store, itemID, now.Add(-40*time.Hour), true, nil)
+
+	stats, _ := store.OverviewStats(userID, now.Add(-24*time.Hour))
+	if st, ok := stats[itemID]; ok && st.Total > 0 {
+		t.Errorf("item with only stale checks reported %d checks in range", st.Total)
+	}
+}
