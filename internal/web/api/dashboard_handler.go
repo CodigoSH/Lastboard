@@ -513,6 +513,16 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
+
+	// The item may have been the last one naming a stored icon. Sweeping here
+	// keeps the database from accumulating images nothing points at any more.
+	// Best-effort: a failed sweep must not fail the delete the user asked for.
+	if removed, err := PruneOrphanIcons(h.DB); err != nil {
+		slog.Warn("Icon sweep after delete failed", "error", err)
+	} else if removed > 0 {
+		slog.Debug("Removed unreferenced icons", "count", removed)
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

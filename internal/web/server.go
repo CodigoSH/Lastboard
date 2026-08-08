@@ -243,6 +243,11 @@ func (s *Server) routes() {
 	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))
 	s.Router.Handle("POST /api/dashboard/health/batch", protect(http.HandlerFunc(dashHandler.CheckHealthBatch)))
 
+	// Icons, kept locally so the dashboard doesn't ask a CDN on every paint.
+	iconHandler := api.NewIconHandler(s.DB)
+	s.Router.Handle("POST /api/icons", protect(http.HandlerFunc(iconHandler.Store)))
+	s.Router.Handle("GET /api/icons/", protect(http.HandlerFunc(iconHandler.Serve)))
+
 	// Generic API widget (server-side fetch + field extraction)
 	widgetHandler := api.NewWidgetHandler()
 	s.Router.Handle("POST /api/widget/api-fetch", protect(http.HandlerFunc(widgetHandler.ApiFetch)))

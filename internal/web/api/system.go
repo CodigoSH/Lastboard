@@ -3,6 +3,7 @@ package api
 import (
 	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -118,6 +119,17 @@ type BackupData struct {
 	Users      []BackupUser      `json:"users"`
 	Dashboards []BackupDashboard `json:"dashboards"`
 	Items      []BackupItem      `json:"items"`
+	// Stored icons, so a backup restores into a machine with no internet and
+	// still looks like the board you left. Omitted from older backups, which
+	// restore fine without them — the items keep whatever URL they had.
+	Icons []BackupIcon `json:"icons,omitempty"`
+}
+
+// BackupIcon carries an icon's bytes base64-encoded, since a backup is JSON.
+type BackupIcon struct {
+	Hash string `json:"hash"`
+	Mime string `json:"mime"`
+	Data string `json:"data"`
 }
 
 type BackupUser struct {
@@ -255,6 +267,35 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 4. Stored icons. A backup without them restores a board whose icons only
+	//    come back if the machine can reach the internet, which defeats keeping
+	//    them locally in the first place.
+	iconRows, err := h.DB.Query(`SELECT hash, mime, data FROM icons`)
+	if err != nil {
+		http.Error(w, "Failed to fetch icons", http.StatusInternalServerError)
+		return
+	}
+	defer iconRows.Close()
+
+	for iconRows.Next() {
+		var (
+			hash, mime string
+			data       []byte
+		)
+		if err := iconRows.Scan(&hash, &mime, &data); err != nil {
+			continue
+		}
+		backup.Icons = append(backup.Icons, BackupIcon{
+			Hash: hash,
+			Mime: mime,
+			Data: base64.StdEncoding.EncodeToString(data),
+		})
+	}
+	if err := iconRows.Err(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
 	// Send JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"lastboard-backup-%s.json\"", time.Now().Format("2006-01-02-1504")))
@@ -316,6 +357,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := restoreItems(tx, backup, ownerMap, fallbackOwner, dashMap); err != nil {
+		writeRestoreError(w, err)
+		return
+	}
+	if err := restoreIcons(tx, backup); err != nil {
 		writeRestoreError(w, err)
 		return
 	}
@@ -387,6 +432,38 @@ func clearExistingData(tx *sql.Tx) error {
 	}
 	if _, err := tx.Exec("DELETE FROM users"); err != nil {
 		return &restoreError{http.StatusInternalServerError, "Failed to clear users"}
+	}
+	if _, err := tx.Exec("DELETE FROM icons"); err != nil {
+		return &restoreError{http.StatusInternalServerError, "Failed to clear icons"}
+	}
+	return nil
+}
+
+// restoreIcons puts the stored images back under their own hashes.
+//
+// A backup taken before icons existed simply has none, and the restore is a
+// no-op: its items carry whatever URL they had at the time.
+func restoreIcons(tx *sql.Tx, backup BackupData) error {
+	if len(backup.Icons) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(`INSERT OR IGNORE INTO icons (hash, mime, data, size) VALUES (?, ?, ?, ?)`)
+	if err != nil {
+		return &restoreError{http.StatusInternalServerError, "Failed to prepare icons"}
+	}
+	defer stmt.Close()
+
+	for _, ic := range backup.Icons {
+		data, err := base64.StdEncoding.DecodeString(ic.Data)
+		if err != nil {
+			// One unreadable icon is a missing picture, not a failed restore.
+			slog.Warn("Skipping unreadable icon in backup", "hash", ic.Hash)
+			continue
+		}
+		if _, err := stmt.Exec(ic.Hash, ic.Mime, data, len(data)); err != nil {
+			return &restoreError{http.StatusInternalServerError, "Failed to restore icons"}
+		}
 	}
 	return nil
 }

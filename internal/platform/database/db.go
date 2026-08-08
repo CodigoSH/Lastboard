@@ -164,6 +164,25 @@ func initSchema(db *sql.DB) error {
 		// whole table. CREATE INDEX IF NOT EXISTS runs on every boot, so
 		// existing databases pick this up without a dedicated migration.
 		`CREATE INDEX IF NOT EXISTS idx_monitor_checks_time ON monitor_checks(checked_at);`,
+		// Bookmark and container icons, downloaded once when they are chosen so
+		// the dashboard stops asking a public CDN for them on every paint.
+		// Content-addressed: the hash IS the name, so the same icon on twenty
+		// bookmarks is stored once and its URL can be cached forever.
+		//
+		// A separate table, not a column on items: /api/dashboard returns every
+		// item on each load, and inlining the bytes there would put megabytes of
+		// base64 in a response the browser cannot cache separately.
+		//
+		// New table, so CREATE TABLE IF NOT EXISTS is enough — but any column
+		// added to it later needs its own ALTER in migrateSchema, or databases
+		// created before that column will never receive it.
+		`CREATE TABLE IF NOT EXISTS icons (
+			hash       TEXT PRIMARY KEY,
+			mime       TEXT NOT NULL,
+			data       BLOB NOT NULL,
+			size       INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
 	}
 
 	for _, q := range queries {
