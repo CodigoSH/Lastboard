@@ -96,6 +96,12 @@ class ApiService {
                     return { status: 'deleted' } as any;
                 }
 
+                // API widget (Demo: synthetic counters, see demoApi)
+                if (url === '/api/widget/api-fetch' && method === 'POST') {
+                    const { demoApiValues } = await import('./demoApi');
+                    return { ok: true, values: demoApiValues(body.paths || []) } as any;
+                }
+
                 // Admin (Mock success)
                 if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;
                 if (url === '/api/users') return { message: 'Admin action simulated (Demo)' } as any;

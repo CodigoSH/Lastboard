@@ -135,7 +135,18 @@ fav(1, 12, 4, 'cloudflare', 'Cloudflare', 'https://dash.cloudflare.com');
 // ── Dashboard 2: Servers ─────────────────────────────────────────────────────
 // Docker at its real size (4x3), two curated sections, small widgets. ~3 rows.
 
-widget(2, 1, 1, 5, 3, { widgetId: 'docker', hosts: [{ id: 'demo', name: 'Demo Server', type: 'local' }], activeHost: 'demo' });
+// Docker carries a title of its own and a hand-written address for a container
+// that publishes no port — the two things its config screen is for.
+widget(2, 1, 1, 5, 3, {
+    widgetId: 'docker',
+    title: 'Server room',
+    hosts: [{ id: 'demo', name: 'Demo Server', type: 'local' }],
+    activeHost: 'demo',
+    refreshSec: 60,
+    containerConfig: {
+        'demo-red': { url: 'http://redis-commander.home:8081' },
+    },
+});
 
 const infra = section(2, 6, 1, 4, 2, 'Infrastructure');
 bookmark(2, infra, 1, 1, 'proxmox', 'Proxmox', 'https://www.proxmox.com', { statusCheck: true, statusPos: 'top-right' });
@@ -155,9 +166,47 @@ bookmark(2, monitoring, 1, 2, 'netdata', 'Netdata', 'https://netdata.cloud');
 bookmark(2, monitoring, 2, 2, 'glances', 'Glances', 'https://nicolargo.github.io/glances');
 bookmark(2, monitoring, 3, 2, 'dozzle', 'Dozzle', 'https://dozzle.dev');
 
-widget(2, 6, 3, 3, 1, { widgetId: 'markdown', text: '**🖥️ Server room** — Docker stats simulated.' });
+widget(2, 6, 3, 3, 1, { widgetId: 'markdown', text: '**🖥️ Docker & monitoring** — simulated data.' });
 widget(2, 9, 3, 2, 1, { widgetId: 'clock', timezone: 'UTC', hour12: false, showDate: false, showSeconds: false, showCity: true, city: 'UTC' });
 fav(2, 11, 3, 'cloudflare', 'Cloudflare', 'https://dash.cloudflare.com');
 fav(2, 12, 3, 'github', 'GitHub', 'https://github.com');
+
+// Row 4 — the two widgets a visitor could not see before. Monitoring is wide
+// enough (5 columns) to land past the 300px container query, where the
+// heartbeat sits on the same line as the name and roughly twice as many
+// services fit.
+widget(2, 1, 4, 5, 2, { widgetId: 'monitor', title: 'Service status', refreshSec: 60, items: [] });
+
+// Two API widgets, one per view: rows on the left, figures on the right. The
+// demo had only ever shown the widget's metric view.
+widget(2, 6, 4, 4, 2, {
+    widgetId: 'api',
+    preset: '',
+    title: 'Download queue',
+    url: 'http://10.0.0.8:8989/api/v3/queue',
+    method: 'GET',
+    headers: {},
+    viewMode: 'list',
+    arrayPath: 'records',
+    mappings: [
+        { label: 'Title', path: 'title' },
+        { label: 'Status', path: 'status' },
+    ],
+    refreshSec: 120,
+});
+widget(2, 10, 4, 2, 1, {
+    widgetId: 'api',
+    preset: 'adguard',
+    title: 'AdGuard',
+    url: 'http://10.0.0.2:3000/control/stats',
+    method: 'GET',
+    headers: {},
+    viewMode: 'metrics',
+    mappings: [
+        { label: 'Queries', path: 'num_dns_queries', format: 'number' },
+        { label: 'Blocked', path: 'num_blocked_filtering', format: 'number' },
+    ],
+    refreshSec: 60,
+});
 
 export const DEFAULT_ITEMS: GridItem[] = items;
