@@ -574,10 +574,16 @@ class DockerWidget extends HTMLElement {
     /**
      * Reads CPU and memory for the rows on screen.
      *
-     * One request per container, every four seconds, so what it asks for
-     * matters: it used to poll every running container the host reported,
-     * including the ones hidden from the widget — you could hide something and
-     * still pay for it forever, invisibly. It now follows what is drawn.
+     * One request per host, not per container. It used to ask for a single
+     * container at a time, in batches of five with a pause between them, so a
+     * host with twenty containers cost twenty round trips and twenty
+     * connections to the daemon before the first screenful was complete. The
+     * server now reads them together and answers with a map.
+     *
+     * What it asks for still matters as much as how: it once polled every
+     * running container the host reported, including the ones hidden from the
+     * widget — you could hide something and still pay for it forever,
+     * invisibly. It follows what is drawn.
      */
     private async fetchAllStats() {
         // A host that isn't answering has nothing to report, and asking is how
@@ -590,31 +596,40 @@ class DockerWidget extends HTMLElement {
             return;
         }
 
-        const chunkSize = 5;
-        for (let i = 0; i < rows.length; i += chunkSize) {
-            if (this._pollingTimer === null) break;
-
-            const chunk = rows.slice(i, i + chunkSize);
-            await Promise.all(chunk.map(async ({ container, state }) => {
-                try {
-                    const param = hostParam(state.host);
-                    const res = await fetch(
-                        `/api/docker/stats?host=${encodeURIComponent(param)}&id=${encodeURIComponent(container.ID)}`
-                    );
-                    if (res.ok) {
-                        const stats: DockerStats = await res.json();
-                        this._stats.set(container.ID, stats);
-                        this.updateStatsDOM(container.ID, stats);
-                    } else {
-                        this.clearStatsPending(container.ID);
-                    }
-                } catch (_) {
-                    this.clearStatsPending(container.ID);
-                }
-            }));
-
-            await new Promise(r => setTimeout(r, 150));
+        // Group by host: the batch endpoint reads one daemon per call.
+        const byHost = new Map<string, { host: DockerHost; ids: string[] }>();
+        for (const { container, state } of rows) {
+            const key = state.host.id;
+            const entry = byHost.get(key) ?? { host: state.host, ids: [] };
+            entry.ids.push(container.ID);
+            byHost.set(key, entry);
         }
+
+        // Hosts in parallel: one slow machine shouldn't hold up the others.
+        await Promise.all([...byHost.values()].map(async ({ host, ids }) => {
+            if (this._pollingTimer === null) return;
+            try {
+                const param = hostParam(host);
+                const res = await fetch(
+                    `/api/docker/stats?host=${encodeURIComponent(param)}&ids=${encodeURIComponent(ids.join(','))}`
+                );
+                if (!res.ok) {
+                    ids.forEach(id => this.clearStatsPending(id));
+                    return;
+                }
+                const all: Record<string, DockerStats> = await res.json();
+                for (const id of ids) {
+                    const stats = all[id];
+                    // A container the daemon wouldn't report on is missing from
+                    // the answer. It gets no number, not a zero.
+                    if (!stats) { this.clearStatsPending(id); continue; }
+                    this._stats.set(id, stats);
+                    this.updateStatsDOM(id, stats);
+                }
+            } catch (_) {
+                ids.forEach(id => this.clearStatsPending(id));
+            }
+        }));
     }
 
     private updateStatsDOM(containerID: string, stats: DockerStats) {

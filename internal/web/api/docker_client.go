@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -80,6 +81,7 @@ func newDockerClient(hostURL string) (*http.Client, string, error) {
 	case hostURL == "" || strings.EqualFold(hostURL, "local"):
 		// Unix-socket transport
 		transport := &http.Transport{
+			MaxIdleConnsPerHost: statsParallelism,
 			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 				return (&net.Dialer{Timeout: timeout}).DialContext(ctx, "unix", dockerSocketPath)
 			},
@@ -102,15 +104,13 @@ func newDockerClient(hostURL string) (*http.Client, string, error) {
 		}
 		transport := &agentTransport{
 			token:     token,
-			transport: http.DefaultTransport,
+			transport: pooledTransport(nil),
 		}
 		client := &http.Client{Transport: transport, Timeout: timeout}
 		return client, "http://" + host, nil
 
 	case strings.HasPrefix(hostURL, "https://"):
-		transport := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
-		}
+		transport := pooledTransport(&tls.Config{InsecureSkipVerify: true}) //nolint:gosec
 		client := &http.Client{Transport: transport, Timeout: timeout}
 		return client, strings.TrimRight(hostURL, "/"), nil
 
@@ -120,8 +120,25 @@ func newDockerClient(hostURL string) (*http.Client, string, error) {
 		if !strings.HasPrefix(base, "http://") {
 			base = "http://" + base
 		}
-		client := &http.Client{Timeout: timeout}
+		client := &http.Client{Transport: pooledTransport(nil), Timeout: timeout}
 		return client, strings.TrimRight(base, "/"), nil
+	}
+}
+
+// pooledTransport builds a transport that will keep as many idle connections
+// to the daemon as we ask questions in parallel.
+//
+// The stock default keeps two. A batch of stats reads is the only place we
+// talk to one host many times at once, and with the default the other six
+// would dial and hang up on every pass — the pool exists precisely so they
+// don't.
+func pooledTransport(tlsCfg *tls.Config) *http.Transport {
+	return &http.Transport{
+		Proxy:               http.ProxyFromEnvironment,
+		TLSClientConfig:     tlsCfg,
+		MaxIdleConns:        statsParallelism * 2,
+		MaxIdleConnsPerHost: statsParallelism,
+		IdleConnTimeout:     90 * time.Second,
 	}
 }
 
@@ -276,15 +293,60 @@ type dockerAPIStats struct {
 	} `json:"memory_stats"`
 }
 
-// GetContainerStats fetches a single stats snapshot (stream=false) for the
-// container identified by containerID and returns computed CPU and memory
-// percentages using the standard Docker formula.
-func GetContainerStats(hostURL, containerID string) (DockerStats, error) {
+// statsParallelism caps how many containers we ask the daemon about at once.
+//
+// Each answer costs it a real sampling window — it has to read the CPU
+// counters twice to produce a delta — so the wait is the daemon's, not the
+// network's, and asking serially multiplies it by the number of containers.
+// Eight at a time keeps a busy dashboard quick without turning a host with
+// forty containers into forty simultaneous readings.
+const statsParallelism = 8
+
+// GetContainersStats reads several containers from one host in one go.
+//
+// It builds the client once and reuses it, which is the point: the widget used
+// to ask for one container per HTTP request, so every reading paid for its own
+// connection to the daemon and its own round trip from the browser. Containers
+// that fail are left out of the map rather than failing the batch — one
+// container the daemon won't report on shouldn't cost you the other thirty.
+func GetContainersStats(hostURL string, ids []string) (map[string]DockerStats, error) {
 	client, base, err := newDockerClient(hostURL)
 	if err != nil {
-		return DockerStats{}, fmt.Errorf("docker: build client: %w", err)
+		return nil, fmt.Errorf("docker: build client: %w", err)
 	}
 
+	var (
+		mu   sync.Mutex
+		wg   sync.WaitGroup
+		out  = make(map[string]DockerStats, len(ids))
+		gate = make(chan struct{}, statsParallelism)
+	)
+
+	for _, id := range ids {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			gate <- struct{}{}
+			defer func() { <-gate }()
+
+			s, err := containerStats(client, base, id)
+			if err != nil {
+				return
+			}
+			mu.Lock()
+			out[id] = s
+			mu.Unlock()
+		}(id)
+	}
+	wg.Wait()
+
+	return out, nil
+}
+
+// containerStats performs one stats read (stream=false) with an already-built
+// client and returns computed CPU and memory percentages using the standard
+// Docker formula.
+func containerStats(client *http.Client, base, containerID string) (DockerStats, error) {
 	url := fmt.Sprintf("%s/containers/%s/stats?stream=false", base, containerID)
 	resp, err := client.Get(url)
 	if err != nil {

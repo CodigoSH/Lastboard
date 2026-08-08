@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 type DockerHandler struct {
@@ -28,17 +29,40 @@ func (h *DockerHandler) GetContainers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(containers)
 }
 
-// GET /api/docker/stats?host=<hostURL>&id=<containerID>
+// maxStatsBatch caps how many containers one call may ask about. A host with
+// more running containers than this simply needs a second call; the number is
+// here so a hand-written URL can't ask for ten thousand readings.
+const maxStatsBatch = 200
+
+// GET /api/docker/stats?host=<hostURL>&ids=<id,id,id>
+//
+// Answers with a map keyed by container id. It reads several containers per
+// call on purpose: the widget used to make one request per container, which
+// on a host with twenty of them meant twenty round trips and twenty
+// connections to the daemon for one screenful of numbers.
+//
+// A container the daemon won't report on is absent from the map rather than
+// failing the call.
 func (h *DockerHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	hostURL := r.URL.Query().Get("host")
-	containerID := r.URL.Query().Get("id")
 
-	if containerID == "" {
+	var ids []string
+	for _, raw := range strings.Split(r.URL.Query().Get("ids"), ",") {
+		if id := strings.TrimSpace(raw); id != "" {
+			ids = append(ids, id)
+		}
+	}
+
+	if len(ids) == 0 {
 		http.Error(w, "docker.missing_id", http.StatusBadRequest)
 		return
 	}
+	if len(ids) > maxStatsBatch {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
 
-	stats, err := GetContainerStats(hostURL, containerID)
+	stats, err := GetContainersStats(hostURL, ids)
 	if err != nil {
 		http.Error(w, "docker.stats_error", http.StatusBadGateway)
 		return
