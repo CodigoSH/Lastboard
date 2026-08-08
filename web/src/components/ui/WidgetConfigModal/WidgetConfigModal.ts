@@ -15,6 +15,7 @@ import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
 import '../IconSelectionModal/IconSelectionModal';
 import { resolveIconUrl } from '../../../services/iconUrl';
+import { materializeIcon } from '../../../services/iconStore';
 import {
     type DockerContainer,
     type DockerHost,
@@ -1116,10 +1117,15 @@ class WidgetConfigModal extends HTMLElement {
             const picked: string | null = await modal.open();
             if (!picked) return;
 
-            const url = resolveIconUrl(picked);
-            btn.dataset.icon = url;
+            // Show the icon straight away, then swap in the local copy once it
+            // has been stored — the download shouldn't make the click feel slow.
+            const remote = resolveIconUrl(picked);
+            btn.dataset.icon = remote;
             btn.dataset.iconName = picked;
-            btn.innerHTML = `<img src="${esc(url)}" alt="" />`;
+            btn.innerHTML = `<img src="${esc(remote)}" alt="" />`;
+
+            const stored = await materializeIcon(remote);
+            btn.dataset.icon = stored;
         });
 
         root.getElementById('docker-show-add-btn')?.addEventListener('click', () => {

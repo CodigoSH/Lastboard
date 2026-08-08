@@ -4,6 +4,7 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import { safeImageSrc } from '../../../services/escape';
 import { resolveIconUrl } from '../../../services/iconUrl';
+import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
 import '../ColorPicker/ColorPicker';
 import css from './AddBookmarkModal.css' with { type: 'text' };
@@ -171,8 +172,11 @@ class AddBookmarkModal extends HTMLElement {
         this.submitHandler = async (e: Event) => {
             e.preventDefault();
 
-            // Re-read values just in case (though state should be consistent)
-            const iconUrl = resolveIconUrl(this.selectedIconName);
+            // Re-read values just in case (though state should be consistent).
+            // The icon is downloaded here, once, so the board never asks a CDN
+            // for it again; if that fails the original URL is kept and the
+            // bookmark saves exactly as before.
+            const iconUrl = await materializeIcon(resolveIconUrl(this.selectedIconName));
 
             const content = JSON.stringify({
                 label: this.bookmarkTitle,
