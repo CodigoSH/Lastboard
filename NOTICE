@@ -51,10 +51,13 @@ THIRD-PARTY COMPONENTS
    Material Design Icons          Apache-2.0    Copyright Google Inc.
    - https://github.com/google/material-design-icons
 
-3. Icons fetched by the browser when you pick an icon
+3. Icons you pick from a provider
 
-   These are neither bundled nor redistributed with Lastboard; the browser
-   requests them from a public CDN (jsDelivr) at runtime. Listed here because
+   These are neither bundled nor redistributed with Lastboard. Your browser
+   searches a public CDN (jsDelivr) while you are choosing, and the icon you
+   pick is then downloaded once, by your own instance, and kept in your
+   database — so your dashboard stops asking a third party for it on every
+   load. The copy is yours and never leaves your server. Listed here because
    CC BY 4.0 requires attribution wherever the work is displayed.
 
    selfhst/icons                  CC BY 4.0     Copyright (c) selfh.st

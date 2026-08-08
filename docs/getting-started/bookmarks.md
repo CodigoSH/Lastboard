@@ -12,7 +12,7 @@ Enter **Edit Mode** (the pencil/edit toggle in the top bar) and use the **Add (+
 
 | Option | Description |
 | :--- | :--- |
-| **Icon** | Pick an icon from the built-in icon search, or provide a direct image URL. If left empty, the first letter of the label is used as a placeholder. |
+| **Icon** | Pick an icon from the built-in icon search, upload your own, or paste a direct image URL. If left empty, the first letter of the label is used as a placeholder. See [Where icons are stored](#where-icons-are-stored). |
 | **Label** | The name shown on the tile. |
 | **Label Position** | Where the label appears relative to the tile: **Bottom** (default), **Top**, **Off** (icon only), or **Section** (renders the label as a section-style header). |
 | **URL** | The destination address. A **protocol** dropdown lets you choose `https://` or `http://`. |
@@ -25,6 +25,20 @@ The **Customization** tab controls the tile's appearance:
 
 - **Color**: The accent/border color of the tile.
 - **Border Width**: How thick the tile's border is (set to `0` for no border).
+
+## Where icons are stored
+
+Whichever way you choose an icon — provider search, your own upload, or a pasted URL — Lastboard downloads it **once, when you save the bookmark**, and keeps it in your own database. Your dashboard then loads it from your server.
+
+This matters for three situations:
+
+- **Your connection is down.** Your icons still appear, which is exactly when you need the dashboard to reach the services that are still up.
+- **Nothing is reported to anyone.** Without this, every dashboard load would tell a public CDN your address and, from the icons requested, which services you run.
+- **The remote file disappears or is internal.** An icon hosted only inside your network, or one that gets deleted upstream later, keeps working.
+
+Identical icons are stored once no matter how many bookmarks use them, and an icon stops being kept when nothing points at it any more. Your icons travel inside backups, so restoring on a machine with no internet gives you the board exactly as you left it.
+
+If the download fails, the bookmark is still saved and keeps the original URL — you never lose a bookmark over a picture. Bookmarks created before this existed keep the URL they were saved with; re-pick their icon to store it locally.
 
 ## Sections
 

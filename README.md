@@ -176,7 +176,7 @@ We appreciate the organizations that support us as a gesture of goodwill to help
 - **Interface icons**:
   - Feather Icons (MIT - https://github.com/feathericons/feather)
   - Material Design Icons (Apache 2.0 - https://github.com/google/material-design-icons)
-- **Icon set in the picker** (CC BY 4.0, fetched from jsDelivr, not bundled):
+- **Icon set in the picker** (CC BY 4.0, searched on jsDelivr and then stored by your own instance, not bundled):
   - Selfhst Icons (CC BY 4.0 - https://github.com/selfhst/icons)
 - **Weather data**: Open-Meteo (CC BY 4.0 - https://open-meteo.com)
 

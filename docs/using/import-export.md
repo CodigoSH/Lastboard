@@ -17,10 +17,12 @@ Both live in the same **Settings → Data** panel:
 
 ## Full Backup
 
-Saves or restores **everything** — every user, every dashboard, and all settings — as a single snapshot.
+Saves or restores **everything** — every user, every dashboard, all settings, and your stored icons — as a single snapshot.
 
 - **Backup** — download a complete copy of your instance.
 - **Restore** — upload a backup to bring an instance back to that exact state.
+
+Because the icons travel inside the file, restoring on a machine with no internet still gives you the board exactly as you left it. Backups taken before icons were stored locally restore fine; their bookmarks simply keep the URLs they were saved with.
 
 > **Warning:** Restoring **overwrites all current data** and cannot be undone. Use it for recovery, or to move a full setup to another Lastboard instance — not to merge dashboards.
 
