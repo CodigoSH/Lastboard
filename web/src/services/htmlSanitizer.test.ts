@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { isSafeSanitizerUrl } from './htmlSanitizer';
+import { isSafeSanitizerUrl, DEFAULT_CONFIG } from './htmlSanitizer';
 
 /**
  * Tests for the sanitizer's URL/scheme gate. The full DOM-based sanitize()
@@ -43,5 +43,25 @@ describe('isSafeSanitizerUrl', () => {
     it('blocks unknown schemes', () => {
         expect(isSafeSanitizerUrl('file:///etc/passwd', SCHEMES)).toBe(false);
         expect(isSafeSanitizerUrl('ftp://x', SCHEMES)).toBe(false);
+    });
+});
+
+describe('allowlist for the markdown checkbox', () => {
+    // A task list is the only place an <input> survives sanitising, and the
+    // parser writes it disabled because ticking it saves nothing. When
+    // `disabled` was missing from this list the attribute was stripped, so the
+    // box could be clicked and silently reverted on the next render.
+    const attrs = DEFAULT_CONFIG.allowedAttrs['input'];
+
+    it('keeps a task-list checkbox disabled', () => {
+        expect(attrs).toContain('disabled');
+    });
+
+    it('keeps the field identifiable, so the browser stops reporting it', () => {
+        expect(attrs).toContain('name');
+    });
+
+    it('still allows nothing but the checkbox attributes it needs', () => {
+        expect([...attrs].sort()).toEqual(['checked', 'disabled', 'id', 'name', 'type']);
     });
 });

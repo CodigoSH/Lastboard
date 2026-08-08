@@ -81,9 +81,9 @@ describe('MarkdownParser', () => {
     describe('checkboxes', () => {
         it('parses unchecked and checked checkboxes', () => {
             expect(MarkdownParser.parse('[ ] todo'))
-                .toContain('<input type="checkbox" disabled>');
+                .toContain('<input type="checkbox" name="task" disabled>');
             expect(MarkdownParser.parse('[x] done'))
-                .toContain('<input type="checkbox" checked disabled>');
+                .toContain('<input type="checkbox" name="task" checked disabled>');
         });
     });
 

@@ -47,9 +47,12 @@ export class MarkdownParser {
         html = html.replace(/^\s*\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>');
         html = html.replace(/<\/ol>\s*<ol>/gim, ''); // Merge adjacent lists
 
-        // Checkboxes (GitHub style)
-        html = html.replace(/^\s*\[ \]\s+(.*$)/gim, '<div class="checklist-item"><input type="checkbox" disabled> $1</div>');
-        html = html.replace(/^\s*\[x\]\s+(.*$)/gim, '<div class="checklist-item"><input type="checkbox" checked disabled> $1</div>');
+        // Checkboxes (GitHub style). They carry a name only because a form
+        // field without one makes the browser warn that it can't be autofilled
+        // — which is beside the point for a box that is disabled and drawn
+        // from your text, but the warning is real and the attribute is free.
+        html = html.replace(/^\s*\[ \]\s+(.*$)/gim, '<div class="checklist-item"><input type="checkbox" name="task" disabled> $1</div>');
+        html = html.replace(/^\s*\[x\]\s+(.*$)/gim, '<div class="checklist-item"><input type="checkbox" name="task" checked disabled> $1</div>');
 
         // Inline Code
         html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');

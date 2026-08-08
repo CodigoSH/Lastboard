@@ -237,7 +237,7 @@ export class MarkdownWidget extends HTMLElement {
             </div>
 
             <div class="editor-container">
-                <textarea class="editor" placeholder="${i18n.t('widget.markdown.placeholder')}" style="${this._isLocked ? 'display:none' : ''}"></textarea>
+                <textarea class="editor" name="markdown-source" autocomplete="off" placeholder="${i18n.t('widget.markdown.placeholder')}" style="${this._isLocked ? 'display:none' : ''}"></textarea>
                 <div class="preview ${this._isLocked ? 'visible' : ''}"></div>
             </div>
         `;

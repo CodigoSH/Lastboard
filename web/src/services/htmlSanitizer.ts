@@ -11,7 +11,14 @@ export interface SanitizerConfig {
     allowedSchemes: string[];
 }
 
-const DEFAULT_CONFIG: SanitizerConfig = {
+/**
+ * Exported so the policy itself can be asserted. The sanitizer's own methods
+ * need a DOM, which the test runner deliberately doesn't have, so what is
+ * checkable here is the allowlist — and it is worth checking: an attribute
+ * silently dropped from it is exactly how a task-list checkbox ended up
+ * clickable when it was written to be disabled.
+ */
+export const DEFAULT_CONFIG: SanitizerConfig = {
     allowedTags: [
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
         'p', 'br', 'div', 'span',
@@ -25,7 +32,13 @@ const DEFAULT_CONFIG: SanitizerConfig = {
         '*': ['class'],
         'a': ['href', 'title', 'target'],
         'img': ['src', 'alt', 'title', 'width', 'height'],
-        'input': ['type', 'id', 'checked'],
+        // `disabled` matters: the only input allowed through is the checkbox a
+        // task list is drawn with, and it is marked disabled precisely because
+        // ticking it saves nothing. Stripping the attribute left a box you
+        // could click that quietly reverted on the next render. `name` is here
+        // so the browser stops reporting a form field it cannot identify;
+        // unlike `id`, already allowed, a name on an input clobbers nothing.
+        'input': ['type', 'id', 'name', 'checked', 'disabled'],
         'label': ['for']
     },
     allowedSchemes: ['http', 'https', 'mailto']
@@ -223,7 +236,13 @@ export const notepadSanitizer = new HTMLSanitizer({
         'a': ['href', 'title', 'target'],
         'img': ['src', 'alt', 'title', 'width', 'height', 'style'],
         'font': ['color', 'face'],
-        'input': ['type', 'id', 'checked'],
+        // `disabled` matters: the only input allowed through is the checkbox a
+        // task list is drawn with, and it is marked disabled precisely because
+        // ticking it saves nothing. Stripping the attribute left a box you
+        // could click that quietly reverted on the next render. `name` is here
+        // so the browser stops reporting a form field it cannot identify;
+        // unlike `id`, already allowed, a name on an input clobbers nothing.
+        'input': ['type', 'id', 'name', 'checked', 'disabled'],
         'label': ['for']
     },
     allowedSchemes: ['http', 'https', 'mailto']
