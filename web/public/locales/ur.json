@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "ایجنٹ کو روکا نہیں جا سکتا",
   "docker.action_success": "عمل کامیابی سے مکمل ہوا",
   "docker.add_new_host": "نیا ہوسٹ شامل کریں",
+  "docker.all_hosts": "تمام ہوسٹس",
   "docker.configure_hint": "شروع کرنے کے لیے ویجیٹ سیٹنگز میں ہوسٹ شامل کریں",
   "docker.connection_error": "Docker ہوسٹ سے رابطہ نہیں ہو سکا",
   "docker.container_visible": "نمایاں",

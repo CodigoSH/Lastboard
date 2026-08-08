@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "এজেন্ট থামানো যাচ্ছে না",
   "docker.action_success": "অ্যাকশন সফলভাবে সম্পন্ন হয়েছে",
   "docker.add_new_host": "নতুন হোস্ট যোগ করুন",
+  "docker.all_hosts": "সব হোস্ট",
   "docker.configure_hint": "শুরু করতে উইজেট সেটিংসে একটি হোস্ট যোগ করুন",
   "docker.connection_error": "Docker হোস্টের সাথে সংযোগ করা যায়নি",
   "docker.container_visible": "দৃশ্যমান",

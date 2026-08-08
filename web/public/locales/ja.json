@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "エージェントを停止できません",
   "docker.action_success": "アクションが正常に完了しました",
   "docker.add_new_host": "新しいホストを追加",
+  "docker.all_hosts": "すべてのホスト",
   "docker.configure_hint": "ウィジェット設定にホストを追加して開始してください",
   "docker.connection_error": "Dockerホストに接続できませんでした",
   "docker.container_visible": "表示",

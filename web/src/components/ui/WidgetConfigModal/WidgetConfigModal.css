@@ -782,11 +782,22 @@ dialog[open] {
     margin-top: 4px;
 }
 
+/* Hosts stack up like anything else in this dialog: past a few, the list
+   scrolls instead of pushing the save button off the screen. */
+.hosts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 190px;
+    overflow-y: auto;
+}
+
 .host-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-shrink: 0;
     background: var(--surface);
     border: 1px solid var(--border);
     padding: 12px 16px;
@@ -1012,8 +1023,23 @@ dialog[open] {
    icon and the display name. Grouped by host because the list can span
    several. */
 
-.docker-search {
+/* Host on the left, free-text search on the right: the two ways of narrowing
+   a container list, side by side and above what they narrow. */
+.docker-filter {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 8px;
     margin-bottom: 8px;
+}
+
+@media (max-width: 520px) {
+    .docker-filter {
+        grid-template-columns: 1fr;
+    }
+}
+
+.docker-search {
+    margin: 0;
 }
 
 .docker-containers {

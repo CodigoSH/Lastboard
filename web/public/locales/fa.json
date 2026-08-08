@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "نمی‌توان نماینده را متوقف کرد",
   "docker.action_success": "تراکنش با موفقیت انجام شد",
   "docker.add_new_host": "افزودن هوسانت جدید",
+  "docker.all_hosts": "همه میزبان‌ها",
   "docker.configure_hint": "برای شروع یک هوسانت در تنظیمات ویجت اضافه کنید",
   "docker.connection_error": "اتصال به هوسانت داکر برقرار نشد",
   "docker.container_visible": "نمایان",

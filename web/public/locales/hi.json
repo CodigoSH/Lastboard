@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "एजेंट को रोका नहीं जा सकता",
   "docker.action_success": "कार्रवाई सफलतापूर्वक पूरी हुई",
   "docker.add_new_host": "नया होस्ट जोड़ें",
+  "docker.all_hosts": "सभी होस्ट",
   "docker.configure_hint": "शुरू करने के लिए विजेट सेटिंग्स में एक होस्ट जोड़ें",
   "docker.connection_error": "Docker होस्ट से कनेक्ट नहीं हो सका",
   "docker.container_visible": "दृश्यमान",

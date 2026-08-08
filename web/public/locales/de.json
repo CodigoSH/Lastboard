@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "Agent kann nicht gestoppt werden",
   "docker.action_success": "Aktion erfolgreich abgeschlossen",
   "docker.add_new_host": "Neuen Host hinzufügen",
+  "docker.all_hosts": "Alle Hosts",
   "docker.configure_hint": "Füge in den Widget-Einstellungen einen Host hinzu, um zu beginnen",
   "docker.connection_error": "Verbindung zum Docker-Host fehlgeschlagen",
   "docker.container_visible": "Sichtbar",

@@ -1092,24 +1092,28 @@ class WidgetConfigModal extends HTMLElement {
             const content = typeof this.currentItem.content === 'string'
                 ? JSON.parse(this.currentItem.content)
                 : this.currentItem.content;
+
+            // One host at a time by default. Listing every host at once was
+            // fine with one and unusable with a few: the sections stack up and
+            // the dialog grows past the screen with nothing to aim at.
+            const hosts: DockerHost[] = content.hosts || [];
+            const hostFilter = root.getElementById('docker-host-filter') as AppSelect | null;
+            if (hostFilter) {
+                hostFilter.options = [
+                    ...hosts.map(h => ({ value: h.id, label: h.name })),
+                    { value: '*', label: i18n.t('docker.all_hosts') },
+                ];
+                hostFilter.value = content.activeHost || hosts[0]?.id || '*';
+                hostFilter.addEventListener('change', () => this.applyDockerFilters());
+            }
+
             this.loadDockerContainers(content);
         }
 
         // Filter by name or image. Plain substring match on a data attribute
         // built when the row was drawn, so typing never re-queries a host.
         const search = root.getElementById('docker-search') as HTMLInputElement | null;
-        search?.addEventListener('input', () => {
-            const q = search.value.trim().toLowerCase();
-            root.querySelectorAll<HTMLElement>('.docker-container-row').forEach(row => {
-                row.style.display = !q || (row.dataset.search || '').includes(q) ? '' : 'none';
-            });
-            // A host whose containers all filtered out shouldn't keep its heading.
-            root.querySelectorAll<HTMLElement>('.docker-host-group').forEach(group => {
-                const rows = Array.from(group.querySelectorAll<HTMLElement>('.docker-container-row'));
-                const anyVisible = rows.length === 0 || rows.some(r => r.style.display !== 'none');
-                group.style.display = anyVisible ? '' : 'none';
-            });
-        });
+        search?.addEventListener('input', () => this.applyDockerFilters());
 
         // Icon picking, the same modal the bookmark form uses.
         root.getElementById('docker-containers')?.addEventListener('click', async (e: Event) => {
@@ -1396,8 +1400,11 @@ class WidgetConfigModal extends HTMLElement {
             </div>
             <div class="field-group">
                 <label>${i18n.t('docker.containers')}</label>
-                <input type="text" id="docker-search" class="docker-search"
-                       placeholder="${esc(i18n.t('docker.search_containers'))}" />
+                <div class="docker-filter">
+                    <app-select id="docker-host-filter"></app-select>
+                    <input type="text" id="docker-search" class="docker-search"
+                           placeholder="${esc(i18n.t('docker.search_containers'))}" />
+                </div>
                 <div id="docker-containers" class="docker-containers">
                     <p class="monitor-services__state">${i18n.t('general.loading')}</p>
                 </div>
@@ -1448,11 +1455,46 @@ class WidgetConfigModal extends HTMLElement {
                     : containers.map(c => this.dockerContainerRow(c, cfg, host)).join('');
 
             return `
-                <div class="docker-host-group">
+                <div class="docker-host-group" data-host-id="${esc(host.id)}">
                     <p class="docker-host-heading">${esc(host.name)}</p>
                     ${body}
                 </div>`;
         }).join('');
+
+        this.applyDockerFilters();
+    }
+
+    /**
+     * Hides what the host selector and the search box exclude.
+     *
+     * Filtering rather than re-fetching: the rows already carry everything
+     * needed to decide, so switching host or typing never asks a daemon again,
+     * and nothing is lost — a hidden row is still read when saving, so settings
+     * on a host you aren't looking at survive.
+     */
+    private applyDockerFilters() {
+        const root = this.shadowRoot;
+        if (!root) return;
+
+        const host = (root.getElementById('docker-host-filter') as AppSelect | null)?.value || '*';
+        const search = root.getElementById('docker-search') as HTMLInputElement | null;
+        const q = (search?.value || '').trim().toLowerCase();
+
+        root.querySelectorAll<HTMLElement>('.docker-host-group').forEach(group => {
+            const thisHost = host === '*' || group.dataset.hostId === host;
+            let anyVisible = false;
+
+            group.querySelectorAll<HTMLElement>('.docker-container-row').forEach(row => {
+                const matches = thisHost && (!q || (row.dataset.search || '').includes(q));
+                row.style.display = matches ? '' : 'none';
+                if (matches) anyVisible = true;
+            });
+
+            // A host with no containers still shows its heading, so "this host
+            // answered and has none" doesn't look like "this host is missing".
+            const empty = group.querySelectorAll('.docker-container-row').length === 0;
+            group.style.display = thisHost && (anyVisible || (empty && !q)) ? '' : 'none';
+        });
     }
 
     private dockerContainerRow(

@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "에이전트를 중지할 수 없습니다",
   "docker.action_success": "작업이 성공적으로 완료되었습니다",
   "docker.add_new_host": "새 호스트 추가",
+  "docker.all_hosts": "모든 호스트",
   "docker.configure_hint": "위젯 설정에서 호스트를 추가하여 시작하세요",
   "docker.connection_error": "Docker 호스트에 연결할 수 없습니다",
   "docker.container_visible": "표시",

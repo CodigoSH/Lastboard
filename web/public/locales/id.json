@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "Tidak dapat menghentikan agen",
   "docker.action_success": "Tindakan berhasil diselesaikan",
   "docker.add_new_host": "Tambah Host Baru",
+  "docker.all_hosts": "Semua host",
   "docker.configure_hint": "Tambahkan host di pengaturan widget untuk memulai",
   "docker.connection_error": "Tidak dapat terhubung ke host Docker",
   "docker.container_visible": "Terlihat",

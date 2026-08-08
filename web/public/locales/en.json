@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "Cannot stop agent",
   "docker.action_success": "Action completed successfully",
   "docker.add_new_host": "Add New Host",
+  "docker.all_hosts": "All hosts",
   "docker.configure_hint": "Add a host in the widget settings to get started",
   "docker.connection_error": "Could not connect to Docker host",
   "docker.container_visible": "Visible",

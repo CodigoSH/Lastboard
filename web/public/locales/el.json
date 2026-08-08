@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "Δεν είναι δυνατή η διακοπή του πράκτορα",
   "docker.action_success": "Η ενέργεια ολοκληρώθηκε με επιτυχία",
   "docker.add_new_host": "Προσθήκη νέου Host",
+  "docker.all_hosts": "Όλοι οι κόμβοι",
   "docker.configure_hint": "Προσθέστε έναν διακομιστή στις ρυθμίσεις του widget για να ξεκινήσετε",
   "docker.connection_error": "Αδυναμία σύνδεσης στον διακομιστή Docker",
   "docker.container_visible": "Ορατό",

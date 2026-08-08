@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "无法停止代理",
   "docker.action_success": "操作成功完成",
   "docker.add_new_host": "添加新主机",
+  "docker.all_hosts": "所有主机",
   "docker.configure_hint": "在小部件设置中添加主机以开始使用",
   "docker.connection_error": "无法连接到 Docker 主机",
   "docker.container_visible": "可见",

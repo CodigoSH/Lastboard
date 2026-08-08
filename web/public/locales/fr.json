@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "Impossible d'arrêter l'agent",
   "docker.action_success": "Action effectuée avec succès",
   "docker.add_new_host": "Ajouter un nouvel hôte",
+  "docker.all_hosts": "Tous les hôtes",
   "docker.configure_hint": "Ajoutez un hôte dans les paramètres du widget pour commencer",
   "docker.connection_error": "Impossible de se connecter à l'hôte Docker",
   "docker.container_visible": "Visible",

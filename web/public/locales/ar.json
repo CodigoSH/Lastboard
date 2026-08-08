@@ -69,6 +69,7 @@
   "docker.action_stop_disabled": "لا يمكن إيقاف الوكيل",
   "docker.action_success": "اكتمل الإجراء بنجاح",
   "docker.add_new_host": "إضافة مضيف جديد",
+  "docker.all_hosts": "كل الخوادم",
   "docker.configure_hint": "أضف مضيفًا في إعدادات الودجت للبدء",
   "docker.connection_error": "تعذر الاتصال بمضيف Docker",
   "docker.container_visible": "مرئي",
