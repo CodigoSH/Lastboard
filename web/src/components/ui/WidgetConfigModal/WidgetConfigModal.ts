@@ -1087,9 +1087,11 @@ class WidgetConfigModal extends HTMLElement {
                 ? JSON.parse(this.currentItem.content)
                 : this.currentItem.content;
 
-            // The dialog only widens once there is a choice to make.
-            const split = (content.hosts || []).length >= 2;
-            root.getElementById('modal')?.classList.toggle('dialog--wide', split);
+            // Always wide: a container's address is a URL with a host and a
+            // port, and in the narrow dialog it was cut mid-text — measured
+            // needing 72px more than the 156px it had. The two columns still
+            // wait for a second host; the width does not.
+            root.getElementById('modal')?.classList.add('dialog--wide');
 
             this.loadDockerContainers(content);
         }
