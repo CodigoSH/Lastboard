@@ -86,11 +86,11 @@ You can add multiple hosts. Supported URL formats include:
 - **Agent Server:** `agent://IP_OR_DOMAIN:PORT?token=YOUR_TOKEN`
 - **TLS/TCP:** `https://...` or `http://...`
 
-With more than one host configured, the widget header gets a selector to switch between them.
+With more than one host configured, the settings screen splits in two: hosts on the left, the selected host's containers on the right.
 
 ### Containers
 
-Every container from every host is listed, grouped by host, with a search box for long lists. For each one you can:
+Pick a host on the left and its containers appear on the right, with a search box for long lists. For each one you can:
 
 - **Show or hide it** with the checkbox. Unchecked containers stay out of the widget.
 - **Set an icon**, from the same picker used for bookmarks.
@@ -98,6 +98,14 @@ Every container from every host is listed, grouped by host, with a search box fo
 - **Set the address it opens**. See [Opening a container's service](#opening-a-containers-service).
 
 Hosts that don't answer say so in their own section, and their containers keep whatever you had already set for them.
+
+**The widget shows what you ticked, from every host at once** — it is one list of the containers you care about, not one host at a time. With more than one host configured, each row names the host it runs on, under the image.
+
+### When a host stops answering
+
+Its containers don't disappear from the widget. They stay where they are, greyed out, and the line that normally names the host says it isn't responding instead — so you can see at a glance which services you've lost and which are fine. Their action buttons go away, since there is nothing there to receive the command.
+
+A host that was already down when the dashboard loaded listed nothing, so there are no rows of its to grey out. That one gets a single line naming it and saying it doesn't answer.
 
 ### Opening a container's service
 

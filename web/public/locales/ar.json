@@ -90,6 +90,7 @@
   "docker.host_type_local": "Local (socket)",
   "docker.host_type_tcp": "Remote TCP",
   "docker.host_type_tls": "Remote TLS",
+  "docker.host_unreachable": "الخادم لا يستجيب",
   "docker.host_url": "رابط المضيف",
   "docker.hosts": "المضيفين",
   "docker.invalid_action": "إجراء غير صالح",

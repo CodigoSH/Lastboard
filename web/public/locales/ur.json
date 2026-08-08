@@ -90,6 +90,7 @@
   "docker.host_type_local": "مقامی (socket)",
   "docker.host_type_tcp": "ریموٹ TCP",
   "docker.host_type_tls": "ریموٹ TLS",
+  "docker.host_unreachable": "ہوسٹ جواب نہیں دے رہا",
   "docker.host_url": "ہوسٹ کا URL",
   "docker.hosts": "ہوسٹس",
   "docker.invalid_action": "غلط اقدام",

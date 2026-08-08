@@ -90,6 +90,7 @@
   "docker.host_type_local": "Yerel (socket)",
   "docker.host_type_tcp": "Uzak TCP",
   "docker.host_type_tls": "Uzak TLS",
+  "docker.host_unreachable": "Sunucu yanıt vermiyor",
   "docker.host_url": "Ana Bilgisayar URL",
   "docker.hosts": "Ana Bilgisayarlar",
   "docker.invalid_action": "Geçersiz eylem",

@@ -90,6 +90,7 @@
   "docker.host_type_local": "Local (socket)",
   "docker.host_type_tcp": "TCP distant",
   "docker.host_type_tls": "TLS distant",
+  "docker.host_unreachable": "Hôte injoignable",
   "docker.host_url": "URL de l'hôte",
   "docker.hosts": "Hôtes",
   "docker.invalid_action": "Action invalide",

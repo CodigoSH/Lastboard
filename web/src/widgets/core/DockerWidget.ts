@@ -95,22 +95,7 @@ const CSS = `
    styles/shared.css. They used to be declared here, and the monitor widget grew
    its own smaller variant, which is how two widgets side by side ended up with
    different headers. */
-.host-select {
-    width: 150px;
-    flex-shrink: 0;
-}
-
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-/* Second header line. Only drawn when the host can't be reached — in normal
-   operation the header is one line, the same as every other widget. */
-.header-summary {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--danger-color);
-    padding-left: 1px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
 
 /* ── Scrollable wrapper ── */
 .widget-body {
@@ -243,13 +228,46 @@ const CSS = `
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* IMAGE cell */
-.cell-image { min-width: 0; padding-right: 8px; overflow: hidden; }
+/* IMAGE cell — two lines, mirroring the state cell opposite it: what it runs
+   on top, where it runs underneath. The row is already this tall because of
+   that cell, so the second line costs no height. */
+.cell-image {
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 0; padding-right: 8px; overflow: hidden;
+}
 .container-image {
     font-size: 11px; color: var(--text-dim);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     opacity: 0.75; display: block;
 }
+.container-host {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-dim); opacity: 0.7;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.container-host.is-down { color: var(--danger-color); opacity: 1; }
+
+/* A container whose host stopped answering. Everything on the row is a memory
+   of the last successful listing, so it reads as one — except the line that
+   says why, which does not fade. */
+.container-row.is-stale .cell-icon,
+.container-row.is-stale .cell-name,
+.container-row.is-stale .cell-state,
+.container-row.is-stale .cell-ports,
+.container-row.is-stale .container-image { opacity: 0.4; }
+
+/* A host that was already down when the widget loaded listed nothing, so there
+   are no rows of its to grey out — it gets a line of its own instead. */
+.host-down-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(128,128,128,0.08);
+    font-size: 12px;
+}
+.host-down-icon { width: 14px; height: 14px; color: var(--danger-color); flex-shrink: 0; }
+.host-down-icon svg { width: 100%; height: 100%; }
+.host-down-name { font-weight: 600; color: var(--text-main); }
+.host-down-text { color: var(--danger-color); font-size: 11px; }
 
 /* PORTS cell */
 .cell-ports {
@@ -317,14 +335,29 @@ const CSS = `
 
 // ── Widget class ─────────────────────────────────────────────────────────────
 
+/**
+ * What one host contributed to the last listing.
+ *
+ * `containers` is kept even when a refresh fails, so a host going down greys
+ * its rows out instead of making them vanish — a dashboard that reshuffles
+ * every time a machine hiccups is harder to read than one that doesn't.
+ * `everLoaded` separates "went away just now" from "was already down when you
+ * opened this", which are different things to show.
+ */
+interface HostState {
+    host: DockerHost;
+    containers: DockerContainer[];
+    failed: boolean;
+    everLoaded: boolean;
+}
+
 class DockerWidget extends HTMLElement {
     private _itemId: number = 0;
     private _config: DockerWidgetConfig = { widgetId: 'docker', hosts: [], activeHost: '' };
 
-    private _containers: DockerContainer[] = [];
+    private _byHost: HostState[] = [];
     private _stats: Map<string, DockerStats> = new Map();
     private _loading = false;
-    private _error = false;
     private _pollingTimer: ReturnType<typeof setInterval> | null = null;
     /** Re-lists containers, so one started elsewhere shows up on its own. */
     private _listTimer: ReturnType<typeof setInterval> | null = null;
@@ -429,11 +462,29 @@ class DockerWidget extends HTMLElement {
         this._unsubscribeI18n?.();
     }
 
-    // ── Active host ──────────────────────────────────────────────────────────
+    // ── Hosts ────────────────────────────────────────────────────────────────
 
-    private getActiveHost(): DockerHost | undefined {
-        return this._config.hosts.find(h => h.id === this._config.activeHost)
-            ?? this._config.hosts[0];
+    private hostById(id: string): DockerHost | undefined {
+        return this._config.hosts.find(h => h.id === id);
+    }
+
+    /**
+     * The containers on screen, each with the host it came from.
+     *
+     * Which ones those are is decided in the config screen and stored by
+     * absence: a container with nothing set has no entry at all, so "not
+     * hidden" is what selected means.
+     */
+    private visibleRows(): Array<{ container: DockerContainer; state: HostState }> {
+        const cfg = this._config.containerConfig || {};
+        const rows: Array<{ container: DockerContainer; state: HostState }> = [];
+        for (const state of this._byHost) {
+            for (const container of state.containers) {
+                if (cfg[shortId(container.ID)]?.hidden) continue;
+                rows.push({ container, state });
+            }
+        }
+        return rows;
     }
 
     // ── List refresh ─────────────────────────────────────────────────────────
@@ -458,20 +509,23 @@ class DockerWidget extends HTMLElement {
     // ── Data fetching ────────────────────────────────────────────────────────
 
     /**
-     * Re-lists the active host's containers.
+     * Re-lists every configured host, in parallel.
      *
      * `silent` is what the refresh timer passes: the rows on screen are still
      * valid, so they stay put instead of collapsing into skeletons and back
-     * every interval. Only a host change or the first load clears the view.
+     * every interval. Only the first load clears the view.
+     *
+     * A host that fails keeps whatever it last returned; the render greys those
+     * rows rather than dropping them, so one machine going quiet doesn't
+     * reshuffle the whole widget.
      */
     private async loadContainers(silent = false) {
-        const host = this.getActiveHost();
+        const hosts = this._config.hosts;
 
-        if (!host && !isDemoMode()) {
+        if (!hosts.length && !isDemoMode()) {
             this.stopPolling();
             this._loading = false;
-            this._error = false;
-            this._containers = [];
+            this._byHost = [];
             this.render();
             return;
         }
@@ -479,24 +533,35 @@ class DockerWidget extends HTMLElement {
         this.stopPolling();
         if (!silent) {
             this._loading = true;
-            this._error = false;
-            this._containers = [];
+            this._byHost = [];
             this._stats.clear();
             this.render();
         }
 
-        try {
-            this._containers = await fetchContainers(host);
-            this._loading = false;
-            this._error = false;
-            this.render();
-            this.startStatsPolling();
-        } catch (_) {
-            this._loading = false;
-            this._error = true;
-            this._containers = [];
-            this.render();
-        }
+        const previous = new Map(this._byHost.map(s => [s.host.id, s]));
+
+        this._byHost = await Promise.all(hosts.map(async (host): Promise<HostState> => {
+            const before = previous.get(host.id);
+            try {
+                return {
+                    host,
+                    containers: await fetchContainers(host),
+                    failed: false,
+                    everLoaded: true,
+                };
+            } catch (_) {
+                return {
+                    host,
+                    containers: before?.containers ?? [],
+                    failed: true,
+                    everLoaded: before?.everLoaded ?? false,
+                };
+            }
+        }));
+
+        this._loading = false;
+        this.render();
+        this.startStatsPolling();
     }
 
     private stopPolling() {
@@ -518,33 +583,40 @@ class DockerWidget extends HTMLElement {
         this._pollingTimer = setTimeout(poll, 0);
     }
 
+    /**
+     * Reads CPU and memory for the rows on screen.
+     *
+     * One request per container, every four seconds, so what it asks for
+     * matters: it used to poll every running container the host reported,
+     * including the ones hidden from the widget — you could hide something and
+     * still pay for it forever, invisibly. It now follows what is drawn.
+     */
     private async fetchAllStats() {
+        // A host that isn't answering has nothing to report, and asking is how
+        // you turn one unreachable machine into a slow widget.
+        const rows = this.visibleRows()
+            .filter(r => r.container.Status === 'running' && !r.state.failed);
+
         if (isDemoMode()) {
-            this._containers
-                .filter(c => c.Status === 'running')
-                .forEach(c => this.updateStatsDOM(c.ID, demoStats()));
+            rows.forEach(r => this.updateStatsDOM(r.container.ID, demoStats()));
             return;
         }
 
-        const host = this.getActiveHost();
-        if (!host) return;
-        const param = hostParam(host);
-        const running = this._containers.filter(c => c.Status === 'running');
-
         const chunkSize = 5;
-        for (let i = 0; i < running.length; i += chunkSize) {
+        for (let i = 0; i < rows.length; i += chunkSize) {
             if (this._pollingTimer === null) break;
 
-            const chunk = running.slice(i, i + chunkSize);
-            await Promise.all(chunk.map(async c => {
+            const chunk = rows.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async ({ container, state }) => {
                 try {
+                    const param = hostParam(state.host);
                     const res = await fetch(
-                        `/api/docker/stats?host=${encodeURIComponent(param)}&id=${encodeURIComponent(c.ID)}`
+                        `/api/docker/stats?host=${encodeURIComponent(param)}&id=${encodeURIComponent(container.ID)}`
                     );
                     if (res.ok) {
                         const stats: DockerStats = await res.json();
-                        this._stats.set(c.ID, stats);
-                        this.updateStatsDOM(c.ID, stats);
+                        this._stats.set(container.ID, stats);
+                        this.updateStatsDOM(container.ID, stats);
                     }
                 } catch (_) { }
             }));
@@ -561,8 +633,15 @@ class DockerWidget extends HTMLElement {
 
     // ── Actions ───────────────────────────────────────────────────────────────
 
-    private async performAction(containerID: string, action: string) {
-        const host = this.getActiveHost();
+    /**
+     * Starts, stops or restarts a container.
+     *
+     * The host comes from the row, not from a widget-wide "current" one: with
+     * containers from several hosts side by side, anything else would send the
+     * command to whichever machine happened to be selected.
+     */
+    private async performAction(containerID: string, action: string, hostId: string) {
+        const host = this.hostById(hostId);
         if (!host) return;
 
         this._pendingAction.add(containerID);
@@ -595,26 +674,6 @@ class DockerWidget extends HTMLElement {
                 btn.innerHTML = ICON.spinner;
             }
         });
-    }
-
-    // ── Host selector change ─────────────────────────────────────────────────
-
-    private async onHostChange(id: string) {
-        this._config.activeHost = id;
-        if (this._itemId) {
-            const state = dashboardStore.getState();
-            const item = (Array.isArray(state.items) ? state.items : [])
-                .find((i) => i.id === this._itemId);
-            if (item?.content) {
-                try {
-                    const parsed = typeof item.content === 'string'
-                        ? JSON.parse(item.content) : item.content;
-                    const newContent = { ...parsed, activeHost: id };
-                    await dashboardStore.updateItem({ id: this._itemId, content: JSON.stringify(newContent) });
-                } catch (_) { }
-            }
-        }
-        this.loadContainers();
     }
 
     // ── Ports rendering ───────────────────────────────────────────────────────
@@ -658,20 +717,15 @@ class DockerWidget extends HTMLElement {
         const admin        = isAdmin();
         const containerCfg = this._config.containerConfig || {};
 
-        const visibleContainers = this._containers
-            .filter(c => !containerCfg[shortId(c.ID)]?.hidden);
+        const rows = this.visibleRows();
+        // With one host, naming it on every row says nothing you don't know.
+        const showHost = this._config.hosts.length > 1;
 
-        // Only failures earn a second header line; the rest of the time this is
-        // a one-line header like every other widget.
-        const errorLine = this._error
-            ? `<div class="header-summary">${esc(i18n.t('docker.connection_error') || 'Connection failed')}</div>`
-            : '';
-
-        // Switching host is navigation, not configuration, so it stays here.
-        const hostSelector = this._config.hosts.length > 1 ? `
-            <div style="width: 150px; flex-shrink: 0;">
-                <app-select class="host-select" id="host-select" value="${esc(this._config.activeHost)}"></app-select>
-            </div>` : '';
+        // Hosts that were already down when this loaded have no containers to
+        // grey out, so they get a line of their own. Ones that went quiet later
+        // keep their rows instead — see renderContainer.
+        const silentHosts = this._byHost.filter(s => s.failed && !s.everLoaded);
+        const everythingDown = this._byHost.length > 0 && this._byHost.every(s => s.failed);
 
         let bodyHTML = '';
 
@@ -693,7 +747,7 @@ class DockerWidget extends HTMLElement {
                     </div>
                 </div>`).join('');
 
-        } else if (this._error) {
+        } else if (everythingDown && rows.length === 0) {
             bodyHTML = `
                 <div class="state-view">
                     <div class="state-icon">${ICON.alert}</div>
@@ -701,9 +755,9 @@ class DockerWidget extends HTMLElement {
                     <button class="retry-btn" id="retry-btn">${i18n.t('general.retry') || 'Retry'}</button>
                 </div>`;
 
-        } else if (visibleContainers.length === 0) {
-            // Either the host has none, or every one of them is hidden from the
-            // config screen. Both read the same from here.
+        } else if (rows.length === 0 && silentHosts.length === 0) {
+            // Either the hosts have none, or every one of them is hidden from
+            // the config screen. Both read the same from here.
             bodyHTML = `
                 <div class="state-view">
                     <div class="state-icon">${ICON.inbox}</div>
@@ -711,9 +765,16 @@ class DockerWidget extends HTMLElement {
                 </div>`;
 
         } else {
-            bodyHTML = visibleContainers.map(c =>
-                this.renderContainer(c, admin, containerCfg)
-            ).join('');
+            bodyHTML = rows
+                .map(({ container, state }) =>
+                    this.renderContainer(container, state, admin, containerCfg, showHost))
+                .join('')
+                + silentHosts.map(s => `
+                <div class="host-down-row">
+                    <span class="host-down-icon">${ICON.alert}</span>
+                    <span class="host-down-name">${esc(s.host.name)}</span>
+                    <span class="host-down-text">${esc(i18n.t('docker.host_unreachable'))}</span>
+                </div>`).join('');
         }
 
         const title = this._config.title || i18n.t('widget.docker.name');
@@ -724,9 +785,7 @@ class DockerWidget extends HTMLElement {
                 <div class="widget-header__top">
                     <span class="widget-header__icon">${ICON.docker}</span>
                     <span class="widget-header__title">${esc(title)}</span>
-                    ${hostSelector}
                 </div>
-                ${errorLine}
             </div>
             <div class="widget-body" id="body">${bodyHTML}</div>
         `;
@@ -736,11 +795,17 @@ class DockerWidget extends HTMLElement {
 
     private renderContainer(
         c: DockerContainer,
+        state: HostState,
         admin: boolean,
-        containerCfg: Record<string, ContainerCfgEntry>
+        containerCfg: Record<string, ContainerCfgEntry>,
+        showHost: boolean
     ): string {
         const sid = shortId(c.ID);
         const cfg = containerCfg[sid] || {};
+        // Its host stopped answering after we listed it. The row stays, because
+        // knowing a service is unreachable is worth more than an empty space,
+        // but nothing on it pretends to be current any more.
+        const stale = state.failed;
 
         // Icon
         const iconHTML = cfg.icon
@@ -752,7 +817,7 @@ class DockerWidget extends HTMLElement {
         // someone typed an address in the config. Without that it stays text:
         // a link that goes nowhere is worse than no link.
         const displayName = cfg.label || containerName(c);
-        const target = cfg.url || defaultContainerUrl(c, this.getActiveHost(), window.location.hostname);
+        const target = cfg.url || defaultContainerUrl(c, state.host, window.location.hostname);
         const nameHTML = target
             ? `<a class="container-name is-link" href="${esc(target)}" target="_blank" rel="noopener noreferrer"
                   title="${esc(target)}">${esc(displayName)}</a>`
@@ -776,9 +841,19 @@ class DockerWidget extends HTMLElement {
         // Ports
         const portsHTML = this.renderPorts(c.Ports || []);
 
-        // Actions
+        // The host goes under the image, the way the resource usage goes under
+        // the state: that cell already forces the row to two lines, so a second
+        // line here is free. When the host stops answering this is where it
+        // says so — on the row of the container it affects.
+        const hostLine = stale
+            ? `<span class="container-host is-down">${esc(i18n.t('docker.host_unreachable'))}</span>`
+            : showHost
+                ? `<span class="container-host">${esc(state.host.name)}</span>`
+                : '';
+
+        // Actions. A host that isn't answering can't be told to do anything.
         let actionsHTML = '';
-        if (admin) {
+        if (admin && !stale) {
             const isPending = this._pendingAction.has(c.ID);
             const dis = isPending ? 'disabled' : '';
             const isAgent = containerName(c) === 'lastboard-agent';
@@ -795,7 +870,8 @@ class DockerWidget extends HTMLElement {
         }
 
         return `
-        <div class="container-row" data-container-id="${esc(c.ID)}">
+        <div class="container-row${stale ? ' is-stale' : ''}"
+             data-container-id="${esc(c.ID)}" data-host-id="${esc(state.host.id)}">
             <div class="cell-icon" data-sid="${esc(sid)}">
                 ${iconHTML}
             </div>
@@ -809,6 +885,7 @@ class DockerWidget extends HTMLElement {
             </div>
             <div class="cell-image">
                 <span class="container-image" title="${esc(c.Image)}">${esc(imgShort)}</span>
+                ${hostLine}
             </div>
             <div class="cell-ports">${portsHTML}</div>
             <div class="cell-actions">${actionsHTML}</div>
@@ -824,13 +901,6 @@ class DockerWidget extends HTMLElement {
         // Retry
         root.getElementById('retry-btn')?.addEventListener('click', () => this.loadContainers());
 
-        // Host selector
-        const sel = root.getElementById('host-select') as any;
-        if (sel) {
-            sel.options = this._config.hosts.map(h => ({ value: h.id, label: h.name }));
-            sel.addEventListener('change', (e: CustomEvent) => this.onHostChange(e.detail));
-        }
-
         // Start / stop / restart. Everything else a row can do is configuration,
         // and configuration lives in the config modal.
         root.getElementById('body')?.addEventListener('click', (e: Event) => {
@@ -838,7 +908,10 @@ class DockerWidget extends HTMLElement {
             if (btn && !btn.hasAttribute('disabled')) {
                 const action = btn.dataset.action;
                 const id = btn.dataset.id;
-                if (action && id) this.performAction(id, action);
+                // The row carries its host: with several on screen, the command
+                // has to go to the machine this container actually runs on.
+                const hostId = btn.closest<HTMLElement>('.container-row')?.dataset.hostId;
+                if (action && id && hostId) this.performAction(id, action, hostId);
             }
         });
     }

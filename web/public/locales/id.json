@@ -90,6 +90,7 @@
   "docker.host_type_local": "Lokal (socket)",
   "docker.host_type_tcp": "TCP Jarak Jauh",
   "docker.host_type_tls": "TLS Jarak Jauh",
+  "docker.host_unreachable": "Host tidak merespons",
   "docker.host_url": "URL Host",
   "docker.hosts": "Host",
   "docker.invalid_action": "Tindakan tidak valid",

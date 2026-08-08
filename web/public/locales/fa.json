@@ -90,6 +90,7 @@
   "docker.host_type_local": "محل (socket)",
   "docker.host_type_tcp": "Remote TCP",
   "docker.host_type_tls": "Remote TLS",
+  "docker.host_unreachable": "میزبان پاسخ نمی‌دهد",
   "docker.host_url": "آدرس وب هوسانت",
   "docker.hosts": "هوسانت‌ها",
   "docker.invalid_action": "تراکنش نامعتبر",

@@ -90,6 +90,7 @@
   "docker.host_type_local": "Lokalny (socket)",
   "docker.host_type_tcp": "Zdalny TCP",
   "docker.host_type_tls": "Zdalny TLS",
+  "docker.host_unreachable": "Host nie odpowiada",
   "docker.host_url": "URL hosta",
   "docker.hosts": "Hosty",
   "docker.invalid_action": "Nieprawidłowe działanie",

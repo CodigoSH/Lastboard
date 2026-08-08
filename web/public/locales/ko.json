@@ -90,6 +90,7 @@
   "docker.host_type_local": "로컬 (소켓)",
   "docker.host_type_tcp": "원격 TCP",
   "docker.host_type_tls": "원격 TLS",
+  "docker.host_unreachable": "호스트가 응답하지 않음",
   "docker.host_url": "호스트 URL",
   "docker.hosts": "호스트",
   "docker.invalid_action": "유효하지 않은 작업",

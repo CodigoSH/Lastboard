@@ -90,6 +90,7 @@
   "docker.host_type_local": "Локальный (сокет)",
   "docker.host_type_tcp": "Удалённый TCP",
   "docker.host_type_tls": "Удалённый TLS",
+  "docker.host_unreachable": "Хост не отвечает",
   "docker.host_url": "URL хоста",
   "docker.hosts": "Хосты",
   "docker.invalid_action": "Недопустимое действие",

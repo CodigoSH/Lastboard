@@ -90,6 +90,7 @@
   "docker.host_type_local": "Local (socket)",
   "docker.host_type_tcp": "Remoto TCP",
   "docker.host_type_tls": "Remoto TLS",
+  "docker.host_unreachable": "El servidor no responde",
   "docker.host_url": "URL del Host",
   "docker.hosts": "Servidores",
   "docker.invalid_action": "Acción inválida",

@@ -90,6 +90,7 @@
   "docker.host_type_local": "Τοπικό (socket)",
   "docker.host_type_tcp": "Remote TCP",
   "docker.host_type_tls": "Remote TLS",
+  "docker.host_unreachable": "Ο κόμβος δεν αποκρίνεται",
   "docker.host_url": "URL Host",
   "docker.hosts": "Διακομιστές",
   "docker.invalid_action": "Μη έγκυρη ενέργεια",

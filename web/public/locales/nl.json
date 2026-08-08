@@ -90,6 +90,7 @@
   "docker.host_type_local": "Lokaal (socket)",
   "docker.host_type_tcp": "Externe TCP",
   "docker.host_type_tls": "Externe TLS",
+  "docker.host_unreachable": "Host reageert niet",
   "docker.host_url": "Host URL",
   "docker.hosts": "Hostservers",
   "docker.invalid_action": "Ongeldige actie",

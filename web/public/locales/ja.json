@@ -90,6 +90,7 @@
   "docker.host_type_local": "ローカル（ソケット）",
   "docker.host_type_tcp": "リモートTCP",
   "docker.host_type_tls": "リモートTLS",
+  "docker.host_unreachable": "ホストが応答しません",
   "docker.host_url": "ホストURL",
   "docker.hosts": "ホスト",
   "docker.invalid_action": "無効なアクション",

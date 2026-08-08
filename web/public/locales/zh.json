@@ -90,6 +90,7 @@
   "docker.host_type_local": "本地 (socket)",
   "docker.host_type_tcp": "远程 TCP",
   "docker.host_type_tls": "远程 TLS",
+  "docker.host_unreachable": "主机无响应",
   "docker.host_url": "主机 URL",
   "docker.hosts": "主机",
   "docker.invalid_action": "操作无效",

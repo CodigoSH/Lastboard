@@ -90,6 +90,7 @@
   "docker.host_type_local": "Local (socket)",
   "docker.host_type_tcp": "Remote TCP",
   "docker.host_type_tls": "Remote TLS",
+  "docker.host_unreachable": "হোস্ট সাড়া দিচ্ছে না",
   "docker.host_url": "হোস্ট ইউআরএল",
   "docker.hosts": "হোস্টসমূহ",
   "docker.invalid_action": "অবৈধ অ্যাকশন",
