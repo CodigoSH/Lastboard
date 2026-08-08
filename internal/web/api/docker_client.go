@@ -49,6 +49,11 @@ type DockerContainer struct {
 	State   string // Raw state string returned by Docker
 	Created int64
 	Ports   []DockerPort // Host-exposed port mappings
+	// UrlHint is the address the container labels itself with, when it does.
+	// Only the two keys we understand are carried: a container can hold dozens
+	// of labels (reverse-proxy rules, build metadata) and none of the rest is
+	// the browser's business.
+	UrlHint string
 }
 
 // DockerStats holds CPU and memory metrics for a running container.
@@ -132,13 +137,36 @@ type dockerAPIPort struct {
 
 // dockerAPIContainer is the raw shape returned by GET /containers/json.
 type dockerAPIContainer struct {
-	Id      string          `json:"Id"`
-	Names   []string        `json:"Names"`
-	Image   string          `json:"Image"`
-	State   string          `json:"State"`
-	Status  string          `json:"Status"`
-	Created int64           `json:"Created"`
-	Ports   []dockerAPIPort `json:"Ports"`
+	Id      string            `json:"Id"`
+	Names   []string          `json:"Names"`
+	Image   string            `json:"Image"`
+	State   string            `json:"State"`
+	Status  string            `json:"Status"`
+	Created int64             `json:"Created"`
+	Ports   []dockerAPIPort   `json:"Ports"`
+	Labels  map[string]string `json:"Labels"`
+}
+
+// urlLabelKeys are read in order: the first one present wins. `lastboard.url`
+// comes first so an instance can override a label a container already carries
+// for someone else's dashboard.
+var urlLabelKeys = []string{"lastboard.url", "homepage.href"}
+
+// urlFromLabels returns the address a container advertises, if any.
+//
+// Only http(s) is accepted: this value ends up in an href, and a container is
+// free to label itself with anything.
+func urlFromLabels(labels map[string]string) string {
+	for _, key := range urlLabelKeys {
+		v := strings.TrimSpace(labels[key])
+		if v == "" {
+			continue
+		}
+		if strings.HasPrefix(v, "http://") || strings.HasPrefix(v, "https://") {
+			return v
+		}
+	}
+	return ""
 }
 
 // normaliseStatus maps Docker's raw container state to the set of values
@@ -217,6 +245,7 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 			Status:  normaliseStatus(c.State),
 			Created: c.Created,
 			Ports:   ports,
+			UrlHint: urlFromLabels(c.Labels),
 		})
 	}
 	return containers, nil

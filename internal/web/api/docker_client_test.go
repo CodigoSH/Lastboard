@@ -66,6 +66,66 @@ func TestListContainers_ParsesMockAPI(t *testing.T) {
 	}
 }
 
+func TestUrlFromLabels(t *testing.T) {
+	cases := []struct {
+		name   string
+		labels map[string]string
+		want   string
+	}{
+		{"nothing to read", nil, ""},
+		{"no url labels", map[string]string{"traefik.enable": "true"}, ""},
+		{"homepage label", map[string]string{"homepage.href": "http://nas:8096"}, "http://nas:8096"},
+		{"our own label", map[string]string{"lastboard.url": "https://plex.home"}, "https://plex.home"},
+		{
+			// A container may already carry homepage's label for someone else's
+			// dashboard; ours is the one that wins.
+			"ours wins over homepage's",
+			map[string]string{"homepage.href": "http://a", "lastboard.url": "http://b"},
+			"http://b",
+		},
+		{"blank is not a value", map[string]string{"lastboard.url": "   "}, ""},
+		{
+			// This ends up in an href. A container labelling itself with a
+			// script URL must not become a link that runs it.
+			"only http(s) is trusted",
+			map[string]string{"lastboard.url": "javascript:alert(1)"},
+			"",
+		},
+		{"no scheme, no link", map[string]string{"homepage.href": "nas:8096"}, ""},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := urlFromLabels(tc.labels); got != tc.want {
+				t.Errorf("urlFromLabels(%v) = %q, want %q", tc.labels, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestListContainers_ReadsUrlLabel(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[
+			{"Id":"aaa","Names":["/jellyfin"],"Image":"jellyfin","State":"running","Created":1,"Ports":[],
+			 "Labels":{"homepage.href":"http://nas:8096","traefik.enable":"true"}},
+			{"Id":"bbb","Names":["/redis"],"Image":"redis","State":"running","Created":1,"Ports":[],"Labels":{}}
+		]`))
+	}))
+	defer srv.Close()
+
+	containers, err := ListContainers(srv.URL)
+	if err != nil {
+		t.Fatalf("ListContainers: %v", err)
+	}
+	if containers[0].UrlHint != "http://nas:8096" {
+		t.Errorf("UrlHint = %q, want http://nas:8096", containers[0].UrlHint)
+	}
+	if containers[1].UrlHint != "" {
+		t.Errorf("a container without the label got UrlHint %q", containers[1].UrlHint)
+	}
+}
+
 func TestGetContainerStats_ComputesPercentages(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
