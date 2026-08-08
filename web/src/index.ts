@@ -46,6 +46,22 @@ let passwordConfirmModal: any;
 
 import { bootstrap } from './core/bootstrap';
 
+// ── Who you are and what boards you have ────────────────────────────────────
+// Asked for here, at module scope, rather than inside bootstrap: bootstrap
+// waits for the locale file before it runs anything, and neither of these
+// answers needs a translation. Behind that wait they cost an extra round trip
+// at the head of the chain that every later request hangs off — the board's
+// items, and then the widgets' own data, are all downstream of them.
+//
+// The rejection is still handled where the promise is awaited below; the
+// handler attached here only keeps an early failure from being reported as an
+// unhandled rejection in the seconds before that.
+const bootFetches = Promise.all([
+    userStore.fetchUser(),
+    dashboardStore.fetchDashboards(),
+]);
+bootFetches.catch(() => { /* surfaced by the await inside bootstrap */ });
+
 // Initialize Application
 bootstrap(async () => {
     // Flash-prevention: apply a theme before the user record arrives so the
@@ -58,12 +74,10 @@ bootstrap(async () => {
     renderDashboard();
 
     // ── Parallel Initialization ─────────────────────────────────────
-    // fetchUser and fetchDashboards run in parallel while skeletons are visible.
-    // setUserId must happen before fetchItems so the localStorage key is correct.
-    await Promise.all([
-        userStore.fetchUser(),
-        dashboardStore.fetchDashboards()
-    ]);
+    // Both were already in flight before this callback ran; here we only wait
+    // for them. setUserId must happen before fetchItems so the localStorage
+    // key is the right one.
+    await bootFetches;
 
     const u = userStore.getUser();
     if (u?.id) dashboardStore.setUserId(u.id);
