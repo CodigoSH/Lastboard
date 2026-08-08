@@ -17,6 +17,7 @@ interface AddBookmarkModalData {
 
 import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
+import { resolveIconUrl } from '../../../services/iconUrl';
 
 const premiumColors = [
     '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -27,8 +28,7 @@ const renderIconPreview = (selectedIcon: string | null) => {
     if (!selectedIcon) {
         return `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
     }
-    const isDirectUrl = selectedIcon.startsWith('http') || selectedIcon.startsWith('/') || selectedIcon.startsWith('data:');
-    const iconUrl = isDirectUrl ? selectedIcon : `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${selectedIcon}.webp`;
+    const iconUrl = resolveIconUrl(selectedIcon);
     return `<img src="${safeImageSrc(iconUrl)}" alt="icon" style="width: 36px; height: 36px; object-fit: contain;">`;
 };
 
