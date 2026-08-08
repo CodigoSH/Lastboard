@@ -77,13 +77,31 @@ If securing the agent behind a reverse proxy (like Pangolin or Cloudflare Zero T
 
 ## Widget Configuration
 
-In the widget's settings, you can add multiple hosts. Supported URL formats include:
+Everything the widget shows is set from its configuration screen: enter the dashboard's edit mode and open the widget's settings.
+
+### Hosts
+
+You can add multiple hosts. Supported URL formats include:
 - **Local:** `local` or empty string.
 - **Agent Server:** `agent://IP_OR_DOMAIN:PORT?token=YOUR_TOKEN`
 - **TLS/TCP:** `https://...` or `http://...`
 
-## Customization and Admin Controls
+With more than one host configured, the widget header gets a selector to switch between them.
 
-- **Visibility:** Click the eye icon to enter Edit Mode. From here, you can hide specific containers from view.
-- **Customization:** Rename containers or assign custom icons.
-- **Admin Actions:** Users with the `admin` role can start, stop, or restart containers directly from the widget overlay.
+### Containers
+
+Every container from every host is listed, grouped by host, with a search box for long lists. For each one you can:
+
+- **Show or hide it** with the checkbox. Unchecked containers stay out of the widget.
+- **Set an icon**, from the same picker used for bookmarks.
+- **Rename it**, if the container name isn't what you want to read on your dashboard.
+
+Hosts that don't answer say so in their own section, and their containers keep whatever you had already set for them.
+
+### Title and refresh
+
+You can give the widget a title of your own instead of "Docker", and choose how often the container list is refreshed (30 seconds to 10 minutes). Resource usage for running containers updates continuously regardless of this setting.
+
+## Admin Controls
+
+Users with the `admin` role can start, stop, or restart containers directly from the widget rows.

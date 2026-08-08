@@ -13,6 +13,15 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
+import '../IconSelectionModal/IconSelectionModal';
+import { resolveIconUrl } from '../../../services/iconUrl';
+import {
+    type DockerContainer,
+    type DockerHost,
+    containerName,
+    fetchContainers,
+    shortId,
+} from '../../../services/dockerShared';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
@@ -528,6 +537,40 @@ class WidgetConfigModal extends HTMLElement {
 
             const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
+        } else if (widgetId === 'docker') {
+            const titleInput = this.shadowRoot?.getElementById('docker-title') as HTMLInputElement | null;
+            newContent.title = (titleInput?.value || '').trim();
+
+            const refreshSel = this.shadowRoot?.getElementById('docker-refresh') as HTMLSelectElement | null;
+            newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
+
+            // Start from what is stored rather than from scratch: a host that
+            // failed to answer drew no rows, and its containers must keep their
+            // icons and names instead of being wiped by a save.
+            const cfg: Record<string, any> = { ...(newContent.containerConfig || {}) };
+
+            this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-container-row').forEach(row => {
+                const sid = row.dataset.sid;
+                if (!sid) return;
+
+                const visible = row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true;
+                const label = row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '';
+                const iconBtn = row.querySelector<HTMLElement>('.docker-icon-btn');
+
+                const entry: Record<string, any> = { ...(cfg[sid] || {}) };
+                if (label) entry.label = label; else delete entry.label;
+                if (visible) delete entry.hidden; else entry.hidden = true;
+                if (iconBtn?.dataset.icon) {
+                    entry.icon = iconBtn.dataset.icon;
+                    entry.iconName = iconBtn.dataset.iconName || '';
+                }
+
+                // Don't keep an entry that no longer says anything.
+                if (Object.keys(entry).length) cfg[sid] = entry;
+                else delete cfg[sid];
+            });
+
+            newContent.containerConfig = cfg;
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? parseInt(intervalInput.value) : 5000;
@@ -904,6 +947,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
                 <div id="docker-host-overlay" class="docker-overlay" style="display: none;"></div>
             </dialog>
+            <icon-selection-modal></icon-selection-modal>
         `;
 
         this.dialog = this.shadowRoot.querySelector('dialog');
@@ -1029,6 +1073,54 @@ class WidgetConfigModal extends HTMLElement {
     private setupDockerEvents() {
         if (!this.shadowRoot) return;
         const root = this.shadowRoot;
+
+        const refreshSel = root.getElementById('docker-refresh') as AppSelect | null;
+        if (refreshSel) refreshSel.options = [
+            { value: '30', label: '30s' },
+            { value: '60', label: '1m' },
+            { value: '300', label: '5m' },
+            { value: '600', label: '10m' },
+        ];
+
+        if (this.currentItem) {
+            const content = typeof this.currentItem.content === 'string'
+                ? JSON.parse(this.currentItem.content)
+                : this.currentItem.content;
+            this.loadDockerContainers(content);
+        }
+
+        // Filter by name or image. Plain substring match on a data attribute
+        // built when the row was drawn, so typing never re-queries a host.
+        const search = root.getElementById('docker-search') as HTMLInputElement | null;
+        search?.addEventListener('input', () => {
+            const q = search.value.trim().toLowerCase();
+            root.querySelectorAll<HTMLElement>('.docker-container-row').forEach(row => {
+                row.style.display = !q || (row.dataset.search || '').includes(q) ? '' : 'none';
+            });
+            // A host whose containers all filtered out shouldn't keep its heading.
+            root.querySelectorAll<HTMLElement>('.docker-host-group').forEach(group => {
+                const rows = Array.from(group.querySelectorAll<HTMLElement>('.docker-container-row'));
+                const anyVisible = rows.length === 0 || rows.some(r => r.style.display !== 'none');
+                group.style.display = anyVisible ? '' : 'none';
+            });
+        });
+
+        // Icon picking, the same modal the bookmark form uses.
+        root.getElementById('docker-containers')?.addEventListener('click', async (e: Event) => {
+            const btn = (e.target as Element).closest('.docker-icon-btn') as HTMLElement | null;
+            if (!btn) return;
+            e.preventDefault();
+
+            const modal = root.querySelector('icon-selection-modal') as any;
+            if (!modal) return;
+            const picked: string | null = await modal.open();
+            if (!picked) return;
+
+            const url = resolveIconUrl(picked);
+            btn.dataset.icon = url;
+            btn.dataset.iconName = picked;
+            btn.innerHTML = `<img src="${esc(url)}" alt="" />`;
+        });
 
         root.getElementById('docker-show-add-btn')?.addEventListener('click', () => {
             this.showDockerHostForm(null);
@@ -1259,7 +1351,7 @@ class WidgetConfigModal extends HTMLElement {
         const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
 
         const hosts = content.hosts || [];
-        let generalTab = '';
+        const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
 
         const hostsList = hosts.length > 0
             ? hosts.map((h: any) => `
@@ -1280,15 +1372,99 @@ class WidgetConfigModal extends HTMLElement {
             `).join('')
             : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${i18n.t('docker.no_hosts_configured') || 'No hosts found'}</p>`;
 
-        generalTab = `
+        const generalTab = `
+            <div class="field-group">
+                <label>${i18n.t('widget.api.title_label')}</label>
+                <input type="text" id="docker-title" value="${esc(content.title || '')}"
+                       placeholder="${esc(i18n.t('widget.docker.name'))}" />
+            </div>
             <div class="field-group">
                 <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
                 <div class="hosts-list">${hostsList}</div>
                 <app-button variant="ghost" id="docker-show-add-btn" style="width: 100%; margin-top: 12px;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>
             </div>
+            <div class="field-group">
+                <label>${i18n.t('docker.containers')}</label>
+                <input type="text" id="docker-search" class="docker-search"
+                       placeholder="${esc(i18n.t('docker.search_containers'))}" />
+                <div id="docker-containers" class="docker-containers">
+                    <p class="monitor-services__state">${i18n.t('general.loading')}</p>
+                </div>
+                <small>${i18n.t('docker.containers_desc')}</small>
+            </div>
+            <div class="field-group row-aligned">
+                <label>${i18n.t('widget.api.refresh_label')}</label>
+                <app-select id="docker-refresh" value="${refresh}"></app-select>
+            </div>
         `;
 
         return { general: generalTab, customization: renderAppearanceControls() };
+    }
+
+    /**
+     * Fills the container list: every host, one section each.
+     *
+     * All hosts at once rather than only the active one, because the settings
+     * are stored per container id regardless of which host it came from, and
+     * hunting for the right host before you can tick a box is busywork. A host
+     * that doesn't answer says so in its own section and leaves the rest alone.
+     */
+    private async loadDockerContainers(content: any) {
+        const box = this.shadowRoot?.getElementById('docker-containers');
+        if (!box) return;
+
+        const hosts: DockerHost[] = content.hosts || [];
+        if (!hosts.length) {
+            box.innerHTML = `<p class="monitor-services__state">${esc(i18n.t('docker.no_hosts_configured'))}</p>`;
+            return;
+        }
+
+        const cfg: Record<string, any> = content.containerConfig || {};
+
+        const results = await Promise.all(hosts.map(async (host) => {
+            try {
+                return { host, containers: await fetchContainers(host), failed: false };
+            } catch {
+                return { host, containers: [] as DockerContainer[], failed: true };
+            }
+        }));
+
+        box.innerHTML = results.map(({ host, containers, failed }) => {
+            const body = failed
+                ? `<p class="docker-host-state is-error">${esc(i18n.t('docker.connection_error'))}</p>`
+                : containers.length === 0
+                    ? `<p class="docker-host-state">${esc(i18n.t('docker.no_containers'))}</p>`
+                    : containers.map(c => this.dockerContainerRow(c, cfg)).join('');
+
+            return `
+                <div class="docker-host-group">
+                    <p class="docker-host-heading">${esc(host.name)}</p>
+                    ${body}
+                </div>`;
+        }).join('');
+    }
+
+    private dockerContainerRow(c: DockerContainer, cfg: Record<string, any>): string {
+        const sid = shortId(c.ID);
+        const entry = cfg[sid] || {};
+        const name = containerName(c);
+        const icon = entry.icon || '';
+
+        const preview = icon
+            ? `<img src="${esc(icon)}" alt="" />`
+            : `<span class="docker-icon-placeholder">${esc((name[0] || '?').toUpperCase())}</span>`;
+
+        return `
+            <div class="docker-container-row" data-sid="${esc(sid)}" data-search="${esc((name + ' ' + c.Image).toLowerCase())}">
+                <input type="checkbox" class="docker-container" data-sid="${esc(sid)}"
+                       ${entry.hidden ? '' : 'checked'}
+                       title="${esc(i18n.t('docker.container_visible'))}" />
+                <button type="button" class="docker-icon-btn" data-sid="${esc(sid)}"
+                        data-icon="${esc(icon)}" data-icon-name="${esc(entry.iconName || '')}"
+                        title="${esc(i18n.t('docker.container_icon'))}">${preview}</button>
+                <input type="text" class="docker-label" data-sid="${esc(sid)}"
+                       value="${esc(entry.label || '')}" placeholder="${esc(name)}" />
+            </div>`;
     }
 }
 

@@ -1006,3 +1006,118 @@ dialog[open] {
     accent-color: var(--accent);
     cursor: pointer;
 }
+
+/* ── Docker: per-container settings ──────────────────────────────────────────
+   Same box as the monitor service list, with two extra controls per row: the
+   icon and the display name. Grouped by host because the list can span
+   several. */
+
+.docker-search {
+    margin-bottom: 8px;
+}
+
+.docker-containers {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+}
+
+.docker-host-group + .docker-host-group {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.docker-host-heading {
+    margin: 0 0 4px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+}
+
+.docker-host-state {
+    margin: 0;
+    padding: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+.docker-host-state.is-error {
+    color: var(--danger-color);
+}
+
+.docker-container-row {
+    display: grid;
+    grid-template-columns: auto 32px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.docker-container-row:hover {
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.docker-container-row input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.docker-icon-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.docker-icon-btn:hover {
+    border-color: var(--accent);
+}
+
+.docker-icon-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.docker-icon-placeholder {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+/* Reads as the name itself rather than a form field until you reach for it.
+   Six stacked input boxes made the list look like a form to fill in, when the
+   common case is leaving every name alone. Specific enough to beat the generic
+   .field-group input rule above. */
+.docker-container-row input[type="text"].docker-label {
+    padding: 4px 8px;
+    background: transparent;
+    border-color: transparent;
+    font-size: 13px;
+}
+
+.docker-container-row input[type="text"].docker-label:hover {
+    border-color: var(--border);
+}
+
+.docker-container-row input[type="text"].docker-label:focus {
+    background: var(--input-bg, transparent);
+    border-color: var(--accent);
+}

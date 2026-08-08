@@ -4,47 +4,30 @@ import { adoptSharedStyles } from '../../services/sharedStyles';
 import { dashboardStore } from '../../store/dashboardStore';
 import { userStore } from '../../store/userStore';
 import { escapeHtml as esc } from '../../services/escape';
-import '../../components/ui/IconSelectionModal/IconSelectionModal';
+import {
+    type ContainerCfgEntry,
+    type DockerContainer,
+    type DockerHost,
+    type DockerPort,
+    containerName,
+    fetchContainers,
+    hostParam,
+    isDemoMode,
+    shortId,
+} from '../../services/dockerShared';
 import '../../components/ui/Select/Select';
 
 // ── Types ───────────────────────────────────────────────────────────────────
-
-interface DockerHost {
-    id: string;
-    name: string;
-    type: 'local' | 'tcp' | 'tls' | 'agent';
-    url?: string;
-    token?: string;
-}
-
-interface ContainerCfgEntry {
-    label?: string;
-    icon?: string;
-    iconName?: string;
-    hidden?: boolean;
-}
 
 interface DockerWidgetConfig {
     widgetId: 'docker';
     hosts: DockerHost[];
     activeHost: string;
     containerConfig?: Record<string, ContainerCfgEntry>;
-}
-
-interface DockerPort {
-    PublicPort: number;
-    PrivatePort: number;
-    Type: string;
-}
-
-interface DockerContainer {
-    ID: string;
-    Name: string;
-    Image: string;
-    Status: string;
-    State: string;
-    Created: number;
-    Ports: DockerPort[];
+    /** Header text. Empty falls back to the widget's own name. */
+    title?: string;
+    /** How often the container list is re-listed, in seconds. */
+    refreshSec?: number;
 }
 
 interface DockerStats {
@@ -54,31 +37,10 @@ interface DockerStats {
     MemLimit: number;
 }
 
+/** Matches the monitor widget's default, and its options in the config modal. */
+const DEFAULT_REFRESH_SEC = 60;
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
-
-function hostParam(host: DockerHost): string {
-    if (host.type === 'local') return '';
-    if (host.type === 'agent') return `agent://${host.url ?? ''}?token=${encodeURIComponent(host.token ?? '')}`;
-    if (host.type === 'tls') return `https://${host.url ?? ''}`;
-    return host.url ?? '';
-}
-
-// ── Demo mode ─────────────────────────────────────────────────────────────
-// In DEMO_ONLY mode there is no Docker daemon, so the widget would be empty.
-// These synthetic containers + stats let visitors see it working. Real installs
-// never take this path (guarded by window.LASTBOARD_CONFIG.demo_mode).
-function isDemoMode(): boolean {
-    return typeof window !== 'undefined' && window.LASTBOARD_CONFIG?.demo_mode === true;
-}
-
-const DEMO_CONTAINERS: DockerContainer[] = [
-    { ID: 'demo-lastboard', Name: 'lastboard', Image: 'git.codigosh.com/codigosh/lastboard:latest', Status: 'running', State: 'running', Created: 1717000000, Ports: [{ PublicPort: 8080, PrivatePort: 8080, Type: 'tcp' }] },
-    { ID: 'demo-postgres', Name: 'postgres', Image: 'postgres:16-alpine', Status: 'running', State: 'running', Created: 1716000000, Ports: [{ PublicPort: 5432, PrivatePort: 5432, Type: 'tcp' }] },
-    { ID: 'demo-traefik', Name: 'traefik', Image: 'traefik:v3.1', Status: 'running', State: 'running', Created: 1715000000, Ports: [{ PublicPort: 443, PrivatePort: 443, Type: 'tcp' }] },
-    { ID: 'demo-jellyfin', Name: 'jellyfin', Image: 'jellyfin/jellyfin:latest', Status: 'running', State: 'running', Created: 1716500000, Ports: [{ PublicPort: 8096, PrivatePort: 8096, Type: 'tcp' }] },
-    { ID: 'demo-redis', Name: 'redis', Image: 'redis:7-alpine', Status: 'running', State: 'running', Created: 1716800000, Ports: [] },
-    { ID: 'demo-backup', Name: 'nightly-backup', Image: 'offen/docker-volume-backup:v2', Status: 'stopped', State: 'stopped', Created: 1714000000, Ports: [] },
-];
 
 function demoStats(): DockerStats {
     const cpu = Math.random() * 18 + 0.4;      // 0.4% – 18%
@@ -99,10 +61,6 @@ function isAdmin(): boolean {
     return role === 'admin';
 }
 
-function shortId(id: string): string {
-    return id.substring(0, 8);
-}
-
 // ── SVG Icons ────────────────────────────────────────────────────────────────
 
 const ICON = {
@@ -110,14 +68,10 @@ const ICON = {
     play:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16l13 -8z" /></svg>`,
     stop:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" /></svg>`,
     restart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" /><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" /></svg>`,
-    refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" /><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" /></svg>`,
     alert:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
     inbox:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
     settings:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
     spinner: `<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 10 10"/></svg>`,
-    eye:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`,
-    eyeOff:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
-    ellipsis:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>`,
 };
 
 // ── CSS ──────────────────────────────────────────────────────────────────────
@@ -144,55 +98,17 @@ const CSS = `
     flex-shrink: 0;
 }
 
-.header-btn {
-    width: 24px; height: 24px;
-    display: flex; align-items: center; justify-content: center;
-    background: transparent;
-    border: 1px solid rgba(128,128,128,0.15);
-    border-radius: 4px;
-    position: relative;
-    cursor: pointer; color: var(--text-dim);
-    transition: all 0.15s;
-    flex-shrink: 0;
-}
-.header-btn svg { width: 13px; height: 13px; }
-.header-btn:hover { border-color: var(--accent); color: var(--accent); }
-.header-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb,37,99,235),0.1); }
-.refresh-btn.spinning svg { animation: spin 0.7s linear 1; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* Header summary line */
+/* Second header line. Only drawn when the host can't be reached — in normal
+   operation the header is one line, the same as every other widget. */
 .header-summary {
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--text-dim);
-    opacity: 0.8;
-    transition: opacity 0.3s;
+    color: var(--danger-color);
     padding-left: 1px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.header-summary.error { color: var(--danger-color); }
-
-/* Edit mode banner */
-.edit-banner {
-    display: flex; align-items: center; gap: 6px;
-    padding: 5px 12px;
-    background: rgba(var(--accent-rgb,37,99,235),0.08);
-    border-bottom: 1px solid rgba(var(--accent-rgb,37,99,235),0.2);
-    flex-shrink: 0;
-}
-.edit-banner-text {
-    flex: 1; font-size: 11px; color: var(--accent);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.edit-banner-close {
-    width: 18px; height: 18px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: transparent; border: none;
-    color: var(--accent); cursor: pointer; font-size: 14px;
-    border-radius: 3px; transition: background 0.15s; padding: 0;
-}
-.edit-banner-close:hover { background: rgba(var(--accent-rgb,37,99,235),0.15); }
 
 /* ── Scrollable wrapper ── */
 .widget-body {
@@ -253,46 +169,19 @@ const CSS = `
     min-width: 0;
     overflow: hidden;
 }
-/* Edit mode adds eye column at start */
-.container-row.edit-mode {
-    grid-template-columns: 28px 36px minmax(0, 1.5fr) 140px minmax(0, 2fr) 110px 90px;
-}
 .container-row:last-child { border-bottom: none; }
 .container-row:hover { background: var(--surface-hover, rgba(128,128,128,0.06)); }
-.container-row.is-hidden { opacity: 0.45; }
 
-/* EYE cell */
-.cell-eye {
-    display: flex; align-items: center; justify-content: center;
-}
-.eye-btn {
-    width: 22px; height: 22px;
-    display: flex; align-items: center; justify-content: center;
-    background: transparent; border: none;
-    cursor: pointer; color: var(--text-dim);
-    border-radius: 4px; transition: all 0.15s; padding: 0;
-}
-.eye-btn svg { width: 13px; height: 13px; }
-.eye-btn:hover { color: var(--accent); background: rgba(var(--accent-rgb,37,99,235),0.1); }
-.eye-btn.is-hidden { color: var(--text-dim); opacity: 0.5; }
-.eye-btn.is-hidden:hover { color: var(--accent); opacity: 1; }
-
-/* ICON cell */
+/* ICON cell — display only. Choosing the icon lives in the config modal, like
+   every other per-container setting. */
 .cell-icon {
     display: flex; align-items: center; justify-content: flex-start;
-    cursor: pointer;
     padding-right: 6px;
 }
 .icon-img {
     width: 28px; height: 28px;
     border-radius: 6px; object-fit: contain;
-    border: 1px solid transparent;
-    transition: border-color 0.15s, box-shadow 0.15s;
     background: rgba(128,128,128,0.05);
-}
-.cell-icon:hover .icon-img {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(var(--accent-rgb,37,99,235),0.2);
 }
 .icon-placeholder {
     width: 28px; height: 28px;
@@ -301,12 +190,8 @@ const CSS = `
     border: 1px solid rgba(var(--accent-rgb, 37,99,235), 0.2);
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 600; color: var(--accent);
-    text-transform: uppercase; transition: border-color 0.15s, box-shadow 0.15s;
+    text-transform: uppercase;
     user-select: none;
-}
-.cell-icon:hover .icon-placeholder {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(var(--accent-rgb,37,99,235),0.2);
 }
 
 /* NAME cell */
@@ -314,19 +199,7 @@ const CSS = `
 .container-name {
     font-size: 13px; font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    cursor: default;
     display: block;
-}
-.container-name-edit {
-    width: 100%;
-    font-family: var(--font-sans); font-size: 13px;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--accent);
-    color: var(--text-main);
-    outline: none;
-    padding: 0 0 1px 0;
-    box-sizing: border-box;
 }
 
 /* STATE cell */
@@ -417,7 +290,7 @@ const CSS = `
 .action-btn:disabled svg { opacity: 0.5; }
 
 /* Tooltip — anchored left so it never overflows widget top edge */
-.action-btn::after, .header-btn::after {
+.action-btn::after {
     content: attr(data-title);
     position: absolute; right: calc(100% + 8px); top: 50%;
     transform: translateY(-50%);
@@ -428,7 +301,7 @@ const CSS = `
     opacity: 0; transition: opacity 0.15s; z-index: 9999;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
-.action-btn:hover::after, .header-btn:hover::after { opacity: 1; }
+.action-btn:hover::after { opacity: 1; }
 
 .spin { animation: spin 0.7s linear infinite; }
 `;
@@ -444,14 +317,13 @@ class DockerWidget extends HTMLElement {
     private _loading = false;
     private _error = false;
     private _pollingTimer: ReturnType<typeof setInterval> | null = null;
+    /** Re-lists containers, so one started elsewhere shows up on its own. */
+    private _listTimer: ReturnType<typeof setInterval> | null = null;
 
     private _unsubscribeDashboard: (() => void) | null = null;
     private _unsubscribeI18n: (() => void) | null = null;
 
     private _pendingAction: Set<string> = new Set();
-
-    // Edit mode (in-memory only — resets on unmount)
-    private _editMode = false;
 
     static get observedAttributes() { return ['item-id', 'content']; }
 
@@ -491,6 +363,7 @@ class DockerWidget extends HTMLElement {
     connectedCallback() {
         this.render();
         this.loadContainers();
+        this.restartListTimer();
 
         this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
             if (this._itemId) {
@@ -513,8 +386,21 @@ class DockerWidget extends HTMLElement {
                             if (hostsChanged || hostChanged) {
                                 this._config = { ...this._config, ...c, hosts: incomingHosts, activeHost: incomingActiveHost };
                                 this.loadContainers();
+                                this.restartListTimer();
                             } else {
+                                // Saved from the config modal: visibility, icons,
+                                // names, title and interval all land here.
+                                const titleChanged = (c.title || '') !== (this._config.title || '');
+                                const cfgChanged = JSON.stringify(c.containerConfig || {})
+                                    !== JSON.stringify(this._config.containerConfig || {});
+                                const intervalChanged = Number(c.refreshSec) !== Number(this._config.refreshSec);
+
                                 this._config.containerConfig = c.containerConfig || this._config.containerConfig;
+                                this._config.title = c.title;
+                                this._config.refreshSec = c.refreshSec;
+
+                                if (titleChanged || cfgChanged) this.render();
+                                if (intervalChanged) this.restartListTimer();
                             }
                         }
                     } catch (_) { }
@@ -529,6 +415,7 @@ class DockerWidget extends HTMLElement {
 
     disconnectedCallback() {
         this.stopPolling();
+        this.stopListTimer();
         this._unsubscribeDashboard?.();
         this._unsubscribeI18n?.();
     }
@@ -540,23 +427,39 @@ class DockerWidget extends HTMLElement {
             ?? this._config.hosts[0];
     }
 
+    // ── List refresh ─────────────────────────────────────────────────────────
+    // Separate from the stats poll: that one updates numbers on rows that are
+    // already drawn, this one asks which containers exist at all.
+
+    private stopListTimer() {
+        if (this._listTimer !== null) {
+            clearInterval(this._listTimer);
+            this._listTimer = null;
+        }
+    }
+
+    private restartListTimer() {
+        this.stopListTimer();
+        const sec = Number(this._config.refreshSec) > 0
+            ? Number(this._config.refreshSec)
+            : DEFAULT_REFRESH_SEC;
+        this._listTimer = setInterval(() => this.loadContainers(true), sec * 1000);
+    }
+
     // ── Data fetching ────────────────────────────────────────────────────────
 
-    private async loadContainers() {
-        if (isDemoMode()) {
-            this.stopPolling();
-            this._loading = false;
-            this._error = false;
-            this._containers = DEMO_CONTAINERS;
-            this._stats.clear();
-            this.render();
-            this.startStatsPolling();
-            return;
-        }
-
+    /**
+     * Re-lists the active host's containers.
+     *
+     * `silent` is what the refresh timer passes: the rows on screen are still
+     * valid, so they stay put instead of collapsing into skeletons and back
+     * every interval. Only a host change or the first load clears the view.
+     */
+    private async loadContainers(silent = false) {
         const host = this.getActiveHost();
 
-        if (!host) {
+        if (!host && !isDemoMode()) {
+            this.stopPolling();
             this._loading = false;
             this._error = false;
             this._containers = [];
@@ -565,24 +468,24 @@ class DockerWidget extends HTMLElement {
         }
 
         this.stopPolling();
-        this._loading = true;
-        this._error = false;
-        this._containers = [];
-        this._stats.clear();
-        this.render();
+        if (!silent) {
+            this._loading = true;
+            this._error = false;
+            this._containers = [];
+            this._stats.clear();
+            this.render();
+        }
 
         try {
-            const param = hostParam(host);
-            const res = await fetch(`/api/docker/containers?host=${encodeURIComponent(param)}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            this._containers = Array.isArray(data) ? data : [];
+            this._containers = await fetchContainers(host);
             this._loading = false;
+            this._error = false;
             this.render();
             this.startStatsPolling();
         } catch (_) {
             this._loading = false;
             this._error = true;
+            this._containers = [];
             this.render();
         }
     }
@@ -712,127 +615,6 @@ class DockerWidget extends HTMLElement {
         this.loadContainers();
     }
 
-    // ── Icon selection ───────────────────────────────────────────────────────
-
-    private async openIconPicker(sid: string) {
-        const modal = this.shadowRoot?.querySelector('icon-selection-modal') as any;
-        if (!modal) return;
-
-        const result: string | null = await modal.open();
-
-        if (!result) return;
-
-        const isDirectUrl = result.startsWith('http') || result.startsWith('/') || result.startsWith('data:');
-        const iconUrl = isDirectUrl
-            ? result
-            : `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${result}.webp`;
-
-        const existing = this._config.containerConfig?.[sid] || {};
-        const updatedCfg = {
-            ...this._config.containerConfig,
-            [sid]: { ...existing, icon: iconUrl, iconName: result }
-        };
-        this._config.containerConfig = updatedCfg;
-
-        await this.saveContainerConfig(updatedCfg);
-
-        const iconCell = this.shadowRoot?.querySelector(`.cell-icon[data-sid="${sid}"]`);
-        if (iconCell) {
-            iconCell.innerHTML = `<img class="icon-img" src="${esc(iconUrl)}" alt="" loading="lazy" />`;
-        }
-    }
-
-    // ── Label editing ────────────────────────────────────────────────────────
-
-    private startLabelEdit(containerID: string, sid: string, currentLabel: string) {
-        const nameEl = this.shadowRoot?.querySelector(`.container-name[data-cid="${containerID}"]`);
-        if (!nameEl) return;
-
-        const input = document.createElement('input');
-        input.className = 'container-name-edit';
-        input.value = currentLabel;
-
-        const commit = async () => {
-            const newLabel = input.value.trim();
-            input.replaceWith(nameEl);
-
-            if (newLabel && newLabel !== currentLabel) {
-                const existing = this._config.containerConfig?.[sid] || {};
-                const updatedCfg = { ...this._config.containerConfig, [sid]: { ...existing, label: newLabel } };
-                this._config.containerConfig = updatedCfg;
-                (nameEl as HTMLElement).textContent = newLabel;
-                await this.saveContainerConfig(updatedCfg);
-            }
-        };
-
-        const cancel = () => { input.replaceWith(nameEl); };
-
-        input.addEventListener('keydown', (e: KeyboardEvent) => {
-            if (e.key === 'Enter') { e.preventDefault(); commit(); }
-            if (e.key === 'Escape') { e.preventDefault(); cancel(); }
-        });
-        input.addEventListener('blur', commit);
-
-        nameEl.replaceWith(input);
-        input.focus();
-        input.select();
-    }
-
-    // ── Hide/show toggle ─────────────────────────────────────────────────────
-
-    private async toggleHidden(sid: string) {
-        const existing = this._config.containerConfig?.[sid] || {};
-        const newHidden = !existing.hidden;
-        const updatedCfg = {
-            ...this._config.containerConfig,
-            [sid]: { ...existing, hidden: newHidden }
-        };
-        this._config.containerConfig = updatedCfg;
-        await this.saveContainerConfig(updatedCfg);
-        this.render();
-    }
-
-    // ── Persist helpers ──────────────────────────────────────────────────────
-
-    private async saveContainerConfig(cfg: Record<string, ContainerCfgEntry>) {
-        if (!this._itemId) return;
-        try {
-            const state = dashboardStore.getState();
-            const item = (Array.isArray(state.items) ? state.items : [])
-                .find((i) => i.id === this._itemId);
-            if (!item?.content) return;
-            const parsed = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
-            const merged = { ...parsed, containerConfig: cfg };
-            await dashboardStore.updateItem({ id: this._itemId, content: JSON.stringify(merged) });
-        } catch (_) { }
-    }
-
-    // ── Summary line ─────────────────────────────────────────────────────────
-
-    private buildSummary(visibleContainers: DockerContainer[]): string {
-        if (this._loading) return i18n.t('docker.connecting') || 'Connecting...';
-        if (this._error)   return '';
-
-        const counts: Record<string, number> = {};
-        for (const c of visibleContainers) {
-            counts[c.Status] = (counts[c.Status] || 0) + 1;
-        }
-
-        const parts: string[] = [];
-        const statuses: Array<[string, string]> = [
-            ['running',    i18n.t('docker.state_running')    || 'running'],
-            ['stopped',    i18n.t('docker.state_stopped')    || 'stopped'],
-            ['paused',     i18n.t('docker.state_paused')     || 'paused'],
-            ['restarting', i18n.t('docker.state_restarting') || 'restarting'],
-        ];
-
-        for (const [key, label] of statuses) {
-            if (counts[key]) parts.push(`${counts[key]} ${label}`);
-        }
-
-        return parts.length ? parts.join(' · ') : (i18n.t('docker.no_containers') || 'No containers');
-    }
-
     // ── Ports rendering ───────────────────────────────────────────────────────
 
     private renderPorts(ports: DockerPort[]): string {
@@ -874,29 +656,19 @@ class DockerWidget extends HTMLElement {
         const admin        = isAdmin();
         const containerCfg = this._config.containerConfig || {};
 
-        const visibleContainers = this._editMode
-            ? this._containers
-            : this._containers.filter(c => !containerCfg[shortId(c.ID)]?.hidden);
+        const visibleContainers = this._containers
+            .filter(c => !containerCfg[shortId(c.ID)]?.hidden);
 
-        const summaryText  = this._error
-            ? (i18n.t('docker.connection_error') || 'Connection failed')
-            : this.buildSummary(visibleContainers);
-        const summaryClass = this._error ? 'header-summary error' : 'header-summary';
+        // Only failures earn a second header line; the rest of the time this is
+        // a one-line header like every other widget.
+        const errorLine = this._error
+            ? `<div class="header-summary">${esc(i18n.t('docker.connection_error') || 'Connection failed')}</div>`
+            : '';
 
-        // Host selector
+        // Switching host is navigation, not configuration, so it stays here.
         const hostSelector = this._config.hosts.length > 1 ? `
             <div style="width: 150px; flex-shrink: 0;">
                 <app-select class="host-select" id="host-select" value="${esc(this._config.activeHost)}"></app-select>
-            </div>` : '';
-
-        const editBtn = admin
-            ? `<button class="header-btn${this._editMode ? ' active' : ''}" id="edit-mode-btn" data-title="${i18n.t('docker.edit_mode_toggle') || 'Customize'}">${ICON.ellipsis}</button>`
-            : '';
-
-        const editBanner = this._editMode ? `
-            <div class="edit-banner">
-                <span class="edit-banner-text">${i18n.t('docker.edit_mode_banner') || 'Edit mode — click the eye icon to hide or show containers'}</span>
-                <button class="edit-banner-close" id="edit-banner-close">×</button>
             </div>` : '';
 
         let bodyHTML = '';
@@ -927,7 +699,9 @@ class DockerWidget extends HTMLElement {
                     <button class="retry-btn" id="retry-btn">${i18n.t('general.retry') || 'Retry'}</button>
                 </div>`;
 
-        } else if (visibleContainers.length === 0 && !this._editMode) {
+        } else if (visibleContainers.length === 0) {
+            // Either the host has none, or every one of them is hidden from the
+            // config screen. Both read the same from here.
             bodyHTML = `
                 <div class="state-view">
                     <div class="state-icon">${ICON.inbox}</div>
@@ -940,21 +714,19 @@ class DockerWidget extends HTMLElement {
             ).join('');
         }
 
+        const title = this._config.title || i18n.t('widget.docker.name');
+
         this.shadowRoot.innerHTML = `
             <style>${CSS}</style>
             <div class="widget-header">
                 <div class="widget-header__top">
                     <span class="widget-header__icon">${ICON.docker}</span>
-                    <span class="widget-header__title">${i18n.t('widget.docker.name')}</span>
+                    <span class="widget-header__title">${esc(title)}</span>
                     ${hostSelector}
-                    <button class="header-btn refresh-btn" id="refresh-btn" data-title="${i18n.t('docker.refresh') || 'Refresh'}">${ICON.refresh}</button>
-                    ${editBtn}
                 </div>
-                <div class="${summaryClass}" id="header-summary">${esc(summaryText)}</div>
+                ${errorLine}
             </div>
-            ${editBanner}
             <div class="widget-body" id="body">${bodyHTML}</div>
-            <icon-selection-modal></icon-selection-modal>
         `;
 
         this.bindEvents();
@@ -965,28 +737,16 @@ class DockerWidget extends HTMLElement {
         admin: boolean,
         containerCfg: Record<string, ContainerCfgEntry>
     ): string {
-        const sid      = shortId(c.ID);
-        const cfg      = containerCfg[sid] || {};
-        const isHidden = !!cfg.hidden;
-
-        // Eye cell (edit mode only)
-        const eyeCell = this._editMode ? `
-            <div class="cell-eye">
-                <button class="eye-btn${isHidden ? ' is-hidden' : ''}" data-eye-sid="${esc(sid)}"
-                    title="${isHidden ? (i18n.t('docker.container_hidden') || 'Hidden') : (i18n.t('docker.container_visible') || 'Visible')}">
-                    ${isHidden ? ICON.eyeOff : ICON.eye}
-                </button>
-            </div>` : '';
-
-        const rowClass = `container-row${this._editMode ? ' edit-mode' : ''}${isHidden ? ' is-hidden' : ''}`;
+        const sid = shortId(c.ID);
+        const cfg = containerCfg[sid] || {};
 
         // Icon
         const iconHTML = cfg.icon
             ? `<img class="icon-img" src="${esc(cfg.icon)}" alt="" loading="lazy" />`
-            : `<div class="icon-placeholder">${esc((c.Name.replace(/^\//, '')[0] || '?').toUpperCase())}</div>`;
+            : `<div class="icon-placeholder">${esc((containerName(c)[0] || '?').toUpperCase())}</div>`;
 
         // Name
-        const displayName = cfg.label || c.Name.replace(/^\//, '');
+        const displayName = cfg.label || containerName(c);
 
         // State
         const statusKey  = c.Status === 'running' ? 'running'
@@ -1011,7 +771,7 @@ class DockerWidget extends HTMLElement {
         if (admin) {
             const isPending = this._pendingAction.has(c.ID);
             const dis = isPending ? 'disabled' : '';
-            const isAgent = c.Name.replace(/^\//, '') === 'lastboard-agent';
+            const isAgent = containerName(c) === 'lastboard-agent';
             const stopDis = (isPending || isAgent) ? 'disabled' : '';
             if (c.Status === 'running') {
                 actionsHTML = `
@@ -1025,13 +785,12 @@ class DockerWidget extends HTMLElement {
         }
 
         return `
-        <div class="${rowClass}" data-container-id="${esc(c.ID)}">
-            ${eyeCell}
+        <div class="container-row" data-container-id="${esc(c.ID)}">
             <div class="cell-icon" data-sid="${esc(sid)}">
                 ${iconHTML}
             </div>
             <div class="cell-name">
-                <span class="container-name" data-cid="${esc(c.ID)}" data-sid="${esc(sid)}" data-label="${esc(displayName)}" title="${esc(displayName)}">${esc(displayName)}</span>
+                <span class="container-name" title="${esc(displayName)}">${esc(displayName)}</span>
             </div>
             <div class="cell-state">
                 <div class="state-badge ${statusKey}">
@@ -1057,26 +816,6 @@ class DockerWidget extends HTMLElement {
         // Retry
         root.getElementById('retry-btn')?.addEventListener('click', () => this.loadContainers());
 
-        // Refresh
-        const refreshBtn = root.getElementById('refresh-btn');
-        refreshBtn?.addEventListener('click', () => {
-            refreshBtn.classList.add('spinning');
-            refreshBtn.addEventListener('animationend', () => refreshBtn.classList.remove('spinning'), { once: true });
-            this.loadContainers();
-        });
-
-        // Edit mode toggle
-        root.getElementById('edit-mode-btn')?.addEventListener('click', () => {
-            this._editMode = !this._editMode;
-            this.render();
-        });
-
-        // Edit mode close banner
-        root.getElementById('edit-banner-close')?.addEventListener('click', () => {
-            this._editMode = false;
-            this.render();
-        });
-
         // Host selector
         const sel = root.getElementById('host-select') as any;
         if (sel) {
@@ -1084,44 +823,14 @@ class DockerWidget extends HTMLElement {
             sel.addEventListener('change', (e: CustomEvent) => this.onHostChange(e.detail));
         }
 
-        // Delegate clicks on body
+        // Start / stop / restart. Everything else a row can do is configuration,
+        // and configuration lives in the config modal.
         root.getElementById('body')?.addEventListener('click', (e: Event) => {
-            const target = e.target as Element;
-
-            // Eye buttons
-            const eyeBtn = target.closest('[data-eye-sid]') as HTMLElement | null;
-            if (eyeBtn?.dataset.eyeSid) {
-                this.toggleHidden(eyeBtn.dataset.eyeSid);
-                return;
-            }
-
-            // Action buttons
-            const btn = target.closest('.action-btn') as HTMLElement | null;
+            const btn = (e.target as Element).closest('.action-btn') as HTMLElement | null;
             if (btn && !btn.hasAttribute('disabled')) {
                 const action = btn.dataset.action;
                 const id = btn.dataset.id;
                 if (action && id) this.performAction(id, action);
-                return;
-            }
-
-            // Icon cell click → open icon picker
-            const iconCell = target.closest('.cell-icon') as HTMLElement | null;
-            if (iconCell?.dataset.sid) {
-                this.openIconPicker(iconCell.dataset.sid);
-                return;
-            }
-        });
-
-        // Double-click on name → inline edit
-        root.getElementById('body')?.addEventListener('dblclick', (e: Event) => {
-            const target = e.target as Element;
-            const nameEl = target.closest('.container-name') as HTMLElement | null;
-            if (nameEl?.dataset.cid) {
-                this.startLabelEdit(
-                    nameEl.dataset.cid,
-                    nameEl.dataset.sid || '',
-                    nameEl.dataset.label || nameEl.textContent || ''
-                );
             }
         });
     }
