@@ -76,7 +76,6 @@
   "docker.containers_desc": "Los contenedores sin marcar no se muestran en el widget.",
   "docker.search_containers": "Buscar un contenedor…",
   "docker.search_hosts": "Buscar un servidor…",
-  "docker.container_icon": "Elegir un icono",
   "docker.container_url": "Dirección que abre esta fila",
   "docker.container_url_none": "Sin puerto publicado",
   "docker.delete_host_confirm": "¿Estás seguro de que quieres eliminar este host?",

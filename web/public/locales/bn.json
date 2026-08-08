@@ -76,7 +76,6 @@
   "docker.containers_desc": "টিক না দেওয়া কনটেইনার উইজেটে দেখানো হয় না।",
   "docker.search_containers": "কনটেইনার খুঁজুন…",
   "docker.search_hosts": "হোস্ট খুঁজুন…",
-  "docker.container_icon": "একটি আইকন বাছুন",
   "docker.container_url": "এই সারি যে ঠিকানা খোলে",
   "docker.container_url_none": "কোনো প্রকাশিত পোর্ট নেই",
   "docker.delete_host_confirm": "আপনি কি নিশ্চিত যে আপনি এই হোস্টটি অপসারণ করতে চান?",

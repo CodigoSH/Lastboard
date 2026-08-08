@@ -76,7 +76,6 @@
   "docker.containers_desc": "Τα κοντέινερ χωρίς επιλογή παραμένουν κρυφά στο widget.",
   "docker.search_containers": "Αναζήτηση κοντέινερ…",
   "docker.search_hosts": "Αναζήτηση κόμβου…",
-  "docker.container_icon": "Επιλογή εικονιδίου",
   "docker.container_url": "Διεύθυνση που ανοίγει αυτή η γραμμή",
   "docker.container_url_none": "Καμία δημοσιευμένη θύρα",
   "docker.delete_host_confirm": "Είστε βέβαιοι ότι θέλετε να καταργήσετε αυτόν τον κεντρικό υπολογιστή;",

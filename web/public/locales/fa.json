@@ -76,7 +76,6 @@
   "docker.containers_desc": "کانتینرهای تیک‌نخورده در ابزارک پنهان می‌مانند.",
   "docker.search_containers": "جست‌وجوی کانتینر…",
   "docker.search_hosts": "جست‌وجوی میزبان…",
-  "docker.container_icon": "انتخاب نماد",
   "docker.container_url": "نشانی‌ای که این ردیف باز می‌کند",
   "docker.container_url_none": "پورتی منتشر نشده",
   "docker.delete_host_confirm": "آیا مطمئن هستید که می‌خواهید این میزبان را حذف کنید؟",

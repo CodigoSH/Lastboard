@@ -76,7 +76,6 @@
   "docker.containers_desc": "Niet-aangevinkte containers blijven verborgen in de widget.",
   "docker.search_containers": "Container zoeken…",
   "docker.search_hosts": "Host zoeken…",
-  "docker.container_icon": "Pictogram kiezen",
   "docker.container_url": "Adres dat deze rij opent",
   "docker.container_url_none": "Geen gepubliceerde poort",
   "docker.delete_host_confirm": "Weet u zeker dat u deze host wilt verwijderen?",

@@ -76,7 +76,6 @@
   "docker.containers_desc": "선택하지 않은 컨테이너는 위젯에 표시되지 않습니다.",
   "docker.search_containers": "컨테이너 검색…",
   "docker.search_hosts": "호스트 검색…",
-  "docker.container_icon": "아이콘 선택",
   "docker.container_url": "이 행이 여는 주소",
   "docker.container_url_none": "게시된 포트 없음",
   "docker.delete_host_confirm": "이 호스트를 제거하시겠습니까?",

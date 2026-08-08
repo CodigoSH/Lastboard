@@ -76,7 +76,6 @@
   "docker.containers_desc": "الحاويات غير المحددة تبقى مخفية في الأداة.",
   "docker.search_containers": "ابحث عن حاوية…",
   "docker.search_hosts": "ابحث عن خادم…",
-  "docker.container_icon": "اختر أيقونة",
   "docker.container_url": "العنوان الذي يفتحه هذا الصف",
   "docker.container_url_none": "لا يوجد منفذ منشور",
   "docker.delete_host_confirm": "هل أنت متأكد أنك تريد إزالة هذا المضيف؟",

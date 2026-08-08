@@ -13,9 +13,6 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
-import '../IconSelectionModal/IconSelectionModal';
-import { resolveIconUrl } from '../../../services/iconUrl';
-import { materializeIcon } from '../../../services/iconStore';
 import {
     type DockerContainer,
     type DockerHost,
@@ -563,19 +560,12 @@ class WidgetConfigModal extends HTMLElement {
                 const visible = row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true;
                 const label = row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '';
                 const url = row.querySelector<HTMLInputElement>('.docker-url')?.value.trim() || '';
-                const iconBtn = row.querySelector<HTMLElement>('.docker-icon-btn');
-
                 const entry: Record<string, any> = { ...(cfg[sid] || {}) };
                 if (label) entry.label = label; else delete entry.label;
                 // Only an explicit address is stored. An empty field means the
                 // widget keeps deriving one, so it follows the container.
                 if (url) entry.url = url; else delete entry.url;
                 if (visible) delete entry.hidden; else entry.hidden = true;
-                if (iconBtn?.dataset.icon) {
-                    entry.icon = iconBtn.dataset.icon;
-                    entry.iconName = iconBtn.dataset.iconName || '';
-                }
-
                 // Don't keep an entry that no longer says anything.
                 if (Object.keys(entry).length) cfg[sid] = entry;
                 else delete cfg[sid];
@@ -958,7 +948,6 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
                 <div id="docker-host-overlay" class="docker-overlay" style="display: none;"></div>
             </dialog>
-            <icon-selection-modal></icon-selection-modal>
         `;
 
         this.dialog = this.shadowRoot.querySelector('dialog');
@@ -1148,27 +1137,6 @@ class WidgetConfigModal extends HTMLElement {
         const search = root.getElementById('docker-search') as HTMLInputElement | null;
         search?.addEventListener('input', () => this.applyDockerFilters());
 
-        // Icon picking, the same modal the bookmark form uses.
-        root.getElementById('docker-containers')?.addEventListener('click', async (e: Event) => {
-            const btn = (e.target as Element).closest('.docker-icon-btn') as HTMLElement | null;
-            if (!btn) return;
-            e.preventDefault();
-
-            const modal = root.querySelector('icon-selection-modal') as any;
-            if (!modal) return;
-            const picked: string | null = await modal.open();
-            if (!picked) return;
-
-            // Show the icon straight away, then swap in the local copy once it
-            // has been stored — the download shouldn't make the click feel slow.
-            const remote = resolveIconUrl(picked);
-            btn.dataset.icon = remote;
-            btn.dataset.iconName = picked;
-            btn.innerHTML = `<img src="${esc(remote)}" alt="" />`;
-
-            const stored = await materializeIcon(remote);
-            btn.dataset.icon = stored;
-        });
 
         root.getElementById('docker-show-add-btn')?.addEventListener('click', () => {
             this.showDockerHostForm(null);
@@ -1593,11 +1561,6 @@ class WidgetConfigModal extends HTMLElement {
         const sid = shortId(c.ID);
         const entry = cfg[sid] || {};
         const name = containerName(c);
-        const icon = entry.icon || '';
-
-        const preview = icon
-            ? `<img src="${esc(icon)}" alt="" />`
-            : `<span class="docker-icon-placeholder">${esc((name[0] || '?').toUpperCase())}</span>`;
 
         // The derived address is the placeholder, not the value: leaving the
         // field empty means "use whatever you worked out", so a container that
@@ -1609,9 +1572,6 @@ class WidgetConfigModal extends HTMLElement {
                 <input type="checkbox" class="docker-container" data-sid="${esc(sid)}"
                        ${entry.hidden ? '' : 'checked'}
                        title="${esc(i18n.t('docker.container_visible'))}" />
-                <button type="button" class="docker-icon-btn" data-sid="${esc(sid)}"
-                        data-icon="${esc(icon)}" data-icon-name="${esc(entry.iconName || '')}"
-                        title="${esc(i18n.t('docker.container_icon'))}">${preview}</button>
                 <input type="text" class="docker-label" data-sid="${esc(sid)}"
                        value="${esc(entry.label || '')}" placeholder="${esc(name)}" />
                 <input type="text" class="docker-url" data-sid="${esc(sid)}"

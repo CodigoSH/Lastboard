@@ -76,7 +76,6 @@
   "docker.containers_desc": "Niezaznaczone kontenery pozostają ukryte w widżecie.",
   "docker.search_containers": "Szukaj kontenera…",
   "docker.search_hosts": "Szukaj hosta…",
-  "docker.container_icon": "Wybierz ikonę",
   "docker.container_url": "Adres otwierany przez ten wiersz",
   "docker.container_url_none": "Brak opublikowanego portu",
   "docker.delete_host_confirm": "Czy na pewno chcesz usunąć ten host?",

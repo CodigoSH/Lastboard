@@ -93,13 +93,14 @@ With more than one host configured, the settings screen splits in two: hosts on 
 Pick a host on the left and its containers appear on the right, with a search box for long lists. For each one you can:
 
 - **Show or hide it** with the checkbox. Unchecked containers stay out of the widget.
-- **Set an icon**, from the same picker used for bookmarks.
 - **Rename it**, if the container name isn't what you want to read on your dashboard.
 - **Set the address it opens**. See [Opening a container's service](#opening-a-containers-service).
 
 Hosts that don't answer say so in their own section, and their containers keep whatever you had already set for them.
 
 **The widget shows what you ticked, from every host at once** — it is one list of the containers you care about, not one host at a time. With more than one host configured, each row names the host it runs on, under the image.
+
+Each row opens with a coloured dot for the container's state — the same dot the Monitoring widget uses for a service, so a board with both reads one way rather than two. Green is running, grey is stopped, amber is paused and blue is restarting; hovering it spells the state out.
 
 ### When a host stops answering
 

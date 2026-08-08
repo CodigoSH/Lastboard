@@ -146,10 +146,13 @@ const CSS = `
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* ── Container rows — CSS Grid layout ── */
+/* Same shape as the monitor widget's rows: a dot for state, then the name.
+   The two sit side by side on a dashboard, so they are read together. */
 .container-row {
     display: grid;
-    grid-template-columns: 36px minmax(0, 1.5fr) 140px minmax(0, 2fr) 110px 90px;
+    grid-template-columns: 8px minmax(0, 1.5fr) 130px minmax(0, 2fr) 110px 90px;
     align-items: center;
+    gap: 0 8px;
     padding: 7px 10px;
     border-bottom: 1px solid rgba(128,128,128,0.08);
     transition: background 0.15s, opacity 0.2s;
@@ -158,28 +161,6 @@ const CSS = `
 }
 .container-row:last-child { border-bottom: none; }
 .container-row:hover { background: var(--surface-hover, rgba(128,128,128,0.06)); }
-
-/* ICON cell — display only. Choosing the icon lives in the config modal, like
-   every other per-container setting. */
-.cell-icon {
-    display: flex; align-items: center; justify-content: flex-start;
-    padding-right: 6px;
-}
-.icon-img {
-    width: 28px; height: 28px;
-    border-radius: 6px; object-fit: contain;
-    background: rgba(128,128,128,0.05);
-}
-.icon-placeholder {
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    background: rgba(var(--accent-rgb, 37,99,235), 0.15);
-    border: 1px solid rgba(var(--accent-rgb, 37,99,235), 0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 600; color: var(--accent);
-    text-transform: uppercase;
-    user-select: none;
-}
 
 /* NAME cell */
 .cell-name { min-width: 0; padding-right: 8px; position: relative; overflow: hidden; }
@@ -197,31 +178,25 @@ const CSS = `
 }
 
 /* STATE cell */
-.cell-state {
-    display: flex; flex-direction: column; gap: 2px;
-    padding-right: 8px; min-width: 0;
-}
-.state-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
-    text-transform: uppercase; padding: 2px 7px;
-    border-radius: 100px;
-    width: fit-content; max-width: 100%;
-    white-space: nowrap;
-}
+/* STATE — the same 8px dot the monitor widget uses, so a glance down a board
+   with both widgets reads one way and not two. Docker has four states where
+   monitoring has two, and the colour carries all of them; what the badge used
+   to add was the word, not the state. Its title attribute still spells it out
+   for the two that aren't obvious. */
 .state-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%; flex-shrink: 0;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
 }
-.state-badge.running  { color: var(--success-color); background: rgba(var(--success-rgb,22,163,74),0.12); }
-.state-badge.stopped  { color: var(--text-dim); background: rgba(128,128,128,0.1); }
-.state-badge.paused   { color: var(--warning-color); background: rgba(var(--warning-rgb,202,138,4),0.12); }
-.state-badge.restarting { color: var(--accent); background: rgba(var(--accent-rgb,37,99,235),0.12); }
-.state-dot.running  { background: var(--success-color); animation: pulse 2.5s ease-in-out infinite; }
+.state-dot.running  { background: var(--success-color); }
 .state-dot.stopped  { background: var(--text-dim); opacity: 0.5; }
 .state-dot.paused   { background: var(--warning-color); }
-.state-dot.restarting { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.state-dot.restarting { background: var(--accent); }
+
+.cell-state {
+    min-width: 0;
+    padding-right: 8px;
+}
 .stats-text {
     font-family: var(--font-mono); font-size: 10px;
     color: var(--text-dim); opacity: 0.7;
@@ -250,7 +225,7 @@ const CSS = `
 /* A container whose host stopped answering. Everything on the row is a memory
    of the last successful listing, so it reads as one — except the line that
    says why, which does not fade. */
-.container-row.is-stale .cell-icon,
+.container-row.is-stale .state-dot,
 .container-row.is-stale .cell-name,
 .container-row.is-stale .cell-state,
 .container-row.is-stale .cell-ports,
@@ -807,11 +782,6 @@ class DockerWidget extends HTMLElement {
         // but nothing on it pretends to be current any more.
         const stale = state.failed;
 
-        // Icon
-        const iconHTML = cfg.icon
-            ? `<img class="icon-img" src="${esc(cfg.icon)}" alt="" loading="lazy" />`
-            : `<div class="icon-placeholder">${esc((containerName(c)[0] || '?').toUpperCase())}</div>`;
-
         // Name. It becomes a link when we know where the container answers —
         // either because it says so, because a port is published, or because
         // someone typed an address in the config. Without that it stays text:
@@ -841,10 +811,8 @@ class DockerWidget extends HTMLElement {
         // Ports
         const portsHTML = this.renderPorts(c.Ports || []);
 
-        // The host goes under the image, the way the resource usage goes under
-        // the state: that cell already forces the row to two lines, so a second
-        // line here is free. When the host stops answering this is where it
-        // says so — on the row of the container it affects.
+        // The host goes under the image. When the host stops answering this is
+        // where it says so — on the row of the container it affects.
         const hostLine = stale
             ? `<span class="container-host is-down">${esc(i18n.t('docker.host_unreachable'))}</span>`
             : showHost
@@ -872,15 +840,9 @@ class DockerWidget extends HTMLElement {
         return `
         <div class="container-row${stale ? ' is-stale' : ''}"
              data-container-id="${esc(c.ID)}" data-host-id="${esc(state.host.id)}">
-            <div class="cell-icon" data-sid="${esc(sid)}">
-                ${iconHTML}
-            </div>
+            <span class="state-dot ${statusKey}" title="${esc(stateLabel)}"></span>
             <div class="cell-name">${nameHTML}</div>
             <div class="cell-state">
-                <div class="state-badge ${statusKey}">
-                    <div class="state-dot ${statusKey}"></div>
-                    ${esc(stateLabel)}
-                </div>
                 <span class="stats-text" data-stats-id="${esc(c.ID)}">${esc(statsText)}</span>
             </div>
             <div class="cell-image">

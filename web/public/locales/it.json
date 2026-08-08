@@ -76,7 +76,6 @@
   "docker.containers_desc": "I container non selezionati restano nascosti nel widget.",
   "docker.search_containers": "Cerca un container…",
   "docker.search_hosts": "Cerca un host…",
-  "docker.container_icon": "Scegli un'icona",
   "docker.container_url": "Indirizzo aperto da questa riga",
   "docker.container_url_none": "Nessuna porta pubblicata",
   "docker.delete_host_confirm": "Sei sicuro di voler rimuovere questo host?",

@@ -34,11 +34,15 @@ export interface DockerContainer {
     UrlHint?: string;
 }
 
-/** Per-container presentation, keyed by short id in the widget's content. */
+/**
+ * Per-container presentation, keyed by short id in the widget's content.
+ *
+ * Rows used to carry a chosen icon; state is a dot now, the same one the
+ * monitor widget uses, so there was nothing left for an icon to be. Older
+ * configs may still hold the fields — unread keys do no harm.
+ */
 export interface ContainerCfgEntry {
     label?: string;
-    icon?: string;
-    iconName?: string;
     hidden?: boolean;
     /** Where clicking this row goes. Empty means the row isn't a link. */
     url?: string;

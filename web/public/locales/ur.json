@@ -76,7 +76,6 @@
   "docker.containers_desc": "بغیر نشان والے کنٹینرز ویجٹ میں پوشیدہ رہتے ہیں۔",
   "docker.search_containers": "کنٹینر تلاش کریں…",
   "docker.search_hosts": "ہوسٹ تلاش کریں…",
-  "docker.container_icon": "آئیکن منتخب کریں",
   "docker.container_url": "وہ پتہ جو یہ قطار کھولتی ہے",
   "docker.container_url_none": "کوئی شائع شدہ پورٹ نہیں",
   "docker.delete_host_confirm": "کیا آپ واقعی اس ہوسٹ کو ہٹانا چاہتے ہیں؟",
