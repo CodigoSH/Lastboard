@@ -566,5 +566,13 @@
   "widget.api.label.state": "Estado",
   "widget.api.label.pending": "Pendentes",
   "widget.api.label.total": "Total",
-  "widget.api.label.episodes": "Episódios"
+  "widget.api.label.episodes": "Episódios",
+  "settings.icons_local": "Ícones guardados consigo",
+  "settings.icons_local_desc": "A sua instância guarda uma cópia de cada ícone, por isso abrir o painel não revela a ninguém que serviços utiliza.",
+  "settings.icons_pending": "Ícones que ainda vêm de fora: {count}",
+  "settings.icons_pending_desc": "São de marcadores criados antes de os ícones serem guardados localmente. São obtidos ao arrancar o servidor; guarde-os agora se isso não foi possível.",
+  "settings.icons_storing": "A guardar…",
+  "settings.icons_stored": "{count} ícones guardados",
+  "settings.icons_stored_partial": "{stored} guardados, {failed} inacessíveis",
+  "action.store_icons": "Guardar agora"
 }

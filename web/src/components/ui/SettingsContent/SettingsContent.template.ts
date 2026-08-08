@@ -409,8 +409,40 @@ export const notificationsTemplate = (monitoring: {
     </div>
 `;
 
-export const dataTemplate = () => `
+/**
+ * Icons that are still fetched from somewhere else.
+ *
+ * Shown only when there are any. Boards are brought in automatically when the
+ * server starts, so on a healthy install this card never appears; it is here
+ * for the upgrade that happened while the machine had no connection, and to
+ * answer a question that was previously unanswerable — whether your dashboard
+ * still calls out when you open it.
+ */
+const pendingIconsCard = (pending: number, busy: boolean) => {
+    if (pending <= 0) return '';
+    return `
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.icons_local')}</h3>
+            <p class="settings-content__text-dim" style="font-size: 13px; margin: -6px 0 16px;">${i18n.t('settings.icons_local_desc')}</p>
+            <div class="settings-content__action-group">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.icons_pending').replace('{count}', String(pending))}</h3>
+                        <p>${i18n.t('settings.icons_pending_desc')}</p>
+                    </div>
+                    <app-button variant="primary" data-action="localize-icons" ${busy ? 'disabled' : ''}>
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        ${busy ? i18n.t('settings.icons_storing') : i18n.t('action.store_icons')}
+                    </app-button>
+                </div>
+            </div>
+        </div>`;
+};
+
+export const dataTemplate = (pendingIcons = 0, storingIcons = false) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
+
+        ${pendingIconsCard(pendingIcons, storingIcons)}
 
         <!-- Full backup (Lastboard-only, restore is destructive) -->
         <div class="bento-card">

@@ -566,5 +566,13 @@
   "widget.api.label.state": "State",
   "widget.api.label.pending": "Pending",
   "widget.api.label.total": "Total",
-  "widget.api.label.episodes": "Episodes"
+  "widget.api.label.episodes": "Episodes",
+  "settings.icons_local": "Icons stored with you",
+  "settings.icons_local_desc": "Your instance keeps a copy of every icon, so opening your dashboard tells no one which services you run.",
+  "settings.icons_pending": "Icons still coming from elsewhere: {count}",
+  "settings.icons_pending_desc": "These are from bookmarks made before icons were stored locally. They are brought in when the server starts; store them now if that could not happen.",
+  "settings.icons_storing": "Storing…",
+  "settings.icons_stored": "{count} icons stored",
+  "settings.icons_stored_partial": "{stored} stored, {failed} could not be reached",
+  "action.store_icons": "Store them now"
 }

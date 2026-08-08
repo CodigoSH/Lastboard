@@ -566,5 +566,13 @@
   "widget.api.label.state": "অবস্থা",
   "widget.api.label.pending": "অপেক্ষমাণ",
   "widget.api.label.total": "মোট",
-  "widget.api.label.episodes": "পর্ব"
+  "widget.api.label.episodes": "পর্ব",
+  "settings.icons_local": "আইকন আপনার কাছেই সংরক্ষিত",
+  "settings.icons_local_desc": "আপনার ইনস্ট্যান্স প্রতিটি আইকনের একটি অনুলিপি রাখে, তাই ড্যাশবোর্ড খুললে কেউ জানতে পারে না আপনি কোন সেবাগুলি চালান।",
+  "settings.icons_pending": "এখনও বাইরে থেকে আসা আইকন: {count}",
+  "settings.icons_pending_desc": "এগুলি স্থানীয় সংরক্ষণের আগে তৈরি বুকমার্কের। সার্ভার চালু হলে এগুলি আনা হয়; তা না হয়ে থাকলে এখনই সংরক্ষণ করুন।",
+  "settings.icons_storing": "সংরক্ষণ করা হচ্ছে…",
+  "settings.icons_stored": "{count}টি আইকন সংরক্ষিত হয়েছে",
+  "settings.icons_stored_partial": "{stored}টি সংরক্ষিত, {failed}টিতে পৌঁছানো যায়নি",
+  "action.store_icons": "এখনই সংরক্ষণ করুন"
 }

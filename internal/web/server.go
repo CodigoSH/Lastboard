@@ -246,6 +246,10 @@ func (s *Server) routes() {
 	// Icons, kept locally so the dashboard doesn't ask a CDN on every paint.
 	iconHandler := api.NewIconHandler(s.DB)
 	s.Router.Handle("POST /api/icons", protect(http.HandlerFunc(iconHandler.Store)))
+	// More specific than the catch-all below it, which ServeMux honours: these
+	// two are about the board's icons, not about serving one.
+	s.Router.Handle("GET /api/icons/pending", protect(http.HandlerFunc(iconHandler.PendingStatus)))
+	s.Router.Handle("POST /api/icons/localize", protect(http.HandlerFunc(iconHandler.Localize)))
 	s.Router.Handle("GET /api/icons/", protect(http.HandlerFunc(iconHandler.Serve)))
 
 	// Generic API widget (server-side fetch + field extraction)

@@ -14,6 +14,7 @@ import (
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
 )
 
 func main() {
@@ -80,6 +81,12 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+
+	// Boards built before icons were stored locally still point at the CDN
+	// they were made with. Bring those home, off the critical path: it is
+	// network-bound work and nobody should wait on a third party to reach
+	// their own dashboard.
+	go api.RunIconMigration(db.DB)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)

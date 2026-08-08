@@ -566,5 +566,13 @@
   "widget.api.label.state": "स्थिति",
   "widget.api.label.pending": "लंबित",
   "widget.api.label.total": "कुल",
-  "widget.api.label.episodes": "एपिसोड"
+  "widget.api.label.episodes": "एपिसोड",
+  "settings.icons_local": "आइकन आपके पास संग्रहित",
+  "settings.icons_local_desc": "आपका इंस्टेंस हर आइकन की एक प्रति रखता है, इसलिए डैशबोर्ड खोलने पर किसी को पता नहीं चलता कि आप कौन-सी सेवाएँ चलाते हैं।",
+  "settings.icons_pending": "अब भी बाहर से आने वाले आइकन: {count}",
+  "settings.icons_pending_desc": "ये उन बुकमार्क के हैं जो स्थानीय संग्रहण से पहले बने थे। सर्वर शुरू होने पर ये ले लिए जाते हैं; अगर ऐसा न हो सका हो तो अभी सहेजें।",
+  "settings.icons_storing": "सहेजा जा रहा है…",
+  "settings.icons_stored": "{count} आइकन सहेजे गए",
+  "settings.icons_stored_partial": "{stored} सहेजे गए, {failed} तक पहुँच नहीं हो सकी",
+  "action.store_icons": "अभी सहेजें"
 }

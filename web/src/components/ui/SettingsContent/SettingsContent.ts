@@ -17,6 +17,9 @@ import css from './SettingsContent.css' with { type: 'text' };
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
     private users: User[] = [];
+    /** Bookmarks of mine whose icon still comes from somewhere else. */
+    private pendingIcons = 0;
+    private storingIcons = false;
     private importFormat = 'native';
     private monitoring: {
         mode: string; interval_sec: number; alerts_enabled: boolean;
@@ -110,6 +113,9 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'clear-monitor-data':
                     this.clearMonitorData();
+                    break;
+                case 'localize-icons':
+                    this.localizeIcons();
                     break;
                 case 'test-notify':
                     this.testNotify();
@@ -225,6 +231,9 @@ class SettingsContent extends HTMLElement {
         if (section === 'monitoring' || section === 'notifications') {
             this.fetchMonitoring();
         }
+        if (section === 'data') {
+            this.fetchPendingIcons();
+        }
         if (section === 'about') {
             // No longer checking automatically here. Using background + manual button.
         }
@@ -306,6 +315,65 @@ class SettingsContent extends HTMLElement {
         });
     }
 
+    /**
+     * Reads how many of my bookmarks still fetch their icon from elsewhere.
+     *
+     * A failure here is silent on purpose: this only decides whether an
+     * optional card is drawn, and an error toast about it would be noise on a
+     * settings screen the user opened to do something else.
+     */
+    async fetchPendingIcons() {
+        try {
+            const r = await apiService.get<{ pending: number }>('/api/icons/pending');
+            const before = this.pendingIcons;
+            this.pendingIcons = r?.pending ?? 0;
+            if (before !== this.pendingIcons) this.render();
+        } catch {
+            this.pendingIcons = 0;
+        }
+    }
+
+    /**
+     * Brings the remaining icons in, on demand.
+     *
+     * The server does this by itself when it starts, so pressing this means
+     * that pass could not finish — no connection at the time, or a provider
+     * that was down. It calls the same routine, and reports what is left
+     * rather than claiming success it can't verify.
+     */
+    async localizeIcons() {
+        if (this.storingIcons) return;
+        this.storingIcons = true;
+        this.render();
+
+        try {
+            const r = await apiService.post<{ stored: number; failed: number; pending: number }>(
+                '/api/icons/localize', {},
+            );
+            this.pendingIcons = r?.pending ?? 0;
+
+            if (window.notifier) {
+                if (r?.failed) {
+                    window.notifier.show(
+                        i18n.t('settings.icons_stored_partial')
+                            .replace('{stored}', String(r.stored))
+                            .replace('{failed}', String(r.failed)),
+                        'error',
+                    );
+                } else {
+                    window.notifier.show(
+                        i18n.t('settings.icons_stored').replace('{count}', String(r?.stored ?? 0)),
+                    );
+                }
+            }
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+        } finally {
+            this.storingIcons = false;
+            this.render();
+        }
+    }
+
     async fetchMonitoring() {
         try {
             this.monitoring = await apiService.get<typeof this.monitoring>('/api/monitor/settings');
@@ -351,6 +419,9 @@ class SettingsContent extends HTMLElement {
             }
             if (newValue === 'monitoring' || newValue === 'notifications') {
                 this.fetchMonitoring();
+            }
+            if (newValue === 'data') {
+                this.fetchPendingIcons();
             }
             if (newValue === 'about') {
                 this.checkForUpdates();
@@ -770,7 +841,7 @@ class SettingsContent extends HTMLElement {
                 return advancedTemplate();
 
             case 'data':
-                return dataTemplate();
+                return dataTemplate(this.pendingIcons, this.storingIcons);
 
             case 'monitoring':
                 return monitoringTemplate(this.monitoring);

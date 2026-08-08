@@ -566,5 +566,13 @@
   "widget.api.label.state": "Status",
   "widget.api.label.pending": "Menunggu",
   "widget.api.label.total": "Total",
-  "widget.api.label.episodes": "Episode"
+  "widget.api.label.episodes": "Episode",
+  "settings.icons_local": "Ikon tersimpan di tempat Anda",
+  "settings.icons_local_desc": "Instansi Anda menyimpan salinan setiap ikon, sehingga membuka dasbor tidak memberi tahu siapa pun layanan apa yang Anda jalankan.",
+  "settings.icons_pending": "Ikon yang masih datang dari luar: {count}",
+  "settings.icons_pending_desc": "Ikon ini berasal dari markah yang dibuat sebelum penyimpanan lokal. Ikon diambil saat server dimulai; simpan sekarang jika hal itu tidak sempat terjadi.",
+  "settings.icons_storing": "Menyimpan…",
+  "settings.icons_stored": "{count} ikon tersimpan",
+  "settings.icons_stored_partial": "{stored} tersimpan, {failed} tidak dapat dijangkau",
+  "action.store_icons": "Simpan sekarang"
 }

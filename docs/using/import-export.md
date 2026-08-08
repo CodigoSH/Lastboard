@@ -22,7 +22,7 @@ Saves or restores **everything** — every user, every dashboard, all settings, 
 - **Backup** — download a complete copy of your instance.
 - **Restore** — upload a backup to bring an instance back to that exact state.
 
-Because the icons travel inside the file, restoring on a machine with no internet still gives you the board exactly as you left it. Backups taken before icons were stored locally restore fine; their bookmarks simply keep the URLs they were saved with.
+Because the icons travel inside the file, restoring on a machine with no internet still gives you the board exactly as you left it. Backups taken before icons were stored locally restore fine too: their bookmarks come back with the URLs they were saved with, and the next restart stores those pictures for you.
 
 > **Warning:** Restoring **overwrites all current data** and cannot be undone. Use it for recovery, or to move a full setup to another Lastboard instance — not to merge dashboards.
 

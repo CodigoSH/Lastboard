@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // Icon storage.
@@ -253,6 +255,62 @@ func (h *IconHandler) Store(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, map[string]string{"url": "/api/icons/" + hash, "hash": hash})
+}
+
+// PendingStatus answers how many bookmarks still fetch their icon from
+// somewhere else, so settings can say whether the board is done rather than
+// leaving you to guess.
+//
+// GET /api/icons/pending
+func (h *IconHandler) PendingStatus(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.currentUser(w, r)
+	if !ok {
+		return
+	}
+	pending, err := CountPendingIcons(h.DB, &userID)
+	if err != nil {
+		http.Error(w, "Could not read bookmarks", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]int{"pending": pending})
+}
+
+// currentUser resolves the caller's id, which is what scopes both the count
+// and the action to their own board.
+func (h *IconHandler) currentUser(w http.ResponseWriter, r *http.Request) (int, bool) {
+	username := middleware.GetUserFromContext(r)
+	if username == "" {
+		http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
+		return 0, false
+	}
+	var id int
+	if err := h.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&id); err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return 0, false
+	}
+	return id, true
+}
+
+// Localize brings the remaining remote icons in on demand.
+//
+// The startup pass already does this, so this is for the board that was
+// upgraded while the machine had no connection, or the icon whose host was
+// briefly down. It calls the very same routine — the migration has one
+// implementation, exposed at two moments — and answers with what is left, so
+// the button can report the result instead of claiming success.
+//
+// POST /api/icons/localize
+func (h *IconHandler) Localize(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.currentUser(w, r)
+	if !ok {
+		return
+	}
+	done, failed := LocalizeIcons(h.DB, h, &userID)
+	pending, err := CountPendingIcons(h.DB, &userID)
+	if err != nil {
+		pending = failed
+	}
+	writeJSON(w, map[string]int{"stored": done, "failed": failed, "pending": pending})
 }
 
 // Serve returns a stored icon.

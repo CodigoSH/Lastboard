@@ -566,5 +566,13 @@
   "widget.api.label.state": "状態",
   "widget.api.label.pending": "保留中",
   "widget.api.label.total": "合計",
-  "widget.api.label.episodes": "エピソード"
+  "widget.api.label.episodes": "エピソード",
+  "settings.icons_local": "アイコンは手元に保存",
+  "settings.icons_local_desc": "アイコンの複製をこのインスタンスが保持するため、ダッシュボードを開いても稼働中のサービスが外部に伝わりません。",
+  "settings.icons_pending": "まだ外部から読み込まれているアイコン: {count}",
+  "settings.icons_pending_desc": "ローカル保存より前に作成したブックマークのものです。サーバー起動時に取得されますが、できなかった場合は今すぐ保存してください。",
+  "settings.icons_storing": "保存中…",
+  "settings.icons_stored": "{count} 件のアイコンを保存しました",
+  "settings.icons_stored_partial": "{stored} 件を保存、{failed} 件は取得できませんでした",
+  "action.store_icons": "今すぐ保存"
 }

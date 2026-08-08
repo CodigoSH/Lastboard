@@ -566,5 +566,13 @@
   "widget.api.label.state": "Zustand",
   "widget.api.label.pending": "Ausstehend",
   "widget.api.label.total": "Gesamt",
-  "widget.api.label.episodes": "Folgen"
+  "widget.api.label.episodes": "Folgen",
+  "settings.icons_local": "Symbole bei dir gespeichert",
+  "settings.icons_local_desc": "Deine Instanz behält eine Kopie jedes Symbols, sodass das Öffnen deines Dashboards niemandem verrät, welche Dienste du betreibst.",
+  "settings.icons_pending": "Symbole, die noch von außerhalb kommen: {count}",
+  "settings.icons_pending_desc": "Sie stammen aus Lesezeichen von vor der lokalen Speicherung. Beim Start des Servers werden sie geholt; speichere sie jetzt, falls das nicht möglich war.",
+  "settings.icons_storing": "Wird gespeichert…",
+  "settings.icons_stored": "{count} Symbole gespeichert",
+  "settings.icons_stored_partial": "{stored} gespeichert, {failed} nicht erreichbar",
+  "action.store_icons": "Jetzt speichern"
 }

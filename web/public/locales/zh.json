@@ -566,5 +566,13 @@
   "widget.api.label.state": "状态",
   "widget.api.label.pending": "待处理",
   "widget.api.label.total": "总计",
-  "widget.api.label.episodes": "剧集"
+  "widget.api.label.episodes": "剧集",
+  "settings.icons_local": "图标保存在你这里",
+  "settings.icons_local_desc": "你的实例会保留每个图标的副本，因此打开面板不会向任何人透露你运行了哪些服务。",
+  "settings.icons_pending": "仍来自外部的图标：{count}",
+  "settings.icons_pending_desc": "它们来自本地保存之前创建的书签。服务器启动时会自动取回；如果当时无法完成，现在保存即可。",
+  "settings.icons_storing": "正在保存…",
+  "settings.icons_stored": "已保存 {count} 个图标",
+  "settings.icons_stored_partial": "已保存 {stored} 个，{failed} 个无法获取",
+  "action.store_icons": "立即保存"
 }

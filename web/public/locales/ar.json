@@ -566,5 +566,13 @@
   "widget.api.label.state": "الحالة",
   "widget.api.label.pending": "قيد الانتظار",
   "widget.api.label.total": "الإجمالي",
-  "widget.api.label.episodes": "الحلقات"
+  "widget.api.label.episodes": "الحلقات",
+  "settings.icons_local": "الأيقونات محفوظة لديك",
+  "settings.icons_local_desc": "تحتفظ نسختك بنسخة من كل أيقونة، لذا فإن فتح لوحتك لا يُخبر أحدًا بالخدمات التي تشغّلها.",
+  "settings.icons_pending": "الأيقونات التي ما زالت تأتي من الخارج: {count}",
+  "settings.icons_pending_desc": "هذه من علامات مرجعية أُنشئت قبل الحفظ المحلي. تُجلب عند بدء تشغيل الخادم؛ احفظها الآن إن تعذّر ذلك.",
+  "settings.icons_storing": "جارٍ الحفظ…",
+  "settings.icons_stored": "تم حفظ {count} أيقونة",
+  "settings.icons_stored_partial": "حُفظت {stored}، وتعذّر الوصول إلى {failed}",
+  "action.store_icons": "احفظها الآن"
 }

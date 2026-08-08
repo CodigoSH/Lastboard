@@ -566,5 +566,13 @@
   "widget.api.label.state": "Stan",
   "widget.api.label.pending": "Oczekujące",
   "widget.api.label.total": "Łącznie",
-  "widget.api.label.episodes": "Odcinki"
+  "widget.api.label.episodes": "Odcinki",
+  "settings.icons_local": "Ikony przechowywane u ciebie",
+  "settings.icons_local_desc": "Twoja instancja trzyma kopię każdej ikony, więc otwarcie pulpitu nikomu nie zdradza, jakie usługi prowadzisz.",
+  "settings.icons_pending": "Ikony wciąż pobierane z zewnątrz: {count}",
+  "settings.icons_pending_desc": "Pochodzą z zakładek sprzed lokalnego przechowywania. Są pobierane przy starcie serwera; zapisz je teraz, jeśli to się nie udało.",
+  "settings.icons_storing": "Zapisywanie…",
+  "settings.icons_stored": "Zapisano {count} ikon",
+  "settings.icons_stored_partial": "Zapisano {stored}, nie udało się pobrać {failed}",
+  "action.store_icons": "Zapisz teraz"
 }

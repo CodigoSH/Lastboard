@@ -566,5 +566,13 @@
   "widget.api.label.state": "Stato",
   "widget.api.label.pending": "In sospeso",
   "widget.api.label.total": "Totale",
-  "widget.api.label.episodes": "Episodi"
+  "widget.api.label.episodes": "Episodi",
+  "settings.icons_local": "Icone conservate da te",
+  "settings.icons_local_desc": "La tua istanza tiene una copia di ogni icona, così aprire la bacheca non rivela a nessuno quali servizi usi.",
+  "settings.icons_pending": "Icone che arrivano ancora dall'esterno: {count}",
+  "settings.icons_pending_desc": "Vengono da segnalibri creati prima che le icone fossero salvate in locale. Vengono recuperate all'avvio del server; salvale ora se non è stato possibile.",
+  "settings.icons_storing": "Salvataggio…",
+  "settings.icons_stored": "{count} icone salvate",
+  "settings.icons_stored_partial": "{stored} salvate, {failed} non raggiungibili",
+  "action.store_icons": "Salvale ora"
 }

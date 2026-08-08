@@ -566,5 +566,13 @@
   "widget.api.label.state": "وضعیت",
   "widget.api.label.pending": "در انتظار",
   "widget.api.label.total": "مجموع",
-  "widget.api.label.episodes": "قسمت‌ها"
+  "widget.api.label.episodes": "قسمت‌ها",
+  "settings.icons_local": "نمادها نزد شما ذخیره می‌شوند",
+  "settings.icons_local_desc": "نمونهٔ شما از هر نماد یک رونوشت نگه می‌دارد، بنابراین باز کردن داشبورد به کسی نمی‌گوید چه سرویس‌هایی دارید.",
+  "settings.icons_pending": "نمادهایی که هنوز از بیرون می‌آیند: {count}",
+  "settings.icons_pending_desc": "این‌ها از نشانک‌هایی هستند که پیش از ذخیرهٔ محلی ساخته شده‌اند. هنگام آغاز سرور دریافت می‌شوند؛ اگر آن زمان ممکن نشد، اکنون ذخیره کنید.",
+  "settings.icons_storing": "در حال ذخیره…",
+  "settings.icons_stored": "{count} نماد ذخیره شد",
+  "settings.icons_stored_partial": "{stored} ذخیره شد، {failed} در دسترس نبود",
+  "action.store_icons": "همین حالا ذخیره کن"
 }

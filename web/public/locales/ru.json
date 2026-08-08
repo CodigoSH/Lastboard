@@ -566,5 +566,13 @@
   "widget.api.label.state": "Состояние",
   "widget.api.label.pending": "В ожидании",
   "widget.api.label.total": "Всего",
-  "widget.api.label.episodes": "Эпизоды"
+  "widget.api.label.episodes": "Эпизоды",
+  "settings.icons_local": "Значки хранятся у вас",
+  "settings.icons_local_desc": "Ваш экземпляр хранит копию каждого значка, поэтому открытие панели никому не сообщает, какие службы вы используете.",
+  "settings.icons_pending": "Значки, всё ещё берущиеся извне: {count}",
+  "settings.icons_pending_desc": "Они из закладок, созданных до локального хранения. Они загружаются при запуске сервера; сохраните их сейчас, если это не удалось.",
+  "settings.icons_storing": "Сохранение…",
+  "settings.icons_stored": "Сохранено значков: {count}",
+  "settings.icons_stored_partial": "Сохранено {stored}, недоступно {failed}",
+  "action.store_icons": "Сохранить сейчас"
 }

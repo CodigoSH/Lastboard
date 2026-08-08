@@ -566,5 +566,13 @@
   "widget.api.label.state": "Status",
   "widget.api.label.pending": "In afwachting",
   "widget.api.label.total": "Totaal",
-  "widget.api.label.episodes": "Afleveringen"
+  "widget.api.label.episodes": "Afleveringen",
+  "settings.icons_local": "Pictogrammen bij jou opgeslagen",
+  "settings.icons_local_desc": "Je instantie bewaart een kopie van elk pictogram, dus het openen van je dashboard verklapt aan niemand welke diensten je draait.",
+  "settings.icons_pending": "Pictogrammen die nog van elders komen: {count}",
+  "settings.icons_pending_desc": "Ze horen bij bladwijzers van vóór de lokale opslag. Ze worden opgehaald bij het starten van de server; sla ze nu op als dat niet lukte.",
+  "settings.icons_storing": "Bezig met opslaan…",
+  "settings.icons_stored": "{count} pictogrammen opgeslagen",
+  "settings.icons_stored_partial": "{stored} opgeslagen, {failed} onbereikbaar",
+  "action.store_icons": "Nu opslaan"
 }

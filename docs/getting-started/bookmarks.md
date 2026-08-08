@@ -38,7 +38,13 @@ This matters for three situations:
 
 Identical icons are stored once no matter how many bookmarks use them, and an icon stops being kept when nothing points at it any more. Your icons travel inside backups, so restoring on a machine with no internet gives you the board exactly as you left it.
 
-If the download fails, the bookmark is still saved and keeps the original URL — you never lose a bookmark over a picture. Bookmarks created before this existed keep the URL they were saved with; re-pick their icon to store it locally.
+If the download fails, the bookmark is still saved and keeps the original URL — you never lose a bookmark over a picture.
+
+### Boards made before this existed
+
+Nothing to do: when Lastboard starts it brings in any icon that is still fetched from elsewhere, so upgrading is enough. A board of 25 bookmarks takes well under a second, and the log says how many were stored.
+
+If the machine had no connection at that moment, the icons stay as they were and it tries again on the next start. **Settings → Data** then shows how many are still coming from outside, with a button to fetch them without waiting for a restart. When there are none — the normal case — that card isn't there at all.
 
 ## Sections
 
