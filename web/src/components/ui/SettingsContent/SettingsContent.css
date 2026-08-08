@@ -716,13 +716,20 @@ button {
     min-width: 0;
 }
 
-/* The control keeps its own size. app-button is width:100% of whatever holds
-   it, which went unnoticed while the row never wrapped — the flex line sized
-   it. Once it can drop onto a line of its own, that 100% turned a secondary
-   action into a full-width bar. Overriding the width from out here works
-   because a rule in the outer tree beats the component's own :host. */
+/* The control keeps its own size rather than growing to fill the line. */
 .settings-content__action-row > :not(.settings-content__action-info) {
     flex: 0 0 auto;
+}
+
+/* Only the buttons need their width pinned: app-button is width:100% of
+   whatever holds it, which went unnoticed while the row never wrapped — the
+   flex line sized it — and turned into a full-width bar once it could drop
+   onto a line of its own. Overriding from out here works because a rule in
+   the outer tree beats the component's own :host.
+   Scoped to app-button on purpose: applying it to every non-text child also
+   hit `.toggle-switch`, whose 44px track collapsed and left the knob floating
+   with nothing under it. */
+.settings-content__action-row app-button {
     width: auto;
     max-width: 100%;
 }
