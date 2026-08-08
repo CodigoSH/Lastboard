@@ -1,4 +1,4 @@
-import { template } from './BookmarkGrid.template';
+import { template, WIDGET_TAGS } from './BookmarkGrid.template';
 import { GridItem } from '../../../types';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { collisionService } from '../../../services/collisionService';
@@ -13,6 +13,14 @@ import '../../../widgets/core/TelemetryWidget';
 import '../../../widgets/core/WeatherWidget';
 import '../../../widgets/core/DockerWidget';
 import css from './BookmarkGrid.css' with { type: 'text' };
+
+/**
+ * The elements a re-render must not destroy. They are the ones that load
+ * something when they mount, so rebuilding one costs a round trip and starts
+ * its screen over from empty. Derived from the map the template draws them
+ * with, so adding a widget in one place is enough.
+ */
+const WIDGET_SELECTOR = Object.values(WIDGET_TAGS).join(', ');
 
 class BookmarkGrid extends HTMLElement {
     private bookmarks: GridItem[] = [];
@@ -1284,7 +1292,7 @@ class BookmarkGrid extends HTMLElement {
         // so drop any stale open-menu listeners.
         if (this._menuDismissBound) this._unbindMenuDismiss();
 
-        this.shadowRoot!.innerHTML = `
+        this._applyMarkup(`
             <style>${css}</style>
             ${template({
             bookmarks: this.bookmarks,
@@ -1296,7 +1304,7 @@ class BookmarkGrid extends HTMLElement {
             selectedIds: this._selectedIds,
             selectMode: this._selectMode
         })}
-        `;
+        `);
 
         // RE-ATTACH LISTENERS after content replacement
         this.setupActionListeners();
@@ -1307,6 +1315,119 @@ class BookmarkGrid extends HTMLElement {
         this._runEntrance();
         this._runMaterialize();
         this._runArrival();
+    }
+
+    /**
+     * Writes freshly rendered markup into the shadow root without destroying
+     * the widgets already on it.
+     *
+     * Replacing innerHTML outright is what this used to do, and it threw away
+     * every widget element on the board. A widget that gets rebuilt starts its
+     * loading over from nothing: measured on one page load, the Docker widget
+     * was constructed four times and three container listings were fetched and
+     * discarded before the fourth instance finally painted — about a second of
+     * the wait was the board rebuilding itself.
+     *
+     * Nothing about a re-render requires that. A card's position is a CSS
+     * variable, not its place in the document, so a card can stay exactly
+     * where it is while its contents are brought up to date. Cards holding a
+     * widget are patched in place; everything else is still rewritten, because
+     * bookmarks are cheap and stateless.
+     */
+    private _applyMarkup(html: string) {
+        const root = this.shadowRoot!;
+        const next = document.createElement('div');
+        next.innerHTML = html;
+        this._patchChildren(root as unknown as Element, next);
+    }
+
+    /**
+     * Brings `live`'s children up to date with `next`'s, leaving any subtree
+     * that holds a widget attached the whole time.
+     *
+     * Detaching is the thing to avoid: moving a connected custom element —
+     * even within the same parent — fires disconnectedCallback and then
+     * connectedCallback, which is exactly the restart we are here to prevent.
+     * So kept nodes are never moved, only patched, and new ones are appended.
+     * Order is safe to disturb: cards are placed by --x/--y and a card's own
+     * controls are absolutely positioned.
+     */
+    private _patchChildren(live: Element, next: Element) {
+        // Keyed by tag as well as id, because an item's id appears on more than
+        // one element: the card, the widget inside it and the card's own kebab
+        // button all carry the same number. On id alone the kebab would match
+        // the widget, survive the sweep meant to remove it, and be appended
+        // again on every render.
+        const keyOf = (el: Element) => {
+            const id = (el as HTMLElement).dataset?.id || el.getAttribute('item-id');
+            return id ? `${el.tagName}#${id}` : null;
+        };
+        const isWidgetHost = (el: Element) =>
+            el.matches(WIDGET_SELECTOR) || !!el.querySelector(WIDGET_SELECTOR);
+
+        const keep = new Map<string, Element>();
+        for (const child of Array.from(live.children)) {
+            const key = keyOf(child);
+            if (key && isWidgetHost(child)) keep.set(key, child);
+        }
+
+        // Nothing here is worth saving: the blunt path is also the fast one.
+        if (keep.size === 0) {
+            live.innerHTML = next.innerHTML;
+            return;
+        }
+
+        const incoming = Array.from(next.children);
+        const wanted = new Set(
+            incoming.map(keyOf).filter((k): k is string => !!k),
+        );
+
+        // Drop what the new markup no longer has, and the throwaway nodes we
+        // are about to receive again. The stylesheet is identical every time,
+        // so it stays rather than being torn out and put back.
+        for (const child of Array.from(live.children)) {
+            if (child.tagName === 'STYLE') continue;
+            const key = keyOf(child);
+            if (key && keep.has(key) && wanted.has(key)) continue;
+            child.remove();
+        }
+
+        for (const fresh of incoming) {
+            if (fresh.tagName === 'STYLE') continue;
+            const key = keyOf(fresh);
+            const kept = key ? keep.get(key) : undefined;
+
+            // A card whose widget changed type is a different thing wearing
+            // the same id; rebuilding it is the correct answer.
+            if (kept && wanted.has(key!) && this._sameWidget(kept, fresh)) {
+                this._syncAttributes(kept, fresh);
+                this._patchChildren(kept, fresh);
+            } else {
+                live.appendChild(fresh);
+            }
+        }
+    }
+
+    /** Do these two nodes hold the same widget element, by tag? */
+    private _sameWidget(a: Element, b: Element): boolean {
+        const tag = (el: Element) =>
+            (el.matches(WIDGET_SELECTOR) ? el : el.querySelector(WIDGET_SELECTOR))?.tagName || '';
+        return tag(a) === tag(b);
+    }
+
+    /**
+     * Copies `next`'s attributes onto `live`, and only where they differ:
+     * setAttribute fires attributeChangedCallback even when the value is
+     * unchanged, and a widget listening for its content would take that as
+     * news and reload.
+     */
+    private _syncAttributes(live: Element, next: Element) {
+        for (const { name, value } of Array.from(next.attributes)) {
+            if (live.getAttribute(name) !== value) live.setAttribute(name, value);
+        }
+        for (const { name } of Array.from(live.attributes)) {
+            if (!next.hasAttribute(name)) live.removeAttribute(name);
+        }
     }
 
     private get _reduceMotion(): boolean {

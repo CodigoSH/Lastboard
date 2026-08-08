@@ -23,6 +23,26 @@ const cardControl = (id: number, isEditing: boolean, selecting: boolean, selecte
     return `<button class="kebab-btn" data-id="${id}" aria-label="${i18n.t('general.edit')}" title="${i18n.t('general.edit')}">${ICON_KEBAB}</button>`;
 };
 
+/**
+ * The custom element each widget is drawn with.
+ *
+ * The grid reads this too, to know which elements a re-render must leave
+ * alone, so a widget added here is picked up by both. Two hand-written copies
+ * of this list would disagree the first time one of them is forgotten, and
+ * the symptom — a widget quietly reloading itself — doesn't look like a
+ * missing map entry.
+ */
+export const WIDGET_TAGS: Record<string, string> = {
+    'clock': 'widget-clock',
+    'notepad': 'widget-notepad',
+    'telemetry': 'widget-telemetry',
+    'weather': 'widget-weather',
+    'markdown': 'widget-markdown',
+    'docker': 'widget-docker',
+    'api': 'widget-api',
+    'monitor': 'widget-monitor',
+};
+
 const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 const safeUrl = (url: string): string => {
     if (!url) return '#';
@@ -106,17 +126,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
 
     if (b.type === 'widget') {
         const widgetId = data.widgetId;
-        const tagMap: Record<string, string> = {
-            'clock': 'widget-clock',
-            'notepad': 'widget-notepad',
-            'telemetry': 'widget-telemetry',
-            'weather': 'widget-weather',
-            'markdown': 'widget-markdown',
-            'docker': 'widget-docker',
-            'api': 'widget-api',
-            'monitor': 'widget-monitor'
-        };
-        const tagName = tagMap[widgetId] || 'div';
+        const tagName = WIDGET_TAGS[widgetId] || 'div';
         const rawContent = data.text || '';
         const dataContent = rawContent.replace(/"/g, '&quot;');
 
