@@ -66,32 +66,6 @@
 .right-drawer__content-panel {
     position: absolute;
     top: 24px;
-    right: clamp(204px, calc(12cqi + 24px), 274px);
-    bottom: auto;
-    width: clamp(280px, 45cqi, 400px);
-    max-height: calc(100vh - 96px);
-    background: var(--surface);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: all 0.3s var(--ease-out);
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    opacity: 1;
-    transform: translateX(0);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-}
-
-:host([open]) .right-drawer__panel {
-    transform: translateX(0);
-}
-
-.right-drawer__content-panel {
-    position: absolute;
-    top: 24px;
     right: clamp(189px, calc(18vw + 24px), 249px);
     bottom: auto;
     width: clamp(400px, calc(50vw - 18vw - 48px), 725px);

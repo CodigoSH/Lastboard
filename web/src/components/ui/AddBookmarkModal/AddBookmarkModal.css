@@ -202,8 +202,6 @@ dialog[open] {
     outline: none;
 }
 
-.tab-btn:focus { outline: none; }
-
 .tab-btn:hover {
     color: var(--text-main);
     opacity: 1;
@@ -614,6 +612,8 @@ dialog[open] {
     cursor: pointer;
     border: none;
     padding: 0;
+    /* Above the swatch it covers, so the click reaches the colour input. */
+    z-index: 10;
 }
 
 /* --- Segmented Control (Border Width) --- */
@@ -661,24 +661,4 @@ dialog[open] {
 }
 
 /* Rainbow swatch correction */
-.premium-color-swatch--custom {
-    background: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
-    overflow: visible;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 /* Ensure hidden input covers the whole area for clicking */
-.premium-swatch-picker {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    border: none;
-    padding: 0;
-    z-index: 10;
-    /* Ensure it's on top */
-}

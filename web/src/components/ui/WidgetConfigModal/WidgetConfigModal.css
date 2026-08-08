@@ -92,12 +92,12 @@ dialog[open] {
 .modal-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    /* Align tabs to bottom */
+    align-items: center;
     margin-bottom: 0;
-    border-bottom: 1px solid var(--border);
-    padding: 12px 24px 0 24px;
-    background: var(--modal-header-bg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 24px;
+    height: 56px;
+    background: transparent;
     border-radius: var(--radius) var(--radius) 0 0;
 }
 
@@ -159,11 +159,16 @@ dialog[open] {
     flex-shrink: 0;
 }
 
+/* One rule, not two. A second .tab-content.active further down this file used
+   to set `display: block`, and being later it won — which silently killed the
+   gap below and left every field group in every widget's settings touching the
+   next one. Measured at 0px between them. */
 .tab-content {
     display: none;
     flex-direction: column;
     gap: 16px;
     padding: 24px;
+    animation: fadeContent 0.3s ease;
 }
 
 .tab-content.active {
@@ -527,28 +532,9 @@ dialog[open] {
     border-radius: 0;
 }
 
-/* Header Adjustments */
-.modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0 24px;
-    background: transparent;
-    height: 56px;
-    /* Slightly compact */
-    align-items: center;
-}
-
-/* Remove old styles */
+/* A leftover element from an earlier tab implementation. */
 .tab-header {
     display: none;
-}
-
-.tab-content {
-    display: none;
-    animation: fadeContent 0.3s ease;
-}
-
-.tab-content.active {
-    display: block;
 }
 
 /* Enters from above, not below. The scrolling body is this element's parent, so
