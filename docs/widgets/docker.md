@@ -95,8 +95,33 @@ Every container from every host is listed, grouped by host, with a search box fo
 - **Show or hide it** with the checkbox. Unchecked containers stay out of the widget.
 - **Set an icon**, from the same picker used for bookmarks.
 - **Rename it**, if the container name isn't what you want to read on your dashboard.
+- **Set the address it opens**. See [Opening a container's service](#opening-a-containers-service).
 
 Hosts that don't answer say so in their own section, and their containers keep whatever you had already set for them.
+
+### Opening a container's service
+
+A container's name in the widget is a link: click it and its web interface opens in a new tab. No bookmark to create by hand for something the widget already lists.
+
+Lastboard works the address out for you, in this order:
+
+1. **What you typed** in the container's address field, if anything.
+2. **A label on the container.** `lastboard.url` is read first, then `homepage.href` — so a container already labelled for another dashboard works here without changes, and you can override it with ours. Only `http://` and `https://` addresses are used.
+3. **The first published port**, combined with the host's address. For a local host that's whatever address you're using to read the dashboard; for a remote one it's that host's own address.
+
+A container that publishes no port and carries no label simply isn't a link — the field shows *No published port* and its name stays plain text.
+
+The address field is left **empty** on purpose when the derived one is right: the placeholder shows what will be used, and leaving it alone means the widget keeps following the container. Type something only when you want to override it — a reverse-proxy hostname, for example, or a container reachable on a path.
+
+Example of labelling a container so it advertises its own address:
+
+```yaml
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    labels:
+      lastboard.url: https://jellyfin.example.home
+```
 
 ### Title and refresh
 
