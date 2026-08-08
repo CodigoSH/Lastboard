@@ -1,3 +1,4 @@
+import { csrfToken } from './csrf';
 import { isDirectIconUrl } from './iconUrl';
 
 /**
@@ -51,11 +52,4 @@ export async function materializeIcon(source: string | null | undefined): Promis
     } catch {
         return src;
     }
-}
-
-function csrfToken(): string {
-    return document.cookie
-        .split('; ')
-        .find(r => r.startsWith('csrf_token='))
-        ?.split('=')[1] ?? '';
 }

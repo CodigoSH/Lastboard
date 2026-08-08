@@ -1,3 +1,4 @@
+import { csrfToken } from './csrf';
 
 /**
  * Centalized API Service
@@ -12,8 +13,7 @@ class ApiService {
     }
 
     private getCsrfToken(): string {
-        const match = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
-        return match ? decodeURIComponent(match.split('=')[1]) : '';
+        return csrfToken();
     }
 
     private async request<T>(url: string, options: RequestInit): Promise<T> {

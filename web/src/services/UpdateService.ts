@@ -1,3 +1,4 @@
+import { csrfToken } from './csrf';
 export interface UpdateInfo {
     available: boolean;
     current_version: string;
@@ -93,12 +94,12 @@ class UpdateService {
      * restart and is now replacing itself.
      */
     async perform(assetUrl: string, onEvent: (event: UpdateEvent) => void): Promise<void> {
-        const csrf = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
+        const csrf = csrfToken();
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'Accept': 'text/event-stream',
         };
-        if (csrf) headers['X-CSRF-Token'] = decodeURIComponent(csrf.split('=')[1]);
+        if (csrf) headers['X-CSRF-Token'] = csrf;
 
         const res = await fetch('/api/system/update/perform', {
             method: 'POST',

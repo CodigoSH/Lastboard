@@ -1,3 +1,4 @@
+import { csrfToken as readCsrfToken } from '../../../services/csrf';
 import { userStore } from '../../../store/userStore';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { template, panelInnerTemplate } from './RightDrawer.template';
@@ -121,10 +122,9 @@ class RightDrawer extends HTMLElement {
     }
 
     async performLogout() {
-        const csrfMatch = document.cookie.split('; ').find(c => c.startsWith('csrf_token='));
-        const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch.split('=')[1]) : '';
+        const token = readCsrfToken();
         try {
-            await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken } });
+            await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-Token': token } });
         } catch (e) { /* ignore */ }
         document.body.style.opacity = '0';
         window.location.href = '/login';

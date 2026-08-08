@@ -1,4 +1,5 @@
 
+import { csrfToken } from '../../services/csrf';
 import { i18n } from '../../services/i18n';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { dashboardStore } from '../../store/dashboardStore';
@@ -572,7 +573,7 @@ class DockerWidget extends HTMLElement {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-Token': this.getCSRFToken(),
+                    'X-CSRF-Token': csrfToken(),
                 },
                 body: JSON.stringify({ host: hostParam(host), id: containerID, action }),
             });
@@ -594,13 +595,6 @@ class DockerWidget extends HTMLElement {
                 btn.innerHTML = ICON.spinner;
             }
         });
-    }
-
-    private getCSRFToken(): string {
-        return document.cookie
-            .split('; ')
-            .find(r => r.startsWith('csrf_token='))
-            ?.split('=')[1] ?? '';
     }
 
     // ── Host selector change ─────────────────────────────────────────────────
