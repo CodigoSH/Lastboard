@@ -91,6 +91,8 @@ async function getCityTimezone(city: string): Promise<string> {
 class WidgetConfigModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
     private currentItem: GridItem | null = null;
+    /** Which host's containers the Docker form is showing. */
+    private _dockerSelectedHost = '';
     private _clockSelectedLat: number | null = null;
     private _clockSelectedLon: number | null = null;
     private _selectedColor: string = '#333333';
@@ -115,6 +117,9 @@ class WidgetConfigModal extends HTMLElement {
 
     open(item: GridItem) {
         this.currentItem = item;
+        // Each widget starts on its own active host, not on whatever was
+        // selected the last time this dialog was open for another one.
+        this._dockerSelectedHost = '';
 
         // Init Appearance State
         let content: any = {};
@@ -1093,22 +1098,50 @@ class WidgetConfigModal extends HTMLElement {
                 ? JSON.parse(this.currentItem.content)
                 : this.currentItem.content;
 
-            // One host at a time by default. Listing every host at once was
-            // fine with one and unusable with a few: the sections stack up and
-            // the dialog grows past the screen with nothing to aim at.
-            const hosts: DockerHost[] = content.hosts || [];
-            const hostFilter = root.getElementById('docker-host-filter') as AppSelect | null;
-            if (hostFilter) {
-                hostFilter.options = [
-                    ...hosts.map(h => ({ value: h.id, label: h.name })),
-                    { value: '*', label: i18n.t('docker.all_hosts') },
-                ];
-                hostFilter.value = content.activeHost || hosts[0]?.id || '*';
-                hostFilter.addEventListener('change', () => this.applyDockerFilters());
-            }
+            // The dialog only widens once there is a choice to make.
+            const split = (content.hosts || []).length >= 2;
+            root.getElementById('modal')?.classList.toggle('dialog--wide', split);
 
             this.loadDockerContainers(content);
         }
+
+        // Picking a host on the left is what the right-hand column follows.
+        root.querySelectorAll<HTMLElement>('.host-item[data-host-id]').forEach(row => {
+            const select = () => {
+                const id = row.dataset.hostId;
+                if (!id || id === this._dockerSelectedHost) return;
+                this._dockerSelectedHost = id;
+                root.querySelectorAll('.host-item').forEach(x => x.classList.remove('is-selected'));
+                row.classList.add('is-selected');
+                // A search typed for one host shouldn't silently hide the next
+                // host's containers.
+                const box = root.getElementById('docker-search') as HTMLInputElement | null;
+                if (box) box.value = '';
+                this.applyDockerFilters();
+            };
+            // The edit and delete buttons act on the row without selecting it.
+            row.addEventListener('click', (e) => {
+                if ((e.target as Element).closest('.host-action-btn')) return;
+                select();
+            });
+            row.addEventListener('keydown', (e) => {
+                if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+                    e.preventDefault();
+                    select();
+                }
+            });
+        });
+
+        // Narrow the host list itself, for the installations that have enough
+        // of them to make scanning slow.
+        const hostSearch = root.getElementById('docker-host-search') as HTMLInputElement | null;
+        hostSearch?.addEventListener('input', () => {
+            const q = hostSearch.value.trim().toLowerCase();
+            root.querySelectorAll<HTMLElement>('.host-item[data-host-id]').forEach(row => {
+                const name = row.querySelector('.host-name')?.textContent?.toLowerCase() || '';
+                row.style.display = !q || name.includes(q) ? '' : 'none';
+            });
+        });
 
         // Filter by name or image. Plain substring match on a data attribute
         // built when the row was drawn, so typing never re-queries a host.
@@ -1362,30 +1395,89 @@ class WidgetConfigModal extends HTMLElement {
         `).join('');
     }
 
+    /** Past this many hosts, scanning the list is slower than typing a name. */
+    private static readonly DOCKER_HOST_SEARCH_FROM = 6;
+
+    /**
+     * The Docker form, in one of two shapes.
+     *
+     * With a single host there is nothing to choose between, so it stays the
+     * narrow single column it has always been. From the second host on it
+     * becomes master-detail: hosts on the left, the selected host's containers
+     * on the right. That also removes a duplication — the hosts used to appear
+     * twice, once as a list and again in a filter dropdown.
+     *
+     * Title, hint, refresh and save stay full width in both: they belong to the
+     * widget, not to whichever host is selected.
+     */
     private renderDockerForm(content: any) {
         const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
 
-        const hosts = content.hosts || [];
+        const hosts: DockerHost[] = content.hosts || [];
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
+        const split = hosts.length >= 2;
+
+        if (!this._dockerSelectedHost || !hosts.some(h => h.id === this._dockerSelectedHost)) {
+            this._dockerSelectedHost = content.activeHost || hosts[0]?.id || '';
+        }
+
+        const hostRow = (h: DockerHost) => `
+            <div class="host-item${split && h.id === this._dockerSelectedHost ? ' is-selected' : ''}"
+                 data-host-id="${esc(h.id)}"${split ? ' role="button" tabindex="0"' : ''}>
+                <div class="host-info">
+                    <span class="host-name">${esc(h.name)}</span>
+                    <span class="host-tag">${h.type === 'local' ? i18n.t('docker.host_type_local') : i18n.t('docker.host_type_' + h.type)}</span>
+                </div>
+                <div class="host-actions">
+                    <button class="host-action-btn edit" data-id="${esc(h.id)}" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
+                    <button class="host-action-btn delete" data-id="${esc(h.id)}" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
+                </div>
+            </div>`;
 
         const hostsList = hosts.length > 0
-            ? hosts.map((h: any) => `
-                <div class="host-item">
-                    <div class="host-info">
-                        <span class="host-name">${esc(h.name)}</span>
-                        <span class="host-tag">${h.type === 'local' ? i18n.t('docker.host_type_local') : i18n.t('docker.host_type_' + h.type)}</span>
-                    </div>
-                    <div class="host-actions">
-                        <button class="host-action-btn edit" data-id="${h.id}" title="${i18n.t('general.edit')}">
-                            ${ICON_EDIT}
-                        </button>
-                        <button class="host-action-btn delete" data-id="${h.id}" title="${i18n.t('general.delete')}">
-                            ${ICON_TRASH}
-                        </button>
-                    </div>
-                </div>
-            `).join('')
+            ? hosts.map(hostRow).join('')
             : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${i18n.t('docker.no_hosts_configured') || 'No hosts found'}</p>`;
+
+        const hostSearch = hosts.length >= WidgetConfigModal.DOCKER_HOST_SEARCH_FROM
+            ? `<input type="text" id="docker-host-search" class="docker-search"
+                      placeholder="${esc(i18n.t('docker.search_hosts'))}" />`
+            : '';
+
+        const hostsPanel = `
+            <div class="hosts-list">${hostsList}</div>
+            <app-button variant="ghost" id="docker-show-add-btn" style="width: 100%; margin-top: 12px;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>`;
+
+        const containersPanel = `
+            <input type="text" id="docker-search" class="docker-search"
+                   placeholder="${esc(i18n.t('docker.search_containers'))}" />
+            <div id="docker-containers" class="docker-containers">
+                <p class="monitor-services__state">${i18n.t('general.loading')}</p>
+            </div>`;
+
+        const body = split
+            ? `
+            <div class="docker-split">
+                <div class="docker-split__hosts">
+                    <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
+                    ${hostSearch}
+                    ${hostsPanel}
+                </div>
+                <div class="docker-split__containers">
+                    <label id="docker-containers-label">${i18n.t('docker.containers')}</label>
+                    ${containersPanel}
+                </div>
+            </div>
+            <small class="docker-hint">${i18n.t('docker.containers_desc')}</small>`
+            : `
+            <div class="field-group">
+                <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
+                ${hostsPanel}
+            </div>
+            <div class="field-group">
+                <label id="docker-containers-label">${i18n.t('docker.containers')}</label>
+                ${containersPanel}
+                <small>${i18n.t('docker.containers_desc')}</small>
+            </div>`;
 
         const generalTab = `
             <div class="field-group">
@@ -1393,23 +1485,7 @@ class WidgetConfigModal extends HTMLElement {
                 <input type="text" id="docker-title" value="${esc(content.title || '')}"
                        placeholder="${esc(i18n.t('widget.docker.name'))}" />
             </div>
-            <div class="field-group">
-                <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
-                <div class="hosts-list">${hostsList}</div>
-                <app-button variant="ghost" id="docker-show-add-btn" style="width: 100%; margin-top: 12px;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>
-            </div>
-            <div class="field-group">
-                <label>${i18n.t('docker.containers')}</label>
-                <div class="docker-filter">
-                    <app-select id="docker-host-filter"></app-select>
-                    <input type="text" id="docker-search" class="docker-search"
-                           placeholder="${esc(i18n.t('docker.search_containers'))}" />
-                </div>
-                <div id="docker-containers" class="docker-containers">
-                    <p class="monitor-services__state">${i18n.t('general.loading')}</p>
-                </div>
-                <small>${i18n.t('docker.containers_desc')}</small>
-            </div>
+            ${body}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>
                 <app-select id="docker-refresh" value="${refresh}"></app-select>
@@ -1454,11 +1530,9 @@ class WidgetConfigModal extends HTMLElement {
                     ? `<p class="docker-host-state">${esc(i18n.t('docker.no_containers'))}</p>`
                     : containers.map(c => this.dockerContainerRow(c, cfg, host)).join('');
 
-            return `
-                <div class="docker-host-group" data-host-id="${esc(host.id)}">
-                    <p class="docker-host-heading">${esc(host.name)}</p>
-                    ${body}
-                </div>`;
+            // No heading inside: only the selected host's group is ever shown,
+            // and the label above the column already names it.
+            return `<div class="docker-host-group" data-host-id="${esc(host.id)}">${body}</div>`;
         }).join('');
 
         this.applyDockerFilters();
@@ -1476,25 +1550,30 @@ class WidgetConfigModal extends HTMLElement {
         const root = this.shadowRoot;
         if (!root) return;
 
-        const host = (root.getElementById('docker-host-filter') as AppSelect | null)?.value || '*';
+        const host = this._dockerSelectedHost;
         const search = root.getElementById('docker-search') as HTMLInputElement | null;
         const q = (search?.value || '').trim().toLowerCase();
 
         root.querySelectorAll<HTMLElement>('.docker-host-group').forEach(group => {
-            const thisHost = host === '*' || group.dataset.hostId === host;
-            let anyVisible = false;
+            const thisHost = !host || group.dataset.hostId === host;
 
             group.querySelectorAll<HTMLElement>('.docker-container-row').forEach(row => {
                 const matches = thisHost && (!q || (row.dataset.search || '').includes(q));
                 row.style.display = matches ? '' : 'none';
-                if (matches) anyVisible = true;
             });
 
-            // A host with no containers still shows its heading, so "this host
-            // answered and has none" doesn't look like "this host is missing".
-            const empty = group.querySelectorAll('.docker-container-row').length === 0;
-            group.style.display = thisHost && (anyVisible || (empty && !q)) ? '' : 'none';
+            group.style.display = thisHost ? '' : 'none';
         });
+
+        // The right-hand column says whose containers these are, so the heading
+        // above the host list doesn't have to be read to know.
+        const label = root.getElementById('docker-containers-label');
+        const name = root.querySelector('.host-item.is-selected .host-name')?.textContent?.trim();
+        if (label) {
+            label.textContent = name
+                ? `${i18n.t('docker.containers')} · ${name}`
+                : i18n.t('docker.containers');
+        }
     }
 
     private dockerContainerRow(

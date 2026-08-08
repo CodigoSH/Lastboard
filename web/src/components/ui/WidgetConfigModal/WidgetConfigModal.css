@@ -806,6 +806,21 @@ dialog[open] {
     animation: slideIn 0.3s ease-out;
 }
 
+/* A host row is a choice, not just a record, once there is more than one. */
+.host-item[role="button"] {
+    cursor: pointer;
+}
+
+.host-item.is-selected {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.1);
+}
+
+.host-item[role="button"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .host-item:hover {
     border-color: rgba(var(--accent-rgb), 0.4);
     background: rgba(var(--accent-rgb), 0.04);
@@ -836,6 +851,7 @@ dialog[open] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .host-tag {
@@ -845,6 +861,12 @@ dialog[open] {
     letter-spacing: 0.05em;
     padding: 2px 6px;
     border-radius: 4px;
+    /* One line: in the narrow hosts column "Local (socket)" was breaking in
+       two and making every row a different height. */
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     background: rgba(var(--accent-rgb), 0.12);
     color: var(--accent);
     flex-shrink: 0;
@@ -1023,23 +1045,39 @@ dialog[open] {
    icon and the display name. Grouped by host because the list can span
    several. */
 
-/* Host on the left, free-text search on the right: the two ways of narrowing
-   a container list, side by side and above what they narrow. */
-.docker-filter {
+/* Master-detail, from the second host on: pick a host on the left, configure
+   its containers on the right. Below two hosts there is nothing to pick, so
+   the form stays a single narrow column and this never applies. */
+.docker-split {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-    gap: 8px;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.6fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.docker-split label {
+    display: block;
     margin-bottom: 8px;
 }
 
-@media (max-width: 520px) {
-    .docker-filter {
+/* A narrow desktop window would squeeze both columns into uselessness. */
+@media (max-width: 720px) {
+    .docker-split {
         grid-template-columns: 1fr;
     }
 }
 
+.docker-hint {
+    display: block;
+    margin-top: 10px;
+}
+
+/* Outside a .field-group the generic input rule doesn't reach it, and the box
+   was rendering at its default size in the middle of a wide column. */
 .docker-search {
-    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 8px;
 }
 
 .docker-containers {
@@ -1048,22 +1086,6 @@ dialog[open] {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 6px;
-}
-
-.docker-host-group + .docker-host-group {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-}
-
-.docker-host-heading {
-    margin: 0 0 4px;
-    padding: 0 8px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-dim);
 }
 
 .docker-host-state {
