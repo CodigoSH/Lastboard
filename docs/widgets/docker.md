@@ -79,6 +79,8 @@ If securing the agent behind a reverse proxy (like Pangolin or Cloudflare Zero T
 
 Everything the widget shows is set from its configuration screen: enter the dashboard's edit mode and open the widget's settings.
 
+![Docker widget configuration](../assets/w-p-docker.png)
+
 ### Hosts
 
 You can add multiple hosts. Supported URL formats include:

@@ -37,7 +37,7 @@ Full control for any endpoint that has no preset. Set the **Service** selector t
 | **Headers** | Custom request headers, **one per line** as `Name: value` — typically for authentication (e.g. `Authorization: Bearer …` or `X-Api-Key: …`). |
 | **List array** *(optional)* | A path to an array in the response. Fill it to render a **list**; leave it empty for **metrics**. See [Display Modes](#display-modes). |
 | **Fields** | The values to show, **one per line** — see [Field Mappings](#field-mappings). |
-| **Refresh** | How often to re-fetch (minimum **15s**). |
+| **Refresh** | How often to re-fetch: 30s, 1m, 5m or 10m. |
 
 > Services that authenticate with a login session rather than a token or API key (for example qBittorrent, Deluge, or UniFi) are not offered as presets and must be configured in Advanced mode if their API supports header/token auth.
 

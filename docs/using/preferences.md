@@ -57,6 +57,8 @@ Configure down/up alerts via ntfy, Gotify, or a webhook. Covered in **[Monitorin
 
 Full backup & restore, and importing/exporting dashboards. See **[Import, Export & Backup](import-export.md)**.
 
+If any of your bookmarks still fetch their icon from outside, this section says how many and offers to store them — see **[Where icons are stored](../getting-started/bookmarks.md#boards-made-before-this-existed)**. Normally there are none and it isn't shown.
+
 ## Advanced
 
 <!-- p-avanced.png keeps the app's own spelling of the file -->
