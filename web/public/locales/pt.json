@@ -574,5 +574,7 @@
   "settings.icons_storing": "A guardar…",
   "settings.icons_stored": "{count} ícones guardados",
   "settings.icons_stored_partial": "{stored} guardados, {failed} inacessíveis",
-  "action.store_icons": "Guardar agora"
+  "action.store_icons": "Guardar agora",
+  "settings.icons_all_local": "Ícones servidos a partir deste servidor: {count}",
+  "settings.icons_all_local_desc": "O seu painel não os pede a mais ninguém."
 }

@@ -19,6 +19,8 @@ class SettingsContent extends HTMLElement {
     private users: User[] = [];
     /** Bookmarks of mine whose icon still comes from somewhere else. */
     private pendingIcons = 0;
+    /** Bookmarks of mine already served from this instance. */
+    private localIcons = 0;
     private storingIcons = false;
     private importFormat = 'native';
     private monitoring: {
@@ -324,10 +326,11 @@ class SettingsContent extends HTMLElement {
      */
     async fetchPendingIcons() {
         try {
-            const r = await apiService.get<{ pending: number }>('/api/icons/pending');
-            const before = this.pendingIcons;
+            const r = await apiService.get<{ pending: number; local: number }>('/api/icons/pending');
+            const before = `${this.pendingIcons}/${this.localIcons}`;
             this.pendingIcons = r?.pending ?? 0;
-            if (before !== this.pendingIcons) this.render();
+            this.localIcons = r?.local ?? 0;
+            if (before !== `${this.pendingIcons}/${this.localIcons}`) this.render();
         } catch {
             this.pendingIcons = 0;
         }
@@ -347,10 +350,11 @@ class SettingsContent extends HTMLElement {
         this.render();
 
         try {
-            const r = await apiService.post<{ stored: number; failed: number; pending: number }>(
+            const r = await apiService.post<{ stored: number; failed: number; pending: number; local: number }>(
                 '/api/icons/localize', {},
             );
             this.pendingIcons = r?.pending ?? 0;
+            this.localIcons = r?.local ?? this.localIcons;
 
             if (window.notifier) {
                 if (r?.failed) {
@@ -841,7 +845,7 @@ class SettingsContent extends HTMLElement {
                 return advancedTemplate();
 
             case 'data':
-                return dataTemplate(this.pendingIcons, this.storingIcons);
+                return dataTemplate(this.pendingIcons, this.localIcons, this.storingIcons);
 
             case 'monitoring':
                 return monitoringTemplate(this.monitoring);

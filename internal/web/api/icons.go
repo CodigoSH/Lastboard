@@ -267,12 +267,12 @@ func (h *IconHandler) PendingStatus(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	pending, err := CountPendingIcons(h.DB, &userID)
+	counts, err := CountPendingIcons(h.DB, &userID)
 	if err != nil {
 		http.Error(w, "Could not read bookmarks", http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, map[string]int{"pending": pending})
+	writeJSON(w, counts)
 }
 
 // currentUser resolves the caller's id, which is what scopes both the count
@@ -306,11 +306,14 @@ func (h *IconHandler) Localize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	done, failed := LocalizeIcons(h.DB, h, &userID)
-	pending, err := CountPendingIcons(h.DB, &userID)
+	counts, err := CountPendingIcons(h.DB, &userID)
 	if err != nil {
-		pending = failed
+		counts.Pending = failed
 	}
-	writeJSON(w, map[string]int{"stored": done, "failed": failed, "pending": pending})
+	writeJSON(w, map[string]int{
+		"stored": done, "failed": failed,
+		"pending": counts.Pending, "local": counts.Local,
+	})
 }
 
 // Serve returns a stored icon.

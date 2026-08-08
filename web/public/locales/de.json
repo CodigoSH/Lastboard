@@ -574,5 +574,7 @@
   "settings.icons_storing": "Wird gespeichert…",
   "settings.icons_stored": "{count} Symbole gespeichert",
   "settings.icons_stored_partial": "{stored} gespeichert, {failed} nicht erreichbar",
-  "action.store_icons": "Jetzt speichern"
+  "action.store_icons": "Jetzt speichern",
+  "settings.icons_all_local": "Von diesem Server ausgelieferte Symbole: {count}",
+  "settings.icons_all_local_desc": "Dein Dashboard fragt sie bei niemandem sonst an."
 }

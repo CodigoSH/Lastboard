@@ -574,5 +574,7 @@
   "settings.icons_storing": "Guardando…",
   "settings.icons_stored": "{count} iconos guardados",
   "settings.icons_stored_partial": "{stored} guardados, {failed} no se pudieron descargar",
-  "action.store_icons": "Guardarlos ahora"
+  "action.store_icons": "Guardarlos ahora",
+  "settings.icons_all_local": "Iconos servidos desde este servidor: {count}",
+  "settings.icons_all_local_desc": "Tu panel no se los pide a nadie más."
 }

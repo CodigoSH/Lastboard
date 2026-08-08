@@ -410,16 +410,20 @@ export const notificationsTemplate = (monitoring: {
 `;
 
 /**
- * Icons that are still fetched from somewhere else.
+ * Where your icons come from.
  *
- * Shown only when there are any. Boards are brought in automatically when the
- * server starts, so on a healthy install this card never appears; it is here
- * for the upgrade that happened while the machine had no connection, and to
- * answer a question that was previously unanswerable — whether your dashboard
- * still calls out when you open it.
+ * This card is always here, and that is the point. It used to be drawn only
+ * when something was outstanding, which meant a board with nothing pending
+ * showed nothing at all — and "nothing to do" looked exactly like "this
+ * feature doesn't exist". You could not tell whether opening your dashboard
+ * still asked a CDN for the pictures, which is the one question the whole
+ * feature exists to answer.
+ *
+ * So it states the count either way: how many are served from here, and how
+ * many are not. The button only appears when there is something to press.
  */
-const pendingIconsCard = (pending: number, busy: boolean) => {
-    if (pending <= 0) return '';
+const iconsCard = (pending: number, local: number, busy: boolean) => {
+    const outstanding = pending > 0;
     return `
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.icons_local')}</h3>
@@ -427,22 +431,27 @@ const pendingIconsCard = (pending: number, busy: boolean) => {
             <div class="settings-content__action-group">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.icons_pending').replace('{count}', String(pending))}</h3>
-                        <p>${i18n.t('settings.icons_pending_desc')}</p>
+                        <h3>${outstanding
+            ? i18n.t('settings.icons_pending').replace('{count}', String(pending))
+            : i18n.t('settings.icons_all_local').replace('{count}', String(local))}</h3>
+                        <p>${outstanding
+            ? i18n.t('settings.icons_pending_desc')
+            : i18n.t('settings.icons_all_local_desc')}</p>
                     </div>
+                    ${outstanding ? `
                     <app-button variant="primary" data-action="localize-icons" ${busy ? 'disabled' : ''}>
                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                         ${busy ? i18n.t('settings.icons_storing') : i18n.t('action.store_icons')}
-                    </app-button>
+                    </app-button>` : ''}
                 </div>
             </div>
         </div>`;
 };
 
-export const dataTemplate = (pendingIcons = 0, storingIcons = false) => `
+export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = false) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
 
-        ${pendingIconsCard(pendingIcons, storingIcons)}
+        ${iconsCard(pendingIcons, localIcons, storingIcons)}
 
         <!-- Full backup (Lastboard-only, restore is destructive) -->
         <div class="bento-card">

@@ -574,5 +574,7 @@
   "settings.icons_storing": "جارٍ الحفظ…",
   "settings.icons_stored": "تم حفظ {count} أيقونة",
   "settings.icons_stored_partial": "حُفظت {stored}، وتعذّر الوصول إلى {failed}",
-  "action.store_icons": "احفظها الآن"
+  "action.store_icons": "احفظها الآن",
+  "settings.icons_all_local": "الأيقونات المقدَّمة من هذا الخادم: {count}",
+  "settings.icons_all_local_desc": "لوحتك لا تطلبها من أي جهة أخرى."
 }

@@ -101,13 +101,38 @@ func findPendingIcons(db *sql.DB, owner *int) ([]pendingIcon, error) {
 	return out, rows.Err()
 }
 
-// CountPendingIcons reports how many bookmarks still ask an external server
-// for their picture. It backs the line in settings that tells you whether your
-// board is done — without it there is no way to know short of reading the
-// database.
-func CountPendingIcons(db *sql.DB, owner *int) (int, error) {
+// IconCounts is what settings needs to state the situation plainly: how many
+// of your bookmarks are served from here and how many still are not.
+//
+// Both numbers matter. Reporting only the pending ones meant that a board with
+// nothing pending showed nothing at all, and "no icons are outstanding" looked
+// exactly like "this feature isn't here" — you could not tell whether your
+// dashboard still called out.
+type IconCounts struct {
+	Pending int `json:"pending"`
+	Local   int `json:"local"`
+}
+
+// CountPendingIcons reports how many bookmarks still ask an external server for
+// their picture, and how many already come from this one.
+func CountPendingIcons(db *sql.DB, owner *int) (IconCounts, error) {
 	pending, err := findPendingIcons(db, owner)
-	return len(pending), err
+	if err != nil {
+		return IconCounts{}, err
+	}
+
+	query := `SELECT COUNT(*) FROM items WHERE content LIKE '%"/api/icons/%'`
+	args := []any{}
+	if owner != nil {
+		query += ` AND user_id = ?`
+		args = append(args, *owner)
+	}
+	var local int
+	if err := db.QueryRow(query, args...).Scan(&local); err != nil {
+		return IconCounts{}, err
+	}
+
+	return IconCounts{Pending: len(pending), Local: local}, nil
 }
 
 // LocalizeIcons fetches every icon that is still remote and points its
@@ -194,12 +219,12 @@ func LocalizeIcons(db *sql.DB, h *IconHandler, owner *int) (done int, failed int
 func RunIconMigration(db *sql.DB) {
 	h := NewIconHandler(db)
 
-	pending, err := CountPendingIcons(db, nil)
-	if err != nil || pending == 0 {
+	counts, err := CountPendingIcons(db, nil)
+	if err != nil || counts.Pending == 0 {
 		return
 	}
 
-	slog.Info("Storing icons that are still fetched from elsewhere", "bookmarks", pending)
+	slog.Info("Storing icons that are still fetched from elsewhere", "bookmarks", counts.Pending)
 	done, failed := LocalizeIcons(db, h, nil)
 
 	switch {

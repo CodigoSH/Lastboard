@@ -44,7 +44,7 @@ If the download fails, the bookmark is still saved and keeps the original URL �
 
 Nothing to do: when Lastboard starts it brings in any icon that is still fetched from elsewhere, so upgrading is enough. A board of 25 bookmarks takes well under a second, and the log says how many were stored.
 
-If the machine had no connection at that moment, the icons stay as they were and it tries again on the next start. **Settings → Data** then shows how many are still coming from outside, with a button to fetch them without waiting for a restart. When there are none — the normal case — that card isn't there at all.
+**Settings → Data** always says where your icons come from: how many this server hands out, and how many are still fetched from outside. If the machine had no connection when it started, the icons stay as they were, it tries again on the next start, and that panel offers a button to fetch them without waiting.
 
 ## Sections
 

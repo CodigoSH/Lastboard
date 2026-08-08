@@ -574,5 +574,7 @@
   "settings.icons_storing": "Storing…",
   "settings.icons_stored": "{count} icons stored",
   "settings.icons_stored_partial": "{stored} stored, {failed} could not be reached",
-  "action.store_icons": "Store them now"
+  "action.store_icons": "Store them now",
+  "settings.icons_all_local": "Icons served from this server: {count}",
+  "settings.icons_all_local_desc": "Your dashboard asks nobody else for them."
 }

@@ -165,12 +165,15 @@ func TestLocalizeIcons_KeepsTheUrlWhenTheFetchFails(t *testing.T) {
 	}
 
 	// And it is still counted as outstanding, so the retry has something to do.
-	n, err := CountPendingIcons(db, nil)
+	counts, err := CountPendingIcons(db, nil)
 	if err != nil {
 		t.Fatalf("count: %v", err)
 	}
-	if n != 1 {
-		t.Errorf("pending = %d, want 1", n)
+	if counts.Pending != 1 {
+		t.Errorf("pending = %d, want 1", counts.Pending)
+	}
+	if counts.Local != 0 {
+		t.Errorf("local = %d, want 0 — nothing was stored", counts.Local)
 	}
 }
 
@@ -198,11 +201,11 @@ func TestLocalizeIcons_ScopesToOneOwner(t *testing.T) {
 		t.Errorf("my bookmark was not stored: %q", got)
 	}
 
-	if n, _ := CountPendingIcons(db, &me); n != 0 {
-		t.Errorf("my pending = %d, want 0", n)
+	if c, _ := CountPendingIcons(db, &me); c.Pending != 0 || c.Local != 1 {
+		t.Errorf("mine: pending=%d local=%d, want 0 and 1", c.Pending, c.Local)
 	}
-	if n, _ := CountPendingIcons(db, nil); n != 1 {
-		t.Errorf("everyone's pending = %d, want 1 (theirs is untouched)", n)
+	if c, _ := CountPendingIcons(db, nil); c.Pending != 1 || c.Local != 1 {
+		t.Errorf("everyone: pending=%d local=%d, want 1 and 1 (theirs untouched)", c.Pending, c.Local)
 	}
 }
 

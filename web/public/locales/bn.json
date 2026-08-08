@@ -574,5 +574,7 @@
   "settings.icons_storing": "সংরক্ষণ করা হচ্ছে…",
   "settings.icons_stored": "{count}টি আইকন সংরক্ষিত হয়েছে",
   "settings.icons_stored_partial": "{stored}টি সংরক্ষিত, {failed}টিতে পৌঁছানো যায়নি",
-  "action.store_icons": "এখনই সংরক্ষণ করুন"
+  "action.store_icons": "এখনই সংরক্ষণ করুন",
+  "settings.icons_all_local": "এই সার্ভার থেকে দেওয়া আইকন: {count}",
+  "settings.icons_all_local_desc": "আপনার ড্যাশবোর্ড আর কারও কাছে এগুলি চায় না।"
 }

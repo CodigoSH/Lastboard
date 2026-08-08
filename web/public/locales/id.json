@@ -574,5 +574,7 @@
   "settings.icons_storing": "Menyimpan…",
   "settings.icons_stored": "{count} ikon tersimpan",
   "settings.icons_stored_partial": "{stored} tersimpan, {failed} tidak dapat dijangkau",
-  "action.store_icons": "Simpan sekarang"
+  "action.store_icons": "Simpan sekarang",
+  "settings.icons_all_local": "Ikon yang dilayani server ini: {count}",
+  "settings.icons_all_local_desc": "Dasbor Anda tidak memintanya kepada siapa pun lagi."
 }
