@@ -10,6 +10,7 @@ import {
     type DockerHost,
     type DockerPort,
     containerName,
+    defaultContainerUrl,
     fetchContainers,
     hostParam,
     isDemoMode,
@@ -200,6 +201,13 @@ const CSS = `
     font-size: 13px; font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     display: block;
+    color: inherit;
+    text-decoration: none;
+}
+/* Only rows that lead somewhere look clickable. */
+.container-name.is-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
 }
 
 /* STATE cell */
@@ -745,8 +753,16 @@ class DockerWidget extends HTMLElement {
             ? `<img class="icon-img" src="${esc(cfg.icon)}" alt="" loading="lazy" />`
             : `<div class="icon-placeholder">${esc((containerName(c)[0] || '?').toUpperCase())}</div>`;
 
-        // Name
+        // Name. It becomes a link when we know where the container answers —
+        // either because it says so, because a port is published, or because
+        // someone typed an address in the config. Without that it stays text:
+        // a link that goes nowhere is worse than no link.
         const displayName = cfg.label || containerName(c);
+        const target = cfg.url || defaultContainerUrl(c, this.getActiveHost(), window.location.hostname);
+        const nameHTML = target
+            ? `<a class="container-name is-link" href="${esc(target)}" target="_blank" rel="noopener noreferrer"
+                  title="${esc(target)}">${esc(displayName)}</a>`
+            : `<span class="container-name" title="${esc(displayName)}">${esc(displayName)}</span>`;
 
         // State
         const statusKey  = c.Status === 'running' ? 'running'
@@ -789,9 +805,7 @@ class DockerWidget extends HTMLElement {
             <div class="cell-icon" data-sid="${esc(sid)}">
                 ${iconHTML}
             </div>
-            <div class="cell-name">
-                <span class="container-name" title="${esc(displayName)}">${esc(displayName)}</span>
-            </div>
+            <div class="cell-name">${nameHTML}</div>
             <div class="cell-state">
                 <div class="state-badge ${statusKey}">
                     <div class="state-dot ${statusKey}"></div>

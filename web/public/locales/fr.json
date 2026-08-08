@@ -77,6 +77,8 @@
   "docker.containers_desc": "Les conteneurs non cochés restent masqués dans le widget.",
   "docker.search_containers": "Rechercher un conteneur…",
   "docker.container_icon": "Choisir une icône",
+  "docker.container_url": "Adresse ouverte par cette ligne",
+  "docker.container_url_none": "Aucun port publié",
   "docker.delete_host_confirm": "Êtes-vous sûr de vouloir supprimer cet hôte ?",
   "docker.forbidden": "Rôle administrateur requis pour effectuer des actions",
   "docker.host_name": "Nom",

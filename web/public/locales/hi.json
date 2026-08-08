@@ -77,6 +77,8 @@
   "docker.containers_desc": "बिना चुने कंटेनर विजेट में नहीं दिखते।",
   "docker.search_containers": "कंटेनर खोजें…",
   "docker.container_icon": "आइकन चुनें",
+  "docker.container_url": "यह पंक्ति जो पता खोलती है",
+  "docker.container_url_none": "कोई प्रकाशित पोर्ट नहीं",
   "docker.delete_host_confirm": "क्या आप वाकई इस होस्ट को हटाना चाहते हैं?",
   "docker.forbidden": "कार्रवाई करने के लिए एडमिन भूमिका आवश्यक है",
   "docker.host_name": "नाम",

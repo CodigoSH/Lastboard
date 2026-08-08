@@ -77,6 +77,8 @@
   "docker.containers_desc": "Nicht markierte Container bleiben im Widget ausgeblendet.",
   "docker.search_containers": "Container suchen …",
   "docker.container_icon": "Symbol wählen",
+  "docker.container_url": "Adresse, die diese Zeile öffnet",
+  "docker.container_url_none": "Kein veröffentlichter Port",
   "docker.delete_host_confirm": "Sind Sie sicher, dass Sie diesen Host entfernen möchten?",
   "docker.forbidden": "Admin-Rolle für Aktionen erforderlich",
   "docker.host_name": "Name",

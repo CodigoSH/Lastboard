@@ -77,6 +77,8 @@
   "docker.containers_desc": "Неотмеченные контейнеры не показываются в виджете.",
   "docker.search_containers": "Поиск контейнера…",
   "docker.container_icon": "Выбрать значок",
+  "docker.container_url": "Адрес, который открывает эта строка",
+  "docker.container_url_none": "Нет опубликованного порта",
   "docker.delete_host_confirm": "Вы уверены, что хотите удалить этот хост?",
   "docker.forbidden": "Для выполнения действий требуются права администратора",
   "docker.host_name": "Имя",

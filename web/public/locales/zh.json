@@ -77,6 +77,8 @@
   "docker.containers_desc": "未勾选的容器不会显示在小部件中。",
   "docker.search_containers": "搜索容器…",
   "docker.container_icon": "选择图标",
+  "docker.container_url": "此行打开的地址",
+  "docker.container_url_none": "未发布端口",
   "docker.delete_host_confirm": "您确定要删除此主机吗？",
   "docker.forbidden": "执行操作需要管理员角色",
   "docker.host_name": "名称",

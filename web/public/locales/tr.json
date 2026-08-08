@@ -77,6 +77,8 @@
   "docker.containers_desc": "İşaretlenmemiş konteynerler bileşende gizli kalır.",
   "docker.search_containers": "Konteyner ara…",
   "docker.container_icon": "Simge seç",
+  "docker.container_url": "Bu satırın açtığı adres",
+  "docker.container_url_none": "Yayımlanmış bağlantı noktası yok",
   "docker.delete_host_confirm": "Bu ana bilgisayarı kaldırmak istediğinizden emin misiniz?",
   "docker.forbidden": "Eylemleri gerçekleştirmek için yönetici rolü gereklidir",
   "docker.host_name": "İsim",

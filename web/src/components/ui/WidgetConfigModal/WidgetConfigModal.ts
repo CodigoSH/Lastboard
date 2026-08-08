@@ -20,6 +20,7 @@ import {
     type DockerContainer,
     type DockerHost,
     containerName,
+    defaultContainerUrl,
     fetchContainers,
     shortId,
 } from '../../../services/dockerShared';
@@ -556,10 +557,14 @@ class WidgetConfigModal extends HTMLElement {
 
                 const visible = row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true;
                 const label = row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '';
+                const url = row.querySelector<HTMLInputElement>('.docker-url')?.value.trim() || '';
                 const iconBtn = row.querySelector<HTMLElement>('.docker-icon-btn');
 
                 const entry: Record<string, any> = { ...(cfg[sid] || {}) };
                 if (label) entry.label = label; else delete entry.label;
+                // Only an explicit address is stored. An empty field means the
+                // widget keeps deriving one, so it follows the container.
+                if (url) entry.url = url; else delete entry.url;
                 if (visible) delete entry.hidden; else entry.hidden = true;
                 if (iconBtn?.dataset.icon) {
                     entry.icon = iconBtn.dataset.icon;
@@ -1440,7 +1445,7 @@ class WidgetConfigModal extends HTMLElement {
                 ? `<p class="docker-host-state is-error">${esc(i18n.t('docker.connection_error'))}</p>`
                 : containers.length === 0
                     ? `<p class="docker-host-state">${esc(i18n.t('docker.no_containers'))}</p>`
-                    : containers.map(c => this.dockerContainerRow(c, cfg)).join('');
+                    : containers.map(c => this.dockerContainerRow(c, cfg, host)).join('');
 
             return `
                 <div class="docker-host-group">
@@ -1450,7 +1455,11 @@ class WidgetConfigModal extends HTMLElement {
         }).join('');
     }
 
-    private dockerContainerRow(c: DockerContainer, cfg: Record<string, any>): string {
+    private dockerContainerRow(
+        c: DockerContainer,
+        cfg: Record<string, any>,
+        host: DockerHost,
+    ): string {
         const sid = shortId(c.ID);
         const entry = cfg[sid] || {};
         const name = containerName(c);
@@ -1459,6 +1468,11 @@ class WidgetConfigModal extends HTMLElement {
         const preview = icon
             ? `<img src="${esc(icon)}" alt="" />`
             : `<span class="docker-icon-placeholder">${esc((name[0] || '?').toUpperCase())}</span>`;
+
+        // The derived address is the placeholder, not the value: leaving the
+        // field empty means "use whatever you worked out", so a container that
+        // later publishes a different port keeps working without an edit.
+        const suggested = defaultContainerUrl(c, host, window.location.hostname);
 
         return `
             <div class="docker-container-row" data-sid="${esc(sid)}" data-search="${esc((name + ' ' + c.Image).toLowerCase())}">
@@ -1470,6 +1484,11 @@ class WidgetConfigModal extends HTMLElement {
                         title="${esc(i18n.t('docker.container_icon'))}">${preview}</button>
                 <input type="text" class="docker-label" data-sid="${esc(sid)}"
                        value="${esc(entry.label || '')}" placeholder="${esc(name)}" />
+                <input type="text" class="docker-url" data-sid="${esc(sid)}"
+                       data-suggested="${esc(suggested)}"
+                       value="${esc(entry.url || '')}"
+                       placeholder="${esc(suggested || i18n.t('docker.container_url_none'))}"
+                       title="${esc(i18n.t('docker.container_url'))}" />
             </div>`;
     }
 }

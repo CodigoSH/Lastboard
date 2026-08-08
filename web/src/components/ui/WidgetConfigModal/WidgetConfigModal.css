@@ -1053,12 +1053,22 @@ dialog[open] {
 
 .docker-container-row {
     display: grid;
-    grid-template-columns: auto 32px minmax(0, 1fr);
+    grid-template-columns: auto 32px minmax(0, 1fr) minmax(0, 1.2fr);
     align-items: center;
     gap: 10px;
     padding: 5px 8px;
     border-radius: 6px;
     transition: background 0.15s;
+}
+
+/* Narrow dialogs stack the name and the address instead of squeezing both. */
+@media (max-width: 520px) {
+    .docker-container-row {
+        grid-template-columns: auto 32px minmax(0, 1fr);
+    }
+    .docker-container-row .docker-url {
+        grid-column: 2 / -1;
+    }
 }
 
 .docker-container-row:hover {
@@ -1117,7 +1127,23 @@ dialog[open] {
     border-color: var(--border);
 }
 
-.docker-container-row input[type="text"].docker-label:focus {
+.docker-container-row input[type="text"].docker-label:focus,
+.docker-container-row input[type="text"].docker-url:focus {
     background: var(--input-bg, transparent);
     border-color: var(--accent);
+}
+
+/* The address sits quieter than the name: most of the time the placeholder
+   already says where the row will go, and there is nothing to type. */
+.docker-container-row input[type="text"].docker-url {
+    padding: 4px 8px;
+    background: transparent;
+    border-color: transparent;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+}
+
+.docker-container-row input[type="text"].docker-url:hover {
+    border-color: var(--border);
 }

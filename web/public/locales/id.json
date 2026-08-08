@@ -77,6 +77,8 @@
   "docker.containers_desc": "Kontainer yang tidak dicentang tetap tersembunyi di widget.",
   "docker.search_containers": "Cari kontainer…",
   "docker.container_icon": "Pilih ikon",
+  "docker.container_url": "Alamat yang dibuka baris ini",
+  "docker.container_url_none": "Tidak ada porta yang dipublikasikan",
   "docker.delete_host_confirm": "Apakah Anda yakin ingin menghapus host ini?",
   "docker.forbidden": "Peran admin diperlukan untuk melakukan tindakan",
   "docker.host_name": "Nama",

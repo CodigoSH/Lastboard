@@ -77,6 +77,8 @@
   "docker.containers_desc": "チェックを外したコンテナはウィジェットに表示されません。",
   "docker.search_containers": "コンテナを検索…",
   "docker.container_icon": "アイコンを選択",
+  "docker.container_url": "この行が開くアドレス",
+  "docker.container_url_none": "公開ポートなし",
   "docker.delete_host_confirm": "このホストを削除してもよろしいですか？",
   "docker.forbidden": "アクションの実行には管理者ロールが必要です",
   "docker.host_name": "名前",
