@@ -181,7 +181,7 @@ export class UpdateModal extends HTMLElement {
                 title: i18n.t('update.modal_title'),
                 close: i18n.t('general.close'),
                 badge: this.badgeFor(state.phase),
-                install: i18n.t('action.download_install'),
+                install: i18n.t('action.update_now'),
                 changelog: i18n.t('general.changelog'),
                 intro: i18n.t('update.intro'),
                 runningHint: i18n.t('update.running_hint'),

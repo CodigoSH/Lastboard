@@ -461,7 +461,6 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.export_db')}</h3>
-                        <p>${i18n.t('settings.export_desc')}</p>
                     </div>
                     <app-button variant="primary" data-action="download-backup">
                         <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
@@ -471,7 +470,7 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.import_db')}</h3>
-                        <p>${i18n.t('settings.import_desc')} <br><span style="color: var(--danger-color); font-weight: 600;">${i18n.t('settings.restore_overwrite_warn')}</span></p>
+                        <p><span style="color: var(--danger-color); font-weight: 600;">${i18n.t('settings.restore_overwrite_warn')}</span></p>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <input type="file" id="backup-upload" accept=".json" style="display: none;" data-change="restore-backup">
@@ -492,7 +491,6 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.export_native')}</h3>
-                        <p>${i18n.t('settings.export_native_desc')}</p>
                     </div>
                     <app-button variant="primary" data-action="export-native">${i18n.t('settings.export_native_btn')}</app-button>
                 </div>
@@ -506,7 +504,6 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.import_file')}</h3>
-                        <p>${i18n.t('settings.import_file_desc')}</p>
                     </div>
                     <input type="file" id="import-file" accept=".yaml,.yml" style="display: none;" data-change="import-file">
                     <app-button data-action="click-file" data-file="import-file">${i18n.t('action.select_file')}</app-button>
@@ -570,13 +567,14 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
                         <h3 class="update-modal__version">${updateInfo.latest_version}</h3>
                     </div>
                     
+                    <!-- One button, one decision. What's New used to sit here as
+                         well as in the dialog this opens, so you were offered the
+                         same link twice in two steps; it belongs with the install
+                         confirmation, where reading it can still change your mind. -->
                     <div class="update-modal__footer">
                         <app-button variant="primary" id="btn-update-now" style="flex: 1; justify-content: center;" data-action="perform-update" data-asset-url="${esc(updateInfo.asset_url)}">
-                            ${i18n.t('action.download_install')}
+                            ${i18n.t('action.update_now')}
                         </app-button>
-                        <a href="https://git.codigosh.com/CodigoSH/Lastboard/releases" target="_blank" style="text-decoration: none;">
-                            <app-button variant="ghost" style="height: 100%;">${i18n.t('general.changelog')}</app-button>
-                        </a>
                     </div>
                 </div>
             </div>

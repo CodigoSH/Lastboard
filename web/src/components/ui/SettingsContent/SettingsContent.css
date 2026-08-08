@@ -38,10 +38,16 @@ dialog {
     margin-bottom: clamp(20px, 4cqi, 32px);
 }
 
+/* Each card is one subject: your icons, a full backup, import/export.
+   They used to be transparent and unpadded, so three separate subjects ran
+   together into a single column of headings and rows with nothing to say where
+   one ended and the next began — which is what made a section with three of
+   them read as a wall rather than as three choices. */
 .bento-card {
-    background: transparent;
-    border: none;
-    padding: 0;
+    background: rgba(128, 128, 128, 0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(16px, 3cqi, 20px);
     position: relative;
     transition: all 0.2s ease;
 }
@@ -690,12 +696,35 @@ button {
     transform: translateY(0);
 }
 
+/* Text on the left, its control on the right — until there isn't room for
+   both. The drawer is around 460px wide and the buttons take a fixed slice of
+   it, which left the description about 200px and wrapped one sentence over
+   four lines. Below the threshold the control drops onto its own line and the
+   text gets the full width instead. */
 .settings-content__action-row {
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     justify-content: space-between;
     align-items: center;
     padding: clamp(16px, 3cqi, 24px) 0;
     border-bottom: 1px solid var(--border);
+}
+
+.settings-content__action-info {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+/* The control keeps its own size. app-button is width:100% of whatever holds
+   it, which went unnoticed while the row never wrapped — the flex line sized
+   it. Once it can drop onto a line of its own, that 100% turned a secondary
+   action into a full-width bar. Overriding the width from out here works
+   because a rule in the outer tree beats the component's own :host. */
+.settings-content__action-row > :not(.settings-content__action-info) {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
 }
 
 .settings-content__action-row:last-child {
