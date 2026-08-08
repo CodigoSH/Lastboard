@@ -202,6 +202,19 @@ const CSS = `
     color: var(--text-dim); opacity: 0.7;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* A running container has no reading for its first seconds: the list arrives
+   from one endpoint and the numbers from another, one request per container.
+   The cell used to sit empty in the meantime, so the row landed with a hole in
+   it and grew a value out of nothing. It now carries the same shimmer bar the
+   bookmarks show while they load — the row arrives whole and fills in. */
+.stats-text.is-loading {
+    display: block;
+    width: 85%; height: 9px;
+    border-radius: 4px;
+    opacity: 1;
+    background: linear-gradient(90deg, rgba(128,128,128,0.1) 25%, rgba(128,128,128,0.2) 50%, rgba(128,128,128,0.1) 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s infinite;
+}
 
 /* IMAGE cell — two lines, mirroring the state cell opposite it: what it runs
    on top, where it runs underneath. The row is already this tall because of
@@ -592,8 +605,12 @@ class DockerWidget extends HTMLElement {
                         const stats: DockerStats = await res.json();
                         this._stats.set(container.ID, stats);
                         this.updateStatsDOM(container.ID, stats);
+                    } else {
+                        this.clearStatsPending(container.ID);
                     }
-                } catch (_) { }
+                } catch (_) {
+                    this.clearStatsPending(container.ID);
+                }
             }));
 
             await new Promise(r => setTimeout(r, 150));
@@ -603,7 +620,19 @@ class DockerWidget extends HTMLElement {
     private updateStatsDOM(containerID: string, stats: DockerStats) {
         const el = this.shadowRoot?.querySelector(`[data-stats-id="${containerID}"]`);
         if (!el) return;
+        el.classList.remove('is-loading');
         el.textContent = `${stats.CPUPercent.toFixed(1)}% CPU · ${stats.MemPercent.toFixed(1)}% RAM`;
+    }
+
+    /**
+     * Takes the shimmer off a row whose reading never arrived. A placeholder
+     * that pulses forever promises something that isn't coming, so a container
+     * the daemon won't report on goes back to showing nothing at all.
+     */
+    private clearStatsPending(containerID: string) {
+        this.shadowRoot
+            ?.querySelector(`[data-stats-id="${containerID}"]`)
+            ?.classList.remove('is-loading');
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
@@ -804,6 +833,10 @@ class DockerWidget extends HTMLElement {
         const statsText   = (c.Status === 'running' && cachedStats)
             ? `${cachedStats.CPUPercent.toFixed(1)}% CPU · ${cachedStats.MemPercent.toFixed(1)}% RAM`
             : '';
+        // Only a row that is actually waiting for numbers shimmers. A stopped
+        // container has none to wait for, and a host that stopped answering
+        // isn't going to send any.
+        const statsPending = c.Status === 'running' && !stale && !cachedStats;
 
         // Image
         const imgShort = c.Image.replace(/^[a-z0-9.-]+\.[a-z]{2,}\//i, '');
@@ -843,7 +876,7 @@ class DockerWidget extends HTMLElement {
             <span class="state-dot ${statusKey}" title="${esc(stateLabel)}"></span>
             <div class="cell-name">${nameHTML}</div>
             <div class="cell-state">
-                <span class="stats-text" data-stats-id="${esc(c.ID)}">${esc(statsText)}</span>
+                <span class="stats-text${statsPending ? ' is-loading' : ''}" data-stats-id="${esc(c.ID)}">${esc(statsText)}</span>
             </div>
             <div class="cell-image">
                 <span class="container-image" title="${esc(c.Image)}">${esc(imgShort)}</span>
