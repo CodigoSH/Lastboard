@@ -45,4 +45,4 @@ All selected items move together and are auto-placed on the target dashboard.
 
 ## Per-Dashboard Background
 
-Each dashboard keeps its own background image. Set it from **Settings → Appearance** while that dashboard is active. See [Preferences](../getting-started/configuration.md) for the appearance options.
+Each dashboard keeps its own background image. Set it from **Settings → Appearance** while that dashboard is active. See [Preferences](preferences.md) for the appearance options.
