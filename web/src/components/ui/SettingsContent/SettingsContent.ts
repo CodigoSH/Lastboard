@@ -6,7 +6,7 @@ import { userService } from '../../../services/userService';
 import { ThemeService } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, notificationsTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
@@ -847,11 +847,11 @@ class SettingsContent extends HTMLElement {
             case 'data':
                 return dataTemplate(this.pendingIcons, this.localIcons, this.storingIcons);
 
+            // 'notifications' used to be its own section; anything still
+            // pointing there lands on the section that absorbed it.
             case 'monitoring':
-                return monitoringTemplate(this.monitoring);
-
             case 'notifications':
-                return notificationsTemplate(this.monitoring);
+                return monitoringTemplate(this.monitoring);
 
             case 'users':
                 return usersTemplate(this.users);

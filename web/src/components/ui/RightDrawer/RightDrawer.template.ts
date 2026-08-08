@@ -57,11 +57,6 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                         <span>${i18n.t('settings.monitoring')}</span>
                     </div>
 
-                    <div class="right-drawer__menu-item ${selectedSection === 'notifications' ? 'right-drawer__menu-item--active' : ''}" data-section="notifications">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        <span>${i18n.t('settings.notifications')}</span>
-                    </div>
-
                     <div class="right-drawer__menu-item ${selectedSection === 'data' ? 'right-drawer__menu-item--active' : ''}" data-section="data">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
                         <span>${i18n.t('settings.data')}</span>

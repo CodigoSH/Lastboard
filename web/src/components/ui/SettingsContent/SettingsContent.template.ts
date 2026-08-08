@@ -305,10 +305,25 @@ export const usersTemplate = (users: any[]) => `
     </dialog>
 `;
 
+/**
+ * Monitoring and its alerts, in one section.
+ *
+ * They used to be two entries in the sidebar, which left Alerts as a screen
+ * with a single switch on it while Monitoring carried everything else. They
+ * are one subject — alerts only mean anything with 24/7 recording on, and the
+ * docs already treat them together — so they are one section with two cards.
+ *
+ * Within each card the settings that save themselves come first and the
+ * buttons after, separated: a switch that takes effect as you flip it and a
+ * button that deletes your history should not look like the same kind of
+ * thing.
+ */
 export const monitoringTemplate = (monitoring: {
     mode: string; interval_sec: number; alerts_enabled: boolean;
     notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
-}) => `
+}) => {
+    const on24 = monitoring.mode === 'background';
+    return `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.monitoring')}</h3>
@@ -319,22 +334,22 @@ export const monitoringTemplate = (monitoring: {
                         <p>${i18n.t('settings.monitoring_mode_desc')}</p>
                     </div>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="monitoring-toggle" data-change="monitoring-toggle" ${monitoring.mode === 'background' ? 'checked' : ''}>
+                        <input type="checkbox" id="monitoring-toggle" data-change="monitoring-toggle" ${on24 ? 'checked' : ''}>
                         <span class="slider"></span>
                     </label>
                 </div>
                 <div class="settings-content__action-row" id="monitoring-interval-row"
-                     style="display: ${monitoring.mode === 'background' ? 'flex' : 'none'};">
+                     style="display: ${on24 ? 'flex' : 'none'};">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.monitoring_interval')}</h3>
-                        <p>${i18n.t('settings.monitoring_interval_desc')}</p>
                     </div>
                     <app-select id="monitoring-interval" value="${monitoring.interval_sec}" style="min-width: 200px;"></app-select>
                 </div>
+            </div>
+            <div class="settings-content__action-group settings-content__action-group--actions">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('monitor.overview_title')}</h3>
-                        <p>${i18n.t('settings.monitoring_overview_desc')}</p>
                     </div>
                     <app-button variant="primary" data-action="open-monitor-overview">${i18n.t('monitor.view_overview')}</app-button>
                 </div>
@@ -347,17 +362,10 @@ export const monitoringTemplate = (monitoring: {
                 </div>
             </div>
         </div>
-    </div>
-`;
 
-export const notificationsTemplate = (monitoring: {
-    mode: string; alerts_enabled: boolean;
-    notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
-}) => `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.notifications')}</h3>
-            ${monitoring.mode !== 'background' ? `<p class="settings-content__text-dim" style="font-size:13px;margin:0 0 14px;">${i18n.t('settings.alerts_requires_247')}</p>` : ''}
+            ${!on24 ? `<p class="settings-content__text-dim" style="font-size:13px;margin:0 0 14px;">${i18n.t('settings.alerts_requires_247')}</p>` : ''}
             <div class="settings-content__action-group">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
@@ -373,7 +381,6 @@ export const notificationsTemplate = (monitoring: {
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.notify_method')}</h3>
-                        <p>${i18n.t('settings.notify_method_desc')}</p>
                     </div>
                     <app-select id="notify-type" value="${esc(monitoring.notify_type)}" style="min-width: 200px;"></app-select>
                 </div>
@@ -395,19 +402,22 @@ export const notificationsTemplate = (monitoring: {
                     </div>
                     <app-select id="fail-threshold" value="${monitoring.fail_threshold}" style="min-width: 120px;"></app-select>
                 </div>
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.notify_test')}</h3>
-                        <p>${i18n.t('settings.notify_test_desc')}</p>
-                    </div>
-                    <app-button variant="primary" data-action="test-notify">${i18n.t('settings.notify_test_btn')}</app-button>
-                </div>
                 ` : ''}
                 ` : ''}
             </div>
+            ${monitoring.alerts_enabled && monitoring.notify_type && monitoring.notify_type !== 'none' ? `
+            <div class="settings-content__action-group settings-content__action-group--actions">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.notify_test')}</h3>
+                    </div>
+                    <app-button variant="primary" data-action="test-notify">${i18n.t('settings.notify_test_btn')}</app-button>
+                </div>
+            </div>` : ''}
         </div>
     </div>
 `;
+};
 
 /**
  * Where your icons come from.

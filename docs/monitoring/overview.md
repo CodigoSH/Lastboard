@@ -64,7 +64,7 @@ Clearing data does not turn monitoring off — new checks start accumulating aga
 
 ## Notifications
 
-When **24/7 monitoring** is on, Lastboard can send an alert when a service goes down and again when it recovers. Configure this in **Settings → Notifications**.
+When **24/7 monitoring** is on, Lastboard can send an alert when a service goes down and again when it recovers. Configure this in **Settings → Monitoring**, in the Notifications card below the monitoring settings.
 
 ![Notifications settings](../assets/p-notifications.png)
 

@@ -47,17 +47,13 @@ Administrators manage who can access the instance.
 
 ## Monitoring
 
-Turn service monitoring on and choose how often the server checks your services. See **[Monitoring & Uptime](../monitoring/overview.md)** for the full guide.
-
-## Notifications
-
-Configure down/up alerts via ntfy, Gotify, or a webhook. Covered in **[Monitoring & Uptime](../monitoring/overview.md#notifications)**.
+Turn service monitoring on, choose how often the server checks your services, and configure down/up alerts via ntfy, Gotify or a webhook. See **[Monitoring & Uptime](../monitoring/overview.md)** for the full guide.
 
 ## Data
 
 Full backup & restore, and importing/exporting dashboards. See **[Import, Export & Backup](import-export.md)**.
 
-If any of your bookmarks still fetch their icon from outside, this section says how many and offers to store them — see **[Where icons are stored](../getting-started/bookmarks.md#boards-made-before-this-existed)**. Normally there are none and it isn't shown.
+It also says where your icons come from — how many this server hands out, and how many are still fetched from outside, with a button to bring those in. See **[Where icons are stored](../getting-started/bookmarks.md#boards-made-before-this-existed)**.
 
 ## Advanced
 

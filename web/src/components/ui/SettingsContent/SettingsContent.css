@@ -711,9 +711,23 @@ button {
     border-bottom: 1px solid var(--border);
 }
 
+/* The basis is the wrap threshold, not the width: the text grows to fill
+   whatever the control leaves. Keep it low enough that a row holding a 200px
+   dropdown still fits on one line in a ~420px panel — at 220px it didn't, and
+   the dropdowns dropped onto a line of their own and stretched across it. */
 .settings-content__action-info {
-    flex: 1 1 220px;
+    flex: 1 1 150px;
     min-width: 0;
+}
+
+/* Things you press, kept apart from things that save themselves.
+   A switch that takes effect as you flip it and a button that deletes your
+   history were sitting in the same list looking like the same kind of thing.
+   The gap and the rule say they aren't. */
+.settings-content__action-group--actions {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
 }
 
 /* The control keeps its own size rather than growing to fill the line. */
@@ -721,15 +735,17 @@ button {
     flex: 0 0 auto;
 }
 
-/* Only the buttons need their width pinned: app-button is width:100% of
-   whatever holds it, which went unnoticed while the row never wrapped — the
-   flex line sized it — and turned into a full-width bar once it could drop
-   onto a line of its own. Overriding from out here works because a rule in
-   the outer tree beats the component's own :host.
-   Scoped to app-button on purpose: applying it to every non-text child also
-   hit `.toggle-switch`, whose 44px track collapsed and left the knob floating
-   with nothing under it. */
-.settings-content__action-row app-button {
+/* app-button and app-select are both width:100% of whatever holds them, which
+   went unnoticed while the row never wrapped — the flex line sized them — and
+   made each one claim a full line of its own once it could. Overriding from
+   out here works because a rule in the outer tree beats the component's own
+   :host. A select still asks for its inline min-width, so it keeps its size;
+   it just stops demanding the whole row.
+   Named tag by tag on purpose: written as "every child that isn't the text"
+   this also hit `.toggle-switch`, whose 44px track collapsed and left the knob
+   floating with nothing under it. */
+.settings-content__action-row app-button,
+.settings-content__action-row app-select {
     width: auto;
     max-width: 100%;
 }
