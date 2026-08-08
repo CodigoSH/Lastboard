@@ -790,6 +790,11 @@ dialog[open] {
     gap: 8px;
     max-height: 190px;
     overflow-y: auto;
+    /* A scroll container clips its children, and a hovered row lifts itself by
+       a pixel and casts a shadow. Without this the top row lost its border on
+       hover and the shadow was cut off. */
+    padding: 3px;
+    margin: -3px;
 }
 
 .host-item {
@@ -1047,37 +1052,81 @@ dialog[open] {
 
 /* Master-detail, from the second host on: pick a host on the left, configure
    its containers on the right. Below two hosts there is nothing to pick, so
-   the form stays a single narrow column and this never applies. */
+   the form stays a single narrow column and this never applies.
+   Both children are .field-group, so labels and inputs are styled by the rules
+   above rather than by anything specific to this layout. */
 .docker-split {
     display: grid;
-    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.6fr);
+    grid-template-columns: minmax(190px, 0.85fr) minmax(0, 1.6fr);
     gap: 20px;
-    align-items: start;
+    /* One height for both columns, so the two lists start and finish on the
+       same lines. Left to themselves they sized to their own content: the
+       shorter one left a hole under it, and the taller one pushed the dialog
+       down the screen as hosts were added. A set height gives the lists room
+       to be worth scrolling and stops either from deciding how tall the
+       dialog is. */
+    align-items: stretch;
+    height: 380px;
 }
 
-.docker-split label {
-    display: block;
-    margin-bottom: 8px;
+.docker-split > .field-group {
+    min-height: 0;
+}
+
+/* Each list takes whatever is left between the search box above it and the
+   button below, rather than a fixed height that leaves a gap or overflows. */
+.docker-split .hosts-list,
+.docker-split .docker-containers {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+}
+
+/* Both lists are framed the same way. Only the container list used to be, and
+   an unframed column next to a framed one reads as a hole rather than as a
+   panel with room left in it. */
+.docker-split .hosts-list {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+    margin: 0;
+}
+
+/* Room is tight beside two icon buttons, and the host name was being cut off
+   several characters early. */
+.docker-split .host-item {
+    padding: 10px 12px;
+}
+
+/* The name is what you scan; editing and deleting are occasional. In the
+   narrow column they hand their width back until you reach for a row — the
+   selected one keeps them, so the current host never changes shape. This
+   dialog is desktop-only, so hover is a safe way to reveal them. */
+.docker-split .host-actions {
+    opacity: 0;
+    transition: opacity 0.15s var(--ease-standard);
+}
+
+.docker-split .host-item:hover .host-actions,
+.docker-split .host-item:focus-within .host-actions,
+.docker-split .host-item.is-selected .host-actions {
+    opacity: 1;
 }
 
 /* A narrow desktop window would squeeze both columns into uselessness. */
 @media (max-width: 720px) {
     .docker-split {
         grid-template-columns: 1fr;
+        height: auto;
     }
-}
 
-.docker-hint {
-    display: block;
-    margin-top: 10px;
-}
+    .docker-split .hosts-list {
+        max-height: 190px;
+    }
 
-/* Outside a .field-group the generic input rule doesn't reach it, and the box
-   was rendering at its default size in the middle of a wide column. */
-.docker-search {
-    width: 100%;
-    box-sizing: border-box;
-    margin: 0 0 8px;
+    .docker-split .docker-containers {
+        max-height: 260px;
+    }
 }
 
 .docker-containers {

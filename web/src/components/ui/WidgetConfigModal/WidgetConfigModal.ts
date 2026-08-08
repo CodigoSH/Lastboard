@@ -1438,45 +1438,54 @@ class WidgetConfigModal extends HTMLElement {
             ? hosts.map(hostRow).join('')
             : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${i18n.t('docker.no_hosts_configured') || 'No hosts found'}</p>`;
 
+        // Every control below lives inside a .field-group, which is what gives
+        // labels and inputs their colours, padding and focus ring. Building the
+        // columns out of anything else meant restyling each property by hand,
+        // and the ones that got missed rendered as bare browser defaults.
         const hostSearch = hosts.length >= WidgetConfigModal.DOCKER_HOST_SEARCH_FROM
-            ? `<input type="text" id="docker-host-search" class="docker-search"
+            ? `<input type="text" id="docker-host-search"
                       placeholder="${esc(i18n.t('docker.search_hosts'))}" />`
             : '';
 
-        const hostsPanel = `
-            <div class="hosts-list">${hostsList}</div>
-            <app-button variant="ghost" id="docker-show-add-btn" style="width: 100%; margin-top: 12px;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>`;
+        const addHostBtn = `<app-button variant="ghost" id="docker-show-add-btn" style="width: 100%;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>`;
 
-        const containersPanel = `
-            <input type="text" id="docker-search" class="docker-search"
-                   placeholder="${esc(i18n.t('docker.search_containers'))}" />
+        const containerSearch = `<input type="text" id="docker-search"
+                   placeholder="${esc(i18n.t('docker.search_containers'))}" />`;
+
+        const containerList = `
             <div id="docker-containers" class="docker-containers">
                 <p class="monitor-services__state">${i18n.t('general.loading')}</p>
             </div>`;
 
+        const hint = `<small>${i18n.t('docker.containers_desc')}</small>`;
+
         const body = split
             ? `
             <div class="docker-split">
-                <div class="docker-split__hosts">
+                <div class="field-group">
                     <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
                     ${hostSearch}
-                    ${hostsPanel}
+                    <div class="hosts-list">${hostsList}</div>
+                    ${addHostBtn}
                 </div>
-                <div class="docker-split__containers">
+                <div class="field-group">
                     <label id="docker-containers-label">${i18n.t('docker.containers')}</label>
-                    ${containersPanel}
+                    ${containerSearch}
+                    ${containerList}
+                    ${hint}
                 </div>
-            </div>
-            <small class="docker-hint">${i18n.t('docker.containers_desc')}</small>`
+            </div>`
             : `
             <div class="field-group">
                 <label>${i18n.t('docker.hosts') || 'Docker Hosts'}</label>
-                ${hostsPanel}
+                <div class="hosts-list">${hostsList}</div>
+                ${addHostBtn}
             </div>
             <div class="field-group">
                 <label id="docker-containers-label">${i18n.t('docker.containers')}</label>
-                ${containersPanel}
-                <small>${i18n.t('docker.containers_desc')}</small>
+                ${containerSearch}
+                ${containerList}
+                ${hint}
             </div>`;
 
         const generalTab = `
