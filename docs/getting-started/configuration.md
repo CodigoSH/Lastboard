@@ -12,7 +12,7 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 | `DB_FILE` | `./lastboard.db` | Path to the SQLite database. In Docker, this defaults to `/var/lib/lastboard/lastboard.db`. |
 | `TZ` | `UTC` | Timezone for the application (e.g., `America/New_York`). |
 | `LOG_FORMAT` | `text` | Log output format. Use `json` for structured logging. |
-| `DEMO_ONLY` | `false` | Set to `true` to run purely in a frontend-only demo mode (no auth, no persistence). |
+| `DEMO_ONLY` | `false` | Set to `true` to run purely in a frontend-only demo mode (no auth, no persistence). Responses also carry `X-Robots-Tag: noindex, nofollow`, so a public demo stays out of search results. |
 | `TRUST_PROXY` | `false` | Enable reading the real client IP from `X-Forwarded-For`. Set to `true` if behind a proxy. |
 | `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. Enforced by the backend API. |
 | `PUID` | `0` | User id to run as. When non-zero (and started as root) the app chowns the data dir and drops privileges to it. |

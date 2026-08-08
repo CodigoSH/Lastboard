@@ -377,6 +377,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"object-src 'none'; "+
 			"frame-ancestors 'self'")
 
+	// A demo instance is public, but it must stay out of search results: every
+	// URL renders the same page from mock data, so search engines read the site
+	// as duplicate content and it competes with the real one. Crawling is left
+	// allowed on purpose — blocking it in robots.txt would hide this header,
+	// and a page that can't be fetched can't be told not to index.
+	if os.Getenv("DEMO_ONLY") == "true" {
+		w.Header().Set("X-Robots-Tag", "noindex, nofollow")
+	}
+
 	// HSTS (HTTP Strict Transport Security)
 	// Only send over HTTPS to prevent MITM attacks
 	// max-age=31536000 (1 year), includeSubDomains, preload
