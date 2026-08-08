@@ -47,6 +47,13 @@ export class IconSelectionModal extends HTMLElement {
     async open(): Promise<string | null> {
         if (!this.dialog) return null;
 
+        // Each opening starts clean. The picker is never unmounted, so it would
+        // otherwise reopen still showing the last search — tedious when setting
+        // icons for one container after another.
+        const picker = this.shadowRoot!.querySelector('icon-picker') as
+            (HTMLElement & { reset?: () => void }) | null;
+        picker?.reset?.();
+
         this.dialog.showModal();
 
         return new Promise((resolve) => {
