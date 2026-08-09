@@ -1,9 +1,11 @@
 :host {
     display: block;
     color: var(--text-main);
-    max-width: clamp(240px, 85cqi, 900px);
-    margin: 0 auto;
-    padding: clamp(20px, 5cqi, 40px) clamp(12px, 3cqi, 20px);
+    /* No width of its own and no side padding: the drawer's content body
+       already pads this box, and the old max-width + auto margins + 20px
+       gutter stacked a second frame inside the panel — the cards ended up
+       ~90px narrower than the space they were sitting in. */
+    padding: clamp(8px, 1.5cqi, 14px) 0;
     position: relative;
 }
 
@@ -36,6 +38,10 @@ dialog {
     grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 45cqi, 320px), 1fr));
     gap: clamp(12px, 3cqi, 20px);
     margin-bottom: clamp(20px, 4cqi, 32px);
+    /* Each card is as tall as its own contents. Stretching them to match the
+       tallest one in the row leaves a card with two fields sitting in a box
+       with half of it empty. */
+    align-items: start;
 }
 
 /* Each card is one subject: your icons, a full backup, import/export.
@@ -1036,12 +1042,13 @@ input:checked+.slider:before {
     background-color: white;
 }
 
-/* Responsive Overrides */
-@media (max-width: 900px) {
-    :host {
-        padding: clamp(16px, 4vw, 24px) clamp(12px, 3vw, 16px);
-    }
-
+/* Responsive Overrides.
+   Keyed to the drawer's content panel, not to the window: this content lives
+   in a panel roughly a third of the screen wide, so a window-width breakpoint
+   fired at the wrong moments — rows stayed side by side in a 590px panel on a
+   1024px screen, and stacked in an 800px panel as soon as the window dipped
+   under 900. */
+@container (max-width: 470px) {
     .settings-content__action-row,
     .settings-content__danger-zone {
         flex-direction: column;
@@ -1053,6 +1060,14 @@ input:checked+.slider:before {
 
     .settings-content__action-info p {
         max-width: none;
+    }
+
+    /* flex-basis follows the main axis, so the 150px wrap threshold that keeps
+       the text from strangling in a row became a 150px TALL text block once the
+       row stacked — the label and its control ended up an inch apart, with
+       space-between pushing them to opposite ends of the gap. */
+    .settings-content__action-info {
+        flex: 0 0 auto;
     }
 
     .settings-content__reset-btn,

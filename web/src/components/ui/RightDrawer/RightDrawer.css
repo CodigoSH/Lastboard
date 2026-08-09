@@ -7,6 +7,9 @@
     z-index: 1000;
     font-family: var(--font-sans);
     container-type: inline-size;
+    /* Where the side menu ends: the content panel is anchored to it and also
+       sized from it, so the two must never disagree. */
+    --drawer-menu-offset: clamp(189px, calc(18vw + 24px), 249px);
 
     visibility: hidden;
     pointer-events: none;
@@ -66,9 +69,20 @@
 .right-drawer__content-panel {
     position: absolute;
     top: 24px;
-    right: clamp(189px, calc(18vw + 24px), 249px);
+    /* Sits beside the menu, except when there is not enough room left for a
+       usable panel — then it slides over the menu instead of hanging off the
+       left edge of the screen, which is what it did on a phone (left edge at
+       -201px, first column of every row unreachable). */
+    right: min(var(--drawer-menu-offset), max(8px, calc(100vw - 360px)));
     bottom: auto;
-    width: clamp(400px, calc(50vw - 18vw - 48px), 725px);
+    /* Everything from the side menu to a margin of dashboard left visible.
+       The old formula (32vw - 48px) hit its 400px floor on every laptop and
+       only reached 566px on a 1080p screen, so the panel stayed the same
+       narrow column no matter how much room there was — the settings inside
+       it were cramped while 700-1100px of screen sat empty beside them. */
+    width: clamp(320px, calc(100vw - var(--drawer-menu-offset) - 22vw), 900px);
+    /* Never wider than the window it has to fit in. */
+    max-width: calc(100vw - 16px);
     max-height: calc(100vh - 96px);
     background: var(--surface);
     backdrop-filter: blur(16px);
@@ -83,6 +97,12 @@
     opacity: 1;
     transform: translateX(0);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    /* The panel is what the settings inside it should measure themselves
+       against. Without this their cqi units resolved against the drawer host,
+       which spans the whole window — so every clamp() in there sat pinned at
+       its maximum on a desktop and at its minimum on a phone, never tracking
+       the box the content actually lives in. */
+    container-type: inline-size;
 }
 
 .right-drawer__content-panel--closed {
