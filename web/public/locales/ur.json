@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "تمام زیر نگرانی سروسز کی ریکارڈ شدہ ہسٹری حذف کریں؟ واپس نہیں ہو سکتا۔",
   "monitor.data_cleared": "ڈیٹا صاف ہو گیا",
   "settings.monitoring_clear_desc": "ریکارڈ شدہ تمام اسٹیٹس ہسٹری حذف کرتا ہے۔ نگرانی چالو رہتی ہے۔",
+  "settings.monitoring_unavailable": "مانیٹرنگ کی ترتیبات لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کے لیے صفحہ ریفریش کریں۔",
   "monitor.clear_this": "اس سروس کی تاریخ",
   "monitor.clear_all_services": "تمام سروسز کی تاریخ",
   "monitor.now": "اب",

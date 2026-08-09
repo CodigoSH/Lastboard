@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "Supprimer l'historique de tous les services surveillés ? Action irréversible.",
   "monitor.data_cleared": "Données effacées",
   "settings.monitoring_clear_desc": "Supprime tout l'historique d'état enregistré. La surveillance reste active.",
+  "settings.monitoring_unavailable": "Impossible de charger les paramètres de surveillance. Rechargez la page pour réessayer.",
   "monitor.clear_this": "Historique de ce service",
   "monitor.clear_all_services": "Historique de tous les services",
   "monitor.now": "maintenant",

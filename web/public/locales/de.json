@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "Den aufgezeichneten Verlauf aller überwachten Dienste löschen? Kann nicht rückgängig gemacht werden.",
   "monitor.data_cleared": "Daten gelöscht",
   "settings.monitoring_clear_desc": "Löscht den gesamten aufgezeichneten Statusverlauf. Die Überwachung bleibt aktiv.",
+  "settings.monitoring_unavailable": "Überwachungseinstellungen konnten nicht geladen werden. Seite neu laden und erneut versuchen.",
   "monitor.clear_this": "Verlauf dieses Dienstes",
   "monitor.clear_all_services": "Verlauf aller Dienste",
   "monitor.now": "jetzt",

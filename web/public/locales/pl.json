@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "Usunąć historię wszystkich monitorowanych usług? Nie można cofnąć.",
   "monitor.data_cleared": "Dane wyczyszczone",
   "settings.monitoring_clear_desc": "Usuwa całą zapisaną historię stanu. Monitorowanie pozostaje włączone.",
+  "settings.monitoring_unavailable": "Nie udało się wczytać ustawień monitorowania. Odśwież stronę, aby spróbować ponownie.",
   "monitor.clear_this": "Historia tej usługi",
   "monitor.clear_all_services": "Historia wszystkich usług",
   "monitor.now": "teraz",

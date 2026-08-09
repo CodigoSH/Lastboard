@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "تاریخچه ثبت‌شده همه سرویس‌های تحت نظارت حذف شود؟ قابل بازگردانی نیست.",
   "monitor.data_cleared": "داده‌ها پاک شد",
   "settings.monitoring_clear_desc": "همه تاریخچه وضعیت ثبت‌شده را حذف می‌کند. نظارت فعال می‌ماند.",
+  "settings.monitoring_unavailable": "تنظیمات پایش بارگذاری نشد. برای تلاش دوباره صفحه را دوباره بارگذاری کنید.",
   "monitor.clear_this": "تاریخچهٔ این سرویس",
   "monitor.clear_all_services": "تاریخچهٔ همهٔ سرویس‌ها",
   "monitor.now": "اکنون",

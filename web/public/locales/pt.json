@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "Eliminar o histórico de todos os serviços monitorizados? Não pode ser desfeito.",
   "monitor.data_cleared": "Dados apagados",
   "settings.monitoring_clear_desc": "Apaga todo o histórico de estado registado. A monitorização continua ativa.",
+  "settings.monitoring_unavailable": "Não foi possível carregar as definições de monitorização. Recarregue a página para tentar de novo.",
   "monitor.clear_this": "Histórico deste serviço",
   "monitor.clear_all_services": "Histórico de todos os serviços",
   "monitor.now": "agora",

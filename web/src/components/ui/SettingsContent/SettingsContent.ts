@@ -27,6 +27,21 @@ class SettingsContent extends HTMLElement {
         mode: string; interval_sec: number; alerts_enabled: boolean;
         notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
     } = { mode: 'tab', interval_sec: 300, alerts_enabled: false, notify_type: 'none', notify_url: '', notify_token: '', fail_threshold: 1 };
+    /**
+     * Whether the values above came from the server. The object starts as a
+     * guess, and drawing switches from a guess is not a cosmetic problem: the
+     * panel showed 24/7 and alerts as OFF for as long as the request took —
+     * forever, if it failed — and flipping any switch then saved the guess,
+     * which turned monitoring off and wiped the notification provider, URL and
+     * token of anyone who touched it before the answer arrived.
+     */
+    private monitoringLoaded = false;
+    private monitoringFailed = false;
+    /**
+     * Bumped on every save so a slower GET that started earlier cannot land
+     * afterwards and paint the state the user just changed.
+     */
+    private monitoringSeq = 0;
 
 
     static get observedAttributes() {
@@ -379,18 +394,32 @@ class SettingsContent extends HTMLElement {
     }
 
     async fetchMonitoring() {
+        const seq = this.monitoringSeq;
+        this.monitoringFailed = false;
         try {
-            this.monitoring = await apiService.get<typeof this.monitoring>('/api/monitor/settings');
+            const loaded = await apiService.get<typeof this.monitoring>('/api/monitor/settings');
+            // A save happened while this was in flight: its response is newer
+            // than ours, so drop what we fetched instead of undoing it.
+            if (seq !== this.monitoringSeq) return;
+            this.monitoring = loaded;
+            this.monitoringLoaded = true;
             this.render();
         } catch (e) {
             console.error("Failed to fetch monitoring settings", e);
+            if (seq !== this.monitoringSeq) return;
+            this.monitoringFailed = true;
+            this.render();
         }
     }
 
     // Global (system-wide) setting, so it goes through the monitor endpoint
     // rather than savePrefs. Re-renders to toggle dependent rows.
     async saveMonitoring(patch: Partial<typeof this.monitoring>) {
+        // Never build a save on top of the placeholder: without the server's
+        // values every field we did not touch would be sent as its default.
+        if (!this.monitoringLoaded) return;
         const next = { ...this.monitoring, ...patch };
+        this.monitoringSeq++;
         try {
             const saved = await apiService.post<typeof this.monitoring>('/api/monitor/settings', next);
             this.monitoring = saved;
@@ -851,7 +880,7 @@ class SettingsContent extends HTMLElement {
             // pointing there lands on the section that absorbed it.
             case 'monitoring':
             case 'notifications':
-                return monitoringTemplate(this.monitoring);
+                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed);
 
             case 'users':
                 return usersTemplate(this.users);

@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "حذف السجل المسجَّل لجميع الخدمات المراقَبة؟ لا يمكن التراجع.",
   "monitor.data_cleared": "تم مسح البيانات",
   "settings.monitoring_clear_desc": "حذف كل سجل الحالة المسجَّل. تبقى المراقبة مفعّلة.",
+  "settings.monitoring_unavailable": "تعذّر تحميل إعدادات المراقبة. أعد تحميل الصفحة للمحاولة مرة أخرى.",
   "monitor.clear_this": "سجلّ هذه الخدمة",
   "monitor.clear_all_services": "سجلّ كل الخدمات",
   "monitor.now": "الآن",

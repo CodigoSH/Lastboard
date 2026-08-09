@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "Удалить историю всех отслеживаемых сервисов? Отменить нельзя.",
   "monitor.data_cleared": "Данные очищены",
   "settings.monitoring_clear_desc": "Удаляет всю записанную историю состояния. Мониторинг остаётся включённым.",
+  "settings.monitoring_unavailable": "Не удалось загрузить настройки мониторинга. Обновите страницу, чтобы повторить попытку.",
   "monitor.clear_this": "История этого сервиса",
   "monitor.clear_all_services": "История всех сервисов",
   "monitor.now": "сейчас",

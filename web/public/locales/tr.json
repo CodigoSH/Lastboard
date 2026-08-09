@@ -499,6 +499,7 @@
   "monitor.clear_all_confirm": "İzlenen tüm servislerin kayıtlı geçmişi silinsin mi? Geri alınamaz.",
   "monitor.data_cleared": "Veriler temizlendi",
   "settings.monitoring_clear_desc": "Kaydedilen tüm durum geçmişini siler. İzleme açık kalır.",
+  "settings.monitoring_unavailable": "İzleme ayarları yüklenemedi. Yeniden denemek için sayfayı yenileyin.",
   "monitor.clear_this": "Bu servisin geçmişi",
   "monitor.clear_all_services": "Tüm servislerin geçmişi",
   "monitor.now": "şimdi",

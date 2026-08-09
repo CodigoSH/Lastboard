@@ -321,7 +321,23 @@ export const usersTemplate = (users: any[]) => `
 export const monitoringTemplate = (monitoring: {
     mode: string; interval_sec: number; alerts_enabled: boolean;
     notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
-}) => {
+}, loaded: boolean, failed: boolean) => {
+    // Until the server has answered there is nothing true to draw. The switches
+    // used to be painted from the placeholder, so this section claimed 24/7 and
+    // alerts were off before it knew — and a switch flipped in that window saved
+    // that claim over the real configuration.
+    if (!loaded) {
+        return `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.monitoring')}</h3>
+            <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
+                ${failed ? i18n.t('settings.monitoring_unavailable') : i18n.t('general.loading')}
+            </p>
+        </div>
+    </div>
+`;
+    }
     const on24 = monitoring.mode === 'background';
     return `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
