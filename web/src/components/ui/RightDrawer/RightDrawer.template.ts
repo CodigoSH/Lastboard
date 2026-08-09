@@ -88,15 +88,29 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
         </div>
 `;
 
+/**
+ * Settings is one window, not two.
+ *
+ * The nav and the content used to be separate boxes: a strip glued to the right
+ * edge of the screen and, across a gap, a card that floated and resized with the
+ * viewport. They read as two things that happened to be on screen at once, and
+ * the card's width was a number of its own — the same 900px on a 13" laptop and
+ * on a 27" monitor.
+ *
+ * They are now one surface of a fixed size: the nav column first (reading and
+ * tab order), the section beside it.
+ */
 export const template = (props: RightDrawerProps) => `
     <div class="right-drawer__overlay"></div>
 
-    <div class="right-drawer__content-panel ${props.selectedSection ? '' : 'right-drawer__content-panel--closed'}">
-        <div class="right-drawer__content-body">
-            ${props.selectedSection ? `<settings-content section="${props.selectedSection}"></settings-content>` : ''}
+    <div class="right-drawer__sheet">
+        <div class="right-drawer__panel">${panelInnerTemplate(props)}
         </div>
-    </div>
 
-    <div class="right-drawer__panel">${panelInnerTemplate(props)}
+        <div class="right-drawer__content-panel ${props.selectedSection ? '' : 'right-drawer__content-panel--closed'}">
+            <div class="right-drawer__content-body">
+                ${props.selectedSection ? `<settings-content section="${props.selectedSection}"></settings-content>` : ''}
+            </div>
+        </div>
     </div>
 `;

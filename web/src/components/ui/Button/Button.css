@@ -3,10 +3,12 @@
     width: 100%;
 }
 
+/* Height and radius come from custom properties so a caller can line this up
+   with its dropdowns and fields. Defaults are today's values. */
 .btn {
     width: 100%;
-    height: 38px;
-    border-radius: var(--radius);
+    height: var(--btn-height, 38px);
+    border-radius: var(--btn-radius, var(--radius));
     font-family: var(--font-sans);
     font-weight: 500;
     font-size: 13px;

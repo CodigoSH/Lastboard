@@ -201,6 +201,7 @@
   "settings.appearance": "Look & Feel",
   "settings.background_size_hint": "Optimized for performance.",
   "settings.beta_tester": "Beta Tester",
+  "settings.beta_updates_desc": "Offer beta releases when you check for updates.",
   "settings.confirm_password": "Confirm Password",
   "settings.confirm_reset_msg": "This action will reset the system to factory settings. All data will be permanently deleted.",
   "settings.current_password": "Current Password",

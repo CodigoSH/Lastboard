@@ -42,7 +42,7 @@ export const accountTemplate = (user: User) => `
             <div class="settings-content__form-container" style="margin-top: 32px;">
                 <div class="settings-content__form-group">
                     <label class="settings-content__label">${i18n.t('auth.username')}</label>
-                    <div style="display: flex; gap: 8px;">
+                    <div class="settings-content__input-row">
                         <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('auth.username')}">
                         <app-button variant="primary" data-action="update-username">${i18n.t('settings.save_username')}</app-button>
                     </div>
@@ -74,7 +74,7 @@ export const accountTemplate = (user: User) => `
                     ${pwToggle()}
                 </div>
             </div>
-            <div style="margin-top: 32px;">
+            <div class="settings-content__form-actions">
                 <app-button variant="primary" data-action="update-password">${i18n.t('settings.change_password')}</app-button>
             </div>
         </div>
@@ -354,12 +354,15 @@ export const monitoringTemplate = (monitoring: {
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div class="settings-content__action-row" id="monitoring-interval-row"
-                     style="display: ${on24 ? 'flex' : 'none'};">
+                <!-- Hidden with a class, not with an inline display: an inline
+                     "display: flex" here beat the row's own layout and left this
+                     dropdown out of line with every other control. -->
+                <div class="settings-content__action-row ${on24 ? '' : 'settings-content__action-row--hidden'}"
+                     id="monitoring-interval-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.monitoring_interval')}</h3>
                     </div>
-                    <app-select id="monitoring-interval" value="${monitoring.interval_sec}" style="min-width: 200px;"></app-select>
+                    <app-select id="monitoring-interval" value="${monitoring.interval_sec}"></app-select>
                 </div>
             </div>
             <div class="settings-content__action-group settings-content__action-group--actions">
@@ -398,7 +401,7 @@ export const monitoringTemplate = (monitoring: {
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.notify_method')}</h3>
                     </div>
-                    <app-select id="notify-type" value="${esc(monitoring.notify_type)}" style="min-width: 200px;"></app-select>
+                    <app-select id="notify-type" value="${esc(monitoring.notify_type)}"></app-select>
                 </div>
                 ${monitoring.notify_type && monitoring.notify_type !== 'none' ? `
                 <div class="settings-content__form-group">
@@ -416,7 +419,7 @@ export const monitoringTemplate = (monitoring: {
                         <h3>${i18n.t('settings.fail_threshold')}</h3>
                         <p>${i18n.t('settings.fail_threshold_desc')}</p>
                     </div>
-                    <app-select id="fail-threshold" value="${monitoring.fail_threshold}" style="min-width: 120px;"></app-select>
+                    <app-select id="fail-threshold" value="${monitoring.fail_threshold}"></app-select>
                 </div>
                 ` : ''}
                 ` : ''}
@@ -525,7 +528,7 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                         <h3>${i18n.t('settings.import_dashboards')}</h3>
                         <p>${i18n.t('settings.import_dashboards_desc')}</p>
                     </div>
-                    <app-select id="import-format" value="native" style="min-width: 220px;"></app-select>
+                    <app-select id="import-format" value="native"></app-select>
                 </div>
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
@@ -638,36 +641,37 @@ export const updateZoneTemplate = (isAdmin: boolean, updateInfo: any, isChecking
 export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean, isCheckingUpdates: boolean) => {
     const isAdmin = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'administrator';
     return `
-    <div style="position: relative;">
-        ${isAdmin ? `
-            <div class="beta-badge">
-                <span id="beta-text" class="beta-badge__pill ${betaUpdates ? 'active' : ''}">
-                    ${i18n.t('settings.beta_tester')}
-                </span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="beta-updates-toggle-badge" data-change="beta-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        ` : ''}
-
+    <div>
         <div class="bento-grid" style="grid-template-columns: 1fr;">
-            <div class="bento-card" style="text-align: center; padding: 24px;">
-            
-            <div style="margin: 24px 0;">
-                <!-- Logo Placeholder -->
-                <img src="/images/logo.png" alt="Lastboard" style="max-width: 100px; height: auto; border-radius: 18px; margin: 0 auto 24px auto; display: block;">
-                
-                <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--text-main);">${i18n.t('app.title')}</h2>
-                <p id="current-version-label" class="settings-content__text-dim" style="margin: 0;">${version || '…'}</p>
+            <div class="bento-card settings-content__about-card">
+                <img src="/images/logo.png" alt="Lastboard" class="settings-content__about-logo">
+                <h2 class="settings-content__about-name">${i18n.t('app.title')}</h2>
+                <p id="current-version-label" class="settings-content__about-version">${version || '…'}</p>
+
+                <div id="update-zone-wrapper" class="settings-content__about-update">
+                    ${updateZoneTemplate(isAdmin, updateInfo, isCheckingUpdates)}
+                </div>
             </div>
 
-              <div id="update-zone-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-                ${updateZoneTemplate(isAdmin, updateInfo, isCheckingUpdates)}
-              </div>
-             </div>
+            ${isAdmin ? `
+            <!-- The beta switch used to float over the corner of the card above,
+                 detached from anything and overlapping its edge. It is a setting
+                 like any other, so it sits in a row like any other. -->
+            <div class="bento-card">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3 id="beta-text">${i18n.t('settings.beta_tester')}</h3>
+                        <p>${i18n.t('settings.beta_updates_desc')}</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="beta-updates-toggle-badge" data-change="beta-toggle" ${betaUpdates ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            ` : ''}
 
-             <div style="margin-top: 64px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: center; gap: 24px;">
+             <div class="settings-content__about-links">
                  <a href="https://git.codigosh.com/CodigoSH/Lastboard" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
                      <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
                      ${i18n.t('settings.github')}

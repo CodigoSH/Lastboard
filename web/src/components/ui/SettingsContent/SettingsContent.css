@@ -1,12 +1,42 @@
+/*
+ * The measure.
+ *
+ * Every size in this file comes off one of these three numbers instead of
+ * being interpolated against the container. That interpolation is what made
+ * the same panel read as cramped on a laptop and stretched on a 27": a text
+ * field grew to 810px because there was room, a button to 649px, and the same
+ * control came out six different widths depending on where it sat.
+ *
+ * --rail is the width every control shares, so the right edge of the panel is
+ * a single line. --field is what a free-standing input is allowed to grow to
+ * (a URL, a password: past ~420px a field stops being easier to read and just
+ * looks unfinished). --gap-rail keeps the label off the control.
+ */
 :host {
     display: block;
     color: var(--text-main);
-    /* No width of its own and no side padding: the drawer's content body
-       already pads this box, and the old max-width + auto margins + 20px
-       gutter stacked a second frame inside the panel — the cards ended up
-       ~90px narrower than the space they were sitting in. */
-    padding: clamp(8px, 1.5cqi, 14px) 0;
     position: relative;
+
+    --rail: 240px;
+    --field: 420px;
+    --gap-rail: 32px;
+    --control-h: 36px;
+    --radius-control: 8px;
+
+    /* A dropdown, a button and a text field on the same line have to be the
+       same object. They were 45, 38 and 45 tall with three different corner
+       radii. */
+    --select-height: var(--control-h);
+    --select-padding: 0 12px;
+    --select-radius: var(--radius-control);
+    --select-font-size: 13px;
+    --btn-height: var(--control-h);
+    --btn-radius: var(--radius-control);
+
+    /* No width or side padding of its own: the drawer's content column already
+       places this box. The old max-width + auto margins + 20px gutter stacked
+       a second frame inside the panel. */
+    padding: 0;
 }
 
 .settings-content__text-dim {
@@ -22,25 +52,28 @@ dialog {
     margin-top: 16px;
 }
 
+/* The card's own name. Quiet and small: it labels the group, it is not a
+   headline competing with the setting titles under it. */
 .settings-content__title {
     font-family: var(--font-sans);
-    font-weight: 500;
-    font-size: 15px;
-    margin: 0 0 24px 0;
-    color: var(--text-main);
+    font-weight: 600;
+    font-size: 11px;
+    margin: 0 0 4px 0;
+    color: var(--text-dim);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
 }
 
-/* Bento Layout */
+/* One column, always.
+   Cards side by side is a dashboard idea. In a settings panel it produced a
+   short card stretched next to a tall one and a hole where the third would
+   have gone — and it halved the width every row had to lay a label and its
+   control out in. Settings read top to bottom. */
 .bento-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 45cqi, 320px), 1fr));
-    gap: clamp(12px, 3cqi, 20px);
-    margin-bottom: clamp(20px, 4cqi, 32px);
-    /* Each card is as tall as its own contents. Stretching them to match the
-       tallest one in the row leaves a card with two fields sitting in a box
-       with half of it empty. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
     align-items: start;
 }
 
@@ -52,15 +85,15 @@ dialog {
 .bento-card {
     background: rgba(128, 128, 128, 0.04);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: clamp(16px, 3cqi, 20px);
+    border-radius: 10px;
+    padding: 16px 20px;
     position: relative;
     transition: all 0.2s ease;
 }
 
 .bento-card h3 {
     margin: 0 0 8px 0;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
 }
 
@@ -114,17 +147,49 @@ dialog {
 }
 
 /* Form Controls */
+/* A field on a line of its own still has a width. Letting it run the width of
+   the panel is what put an 810px box around a password and a 649px button
+   under it. */
 .settings-content__form-group {
-    margin-bottom: clamp(16px, 3cqi, 24px);
+    margin-bottom: 16px;
+    max-width: var(--field);
 }
 
 .settings-content__label {
     font-family: var(--font-sans);
-    font-size: clamp(11px, 1.5cqi, 12px);
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-dim);
-    margin-bottom: clamp(6px, 1.2cqi, 8px);
+    margin-bottom: 6px;
     display: block;
+}
+
+/* A field and the button that commits it. */
+.settings-content__input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.settings-content__input-row app-button {
+    flex: 0 0 auto;
+    width: fit-content;
+}
+
+/* What closes a form. Aligned with the fields above it, not with the card. */
+.settings-content__form-actions {
+    margin-top: 24px;
+    max-width: var(--field);
+    display: flex;
+}
+
+.settings-content__form-actions app-button {
+    width: fit-content;
+    min-width: 160px;
+}
+
+.settings-content__action-row--hidden {
+    display: none;
 }
 
 /* Password visibility toggle wrapper */
@@ -170,11 +235,13 @@ dialog {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
     color: var(--text-main);
-    padding: clamp(8px, 1.8cqi, 12px) clamp(10px, 2.2cqi, 16px);
-    border-radius: clamp(8px, 1.8cqi, 12px);
+    height: var(--control-h);
+    padding: 0 12px;
+    border-radius: var(--radius-control);
     font-family: var(--font-sans);
-    font-size: clamp(12px, 1.8cqi, 14px);
+    font-size: 13px;
     width: 100%;
+    max-width: var(--field);
     outline: none;
     transition: all 0.2s var(--ease-standard);
     box-sizing: border-box;
@@ -702,27 +769,22 @@ button {
     transform: translateY(0);
 }
 
-/* Text on the left, its control on the right — until there isn't room for
-   both. The drawer is around 460px wide and the buttons take a fixed slice of
-   it, which left the description about 200px and wrapped one sentence over
-   four lines. Below the threshold the control drops onto its own line and the
-   text gets the full width instead. */
+/* The row: what the setting is, and the one thing you do to it.
+   A grid, not a spread-out flex line. The control sits in a rail of a fixed
+   width, so every control in the panel starts at the same x and the eye has a
+   single edge to follow down the page instead of chasing a button that was
+   118px in one row and 649px in the next. */
 .settings-content__action-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail);
+    column-gap: var(--gap-rail);
     align-items: center;
-    padding: clamp(16px, 3cqi, 24px) 0;
+    padding: 14px 0;
+    min-height: 56px;
     border-bottom: 1px solid var(--border);
 }
 
-/* The basis is the wrap threshold, not the width: the text grows to fill
-   whatever the control leaves. Keep it low enough that a row holding a 200px
-   dropdown still fits on one line in a ~420px panel — at 220px it didn't, and
-   the dropdowns dropped onto a line of their own and stretched across it. */
 .settings-content__action-info {
-    flex: 1 1 150px;
     min-width: 0;
 }
 
@@ -736,23 +798,23 @@ button {
     border-top: 1px solid var(--border);
 }
 
-/* The control keeps its own size rather than growing to fill the line. */
+/* Everything in the rail ends on the same line. A dropdown fills the rail (it
+   holds text that varies), a button is only as wide as its label with a floor
+   so a two-word one and a one-word one still look like the same object, and a
+   switch is a switch. */
 .settings-content__action-row > :not(.settings-content__action-info) {
-    flex: 0 0 auto;
+    justify-self: end;
 }
 
-/* app-button and app-select are both width:100% of whatever holds them, which
-   went unnoticed while the row never wrapped — the flex line sized them — and
-   made each one claim a full line of its own once it could. Overriding from
-   out here works because a rule in the outer tree beats the component's own
-   :host. A select still asks for its inline min-width, so it keeps its size;
-   it just stops demanding the whole row.
-   Named tag by tag on purpose: written as "every child that isn't the text"
-   this also hit `.toggle-switch`, whose 44px track collapsed and left the knob
-   floating with nothing under it. */
-.settings-content__action-row app-button,
 .settings-content__action-row app-select {
-    width: auto;
+    width: 100%;
+    max-width: var(--rail);
+}
+
+.settings-content__action-row app-button,
+.settings-content__action-row .settings-content__button {
+    width: fit-content;
+    min-width: 116px;
     max-width: 100%;
 }
 
@@ -766,30 +828,37 @@ button {
 }
 
 .settings-content__action-info h3 {
-    margin: 0 0 clamp(2px, 0.5cqi, 4px) 0;
-    font-size: clamp(12px, 1.8cqi, 14px);
+    margin: 0 0 2px 0;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-main);
 }
 
+/* Capped in characters, not pixels: a line of explanation stops being easier
+   to read somewhere around 60 and the panel is wide enough to run past it. */
 .settings-content__action-info p {
     margin: 0;
-    font-size: clamp(11px, 1.5cqi, 13px);
+    font-size: 12px;
     color: var(--text-dim);
     line-height: 1.5;
-    max-width: clamp(300px, 60cqi, 480px);
+    max-width: 56ch;
 }
 
 .settings-content__danger-zone {
     border: 1px solid rgba(var(--danger-rgb), 0.3);
     background: rgba(var(--danger-rgb), 0.04);
-    border-radius: var(--radius);
-    padding: clamp(16px, 3cqi, 24px);
-    margin-top: clamp(16px, 3cqi, 24px);
-    display: flex;
-    justify-content: space-between;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail);
+    column-gap: var(--gap-rail);
     align-items: center;
     transition: all 0.2s ease;
+}
+
+.settings-content__danger-zone > :last-child {
+    justify-self: end;
 }
 
 .settings-content__danger-zone:hover {
@@ -965,40 +1034,51 @@ button {
 }
 
 /* Beta Badge Styling */
-.beta-badge {
-    position: absolute;
-    top: 6px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    z-index: 100;
+/* About: the one card in the panel that is a statement rather than a list of
+   settings, so it is allowed to be centred — but only as tall as what it says.
+   It used to run 385px with the logo floating in the middle of it. */
+.settings-content__about-card {
+    text-align: center;
+    padding: 28px 20px 24px;
 }
 
-.beta-badge__pill {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s;
-    user-select: none;
-    border: 2px solid transparent;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.05);
+.settings-content__about-logo {
+    width: 72px;
+    height: auto;
+    border-radius: 16px;
+    display: block;
+    margin: 0 auto 14px;
+}
+
+.settings-content__about-name {
+    margin: 0 0 2px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.settings-content__about-version {
+    margin: 0;
+    font-size: 12px;
     color: var(--text-dim);
 }
 
-.beta-badge__pill.active {
-    color: #2fb344;
-    border-color: #2fb344;
-    box-shadow: 0 0 10px rgba(47, 179, 68, 0.2);
+.settings-content__about-update {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 18px;
 }
 
-.beta-badge .toggle-switch {
-    transform: scale(0.8);
-    transform-origin: top center;
+.settings-content__about-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
 }
 
 .toggle-switch input {
@@ -1048,26 +1128,40 @@ input:checked+.slider:before {
    fired at the wrong moments — rows stayed side by side in a 590px panel on a
    1024px screen, and stacked in an 800px panel as soon as the window dipped
    under 900. */
-@container (max-width: 470px) {
+/* Before the row has to break, the rail gives ground: a label needs room to
+   stay on two lines, and a 240px rail in a 550px column left it 270. */
+@container (max-width: 620px) {
+    :host {
+        --rail: 200px;
+        --gap-rail: 24px;
+    }
+}
+
+@container (max-width: 480px) {
+    /* One column: the label above, its control below, both full width. */
     .settings-content__action-row,
     .settings-content__danger-zone {
-        flex-direction: column;
-        align-items: stretch;
-        gap: clamp(12px, 3vw, 16px);
-        padding-left: 0;
-        padding-right: 0;
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 12px;
+        min-height: 0;
+    }
+
+    .settings-content__action-row > :not(.settings-content__action-info),
+    .settings-content__danger-zone > :last-child {
+        justify-self: stretch;
     }
 
     .settings-content__action-info p {
         max-width: none;
     }
 
-    /* flex-basis follows the main axis, so the 150px wrap threshold that keeps
-       the text from strangling in a row became a 150px TALL text block once the
-       row stacked — the label and its control ended up an inch apart, with
-       space-between pushing them to opposite ends of the gap. */
-    .settings-content__action-info {
-        flex: 0 0 auto;
+    .settings-content__form-group {
+        max-width: none;
+    }
+
+    .settings-content__input,
+    .settings-content__action-row app-select {
+        max-width: none;
     }
 
     .settings-content__reset-btn,
@@ -1075,6 +1169,11 @@ input:checked+.slider:before {
     app-button {
         width: 100%;
         justify-content: center;
+    }
+
+    /* A switch stays a switch even here. */
+    .settings-content__action-row .toggle-switch {
+        justify-self: start;
     }
 
     .settings-content__profile-header {

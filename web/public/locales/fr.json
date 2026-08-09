@@ -201,6 +201,7 @@
   "settings.appearance": "Apparence",
   "settings.background_size_hint": "Optimisé pour la performance.",
   "settings.beta_tester": "Bêta-testeur",
+  "settings.beta_updates_desc": "Proposer les versions bêta lors de la recherche de mises à jour.",
   "settings.confirm_password": "Confirmer le mot de passe",
   "settings.confirm_reset_msg": "Cette action supprimera toutes les données et réinitialisera le système.",
   "settings.current_password": "Mot de passe actuel",

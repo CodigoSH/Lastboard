@@ -201,6 +201,7 @@
   "settings.appearance": "المظهر",
   "settings.background_size_hint": "محسن للأداء.",
   "settings.beta_tester": "مختبر بيتا",
+  "settings.beta_updates_desc": "اعرض إصدارات بيتا عند البحث عن التحديثات.",
   "settings.confirm_password": "تأكيد كلمة المرور",
   "settings.confirm_reset_msg": "سيؤدي هذا الإجراء إلى حذف جميع البيانات وإعادة ضبط النظام.",
   "settings.current_password": "كلمة المرور الحالية",

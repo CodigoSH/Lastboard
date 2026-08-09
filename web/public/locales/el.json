@@ -201,6 +201,7 @@
   "settings.appearance": "Εμφάνιση",
   "settings.background_size_hint": "Βελτιστοποιημένο για απόδοση.",
   "settings.beta_tester": "Δοκιμαστής Beta",
+  "settings.beta_updates_desc": "Να προτείνονται εκδόσεις beta κατά τον έλεγχο ενημερώσεων.",
   "settings.confirm_password": "Επιβεβαίωση κωδικού",
   "settings.confirm_reset_msg": "Αυτή η ενέργεια θα διαγράψει όλα τα δεδομένα και θα επαναφέρει το σύστημα.",
   "settings.current_password": "Τρέχων κωδικός",

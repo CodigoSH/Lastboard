@@ -201,6 +201,7 @@
   "settings.appearance": "रूप",
   "settings.background_size_hint": "प्रदर्शन के लिए अनुकूलित।",
   "settings.beta_tester": "बीटा टेस्टर",
+  "settings.beta_updates_desc": "अपडेट देखते समय बीटा संस्करण भी दिखाएँ।",
   "settings.confirm_password": "पासवर्ड की पुष्टि करें",
   "settings.confirm_reset_msg": "यह कार्रवाई सभी डेटा हटा देगी और सिस्टम को रीसेट कर देगी।",
   "settings.current_password": "वर्तमान पासवर्ड",

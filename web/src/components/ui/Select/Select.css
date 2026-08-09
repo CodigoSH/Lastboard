@@ -10,13 +10,17 @@
     position: relative;
 }
 
+/* Height and type come from custom properties so a caller can put this on the
+   same line as its buttons and inputs. Defaults are what every existing
+   dropdown in the app already measured, so nothing moves unless asked. */
 .select-trigger {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     color: var(--text-main);
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    font-size: 14px;
+    height: var(--select-height, auto);
+    padding: var(--select-padding, 12px 16px);
+    border-radius: var(--select-radius, var(--radius));
+    font-size: var(--select-font-size, 14px);
     width: 100%;
     cursor: pointer;
     transition: all 0.2s var(--ease-standard);

@@ -201,6 +201,7 @@
   "settings.appearance": "Görünüm",
   "settings.background_size_hint": "Performans için optimize edilmiştir.",
   "settings.beta_tester": "Beta Test Kullanıcısı",
+  "settings.beta_updates_desc": "Güncelleme ararken beta sürümleri de sun.",
   "settings.confirm_password": "Şifreyi Onayla",
   "settings.confirm_reset_msg": "Bu işlem tüm verileri silecek ve sistemi sıfırlayacaktır.",
   "settings.current_password": "Mevcut Şifre",

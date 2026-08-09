@@ -201,6 +201,7 @@
   "settings.appearance": "外观",
   "settings.background_size_hint": "性能已优化。",
   "settings.beta_tester": "Beta 测试员",
+  "settings.beta_updates_desc": "检查更新时同时提供 Beta 版本。",
   "settings.confirm_password": "确认密码",
   "settings.confirm_reset_msg": "此操作将删除所有数据并重置系统。",
   "settings.current_password": "当前密码",

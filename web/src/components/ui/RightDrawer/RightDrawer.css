@@ -7,9 +7,15 @@
     z-index: 1000;
     font-family: var(--font-sans);
     container-type: inline-size;
-    /* Where the side menu ends: the content panel is anchored to it and also
-       sized from it, so the two must never disagree. */
-    --drawer-menu-offset: clamp(189px, calc(18vw + 24px), 249px);
+
+    /* The window is one size, stated once. A nav column wide enough for the
+       longest section name, and a content column of the measure the settings
+       themselves are laid out to (see SettingsContent.css). Fixed on purpose:
+       a settings window that grows with the monitor is what left the same
+       panel looking cramped on a laptop and stretched on a 27". */
+    --drawer-nav-width: 240px;
+    --drawer-content-width: 700px;
+    --drawer-margin: 24px;
 
     visibility: hidden;
     pointer-events: none;
@@ -41,80 +47,72 @@
     -webkit-backdrop-filter: blur(8px);
 }
 
-.right-drawer__panel {
+/* The window: nav and content inside one surface, anchored to the right edge. */
+.right-drawer__sheet {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: clamp(180px, 12cqi, 250px);
-    height: 100%;
+    top: var(--drawer-margin);
+    right: var(--drawer-margin);
+    height: calc(100% - var(--drawer-margin) * 2);
+    width: calc(var(--drawer-nav-width) + var(--drawer-content-width));
+    /* Down to the width where both columns still fit, the window keeps its
+       size; below that it takes the room there is and finally goes edge to
+       edge, instead of the panel hanging off the left of the screen. */
+    max-width: calc(100vw - var(--drawer-margin) * 2);
+    max-height: 860px;
+
+    display: grid;
+    grid-template-columns: var(--drawer-nav-width) minmax(0, 1fr);
+    overflow: hidden;
+
     background: var(--surface-solid);
-    backdrop-filter: var(--modal-blur);
-    -webkit-backdrop-filter: var(--modal-blur);
-    border-left: 1px solid var(--border);
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
     color: var(--text-main);
+    z-index: 2;
 
-    container-type: inline-size;
-
-    transform: translateX(100%);
+    transform: translateX(calc(100% + var(--drawer-margin)));
     transition: transform 0.4s var(--ease-out);
 }
 
-:host([open]) .right-drawer__panel {
+:host([open]) .right-drawer__sheet {
     transform: translateX(0);
 }
 
-.right-drawer__content-panel {
-    position: absolute;
-    top: 24px;
-    /* Sits beside the menu, except when there is not enough room left for a
-       usable panel — then it slides over the menu instead of hanging off the
-       left edge of the screen, which is what it did on a phone (left edge at
-       -201px, first column of every row unreachable). */
-    right: min(var(--drawer-menu-offset), max(8px, calc(100vw - 360px)));
-    bottom: auto;
-    /* Everything from the side menu to a margin of dashboard left visible.
-       The old formula (32vw - 48px) hit its 400px floor on every laptop and
-       only reached 566px on a 1080p screen, so the panel stayed the same
-       narrow column no matter how much room there was — the settings inside
-       it were cramped while 700-1100px of screen sat empty beside them. */
-    width: clamp(320px, calc(100vw - var(--drawer-menu-offset) - 22vw), 900px);
-    /* Never wider than the window it has to fit in. */
-    max-width: calc(100vw - 16px);
-    max-height: calc(100vh - 96px);
-    background: var(--surface);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: all 0.3s var(--ease-out);
-    z-index: 10;
+/* Nav column. No surface of its own any more — it is part of the window. */
+.right-drawer__panel {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    opacity: 1;
-    transform: translateX(0);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    /* The panel is what the settings inside it should measure themselves
-       against. Without this their cqi units resolved against the drawer host,
-       which spans the whole window — so every clamp() in there sat pinned at
-       its maximum on a desktop and at its minimum on a phone, never tracking
-       the box the content actually lives in. */
+    min-height: 0;
+    border-right: 1px solid var(--border);
+    background: rgba(128, 128, 128, 0.04);
+    container-type: inline-size;
+}
+
+/* Content column. Only this scrolls: the nav stays put while a long section
+   moves, which is what makes a settings window feel like one. */
+.right-drawer__content-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    /* The column the settings measure themselves against. Without this their
+       cqi units resolved against the drawer host, which spans the whole
+       window, so every clamp() in there sat pinned at its maximum on a
+       desktop and at its minimum on a phone. */
     container-type: inline-size;
 }
 
 .right-drawer__content-panel--closed {
     opacity: 0;
-    transform: translateX(20px) scale(0.95);
     pointer-events: none;
 }
 
 .right-drawer__content-body {
     flex: 1;
     overflow-y: auto;
-    padding: clamp(16px, 3cqi, 24px);
+    overscroll-behavior: contain;
+    padding: 28px 32px 40px;
 }
 
 .right-drawer__header {
@@ -237,4 +235,101 @@
 
 .right-drawer__menu-item--logout:hover {
     background: rgba(var(--danger-rgb), 0.05) !important;
+}
+
+/* Narrow windows: a 240px nav column beside the settings would leave the
+   settings themselves in what is left, which on a phone was a hundred pixels.
+   The window goes edge to edge and the nav becomes a band across the top —
+   the same sections, scrolled sideways, with the avatar and the way out at
+   either end of it. */
+@media (max-width: 900px) {
+    :host {
+        --drawer-margin: 8px;
+    }
+
+    .right-drawer__sheet {
+        left: var(--drawer-margin);
+        width: auto;
+        max-width: none;
+        max-height: none;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        border-radius: 12px;
+    }
+
+    .right-drawer__panel {
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 0 8px;
+    }
+
+    .right-drawer__header {
+        padding: 8px 4px 8px 8px;
+        border-bottom: none;
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .right-drawer__avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+
+    /* The name is in the profile section anyway; in a band it only steals the
+       room the sections need. */
+    .right-drawer__user-info,
+    .right-drawer__section-label {
+        display: none;
+    }
+
+    .right-drawer__body {
+        flex: 1;
+        min-width: 0;
+        padding: 6px 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+    }
+
+    .right-drawer__body::-webkit-scrollbar {
+        display: none;
+    }
+
+    .right-drawer__menu {
+        flex-direction: row;
+        gap: 2px;
+        width: max-content;
+    }
+
+    .right-drawer__menu-item {
+        margin: 0;
+        white-space: nowrap;
+        padding: 8px 12px;
+    }
+
+    .right-drawer__menu-item--active {
+        border-right: none;
+        border-bottom: 2px solid var(--accent);
+        border-radius: 6px;
+    }
+
+    .right-drawer__footer {
+        padding: 8px;
+        border-top: none;
+        border-left: 1px solid var(--border);
+    }
+
+    /* Only the icon fits in a band. */
+    .right-drawer__menu-item--logout span {
+        display: none;
+    }
+
+    .right-drawer__content-body {
+        padding: 20px 16px 32px;
+    }
 }

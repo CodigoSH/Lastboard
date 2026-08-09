@@ -201,6 +201,7 @@
   "settings.appearance": "Aspecto",
   "settings.background_size_hint": "Optimizado para el rendimiento.",
   "settings.beta_tester": "Probador beta",
+  "settings.beta_updates_desc": "Ofrece versiones beta al buscar actualizaciones.",
   "settings.confirm_password": "Confirmar contraseña",
   "settings.confirm_reset_msg": "Esta acción eliminará todos los datos y restablecerá el sistema.",
   "settings.current_password": "Contraseña actual",

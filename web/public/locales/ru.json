@@ -201,6 +201,7 @@
   "settings.appearance": "Внешний вид",
   "settings.background_size_hint": "Оптимизировано для производительности.",
   "settings.beta_tester": "Бета-тестер",
+  "settings.beta_updates_desc": "Предлагать бета-версии при проверке обновлений.",
   "settings.confirm_password": "Подтвердите пароль",
   "settings.confirm_reset_msg": "Это действие удалит все данные и сбросит систему.",
   "settings.current_password": "Текущий пароль",

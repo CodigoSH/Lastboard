@@ -201,6 +201,7 @@
   "settings.appearance": "চেহারা",
   "settings.background_size_hint": "পারফরম্যান্সের জন্য অপ্টিমাইজ করা হয়েছে।",
   "settings.beta_tester": "বিটা টেস্টার",
+  "settings.beta_updates_desc": "আপডেট খোঁজার সময় বিটা সংস্করণ দেখাও।",
   "settings.confirm_password": "পাসওয়ার্ড নিশ্চিত করুন",
   "settings.confirm_reset_msg": "এই পদক্ষেপটি সমস্ত ডেটা মুছে ফেলবে এবং সিস্টেম রিসেট করবে।",
   "settings.current_password": "বর্তমান পাসওয়ার্ড",
