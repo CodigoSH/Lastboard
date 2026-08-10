@@ -5,6 +5,10 @@
  *   bun scripts/docs-shots.ts home p-*   # only the ones matching
  *   KEEP=1 bun scripts/docs-shots.ts     # leave the instance up to poke at it
  *
+ * The two Docker shots need a Docker-compatible API to point at, named in
+ * DOCKER_API; without it that widget is not seeded and those shots are skipped.
+ * Podman serves one:  podman system service --time=0 tcp://127.0.0.1:2375 &
+ *
  * Why this exists: the screenshots used to be taken by hand, one at a time,
  * over months. They ended up at sixteen different widths, all at 1x — a 313px
  * image stretched to 720 in the docs column — with the interface in two
@@ -88,7 +92,13 @@ const openSettings = (section: string) => `
 
 /** The card on the board that holds a given widget, for framing one tile. */
 const tile = (widgetTag: string) =>
-    `document.querySelector('bookmark-grid').shadowRoot.querySelector('${widgetTag}').closest('.bookmark-grid__card')`;
+    `(() => {
+        const el = document.querySelector('bookmark-grid').shadowRoot.querySelector('${widgetTag}');
+        // Named on purpose: a bare null.closest() aborted a whole run once, and
+        // the eleven shots queued behind this one were never taken.
+        if (!el) throw new Error('no ${widgetTag} on the board — was it seeded?');
+        return el.closest('.bookmark-grid__card');
+    })()`;
 
 /** Section names as they appear in the settings nav, and the file each becomes. */
 const SETTINGS_SECTIONS: [string, string][] = [
@@ -142,11 +152,15 @@ const SHOTS: Shot[] = [
     { name: 'w-markdown', exhibit: true, clip: tile('widget-markdown'), pad: 0, dpr: 4 },
 
     // ── The two widgets that only mean anything with live data ──────────
-    { name: 'w-monitor', exhibit: true, clip: tile('widget-monitor'), pad: 0, dpr: 4, wait: 1500 },
-    { name: 'w-api', exhibit: true, clip: tile('widget-api'), pad: 0, dpr: 4, wait: 1800 },
+    // Taller viewport, not a longer wait: these three sit on the fifth row and a
+    // 900px window leaves them below the fold, where the board never mounts them
+    // — so the wait found nothing to wait for and the close-up was captured on a
+    // tile that only started loading when the screenshot forced it to render.
+    { name: 'w-monitor', exhibit: true, clip: tile('widget-monitor'), pad: 0, dpr: 4, h: 1300, wait: 2500 },
+    { name: 'w-api', exhibit: true, clip: tile('widget-api'), pad: 0, dpr: 4, h: 1300, wait: 1800 },
 
     // ── Docker, when a Docker-compatible API is available ───────────────
-    { name: 'w-docker', exhibit: true, clip: tile('widget-docker'), pad: 0, dpr: 4, wait: 2500 },
+    { name: 'w-docker', exhibit: true, clip: tile('widget-docker'), pad: 0, dpr: 4, h: 1300, wait: 2500 },
     {
         name: 'w-p-docker', w: 1500, h: 980, pad: 0, wait: 1200,
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
@@ -159,14 +173,18 @@ const SHOTS: Shot[] = [
 
     // ── The menus you reach them from ───────────────────────────────────
     {
-        name: 'm-addnew', w: 1400, h: 800, pad: 16,
+        // On the exhibit canvas, and shot at 4x: the menu is only ~180 CSS px
+        // wide, so left as a bare crop it arrives in the docs as a small image
+        // stretched across the column — soft, with type twice the size of the
+        // paragraph beside it.
+        name: 'm-addnew', w: 1400, h: 800, pad: 0, exhibit: true, dpr: 4,
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(600);
               ${TOPBAR}.querySelector('#add-toggle').click(); await sleep(500);`,
         clip: `${TOPBAR}.querySelector('#add-menu')`,
     },
 
     {
-        name: 'm-dashboards', w: 1400, h: 800, pad: 12, wait: 700,
+        name: 'm-dashboards', w: 1400, h: 800, pad: 0, wait: 700, exhibit: true, dpr: 4,
         // The switcher lives inside the top bar's shadow root, not the document.
         act: `const sw = ${TOPBAR}.querySelector('dashboard-switcher').shadowRoot;
               sw.querySelector('.switcher-trigger').click(); await sleep(800);`,
@@ -255,6 +273,13 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         body: JSON.stringify(body),
     });
 
+    // Two more accounts. The Users panel is where a household shares a board, and
+    // photographed on a fresh install it says "No users here yet." — a picture of
+    // an empty room, which explains nothing about what the panel is for.
+    for (const username of ['ana', 'marco']) {
+        await api('/users', { username, password: 'Lastboard123!' });
+    }
+
     // 24/7 monitoring on, so the status page and the widget have something to say.
     await api('/monitor/settings', {
         mode: 'background', interval_sec: 300, alerts_enabled: true,
@@ -263,6 +288,25 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
 
     const { Database } = await import('bun:sqlite');
     const db = new Database(dbPath);
+
+    // Boards. Two things are being fixed here, and both were caught by reading
+    // the database rather than the picture:
+    //
+    //  - The default board does not exist yet. The server creates it lazily, on
+    //    the first GET /api/dashboards, which happens after this seed runs, so
+    //    inserting the extra boards on their own left all 35 items orphaned.
+    //  - When the server does create it, it names it 'Dashboard principal' —
+    //    hardcoded Spanish, whatever language was chosen — which would be the
+    //    only Spanish words in an English manual.
+    //
+    // So the default board is created here exactly as the server would, adopting
+    // the orphans, and two more give the switcher something to switch between.
+    db.run(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (1, 'Main board', 0, 1)`);
+    const main = db.query(`SELECT id FROM dashboards WHERE is_default = 1`).get() as { id: number };
+    db.run(`UPDATE items SET dashboard_id = ? WHERE dashboard_id IS NULL`, [main.id]);
+    for (const [i, name] of ['Media', 'Infrastructure'].entries()) {
+        db.run(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (1, ?, ?, 0)`, [name, i + 1]);
+    }
 
     // Put a status dot on a handful of recognisable services.
     const watched = ['Plex', 'Jellyfin', 'Nextcloud', 'Immich', 'Proxmox', 'Grafana'];
@@ -306,11 +350,29 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     // rather than photographed empty — an empty widget teaches nothing, and a
     // screenshot of someone's real containers is not ours to publish.
     if (process.env.DOCKER_API) {
+        // Given as host:port. A `tcp://` prefix — the form DOCKER_HOST uses, and
+        // the obvious thing to paste for a host type the UI calls "TCP" — is
+        // stripped here because the server does not accept it: it prepends
+        // http:// to anything unrecognised and ends up dialling
+        // `http://tcp://127.0.0.1:2375`, which fails after a four-second
+        // timeout. That is what put "Could not connect to Docker host" across
+        // the main board, and it is a product bug, not a rig one.
+        const dockerHost = process.env.DOCKER_API.replace(/^tcp:\/\//, '');
         addWidget(8, 5, 4, 2, {
             widgetId: 'docker',
-            hosts: [{ id: 'docs', name: 'Home server', type: 'tcp', url: process.env.DOCKER_API }],
+            hosts: [{ id: 'docs', name: 'Home server', type: 'tcp', url: dockerHost }],
             activeHost: 'docs',
         });
+        // Warm the proxy before anything is photographed. The first call to a
+        // just-started Podman service takes several seconds to come back, which
+        // is longer than any shot waits — the main board was photographed with
+        // "Could not connect to Docker host" across its Docker tile, while the
+        // tile's own close-up, taken minutes later, was fine.
+        const warm = Date.now();
+        await fetch(`${APP}api/docker/containers?host=${encodeURIComponent(dockerHost)}`, {
+            headers: { Cookie: `session_token=${token}; csrf_token=${csrf}` },
+        }).catch(() => { });
+        console.log(`  docker proxy warmed in ${Date.now() - warm}ms`);
     }
     addWidget(5, 5, 3, 2, {
         widgetId: 'api',
@@ -493,7 +555,20 @@ async function main() {
 
     // 3. The shots that need an account.
     await setCookies(cookies);
-    for (const shot of wanted.filter((s) => !s.beforeSetup)) await capture(shot);
+    // One shot that throws must not take the rest of the run with it: the whole
+    // point of a rig is that a full pass leaves a consistent set behind, and a
+    // half-finished set is how mismatched images got published in the first
+    // place. Failures are collected and reported at the end instead.
+    const failed: string[] = [];
+    for (const shot of wanted.filter((s) => !s.beforeSetup)) {
+        try {
+            await capture(shot);
+        } catch (err) {
+            failed.push(shot.name);
+            console.warn(`  ! ${shot.name}: ${(err as Error).message}`);
+        }
+    }
+    if (failed.length) console.warn(`\n✗ not taken: ${failed.join(', ')}`);
     await finish();
 }
 
@@ -544,12 +619,80 @@ async function finish() {
     process.exit(0);
 }
 
+/**
+ * Waits until no tile is still drawing a placeholder.
+ *
+ * Fixed waits are not enough and were never going to be: the same shot came out
+ * fine on its own and as a skeleton inside a full run, because the close-ups
+ * render at four times the scale and everything is slower. This polls for the
+ * two things a waiting widget shows — the Docker skeleton rows and the
+ * "loading" state the others use — and gives up loudly rather than quietly
+ * photographing a half-drawn board.
+ */
+async function waitForWidgetContent(timeoutMs = 15000) {
+    const started = Date.now();
+    let clean = 0;
+    while (Date.now() - started < timeoutMs) {
+        const waiting = await evaluate(`
+            const grid = document.querySelector('bookmark-grid');
+            if (!grid) return 0;
+            let n = 0;
+            for (const card of grid.shadowRoot.querySelectorAll('.bookmark-grid__card')) {
+                for (const el of card.querySelectorAll('*')) {
+                    const r = el.shadowRoot;
+                    if (!r) continue;
+                    if (r.querySelector('.skeleton-row')) n++;
+                    else if (/${'Just a sec|Loading|Cargando'}/.test(r.textContent || '')) n++;
+                }
+            }
+            return n;`);
+        // Two clean readings, not one. A single look can land in the gap between
+        // a tile mounting and its first request starting, which is how the
+        // monitoring close-up was published showing "Just a sec…" while the run
+        // reported it fine.
+        if (!waiting) {
+            clean++;
+            if (clean >= 2) return;
+        } else {
+            clean = 0;
+        }
+        await sleep(600);
+    }
+    console.warn('  ! a widget was still loading after 15s — check the shot');
+}
+
+/**
+ * Presses any widget's retry button once and waits for the second attempt.
+ * Returns how many it found, so a run that keeps failing is visible in the log
+ * rather than quietly producing pictures of error states.
+ */
+async function settleWidgets() {
+    const clicked = await evaluate(`
+        const grid = document.querySelector('bookmark-grid');
+        if (!grid) return 0;
+        let n = 0;
+        for (const card of grid.shadowRoot.querySelectorAll('.bookmark-grid__card')) {
+            for (const el of card.querySelectorAll('*')) {
+                const btn = el.shadowRoot?.getElementById?.('retry-btn');
+                if (btn) { btn.click(); n++; }
+            }
+        }
+        return n;`);
+    if (clicked) {
+        console.log(`    (${clicked} widget${clicked > 1 ? 's' : ''} retried)`);
+        await sleep(2500);
+    }
+}
+
 /** Takes one shot: sets the viewport, reaches the state, frames and writes it. */
 async function capture(shot: Shot) {
     {
         const w = shot.w ?? 1600, h = shot.h ?? 900;
         const dpr = shot.dpr ?? DPR;
-        const phone = (shot.w ?? 0) < 600;
+        // `?? 0` here, not `?? 1600`, quietly put every shot that does not name a
+        // width — all the close-ups — into mobile emulation with a coarse
+        // pointer, which is the layout the board switches on.
+        const phone = (shot.w ?? 1600) < 600;
         await cdp('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile: phone });
         // The board switches to its touch layout on `pointer: coarse`, not on
         // width. Without touch emulation a narrow window just squeezes the
@@ -560,6 +703,13 @@ async function capture(shot: Shot) {
         await cdp('Page.navigate', { url: APP });
         await sleep(1200);
         await waitForImages();
+        // A widget that failed to reach its service draws a retry button. That is
+        // the honest state of a real board, but photographing it teaches nothing
+        // — and it happened to the main board shot, where the Docker tile was
+        // caught before its first request came back. Any retry on screen is
+        // pressed once and given time, exactly as a person would.
+        await settleWidgets();
+        await waitForWidgetContent();
         if (shot.act) await evaluate(shot.act);
         // Whatever the action opened may bring its own images with it.
         await waitForImages(6000);
@@ -581,7 +731,14 @@ async function capture(shot: Shot) {
             console.warn(`  ! ${shot.name}: nothing to frame — skipped`);
             return;
         }
-        const png = await cdp('Page.captureScreenshot', { format: 'png', ...(clip ? { clip } : {}), captureBeyondViewport: !!clip });
+        // captureBeyondViewport re-renders the page against a different surface,
+        // and a widget that re-renders goes back to its loading state — which is
+        // how the monitoring close-up kept coming out as "Just a sec…" while a
+        // probe taken a moment earlier confirmed the tile was fully drawn. It is
+        // only needed when the clip runs past the window, so it is asked for
+        // only then.
+        const beyond = !!clip && (clip.y + clip.height > h || clip.x + clip.width > w);
+        const png = await cdp('Page.captureScreenshot', { format: 'png', ...(clip ? { clip } : {}), captureBeyondViewport: beyond });
         if (!png.result?.data) {
             console.warn(`  ! ${shot.name}: the browser refused the capture — skipped`);
             return;
