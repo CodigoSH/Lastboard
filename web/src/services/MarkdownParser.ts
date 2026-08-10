@@ -28,8 +28,10 @@ export class MarkdownParser {
         // Code Blocks (fenced)
         html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
 
-        // Blockquotes
-        html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+        // Blockquotes. Matched on the escaped form: the HTML escaping above has
+        // already turned every "> " into "&gt; ", so a rule written against the
+        // raw character never fired and quotes came out as literal `&gt; text`.
+        html = html.replace(/^&gt; (.*$)/gim, '<blockquote>$1</blockquote>');
 
         // Headers
         html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');

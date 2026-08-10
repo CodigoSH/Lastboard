@@ -64,4 +64,10 @@ describe('allowlist for the markdown checkbox', () => {
     it('still allows nothing but the checkbox attributes it needs', () => {
         expect([...attrs].sort()).toEqual(['checked', 'disabled', 'id', 'name', 'type']);
     });
+
+    it('allows a horizontal rule, so Markdown "---" survives', () => {
+        // The parser emits <hr /> for "---"; leaving the tag off this list
+        // meant the rule was written, rendered and then quietly removed.
+        expect(DEFAULT_CONFIG.allowedTags).toContain('hr');
+    });
 });

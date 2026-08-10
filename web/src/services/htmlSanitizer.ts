@@ -21,7 +21,10 @@ export interface SanitizerConfig {
 export const DEFAULT_CONFIG: SanitizerConfig = {
     allowedTags: [
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'p', 'br', 'div', 'span',
+        // `hr` is here because the Markdown widget's parser emits one for `---`
+        // and it was being stripped on the way out, so the rule silently
+        // vanished from anything written with it.
+        'p', 'br', 'div', 'span', 'hr',
         'strong', 'b', 'em', 'i', 'u', 's', 'strike',
         'a', 'img',
         'ul', 'ol', 'li',

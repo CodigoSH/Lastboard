@@ -123,6 +123,19 @@ describe('MarkdownParser', () => {
         });
     });
 
+    describe('rules that were silently dropped', () => {
+        it('turns "> quote" into a blockquote', () => {
+            // The HTML escaping runs first, so the rule has to match the
+            // escaped form. Written against the raw ">" it never fired and the
+            // quote came out as literal "&gt; quote".
+            expect(MarkdownParser.parse('> quoted')).toContain('<blockquote>quoted</blockquote>');
+        });
+
+        it('turns "---" into a rule', () => {
+            expect(MarkdownParser.parse('---')).toContain('<hr />');
+        });
+    });
+
     describe('full document snapshot', () => {
         it('matches the frozen output for a representative document', () => {
             const doc = [
