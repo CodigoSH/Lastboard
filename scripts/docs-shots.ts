@@ -305,7 +305,7 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     //
     // So the default board is created here exactly as the server would, adopting
     // the orphans, and two more give the switcher something to switch between.
-    db.run(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (1, 'Main board', 0, 1)`);
+    db.run(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (1, 'Main dashboard', 0, 1)`);
     const main = db.query(`SELECT id FROM dashboards WHERE is_default = 1`).get() as { id: number };
     db.run(`UPDATE items SET dashboard_id = ? WHERE dashboard_id IS NULL`, [main.id]);
     for (const [i, name] of ['Media', 'Infrastructure'].entries()) {

@@ -38,7 +38,10 @@ func (h *MultiDashboardHandler) GetDashboards(w http.ResponseWriter, r *http.Req
 	if count == 0 {
 		// Auto-create a default dashboard.
 		res, err := h.DB.Exec(
-			"INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Dashboard principal', 0, 1)",
+			// One name, in English, everywhere. This used to be written in
+			// Spanish whatever language had been chosen, so an English install
+			// carried the only Spanish words in its whole interface.
+			"INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Main dashboard', 0, 1)",
 			userID,
 		)
 		if err != nil {

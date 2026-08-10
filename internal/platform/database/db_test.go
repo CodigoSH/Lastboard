@@ -351,3 +351,63 @@ func BenchmarkItemInsert(b *testing.B) {
 		`, userID)
 	}
 }
+
+// The default dashboard's name reached users two ways, both wrong: the handler
+// that creates it lazily wrote Spanish whatever language was chosen, and the
+// orphan migration wrote a translation key no locale file defines, which the
+// switcher then showed verbatim. An upgrade has to repair both, and has to
+// leave alone any board its owner has renamed.
+func TestMigrateSchemaFixesDefaultDashboardName(t *testing.T) {
+	tmpfile, err := os.CreateTemp("", "dashname_*.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpfile.Close()
+	defer os.Remove(tmpfile.Name())
+
+	db, err := sql.Open("sqlite", tmpfile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	if err := initSchema(db); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO users (id, username, password) VALUES (1, 'demo', 'x')`); err != nil {
+		t.Fatal(err)
+	}
+	seed := []struct{ id, name string }{
+		{"1", "Dashboard principal"},
+		{"2", "dashboard.default_name"},
+		{"3", "Media"},
+		{"4", "Mi panel"},
+	}
+	for _, s := range seed {
+		if _, err := db.Exec(
+			`INSERT INTO dashboards (id, user_id, name, position, is_default) VALUES (?, 1, ?, 0, 0)`,
+			s.id, s.name); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := migrateSchema(db); err != nil {
+		t.Fatalf("migrateSchema: %v", err)
+	}
+
+	want := map[string]string{
+		"1": "Main dashboard",
+		"2": "Main dashboard",
+		"3": "Media",     // never a default: untouched
+		"4": "Mi panel",  // renamed by its owner: untouched
+	}
+	for id, expected := range want {
+		var got string
+		if err := db.QueryRow(`SELECT name FROM dashboards WHERE id = ?`, id).Scan(&got); err != nil {
+			t.Fatal(err)
+		}
+		if got != expected {
+			t.Errorf("dashboard %s named %q, want %q", id, got, expected)
+		}
+	}
+}

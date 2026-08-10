@@ -270,6 +270,21 @@ func migrateSchema(db *sql.DB) error {
 		return err
 	}
 
+	// Migration 6: the default dashboard's name. It was written as
+	// 'Dashboard principal' by the handler that creates it lazily — Spanish
+	// whatever language the owner picked — and as the untranslated key
+	// 'dashboard.default_name' by the migration below, which no locale file ever
+	// defined, so it reached the screen verbatim. Both become the English name
+	// used everywhere now. Only untouched defaults match: a board the owner
+	// renamed keeps the name they gave it.
+	_, err = db.Exec(`
+		UPDATE dashboards SET name = 'Main dashboard'
+		WHERE name IN ('Dashboard principal', 'dashboard.default_name')
+	`)
+	if err != nil {
+		return fmt.Errorf("migration 6 (default dashboard name) failed: %w", err)
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.
@@ -369,7 +384,10 @@ func resolveDefaultDashboard(db *sql.DB, userID int) (int, error) {
 	// 3. No dashboards at all — create the initial one for this legacy user.
 	// The name is stored as an i18n key so the frontend renders it in the user's language.
 	res, err := db.Exec(
-		`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'dashboard.default_name', 0, 1)`, userID,
+		// A literal name, not a translation key: `dashboard.default_name` was
+		// never added to any locale file, so every board created down this path
+		// was displayed to its owner as that string, verbatim.
+		`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Main dashboard', 0, 1)`, userID,
 	)
 	if err != nil {
 		return 0, err
