@@ -457,12 +457,12 @@ class WidgetConfigModal extends HTMLElement {
             newContent.showForecast = forecastInput?.checked || false;
             newContent.forecastDays = parseInt(daysInput?.value) || 5;
             delete newContent.unit;
-        } else if (widgetId === 'notepad') {
-            const textInput = this.shadowRoot?.getElementById('notepad-text') as HTMLTextAreaElement;
-            newContent.text = textInput ? textInput.value : '';
-        } else if (widgetId === 'markdown') {
-            const textInput = this.shadowRoot?.getElementById('markdown-text') as HTMLTextAreaElement;
-            newContent.text = textInput ? textInput.value : '';
+        // Notepad and Markdown are written in the widget itself, not here: their
+        // settings form only points at the Personalize tab. Saving used to read
+        // a `#notepad-text` / `#markdown-text` field that this form has never
+        // rendered, so `textInput` was always null and the fallback wrote an
+        // empty string over the note. Changing a border colour erased what you
+        // had written. The text is already in `newContent` — leave it there.
         } else if (widgetId === 'api') {
             const val = (id: string) => (this.shadowRoot?.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)?.value ?? '';
             newContent.title = val('api-title').trim();
