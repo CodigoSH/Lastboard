@@ -8,9 +8,12 @@ Enter **Edit Mode** (the pencil/edit toggle in the top bar). Tiles gain a drag h
 
 ![The board in edit mode](../assets/edit-mode.png)
 
-Tiles can be dragged to a new place, and their bottom-right corner resizes them a grid cell at a time — everything around them moves out of the way as you go.
+Tiles can be dragged to a new place, and their bottom-right corner resizes them a grid cell at a
+time. An outline shows where the tile will land or how large it will become, and it turns red when
+the target overlaps something — nothing is pushed aside to make room, so a move or a resize onto an
+occupied cell is simply refused. Let go over a red outline and the tile stays as it was.
 
-![Resizing a widget: the grid reflows around it](../assets/grid.webp)
+![Moving a bookmark, then resizing a section into the space below it](../assets/grid.webp)
 
 Use **Add (+)** to create a new bookmark.
 

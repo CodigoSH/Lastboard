@@ -10,6 +10,7 @@
     "build": "bun web/build.ts"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "playwright": "^1.62.1"
   }
 }
