@@ -1,0 +1,21 @@
+{
+  "overview": "Lastboard Documentation",
+  "order": [
+    "getting-started",
+    "using",
+    "widgets",
+    "monitoring",
+    "security",
+    "help",
+    "contributing"
+  ],
+  "labels": {
+    "getting-started": "Getting started",
+    "using": "Using Lastboard",
+    "widgets": "Widgets",
+    "monitoring": "Monitoring",
+    "security": "Security",
+    "help": "Help",
+    "contributing": "Contributing"
+  }
+}

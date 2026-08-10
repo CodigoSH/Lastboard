@@ -87,7 +87,9 @@ const SETTINGS_SECTIONS: [string, string][] = [
 
 const SHOTS: Shot[] = [
     // ── The board itself ────────────────────────────────────────────────
-    { name: 'home', w: 1600, h: 760 },
+    // Long enough for the API tile to answer: caught early it draws its
+    // error state, and the board is the image everything else leads with.
+    { name: 'home', w: 1600, h: 760, wait: 3000 },
     { name: 'mobile', w: 430, h: 880 },
 
     // ── Settings, one per section, all framed identically ───────────────
@@ -245,7 +247,10 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         url: 'https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard',
         method: 'GET',
         refreshSec: 300,
-        headers: [],
+        // An object, not an array: the proxy decodes this into a string map and
+        // an empty array makes it reject the whole request, which the widget
+        // then draws as "Unreachable".
+        headers: {},
         arrayPath: '',
         mappings: [
             { label: 'Stars', path: 'stars_count', format: 'number' },
@@ -399,7 +404,14 @@ async function main() {
     for (const shot of wanted) {
         const w = shot.w ?? 1600, h = shot.h ?? 900;
         const dpr = shot.dpr ?? DPR;
-        await cdp('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile: (shot.w ?? 0) < 600 });
+        const phone = (shot.w ?? 0) < 600;
+        await cdp('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile: phone });
+        // The board switches to its touch layout on `pointer: coarse`, not on
+        // width. Without touch emulation a narrow window just squeezes the
+        // desktop grid, and the "mobile" screenshot came out as overlapping
+        // tiles with the labels clipped.
+        await cdp('Emulation.setTouchEmulationEnabled', { enabled: phone, maxTouchPoints: phone ? 5 : 0 });
+        await cdp('Emulation.setEmitTouchEventsForMouse', { enabled: phone, configuration: phone ? 'mobile' : 'desktop' });
         await cdp('Page.navigate', { url: APP });
         await sleep(1200);
         await waitForImages();
