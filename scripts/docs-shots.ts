@@ -132,7 +132,11 @@ const SHOTS: Shot[] = [
     // ── The board itself ────────────────────────────────────────────────
     // Long enough for the API tile to answer: caught early it draws its
     // error state, and the board is the image everything else leads with.
-    { name: 'home', w: 1600, h: 760, wait: 3000 },
+    // Tall enough for the whole board, measured rather than guessed: the tiles
+    // end 840px down at this width. At 760 the bottom row was sliced through the
+    // middle — the Docker widget's rows ran off the edge — and the top bar was
+    // dropping its right-hand button as well.
+    { name: 'home', w: 1600, h: 880, wait: 3000 },
     { name: 'mobile', w: 430, h: 880 },
 
     // ── Settings, one per section, all framed identically ───────────────
@@ -205,7 +209,7 @@ const SHOTS: Shot[] = [
 
     // ── Editing the board ───────────────────────────────────────────────
     {
-        name: 'edit-mode', w: 1600, h: 760, wait: 700,
+        name: 'edit-mode', w: 1600, h: 880, wait: 700,
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(700);`,
     },
     {
