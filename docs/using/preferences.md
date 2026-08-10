@@ -2,15 +2,13 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
 
-![Settings menu](../assets/p-panel.png)
-
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
 ## My Profile
 
 Manage your personal profile and security.
 
-![My Profile](../assets/p-myprofile.png)
+![My Profile](../assets/p-profile.png)
 
 - **Avatar** — upload a custom profile picture (use **Change Image**).
 - **Username** — change your display name, then **Save Name**. This signs you out, since the session is tied to it.
@@ -57,8 +55,7 @@ It also says where your icons come from — how many this server hands out, and 
 
 ## Advanced
 
-<!-- p-avanced.png keeps the app's own spelling of the file -->
-![Advanced](../assets/p-avanced.png)
+![Advanced](../assets/p-advanced.png)
 
 - **Reset System** — a safe-guarded "wipe everything" that erases all data and returns the instance to a fresh start (the Setup Wizard). This cannot be undone.
 
