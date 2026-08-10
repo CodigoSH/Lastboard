@@ -337,11 +337,31 @@ fi
 # beta cycle, every one of those betas contributed its own, and they are the
 # headline of their own notes, not a change.
 #
-# `test:`, `ci:` and `style:` are dropped too: the notes are read by someone
-# deciding whether to update, and none of them changes anything they run. A
-# formatting pass had reached the public notes as "Gofmt the dashboard-name
+# `test:`, `ci:`, `style:` and `docs:` are dropped too: the notes are read by
+# someone deciding whether to update, and none of them changes anything they run.
+# A formatting pass had reached the public notes as "Gofmt the dashboard-name
 # migration test", which tells that reader nothing at all.
-HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chore: bump|pre-release|^Merge branch|^Merge remote-tracking|^test(\([a-z0-9_ -]+\))?!?:|^ci(\([a-z0-9_ -]+\))?!?:|^style(\([a-z0-9_ -]+\))?!?:'
+#
+# `docs:` is the same, only more so. The documentation site rebuilds itself from
+# main on every push, so those changes are already published whether or not
+# anyone takes the release — a reader is being told about something they have
+# had for days. A cycle of documentation work put eleven lines about screenshots
+# into one beta's notes and pushed the one behavioural change out of sight.
+# Where a documentation overhaul is worth announcing, it goes in the Open
+# Collective post for the minor version, which is written by hand and read by
+# people who want that news.
+#
+# The `(docs)` scope is dropped on any type, not just `docs:`. `fix(docs): the
+# recording no longer stalls before the first click` is a repair to the script
+# that films the documentation — a fix, and nothing a reader of these notes will
+# ever run. `fix(docker)` is untouched: the scope has to be exactly `docs`.
+#
+# Which puts weight on typing a commit correctly. `docs:` means the published
+# documentation and nothing else. A change to a string the binary ships is a
+# `fix:` or an `i18n:` however documentary it feels — v1.7.0-Beta.16 carried
+# "an instance has one administrator" as `docs:`, and it had rewritten a warning
+# in twenty locale files.
+HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chore: bump|pre-release|^Merge branch|^Merge remote-tracking|^test(\([a-z0-9_ -]+\))?!?:|^ci(\([a-z0-9_ -]+\))?!?:|^style(\([a-z0-9_ -]+\))?!?:|^docs(\([a-z0-9_ -]+\))?!?:|^[a-z]+\(docs\)!?:'
 
 # One normalizer for every section. The previous code had two — a decent regex
 # for the typed buckets and `sed 's/^[a-z]*: //'` for everything else, which only
