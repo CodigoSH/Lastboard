@@ -86,8 +86,21 @@ async function evaluate(expression: string) {
 }
 
 /** The real pointer, on the throwaway display. */
+let pointer = { x: -1, y: -1 };
 const mouse = {
-    to: (x: number, y: number) => spawnSync('xdotool', ['mousemove', '--sync', String(Math.round(x)), String(Math.round(y))], { env: XENV }),
+    /**
+     * `--sync` waits for the X server to confirm the pointer moved, so asking it
+     * to move somewhere it already is blocks until it gives up — about two and a
+     * half seconds each time. Eased motion over a short hop rounds several early
+     * steps onto the same pixel, and the two top-bar buttons are close enough
+     * that a 380ms glide between them took half a minute of the recording.
+     */
+    to: (x: number, y: number) => {
+        const p = { x: Math.round(x), y: Math.round(y) };
+        if (p.x === pointer.x && p.y === pointer.y) return;
+        pointer = p;
+        spawnSync('xdotool', ['mousemove', '--sync', String(p.x), String(p.y)], { env: XENV });
+    },
     down: () => spawnSync('xdotool', ['mousedown', '1'], { env: XENV }),
     up: () => spawnSync('xdotool', ['mouseup', '1'], { env: XENV }),
     key: (k: string) => spawnSync('xdotool', ['key', k], { env: XENV }),
@@ -291,16 +304,26 @@ async function main() {
     const TOPBAR = `document.querySelector('app-topbar').shadowRoot`;
     const MODAL = `document.querySelector('widget-config-modal').shadowRoot`;
 
+    const t0 = Date.now();
+    const beat = (what: string) => { if (process.env.TRACE) log(`  · ${what} @${((Date.now() - t0) / 1000).toFixed(2)}s`); };
+
     // ── 1. Into edit mode, from the top bar ─────────────────────────────
+    beat('start');
     await click(await where(`return ${TOPBAR}.querySelector('#edit-toggle');`), 500);
+    beat('edit clicked');
     await sleep(550);
     if (!await evaluate(`return document.querySelector('bookmark-grid').isEditing;`)) {
         throw new Error('the board never entered edit mode');
     }
+    beat('editing confirmed');
 
     // ── 2. Add a section ────────────────────────────────────────────────
-    await click(await where(`return ${TOPBAR}.querySelector('#add-toggle');`), 380);
+    const addBtn = await where(`return ${TOPBAR}.querySelector('#add-toggle');`);
+    beat('add button located');
+    await click(addBtn, 380);
+    beat('+ clicked');
     await sleep(420);
+    beat('menu open');
     const entry = `return ${TOPBAR}.querySelector('#add-menu [data-action="add-section"]');`;
     at = await glide(at, await where(entry), 300);
     // Measured again on arrival: the menu is still opening when the first
