@@ -13,7 +13,12 @@ time. An outline shows where the tile will land or how large it will become, and
 the target overlaps something — nothing is pushed aside to make room, so a move or a resize onto an
 occupied cell is simply refused. Let go over a red outline and the tile stays as it was.
 
-![Moving a bookmark, then resizing a section into the space below it](../assets/grid.webp)
+A section is a container: drop bookmarks inside one and they travel with it. The recording below is
+one pass through all of it — adding a section from **Add (+)**, giving it a name in the settings
+that open with it, dragging its corner out, and carrying two bookmarks that were already on the
+board into it.
+
+![Adding a section, naming it, making it bigger, and moving two bookmarks into it](../assets/grid.webp)
 
 Use **Add (+)** to create a new bookmark.
 
