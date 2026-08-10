@@ -147,7 +147,7 @@ class DemoService {
         // Ensure preferences object exists
         if (!updated.preferences) {
             updated.preferences = {
-                accent_color: 'blue',
+                accent_color: 'orange',
                 language: 'en',
                 theme: 'system',
                 grid_columns: 12

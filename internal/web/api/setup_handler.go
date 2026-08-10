@@ -65,7 +65,7 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		input.Theme = "dark"
 	}
 	if input.AccentColor == "" {
-		input.AccentColor = "#2563eb"
+		input.AccentColor = "#e8520e"
 	}
 
 	// Validate preferences

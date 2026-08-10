@@ -60,7 +60,7 @@ class UserStore {
         this.user = {
             ...cleanUserData,
             preferences: {
-                accent_color: userData.accent_color || 'blue',
+                accent_color: userData.accent_color || 'orange',
                 language: userData.language || 'en',
                 theme: userData.theme, // Map theme from backend!
                 grid_columns: userData.grid_columns || 12, // Default 12
@@ -133,9 +133,9 @@ class UserStore {
         if (color.startsWith('#')) return color;
         const map: Record<string, string> = {
             'blue': '#228be6', 'indigo': '#4c6ef5', 'cyan': '#15aabf',
-            'teal': '#12b886', 'orange': '#fd7e14', 'red': '#fa5252', 'grape': '#be4bdb'
+            'teal': '#12b886', 'orange': '#e8520e', 'red': '#fa5252', 'grape': '#be4bdb'
         };
-        return map[color] || '#0078D4';
+        return map[color] || '#e8520e';
     }
 
     // Success is NOT announced here: the settings panel decides, per control,

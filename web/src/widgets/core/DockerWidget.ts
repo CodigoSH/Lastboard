@@ -124,7 +124,7 @@ const CSS = `
     font-family: var(--font-sans); cursor: pointer;
     transition: all 0.15s; opacity: 1;
 }
-.retry-btn:hover { background: rgba(var(--accent-rgb,37,99,235),0.12); border-color: var(--accent); color: var(--accent); }
+.retry-btn:hover { background: rgba(var(--accent-rgb,232,82,14),0.12); border-color: var(--accent); color: var(--accent); }
 
 /* ── Skeleton rows ── */
 .skeleton-row {
@@ -276,8 +276,8 @@ const CSS = `
 }
 .port-badge.more {
     color: var(--accent);
-    border-color: rgba(var(--accent-rgb,37,99,235),0.3);
-    background: rgba(var(--accent-rgb,37,99,235),0.08);
+    border-color: rgba(var(--accent-rgb,232,82,14),0.3);
+    background: rgba(var(--accent-rgb,232,82,14),0.08);
 }
 
 /* ACTIONS cell */
@@ -297,7 +297,7 @@ const CSS = `
     position: relative; flex-shrink: 0;
 }
 .action-btn svg { width: 13px; height: 13px; }
-.action-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb,37,99,235),0.1); }
+.action-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb,232,82,14),0.1); }
 .action-btn:active { transform: scale(0.92); }
 .action-btn[data-action="stop"]:hover:not(:disabled)  { background: rgba(var(--danger-rgb,220,38,38),0.1); border-color: var(--danger-color); color: var(--danger-color); }
 .action-btn[data-action="start"]:hover:not(:disabled) { background: rgba(var(--success-rgb,22,163,74),0.1); border-color: var(--success-color); color: var(--success-color); }

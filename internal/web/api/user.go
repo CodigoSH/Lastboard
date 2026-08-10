@@ -418,7 +418,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Default Avatar Logic
 	defaultAvatar := "/images/default-avatar.svg"
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, 'user', ?, 'system', 'metric', '#2563eb', 'en', 'Lastboard', 140, ?)")
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, 'user', ?, 'system', 'metric', '#e8520e', 'en', 'Lastboard', 140, ?)")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

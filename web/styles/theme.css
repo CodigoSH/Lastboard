@@ -14,9 +14,9 @@
     --modal-blur: blur(12px);
 
     /* Accents */
-    --accent: #2563eb;
-    --accent-alt: #4f46e5;
-    --accent-rgb: 37, 99, 235;
+    --accent: #e8520e;
+    --accent-alt: #c2410c;
+    --accent-rgb: 232, 82, 14;
 
     /* Borders & Text — light equivalents of dark's #333/#444 */
     --border: rgba(0, 0, 0, 0.05);
@@ -119,7 +119,7 @@
     --modal-blur: blur(12px);
 
     /* Accents */
-    --accent-rgb: 37, 99, 235;
+    --accent-rgb: 232, 82, 14;
     /* Default fallback, overridden by JS */
 
     /* Borders & Text */

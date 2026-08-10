@@ -54,7 +54,7 @@ class SettingsContent extends HTMLElement {
         adoptSharedStyles(this.shadowRoot);
         // Safe initial state while loading
         this.prefs = {
-            accent_color: '#0078D4',
+            accent_color: '#e8520e',
             language: 'en',
             widget_min_width: 140,
             beta_updates: false,
@@ -510,11 +510,11 @@ class SettingsContent extends HTMLElement {
         let hex = color;
         const colorMap: Record<string, string> = {
             'blue': '#228be6', 'indigo': '#4c6ef5', 'cyan': '#15aabf',
-            'teal': '#12b886', 'orange': '#fd7e14', 'red': '#fa5252', 'grape': '#be4bdb'
+            'teal': '#12b886', 'orange': '#e8520e', 'red': '#fa5252', 'grape': '#be4bdb'
         };
 
         if (!color.startsWith('#')) {
-            hex = colorMap[color] || '#0078D4';
+            hex = colorMap[color] || '#e8520e';
         }
 
         document.documentElement.style.setProperty('--accent', hex);
@@ -848,7 +848,7 @@ class SettingsContent extends HTMLElement {
             initials: '??',
             role: i18n.t('role.view_only'),
             avatar_url: '',
-            accent_color: '#0078D4',
+            accent_color: '#e8520e',
             language: 'en',
             preferences: {}
         } as User;
@@ -860,7 +860,7 @@ class SettingsContent extends HTMLElement {
             case 'theme': {
                 const colorMap: Record<string, string> = {
                     'blue': '#228be6', 'indigo': '#4c6ef5', 'cyan': '#15aabf',
-                    'teal': '#12b886', 'orange': '#fd7e14', 'red': '#fa5252', 'grape': '#be4bdb'
+                    'teal': '#12b886', 'orange': '#e8520e', 'red': '#fa5252', 'grape': '#be4bdb'
                 };
                 const colors = Object.keys(colorMap);
                 return themeTemplate(this.prefs, colorMap, colors);

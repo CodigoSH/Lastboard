@@ -76,7 +76,7 @@ const CSS = `
     --lb-bg: var(--bg-card, #1a1a1a);
     --lb-text: var(--text-main, #ffffff);
     --lb-text-dim: var(--text-dim, rgba(255,255,255,0.5));
-    --lb-accent: var(--accent, #0078D4);
+    --lb-accent: var(--accent, #e8520e);
     --lb-accent-rgb: var(--accent-rgb, 0, 120, 212);
     --lb-border: var(--border, rgba(255,255,255,0.1));
 

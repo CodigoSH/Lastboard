@@ -87,7 +87,7 @@ func initSchema(db *sql.DB) error {
 			role                 TEXT NOT NULL DEFAULT 'user',
 			created_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
 			theme                TEXT DEFAULT 'system',
-			accent_color         TEXT DEFAULT 'blue',
+			accent_color         TEXT DEFAULT 'orange',
 			language             TEXT DEFAULT 'en',
 			grid_columns_pc      INTEGER DEFAULT 12,
 			grid_columns_tablet  INTEGER DEFAULT 4,
@@ -213,7 +213,7 @@ func migrateSchema(db *sql.DB) error {
 	// "duplicate column name", which we ignore.
 	backfill := []string{
 		`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system'`,
-		`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'blue'`,
+		`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'orange'`,
 		`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'`,
 		`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12`,
 		`ALTER TABLE users ADD COLUMN grid_columns_tablet INTEGER DEFAULT 4`,

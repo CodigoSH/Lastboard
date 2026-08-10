@@ -102,7 +102,7 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                      <svg viewBox="0 0 24 24" style="z-index: 5; fill: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events: none;">
                         <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5 9c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm3 3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                      </svg>
-                     <app-color-picker class="settings-content__swatch-picker" trigger-opacity="0" value="${prefs.accent_color.startsWith('#') ? prefs.accent_color : '#0078D4'}"
+                     <app-color-picker class="settings-content__swatch-picker" trigger-opacity="0" value="${prefs.accent_color.startsWith('#') ? prefs.accent_color : '#e8520e'}"
                             data-change="accent-picker"></app-color-picker>
                 </div>
              </div>

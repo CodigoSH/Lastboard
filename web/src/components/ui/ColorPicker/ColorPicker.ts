@@ -8,10 +8,10 @@ export class ColorPicker extends HTMLElement {
         return ['value', 'trigger-opacity'];
     }
 
-    private _value: string = '#0078D4';
+    private _value: string = '#e8520e';
     private _h: number = 210;
     private _s: number = 100;
-    private _v: number = 83; // Approx for #0078D4
+    private _v: number = 91; // Approx for #e8520e
 
     private _popover: HTMLElement | null = null;
     private _satArea: HTMLElement | null = null;

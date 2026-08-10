@@ -65,7 +65,7 @@ export class MarkdownWidget extends HTMLElement {
                     border-radius: 12px;
                     overflow: hidden;
                     position: relative;
-                    --lb-accent: var(--accent, #0078D4);
+                    --lb-accent: var(--accent, #e8520e);
                     --lb-border: var(--border, rgba(255,255,255,0.1));
                     --lb-text-dim: var(--text-dim, rgba(255,255,255,0.5));
                 }
