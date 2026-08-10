@@ -1244,12 +1244,25 @@ class WidgetConfigModal extends HTMLElement {
                 { value: 'tls', label: i18n.t('docker.host_type_tls') || 'Remote TLS' }
             ];
 
+            // The port belongs to the connection type, and one fixed example for
+            // all three was wrong for TLS: an unencrypted daemon listens on 2375
+            // and a TLS one on 2376, and the agent has its own default. Showing
+            // 2375 whatever you picked is how the ports stopped matching what the
+            // agent and the guides say.
+            const URL_HINT: Record<string, string> = {
+                agent: '192.168.1.100:2375',
+                tcp: '192.168.1.100:2375',
+                tls: '192.168.1.100:2376',
+            };
+
             const toggle = (val?: string) => {
                 const t = val || typeSelect.value;
                 const url = this.shadowRoot!.getElementById('docker-url-row');
                 const token = this.shadowRoot!.getElementById('docker-token-row');
+                const urlInput = this.shadowRoot!.getElementById('docker-url') as HTMLInputElement | null;
                 if (url) url.style.display = t === 'local' ? 'none' : '';
                 if (token) token.style.display = t === 'agent' ? '' : 'none';
+                if (urlInput && URL_HINT[t]) urlInput.placeholder = URL_HINT[t];
             };
             typeSelect.addEventListener('change', (e: Event) => toggle((e as CustomEvent).detail.value));
             toggle();
