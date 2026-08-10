@@ -5,12 +5,17 @@ import { template, panelInnerTemplate } from './RightDrawer.template';
 import { i18n } from '../../../services/i18n';
 import css from './RightDrawer.css' with { type: 'text' };
 
+/** Mirrors the sheet's slide in RightDrawer.css. */
+const SLIDE_MS = 400;
+
 class RightDrawer extends HTMLElement {
     isOpen: boolean;
     selectedSection: string | null;
     _unsubscribe: (() => void) | undefined;
     _unsubscribeI18n: (() => void) | undefined;
     _keydownHandler: ((e: KeyboardEvent) => void) | undefined;
+    /** Pending clean-up of the section, once the window has slid out. */
+    private closeTimer: number | null = null;
 
     updateAvailable: boolean;
     _unsubscribeDashboard: (() => void) | undefined;
@@ -57,14 +62,40 @@ class RightDrawer extends HTMLElement {
         if (this._keydownHandler) {
             window.removeEventListener('keydown', this._keydownHandler);
         }
+        if (this.closeTimer !== null) {
+            clearTimeout(this.closeTimer);
+            this.closeTimer = null;
+        }
     }
 
+    /**
+     * Opening and closing only change state — they do not rebuild the shadow
+     * DOM any more.
+     *
+     * That rebuild is why the window never slid in: `open` was set and the DOM
+     * replaced in the same tick, so the sheet was created with :host([open])
+     * already matching and was born at its final position. A newly inserted
+     * element does not transition from a state it never had, so the 0.4s
+     * transform in the stylesheet was never travelled — measured at 3ms after
+     * the click the panel was already at its resting x, and the overlay already
+     * fully opaque. With the DOM kept, flipping the attribute is enough.
+     */
     open() {
+        // Reopened while the previous close was still sliding out: drop the
+        // pending clean-up and start from the same place a finished close would
+        // have left us.
+        if (this.closeTimer !== null) {
+            clearTimeout(this.closeTimer);
+            this.closeTimer = null;
+            this.selectedSection = null;
+        }
+
         this.isOpen = true;
         // Default to the first section ("My profile") so the panel is never empty.
         if (!this.selectedSection) this.selectedSection = 'account';
+        this.refreshChrome();
+        this.updateSelection();
         this.setAttribute('open', '');
-        this.render();
         document.body.style.overflow = 'hidden';
         this.dispatchEvent(new CustomEvent('drawer-open', { bubbles: true, composed: true }));
     }
@@ -72,10 +103,21 @@ class RightDrawer extends HTMLElement {
     close() {
         this.isOpen = false;
         this.removeAttribute('open');
-        this.selectedSection = null;
-        this.render();
         document.body.style.overflow = '';
         this.dispatchEvent(new CustomEvent('drawer-close', { bubbles: true, composed: true }));
+
+        // The section is let go only once the window is out of sight. Dropping
+        // it now would empty the panel in the middle of its own slide, so what
+        // leaves the screen would be a blank box.
+        if (this.closeTimer !== null) clearTimeout(this.closeTimer);
+        this.closeTimer = window.setTimeout(() => {
+            this.closeTimer = null;
+            if (this.isOpen) return;
+            this.selectedSection = null;
+            this.updateSelection();
+            const body = this.shadowRoot?.querySelector('.right-drawer__content-body');
+            if (body) body.innerHTML = '';
+        }, SLIDE_MS);
     }
 
     selectSection(section: string) {

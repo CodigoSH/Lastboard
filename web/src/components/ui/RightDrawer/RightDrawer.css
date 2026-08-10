@@ -79,6 +79,15 @@
     transform: translateX(0);
 }
 
+@media (prefers-reduced-motion: reduce) {
+
+    :host,
+    .right-drawer__overlay,
+    .right-drawer__sheet {
+        transition: none;
+    }
+}
+
 /* Nav column. No surface of its own any more — it is part of the window. */
 .right-drawer__panel {
     display: flex;
