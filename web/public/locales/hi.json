@@ -186,7 +186,7 @@
   "notifier.user_created": "उपयोगकर्ता जोड़ा गया",
   "notifier.user_delete_confirm": "उपयोगकर्ता हटाएं?",
   "notifier.user_delete_error": "उपयोगकर्ता हटाने में त्रुटि",
-  "notifier.user_delete_superadmin": "सुपर एडमिनिस्ट्रेटर को हटाया नहीं जा सकता",
+  "notifier.user_delete_superadmin": "व्यवस्थापक खाता हटाया नहीं जा सकता",
   "notifier.user_deleted": "उपयोगकर्ता हटा दिया गया",
   "notifier.user_update_error": "उपयोगकर्ता अपडेट नहीं किया जा सका",
   "notifier.user_updated": "उपयोगकर्ता अपडेट किया गया",

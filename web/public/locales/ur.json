@@ -186,7 +186,7 @@
   "notifier.user_created": "صارف شامل کیا گیا",
   "notifier.user_delete_confirm": "صارف کو حذف کریں؟",
   "notifier.user_delete_error": "صارف حذف کرنے میں خرابی",
-  "notifier.user_delete_superadmin": "سپر ایڈمنسٹریٹر کو حذف نہیں کیا جا سکتا",
+  "notifier.user_delete_superadmin": "ایڈمنسٹریٹر اکاؤنٹ حذف نہیں کیا جا سکتا",
   "notifier.user_deleted": "صارف حذف کردیا گیا",
   "notifier.user_update_error": "صارف کو اپ ڈیٹ نہیں کیا جا سکا",
   "notifier.user_updated": "صارف اپ ڈیٹ ہو گیا",

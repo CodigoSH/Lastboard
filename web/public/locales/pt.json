@@ -186,7 +186,7 @@
   "notifier.user_created": "Utilizador adicionado",
   "notifier.user_delete_confirm": "Eliminar este utilizador?",
   "notifier.user_delete_error": "Erro ao eliminar utilizador",
-  "notifier.user_delete_superadmin": "O Super Administrador não pode ser excluído",
+  "notifier.user_delete_superadmin": "A conta de administrador não pode ser excluída",
   "notifier.user_deleted": "Utilizador eliminado",
   "notifier.user_update_error": "Não foi possível atualizar o utilizador",
   "notifier.user_updated": "Utilizador atualizado",

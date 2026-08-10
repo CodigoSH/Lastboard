@@ -4,7 +4,7 @@ The Docker widget provides live monitoring and basic management of your Docker c
 
 ## Description
 
-This widget lists containers, shows their running state, exposes port mappings, and provides real-time CPU/RAM stats. It also allows admin users to control container lifecycles (Start, Stop, Restart).
+This widget lists containers, shows their running state, exposes port mappings, and provides real-time CPU/RAM stats. It also lets the administrator control container lifecycles (Start, Stop, Restart).
 
 ![Docker Widget](../assets/w-docker.png)
 
@@ -83,10 +83,20 @@ Everything the widget shows is set from its configuration screen: enter the dash
 
 ### Hosts
 
-You can add multiple hosts. Supported URL formats include:
-- **Local:** `local` or empty string.
-- **Agent Server:** `agent://IP_OR_DOMAIN:PORT?token=YOUR_TOKEN`
-- **TLS/TCP:** `https://...` or `http://...`
+You can add as many hosts as you like. Each one has a name, a **Connection Type**, and — for
+everything except a local socket — an address. Pick the type first; the fields below it change to
+match, and so does the port in the example address.
+
+| Connection Type | Address to enter | Default port |
+| :--- | :--- | :--- |
+| **Local socket** | nothing — the address field disappears | — |
+| **Lastboard Agent** | `192.168.1.100:2375`, plus the agent's token in its own field | `2375`, or whatever you set in the agent's `PORT` |
+| **Remote TCP** | `192.168.1.100:2375` | `2375` — an unencrypted Docker daemon |
+| **Remote TLS** | `192.168.1.100:2376` | `2376` — a TLS Docker daemon |
+
+Enter the host and port on their own. Lastboard adds the scheme it needs, so there is no
+`agent://` or `https://` to type, and no `?token=` — the token has its own field, which appears
+only for the agent.
 
 With more than one host configured, the settings screen splits in two: hosts on the left, the selected host's containers on the right.
 
@@ -138,6 +148,6 @@ services:
 
 You can give the widget a title of your own instead of "Docker", and choose how often the container list is refreshed (30 seconds to 10 minutes). Resource usage for running containers updates continuously regardless of this setting.
 
-## Admin Controls
+## Administrator Controls
 
-Users with the `admin` role can start, stop, or restart containers directly from the widget rows.
+The administrator can start, stop, or restart containers directly from the widget rows. Members see the same containers and their state, without the controls.

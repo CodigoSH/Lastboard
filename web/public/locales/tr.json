@@ -186,7 +186,7 @@
   "notifier.user_created": "Kullanıcı eklendi",
   "notifier.user_delete_confirm": "Kullanıcıyı sil?",
   "notifier.user_delete_error": "Kullanıcı silinirken hata oluştu",
-  "notifier.user_delete_superadmin": "Süper Yönetici silinemez",
+  "notifier.user_delete_superadmin": "Yönetici hesabı silinemez",
   "notifier.user_deleted": "Kullanıcı silindi",
   "notifier.user_update_error": "Kullanıcı güncellenemedi",
   "notifier.user_updated": "Kullanıcı güncellendi",

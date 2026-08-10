@@ -186,7 +186,7 @@
   "notifier.user_created": "用户已创建",
   "notifier.user_delete_confirm": "删除此用户？",
   "notifier.user_delete_error": "删除用户时出错",
-  "notifier.user_delete_superadmin": "超级管理员无法删除",
+  "notifier.user_delete_superadmin": "无法删除管理员账户",
   "notifier.user_deleted": "用户已删除",
   "notifier.user_update_error": "无法更新用户",
   "notifier.user_updated": "用户已更新",

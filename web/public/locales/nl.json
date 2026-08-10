@@ -186,7 +186,7 @@
   "notifier.user_created": "Gebruiker toegevoegd",
   "notifier.user_delete_confirm": "Gebruiker verwijderen?",
   "notifier.user_delete_error": "Fout bij verwijderen gebruiker",
-  "notifier.user_delete_superadmin": "De superbeheerder kan niet worden verwijderd",
+  "notifier.user_delete_superadmin": "Het beheerdersaccount kan niet worden verwijderd",
   "notifier.user_deleted": "Gebruiker verwijderd",
   "notifier.user_update_error": "Kon gebruiker niet bijwerken",
   "notifier.user_updated": "Gebruiker bijgewerkt",

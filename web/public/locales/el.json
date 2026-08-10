@@ -186,7 +186,7 @@
   "notifier.user_created": "Προστέθηκε χρήστης",
   "notifier.user_delete_confirm": "Διαγραφή χρήστη;",
   "notifier.user_delete_error": "Σφάλμα διαγραφής χρήστη",
-  "notifier.user_delete_superadmin": "Δεν είναι δυνατή η διαγραφή του Super Administrator",
+  "notifier.user_delete_superadmin": "Δεν είναι δυνατή η διαγραφή του λογαριασμού διαχειριστή",
   "notifier.user_deleted": "Ο χρήστης διαγράφηκε",
   "notifier.user_update_error": "Αδυναμία ενημέρωσης χρήστη",
   "notifier.user_updated": "Ο χρήστης ενημερώθηκε",

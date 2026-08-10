@@ -186,7 +186,7 @@
   "notifier.user_created": "ব্যবহারকারী যোগ করা হয়েছে",
   "notifier.user_delete_confirm": "ব্যবহারকারী মুছবেন?",
   "notifier.user_delete_error": "ব্যবহারকারী মুছতে ত্রুটি",
-  "notifier.user_delete_superadmin": "সুপার অ্যাডমিনিস্ট্রেটর মুছে ফেলা যাবে না",
+  "notifier.user_delete_superadmin": "অ্যাডমিনিস্ট্রেটর অ্যাকাউন্ট মুছে ফেলা যাবে না",
   "notifier.user_deleted": "ব্যবহারকারী মুছে ফেলা হয়েছে",
   "notifier.user_update_error": "ব্যবহারকারী আপডেট করা যায়নি",
   "notifier.user_updated": "ব্যবহারকারী আপডেট করা হয়েছে",

@@ -186,7 +186,7 @@
   "notifier.user_created": "사용자 추가됨",
   "notifier.user_delete_confirm": "사용자를 삭제하시겠습니까?",
   "notifier.user_delete_error": "사용자 삭제 오류",
-  "notifier.user_delete_superadmin": "최고 관리자는 삭제할 수 없습니다",
+  "notifier.user_delete_superadmin": "관리자 계정은 삭제할 수 없습니다",
   "notifier.user_deleted": "사용자가 삭제되었습니다",
   "notifier.user_update_error": "사용자를 업데이트할 수 없습니다",
   "notifier.user_updated": "사용자 업데이트됨",

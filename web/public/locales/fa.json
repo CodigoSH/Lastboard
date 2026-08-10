@@ -186,7 +186,7 @@
   "notifier.user_created": "کاربر اضافه شد",
   "notifier.user_delete_confirm": "کاربر حذف شود؟",
   "notifier.user_delete_error": "خطا در حذف کاربر",
-  "notifier.user_delete_superadmin": "سوپر ادمین قابل حذف نیست",
+  "notifier.user_delete_superadmin": "حساب مدیر قابل حذف نیست",
   "notifier.user_deleted": "کاربر حذف شد",
   "notifier.user_update_error": "امکان به‌روزرسانی کاربر وجود ندارد",
   "notifier.user_updated": "کاربر به‌روز شد",

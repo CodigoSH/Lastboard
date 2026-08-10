@@ -186,7 +186,7 @@
   "notifier.user_created": "Pengguna ditambahkan",
   "notifier.user_delete_confirm": "Hapus pengguna ini?",
   "notifier.user_delete_error": "Kesalahan menghapus pengguna",
-  "notifier.user_delete_superadmin": "Super Administrator tidak dapat dihapus",
+  "notifier.user_delete_superadmin": "Akun administrator tidak dapat dihapus",
   "notifier.user_deleted": "Pengguna dihapus",
   "notifier.user_update_error": "Tidak dapat memperbarui pengguna",
   "notifier.user_updated": "Pengguna diperbarui",

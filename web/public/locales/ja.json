@@ -186,7 +186,7 @@
   "notifier.user_created": "ユーザーを追加しました",
   "notifier.user_delete_confirm": "ユーザーを削除しますか？",
   "notifier.user_delete_error": "ユーザーの削除エラー",
-  "notifier.user_delete_superadmin": "スーパー管理者は削除できません",
+  "notifier.user_delete_superadmin": "管理者アカウントは削除できません",
   "notifier.user_deleted": "ユーザーを削除しました",
   "notifier.user_update_error": "ユーザーを更新できませんでした",
   "notifier.user_updated": "ユーザーが更新されました",

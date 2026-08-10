@@ -186,7 +186,7 @@
   "notifier.user_created": "Utente aggiunto",
   "notifier.user_delete_confirm": "Eliminare l'utente?",
   "notifier.user_delete_error": "Errore durante l'eliminazione dell'utente",
-  "notifier.user_delete_superadmin": "L'amministratore principale non può essere eliminato",
+  "notifier.user_delete_superadmin": "L'account amministratore non può essere eliminato",
   "notifier.user_deleted": "Utente eliminato",
   "notifier.user_update_error": "Impossibile aggiornare l'utente",
   "notifier.user_updated": "Utente aggiornato",

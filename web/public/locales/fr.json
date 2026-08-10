@@ -186,7 +186,7 @@
   "notifier.user_created": "Utilisateur ajouté",
   "notifier.user_delete_confirm": "Supprimer cet utilisateur ?",
   "notifier.user_delete_error": "Échec de la suppression de l'utilisateur",
-  "notifier.user_delete_superadmin": "L'administrateur principal ne peut pas être supprimé",
+  "notifier.user_delete_superadmin": "Le compte administrateur ne peut pas être supprimé",
   "notifier.user_deleted": "Utilisateur supprimé",
   "notifier.user_update_error": "Impossible de mettre à jour l'utilisateur",
   "notifier.user_updated": "Utilisateur mis à jour",

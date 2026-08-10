@@ -186,7 +186,7 @@
   "notifier.user_created": "Пользователь добавлен",
   "notifier.user_delete_confirm": "Удалить пользователя?",
   "notifier.user_delete_error": "Ошибка при удалении пользователя",
-  "notifier.user_delete_superadmin": "Невозможно удалить первого администратора",
+  "notifier.user_delete_superadmin": "Невозможно удалить учётную запись администратора",
   "notifier.user_deleted": "Пользователь удален",
   "notifier.user_update_error": "Не удалось обновить пользователя",
   "notifier.user_updated": "Пользователь обновлен",

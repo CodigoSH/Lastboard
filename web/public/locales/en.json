@@ -186,7 +186,7 @@
   "notifier.user_created": "User added",
   "notifier.user_delete_confirm": "Delete this user?",
   "notifier.user_delete_error": "Couldn't delete user",
-  "notifier.user_delete_superadmin": "Can't delete the primary admin",
+  "notifier.user_delete_superadmin": "The administrator account can't be deleted",
   "notifier.user_deleted": "User removed",
   "notifier.user_update_error": "Couldn't update user",
   "notifier.user_updated": "User updated",

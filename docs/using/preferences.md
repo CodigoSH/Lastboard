@@ -2,7 +2,7 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
 
-Four of the sections — **Users**, **Monitoring**, **Data** and **Advanced** — are admin-only. A Member account sees My Profile, Look & Feel, Personalization and About.
+Four of the sections — **Users**, **Monitoring**, **Data** and **Advanced** — belong to the administrator. A Member account sees My Profile, Look & Feel, Personalization and About.
 
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
@@ -35,15 +35,15 @@ Everything that changes how the dashboard looks.
 - **Measurement Units** — **Metric** (°C, km/h) or **Imperial** (°F, mph). Applies to all compatible widgets (Weather, Telemetry, …).
 - **Grid Layout** — the **Columns** slider sets how many columns the grid uses, for tighter or more spacious layouts.
 
-## Users (Admin Only)
+## Users (Administrator Only)
 
-Administrators manage who can access the instance.
+The administrator manages who can access the instance.
 
 ![Users](../assets/p-users.png)
 
 - **Add User** — create a new account.
 - **Edit / Delete** — modify or remove an existing account from its row.
-- **Roles** — **Admin** (the instance owner, full control) and **Member** (standard access).
+- **Roles** — an instance has exactly one **Admin**: the account created by the Setup Wizard. Every account added afterwards is a **Member**, and there is no way to promote one. If you need to hand the instance over, change the admin account's own username and password rather than creating a second administrator.
 
 ## Monitoring
 
