@@ -94,9 +94,14 @@ match, and so does the port in the example address.
 | **Remote TCP** | `192.168.1.100:2375` | `2375` — an unencrypted Docker daemon |
 | **Remote TLS** | `192.168.1.100:2376` | `2376` — a TLS Docker daemon |
 
-Enter the host and port on their own. Lastboard adds the scheme it needs, so there is no
-`agent://` or `https://` to type, and no `?token=` — the token has its own field, which appears
-only for the agent.
+Enter the host and port on their own — Lastboard adds the scheme the connection type needs. If you
+paste an address that already carries one, the standard forms are understood as written:
+`tcp://10.0.0.5:2375` is what `DOCKER_HOST` holds and what `docker context ls` prints, and
+`unix:///var/run/docker.sock` addresses a socket somewhere other than the default path.
+`npipe://` and `ssh://` are refused with a message rather than tried, since neither can be reached
+from here.
+
+There is no `?token=` to type: the token has its own field, which appears only for the agent.
 
 With more than one host configured, the settings screen splits in two: hosts on the left, the selected host's containers on the right.
 

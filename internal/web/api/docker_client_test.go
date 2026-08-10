@@ -263,3 +263,52 @@ func TestListContainers_ErrorStatus(t *testing.T) {
 		t.Fatal("expected error on non-200 Docker response")
 	}
 }
+
+// The addresses people actually have: whatever DOCKER_HOST holds, whatever
+// `docker context ls` prints, and whatever they type without a scheme. Pinned
+// because `tcp://` — the commonest of them — used to be turned into
+// `http://tcp://host:2375` and failed four seconds later with no explanation.
+func TestNewDockerClient_AcceptsDockerHostForms(t *testing.T) {
+	cases := []struct {
+		host string
+		base string
+	}{
+		{"", "http://localhost"},
+		{"local", "http://localhost"},
+		{"LOCAL", "http://localhost"},
+		{"unix:///var/run/docker.sock", "http://localhost"},
+		{"unix:///run/user/1000/podman/podman.sock", "http://localhost"},
+		{"tcp://192.168.1.10:2375", "http://192.168.1.10:2375"},
+		{"tcp://docker.example.com:2375/", "http://docker.example.com:2375"},
+		{"http://192.168.1.10:2375", "http://192.168.1.10:2375"},
+		{"https://192.168.1.10:2376", "https://192.168.1.10:2376"},
+		{"192.168.1.10:2375", "http://192.168.1.10:2375"},
+		{"agent://192.168.1.10:2375?token=secret", "http://192.168.1.10:2375"},
+	}
+	for _, c := range cases {
+		client, base, err := newDockerClient(c.host)
+		if err != nil {
+			t.Errorf("newDockerClient(%q) returned %v", c.host, err)
+			continue
+		}
+		if client == nil {
+			t.Errorf("newDockerClient(%q) returned no client", c.host)
+		}
+		if base != c.base {
+			t.Errorf("newDockerClient(%q) base = %q, want %q", c.host, base, c.base)
+		}
+	}
+}
+
+// Refused by name rather than mangled into something that times out.
+func TestNewDockerClient_RejectsWhatItCannotReach(t *testing.T) {
+	for _, host := range []string{
+		"npipe:////./pipe/docker_engine",
+		"ssh://user@192.168.1.10",
+		"unix://",
+	} {
+		if _, _, err := newDockerClient(host); err == nil {
+			t.Errorf("newDockerClient(%q) accepted an address it cannot reach", host)
+		}
+	}
+}

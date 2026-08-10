@@ -48,12 +48,24 @@ export interface ContainerCfgEntry {
     url?: string;
 }
 
+/**
+ * Drops a scheme the address was typed with.
+ *
+ * The connection type already says how to reach the host, and people paste what
+ * their DOCKER_HOST holds — `tcp://10.0.0.5:2375` — into a field that then adds
+ * a scheme of its own. Left alone that produced `https://tcp://10.0.0.5:2376`,
+ * which fails with nothing on screen to explain why.
+ */
+function bareHost(url: string | undefined): string {
+    return (url ?? '').trim().replace(/^(tcp|http|https|unix|npipe|ssh):\/\//i, '');
+}
+
 /** How a host is addressed in the `host` query parameter. */
 export function hostParam(host: DockerHost): string {
     if (host.type === 'local') return '';
-    if (host.type === 'agent') return `agent://${host.url ?? ''}?token=${encodeURIComponent(host.token ?? '')}`;
-    if (host.type === 'tls') return `https://${host.url ?? ''}`;
-    return host.url ?? '';
+    if (host.type === 'agent') return `agent://${bareHost(host.url)}?token=${encodeURIComponent(host.token ?? '')}`;
+    if (host.type === 'tls') return `https://${bareHost(host.url)}`;
+    return bareHost(host.url);
 }
 
 /** The id containerConfig is keyed by. */

@@ -36,6 +36,20 @@ describe('containerName', () => {
 });
 
 describe('hostParam', () => {
+    // People paste what DOCKER_HOST holds. The connection type already says how
+    // to reach the host, so a scheme typed into the address field is dropped
+    // rather than stacked on top of the one the type adds.
+    test('drops a scheme the address was typed with', () => {
+        expect(hostParam({ id: '1', name: 'nas', type: 'tcp', url: 'tcp://10.0.0.5:2375' }))
+            .toBe('10.0.0.5:2375');
+        expect(hostParam({ id: '1', name: 'nas', type: 'tls', url: 'tcp://10.0.0.5:2376' }))
+            .toBe('https://10.0.0.5:2376');
+        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'http://nas:2375', token: 't' }))
+            .toBe('agent://nas:2375?token=t');
+        expect(hostParam({ id: '1', name: 'nas', type: 'tcp', url: '  10.0.0.5:2375  ' }))
+            .toBe('10.0.0.5:2375');
+    });
+
     test('local sockets address nothing', () => {
         expect(hostParam({ id: '1', name: 'here', type: 'local' })).toBe('');
     });

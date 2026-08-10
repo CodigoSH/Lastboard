@@ -70,25 +70,51 @@ type DockerStats struct {
 // newDockerClient returns a configured *http.Client and the base URL to use
 // for the given hostURL.
 //
-//   - "" or "local"       → Unix socket at dockerSocketPath
-//   - "agent://host?token" → plain HTTP with Authorization: Bearer header
-//   - "https://…"        → TCP with TLS (InsecureSkipVerify: true)
-//   - anything else       → plain TCP; "http://" is prepended if missing
+// The schemes Docker itself uses in DOCKER_HOST are understood, so an address
+// copied from a Docker guide or from `docker context ls` works as written:
+//
+//   - "" or "local"          → Unix socket at dockerSocketPath
+//   - "unix:///path/to.sock" → that Unix socket
+//   - "tcp://host:port"      → plain TCP, the form DOCKER_HOST uses
+//   - "http://host:port"     → the same thing, spelt the other way
+//   - "https://host:port"    → TCP with TLS (InsecureSkipVerify: true)
+//   - "agent://host?token"   → plain HTTP with an Authorization: Bearer header
+//   - "host:port"            → plain TCP, for an address typed without a scheme
+//
+// "npipe://" and "ssh://" are refused by name rather than mangled: both are
+// valid DOCKER_HOST values that this cannot reach, and saying so beats a
+// four-second timeout and "could not connect".
 func newDockerClient(hostURL string) (*http.Client, string, error) {
 	const timeout = 10 * time.Second
 
-	switch {
-	case hostURL == "" || strings.EqualFold(hostURL, "local"):
-		// Unix-socket transport
+	// A Unix socket, wherever it lives.
+	unixClient := func(socket string) *http.Client {
 		transport := &http.Transport{
 			MaxIdleConnsPerHost: statsParallelism,
 			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-				return (&net.Dialer{Timeout: timeout}).DialContext(ctx, "unix", dockerSocketPath)
+				return (&net.Dialer{Timeout: timeout}).DialContext(ctx, "unix", socket)
 			},
 		}
-		client := &http.Client{Transport: transport, Timeout: timeout}
+		return &http.Client{Transport: transport, Timeout: timeout}
+	}
+
+	switch {
+	case hostURL == "" || strings.EqualFold(hostURL, "local"):
 		// Docker requires a dummy HTTP host; the real routing happens via the socket.
-		return client, "http://localhost", nil
+		return unixClient(dockerSocketPath), "http://localhost", nil
+
+	case strings.HasPrefix(hostURL, "unix://"):
+		socket := strings.TrimPrefix(hostURL, "unix://")
+		if socket == "" {
+			return nil, "", fmt.Errorf("docker.invalid_host")
+		}
+		return unixClient(socket), "http://localhost", nil
+
+	case strings.HasPrefix(hostURL, "npipe://"), strings.HasPrefix(hostURL, "ssh://"):
+		// Both are legitimate DOCKER_HOST values, and neither is reachable from
+		// here: a Windows named pipe is not on this machine, and an SSH tunnel
+		// would have to be set up outside Lastboard.
+		return nil, "", fmt.Errorf("docker.unsupported_scheme")
 
 	case strings.HasPrefix(hostURL, "agent://"):
 		// Strip scheme to get "host:port?token=secret"
@@ -115,8 +141,11 @@ func newDockerClient(hostURL string) (*http.Client, string, error) {
 		return client, strings.TrimRight(hostURL, "/"), nil
 
 	default:
-		// Plain TCP — ensure the host has the http:// scheme.
-		base := hostURL
+		// Plain TCP. `tcp://` is what DOCKER_HOST uses and what every Docker
+		// guide writes, so it is translated rather than left to fall through —
+		// prepending http:// to it produced `http://tcp://host:2375`, which
+		// fails four seconds later with nothing to explain why.
+		base := strings.TrimPrefix(hostURL, "tcp://")
 		if !strings.HasPrefix(base, "http://") {
 			base = "http://" + base
 		}
