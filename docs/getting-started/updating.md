@@ -4,12 +4,10 @@ Lastboard makes updates as painless as possible. We offer multiple ways to keep 
 
 ## Web Updater
 
-The easiest way to update is directly from the Lastboard web interface. This feature is restricted to admin users only.
+The easiest way to update is directly from the Lastboard web interface. Installing an update is restricted to the **first admin account** — the one created by the Setup Wizard. Other admins can check for updates but not install them.
 
-1. Navigate to **System settings**.
-2. Go to the **Updates** section.
-3. Click **Check for updates**. If an update is available, **Download & install** opens the
-   update window.
+1. Open **Settings** and go to **About**.
+2. Click **Check for Updates**. If an update is available, **Update** opens the update window.
 4. Confirm there, and the window follows the process step by step — download, signature,
    integrity, extract, install, restart — turning each step green as the server completes it.
    If a step fails, it turns red with the reason and the remaining ones are left untouched.

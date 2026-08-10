@@ -16,7 +16,7 @@ It reads the same data as the full [Monitoring & Uptime](../monitoring/overview.
 
 Clicking a row opens the same history drawer as the status page, with the outage list and the latency chart.
 
-> **Requires monitoring to be on.** The widget lists services that are already being monitored. Enable 24/7 monitoring and tick **Check status** on the bookmarks you care about — see [Monitoring & Uptime](../monitoring/overview.md).
+> **Requires monitoring to be on.** The widget lists services that are already being monitored. Enable 24/7 monitoring and give the bookmarks you care about a **Status Position** other than Off — see [Monitoring & Uptime](../monitoring/overview.md).
 
 ## Choosing which services to show
 

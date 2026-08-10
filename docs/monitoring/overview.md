@@ -6,7 +6,7 @@ Lastboard can watch your services, record their status over time, and alert you 
 
 ## What Gets Monitored
 
-A service is monitored when its **bookmark has Status Monitor enabled and a URL**. Enable it per bookmark from the bookmark editor (see [Bookmarks](../getting-started/bookmarks.md)). Lastboard then probes that URL and shows an up/down indicator on the tile.
+A service is monitored when its **bookmark has a URL and a Status Position other than Off**. Enable it per bookmark from the bookmark editor (see [Bookmarks](../getting-started/bookmarks.md)). Lastboard then probes that URL and shows an up/down indicator on the tile.
 
 Monitoring adds history and alerting on top of that indicator.
 
@@ -16,7 +16,7 @@ Open **Settings → Monitoring**. The **24/7 monitoring** toggle is a server-wid
 
 ![Monitoring settings](../assets/p-monitoring.png)
 
-- **Off** *(default)* — checks run in your browser while Lastboard is open. You get live up/down indicators, but history is only recorded while a tab is open.
+- **Off** *(default)* — while Lastboard is open, your browser asks the server to check each service. You get live up/down indicators, but **nothing is recorded**: no history and no alerts.
 - **On** — the server probes every monitored service on the check interval, even when nobody has Lastboard open. This records a continuous history and is what enables alerts.
 
 From this section you can also open the status page (**View status**) and clear all recorded history (**Clear data**).
@@ -33,7 +33,7 @@ Recorded checks are kept for **30 days**; older data is pruned automatically eac
 
 ## The Status Page
 
-The **Service status** page lists every monitored service in one place, each with its current state and a recent-checks strip. Open it from the **status icon in the top bar**, or from **Settings → Monitoring → View status**. Use the search box to filter by name.
+The **Service status** page lists every monitored service in one place, each with its current state and a recent-checks strip. With 24/7 monitoring on, open it from the **status icon in the top bar**. It is always reachable from **Settings → Monitoring → View status**. Use the search box to filter by name.
 
 Click any service to open its detail view. You can also click the **status indicator on a bookmark tile** to jump straight to that service's history.
 
@@ -57,8 +57,8 @@ Use **Refresh** to re-poll immediately; the view also refreshes itself while ope
 
 From a service's detail view (or **Settings → Monitoring → Clear data**) you can delete recorded history:
 
-- **This service** — clears only the selected service.
-- **All services** — clears every service's history.
+- **This service's history** — clears only the selected service.
+- **History of every service** — clears every service's history.
 
 Clearing data does not turn monitoring off — new checks start accumulating again immediately. This can't be undone.
 
@@ -68,6 +68,7 @@ When **24/7 monitoring** is on, Lastboard can send an alert when a service goes 
 
 | Setting | Description |
 | :--- | :--- |
+| **Alerts** | Turns notifications on. Everything below only appears once it is on. |
 | **Notification method** | **None**, **ntfy**, **Gotify**, or **Webhook**. |
 | **URL** | The ntfy topic URL, the Gotify server URL, or your webhook endpoint. |
 | **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. |
@@ -90,4 +91,4 @@ Use **Send test** to fire a test notification with the current settings and conf
   ```
   If a token is set, it is sent as an `Authorization: Bearer …` header.
 
-> Alerts are driven by the server-side scheduler, so they require **24/7 monitoring**. In "While the tab is open" mode there is no server to send them.
+> Alerts are driven by the server-side scheduler, so they require **24/7 monitoring**. With it off, nothing is running to notice an outage.

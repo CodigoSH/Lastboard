@@ -38,7 +38,7 @@ The request runs on the **Lastboard server**, not your browser, so what matters 
 
 ## A monitored service shows no history
 
-- History is only recorded continuously in **24/7 (server-side)** monitoring mode. In "While the tab is open" mode, data is gathered only while Lastboard is open.
+- History is only recorded with **24/7 monitoring** on. With it off the up/down dots still work, but nothing is stored, so there is no history to show.
 - Recorded checks are kept for **30 days**; older data is pruned.
 
 See [Monitoring & Uptime](../monitoring/overview.md).

@@ -2,6 +2,8 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
 
+Four of the sections — **Users**, **Monitoring**, **Data** and **Advanced** — are admin-only. A Member account sees My Profile, Look & Feel, Personalization and About.
+
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
 ## My Profile

@@ -35,8 +35,8 @@ make dev
 Alternatively, run the frontend and backend watchers manually in two terminals:
 
 ```bash
-# Terminal 1: Watch TypeScript & CSS
-bun run dev
+# Terminal 1: Build the frontend bundle (re-run after changing TypeScript or CSS)
+bun run build
 
 # Terminal 2: Run Go server
 go run ./cmd/lastboard/main.go

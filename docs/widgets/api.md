@@ -33,7 +33,7 @@ Full control for any endpoint that has no preset. Set the **Service** selector t
 | Field | Description |
 | :--- | :--- |
 | **Endpoint URL** | The full endpoint, including path and any query string. `http://` or `https://`. |
-| **Method** | `GET` (default), `POST`, or `HEAD`. |
+| **Method** | `GET` (default) or `POST`. |
 | **Headers** | Custom request headers, **one per line** as `Name: value` — typically for authentication (e.g. `Authorization: Bearer …` or `X-Api-Key: …`). |
 | **List array** *(optional)* | A path to an array in the response. Fill it to render a **list**; leave it empty for **metrics**. See [Display Modes](#display-modes). |
 | **Fields** | The values to show, **one per line** — see [Field Mappings](#field-mappings). |

@@ -42,7 +42,7 @@ dashboards:
         group: Media
 ```
 
-Each item has a `type`, `title`, and `url`, plus an optional `icon` and `group` (the section it belongs to).
+Each item has a `type`, `title`, and `url`, plus optional `icon`, `group` (the section it belongs to), `description` and `status_check`.
 
 ## Import Dashboards
 
