@@ -48,6 +48,19 @@ dialog {
     overflow: visible !important;
 }
 
+/* The dialogs that open from inside this panel — add and edit user — dim what
+   is behind them like every other modal in the app.
+   This was the one stylesheet in the app that hosts a <dialog> and never
+   styled its ::backdrop, so those two fell back to the browser's own: measured
+   at rgba(0, 0, 0, 0.1) with no blur, against rgba(0, 0, 0, 0.6) and blur(12px)
+   everywhere else. Opening one over the settings window left the window at full
+   brightness, as if the dialog were floating loose on top of it. */
+dialog::backdrop {
+    background: var(--overlay-bg);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
+}
+
 .settings-content__section-spacer {
     margin-top: 16px;
 }
