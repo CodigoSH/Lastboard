@@ -8,6 +8,10 @@ Enter **Edit Mode** (the pencil/edit toggle in the top bar). Tiles gain a drag h
 
 ![The board in edit mode](../assets/edit-mode.png)
 
+Tiles can be dragged to a new place, and their bottom-right corner resizes them a grid cell at a time — everything around them moves out of the way as you go.
+
+![Resizing a widget: the grid reflows around it](../assets/grid.webp)
+
 Use **Add (+)** to create a new bookmark.
 
 ![Add menu](../assets/m-addnew.png)

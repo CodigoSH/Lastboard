@@ -57,6 +57,23 @@ type Shot = {
      * renders the text and icons at that size instead of stretching them.
      */
     dpr?: number;
+    /**
+     * Small pieces — a single widget — are composed onto a canvas of one fixed
+     * shape instead of being handed to the docs at their own size.
+     *
+     * A clock tile is ~280 CSS pixels wide in the app. Published on its own it
+     * was stretched across a 720px column and read as something enormous, which
+     * is exactly what a screenshot must not do: it has to say how big the thing
+     * actually is. On the canvas it sits at a size close to life, centred, with
+     * the same margin every other exhibit gets — so the whole set looks like one
+     * family rather than a pile of crops.
+     */
+    exhibit?: boolean;
+    /**
+     * Photographed before the instance has an account — the Setup Wizard only
+     * exists until someone finishes it, so it has to be caught on the way in.
+     */
+    beforeSetup?: boolean;
 };
 
 // Reaching into the app from outside: the pieces live in shadow roots, so the
@@ -86,6 +103,22 @@ const SETTINGS_SECTIONS: [string, string][] = [
 ];
 
 const SHOTS: Shot[] = [
+    // ── Before there is an account ──────────────────────────────────────
+    {
+        // English is picked in the wizard rather than forced through the
+        // browser: the page reads the browser's locale and Chrome's --lang did
+        // not move it, and choosing it here is what a reader outside Spain does
+        // anyway. The accent is the product's default blue — this screen runs
+        // before any preference exists, and dressing it in the brand's orange
+        // would be staging something no first run ever shows.
+        name: 'setup', w: 1280, h: 900, beforeSetup: true, wait: 1500, pad: 56,
+        clip: `document.querySelector('.setup-container')`,
+        act: `const sel = document.getElementById('language');
+              sel.value = 'en';
+              sel.dispatchEvent(new CustomEvent('change', { detail: 'en', bubbles: true }));
+              await sleep(1200);`,
+    },
+
     // ── The board itself ────────────────────────────────────────────────
     // Long enough for the API tile to answer: caught early it draws its
     // error state, and the board is the image everything else leads with.
@@ -102,15 +135,27 @@ const SHOTS: Shot[] = [
     // ── One widget per tile, framed the same way ────────────────────────
     // pad 0: any margin here catches the neighbouring tile, and the figure
     // frame in the docs supplies the breathing room anyway.
-    { name: 'w-time', clip: tile('widget-clock'), pad: 0, dpr: 4 },
-    { name: 'w-weather', clip: tile('widget-weather'), pad: 0, dpr: 4 },
-    { name: 'w-telemetry', clip: tile('widget-telemetry'), pad: 0, dpr: 4 },
-    { name: 'w-notepad', clip: tile('widget-notepad'), pad: 0, dpr: 4 },
-    { name: 'w-markdown', clip: tile('widget-markdown'), pad: 0, dpr: 4 },
+    { name: 'w-time', exhibit: true, clip: tile('widget-clock'), pad: 0, dpr: 4 },
+    { name: 'w-weather', exhibit: true, clip: tile('widget-weather'), pad: 0, dpr: 4 },
+    { name: 'w-telemetry', exhibit: true, clip: tile('widget-telemetry'), pad: 0, dpr: 4 },
+    { name: 'w-notepad', exhibit: true, clip: tile('widget-notepad'), pad: 0, dpr: 4 },
+    { name: 'w-markdown', exhibit: true, clip: tile('widget-markdown'), pad: 0, dpr: 4 },
 
     // ── The two widgets that only mean anything with live data ──────────
-    { name: 'w-monitor', clip: tile('widget-monitor'), pad: 0, dpr: 4, wait: 1500 },
-    { name: 'w-api', clip: tile('widget-api'), pad: 0, dpr: 4, wait: 1800 },
+    { name: 'w-monitor', exhibit: true, clip: tile('widget-monitor'), pad: 0, dpr: 4, wait: 1500 },
+    { name: 'w-api', exhibit: true, clip: tile('widget-api'), pad: 0, dpr: 4, wait: 1800 },
+
+    // ── Docker, when a Docker-compatible API is available ───────────────
+    { name: 'w-docker', exhibit: true, clip: tile('widget-docker'), pad: 0, dpr: 4, wait: 2500 },
+    {
+        name: 'w-p-docker', w: 1500, h: 980, pad: 0, wait: 1200,
+        act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
+              const grid = document.querySelector('bookmark-grid').shadowRoot;
+              const card = grid.querySelector('widget-docker').closest('.bookmark-grid__card');
+              card.querySelector('.kebab-btn').click(); await sleep(600);
+              grid.querySelector('#kebab-menu .menu-edit').click(); await sleep(1800);`,
+        clip: `document.querySelector('widget-config-modal').shadowRoot.querySelector('dialog')`,
+    },
 
     // ── The menus you reach them from ───────────────────────────────────
     {
@@ -118,6 +163,14 @@ const SHOTS: Shot[] = [
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(600);
               ${TOPBAR}.querySelector('#add-toggle').click(); await sleep(500);`,
         clip: `${TOPBAR}.querySelector('#add-menu')`,
+    },
+
+    {
+        name: 'm-dashboards', w: 1400, h: 800, pad: 12, wait: 700,
+        // The switcher lives inside the top bar's shadow root, not the document.
+        act: `const sw = ${TOPBAR}.querySelector('dashboard-switcher').shadowRoot;
+              sw.querySelector('.switcher-trigger').click(); await sleep(800);`,
+        clip: `${TOPBAR}.querySelector('dashboard-switcher').shadowRoot.querySelector('.switcher-dropdown')`,
     },
 
     // ── Monitoring, end to end ──────────────────────────────────────────
@@ -165,12 +218,18 @@ const SHOTS: Shot[] = [
     // ── Widget settings, opened from the tile's own menu ─────────────────
     ...[['w-p-monitor', 'widget-monitor'], ['w-api-conf', 'widget-api']].map(([name, tag]) => ({
         name, w: 1500, h: 980, pad: 0, wait: 900,
+        // Two clicks, not one: the tile's button opens a small menu, and it is
+        // that menu's Edit entry which opens the settings. Clicking only the
+        // first one is why these shots came out empty the first time round.
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
               const grid = document.querySelector('bookmark-grid').shadowRoot;
               const card = grid.querySelector('${tag}').closest('.bookmark-grid__card');
               const kebab = card.querySelector('.kebab-btn');
-              if (!kebab) throw new Error('no edit button on the ${tag} tile');
-              kebab.click();
+              if (!kebab) throw new Error('no menu button on the ${tag} tile');
+              kebab.click(); await sleep(600);
+              const edit = grid.querySelector('#kebab-menu .menu-edit');
+              if (!edit) throw new Error('the tile menu has no Edit entry');
+              edit.click();
               for (let i = 0; i < 25; i++) {
                   const d = document.querySelector('widget-config-modal')?.shadowRoot?.querySelector('dialog');
                   if (d && d.open) break;
@@ -241,6 +300,18 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
             [x, y, w, h, JSON.stringify(content), dashboardId]);
 
     addWidget(1, 5, 4, 2, { widgetId: 'monitor', items: [], refreshSec: 60, title: 'Service status' });
+
+    // The Docker widget, pointed at whatever Docker-compatible API is listening
+    // on DOCKER_API (Podman serves one too). Without it the widget is left out
+    // rather than photographed empty — an empty widget teaches nothing, and a
+    // screenshot of someone's real containers is not ours to publish.
+    if (process.env.DOCKER_API) {
+        addWidget(8, 5, 4, 2, {
+            widgetId: 'docker',
+            hosts: [{ id: 'docs', name: 'Home server', type: 'tcp', url: process.env.DOCKER_API }],
+            activeHost: 'docs',
+        });
+    }
     addWidget(5, 5, 3, 2, {
         widgetId: 'api',
         title: 'Lastboard on Forgejo',
@@ -259,6 +330,47 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         ],
     });
     db.close();
+}
+
+/**
+ * Places a captured piece on the shared exhibit canvas.
+ *
+ * One shape for every exhibit (16:10), the piece centred at a size near its
+ * real one, on the board's own background. Done with Python + Pillow rather
+ * than in the browser because compositing after the fact keeps the capture
+ * itself honest: what is photographed is the widget, untouched.
+ */
+function mountOnCanvas(file: string, dpr: number) {
+    const script = `
+import sys
+from PIL import Image
+src = Image.open(sys.argv[1]).convert('RGBA')
+dpr = float(sys.argv[2])
+
+CANVAS_CSS = (720, 450)          # what the docs column gives a figure
+MAX_CSS    = 460                 # never wider than this on the canvas
+GROWTH     = 1.28                # a touch larger than life, still believable
+BG         = (17, 17, 18, 255)   # the board's own background
+
+nat_css = src.width / dpr
+target_css = min(MAX_CSS, nat_css * GROWTH, CANVAS_CSS[0] - 80)
+scale = target_css / nat_css
+
+out_px = (CANVAS_CSS[0] * 2, CANVAS_CSS[1] * 2)
+piece_px = (max(1, round(src.width * scale * 2 / dpr)), max(1, round(src.height * scale * 2 / dpr)))
+if piece_px[1] > out_px[1] - 80:                      # tall pieces fit by height
+    k = (out_px[1] - 80) / piece_px[1]
+    piece_px = (max(1, round(piece_px[0] * k)), max(1, round(piece_px[1] * k)))
+
+piece = src.resize(piece_px, Image.LANCZOS)
+canvas = Image.new('RGBA', out_px, BG)
+canvas.paste(piece, ((out_px[0] - piece_px[0]) // 2, (out_px[1] - piece_px[1]) // 2), piece)
+canvas.convert('RGB').save(sys.argv[1])
+print(f'{out_px[0]}x{out_px[1]} (pieza {piece_px[0]}x{piece_px[1]})')
+`;
+    const r = spawnSync('python3', ['-c', script, file, String(dpr)], { encoding: 'utf8' });
+    if (r.status !== 0) console.warn(`  ! canvas failed: ${(r.stderr || '').trim().split('\n').pop()}`);
+    return (r.stdout || '').trim();
 }
 
 // ── Plumbing ────────────────────────────────────────────────────────────────
@@ -353,6 +465,13 @@ async function main() {
     }));
     await waitFor(APP);
 
+    // The browser comes up first: the Setup Wizard only exists until an account
+    // is created, so anything photographing it has to run before that call.
+    await startBrowser(procs);
+
+    const preSetup = wanted.filter((s) => s.beforeSetup);
+    for (const shot of preSetup) await capture(shot);
+
     await fetch(`${APP}api/setup`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: 'demo', password: 'Lastboard123!', language: LANG, theme: THEME, accent_color: ACCENT }),
@@ -372,13 +491,24 @@ async function main() {
     console.log('▶ seeding monitoring history and the data-backed widgets…');
     await seedLiveData(join(WORK, 'shots.db'), cookies.session_token, cookies.csrf_token);
 
-    // 2. A browser with a clean profile, so no extension or leftover state
-    //    paints itself into a screenshot.
+    // 3. The shots that need an account.
+    await setCookies(cookies);
+    for (const shot of wanted.filter((s) => !s.beforeSetup)) await capture(shot);
+    await finish();
+}
+
+/** A browser with a clean profile, so no extension or leftover state paints
+ *  itself into a screenshot. */
+async function startBrowser(procs: ChildProcess[]) {
     console.log('▶ starting the browser…');
     procs.push(spawn('google-chrome', [
         '--headless=new', `--remote-debugging-port=${CDP_PORT}`,
         `--user-data-dir=${join(WORK, 'profile')}`, '--no-first-run', '--hide-scrollbars',
-        '--force-color-profile=srgb', '--disable-lcd-text', 'about:blank',
+        '--force-color-profile=srgb', '--disable-lcd-text',
+        // The Setup Wizard runs before any account exists, so it follows the
+        // browser's language rather than a stored preference. Left to this
+        // machine's locale it came out in Spanish on an English-only site.
+        `--lang=${LANG}-US`, 'about:blank',
     ], { stdio: 'ignore' }));
     await waitFor(`http://127.0.0.1:${CDP_PORT}/json/version`);
 
@@ -392,16 +522,31 @@ async function main() {
 
     await cdp('Page.enable'); await cdp('Runtime.enable'); await cdp('Network.enable');
     await cdp('Network.setCacheDisabled', { cacheDisabled: true });
+    await cdp('Network.setExtraHTTPHeaders', { headers: { 'Accept-Language': `${LANG}-US,${LANG};q=0.9` } });
     // Entry animations would otherwise be caught halfway through, giving a
     // board of half-faded tiles.
     await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    mkdirSync(OUT_DIR, { recursive: true });
+}
+
+async function setCookies(cookies: Record<string, string>) {
     for (const [name, value] of Object.entries(cookies)) {
         await cdp('Network.setCookie', { name, value, domain: 'localhost', path: '/' });
     }
+}
 
-    // 3. The shots.
-    mkdirSync(OUT_DIR, { recursive: true });
-    for (const shot of wanted) {
+async function finish() {
+    if (process.env.KEEP) {
+        console.log(`\nInstance left running on ${APP} (user demo / Lastboard123!). Ctrl-C to stop.`);
+        await new Promise(() => { });
+    }
+    console.log('\n✨ done');
+    process.exit(0);
+}
+
+/** Takes one shot: sets the viewport, reaches the state, frames and writes it. */
+async function capture(shot: Shot) {
+    {
         const w = shot.w ?? 1600, h = shot.h ?? 900;
         const dpr = shot.dpr ?? DPR;
         const phone = (shot.w ?? 0) < 600;
@@ -434,26 +579,20 @@ async function main() {
 
         if (clip && (!clip.width || !clip.height)) {
             console.warn(`  ! ${shot.name}: nothing to frame — skipped`);
-            continue;
+            return;
         }
         const png = await cdp('Page.captureScreenshot', { format: 'png', ...(clip ? { clip } : {}), captureBeyondViewport: !!clip });
         if (!png.result?.data) {
             console.warn(`  ! ${shot.name}: the browser refused the capture — skipped`);
-            continue;
+            return;
         }
         const file = join(OUT_DIR, `${shot.name}.png`);
         await Bun.write(file, Buffer.from(png.result.data, 'base64'));
+        if (shot.exhibit) mountOnCanvas(file, dpr);
         const size = spawnSync('python3', ['-c',
             `import struct;d=open('${file}','rb').read(33);w,h=struct.unpack('>II',d[16:24]);print(f'{w}x{h}')`]).stdout.toString().trim();
         console.log(`  ✓ ${shot.name.padEnd(22)} ${size}`);
     }
-
-    if (process.env.KEEP) {
-        console.log(`\nInstance left running on ${APP} (user demo / Lastboard123!). Ctrl-C to stop.`);
-        await new Promise(() => { });
-    }
-    console.log('\n✨ done');
-    process.exit(0);
 }
 
 main().catch((err) => { console.error('✗', err.message); process.exit(1); });

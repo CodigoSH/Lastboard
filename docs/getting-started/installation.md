@@ -2,6 +2,10 @@
 
 Get Lastboard up and running using your preferred method. We officially support Docker and native Linux installations.
 
+![The Setup Wizard on a fresh install](../assets/setup.png)
+
+The first time you open Lastboard it walks you through three steps: your language and theme, the admin account, and a summary. There is nothing to configure before that — the wizard creates the database on the spot.
+
 ## Requirements
 
 - **Docker Method:** Docker and Docker Compose installed.
