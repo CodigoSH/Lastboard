@@ -398,8 +398,8 @@ func TestMigrateSchemaFixesDefaultDashboardName(t *testing.T) {
 	want := map[string]string{
 		"1": "Main dashboard",
 		"2": "Main dashboard",
-		"3": "Media",     // never a default: untouched
-		"4": "Mi panel",  // renamed by its owner: untouched
+		"3": "Media",    // never a default: untouched
+		"4": "Mi panel", // renamed by its owner: untouched
 	}
 	for id, expected := range want {
 		var got string
