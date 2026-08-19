@@ -249,9 +249,23 @@ jobs:
           fi
           # The endpoint authenticates with a Coolify API token; without the
           # header it answers 401.
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
-            -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
-            "$COOLIFY_DEPLOY_URL")
+          #
+          # Which verb it wants depends on which URL is in the secret: Coolify's
+          # API deploy endpoint (/api/v1/deploy?uuid=…) is a GET, and a deploy
+          # webhook is a POST. Asking with the wrong one answers 405, which is
+          # what silently stopped the site being rebuilt after v1.7.0 — the
+          # release went out and the website went on advertising 1.6.2. So it
+          # asks one way and, only if the answer is "wrong method", the other.
+          ask() {
+            curl -s -o /dev/null -w "%{http_code}" --max-time 30 -X "$1" \
+              -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
+              "$COOLIFY_DEPLOY_URL"
+          }
+          CODE=$(ask GET)
+          if [ "$CODE" = "405" ]; then
+            echo "Website rebuild: GET answered 405, retrying as POST"
+            CODE=$(ask POST)
+          fi
           echo "Website rebuild HTTP $CODE"
           case "$CODE" in
             2*) echo "Website rebuild requested." ;;
