@@ -24,7 +24,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26.5'
+          go-version: '1.26.7'
 
       - name: Setup Bun (Frontend)
         uses: oven-sh/setup-bun@v2
@@ -80,7 +80,7 @@ jobs:
       - name: Set up Go (for signing)
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26.5'
+          go-version: '1.26.7'
 
       - name: Sign checksums.txt
         # Opt-in: if RELEASE_SIGNING_KEY is unset the release ships unsigned
