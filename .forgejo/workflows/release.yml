@@ -256,10 +256,21 @@ jobs:
           # what silently stopped the site being rebuilt after v1.7.0 — the
           # release went out and the website went on advertising 1.6.2. So it
           # asks one way and, only if the answer is "wrong method", the other.
+          # force=true matters more than it looks. Coolify only redeploys when the
+          # commit touches its configured Watch Paths, and when it doesn't it
+          # skips the deployment and still answers 2xx — which is why a release
+          # could report a successful rebuild and leave the site untouched. The
+          # site's content comes from this repository's API at build time, so a
+          # rebuild is worth doing whatever the commit happened to change.
+          URL="$COOLIFY_DEPLOY_URL"
+          case "$URL" in
+            *\?*) URL="$URL&force=true" ;;
+            *)    URL="$URL?force=true" ;;
+          esac
           ask() {
             curl -s -o /dev/null -w "%{http_code}" --max-time 30 -X "$1" \
               -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
-              "$COOLIFY_DEPLOY_URL"
+              "$URL"
           }
           CODE=$(ask GET)
           if [ "$CODE" = "405" ]; then
