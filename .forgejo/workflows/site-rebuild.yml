@@ -1,0 +1,48 @@
+name: Rebuild the website
+
+# The documentation is published by codigosh.com, which builds it from this
+# repository. Nothing here rebuilt that site on a normal push, so a change to
+# docs/ sat unpublished until the next release happened to trigger one — and
+# when the release-time trigger failed, the site went nine days without a build
+# while still advertising the previous version.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      # So a change to this job proves itself on the push that makes it.
+      - '.forgejo/workflows/site-rebuild.yml'
+
+jobs:
+  rebuild:
+    name: Rebuild the website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask Coolify to redeploy codigosh-web
+        env:
+          COOLIFY_DEPLOY_URL: ${{ secrets.COOLIFY_DEPLOY_URL }}
+          COOLIFY_DEPLOY_TOKEN: ${{ secrets.COOLIFY_DEPLOY_TOKEN }}
+        run: |
+          # Optional: a docs change must not fail because the hook is not set.
+          if [ -z "$COOLIFY_DEPLOY_URL" ] || [ -z "$COOLIFY_DEPLOY_TOKEN" ]; then
+            echo "Coolify deploy secrets not set — skipping website rebuild."
+            exit 0
+          fi
+          # Which verb the endpoint wants depends on which URL is configured:
+          # Coolify's API deploy endpoint is a GET, a deploy webhook is a POST,
+          # and the other one answers 405.
+          ask() {
+            curl -s -o /dev/null -w "%{http_code}" --max-time 30 -X "$1" \
+              -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
+              "$COOLIFY_DEPLOY_URL"
+          }
+          CODE=$(ask GET)
+          if [ "$CODE" = "405" ]; then
+            echo "GET answered 405, retrying as POST"
+            CODE=$(ask POST)
+          fi
+          echo "Website rebuild HTTP $CODE"
+          case "$CODE" in
+            2*) echo "Website rebuild requested." ;;
+            *)  echo "Website rebuild failed (HTTP $CODE)"; exit 1 ;;
+          esac
