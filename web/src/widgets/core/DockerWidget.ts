@@ -147,10 +147,25 @@ const CSS = `
 
 /* ── Container rows — CSS Grid layout ── */
 /* Same shape as the monitor widget's rows: a dot for state, then the name.
-   The two sit side by side on a dashboard, so they are read together. */
+   The two sit side by side on a dashboard, so they are read together.
+
+   The ports column is --ports-w, measured after each render: the widest ports
+   cell in the list, floored at one badge and capped so it can never take the
+   name's room. As a fixed 110px it charged every row for the worst case, and
+   most lists never pay it — plenty of containers publish nothing at all.
+
+   Every row must agree on the width or the columns stop lining up, which is why
+   this is one measured value rather than per-row content sizing. Subgrid would
+   express it directly and was tried; the rows carry horizontal padding, and a
+   subgrid's tracks are positioned by the parent, so the padding pushed every
+   cell 10px left of its track and the name landed on top of the state dot.
+
+   The name is also the widest flexible column now. It used to be 1.5fr against
+   the image's 2fr, so the part people read was narrower than the part they
+   don't — the image is abbreviated to library/n... either way. */
 .container-row {
     display: grid;
-    grid-template-columns: 8px minmax(0, 1.5fr) 130px minmax(0, 2fr) 110px 90px;
+    grid-template-columns: 8px minmax(0, 2fr) 130px minmax(0, 1.4fr) var(--ports-w, 56px) 90px;
     align-items: center;
     gap: 0 8px;
     padding: 7px 10px;
@@ -261,7 +276,8 @@ const CSS = `
 .cell-ports {
     display: flex; flex-wrap: nowrap; gap: 3px;
     align-items: center; min-width: 0;
-    overflow: hidden; padding-right: 8px;
+    overflow: hidden;
+    /* No padding of its own: the grid's column gap already separates it. */
 }
 .port-badge {
     background: var(--surface-hover, rgba(128,128,128,0.08));
@@ -710,18 +726,21 @@ class DockerWidget extends HTMLElement {
             }
         }
 
+        const label = (p: DockerPort) => (p.PrivatePort && p.PrivatePort !== p.PublicPort
+            ? `${p.PublicPort}:${p.PrivatePort}`
+            : `${p.PublicPort}`);
+
+        // Two at most on the row. Any more would push the column wide enough to
+        // start costing the container's name, which is the part being read.
         const show = unique.slice(0, 2);
-        const rest = unique.length - show.length;
+        const hidden = unique.slice(2);
 
-        const badges = show.map(p => {
-            const label = p.PrivatePort && p.PrivatePort !== p.PublicPort
-                ? `${p.PublicPort}:${p.PrivatePort}`
-                : `${p.PublicPort}`;
-            return `<span class="port-badge">${esc(label)}</span>`;
-        }).join('');
+        const badges = show.map(p => `<span class="port-badge">${esc(label(p))}</span>`).join('');
 
-        const moreBadge = rest > 0
-            ? `<span class="port-badge more">+${rest}</span>`
+        // The rest are counted, and named on hover — a "+3" that will not say
+        // which three is just a smaller way of hiding them.
+        const moreBadge = hidden.length > 0
+            ? `<span class="port-badge more" title="${esc(hidden.map(label).join(', '))}">+${hidden.length}</span>`
             : '';
 
         return badges + moreBadge;
@@ -810,6 +829,27 @@ class DockerWidget extends HTMLElement {
         `;
 
         this.bindEvents();
+        this.fitPortsColumn();
+    }
+
+    /**
+     * Sizes the ports column to the widest row that actually has ports.
+     *
+     * Measured rather than guessed: the badges are monospaced but the label is
+     * anything from "80" to "65535:65535", and a fixed track has to assume the
+     * worst for every row in the list. Floored at one badge so the column does
+     * not disappear on a list where nothing publishes a port, and capped so a
+     * container with two long mappings cannot eat into the name — which is the
+     * part being read.
+     */
+    private fitPortsColumn(): void {
+        const body = this.shadowRoot?.getElementById('body');
+        if (!body) return;
+        const cells = body.querySelectorAll<HTMLElement>('.cell-ports');
+        let widest = 0;
+        for (const cell of cells) widest = Math.max(widest, cell.scrollWidth);
+        const width = Math.min(120, Math.max(56, Math.ceil(widest)));
+        body.style.setProperty('--ports-w', `${width}px`);
     }
 
     private renderContainer(
