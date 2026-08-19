@@ -45,6 +45,17 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image }}
+          # `latest` is decided here and nowhere else. The action's default
+          # flavour is `latest=auto`, which adds the tag to whatever it judges to
+          # be the newest release — and it judges by parsing the version. A tag
+          # like v1.7.0-Beta.09 is not valid semver (a numeric prerelease
+          # identifier may not carry a leading zero), so the parse failed, the
+          # action stopped seeing a prerelease, and it moved `latest` onto that
+          # beta. It has pointed there ever since: from Beta.10 on the versions
+          # parse correctly and `latest=auto` has been leaving them alone, so
+          # nothing moved it back. Anyone installing with :latest got Beta.09.
+          flavor: |
+            latest=false
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
