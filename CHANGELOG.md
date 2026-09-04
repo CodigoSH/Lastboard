@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changing your password ends the sessions opened under the old one
 - Check the reported origin where there is no token to check
 - Every error the server sends is a key, and every key is translated
-- Force the redeploy, or Coolify skips it and reports success
+- Force the documentation redeploy, which was being skipped and reported as done
 - Format dates and numbers in the language the user picked
 - Isolate interpolated values so the punctuation around them stays put
 - Keep the notification credentials to the admin who set them
