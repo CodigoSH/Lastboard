@@ -30,7 +30,7 @@ func NewUserHandler(db *sql.DB, secret []byte) *UserHandler {
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
 	if username == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -53,13 +53,13 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "User not found", http.StatusNotFound)
+			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}
 		// A real query error (e.g. a missing column on an un-migrated DB) must not
 		// masquerade as "user not found" — log it so it is diagnosable.
 		slog.Error("GetMe: failed to load user", "username", username, "error", err)
-		http.Error(w, "Failed to load profile", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		DashboardBackground string  `json:"dashboard_background"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -116,52 +116,52 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "User not found", http.StatusNotFound)
+			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}
 		slog.Error("UpdatePreferences: failed to load current preferences", "username", username, "error", err)
-		http.Error(w, "Failed to load preferences", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
 	if input.AccentColor != "" {
 		if !isValidAccentColor(input.AccentColor) {
-			http.Error(w, "Invalid accent color", http.StatusBadRequest)
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
 			return
 		}
 		current.AccentColor = input.AccentColor
 	}
 	if input.Language != "" {
 		if len(input.Language) > 10 {
-			http.Error(w, "Invalid language", http.StatusBadRequest)
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
 			return
 		}
 		current.Language = input.Language
 	}
 	if input.Theme != "" {
 		if input.Theme != "dark" && input.Theme != "light" && input.Theme != "system" {
-			http.Error(w, "Invalid theme value", http.StatusBadRequest)
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
 			return
 		}
 		current.Theme = input.Theme
 	}
 	if input.UnitSystem != "" {
 		if input.UnitSystem != "metric" && input.UnitSystem != "imperial" {
-			http.Error(w, "Invalid unit system value", http.StatusBadRequest)
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
 			return
 		}
 		current.UnitSystem = input.UnitSystem
 	}
 	if input.WidgetMinWidth > 0 {
 		if input.WidgetMinWidth < 50 || input.WidgetMinWidth > 500 {
-			http.Error(w, "Invalid widget min width (50-500)", http.StatusBadRequest)
+			http.Error(w, "error.invalid_widget_min_width", http.StatusBadRequest)
 			return
 		}
 		current.WidgetMinWidth = input.WidgetMinWidth
 	}
 	if input.ProjectName != "" {
 		if len(input.ProjectName) > 64 {
-			http.Error(w, "Project name too long", http.StatusBadRequest)
+			http.Error(w, "error.project_name_too_long", http.StatusBadRequest)
 			return
 		}
 		current.ProjectName = input.ProjectName
@@ -182,7 +182,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 
 	// Dashboard Background: accept any string (Base64 or URL). Empty string clears it.
 	if len(input.DashboardBackground) > 2*1024*1024 {
-		http.Error(w, "Background too large (max 2MB)", http.StatusBadRequest)
+		http.Error(w, "error.background_too_large", http.StatusBadRequest)
 		return
 	}
 	current.DashboardBackground = input.DashboardBackground
@@ -191,7 +191,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	if input.ProjectLogo != nil {
 		logo := *input.ProjectLogo
 		if logo != "" && len(logo) > 2*1024*1024 {
-			http.Error(w, "Logo too large (max 2MB)", http.StatusBadRequest)
+			http.Error(w, "error.logo_too_large", http.StatusBadRequest)
 			return
 		}
 		current.ProjectLogo = logo
@@ -204,7 +204,8 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		current.WidgetMinWidth, current.ProjectName, current.BetaUpdates, current.GridColumnsPC, current.DashboardBackground, current.ProjectLogo, username)
 
 	if err != nil {
-		http.Error(w, "Failed to update preferences", http.StatusInternalServerError)
+		slog.Error("Failed to update preferences", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -223,7 +224,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		AvatarUrl string `json:"avatar_url"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -245,13 +246,13 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	// Allow HTTP, HTTPS, or Base64 Image Data
 	if input.AvatarUrl != "" {
 		if len(input.AvatarUrl) > 2*1024*1024 {
-			http.Error(w, "Avatar too large (max 2MB)", http.StatusBadRequest)
+			http.Error(w, "error.avatar_too_large", http.StatusBadRequest)
 			return
 		}
 		if !strings.HasPrefix(input.AvatarUrl, "http://") &&
 			!strings.HasPrefix(input.AvatarUrl, "https://") &&
 			!strings.HasPrefix(input.AvatarUrl, "data:image/") {
-			http.Error(w, "Invalid avatar URL", http.StatusBadRequest)
+			http.Error(w, "error.invalid_url", http.StatusBadRequest)
 			return
 		}
 	}
@@ -262,7 +263,8 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "error.username_taken", http.StatusConflict)
 			return
 		}
-		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		slog.Error("Failed to update profile", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -292,7 +294,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		NewPassword     string `json:"new_password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -300,16 +302,16 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	err := h.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "User not found", http.StatusNotFound)
+			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}
 		slog.Error("ChangePassword: failed to load user", "username", username, "error", err)
-		http.Error(w, "Failed to load user", http.StatusInternalServerError)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.CurrentPassword)); err != nil {
-		http.Error(w, "Current password incorrect", http.StatusUnauthorized)
+		http.Error(w, "error.current_password_incorrect", http.StatusUnauthorized)
 		return
 	}
 
@@ -320,7 +322,8 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	newHash, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Encryption failed", http.StatusInternalServerError)
+		slog.Error("Encryption failed", "error", err)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -330,7 +333,8 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	_, err = h.DB.Exec("UPDATE users SET password=?, password_version=password_version+1 WHERE username=?",
 		string(newHash), username)
 	if err != nil {
-		http.Error(w, "Failed to update password", http.StatusInternalServerError)
+		slog.Error("Failed to update password", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -376,14 +380,15 @@ func (h *UserHandler) verifyPassword(username, password string) bool {
 
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	if !isAdminUser(h.DB, r) {
-		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
+		http.Error(w, "auth.admin_only", http.StatusForbidden)
 		return
 	}
 
 	currentUserID := middleware.GetUserIDFromContext(r)
 	rows, err := h.DB.Query("SELECT id, username, role, created_at, COALESCE(avatar_url, '') FROM users WHERE id != ?", currentUserID)
 	if err != nil {
-		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+		slog.Error("Failed to fetch users", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -402,7 +407,8 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if err := rows.Err(); err != nil {
-		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+		slog.Error("Failed to fetch users", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -413,7 +419,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
 	if !isAdminUser(h.DB, r) {
-		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
+		http.Error(w, "auth.admin_only", http.StatusForbidden)
 		return
 	}
 
@@ -422,7 +428,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -437,7 +443,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Encryption failed", http.StatusInternalServerError)
+		slog.Error("Encryption failed", "error", err)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -446,14 +453,16 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, 'user', ?, 'system', 'metric', '#e8520e', 'en', 'Lastboard', 140, ?)")
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer stmt.Close()
 
 	result, err := stmt.Exec(input.Username, string(hashedPassword), time.Now(), defaultAvatar)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusConflict)
+		slog.Error("Failed to create user", "error", err)
+		http.Error(w, "general.db_error", http.StatusConflict)
 		return
 	}
 
@@ -479,7 +488,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
 	if !isAdminUser(h.DB, r) {
-		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
+		http.Error(w, "auth.admin_only", http.StatusForbidden)
 		return
 	}
 
@@ -489,12 +498,12 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"` // Optional: if empty, don't change
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
 	if input.ID == 0 {
-		http.Error(w, "Missing user ID", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -511,7 +520,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 		if hashErr != nil {
-			http.Error(w, "Encryption failed", http.StatusInternalServerError)
+			http.Error(w, "general.internal_error", http.StatusInternalServerError)
 			return
 		}
 		_, err = h.DB.Exec("UPDATE users SET username=?, password=?, password_version=password_version+1 WHERE id=?", input.Username, string(hashedPassword), input.ID)
@@ -520,7 +529,8 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		slog.Error("Failed to update user", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -531,7 +541,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if !isAdminUser(h.DB, r) {
-		http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
+		http.Error(w, "auth.admin_only", http.StatusForbidden)
 		return
 	}
 
@@ -545,37 +555,37 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 			AdminPassword string `json:"admin_password"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			http.Error(w, "Invalid input", http.StatusBadRequest)
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
 			return
 		}
 		targetID = input.ID
 		adminPassword = input.AdminPassword
 	} else {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "error.method_not_allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Admin password is always required to confirm destructive action
 	if adminPassword == "" {
-		http.Error(w, "Admin password required", http.StatusBadRequest)
+		http.Error(w, "error.admin_password_required", http.StatusBadRequest)
 		return
 	}
 	adminUsername := middleware.GetUserFromContext(r)
 	if !h.verifyPassword(adminUsername, adminPassword) {
-		http.Error(w, "Invalid admin password", http.StatusUnauthorized)
+		http.Error(w, "error.admin_password_invalid", http.StatusUnauthorized)
 		return
 	}
 
 	// Prevent self-deletion
 	if targetID == middleware.GetUserIDFromContext(r) {
-		http.Error(w, "Cannot delete your own account", http.StatusBadRequest)
+		http.Error(w, "error.cannot_delete_self", http.StatusBadRequest)
 		return
 	}
 
 	// Prevent deleting the last admin
 	var exists int
 	if err := h.DB.QueryRow("SELECT 1 FROM users WHERE id = ?", targetID).Scan(&exists); err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 	// Protect the admin (cannot be deleted)

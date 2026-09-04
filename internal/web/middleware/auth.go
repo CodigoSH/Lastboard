@@ -40,7 +40,7 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 
 			if err != nil || cookie.Value == "" {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
 					return
 				}
 				http.Redirect(w, r, "/login", http.StatusFound)
@@ -51,7 +51,7 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			username, tokenPasswordVersion := util.ParseSessionPayload(payload)
 			if err != nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
 					return
 				}
 				http.Redirect(w, r, "/login", http.StatusFound)
@@ -64,7 +64,7 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				csrfCookie, err := r.Cookie("csrf_token")
 				csrfHeader := r.Header.Get("X-CSRF-Token")
 				if err != nil || csrfCookie.Value == "" || csrfHeader == "" || subtle.ConstantTimeCompare([]byte(csrfCookie.Value), []byte(csrfHeader)) != 1 {
-					http.Error(w, "Forbidden", http.StatusForbidden)
+					http.Error(w, "error.forbidden", http.StatusForbidden)
 					return
 				}
 			}
@@ -78,7 +78,7 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			if err := db.QueryRow("SELECT id, role, password_version FROM users WHERE username = ?", username).
 				Scan(&userID, &userRole, &passwordVersion); err != nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
 					return
 				}
 				http.Redirect(w, r, "/login", http.StatusFound)

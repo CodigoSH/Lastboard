@@ -73,7 +73,7 @@ func RateLimit(next http.Handler) http.Handler {
 
 		limiter := getLimiter(ip)
 		if !limiter.Allow() {
-			http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+			http.Error(w, "error.rate_limited", http.StatusTooManyRequests)
 			return
 		}
 

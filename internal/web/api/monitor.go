@@ -178,19 +178,19 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var s monitorSettings
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	switch s.Mode {
 	case "off", "tab", "background":
 	default:
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	switch s.NotifyType {
 	case "", "none", "ntfy", "gotify", "webhook":
 	default:
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	if s.IntervalSec < monitorMinIntervalSec {
@@ -231,12 +231,12 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var s monitorSettings
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: s.NotifyToken}
 	if !cfg.active() {
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	if err := sendNotification(cfg, "Lastboard", "Test notification", true); err != nil {
@@ -346,7 +346,7 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserIDFromContext(r)
 	itemID, err := strconv.Atoi(r.URL.Query().Get("item_id"))
 	if err != nil || itemID <= 0 {
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	var one int
@@ -359,7 +359,7 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	label, since := rangeSince(r.URL.Query().Get("range"), now)
 	checks, err := h.store.History(itemID, since)
 	if err != nil {
-		http.Error(w, "error.internal", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -407,7 +407,7 @@ func (h *MonitorHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserIDFromContext(r)
 	items, err := h.store.MonitoredItemsForUser(userID)
 	if err != nil {
-		http.Error(w, "error.internal", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -416,7 +416,7 @@ func (h *MonitorHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 
 	stats, err := h.store.OverviewStats(userID, since)
 	if err != nil {
-		http.Error(w, "error.internal", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -459,7 +459,7 @@ func (h *MonitorHandler) ClearHistory(w http.ResponseWriter, r *http.Request) {
 	if idStr := r.URL.Query().Get("item_id"); idStr != "" {
 		itemID, convErr := strconv.Atoi(idStr)
 		if convErr != nil || itemID <= 0 {
-			http.Error(w, "error.invalid_input", http.StatusBadRequest)
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
 			return
 		}
 		var one int
@@ -472,7 +472,7 @@ func (h *MonitorHandler) ClearHistory(w http.ResponseWriter, r *http.Request) {
 		deleted, err = h.store.ClearAllForUser(userID)
 	}
 	if err != nil {
-		http.Error(w, "error.internal", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 

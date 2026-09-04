@@ -187,7 +187,7 @@ func sameOriginWS(r *http.Request) bool {
 
 func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	if !sameOriginWS(r) {
-		http.Error(w, "forbidden origin", http.StatusForbidden)
+		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
 	handler := func(ws *websocket.Conn) {

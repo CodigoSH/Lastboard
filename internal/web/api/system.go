@@ -31,12 +31,12 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 
 	var userID int
 	if err := h.DB.QueryRow("SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 
 	if !isFirstAdmin(h.DB, userID) {
-		http.Error(w, "Forbidden: Admin only", http.StatusForbidden)
+		http.Error(w, "auth.admin_only", http.StatusForbidden)
 		return
 	}
 
@@ -45,18 +45,19 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
 	var storedHash string
 	if err := h.DB.QueryRow("SELECT password FROM users WHERE id=?", userID).Scan(&storedHash); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.Password)); err != nil {
-		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		http.Error(w, "general.invalid_input", http.StatusUnauthorized)
 		return
 	}
 
@@ -176,7 +177,7 @@ type BackupItem struct {
 func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
 	if username == "" {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -184,11 +185,11 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	// because it contains password hashes for all users.
 	var userID int
 	if err := h.DB.QueryRow("SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
 	if !isFirstAdmin(h.DB, userID) {
-		http.Error(w, "Forbidden: Admin only", http.StatusForbidden)
+		http.Error(w, "auth.admin_only", http.StatusForbidden)
 		return
 	}
 
@@ -205,7 +206,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		COALESCE(project_logo, ''), COALESCE(beta_updates, 0), COALESCE(unit_system, 'metric'),
 		COALESCE(dashboard_background, ''), COALESCE(widget_min_width, 140) FROM users`)
 	if err != nil {
-		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+		slog.Error("Failed to fetch users", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -220,7 +222,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		backup.Users = append(backup.Users, u)
 	}
 	if err := rows.Err(); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -228,7 +231,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	dashRows, err := h.DB.Query(`SELECT d.id, COALESCE(u.username, ''), d.name, d.position, d.is_default
 		FROM dashboards d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id ASC`)
 	if err != nil {
-		http.Error(w, "Failed to fetch dashboards", http.StatusInternalServerError)
+		slog.Error("Failed to fetch dashboards", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer dashRows.Close()
@@ -241,7 +245,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		backup.Dashboards = append(backup.Dashboards, d)
 	}
 	if err := dashRows.Err(); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -250,7 +255,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	itemRows, err := h.DB.Query(`SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content
 		FROM items i LEFT JOIN users u ON i.user_id = u.id`)
 	if err != nil {
-		http.Error(w, "Failed to fetch items", http.StatusInternalServerError)
+		slog.Error("Failed to fetch items", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer itemRows.Close()
@@ -263,7 +269,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		backup.Items = append(backup.Items, i)
 	}
 	if err := itemRows.Err(); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -272,7 +279,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	//    them locally in the first place.
 	iconRows, err := h.DB.Query(`SELECT hash, mime, data FROM icons`)
 	if err != nil {
-		http.Error(w, "Failed to fetch icons", http.StatusInternalServerError)
+		slog.Error("Failed to fetch icons", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer iconRows.Close()
@@ -292,7 +300,8 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if err := iconRows.Err(); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -305,7 +314,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 // POST /api/system/restore
 func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	if !isAdminUser(h.DB, r) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -315,14 +324,14 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	// Parse Upload
 	file, _, err := r.FormFile("backup_file")
 	if err != nil {
-		http.Error(w, "Invalid file", http.StatusBadRequest)
+		http.Error(w, "error.invalid_file", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 
 	var backup BackupData
 	if err := json.NewDecoder(file).Decode(&backup); err != nil {
-		http.Error(w, "Invalid backup format", http.StatusBadRequest)
+		http.Error(w, "error.invalid_backup_format", http.StatusBadRequest)
 		return
 	}
 
@@ -333,7 +342,8 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := h.DB.Begin()
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -366,7 +376,8 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := tx.Commit(); err != nil {
-		http.Error(w, "Commit failed", http.StatusInternalServerError)
+		slog.Error("Commit failed", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -404,7 +415,7 @@ func writeRestoreError(w http.ResponseWriter, err error) {
 		http.Error(w, re.msg, re.status)
 		return
 	}
-	http.Error(w, "Failed to restore backup", http.StatusInternalServerError)
+	http.Error(w, "general.db_error", http.StatusInternalServerError)
 }
 
 // validateBackupUsers rejects backups whose users have non-bcrypt passwords or

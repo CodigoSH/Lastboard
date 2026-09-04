@@ -202,11 +202,11 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 
 	// Validate Grid Coordinates
 	if item.X < 1 || item.Y < 1 || item.W < 1 || item.H < 1 {
-		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	if item.X > 100 || item.Y > 100 || item.W > 100 || item.H > 100 {
-		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -307,7 +307,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 
 	// Validate Grid Coordinates (if being updated)
 	if !gridInputValid(input.X, input.Y, input.W, input.H) {
-		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -433,7 +433,7 @@ func (h *DashboardHandler) MoveItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if input.X < 1 || input.Y < 1 {
-		http.Error(w, "Invalid grid coordinates", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	// The destination dashboard must belong to the caller.
@@ -534,7 +534,7 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 		URLs []string `json:"urls"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.URLs) == 0 {
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	if len(body.URLs) > 100 {

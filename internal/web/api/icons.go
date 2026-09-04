@@ -211,13 +211,13 @@ func (h *IconHandler) Store(w http.ResponseWriter, r *http.Request) {
 		Source string `json:"source"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
 	src := strings.TrimSpace(input.Source)
 	if src == "" {
-		http.Error(w, "Missing source", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -238,19 +238,19 @@ func (h *IconHandler) Store(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(src, "http://"), strings.HasPrefix(src, "https://"):
 		mime, data, err = h.fetchIcon(src)
 	default:
-		http.Error(w, "Unsupported icon source", http.StatusBadRequest)
+		http.Error(w, "error.unsupported_icon_source", http.StatusBadRequest)
 		return
 	}
 	if err != nil {
 		slog.Warn("Icon could not be stored", "error", err)
-		http.Error(w, "Could not store icon", http.StatusBadGateway)
+		http.Error(w, "general.internal_error", http.StatusBadGateway)
 		return
 	}
 
 	hash, err := storeIcon(h.DB, mime, data)
 	if err != nil {
 		slog.Error("Failed to write icon", "error", err)
-		http.Error(w, "Could not store icon", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -269,7 +269,8 @@ func (h *IconHandler) PendingStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	counts, err := CountPendingIcons(h.DB, &userID)
 	if err != nil {
-		http.Error(w, "Could not read bookmarks", http.StatusInternalServerError)
+		slog.Error("Could not read bookmarks", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	writeJSON(w, counts)
@@ -285,7 +286,7 @@ func (h *IconHandler) currentUser(w http.ResponseWriter, r *http.Request) (int, 
 	}
 	var id int
 	if err := h.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&id); err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return 0, false
 	}
 	return id, true
@@ -334,7 +335,8 @@ func (h *IconHandler) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		http.Error(w, "Icon unavailable", http.StatusInternalServerError)
+		slog.Error("Icon unavailable", "error", err)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 

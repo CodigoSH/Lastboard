@@ -70,15 +70,15 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 
 	// Validate preferences
 	if input.Theme != "dark" && input.Theme != "light" && input.Theme != "system" {
-		http.Error(w, "error.invalid_theme", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	if len(input.Language) > 10 {
-		http.Error(w, "error.invalid_language", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	if len(input.AccentColor) > 32 {
-		http.Error(w, "error.invalid_accent_color", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 

@@ -63,7 +63,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 	// Dashboards, in order.
 	dashRows, err := h.DB.Query(`SELECT id, name FROM dashboards WHERE user_id = ? ORDER BY position, id`, userID)
 	if err != nil {
-		http.Error(w, "error.internal", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 	type dash struct {
@@ -76,7 +76,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 		var d dash
 		if err := dashRows.Scan(&d.id, &d.name); err != nil {
 			dashRows.Close()
-			http.Error(w, "error.internal", http.StatusInternalServerError)
+			http.Error(w, "general.internal_error", http.StatusInternalServerError)
 			return
 		}
 		dashIndex[d.id] = len(dashboards)
@@ -88,7 +88,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 	itemRows, err := h.DB.Query(
 		`SELECT id, COALESCE(dashboard_id, 0), parent_id, type, content FROM items WHERE user_id = ?`, userID)
 	if err != nil {
-		http.Error(w, "error.internal", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 	type raw struct {
@@ -103,7 +103,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 		var it raw
 		if err := itemRows.Scan(&it.id, &it.dashboardID, &it.parentID, &it.itemType, &it.content); err != nil {
 			itemRows.Close()
-			http.Error(w, "error.internal", http.StatusInternalServerError)
+			http.Error(w, "general.internal_error", http.StatusInternalServerError)
 			return
 		}
 		if it.itemType == "section" && it.content.Valid {
@@ -146,7 +146,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 
 	blob, err := yaml.Marshal(out)
 	if err != nil {
-		http.Error(w, "error.internal", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/x-yaml")
@@ -159,19 +159,19 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 // returns it as JSON. The frontend then materializes it (auto-placing items).
 func (h *ImportExportHandler) ImportParse(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(2 << 20); err != nil { // 2 MiB
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	format := r.FormValue("format")
 	file, _, ferr := r.FormFile("file")
 	if ferr != nil {
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 	data, ferr := io.ReadAll(io.LimitReader(file, 2<<20))
 	if ferr != nil {
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
@@ -187,7 +187,7 @@ func (h *ImportExportHandler) ImportParse(w http.ResponseWriter, r *http.Request
 	case "homepage-bookmarks":
 		cfg, err = parseHomepageBookmarks([]byte(data))
 	default:
-		http.Error(w, "error.invalid_input", http.StatusBadRequest)
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 	if err != nil {

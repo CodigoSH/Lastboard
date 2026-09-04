@@ -35,7 +35,7 @@ func SetupRequired(db *sql.DB) func(http.Handler) http.Handler {
 			err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
 			if err != nil {
 				slog.Error("Error checking users count", "error", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				http.Error(w, "general.internal_error", http.StatusInternalServerError)
 				return
 			}
 

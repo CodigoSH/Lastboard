@@ -207,7 +207,8 @@ func (s *Server) routes() {
 		// Check if setup is needed (Clean Install)
 		var exists bool
 		if err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
-			http.Error(w, "Database error", http.StatusInternalServerError)
+			slog.Error("Database error", "error", err)
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
 			return
 		}
 		if !exists {
@@ -306,7 +307,7 @@ func (s *Server) routes() {
 		err := s.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists)
 		if err != nil {
 			slog.Error("Error checking system state", "error", err)
-			http.Error(w, "Internal System Error", http.StatusInternalServerError)
+			http.Error(w, "general.internal_error", http.StatusInternalServerError)
 			return
 		}
 
@@ -411,7 +412,7 @@ func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := htmltemplate.ParseFS(s.assets, "login.html")
 	if err != nil {
 		slog.Error("Error loading login template", "error", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -435,7 +436,7 @@ func (s *Server) serveSetupPage(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := htmltemplate.ParseFS(s.assets, "setup.html")
 	if err != nil {
 		slog.Error("Error loading setup template", "error", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -483,7 +484,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")
 	if err != nil {
 		slog.Error("Error loading template", "error", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -515,7 +516,7 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")
 	if err != nil {
 		slog.Error("Error loading demo template", "error", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
 
