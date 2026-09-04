@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-09-04
+
+### Added
+- Say at startup which settings could not be read
+
+### Fixed
+- Accept more than one release key so it can be rotated
+- Answer with an error when a handler panics instead of dropping the connection
+- Cap every request body, and keep it capped
+- Cap how many addresses the rate limiter tracks
+- Changing your password ends the sessions opened under the old one
+- Check the reported origin where there is no token to check
+- Every error the server sends is a key, and every key is translated
+- Force the redeploy, or Coolify skips it and reports success
+- Format dates and numbers in the language the user picked
+- Isolate interpolated values so the punctuation around them stays put
+- Keep the notification credentials to the admin who set them
+- Light or dark, decided once, with nothing left to correct
+- Mirror the interface for the languages that read right to left
+- Move to Go 1.26.7 and x/net 0.55, clearing every reachable advisory
+- Publish the documentation when it changes, not when a release happens
+- Read the forwarded address our own proxy wrote, not the caller's
+- Refuse the cloud metadata service, and stop forwarding identity headers
+- Refuse to open a database written by a newer Lastboard
+- Refuse to publish a release nobody can verify
+- Refuse writes the browser reports as coming from another site
+- Shut the background work down instead of cutting it off
+- Stop exempting paths from authentication by their prefix
+- Stop the icon toast saying "1 icons stored"
+- Tell the page what language it is in and which way it reads
+- The website rebuild asks with the verb its endpoint accepts
+
+### Changed
+- Bound how many bookmarks are probed at once
+- Let a read stop when the caller has gone
+- Refresh the list instead of rebuilding the widget
+- Drop a translation key nothing reads
+- Make releases reproducible so anyone can check them against the source
+- Stamp the bundle with the hash of its own output
+
 ## [1.7.0] - 2026-08-19
 
 ### Added
