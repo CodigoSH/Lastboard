@@ -11,12 +11,17 @@ binary**. A tampered release cannot produce a valid signature.
 Signing uses only the Go standard library (`crypto/ed25519`) — no GPG, cosign,
 or external services — to stay self-contained and dependency-free.
 
-## Status: opt-in
+## Status: enabled
 
-Signing ships **disabled**. Until you complete the key ceremony below,
-`internal/web/util/signature.go` has an empty `releasePublicKeys` list and the
-auto-updater keeps working exactly as before (checksum-only). Once a public key
-is embedded, the updater additionally verifies `checksums.txt.sig`.
+Signing is **on**. `internal/web/util/signature.go` carries a release public
+key, so the auto-updater verifies `checksums.txt.sig` against it, and the
+release workflow refuses to publish without a signature — a release nobody can
+verify is worse than none, because the updater would silently fall back to
+checksums alone.
+
+**Forks start unsigned.** Empty `releasePublicKeys` and the updater behaves as
+it did before signing existed: checksum-only, no warning, and the workflow
+publishes without a signature. Complete the ceremony below to turn it on.
 
 ## Key ceremony (one-time)
 
@@ -35,7 +40,9 @@ Everything uses the project's own tool, `cmd/sign` (Ed25519, stdlib only).
 
 3. **Embed the public key**: add it to `releasePublicKeys` in
    `internal/web/util/signature.go`, commit, and release. From this release on,
-   `SigningConfigured()` returns true and clients verify signatures.
+   `SigningConfigured()` returns true, clients verify signatures, and the
+   workflow will not publish without the secret. `go run ./cmd/sign configured`
+   reports which state a build is in.
 
 That's it. The release workflow (`.forgejo/workflows/release.yml`) already:
 

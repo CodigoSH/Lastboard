@@ -83,14 +83,22 @@ jobs:
           go-version: '1.26.7'
 
       - name: Sign checksums.txt
-        # Opt-in: if RELEASE_SIGNING_KEY is unset the release ships unsigned
-        # (the updater falls back to checksum-only). When set, we attach
-        # checksums.txt.sig, verified client-side against the embedded public key.
+        # If this build carries a public key, clients expect a signature: a
+        # release published without one makes every updater fall back to
+        # checksum-only with nothing but a warning, which is weaker than what
+        # the binary promises. So a missing secret is a failure, not a
+        # fallback. A fork with no key embedded still releases unsigned.
         env:
           RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
         run: |
           if [ -z "$RELEASE_SIGNING_KEY" ]; then
-            echo "RELEASE_SIGNING_KEY not set — shipping an unsigned release."
+            if go run ./cmd/sign configured; then
+              echo "::error::This build embeds a release public key, so clients will expect"
+              echo "::error::checksums.txt.sig. RELEASE_SIGNING_KEY is not set — refusing to"
+              echo "::error::publish a release that nobody can verify."
+              exit 1
+            fi
+            echo "No public key embedded and no signing key — shipping an unsigned release."
             exit 0
           fi
           go run ./cmd/sign artifacts/checksums.txt

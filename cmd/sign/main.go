@@ -41,6 +41,12 @@ func main() {
 			usage()
 		}
 		verify(os.Args[2], os.Args[3])
+	case "configured":
+		// Exit status only, for the release workflow: a build that carries a
+		// public key must not publish a release nobody can verify with it.
+		if !util.SigningConfigured() {
+			os.Exit(1)
+		}
 	default:
 		signFile(os.Args[1])
 	}
@@ -48,6 +54,7 @@ func main() {
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "usage:")
+	fmt.Fprintln(os.Stderr, "  sign configured            exit 0 if a release public key is embedded")
 	fmt.Fprintln(os.Stderr, "  sign keygen              generate a keypair")
 	fmt.Fprintln(os.Stderr, "  sign <file>              sign <file> -> <file>.sig using $RELEASE_SIGNING_KEY")
 	fmt.Fprintln(os.Stderr, "  sign verify <file> <sig> verify <sig> over <file> against the embedded public key")
