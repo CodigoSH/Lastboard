@@ -35,6 +35,34 @@ func IsSecureRequest(r *http.Request) bool {
 	return false
 }
 
+// SessionPayload is what a session token carries: who you are, and which
+// generation of your password the session was minted under.
+//
+// Usernames are restricted to [A-Za-z0-9_-], so the colon is unambiguous and
+// the expiry is still parsed off the end.
+func SessionPayload(username string, passwordVersion int) string {
+	return fmt.Sprintf("%s:%d", username, passwordVersion)
+}
+
+// ParseSessionPayload splits what SessionPayload built.
+//
+// A payload with no version is a session minted before sessions carried one.
+// It is read as version 0, which is what every account that has never changed
+// its password still holds — those sessions survive the upgrade, and the ones
+// belonging to an account whose password has since changed do not, which is
+// precisely the behaviour being added.
+func ParseSessionPayload(data string) (username string, passwordVersion int) {
+	idx := strings.LastIndex(data, ":")
+	if idx < 1 {
+		return data, 0
+	}
+	v, err := strconv.Atoi(data[idx+1:])
+	if err != nil {
+		return data, 0
+	}
+	return data[:idx], v
+}
+
 // SignToken creates a signed token: base64(data:expiry_unix).base64(hmac_sha256)
 func SignToken(data string, secret []byte, expiry time.Time) string {
 	payload := fmt.Sprintf("%s:%d", data, expiry.Unix())

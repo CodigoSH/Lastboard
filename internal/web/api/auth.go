@@ -115,7 +115,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch user
 	var storedHash string
-	err = h.DB.QueryRow("SELECT password FROM users WHERE username = ?", input.Username).Scan(&storedHash)
+	var passwordVersion int
+	err = h.DB.QueryRow("SELECT password, password_version FROM users WHERE username = ?", input.Username).
+		Scan(&storedHash, &passwordVersion)
 	if err != nil {
 		bcrypt.CompareHashAndPassword([]byte(dummyHash), []byte(input.Password))
 		h.recordFailedAttempt(ip, count)
@@ -139,7 +141,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		duration = extendedSession
 	}
 	expiry := time.Now().Add(duration)
-	token := util.SignToken(input.Username, h.Secret, expiry)
+	// The password generation rides along, so changing the password ends every
+	// session that was open under the old one.
+	token := util.SignToken(util.SessionPayload(input.Username, passwordVersion), h.Secret, expiry)
 	secure := util.IsSecureRequest(r)
 
 	http.SetCookie(w, &http.Cookie{

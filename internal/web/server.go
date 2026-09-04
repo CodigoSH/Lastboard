@@ -272,7 +272,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/docker/action", protect(http.HandlerFunc(dockerHandler.Action)))
 
 	// User API
-	userHandler := api.NewUserHandler(s.DB)
+	userHandler := api.NewUserHandler(s.DB, s.sessionSecret)
 	s.Router.Handle("/api/me", protect(http.HandlerFunc(userHandler.GetMe)))
 	s.Router.Handle("POST /api/user/update-profile", protect(http.HandlerFunc(userHandler.UpdateProfile)))
 	s.Router.Handle("POST /api/user/change-password", protect(http.HandlerFunc(userHandler.ChangePassword)))

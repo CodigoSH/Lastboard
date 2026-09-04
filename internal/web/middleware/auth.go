@@ -47,7 +47,8 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				return
 			}
 
-			username, err := util.VerifyToken(cookie.Value, secret)
+			payload, err := util.VerifyToken(cookie.Value, secret)
+			username, tokenPasswordVersion := util.ParseSessionPayload(payload)
 			if err != nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -73,9 +74,25 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			// while session was still live" case.
 			var userID int
 			var userRole string
-			if err := db.QueryRow("SELECT id, role FROM users WHERE username = ?", username).Scan(&userID, &userRole); err != nil {
+			var passwordVersion int
+			if err := db.QueryRow("SELECT id, role, password_version FROM users WHERE username = ?", username).
+				Scan(&userID, &userRole, &passwordVersion); err != nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			// The generation the token was minted under has to still be current.
+			// This is what makes changing a password end the sessions that were
+			// open under the old one — until now the counter was incremented on
+			// every change and read by nobody, so a stolen session survived the
+			// one action a user takes to stop it.
+			if tokenPasswordVersion != passwordVersion {
+				if strings.HasPrefix(r.URL.Path, "/api/") {
+					http.Error(w, "auth.session_expired", http.StatusUnauthorized)
 					return
 				}
 				http.Redirect(w, r, "/login", http.StatusFound)

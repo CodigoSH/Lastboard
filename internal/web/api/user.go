@@ -12,15 +12,19 @@ import (
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/user"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
 	DB *sql.DB
+	// Secret signs session tokens. Changing your own password mints a new one
+	// for this browser so it stays signed in while the others are cut off.
+	Secret []byte
 }
 
-func NewUserHandler(db *sql.DB) *UserHandler {
-	return &UserHandler{DB: db}
+func NewUserHandler(db *sql.DB, secret []byte) *UserHandler {
+	return &UserHandler{DB: db, Secret: secret}
 }
 
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
@@ -320,10 +324,32 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.DB.Exec("UPDATE users SET password=? WHERE username=?", string(newHash), username)
+	// The generation goes up with the password, so every session opened under the
+	// old one stops working — including this browser's, which is the point: a
+	// person changing their password is usually trying to end someone else's.
+	_, err = h.DB.Exec("UPDATE users SET password=?, password_version=password_version+1 WHERE username=?",
+		string(newHash), username)
 	if err != nil {
 		http.Error(w, "Failed to update password", http.StatusInternalServerError)
 		return
+	}
+
+	// Every session is now a generation behind, this browser's included. Mint it
+	// a current one: the person who just changed their password should stay
+	// where they are, and everyone else should be thrown out.
+	var newVersion int
+	if err := h.DB.QueryRow("SELECT password_version FROM users WHERE username = ?", username).
+		Scan(&newVersion); err == nil {
+		expiry := time.Now().Add(24 * time.Hour)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    util.SignToken(util.SessionPayload(username, newVersion), h.Secret, expiry),
+			Path:     "/",
+			Expires:  expiry,
+			HttpOnly: true,
+			Secure:   util.IsSecureRequest(r),
+			SameSite: http.SameSiteLaxMode,
+		})
 	}
 
 	// Invalidate session for security (force re-login with new password)

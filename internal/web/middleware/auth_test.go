@@ -158,3 +158,36 @@ func TestAuthRequired_CSRF(t *testing.T) {
 		t.Fatalf("POST with mismatched CSRF: want 403, got %d reached=%v", w.Code, reached)
 	}
 }
+
+// Changing a password ends the sessions that were open under the old one. The
+// counter was already incremented on every change and read by nobody, so a
+// stolen session used to survive the one action a user takes to stop it.
+func TestAuthRequired_RejectsASessionFromBeforeAPasswordChange(t *testing.T) {
+	db, secret := newAuthTestDB(t)
+	if _, err := db.Exec("INSERT INTO users (username, password, role, password_version) VALUES ('alice','x','admin',3)"); err != nil {
+		t.Fatal(err)
+	}
+
+	// A session minted under the previous password.
+	stale := util.SignToken(util.SessionPayload("alice", 2), secret, time.Now().Add(time.Hour))
+	reached := false
+	h := AuthRequired(db, secret)(okHandler(&reached))
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/items", nil)
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: stale})
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	if reached || w.Code != http.StatusUnauthorized {
+		t.Fatalf("stale session: want 401 and handler not reached, got %d reached=%v", w.Code, reached)
+	}
+
+	// And the session minted under the current one still works.
+	current := util.SignToken(util.SessionPayload("alice", 3), secret, time.Now().Add(time.Hour))
+	reached = false
+	req = httptest.NewRequest(http.MethodGet, "/api/dashboard/items", nil)
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: current})
+	w = httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	if !reached || w.Code != http.StatusOK {
+		t.Fatalf("current session: want 200 and handler reached, got %d reached=%v", w.Code, reached)
+	}
+}

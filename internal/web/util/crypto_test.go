@@ -247,3 +247,28 @@ func BenchmarkTokenRoundtrip(b *testing.B) {
 		VerifyToken(token, secret)
 	}
 }
+
+// The session payload carries the password generation, and reads back what it
+// wrote. A payload without one is a session minted before this existed and is
+// read as generation 0 — which is what an account that has never changed its
+// password still holds, so those sessions survive the upgrade.
+func TestSessionPayloadRoundTrip(t *testing.T) {
+	cases := []struct {
+		payload string
+		user    string
+		version int
+	}{
+		{SessionPayload("demo", 0), "demo", 0},
+		{SessionPayload("demo", 7), "demo", 7},
+		{SessionPayload("a-user_1", 42), "a-user_1", 42},
+		{"demo", "demo", 0},                       // minted before sessions carried a version
+		{"demo:notanumber", "demo:notanumber", 0}, // never produced by us; read safely
+	}
+	for _, c := range cases {
+		user, version := ParseSessionPayload(c.payload)
+		if user != c.user || version != c.version {
+			t.Errorf("ParseSessionPayload(%q) = (%q, %d), want (%q, %d)",
+				c.payload, user, version, c.user, c.version)
+		}
+	}
+}

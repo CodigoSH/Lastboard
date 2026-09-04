@@ -14,6 +14,10 @@ import (
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
+// A session secret for the handlers under test. Changing your own password
+// re-issues this browser's cookie, so the handler needs one to sign with.
+var testSessionSecret = []byte("test_secret_key_12345678901234567890123456789012")
+
 // userSession holds both cookies needed for authenticated requests.
 type userSession struct {
 	sessionCookie *http.Cookie
@@ -47,7 +51,7 @@ func setupFullServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	protect := middleware.AuthRequired(db.DB, testSecret)
 
 	authHandler := api.NewAuthHandler(db.DB, testSecret)
-	userHandler := api.NewUserHandler(db.DB)
+	userHandler := api.NewUserHandler(db.DB, testSessionSecret)
 	updateHandler := api.NewUpdateHandler(db.DB)
 
 	mux.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
