@@ -285,7 +285,7 @@ func (h *IconHandler) currentUser(w http.ResponseWriter, r *http.Request) (int, 
 		return 0, false
 	}
 	var id int
-	if err := h.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&id); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username = ?", username).Scan(&id); err != nil {
 		http.Error(w, "error.not_found", http.StatusNotFound)
 		return 0, false
 	}
@@ -329,7 +329,7 @@ func (h *IconHandler) Serve(w http.ResponseWriter, r *http.Request) {
 		mime string
 		data []byte
 	)
-	err := h.DB.QueryRow(`SELECT mime, data FROM icons WHERE hash = ?`, hash).Scan(&mime, &data)
+	err := h.DB.QueryRowContext(r.Context(), `SELECT mime, data FROM icons WHERE hash = ?`, hash).Scan(&mime, &data)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.NotFound(w, r)
 		return

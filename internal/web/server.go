@@ -474,7 +474,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 
 	if username != "" {
 		// Fetch Project Name AND Theme
-		err := s.DB.QueryRow("SELECT project_name, COALESCE(theme, '') FROM users WHERE username = ?", username).Scan(&projectName, &dbTheme)
+		err := s.DB.QueryRowContext(r.Context(), "SELECT project_name, COALESCE(theme, '') FROM users WHERE username = ?", username).Scan(&projectName, &dbTheme)
 		if err != nil && err != sql.ErrNoRows {
 			slog.Warn("Error fetching user data", "error", err)
 		}

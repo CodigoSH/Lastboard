@@ -133,7 +133,7 @@ func (h *DashboardHandler) GetDashboard(w http.ResponseWriter, r *http.Request) 
 		args = []interface{}{userID, userID}
 	}
 
-	rows, err := h.DB.Query(query, args...)
+	rows, err := h.DB.QueryContext(r.Context(), query, args...)
 	if err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
@@ -220,7 +220,7 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	var itemCount int
-	if err := h.DB.QueryRow("SELECT COUNT(*) FROM items WHERE user_id = ?", userID).Scan(&itemCount); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM items WHERE user_id = ?", userID).Scan(&itemCount); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -363,7 +363,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		// If content is being updated, valid it based on existing type or new type (if type were updatable, but it's not here)
 		// We need to fetch the item's type to validate content properly.
 		var itemType string
-		if err := h.DB.QueryRow("SELECT type FROM items WHERE id=? AND user_id=?", id, userID).Scan(&itemType); err != nil {
+		if err := h.DB.QueryRowContext(r.Context(), "SELECT type FROM items WHERE id=? AND user_id=?", id, userID).Scan(&itemType); err != nil {
 			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}

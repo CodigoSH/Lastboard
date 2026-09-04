@@ -30,7 +30,7 @@ func (h *MultiDashboardHandler) GetDashboards(w http.ResponseWriter, r *http.Req
 
 	// Check whether any dashboards exist for this user.
 	var count int
-	if err := h.DB.QueryRow("SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&count); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&count); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -63,7 +63,7 @@ func (h *MultiDashboardHandler) GetDashboards(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	rows, err := h.DB.Query(
+	rows, err := h.DB.QueryContext(r.Context(),
 		"SELECT id, name, position, is_default, created_at FROM dashboards WHERE user_id = ? ORDER BY position ASC",
 		userID,
 	)
@@ -118,7 +118,7 @@ func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.R
 
 	// Position = current count of dashboards for this user.
 	var pos int
-	if err := h.DB.QueryRow("SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&pos); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&pos); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -163,7 +163,7 @@ func (h *MultiDashboardHandler) DeleteDashboard(w http.ResponseWriter, r *http.R
 
 	// Verify ownership.
 	var isDefault int
-	err = h.DB.QueryRow(
+	err = h.DB.QueryRowContext(r.Context(),
 		"SELECT is_default FROM dashboards WHERE id = ? AND user_id = ?",
 		dashID, userID,
 	).Scan(&isDefault)
@@ -178,7 +178,7 @@ func (h *MultiDashboardHandler) DeleteDashboard(w http.ResponseWriter, r *http.R
 
 	// Guard: cannot delete the last dashboard.
 	var total int
-	if err := h.DB.QueryRow("SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&total); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&total); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -189,7 +189,7 @@ func (h *MultiDashboardHandler) DeleteDashboard(w http.ResponseWriter, r *http.R
 
 	// Find the dashboard that will become the new default (lowest position that remains).
 	var newDefaultID int
-	err = h.DB.QueryRow(
+	err = h.DB.QueryRowContext(r.Context(),
 		"SELECT id FROM dashboards WHERE user_id = ? AND id != ? ORDER BY position ASC LIMIT 1",
 		userID, dashID,
 	).Scan(&newDefaultID)
@@ -260,7 +260,7 @@ func (h *MultiDashboardHandler) RenameDashboard(w http.ResponseWriter, r *http.R
 
 	// Verify ownership.
 	var exists int
-	if err := h.DB.QueryRow(
+	if err := h.DB.QueryRowContext(r.Context(),
 		"SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?",
 		dashID, userID,
 	).Scan(&exists); err == sql.ErrNoRows {
@@ -304,7 +304,7 @@ func (h *MultiDashboardHandler) SetDefaultDashboard(w http.ResponseWriter, r *ht
 
 	// 1. Verify ownership.
 	var exists int
-	if err := h.DB.QueryRow(
+	if err := h.DB.QueryRowContext(r.Context(),
 		"SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?",
 		dashID, userID,
 	).Scan(&exists); err == sql.ErrNoRows {
@@ -359,7 +359,7 @@ func (h *MultiDashboardHandler) ReorderDashboards(w http.ResponseWriter, r *http
 
 	for i, id := range body.IDs {
 		var exists int
-		if err := h.DB.QueryRow("SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?", id, userID).Scan(&exists); err != nil {
+		if err := h.DB.QueryRowContext(r.Context(), "SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?", id, userID).Scan(&exists); err != nil {
 			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}

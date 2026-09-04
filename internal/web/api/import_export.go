@@ -61,7 +61,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 	userID := middleware.GetUserIDFromContext(r)
 
 	// Dashboards, in order.
-	dashRows, err := h.DB.Query(`SELECT id, name FROM dashboards WHERE user_id = ? ORDER BY position, id`, userID)
+	dashRows, err := h.DB.QueryContext(r.Context(), `SELECT id, name FROM dashboards WHERE user_id = ? ORDER BY position, id`, userID)
 	if err != nil {
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
@@ -85,7 +85,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 	dashRows.Close()
 
 	// Items: resolve section titles first, then emit bookmarks with their group.
-	itemRows, err := h.DB.Query(
+	itemRows, err := h.DB.QueryContext(r.Context(),
 		`SELECT id, COALESCE(dashboard_id, 0), parent_id, type, content FROM items WHERE user_id = ?`, userID)
 	if err != nil {
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)

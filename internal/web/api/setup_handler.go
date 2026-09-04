@@ -24,7 +24,7 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	// return 403 at the end. The authoritative check still happens inside the
 	// transaction below, which is what makes concurrent setup attempts safe.
 	var alreadySetUp bool
-	if err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&alreadySetUp); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT EXISTS(SELECT 1 FROM users)").Scan(&alreadySetUp); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -98,7 +98,7 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	var exists bool
-	if err := tx.QueryRow("SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
+	if err := tx.QueryRowContext(r.Context(), "SELECT EXISTS(SELECT 1 FROM users)").Scan(&exists); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -118,7 +118,7 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 
 	// Assign seeded dashboard items to the new admin
 	var adminID int
-	if err := tx.QueryRow("SELECT id FROM users WHERE username = ?", input.Username).Scan(&adminID); err == nil {
+	if err := tx.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username = ?", input.Username).Scan(&adminID); err == nil {
 		if err := SeedDefaultItems(tx, adminID); err != nil {
 			slog.Warn("Setup: failed to seed default items", "admin_id", adminID, "error", err)
 		}

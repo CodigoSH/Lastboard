@@ -350,7 +350,7 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var one int
-	if h.DB.QueryRow(`SELECT 1 FROM items WHERE id = ? AND user_id = ?`, itemID, userID).Scan(&one) != nil {
+	if h.DB.QueryRowContext(r.Context(), `SELECT 1 FROM items WHERE id = ? AND user_id = ?`, itemID, userID).Scan(&one) != nil {
 		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
@@ -463,7 +463,7 @@ func (h *MonitorHandler) ClearHistory(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var one int
-		if h.DB.QueryRow(`SELECT 1 FROM items WHERE id = ? AND user_id = ?`, itemID, userID).Scan(&one) != nil {
+		if h.DB.QueryRowContext(r.Context(), `SELECT 1 FROM items WHERE id = ? AND user_id = ?`, itemID, userID).Scan(&one) != nil {
 			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}

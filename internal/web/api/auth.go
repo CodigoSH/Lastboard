@@ -50,7 +50,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var firstSeen time.Time
 	var lockedUntil sql.NullTime
 
-	err := h.DB.QueryRow(
+	err := h.DB.QueryRowContext(r.Context(),
 		"SELECT count, first_seen, locked_until FROM login_attempts WHERE ip = ?", ip,
 	).Scan(&count, &firstSeen, &lockedUntil)
 
@@ -97,7 +97,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Fetch user
 	var storedHash string
 	var passwordVersion int
-	err = h.DB.QueryRow("SELECT password, password_version FROM users WHERE username = ?", input.Username).
+	err = h.DB.QueryRowContext(r.Context(), "SELECT password, password_version FROM users WHERE username = ?", input.Username).
 		Scan(&storedHash, &passwordVersion)
 	if err != nil {
 		bcrypt.CompareHashAndPassword([]byte(dummyHash), []byte(input.Password))

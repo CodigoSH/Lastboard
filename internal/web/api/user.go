@@ -35,7 +35,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var u user.User
-	err := h.DB.QueryRow(`
+	err := h.DB.QueryRowContext(r.Context(), `
 		SELECT id, username, role, accent_color, language,
 		       COALESCE(avatar_url, ''),
 		       COALESCE(widget_min_width, 140),
@@ -110,7 +110,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRow(`SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12), COALESCE(unit_system, 'metric'), COALESCE(dashboard_background, ''), COALESCE(project_logo, '')
+	err := h.DB.QueryRowContext(r.Context(), `SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12), COALESCE(unit_system, 'metric'), COALESCE(dashboard_background, ''), COALESCE(project_logo, '')
 		FROM users WHERE username=?`, username).Scan(
 		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC, &current.UnitSystem, &current.DashboardBackground, &current.ProjectLogo)
 
@@ -299,7 +299,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var storedHash string
-	err := h.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
+	err := h.DB.QueryRowContext(r.Context(), "SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "error.not_found", http.StatusNotFound)
@@ -342,7 +342,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	// a current one: the person who just changed their password should stay
 	// where they are, and everyone else should be thrown out.
 	var newVersion int
-	if err := h.DB.QueryRow("SELECT password_version FROM users WHERE username = ?", username).
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT password_version FROM users WHERE username = ?", username).
 		Scan(&newVersion); err == nil {
 		expiry := time.Now().Add(24 * time.Hour)
 		http.SetCookie(w, &http.Cookie{
@@ -385,7 +385,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	currentUserID := middleware.GetUserIDFromContext(r)
-	rows, err := h.DB.Query("SELECT id, username, role, created_at, COALESCE(avatar_url, '') FROM users WHERE id != ?", currentUserID)
+	rows, err := h.DB.QueryContext(r.Context(), "SELECT id, username, role, created_at, COALESCE(avatar_url, '') FROM users WHERE id != ?", currentUserID)
 	if err != nil {
 		slog.Error("Failed to fetch users", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
@@ -585,7 +585,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	// Prevent deleting the last admin
 	var exists int
-	if err := h.DB.QueryRow("SELECT 1 FROM users WHERE id = ?", targetID).Scan(&exists); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT 1 FROM users WHERE id = ?", targetID).Scan(&exists); err != nil {
 		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}

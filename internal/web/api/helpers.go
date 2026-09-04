@@ -18,7 +18,7 @@ func isAdminUser(db *sql.DB, r *http.Request) bool {
 		return false
 	}
 	var userID int
-	if err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
+	if err := db.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
 		return false
 	}
 	return isFirstAdmin(db, userID)

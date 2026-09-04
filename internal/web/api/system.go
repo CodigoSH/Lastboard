@@ -30,7 +30,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userID int
-	if err := h.DB.QueryRow("SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
 		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
@@ -51,7 +51,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var storedHash string
-	if err := h.DB.QueryRow("SELECT password FROM users WHERE id=?", userID).Scan(&storedHash); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT password FROM users WHERE id=?", userID).Scan(&storedHash); err != nil {
 		slog.Error("Database error", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
@@ -185,7 +185,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	// Only the first admin (by ID) may download the backup,
 	// because it contains password hashes for all users.
 	var userID int
-	if err := h.DB.QueryRow("SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
 		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
@@ -202,7 +202,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Fetch Users
-	rows, err := h.DB.Query(`SELECT username, password, role, theme, accent_color, language,
+	rows, err := h.DB.QueryContext(r.Context(), `SELECT username, password, role, theme, accent_color, language,
 		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name,
 		COALESCE(project_logo, ''), COALESCE(beta_updates, 0), COALESCE(unit_system, 'metric'),
 		COALESCE(dashboard_background, ''), COALESCE(widget_min_width, 140) FROM users`)
@@ -229,7 +229,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Fetch Dashboards — join users to store owner username for portability.
-	dashRows, err := h.DB.Query(`SELECT d.id, COALESCE(u.username, ''), d.name, d.position, d.is_default
+	dashRows, err := h.DB.QueryContext(r.Context(), `SELECT d.id, COALESCE(u.username, ''), d.name, d.position, d.is_default
 		FROM dashboards d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id ASC`)
 	if err != nil {
 		slog.Error("Failed to fetch dashboards", "error", err)
@@ -253,7 +253,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 
 	// 3. Fetch Items — join users to store owner username; backups must be
 	// portable across restores where numeric IDs will differ.
-	itemRows, err := h.DB.Query(`SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content
+	itemRows, err := h.DB.QueryContext(r.Context(), `SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content
 		FROM items i LEFT JOIN users u ON i.user_id = u.id`)
 	if err != nil {
 		slog.Error("Failed to fetch items", "error", err)
@@ -278,7 +278,7 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 	// 4. Stored icons. A backup without them restores a board whose icons only
 	//    come back if the machine can reach the internet, which defeats keeping
 	//    them locally in the first place.
-	iconRows, err := h.DB.Query(`SELECT hash, mime, data FROM icons`)
+	iconRows, err := h.DB.QueryContext(r.Context(), `SELECT hash, mime, data FROM icons`)
 	if err != nil {
 		slog.Error("Failed to fetch icons", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)

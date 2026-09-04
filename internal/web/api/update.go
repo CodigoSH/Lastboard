@@ -427,7 +427,7 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	username := middleware.GetUserFromContext(r)
 	var userID int
-	if err := h.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
