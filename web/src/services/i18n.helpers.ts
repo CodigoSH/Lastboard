@@ -122,3 +122,17 @@ export function formatNumber(
     const formatter = cached('number', locale, options, () => new Intl.NumberFormat(locale, options));
     return formatter ? formatter.format(value) : value.toLocaleString();
 }
+
+/**
+ * The languages Lastboard ships that are written right to left.
+ *
+ * Kept as a list rather than asked of Intl, because Intl.Locale's textInfo is
+ * still missing in Firefox, and this list changes about as often as the set of
+ * shipped languages does.
+ */
+const rightToLeft = new Set(['ar', 'fa', 'ur', 'he']);
+
+/** Reading direction for a language code, for the `dir` attribute. */
+export function directionOf(language: string): 'rtl' | 'ltr' {
+    return rightToLeft.has(language.split('-')[0].toLowerCase()) ? 'rtl' : 'ltr';
+}

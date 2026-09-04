@@ -1,6 +1,6 @@
 import { availableLocales } from '../locales/metadata';
 import { Locale } from '../locales/types';
-import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, directionOf } from './i18n.helpers';
 
 class I18nService {
     private currentLanguage: string = 'en';
@@ -111,8 +111,25 @@ class I18nService {
     }
 
     private notifyListeners() {
+        this.applyDocumentLanguage();
         const locale = this.getLocale();
         this.listeners.forEach(l => l(locale));
+    }
+
+    /**
+     * Tell the document what language it is in, and which way it reads.
+     *
+     * The shell ships lang="en" and no dir at all, so every non-English user
+     * was served a page claiming to be English — which is what a screen reader
+     * announces it in, and what the browser hyphenates and spellchecks by. For
+     * Arabic, Persian and Urdu the missing dir is worse: the text is
+     * translated, but the interface still reads left to right.
+     */
+    private applyDocumentLanguage() {
+        if (typeof document === 'undefined') return;
+        const root = document.documentElement;
+        root.setAttribute('lang', this.currentLanguage);
+        root.setAttribute('dir', directionOf(this.currentLanguage));
     }
 
     public async ensureInitialized() {

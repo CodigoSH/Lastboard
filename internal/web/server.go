@@ -471,10 +471,13 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	username := middleware.GetUserFromContext(r)
 	var projectName string = "Lastboard"
 	var dbTheme string = ""
+	var dbLanguage string = ""
 
 	if username != "" {
-		// Fetch Project Name AND Theme
-		err := s.DB.QueryRowContext(r.Context(), "SELECT project_name, COALESCE(theme, '') FROM users WHERE username = ?", username).Scan(&projectName, &dbTheme)
+		// Fetch Project Name, Theme AND language
+		err := s.DB.QueryRowContext(r.Context(),
+			"SELECT project_name, COALESCE(theme, ''), COALESCE(language, '') FROM users WHERE username = ?",
+			username).Scan(&projectName, &dbTheme, &dbLanguage)
 		if err != nil && err != sql.ErrNoRows {
 			slog.Warn("Error fetching user data", "error", err)
 		}
@@ -499,14 +502,26 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Known here, so the page arrives in the right language and the right
+	// reading direction instead of starting English and left-to-right and
+	// being corrected once the bundle has loaded.
+	language := dbLanguage
+	if language == "" {
+		language = "en"
+	}
+
 	data := struct {
 		ProjectName string
 		ThemeClass  string
+		Language    string
+		Direction   string
 		DemoMode    bool
 		Nonce       string
 	}{
 		ProjectName: projectName,
 		ThemeClass:  themeClass,
+		Language:    language,
+		Direction:   directionOf(language),
 		DemoMode:    false,
 		Nonce:       cspNonce(r),
 	}
@@ -546,4 +561,16 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("Error executing demo template", "error", err)
 	}
+}
+
+// directionOf reports how a language reads, for the document's dir attribute.
+// The list mirrors the one the frontend keeps in i18n.helpers.ts; both are
+// asserted against the shipped locales by a test.
+func directionOf(language string) string {
+	base, _, _ := strings.Cut(language, "-")
+	switch strings.ToLower(base) {
+	case "ar", "fa", "ur", "he":
+		return "rtl"
+	}
+	return "ltr"
 }

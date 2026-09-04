@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, directionOf } from './i18n.helpers';
 
 describe('translate', () => {
     const en = { greeting: 'Hello', welcome: 'Welcome {name}', multi: '{a} and {b}' };
@@ -107,5 +107,25 @@ describe('formatting in the language the user picked', () => {
 
     it('does not choke on infinity', () => {
         expect(formatNumber('en', Infinity)).toBe('Infinity');
+    });
+});
+
+describe('directionOf', () => {
+    it('knows the languages Lastboard ships that read right to left', () => {
+        expect(directionOf('ar')).toBe('rtl');
+        expect(directionOf('fa')).toBe('rtl');
+        expect(directionOf('ur')).toBe('rtl');
+    });
+
+    it('leaves everything else alone', () => {
+        expect(directionOf('en')).toBe('ltr');
+        expect(directionOf('es')).toBe('ltr');
+        expect(directionOf('ja')).toBe('ltr');
+    });
+
+    it('ignores the region and the case', () => {
+        expect(directionOf('ar-EG')).toBe('rtl');
+        expect(directionOf('AR')).toBe('rtl');
+        expect(directionOf('en-GB')).toBe('ltr');
     });
 });
