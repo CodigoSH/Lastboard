@@ -105,8 +105,9 @@ byte for byte.
 Every released binary is built with `-trimpath` (no build-machine paths baked
 in), with `CGO_ENABLED=0` and an explicit `GOOS`/`GOARCH`, on the Go toolchain
 pinned in `go.mod`. The embedded frontend bundle carries a cache-busting stamp
-that normally comes from the clock; for a release it comes from the commit date
-instead, via `SOURCE_DATE_EPOCH`, so the bundle is identical on every rebuild.
+derived from the **hash of the built assets themselves**, paths included — not
+from the clock — so the same sources always produce the same bundle, and any
+change to any asset produces a new one.
 
 To reproduce, for example, `v1.7.0` for `linux/amd64`:
 
@@ -115,9 +116,9 @@ git clone https://git.codigosh.com/CodigoSH/Lastboard.git
 cd Lastboard
 git checkout v1.7.0
 
-# The frontend, stamped with the commit date rather than the clock
+# The frontend, stamped with the hash of its own output
 bun install
-SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) bun run web/build.ts
+bun run web/build.ts
 
 # The binary, with the same flags the release workflow uses
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \

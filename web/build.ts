@@ -1,28 +1,30 @@
 import { build } from "bun";
-import { cp, mkdir, readFile, rm, writeFile } from "fs/promises";
+import { cp, mkdir, readdir, readFile, rm, writeFile } from "fs/promises";
 import { existsSync } from "fs";
+import { createHash } from "crypto";
 
 console.log("🚀 Starting Build...");
 
 // One stamp per build, shared by the HTML cache-busting query and the bundle.
 // Anything fetched with ?v=<stamp> is served immutable, so the stamp must stay
-// identical across every asset of a single build and change on the next one.
+// identical across every asset of a single build, and must change whenever any
+// of them changes.
 //
-// The clock is the right source while developing, where every rebuild must look
-// new. It is the wrong one for a release: a bundle that differs on every run
-// cannot be reproduced by anyone else, and then the signed checksums only prove
-// the binary came from our CI, not that it matches this source. So a caller that
-// pins SOURCE_DATE_EPOCH (the release workflow passes the commit date) decides
-// the stamp instead.
-const pinnedDate = process.env.SOURCE_DATE_EPOCH;
-if (pinnedDate !== undefined && !/^[0-9]+$/.test(pinnedDate)) {
-    throw new Error(`SOURCE_DATE_EPOCH must be seconds since the epoch, got "${pinnedDate}"`);
-}
-const buildStamp = pinnedDate ?? String(Math.floor(Date.now() / 1000));
+// The clock satisfies neither half. It changes when nothing has changed, which
+// makes two builds of the same source produce different binaries — so "rebuild
+// the release and compare the hashes" becomes a promise nobody can keep. And it
+// does not change when only the content does, if the second passes within the
+// same second.
+//
+// So the assets are assembled carrying a placeholder, the whole output is
+// hashed — paths included, so moving a file counts — and the placeholder is
+// replaced by that hash. Same sources, same bytes; one character different
+// anywhere, new stamp.
+const PLACEHOLDER = "0BUILDSTAMP0";
 
 const define = {
     "process.env.NODE_ENV": JSON.stringify("production"),
-    "__BUILD_STAMP__": JSON.stringify(buildStamp),
+    "__BUILD_STAMP__": JSON.stringify(PLACEHOLDER),
 };
 
 // Start from a clean output directory: cp() never removes files, so leftovers
@@ -79,7 +81,7 @@ if (result.success && resultSetup.success && resultLogin.success) {
         // Copy HTML & Public Assets with Cache Busting
         const copyWithVersion = async (src: string, dest: string) => {
             let content = await readFile(src, 'utf-8');
-            content = content.replace(/(\?v=)[0-9]+/g, `$1${buildStamp}`);
+            content = content.replace(/(\?v=)[0-9a-zA-Z]+/g, `$1${PLACEHOLDER}`);
             await writeFile(dest, content);
         };
 
@@ -117,6 +119,46 @@ if (result.success && resultSetup.success && resultLogin.success) {
         }
 
         console.log("✅ HTML, Styles & Public assets copied to web/dist");
+
+        // Everything is in place carrying the placeholder. Hash the lot and
+        // swap it in, before the copy that Go embeds, so both directories hold
+        // exactly the same bytes.
+        const filesUnder = async (dir: string): Promise<string[]> => {
+            const entries = await readdir(dir, { withFileTypes: true });
+            const found: string[] = [];
+            // Sorted, so the digest does not depend on the order the filesystem
+            // happens to hand them back.
+            for (const entry of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
+                const full = `${dir}/${entry.name}`;
+                if (entry.isDirectory()) found.push(...(await filesUnder(full)));
+                else found.push(full);
+            }
+            return found;
+        };
+
+        const digest = createHash("sha256");
+        const built = await filesUnder('./web/dist');
+        for (const file of built) {
+            digest.update(file.slice('./web/dist'.length));
+            digest.update(await readFile(file));
+        }
+        const buildStamp = digest.digest("hex").slice(0, 16);
+
+        let stamped = 0;
+        for (const file of built) {
+            const content = await readFile(file);
+            if (!content.includes(PLACEHOLDER)) continue;
+            await writeFile(file, content.toString('utf-8').replaceAll(PLACEHOLDER, buildStamp));
+            stamped++;
+        }
+        if (stamped === 0) {
+            // The three HTML files and the three bundles all carry it. None
+            // carrying it means the substitution has silently stopped working,
+            // and every asset is about to be served immutable under one name
+            // for ever.
+            throw new Error("nothing carried the build stamp: the substitution is broken");
+        }
+        console.log(`✅ Build stamp ${buildStamp} written into ${stamped} files`);
 
         // SYNC TO INTERNAL GO EMBED DIRECTORY
         console.log("🔄 Syncing to internal/web/dist...");

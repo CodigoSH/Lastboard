@@ -12,10 +12,6 @@ RUN bun install --frozen-lockfile
 
 # Copy source and build
 COPY . .
-
-# Pinning this makes the bundle reproducible; unset, the stamp falls back to the
-# clock, which is what a local `docker build` wants.
-ARG SOURCE_DATE_EPOCH
 RUN bun web/build.ts
 
 # ==========================================
