@@ -1,46 +1,50 @@
 /**
- * ThemeService handles Light/Dark mode toggling.
- * Persists preference to localStorage and Cookies for backend SSR.
+ * ThemeService decides which theme the page wears.
+ *
+ * Two states, light and dark, which is what the product has always offered: the
+ * setup wizard asks for one of the two, and so does the settings panel.
+ *
+ * There used to be a third, `system`, that nothing ever chose. It arrived only
+ * as the database column's default, so it landed on accounts an administrator
+ * created — and it was resolved on load and then written to storage, which
+ * turned "follow my device" into a fixed value on the first visit anyway. The
+ * settings panel had meanwhile always drawn those accounts as dark. Three
+ * different answers to the same question; there is one now.
+ *
+ * The first paint is not this file's job: the server stamps the class onto
+ * <html> from the account's own row before the page is sent, so there is
+ * nothing to correct afterwards and nothing to flash.
  */
+export type ThemeChoice = 'light' | 'dark';
+
 export class ThemeService {
     private static readonly STORAGE_KEY = 'lastboard_theme';
     private static readonly CLASS_NAME = 'dark-mode';
 
     static init() {
-        // 1. Check LocalStorage
-        const saved = localStorage.getItem(this.STORAGE_KEY);
-        if (saved === 'dark') {
-            this.enableDark();
-        } else if (saved === 'light') {
-            this.enableLight();
-        } else {
-            // 2. Check System Preference
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                this.enableDark();
-            } else {
-                this.enableLight();
-            }
+        this.apply(this.stored());
+    }
+
+    /** The stored choice, defaulting to dark as everything else in the app does. */
+    static stored(): ThemeChoice {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) === 'light' ? 'light' : 'dark';
+        } catch {
+            return 'dark';
         }
     }
 
-    static enableDark() {
-        document.documentElement.classList.add(this.CLASS_NAME);
-        localStorage.setItem(this.STORAGE_KEY, 'dark');
-        this.setCookie(this.STORAGE_KEY, 'dark', 365);
+    static apply(choice: ThemeChoice) {
+        document.documentElement.classList.toggle(this.CLASS_NAME, choice === 'dark');
+        try { localStorage.setItem(this.STORAGE_KEY, choice); } catch { /* private mode */ }
+        this.setCookie(this.STORAGE_KEY, choice, 365);
     }
 
-    static enableLight() {
-        document.documentElement.classList.remove(this.CLASS_NAME);
-        localStorage.setItem(this.STORAGE_KEY, 'light');
-        this.setCookie(this.STORAGE_KEY, 'light', 365);
-    }
+    static enableDark() { this.apply('dark'); }
+    static enableLight() { this.apply('light'); }
 
     static toggle() {
-        if (document.documentElement.classList.contains(this.CLASS_NAME)) {
-            this.enableLight();
-        } else {
-            this.enableDark();
-        }
+        this.apply(this.isDark() ? 'light' : 'dark');
     }
 
     static isDark(): boolean {
@@ -48,27 +52,20 @@ export class ThemeService {
     }
 
     private static setCookie(name: string, value: string, days: number) {
-        let expires = "";
-        if (days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        const date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
     }
 
+    /** Brings the browser in line with the account. */
     static async sync() {
         try {
             const res = await fetch('/api/me');
-            if (res.ok) {
-                const user = await res.json();
-                if (user.theme === 'dark') this.enableDark();
-                else if (user.theme === 'light') this.enableLight();
-                // If 'system', we leave it to init() logic or re-run init logic?
-                // For now, explicit dark/light is what we care about preserving.
-            }
-        } catch (e) {
-            // Not logged in or error
+            if (!res.ok) return;
+            const user = await res.json();
+            this.apply(user.theme === 'light' ? 'light' : 'dark');
+        } catch {
+            // Not signed in, or offline: whatever is on screen stands.
         }
     }
 }

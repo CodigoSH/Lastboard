@@ -468,19 +468,16 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var themeClass string = ""
 	// Use the per-user database value directly.  A shared cookie would leak
 	// the previous user's preference to the next user on the same browser;
 	// the DB row is already scoped to the authenticated session.
-	// "system" or empty → dark-mode default; the client-side ThemeService
-	// corrects this to the real OS preference after the page loads.
-	switch dbTheme {
-	case "dark":
-		themeClass = "dark-mode"
-	case "light":
+	//
+	// Two answers, both known here, so the page is painted in the right theme
+	// from the first byte and the client never has to correct it. Anything that
+	// is not "light" is dark, which is the app's default everywhere else.
+	themeClass := "dark-mode"
+	if dbTheme == "light" {
 		themeClass = ""
-	default:
-		themeClass = "dark-mode"
 	}
 
 	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")

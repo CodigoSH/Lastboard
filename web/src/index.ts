@@ -64,9 +64,8 @@ bootFetches.catch(() => { /* surfaced by the await inside bootstrap */ });
 
 // Initialize Application
 bootstrap(async () => {
-    // Flash-prevention: apply a theme before the user record arrives so the
-    // page does not flicker.  serveIndex already injects the correct class
-    // from the DB; this call only matters for the 'system' edge case.
+    // The server already stamped the theme onto <html> from the account's row,
+    // so this only aligns storage with what is on screen.
     ThemeService.init();
 
     // 3. Mount the grid immediately so skeletons appear while API calls are in-flight.
@@ -98,17 +97,7 @@ bootstrap(async () => {
             document.documentElement.style.setProperty('--user-preferred-columns', u.preferences.grid_columns.toString());
         }
 
-        if (u.theme === 'dark') {
-            ThemeService.enableDark();
-        } else if (u.theme === 'light') {
-            ThemeService.enableLight();
-        } else {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                ThemeService.enableDark();
-            } else {
-                ThemeService.enableLight();
-            }
-        }
+        ThemeService.apply(u.theme === 'light' ? 'light' : 'dark');
 
         if (u.id) {
             dashboardStore.setUserId(u.id);

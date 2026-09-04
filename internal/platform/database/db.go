@@ -143,7 +143,7 @@ func initSchema(db *sql.DB) error {
 			password             TEXT NOT NULL,
 			role                 TEXT NOT NULL DEFAULT 'user',
 			created_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
-			theme                TEXT DEFAULT 'system',
+			theme                TEXT DEFAULT 'dark',
 			accent_color         TEXT DEFAULT 'orange',
 			language             TEXT DEFAULT 'en',
 			grid_columns_pc      INTEGER DEFAULT 12,
@@ -269,7 +269,7 @@ func migrateSchema(db *sql.DB) error {
 	// still need it. Idempotent — an ALTER on an existing column returns
 	// "duplicate column name", which we ignore.
 	backfill := []string{
-		`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system'`,
+		`ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'dark'`,
 		`ALTER TABLE users ADD COLUMN accent_color TEXT DEFAULT 'orange'`,
 		`ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'`,
 		`ALTER TABLE users ADD COLUMN grid_columns_pc INTEGER DEFAULT 12`,
@@ -340,6 +340,19 @@ func migrateSchema(db *sql.DB) error {
 	`)
 	if err != nil {
 		return fmt.Errorf("migration 6 (default dashboard name) failed: %w", err)
+	}
+
+	// Migration 7: the theme is light or dark, and nothing else.
+	//
+	// 'system' was never chosen by anything: the wizard asks for light or dark,
+	// so does the settings panel, and the frontend's own default is dark. It
+	// arrived solely as this column's default, so it landed on accounts an
+	// administrator created — while the settings panel drew those accounts as
+	// dark all along. Making the stored value say what the interface has been
+	// showing.
+	_, err = db.Exec(`UPDATE users SET theme = 'dark' WHERE theme IS NULL OR theme NOT IN ('light', 'dark')`)
+	if err != nil {
+		return fmt.Errorf("migration 7 (theme is light or dark) failed: %w", err)
 	}
 
 	// Migration 2: users from versions without multi-dashboard support have items

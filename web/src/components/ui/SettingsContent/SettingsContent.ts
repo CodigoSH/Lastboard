@@ -481,11 +481,7 @@ class SettingsContent extends HTMLElement {
             i18n.setLanguage(newPrefs.language);
         }
         if (newPrefs.theme) {
-            if (newPrefs.theme === 'dark') {
-                ThemeService.enableDark();
-            } else {
-                ThemeService.enableLight();
-            }
+            ThemeService.apply(newPrefs.theme === 'light' ? 'light' : 'dark');
         }
 
         let ok = true;
