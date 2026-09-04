@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"log/slog"
 	"net"
 	"net/http"
@@ -529,6 +530,10 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 // CheckHealthBatch checks multiple URLs in parallel and returns all results in
 // one response. Each URL is checked concurrently in its own goroutine so the
 // total time equals the slowest single check, not the sum of all checks.
+// healthBatchConcurrency is how many bookmarks are probed at once. The same
+// number the background scheduler uses, for the same reason.
+const healthBatchConcurrency = 10
+
 func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Request) {
 	// At most 100 URLs are accepted below, so 64 KiB is generous for the body.
 	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
@@ -552,10 +557,19 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 	results := make([]result, len(body.URLs))
 	var wg sync.WaitGroup
 
+	// Bounded, like the background scheduler already is. One dashboard asking
+	// about a hundred bookmarks used to open a hundred sockets at once, and the
+	// rate limiter allows a burst of those requests — enough to spend the
+	// process's file descriptors on a single user's page load, never mind a
+	// deliberate one. Waiting a few probes longer costs nobody anything.
+	gate := make(chan struct{}, healthBatchConcurrency)
+
 	for i, rawUrl := range body.URLs {
 		wg.Add(1)
+		gate <- struct{}{}
 		go func(idx int, u string) {
 			defer wg.Done()
+			defer func() { <-gate }()
 			results[idx] = result{url: u, status: probeURL(u)}
 		}(i, rawUrl)
 	}
@@ -573,6 +587,11 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 func probeURL(rawUrl string) string {
 	u, err := url.Parse(rawUrl)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+		return "down"
+	}
+	// Probing your own network is the point; probing the instance metadata
+	// service is not — see util.IsCloudMetadataHost.
+	if util.IsCloudMetadataHost(u.Hostname()) {
 		return "down"
 	}
 
