@@ -2,7 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -409,5 +412,49 @@ func TestMigrateSchemaFixesDefaultDashboardName(t *testing.T) {
 		if got != expected {
 			t.Errorf("dashboard %s named %q, want %q", id, got, expected)
 		}
+	}
+}
+
+// A database written by a newer Lastboard must be refused, not migrated.
+// Downgrades are routine here — the updater has a beta channel, so people move
+// from beta to stable and back — and an old binary used to open a newer
+// database without noticing and write against a shape it did not understand.
+func TestInitDBRefusesANewerSchema(t *testing.T) {
+	dir := t.TempDir()
+	dsn := filepath.Join(dir, "future.db")
+
+	// A database that reports a version from the future.
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(fmt.Sprintf("PRAGMA user_version = %d", schemaVersion+1)); err != nil {
+		t.Fatal(err)
+	}
+	db.Close()
+
+	if _, err := InitDB(dsn); err == nil {
+		t.Fatal("InitDB opened a database newer than this build")
+	} else if !errors.Is(err, ErrSchemaTooNew) {
+		t.Fatalf("InitDB failed for the wrong reason: %v", err)
+	}
+}
+
+// The ordinary path: a database at or below this build's version is migrated
+// and stamped, so the next binary can tell what wrote it.
+func TestInitDBStampsTheSchemaVersion(t *testing.T) {
+	dsn := filepath.Join(t.TempDir(), "fresh.db")
+	db, err := InitDB(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	var got int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&got); err != nil {
+		t.Fatal(err)
+	}
+	if got != schemaVersion {
+		t.Errorf("user_version = %d, want %d", got, schemaVersion)
 	}
 }

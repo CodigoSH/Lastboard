@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -15,6 +16,46 @@ import (
 
 type DB struct {
 	*sql.DB
+}
+
+// schemaVersion is what this binary knows how to read and write. It is stored
+// in the database's PRAGMA user_version, and a database reporting a HIGHER one
+// was written by a newer Lastboard than this.
+//
+// That is not hypothetical: Lastboard updates itself and offers a beta channel,
+// so people move from beta to stable and back, which means downgrading is
+// routine. An old binary opening a newer database used to notice nothing at
+// all — it would run, and write, against a shape it does not understand.
+//
+// Raise this whenever a migration changes what an older binary could safely
+// read. Adding a column an older binary simply ignores does not need a bump;
+// changing the meaning of existing data does.
+const schemaVersion = 1
+
+// ErrSchemaTooNew is returned when the database was written by a newer version.
+var ErrSchemaTooNew = errors.New("database schema is newer than this build")
+
+// checkSchemaVersion refuses to touch a database from the future, and stamps
+// the current version on one it has just migrated.
+func checkSchemaVersion(db *sql.DB) error {
+	var found int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&found); err != nil {
+		return fmt.Errorf("reading schema version: %w", err)
+	}
+	if found > schemaVersion {
+		return fmt.Errorf("%w: the database reports version %d and this build understands %d — "+
+			"update Lastboard, or restore a backup taken with this version",
+			ErrSchemaTooNew, found, schemaVersion)
+	}
+	if found < schemaVersion {
+		// PRAGMA does not take parameters, and schemaVersion is a constant of
+		// ours rather than anything a user can reach.
+		if _, err := db.Exec(fmt.Sprintf("PRAGMA user_version = %d", schemaVersion)); err != nil {
+			return fmt.Errorf("stamping schema version: %w", err)
+		}
+		slog.Info("Database schema stamped", "from", found, "to", schemaVersion)
+	}
+	return nil
 }
 
 func InitDB(dsn string) (*DB, error) {
@@ -67,12 +108,28 @@ func InitDB(dsn string) (*DB, error) {
 	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(1 * time.Hour)
 
+	// Checked before anything is written: a database from the future must not be
+	// migrated, only refused.
+	var found int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&found); err != nil {
+		return nil, fmt.Errorf("reading schema version: %w", err)
+	}
+	if found > schemaVersion {
+		return nil, fmt.Errorf("%w: the database reports version %d and this build understands %d — "+
+			"update Lastboard, or restore a backup taken with this version",
+			ErrSchemaTooNew, found, schemaVersion)
+	}
+
 	if err := initSchema(db); err != nil {
 		return nil, err
 	}
 
 	if err := migrateSchema(db); err != nil {
 		return nil, fmt.Errorf("schema migration failed: %w", err)
+	}
+
+	if err := checkSchemaVersion(db); err != nil {
+		return nil, err
 	}
 
 	return &DB{DB: db}, nil
