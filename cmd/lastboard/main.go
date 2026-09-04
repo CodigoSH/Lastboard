@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/config"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web"
@@ -34,6 +35,13 @@ func main() {
 	if *versionFlag {
 		fmt.Printf("Lastboard %s\n", version.Current)
 		os.Exit(0)
+	}
+
+	// Say so before anything uses them. Each of these falls back to a default
+	// when it cannot be understood, so without this a typo looks like a setting
+	// that took effect.
+	for _, problem := range config.CheckEnvironment() {
+		slog.Warn("configuration ignored", "setting", problem.String())
 	}
 
 	// 1. Resolve DB path, then drop privileges if requested (PUID/PGID).

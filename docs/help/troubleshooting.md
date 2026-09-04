@@ -15,6 +15,11 @@ See [Configuration → PUID / PGID](../getting-started/configuration.md#puid--pg
 
 Behind a reverse proxy without `TRUST_PROXY`, every visitor appears to come from the proxy's IP, so they share one rate-limit and lockout bucket.
 
+A setting spelled in a way Lastboard cannot read falls back to its default, so
+`TRUST_PROXY=True` — with a capital letter — means the same as not setting it at
+all. Lastboard says so at startup: look for `configuration ignored` in the log,
+which names the setting, the value found and what will be used instead.
+
 - Set `TRUST_PROXY=true` **only** when Lastboard sits behind a proxy (Nginx, Traefik, Caddy, Cloudflare, Pangolin…).
 - Never enable it when Lastboard is exposed directly to the internet — it would let clients spoof their IP.
 
