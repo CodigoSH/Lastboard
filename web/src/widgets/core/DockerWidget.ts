@@ -364,6 +364,9 @@ class DockerWidget extends HTMLElement {
     private _loading = false;
     private _pollingTimer: ReturnType<typeof setInterval> | null = null;
     /** Re-lists containers, so one started elsewhere shows up on its own. */
+    /** Last list markup written, so an unchanged refresh writes nothing. */
+    private _lastBodyHTML: string | null = null;
+
     private _listTimer: ReturnType<typeof setInterval> | null = null;
 
     private _unsubscribeDashboard: (() => void) | null = null;
@@ -530,7 +533,7 @@ class DockerWidget extends HTMLElement {
             this.stopPolling();
             this._loading = false;
             this._byHost = [];
-            this.render();
+            this.refreshBody();
             return;
         }
 
@@ -539,7 +542,7 @@ class DockerWidget extends HTMLElement {
             this._loading = true;
             this._byHost = [];
             this._stats.clear();
-            this.render();
+            this.refreshBody();
         }
 
         const previous = new Map(this._byHost.map(s => [s.host.id, s]));
@@ -564,7 +567,7 @@ class DockerWidget extends HTMLElement {
         }));
 
         this._loading = false;
-        this.render();
+        this.refreshBody();
         this.startStatsPolling();
     }
 
@@ -751,6 +754,49 @@ class DockerWidget extends HTMLElement {
     render() {
         if (!this.shadowRoot) return;
 
+        const title = this._config.title || i18n.t('widget.docker.name');
+
+        this.shadowRoot.innerHTML = `
+            <style>${CSS}</style>
+            <div class="widget-header">
+                <div class="widget-header__top">
+                    <span class="widget-header__icon">${ICON.docker}</span>
+                    <span class="widget-header__title">${esc(title)}</span>
+                </div>
+            </div>
+            <div class="widget-body" id="body"></div>
+        `;
+
+        this.bindEvents();
+        this._lastBodyHTML = null;
+        this.refreshBody();
+    }
+
+    /**
+     * Repaints the list without rebuilding the widget.
+     *
+     * The refresh timer used to call render(), which reassigned the whole shadow
+     * root every few seconds: the stylesheet was reparsed, and every node was
+     * replaced — so an open ports popup closed under the pointer and anything
+     * animating started over, on a loop, for as long as the dashboard was open.
+     *
+     * Only the list is touched here, and only when it actually differs. In the
+     * ordinary case — the same containers in the same states — nothing is
+     * written to the DOM at all.
+     */
+    private refreshBody(): void {
+        const body = this.shadowRoot?.getElementById('body');
+        if (!body) return;
+
+        const html = this.buildBody();
+        if (html === this._lastBodyHTML) return;
+        this._lastBodyHTML = html;
+
+        body.innerHTML = html;
+        this.fitPortsColumn();
+    }
+
+    private buildBody(): string {
         const hasHosts     = this._config.hosts.length > 0;
         const admin        = isAdmin();
         const containerCfg = this._config.containerConfig || {};
@@ -815,21 +861,7 @@ class DockerWidget extends HTMLElement {
                 </div>`).join('');
         }
 
-        const title = this._config.title || i18n.t('widget.docker.name');
-
-        this.shadowRoot.innerHTML = `
-            <style>${CSS}</style>
-            <div class="widget-header">
-                <div class="widget-header__top">
-                    <span class="widget-header__icon">${ICON.docker}</span>
-                    <span class="widget-header__title">${esc(title)}</span>
-                </div>
-            </div>
-            <div class="widget-body" id="body">${bodyHTML}</div>
-        `;
-
-        this.bindEvents();
-        this.fitPortsColumn();
+        return bodyHTML;
     }
 
     /**
@@ -948,12 +980,16 @@ class DockerWidget extends HTMLElement {
         if (!this.shadowRoot) return;
         const root = this.shadowRoot;
 
-        // Retry
-        root.getElementById('retry-btn')?.addEventListener('click', () => this.loadContainers());
-
-        // Start / stop / restart. Everything else a row can do is configuration,
-        // and configuration lives in the config modal.
+        // Delegated from the body, which survives a refresh — anything bound to a
+        // node inside it would not.
         root.getElementById('body')?.addEventListener('click', (e: Event) => {
+            if ((e.target as Element).closest('#retry-btn')) {
+                this.loadContainers();
+                return;
+            }
+
+            // Start / stop / restart. Everything else a row can do is
+            // configuration, and configuration lives in the config modal.
             const btn = (e.target as Element).closest('.action-btn') as HTMLElement | null;
             if (btn && !btn.hasAttribute('disabled')) {
                 const action = btn.dataset.action;

@@ -45,6 +45,8 @@ class MonitorWidget extends HTMLElement {
     private loaded = false;
     private failed = false;
     private timer: ReturnType<typeof setInterval> | null = null;
+    /** Last list markup written, so an unchanged refresh writes nothing. */
+    private _lastBody: string | null = null;
     private _unsubscribe: (() => void) | null = null;
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -132,7 +134,7 @@ class MonitorWidget extends HTMLElement {
             this.failed = true;
         }
         this.loaded = true;
-        this.render();
+        this.refreshBody();
     }
 
     /** The chosen services, in the order they were chosen. */
@@ -204,7 +206,36 @@ class MonitorWidget extends HTMLElement {
                     <span class="widget-header__title">${escapeHtml(title)}</span>
                 </div>
             </div>`;
-        this.shadowRoot.innerHTML = `<style>${CSS}</style>${header}<div class="mw-body">${this.body()}</div>`;
+        this.shadowRoot.innerHTML = `<style>${CSS}</style>${header}<div class="mw-body" id="mw-body"></div>`;
+        this._lastBody = null;
+        this.refreshBody();
+    }
+
+    /**
+     * Repaints the list without rebuilding the widget.
+     *
+     * The refresh timer used to call render(), which reassigned the whole shadow
+     * root: the list scrolls, so anyone reading past the first few services was
+     * sent back to the top on every cycle, and the heartbeat bars restarted
+     * their animation each time.
+     *
+     * Only the list is touched, and only when it differs — an unchanged refresh
+     * writes nothing at all, which is the common case between state changes.
+     */
+    private refreshBody(): void {
+        const body = this.shadowRoot?.getElementById('mw-body');
+        if (!body) return;
+
+        const html = this.body();
+        if (html === this._lastBody) return;
+        this._lastBody = html;
+
+        // Keep the reader where they were: replacing the rows would otherwise
+        // send the scroll box back to the top.
+        const scrollTop = body.querySelector('.mw-rows')?.scrollTop ?? 0;
+        body.innerHTML = html;
+        const rows = body.querySelector('.mw-rows');
+        if (rows && scrollTop) rows.scrollTop = scrollTop;
     }
 }
 
