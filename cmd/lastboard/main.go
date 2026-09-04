@@ -15,6 +15,7 @@ import (
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 func main() {
@@ -65,8 +66,9 @@ func main() {
 	}
 
 	server := &http.Server{
-		Addr:    ":" + port,
-		Handler: srv,
+		Addr: ":" + port,
+		// Recover is outermost so it also covers the middleware below it.
+		Handler: middleware.Recover(srv),
 		// ReadTimeout/WriteTimeout/IdleTimeout intentionally unset:
 		// the /ws WebSocket needs a long-lived connection. ReadHeaderTimeout
 		// still protects against slow-loris attacks on regular HTTP routes.
