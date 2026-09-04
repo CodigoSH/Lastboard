@@ -23,7 +23,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-right: 44px;
+    padding-inline-end: 44px;
 }
 
 /* Range tabs */
@@ -258,7 +258,7 @@
 }
 
 .mhd__clear-item {
-    text-align: left;
+    text-align: start;
     padding: 9px 12px;
     background: transparent;
     border: none;

@@ -95,7 +95,7 @@
 /* Label — fills remaining space, left-aligned */
 :host(.touch-mode) .bookmark-grid__label {
     font-size: 14px;
-    text-align: left;
+    text-align: start;
     padding: 0;
     flex: 1;
     min-width: 0;
@@ -203,8 +203,7 @@
     top: 0;
     transform: translateY(calc(-50% - 1px));
     /* EXACT MATCH */
-    left: 12px;
-    right: 12px;
+    inset-inline: 12px;
     width: fit-content;
     /* EXACT MATCH */
     max-width: calc(100% - 24px);
@@ -308,7 +307,9 @@
 }
 
 
-/* Status Positions */
+/* Status Positions — deliberately physical.
+   The user picks one of these by name in the settings ("top-right"), so the dot
+   must land where the label says regardless of the reading direction. */
 .status-indicator.status-pos-top-right {
     top: clamp(6px, 6cqi, 12px);
     right: clamp(6px, 6cqi, 12px);
@@ -354,7 +355,7 @@
 .bookmark-actions {
     position: absolute;
     top: 4px;
-    right: 4px;
+    inset-inline-end: 4px;
     display: flex;
     gap: 4px;
     z-index: 999;
@@ -410,7 +411,10 @@
     /* Ensure handle positioning context */
 }
 
-/* Resize Handle */
+/* Resize Handle — deliberately physical.
+   The triangle is drawn with borders and the drag maths works in screen
+   coordinates; mirroring the corner alone would leave the cursor and the
+   triangle pointing the wrong way. */
 .resize-handle {
     position: absolute;
     bottom: 0;
@@ -564,8 +568,7 @@
     top: 0;
     transform: translateY(calc(-50% - 1px));
     /* Lift half-way up to interrupt border */
-    left: 12px;
-    right: 12px;
+    inset-inline: 12px;
     display: block;
     width: fit-content;
     z-index: 2;
@@ -737,7 +740,7 @@
 .select-box {
     position: absolute;
     top: 6px;
-    left: 6px;
+    inset-inline-start: 6px;
     z-index: 7;
     width: 20px;
     height: 20px;
@@ -778,7 +781,7 @@
 .kebab-btn {
     position: absolute;
     top: 4px;
-    right: 4px;
+    inset-inline-end: 4px;
     z-index: 999;
     width: 28px;
     height: 28px;
@@ -817,7 +820,10 @@
 
 .kebab-menu[hidden] { display: none; }
 
-/* Callout pointer toward the kebab button (menu is right-aligned to it). */
+/* Callout pointer toward the kebab button (menu is right-aligned to it).
+   Deliberately physical: --arrow-x is computed in JavaScript from screen
+   coordinates, and the borders draw a rotated square, so a logical property
+   here would disagree with the number that positions it. */
 .kebab-menu::before {
     content: '';
     position: absolute;
@@ -854,7 +860,7 @@
     color: var(--text-main);
     font: inherit;
     font-size: 14px;
-    text-align: left;
+    text-align: start;
     cursor: pointer;
 }
 

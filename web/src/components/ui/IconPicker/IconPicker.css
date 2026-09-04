@@ -168,7 +168,7 @@
 .icon-picker__badge {
     position: absolute;
     top: -4px;
-    right: -4px;
+    inset-inline-end: -4px;
     font-size: 7px;
     font-weight: 700;
     padding: 1px 3px;

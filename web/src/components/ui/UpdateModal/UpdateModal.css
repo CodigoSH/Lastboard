@@ -177,7 +177,7 @@ dialog[open] {
 .tl-step::before {
     content: '';
     position: absolute;
-    left: 10px;
+    inset-inline-start: 10px;
     top: 22px;
     bottom: 0;
     width: 2px;

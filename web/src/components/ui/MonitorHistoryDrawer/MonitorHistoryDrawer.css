@@ -21,15 +21,15 @@
 .mhd-drawer__panel {
     position: absolute;
     top: 0;
-    right: 0;
+    inset-inline-end: 0;
     height: 100%;
     width: min(420px, 100%);
     background: var(--surface-solid);
-    border-left: 1px solid var(--border);
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.35);
+    border-inline-start: 1px solid var(--border);
+    box-shadow: calc(var(--rtl-flip, 1) * -10px) 0 40px rgba(0, 0, 0, 0.35);
     display: flex;
     flex-direction: column;
-    transform: translateX(100%);
+    transform: translateX(calc(var(--rtl-flip, 1) * 100%));
     transition: transform 0.28s var(--ease-out);
     box-sizing: border-box;
 }
@@ -41,7 +41,7 @@
 .mhd-drawer__close {
     position: absolute;
     top: 15px;
-    right: 16px;
+    inset-inline-end: 16px;
     z-index: 2;
     background: transparent;
     border: 1px solid var(--border);

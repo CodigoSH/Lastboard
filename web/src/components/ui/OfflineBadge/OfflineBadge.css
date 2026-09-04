@@ -6,7 +6,7 @@
     background: rgba(var(--danger-rgb), 0.15);
     border: 1px solid rgba(var(--danger-rgb), 0.3);
     border-radius: 4px;
-    margin-right: 12px;
+    margin-inline-end: 12px;
 }
 
 :host(.visible) {

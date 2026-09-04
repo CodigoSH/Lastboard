@@ -47,11 +47,12 @@
     -webkit-backdrop-filter: blur(8px);
 }
 
-/* The window: nav and content inside one surface, anchored to the right edge. */
+/* The window: nav and content inside one surface, anchored to the edge the
+   interface ends on — the right, or the left when mirrored. */
 .right-drawer__sheet {
     position: absolute;
     top: var(--drawer-margin);
-    right: var(--drawer-margin);
+    inset-inline-end: var(--drawer-margin);
     height: calc(100% - var(--drawer-margin) * 2);
     width: calc(var(--drawer-nav-width) + var(--drawer-content-width));
     /* Down to the width where both columns still fit, the window keeps its
@@ -71,7 +72,7 @@
     color: var(--text-main);
     z-index: 2;
 
-    transform: translateX(calc(100% + var(--drawer-margin)));
+    transform: translateX(calc(var(--rtl-flip, 1) * (100% + var(--drawer-margin))));
     transition: transform 0.4s var(--ease-out);
 }
 
@@ -93,7 +94,7 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    border-right: 1px solid var(--border);
+    border-inline-end: 1px solid var(--border);
     background: rgba(128, 128, 128, 0.04);
     container-type: inline-size;
 }
@@ -216,9 +217,9 @@
 .right-drawer__menu-item--active {
     color: var(--text-main);
     background: var(--surface-active);
-    border-right: 2px solid var(--accent);
+    border-inline-end: 2px solid var(--accent);
     border-radius: 6px 0 0 6px;
-    margin-right: 0;
+    margin-inline-end: 0;
 }
 
 .right-drawer__menu-item svg {
@@ -257,7 +258,7 @@
     }
 
     .right-drawer__sheet {
-        left: var(--drawer-margin);
+        inset-inline-start: var(--drawer-margin);
         width: auto;
         max-width: none;
         max-height: none;
@@ -270,7 +271,7 @@
         flex-direction: row;
         align-items: center;
         gap: 4px;
-        border-right: none;
+        border-inline-end: none;
         border-bottom: 1px solid var(--border);
         padding: 0 8px;
     }
@@ -322,7 +323,7 @@
     }
 
     .right-drawer__menu-item--active {
-        border-right: none;
+        border-inline-end: none;
         border-bottom: 2px solid var(--accent);
         border-radius: 6px;
     }
@@ -330,7 +331,7 @@
     .right-drawer__footer {
         padding: 8px;
         border-top: none;
-        border-left: 1px solid var(--border);
+        border-inline-start: 1px solid var(--border);
     }
 
     /* Only the icon fits in a band. */

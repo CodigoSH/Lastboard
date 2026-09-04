@@ -305,7 +305,7 @@ dialog[open] {
 .check-row input[type="checkbox"]:checked::after {
     content: '';
     position: absolute;
-    left: 5px;
+    inset-inline-start: 5px;
     top: 2px;
     width: 4px;
     height: 8px;
@@ -429,7 +429,7 @@ dialog[open] {
     border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.15s;
-    text-align: left;
+    text-align: start;
     font-family: var(--font-sans);
     color: var(--text-main);
 }
@@ -737,7 +737,7 @@ dialog[open] {
 .toggle-slider::before {
     content: '';
     position: absolute;
-    left: 3px;
+    inset-inline-start: 3px;
     top: 3px;
     width: 16px;
     height: 16px;
@@ -752,7 +752,7 @@ dialog[open] {
 }
 
 .toggle-switch input:checked+.toggle-slider::before {
-    transform: translateX(18px);
+    transform: translateX(calc(var(--rtl-flip, 1) * 18px));
 }
 
 .toggle-switch input:disabled+.toggle-slider {
@@ -826,7 +826,7 @@ dialog[open] {
     flex-direction: column;
     gap: 4px;
     align-items: flex-start;
-    text-align: left;
+    text-align: start;
 }
 
 .host-header-row {
@@ -967,12 +967,12 @@ dialog[open] {
 
 .pw-wrap input[type="password"],
 .pw-wrap input[type="text"] {
-    padding-right: 44px;
+    padding-inline-end: 44px;
 }
 
 .pw-toggle {
     position: absolute;
-    right: 10px;
+    inset-inline-end: 10px;
     background: none;
     border: none;
     cursor: pointer;

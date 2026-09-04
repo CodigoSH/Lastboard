@@ -105,7 +105,7 @@ dialog[open] {
     padding: 12px 14px;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
-    text-align: left;
+    text-align: start;
 }
 
 .dash-option:hover,

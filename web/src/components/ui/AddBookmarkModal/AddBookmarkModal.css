@@ -351,7 +351,7 @@ dialog[open] {
 .input-group>*:not(:last-child) input,
 .input-group>*:not(:last-child) .fake-input,
 .input-group>input:not(:last-child) {
-    border-right: none;
+    border-inline-end: none;
 }
 
 /* 4. Fix for nested elements (like dropdown buttons inside divs) */
@@ -367,7 +367,7 @@ dialog[open] {
 }
 
 .input-group>.icon-dropdown:not(:last-child)>.icon-dropdown-btn {
-    border-right: none;
+    border-inline-end: none;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }

@@ -213,12 +213,12 @@ dialog::backdrop {
 }
 
 .pw-wrap .settings-content__input {
-    padding-right: 42px;
+    padding-inline-end: 42px;
 }
 
 .pw-toggle {
     position: absolute;
-    right: 10px;
+    inset-inline-end: 10px;
     background: none;
     border: none;
     cursor: pointer;
@@ -267,7 +267,15 @@ dialog::backdrop {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
-    padding-right: 42px;
+    padding-inline-end: 42px;
+}
+
+/* Mirrored: the arrow is a background image, and background-position has no
+   logical form, so it is placed by direction here. The padding that clears it
+   is logical, so the two must be flipped together or the text runs under the
+   arrow. */
+.settings-content__select:dir(rtl) {
+    background-position: left 14px center;
 }
 
 .settings-content__select option {
@@ -502,7 +510,7 @@ dialog::backdrop {
 .settings-content__edit-overlay {
     position: absolute;
     bottom: -2px;
-    right: -2px;
+    inset-inline-end: -2px;
     background: var(--canvas);
     border: 1px solid var(--border);
     color: var(--text-dim);
@@ -541,7 +549,7 @@ dialog::backdrop {
 .settings-content__checkbox--checked::after {
     content: '';
     position: absolute;
-    left: 3px;
+    inset-inline-start: 3px;
     top: 0px;
     width: 4px;
     height: 8px;
@@ -618,7 +626,7 @@ dialog::backdrop {
 .settings-content__background-remove {
     position: absolute;
     top: 8px;
-    right: 8px;
+    inset-inline-end: 8px;
     width: 24px;
     height: 24px;
     background: rgba(0, 0, 0, 0.6);
@@ -913,7 +921,7 @@ button {
 .update-modal__glow {
     position: absolute;
     top: -50%;
-    right: -50%;
+    inset-inline-end: -50%;
     width: 100%;
     height: 100%;
     background: radial-gradient(circle, var(--accent) 0%, transparent 60%);
@@ -1033,7 +1041,7 @@ button {
     border-radius: 50%;
     border-top-color: #fff;
     animation: spin 0.8s linear infinite;
-    margin-right: 8px;
+    margin-inline-end: 8px;
     will-change: transform;
 }
 
@@ -1118,7 +1126,7 @@ button {
     content: "";
     height: 18px;
     width: 18px;
-    left: 2px;
+    inset-inline-start: 2px;
     bottom: 2px;
     background-color: var(--text-dim);
     transition: 0.3s;
@@ -1131,7 +1139,7 @@ input:checked+.slider {
 }
 
 input:checked+.slider:before {
-    transform: translateX(20px);
+    transform: translateX(calc(var(--rtl-flip, 1) * 20px));
     background-color: white;
 }
 
@@ -1221,7 +1229,7 @@ input:checked+.slider:before {
 .settings-logo-remove {
     position: absolute;
     top: -6px;
-    right: -6px;
+    inset-inline-end: -6px;
     width: 16px;
     height: 16px;
     border-radius: 50%;

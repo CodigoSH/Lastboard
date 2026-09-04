@@ -274,3 +274,16 @@ body::before {
 *::-webkit-scrollbar-thumb:hover {
     background: rgba(var(--accent-rgb), 0.45);
 }
+/* Which way a slide comes from.
+   transform: translateX() is physical — it does not follow the reading
+   direction — so a panel that slides in from the right edge would still slide
+   in from the right when the interface is mirrored, ending up on top of the
+   content instead of off-screen. Multiplying the offset by this flips it.
+   Custom properties inherit through shadow roots, so components can use it. */
+:root {
+    --rtl-flip: 1;
+}
+
+:root[dir="rtl"] {
+    --rtl-flip: -1;
+}

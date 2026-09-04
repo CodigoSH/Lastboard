@@ -35,7 +35,7 @@
     letter-spacing: -0.01em;
     flex-shrink: 0;
     /* Guard the title from shrinking */
-    margin-right: 8px;
+    margin-inline-end: 8px;
 }
 
 .top-bar__demo-badge {
@@ -50,7 +50,7 @@
     letter-spacing: 0.1em;
     font-family: var(--font-mono);
     box-shadow: 0 0 10px rgba(var(--accent-rgb, 0, 122, 255), 0.2);
-    margin-right: 16px;
+    margin-inline-end: 16px;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -136,7 +136,7 @@
 .top-bar__indicator {
     position: absolute;
     top: 3px;
-    right: 3px;
+    inset-inline-end: 3px;
     width: 6px;
     height: 18px;
     fill: var(--text-main);
@@ -148,7 +148,7 @@
     opacity: 1;
 }
 
-dashboard-switcher { margin-right: 4px; }
+dashboard-switcher { margin-inline-end: 4px; }
 dashboard-switcher.disabled {
     opacity: 0.3;
     pointer-events: none;
@@ -257,7 +257,7 @@ dashboard-switcher.disabled {
 .add-menu {
     position: absolute;
     top: 42px;
-    right: 80px;
+    inset-inline-end: 80px;
     background: var(--surface-solid, #1a1b1e);
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -295,7 +295,7 @@ dashboard-switcher.disabled {
 .add-menu-icon {
     width: 14px;
     height: 14px;
-    margin-right: 8px;
+    margin-inline-end: 8px;
     opacity: 0.7;
     flex-shrink: 0;
 }
@@ -315,7 +315,7 @@ dashboard-switcher.disabled {
     }
 
     .top-bar__title {
-        margin-right: 8px;
+        margin-inline-end: 8px;
     }
 }
 
@@ -323,7 +323,7 @@ dashboard-switcher.disabled {
 .notification-dot {
     position: absolute;
     top: 4px;
-    right: 4px;
+    inset-inline-end: 4px;
     width: 8px;
     height: 8px;
     background-color: var(--danger-color);

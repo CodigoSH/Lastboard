@@ -73,7 +73,7 @@
     width: 545px;
     max-width: 52%;
     flex-shrink: 0;
-    border-right: 1px solid var(--border);
+    border-inline-end: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -113,15 +113,15 @@
     padding: 14px 16px;
     background: transparent;
     border: 1px solid transparent;
-    border-left: 3px solid transparent;
+    border-inline-start: 3px solid transparent;
     border-radius: 10px;
     cursor: pointer;
-    text-align: left;
+    text-align: start;
     transition: background 0.15s, border-color 0.15s;
 }
 
 .mp-row:hover { background: var(--surface-hover); }
-.mp-row--active { background: rgba(var(--accent-rgb), 0.1); border-left-color: var(--accent); }
+.mp-row--active { background: rgba(var(--accent-rgb), 0.1); border-inline-start-color: var(--accent); }
 
 .mp-row__uptime {
     justify-self: stretch;
@@ -161,7 +161,7 @@
 
 @media (max-width: 640px) {
     /* Phones: list fills the screen; a tapped row opens the drawer instead. */
-    .mp__list { width: 100%; max-width: 100%; border-right: none; }
+    .mp__list { width: 100%; max-width: 100%; border-inline-end: none; }
     .mp__detail { display: none; }
     .mp-row__beats { display: none; }
 }
