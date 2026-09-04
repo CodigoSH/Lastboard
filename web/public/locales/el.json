@@ -579,7 +579,7 @@
   "settings.icons_pending": "Εικονίδια που έρχονται ακόμη απ’ έξω: {count}",
   "settings.icons_pending_desc": "Προέρχονται από σελιδοδείκτες πριν από την τοπική αποθήκευση. Κατεβαίνουν όταν ξεκινά ο διακομιστής· αποθηκεύστε τα τώρα αν αυτό δεν έγινε.",
   "settings.icons_storing": "Αποθήκευση…",
-  "settings.icons_stored": "Αποθηκεύτηκαν {count} εικονίδια",
+  "settings.icons_stored": "Αποθηκευμένα εικονίδια: {count}",
   "settings.icons_stored_partial": "Αποθηκεύτηκαν {stored}, δεν βρέθηκαν {failed}",
   "action.store_icons": "Αποθήκευση τώρα",
   "settings.icons_all_local": "Εικονίδια από αυτόν τον διακομιστή: {count}",

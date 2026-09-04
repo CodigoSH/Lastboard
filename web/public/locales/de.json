@@ -579,7 +579,7 @@
   "settings.icons_pending": "Symbole, die noch von außerhalb kommen: {count}",
   "settings.icons_pending_desc": "Sie stammen aus Lesezeichen von vor der lokalen Speicherung. Beim Start des Servers werden sie geholt; speichere sie jetzt, falls das nicht möglich war.",
   "settings.icons_storing": "Wird gespeichert…",
-  "settings.icons_stored": "{count} Symbole gespeichert",
+  "settings.icons_stored": "Gespeicherte Symbole: {count}",
   "settings.icons_stored_partial": "{stored} gespeichert, {failed} nicht erreichbar",
   "action.store_icons": "Jetzt speichern",
   "settings.icons_all_local": "Von diesem Server ausgelieferte Symbole: {count}",

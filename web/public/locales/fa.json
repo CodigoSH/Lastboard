@@ -579,7 +579,7 @@
   "settings.icons_pending": "نمادهایی که هنوز از بیرون می‌آیند: {count}",
   "settings.icons_pending_desc": "این‌ها از نشانک‌هایی هستند که پیش از ذخیرهٔ محلی ساخته شده‌اند. هنگام آغاز سرور دریافت می‌شوند؛ اگر آن زمان ممکن نشد، اکنون ذخیره کنید.",
   "settings.icons_storing": "در حال ذخیره…",
-  "settings.icons_stored": "{count} نماد ذخیره شد",
+  "settings.icons_stored": "نمادهای ذخیره‌شده: {count}",
   "settings.icons_stored_partial": "{stored} ذخیره شد، {failed} در دسترس نبود",
   "action.store_icons": "همین حالا ذخیره کن",
   "settings.icons_all_local": "نمادهای ارائه‌شده از این سرور: {count}",

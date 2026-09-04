@@ -579,7 +579,7 @@
   "settings.icons_pending": "아직 외부에서 오는 아이콘: {count}",
   "settings.icons_pending_desc": "로컬 저장 이전에 만든 북마크의 아이콘입니다. 서버가 시작할 때 가져오며, 그러지 못했다면 지금 저장하세요.",
   "settings.icons_storing": "저장 중…",
-  "settings.icons_stored": "아이콘 {count}개를 저장했습니다",
+  "settings.icons_stored": "저장된 아이콘: {count}",
   "settings.icons_stored_partial": "{stored}개 저장, {failed}개는 가져오지 못했습니다",
   "action.store_icons": "지금 저장",
   "settings.icons_all_local": "이 서버에서 제공하는 아이콘: {count}",

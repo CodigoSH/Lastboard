@@ -579,7 +579,7 @@
   "settings.icons_pending": "Icônes venant encore de l'extérieur : {count}",
   "settings.icons_pending_desc": "Elles proviennent de favoris créés avant que les icônes ne soient stockées localement. Elles sont récupérées au démarrage du serveur ; enregistrez-les maintenant si cela n'a pas pu se faire.",
   "settings.icons_storing": "Enregistrement…",
-  "settings.icons_stored": "{count} icônes enregistrées",
+  "settings.icons_stored": "Icônes enregistrées : {count}",
   "settings.icons_stored_partial": "{stored} enregistrées, {failed} inaccessibles",
   "action.store_icons": "Les enregistrer",
   "settings.icons_all_local": "Icônes servies depuis ce serveur : {count}",

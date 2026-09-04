@@ -579,7 +579,7 @@
   "settings.icons_pending": "Icone che arrivano ancora dall'esterno: {count}",
   "settings.icons_pending_desc": "Vengono da segnalibri creati prima che le icone fossero salvate in locale. Vengono recuperate all'avvio del server; salvale ora se non è stato possibile.",
   "settings.icons_storing": "Salvataggio…",
-  "settings.icons_stored": "{count} icone salvate",
+  "settings.icons_stored": "Icone salvate: {count}",
   "settings.icons_stored_partial": "{stored} salvate, {failed} non raggiungibili",
   "action.store_icons": "Salvale ora",
   "settings.icons_all_local": "Icone servite da questo server: {count}",

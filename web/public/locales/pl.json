@@ -579,7 +579,7 @@
   "settings.icons_pending": "Ikony wciąż pobierane z zewnątrz: {count}",
   "settings.icons_pending_desc": "Pochodzą z zakładek sprzed lokalnego przechowywania. Są pobierane przy starcie serwera; zapisz je teraz, jeśli to się nie udało.",
   "settings.icons_storing": "Zapisywanie…",
-  "settings.icons_stored": "Zapisano {count} ikon",
+  "settings.icons_stored": "Zapisane ikony: {count}",
   "settings.icons_stored_partial": "Zapisano {stored}, nie udało się pobrać {failed}",
   "action.store_icons": "Zapisz teraz",
   "settings.icons_all_local": "Ikony serwowane z tego serwera: {count}",

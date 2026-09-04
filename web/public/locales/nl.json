@@ -579,7 +579,7 @@
   "settings.icons_pending": "Pictogrammen die nog van elders komen: {count}",
   "settings.icons_pending_desc": "Ze horen bij bladwijzers van vóór de lokale opslag. Ze worden opgehaald bij het starten van de server; sla ze nu op als dat niet lukte.",
   "settings.icons_storing": "Bezig met opslaan…",
-  "settings.icons_stored": "{count} pictogrammen opgeslagen",
+  "settings.icons_stored": "Opgeslagen pictogrammen: {count}",
   "settings.icons_stored_partial": "{stored} opgeslagen, {failed} onbereikbaar",
   "action.store_icons": "Nu opslaan",
   "settings.icons_all_local": "Pictogrammen vanaf deze server: {count}",

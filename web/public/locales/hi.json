@@ -579,7 +579,7 @@
   "settings.icons_pending": "अब भी बाहर से आने वाले आइकन: {count}",
   "settings.icons_pending_desc": "ये उन बुकमार्क के हैं जो स्थानीय संग्रहण से पहले बने थे। सर्वर शुरू होने पर ये ले लिए जाते हैं; अगर ऐसा न हो सका हो तो अभी सहेजें।",
   "settings.icons_storing": "सहेजा जा रहा है…",
-  "settings.icons_stored": "{count} आइकन सहेजे गए",
+  "settings.icons_stored": "सहेजे गए आइकन: {count}",
   "settings.icons_stored_partial": "{stored} सहेजे गए, {failed} तक पहुँच नहीं हो सकी",
   "action.store_icons": "अभी सहेजें",
   "settings.icons_all_local": "इस सर्वर से दिए जा रहे आइकन: {count}",

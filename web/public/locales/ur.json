@@ -579,7 +579,7 @@
   "settings.icons_pending": "اب بھی باہر سے آنے والے آئیکن: {count}",
   "settings.icons_pending_desc": "یہ اُن بُک مارکس کے ہیں جو مقامی محفوظگی سے پہلے بنے تھے۔ سرور شروع ہوتے وقت یہ حاصل کر لیے جاتے ہیں؛ اگر ایسا نہ ہو سکا تو ابھی محفوظ کریں۔",
   "settings.icons_storing": "محفوظ کیا جا رہا ہے…",
-  "settings.icons_stored": "{count} آئیکن محفوظ ہو گئے",
+  "settings.icons_stored": "محفوظ آئیکن: {count}",
   "settings.icons_stored_partial": "{stored} محفوظ، {failed} تک رسائی نہ ہو سکی",
   "action.store_icons": "ابھی محفوظ کریں",
   "settings.icons_all_local": "اس سرور سے فراہم کردہ آئیکن: {count}",

@@ -579,7 +579,7 @@
   "settings.icons_pending": "Hâlâ dışarıdan gelen simgeler: {count}",
   "settings.icons_pending_desc": "Bunlar, simgeler yerelde saklanmadan önce oluşturulmuş yer imlerinden. Sunucu başlarken indirilirler; bu olamadıysa şimdi kaydedin.",
   "settings.icons_storing": "Kaydediliyor…",
-  "settings.icons_stored": "{count} simge kaydedildi",
+  "settings.icons_stored": "Kaydedilen simgeler: {count}",
   "settings.icons_stored_partial": "{stored} kaydedildi, {failed} tanesine ulaşılamadı",
   "action.store_icons": "Şimdi kaydet",
   "settings.icons_all_local": "Bu sunucudan sunulan simgeler: {count}",
