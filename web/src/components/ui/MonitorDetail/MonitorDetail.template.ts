@@ -82,7 +82,7 @@ const fmtDuration = (sec: number): string => {
     return rm ? `${h} h ${rm} min` : `${h} h`;
 };
 
-const fmtDateTime = (s: string) => parseTs(s).toLocaleString([], {
+const fmtDateTime = (s: string) => i18n.formatDateTime(parseTs(s), {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
 });
 
@@ -92,11 +92,11 @@ const statusLabelOf = (status: string) => status === 'down'
 
 export const barTooltipHtml = (status: string, at: string) => `
     <div class="mhd__tip-status mhd__tip-status--${status}"><span class="mhd__tip-dot"></span>${escapeHtml(statusLabelOf(status))}</div>
-    <div class="mhd__tip-sub">${escapeHtml(parseTs(at).toLocaleString())}</div>`;
+    <div class="mhd__tip-sub">${escapeHtml(i18n.formatDateTime(parseTs(at)))}</div>`;
 
 export const sparkTooltipHtml = (value: number, at: string) => `
     <div class="mhd__tip-value">${value} ms</div>
-    <div class="mhd__tip-sub">${escapeHtml(parseTs(at).toLocaleString())}</div>`;
+    <div class="mhd__tip-sub">${escapeHtml(i18n.formatDateTime(parseTs(at)))}</div>`;
 
 // Outage log as a table (Uptime-Kuma "Events"): status, when, duration.
 const incidentTable = (incidents: Incident[]): string => {

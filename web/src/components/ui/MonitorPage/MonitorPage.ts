@@ -146,7 +146,7 @@ class MonitorPage extends HTMLElement {
         const pad = Math.max(0, MonitorPage.BEATS_N - real.length);
         const label = (st: string) => st === 'down' ? i18n.t('status.unreachable') : i18n.t('status.online');
         const beats = '<span class="mp-row__beat mp-row__beat--empty"></span>'.repeat(pad)
-            + real.map(b => `<span class="mp-row__beat mp-row__beat--${b.status}" title="${escapeHtml(`${label(b.status)} · ${parseTs(b.at).toLocaleString()}`)}"></span>`).join('');
+            + real.map(b => `<span class="mp-row__beat mp-row__beat--${b.status}" title="${escapeHtml(`${label(b.status)} · ${i18n.formatDateTime(parseTs(b.at))}`)}"></span>`).join('');
         return `
             <button class="mp-row ${r.item_id === this.selectedId ? 'mp-row--active' : ''}" data-id="${r.item_id}" data-name="${escapeHtml(r.name)}">
                 <span class="mp-row__uptime mp-row__uptime--${r.status}">${uptime}</span>

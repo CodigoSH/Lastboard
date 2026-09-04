@@ -1,6 +1,6 @@
 import { availableLocales } from '../locales/metadata';
 import { Locale } from '../locales/types';
-import { translate, sortLocales, resolveLanguage } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber } from './i18n.helpers';
 
 class I18nService {
     private currentLanguage: string = 'en';
@@ -82,6 +82,21 @@ class I18nService {
 
     public t(key: string, params?: Record<string, string>): string {
         return translate(key, this.cache.get(this.currentLanguage), this.cache.get('en'), params);
+    }
+
+    /**
+     * Format a date in the language the user picked, not the browser's.
+     * Accepts a Date or anything Date understands, so callers holding an ISO
+     * string from the API do not each parse it their own way.
+     */
+    public formatDateTime(value: Date | string | number, options?: Intl.DateTimeFormatOptions): string {
+        const date = value instanceof Date ? value : new Date(value);
+        return formatDateTime(this.currentLanguage, date, options);
+    }
+
+    /** Format a number in the language the user picked. */
+    public formatNumber(value: number, options?: Intl.NumberFormatOptions): string {
+        return formatNumber(this.currentLanguage, value, options);
     }
 
     public subscribe(listener: (locale: Locale) => void): () => void {

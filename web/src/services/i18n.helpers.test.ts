@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { translate, sortLocales, resolveLanguage } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber } from './i18n.helpers';
 
 describe('translate', () => {
     const en = { greeting: 'Hello', welcome: 'Welcome {name}', multi: '{a} and {b}' };
@@ -75,5 +75,37 @@ describe('resolveLanguage', () => {
 
     it('uses the browser language when nothing is saved', () => {
         expect(resolveLanguage(null, 'de', codes)).toBe('de');
+    });
+});
+
+describe('formatting in the language the user picked', () => {
+    // The whole point: the browser's language must not decide this. Someone
+    // running Lastboard in Spanish on an English system was seeing English
+    // month names and decimal points where their numbers use commas.
+    const when = new Date(Date.UTC(2026, 2, 9, 15, 4, 0));
+    const options: Intl.DateTimeFormatOptions = { month: 'long', timeZone: 'UTC' };
+
+    it('formats the same date differently for different languages', () => {
+        expect(formatDateTime('es', when, options)).toBe('marzo');
+        expect(formatDateTime('en', when, options)).toBe('March');
+        expect(formatDateTime('de', when, options)).toBe('März');
+    });
+
+    it('formats numbers with the separators of each language', () => {
+        expect(formatNumber('en', 1234567.5)).toBe('1,234,567.5');
+        expect(formatNumber('es', 1234567.5)).toBe('1.234.567,5');
+    });
+
+    it('falls back instead of throwing on a locale it does not know', () => {
+        expect(() => formatDateTime('not-a-locale!!', when, options)).not.toThrow();
+        expect(formatNumber('not-a-locale!!', 42)).toContain('42');
+    });
+
+    it('gives an empty string for a date that is not one, rather than "Invalid Date"', () => {
+        expect(formatDateTime('en', new Date('nonsense'))).toBe('');
+    });
+
+    it('does not choke on infinity', () => {
+        expect(formatNumber('en', Infinity)).toBe('Infinity');
     });
 });

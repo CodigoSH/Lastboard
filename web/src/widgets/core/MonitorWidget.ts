@@ -167,7 +167,7 @@ class MonitorWidget extends HTMLElement {
         const pad = Math.max(0, BEATS - beats.length);
         const label = (st: string) => st === 'down' ? i18n.t('status.unreachable') : i18n.t('status.online');
         const bars = '<span class="mw-beat mw-beat--empty"></span>'.repeat(pad)
-            + beats.map(b => `<span class="mw-beat mw-beat--${b.status}" title="${escapeHtml(`${label(b.status)} · ${new Date(b.at).toLocaleString()}`)}"></span>`).join('');
+            + beats.map(b => `<span class="mw-beat mw-beat--${b.status}" title="${escapeHtml(`${label(b.status)} · ${i18n.formatDateTime(b.at)}`)}"></span>`).join('');
 
         const latency = r.latency_ms != null ? `${r.latency_ms} ms` : '';
         return `

@@ -86,7 +86,7 @@ function formatValue(v: any, fmt?: string): string {
     const num = Number(v);
     if (fmt === 'bytes' && !isNaN(num)) return humanBytes(num);
     if (fmt === 'percent' && !isNaN(num)) return `${Math.round(num)}%`;
-    if (fmt === 'number' && !isNaN(num)) return num.toLocaleString();
+    if (fmt === 'number' && !isNaN(num)) return i18n.formatNumber(num);
     if (typeof v === 'object') return Array.isArray(v) ? `${v.length}` : JSON.stringify(v);
     return String(v);
 }
