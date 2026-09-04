@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"log/slog"
 	"net"
 	"net/http"
@@ -139,6 +140,13 @@ type monitorSettings struct {
 
 // GetSettings returns the current monitoring configuration, filling defaults
 // when unset (mode "tab" = today's frontend-driven behavior).
+//
+// Everyone authenticated may read it — the top bar and the history drawer need
+// the mode to know whether the server is probing — but the notification
+// destination and its token are admin-only. They are the admin's credentials
+// for their own ntfy/gotify channel: handing them to every account lets anyone
+// publish into it and, on ntfy and gotify, subscribe and read the alerts of
+// every service the admin watches.
 func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	mode := h.getSetting("monitoring_mode")
 	if mode == "" {
@@ -156,16 +164,22 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	if notifyType == "" {
 		notifyType = "none"
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(monitorSettings{
+	settings := monitorSettings{
 		Mode:          mode,
 		IntervalSec:   interval,
 		AlertsEnabled: h.getSetting("monitoring_alerts_enabled") == "1",
 		NotifyType:    notifyType,
-		NotifyURL:     h.getSetting("monitoring_notify_url"),
-		NotifyToken:   h.getSetting("monitoring_notify_token"),
 		FailThreshold: threshold,
-	})
+	}
+	// The type is not a secret — the interface says "alerts go to ntfy" to
+	// anyone — but where they go and with what credential is.
+	if isAdminUser(h.DB, r) {
+		settings.NotifyURL = h.getSetting("monitoring_notify_url")
+		settings.NotifyToken = h.getSetting("monitoring_notify_token")
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(settings)
 }
 
 // UpdateSettings persists the monitoring configuration. Admin-only, since the
@@ -508,6 +522,12 @@ func probeTimed(rawUrl string) (bool, *int, int) {
 
 	u, err := url.Parse(rawUrl)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+		return false, nil, 0
+	}
+	// This one runs unattended every cycle for as long as the bookmark exists,
+	// so it is the last place that should be allowed to reach the instance
+	// metadata service — see util.IsCloudMetadataHost.
+	if util.IsCloudMetadataHost(u.Hostname()) {
 		return false, nil, 0
 	}
 	hostname := u.Hostname()

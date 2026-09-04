@@ -52,6 +52,7 @@ func setupTestServer(t *testing.T) (*httptest.Server, *sql.DB, func()) {
 	mux.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
 	mux.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	mux.Handle("GET /api/dashboard", protect(http.HandlerFunc(dashHandler.GetDashboard)))
+	mux.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).GetSettings)))
 
 	server := httptest.NewServer(mux)
 
@@ -474,5 +475,60 @@ func TestLockoutCannotBeEvadedByForgingForwardedFor(t *testing.T) {
 	if last != http.StatusTooManyRequests {
 		t.Errorf("after 12 attempts from the same real client the answer was %d; "+
 			"the lockout is being evaded by forging the header", last)
+	}
+}
+
+// The monitoring settings are readable by everyone — the top bar and the
+// history drawer need the mode to know whether the server is probing — but the
+// destination and its token are the admin's credentials for their own
+// ntfy/gotify channel. Handed to every account, anyone could publish into it
+// and, on ntfy and gotify, subscribe and read the alerts of every service the
+// admin watches.
+func TestMonitorSettingsHideTheNotificationCredentialsFromNonAdmins(t *testing.T) {
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	if _, err := db.Exec(
+		"INSERT INTO system_settings (key, value) VALUES ('monitoring_notify_url', ?), ('monitoring_notify_token', ?), ('monitoring_notify_type', 'ntfy')",
+		"https://ntfy.sh/the-admins-private-topic", "tk_secret_bearer_token",
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	createUser(t, db, "boss", "correcthorse", "admin")
+	createUser(t, db, "guest", "correcthorse", "user")
+
+	read := func(username string) map[string]any {
+		cookie := loginAndGetCookie(t, server, username, "correcthorse")
+		req, err := http.NewRequest(http.MethodGet, server.URL+"/api/monitor/settings", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.AddCookie(cookie)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		var out map[string]any
+		if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+			t.Fatalf("%s: %v", username, err)
+		}
+		return out
+	}
+
+	admin := read("boss")
+	if admin["notify_url"] != "https://ntfy.sh/the-admins-private-topic" || admin["notify_token"] != "tk_secret_bearer_token" {
+		t.Errorf("the admin can no longer read their own settings: %v", admin)
+	}
+
+	guest := read("guest")
+	if guest["notify_url"] != "" || guest["notify_token"] != "" {
+		t.Errorf("a plain user was handed the notification credentials: url=%q token=%q",
+			guest["notify_url"], guest["notify_token"])
+	}
+	// What they do need still arrives.
+	if guest["mode"] == "" || guest["notify_type"] != "ntfy" {
+		t.Errorf("a plain user lost the settings they legitimately read: %v", guest)
 	}
 }
