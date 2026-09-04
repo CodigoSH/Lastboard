@@ -158,6 +158,11 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 // ImportParse parses an uploaded competitor/native file into a NativeConfig and
 // returns it as JSON. The frontend then materializes it (auto-placing items).
 func (h *ImportExportHandler) ImportParse(w http.ResponseWriter, r *http.Request) {
+	// ParseMultipartForm's argument bounds what is kept in memory, not the
+	// upload: anything above it is spilled to disk, so on its own it is no limit
+	// at all. A Homepage or Dashy configuration is a text file; 4 MiB is already
+	// far more than one.
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024*1024)
 	if err := r.ParseMultipartForm(2 << 20); err != nil { // 2 MiB
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return

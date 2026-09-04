@@ -530,6 +530,8 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 // one response. Each URL is checked concurrently in its own goroutine so the
 // total time equals the slowest single check, not the sum of all checks.
 func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Request) {
+	// At most 100 URLs are accepted below, so 64 KiB is generous for the body.
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
 	var body struct {
 		URLs []string `json:"urls"`
 	}

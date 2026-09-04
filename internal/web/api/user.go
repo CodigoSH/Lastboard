@@ -550,6 +550,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if r.Method == http.MethodPost {
+		r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 		var input struct {
 			ID            int    `json:"id"`
 			AdminPassword string `json:"admin_password"`

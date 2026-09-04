@@ -41,6 +41,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify Password
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var input struct {
 		Password string `json:"password"`
 	}

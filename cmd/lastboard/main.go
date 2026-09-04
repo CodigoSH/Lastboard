@@ -68,7 +68,7 @@ func main() {
 	server := &http.Server{
 		Addr: ":" + port,
 		// Recover is outermost so it also covers the middleware below it.
-		Handler: middleware.Recover(srv),
+		Handler: middleware.Recover(middleware.LimitBody(srv)),
 		// ReadTimeout/WriteTimeout/IdleTimeout intentionally unset:
 		// the /ws WebSocket needs a long-lived connection. ReadHeaderTimeout
 		// still protects against slow-loris attacks on regular HTTP routes.
