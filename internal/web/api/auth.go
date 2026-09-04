@@ -6,10 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"log"
-	"net"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -38,24 +35,8 @@ func NewAuthHandler(db *sql.DB, secret []byte) *AuthHandler {
 	return &AuthHandler{DB: db, Secret: secret}
 }
 
-// resolveClientIP returns the client IP from RemoteAddr, honoring the first
-// X-Forwarded-For entry only when TRUST_PROXY is enabled and it is a valid IP.
-func resolveClientIP(r *http.Request) string {
-	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	if os.Getenv("TRUST_PROXY") == "true" {
-		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-			parts := strings.Split(forwarded, ",")
-			candidate := strings.TrimSpace(parts[0])
-			if net.ParseIP(candidate) != nil {
-				ip = candidate
-			}
-		}
-	}
-	return ip
-}
-
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	ip := resolveClientIP(r)
+	ip := util.ClientIP(r)
 	now := time.Now()
 
 	// Inline cleanup: remove expired lockouts to keep the table lean. Best-effort,

@@ -431,3 +431,48 @@ func TestDashboardIsolation(t *testing.T) {
 		t.Errorf("Expected 0 items for userB, got %d", len(result))
 	}
 }
+
+// A reverse proxy does not replace X-Forwarded-For, it appends to it: nginx's
+// $proxy_add_x_forwarded_for adds the peer to whatever the client already sent.
+// So the leftmost entry is written by the client, and reading it means the
+// caller chooses their own identity — the lockout counts each fake address
+// separately and never fires.
+//
+// The rightmost entry is the one the proxy in front of us appended, which is
+// the only one we have any reason to believe.
+func TestLockoutCannotBeEvadedByForgingForwardedFor(t *testing.T) {
+	t.Setenv("TRUST_PROXY", "true")
+
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	createUser(t, db, "forgeuser", "correcthorse", "user")
+
+	attempt := func(forwarded string) int {
+		req, err := http.NewRequest(http.MethodPost, server.URL+"/api/login",
+			strings.NewReader(`{"username": "forgeuser", "password": "wrongpassword"}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Forwarded-For", forwarded)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		return resp.StatusCode
+	}
+
+	// One attacker, behind one proxy, inventing a new left-hand address each
+	// time. Everything after the comma is what the proxy really saw.
+	var last int
+	for i := 0; i < 12; i++ {
+		last = attempt(fmt.Sprintf("10.1.2.%d, 203.0.113.7", i))
+	}
+
+	if last != http.StatusTooManyRequests {
+		t.Errorf("after 12 attempts from the same real client the answer was %d; "+
+			"the lockout is being evaded by forging the header", last)
+	}
+}
