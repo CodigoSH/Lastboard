@@ -28,11 +28,28 @@ export function translate(
 
     if (params) {
         Object.keys(params).forEach((k) => {
-            text = text!.replace(`{${k}}`, params[k]);
+            text = text!.replace(`{${k}}`, isolate(params[k]));
         });
     }
 
     return text;
+}
+
+/**
+ * Wraps an interpolated value in FIRST STRONG ISOLATE … POP DIRECTIONAL ISOLATE.
+ *
+ * A value dropped into a translated sentence carries its own direction: a
+ * version number or a count is left-to-right inside an Arabic sentence. Without
+ * the isolate, the neutral characters around it — the comma, the colon, the
+ * full stop — are placed by the direction of the paragraph rather than of the
+ * value, so the punctuation drifts to the wrong end and a list of otherwise
+ * correct strings comes out with two different alignments.
+ *
+ * The characters are invisible and inert in a left-to-right interface, so this
+ * costs nothing in the other nineteen languages.
+ */
+function isolate(value: string): string {
+    return `\u2068${value}\u2069`;
 }
 
 /**

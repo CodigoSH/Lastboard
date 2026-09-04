@@ -17,12 +17,16 @@ describe('translate', () => {
         expect(translate('nope', es, en)).toBe('nope');
     });
 
+    // The value comes back wrapped in FIRST STRONG ISOLATE … POP DIRECTIONAL
+    // ISOLATE. They are invisible, and they are what keeps the punctuation
+    // beside the value from drifting when the sentence reads right to left —
+    // see i18n-isolate.test.ts.
     it('interpolates a single param', () => {
-        expect(translate('welcome', es, en, { name: 'Ana' })).toBe('Welcome Ana');
+        expect(translate('welcome', es, en, { name: 'Ana' })).toBe('Welcome \u2068Ana\u2069');
     });
 
     it('interpolates multiple params', () => {
-        expect(translate('multi', es, en, { a: 'X', b: 'Y' })).toBe('X and Y');
+        expect(translate('multi', es, en, { a: 'X', b: 'Y' })).toBe('\u2068X\u2069 and \u2068Y\u2069');
     });
 
     it('handles an undefined current table', () => {

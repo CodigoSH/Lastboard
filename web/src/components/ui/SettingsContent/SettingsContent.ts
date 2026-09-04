@@ -300,7 +300,7 @@ class SettingsContent extends HTMLElement {
             const { eventBus, EVENTS } = await import('../../../services/EventBus');
             eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
                 title: i18n.t('settings.import_dashboards'),
-                message: i18n.t('settings.import_confirm').replace('{count}', String(count)),
+                message: i18n.t('settings.import_confirm', { count: String(count) }),
                 onConfirm: async () => {
                     try {
                         const gridCols = userStore.getUser()?.preferences?.grid_columns || 12;
@@ -374,14 +374,15 @@ class SettingsContent extends HTMLElement {
             if (window.notifier) {
                 if (r?.failed) {
                     window.notifier.show(
-                        i18n.t('settings.icons_stored_partial')
-                            .replace('{stored}', String(r.stored))
-                            .replace('{failed}', String(r.failed)),
+                        i18n.t('settings.icons_stored_partial', {
+                            stored: String(r.stored),
+                            failed: String(r.failed),
+                        }),
                         'error',
                     );
                 } else {
                     window.notifier.show(
-                        i18n.t('settings.icons_stored').replace('{count}', String(r?.stored ?? 0)),
+                        i18n.t('settings.icons_stored', { count: String(r?.stored ?? 0) }),
                     );
                 }
             }

@@ -461,8 +461,8 @@ const iconsCard = (pending: number, local: number, busy: boolean) => {
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${outstanding
-            ? i18n.t('settings.icons_pending').replace('{count}', String(pending))
-            : i18n.t('settings.icons_all_local').replace('{count}', String(local))}</h3>
+            ? i18n.t('settings.icons_pending', { count: String(pending) })
+            : i18n.t('settings.icons_all_local', { count: String(local) })}</h3>
                         <p>${outstanding
             ? i18n.t('settings.icons_pending_desc')
             : i18n.t('settings.icons_all_local_desc')}</p>
