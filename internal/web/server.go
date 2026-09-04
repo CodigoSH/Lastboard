@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
@@ -63,21 +64,31 @@ func NewServer(db *sql.DB) *Server {
 		sessionSecret: secret,
 	}
 
-	// Start WebSocket Hub
-	go s.WSHub.Run()
-	// Start broadcasting stats every 1 second
-	go s.WSHub.StartBroadcasting(1 * time.Second)
-
-	// Start Background Update Check (Gold Standard)
-	updateHandler := api.NewUpdateHandler(db)
-	go updateHandler.CheckForUpdatesBackground(s.WSHub)
-
-	// Start background monitoring scheduler. Idle unless monitoring_mode is
-	// "background"; then it records status history 24/7 on its own interval.
-	go api.NewMonitorScheduler(db).Run()
-
 	s.routes()
 	return s
+}
+
+// StartBackground launches the loops that run for the life of the process. They
+// stop when ctx is cancelled, and wg is done only once every one of them has
+// returned — so a restart cannot catch one mid-write.
+func (s *Server) StartBackground(ctx context.Context, wg *sync.WaitGroup) {
+	tasks := map[string]func(){
+		"websocket hub":   func() { s.WSHub.Run(ctx) },
+		"stats broadcast": func() { s.WSHub.StartBroadcasting(ctx, 1*time.Second) },
+		"update check":    func() { api.NewUpdateHandler(s.DB).CheckForUpdatesBackground(ctx, s.WSHub) },
+		// Idle unless monitoring_mode is "background"; then it records status
+		// history 24/7 on its own interval.
+		"monitor scheduler": func() { api.NewMonitorScheduler(s.DB).Run(ctx) },
+	}
+
+	for name, task := range tasks {
+		wg.Add(1)
+		go func(name string, task func()) {
+			defer wg.Done()
+			task()
+			slog.Debug("background task stopped", "task", name)
+		}(name, task)
+	}
 }
 
 func initSessionSecret(db *sql.DB) []byte {

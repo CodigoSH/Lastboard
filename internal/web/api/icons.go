@@ -306,7 +306,7 @@ func (h *IconHandler) Localize(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	done, failed := LocalizeIcons(h.DB, h, &userID)
+	done, failed := LocalizeIcons(r.Context(), h.DB, h, &userID)
 	counts, err := CountPendingIcons(h.DB, &userID)
 	if err != nil {
 		counts.Pending = failed

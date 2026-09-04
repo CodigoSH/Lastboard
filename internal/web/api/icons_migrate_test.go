@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -88,7 +89,7 @@ func TestLocalizeIcons_TouchesOnlyTheIcon(t *testing.T) {
 		"borderWidth":2,"labelPos":"bottom","visibleTouch":false,"openInNewTab":true
 	}`)
 
-	done, failed := LocalizeIcons(db, NewIconHandler(db), nil)
+	done, failed := LocalizeIcons(context.Background(), db, NewIconHandler(db), nil)
 	if done != 1 || failed != 0 {
 		t.Fatalf("stored=%d failed=%d, want 1 and 0", done, failed)
 	}
@@ -132,7 +133,7 @@ func TestLocalizeIcons_LeavesNonRemoteIconsAlone(t *testing.T) {
 		before[name] = readContent(t, db, ids[name])
 	}
 
-	done, failed := LocalizeIcons(db, NewIconHandler(db), nil)
+	done, failed := LocalizeIcons(context.Background(), db, NewIconHandler(db), nil)
 	if done != 0 || failed != 0 {
 		t.Fatalf("stored=%d failed=%d, want nothing to happen", done, failed)
 	}
@@ -156,7 +157,7 @@ func TestLocalizeIcons_KeepsTheUrlWhenTheFetchFails(t *testing.T) {
 	original := srv.URL + "/gone.png"
 	id := insertItem(t, db, 1, `{"label":"Ghost","icon":"`+original+`"}`)
 
-	done, failed := LocalizeIcons(db, NewIconHandler(db), nil)
+	done, failed := LocalizeIcons(context.Background(), db, NewIconHandler(db), nil)
 	if done != 0 || failed != 1 {
 		t.Fatalf("stored=%d failed=%d, want 0 and 1", done, failed)
 	}
@@ -190,7 +191,7 @@ func TestLocalizeIcons_ScopesToOneOwner(t *testing.T) {
 	theirs := insertItem(t, db, 2, `{"label":"theirs","icon":"`+srv.URL+`/b.gif"}`)
 
 	me := 1
-	done, failed := LocalizeIcons(db, NewIconHandler(db), &me)
+	done, failed := LocalizeIcons(context.Background(), db, NewIconHandler(db), &me)
 	if done != 1 || failed != 0 {
 		t.Fatalf("stored=%d failed=%d, want 1 and 0", done, failed)
 	}
@@ -222,10 +223,10 @@ func TestLocalizeIcons_IsIdempotent(t *testing.T) {
 	insertItem(t, db, 1, `{"label":"a","icon":"`+srv.URL+`/a.gif"}`)
 	insertItem(t, db, 1, `{"label":"b","icon":"`+srv.URL+`/a.gif"}`) // same bytes
 
-	if done, failed := LocalizeIcons(db, NewIconHandler(db), nil); done != 2 || failed != 0 {
+	if done, failed := LocalizeIcons(context.Background(), db, NewIconHandler(db), nil); done != 2 || failed != 0 {
 		t.Fatalf("first run: stored=%d failed=%d, want 2 and 0", done, failed)
 	}
-	if done, failed := LocalizeIcons(db, NewIconHandler(db), nil); done != 0 || failed != 0 {
+	if done, failed := LocalizeIcons(context.Background(), db, NewIconHandler(db), nil); done != 0 || failed != 0 {
 		t.Errorf("second run did work: stored=%d failed=%d", done, failed)
 	}
 

@@ -74,7 +74,7 @@ func dialWS(t *testing.T, srv *httptest.Server) *websocket.Conn {
 
 func TestHub_RegisterBroadcastUnregister(t *testing.T) {
 	h := NewHub()
-	go h.Run()
+	go h.Run(t.Context())
 
 	srv := httptest.NewServer(http.HandlerFunc(h.HandleWebSocket))
 	defer srv.Close()
@@ -100,7 +100,7 @@ func TestHub_RegisterBroadcastUnregister(t *testing.T) {
 
 func TestHub_MultipleClients(t *testing.T) {
 	h := NewHub()
-	go h.Run()
+	go h.Run(t.Context())
 
 	srv := httptest.NewServer(http.HandlerFunc(h.HandleWebSocket))
 	defer srv.Close()
@@ -126,7 +126,7 @@ func TestHub_MultipleClients(t *testing.T) {
 
 func TestHandleWebSocket_RejectsCrossOrigin(t *testing.T) {
 	h := NewHub()
-	go h.Run()
+	go h.Run(t.Context())
 	srv := httptest.NewServer(http.HandlerFunc(h.HandleWebSocket))
 	defer srv.Close()
 

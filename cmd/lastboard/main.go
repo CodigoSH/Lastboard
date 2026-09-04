@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -56,8 +57,16 @@ func main() {
 	defer db.Close()
 	slog.Info("Database initialized", "path", dbFile)
 
+	// Cancelled on SIGTERM/SIGINT. Everything that runs in the background takes
+	// it, so a restart tells them to stop rather than being cut off mid-write.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+
 	// 2. Initialize Server (Dependency Injection)
 	srv := web.NewServer(db.DB)
+
+	var background sync.WaitGroup
+	srv.StartBackground(ctx, &background)
 
 	// 3. Start Server
 	port := os.Getenv("PORT")
@@ -88,18 +97,37 @@ func main() {
 	// they were made with. Bring those home, off the critical path: it is
 	// network-bound work and nobody should wait on a third party to reach
 	// their own dashboard.
-	go api.RunIconMigration(db.DB)
+	background.Add(1)
+	go func() {
+		defer background.Done()
+		api.RunIconMigration(ctx, db.DB)
+	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
-	<-quit
+	<-ctx.Done()
+	stop() // a second signal from here on gets the default behaviour: die now
 
 	slog.Info("shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(shutdownCtx); err != nil {
 		slog.Error("shutdown error", "error", err)
 	}
+
+	// The background tasks were told to stop when the signal arrived; wait for
+	// them to actually finish, so the database is closed after the last write
+	// and not during it. Bounded, because a task that will not stop must not
+	// keep the process alive forever.
+	stopped := make(chan struct{})
+	go func() {
+		background.Wait()
+		close(stopped)
+	}()
+	select {
+	case <-stopped:
+	case <-time.After(10 * time.Second):
+		slog.Warn("background tasks did not stop in time; exiting anyway")
+	}
+
 	slog.Info("server stopped")
 }

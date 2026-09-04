@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log/slog"
@@ -145,7 +146,7 @@ func CountPendingIcons(db *sql.DB, owner *int) (IconCounts, error) {
 // Failures are counted, never fatal: an icon whose host is gone leaves its
 // bookmark exactly as it was, pointing at a URL that may still work for
 // someone. Nothing is deleted and no other field is touched.
-func LocalizeIcons(db *sql.DB, h *IconHandler, owner *int) (done int, failed int) {
+func LocalizeIcons(ctx context.Context, db *sql.DB, h *IconHandler, owner *int) (done int, failed int) {
 	pending, err := findPendingIcons(db, owner)
 	if err != nil {
 		slog.Error("Icon migration: could not list bookmarks", "error", err)
@@ -162,6 +163,11 @@ func LocalizeIcons(db *sql.DB, h *IconHandler, owner *int) (done int, failed int
 	)
 
 	for _, p := range pending {
+		// Stop starting new work once we are shutting down. Whatever is already
+		// in flight finishes its own write, so no bookmark is left half-stored.
+		if ctx.Err() != nil {
+			break
+		}
 		wg.Add(1)
 		go func(p pendingIcon) {
 			defer wg.Done()
@@ -216,7 +222,7 @@ func LocalizeIcons(db *sql.DB, h *IconHandler, owner *int) (done int, failed int
 // It is meant to be called in its own goroutine once the server is listening:
 // the work is network-bound and nobody should wait on a CDN to reach their
 // dashboard.
-func RunIconMigration(db *sql.DB) {
+func RunIconMigration(ctx context.Context, db *sql.DB) {
 	h := NewIconHandler(db)
 
 	counts, err := CountPendingIcons(db, nil)
@@ -225,7 +231,7 @@ func RunIconMigration(db *sql.DB) {
 	}
 
 	slog.Info("Storing icons that are still fetched from elsewhere", "bookmarks", counts.Pending)
-	done, failed := LocalizeIcons(db, h, nil)
+	done, failed := LocalizeIcons(ctx, db, h, nil)
 
 	switch {
 	case failed == 0:

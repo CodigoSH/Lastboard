@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"strconv"
@@ -39,18 +40,26 @@ func NewMonitorScheduler(db *sql.DB) *MonitorScheduler {
 }
 
 // Run launches the probe loop and the daily prune. It is meant to be started in
-// its own goroutine at startup and runs for the life of the process (matching
-// the other background loops in NewServer).
-func (m *MonitorScheduler) Run() {
-	go m.pruneLoop()
-	m.probeLoop()
+// its own goroutine at startup and runs until ctx is cancelled.
+func (m *MonitorScheduler) Run(ctx context.Context) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		m.pruneLoop(ctx)
+	}()
+
+	m.probeLoop(ctx)
+	wg.Wait()
 }
 
-func (m *MonitorScheduler) probeLoop() {
+func (m *MonitorScheduler) probeLoop(ctx context.Context) {
 	for {
 		// Re-read the interval each cycle so config changes apply without a
 		// restart. The first probe happens one interval after boot.
-		time.Sleep(time.Duration(m.intervalSec()) * time.Second)
+		if !sleep(ctx, time.Duration(m.intervalSec())*time.Second) {
+			return
+		}
 		if m.mode() != "background" {
 			continue
 		}
@@ -58,17 +67,32 @@ func (m *MonitorScheduler) probeLoop() {
 	}
 }
 
+// sleep waits for d, or returns false as soon as ctx is cancelled. A plain
+// time.Sleep here would hold shutdown for up to a day.
+func sleep(ctx context.Context, d time.Duration) bool {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
 // pruneLoop enforces the retention window. It prunes before sleeping: waiting a
 // full day first meant an instance restarted more often than that (a routine
 // homelab update cadence) never pruned at all, and history grew unbounded.
-func (m *MonitorScheduler) pruneLoop() {
+func (m *MonitorScheduler) pruneLoop(ctx context.Context) {
 	for {
 		if n, err := m.store.Prune(monitorRetentionDays); err != nil {
 			slog.Error("monitor: prune failed", "error", err)
 		} else if n > 0 {
 			slog.Info("monitor: pruned old history", "rows", n)
 		}
-		time.Sleep(24 * time.Hour)
+		if !sleep(ctx, 24*time.Hour) {
+			return
+		}
 	}
 }
 

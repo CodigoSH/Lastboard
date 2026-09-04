@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -52,9 +53,20 @@ func NewHub() *Hub {
 // cannot block telemetry for everyone.
 const wsWriteTimeout = 5 * time.Second
 
-func (h *Hub) Run() {
+func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
+		case <-ctx.Done():
+			// Shutting down: close what is still connected so the clients see
+			// a closed socket rather than a silence they have to time out.
+			h.mu.Lock()
+			for client := range h.clients {
+				client.Close()
+				delete(h.clients, client)
+			}
+			h.mu.Unlock()
+			return
+
 		case client := <-h.register:
 			h.mu.Lock()
 			h.clients[client] = true
@@ -96,11 +108,17 @@ func (h *Hub) Run() {
 }
 
 // StatsBroadcaster gathers system stats and sends them to the hub
-func (h *Hub) StartBroadcasting(interval time.Duration) {
+func (h *Hub) StartBroadcasting(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for range ticker.C {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
 		// Optimization: Don't gather stats if no one is listening
 		h.mu.Lock()
 		clientCount := len(h.clients)
@@ -111,13 +129,17 @@ func (h *Hub) StartBroadcasting(interval time.Duration) {
 		}
 
 		stats, err := gatherStats()
-		if err == nil {
-			h.broadcast <- WSMessage{
-				Type:    "stats",
-				Payload: stats,
-			}
-		} else {
+		if err != nil {
 			slog.Warn("Error gathering stats for WS", "error", err)
+			continue
+		}
+
+		// Run may already be gone, and nothing would ever read this. Give up on
+		// the send instead of leaving the goroutine parked on it forever.
+		select {
+		case h.broadcast <- WSMessage{Type: "stats", Payload: stats}:
+		case <-ctx.Done():
+			return
 		}
 	}
 }

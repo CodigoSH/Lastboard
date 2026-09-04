@@ -3,6 +3,7 @@ package api
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -96,9 +97,11 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 // CheckForUpdatesBackground runs a periodic loop to check for updates and notify via WS
-func (h *UpdateHandler) CheckForUpdatesBackground(hub *Hub) {
+func (h *UpdateHandler) CheckForUpdatesBackground(ctx context.Context, hub *Hub) {
 	// Initial check after 30s to allow system to settle
-	time.Sleep(30 * time.Second)
+	if !sleep(ctx, 30*time.Second) {
+		return
+	}
 
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
@@ -125,8 +128,13 @@ func (h *UpdateHandler) CheckForUpdatesBackground(hub *Hub) {
 	// First run
 	check()
 
-	for range ticker.C {
-		check()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			check()
+		}
 	}
 }
 
