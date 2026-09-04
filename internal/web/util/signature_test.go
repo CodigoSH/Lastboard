@@ -56,13 +56,53 @@ func TestEmbeddedReleaseKey(t *testing.T) {
 	if !SigningConfigured() {
 		t.Fatal("expected release signing to be configured (public key embedded)")
 	}
-	// The embedded key must decode to a valid 32-byte Ed25519 public key,
-	// otherwise every signature verification would fail at runtime.
-	pub, err := base64.StdEncoding.DecodeString(releasePublicKey)
-	if err != nil {
-		t.Fatalf("embedded releasePublicKey is not valid base64: %v", err)
+	// Every embedded key must decode to a valid 32-byte Ed25519 public key.
+	// A malformed one added during a rotation would be silently useless: the
+	// key it is meant to replace would keep working, and the failure would only
+	// show up once the old one is dropped.
+	for i, key := range releasePublicKeys {
+		pub, err := base64.StdEncoding.DecodeString(key)
+		if err != nil {
+			t.Fatalf("embedded key %d is not valid base64: %v", i, err)
+		}
+		if len(pub) != ed25519.PublicKeySize {
+			t.Fatalf("embedded key %d is %d bytes, want %d", i, len(pub), ed25519.PublicKeySize)
+		}
 	}
-	if len(pub) != ed25519.PublicKeySize {
-		t.Fatalf("embedded releasePublicKey is %d bytes, want %d", len(pub), ed25519.PublicKeySize)
+}
+
+// Rotation is only useful if a binary carrying both keys accepts a release
+// signed with either. This is the whole point of the list.
+func TestEitherKeyVerifiesDuringARotation(t *testing.T) {
+	oldPub, oldPriv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newPub, newPriv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keys := []string{
+		base64.StdEncoding.EncodeToString(oldPub),
+		base64.StdEncoding.EncodeToString(newPub),
+	}
+	data := []byte("checksums for some release\n")
+
+	for name, priv := range map[string]ed25519.PrivateKey{"retiring key": oldPriv, "incoming key": newPriv} {
+		signature := base64.StdEncoding.EncodeToString(ed25519.Sign(priv, data))
+		if err := verifyAny(keys, data, signature); err != nil {
+			t.Errorf("a release signed with the %s was rejected: %v", name, err)
+		}
+	}
+
+	// And a key on neither side of the rotation still gets nowhere.
+	_, strangerPriv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	forged := base64.StdEncoding.EncodeToString(ed25519.Sign(strangerPriv, data))
+	if err := verifyAny(keys, data, forged); err == nil {
+		t.Error("a signature from an unknown key was accepted")
 	}
 }

@@ -56,7 +56,7 @@ func usage() {
 
 func verify(filePath, sigPath string) {
 	if !util.SigningConfigured() {
-		fail(fmt.Errorf("no public key embedded (releasePublicKey is empty)"))
+		fail(fmt.Errorf("no public key embedded (releasePublicKeys is empty)"))
 	}
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -80,7 +80,7 @@ func keygen() {
 	fmt.Println("PRIVATE (store as CI secret RELEASE_SIGNING_KEY):")
 	fmt.Println(base64.StdEncoding.EncodeToString(priv))
 	fmt.Println()
-	fmt.Println("PUBLIC (paste into internal/web/util/signature.go releasePublicKey):")
+	fmt.Println("PUBLIC (add to internal/web/util/signature.go releasePublicKeys):")
 	fmt.Println(base64.StdEncoding.EncodeToString(pub))
 }
 

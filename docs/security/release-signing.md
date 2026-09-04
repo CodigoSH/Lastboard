@@ -14,7 +14,7 @@ or external services — to stay self-contained and dependency-free.
 ## Status: opt-in
 
 Signing ships **disabled**. Until you complete the key ceremony below,
-`internal/web/util/signature.go` has an empty `releasePublicKey` and the
+`internal/web/util/signature.go` has an empty `releasePublicKeys` list and the
 auto-updater keeps working exactly as before (checksum-only). Once a public key
 is embedded, the updater additionally verifies `checksums.txt.sig`.
 
@@ -33,7 +33,7 @@ Everything uses the project's own tool, `cmd/sign` (Ed25519, stdlib only).
 2. **Store the private key** as a CI secret named `RELEASE_SIGNING_KEY` in the
    Forgejo repo settings. It must never be committed or leave your control.
 
-3. **Embed the public key**: paste it into `releasePublicKey` in
+3. **Embed the public key**: add it to `releasePublicKeys` in
    `internal/web/util/signature.go`, commit, and release. From this release on,
    `SigningConfigured()` returns true and clients verify signatures.
 
@@ -62,9 +62,23 @@ failure, so an attacker cannot strip the signature to force the fallback.
 
 ## Rotating the key
 
-Generate a new keypair, update `RELEASE_SIGNING_KEY` and the embedded
-`releasePublicKey`, and cut a release. Clients pick up the new key when they
-update to that release.
+A binary can only verify with the keys it was built with. Replacing the key
+outright would leave every installation still on an older build unable to verify
+the next release — the auto-updater would refuse it, and the people furthest
+behind would be the ones stuck. So rotation overlaps:
+
+1. Generate a new keypair. Add the **new public key** to `releasePublicKeys` in
+   `internal/web/util/signature.go`, after the current one, and cut a release.
+   Releases are still signed with the **old** private key, so nothing changes
+   for anyone yet.
+2. Give that release time to reach installations. Then switch the CI secret
+   `RELEASE_SIGNING_KEY` to the new private key. Anyone on step 1's release or
+   later verifies it with the new key; anyone still on an older one verifies
+   nothing new, but was already going to update to step 1's release first.
+3. In a later release, drop the retired key from the list.
+
+Both keys verify while the list holds both, which is what makes the middle step
+safe.
 
 ## install.sh (follow-up)
 
