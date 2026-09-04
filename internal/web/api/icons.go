@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"io"
 	"log/slog"
 	"net/http"
@@ -151,6 +152,11 @@ func (h *IconHandler) fetchIcon(src string) (mime string, data []byte, err error
 	req, err := http.NewRequest(http.MethodGet, src, nil)
 	if err != nil {
 		return "", nil, err
+	}
+	// An icon never lives on the instance metadata service, and that service
+	// answers with the instance's credentials — see util.IsCloudMetadataHost.
+	if util.IsCloudMetadataHost(req.URL.Hostname()) {
+		return "", nil, errors.New("refusing to fetch from the metadata service")
 	}
 	req.Header.Set("Accept", "image/*")
 

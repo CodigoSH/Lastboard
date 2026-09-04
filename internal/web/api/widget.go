@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"io"
 	"net"
 	"net/http"
@@ -67,6 +68,12 @@ func (h *WidgetHandler) ApiFetch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error.invalid_url", http.StatusBadRequest)
 		return
 	}
+	// Pointing at your own network is the product; pointing at the instance
+	// metadata service is not — see util.IsCloudMetadataHost.
+	if util.IsCloudMetadataHost(target.Hostname()) {
+		http.Error(w, "error.invalid_url", http.StatusBadRequest)
+		return
+	}
 
 	method := strings.ToUpper(strings.TrimSpace(input.Method))
 	if method == "" {
@@ -85,10 +92,15 @@ func (h *WidgetHandler) ApiFetch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error.invalid_url", http.StatusBadRequest)
 		return
 	}
+	// The widget forwards headers so it can carry an API key, which is what it
+	// is for. The ones that say who the request is from, rather than what it
+	// wants, are dropped: forwarded to a service that trusts this server's
+	// place on the network, they let the caller wear somebody else's identity.
 	for k, v := range input.Headers {
-		if k != "" {
-			req.Header.Set(k, v)
+		if k == "" || util.IsForbiddenOutboundHeader(k) {
+			continue
 		}
+		req.Header.Set(k, v)
 	}
 	if req.Header.Get("Accept") == "" {
 		req.Header.Set("Accept", "application/json")
