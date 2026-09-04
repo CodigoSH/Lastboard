@@ -400,7 +400,6 @@
   "update.intro": "The release is downloaded, verified and installed, and the service restarts by itself.",
   "update.running_hint": "Don't close this window or stop the server until it finishes.",
   "update.restarting": "Installed. Waiting for the new version to come back up…",
-  "update.done": "Now running {version}. Reloading…",
   "update.error_title": "Update failed",
   "update.running_badge": "Updating",
   "update.done_badge": "Updated",

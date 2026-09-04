@@ -400,7 +400,6 @@
   "update.intro": "Paket diunduh, diverifikasi, dan dipasang, lalu layanan memulai ulang sendiri.",
   "update.running_hint": "Jangan tutup jendela ini atau matikan server sampai selesai.",
   "update.restarting": "Terpasang. Menunggu versi baru kembali aktif…",
-  "update.done": "Kini menjalankan {version}. Memuat ulang…",
   "update.error_title": "Pembaruan gagal",
   "update.running_badge": "Memperbarui",
   "update.done_badge": "Diperbarui",

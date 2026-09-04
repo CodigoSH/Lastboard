@@ -400,7 +400,6 @@
   "update.intro": "Pakiet zostanie pobrany, zweryfikowany i zainstalowany, a usługa uruchomi się ponownie sama.",
   "update.running_hint": "Nie zamykaj tego okna ani nie wyłączaj serwera, dopóki się nie zakończy.",
   "update.restarting": "Zainstalowano. Czekam, aż nowa wersja znów odpowie…",
-  "update.done": "Działa teraz wersja {version}. Przeładowywanie…",
   "update.error_title": "Aktualizacja nieudana",
   "update.running_badge": "Aktualizowanie",
   "update.done_badge": "Zaktualizowano",

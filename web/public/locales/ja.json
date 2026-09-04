@@ -400,7 +400,6 @@
   "update.intro": "パッケージをダウンロードして検証し、インストールしたあとサービスが自動的に再起動します。",
   "update.running_hint": "完了するまでこのウィンドウを閉じたりサーバーを停止したりしないでください。",
   "update.restarting": "インストールしました。新しいバージョンの起動を待っています…",
-  "update.done": "現在 {version} で動作しています。再読み込みします…",
   "update.error_title": "更新に失敗しました",
   "update.running_badge": "更新中",
   "update.done_badge": "更新完了",

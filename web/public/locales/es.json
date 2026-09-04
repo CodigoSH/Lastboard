@@ -400,7 +400,6 @@
   "update.intro": "Se descarga el paquete, se verifica, se instala y el servicio se reinicia solo.",
   "update.running_hint": "No cierres esta ventana ni apagues el servidor hasta que termine.",
   "update.restarting": "Instalada. Esperando a que vuelva la nueva versión…",
-  "update.done": "Ya está en la versión {version}. Recargando…",
   "update.error_title": "Actualización fallida",
   "update.running_badge": "Actualizando",
   "update.done_badge": "Actualizado",

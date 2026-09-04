@@ -400,7 +400,6 @@
   "update.intro": "Het pakket wordt gedownload, gecontroleerd en geïnstalleerd, en de service herstart vanzelf.",
   "update.running_hint": "Sluit dit venster niet en zet de server niet uit totdat het klaar is.",
   "update.restarting": "Geïnstalleerd. Wachten tot de nieuwe versie weer bereikbaar is…",
-  "update.done": "Draait nu op {version}. Opnieuw laden…",
   "update.error_title": "Update mislukt",
   "update.running_badge": "Bezig met bijwerken",
   "update.done_badge": "Bijgewerkt",

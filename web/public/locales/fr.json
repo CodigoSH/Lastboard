@@ -400,7 +400,6 @@
   "update.intro": "Le paquet est téléchargé, vérifié et installé, puis le service redémarre tout seul.",
   "update.running_hint": "Ne ferme pas cette fenêtre et n'arrête pas le serveur avant la fin.",
   "update.restarting": "Installée. En attente du retour de la nouvelle version…",
-  "update.done": "Version {version} en cours d'exécution. Rechargement…",
   "update.error_title": "Échec de la mise à jour",
   "update.running_badge": "Mise à jour en cours",
   "update.done_badge": "Mise à jour terminée",

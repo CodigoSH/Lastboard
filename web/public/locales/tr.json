@@ -400,7 +400,6 @@
   "update.intro": "Paket indirilir, doğrulanır ve kurulur; ardından hizmet kendiliğinden yeniden başlar.",
   "update.running_hint": "İşlem bitene kadar bu pencereyi kapatma ve sunucuyu durdurma.",
   "update.restarting": "Kuruldu. Yeni sürümün yeniden yanıt vermesi bekleniyor…",
-  "update.done": "Şimdi {version} sürümü çalışıyor. Yeniden yükleniyor…",
   "update.error_title": "Güncelleme başarısız",
   "update.running_badge": "Güncelleniyor",
   "update.done_badge": "Güncellendi",

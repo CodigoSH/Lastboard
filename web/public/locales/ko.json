@@ -400,7 +400,6 @@
   "update.intro": "패키지를 내려받아 검증하고 설치한 뒤 서비스가 스스로 다시 시작합니다.",
   "update.running_hint": "완료될 때까지 이 창을 닫거나 서버를 끄지 마세요.",
   "update.restarting": "설치했습니다. 새 버전이 다시 응답하기를 기다리는 중…",
-  "update.done": "이제 {version} 버전으로 실행 중입니다. 새로 고치는 중…",
   "update.error_title": "업데이트 실패",
   "update.running_badge": "업데이트 중",
   "update.done_badge": "업데이트 완료",

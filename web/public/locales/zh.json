@@ -400,7 +400,6 @@
   "update.intro": "将下载并校验安装包，安装后服务会自行重启。",
   "update.running_hint": "完成之前请不要关闭此窗口或停止服务器。",
   "update.restarting": "已安装。正在等待新版本重新启动…",
-  "update.done": "现已运行 {version}。正在重新加载…",
   "update.error_title": "更新失败",
   "update.running_badge": "正在更新",
   "update.done_badge": "已更新",

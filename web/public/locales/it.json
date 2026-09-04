@@ -400,7 +400,6 @@
   "update.intro": "Il pacchetto viene scaricato, verificato e installato, poi il servizio si riavvia da solo.",
   "update.running_hint": "Non chiudere questa finestra né spegnere il server finché non termina.",
   "update.restarting": "Installato. In attesa che la nuova versione torni disponibile…",
-  "update.done": "Ora in esecuzione la versione {version}. Ricaricamento…",
   "update.error_title": "Aggiornamento non riuscito",
   "update.running_badge": "Aggiornamento in corso",
   "update.done_badge": "Aggiornato",

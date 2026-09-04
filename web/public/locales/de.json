@@ -400,7 +400,6 @@
   "update.intro": "Das Paket wird heruntergeladen, geprüft und installiert; danach startet der Dienst von selbst neu.",
   "update.running_hint": "Schließe dieses Fenster nicht und stoppe den Server nicht, bis der Vorgang fertig ist.",
   "update.restarting": "Installiert. Warten, bis die neue Version wieder erreichbar ist…",
-  "update.done": "Läuft jetzt mit {version}. Wird neu geladen…",
   "update.error_title": "Update fehlgeschlagen",
   "update.running_badge": "Wird aktualisiert",
   "update.done_badge": "Aktualisiert",
