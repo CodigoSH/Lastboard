@@ -206,3 +206,49 @@ func TestAuthRequired_RejectsASessionFromBeforeAPasswordChange(t *testing.T) {
 		t.Fatalf("current session: want 200 and handler reached, got %d reached=%v", w.Code, reached)
 	}
 }
+
+// The double-submit token only proves the caller could read a cookie and copy
+// it into a header. Anything able to write cookies on the domain — a
+// compromised subdomain — can set both sides and satisfy it. Sec-Fetch-Site is
+// filled in by the browser from the real origins and cannot be set by the page
+// making the request, so a write that did not come from this exact origin is
+// refused before the token matters.
+func TestAuthRequired_RefusesWritesFromAnotherSite(t *testing.T) {
+	db, secret := newAuthTestDB(t)
+	if _, err := db.Exec("INSERT INTO users (username, password, role) VALUES ('alice','x','admin')"); err != nil {
+		t.Fatal(err)
+	}
+	token := util.SignToken("alice", secret, time.Now().Add(time.Hour))
+
+	// The token pair is perfectly valid in every case here; only the origin
+	// the browser reports differs.
+	post := func(fetchSite string) (int, bool) {
+		reached := false
+		h := AuthRequired(db, secret)(okHandler(&reached))
+		req := httptest.NewRequest(http.MethodPost, "/api/dashboard/item", nil)
+		req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+		req.AddCookie(&http.Cookie{Name: "csrf_token", Value: "abc"})
+		req.Header.Set("X-CSRF-Token", "abc")
+		if fetchSite != "" {
+			req.Header.Set("Sec-Fetch-Site", fetchSite)
+		}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		return w.Code, reached
+	}
+
+	for _, site := range []string{"cross-site", "same-site"} {
+		if code, reached := post(site); reached || code != http.StatusForbidden {
+			t.Errorf("a write reported as %q got %d (handler reached=%v), want 403", site, code, reached)
+		}
+	}
+
+	// The application's own requests, and clients that send no such header at
+	// all — an older browser, curl, someone's script — must be unaffected.
+	for _, site := range []string{"same-origin", "none", ""} {
+		if code, reached := post(site); !reached || code != http.StatusOK {
+			t.Errorf("a legitimate write reported as %q got %d (handler reached=%v), want 200",
+				site, code, reached)
+		}
+	}
+}

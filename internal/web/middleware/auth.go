@@ -58,6 +58,23 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			// CSRF check for state-changing methods
 			if r.Method == http.MethodPost || r.Method == http.MethodPut ||
 				r.Method == http.MethodPatch || r.Method == http.MethodDelete {
+
+				// The browser tells us where the request came from, and it is
+				// the one party in this exchange that cannot be lied to about
+				// it: the header is computed from the real origins, not copied
+				// from anything the caller sent. A write from another site is
+				// refused before the token is even looked at.
+				//
+				// Absent means an older browser or a client that is not one at
+				// all (curl, a script); those fall through to the token check
+				// below, exactly as before. Nothing that works today stops
+				// working because of this.
+				switch r.Header.Get("Sec-Fetch-Site") {
+				case "cross-site", "same-site":
+					http.Error(w, "error.forbidden", http.StatusForbidden)
+					return
+				}
+
 				csrfCookie, err := r.Cookie("csrf_token")
 				csrfHeader := r.Header.Get("X-CSRF-Token")
 				if err != nil || csrfCookie.Value == "" || csrfHeader == "" || subtle.ConstantTimeCompare([]byte(csrfCookie.Value), []byte(csrfHeader)) != 1 {
