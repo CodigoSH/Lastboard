@@ -242,7 +242,10 @@ func (s *Server) routes() {
 
 	// Auth API
 	authHandler := api.NewAuthHandler(s.DB, s.sessionSecret)
-	s.Router.Handle("POST /api/login", middleware.RateLimit(http.HandlerFunc(authHandler.Login)))
+	// RefuseCrossSite because these two create the session the CSRF token is
+	// compared against, so they have nothing to compare yet — see the comment
+	// on the middleware.
+	s.Router.Handle("POST /api/login", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.Login))))
 	s.Router.Handle("POST /logout", protect(http.HandlerFunc(authHandler.Logout)))
 
 	// Dashboard API
@@ -342,7 +345,7 @@ func (s *Server) routes() {
 
 	// Setup API — public and state-changing, so rate limited like /api/login.
 	setupHandler := api.NewSetupHandler(s.DB)
-	s.Router.Handle("POST /api/setup", middleware.RateLimit(http.HandlerFunc(setupHandler.SetupSystem)))
+	s.Router.Handle("POST /api/setup", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(setupHandler.SetupSystem))))
 
 	// System API
 	systemHandler := api.NewSystemHandler(s.DB)

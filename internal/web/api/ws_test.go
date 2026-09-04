@@ -13,21 +13,32 @@ import (
 func TestSameOriginWS(t *testing.T) {
 	cases := []struct {
 		name          string
+		trustProxy    string
 		host          string
 		origin        string
 		forwardedHost string
 		want          bool
 	}{
-		{"missing origin allowed", "example.com", "", "", true},
-		{"same origin", "example.com", "http://example.com", "", true},
-		{"same origin https", "example.com", "https://example.com", "", true},
-		{"cross origin rejected", "example.com", "http://evil.com", "", false},
-		{"proxied via x-forwarded-host", "192.168.1.5:8080", "https://board.example.com", "board.example.com", true},
-		{"proxied but forwarded mismatch", "192.168.1.5:8080", "https://board.example.com", "other.com", false},
-		{"malformed origin rejected", "example.com", "://bad", "", false},
+		{"missing origin allowed", "", "example.com", "", "", true},
+		{"same origin", "", "example.com", "http://example.com", "", true},
+		{"same origin https", "", "example.com", "https://example.com", "", true},
+		{"cross origin rejected", "", "example.com", "http://evil.com", "", false},
+		{"malformed origin rejected", "", "example.com", "://bad", "", false},
+
+		// Behind a declared proxy the backend's Host is the internal address
+		// while the browser's Origin is the public name, so the forwarded host
+		// is what they have in common.
+		{"proxied via x-forwarded-host", "true", "192.168.1.5:8080", "https://board.example.com", "board.example.com", true},
+		{"proxied but forwarded mismatch", "true", "192.168.1.5:8080", "https://board.example.com", "other.com", false},
+
+		// And without that declaration the header is just something the caller
+		// sent. Accepting it let anyone name their own site and have their
+		// cross-site socket approved, riding the victim's session cookie.
+		{"forwarded host ignored when no proxy is declared", "", "192.168.1.5:8080", "https://evil.com", "evil.com", false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			t.Setenv("TRUST_PROXY", c.trustProxy)
 			r := httptest.NewRequest(http.MethodGet, "/ws", nil)
 			r.Host = c.host
 			if c.origin != "" {

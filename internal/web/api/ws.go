@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
@@ -187,8 +188,11 @@ func gatherStats() (SystemStats, error) {
 //
 // Self-hosted note: most operators run behind a reverse proxy, where the
 // backend's Host may be the internal address while the browser's Origin is the
-// public hostname. We therefore also accept the proxy-forwarded X-Forwarded-Host
-// so telemetry keeps working behind Pangolin/Traefik/NPM/Caddy without config.
+// public hostname. X-Forwarded-Host is therefore accepted too, so telemetry
+// keeps working behind Pangolin/Traefik/NPM/Caddy — but only when the operator
+// has said there is a proxy in front. Without that gate the header is just
+// something the caller sends: anyone could name their own site in it and have
+// their cross-site socket accepted, riding the victim's session cookie.
 func sameOriginWS(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 	if origin == "" {
@@ -201,8 +205,10 @@ func sameOriginWS(r *http.Request) bool {
 	if strings.EqualFold(u.Host, r.Host) {
 		return true
 	}
-	if fwd := r.Header.Get("X-Forwarded-Host"); fwd != "" && strings.EqualFold(u.Host, fwd) {
-		return true
+	if os.Getenv("TRUST_PROXY") == "true" {
+		if fwd := r.Header.Get("X-Forwarded-Host"); fwd != "" && strings.EqualFold(u.Host, fwd) {
+			return true
+		}
 	}
 	return false
 }

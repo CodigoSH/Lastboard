@@ -59,18 +59,10 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			if r.Method == http.MethodPost || r.Method == http.MethodPut ||
 				r.Method == http.MethodPatch || r.Method == http.MethodDelete {
 
-				// The browser tells us where the request came from, and it is
-				// the one party in this exchange that cannot be lied to about
-				// it: the header is computed from the real origins, not copied
-				// from anything the caller sent. A write from another site is
-				// refused before the token is even looked at.
-				//
-				// Absent means an older browser or a client that is not one at
-				// all (curl, a script); those fall through to the token check
-				// below, exactly as before. Nothing that works today stops
-				// working because of this.
-				switch r.Header.Get("Sec-Fetch-Site") {
-				case "cross-site", "same-site":
+				// A write from another site is refused before the token is
+				// even looked at — see IsCrossSiteWrite for why the browser is
+				// the one party here that cannot be lied to.
+				if IsCrossSiteWrite(r) {
 					http.Error(w, "error.forbidden", http.StatusForbidden)
 					return
 				}
