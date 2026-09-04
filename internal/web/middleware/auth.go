@@ -21,19 +21,16 @@ const (
 // AuthRequired checks for a valid session cookie.
 // If valid, it allows the request.
 // If invalid, it redirects to /login for page requests, or returns 401 for API requests.
+//
+// It has no list of public paths, and must not grow one. A route is public by
+// being registered without this middleware, which is a decision visible where
+// the route is declared. The list that used to live here also let anything
+// under /dist/ or /styles/ through — including paths with no file behind them,
+// which fall back to the application shell — so an unauthenticated caller got
+// the page by asking for an asset that did not exist.
 func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			// Skip check for Login page and static assets (and Setup)
-			if r.URL.Path == "/login" || r.URL.Path == "/setup" ||
-				strings.HasPrefix(r.URL.Path, "/dist/") ||
-				strings.HasPrefix(r.URL.Path, "/styles/") ||
-				r.URL.Path == "/api/login" ||
-				r.URL.Path == "/api/setup" {
-				next.ServeHTTP(w, r)
-				return
-			}
 
 			// Check for Session Cookie
 			cookie, err := r.Cookie("session_token")

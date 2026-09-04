@@ -33,16 +33,31 @@ func okHandler(reached *bool) http.Handler {
 	})
 }
 
-func TestAuthRequired_SkipList(t *testing.T) {
+// This middleware used to carry its own list of public paths, and this test
+// asserted the list worked. The list was the problem: everything under /dist/
+// and /styles/ passed, including paths with no file behind them, which fall
+// back to the application shell — so asking for an asset that did not exist
+// served the page to a caller with no session.
+//
+// Public is now decided where a route is registered, by not wrapping it in this
+// middleware. Nothing reaches here and gets waved through.
+func TestAuthRequired_HasNoListOfPublicPaths(t *testing.T) {
 	db, secret := newAuthTestDB(t)
-	for _, path := range []string{"/login", "/setup", "/api/login", "/api/setup", "/dist/app.js", "/styles/x.css"} {
+	paths := []string{
+		"/login", "/setup", "/api/login", "/api/setup",
+		"/dist/app.js", "/styles/x.css",
+		// The ones that used to serve the shell to anyone who asked.
+		"/dist/there-is-no-such-file.js", "/styles/nor-this-one.css",
+	}
+	for _, path := range paths {
 		reached := false
 		h := AuthRequired(db, secret)(okHandler(&reached))
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
-		if !reached {
-			t.Errorf("path %s should skip auth and reach the handler", path)
+		if reached {
+			t.Errorf("%s reached the handler with no session; this middleware must not "+
+				"exempt anything by path", path)
 		}
 	}
 }
