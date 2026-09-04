@@ -80,3 +80,52 @@ printf '302a300506032b6570032100%s' "$(echo "<BASE64_PUBKEY>" | base64 -d | xxd 
 base64 -d checksums.txt.sig > checksums.sig.bin
 openssl pkeyutl -verify -pubin -inkey pub.pem -rawin -in checksums.txt -sigfile checksums.sig.bin
 ```
+
+## Reproducing a release yourself
+
+A signature proves a binary came from this project's CI. It does not prove the
+binary matches the source code you can read. Reproducible builds close that gap:
+anyone can rebuild a published release and check that the result is identical,
+byte for byte.
+
+Every released binary is built with `-trimpath` (no build-machine paths baked
+in), with `CGO_ENABLED=0` and an explicit `GOOS`/`GOARCH`, on the Go toolchain
+pinned in `go.mod`. The embedded frontend bundle carries a cache-busting stamp
+that normally comes from the clock; for a release it comes from the commit date
+instead, via `SOURCE_DATE_EPOCH`, so the bundle is identical on every rebuild.
+
+To reproduce, for example, `v1.7.0` for `linux/amd64`:
+
+```bash
+git clone https://git.codigosh.com/CodigoSH/Lastboard.git
+cd Lastboard
+git checkout v1.7.0
+
+# The frontend, stamped with the commit date rather than the clock
+bun install
+SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) bun run web/build.ts
+
+# The binary, with the same flags the release workflow uses
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
+  -ldflags "-s -w -extldflags '-static' -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=v1.7.0" \
+  -o lastboard ./cmd/lastboard
+
+sha256sum lastboard
+```
+
+The hash must match the entry for `lastboard-linux-amd64` in the release's
+`checksums.txt`. Use the same Go and Bun versions as the release workflow
+(`.forgejo/workflows/release.yml`); a different Go minor version produces a
+different, equally valid binary, but it will not match the published hash.
+
+## Inventory of dependencies
+
+Every binary carries its own dependency list. No separate file to trust:
+
+```bash
+go version -m lastboard
+```
+
+It prints the Go version, the build flags used, the VCS revision the binary was
+built from, and every module with its version and checksum — which you can
+compare against `go.sum` in the tagged source.

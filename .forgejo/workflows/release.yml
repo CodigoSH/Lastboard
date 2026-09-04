@@ -34,6 +34,10 @@ jobs:
       - name: Build Frontend
         run: |
           bun install
+          # The bundle's cache-busting stamp comes from the commit date, not the
+          # clock, so this release can be rebuilt byte for byte from its tag.
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          export SOURCE_DATE_EPOCH
           bun run web/build.ts
 
       - name: Build Backend
@@ -44,7 +48,7 @@ jobs:
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
 
-          go build -ldflags "-s -w -extldflags '-static' -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=$VERSION" -o lastboard ./cmd/lastboard
+          go build -trimpath -ldflags "-s -w -extldflags '-static' -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=$VERSION" -o lastboard ./cmd/lastboard
 
       - name: Package
         run: tar -czvf lastboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz lastboard

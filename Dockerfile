@@ -12,6 +12,10 @@ RUN bun install --frozen-lockfile
 
 # Copy source and build
 COPY . .
+
+# Pinning this makes the bundle reproducible; unset, the stamp falls back to the
+# clock, which is what a local `docker build` wants.
+ARG SOURCE_DATE_EPOCH
 RUN bun web/build.ts
 
 # ==========================================
@@ -40,13 +44,13 @@ ARG VERSION=dev
 
 # Build main binary (timetzdata embeds timezone DB in the binary)
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go build -tags timetzdata \
+    go build -trimpath -tags timetzdata \
     -ldflags="-s -w -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=${VERSION}" \
     -o /app/lastboard ./cmd/lastboard
 
 # Build healthcheck binary for target platform
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go build -ldflags="-s -w" -o /app/healthcheck ./cmd/healthcheck
+    go build -trimpath -ldflags="-s -w" -o /app/healthcheck ./cmd/healthcheck
 
 # ==========================================
 # Stage 3: Runtime (Alpine, no RUN = no QEMU)

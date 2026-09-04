@@ -7,7 +7,18 @@ console.log("🚀 Starting Build...");
 // One stamp per build, shared by the HTML cache-busting query and the bundle.
 // Anything fetched with ?v=<stamp> is served immutable, so the stamp must stay
 // identical across every asset of a single build and change on the next one.
-const buildStamp = String(Math.floor(Date.now() / 1000));
+//
+// The clock is the right source while developing, where every rebuild must look
+// new. It is the wrong one for a release: a bundle that differs on every run
+// cannot be reproduced by anyone else, and then the signed checksums only prove
+// the binary came from our CI, not that it matches this source. So a caller that
+// pins SOURCE_DATE_EPOCH (the release workflow passes the commit date) decides
+// the stamp instead.
+const pinnedDate = process.env.SOURCE_DATE_EPOCH;
+if (pinnedDate !== undefined && !/^[0-9]+$/.test(pinnedDate)) {
+    throw new Error(`SOURCE_DATE_EPOCH must be seconds since the epoch, got "${pinnedDate}"`);
+}
+const buildStamp = pinnedDate ?? String(Math.floor(Date.now() / 1000));
 
 const define = {
     "process.env.NODE_ENV": JSON.stringify("production"),
