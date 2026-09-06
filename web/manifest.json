@@ -4,7 +4,7 @@
   "description": "Your personal dashboard",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f3f4f6",
+  "background_color": "#121212",
   "theme_color": "#e8520e",
   "orientation": "any",
   "icons": [
