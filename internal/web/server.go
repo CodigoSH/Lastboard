@@ -508,26 +508,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	// Known here, so the page arrives in the right language and the right
 	// reading direction instead of starting English and left-to-right and
 	// being corrected once the bundle has loaded.
-	language := dbLanguage
-	if language == "" {
-		language = "en"
-	}
-
-	data := struct {
-		ProjectName string
-		ThemeClass  string
-		Language    string
-		Direction   string
-		DemoMode    bool
-		Nonce       string
-	}{
-		ProjectName: projectName,
-		ThemeClass:  themeClass,
-		Language:    language,
-		Direction:   directionOf(language),
-		DemoMode:    false,
-		Nonce:       cspNonce(r),
-	}
+	data := newIndexPageData(projectName, themeClass, dbLanguage, false, cspNonce(r))
 
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("Error executing template", "error", err)
@@ -549,20 +530,41 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		ProjectName string
-		ThemeClass  string
-		DemoMode    bool
-		Nonce       string
-	}{
-		ProjectName: "Lastboard",
-		ThemeClass:  "dark-mode",
-		DemoMode:    true,
-		Nonce:       cspNonce(r),
-	}
+	data := newIndexPageData("Lastboard", "dark-mode", "", true, cspNonce(r))
 
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("Error executing demo template", "error", err)
+	}
+}
+
+// indexPageData is what index.html is rendered with. Both the dashboard and the
+// demo build it through newIndexPageData rather than declaring a struct each:
+// when the template grew `lang` and `dir` the demo handler kept its own literal
+// without them, and every demo page died at line 2 — twenty-eight bytes and a
+// blank screen — because a missing field is an execution error, not a blank.
+type indexPageData struct {
+	ProjectName string
+	ThemeClass  string
+	Language    string
+	Direction   string
+	DemoMode    bool
+	Nonce       string
+}
+
+// newIndexPageData fills in the pair that has to agree — a language and the
+// direction it reads in — so no caller can set one and forget the other.
+// An empty language means English, which is what the frontend falls back to.
+func newIndexPageData(projectName, themeClass, language string, demo bool, nonce string) indexPageData {
+	if language == "" {
+		language = "en"
+	}
+	return indexPageData{
+		ProjectName: projectName,
+		ThemeClass:  themeClass,
+		Language:    language,
+		Direction:   directionOf(language),
+		DemoMode:    demo,
+		Nonce:       nonce,
 	}
 }
 

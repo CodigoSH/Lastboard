@@ -2,8 +2,12 @@ package web
 
 import (
 	"context"
+	htmltemplate "html/template"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -103,5 +107,90 @@ func TestBothDirectionListsAgree(t *testing.T) {
 		if !frontend[language] {
 			t.Errorf("the server treats %q as right-to-left and the frontend does not", language)
 		}
+	}
+}
+
+// The demo page is the one index.html render nobody is logged in for, so it is
+// also the one no manual pass ever opens. When index.html grew `lang` and `dir`
+// the dashboard handler was updated and the demo one was not, and because a
+// missing field is a template *execution* error the page died mid-tag: 28 bytes
+// of HTML, status 200 already on the wire, and a blank screen. Shipped in two
+// releases before anyone hit it.
+//
+// Rendering it end to end is what catches that class of mistake — the error
+// only exists at execution, so nothing short of executing it will do.
+func TestDemoPageRendersCompletely(t *testing.T) {
+	t.Setenv("DEMO_ONLY", "true")
+
+	file, err := os.CreateTemp(t.TempDir(), "demo_*.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+
+	db, err := database.InitDB(file.Name())
+	if err != nil {
+		t.Fatalf("init db: %v", err)
+	}
+	defer db.Close()
+
+	server := NewServer(db.DB)
+
+	rec := httptest.NewRecorder()
+	server.Router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/demo", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /demo = %d, want 200", rec.Code)
+	}
+
+	body := rec.Body.String()
+	for _, want := range []string{`lang="en"`, `dir="ltr"`, "<app-topbar", "</html>"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("demo page is missing %q — it stopped at %d bytes:\n%s",
+				want, len(body), body)
+		}
+	}
+}
+
+// Every field index.html asks for has to exist on the value it is rendered
+// with, in both of its shapes. Adding a `{{.Whatever}}` to the template without
+// a field to match it takes the page down at request time and at no other
+// moment: it compiles, it parses, and it only fails once someone loads it.
+func TestIndexTemplateRendersWithBothPageShapes(t *testing.T) {
+	file, err := os.CreateTemp(t.TempDir(), "index_*.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+
+	db, err := database.InitDB(file.Name())
+	if err != nil {
+		t.Fatalf("init db: %v", err)
+	}
+	defer db.Close()
+
+	server := NewServer(db.DB)
+
+	tmpl, err := htmltemplate.ParseFS(server.assets, "index.html")
+	if err != nil {
+		t.Fatalf("parse index.html: %v", err)
+	}
+
+	cases := map[string]indexPageData{
+		"dashboard": newIndexPageData("Lastboard", "dark-mode", "es", false, "test-nonce"),
+		"demo":      newIndexPageData("Lastboard", "dark-mode", "", true, "test-nonce"),
+		"rtl":       newIndexPageData("Lastboard", "", "ar", false, "test-nonce"),
+	}
+
+	for name, data := range cases {
+		t.Run(name, func(t *testing.T) {
+			var out strings.Builder
+			if err := tmpl.Execute(&out, data); err != nil {
+				t.Fatalf("index.html does not render for the %s page: %v", name, err)
+			}
+			if !strings.Contains(out.String(), "</html>") {
+				t.Errorf("%s page stopped early, at %d bytes", name, out.Len())
+			}
+		})
 	}
 }
