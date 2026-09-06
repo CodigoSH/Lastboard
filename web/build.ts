@@ -95,10 +95,19 @@ if (result.success && resultSetup.success && resultLogin.success) {
             console.log("✅ Images copied to web/dist/images");
         }
 
-        // Copy Favicon explicitly to root
-        if (existsSync('./web/public/favicon.png')) {
-            await cp('./web/public/favicon.png', './web/dist/favicon.png');
-            console.log("✅ Favicon copied to web/dist/favicon.png");
+        // Copy the loose files at the top of web/public (favicon and the PWA
+        // icons) to the dist root, which is where the app and the manifest ask
+        // for them. Reading the directory rather than naming each one is
+        // deliberate: the manifest gained three icons that an explicit list
+        // silently left behind, and the page only broke on a real phone.
+        {
+            const copied: string[] = [];
+            for (const entry of await readdir('./web/public', { withFileTypes: true })) {
+                if (!entry.isFile()) continue;
+                await cp(`./web/public/${entry.name}`, `./web/dist/${entry.name}`);
+                copied.push(entry.name);
+            }
+            console.log(`✅ Root assets copied to web/dist: ${copied.sort().join(', ')}`);
         }
 
         // Copy Web Manifest explicitly to root
