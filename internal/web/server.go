@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -42,6 +44,9 @@ type Server struct {
 	WSHub         *api.Hub
 	assets        fs.FS
 	sessionSecret []byte
+	// locales are the language codes actually shipped, read once from the
+	// embedded locale files so the list cannot drift from what exists.
+	locales []string
 }
 
 func NewServer(db *sql.DB) *Server {
@@ -62,6 +67,7 @@ func NewServer(db *sql.DB) *Server {
 		WSHub:         api.NewHub(),
 		assets:        assets,
 		sessionSecret: secret,
+		locales:       shippedLocales(assets),
 	}
 
 	s.routes()
@@ -430,12 +436,17 @@ func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	language := preferredLanguage(r.Header.Get("Accept-Language"), s.locales)
 	data := struct {
-		DemoOnly bool
-		Nonce    string
+		DemoOnly  bool
+		Nonce     string
+		Language  string
+		Direction string
 	}{
-		DemoOnly: os.Getenv("DEMO_ONLY") == "true",
-		Nonce:    cspNonce(r),
+		DemoOnly:  os.Getenv("DEMO_ONLY") == "true",
+		Nonce:     cspNonce(r),
+		Language:  language,
+		Direction: directionOf(language),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -454,10 +465,15 @@ func (s *Server) serveSetupPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	language := preferredLanguage(r.Header.Get("Accept-Language"), s.locales)
 	data := struct {
-		Nonce string
+		Nonce     string
+		Language  string
+		Direction string
 	}{
-		Nonce: cspNonce(r),
+		Nonce:     cspNonce(r),
+		Language:  language,
+		Direction: directionOf(language),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -566,6 +582,90 @@ func newIndexPageData(projectName, themeClass, language string, demo bool, nonce
 		DemoMode:    demo,
 		Nonce:       nonce,
 	}
+}
+
+// shippedLocales lists the language codes that have a locale file, so nothing
+// has to repeat the list of twenty by hand. An unreadable directory yields just
+// English, which is the fallback everywhere else too.
+func shippedLocales(assets fs.FS) []string {
+	entries, err := fs.ReadDir(assets, "locales")
+	if err != nil {
+		slog.Warn("Could not read the locales directory", "error", err)
+		return []string{"en"}
+	}
+	codes := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if name, ok := strings.CutSuffix(entry.Name(), ".json"); ok {
+			codes = append(codes, name)
+		}
+	}
+	if len(codes) == 0 {
+		return []string{"en"}
+	}
+	return codes
+}
+
+// preferredLanguage picks a shipped language out of an Accept-Language header.
+//
+// The login and setup pages are painted before anyone is logged in, so there is
+// no stored preference to read: the header is the only thing the server knows.
+// It gets the first paint right for whoever has not overridden the language,
+// and for whoever has, the frontend corrects it as it does today — which beats
+// telling every visitor the page is in English.
+//
+// Quality values order the candidates; a tag with a region ("es-ES") matches on
+// its base. Anything unparseable is skipped rather than failing the request.
+func preferredLanguage(header string, available []string) string {
+	if header == "" {
+		return "en"
+	}
+	shipped := make(map[string]bool, len(available))
+	for _, code := range available {
+		shipped[code] = true
+	}
+
+	type candidate struct {
+		code    string
+		quality float64
+		order   int
+	}
+	var candidates []candidate
+
+	for index, part := range strings.Split(header, ",") {
+		tag, params, _ := strings.Cut(strings.TrimSpace(part), ";")
+		tag = strings.TrimSpace(tag)
+		if tag == "" || tag == "*" {
+			continue
+		}
+		quality := 1.0
+		if value, ok := strings.CutPrefix(strings.TrimSpace(params), "q="); ok {
+			parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+			if err != nil {
+				continue
+			}
+			quality = parsed
+		}
+		if quality <= 0 {
+			continue
+		}
+		base, _, _ := strings.Cut(tag, "-")
+		candidates = append(candidates, candidate{strings.ToLower(base), quality, index})
+	}
+
+	// Stable by quality, then by the order they were written in.
+	sort.SliceStable(candidates, func(i, j int) bool {
+		if candidates[i].quality != candidates[j].quality {
+			return candidates[i].quality > candidates[j].quality
+		}
+		return candidates[i].order < candidates[j].order
+	})
+
+	for _, c := range candidates {
+		if shipped[c.code] {
+			return c.code
+		}
+	}
+	return "en"
 }
 
 // directionOf reports how a language reads, for the document's dir attribute.

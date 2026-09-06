@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -110,6 +111,37 @@ func TestBothDirectionListsAgree(t *testing.T) {
 	}
 }
 
+// newTestServer returns a server on an empty database. Pass withUser when the
+// page under test is one that only exists once somebody has an account: /login
+// redirects to /setup on a fresh install, and /setup redirects to /login once
+// it is done, so a test that ignores this asserts against a redirect body.
+func newTestServer(t *testing.T, withUser bool) *Server {
+	t.Helper()
+
+	file, err := os.CreateTemp(t.TempDir(), "server_*.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+
+	db, err := database.InitDB(file.Name())
+	if err != nil {
+		t.Fatalf("init db: %v", err)
+	}
+	t.Cleanup(func() { db.Close() })
+
+	if withUser {
+		if _, err := db.DB.Exec(
+			"INSERT INTO users (username, password, role) VALUES (?, ?, 'admin')",
+			"probe", "not-a-real-hash",
+		); err != nil {
+			t.Fatalf("seed user: %v", err)
+		}
+	}
+
+	return NewServer(db.DB)
+}
+
 // The demo page is the one index.html render nobody is logged in for, so it is
 // also the one no manual pass ever opens. When index.html grew `lang` and `dir`
 // the dashboard handler was updated and the demo one was not, and because a
@@ -122,19 +154,7 @@ func TestBothDirectionListsAgree(t *testing.T) {
 func TestDemoPageRendersCompletely(t *testing.T) {
 	t.Setenv("DEMO_ONLY", "true")
 
-	file, err := os.CreateTemp(t.TempDir(), "demo_*.db")
-	if err != nil {
-		t.Fatal(err)
-	}
-	file.Close()
-
-	db, err := database.InitDB(file.Name())
-	if err != nil {
-		t.Fatalf("init db: %v", err)
-	}
-	defer db.Close()
-
-	server := NewServer(db.DB)
+	server := newTestServer(t, false)
 
 	rec := httptest.NewRecorder()
 	server.Router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/demo", nil))
@@ -157,19 +177,7 @@ func TestDemoPageRendersCompletely(t *testing.T) {
 // a field to match it takes the page down at request time and at no other
 // moment: it compiles, it parses, and it only fails once someone loads it.
 func TestIndexTemplateRendersWithBothPageShapes(t *testing.T) {
-	file, err := os.CreateTemp(t.TempDir(), "index_*.db")
-	if err != nil {
-		t.Fatal(err)
-	}
-	file.Close()
-
-	db, err := database.InitDB(file.Name())
-	if err != nil {
-		t.Fatalf("init db: %v", err)
-	}
-	defer db.Close()
-
-	server := NewServer(db.DB)
+	server := newTestServer(t, false)
 
 	tmpl, err := htmltemplate.ParseFS(server.assets, "index.html")
 	if err != nil {
@@ -192,5 +200,100 @@ func TestIndexTemplateRendersWithBothPageShapes(t *testing.T) {
 				t.Errorf("%s page stopped early, at %d bytes", name, out.Len())
 			}
 		})
+	}
+}
+
+// The login and setup pages are painted before anyone has logged in, so the
+// stored language the frontend reads is not available to the server: without
+// this, every visitor was served a page claiming to be in English, and Arabic,
+// Persian and Urdu got a left-to-right first paint before the bundle flipped it.
+func TestPreferredLanguage(t *testing.T) {
+	available := []string{"ar", "de", "en", "es", "fr", "ja"}
+
+	cases := map[string]string{
+		"":                        "en",
+		"es":                      "es",
+		"es-ES":                   "es", // a region matches on its base
+		"ES-es":                   "es", // and case does not matter
+		"ar-EG,ar;q=0.9":          "ar", // right-to-left resolves too
+		"pt-BR,pt;q=0.9,en;q=0.8": "en", // first shipped one down the list
+		"nl,fi":                   "en", // nothing shipped: English
+		"en;q=0.4,de;q=0.9":       "de", // quality wins over order
+		"de;q=0,es":               "es", // q=0 means "not acceptable"
+		"*":                       "en", // a wildcard names no language
+		"fr;q=nonsense,ja":        "ja", // an unparseable q is skipped
+		"  es-ES , en ":           "es", // whitespace around the tags
+	}
+
+	for header, want := range cases {
+		if got := preferredLanguage(header, available); got != want {
+			t.Errorf("preferredLanguage(%q) = %q, want %q", header, got, want)
+		}
+	}
+}
+
+// The list of shipped languages is read from the locale files rather than
+// written out again, so it cannot drift from what actually ships.
+func TestShippedLocalesMatchTheLocaleFiles(t *testing.T) {
+	server := newTestServer(t, false)
+
+	if len(server.locales) < 20 {
+		t.Errorf("only %d locales found (%v); twenty ship with the app",
+			len(server.locales), server.locales)
+	}
+	for _, want := range []string{"en", "es", "ar", "fa", "ur", "zh"} {
+		if !slices.Contains(server.locales, want) {
+			t.Errorf("%q is missing from the shipped locales: %v", want, server.locales)
+		}
+	}
+	// Every right-to-left language the server knows about has to be one it ships,
+	// or the direction list is describing something that is not there.
+	for _, code := range server.locales {
+		if directionOf(code) == "rtl" && !slices.Contains([]string{"ar", "fa", "ur", "he"}, code) {
+			t.Errorf("%q reports rtl but is not in the direction list", code)
+		}
+	}
+}
+
+// Both pre-auth pages render, and they say what language they are in. They have
+// their own handlers and their own data, so neither is covered by the tests for
+// the dashboard: this is the same shape of mistake that blanked the demo page.
+func TestPreAuthPagesDeclareTheirLanguage(t *testing.T) {
+	// /login only renders once an account exists; /setup only before that.
+	for page, withUser := range map[string]bool{"/login": true, "/setup": false} {
+		t.Run(page, func(t *testing.T) {
+			server := newTestServer(t, withUser)
+
+			request := httptest.NewRequest(http.MethodGet, page, nil)
+			request.Header.Set("Accept-Language", "ar-EG,ar;q=0.9,en;q=0.5")
+			rec := httptest.NewRecorder()
+			server.Router.ServeHTTP(rec, request)
+
+			if rec.Code != http.StatusOK {
+				t.Fatalf("GET %s = %d, want 200", page, rec.Code)
+			}
+			body := rec.Body.String()
+			for _, want := range []string{`lang="ar"`, `dir="rtl"`, "</html>"} {
+				if !strings.Contains(body, want) {
+					t.Errorf("%s is missing %q (%d bytes)", page, want, len(body))
+				}
+			}
+		})
+	}
+}
+
+// The login page is where someone installs Lastboard from on a phone, because
+// that is the page they land on with no session. Without the manifest linked
+// there, the browser has nothing to install and falls back to a bookmark.
+func TestLoginPageLinksTheManifest(t *testing.T) {
+	server := newTestServer(t, true)
+
+	rec := httptest.NewRecorder()
+	server.Router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/login", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /login = %d, want 200", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `rel="manifest"`) {
+		t.Error("the login page does not link the web app manifest")
 	}
 }
