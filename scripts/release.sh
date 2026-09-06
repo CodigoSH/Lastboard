@@ -361,7 +361,7 @@ fi
 # `fix:` or an `i18n:` however documentary it feels — v1.7.0-Beta.16 carried
 # "an instance has one administrator" as `docs:`, and it had rewritten a warning
 # in twenty locale files.
-HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chore: bump|pre-release|^Merge branch|^Merge remote-tracking|^test(\([a-z0-9_ -]+\))?!?:|^ci(\([a-z0-9_ -]+\))?!?:|^style(\([a-z0-9_ -]+\))?!?:|^docs(\([a-z0-9_ -]+\))?!?:|^[a-z]+\(docs\)!?:'
+HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chore: bump|pre-release|^Merge branch|^Merge remote-tracking|^test(\([a-z0-9_ -]+\))?!?:|^ci(\([a-z0-9_ -]+\))?!?:|^style(\([a-z0-9_ -]+\))?!?:|^docs(\([a-z0-9_ -]+\))?!?:|^[a-z]+\(docs\)!?:|^[a-z]+\(ci\)!?:'
 
 # One normalizer for every section. The previous code had two — a decent regex
 # for the typed buckets and `sed 's/^[a-z]*: //'` for everything else, which only
