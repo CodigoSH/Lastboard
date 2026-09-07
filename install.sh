@@ -15,6 +15,15 @@ GRAY='\033[0;90m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+# The public keys a release may be signed with.
+#
+# A list, mirroring releasePublicKeys in internal/web/util/signature.go, and for
+# the same reason: a release signed with a rotated key has to stay verifiable by
+# an installer somebody downloaded last month. Append, never replace.
+RELEASE_KEYS=(
+    "kip44L4a8PBJ7CVWJSOJx5AaBTcpgM1tu9x05r+1Rz0="
+)
+
 # Configuration
 INSTALL_DIR="/opt/lastboard"
 BIN_DIR="/usr/local/bin"
@@ -167,6 +176,73 @@ if ! curl -fL -s -o checksums.txt "$CHECKSUM_URL"; then
     rm -f lastboard.tar.gz
     exit 1
 fi
+
+# The signature over checksums.txt, checked before the checksums are believed.
+#
+# Without this the only thing standing behind a fresh install is that
+# checksums.txt arrived over HTTPS — and whoever can serve the binary can serve
+# the checksum that matches it. Every release has been signed since v1.7.3;
+# signature.go says these keys are for "auto-update and install", and until now
+# only the first half was true.
+status_msg "Verifying signature..."
+if ! curl -fL -s -o checksums.txt.sig "$CHECKSUM_URL.sig"; then
+    echo -e "${RED}  This release has no signature. Aborting.${NC}"
+    echo -e "${GRAY}  Installing something nobody signed is not worth the convenience.${NC}"
+    rm -f lastboard.tar.gz checksums.txt checksums.txt.sig
+    exit 1
+fi
+
+if [ ${#RELEASE_KEYS[@]} -eq 0 ]; then
+    echo -e "${RED}  This installer has no release keys, so it cannot verify anything.${NC}"
+    rm -f lastboard.tar.gz checksums.txt checksums.txt.sig
+    exit 1
+fi
+
+if ! command -v openssl >/dev/null; then
+    echo -e "${RED}  openssl is required to check the release signature.${NC}"
+    rm -f lastboard.tar.gz checksums.txt checksums.txt.sig
+    exit 1
+fi
+
+# `pkeyutl -rawin` arrived in OpenSSL 3.0. On 1.1.1 there is no command-line way
+# to verify ed25519 at all, and the errors it gives read as though the signature
+# were bad rather than the tool too old.
+OPENSSL_MAJOR=$(openssl version 2>/dev/null | sed -nE 's/^OpenSSL ([0-9]+).*/\1/p')
+if [ -z "$OPENSSL_MAJOR" ] || [ "$OPENSSL_MAJOR" -lt 3 ]; then
+    echo -e "${RED}  openssl 3.0 or newer is required to verify an ed25519 signature.${NC}"
+    echo -e "${GRAY}  This machine has: $(openssl version 2>&1 | head -1)${NC}"
+    rm -f lastboard.tar.gz checksums.txt checksums.txt.sig
+    exit 1
+fi
+
+base64 -d < checksums.txt.sig > signature.bin 2>/dev/null || {
+    echo -e "${RED}  The signature is not valid base64. Aborting.${NC}"
+    rm -f lastboard.tar.gz checksums.txt checksums.txt.sig signature.bin
+    exit 1
+}
+
+VERIFIED=false
+for key in "${RELEASE_KEYS[@]}"; do
+    # An ed25519 public key as a DER SubjectPublicKeyInfo is a fixed 12-byte
+    # prefix followed by the 32 raw bytes, which is what lets openssl read a key
+    # we ship as plain base64.
+    printf '%s' "MCowBQYDK2VwAyEA$key" | base64 -d > key.der 2>/dev/null || continue
+    openssl pkey -pubin -inform DER -in key.der -out key.pem 2>/dev/null || continue
+    if openssl pkeyutl -verify -pubin -inkey key.pem -rawin \
+        -in checksums.txt -sigfile signature.bin >/dev/null 2>&1; then
+        VERIFIED=true
+        break
+    fi
+done
+rm -f checksums.txt.sig signature.bin key.der key.pem
+
+if [ "$VERIFIED" != true ]; then
+    echo -e "${RED}  The signature does not match any key this installer knows.${NC}"
+    echo -e "${GRAY}  Do not run what you just downloaded.${NC}"
+    rm -f lastboard.tar.gz checksums.txt
+    exit 1
+fi
+success_msg "Signature verified."
 
 EXPECTED_HASH=$(grep "$ARCHIVE_NAME" checksums.txt | awk '{print $1}')
 if [ -z "$EXPECTED_HASH" ]; then
