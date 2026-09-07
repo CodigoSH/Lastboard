@@ -31,6 +31,12 @@ env:
 jobs:
   prune:
     runs-on: ubuntu-latest
+    # `ubuntu-latest` is a label the runner translates, and by default it lands
+    # on a Node image built on Debian bullseye — 2021, OpenSSL 1.1.1w. Pinned so
+    # what this runs on is a decision in the diff rather than a line in a config
+    # file on the server that nothing versions. See the house rule in
+    # codigosh/releases.md.
+    container: node:22-bookworm
     steps:
       - name: Prune old releases and images
         env:
