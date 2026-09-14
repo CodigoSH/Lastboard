@@ -59,6 +59,12 @@ var mayReachTheNetwork = map[string]string{
 	// intermediaries" sentence true rather than merely intended.
 	"internal/web/api/update.go": "releases from git.codigosh.com, host-checked before download",
 
+	// The operator's own hypervisor, at the address they typed, with a token
+	// they minted. Same shape as the Docker widget one line up: it is the
+	// machine underneath their services, not a third party — nothing about a
+	// board's contents leaves, and the credential never reaches the browser.
+	"internal/web/api/proxmox_client.go": "the Proxmox integration, against the operator's own host",
+
 	// A separate binary, run by the container to ask the server whether it is
 	// alive. It dials its own port.
 	"cmd/healthcheck/main.go": "the container health check, dialling this instance",
