@@ -192,6 +192,11 @@ class AddBookmarkModal extends HTMLElement {
 
             const iconUrl = await materializeIcon(resolveIconUrl(this.selectedIconName));
 
+            // The machine↔bookmark index is cached across boards; a bookmark
+            // that just changed hands has to rebuild it.
+            const { clearProxmoxLinks } = await import('../../../services/proxmoxLinks');
+            clearProxmoxLinks();
+
             const content = JSON.stringify({
                 label: this.bookmarkTitle,
                 url: this.protocol + this.url.replace(/^https?:\/\//, ''),

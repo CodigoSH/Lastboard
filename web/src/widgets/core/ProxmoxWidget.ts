@@ -3,6 +3,8 @@ import { apiService } from '../../services/apiService';
 import { dashboardStore } from '../../store/dashboardStore';
 import { escapeHtml } from '../../services/escape';
 import { adoptSharedStyles } from '../../services/sharedStyles';
+import { loadProxmoxLinks, proxmoxLinks } from '../../services/proxmoxLinks';
+import { resolveIconUrl } from '../../services/iconUrl';
 
 /** A node as /api/proxmox/overview reports it. Percentages, not fractions. */
 interface PxNode {
@@ -154,6 +156,9 @@ class ProxmoxWidget extends HTMLElement {
     // ── Data ──
 
     private async load() {
+        // Which machine backs which bookmark, from every board: see
+        // proxmoxLinks. It arrives on its own and repaints when it does.
+        loadProxmoxLinks().then(() => { if (this.isConnected) this.refreshBody(); }).catch(() => { });
         try {
             this.data = await apiService.get<PxOverview>('/api/proxmox/overview');
             this.error = '';
@@ -217,6 +222,13 @@ class ProxmoxWidget extends HTMLElement {
             + this.meter(i18n.t('widget.proxmox.disk'), node.disk);
     }
 
+    /** The bookmark this machine serves, if its owner said so. */
+    private link(g: PxGuest) {
+        const l = proxmoxLinks().get(g.vmid);
+        if (!l) return null;
+        return l.node && l.node !== g.node ? null : l;
+    }
+
     /** The node the header speaks for: the one under most pressure. */
     private worstNode(): PxNode | null {
         if (!this.data?.nodes.length) return null;
@@ -233,15 +245,23 @@ class ProxmoxWidget extends HTMLElement {
         // The icon slot is the bookmark's icon once a machine is tied to one.
         // Until then it wears the board's own fallback, which is what a
         // bookmark with no icon wears too.
+        const link = this.link(g);
+        const icon = link?.icon
+            ? `<img src="${escapeHtml(resolveIconUrl(link.icon))}" alt="" loading="lazy">`
+            : ICON_FALLBACK;
+        // A stopped machine nobody bookmarked is a stopped machine; a stopped
+        // machine with a service on it is an outage, and says so.
+        const flag = !g.running && !!link;
+
         const action = power
             ? `<button class="px-act" data-power data-vmid="${g.vmid}" ${busy ? 'disabled' : ''}
                     aria-label="${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}"
                >${g.running ? ICON_STOP : ICON_PLAY}</button>`
             : '';
 
-        return `<div class="px-row${g.running ? '' : ' px-row--off'}">
-            <span class="px-dot px-dot--${g.running ? 'up' : 'off'}"></span>
-            <span class="px-ico">${ICON_FALLBACK}</span>
+        return `<div class="px-row${g.running ? '' : ' px-row--off'}${flag ? ' px-row--flag' : ''}">
+            <span class="px-dot px-dot--${g.running ? 'up' : (flag ? 'bad' : 'off')}"></span>
+            <span class="px-ico">${icon}</span>
             <span class="px-name">
                 <b>${escapeHtml(g.name) || '—'}</b>
                 <span>${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}</span>
@@ -261,12 +281,14 @@ class ProxmoxWidget extends HTMLElement {
         const guests = this.data?.guests ?? [];
         if (!guests.length) return `<div class="px-state">${escapeHtml(i18n.t('widget.proxmox.empty'))}</div>`;
 
-        // Stopped first, then by id. The page keeps a stable order because its
-        // grid is complete; a tile shows only the first few rows, so anything
-        // that needs attention has to be among them or it is not shown at all.
+        // A tile shows only the first few rows, so what needs attention has to
+        // be among them or it is not shown at all. The order is by how much it
+        // needs saying: a stopped machine that serves a bookmark is an outage,
+        // a stopped machine nobody linked is usually on purpose.
+        const rank = (g: PxGuest) => (g.running ? 2 : (this.link(g) ? 0 : 1));
         const sorted = [...guests].sort((a, b) => {
-            if (a.running !== b.running) return a.running ? 1 : -1;
-            return a.vmid - b.vmid;
+            const d = rank(a) - rank(b);
+            return d !== 0 ? d : a.vmid - b.vmid;
         });
         const shown = sorted.slice(0, MAX_ROWS);
         const running = guests.filter(g => g.running).length;
@@ -403,6 +425,12 @@ const CSS = `
 
 .px-ico { display: grid; place-items: center; color: var(--text-dim); }
 .px-ico svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5px; fill: none; }
+.px-ico img { width: 16px; height: 16px; object-fit: contain; border-radius: 3px; }
+
+/* An outage wears the accent on its leading edge — logical, so it stays on the
+   side the reader starts from in Arabic too. */
+.px-row--flag { border-inline-start: 2px solid var(--accent); padding-inline-start: 8px; }
+.px-dot--bad { background: var(--danger-color); }
 
 .px-name { min-width: 0; }
 .px-name b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -38,6 +38,12 @@ class ApiService {
 
                 // Dashboard Items
                 if (url === '/api/dashboard') return demoService.fetchItems() as any;
+                // The Proxmox page reads every board to find the bookmark a
+                // machine backs, so the demo has to answer for a named one too.
+                if (url.startsWith('/api/dashboard?dashboard_id=') && method === 'GET') {
+                    const id = parseInt(url.split('=')[1] || '0', 10);
+                    return demoService.fetchItems(id || undefined) as any;
+                }
                 if (url.startsWith('/api/dashboard/item') && method === 'POST') {
                     return demoService.saveItem(body) as any;
                 }
@@ -75,6 +81,32 @@ class ApiService {
                     return { ok: true, deleted: 0 } as any;
                 }
                 if (url === '/api/monitor/test') return { ok: true } as any;
+
+                // Proxmox (Demo: synthetic, see demoProxmox)
+                if (url === '/api/proxmox/settings' && method === 'GET') {
+                    return { enabled: true, url: '', token_id: '', insecure: true, has_secret: false } as any;
+                }
+                if (url === '/api/proxmox/settings' && method === 'POST') {
+                    // Nothing to save: the demo has no hypervisor to point at.
+                    return { status: 'ok' } as any;
+                }
+                if (url === '/api/proxmox/overview') {
+                    const { buildOverview } = await import('./demoProxmox');
+                    return buildOverview() as any;
+                }
+                if (url.startsWith('/api/proxmox/series')) {
+                    const { buildSeries } = await import('./demoProxmox');
+                    const params = new URLSearchParams(url.split('?')[1] || '');
+                    const vmid = params.get('vmid');
+                    return buildSeries(params.get('range') || '24h', vmid ? parseInt(vmid, 10) : undefined) as any;
+                }
+                if (url === '/api/proxmox/power' && method === 'POST') {
+                    // The demo really does start and stop its machines, so the
+                    // page can be tried end to end — it just forgets on reload.
+                    const { setRunning } = await import('./demoProxmox');
+                    setRunning(Number(body.vmid), body.action === 'start');
+                    return { status: 'ok' } as any;
+                }
 
                 // Multi-Dashboard (Demo: persisted in localStorage via demoService)
                 if (url === '/api/dashboards' && method === 'GET') return demoService.fetchDashboards() as any;

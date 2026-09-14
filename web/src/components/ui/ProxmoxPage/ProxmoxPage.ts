@@ -3,7 +3,7 @@ import { apiService } from '../../../services/apiService';
 import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
-import { dashboardStore } from '../../../store/dashboardStore';
+import { loadProxmoxLinks, proxmoxLinks } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import css from './ProxmoxPage.css' with { type: 'text' };
 
@@ -130,6 +130,9 @@ class ProxmoxPage extends HTMLElement {
     // ── Data ──
 
     private async load() {
+        // The links come from every board, not the one behind this page, so a
+        // machine is flagged the same wherever the visitor happened to be.
+        loadProxmoxLinks().then(() => { if (this.hasAttribute('open')) this.paint(); }).catch(() => { });
         try {
             this.data = await apiService.get<PxOverview>('/api/proxmox/overview');
             this.error = '';
@@ -144,24 +147,15 @@ class ProxmoxPage extends HTMLElement {
     /**
      * The bookmark a machine backs, if its owner said so.
      *
-     * This is the whole point of the page, and it costs nothing: the board is
-     * already in the store, and the association lives in the bookmark's own
-     * content, so no column and no migration were needed for it.
+     * This is the whole point of the page, and it needed no column and no
+     * migration: the association lives in the bookmark's own content. The index
+     * spans every board — see proxmoxLinks for why that is not a detail.
      */
     private backing(g: PxGuest): Backed | null {
-        const items = dashboardStore.getState().items || [];
-        for (const item of items) {
-            if (item.type !== 'bookmark' || !item.content) continue;
-            try {
-                const c = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
-                const px = c?.proxmox;
-                if (!px) continue;
-                if (Number(px.vmid) !== g.vmid) continue;
-                if (px.node && px.node !== g.node) continue;
-                return { label: c.label || '', url: c.url || '', icon: c.icon || c.iconName || '' };
-            } catch { /* a bookmark with unreadable content is simply not linked */ }
-        }
-        return null;
+        const link = proxmoxLinks().get(g.vmid);
+        if (!link) return null;
+        if (link.node && link.node !== g.node) return null;
+        return { label: link.label, url: link.url, icon: link.icon };
     }
 
     // ── Markup ──
