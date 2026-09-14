@@ -27,7 +27,10 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
     // Edit mode, the settings drawer and the status page are exclusive: each one
     // takes over the UI, so while any of them is active every unrelated control
     // is greyed out and only the one that leads back out stays clickable.
-    const locked = editMode || drawerOpen || monitorOpen;
+    // A full-screen page locks the bar behind it. Proxmox was missing here,
+    // which left the board's own search live under the page's one — two search
+    // boxes, one of them filtering a board nobody could see.
+    const locked = editMode || drawerOpen || monitorOpen || proxmoxOpen;
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -97,7 +100,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
             </div>
 
             <!-- Edit Mode Toggle -->
-            <div id="edit-toggle" class="top-bar__toggle ${drawerOpen || monitorOpen ? 'top-bar__toggle--disabled' : ''}" title="${i18n.t('topbar.edit_tooltip')}"
+            <div id="edit-toggle" class="top-bar__toggle ${drawerOpen || monitorOpen || proxmoxOpen ? 'top-bar__toggle--disabled' : ''}" title="${i18n.t('topbar.edit_tooltip')}"
                  style="margin-right: -6px; ${editMode ? 'color: var(--accent);' : ''}">
                 <svg id="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     ${editMode ? `
