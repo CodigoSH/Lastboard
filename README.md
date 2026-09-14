@@ -54,6 +54,7 @@ Most self-hosted dashboards are either too heavy, too ugly, or too complex to ma
 - **Guided setup wizard** — first run walks you through everything. Zero config files to touch.
 - **Multi-dashboard system** — create and switch between multiple independent dashboards, each with its own layout and widgets. Move items between them without rebuilding anything.
 - **Uptime monitoring** — server-side checks around the clock, with history, latency charts, outage logs, and alerts via ntfy, Gotify or a webhook.
+- **Proxmox integration** — read your hypervisor with an API token: nodes, storage and every machine, tied to the bookmark it serves, so a stopped container says which service it takes with it.
 - **No lock-in** — export your dashboards as open, documented YAML, and import straight from Homepage or Dashy.
 - **Multi-user support** — per-user preferences and password management.
 - **Personalized backgrounds** — Set a custom image for your dashboard, optimized and saved per user.
@@ -71,7 +72,7 @@ Lastboard is built from the ground up with defense-in-depth principles, includin
 
 For a detailed breakdown of our security measures, please refer to our [Security Overview](https://codigosh.com/docs/lastboard/security/overview/).
 
-### Widgets (7)
+### Widgets (9)
 
 | Widget | Description |
 | :--- | :--- |
@@ -81,6 +82,8 @@ For a detailed breakdown of our security measures, please refer to our [Security
 | **Weather** | Current conditions and forecast via Open-Meteo |
 | **Markdown** | Freeform Markdown renderer for notes and links |
 | **Docker** | Live monitoring and lifecycle management (Start/Stop/Restart) of your containers |
+| **Monitoring** | The uptime of every monitored service on a tile: heartbeat, latency and 24-hour uptime |
+| **Proxmox** | Your hypervisor's node health and the machines behind your bookmarks, with start and shutdown |
 | **API** | Any JSON endpoint on a tile — guided presets for common self-hosted services, or a fully custom request |
 
 Remote Docker hosts are reached through [Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent), a tiny token-authenticated bridge, so you never have to expose the Docker daemon over TCP.
