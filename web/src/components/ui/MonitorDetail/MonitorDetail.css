@@ -129,6 +129,9 @@
 .mhd__beat:hover { transform: scaleY(1.28) scaleX(1.15); filter: brightness(1.15); }
 .mhd__beat--up { background: var(--success-color, #2fb344); }
 .mhd__beat--down { background: var(--danger-color, #e5484d); }
+/* Some checks failed in this slice and some did not. At thirty days a bar is
+   eighteen hours wide, so this is most of what a real month looks like. */
+.mhd__beat--partial { background: var(--warning-color, #ea580c); }
 .mhd__beat--empty { background: var(--text-dim); opacity: 0.1; cursor: default; }
 .mhd__beat--empty:hover { transform: none; filter: none; }
 
@@ -310,6 +313,7 @@
 .mhd__tip-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .mhd__tip-status--up { color: var(--success-color, #2fb344); }
 .mhd__tip-status--down { color: var(--danger-color, #e5484d); }
+.mhd__tip-status--partial { color: var(--warning-color, #ea580c); }
 .mhd__tip-value { font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 2px; }
 .mhd__tip-sub { color: var(--text-dim); font-size: 11px; }
 

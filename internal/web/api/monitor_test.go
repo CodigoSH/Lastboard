@@ -520,18 +520,25 @@ func TestBucketBeatsSpansTheWholeWindow(t *testing.T) {
 	}
 }
 
-// One failed check colours its whole bucket: an outage that gets averaged away
-// by the successes around it is an outage the strip never shows.
-func TestBucketBeatsMarksABucketDownAndLeavesGapsEmpty(t *testing.T) {
+// A bucket says one of three things: everything passed, everything failed, or
+// some of each. The middle answer matters most at wide ranges — over thirty
+// days a bucket is eighteen hours, and calling that "down" for one failed check
+// contradicts the 99.9% printed next to it, while calling it "up" hides the
+// outage entirely.
+func TestBucketBeatsDistinguishesPartialFromTotalOutages(t *testing.T) {
 	now := time.Date(2026, 9, 14, 12, 0, 0, 0, time.UTC)
 	since := now.Add(-10 * time.Hour) // ten buckets of one hour
 	at := func(hoursIn int) time.Time { return since.Add(time.Duration(hoursIn)*time.Hour + 30*time.Minute) }
 
 	checks := []MonitorCheck{
 		{CheckedAt: at(0), Up: true},
+		// Bucket 1: one check failed, one did not.
 		{CheckedAt: at(1), Up: true},
-		{CheckedAt: at(1).Add(time.Minute), Up: false}, // one failure in bucket 1
-		// buckets 2..8 have nothing recorded at all
+		{CheckedAt: at(1).Add(time.Minute), Up: false},
+		// Bucket 2: every check failed.
+		{CheckedAt: at(2), Up: false},
+		{CheckedAt: at(2).Add(time.Minute), Up: false},
+		// buckets 3..8 have nothing recorded at all
 		{CheckedAt: at(9), Up: true},
 	}
 
@@ -540,7 +547,7 @@ func TestBucketBeatsMarksABucketDownAndLeavesGapsEmpty(t *testing.T) {
 		t.Fatalf("got %d beats, want 10", len(beats))
 	}
 
-	want := []string{"up", "down", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "up"}
+	want := []string{"up", "partial", "down", "empty", "empty", "empty", "empty", "empty", "empty", "up"}
 	for i, w := range want {
 		if beats[i].Status != w {
 			t.Errorf("bucket %d is %q, want %q", i, beats[i].Status, w)

@@ -492,6 +492,7 @@
   "monitor.latency": "Задержка",
   "monitor.recent_checks": "Последние проверки",
   "monitor.status_unknown": "Нет данных",
+  "monitor.status_partial": "Частичный сбой",
   "monitor.click_for_history": "Нажмите для истории",
   "monitor.no_data_yet": "История ещё не записана. Проверки появятся вскоре.",
   "monitor.incidents": "Сбои",

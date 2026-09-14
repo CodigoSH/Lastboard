@@ -310,8 +310,8 @@ func bucketBeats(checks []MonitorCheck, since, now time.Time, n int) []heartbeat
 		return []heartbeatBucket{}
 	}
 
-	seen := make([]bool, n)
-	down := make([]bool, n)
+	total := make([]int, n)
+	failed := make([]int, n)
 	for _, c := range checks {
 		offset := c.CheckedAt.Sub(since)
 		if offset < 0 {
@@ -323,9 +323,9 @@ func bucketBeats(checks []MonitorCheck, since, now time.Time, n int) []heartbeat
 			// than off the end.
 			i = n - 1
 		}
-		seen[i] = true
+		total[i]++
 		if !c.Up {
-			down[i] = true
+			failed[i]++
 		}
 	}
 
@@ -333,12 +333,20 @@ func bucketBeats(checks []MonitorCheck, since, now time.Time, n int) []heartbeat
 	for i := 0; i < n; i++ {
 		st := "empty"
 		switch {
-		case down[i]:
-			// One failure colours the whole bucket: an outage must not be
-			// averaged away by the successes around it.
-			st = "down"
-		case seen[i]:
+		case total[i] == 0:
+			// Say nothing rather than guess: a gap is not an outage.
+		case failed[i] == 0:
 			st = "up"
+		case failed[i] == total[i]:
+			st = "down"
+		default:
+			// Some failed and some did not. Over thirty days a bucket is
+			// eighteen hours wide, so painting it fully down for one failed
+			// check told the reader the service was gone all day while the
+			// figure beside it said 99.9%. Painting it up would hide the
+			// outage, which is worse. This is the third answer status pages
+			// give, and the only honest one.
+			st = "partial"
 		}
 		out = append(out, heartbeatBucket{Status: st, At: since.Add(time.Duration(i) * width)})
 	}

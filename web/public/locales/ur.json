@@ -492,6 +492,7 @@
   "monitor.latency": "لیٹنسی",
   "monitor.recent_checks": "حالیہ چیکس",
   "monitor.status_unknown": "کوئی ڈیٹا نہیں",
+  "monitor.status_partial": "جزوی خرابی",
   "monitor.click_for_history": "ہسٹری کے لیے کلک کریں",
   "monitor.no_data_yet": "ابھی کوئی ہسٹری ریکارڈ نہیں ہوئی۔ چیکس جلد ظاہر ہوں گی۔",
   "monitor.incidents": "آؤٹیجز",

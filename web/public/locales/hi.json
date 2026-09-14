@@ -492,6 +492,7 @@
   "monitor.latency": "विलंबता",
   "monitor.recent_checks": "हाल की जाँच",
   "monitor.status_unknown": "कोई डेटा नहीं",
+  "monitor.status_partial": "आंशिक व्यवधान",
   "monitor.click_for_history": "इतिहास के लिए क्लिक करें",
   "monitor.no_data_yet": "अभी कोई इतिहास दर्ज नहीं। जाँच जल्द ही दिखेंगी।",
   "monitor.incidents": "आउटेज",

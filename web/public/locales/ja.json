@@ -492,6 +492,7 @@
   "monitor.latency": "レイテンシ",
   "monitor.recent_checks": "最近のチェック",
   "monitor.status_unknown": "データなし",
+  "monitor.status_partial": "一部障害",
   "monitor.click_for_history": "クリックで履歴",
   "monitor.no_data_yet": "まだ履歴が記録されていません。まもなくチェックが表示されます。",
   "monitor.incidents": "障害",

@@ -492,6 +492,7 @@
   "monitor.latency": "延迟",
   "monitor.recent_checks": "最近检查",
   "monitor.status_unknown": "无数据",
+  "monitor.status_partial": "部分故障",
   "monitor.click_for_history": "点击查看历史",
   "monitor.no_data_yet": "尚未记录历史。检查结果将很快出现。",
   "monitor.incidents": "故障",

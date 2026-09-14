@@ -492,6 +492,7 @@
   "monitor.latency": "Καθυστέρηση",
   "monitor.recent_checks": "Πρόσφατοι έλεγχοι",
   "monitor.status_unknown": "Χωρίς δεδομένα",
+  "monitor.status_partial": "Μερική διακοπή",
   "monitor.click_for_history": "Κλικ για ιστορικό",
   "monitor.no_data_yet": "Δεν έχει καταγραφεί ιστορικό ακόμη. Οι έλεγχοι θα εμφανιστούν σύντομα.",
   "monitor.incidents": "Διακοπές",

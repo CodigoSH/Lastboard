@@ -492,6 +492,7 @@
   "monitor.latency": "Opóźnienie",
   "monitor.recent_checks": "Ostatnie sprawdzenia",
   "monitor.status_unknown": "Brak danych",
+  "monitor.status_partial": "Częściowa awaria",
   "monitor.click_for_history": "Kliknij, aby zobaczyć historię",
   "monitor.no_data_yet": "Brak zarejestrowanej historii. Sprawdzenia pojawią się wkrótce.",
   "monitor.incidents": "Awarie",

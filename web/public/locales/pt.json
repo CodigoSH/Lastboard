@@ -492,6 +492,7 @@
   "monitor.latency": "Latência",
   "monitor.recent_checks": "Verificações recentes",
   "monitor.status_unknown": "Sem dados",
+  "monitor.status_partial": "Interrupção parcial",
   "monitor.click_for_history": "Clica para ver o histórico",
   "monitor.no_data_yet": "Ainda sem histórico registado. As verificações aparecerão em breve.",
   "monitor.incidents": "Interrupções",
