@@ -24,6 +24,7 @@
  */
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -38,6 +39,7 @@ const PORT = Number(process.env.PORT || 8097);
 const CDP_PORT = Number(process.env.CDP_PORT || 9224);
 const APP = `http://localhost:${PORT}/`;
 const OUT_DIR = 'docs/assets';
+const PVE_PORT = Number(process.env.PVE_PORT || 8198);   // the stand-in hypervisor
 const WORK = join(tmpdir(), 'lastboard-docs-shots');
 const BIN = './bin/lastboard';
 
@@ -107,6 +109,7 @@ const SETTINGS_SECTIONS: [string, string][] = [
     ['personalization', 'p-personalization'],
     ['users', 'p-users'],
     ['monitoring', 'p-monitoring'],
+    ['proxmox', 'p-proxmox'],
     ['data', 'p-data'],
     ['advanced', 'p-advanced'],
     ['about', 'p-about'],
@@ -142,7 +145,15 @@ const SHOTS: Shot[] = [
     // ── Settings, one per section, all framed identically ───────────────
     ...SETTINGS_SECTIONS.map(([section, name]) => ({
         name, w: 1600, h: 940,
-        act: openSettings(section),
+        // The Proxmox card is the one place a screenshot would otherwise print
+        // an address that means something: the stand-in host runs on this
+        // machine, and a manual showing 127.0.0.1 there teaches the wrong
+        // thing. The field is dressed for the photograph in the address a
+        // reader actually has to type.
+        act: openSettings(section) + (section !== 'proxmox' ? '' : `
+            const px = ${DRAWER}.querySelector('settings-content').shadowRoot.getElementById('proxmox-url');
+            px.value = 'https://192.168.1.10:8006';
+            await sleep(200);`),
         clip: `${DRAWER}.querySelector('.right-drawer__sheet')`,
     })),
 
@@ -207,6 +218,34 @@ const SHOTS: Shot[] = [
               if (hit) { hit.click(); await sleep(1200); }`,
     },
 
+    // ── Proxmox, against the stand-in hypervisor ────────────────────────
+    {
+        // Opens on the one machine that is stopped, because that is the thing
+        // this page does that the Proxmox console does not: it names the
+        // service that went down with its container.
+        // 790 tall, measured rather than guessed: the grid ends there at this
+        // width, and the 1000px window it was first shot at published a third
+        // of an empty board under it.
+        name: 'proxmox', w: 1600, h: 790, wait: 2200,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2000);`,
+    },
+    {
+        // The sheet of the one stopped machine, which is where the page makes
+        // its case: it names the service that went down with the container.
+        name: 'proxmox-machine', w: 1600, h: 1000, pad: 0, wait: 1200,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2000);
+              const page = document.querySelector('proxmox-page').shadowRoot;
+              const tiles = [...page.querySelectorAll('.tile')];
+              const hit = tiles.find((t) => /plex/i.test(t.textContent || ''));
+              if (!hit) throw new Error('no plex tile on the page — was the fake host seeded?');
+              hit.click(); await sleep(1600);`,
+        clip: `document.querySelector('proxmox-page').shadowRoot.querySelector('dialog')`,
+    },
+    // Taller than the rest: this tile sits on the seventh row, and a widget
+    // below the fold is never mounted, so the wait would find nothing to wait
+    // for and the close-up would catch a tile that had not loaded.
+    { name: 'w-proxmox', exhibit: true, clip: tile('widget-proxmox'), pad: 0, dpr: 4, h: 1750, wait: 2500 },
+
     // ── Editing the board ───────────────────────────────────────────────
     {
         name: 'edit-mode', w: 1600, h: 880, wait: 700,
@@ -238,8 +277,10 @@ const SHOTS: Shot[] = [
     },
 
     // ── Widget settings, opened from the tile's own menu ─────────────────
-    ...[['w-p-monitor', 'widget-monitor'], ['w-api-conf', 'widget-api']].map(([name, tag]) => ({
-        name, w: 1500, h: 980, pad: 0, wait: 900,
+    ...[['w-p-monitor', 'widget-monitor'], ['w-api-conf', 'widget-api'], ['w-p-proxmox', 'widget-proxmox']].map(([name, tag]) => ({
+        // Tall enough that every tile is on the board before its menu is
+        // opened: the Proxmox one lives on the seventh row.
+        name, w: 1500, h: name === 'w-p-proxmox' ? 1750 : 980, pad: 0, wait: 900,
         // Two clicks, not one: the tile's button opens a small menu, and it is
         // that menu's Edit entry which opens the settings. Clicking only the
         // first one is why these shots came out empty the first time round.
@@ -260,6 +301,69 @@ const SHOTS: Shot[] = [
         clip: `document.querySelector('widget-config-modal').shadowRoot.querySelector('dialog')`,
     })),
 ];
+
+/**
+ * A hypervisor that is not real, so the pictures can be published.
+ *
+ * The Docker shots point at whatever Docker API the machine happens to have,
+ * and that works because the widget is photographed with a couple of test
+ * containers. Proxmox is different: pointing this at anyone's actual cluster
+ * would publish the names of the machines their household runs on. So the rig
+ * serves the two endpoints the integration reads, with a cluster invented to
+ * match the starter board — including one container left stopped, because the
+ * page's whole argument is the sentence it writes about it.
+ */
+function startFakeProxmox(): { close: () => void } {
+    const resources = [
+        { type: 'node', node: 'pve', status: 'online', cpu: 0.14, mem: 22548578304, maxmem: 34359738368, disk: 412316860416, maxdisk: 1000204886016, maxcpu: 16, uptime: 3628800 },
+        { type: 'lxc', vmid: 100, name: 'jellyfin', node: 'pve', status: 'running', cpu: 0.121, mem: 2254857830, maxmem: 4294967296, uptime: 1382400 },
+        { type: 'lxc', vmid: 101, name: 'nextcloud', node: 'pve', status: 'running', cpu: 0.043, mem: 1932735283, maxmem: 4294967296, uptime: 1382400 },
+        { type: 'qemu', vmid: 102, name: 'home-assistant', node: 'pve', status: 'running', cpu: 0.089, mem: 3113851289, maxmem: 4294967296, uptime: 1209600 },
+        { type: 'lxc', vmid: 103, name: 'pihole', node: 'pve', status: 'running', cpu: 0.011, mem: 214748364, maxmem: 1073741824, uptime: 1382400 },
+        { type: 'lxc', vmid: 104, name: 'paperless', node: 'pve', status: 'running', cpu: 0.061, mem: 1503238553, maxmem: 3221225472, uptime: 950400 },
+        { type: 'qemu', vmid: 105, name: 'immich', node: 'pve', status: 'running', cpu: 0.382, mem: 8375186227, maxmem: 12884901888, uptime: 604800 },
+        // Stopped, and a bookmark points at it: the page says which service
+        // that costs, and the widget lifts it to the top of the tile.
+        { type: 'lxc', vmid: 106, name: 'plex', node: 'pve', status: 'stopped', cpu: 0, mem: 0, maxmem: 4294967296, uptime: 0 },
+        { type: 'lxc', vmid: 107, name: 'vaultwarden', node: 'pve', status: 'running', cpu: 0.008, mem: 322122547, maxmem: 1073741824, uptime: 1382400 },
+        { type: 'lxc', vmid: 108, name: 'uptime-kuma', node: 'pve', status: 'running', cpu: 0.029, mem: 644245094, maxmem: 1073741824, uptime: 1296000 },
+        { type: 'qemu', vmid: 900, name: 'debian-12-template', node: 'pve', status: 'stopped', template: 1 },
+        { type: 'storage', storage: 'local', node: 'pve', plugintype: 'dir', disk: 19327352832, maxdisk: 100931731456, shared: 0 },
+        { type: 'storage', storage: 'local-lvm', node: 'pve', plugintype: 'lvmthin', disk: 431677874176, maxdisk: 955630223360, shared: 0 },
+        { type: 'storage', storage: 'tank', node: 'pve', plugintype: 'zfspool', disk: 7477813964800, maxdisk: 11982492172288, shared: 0 },
+        { type: 'storage', storage: 'backups', node: 'pve', plugintype: 'pbs', disk: 4266133552005, maxdisk: 4398046511104, shared: 1 },
+    ];
+
+    // An hour of RRD data, so the sparklines in a machine's sheet have a shape.
+    // `stopped` is not a detail: a machine that is down has to show a line that
+    // falls to the floor and stays there, or the picture of its sheet argues
+    // against the words beside it.
+    const rrd = (base: number, stopped = false) => Array.from({ length: 60 }, (_, i) => ({
+        time: Math.floor(Date.now() / 1000) - (60 - i) * 60,
+        cpu: stopped && i > 26 ? 0 : Math.max(0, base + Math.sin(i / 7) * base * 0.4) / 100,
+        mem: stopped && i > 26 ? 0 : 2.1e9 + Math.sin(i / 11) * 2e8,
+        maxmem: 4294967296,
+    }));
+
+    const server = createServer((req, res) => {
+        const path = (req.url || '').split('?')[0];
+        res.setHeader('content-type', 'application/json');
+        if (path === '/api2/json/cluster/resources') {
+            res.end(JSON.stringify({ data: resources }));
+        } else if (path === '/api2/json/access/permissions') {
+            res.end(JSON.stringify({ data: { '/': { 'VM.Audit': 1, 'VM.PowerMgmt': 1, 'Datastore.Audit': 1, 'Sys.Audit': 1 } } }));
+        } else if (path.endsWith('/rrddata')) {
+            const guest = resources.find((r) => path.includes(`/${r.vmid}/`));
+            res.end(JSON.stringify({ data: rrd(12, guest?.status === 'stopped') }));
+        } else if (path.endsWith('/status')) {
+            res.end(JSON.stringify({ data: { uptime: 3628800, loadavg: ['0.62', '0.71', '0.68'], cpuinfo: { cores: 8, cpus: 16 } } }));
+        } else {
+            res.end(JSON.stringify({ data: null }));
+        }
+    });
+    server.listen(PVE_PORT, '127.0.0.1');
+    return { close: () => server.close() };
+}
 
 /**
  * Gives the throwaway instance the few things the starter board cannot have on
@@ -348,6 +452,43 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
             [x, y, w, h, JSON.stringify(content), dashboardId]);
 
     addWidget(1, 5, 4, 2, { widgetId: 'monitor', items: [], refreshSec: 60, title: 'Service status' });
+
+    // Proxmox, pointed at the stand-in. The token is nonsense and says so: it
+    // is written into the picture of the settings screen, so it has to be a
+    // value nobody could mistake for a real one.
+    await api('/proxmox/settings', {
+        enabled: true,
+        url: `http://127.0.0.1:${PVE_PORT}`,
+        token_id: 'lastboard@pve!lastboard',
+        secret: '00000000-0000-0000-0000-000000000000',
+        insecure: true,
+    });
+
+    // Which bookmark each machine serves. Without this the page draws a grid of
+    // container names, which is what the Proxmox console already does; with it
+    // the tiles wear the service's icon and the stopped one says what it costs.
+    const backing: Record<string, { kind: string; vmid: number }> = {
+        Plex: { kind: 'lxc', vmid: 106 },
+        Jellyfin: { kind: 'lxc', vmid: 100 },
+        Nextcloud: { kind: 'lxc', vmid: 101 },
+        Immich: { kind: 'qemu', vmid: 105 },
+        Vaultwarden: { kind: 'lxc', vmid: 107 },
+        Paperless: { kind: 'lxc', vmid: 104 },
+        'Home Assistant': { kind: 'qemu', vmid: 102 },
+        'Pi-hole': { kind: 'lxc', vmid: 103 },
+        'Uptime Kuma': { kind: 'lxc', vmid: 108 },
+    };
+    for (const row of rows) {
+        const c = JSON.parse(row.content || '{}');
+        const px = backing[c.label];
+        if (!px) continue;
+        c.proxmox = { node: 'pve', ...px };
+        db.run(`UPDATE items SET content = ? WHERE id = ?`, [JSON.stringify(c), row.id]);
+    }
+
+    // Row seven: row five is already full (monitoring, API, Docker), and two
+    // tiles sharing a cell is not a layout, it is a bug in a photograph.
+    addWidget(1, 7, 3, 2, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: '' });
 
     // The Docker widget, pointed at whatever Docker-compatible API is listening
     // on DOCKER_API (Podman serves one too). Without it the widget is left out
@@ -531,6 +672,9 @@ async function main() {
     }));
     await waitFor(APP);
 
+    const pve = startFakeProxmox();
+    process.on('exit', () => pve.close());
+
     // The browser comes up first: the Setup Wizard only exists until an account
     // is created, so anything photographing it has to run before that call.
     await startBrowser(procs);
@@ -573,6 +717,7 @@ async function main() {
         }
     }
     if (failed.length) console.warn(`\n✗ not taken: ${failed.join(', ')}`);
+    pve.close();
     await finish();
 }
 

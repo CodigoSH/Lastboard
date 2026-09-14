@@ -17,6 +17,8 @@ Welcome to the official Lastboard documentation. Here you will find everything y
   - [Import, Export & Backup](using/import-export.md)
 - **Monitoring**
   - [Monitoring & Uptime](monitoring/overview.md)
+- **Proxmox**
+  - [Proxmox](proxmox/overview.md)
 - **Widgets**
   - [Clock](widgets/clock.md)
   - [Telemetry](widgets/telemetry.md)
@@ -25,6 +27,7 @@ Welcome to the official Lastboard documentation. Here you will find everything y
   - [Markdown](widgets/markdown.md)
   - [Monitoring](widgets/monitoring.md)
   - [Docker](widgets/docker.md)
+  - [Proxmox](widgets/proxmox.md)
   - [API](widgets/api.md)
 - **Security**
   - [Overview](security/overview.md)

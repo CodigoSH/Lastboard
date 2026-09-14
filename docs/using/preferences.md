@@ -49,6 +49,12 @@ The administrator manages who can access the instance.
 
 Turn service monitoring on, choose how often the server checks your services, and configure down/up alerts via ntfy, Gotify or a webhook. See **[Monitoring & Uptime](../monitoring/overview.md)** for the full guide.
 
+## Proxmox
+
+![Proxmox](../assets/p-proxmox.png)
+
+Connect Lastboard to a Proxmox VE host: address, API token and certificate policy. Saving reads the host straight away and says what the token can see and whether it may start and stop machines. Administrator only, and hidden from every other account. See **[Proxmox](../proxmox/overview.md)** for the token recipe and the page it unlocks.
+
 ## Data
 
 Full backup & restore, and importing/exporting dashboards. See **[Import, Export & Backup](import-export.md)**.

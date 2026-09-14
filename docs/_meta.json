@@ -5,6 +5,7 @@
     "using",
     "widgets",
     "monitoring",
+    "proxmox",
     "security",
     "help",
     "contributing"
@@ -14,6 +15,7 @@
     "using": "Using Lastboard",
     "widgets": "Widgets",
     "monitoring": "Monitoring",
+    "proxmox": "Proxmox",
     "security": "Security",
     "help": "Help",
     "contributing": "Contributing"
