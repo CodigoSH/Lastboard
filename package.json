@@ -1,6 +1,6 @@
 {
   "name": "lastboard",
-  "version": "1.7.4",
+  "version": "1.7.5-Beta.01",
   "module": "index.ts",
   "type": "module",
   "scripts": {
