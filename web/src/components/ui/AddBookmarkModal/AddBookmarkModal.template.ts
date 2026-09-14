@@ -174,6 +174,15 @@ export const template = ({
                         </div>
                     </div>
                     
+                    <!-- Which machine serves this, when there is a hypervisor to ask.
+                         Hidden until the integration answers: a board with no
+                         Proxmox must not grow a field about Proxmox. -->
+                    <div class="form-group" id="proxmox-group" style="margin-top: 12px; display: none;">
+                        <label for="bookmark-proxmox">${i18n.t('bookmark.backed_by')}</label>
+                        <select id="bookmark-proxmox" name="proxmox"></select>
+                        <small class="field-hint">${i18n.t('bookmark.backed_by_hint')}</small>
+                    </div>
+
                     <!-- Touch Visibility -->
                     <div class="form-group" style="margin-top: 12px;">
                         <div class="input-group">

@@ -429,6 +429,8 @@
   "action.upload_icon": "Symbol hochladen",
   "notifier.backup_confirm": "Diese Sicherung enthält sensible Daten, darunter die Passwort-Hashes aller Benutzer. Bewahre sie sicher auf und teile sie niemals. Fortfahren?",
   "bookmark.select": "Auswählen",
+  "bookmark.backed_by": "Läuft auf",
+  "bookmark.backed_by_hint": "Mit einer Proxmox-Maschine verknüpfen, dann kann die Seite sagen, warum dieser Dienst nicht antwortet.",
   "widget.api.name": "API",
   "widget.api.description": "Daten aus der JSON-API eines beliebigen Dienstes anzeigen",
   "widget.api.title_label": "Titel",

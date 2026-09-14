@@ -429,6 +429,8 @@
   "action.upload_icon": "Enviar ícone",
   "notifier.backup_confirm": "Esta cópia contém dados sensíveis, incluindo os hashes das senhas de todos os utilizadores. Guarde-a num local seguro e nunca a partilhe. Continuar?",
   "bookmark.select": "Selecionar",
+  "bookmark.backed_by": "Servido por",
+  "bookmark.backed_by_hint": "Liga-o a uma máquina do Proxmox e a página poderá dizer por que este serviço deixou de responder.",
   "widget.api.name": "API",
   "widget.api.description": "Mostra dados da API JSON de qualquer serviço",
   "widget.api.title_label": "Título",

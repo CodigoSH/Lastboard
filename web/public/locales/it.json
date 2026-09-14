@@ -429,6 +429,8 @@
   "action.upload_icon": "Carica icona",
   "notifier.backup_confirm": "Questo backup contiene dati sensibili, inclusi gli hash delle password di tutti gli utenti. Conservalo in un luogo sicuro e non condividerlo mai. Continuare?",
   "bookmark.select": "Seleziona",
+  "bookmark.backed_by": "Servito da",
+  "bookmark.backed_by_hint": "Collegalo a una macchina Proxmox e la pagina potrà dire perché questo servizio non risponde più.",
   "widget.api.name": "API",
   "widget.api.description": "Mostra i dati dall'API JSON di qualsiasi servizio",
   "widget.api.title_label": "Titolo",

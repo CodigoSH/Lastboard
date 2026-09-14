@@ -429,6 +429,8 @@
   "action.upload_icon": "আইকন আপলোড করুন",
   "notifier.backup_confirm": "এই ব্যাকআপে সংবেদনশীল তথ্য আছে, এর মধ্যে সব ব্যবহারকারীর পাসওয়ার্ড হ্যাশও রয়েছে। নিরাপদ জায়গায় রাখুন এবং কখনও শেয়ার করবেন না। চালিয়ে যাবেন?",
   "bookmark.select": "নির্বাচন",
+  "bookmark.backed_by": "যে মেশিনে চলে",
+  "bookmark.backed_by_hint": "একটি Proxmox মেশিনের সঙ্গে যুক্ত করুন, তাহলে পেজটি বলতে পারবে কেন এই সেবা সাড়া দিচ্ছে না।",
   "widget.api.name": "API",
   "widget.api.description": "যেকোনো সার্ভিসের JSON API থেকে ডেটা দেখান",
   "widget.api.title_label": "শিরোনাম",

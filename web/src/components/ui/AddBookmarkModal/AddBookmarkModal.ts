@@ -2,8 +2,9 @@ import { template } from './AddBookmarkModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
-import { safeImageSrc } from '../../../services/escape';
+import { safeImageSrc, escapeHtml } from '../../../services/escape';
 import { resolveIconUrl } from '../../../services/iconUrl';
+import { apiService } from '../../../services/apiService';
 import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
 import '../ColorPicker/ColorPicker';
@@ -31,6 +32,8 @@ class AddBookmarkModal extends HTMLElement {
     private labelPosition: string = 'bottom';
     private visibleTouch: boolean = true;
     private borderWidth: number = 1;
+    /** The machine that serves this bookmark, if its owner said so. */
+    private proxmox: { node: string; kind: string; vmid: number } | null = null;
 
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -176,6 +179,17 @@ class AddBookmarkModal extends HTMLElement {
             // The icon is downloaded here, once, so the board never asks a CDN
             // for it again; if that fails the original URL is kept and the
             // bookmark saves exactly as before.
+            const pxSel = this.shadowRoot?.getElementById('bookmark-proxmox') as HTMLSelectElement | null;
+            if (pxSel) {
+                const v = pxSel.value;
+                if (!v) {
+                    this.proxmox = null;
+                } else {
+                    const [node, kind, vmid] = v.split('|');
+                    this.proxmox = { node, kind, vmid: Number(vmid) };
+                }
+            }
+
             const iconUrl = await materializeIcon(resolveIconUrl(this.selectedIconName));
 
             const content = JSON.stringify({
@@ -185,6 +199,9 @@ class AddBookmarkModal extends HTMLElement {
                 icon: iconUrl,
                 iconName: this.selectedIconName,
                 statusCheck: this.checkStatus,
+                // Only written when there is one, so a board without Proxmox
+                // keeps exactly the content it had before this existed.
+                ...(this.proxmox ? { proxmox: this.proxmox } : {}),
                 statusPos: this.checkStatus ? this.statusPosition : 'off',
                 visibleTouch: this.visibleTouch,
                 openInNewTab: true,
@@ -461,8 +478,51 @@ class AddBookmarkModal extends HTMLElement {
         root.addEventListener('submit', this.submitHandler);
         root.addEventListener('input', this.inputHandler);
 
+        this.fillProxmoxChoices();
+
         // Restore open state
         if (wasOpen) this.dialog?.showModal();
+    }
+
+    /**
+     * Fills the "backed by" list from the hypervisor, and leaves the field
+     * hidden when there is nothing to fill it with.
+     *
+     * This is what turns a bookmark into something the Proxmox page can explain:
+     * without it, a stopped container is just a stopped container, and nobody
+     * can be told which of their services went down with it.
+     */
+    private async fillProxmoxChoices() {
+        const group = this.shadowRoot?.getElementById('proxmox-group') as HTMLElement | null;
+        const sel = this.shadowRoot?.getElementById('bookmark-proxmox') as HTMLSelectElement | null;
+        if (!group || !sel) return;
+        try {
+            // Ask the cheap question first. Going straight to the overview made
+            // every board without Proxmox log a failed request each time this
+            // modal opened — our own noise in a console people read to find
+            // real problems. This endpoint answers for anyone and never calls
+            // the hypervisor.
+            const cfg = await apiService.get<{ enabled: boolean }>('/api/proxmox/settings');
+            if (!cfg?.enabled) return;
+
+            const data = await apiService.get<{ guests: { vmid: number; name: string; kind: string; node: string }[] }>(
+                '/api/proxmox/overview');
+            const guests = data?.guests ?? [];
+            if (!guests.length) return;
+
+            const chosen = this.proxmox ? `${this.proxmox.node}|${this.proxmox.kind}|${this.proxmox.vmid}` : '';
+            sel.innerHTML = `<option value="">${escapeHtml(i18n.t('settings.notify_none'))}</option>` +
+                [...guests]
+                    .sort((a, b) => a.vmid - b.vmid)
+                    .map(g => {
+                        const v = `${g.node}|${g.kind}|${g.vmid}`;
+                        const label = `${g.name} · ${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`;
+                        return `<option value="${escapeHtml(v)}"${v === chosen ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+                    }).join('');
+            group.style.display = '';
+        } catch {
+            /* No hypervisor, or not configured: the field simply never appears. */
+        }
     }
 
     open() {
@@ -488,6 +548,9 @@ class AddBookmarkModal extends HTMLElement {
         this.labelPosition = content.labelPos || 'bottom';
         this.visibleTouch = (content.visibleTouch !== false);
         this.borderWidth = content.borderWidth || 1;
+        this.proxmox = (content.proxmox && content.proxmox.vmid)
+            ? { node: content.proxmox.node || '', kind: content.proxmox.kind || 'lxc', vmid: Number(content.proxmox.vmid) }
+            : null;
 
         // URL parsing
         let fullUrl = content.url || '';

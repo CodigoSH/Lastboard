@@ -429,6 +429,8 @@
   "action.upload_icon": "Prześlij ikonę",
   "notifier.backup_confirm": "Ta kopia zapasowa zawiera dane wrażliwe, w tym skróty haseł wszystkich użytkowników. Przechowuj ją w bezpiecznym miejscu i nigdy jej nie udostępniaj. Kontynuować?",
   "bookmark.select": "Zaznacz",
+  "bookmark.backed_by": "Działa na",
+  "bookmark.backed_by_hint": "Powiąż z maszyną Proxmox, a strona powie, dlaczego ta usługa przestała odpowiadać.",
   "widget.api.name": "API",
   "widget.api.description": "Pokaż dane z API JSON dowolnej usługi",
   "widget.api.title_label": "Tytuł",

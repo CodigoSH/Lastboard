@@ -429,6 +429,8 @@
   "action.upload_icon": "アイコンをアップロード",
   "notifier.backup_confirm": "このバックアップには、全ユーザーのパスワードハッシュを含む機密データが含まれます。安全な場所に保管し、絶対に共有しないでください。続行しますか？",
   "bookmark.select": "選択",
+  "bookmark.backed_by": "動いているマシン",
+  "bookmark.backed_by_hint": "Proxmox のマシンと結び付けると、このサービスが応答しなくなった理由をページが説明できます。",
   "widget.api.name": "API",
   "widget.api.description": "任意のサービスのJSON APIからデータを表示",
   "widget.api.title_label": "タイトル",

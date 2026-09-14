@@ -429,6 +429,8 @@
   "action.upload_icon": "Upload icon",
   "notifier.backup_confirm": "This backup holds sensitive data, including every user's password hash. Keep it somewhere safe and never share it. Continue?",
   "bookmark.select": "Select",
+  "bookmark.backed_by": "Served by",
+  "bookmark.backed_by_hint": "Tie it to a Proxmox machine and the page can say why this service stopped answering.",
   "widget.api.name": "API",
   "widget.api.description": "Show data from any service's JSON API",
   "widget.api.title_label": "Title",

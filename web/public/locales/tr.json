@@ -429,6 +429,8 @@
   "action.upload_icon": "Simge yükle",
   "notifier.backup_confirm": "Bu yedek, tüm kullanıcıların parola özetleri dahil hassas veriler içerir. Güvenli bir yerde saklayın ve asla paylaşmayın. Devam edilsin mi?",
   "bookmark.select": "Seç",
+  "bookmark.backed_by": "Şurada çalışıyor",
+  "bookmark.backed_by_hint": "Bir Proxmox makinesine bağlayın; sayfa bu hizmetin neden yanıt vermediğini söyleyebilsin.",
   "widget.api.name": "API",
   "widget.api.description": "Herhangi bir servisin JSON API'sinden veri gösterir",
   "widget.api.title_label": "Başlık",

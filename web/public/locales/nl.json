@@ -429,6 +429,8 @@
   "action.upload_icon": "Pictogram uploaden",
   "notifier.backup_confirm": "Deze back-up bevat gevoelige gegevens, waaronder de wachtwoord-hashes van alle gebruikers. Bewaar hem veilig en deel hem nooit. Doorgaan?",
   "bookmark.select": "Selecteren",
+  "bookmark.backed_by": "Draait op",
+  "bookmark.backed_by_hint": "Koppel het aan een Proxmox-machine, dan kan de pagina zeggen waarom deze dienst niet meer antwoordt.",
   "widget.api.name": "API",
   "widget.api.description": "Toon gegevens uit de JSON-API van elke dienst",
   "widget.api.title_label": "Titel",

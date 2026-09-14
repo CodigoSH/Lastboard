@@ -429,6 +429,8 @@
   "action.upload_icon": "아이콘 업로드",
   "notifier.backup_confirm": "이 백업에는 모든 사용자의 비밀번호 해시를 포함한 민감한 데이터가 들어 있습니다. 안전한 곳에 보관하고 절대 공유하지 마세요. 계속할까요?",
   "bookmark.select": "선택",
+  "bookmark.backed_by": "구동 중인 머신",
+  "bookmark.backed_by_hint": "Proxmox 머신과 연결하면 이 서비스가 왜 응답하지 않는지 페이지가 알려줍니다.",
   "widget.api.name": "API",
   "widget.api.description": "모든 서비스의 JSON API에서 데이터 표시",
   "widget.api.title_label": "제목",

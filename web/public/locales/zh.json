@@ -429,6 +429,8 @@
   "action.upload_icon": "上传图标",
   "notifier.backup_confirm": "此备份包含敏感数据，其中有所有用户的密码哈希。请妥善保管，切勿分享。是否继续？",
   "bookmark.select": "选择",
+  "bookmark.backed_by": "运行于",
+  "bookmark.backed_by_hint": "把它关联到一台 Proxmox 虚拟机，页面就能说明这个服务为什么不再响应。",
   "widget.api.name": "API",
   "widget.api.description": "显示任何服务的 JSON API 数据",
   "widget.api.title_label": "标题",

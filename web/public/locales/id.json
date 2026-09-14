@@ -429,6 +429,8 @@
   "action.upload_icon": "Unggah ikon",
   "notifier.backup_confirm": "Cadangan ini berisi data sensitif, termasuk hash kata sandi semua pengguna. Simpan di tempat aman dan jangan pernah dibagikan. Lanjutkan?",
   "bookmark.select": "Pilih",
+  "bookmark.backed_by": "Dijalankan oleh",
+  "bookmark.backed_by_hint": "Tautkan ke mesin Proxmox agar halaman bisa menjelaskan mengapa layanan ini berhenti merespons.",
   "widget.api.name": "API",
   "widget.api.description": "Tampilkan data dari API JSON layanan apa pun",
   "widget.api.title_label": "Judul",

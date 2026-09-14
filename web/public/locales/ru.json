@@ -429,6 +429,8 @@
   "action.upload_icon": "Загрузить значок",
   "notifier.backup_confirm": "Эта резервная копия содержит конфиденциальные данные, включая хеши паролей всех пользователей. Храните её в надёжном месте и никому не передавайте. Продолжить?",
   "bookmark.select": "Выбрать",
+  "bookmark.backed_by": "Работает на",
+  "bookmark.backed_by_hint": "Свяжите с машиной Proxmox — и страница скажет, почему эта служба перестала отвечать.",
   "widget.api.name": "API",
   "widget.api.description": "Показывать данные из JSON API любого сервиса",
   "widget.api.title_label": "Заголовок",

@@ -429,6 +429,8 @@
   "action.upload_icon": "آئیکن اپ لوڈ کریں",
   "notifier.backup_confirm": "اس بیک اپ میں حساس ڈیٹا ہے، بشمول تمام صارفین کے پاس ورڈ ہیش۔ اسے محفوظ جگہ رکھیں اور کبھی شیئر نہ کریں۔ جاری رکھیں؟",
   "bookmark.select": "منتخب کریں",
+  "bookmark.backed_by": "کس پر چلتا ہے",
+  "bookmark.backed_by_hint": "اسے کسی Proxmox مشین سے جوڑیں تاکہ صفحہ بتا سکے کہ یہ سروس کیوں بند ہوئی۔",
   "widget.api.name": "API",
   "widget.api.description": "کسی بھی سروس کے JSON API سے ڈیٹا دکھائیں",
   "widget.api.title_label": "عنوان",
