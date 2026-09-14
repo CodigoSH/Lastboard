@@ -443,6 +443,111 @@ export const monitoringTemplate = (monitoring: {
 };
 
 /**
+ * The connection to the hypervisor.
+ *
+ * Unlike the monitoring card, this one does not save on every keystroke: a
+ * half-typed address plus a token is a credential sent to a host nobody meant
+ * to name. The fields are collected and saved together, and the save is
+ * followed by a real read, so the answer is not "saved" but "this is what the
+ * token can see and do" — which is the only thing the operator wants to know.
+ *
+ * The secret is never drawn: the server does not send it back (proxmox.go says
+ * why), so an empty box with a "stored" hint means "leave it alone".
+ */
+export const proxmoxTemplate = (
+    px: { enabled: boolean; url: string; token_id: string; insecure: boolean; has_secret: boolean },
+    loaded: boolean,
+    failed: boolean,
+    status: { state: 'idle' | 'testing' | 'ok' | 'error'; nodes?: number; guests?: number; power?: boolean; key?: string },
+) => {
+    if (!loaded) {
+        return `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('widget.proxmox.name')}</h3>
+            <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
+                ${failed ? i18n.t('settings.proxmox_unavailable') : i18n.t('general.loading')}
+            </p>
+        </div>
+    </div>
+`;
+    }
+
+    const line = status.state === 'testing'
+        ? `<p class="settings-content__text-dim" style="font-size:12px;margin:12px 0 0;">${i18n.t('settings.proxmox_testing')}</p>`
+        : status.state === 'ok'
+            ? `<p style="font-size:12px;margin:12px 0 0;color:var(--success-color);">
+                   ${i18n.t('settings.proxmox_connected', { nodes: String(status.nodes ?? 0), guests: String(status.guests ?? 0) })}
+                   <span class="settings-content__text-dim">· ${status.power ? i18n.t('widget.proxmox.can_power') : i18n.t('widget.proxmox.read_only')}</span>
+               </p>`
+            : status.state === 'error'
+                ? `<p style="font-size:12px;margin:12px 0 0;color:var(--danger-color);">${i18n.t(status.key || 'proxmox.connection_error')}</p>`
+                : '';
+
+    return `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('widget.proxmox.name')}</h3>
+            <p class="settings-content__text-dim" style="font-size: 13px; margin: -6px 0 16px;">${i18n.t('settings.proxmox_desc')}</p>
+
+            <div class="settings-content__action-group">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.proxmox_enabled')}</h3>
+                        <p>${i18n.t('settings.proxmox_enabled_desc')}</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="proxmox-toggle" data-change="proxmox-toggle" ${px.enabled ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('settings.proxmox_url')}</label>
+                <input type="text" id="proxmox-url" class="settings-content__input" value="${esc(px.url)}" spellcheck="false" placeholder="https://192.168.1.10:8006" />
+                <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_url_desc')}</p>
+            </div>
+
+            <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('settings.proxmox_token_id')}</label>
+                <input type="text" id="proxmox-token-id" class="settings-content__input" value="${esc(px.token_id)}" spellcheck="false" placeholder="lastboard@pve!lastboard" />
+                <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_token_id_desc')}</p>
+            </div>
+
+            <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('settings.proxmox_secret')}</label>
+                <div class="pw-wrap">
+                    <input type="password" id="proxmox-secret" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password"
+                           placeholder="${px.has_secret ? i18n.t('settings.proxmox_secret_stored') : '00000000-0000-0000-0000-000000000000'}" />
+                    ${pwToggle()}
+                </div>
+                <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_secret_desc')}</p>
+            </div>
+
+            <div class="settings-content__action-group">
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.proxmox_insecure')}</h3>
+                        <p>${i18n.t('settings.proxmox_insecure_desc')}</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="proxmox-insecure" ${px.insecure ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-content__form-actions">
+                <app-button variant="primary" data-action="save-proxmox">${i18n.t('settings.proxmox_save')}</app-button>
+            </div>
+            ${line}
+        </div>
+    </div>
+`;
+};
+
+/**
  * Where your icons come from.
  *
  * This card is always here, and that is the point. It used to be drawn only

@@ -57,6 +57,11 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                         <span>${i18n.t('settings.monitoring')}</span>
                     </div>
 
+                    <div class="right-drawer__menu-item ${selectedSection === 'proxmox' ? 'right-drawer__menu-item--active' : ''}" data-section="proxmox">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
+                        <span>${i18n.t('widget.proxmox.name')}</span>
+                    </div>
+
                     <div class="right-drawer__menu-item ${selectedSection === 'data' ? 'right-drawer__menu-item--active' : ''}" data-section="data">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
                         <span>${i18n.t('settings.data')}</span>

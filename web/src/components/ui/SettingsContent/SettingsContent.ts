@@ -7,7 +7,7 @@ import { userService } from '../../../services/userService';
 import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
@@ -43,6 +43,18 @@ class SettingsContent extends HTMLElement {
      * afterwards and paint the state the user just changed.
      */
     private monitoringSeq = 0;
+
+    /**
+     * The Proxmox connection. Same reason as monitoring for the `loaded` flag:
+     * a form drawn from a guess can be saved back over the real thing. The
+     * secret is not part of the state because the server never sends it — an
+     * empty box means "keep the stored one".
+     */
+    private proxmox = { enabled: false, url: '', token_id: '', insecure: true, has_secret: false };
+    private proxmoxLoaded = false;
+    private proxmoxFailed = false;
+    /** What the last save found out, shown under the button. */
+    private proxmoxStatus: { state: 'idle' | 'testing' | 'ok' | 'error'; nodes?: number; guests?: number; power?: boolean; key?: string } = { state: 'idle' };
 
 
     static get observedAttributes() {
@@ -168,6 +180,9 @@ class SettingsContent extends HTMLElement {
                 case 'check-updates':
                     this.handleManualCheckUpdates();
                     break;
+                case 'save-proxmox':
+                    this.saveProxmoxForm();
+                    break;
             }
         });
 
@@ -214,6 +229,9 @@ class SettingsContent extends HTMLElement {
                 case 'notify-token':
                     this.saveMonitoring({ notify_token: (el as HTMLInputElement).value.trim() });
                     break;
+                case 'proxmox-toggle':
+                    this.toggleProxmox((el as HTMLInputElement).checked);
+                    break;
             }
         });
 
@@ -248,6 +266,9 @@ class SettingsContent extends HTMLElement {
         }
         if (section === 'monitoring' || section === 'notifications') {
             this.fetchMonitoring();
+        }
+        if (section === 'proxmox') {
+            this.fetchProxmox();
         }
         if (section === 'data') {
             this.fetchPendingIcons();
@@ -434,6 +455,104 @@ class SettingsContent extends HTMLElement {
         }
     }
 
+    async fetchProxmox() {
+        this.proxmoxFailed = false;
+        try {
+            this.proxmox = await apiService.get<typeof this.proxmox>('/api/proxmox/settings');
+            this.proxmoxLoaded = true;
+        } catch {
+            this.proxmoxFailed = true;
+        }
+        this.render();
+    }
+
+    /**
+     * The switch on its own. It saves the flag and nothing else, so turning the
+     * integration off never touches the stored address or token: someone who
+     * turns it off for an afternoon gets it back by turning it on again.
+     */
+    async toggleProxmox(enabled: boolean) {
+        if (!this.proxmoxLoaded) return;
+        if (enabled && !this.proxmox.url) {
+            // The top bar would offer a page with nothing behind it.
+            if (window.notifier) window.notifier.show(i18n.t('settings.proxmox_needs_connection'), 'error');
+            this.proxmox = { ...this.proxmox, enabled: false };
+            this.render();
+            return;
+        }
+        await this.putProxmox({ enabled });
+        if (this.proxmox.enabled) this.verifyProxmox();
+    }
+
+    /** The form: address, token and certificate policy, saved in one go. */
+    async saveProxmoxForm() {
+        if (!this.proxmoxLoaded) return;
+        const root = this.shadowRoot!;
+        const val = (id: string) => (root.getElementById(id) as HTMLInputElement | null)?.value.trim() ?? '';
+        const url = val('proxmox-url');
+        const secret = val('proxmox-secret');
+        const tokenId = val('proxmox-token-id');
+        const insecure = !!(root.getElementById('proxmox-insecure') as HTMLInputElement | null)?.checked;
+
+        if (!url || !tokenId || (!secret && !this.proxmox.has_secret)) {
+            if (window.notifier) window.notifier.show(i18n.t('settings.proxmox_needs_connection'), 'error');
+            return;
+        }
+
+        const ok = await this.putProxmox({ url, token_id: tokenId, insecure, enabled: true }, secret);
+        if (ok) this.verifyProxmox();
+    }
+
+    /**
+     * Writes the settings and re-reads them, because the server decides some of
+     * it: it prefixes a bare address with https:// and it is the only one that
+     * knows whether a secret is now stored.
+     */
+    private async putProxmox(patch: Partial<typeof this.proxmox>, secret = ''): Promise<boolean> {
+        const next = { ...this.proxmox, ...patch };
+        try {
+            await apiService.post('/api/proxmox/settings', { ...next, secret });
+            this.proxmox = await apiService.get<typeof this.proxmox>('/api/proxmox/settings');
+            this.render();
+            const { eventBus, EVENTS } = await import('../../../services/EventBus');
+            eventBus.emit(EVENTS.PROXMOX_CHANGED, { enabled: this.proxmox.enabled });
+            if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
+            return true;
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+            return false;
+        }
+    }
+
+    /**
+     * Asks the hypervisor, with what was just saved, and says what came back.
+     *
+     * "Saved" is not the answer anyone wants here — a typo in the token saves
+     * perfectly. This reads the overview, which is the same call the page makes,
+     * so a green line means the page will work and the permissions line is the
+     * token's real one, straight from /access/permissions.
+     */
+    async verifyProxmox() {
+        this.proxmoxStatus = { state: 'testing' };
+        this.render();
+        try {
+            const o = await apiService.get<{ nodes: any[]; guests: any[]; caps: { power: boolean } }>('/api/proxmox/overview');
+            this.proxmoxStatus = {
+                state: 'ok',
+                nodes: o.nodes?.length ?? 0,
+                guests: o.guests?.length ?? 0,
+                power: !!o.caps?.power,
+            };
+        } catch (e) {
+            // The handlers answer with a translation key, which is the message
+            // the operator needs: a rejected token and an unreachable host look
+            // the same from here otherwise.
+            const key = String((e as Error)?.message || '').trim();
+            this.proxmoxStatus = { state: 'error', key: key.startsWith('proxmox.') ? key : 'proxmox.connection_error' };
+        }
+        this.render();
+    }
+
     async testNotify() {
         try {
             await apiService.post('/api/monitor/test', {
@@ -454,6 +573,9 @@ class SettingsContent extends HTMLElement {
             }
             if (newValue === 'monitoring' || newValue === 'notifications') {
                 this.fetchMonitoring();
+            }
+            if (newValue === 'proxmox') {
+                this.fetchProxmox();
             }
             if (newValue === 'data') {
                 this.fetchPendingIcons();
@@ -833,6 +955,9 @@ class SettingsContent extends HTMLElement {
             case 'monitoring':
             case 'notifications':
                 return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed);
+
+            case 'proxmox':
+                return proxmoxTemplate(this.proxmox, this.proxmoxLoaded, this.proxmoxFailed, this.proxmoxStatus);
 
             case 'users':
                 return usersTemplate(this.users);

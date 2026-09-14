@@ -168,6 +168,13 @@ dialog::backdrop {
     max-width: var(--field);
 }
 
+/* A form that comes after a row of switches needs the breathing space those
+   rows give each other, or its first label sits on the last switch's
+   description — which is how the Proxmox address read as part of the toggle. */
+.settings-content__action-group + .settings-content__form-group {
+    margin-top: 18px;
+}
+
 .settings-content__label {
     font-family: var(--font-sans);
     font-size: 12px;
