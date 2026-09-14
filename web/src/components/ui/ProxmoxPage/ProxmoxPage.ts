@@ -84,7 +84,16 @@ class ProxmoxPage extends HTMLElement {
     private data: PxOverview | null = null;
     private error = '';
     private loaded = false;
-    private range: '1h' | '24h' | '7d' = '24h';
+    /**
+     * Every chart on this page is drawn over the last day.
+     *
+     * It used to be a choice — three buttons on a bar of its own — and the bar
+     * went with them: the state of the host belongs next to its name, and a
+     * control that changes every line at once is a lot of furniture for a
+     * question nobody was asking of the whole grid at once. A machine's own
+     * sheet is where a range would earn its place, if it ever does.
+     */
+    private readonly range = '24h';
     private query = '';
     private onlyStopped = false;
     private timer: ReturnType<typeof setInterval> | null = null;
@@ -186,9 +195,11 @@ class ProxmoxPage extends HTMLElement {
             <div class="pp">
                 <header class="pp__header">
                     <div class="pp__title">${ICON_SERVER}<span id="pp-title"></span></div>
+                    <!-- The state of the host reads as part of the title, not as
+                         a bar of its own: one line at the top instead of two. -->
+                    <div class="pp__status" id="pp-status"></div>
                     <button class="pp__close" id="pp-close" aria-label="${escapeHtml(i18n.t('general.close'))}">${ICON_CLOSE}</button>
                 </header>
-                <div class="pp__status" id="pp-status"></div>
                 <div class="pp__body" id="pp-body"></div>
             </div>
             <dialog id="pp-sheet"><div class="sheet" id="pp-sheet-body"></div></dialog>`;
@@ -307,12 +318,6 @@ class ProxmoxPage extends HTMLElement {
             <span class="stat stat--hot ${down ? 'stat--click' : ''} ${this.onlyStopped ? 'stat--on' : ''}" id="pp-down"
                   ${down ? 'role="button" tabindex="0"' : ''}>
                 ${escapeHtml(i18n.t('proxmox.services_down'))}: <b>${down}</b>
-            </span>
-            <span class="pp__right">
-                <span class="ranges" role="group">
-                    ${(['1h', '24h', '7d'] as const).map(r =>
-                        `<button data-range="${r}" aria-pressed="${this.range === r}">${r}</button>`).join('')}
-                </span>
             </span>`;
     }
 
@@ -653,19 +658,6 @@ class ProxmoxPage extends HTMLElement {
         if (t.closest('#pp-close')) { this.close(); return; }
         if (t.closest('[data-close]')) {
             (this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null)?.close();
-            return;
-        }
-
-        const range = t.closest('[data-range]') as HTMLElement | null;
-        if (range) {
-            this.range = (range.dataset.range as any) || '24h';
-            // The range drives every line on the page, tiles included, so the
-            // histories held for the previous one are no longer the answer.
-            // Until this, the three buttons only changed a sheet nobody had
-            // open yet, which read as a control that did nothing.
-            this.series.clear();
-            this.asked.clear();
-            this.paint();
             return;
         }
 

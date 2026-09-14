@@ -89,15 +89,16 @@
 
 /* ── Status line: dense on purpose ──────────────────────────── */
 
+/* Inside the header now, after the title: the host's state is part of saying
+   which host this is, and it does not need a bar of its own to say it. */
 .pp__status {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 14px;
-    padding: 11px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface-solid);
-    flex-shrink: 0;
+    gap: 6px 14px;
+    min-width: 0;
+    padding-inline-start: 14px;
+    border-inline-start: 1px solid var(--border);
 }
 
 .stat {
@@ -120,24 +121,6 @@
     border-bottom: 1px dotted rgba(var(--accent-rgb), 0.5);
 }
 .stat--on { color: var(--accent); }
-
-.pp__right { margin-inline-start: auto; display: flex; align-items: center; gap: 12px; }
-
-.ranges { display: flex; gap: 1px; }
-.ranges button {
-    font-family: var(--font-mono, monospace);
-    font-size: 11px;
-    color: var(--text-dim);
-    background: none;
-    border: 0;
-    padding: 4px 9px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-.ranges button[aria-pressed="true"] {
-    background: rgba(128, 128, 128, 0.14);
-    color: var(--accent);
-}
 
 /* ── Canvas ─────────────────────────────────────────────────── */
 
