@@ -1,28 +1,29 @@
 import css from './ColorPicker.css' with { type: 'text' };
 import { colorPickerTemplate } from './ColorPicker.template';
-import { hexToHsv, hsvToHex } from '../../../services/colorMath';
 import { i18n } from '../../../services/i18n';
 
+/**
+ * A colour swatch that opens the device's own colour picker.
+ *
+ * This was a hand-built HSV popover with a saturation area, a hue slider and a
+ * hex field. Being ours, it looked identical on every device and integrated
+ * with none of them, and its drag targets were small enough to be awkward with
+ * a finger. The native input gets the platform picker for free — the system one
+ * on Android and iOS — and the notepad widget already used one, so there were
+ * two ways to pick a colour in the same app.
+ *
+ * The element's contract is unchanged: a `value` property and attribute holding
+ * `#rrggbb`, a `trigger-opacity` attribute, and composed `input`/`change`
+ * events. Callers place it inside their own swatch at zero opacity, so it is an
+ * invisible hit area and they keep drawing the visible colour themselves.
+ */
 export class ColorPicker extends HTMLElement {
     static get observedAttributes() {
         return ['value', 'trigger-opacity'];
     }
 
     private _value: string = '#e8520e';
-    private _h: number = 210;
-    private _s: number = 100;
-    private _v: number = 91; // Approx for #e8520e
-
-    private _popover: HTMLElement | null = null;
-    private _satArea: HTMLElement | null = null;
-    private _satCursor: HTMLElement | null = null;
-    private _hueSlider: HTMLElement | null = null;
-    private _hueCursor: HTMLElement | null = null;
-    private _hexInput: HTMLInputElement | null = null;
-    private _preview: HTMLElement | null = null;
-
-    private _isDraggingSat = false;
-    private _isDraggingHue = false;
+    private _input: HTMLInputElement | null = null;
 
     constructor() {
         super();
@@ -32,26 +33,14 @@ export class ColorPicker extends HTMLElement {
     connectedCallback() {
         this.render();
         this.bindEvents();
-        // Initialize internal HSV from initial hex attribute or property
-        this.hexToHsv(this._value);
-        this.updateUI();
-    }
-
-    disconnectedCallback() {
-        window.removeEventListener('resize', this.updatePositionRef);
-        window.removeEventListener('scroll', this.updatePositionRef, true);
-        this.stopSatDrag();
-        this.stopHueDrag();
+        this.updateTriggerOpacity(this.getAttribute('trigger-opacity') ?? '');
     }
 
     get value() { return this._value; }
     set value(val: string) {
-        if (this._value !== val) {
-            this._value = val;
-            this.hexToHsv(val);
-            this.updateUI();
-            if (this._hexInput) this._hexInput.value = val;
-        }
+        if (this._value === val) return;
+        this._value = val;
+        if (this._input) this._input.value = val;
     }
 
     attributeChangedCallback(name: string, oldVal: string, newVal: string) {
@@ -63,270 +52,40 @@ export class ColorPicker extends HTMLElement {
     }
 
     private updateTriggerOpacity(opacity: string) {
-        if (this.shadowRoot) {
-            const trigger = this.shadowRoot.getElementById('trigger');
-            if (trigger) {
-                trigger.style.opacity = opacity;
-            }
+        if (this._input && opacity !== '') {
+            this._input.style.opacity = opacity;
         }
     }
 
     render() {
         if (!this.shadowRoot) return;
-        // The trigger shows only a colour swatch, so it needs an explicit
-        // accessible name for screen readers.
+        // The input shows only a colour, so it needs an explicit accessible
+        // name for screen readers.
         this.shadowRoot.innerHTML = colorPickerTemplate(this._value, css, i18n.t('action.choose_color'));
-
-        this._popover = this.shadowRoot.querySelector('#popover');
-        this._satArea = this.shadowRoot.querySelector('#sat-area');
-        this._satCursor = this.shadowRoot.querySelector('#sat-cursor');
-        this._hueSlider = this.shadowRoot.querySelector('#hue-slider');
-        this._hueCursor = this.shadowRoot.querySelector('#hue-cursor');
-        this._hexInput = this.shadowRoot.querySelector('#hex-input');
-        this._preview = this.shadowRoot.querySelector('#preview');
+        this._input = this.shadowRoot.querySelector('#native');
     }
 
     bindEvents() {
-        const trigger = this.shadowRoot?.querySelector('#trigger');
-        trigger?.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent closing immediately
-            this.togglePicker();
+        if (!this._input) return;
+
+        // `input` fires continuously while the picker is open, `change` when it
+        // is dismissed. Both are re-dispatched from the host: a native `change`
+        // is composed: false, so it would stop at the shadow boundary and never
+        // reach the listeners the settings panel and the modals put on their
+        // own root.
+        this._input.addEventListener('input', () => {
+            this._value = this._input!.value;
+            this.dispatchEvent(new CustomEvent('input', {
+                detail: { value: this._value },
+                bubbles: true,
+                composed: true,
+            }));
         });
 
-        // Close dialog when clicking on backdrop
-        this._popover?.addEventListener('click', (e) => {
-            const dialogElement = e.target as HTMLDialogElement;
-            // If clicked directly on the dialog element (backdrop), close it
-            if (dialogElement === this._popover) {
-                this.closePopover();
-            }
+        this._input.addEventListener('change', () => {
+            this._value = this._input!.value;
+            this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
         });
-
-        // Saturation and hue use pointer events so the same code path serves
-        // mouse, touch and pen. With mouse events a finger drag produced no
-        // mousemove, so dragging did nothing at all on touch devices.
-        this._satArea?.addEventListener('pointerdown', (e) => {
-            e.preventDefault(); // stop the browser turning the drag into a scroll
-            this._isDraggingSat = true;
-            this.handleSatDrag(e);
-            window.addEventListener('pointermove', this.onPointerMoveSat);
-            window.addEventListener('pointerup', this.onPointerUpSat);
-            window.addEventListener('pointercancel', this.onPointerUpSat);
-        });
-
-        // Hue Events
-        this._hueSlider?.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            this._isDraggingHue = true;
-            this.handleHueDrag(e);
-            window.addEventListener('pointermove', this.onPointerMoveHue);
-            window.addEventListener('pointerup', this.onPointerUpHue);
-            window.addEventListener('pointercancel', this.onPointerUpHue);
-        });
-
-        // Hex Input
-        this._hexInput?.addEventListener('input', (e) => {
-            const val = (e.target as HTMLInputElement).value;
-            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-                this.value = val;
-                this.emitChange();
-                // Close picker after entering a valid hex color
-                setTimeout(() => this.closePopover(), 300);
-            }
-        });
-    }
-
-    // --- Drag Handlers ---
-
-    private onPointerMoveSat = (e: PointerEvent) => {
-        if (this._isDraggingSat) this.handleSatDrag(e);
-    }
-    private stopSatDrag = () => {
-        this._isDraggingSat = false;
-        window.removeEventListener('pointermove', this.onPointerMoveSat);
-        window.removeEventListener('pointerup', this.onPointerUpSat);
-        window.removeEventListener('pointercancel', this.onPointerUpSat);
-    }
-    private onPointerUpSat = () => {
-        this.stopSatDrag();
-        this.emitChange();
-        // Close picker after selecting a color
-        setTimeout(() => this.closePopover(), 150);
-    }
-
-    private onPointerMoveHue = (e: PointerEvent) => {
-        if (this._isDraggingHue) this.handleHueDrag(e);
-    }
-    private stopHueDrag = () => {
-        this._isDraggingHue = false;
-        window.removeEventListener('pointermove', this.onPointerMoveHue);
-        window.removeEventListener('pointerup', this.onPointerUpHue);
-        window.removeEventListener('pointercancel', this.onPointerUpHue);
-    }
-    private onPointerUpHue = () => {
-        this.stopHueDrag();
-        this.emitChange();
-        // Close picker after selecting a color
-        setTimeout(() => this.closePopover(), 150);
-    }
-
-    private handleSatDrag(e: MouseEvent) {
-        if (!this._satArea) return;
-        const rect = this._satArea.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-
-        // Clamp
-        x = Math.max(0, Math.min(x, rect.width));
-        y = Math.max(0, Math.min(y, rect.height));
-
-        this._s = (x / rect.width) * 100;
-        this._v = 100 - (y / rect.height) * 100;
-
-        this.updateColorFromHsv();
-        this.updateUI();
-    }
-
-    private handleHueDrag(e: MouseEvent) {
-        if (!this._hueSlider) return;
-        const rect = this._hueSlider.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        x = Math.max(0, Math.min(x, rect.width));
-
-        this._h = (x / rect.width) * 360;
-        this.updateColorFromHsv();
-        this.updateUI();
-    }
-
-    // --- Logic ---
-
-    private togglePicker() {
-        const isVisible = this._popover?.classList.contains('visible');
-        if (isVisible) this.closePopover();
-        else this.openPopover();
-    }
-
-    private openPopover() {
-        if (!this._popover || !this.shadowRoot) return;
-
-        const dialogElement = this._popover as HTMLDialogElement;
-
-        // Use dialog.showModal() to open in top layer
-        try {
-            dialogElement.showModal();
-        } catch (e) {
-            console.error('Failed to show color picker dialog:', e);
-            return;
-        }
-
-        this._popover.classList.add('visible');
-
-        requestAnimationFrame(() => {
-            this.updatePosition();
-        });
-
-        // Refresh UI
-        this.hexToHsv(this._value);
-        this.updateUI();
-
-        window.addEventListener('resize', this.updatePositionRef);
-        window.addEventListener('scroll', this.updatePositionRef, true);
-    }
-
-    private updatePositionRef = () => {
-        // Debounce or just update? For simplicity, update or close.
-        // Often easier to close on scroll in mobile/modals, but let's try to stick.
-        if (this._popover?.classList.contains('visible')) {
-            this.updatePosition();
-        }
-    };
-
-    private updatePosition() {
-        if (!this._popover) return;
-
-        const rect = this.getBoundingClientRect();
-        const popoverRect = this._popover.getBoundingClientRect();
-
-        // Calculate Top
-        let top = rect.bottom + 8;
-        // Check if it fits below
-        if (top + 300 > window.innerHeight) {
-            // Flip to top
-            top = rect.top - 8 - (popoverRect.height || 310);
-        }
-
-        // Calculate Left - center horizontally on trigger
-        let left = rect.left + (rect.width / 2) - 120; // 120 is half of popover width (240px)
-
-        // Ensure it doesn't go off-screen horizontally
-        const maxLeft = window.innerWidth - 240 - 8;
-        left = Math.max(8, Math.min(left, maxLeft));
-
-        // Apply positioning
-        this._popover.style.top = `${top}px`;
-        this._popover.style.left = `${left}px`;
-    }
-
-    private closePopover() {
-        if (!this._popover) return;
-
-        const dialogElement = this._popover as HTMLDialogElement;
-
-        this._popover.classList.remove('visible');
-
-        // Wait for transition to finish before closing dialog
-        const handleTransitionEnd = () => {
-            if (!this._popover) return;
-            dialogElement.close();
-        };
-
-        this._popover.addEventListener('transitionend', handleTransitionEnd, { once: true });
-
-        window.removeEventListener('resize', this.updatePositionRef);
-        window.removeEventListener('scroll', this.updatePositionRef, true);
-    }
-
-    private emitChange() {
-        this.dispatchEvent(new CustomEvent('input', {
-            detail: { value: this._value },
-            bubbles: true,
-            composed: true
-        }));
-        this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
-    }
-
-    private updateColorFromHsv() {
-        this._value = hsvToHex(this._h, this._s, this._v);
-    }
-
-    private updateUI() {
-        if (!this._satCursor || !this._hueCursor || !this._hexInput || !this._preview || !this._satArea) return;
-
-        // Update Cursors
-        this._satCursor.style.left = `${this._s}%`;
-        this._satCursor.style.top = `${100 - this._v}%`;
-        this._hueCursor.style.left = `${(this._h / 360) * 100}%`;
-
-        // Update Backgrounds
-        // Saturation area bg color is purely Hue
-        const hueColor = hsvToHex(this._h, 100, 100);
-        this._satArea.style.backgroundColor = hueColor;
-
-        this._hexInput.value = this._value;
-        this._preview.style.backgroundColor = this._value;
-
-        // Also update cursor colors for contrast if needed? White border usually works.
-    }
-
-    // --- Helpers ---
-
-    /** Loads a hex colour into the picker's state, ignoring unparseable input. */
-    private hexToHsv(hex: string) {
-        const hsv = hexToHsv(hex);
-        if (!hsv) return;
-        this._h = hsv.h;
-        this._s = hsv.s;
-        this._v = hsv.v;
     }
 }
 
