@@ -1,4 +1,5 @@
 import { i18n } from '../../../services/i18n';
+import { resizeImage } from '../../../services/image';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { userStore } from '../../../store/userStore';
 import { updateStore } from '../../../store/updateStore';
@@ -617,7 +618,7 @@ class SettingsContent extends HTMLElement {
         }
 
         try {
-            const resizedDataUrl = await this.resizeImage(file, 256, 256);
+            const resizedDataUrl = await resizeImage(file, 256, 256);
             const u = userStore.getUser();
             if (!u) return;
 
@@ -649,7 +650,7 @@ class SettingsContent extends HTMLElement {
 
         try {
             // Backgrounds can be larger than avatars. 1920x1080 is a good balance.
-            const resizedDataUrl = await this.resizeImage(file, 1920, 1080);
+            const resizedDataUrl = await resizeImage(file, 1920, 1080);
             
             // Optimistic localized update
             this.prefs.dashboard_background = resizedDataUrl;
@@ -688,52 +689,6 @@ class SettingsContent extends HTMLElement {
             this.prefs.project_logo = result;
             await this.savePrefs({ project_logo: result }, { notify: true });
         }
-    }
-
-    private resizeImage(file: File, maxWidth: number, maxHeight: number): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-
-                    // Calculate aspect ratio
-                    if (width > height) {
-                        if (width > maxWidth) {
-                            height = Math.round((height * maxWidth) / width);
-                            width = maxWidth;
-                        }
-                    } else {
-                        if (height > maxHeight) {
-                            width = Math.round((width * maxHeight) / height);
-                            height = maxHeight;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) {
-                        reject(new Error('Canvas context not available'));
-                        return;
-                    }
-
-                    // Draw image on canvas
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Convert back to base64
-                    // Quality 0.8 is good compromise
-                    resolve(canvas.toDataURL('image/jpeg', 0.8));
-                };
-                img.onerror = (e) => reject(e);
-                img.src = event.target?.result as string;
-            };
-            reader.onerror = (e) => reject(e);
-            reader.readAsDataURL(file);
-        });
     }
 
     // --- User Management Logic ---

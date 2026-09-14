@@ -1,4 +1,5 @@
 import './components/ui/Paper/Paper';
+import { resizeImage } from './services/image';
 import './components/ui/Button/Button';
 import './components/ui/Avatar/Avatar';
 import './components/ui/Notifier/Notifier';
@@ -97,19 +98,19 @@ bootstrap(async () => {
     if (avatarTrigger && avatarInput) {
         avatarTrigger.addEventListener('click', () => avatarInput.click());
 
-        avatarInput.addEventListener('change', (e) => {
+        avatarInput.addEventListener('change', async (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const result = ev.target?.result as string;
-                    if (result) {
-                        avatarPreview.setAttribute('src', result);
-                        avatarUrlInput.value = result; // Save Base64
-                        selectedAvatar = result;
-                    }
-                };
-                reader.readAsDataURL(file);
+            if (!file) return;
+            try {
+                // Same 256px as the settings panel. Without this the wizard sent
+                // the file untouched, so the very first picture anybody chooses
+                // was the only one that went in at full size.
+                const resized = await resizeImage(file, 256, 256);
+                avatarPreview.setAttribute('src', resized);
+                avatarUrlInput.value = resized;
+                selectedAvatar = resized;
+            } catch {
+                // A picture the browser cannot decode leaves the previous one.
             }
         });
     }

@@ -1,6 +1,10 @@
 package api
 
 import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"testing"
 )
 
@@ -224,5 +228,34 @@ func BenchmarkSafeInitials(b *testing.B) {
 	username := "testuser"
 	for b.Loop() {
 		safeInitials(username)
+	}
+}
+
+// The avatar cap is written twice: here, where it is enforced, and in
+// web/src/services/image.ts, where the browser decides which format to send so
+// the value arrives under it. If they drift the browser sends something the
+// server rejects, and the failure lands on whoever picked the picture.
+func TestTheAvatarCapMatchesTheOneTheBrowserAimsFor(t *testing.T) {
+	source, err := os.ReadFile(filepath.Join("..", "..", "..", "web", "src", "services", "image.ts"))
+	if err != nil {
+		t.Skipf("frontend sources not available: %v", err)
+	}
+
+	match := regexp.MustCompile(`AVATAR_MAX_BYTES\s*=\s*([0-9]+)\s*\*\s*([0-9]+)\s*\*\s*([0-9]+)`).FindSubmatch(source)
+	if match == nil {
+		t.Fatal("could not find AVATAR_MAX_BYTES in image.ts; if it was renamed, this test needs updating")
+	}
+	frontend := 1
+	for _, part := range match[1:] {
+		n, err := strconv.Atoi(string(part))
+		if err != nil {
+			t.Fatalf("unreadable cap in image.ts: %v", err)
+		}
+		frontend *= n
+	}
+
+	const server = 2 * 1024 * 1024 // the value UpdateProfile checks
+	if frontend != server {
+		t.Errorf("the browser aims for %d bytes and the server allows %d", frontend, server)
 	}
 }
