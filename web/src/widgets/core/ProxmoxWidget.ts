@@ -268,7 +268,7 @@ class ProxmoxWidget extends HTMLElement {
             </span>
             <span class="px-ty px-ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
             <span class="px-use">${g.running
-                ? `<b>${g.cpu}%</b> · ${mem}%`
+                ? `<b>${g.cpu}%</b><span class="px-mem"> · ${mem}%</span>`
                 : escapeHtml(i18n.t('docker.state_stopped'))}</span>
             <span class="px-acts">${action}</span>
         </div>`;
@@ -372,6 +372,9 @@ const CSS = `
     overflow: hidden;
     font-family: var(--font-sans);
     color: var(--text-main);
+    /* The tile is whatever width the board gives it, and that is what the rows
+       below answer to — not the viewport, which says nothing about a tile. */
+    container-type: inline-size;
 }
 
 /* The node name sits at the end of the header line, where the Docker widget
@@ -456,6 +459,14 @@ const CSS = `
 }
 .px-use b { color: var(--text-main); font-weight: 500; }
 .px-row--off .px-name b { color: var(--text-dim); }
+
+/* A narrow tile keeps the name, the state and the button, and drops what can
+   be read on the page instead: the type is already in the line under the name,
+   and one figure beats two squeezed into nothing. */
+@container (max-width: 250px) {
+    .px-row { grid-template-columns: 8px 18px minmax(0, 1fr) auto 30px; }
+    .px-ty, .px-mem { display: none; }
+}
 
 .px-acts { display: flex; justify-content: flex-end; }
 .px-act {

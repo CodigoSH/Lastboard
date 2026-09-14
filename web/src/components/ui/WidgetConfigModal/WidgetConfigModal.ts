@@ -1341,11 +1341,14 @@ class WidgetConfigModal extends HTMLElement {
                 <input type="text" id="proxmox-title" value="${esc(content.title || '')}"
                        placeholder="${esc(i18n.t('widget.proxmox.name'))}" />
             </div>
+            <!-- check-row, which is the class this modal actually styles: a
+                 tick box with no rule behind it falls back to the browser's
+                 blue one, beside five orange ones. -->
+            <div class="field-group check-row">
+                <input type="checkbox" id="proxmox-shownode" ${showNode ? 'checked' : ''} />
+                <label for="proxmox-shownode">${i18n.t('widget.proxmox.show_node')}</label>
+            </div>
             <div class="field-group">
-                <label class="checkbox-row">
-                    <input type="checkbox" id="proxmox-shownode" ${showNode ? 'checked' : ''} />
-                    <span>${i18n.t('widget.proxmox.show_node')}</span>
-                </label>
                 <small>${i18n.t('widget.proxmox.show_node_desc')}</small>
             </div>
             <div class="field-group" id="proxmox-state"></div>
