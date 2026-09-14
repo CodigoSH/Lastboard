@@ -505,6 +505,8 @@
   "monitor.refresh": "ताज़ा करें",
   "monitor.overview_title": "सेवा स्थिति",
   "monitor.overview_empty": "कोई सेवा निगरानी में नहीं है।",
+  "monitor.services": "सेवाएँ",
+  "monitor.services_down": "बंद सेवाएँ",
   "widget.monitor.name": "निगरानी",
   "widget.monitor.description": "आपकी निगरानी वाली सेवाओं की स्थिति, अपटाइम और इतिहास",
   "monitor.select_services": "दिखाने के लिए सेवाएँ",

@@ -505,6 +505,8 @@
   "monitor.refresh": "Vernieuwen",
   "monitor.overview_title": "Servicestatus",
   "monitor.overview_empty": "Geen diensten worden gemonitord.",
+  "monitor.services": "Diensten",
+  "monitor.services_down": "Diensten offline",
   "widget.monitor.name": "Monitoring",
   "widget.monitor.description": "Status, beschikbaarheid en verloop van de diensten die je bewaakt",
   "monitor.select_services": "Te tonen diensten",

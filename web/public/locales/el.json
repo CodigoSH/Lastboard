@@ -505,6 +505,8 @@
   "monitor.refresh": "Ανανέωση",
   "monitor.overview_title": "Κατάσταση υπηρεσιών",
   "monitor.overview_empty": "Δεν παρακολουθούνται υπηρεσίες.",
+  "monitor.services": "Υπηρεσίες",
+  "monitor.services_down": "Υπηρεσίες εκτός",
   "widget.monitor.name": "Παρακολούθηση",
   "widget.monitor.description": "Κατάσταση, διαθεσιμότητα και ιστορικό των υπηρεσιών που παρακολουθείς",
   "monitor.select_services": "Υπηρεσίες προς εμφάνιση",

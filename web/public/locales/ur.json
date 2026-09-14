@@ -505,6 +505,8 @@
   "monitor.refresh": "ریفریش",
   "monitor.overview_title": "سروسز کی حالت",
   "monitor.overview_empty": "کوئی سروس زیر نگرانی نہیں۔",
+  "monitor.services": "خدمات",
+  "monitor.services_down": "بند خدمات",
   "widget.monitor.name": "نگرانی",
   "widget.monitor.description": "جن سروسز کی آپ نگرانی کرتے ہیں اُن کی حالت، اپ ٹائم اور تاریخ",
   "monitor.select_services": "دکھانے کے لیے سروسز",

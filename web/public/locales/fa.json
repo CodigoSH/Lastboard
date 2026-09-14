@@ -505,6 +505,8 @@
   "monitor.refresh": "تازه‌سازی",
   "monitor.overview_title": "وضعیت سرویس‌ها",
   "monitor.overview_empty": "هیچ سرویسی تحت نظارت نیست.",
+  "monitor.services": "سرویس‌ها",
+  "monitor.services_down": "سرویس‌های از کار افتاده",
   "widget.monitor.name": "پایش",
   "widget.monitor.description": "وضعیت، در دسترس‌بودن و تاریخچهٔ سرویس‌هایی که پایش می‌کنید",
   "monitor.select_services": "سرویس‌های نمایش‌داده‌شده",

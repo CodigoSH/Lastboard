@@ -505,6 +505,8 @@
   "monitor.refresh": "Actualiser",
   "monitor.overview_title": "État des services",
   "monitor.overview_empty": "Aucun service surveillé.",
+  "monitor.services": "Services",
+  "monitor.services_down": "Services hors service",
   "widget.monitor.name": "Supervision",
   "widget.monitor.description": "État, disponibilité et historique des services que tu surveilles",
   "monitor.select_services": "Services à afficher",

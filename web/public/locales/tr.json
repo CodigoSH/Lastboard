@@ -505,6 +505,8 @@
   "monitor.refresh": "Yenile",
   "monitor.overview_title": "Servis durumu",
   "monitor.overview_empty": "İzlenen servis yok.",
+  "monitor.services": "Hizmetler",
+  "monitor.services_down": "Çalışmayan hizmetler",
   "widget.monitor.name": "İzleme",
   "widget.monitor.description": "İzlediğin servislerin durumu, çalışma süresi ve geçmişi",
   "monitor.select_services": "Gösterilecek servisler",

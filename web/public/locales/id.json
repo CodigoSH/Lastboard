@@ -505,6 +505,8 @@
   "monitor.refresh": "Segarkan",
   "monitor.overview_title": "Status layanan",
   "monitor.overview_empty": "Tidak ada layanan yang dipantau.",
+  "monitor.services": "Layanan",
+  "monitor.services_down": "Layanan mati",
   "widget.monitor.name": "Pemantauan",
   "widget.monitor.description": "Status, waktu aktif, dan riwayat layanan yang Anda pantau",
   "monitor.select_services": "Layanan yang ditampilkan",

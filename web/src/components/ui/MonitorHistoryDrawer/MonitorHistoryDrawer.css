@@ -36,7 +36,12 @@
 
 :host([open]) .mhd-drawer__panel { transform: translateX(0); }
 
-.mhd-drawer__panel monitor-detail { flex: 1 1 auto; min-height: 0; }
+.mhd-drawer__panel monitor-detail {
+    flex: 1 1 auto;
+    min-height: 0;
+    /* Room for the close button below, which floats over that corner. */
+    --mhd-header-end: 62px;
+}
 
 .mhd-drawer__close {
     position: absolute;

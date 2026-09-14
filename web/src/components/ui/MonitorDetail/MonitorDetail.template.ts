@@ -39,14 +39,17 @@ export interface HistoryData {
 
 export const RANGES = ['24h', '7d', '30d'];
 
-const header = (name: string) => `
+/* Name and range on one line: the range belongs to what is being looked at,
+   and three buttons the width of the panel were furniture, not a control. */
+const header = (name: string, range = '') => `
     <header class="mhd__header">
         <h2 class="mhd__title">${escapeHtml(name) || 'Monitor'}</h2>
+        ${range ? rangeBar(range) : ''}
     </header>`;
 
 const rangeBar = (current: string) => `
-    <div class="mhd__ranges">
-        ${RANGES.map(r => `<button class="mhd__range ${r === current ? 'mhd__range--active' : ''}" data-range="${r}">${r}</button>`).join('')}
+    <div class="mhd__ranges" role="group">
+        ${RANGES.map(r => `<button class="mhd__range ${r === current ? 'mhd__range--active' : ''}" data-range="${r}" aria-pressed="${r === current}">${r}</button>`).join('')}
     </div>`;
 
 const footerBar = () => `
@@ -178,8 +181,7 @@ export const loadingInner = (name: string) => `
     <div class="mhd__state">${i18n.t('general.loading') || 'Loading…'}</div>`;
 
 export const emptyInner = (name: string, mode: string, range: string) => `
-    ${header(name)}
-    ${rangeBar(range)}
+    ${header(name, range)}
     <div class="mhd__state">
         <div class="mhd__state-icon">📡</div>
         <p>${mode === 'background'
@@ -195,8 +197,7 @@ export const dataInner = (name: string, data: HistoryData): string => {
     const heartbeat = data.heartbeat || [];
 
     return `
-        ${header(name)}
-        ${rangeBar(data.range)}
+        ${header(name, data.range)}
         <div class="mhd__body">
             <div class="mhd__statuspill mhd__statuspill--${status}">
                 <span class="mhd__statuspill-dot"></span>${escapeHtml(statusLabel)}
@@ -204,17 +205,24 @@ export const dataInner = (name: string, data: HistoryData): string => {
 
             ${statsGrid(data)}
 
-            <div class="mhd__chart-head">
-                <span class="mhd__section-label">${i18n.t('monitor.latency')}</span>
+            <div class="sec__head">
+                <span class="sec__label">${i18n.t('monitor.latency')}</span>
+                <span class="sec__rule"></span>
                 <span class="mhd__legend"><span class="mhd__legend-dot"></span>${i18n.t('monitor.latency')} (ms)</span>
             </div>
-            <div class="mhd__chart" id="mhd-chart"></div>
+            <div class="mhd__chart card" id="mhd-chart"></div>
 
-            <div class="mhd__section-label">${i18n.t('monitor.recent_checks')}</div>
+            <div class="sec__head">
+                <span class="sec__label">${i18n.t('monitor.recent_checks')}</span>
+                <span class="sec__rule"></span>
+            </div>
             <div class="mhd__heartbeat">${heartbeatStrip(heartbeat)}</div>
             ${heartbeatScale(heartbeat)}
 
-            <div class="mhd__section-label">${i18n.t('monitor.incidents')}</div>
+            <div class="sec__head">
+                <span class="sec__label">${i18n.t('monitor.incidents')}</span>
+                <span class="sec__rule"></span>
+            </div>
             ${incidentTable(incidents)}
         </div>
         ${footerBar()}`;

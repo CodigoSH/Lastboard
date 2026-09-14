@@ -505,6 +505,8 @@
   "monitor.refresh": "Обновить",
   "monitor.overview_title": "Состояние сервисов",
   "monitor.overview_empty": "Нет отслеживаемых сервисов.",
+  "monitor.services": "Сервисы",
+  "monitor.services_down": "Сервисы недоступны",
   "widget.monitor.name": "Мониторинг",
   "widget.monitor.description": "Состояние, доступность и история отслеживаемых сервисов",
   "monitor.select_services": "Какие сервисы показывать",

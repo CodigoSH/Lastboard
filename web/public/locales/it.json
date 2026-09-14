@@ -505,6 +505,8 @@
   "monitor.refresh": "Aggiorna",
   "monitor.overview_title": "Stato dei servizi",
   "monitor.overview_empty": "Nessun servizio monitorato.",
+  "monitor.services": "Servizi",
+  "monitor.services_down": "Servizi giù",
   "widget.monitor.name": "Monitoraggio",
   "widget.monitor.description": "Stato, disponibilità e cronologia dei servizi che monitori",
   "monitor.select_services": "Servizi da mostrare",

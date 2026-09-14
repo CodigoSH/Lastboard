@@ -505,6 +505,8 @@
   "monitor.refresh": "Odśwież",
   "monitor.overview_title": "Stan usług",
   "monitor.overview_empty": "Brak monitorowanych usług.",
+  "monitor.services": "Usługi",
+  "monitor.services_down": "Usługi niedostępne",
   "widget.monitor.name": "Monitorowanie",
   "widget.monitor.description": "Stan, dostępność i historia monitorowanych usług",
   "monitor.select_services": "Usługi do pokazania",

@@ -505,6 +505,8 @@
   "monitor.refresh": "刷新",
   "monitor.overview_title": "服务状态",
   "monitor.overview_empty": "没有正在监控的服务。",
+  "monitor.services": "服务",
+  "monitor.services_down": "故障的服务",
   "widget.monitor.name": "监控",
   "widget.monitor.description": "所监控服务的状态、在线率与心跳记录",
   "monitor.select_services": "要显示的服务",

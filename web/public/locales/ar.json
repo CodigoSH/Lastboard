@@ -505,6 +505,8 @@
   "monitor.refresh": "تحديث",
   "monitor.overview_title": "حالة الخدمات",
   "monitor.overview_empty": "لا توجد خدمات قيد المراقبة.",
+  "monitor.services": "الخدمات",
+  "monitor.services_down": "خدمات متوقّفة",
   "widget.monitor.name": "المراقبة",
   "widget.monitor.description": "حالة الخدمات التي تراقبها ونسبة تشغيلها وسجلّها",
   "monitor.select_services": "الخدمات المعروضة",

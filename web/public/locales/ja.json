@@ -505,6 +505,8 @@
   "monitor.refresh": "更新",
   "monitor.overview_title": "サービスの状態",
   "monitor.overview_empty": "監視中のサービスはありません。",
+  "monitor.services": "サービス",
+  "monitor.services_down": "停止中のサービス",
   "widget.monitor.name": "監視",
   "widget.monitor.description": "監視中サービスの状態・稼働率・履歴",
   "monitor.select_services": "表示するサービス",

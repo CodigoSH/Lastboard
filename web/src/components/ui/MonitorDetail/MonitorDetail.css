@@ -7,43 +7,60 @@
     box-sizing: border-box;
 }
 
+/* The look is the Proxmox page's, on purpose — see MonitorPage.css. */
 .mhd__header {
     display: flex;
     align-items: center;
-    padding: 18px 20px;
+    gap: 12px;
+    padding: 13px 20px;
+    /* The drawer that hosts this on a phone puts its own close button over the
+       end of this row, and says so by setting the variable. Rules do not cross
+       a shadow boundary; custom properties do. */
+    padding-inline-end: var(--mhd-header-end, 20px);
     border-bottom: 1px solid var(--border);
+    background: var(--panel);
     flex-shrink: 0;
 }
 
 .mhd__title {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-main);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-inline-end: 44px;
+    min-width: 0;
 }
 
 /* Range tabs */
-.mhd__ranges { display: flex; gap: 8px; padding: 16px 20px 0; flex-shrink: 0; }
+/* The compact group the Proxmox page uses for the same job. */
+.mhd__ranges {
+    display: flex;
+    gap: 2px;
+    margin-inline-start: auto;
+    flex: none;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius);
+    padding: 2px;
+}
 
 .mhd__range {
-    flex: 1;
-    padding: 9px 0;
-    background: rgba(128, 128, 128, 0.06);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    padding: 4px 9px;
+    background: none;
+    border: 0;
+    border-radius: calc(var(--radius) - 3px);
     color: var(--text-dim);
-    font-size: 13px;
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .mhd__range:hover { color: var(--text-main); }
-.mhd__range--active { background: rgba(var(--accent-rgb), 0.12); border-color: var(--accent); color: var(--accent); }
+.mhd__range--active { background: rgba(var(--accent-rgb), 0.12); color: var(--accent); }
 
 .mhd__body { flex: 1 1 auto; min-height: 0; padding: 20px; overflow-y: auto; }
 
@@ -51,10 +68,13 @@
 .mhd__statuspill {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    font-size: 16px;
-    font-weight: 700;
-    padding: 9px 18px;
+    font-family: var(--font-mono, monospace);
+    gap: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 5px 11px;
     border-radius: 999px;
     margin-bottom: 22px;
 }
@@ -67,40 +87,71 @@
 /* Stats grid */
 .mhd__stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
     gap: 10px;
-    margin-bottom: 26px;
+    margin-bottom: 22px;
 }
 
 .mhd__stat {
-    background: rgba(128, 128, 128, 0.05);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 10px;
-    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--card-border, transparent);
+    border-radius: var(--radius);
+    padding: 11px 13px;
 }
 
-.mhd__stat-value { font-size: 22px; font-weight: 700; color: var(--text-main); line-height: 1.1; font-variant-numeric: tabular-nums; }
-.mhd__stat-label { font-size: 12px; color: var(--text-dim); margin-top: 5px; }
-.mhd__stat-sub { font-size: 11px; color: var(--text-dim); opacity: 0.7; margin-top: 1px; }
-
-.mhd__section-label {
-    font-size: 11px;
+.mhd__stat-value {
+    font-family: var(--font-mono, monospace);
+    font-size: 17px;
     font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+}
+
+.mhd__stat-label {
+    font-family: var(--font-mono, monospace);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
     color: var(--text-dim);
-    opacity: 0.8;
-    margin-bottom: 8px;
+    margin-top: 7px;
+}
+
+.mhd__stat-sub { font-family: var(--font-mono, monospace); font-size: 10px; color: var(--text-dim); opacity: 0.7; margin-top: 2px; }
+
+/* ── Section heads, the page's own ──────────────────────────── */
+
+.sec__head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+
+.sec__label {
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border, transparent);
+    border-radius: 12px;
+    padding: 3px 9px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-dim);
+    flex: none;
+}
+
+.sec__rule { flex: 1; height: 1px; background: var(--border); }
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--card-border, transparent);
+    border-radius: var(--radius);
 }
 
 /* Latency chart */
-.mhd__chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.mhd__chart-head .mhd__section-label { margin-bottom: 0; }
 .mhd__legend { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
 .mhd__legend-dot { width: 10px; height: 3px; border-radius: 2px; background: var(--accent); }
 
-.mhd__chart { width: 100%; margin-bottom: 26px; }
+.mhd__chart { width: 100%; margin-bottom: 22px; padding: 10px 12px 4px; box-sizing: border-box; }
 .mhd__chartsvg { display: block; }
 .mhd__chart-empty { height: 190px; display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
 

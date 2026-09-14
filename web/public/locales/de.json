@@ -505,6 +505,8 @@
   "monitor.refresh": "Aktualisieren",
   "monitor.overview_title": "Dienststatus",
   "monitor.overview_empty": "Keine überwachten Dienste.",
+  "monitor.services": "Dienste",
+  "monitor.services_down": "Dienste ausgefallen",
   "widget.monitor.name": "Überwachung",
   "widget.monitor.description": "Status, Verfügbarkeit und Verlauf der überwachten Dienste",
   "monitor.select_services": "Anzuzeigende Dienste",

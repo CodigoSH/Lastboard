@@ -55,15 +55,27 @@ class MonitorPage extends HTMLElement {
                 <header class="mp__header">
                     <div class="mp__title">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        ${escapeHtml(i18n.t('monitor.overview_title'))}
+                        <span>${escapeHtml(i18n.t('monitor.overview_title'))}</span>
                     </div>
+                    <!-- What the page is about, next to its name — the same
+                         line the Proxmox page carries, and for the same reason:
+                         the state of the thing belongs beside what it is. -->
+                    <div class="mp__status" id="mp-status"></div>
                     <button class="mp__close" id="mp-close" aria-label="${escapeHtml(i18n.t('general.close'))}" title="${escapeHtml(i18n.t('general.close'))}">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
                 </header>
                 <div class="mp__layout">
                     <aside class="mp__list">
-                        <input class="mp__search" id="mp-search" type="text" placeholder="${escapeHtml(i18n.t('monitor.search_placeholder'))}" />
+                        <div class="sec__head">
+                            <span class="sec__label">${escapeHtml(i18n.t('monitor.services'))}</span>
+                            <span class="sec__rule"></span>
+                            <span class="search">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input id="mp-search" type="search" placeholder="${escapeHtml(i18n.t('monitor.search_placeholder'))}"
+                                       aria-label="${escapeHtml(i18n.t('monitor.search_placeholder'))}" />
+                            </span>
+                        </div>
                         <div class="mp__rows" id="mp-rows"></div>
                     </aside>
                     <section class="mp__detail"><monitor-detail></monitor-detail></section>
@@ -101,6 +113,7 @@ class MonitorPage extends HTMLElement {
             this.rows = [];
         }
         this._renderRows();
+        this._renderStatus();
         if (this.rows.length) {
             this._select(this.rows[0].item_id, this.rows[0].name);
         } else {
@@ -128,6 +141,16 @@ class MonitorPage extends HTMLElement {
         }
     }
 
+    /** The summary beside the title: how many services, and how many are down. */
+    private _renderStatus() {
+        const el = this.shadowRoot?.getElementById('mp-status');
+        if (!el) return;
+        const down = this.rows.filter(r => r.status === 'down').length;
+        el.innerHTML = `
+            <span class="stat"><b>${this.rows.length}</b> ${escapeHtml(i18n.t('monitor.services').toLowerCase())}</span>
+            <span class="stat stat--hot">${escapeHtml(i18n.t('monitor.services_down'))}: <b>${down}</b></span>`;
+    }
+
     private _renderRows() {
         const box = this.shadowRoot!.getElementById('mp-rows');
         if (!box) return;
@@ -148,10 +171,11 @@ class MonitorPage extends HTMLElement {
         const beats = '<span class="mp-row__beat mp-row__beat--empty"></span>'.repeat(pad)
             + real.map(b => `<span class="mp-row__beat mp-row__beat--${b.status}" title="${escapeHtml(`${label(b.status)} · ${i18n.formatDateTime(parseTs(b.at))}`)}"></span>`).join('');
         return `
-            <button class="mp-row ${r.item_id === this.selectedId ? 'mp-row--active' : ''}" data-id="${r.item_id}" data-name="${escapeHtml(r.name)}">
-                <span class="mp-row__uptime mp-row__uptime--${r.status}">${uptime}</span>
+            <button class="card mp-row ${r.item_id === this.selectedId ? 'mp-row--active' : ''}" data-id="${r.item_id}" data-name="${escapeHtml(r.name)}">
+                <span class="dot dot--${r.status === 'down' ? 'bad' : r.status === 'up' ? 'up' : 'off'}"></span>
                 <span class="mp-row__name">${escapeHtml(r.name) || '—'}</span>
                 <span class="mp-row__beats">${beats}</span>
+                <span class="mp-row__uptime mp-row__uptime--${r.status}">${uptime}</span>
             </button>`;
     }
 
