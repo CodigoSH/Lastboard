@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Lastboard">
+  <!-- A board of panels where one is not a panel but a circle: Lastboard
+       arranges your services and watches them. Flat fills, no strokes and no
+       gradients, which is the language of the CodigoSH mark it sits beside,
+       and the two house colours — accent and accent-alt — and nothing else.
+       Every PNG that ships is generated from this file. -->
+  <rect x="11" y="11" width="34" height="78" rx="9" fill="#E8520E"/>
+  <rect x="55" y="11" width="34" height="34" rx="9" fill="#C2410C"/>
+  <circle cx="72" cy="72" r="17" fill="#E8520E"/>
+</svg>
