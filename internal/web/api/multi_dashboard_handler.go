@@ -357,16 +357,31 @@ func (h *MultiDashboardHandler) ReorderDashboards(w http.ResponseWriter, r *http
 		return
 	}
 
+	// All or nothing. Checking and writing one board at a time left the row
+	// order half-applied when a later id turned out not to be the caller's:
+	// the request was refused and the boards had moved anyway.
+	tx, err := h.DB.Begin()
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
 	for i, id := range body.IDs {
 		var exists int
-		if err := h.DB.QueryRowContext(r.Context(), "SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?", id, userID).Scan(&exists); err != nil {
+		if err := tx.QueryRowContext(r.Context(), "SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?", id, userID).Scan(&exists); err != nil {
 			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}
-		if _, err := h.DB.Exec("UPDATE dashboards SET position = ? WHERE id = ? AND user_id = ?", i, id, userID); err != nil {
+		if _, err := tx.Exec("UPDATE dashboards SET position = ? WHERE id = ? AND user_id = ?", i, id, userID); err != nil {
 			http.Error(w, "general.db_error", http.StatusInternalServerError)
 			return
 		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
