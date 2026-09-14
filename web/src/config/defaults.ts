@@ -100,31 +100,37 @@ widget(1, 10, 1, 2, 1, { widgetId: 'clock', city: 'Madrid', timezone: 'Europe/Ma
 widget(1, 10, 2, 3, 1, { widgetId: 'telemetry', interval: 2000 });
 fav(1, 12, 1, 'github', 'GitHub', 'https://github.com');
 
+/* Several of these say which machine serves them. It is what makes the Proxmox
+   page worth opening in the demo: plex is deliberately the stopped one, so the
+   page can be seen doing the thing only it can do — naming the service that
+   went down with its container.
+   Only here: a real install's seed (internal/web/api/helpers.go) must not
+   invent a hypervisor its owner may not have. */
 const media = section(1, 1, 3, 3, 2, 'Media');
-bookmark(1, media, 1, 1, 'plex', 'Plex', 'https://plex.tv', { statusCheck: true, statusPos: 'top-right' });
-bookmark(1, media, 2, 1, 'jellyfin', 'Jellyfin', 'https://jellyfin.org', { statusCheck: true, statusPos: 'top-right' });
+bookmark(1, media, 1, 1, 'plex', 'Plex', 'https://plex.tv', { statusCheck: true, statusPos: 'top-right', proxmox: { node: 'pve', kind: 'lxc', vmid: 106 } });
+bookmark(1, media, 2, 1, 'jellyfin', 'Jellyfin', 'https://jellyfin.org', { statusCheck: true, statusPos: 'top-right', proxmox: { node: 'pve', kind: 'lxc', vmid: 100 } });
 bookmark(1, media, 3, 1, 'sonarr', 'Sonarr', 'https://sonarr.tv');
 bookmark(1, media, 1, 2, 'radarr', 'Radarr', 'https://radarr.video');
 bookmark(1, media, 2, 2, 'prowlarr', 'Prowlarr', 'https://prowlarr.com', { visibleTouch: false });
 bookmark(1, media, 3, 2, 'overseerr', 'Overseerr', 'https://overseerr.dev');
 
 const apps = section(1, 4, 3, 4, 2, 'Self-Hosted Apps');
-bookmark(1, apps, 1, 1, 'nextcloud', 'Nextcloud', 'https://nextcloud.com', { statusCheck: true, statusPos: 'top-right' });
-bookmark(1, apps, 2, 1, 'immich', 'Immich', 'https://immich.app');
-bookmark(1, apps, 3, 1, 'vaultwarden', 'Vaultwarden', 'https://github.com/dani-garcia/vaultwarden', { borderColor: '#ef4444', borderWidth: 2 });
+bookmark(1, apps, 1, 1, 'nextcloud', 'Nextcloud', 'https://nextcloud.com', { statusCheck: true, statusPos: 'top-right', proxmox: { node: 'pve', kind: 'lxc', vmid: 101 } });
+bookmark(1, apps, 2, 1, 'immich', 'Immich', 'https://immich.app', { proxmox: { node: 'pve', kind: 'qemu', vmid: 105 } });
+bookmark(1, apps, 3, 1, 'vaultwarden', 'Vaultwarden', 'https://github.com/dani-garcia/vaultwarden', { borderColor: '#ef4444', borderWidth: 2, proxmox: { node: 'pve', kind: 'lxc', vmid: 107 } });
 bookmark(1, apps, 4, 1, 'open-webui', 'Open WebUI', 'https://openwebui.com', { borderColor: '#8b5cf6', borderWidth: 2 });
-bookmark(1, apps, 1, 2, 'paperless-ngx', 'Paperless', 'https://docs.paperless-ngx.com', { visibleTouch: false });
+bookmark(1, apps, 1, 2, 'paperless-ngx', 'Paperless', 'https://docs.paperless-ngx.com', { visibleTouch: false, proxmox: { node: 'pve', kind: 'lxc', vmid: 108 } });
 bookmark(1, apps, 2, 2, 'audiobookshelf', 'Audiobookshelf', 'https://www.audiobookshelf.org');
 bookmark(1, apps, 3, 2, 'linkwarden', 'Linkwarden', 'https://linkwarden.app');
 bookmark(1, apps, 4, 2, 'freshrss', 'FreshRSS', 'https://freshrss.org');
 
 const devHome = section(1, 8, 3, 3, 2, 'Dev');
 bookmark(1, devHome, 1, 1, 'gitea', 'Gitea', 'https://gitea.io');
-bookmark(1, devHome, 2, 1, 'forgejo', 'Forgejo', 'https://forgejo.org');
+bookmark(1, devHome, 2, 1, 'forgejo', 'Forgejo', 'https://forgejo.org', { proxmox: { node: 'pve', kind: 'lxc', vmid: 104 } });
 bookmark(1, devHome, 3, 1, 'code-server', 'Code', 'https://coder.com');
 bookmark(1, devHome, 1, 2, 'portainer', 'Portainer', 'https://www.portainer.io');
 bookmark(1, devHome, 2, 2, 'grafana', 'Grafana', 'https://grafana.com');
-bookmark(1, devHome, 3, 2, 'uptime-kuma', 'Uptime Kuma', 'https://github.com/louislam/uptime-kuma', { statusCheck: true, statusPos: 'top-right' });
+bookmark(1, devHome, 3, 2, 'uptime-kuma', 'Uptime Kuma', 'https://github.com/louislam/uptime-kuma', { statusCheck: true, statusPos: 'top-right', proxmox: { node: 'pve', kind: 'lxc', vmid: 109 } });
 
 // Standalone favourites (bookmarks outside any section)
 fav(1, 11, 3, 'google', 'Google', 'https://google.com');
@@ -153,15 +159,15 @@ bookmark(2, infra, 1, 1, 'proxmox', 'Proxmox', 'https://www.proxmox.com', { stat
 bookmark(2, infra, 2, 1, 'portainer', 'Portainer', 'https://www.portainer.io');
 bookmark(2, infra, 3, 1, 'traefik', 'Traefik', 'https://traefik.io');
 bookmark(2, infra, 4, 1, 'nginx-proxy-manager', 'Nginx PM', 'https://nginxproxymanager.com');
-bookmark(2, infra, 1, 2, 'pi-hole', 'Pi-hole', 'https://pi-hole.net', { statusCheck: true, statusPos: 'top-right' });
-bookmark(2, infra, 2, 2, 'home-assistant', 'Home Assistant', 'https://www.home-assistant.io');
+bookmark(2, infra, 1, 2, 'pi-hole', 'Pi-hole', 'https://pi-hole.net', { statusCheck: true, statusPos: 'top-right', proxmox: { node: 'pve', kind: 'lxc', vmid: 103 } });
+bookmark(2, infra, 2, 2, 'home-assistant', 'Home Assistant', 'https://www.home-assistant.io', { proxmox: { node: 'pve', kind: 'qemu', vmid: 102 } });
 bookmark(2, infra, 3, 2, 'adguard-home', 'AdGuard', 'https://adguard.com');
 bookmark(2, infra, 4, 2, 'unifi', 'UniFi', 'https://ui.com');
 
 const monitoring = section(2, 10, 1, 3, 2, 'Monitoring');
 bookmark(2, monitoring, 1, 1, 'grafana', 'Grafana', 'https://grafana.com', { statusCheck: true, statusPos: 'top-right' });
 bookmark(2, monitoring, 2, 1, 'prometheus', 'Prometheus', 'https://prometheus.io');
-bookmark(2, monitoring, 3, 1, 'uptime-kuma', 'Uptime Kuma', 'https://github.com/louislam/uptime-kuma');
+bookmark(2, monitoring, 3, 1, 'uptime-kuma', 'Uptime Kuma', 'https://github.com/louislam/uptime-kuma', { proxmox: { node: 'pve', kind: 'lxc', vmid: 109 } });
 bookmark(2, monitoring, 1, 2, 'netdata', 'Netdata', 'https://netdata.cloud');
 bookmark(2, monitoring, 2, 2, 'glances', 'Glances', 'https://nicolargo.github.io/glances');
 bookmark(2, monitoring, 3, 2, 'dozzle', 'Dozzle', 'https://dozzle.dev');
@@ -208,5 +214,10 @@ widget(2, 10, 4, 2, 1, {
     ],
     refreshSec: 60,
 });
+
+// The hypervisor, under the things it runs. It sits beside the Docker widget
+// on purpose: one lists containers, the other lists the machines those
+// containers live in — and only this one can say the node is short of memory.
+widget(2, 10, 5, 3, 2, { widgetId: 'proxmox', title: 'Hypervisor', refreshSec: 30, showNode: true });
 
 export const DEFAULT_ITEMS: GridItem[] = items;
