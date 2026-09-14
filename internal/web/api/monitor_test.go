@@ -475,3 +475,102 @@ func TestOverviewStatsOmitsItemsWithoutChecks(t *testing.T) {
 		t.Errorf("item with only stale checks reported %d checks in range", st.Total)
 	}
 }
+
+// The heartbeat strip has to span the range the user picked. It used to return
+// the most recent forty checks instead, which at one check every five minutes
+// is the last three hours whether the request said 24h, 7d or 30d — the numbers
+// above the strip changed and the strip did not.
+func TestBucketBeatsSpansTheWholeWindow(t *testing.T) {
+	now := time.Date(2026, 9, 14, 12, 0, 0, 0, time.UTC)
+
+	for _, tc := range []struct {
+		name string
+		span time.Duration
+	}{
+		{"24h", 24 * time.Hour},
+		{"7d", 7 * 24 * time.Hour},
+		{"30d", 30 * 24 * time.Hour},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			since := now.Add(-tc.span)
+
+			// One check every five minutes for the whole window.
+			var checks []MonitorCheck
+			for at := since; at.Before(now); at = at.Add(5 * time.Minute) {
+				checks = append(checks, MonitorCheck{CheckedAt: at, Up: true})
+			}
+
+			beats := bucketBeats(checks, since, now, 40)
+			if len(beats) != 40 {
+				t.Fatalf("got %d beats, want 40", len(beats))
+			}
+
+			covered := beats[len(beats)-1].At.Sub(beats[0].At)
+			// The last bucket starts one width before the end, so the stamps
+			// cover all but that final slice.
+			wantAtLeast := tc.span - tc.span/40 - time.Minute
+			if covered < wantAtLeast {
+				t.Errorf("beats cover %s of a %s window, want at least %s",
+					covered, tc.span, wantAtLeast)
+			}
+			if beats[0].At.Before(since) {
+				t.Errorf("first beat at %s is before the window start %s", beats[0].At, since)
+			}
+		})
+	}
+}
+
+// One failed check colours its whole bucket: an outage that gets averaged away
+// by the successes around it is an outage the strip never shows.
+func TestBucketBeatsMarksABucketDownAndLeavesGapsEmpty(t *testing.T) {
+	now := time.Date(2026, 9, 14, 12, 0, 0, 0, time.UTC)
+	since := now.Add(-10 * time.Hour) // ten buckets of one hour
+	at := func(hoursIn int) time.Time { return since.Add(time.Duration(hoursIn)*time.Hour + 30*time.Minute) }
+
+	checks := []MonitorCheck{
+		{CheckedAt: at(0), Up: true},
+		{CheckedAt: at(1), Up: true},
+		{CheckedAt: at(1).Add(time.Minute), Up: false}, // one failure in bucket 1
+		// buckets 2..8 have nothing recorded at all
+		{CheckedAt: at(9), Up: true},
+	}
+
+	beats := bucketBeats(checks, since, now, 10)
+	if len(beats) != 10 {
+		t.Fatalf("got %d beats, want 10", len(beats))
+	}
+
+	want := []string{"up", "down", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "up"}
+	for i, w := range want {
+		if beats[i].Status != w {
+			t.Errorf("bucket %d is %q, want %q", i, beats[i].Status, w)
+		}
+	}
+}
+
+// Degenerate windows must not panic or divide by zero.
+func TestBucketBeatsHandlesEmptyWindows(t *testing.T) {
+	now := time.Date(2026, 9, 14, 12, 0, 0, 0, time.UTC)
+
+	if got := bucketBeats(nil, now, now, 40); len(got) != 0 {
+		t.Errorf("a zero-length window gave %d beats, want none", len(got))
+	}
+	if got := bucketBeats(nil, now.Add(time.Hour), now, 40); len(got) != 0 {
+		t.Errorf("a window ending before it starts gave %d beats, want none", len(got))
+	}
+	if got := bucketBeats(nil, now.Add(-time.Hour), now, 0); len(got) != 0 {
+		t.Errorf("zero buckets gave %d beats, want none", len(got))
+	}
+
+	// An empty window still reports its shape, so the strip spans the range
+	// rather than collapsing to nothing.
+	got := bucketBeats(nil, now.Add(-24*time.Hour), now, 40)
+	if len(got) != 40 {
+		t.Fatalf("got %d beats for a window with no checks, want 40", len(got))
+	}
+	for i, b := range got {
+		if b.Status != "empty" {
+			t.Errorf("bucket %d is %q with no checks at all, want %q", i, b.Status, "empty")
+		}
+	}
+}

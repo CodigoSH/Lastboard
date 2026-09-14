@@ -288,21 +288,59 @@ type historyResponse struct {
 	Stats     MonitorStats      `json:"stats"`
 }
 
-// rawBeats returns the most recent up-to-n checks as heartbeat beats, oldest
-// first — the dense recent strip. Older history is summarized by the uptime %
-// and the latency chart, not squeezed into these beats.
-func rawBeats(checks []MonitorCheck, n int) []heartbeatBucket {
-	start := 0
-	if len(checks) > n {
-		start = len(checks) - n
+// bucketBeats folds a window of checks into exactly n buckets spanning
+// since..now, oldest first, so the strip reads as the range the user asked for.
+//
+// It replaces a version that returned the most recent n checks instead. That is
+// the same thing only while the window holds n checks or fewer: at one check
+// every five minutes, forty of them are the last three hours, so picking 7d or
+// 30d moved the numbers above the strip and left the strip itself showing the
+// same three hours. Measured before the change: 24h, 7d and 30d all returned
+// 3.2 hours of beats.
+//
+// Buckets with no checks come back as "empty" rather than being dropped, or a
+// gap in the history would silently shorten the window instead of showing as
+// the hole it is.
+func bucketBeats(checks []MonitorCheck, since, now time.Time, n int) []heartbeatBucket {
+	if n <= 0 || !now.After(since) {
+		return []heartbeatBucket{}
 	}
-	out := make([]heartbeatBucket, 0, len(checks)-start)
-	for _, c := range checks[start:] {
-		st := "up"
-		if !c.Up {
-			st = "down"
+	width := now.Sub(since) / time.Duration(n)
+	if width <= 0 {
+		return []heartbeatBucket{}
+	}
+
+	seen := make([]bool, n)
+	down := make([]bool, n)
+	for _, c := range checks {
+		offset := c.CheckedAt.Sub(since)
+		if offset < 0 {
+			continue
 		}
-		out = append(out, heartbeatBucket{Status: st, At: c.CheckedAt})
+		i := int(offset / width)
+		if i >= n {
+			// A check stamped at or after now lands in the last bucket rather
+			// than off the end.
+			i = n - 1
+		}
+		seen[i] = true
+		if !c.Up {
+			down[i] = true
+		}
+	}
+
+	out := make([]heartbeatBucket, 0, n)
+	for i := 0; i < n; i++ {
+		st := "empty"
+		switch {
+		case down[i]:
+			// One failure colours the whole bucket: an outage must not be
+			// averaged away by the successes around it.
+			st = "down"
+		case seen[i]:
+			st = "up"
+		}
+		out = append(out, heartbeatBucket{Status: st, At: since.Add(time.Duration(i) * width)})
 	}
 	return out
 }
@@ -396,7 +434,7 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 		Total:     len(checks),
 		Checks:    checks,
 		Incidents: incidents,
-		Heartbeat: rawBeats(checks, 40),
+		Heartbeat: bucketBeats(checks, since, now, 40),
 	}
 	if stats, err := h.store.Stats(itemID, now); err == nil {
 		resp.Stats = stats
