@@ -87,7 +87,7 @@ The Proxmox icon in the top bar opens it. Top to bottom:
 
 **Storage** — one card per store: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
 
-**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves, its CPU and memory, its type (LXC or VM) and its VMID. Templates are left out: they cannot run, so they have no state to show.
+**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves (matched by name, or told to it — see below), its CPU and memory, its type (LXC or VM) and its VMID. Templates are left out: they cannot run, so they have no state to show.
 
 A machine that is **stopped and serves a bookmark** wears an accent border and a red dot, and sorts to the front. A stopped machine nobody linked is just a stopped machine — it is not flagged, because turning things off is a normal thing to do.
 
@@ -111,21 +111,35 @@ Lastboard offers exactly two actions, on machines only: **start** and **shut dow
 
 Actions are **administrator-only**, and the server checks the token's permissions before relaying anything: with no `VM.PowerMgmt` the buttons are not drawn, and a request made anyway is refused here rather than at the host.
 
-## Linking a bookmark to its machine
+## How a machine is tied to a bookmark
 
-This is what turns a list of containers into something Lastboard can say anything about. Edit any bookmark and pick the machine under **Served by**:
+This is what turns a list of containers into something Lastboard can say anything about, and **it happens on its own**: your container `15-myspeed` is matched to your *MySpeed* bookmark without you configuring anything.
+
+The rule is deliberately strict, because naming the wrong service as the one that went down is worse than naming none:
+
+- The leading ordinal machines get filed under is dropped (`15-myspeed` → `myspeed`, `90--haos` → `haos`), then case, spaces and punctuation are ignored.
+- The bookmark is matched on its **name** or on the **icon it wears** — so a bookmark labelled *Donetic* still finds the container `08-donetick`.
+- A machine is matched only when **exactly one** bookmark fits. Two Jellyfins and one `jellyfin` container: no match, rather than a coin toss.
+
+Measured on a host with twenty-nine containers and a board of fifty-five bookmarks, none of them configured: **sixteen machines matched, none wrongly.**
+
+### When the names don't agree
+
+Some pairs no rule should guess — a container called `23-jellyfin-musica` serving a bookmark called *Jellyfin Music*, or `90--haos` serving *Home Assistant*. For those, edit the bookmark and pick the machine under **Served by**:
 
 ![Adding a bookmark](../assets/m-bookmark.png)
 
-Once linked:
+Leave it on **Automatic (by name)** and the rule above applies. Pick a machine and **that wins**, always — the guess never overrides something you said.
 
-- the machine's tile on the Proxmox page wears that bookmark's icon and name
+Once a machine is tied to a bookmark, however it got there:
+
+- its tile on the Proxmox page wears that bookmark's icon and name
 - a stopped machine says which service it takes with it
 - the widget lifts it above everything else that is merely stopped
 
-The link lives inside the bookmark itself — no extra table, nothing to keep in step — and it works from **any** board: a bookmark on your *Media* board is found while you are looking at *Servers*.
+A hand-made link lives inside the bookmark itself — no extra table, nothing to keep in step — and it works from **any** board: a bookmark on your *Media* board is found while you are looking at *Servers*.
 
-> The link is **not** part of the YAML export, which carries the portable shape of a bookmark (name, address, icon, group). A full [backup](../using/import-export.md) of the database keeps it.
+> A hand-made link is **not** part of the YAML export, which carries the portable shape of a bookmark (name, address, icon, group). A full [backup](../using/import-export.md) of the database keeps it. Matching by name needs nothing kept at all.
 
 ## The widget
 

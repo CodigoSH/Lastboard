@@ -37,7 +37,7 @@ A dialog opens with two tabs, **General** and **Customization**.
 | **Label Position** | Where the label appears relative to the tile: **Label Below** (default), **Label Above**, **Hidden (No Name)** (icon only), or **Section Style** (renders the label as a section-style header). |
 | **URL** | The destination address. A **protocol** dropdown lets you choose `https://` or `http://`. |
 | **Status Position** | Set it to a corner and Lastboard periodically checks whether the URL is reachable, showing an up/down indicator there. Pick **Top Left**, **Top Right**, **Bottom Left**, **Bottom Right**, or **Off**. |
-| **Served by** | Only when a [Proxmox](../proxmox/overview.md) host is connected: the virtual machine or container this service runs on. Tie them together and the Proxmox page can say which service a stopped machine takes with it. |
+| **Served by** | Only when a [Proxmox](../proxmox/overview.md) host is connected: which machine runs this service. Left on **Automatic (by name)**, Lastboard matches the bookmark to a machine called the same thing; pick one by hand when the names differ. |
 | **Touch Devices** | Controls whether the bookmark appears on touch devices. See [Mobile Visibility and Ordering](#mobile-visibility-and-ordering) below. |
 
 ## Customization Options
