@@ -79,19 +79,25 @@ Coming back later, the secret box is empty and says *Stored*. Leaving it that wa
 
 ## The page
 
-The Proxmox icon in the top bar opens it. Top to bottom:
+The Proxmox icon in the top bar opens it, and the **×** in its header closes it — while it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
 
-**The status line** — node name, how many machines are running out of how many, and **Services down**: how many of your bookmarked services are on a machine that is stopped. It also holds the search box and the time range used by the charts (1h, 24h, 7d).
+**The status line** — node name, how many machines are running out of how many, and **Services down**: how many of your bookmarked services are on a machine that is stopped. On the right, the range every chart on the page is drawn over: **1h, 24h, 7d**.
 
 **Nodes** — one card per node with CPU, memory and disk, plus uptime, load average and how many machines it carries. On a cluster the header says so; a single node is never called a cluster.
 
 **Storage** — one card per store: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
 
-**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves (matched by name, or told to it — see below), its CPU and memory, its type (LXC or VM) and its VMID. Templates are left out: they cannot run, so they have no state to show.
+**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves (matched by name, or told to it — see below), its CPU with a **trend line over the chosen range**, its memory, its type (LXC or VM) and its VMID. Templates are left out: they cannot run, so they have no state to show.
 
-A machine that is **stopped and serves a bookmark** wears an accent border and a red dot, and sorts to the front. A stopped machine nobody linked is just a stopped machine — it is not flagged, because turning things off is a normal thing to do.
+The dot in the corner says which of three things a machine is:
 
-Use the search box to filter by name or VMID. When something is down, the **Services down** count becomes a button: click it to show only the stopped machines, and click it again to bring the rest back.
+| | |
+| :--- | :--- |
+| **Green** | running |
+| **Amber**, dashed border | stopped, with no bookmark pointing at it — turning things off is a normal thing to do |
+| **Red**, accent border | stopped **and** serving a bookmark: that is an outage, and the machine sorts to the front of its node |
+
+The search box in the **Machines** header filters by name or VMID. When something is down, the **Services down** count becomes a button: click it to show only the stopped machines, and click it again to bring the rest back.
 
 ## A machine in detail
 
@@ -151,7 +157,8 @@ To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmo
 | :--- | :--- |
 | Page open or widget tick | `GET /cluster/resources` — one call for nodes, machines and storage |
 | Page open | `GET /nodes/{node}/status` — one per node, for load and cores |
-| Opening a machine | `GET .../rrddata` — the history Proxmox already keeps |
+| Page open, and on a range change | `GET .../rrddata` — one per machine, for the trend line on its tile. Proxmox has no endpoint that returns history for more than one machine, so these are spread out, three at a time, and cached until the range changes |
+| Opening a machine | the history it already has, or a request for it |
 | Pressing a button | `POST .../status/start` or `.../status/shutdown` |
 
 The page refreshes every 15 seconds while it is open and the widget on its own interval; neither polls when it is closed. Nothing is written to your database: no machine names, no figures, no history. The only thing Lastboard stores is the connection itself.

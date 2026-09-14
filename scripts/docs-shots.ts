@@ -223,10 +223,11 @@ const SHOTS: Shot[] = [
         // Opens on the one machine that is stopped, because that is the thing
         // this page does that the Proxmox console does not: it names the
         // service that went down with its container.
-        // 790 tall, measured rather than guessed: the grid ends there at this
-        // width, and the 1000px window it was first shot at published a third
-        // of an empty board under it.
-        name: 'proxmox', w: 1600, h: 790, wait: 2200,
+        // 900 tall, measured rather than guessed: the grid ends there at this
+        // width now that a stopped machine sorts to the front and every tile
+        // carries a trend line. At 790 the last row was sliced in half; at
+        // 1000 a third of the window was empty board.
+        name: 'proxmox', w: 1600, h: 900, wait: 4000,
         act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2000);`,
     },
     {
