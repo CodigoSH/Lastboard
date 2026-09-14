@@ -233,6 +233,7 @@
   "settings.import_db": "Restore",
   "settings.language": "Language",
   "settings.light": "Light",
+  "settings.theme_system": "System",
   "settings.new_password": "New Password",
   "settings.new_version_notif": "Update's ready!",
   "settings.no_users": "No users here yet.",

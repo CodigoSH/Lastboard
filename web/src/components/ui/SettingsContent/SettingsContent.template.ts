@@ -134,13 +134,17 @@ export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, co
                     <div class="settings-content__form-group" style="margin-bottom: 0;">
                         <label class="settings-content__label">${i18n.t('settings.theme')}</label>
                         <div class="settings-content__segmented-control">
-                            <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'system' || prefs.theme === 'dark' ? 'active' : ''}"
+                            <button class="settings-content__segment ${!prefs.theme || prefs.theme === 'dark' ? 'active' : ''}"
                                     data-action="set-theme" data-theme="dark">
                                 🌙 ${i18n.t('settings.dark')}
                             </button>
                             <button class="settings-content__segment ${prefs.theme === 'light' ? 'active' : ''}"
                                     data-action="set-theme" data-theme="light">
                                 ☀️ ${i18n.t('settings.light')}
+                            </button>
+                            <button class="settings-content__segment ${prefs.theme === 'system' ? 'active' : ''}"
+                                    data-action="set-theme" data-theme="system">
+                                🖥️ ${i18n.t('settings.theme_system')}
                             </button>
                         </div>
                     </div>

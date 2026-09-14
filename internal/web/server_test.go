@@ -383,15 +383,79 @@ func TestPanelColoursMatchTheStylesheetAndTheFrontend(t *testing.T) {
 	}
 }
 
-// The theme and the colour it wears travel together, so a page cannot be served
-// dark with a light status bar above it.
-func TestThemeColorFollowsTheTheme(t *testing.T) {
-	dark := newIndexPageData("Lastboard", "dark-mode", "en", false, "n")
-	if dark.ThemeColor != panelDark {
-		t.Errorf("the dark page declares %q, want %q", dark.ThemeColor, panelDark)
+// The theme travels as a choice, and three things have to follow from it at
+// once: the class the page is served with, the colour the status bar takes, and
+// whether the page needs the scrap of script that asks the device. They are
+// built in one place so none can be set without the others.
+func TestThemeChoiceDecidesClassColourAndWhoAsksTheDevice(t *testing.T) {
+	for theme, want := range map[string]struct {
+		class         string
+		colour        string
+		followsSystem bool
+	}{
+		"dark":  {"dark-mode", panelDark, false},
+		"light": {"", panelLight, false},
+		// Served dark because that is the default everywhere; a device that
+		// disagrees is corrected before the stylesheet is parsed.
+		"system": {"dark-mode", panelDark, true},
+		// A row from before any of this existed, or one written by hand.
+		"":         {"dark-mode", panelDark, false},
+		"nonsense": {"dark-mode", panelDark, false},
+	} {
+		name := theme
+		if name == "" {
+			name = "(empty)"
+		}
+		t.Run(name, func(t *testing.T) {
+			data := newIndexPageData("Lastboard", theme, "en", false, "n")
+			if data.ThemeClass != want.class {
+				t.Errorf("class %q, want %q", data.ThemeClass, want.class)
+			}
+			if data.ThemeColor != want.colour {
+				t.Errorf("colour %q, want %q", data.ThemeColor, want.colour)
+			}
+			if data.FollowsSystem != want.followsSystem {
+				t.Errorf("FollowsSystem %v, want %v", data.FollowsSystem, want.followsSystem)
+			}
+		})
 	}
-	light := newIndexPageData("Lastboard", "", "en", false, "n")
-	if light.ThemeColor != panelLight {
-		t.Errorf("the light page declares %q, want %q", light.ThemeColor, panelLight)
+}
+
+// Only the page that asked for it carries the script, and it has to come before
+// the stylesheet or it corrects a page that has already painted — which is the
+// flash the server-side stamping exists to avoid.
+func TestTheSystemThemeScriptShipsOnlyWhenNeededAndEarlyEnough(t *testing.T) {
+	server := newTestServer(t, false)
+
+	page, err := htmltemplate.ParseFS(server.assets, "index.html")
+	if err != nil {
+		t.Fatalf("parse index.html: %v", err)
+	}
+
+	render := func(theme string) string {
+		var out strings.Builder
+		if err := page.Execute(&out, newIndexPageData("Lastboard", theme, "en", false, "n")); err != nil {
+			t.Fatalf("render %s: %v", theme, err)
+		}
+		return out.String()
+	}
+
+	for _, theme := range []string{"dark", "light"} {
+		if strings.Contains(render(theme), "prefers-color-scheme") {
+			t.Errorf("the %s page asks the device about a theme it was told outright", theme)
+		}
+	}
+
+	system := render("system")
+	script := strings.Index(system, "prefers-color-scheme")
+	if script < 0 {
+		t.Fatal("the system page does not ask the device anything")
+	}
+	stylesheet := strings.Index(system, `rel="stylesheet"`)
+	if stylesheet < 0 {
+		t.Fatal("no stylesheet in index.html; this test is reading the wrong thing")
+	}
+	if script > stylesheet {
+		t.Error("the theme is settled after the stylesheet is linked, so the page paints once in the wrong one first")
 	}
 }

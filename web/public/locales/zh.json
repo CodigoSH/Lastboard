@@ -233,6 +233,7 @@
   "settings.import_db": "恢复",
   "settings.language": "语言",
   "settings.light": "浅色",
+  "settings.theme_system": "跟随系统",
   "settings.new_password": "新密码",
   "settings.new_version_notif": "新版本可用！",
   "settings.no_users": "暂时没有用户。",

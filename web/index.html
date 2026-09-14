@@ -10,6 +10,21 @@
          the first byte; ThemeService rewrites it when the theme is toggled,
          which Chrome honours live in an installed app. -->
     <meta name="theme-color" content="{{.ThemeColor}}">
+    {{if .FollowsSystem}}
+    <!-- This account asked to follow the device, and the server cannot know
+         which the device is: the client hint that would say is Chromium-only.
+         Settled here, before the stylesheet is parsed, so there is nothing to
+         correct after the page has painted. ThemeService keeps it true
+         afterwards, including when the device changes while the app is open. -->
+    <script nonce="{{.Nonce}}">
+        (function () {
+            var dark = matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.toggle('dark-mode', dark);
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', dark ? '#1a1a1a' : '#ffffff');
+        })();
+    </script>
+    {{end}}
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="icon" type="image/png" href="/favicon.png">

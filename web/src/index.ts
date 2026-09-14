@@ -1,6 +1,6 @@
 import { userStore } from './store/userStore';
 import { dashboardStore } from './store/dashboardStore';
-import { ThemeService } from './services/ThemeService';
+import { ThemeService, asThemeChoice } from './services/ThemeService';
 import { i18n } from './services/i18n';
 
 // Import components to register them
@@ -97,7 +97,7 @@ bootstrap(async () => {
             document.documentElement.style.setProperty('--user-preferred-columns', u.preferences.grid_columns.toString());
         }
 
-        ThemeService.apply(u.theme === 'light' ? 'light' : 'dark');
+        ThemeService.apply(asThemeChoice(u.theme));
 
         if (u.id) {
             dashboardStore.setUserId(u.id);

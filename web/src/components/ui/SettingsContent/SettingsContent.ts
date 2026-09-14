@@ -4,7 +4,7 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { userStore } from '../../../store/userStore';
 import { updateStore } from '../../../store/updateStore';
 import { userService } from '../../../services/userService';
-import { ThemeService } from '../../../services/ThemeService';
+import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
@@ -483,7 +483,7 @@ class SettingsContent extends HTMLElement {
             i18n.setLanguage(newPrefs.language);
         }
         if (newPrefs.theme) {
-            ThemeService.apply(newPrefs.theme === 'light' ? 'light' : 'dark');
+            ThemeService.apply(asThemeChoice(newPrefs.theme));
         }
 
         let ok = true;

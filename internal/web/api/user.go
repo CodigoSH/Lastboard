@@ -39,7 +39,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		SELECT id, username, role, accent_color, language,
 		       COALESCE(avatar_url, ''),
 		       COALESCE(widget_min_width, 140),
-               COALESCE(theme, 'system'),
+               COALESCE(theme, 'dark'),
                COALESCE(project_name, 'Lastboard'),
                COALESCE(beta_updates, 0),
                COALESCE(grid_columns_pc, 12),
@@ -110,7 +110,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var current user.User
-	err := h.DB.QueryRowContext(r.Context(), `SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'system'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12), COALESCE(unit_system, 'metric'), COALESCE(dashboard_background, ''), COALESCE(project_logo, '')
+	err := h.DB.QueryRowContext(r.Context(), `SELECT accent_color, language, COALESCE(widget_min_width, 140), COALESCE(theme, 'dark'), COALESCE(project_name, 'Lastboard'), COALESCE(beta_updates, 0), COALESCE(grid_columns_pc, 12), COALESCE(unit_system, 'metric'), COALESCE(dashboard_background, ''), COALESCE(project_logo, '')
 		FROM users WHERE username=?`, username).Scan(
 		&current.AccentColor, &current.Language, &current.WidgetMinWidth, &current.Theme, &current.ProjectName, &current.BetaUpdates, &current.GridColumnsPC, &current.UnitSystem, &current.DashboardBackground, &current.ProjectLogo)
 
@@ -451,7 +451,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Default Avatar Logic
 	defaultAvatar := "/images/default-avatar.svg"
 
-	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, 'user', ?, 'system', 'metric', '#e8520e', 'en', 'Lastboard', 140, ?)")
+	stmt, err := h.DB.Prepare("INSERT INTO users (username, password, role, created_at, theme, unit_system, accent_color, language, project_name, widget_min_width, avatar_url) VALUES (?, ?, 'user', ?, 'dark', 'metric', '#e8520e', 'en', 'Lastboard', 140, ?)")
 	if err != nil {
 		slog.Error("Database error", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)

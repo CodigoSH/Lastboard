@@ -342,17 +342,53 @@ func migrateSchema(db *sql.DB) error {
 		return fmt.Errorf("migration 6 (default dashboard name) failed: %w", err)
 	}
 
-	// Migration 7: the theme is light or dark, and nothing else.
+	// Migration 7: the theme is one of the three the interface offers.
 	//
-	// 'system' was never chosen by anything: the wizard asks for light or dark,
-	// so does the settings panel, and the frontend's own default is dark. It
-	// arrived solely as this column's default, so it landed on accounts an
-	// administrator created — while the settings panel drew those accounts as
-	// dark all along. Making the stored value say what the interface has been
-	// showing.
-	_, err = db.Exec(`UPDATE users SET theme = 'dark' WHERE theme IS NULL OR theme NOT IN ('light', 'dark')`)
+	// It used to sweep 'system' into 'dark' as well, because nothing could
+	// choose it: it arrived solely as this column's default and landed on
+	// accounts an administrator created, while the settings panel drew those
+	// accounts as dark all along. 'system' is a real choice now, so sweeping it
+	// here would undo that choice on the next restart — these migrations run on
+	// every start, not once. The one-off clean-up moved to migration 8.
+	_, err = db.Exec(`UPDATE users SET theme = 'dark' WHERE theme IS NULL OR theme NOT IN ('light', 'dark', 'system')`)
 	if err != nil {
-		return fmt.Errorf("migration 7 (theme is light or dark) failed: %w", err)
+		return fmt.Errorf("migration 7 (theme is one of three) failed: %w", err)
+	}
+
+	// Migration 8, and it runs exactly once: accounts an administrator created
+	// carry 'system' without having asked for it.
+	//
+	// CreateUser inserted 'system' as a default nobody could choose, and the
+	// settings panel drew those accounts as dark. The moment 'system' means
+	// "follow the device", every one of them would start following a phone its
+	// owner was never asked about — a new feature changing what an existing user
+	// sees, which is the one thing a new feature must not do. They keep the dark
+	// they have been looking at, and can now choose otherwise.
+	//
+	// Remembered with a flag rather than by bumping the schema version: these
+	// migrations re-run on every start, so an ungated sweep would undo the
+	// choice each restart, and a version bump would stop an older binary opening
+	// the database at all — a heavy price to pay for a preference.
+	// A database old enough to need this may predate system_settings, and
+	// migrateSchema runs against exactly that. Creating it here costs nothing on
+	// every other start and keeps the flag from failing the whole migration.
+	if _, err = db.Exec(
+		`CREATE TABLE IF NOT EXISTS system_settings (key TEXT PRIMARY KEY, value TEXT)`,
+	); err != nil {
+		return fmt.Errorf("migration 8 (settings table) failed: %w", err)
+	}
+
+	var themeSwept string
+	_ = db.QueryRow(`SELECT value FROM system_settings WHERE key = 'theme_system_swept'`).Scan(&themeSwept)
+	if themeSwept != "1" {
+		if _, err = db.Exec(`UPDATE users SET theme = 'dark' WHERE theme = 'system'`); err != nil {
+			return fmt.Errorf("migration 8 (legacy system theme) failed: %w", err)
+		}
+		if _, err = db.Exec(
+			`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('theme_system_swept', '1')`,
+		); err != nil {
+			return fmt.Errorf("migration 8 (recording the sweep) failed: %w", err)
+		}
 	}
 
 	// Migration 2: users from versions without multi-dashboard support have items

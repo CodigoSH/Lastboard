@@ -513,10 +513,6 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	// Two answers, both known here, so the page is painted in the right theme
 	// from the first byte and the client never has to correct it. Anything that
 	// is not "light" is dark, which is the app's default everywhere else.
-	themeClass := "dark-mode"
-	if dbTheme == "light" {
-		themeClass = ""
-	}
 
 	tmpl, err := htmltemplate.ParseFS(s.assets, "index.html")
 	if err != nil {
@@ -528,7 +524,7 @@ func (s *Server) serveIndex(w http.ResponseWriter, r *http.Request) {
 	// Known here, so the page arrives in the right language and the right
 	// reading direction instead of starting English and left-to-right and
 	// being corrected once the bundle has loaded.
-	data := newIndexPageData(projectName, themeClass, dbLanguage, false, cspNonce(r))
+	data := newIndexPageData(projectName, dbTheme, dbLanguage, false, cspNonce(r))
 
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("Error executing template", "error", err)
@@ -550,7 +546,7 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := newIndexPageData("Lastboard", "dark-mode", "", true, cspNonce(r))
+	data := newIndexPageData("Lastboard", "dark", "", true, cspNonce(r))
 
 	if err := tmpl.Execute(w, data); err != nil {
 		slog.Error("Error executing demo template", "error", err)
@@ -566,10 +562,16 @@ type indexPageData struct {
 	ProjectName string
 	ThemeClass  string
 	ThemeColor  string
-	Language    string
-	Direction   string
-	DemoMode    bool
-	Nonce       string
+	// FollowsSystem says the account asked to follow the device rather than to
+	// be light or dark. The server cannot know which the device is — the client
+	// hint that would say is Chromium-only — so the page carries a scrap of
+	// script that settles it before the stylesheet is parsed, the same trick the
+	// login and setup pages already use for their own theme.
+	FollowsSystem bool
+	Language      string
+	Direction     string
+	DemoMode      bool
+	Nonce         string
 }
 
 // The colour the top bar paints, per theme — which is what the status bar of an
@@ -588,6 +590,18 @@ func themeColorOf(themeClass string) string {
 		return panelLight
 	}
 	return panelDark
+}
+
+// themeClassOf maps a stored theme to the class the page is served with.
+//
+// "system" gets the dark class: it is the app's default everywhere, so the
+// device that agrees needs no correcting at all, and the one that does not is
+// corrected before the stylesheet is parsed rather than after it has painted.
+func themeClassOf(theme string) string {
+	if theme == "light" {
+		return ""
+	}
+	return "dark-mode"
 }
 
 // themeColorFromRequest reads the theme out of the cookie ThemeService writes
@@ -611,18 +625,20 @@ func themeColorFromRequest(r *http.Request) string {
 // direction it reads in, a theme and the colour it wears — so no caller can set
 // one and forget the other. An empty language means English, which is what the
 // frontend falls back to.
-func newIndexPageData(projectName, themeClass, language string, demo bool, nonce string) indexPageData {
+func newIndexPageData(projectName, theme, language string, demo bool, nonce string) indexPageData {
 	if language == "" {
 		language = "en"
 	}
+	themeClass := themeClassOf(theme)
 	return indexPageData{
-		ProjectName: projectName,
-		ThemeClass:  themeClass,
-		ThemeColor:  themeColorOf(themeClass),
-		Language:    language,
-		Direction:   directionOf(language),
-		DemoMode:    demo,
-		Nonce:       nonce,
+		ProjectName:   projectName,
+		ThemeClass:    themeClass,
+		ThemeColor:    themeColorOf(themeClass),
+		FollowsSystem: theme == "system",
+		Language:      language,
+		Direction:     directionOf(language),
+		DemoMode:      demo,
+		Nonce:         nonce,
 	}
 }
 

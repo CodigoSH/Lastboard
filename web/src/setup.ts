@@ -6,7 +6,7 @@ import './components/ui/Notifier/Notifier';
 import './components/ui/Select/Select';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
-import { ThemeService } from './services/ThemeService';
+import { ThemeService, asThemeChoice } from './services/ThemeService';
 import { setupPasswordToggles } from './services/passwordToggle';
 
 bootstrap(async () => {
@@ -29,7 +29,8 @@ bootstrap(async () => {
     const confirmInput = document.getElementById('confirmPassword') as HTMLInputElement;
     const themeBtns = {
         light: document.getElementById('themeLight'),
-        dark: document.getElementById('themeDark')
+        dark: document.getElementById('themeDark'),
+        system: document.getElementById('themeSystem')
     };
 
     // --- 1. Init Language & Theme ---
@@ -62,26 +63,18 @@ bootstrap(async () => {
     // Init Theme Logic
     ThemeService.init();
 
-    // Set initial active button
-    if (ThemeService.isDark()) {
-        themeBtns.dark?.classList.add('selected');
-        themeBtns.light?.classList.remove('selected');
-    } else {
-        themeBtns.light?.classList.add('selected');
-        themeBtns.dark?.classList.remove('selected');
-    }
+    // Mark the stored choice, not the resolved one: somebody who picked
+    // "system" on a light device should see "system" highlighted, not "light".
+    const markSelected = (mode: string) => {
+        Object.entries(themeBtns).forEach(([key, btn]) => {
+            if (btn) btn.classList.toggle('selected', key === mode);
+        });
+    };
+    markSelected(ThemeService.stored());
 
     function setTheme(mode: string) {
-        // Toggle UI buttons
-        Object.entries(themeBtns).forEach(([key, btn]) => {
-            if (btn) key === mode ? btn.classList.add('selected') : btn.classList.remove('selected');
-        });
-
-        if (mode === 'dark') {
-            ThemeService.enableDark();
-        } else {
-            ThemeService.enableLight();
-        }
+        markSelected(mode);
+        ThemeService.apply(asThemeChoice(mode));
     }
 
     Object.entries(themeBtns).forEach(([mode, btn]) => {
@@ -139,6 +132,7 @@ bootstrap(async () => {
         setText('lblInterfaceTheme', 'setup.interface_theme');
         setText('lblThemeLight', 'settings.light');
         setText('lblThemeDark', 'settings.dark');
+        setText('lblThemeSystem', 'settings.theme_system');
 
         setText('summaryKeyLang', 'settings.language');
         setText('summaryKeyTheme', 'settings.theme');
@@ -283,10 +277,10 @@ bootstrap(async () => {
         nextBtn.textContent = i18n.t('setup.creating');
         nextBtn.setAttribute('disabled', 'true');
 
-        // Gather Data
-        let theme = 'dark';
-        if (themeBtns.light?.classList.contains('selected')) theme = 'light';
-        if (themeBtns.dark?.classList.contains('selected')) theme = 'dark';
+        // Gather Data. Read the stored choice rather than the highlighted card:
+        // the two agree, and only one of them survives somebody adding a fourth
+        // card without touching this.
+        const theme = ThemeService.stored();
 
         // Fix Default Avatar Persistence
         // If selectedAvatar is the generic Proxmox one (or any initial default), keep it.
