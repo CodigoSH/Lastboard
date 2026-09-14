@@ -1,6 +1,7 @@
 import { apiService } from '../../../services/apiService';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
+import { escapeHtml } from '../../../services/escape';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import {
     loadingInner, emptyInner, dataInner, noSelectionInner, HistoryData,
@@ -234,14 +235,24 @@ class MonitorDetail extends HTMLElement {
                 + `<text class="mhd__axis" x="${mL - 8}" y="${(yy + 3).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`;
         }).join('');
 
+        // Tick labels describe the span they cover. They used to be the clock
+        // time always, hand-built from getHours(), so a month of latency was
+        // labelled 01:47, 13:45, 01:42, 13:40 and read as a single day — the
+        // chart was right and its axis said otherwise. Going through i18n also
+        // puts them in the app's language and its 12- or 24-hour convention
+        // instead of this component's idea of one.
+        const overADay = tr > 36 * 3600 * 1000;
+        const tickOptions: Intl.DateTimeFormatOptions = overADay
+            ? { day: '2-digit', month: '2-digit' }
+            : { hour: '2-digit', minute: '2-digit' };
+
         const nx = Math.min(5, data.length);
         const xEls = Array.from({ length: nx }, (_, i) => {
             const t = tmin + (i / (nx - 1)) * tr;
             const xx = X(t);
-            const dt = new Date(t);
-            const lbl = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+            const lbl = i18n.formatDateTime(new Date(t), tickOptions);
             const anchor = i === 0 ? 'start' : i === nx - 1 ? 'end' : 'middle';
-            return `<text class="mhd__axis" x="${xx.toFixed(1)}" y="${H - 6}" text-anchor="${anchor}">${lbl}</text>`;
+            return `<text class="mhd__axis" x="${xx.toFixed(1)}" y="${H - 6}" text-anchor="${anchor}">${escapeHtml(lbl)}</text>`;
         }).join('');
 
         box.innerHTML = `
