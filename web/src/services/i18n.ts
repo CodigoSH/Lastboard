@@ -1,6 +1,6 @@
 import { availableLocales } from '../locales/metadata';
 import { Locale } from '../locales/types';
-import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, directionOf } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, formatSpan, directionOf } from './i18n.helpers';
 
 class I18nService {
     private currentLanguage: string = 'en';
@@ -97,6 +97,11 @@ class I18nService {
     /** Format a number in the language the user picked. */
     public formatNumber(value: number, options?: Intl.NumberFormatOptions): string {
         return formatNumber(this.currentLanguage, value, options);
+    }
+
+    /** How long ago a moment was, as a phrase. Null under a minute. */
+    public formatSpan(fromMs: number, nowMs?: number): string | null {
+        return formatSpan(this.currentLanguage, fromMs, nowMs);
     }
 
     public subscribe(listener: (locale: Locale) => void): () => void {

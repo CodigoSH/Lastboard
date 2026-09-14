@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, directionOf } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, directionOf, formatSpan } from './i18n.helpers';
 
 describe('translate', () => {
     const en = { greeting: 'Hello', welcome: 'Welcome {name}', multi: '{a} and {b}' };
@@ -131,5 +131,45 @@ describe('directionOf', () => {
         expect(directionOf('ar-EG')).toBe('rtl');
         expect(directionOf('AR')).toBe('rtl');
         expect(directionOf('en-GB')).toBe('ltr');
+    });
+});
+
+describe('formatSpan', () => {
+    const now = new Date('2026-09-14T12:00:00Z').getTime();
+    const ago = (minutes: number) => now - minutes * 60_000;
+
+    it('says nothing under a minute, so the caller can say "now"', () => {
+        expect(formatSpan('en', ago(0), now)).toBeNull();
+        expect(formatSpan('en', ago(0.4), now)).toBeNull();
+    });
+
+    it('counts minutes, then hours, then days', () => {
+        expect(formatSpan('en', ago(5), now)).toBe('5 minutes');
+        expect(formatSpan('en', ago(90), now)).toBe('2 hours');
+        expect(formatSpan('en', ago(24 * 60), now)).toBe('24 hours');
+        // Two days is where hours stop being worth reading.
+        expect(formatSpan('en', ago(47 * 60), now)).toBe('47 hours');
+        expect(formatSpan('en', ago(7 * 24 * 60), now)).toBe('7 days');
+        expect(formatSpan('en', ago(30 * 24 * 60), now)).toBe('30 days');
+    });
+
+    // The monitoring strip printed "720h" and "168h" for the 30-day and 7-day
+    // ranges. Nobody reads a month out of 720.
+    it('never leaves the reader dividing by 24', () => {
+        for (const days of [7, 14, 30]) {
+            const out = formatSpan('en', ago(days * 24 * 60), now) as string;
+            expect(out).toContain('day');
+            expect(out).not.toContain('h');
+        }
+    });
+
+    it('speaks the language it is given, with no key to translate', () => {
+        expect(formatSpan('es', ago(30 * 24 * 60), now)).toBe('30 días');
+        expect(formatSpan('de', ago(30 * 24 * 60), now)).toBe('30 Tage');
+        expect(formatSpan('fr', ago(24 * 60), now)).toContain('heures');
+    });
+
+    it('does not go negative when the clock disagrees with the server', () => {
+        expect(formatSpan('en', now + 60_000, now)).toBeNull();
     });
 });

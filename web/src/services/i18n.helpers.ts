@@ -141,6 +141,34 @@ export function formatNumber(
 }
 
 /**
+ * How long ago something was, in a unit a person reads without arithmetic.
+ *
+ * The monitoring strip printed hours whatever the number, so a month of history
+ * was labelled "720h" and a week "168h" — true, and useless. Intl says it in the
+ * app's own language, so this needs no translation key of its own: "30 days",
+ * "30 días", "30 Tage".
+ *
+ * Under a minute there is no number worth showing; the caller says "now".
+ */
+export function formatSpan(
+    locale: string,
+    fromMs: number,
+    nowMs: number = Date.now(),
+): string | null {
+    const minutes = Math.max(0, Math.round((nowMs - fromMs) / 60000));
+    if (minutes < 1) return null;
+
+    // Hours up to two days: "36 hours" reads better than "2 days" for something
+    // that is not two days, and days take over once the hours stop being useful.
+    const [value, unit]: [number, Intl.NumberFormatOptions['unit']] =
+        minutes < 60 ? [minutes, 'minute']
+            : minutes < 48 * 60 ? [Math.round(minutes / 60), 'hour']
+                : [Math.round(minutes / (60 * 24)), 'day'];
+
+    return formatNumber(locale, value, { style: 'unit', unit, unitDisplay: 'long' });
+}
+
+/**
  * The languages Lastboard ships that are written right to left.
  *
  * Kept as a list rather than asked of Intl, because Intl.Locale's textInfo is

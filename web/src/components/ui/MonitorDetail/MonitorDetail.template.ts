@@ -88,7 +88,8 @@ const fmtDateTime = (s: string) => i18n.formatDateTime(parseTs(s), {
 
 const statusLabelOf = (status: string) => status === 'down'
     ? i18n.t('status.unreachable')
-    : status === 'up' ? i18n.t('status.online') : i18n.t('monitor.status_unknown');
+    : status === 'partial' ? i18n.t('monitor.status_partial')
+        : status === 'up' ? i18n.t('status.online') : i18n.t('monitor.status_unknown');
 
 export const barTooltipHtml = (status: string, at: string) => `
     <div class="mhd__tip-status mhd__tip-status--${status}"><span class="mhd__tip-dot"></span>${escapeHtml(statusLabelOf(status))}</div>
@@ -161,8 +162,8 @@ const heartbeatStrip = (beats: HeartbeatBucket[]): string => {
 const heartbeatScale = (beats: HeartbeatBucket[]): string => {
     const real = beats || [];
     if (!real.length) return '';
-    const mins = Math.max(0, Math.round((Date.now() - parseTs(real[0].at).getTime()) / 60000));
-    const left = mins < 1 ? i18n.t('monitor.now') : mins < 60 ? `${mins}m` : `${Math.round(mins / 60)}h`;
+    // "30 days" rather than the "720h" this used to print.
+    const left = i18n.formatSpan(parseTs(real[0].at).getTime()) ?? i18n.t('monitor.now');
     return `<div class="mhd__hb-scale"><span>${escapeHtml(left)}</span><span>${escapeHtml(i18n.t('monitor.now'))}</span></div>`;
 };
 
