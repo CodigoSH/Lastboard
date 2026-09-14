@@ -31,6 +31,79 @@ BINARY_NAME="lastboard"
 DATA_DIR="/var/lib/lastboard"
 SERVICE_FILE="/etc/systemd/system/lastboard.service"
 
+# ============================================================ uninstall
+#
+# Ported from LastHelp's installer, which is the finished one in the house.
+# There was no way to remove Lastboard cleanly before this: the unit, the
+# binary, the symlink and the service account had to be found and deleted by
+# hand, which is how a half-removed install happens.
+#
+#   sudo bash install.sh --uninstall           removes it and keeps the data
+#   sudo bash install.sh --uninstall --purge   removes the data too
+UNINSTALL=no
+PURGE=no
+for ARG in "$@"; do
+    case "$ARG" in
+        --uninstall) UNINSTALL=yes ;;
+        --purge) PURGE=yes ;;
+        --help|-h)
+            echo "Usage: sudo bash install.sh [--uninstall [--purge]]"
+            echo "  --uninstall   stop and remove Lastboard, keeping $DATA_DIR"
+            echo "  --purge       with --uninstall, delete the data and the service account too"
+            exit 0 ;;
+        *) echo -e "${RED}Unknown option: $ARG${NC}"; exit 1 ;;
+    esac
+done
+
+# Nothing here runs rm -rf on a path it has not looked at first. Each of these
+# is a variable at the top of the file, and an empty or relative one would turn
+# a tidy-up into whatever happens to be in the working directory.
+safe_to_remove() {
+    case "$1" in
+        /|/usr|/etc|/var|/opt|/home|/root|/boot) echo -e "${RED}Refusing to remove $1${NC}"; exit 1 ;;
+        /*) [ ${#1} -gt 4 ] || { echo -e "${RED}Refusing to remove $1${NC}"; exit 1 ;} ;;
+        *) echo -e "${RED}Refusing to remove a path that is not absolute: '$1'${NC}"; exit 1 ;;
+    esac
+}
+
+if [ "$UNINSTALL" = "yes" ]; then
+    [ "$(id -u)" -eq 0 ] || { echo -e "${RED}Run this as root (sudo bash install.sh --uninstall)${NC}"; exit 1; }
+    safe_to_remove "$INSTALL_DIR"
+
+    # Confirmed before anything is touched, not after. Somebody who types the
+    # wrong word — or runs this where there is no terminal to type on — ends up
+    # with the installation they started with rather than half of one.
+    if [ "$PURGE" = "yes" ]; then
+        safe_to_remove "$DATA_DIR"
+        if (exec 3< /dev/tty) 2>/dev/null; then
+            printf "  ${BOLD}Type DELETE to erase %s and its database: ${NC}" "$DATA_DIR" > /dev/tty
+            IFS= read -r CONFIRM < /dev/tty 2>/dev/null || CONFIRM=""
+            [ "$CONFIRM" = "DELETE" ] || { echo -e "${RED}Not confirmed. Nothing has been removed.${NC}"; exit 1; }
+        else
+            echo -e "${RED}--purge needs a terminal to confirm on. Nothing has been removed.${NC}"
+            exit 1
+        fi
+    fi
+
+    echo -e "${BLUE}  • ${NC}Stopping the service..."
+    systemctl disable --now lastboard >/dev/null 2>&1 || true
+    rm -f "$SERVICE_FILE"
+    systemctl daemon-reload >/dev/null 2>&1 || true
+
+    echo -e "${BLUE}  • ${NC}Removing the binary..."
+    rm -f "$BIN_DIR/$BINARY_NAME"
+    rm -rf "$INSTALL_DIR"
+
+    if [ "$PURGE" = "yes" ]; then
+        rm -rf "$DATA_DIR"
+        userdel lastboard >/dev/null 2>&1 || true
+        echo -e "${GREEN}  ✓ ${NC}Removed, data and all."
+    else
+        echo -e "${GREEN}  ✓ ${NC}Removed. Your data is still in $DATA_DIR."
+    fi
+    exit 0
+fi
+
 # Helper for friendly status
 function status_msg() {
     echo -e "${BLUE}  • ${NC}$1"

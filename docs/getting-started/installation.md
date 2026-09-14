@@ -56,6 +56,20 @@ Run the following command:
 curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash
 ```
 
+### Removing it
+
+```bash
+sudo bash install.sh --uninstall
+```
+
+Stops and disables the service, removes the unit, the binary and the symlink,
+and leaves your database where it is, in `/var/lib/lastboard`.
+
+To delete the data and the service account as well, add `--purge`. It asks you
+to type `DELETE` first, and refuses outright when there is no terminal to ask
+on — so it cannot erase a database from a script.
+
+
 ## First Run
 
 Once Lastboard is running, it will be available on port `8080` by default. Open your browser and navigate to `http://your-server-ip:8080`.

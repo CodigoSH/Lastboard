@@ -212,4 +212,23 @@ func TestTheInstallerIsSafeToRunOnSomebodyElsesMachine(t *testing.T) {
 	if !strings.Contains(script, ".db.backup-") {
 		t.Error("install.sh no longer copies the database before swapping the binary.")
 	}
+
+	// --purge deletes the database, so it asks first and checks the paths it is
+	// about to remove.
+	//
+	// Both checks below catch these being deleted, which is the regression that
+	// actually happens; neither catches them being rewired, and a grep on source
+	// cannot. The behaviour itself was verified by running the script as root in
+	// a container: with no terminal, --purge refuses and leaves the database and
+	// the binary exactly where they were.
+	if !strings.Contains(script, "safe_to_remove") {
+		t.Error("install.sh removes paths without checking them first.\n\n" +
+			"An empty or relative variable turns a tidy-up into whatever is in the " +
+			"working directory.")
+	}
+	if !strings.Contains(script, "--purge needs a terminal to confirm on") {
+		t.Error("install.sh no longer refuses --purge without a terminal.\n\n" +
+			"Run from a script or from CI it would erase the database with nobody " +
+			"having agreed to it.")
+	}
 }
