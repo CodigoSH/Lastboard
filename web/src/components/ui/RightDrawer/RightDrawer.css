@@ -239,6 +239,21 @@
     border-top: 1px solid var(--border);
 }
 
+/* The way out is a <button> while every other entry is an <a>, so it needs the
+   resets a button does not inherit. They lived in a `style` attribute on the
+   element, and that attribute carried `padding: 0` — which beat the padding
+   every other menu item gets. On a phone, where the label is hidden and only
+   the icon remains, that left a 16x16 target: a quarter of the 44px a finger
+   needs, for the one control somebody opens this drawer to find.
+   Here instead, where the cascade can be read. */
+button.right-drawer__menu-item {
+    background: none;
+    border: none;
+    font-family: inherit;
+    width: 100%;
+    text-align: start;
+}
+
 .right-drawer__menu-item--logout {
     color: var(--danger-color) !important;
 }
@@ -334,9 +349,18 @@
         border-inline-start: 1px solid var(--border);
     }
 
-    /* Only the icon fits in a band. */
+    /* Only the icon fits in a band — so the button has to earn its size from
+       the box, not from a label. 44px is the smallest target a finger hits
+       reliably. */
     .right-drawer__menu-item--logout span {
         display: none;
+    }
+
+    .right-drawer__menu-item--logout {
+        min-width: 44px;
+        min-height: 44px;
+        justify-content: center;
+        margin: 0;
     }
 
     .right-drawer__content-body {

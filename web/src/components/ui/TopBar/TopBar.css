@@ -305,16 +305,18 @@ dashboard-switcher.disabled {
     color: var(--accent);
 }
 
-/* Narrow screens. The settings window needs its two columns — 240px of nav
-   plus 700px of content, and its margins — so below 1024px there is nowhere to
-   put it and the control that opens it is hidden. Touch is deliberately not
-   part of the test: keying this on `pointer: coarse` took the settings away
-   from every tablet in landscape, which has the room of a small laptop and no
-   other way in. */
+/* Narrow screens. Adding a bookmark needs a form this width cannot hold, so
+   that control stays hidden.
+ *
+   The settings used to be hidden here too, on the premise that the window
+   needs its two columns. Measured at 390x844, that premise was false: the
+   drawer already has a narrow layout — 374x782 inside the screen, the nav
+   turned into a band — and hiding the only control that opens it left a phone
+   with no way to sign out, change language or theme, or even read the version.
+   Not buried: absent. So the drawer comes back. */
 @media (max-width: 1023px) {
 
-    #add-toggle,
-    #drawer-toggle {
+    #add-toggle {
         display: none !important;
     }
 
@@ -327,11 +329,12 @@ dashboard-switcher.disabled {
    the widest phones already reach ~1000px lying down and keep growing — but
    height does, and by a wide margin: a phone in landscape is 384-480px tall
    where a tablet is 768-1024px. Touch is part of this test so that a desktop
-   window someone squashed vertically keeps its settings. */
+   window someone squashed vertically keeps its own layout.
+ *
+   Same as above: the form behind `#add-toggle` does not fit, the settings do. */
 @media (max-height: 600px) and (pointer: coarse) {
 
-    #add-toggle,
-    #drawer-toggle {
+    #add-toggle {
         display: none !important;
     }
 

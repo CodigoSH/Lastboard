@@ -81,7 +81,7 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
         </div>
 
         <div class="right-drawer__footer">
-            <button type="button" id="logout-btn" class="right-drawer__menu-item right-drawer__menu-item--logout" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;width:100%;padding:0;">
+            <button type="button" id="logout-btn" class="right-drawer__menu-item right-drawer__menu-item--logout">
                 <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9"/></svg>
                 <span>${i18n.t('auth.logout')}</span>
             </button>
