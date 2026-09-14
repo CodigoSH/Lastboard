@@ -14,6 +14,8 @@ interface TopBarData {
     projectLogo?: string;
     isTouchDevice?: boolean;
     monitoringOn?: boolean;
+    proxmoxOn?: boolean;
+    proxmoxOpen?: boolean;
     monitorOpen?: boolean;
 }
 
@@ -21,7 +23,7 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn, monitorOpen }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
+export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn, monitorOpen, proxmoxOn, proxmoxOpen }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
     // Edit mode, the settings drawer and the status page are exclusive: each one
     // takes over the UI, so while any of them is active every unrelated control
     // is greyed out and only the one that leads back out stays clickable.
@@ -113,14 +115,22 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
 
             ${monitoringOn ? `
             <!-- Monitoring status page — stays clickable while open: it is the way out -->
-            <div id="monitor-toggle" class="top-bar__toggle ${(editMode || drawerOpen) && !monitorOpen ? 'top-bar__toggle--disabled' : ''}"
+            <div id="monitor-toggle" class="top-bar__toggle ${(editMode || drawerOpen || proxmoxOpen) && !monitorOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="${monitorOpen ? 'color: var(--accent);' : ''}"
                  title="${i18n.t('monitor.overview_title')}" aria-label="${i18n.t('monitor.overview_title')}" role="button" tabindex="0">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </div>` : ''}
 
+            ${proxmoxOn ? `
+            <!-- Proxmox page — stays clickable while open: it is the way out -->
+            <div id="proxmox-toggle" class="top-bar__toggle ${(editMode || drawerOpen || monitorOpen) && !proxmoxOpen ? 'top-bar__toggle--disabled' : ''}"
+                 style="${proxmoxOpen ? 'color: var(--accent);' : ''}"
+                 title="${i18n.t('widget.proxmox.name')}" aria-label="${i18n.t('widget.proxmox.name')}" role="button" tabindex="0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
+            </div>` : ''}
+
             <!-- Sidebar Toggle Icon — stays clickable while open: it is the way out -->
-            <div id="drawer-toggle" class="top-bar__toggle ${editMode || monitorOpen ? 'top-bar__toggle--disabled' : ''}"
+            <div id="drawer-toggle" class="top-bar__toggle ${editMode || monitorOpen || proxmoxOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="position: relative;" 
                  title="${i18n.t('topbar.drawer_tooltip')}">
                 ${updateAvailable ? '<div class="notification-dot"></div>' : ''}

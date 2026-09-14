@@ -22,6 +22,8 @@ interface TopBarState {
     projectLogo?: string;
     isTouchDevice?: boolean;
     monitoringOn?: boolean;
+    proxmoxOn?: boolean;
+    proxmoxOpen?: boolean;
     monitorOpen?: boolean;
 }
 
@@ -32,6 +34,8 @@ class TopBar extends HTMLElement {
     _windowClickHandler: ((e: Event) => void) | undefined;
     _monitoringHandler: ((e: CustomEvent) => void) | undefined;
     _monitorOpenHandler: ((e: CustomEvent) => void) | undefined;
+    _proxmoxHandler: ((e: CustomEvent) => void) | undefined;
+    _proxmoxOpenHandler: ((e: CustomEvent) => void) | undefined;
 
     static get observedAttributes() {
         return ['title'];
@@ -49,6 +53,8 @@ class TopBar extends HTMLElement {
             drawerOpen: false,
             searchQuery: '',
             monitorOpen: false,
+            proxmoxOn: false,
+            proxmoxOpen: false,
             isDemo: window.LASTBOARD_CONFIG?.demo_mode || false,
             isTouchDevice: window.innerWidth < 768 && window.matchMedia('(pointer: coarse)').matches
         };
@@ -97,6 +103,22 @@ class TopBar extends HTMLElement {
         };
         eventBus.on(EVENTS.MONITORING_CHANGED, this._monitoringHandler);
 
+        // The Proxmox icon appears only once a connection is saved and enabled.
+        // Everyone authenticated may read that flag; the address and the token
+        // are admin-only and never come back here.
+        apiService.get<{ enabled: boolean }>('/api/proxmox/settings')
+            .then(s => this.setState({ proxmoxOn: !!s.enabled }))
+            .catch(() => { /* leave hidden */ });
+        this._proxmoxHandler = (e: CustomEvent) => {
+            this.setState({ proxmoxOn: !!e.detail?.enabled });
+        };
+        eventBus.on(EVENTS.PROXMOX_CHANGED, this._proxmoxHandler);
+
+        this._proxmoxOpenHandler = (e: CustomEvent) => {
+            this.setState({ proxmoxOpen: !!e.detail?.open });
+        };
+        eventBus.on(EVENTS.PROXMOX_PAGE_CHANGED, this._proxmoxOpenHandler);
+
         // While the status page is up the rest of the topbar is locked, so the
         // only way out is the status icon itself or the page's own close button.
         this._monitorOpenHandler = (e: CustomEvent) => {
@@ -113,6 +135,8 @@ class TopBar extends HTMLElement {
         }
         if (this._monitoringHandler) eventBus.off(EVENTS.MONITORING_CHANGED, this._monitoringHandler);
         if (this._monitorOpenHandler) eventBus.off(EVENTS.MONITOR_OVERVIEW_CHANGED, this._monitorOpenHandler);
+        if (this._proxmoxHandler) eventBus.off(EVENTS.PROXMOX_CHANGED, this._proxmoxHandler);
+        if (this._proxmoxOpenHandler) eventBus.off(EVENTS.PROXMOX_PAGE_CHANGED, this._proxmoxOpenHandler);
     }
 
     setState(newState: Partial<TopBarState>) {
@@ -138,9 +162,10 @@ class TopBar extends HTMLElement {
             // one opened last (from inside the drawer's own settings). The
             // greyed-out controls are inert in CSS too; this keeps them inert
             // for clicks that never went through the pointer.
-            const exclusiveToggle = this.state.monitorOpen ? '#monitor-toggle'
-                : this.state.drawerOpen ? '#drawer-toggle'
-                    : null;
+            const exclusiveToggle = this.state.proxmoxOpen ? '#proxmox-toggle'
+                : this.state.monitorOpen ? '#monitor-toggle'
+                    : this.state.drawerOpen ? '#drawer-toggle'
+                        : null;
             if (exclusiveToggle && !target.closest(exclusiveToggle)) {
                 return;
             }
@@ -227,6 +252,14 @@ class TopBar extends HTMLElement {
                         composed: true
                     }));
                 }
+                return;
+            }
+
+            const proxmoxBtn = target.closest('#proxmox-toggle');
+            if (proxmoxBtn) {
+                eventBus.emit(this.state.proxmoxOpen
+                    ? EVENTS.HIDE_PROXMOX_PAGE
+                    : EVENTS.SHOW_PROXMOX_PAGE);
                 return;
             }
 
@@ -374,6 +407,8 @@ class TopBar extends HTMLElement {
             projectLogo: this.state.projectLogo,
             isTouchDevice: this.state.isTouchDevice,
             monitoringOn: this.state.monitoringOn,
+            proxmoxOn: this.state.proxmoxOn,
+            proxmoxOpen: this.state.proxmoxOpen,
             monitorOpen: this.state.monitorOpen
         })}
         `;

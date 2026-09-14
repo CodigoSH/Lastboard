@@ -9,6 +9,12 @@ export const EVENTS = {
     HIDE_MONITOR_OVERVIEW: 'lastboard:hide-monitor-overview',
     /** Fired by the status page itself whenever it opens or closes ({ open }). */
     MONITOR_OVERVIEW_CHANGED: 'lastboard:monitor-overview-changed',
+    SHOW_PROXMOX_PAGE: 'lastboard:show-proxmox-page',
+    HIDE_PROXMOX_PAGE: 'lastboard:hide-proxmox-page',
+    /** Fired by the Proxmox page itself whenever it opens or closes ({ open }). */
+    PROXMOX_PAGE_CHANGED: 'lastboard:proxmox-page-changed',
+    /** The integration was turned on or off in settings ({ enabled }). */
+    PROXMOX_CHANGED: 'lastboard:proxmox-changed',
     MONITORING_CHANGED: 'lastboard:monitoring-changed',
     NOTIFY: 'lastboard:notify'
 };

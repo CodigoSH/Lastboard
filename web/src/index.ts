@@ -23,6 +23,7 @@ import './components/ui/ConfirmationModal/ConfirmationModal';
 import './components/ui/MoveToDashboardModal/MoveToDashboardModal';
 import './components/ui/MonitorHistoryDrawer/MonitorHistoryDrawer';
 import './components/ui/MonitorPage/MonitorPage';
+import './components/ui/ProxmoxPage/ProxmoxPage';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
 import './components/ui/UpdateModal/UpdateModal';
 // Widget Components
@@ -150,6 +151,9 @@ bootstrap(async () => {
     const monitorPage = document.createElement('monitor-page');
     document.body.appendChild(monitorPage);
 
+    const proxmoxPage = document.createElement('proxmox-page');
+    document.body.appendChild(proxmoxPage);
+
     // Lives outside the settings panel so an update keeps running (and keeps
     // being visible) no matter what happens to the drawer behind it.
     const updateModal = document.createElement('update-modal');
@@ -223,6 +227,16 @@ eventBus.on(EVENTS.SHOW_MONITOR_OVERVIEW, () => {
 
 eventBus.on(EVENTS.HIDE_MONITOR_OVERVIEW, () => {
     const page = document.querySelector('monitor-page') as any;
+    if (page) page.close();
+});
+
+eventBus.on(EVENTS.SHOW_PROXMOX_PAGE, () => {
+    const page = document.querySelector('proxmox-page') as any;
+    if (page) page.open();
+});
+
+eventBus.on(EVENTS.HIDE_PROXMOX_PAGE, () => {
+    const page = document.querySelector('proxmox-page') as any;
     if (page) page.close();
 });
 

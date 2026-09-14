@@ -1,0 +1,533 @@
+/* The Proxmox page.
+ *
+ * Every primitive here is the board's own, because the page is meant to look
+ * like Lastboard and not like a hypervisor console: the tile is
+ * .bookmark-grid__card, the section label is the pill the board puts on a
+ * section's border, the status dot is .status-indicator, and the scrollbars
+ * come from the adopted sheet. Nothing is approximated.
+ */
+
+:host {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: none;
+}
+
+:host([open]) { display: block; }
+
+.pp {
+    position: absolute;
+    inset: 0;
+    background: var(--canvas);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+
+.pp__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+}
+
+.pp__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pp__title svg { color: var(--accent); }
+
+.pp__close {
+    margin-inline-start: auto;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+/* The product removes it deliberately: showModal-style focus would otherwise
+   leave this ringed the moment the page opens. */
+.pp__close:focus { outline: none; }
+
+.pp__close:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    transform: rotate(90deg);
+    color: var(--accent);
+    border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pp__close:hover { transform: none; }
+}
+
+/* ── Status line: dense on purpose ──────────────────────────── */
+
+.pp__status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 11px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-solid);
+    flex-shrink: 0;
+}
+
+.stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--font-mono, monospace);
+    font-size: 11.5px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.stat b { color: var(--text-main); font-weight: 600; }
+.stat--hot b { color: var(--accent); }
+
+/* The count of stopped machines is the one filter worth having, so it is the
+   text that already says it rather than a control of its own. */
+.stat--click {
+    cursor: pointer;
+    border-bottom: 1px dotted rgba(var(--accent-rgb), 0.5);
+}
+.stat--on { color: var(--accent); }
+
+.pp__right { margin-inline-start: auto; display: flex; align-items: center; gap: 12px; }
+
+.ranges { display: flex; gap: 1px; }
+.ranges button {
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: none;
+    border: 0;
+    padding: 4px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.ranges button[aria-pressed="true"] {
+    background: rgba(128, 128, 128, 0.14);
+    color: var(--accent);
+}
+
+/* ── Canvas ─────────────────────────────────────────────────── */
+
+.pp__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: relative;
+}
+
+/* The accent of the house as a wash, from the theme's own glow tokens, which
+   nothing else in the product was using. */
+.pp__body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(70% 34% at 50% 0%, rgba(var(--accent-rgb), 0.08), transparent 72%);
+}
+
+.pp__body > * { position: relative; }
+
+.sec { display: flex; flex-direction: column; gap: 11px; }
+
+.sec__head { display: flex; align-items: center; gap: 12px; }
+
+/* Exactly the pill .bookmark-grid__card.label-section wears. */
+.sec__label {
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border, transparent);
+    border-radius: 12px;
+    padding: 3px 9px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-dim);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+}
+
+.sec__rule { flex: 1; height: 1px; background: var(--border); }
+
+.sec__note {
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+.sec__note b { color: var(--text-main); font-weight: 600; }
+.sec__note--warn b { color: var(--warning-color); }
+.sec__note--bad b { color: var(--danger-color); }
+
+/* ── Cards: the board's own recipe ──────────────────────────── */
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--card-border, transparent);
+    border-radius: var(--radius);
+    text-align: start;
+    width: 100%;
+    cursor: pointer;
+    color: inherit;
+    font-family: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.card:hover {
+    border-color: rgba(var(--accent-rgb), 0.3);
+    background: var(--surface-solid);
+}
+
+.nodes { display: grid; grid-template-columns: repeat(auto-fit, minmax(282px, 1fr)); gap: 10px; }
+.node { padding: 13px 15px; }
+
+.node__head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.node__name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.node__tail {
+    margin-inline-start: auto;
+    font-family: var(--font-mono, monospace);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.metric { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 9px; margin-bottom: 7px; }
+.metric__k { font-family: var(--font-mono, monospace); font-size: 9.5px; letter-spacing: 0.08em; color: var(--text-dim); }
+.metric__v { font-family: var(--font-mono, monospace); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.metric__v--warn { color: var(--warning-color); }
+.metric__v--bad { color: var(--danger-color); }
+
+.bar { display: block; height: 4px; border-radius: 2px; background: rgba(128, 128, 128, 0.18); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
+.bar i.warn { background: var(--warning-color); }
+.bar i.bad { background: var(--danger-color); }
+.bar i.ok { background: var(--success-color); }
+
+.node__foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+    margin-top: 4px;
+    border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12));
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+.node__go { margin-inline-start: auto; color: var(--accent); display: grid; place-items: center; }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot--up { background: var(--success-color); }
+.dot--warn { background: var(--warning-color); }
+.dot--off { background: var(--text-dim); opacity: 0.45; }
+.dot--bad { background: var(--danger-color); }
+
+/* ── Storage ────────────────────────────────────────────────── */
+
+.stores { display: grid; grid-template-columns: repeat(auto-fit, minmax(216px, 1fr)); gap: 10px; }
+.store { padding: 12px 14px; }
+.store__r1 { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+.store__name { font-size: 13px; font-weight: 600; }
+.store__kind {
+    font-family: var(--font-mono, monospace);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+.store__pct {
+    margin-inline-start: auto;
+    font-family: var(--font-mono, monospace);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.store__pct--warn { color: var(--warning-color); }
+.store__pct--bad { color: var(--danger-color); }
+.store__r3 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 7px;
+    font-family: var(--font-mono, monospace);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Machines: a grid of tiles, like the board itself ───────── */
+
+.rack { display: flex; flex-direction: column; gap: 14px; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.group__head { display: flex; align-items: center; gap: 8px; }
+.group__count { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 8px; }
+
+.tile {
+    position: relative;
+    padding: 11px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* The board's status indicator: top right, with a ring of the panel colour. */
+.tile__st {
+    position: absolute;
+    top: 9px;
+    inset-inline-end: 9px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--success-color);
+    box-shadow: 0 0 0 2px var(--panel);
+}
+.tile__st--off { background: var(--text-dim); opacity: 0.6; }
+.tile__st--bad { background: var(--danger-color); }
+
+/* The one thing that shouts: a machine that is down AND has a bookmark
+   pointing at it, because that is a service of yours that stopped answering.
+   One that is off on purpose, with nothing behind it, stays quiet. */
+.tile--flag {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.06);
+}
+
+.tile__t1 { display: flex; align-items: center; gap: 8px; min-width: 0; padding-inline-end: 14px; }
+
+.ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.ico img { display: block; width: 22px; height: 22px; object-fit: contain; }
+.ico--none { color: var(--text-dim); }
+.ico--none svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.5px; fill: none; }
+.tile--off .ico { opacity: 0.45; }
+
+.tile__name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tile--off .tile__name { color: var(--text-dim); }
+
+.tile__t2 { display: flex; align-items: flex-end; gap: 8px; }
+.tile__num {
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+    font-family: var(--font-mono, monospace);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+.tile__num small { font-size: 10px; color: var(--text-dim); font-weight: 500; }
+.tile--off .tile__num { font-size: 13px; color: var(--text-dim); }
+.tile__spark { margin-inline-start: auto; }
+.tile__spark svg { display: block; }
+
+.tile__t3 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono, monospace);
+    font-size: 10px;
+    color: var(--text-dim);
+}
+.tile__meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile__book { margin-inline-start: auto; display: grid; place-items: center; flex: none; color: var(--accent); }
+
+/* Container or full machine, told by the shape alone: colour belongs to the
+   service and the icon to its bookmark, so form is the channel left. */
+.ty {
+    font-family: var(--font-mono, monospace);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 6px;
+    flex: none;
+    color: var(--text-dim);
+    background: rgba(128, 128, 128, 0.14);
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
+}
+.ty--lxc { border-radius: 999px; }
+.ty--vm { border-radius: 3px; }
+.tile--off .ty { opacity: 0.6; }
+
+/* ── Search ─────────────────────────────────────────────────── */
+
+.search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius);
+    padding: 0 9px;
+}
+.search svg { color: var(--text-dim); flex: none; }
+.search input {
+    border: 0;
+    background: none;
+    color: var(--input-text);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 6px 2px;
+    width: 150px;
+    outline: none;
+}
+.search input::placeholder { color: var(--input-placeholder); }
+
+/* ── Empty and error states ─────────────────────────────────── */
+
+.state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+}
+
+/* ── The detail sheet ───────────────────────────────────────── */
+
+dialog {
+    border: 1px solid var(--border);
+    padding: 0;
+    margin: auto;
+    background: var(--surface-solid);
+    color: var(--text-main);
+    border-radius: var(--radius);
+    box-shadow: var(--paper-shadow);
+    width: clamp(300px, 92vw, 520px);
+}
+
+dialog::backdrop {
+    background: var(--overlay-bg);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
+}
+
+dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
+
+@keyframes ppIn {
+    from { opacity: 0; transform: scale(0.94) translateY(14px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    dialog[open] { animation: none; }
+}
+
+.sheet { padding: 20px; display: flex; flex-direction: column; gap: 14px; max-height: 84vh; overflow-y: auto; }
+
+.sheet__head { display: flex; align-items: center; gap: 10px; }
+.sheet__head h3 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.sheet__sub { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+.panel {
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.14));
+    border-radius: var(--radius);
+    padding: 12px 14px;
+}
+.panel__top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+.panel__k {
+    font-family: var(--font-mono, monospace);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+.panel__now {
+    margin-inline-start: auto;
+    font-family: var(--font-mono, monospace);
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.panel__now small { font-size: 10px; color: var(--text-dim); font-weight: 500; }
+.panel svg { display: block; width: 100%; height: 58px; }
+.panel__ax {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--font-mono, monospace);
+    font-size: 10px;
+    color: var(--text-dim);
+}
+
+.kv {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--card-border, rgba(128, 128, 128, 0.14));
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.14));
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.kv > div { background: var(--surface-solid); padding: 10px 12px; }
+.kv__k {
+    font-family: var(--font-mono, monospace);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+.kv__v {
+    font-family: var(--font-mono, monospace);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    margin-top: 3px;
+    word-break: break-word;
+}
+
+.warnbox {
+    border: 1px solid rgba(var(--accent-rgb), 0.35);
+    background: rgba(var(--accent-rgb), 0.07);
+    border-radius: var(--radius);
+    padding: 11px 13px;
+}
+.warnbox__h { font-size: 13px; font-weight: 600; }
+.warnbox__s { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.warnbox em { font-style: normal; color: var(--accent); }
+
+.acts { display: flex; flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 560px) {
+    .pp__body { padding: 14px; }
+    .kv { grid-template-columns: 1fr; }
+    .search input { width: 110px; }
+}
