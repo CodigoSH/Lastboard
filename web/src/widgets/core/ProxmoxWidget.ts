@@ -3,7 +3,7 @@ import { apiService } from '../../services/apiService';
 import { dashboardStore } from '../../store/dashboardStore';
 import { escapeHtml } from '../../services/escape';
 import { adoptSharedStyles } from '../../services/sharedStyles';
-import { loadProxmoxLinks, proxmoxLinks } from '../../services/proxmoxLinks';
+import { loadProxmoxLinks, linkFor } from '../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../services/iconUrl';
 
 /** A node as /api/proxmox/overview reports it. Percentages, not fractions. */
@@ -222,11 +222,9 @@ class ProxmoxWidget extends HTMLElement {
             + this.meter(i18n.t('widget.proxmox.disk'), node.disk);
     }
 
-    /** The bookmark this machine serves, if its owner said so. */
+    /** The bookmark this machine serves — said by its owner, or by its name. */
     private link(g: PxGuest) {
-        const l = proxmoxLinks().get(g.vmid);
-        if (!l) return null;
-        return l.node && l.node !== g.node ? null : l;
+        return linkFor(g);
     }
 
     /** The node the header speaks for: the one under most pressure. */

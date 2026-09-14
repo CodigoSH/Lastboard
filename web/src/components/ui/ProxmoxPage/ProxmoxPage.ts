@@ -3,7 +3,7 @@ import { apiService } from '../../../services/apiService';
 import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
-import { loadProxmoxLinks, proxmoxLinks } from '../../../services/proxmoxLinks';
+import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import css from './ProxmoxPage.css' with { type: 'text' };
 
@@ -148,14 +148,13 @@ class ProxmoxPage extends HTMLElement {
      * The bookmark a machine backs, if its owner said so.
      *
      * This is the whole point of the page, and it needed no column and no
-     * migration: the association lives in the bookmark's own content. The index
-     * spans every board — see proxmoxLinks for why that is not a detail.
+     * migration: the association is either written in the bookmark's own
+     * content or read off the names. See proxmoxLinks and proxmoxMatch — both
+     * halves of that answer cost the page nothing here.
      */
     private backing(g: PxGuest): Backed | null {
-        const link = proxmoxLinks().get(g.vmid);
-        if (!link) return null;
-        if (link.node && link.node !== g.node) return null;
-        return { label: link.label, url: link.url, icon: link.icon };
+        const link = linkFor(g);
+        return link ? { label: link.label, url: link.url, icon: link.icon } : null;
     }
 
     // ── Markup ──
