@@ -373,7 +373,12 @@ const CSS = `
     font-family: var(--font-sans);
     color: var(--text-main);
     /* The tile is whatever width the board gives it, and that is what the rows
-       below answer to — not the viewport, which says nothing about a tile. */
+       below answer to — not the viewport, which says nothing about a tile.
+       The explicit width is not decoration: inline-size containment means the
+       box stops asking its contents how wide to be, and without a width of its
+       own it collapses to zero — measured at 0x245, and photographed as an
+       empty card while the DOM inside it was perfectly correct. */
+    width: 100%;
     container-type: inline-size;
 }
 
