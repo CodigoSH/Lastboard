@@ -438,15 +438,17 @@ func (s *Server) serveLoginPage(w http.ResponseWriter, r *http.Request) {
 
 	language := preferredLanguage(r.Header.Get("Accept-Language"), s.locales)
 	data := struct {
-		DemoOnly  bool
-		Nonce     string
-		Language  string
-		Direction string
+		DemoOnly   bool
+		Nonce      string
+		Language   string
+		Direction  string
+		ThemeColor string
 	}{
-		DemoOnly:  os.Getenv("DEMO_ONLY") == "true",
-		Nonce:     cspNonce(r),
-		Language:  language,
-		Direction: directionOf(language),
+		DemoOnly:   os.Getenv("DEMO_ONLY") == "true",
+		Nonce:      cspNonce(r),
+		Language:   language,
+		Direction:  directionOf(language),
+		ThemeColor: themeColorFromRequest(r),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -467,13 +469,15 @@ func (s *Server) serveSetupPage(w http.ResponseWriter, r *http.Request) {
 
 	language := preferredLanguage(r.Header.Get("Accept-Language"), s.locales)
 	data := struct {
-		Nonce     string
-		Language  string
-		Direction string
+		Nonce      string
+		Language   string
+		Direction  string
+		ThemeColor string
 	}{
-		Nonce:     cspNonce(r),
-		Language:  language,
-		Direction: directionOf(language),
+		Nonce:      cspNonce(r),
+		Language:   language,
+		Direction:  directionOf(language),
+		ThemeColor: themeColorFromRequest(r),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -581,6 +585,23 @@ const (
 // everywhere else.
 func themeColorOf(themeClass string) string {
 	if themeClass == "" {
+		return panelLight
+	}
+	return panelDark
+}
+
+// themeColorFromRequest reads the theme out of the cookie ThemeService writes
+// beside its localStorage copy.
+//
+// The login and setup pages are painted before anyone is logged in, so there is
+// no account row to read a theme from — but the visitor's previous choice is
+// already on the wire, and using it puts the right colour in the page from the
+// first byte instead of leaving the status bar wrong until the bundle loads.
+// No cookie means a first visit, which is dark like every other default here.
+//
+// The value is never interpolated: it only picks between two constants.
+func themeColorFromRequest(r *http.Request) string {
+	if cookie, err := r.Cookie("lastboard_theme"); err == nil && cookie.Value == "light" {
 		return panelLight
 	}
 	return panelDark

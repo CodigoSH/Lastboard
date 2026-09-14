@@ -282,6 +282,45 @@ func TestPreAuthPagesDeclareTheirLanguage(t *testing.T) {
 	}
 }
 
+// An installed app that opens without a session lands on the login page, so the
+// status bar takes its colour from there. There is no account row to read yet,
+// but the visitor's own cookie says which theme they last used.
+func TestPreAuthPagesDeclareTheThemeColour(t *testing.T) {
+	for _, tc := range []struct {
+		cookie string
+		want   string
+	}{
+		{"dark", panelDark},
+		{"light", panelLight},
+		{"", panelDark},         // first visit: the default everywhere else
+		{"nonsense", panelDark}, // anything unrecognised is not light
+	} {
+		name := tc.cookie
+		if name == "" {
+			name = "(no cookie)"
+		}
+		t.Run(name, func(t *testing.T) {
+			for page, withUser := range map[string]bool{"/login": true, "/setup": false} {
+				server := newTestServer(t, withUser)
+				request := httptest.NewRequest(http.MethodGet, page, nil)
+				if tc.cookie != "" {
+					request.AddCookie(&http.Cookie{Name: "lastboard_theme", Value: tc.cookie})
+				}
+				rec := httptest.NewRecorder()
+				server.Router.ServeHTTP(rec, request)
+
+				if rec.Code != http.StatusOK {
+					t.Fatalf("GET %s = %d, want 200", page, rec.Code)
+				}
+				want := `content="` + tc.want + `"`
+				if !strings.Contains(rec.Body.String(), want) {
+					t.Errorf("%s with theme cookie %q does not declare %s", page, tc.cookie, want)
+				}
+			}
+		})
+	}
+}
+
 // The login page is where someone installs Lastboard from on a phone, because
 // that is the page they land on with no session. Without the manifest linked
 // there, the browser has nothing to install and falls back to a bookmark.
