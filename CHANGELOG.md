@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.5] - 2026-09-14
+
+### Added
+- A mark of Lastboard's own, drawn as vectors
+- Follow the device, for whoever asks it to
+- Let people remove Lastboard without doing it by hand
+- Tell a blip apart from an outage in the activity bar
+
+### Fixed
+- Give the login and setup pages a theme colour of their own
+- Label the latency axis for the span it covers
+- Let the status bar follow the theme the user picked
+- Make the activity bar follow the range you pick
+- Open the device's own colour picker
+- Paint the splash screen in the theme the app actually opens in
+- Say "30 days" where the scale said "720h"
+- Shrink the avatar the wizard sends, like the settings panel does
+- Stop painting the Android status bar in the accent colour
+- Stop the installer from taking down what it did not install
+- Verify the signature, which the installer never did
+
 ## [1.7.4] - 2026-09-06
 
 ### Fixed
