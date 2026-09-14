@@ -561,15 +561,35 @@ func (s *Server) serveIndexDemo(w http.ResponseWriter, r *http.Request) {
 type indexPageData struct {
 	ProjectName string
 	ThemeClass  string
+	ThemeColor  string
 	Language    string
 	Direction   string
 	DemoMode    bool
 	Nonce       string
 }
 
-// newIndexPageData fills in the pair that has to agree — a language and the
-// direction it reads in — so no caller can set one and forget the other.
-// An empty language means English, which is what the frontend falls back to.
+// The colour the top bar paints, per theme — which is what the status bar of an
+// installed app sits on top of, so it is what theme-color has to say. These are
+// the --panel values of web/styles/theme.css, and a test holds them to it.
+const (
+	panelDark  = "#1a1a1a"
+	panelLight = "#ffffff"
+)
+
+// themeColorOf maps a theme class to the colour the interface wears under it.
+// Anything that is not the light theme is dark, which is how the app decides
+// everywhere else.
+func themeColorOf(themeClass string) string {
+	if themeClass == "" {
+		return panelLight
+	}
+	return panelDark
+}
+
+// newIndexPageData fills in the pairs that have to agree — a language and the
+// direction it reads in, a theme and the colour it wears — so no caller can set
+// one and forget the other. An empty language means English, which is what the
+// frontend falls back to.
 func newIndexPageData(projectName, themeClass, language string, demo bool, nonce string) indexPageData {
 	if language == "" {
 		language = "en"
@@ -577,6 +597,7 @@ func newIndexPageData(projectName, themeClass, language string, demo bool, nonce
 	return indexPageData{
 		ProjectName: projectName,
 		ThemeClass:  themeClass,
+		ThemeColor:  themeColorOf(themeClass),
 		Language:    language,
 		Direction:   directionOf(language),
 		DemoMode:    demo,

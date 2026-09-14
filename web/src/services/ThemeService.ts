@@ -21,6 +21,19 @@ export class ThemeService {
     private static readonly STORAGE_KEY = 'lastboard_theme';
     private static readonly CLASS_NAME = 'dark-mode';
 
+    /**
+     * What the top bar paints under each theme — the --panel values of
+     * theme.css. The status bar of an installed app sits directly above that
+     * bar, so this is what theme-color has to say, and it followed the accent
+     * until an Android home screen showed a slab of orange over a dark
+     * interface. The server stamps the right one into the page so the first
+     * paint needs no correcting; this keeps it true afterwards.
+     */
+    private static readonly PANEL: Record<ThemeChoice, string> = {
+        dark: '#1a1a1a',
+        light: '#ffffff',
+    };
+
     static init() {
         this.apply(this.stored());
     }
@@ -36,8 +49,21 @@ export class ThemeService {
 
     static apply(choice: ThemeChoice) {
         document.documentElement.classList.toggle(this.CLASS_NAME, choice === 'dark');
+        this.applyThemeColor(choice);
         try { localStorage.setItem(this.STORAGE_KEY, choice); } catch { /* private mode */ }
         this.setCookie(this.STORAGE_KEY, choice, 365);
+    }
+
+    /**
+     * Points the browser's theme-color at the bar the user is looking at.
+     * Chrome repaints the status bar of an installed app when this changes, so
+     * toggling the theme no longer leaves the strip above it from the old one.
+     */
+    private static applyThemeColor(choice: ThemeChoice) {
+        const meta = document.querySelector('meta[name="theme-color"]');
+        // Only the dashboard carries the tag; the login and setup pages do not,
+        // and there is nothing to correct on a page that never had one.
+        if (meta) meta.setAttribute('content', this.PANEL[choice]);
     }
 
     static enableDark() { this.apply('dark'); }

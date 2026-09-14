@@ -297,3 +297,62 @@ func TestLoginPageLinksTheManifest(t *testing.T) {
 		t.Error("the login page does not link the web app manifest")
 	}
 }
+
+// The colour the status bar wears is written down in three places: these Go
+// constants, the PANEL record in ThemeService.ts, and --panel in theme.css.
+// Three hand-written copies of one fact drift, and the failure is quiet — an
+// installed app with a strip above its top bar in a colour that bar stopped
+// using. This holds all three to each other.
+func TestPanelColoursMatchTheStylesheetAndTheFrontend(t *testing.T) {
+	stylesheet, err := os.ReadFile("../../web/styles/theme.css")
+	if err != nil {
+		t.Skipf("frontend sources not available: %v", err)
+	}
+
+	// The first --panel inside each block. `[^}]` keeps the match from running
+	// past the end of its rule; these blocks are plain declarations.
+	panelIn := func(selector string) string {
+		re := regexp.MustCompile(`(?s)` + selector + `\s*\{[^}]*?--panel:\s*(#[0-9a-fA-F]{3,8})`)
+		m := re.FindSubmatch(stylesheet)
+		if m == nil {
+			t.Fatalf("could not find --panel under %s in theme.css; if it was renamed, this test needs updating", selector)
+		}
+		return strings.ToLower(string(m[1]))
+	}
+
+	if got := panelIn(`\.dark-mode`); got != panelDark {
+		t.Errorf("the dark theme paints its panel %s, the server declares %s", got, panelDark)
+	}
+	if got := panelIn(`:root`); got != panelLight {
+		t.Errorf("the light theme paints its panel %s, the server declares %s", got, panelLight)
+	}
+
+	service, err := os.ReadFile("../../web/src/services/ThemeService.ts")
+	if err != nil {
+		t.Skipf("frontend sources not available: %v", err)
+	}
+	for theme, want := range map[string]string{"dark": panelDark, "light": panelLight} {
+		re := regexp.MustCompile(theme + `:\s*'(#[0-9a-fA-F]{3,8})'`)
+		m := re.FindSubmatch(service)
+		if m == nil {
+			t.Errorf("ThemeService.ts declares no panel colour for the %s theme", theme)
+			continue
+		}
+		if got := strings.ToLower(string(m[1])); got != want {
+			t.Errorf("ThemeService.ts uses %s for the %s theme, the server declares %s", got, theme, want)
+		}
+	}
+}
+
+// The theme and the colour it wears travel together, so a page cannot be served
+// dark with a light status bar above it.
+func TestThemeColorFollowsTheTheme(t *testing.T) {
+	dark := newIndexPageData("Lastboard", "dark-mode", "en", false, "n")
+	if dark.ThemeColor != panelDark {
+		t.Errorf("the dark page declares %q, want %q", dark.ThemeColor, panelDark)
+	}
+	light := newIndexPageData("Lastboard", "", "en", false, "n")
+	if light.ThemeColor != panelLight {
+		t.Errorf("the light page declares %q, want %q", light.ThemeColor, panelLight)
+	}
+}

@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- The status bar sits directly above the top bar, so it takes that bar's
-         colour (--panel of the dark theme) rather than the accent, which put a
-         slab of orange above a dark interface on an installed Android app. -->
-    <meta name="theme-color" content="#1a1a1a">
+    <!-- The status bar of an installed app sits directly above the app's own top
+         bar, so it wears that bar's colour rather than the accent. Stamped from
+         the account's theme like the class on <html> above, so it is right from
+         the first byte; ThemeService rewrites it when the theme is toggled,
+         which Chrome honours live in an installed app. -->
+    <meta name="theme-color" content="{{.ThemeColor}}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="icon" type="image/png" href="/favicon.png">
