@@ -2,12 +2,13 @@ import { template } from './AddBookmarkModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
-import { safeImageSrc, escapeHtml } from '../../../services/escape';
+import { safeImageSrc } from '../../../services/escape';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { apiService } from '../../../services/apiService';
 import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
 import '../ColorPicker/ColorPicker';
+import '../Select/Select';
 import css from './AddBookmarkModal.css' with { type: 'text' };
 
 const premiumColors = [
@@ -179,7 +180,7 @@ class AddBookmarkModal extends HTMLElement {
             // The icon is downloaded here, once, so the board never asks a CDN
             // for it again; if that fails the original URL is kept and the
             // bookmark saves exactly as before.
-            const pxSel = this.shadowRoot?.getElementById('bookmark-proxmox') as HTMLSelectElement | null;
+            const pxSel = this.shadowRoot?.getElementById('bookmark-proxmox') as (HTMLElement & { value: string }) | null;
             if (pxSel) {
                 const v = pxSel.value;
                 if (!v) {
@@ -499,7 +500,8 @@ class AddBookmarkModal extends HTMLElement {
      */
     private async fillProxmoxChoices() {
         const group = this.shadowRoot?.getElementById('proxmox-group') as HTMLElement | null;
-        const sel = this.shadowRoot?.getElementById('bookmark-proxmox') as HTMLSelectElement | null;
+        const sel = this.shadowRoot?.getElementById('bookmark-proxmox') as
+            (HTMLElement & { value: string; options: { value: string; label: string }[]; searchable: boolean }) | null;
         if (!group || !sel) return;
         try {
             // Ask the cheap question first. Going straight to the overview made
@@ -516,14 +518,18 @@ class AddBookmarkModal extends HTMLElement {
             if (!guests.length) return;
 
             const chosen = this.proxmox ? `${this.proxmox.node}|${this.proxmox.kind}|${this.proxmox.vmid}` : '';
-            sel.innerHTML = `<option value="">${escapeHtml(i18n.t('settings.notify_none'))}</option>` +
+            // Searchable, because a real host has twenty-nine of these and the
+            // one you want is the one you can already name.
+            sel.searchable = guests.length > 8;
+            sel.options = [{ value: '', label: i18n.t('bookmark.backed_by_auto') }].concat(
                 [...guests]
                     .sort((a, b) => a.vmid - b.vmid)
-                    .map(g => {
-                        const v = `${g.node}|${g.kind}|${g.vmid}`;
-                        const label = `${g.name} · ${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`;
-                        return `<option value="${escapeHtml(v)}"${v === chosen ? ' selected' : ''}>${escapeHtml(label)}</option>`;
-                    }).join('');
+                    .map(g => ({
+                        value: `${g.node}|${g.kind}|${g.vmid}`,
+                        label: `${g.name} · ${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`,
+                    })),
+            );
+            sel.value = chosen;
             group.style.display = '';
         } catch {
             /* No hypervisor, or not configured: the field simply never appears. */

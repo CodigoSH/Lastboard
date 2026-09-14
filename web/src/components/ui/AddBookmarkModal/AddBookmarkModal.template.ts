@@ -179,7 +179,10 @@ export const template = ({
                          Proxmox must not grow a field about Proxmox. -->
                     <div class="form-group" id="proxmox-group" style="margin-top: 12px; display: none;">
                         <label for="bookmark-proxmox">${i18n.t('bookmark.backed_by')}</label>
-                        <select id="bookmark-proxmox" name="proxmox"></select>
+                        <!-- The house dropdown, not the browser's: a bare
+                             <select> is the one control in this modal that
+                             arrived with the operating system's own styling. -->
+                        <app-select id="bookmark-proxmox"></app-select>
                         <small class="field-hint">${i18n.t('bookmark.backed_by_hint')}</small>
                     </div>
 
