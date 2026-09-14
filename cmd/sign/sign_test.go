@@ -160,3 +160,56 @@ func base64Keys(text string) []string {
 	}
 	return found
 }
+
+// Three things the installer must not go back to doing. Each is a grep, and
+// deliberately so: no particular line is wrong, what would be wrong is the
+// behaviour returning, and none of it can be caught by running the script here
+// because all three paths need root and a systemd machine.
+func TestTheInstallerIsSafeToRunOnSomebodyElsesMachine(t *testing.T) {
+	installer, err := os.ReadFile(filepath.Join("..", "..", "install.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Comment lines are dropped first: the port check explains in prose what it
+	// used to do, and a test that forbids naming the old behaviour would forbid
+	// documenting it. Good enough for shell — a line whose first character is a
+	// hash is a comment.
+	var code []string
+	for _, line := range strings.Split(string(installer), "\n") {
+		if !strings.HasPrefix(strings.TrimSpace(line), "#") {
+			code = append(code, line)
+		}
+	}
+	script := strings.Join(code, "\n")
+
+	// It used to find whatever listened on the port and kill it outright. On a machine
+	// where 8080 is another service, that is an outage caused by an installer.
+	for _, weapon := range []string{"kill -9", "kill -KILL", "pkill", "killall"} {
+		if strings.Contains(script, weapon) {
+			t.Errorf("install.sh uses %q.\n\n"+
+				"Whatever holds the port may not be ours. Report it and stop, the way "+
+				"the port check does now — the person running the script knows what "+
+				"runs on their machine and the script does not.", weapon)
+		}
+	}
+	// And the check that replaced it has to keep telling our process apart from
+	// a stranger's, or it either kills nothing or refuses every upgrade.
+	if !strings.Contains(script, "/proc/$PID/exe") {
+		t.Error("install.sh no longer identifies what holds the port.\n\n" +
+			"Without that it cannot tell its own service from somebody else's.")
+	}
+
+	// A checksum says the bytes arrived, not that they run: wrong architecture,
+	// truncated file, missing library. Measured: a truncated binary exits 139
+	// and an arm64 one on x86 exits 126.
+	if !strings.Contains(script, "./lastboard --version") {
+		t.Error("install.sh no longer runs the downloaded binary before installing it.\n\n" +
+			"An unusable download would replace a working one and be discovered while down.")
+	}
+
+	// A new version may migrate the schema on first start. The moment somebody
+	// wants a copy is after it is too late to take one.
+	if !strings.Contains(script, ".db.backup-") {
+		t.Error("install.sh no longer copies the database before swapping the binary.")
+	}
+}

@@ -265,6 +265,47 @@ rm lastboard.tar.gz
 
 if [ -f "lastboard" ]; then
     chmod +x lastboard
+
+    # An intact download can still be unusable here — the wrong architecture, a
+    # truncated file, a library that is not on this machine — and the checksum
+    # says nothing about any of that. Running it once costs nothing; finding out
+    # after the swap means finding out while the service is down.
+    if ! ./lastboard --version >/dev/null 2>&1; then
+        echo -e "${RED}  The downloaded binary does not run on this machine. Aborting.${NC}"
+        echo    "  Whatever was installed before has not been touched."
+        rm -f lastboard
+        exit 1
+    fi
+
+    # Copy the database before swapping the binary. The moment somebody wants a
+    # copy is after it is too late to take one, and a new version may migrate
+    # the schema on its first start.
+    #
+    # The service is stopped first on purpose: copying a live SQLite file can
+    # catch it mid-write, and a backup nobody can open is worse than an honest
+    # absence. It is about to be restarted anyway.
+    STOPPED_FOR_BACKUP=0
+    if [ -f "$DATA_DIR/$BINARY_NAME.db" ]; then
+        if systemctl is-active --quiet lastboard; then
+            systemctl stop lastboard &>/dev/null && STOPPED_FOR_BACKUP=1
+        fi
+        BACKUP="$DATA_DIR/$BINARY_NAME.db.backup-$(date +%Y%m%d-%H%M%S)"
+        if cp "$DATA_DIR/$BINARY_NAME.db" "$BACKUP"; then
+            chown lastboard:lastboard "$BACKUP" 2>/dev/null || true
+            success_msg "Database copied to $(basename "$BACKUP")"
+            # Keep the three most recent and drop the rest. An upgrade every few
+            # weeks would otherwise leave a copy of the database in the data
+            # directory for ever, and the old ones are the least useful.
+            ls -1t "$DATA_DIR/$BINARY_NAME.db.backup-"* 2>/dev/null \
+                | tail -n +4 | while read -r OLD; do rm -f "$OLD"; done
+        else
+            echo -e "${RED}  Could not copy the database. Aborting.${NC}"
+            [ "$STOPPED_FOR_BACKUP" = "1" ] && systemctl start lastboard &>/dev/null
+            rm -f lastboard
+            exit 1
+        fi
+    fi
+
     mv lastboard "$INSTALL_DIR/$BINARY_NAME"
     chown lastboard:lastboard "$INSTALL_DIR/$BINARY_NAME"
     ln -sf "$INSTALL_DIR/$BINARY_NAME" "$BIN_DIR/$BINARY_NAME"
@@ -304,12 +345,27 @@ CPUQuota=200%
 WantedBy=multi-user.target
 EOF
 
-# Ensure port is free
-if lsof -i ":$PORT" -t >/dev/null 2>&1; then
-    status_msg "Port $PORT is in use. Attempting to free it..."
-    PID=$(lsof -i ":$PORT" -t)
-    kill -9 "$PID" &>/dev/null || true
-    sleep 1
+# The port has to be free for the service to start, and this used to kill -9
+# whatever held it. On a machine where 8080 is somebody else's service, that is
+# an outage caused by an installer. Lastboard's own process is fine — the
+# restart below replaces it — but anything else is reported, not killed: whoever
+# runs this script knows what runs on their machine and the script does not.
+if command -v lsof >/dev/null 2>&1 && lsof -i ":$PORT" -t >/dev/null 2>&1; then
+    FOREIGN=""
+    for PID in $(lsof -i ":$PORT" -t); do
+        HOLDER=$(readlink -f "/proc/$PID/exe" 2>/dev/null || true)
+        case "$HOLDER" in
+            "$INSTALL_DIR/$BINARY_NAME"|"$BIN_DIR/$BINARY_NAME") ;;
+            *) FOREIGN="$FOREIGN\n    PID $PID  ${HOLDER:-unknown}" ;;
+        esac
+    done
+    if [ -n "$FOREIGN" ]; then
+        echo -e "${RED}  Port $PORT is held by something that is not Lastboard:${NC}"
+        echo -e "${RED}$FOREIGN${NC}"
+        echo    "  Free that port, or set PORT to another one, and run this again."
+        echo    "  The files are installed; the service has not been started."
+        exit 1
+    fi
 fi
 
 systemctl daemon-reload &>/dev/null
