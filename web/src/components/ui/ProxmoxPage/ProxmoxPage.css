@@ -373,6 +373,15 @@
     font-variant-numeric: tabular-nums;
 }
 .tile__num small { font-size: 10px; color: var(--text-dim); font-weight: 500; }
+
+/* The glyph that says which number this is. Dim and small on purpose: it
+   labels the figure, it does not compete with it. */
+.tile__gi { display: inline-flex; color: var(--text-dim); flex: none; }
+.tile__num .tile__gi { margin-inline-end: 5px; }
+.tile__num .tile__gi svg { width: 13px; height: 13px; }
+.tile__ram { display: inline-flex; align-items: center; }
+.tile__ram .tile__gi { margin-inline-end: 3px; }
+.tile__ram .tile__gi svg { width: 11px; height: 11px; }
 .tile--off .tile__num { font-size: 13px; color: var(--text-dim); }
 .sec__head .search { flex: 0 1 220px; margin-inline-start: 8px; }
 

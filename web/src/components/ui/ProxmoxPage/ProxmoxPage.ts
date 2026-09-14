@@ -42,6 +42,12 @@ const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="curren
 const ICON_CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 const ICON_SEARCH = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>';
 const ICON_BOOK = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+/* A chip and a memory stick, drawn in the same stroke as every other icon on
+   this page. They label two bare numbers that otherwise read as "12.1%" and
+   "52%" with nothing to say which is which. */
+const ICON_CPU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"/></svg>';
+const ICON_RAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 17v3M12 17v3M17 17v3M8 11v2M12 11v2M16 11v2"/></svg>';
+
 /** The board's own fallback for a bookmark with no icon. */
 const ICON_FALLBACK = '<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
 
@@ -258,13 +264,16 @@ class ProxmoxPage extends HTMLElement {
             <span class="tile__t1">${icon}<span class="tile__name">${escapeHtml(g.name) || '—'}</span></span>
             <span class="tile__t2">
                 ${g.running
-                    ? `<span class="tile__num">${g.cpu}<small>%</small></span>`
+                    ? `<span class="tile__num" aria-label="${escapeHtml(i18n.t('widget.telemetry.cpu'))} ${g.cpu}%">
+                           <span class="tile__gi">${ICON_CPU}</span>${g.cpu}<small>%</small></span>`
                     : `<span class="tile__num">${escapeHtml(i18n.t('docker.state_stopped'))}</span>`}
                 <span class="tile__spark">${this.spark(line, g.running ? 'var(--accent)' : 'var(--text-dim)', 62, 20)}</span>
             </span>
             <span class="tile__t3">
                 <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
-                <span class="tile__meta">${g.vmid}${g.running ? ` · ${mem}%` : ''}</span>
+                <span class="tile__meta">${g.vmid}${g.running
+                    ? ` · <span class="tile__ram" aria-label="${escapeHtml(i18n.t('widget.telemetry.ram'))} ${mem}%"><span class="tile__gi">${ICON_RAM}</span>${mem}%</span>`
+                    : ''}</span>
                 ${book ? `<span class="tile__book" title="${escapeHtml(book.label)}">${ICON_BOOK}</span>` : ''}
             </span>
         </button>`;
