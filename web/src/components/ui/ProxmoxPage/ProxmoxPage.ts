@@ -405,16 +405,14 @@ class ProxmoxPage extends HTMLElement {
         if (!host || !d) return;
         const guests = this.visibleGuests();
 
-        // Stopped first, then by kind and id. The order answers a question —
-        // what is not running? — rather than a filing convention, and it only
-        // moves when a machine actually changes state, which is rare enough
-        // that nothing jumps out from under the pointer.
-        const rank = (g: PxGuest) => (g.running ? 2 : (this.backing(g) ? 0 : 1));
-        const ordered = [...guests].sort((a, b) => {
-            const r = rank(a) - rank(b);
-            if (r !== 0) return r;
-            return a.kind === b.kind ? a.vmid - b.vmid : (a.kind === 'lxc' ? -1 : 1);
-        });
+        // Stable order — by kind, then by id. Never by state, which is how the
+        // design has it: a machine you are looking for stays where you left it,
+        // and a stopped one is found by how it looks, not by where the grid
+        // decided to put it today. (The widget is the other way round, and for
+        // a reason: it shows a handful of rows, so what needs attention has to
+        // be among them or it is not shown at all.)
+        const ordered = [...guests].sort((a, b) =>
+            a.kind === b.kind ? a.vmid - b.vmid : (a.kind === 'lxc' ? -1 : 1));
 
         const rack = d.nodes.map(n => {
             const mine = ordered.filter(g => g.node === n.name);

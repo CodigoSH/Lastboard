@@ -94,8 +94,10 @@ The dot in the corner says which of three things a machine is:
 | | |
 | :--- | :--- |
 | **Green** | running |
-| **Amber**, dashed border | stopped, with no bookmark pointing at it — turning things off is a normal thing to do |
-| **Red**, accent border | stopped **and** serving a bookmark: that is an outage, and the machine sorts to the front of its node |
+| **Amber**, brighter edge | stopped, with no bookmark pointing at it — turning things off is a normal thing to do |
+| **Red**, accent edge and a wash of accent | stopped **and** serving a bookmark: that is an outage |
+
+Tiles keep their place whatever happens to them — by kind, then by VMID. A machine you know where to find stays there, and a stopped one is picked out by how it looks rather than by the grid rearranging itself under your pointer. (The widget is the other way round: it has room for a handful of rows, so what needs attention is lifted into them.)
 
 The search box in the **Machines** header filters by name or VMID. When something is down, the **Services down** count becomes a button: click it to show only the stopped machines, and click it again to bring the rest back.
 

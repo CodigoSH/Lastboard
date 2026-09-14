@@ -342,7 +342,13 @@
 .ico img { display: block; width: 22px; height: 22px; object-fit: contain; }
 .ico--none { color: var(--text-dim); }
 .ico--none svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.5px; fill: none; }
-.tile--off { border-style: dashed; }
+/* A stopped machine stays where it was and is found by how it looks: a brighter
+   edge and a faint wash, enough to pick it out of a grid of twenty-nine. The
+   accent edge next to this one is louder on purpose — that one is an outage. */
+.tile--off {
+    border-color: rgba(128, 128, 128, 0.5);
+    background: rgba(128, 128, 128, 0.05);
+}
 .tile--off .ico { opacity: 0.45; }
 
 .tile__name {
