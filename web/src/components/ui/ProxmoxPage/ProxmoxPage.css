@@ -9,7 +9,13 @@
 
 :host {
     position: fixed;
-    inset: 0;
+    /* Below the sticky top bar, exactly like the status page. At inset: 0 the
+       page slid underneath it and took its own header — title and close
+       button — with it, so the only way out was the top bar icon. */
+    top: 48px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 900;
     display: none;
 }
@@ -317,6 +323,9 @@
     box-shadow: 0 0 0 2px var(--panel);
 }
 .tile__st--off { background: var(--text-dim); opacity: 0.6; }
+/* Stopped, with nothing behind it: worth seeing, not worth alarm. The red is
+   reserved for a machine that takes a bookmarked service down with it. */
+.tile__st--warn { background: var(--warning-color); }
 .tile__st--bad { background: var(--danger-color); }
 
 /* The one thing that shouts: a machine that is down AND has a bookmark
@@ -333,6 +342,7 @@
 .ico img { display: block; width: 22px; height: 22px; object-fit: contain; }
 .ico--none { color: var(--text-dim); }
 .ico--none svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.5px; fill: none; }
+.tile--off { border-style: dashed; }
 .tile--off .ico { opacity: 0.45; }
 
 .tile__name {
@@ -358,8 +368,13 @@
 }
 .tile__num small { font-size: 10px; color: var(--text-dim); font-weight: 500; }
 .tile--off .tile__num { font-size: 13px; color: var(--text-dim); }
-.tile__spark { margin-inline-start: auto; }
-.tile__spark svg { display: block; }
+.sec__head .search { flex: 0 1 220px; margin-inline-start: 8px; }
+
+.tile__spark { margin-inline-start: auto; flex: none; }
+/* The size is written here, not left to the SVG: with only a viewBox the
+   browser gives it the width of its box, which in an auto-margined flex item
+   is nothing at all — the line was in the DOM and zero pixels wide. */
+.tile__spark svg { display: block; width: 62px; height: 20px; }
 
 .tile__t3 {
     display: flex;

@@ -83,7 +83,13 @@ class ProxmoxPage extends HTMLElement {
     private onlyStopped = false;
     private timer: ReturnType<typeof setInterval> | null = null;
     private busy = new Set<number>();
+    /** CPU history per machine, keyed `range|vmid`, for the tile sparklines. */
+    private series = new Map<string, number[]>();
+    /** Machines already asked about, so a repaint does not ask again. */
+    private asked = new Set<string>();
     private _built = false;
+    /** Whether the three sections exist; their labels change with the language. */
+    private _shell = false;
     private _keydown: (e: KeyboardEvent) => void;
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -102,7 +108,13 @@ class ProxmoxPage extends HTMLElement {
     connectedCallback() {
         this._build();
         window.addEventListener('keydown', this._keydown);
-        this._unsubscribeI18n = i18n.subscribe(() => { if (this.hasAttribute('open')) this.paint(); });
+        this._unsubscribeI18n = i18n.subscribe(() => {
+            // The section labels and the placeholder live in the shell, which
+            // is written once: a language change is one of the two things that
+            // has to write it again.
+            this._shell = false;
+            if (this.hasAttribute('open')) this.paint();
+        });
     }
 
     disconnectedCallback() {
@@ -121,6 +133,7 @@ class ProxmoxPage extends HTMLElement {
 
     close() {
         this.removeAttribute('open');
+        this._shell = false;
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: false });
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
         const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
@@ -234,13 +247,20 @@ class ProxmoxPage extends HTMLElement {
             ? `<span class="ico"><img src="${escapeHtml(resolveIconUrl(book.icon))}" alt="" loading="lazy"></span>`
             : `<span class="ico ico--none">${ICON_FALLBACK}</span>`;
 
+        // Three states, three colours: running, stopped, and stopped with a
+        // service on it. The middle one used to wear the same faint grey as
+        // "nothing to say here", which is not what a machine that is off is.
+        const dot = g.running ? 'up' : (flag ? 'bad' : 'warn');
+        const line = this.series.get(`${this.range}|${g.vmid}`) ?? [];
+
         return `<button class="card tile${g.running ? '' : ' tile--off'}${flag ? ' tile--flag' : ''}" data-guest="${g.vmid}">
-            <span class="tile__st tile__st--${g.running ? 'up' : (flag ? 'bad' : 'off')}"></span>
+            <span class="tile__st tile__st--${dot}"></span>
             <span class="tile__t1">${icon}<span class="tile__name">${escapeHtml(g.name) || '—'}</span></span>
             <span class="tile__t2">
                 ${g.running
                     ? `<span class="tile__num">${g.cpu}<small>%</small></span>`
                     : `<span class="tile__num">${escapeHtml(i18n.t('docker.state_stopped'))}</span>`}
+                <span class="tile__spark">${this.spark(line, g.running ? 'var(--accent)' : 'var(--text-dim)', 62, 20)}</span>
             </span>
             <span class="tile__t3">
                 <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
@@ -280,11 +300,6 @@ class ProxmoxPage extends HTMLElement {
                 ${escapeHtml(i18n.t('proxmox.services_down'))}: <b>${down}</b>
             </span>
             <span class="pp__right">
-                <span class="search">${ICON_SEARCH}
-                    <input type="search" id="pp-search" value="${escapeHtml(this.query)}"
-                           placeholder="${escapeHtml(i18n.t('proxmox.search'))}"
-                           aria-label="${escapeHtml(i18n.t('proxmox.search'))}">
-                </span>
                 <span class="ranges" role="group">
                     ${(['1h', '24h', '7d'] as const).map(r =>
                         `<button data-range="${r}" aria-pressed="${this.range === r}">${r}</button>`).join('')}
@@ -300,23 +315,106 @@ class ProxmoxPage extends HTMLElement {
         this.paintBody();
     }
 
+    /**
+     * The three sections, written once.
+     *
+     * They used to be rewritten whole on every poll, and the search box lived
+     * inside them: typing for longer than fifteen seconds meant losing the
+     * caret mid-word. Now the shell holds the parts that do not change and the
+     * data is poured into the containers below it.
+     */
+    private buildShell() {
+        const body = this.shadowRoot?.getElementById('pp-body');
+        if (!body) return;
+        this._shell = true;
+        body.innerHTML = `
+            <section class="sec">
+                <div class="sec__head">
+                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.nodes'))}</span>
+                    <span class="sec__rule"></span>
+                    <span class="sec__note" id="pp-nodes-note"></span>
+                </div>
+                <div class="nodes" id="pp-nodes"></div>
+            </section>
+
+            <section class="sec">
+                <div class="sec__head">
+                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.storage'))}</span>
+                    <span class="sec__rule"></span>
+                    <span class="sec__note" id="pp-stores-note"></span>
+                </div>
+                <div class="stores" id="pp-stores"></div>
+            </section>
+
+            <section class="sec">
+                <div class="sec__head">
+                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.machines'))}</span>
+                    <span class="sec__rule"></span>
+                    <!-- The search belongs to the machines, not to a bar of its
+                         own: on a bar it sat directly under the board's own
+                         search box and read as the same thing twice. -->
+                    <span class="search">${ICON_SEARCH}
+                        <input type="search" id="pp-search" value="${escapeHtml(this.query)}"
+                               placeholder="${escapeHtml(i18n.t('proxmox.search'))}"
+                               aria-label="${escapeHtml(i18n.t('proxmox.search'))}">
+                    </span>
+                    <span class="sec__note" id="pp-count"></span>
+                </div>
+                <div id="pp-machines"></div>
+            </section>`;
+    }
+
     private paintBody() {
         const body = this.shadowRoot?.getElementById('pp-body');
         if (!body) return;
 
-        if (!this.loaded) { body.innerHTML = `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`; return; }
-        if (this.error) { body.innerHTML = `<div class="state">${escapeHtml(i18n.t(this.error))}</div>`; return; }
+        if (!this.loaded) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`; return; }
+        if (this.error) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t(this.error))}</div>`; return; }
+        if (!this._shell) this.buildShell();
 
         const d = this.data!;
         const stores = [...d.stores].sort((a, b) => b.percent - a.percent);
         const worstStore = stores[0];
+        const worstNode = [...d.nodes].sort((a, b) =>
+            Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk))[0];
+        const peak = worstNode ? Math.round(Math.max(worstNode.cpu, worstNode.mem, worstNode.disk)) : 0;
+
+        const nodes = this.shadowRoot!.getElementById('pp-nodes');
+        if (nodes) nodes.innerHTML = d.nodes.map(n => this.nodeCard(n)).join('');
+        const nodesNote = this.shadowRoot!.getElementById('pp-nodes-note');
+        if (nodesNote) {
+            nodesNote.className = `sec__note ${level(peak) ? 'sec__note--' + level(peak) : ''}`;
+            nodesNote.innerHTML = `${d.nodes.length} · ${escapeHtml(i18n.t('proxmox.peak'))} <b>${peak}%</b>`;
+        }
+
+        const storesEl = this.shadowRoot!.getElementById('pp-stores');
+        if (storesEl) storesEl.innerHTML = stores.map(s => this.storeCard(s)).join('');
+        const storesNote = this.shadowRoot!.getElementById('pp-stores-note');
+        if (storesNote && worstStore) {
+            storesNote.className = `sec__note ${level(worstStore.percent) ? 'sec__note--' + level(worstStore.percent) : ''}`;
+            storesNote.innerHTML = `${stores.length} · <b>${escapeHtml(worstStore.name)} ${Math.round(worstStore.percent)}%</b>`;
+        }
+
+        this.paintMachines();
+    }
+
+    /** Just the machines: what a keystroke in the search box changes. */
+    private paintMachines() {
+        const host = this.shadowRoot?.getElementById('pp-machines');
+        const d = this.data;
+        if (!host || !d) return;
         const guests = this.visibleGuests();
 
-        // Stable order — by kind, then by id. Never by state: this page polls,
-        // and a grid that reorders itself moves tiles out from under the
-        // pointer every time a machine changes.
-        const ordered = [...guests].sort((a, b) =>
-            a.kind === b.kind ? a.vmid - b.vmid : (a.kind === 'lxc' ? -1 : 1));
+        // Stopped first, then by kind and id. The order answers a question —
+        // what is not running? — rather than a filing convention, and it only
+        // moves when a machine actually changes state, which is rare enough
+        // that nothing jumps out from under the pointer.
+        const rank = (g: PxGuest) => (g.running ? 2 : (this.backing(g) ? 0 : 1));
+        const ordered = [...guests].sort((a, b) => {
+            const r = rank(a) - rank(b);
+            if (r !== 0) return r;
+            return a.kind === b.kind ? a.vmid - b.vmid : (a.kind === 'lxc' ? -1 : 1);
+        });
 
         const rack = d.nodes.map(n => {
             const mine = ordered.filter(g => g.node === n.name);
@@ -332,39 +430,69 @@ class ProxmoxPage extends HTMLElement {
             </div>`;
         }).join('');
 
-        const worstNode = [...d.nodes].sort((a, b) =>
-            Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk))[0];
-        const peak = worstNode ? Math.round(Math.max(worstNode.cpu, worstNode.mem, worstNode.disk)) : 0;
+        host.innerHTML = rack || `<div class="state">${escapeHtml(i18n.t('widget.proxmox.empty'))}</div>`;
 
-        body.innerHTML = `
-            <section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.nodes'))}</span>
-                    <span class="sec__rule"></span>
-                    <span class="sec__note ${level(peak) ? 'sec__note--' + level(peak) : ''}">
-                        ${d.nodes.length} · ${escapeHtml(i18n.t('proxmox.peak'))} <b>${peak}%</b></span>
-                </div>
-                <div class="nodes">${d.nodes.map(n => this.nodeCard(n)).join('')}</div>
-            </section>
+        const count = this.shadowRoot!.getElementById('pp-count');
+        if (count) count.textContent = `${guests.length}${this.query || this.onlyStopped ? ` / ${d.guests.length}` : ''}`;
 
-            <section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.storage'))}</span>
-                    <span class="sec__rule"></span>
-                    ${worstStore ? `<span class="sec__note ${level(worstStore.percent) ? 'sec__note--' + level(worstStore.percent) : ''}">
-                        ${stores.length} · <b>${escapeHtml(worstStore.name)} ${Math.round(worstStore.percent)}%</b></span>` : ''}
-                </div>
-                <div class="stores">${stores.map(s => this.storeCard(s)).join('')}</div>
-            </section>
+        this.loadSeries(ordered);
+    }
 
-            <section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.machines'))}</span>
-                    <span class="sec__rule"></span>
-                    <span class="sec__note">${guests.length}${this.query || this.onlyStopped ? ` / ${d.guests.length}` : ''}</span>
-                </div>
-                ${rack || `<div class="state">${escapeHtml(i18n.t('widget.proxmox.empty'))}</div>`}
-            </section>`;
+    /**
+     * The little chart on every tile.
+     *
+     * Proxmox keeps the history and has no endpoint that returns it for more
+     * than one machine, so this is one request each — measured at 20-76 ms
+     * against a real host — and they are cached per range, so a poll costs
+     * nothing and only changing the range asks again.
+     *
+     * Three at a time with a gap between them, which is not timidity: fired as
+     * fast as they could go, twenty-nine machines and one change of range put
+     * the page over Lastboard's own rate limit (20/s, burst 50) and half the
+     * tiles came back empty with `error.rate_limited` in the console. A page
+     * filling itself in over two seconds is invisible; a page that trips its
+     * own server is not.
+     */
+    private async loadSeries(guests: PxGuest[]) {
+        const pending = guests.filter(g => !this.asked.has(`${this.range}|${g.vmid}`));
+        if (!pending.length) return;
+
+        const range = this.range;
+        let next = 0;
+        const worker = async () => {
+            while (next < pending.length && this.hasAttribute('open') && this.range === range) {
+                const g = pending[next++];
+                const key = `${range}|${g.vmid}`;
+                this.asked.add(key);
+                const url = `/api/proxmox/series?range=${range}&node=${encodeURIComponent(g.node)}&kind=${g.kind}&vmid=${g.vmid}`;
+                try {
+                    const s = await apiService.get<PxSeries>(url);
+                    this.series.set(key, s?.cpu ?? []);
+                    if (this.range === range) this.paintSpark(g);
+                } catch {
+                    // One retry, once the burst has drained. A machine whose
+                    // history still cannot be read simply has no line.
+                    await new Promise(r => setTimeout(r, 1200));
+                    try {
+                        const s = await apiService.get<PxSeries>(url);
+                        this.series.set(key, s?.cpu ?? []);
+                        if (this.range === range) this.paintSpark(g);
+                    } catch { this.series.set(key, []); }
+                }
+                await new Promise(r => setTimeout(r, 120));
+            }
+        };
+        await Promise.all([1, 2, 3].map(() => worker()));
+    }
+
+    /** Draws one tile's line without touching the rest of the grid. */
+    private paintSpark(g: PxGuest) {
+        const slot = this.shadowRoot?.querySelector(`.tile[data-guest="${g.vmid}"] .tile__spark`);
+        if (!slot) return;
+        const values = this.series.get(`${this.range}|${g.vmid}`) ?? [];
+        slot.innerHTML = values.length
+            ? this.spark(values, g.running ? 'var(--accent)' : 'var(--text-dim)', 62, 20)
+            : '';
     }
 
     // ── The detail sheet ──
@@ -389,9 +517,9 @@ class ProxmoxPage extends HTMLElement {
      * discards the rest without a word, so the chart would come out blank in
      * Spanish and perfect in English.
      */
-    private spark(values: number[], colour: string): string {
+    private spark(values: number[], colour: string, w = 300, h = 58): string {
         if (!values.length) return '';
-        const W = 300, H = 58, top = 6, bot = H - 6;
+        const W = w, H = h, top = Math.max(2, H * 0.1), bot = H - Math.max(2, H * 0.1);
         const max = Math.max(10, ...values);
         const pts = values.map((v, i) => {
             const x = (i / Math.max(1, values.length - 1)) * W;
@@ -505,11 +633,11 @@ class ProxmoxPage extends HTMLElement {
         const t = e.target as HTMLInputElement;
         if (t?.id !== 'pp-search') return;
         this.query = t.value;
-        // ONLY the body. Repainting the status line would replace the very
-        // input being typed into: the element the browser holds the caret and
-        // the composition in would be swapped out from under it on every
-        // keystroke, and restoring focus afterwards is not the same thing.
-        this.paintBody();
+        // ONLY the machines. The input now lives in that section's own header,
+        // so repainting anything above it would replace the element the
+        // browser holds the caret and the composition in — and restoring focus
+        // afterwards is not the same thing.
+        this.paintMachines();
     };
 
     private onClick = async (e: Event) => {
@@ -524,13 +652,20 @@ class ProxmoxPage extends HTMLElement {
         const range = t.closest('[data-range]') as HTMLElement | null;
         if (range) {
             this.range = (range.dataset.range as any) || '24h';
+            // The range drives every line on the page, tiles included, so the
+            // histories held for the previous one are no longer the answer.
+            // Until this, the three buttons only changed a sheet nobody had
+            // open yet, which read as a control that did nothing.
+            this.series.clear();
+            this.asked.clear();
             this.paint();
             return;
         }
 
         if (t.closest('#pp-down')) {
             this.onlyStopped = !this.onlyStopped;
-            this.paint();
+            this.paintStatus();
+            this.paintMachines();
             return;
         }
 
