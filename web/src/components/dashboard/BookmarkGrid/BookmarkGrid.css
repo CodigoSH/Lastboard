@@ -142,7 +142,8 @@
     &:has(widget-docker),
     &:has(widget-notepad),
     &:has(widget-markdown),
-    &:has(widget-monitor) {
+    &:has(widget-monitor),
+    &:has(widget-proxmox) {
         padding: 0 !important;
     }
 

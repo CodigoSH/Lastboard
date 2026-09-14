@@ -218,6 +218,8 @@ class WidgetConfigModal extends HTMLElement {
                         }
                     });
                 });
+            } else if (widgetId === 'proxmox') {
+                this.setupProxmoxEvents(content);
             } else if (widgetId === 'monitor') {
                 this.setupMonitorEvents(content);
             } else if (widgetId === 'docker') {
@@ -526,6 +528,15 @@ class WidgetConfigModal extends HTMLElement {
                 newContent.mappings = mappings;
                 newContent.refreshSec = parseInt(val('api-refresh')) || 60;
             }
+        } else if (widgetId === 'proxmox') {
+            const titleInput = this.shadowRoot?.getElementById('proxmox-title') as HTMLInputElement | null;
+            newContent.title = (titleInput?.value || '').trim();
+
+            const refreshSel = this.shadowRoot?.getElementById('proxmox-refresh') as HTMLSelectElement | null;
+            newContent.refreshSec = parseInt(refreshSel?.value || '') || 30;
+
+            const nodeToggle = this.shadowRoot?.getElementById('proxmox-shownode') as HTMLInputElement | null;
+            newContent.showNode = nodeToggle ? nodeToggle.checked : true;
         } else if (widgetId === 'monitor') {
             // An empty selection means "every monitored service", which is also
             // what a fresh widget starts with — so it keeps working when the
@@ -902,6 +913,8 @@ class WidgetConfigModal extends HTMLElement {
                 const customizationTab = ``; // Section customization tab is empty by default, only appearance controls are added.
 
                 return { general: generalTab, customization: customizationTab + renderAppearanceControls() };
+            } else if (widgetId === 'proxmox') {
+                return this.renderProxmoxForm(content);
             } else if (widgetId === 'monitor') {
                 return this.renderMonitorForm(content);
             } else if (widgetId === 'docker') {
@@ -944,7 +957,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
 
                 <div class="actions">
-                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker', 'api', 'monitor'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
+                    ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker', 'api', 'monitor', 'proxmox'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
                 <div id="docker-host-overlay" class="docker-overlay" style="display: none;"></div>
             </dialog>
@@ -1311,6 +1324,69 @@ class WidgetConfigModal extends HTMLElement {
      * placeholder and setupMonitorEvents fills it in — the same shape the docker
      * form uses for its hosts.
      */
+    /**
+     * The Proxmox tile's own settings. The connection is NOT here: it is one
+     * hypervisor per instance, set by an administrator in Preferences, because
+     * the token must not travel to a browser. This screen only chooses what the
+     * tile shows.
+     */
+    private renderProxmoxForm(content: any) {
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
+        const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 30;
+        const showNode = content.showNode !== false;
+
+        const generalTab = `
+            <div class="field-group">
+                <label>${i18n.t('widget.api.title_label')}</label>
+                <input type="text" id="proxmox-title" value="${esc(content.title || '')}"
+                       placeholder="${esc(i18n.t('widget.proxmox.name'))}" />
+            </div>
+            <div class="field-group">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="proxmox-shownode" ${showNode ? 'checked' : ''} />
+                    <span>${i18n.t('widget.proxmox.show_node')}</span>
+                </label>
+                <small>${i18n.t('widget.proxmox.show_node_desc')}</small>
+            </div>
+            <div class="field-group" id="proxmox-state"></div>
+            <div class="field-group row-aligned">
+                <label>${i18n.t('widget.api.refresh_label')}</label>
+                <app-select id="proxmox-refresh" value="${refresh}"></app-select>
+            </div>
+        `;
+
+        return { general: generalTab, customization: renderAppearanceControls() };
+    }
+
+    /**
+     * Fills the refresh choices and says, plainly, whether this instance can
+     * drive the machines or only watch them.
+     *
+     * Measured on a real host: a token with the auditor role reads everything
+     * the tile shows and cannot start anything. Saying so here beats drawing
+     * buttons that answer 403 when somebody finally presses one.
+     */
+    private async setupProxmoxEvents(_content: any) {
+        const sel = this.shadowRoot?.getElementById('proxmox-refresh') as AppSelect | null;
+        if (sel) sel.options = [
+            { value: '15', label: '15s' },
+            { value: '30', label: '30s' },
+            { value: '60', label: '1m' },
+            { value: '300', label: '5m' },
+        ];
+
+        const state = this.shadowRoot?.getElementById('proxmox-state');
+        if (!state) return;
+        try {
+            const data = await apiService.get<{ caps: { power: boolean }; nodes: any[]; guests: any[] }>('/api/proxmox/overview');
+            state.innerHTML = `<small>${esc(i18n.t(data.caps?.power
+                ? 'widget.proxmox.can_power'
+                : 'widget.proxmox.read_only'))}</small>`;
+        } catch {
+            state.innerHTML = `<small>${esc(i18n.t('proxmox.not_configured'))}</small>`;
+        }
+    }
+
     private renderMonitorForm(content: any) {
         const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
