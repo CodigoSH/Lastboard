@@ -248,6 +248,7 @@
 .bar i { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
 .bar i.warn { background: var(--warning-color); }
 .bar i.bad { background: var(--danger-color); }
+.bar i.ok { background: var(--success-color); }
 
 .node__foot {
     display: flex;
@@ -581,6 +582,7 @@
 .hv__lb i { display: block; height: 100%; background: var(--accent); }
 .hv__lb i.warn { background: var(--warning-color); }
 .hv__lb i.bad { background: var(--danger-color); }
+.hv__lb i.ok { background: var(--success-color); }
 .hv__lp { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .hv__foot { display: flex; flex-wrap: wrap; gap: 6px; }

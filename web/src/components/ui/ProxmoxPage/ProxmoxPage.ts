@@ -65,12 +65,17 @@ const fmtUptime = (sec: number): string =>
 
 /**
  * How a percentage is coloured, and the rule is the same for every bar on this
- * page: below 60 it carries no class and the bar stays the brand accent.
+ * page and on the widget: green below 60, amber from 60, red from 90.
  *
- * Storage used to force 'ok' below the threshold, so a disk at 50% was green
- * while the RAM right above it was accent at 48% — the same healthy state drawn
- * two opposite ways, which reads as an alarm on one card and calm on the other.
- * Colour is spent where it means something: amber at 60, red at 90.
+ * Green for the healthy case rather than the brand accent, which is the part
+ * that is easy to get wrong. The accent belongs to the operator and it can BE
+ * red: on a board with a red accent every bar read as an alarm, a CPU at 3%
+ * included, and the page looked broken while nothing was. A meter is read at a
+ * glance by someone who has never seen the palette, so it uses the colours that
+ * mean the same thing everywhere instead of the ones that match the brand.
+ *
+ * The figure beside the bar keeps no class while it is fine, so coloured text
+ * still means "look at this" and only the bar carries the healthy green.
  */
 const level = (p: number) => (p >= 90 ? 'bad' : p >= 60 ? 'warn' : '');
 
@@ -388,7 +393,7 @@ class ProxmoxPage extends HTMLElement {
         const l = level(pct);
         return `<span class="metric">
             <span class="metric__k">${escapeHtml(k)}</span>
-            <span class="bar"><i class="${l}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
+            <span class="bar"><i class="${l || 'ok'}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
             <span class="metric__v ${l ? 'metric__v--' + l : ''}">
                 <span class="metric__p">${Math.round(pct)} %</span></span>
         </span>`;
@@ -448,7 +453,7 @@ class ProxmoxPage extends HTMLElement {
                 <span class="store__kind">${escapeHtml(s.kind)}</span>
                 <span class="store__pct ${l ? 'store__pct--' + l : ''}">${Math.round(s.percent)}%</span>
             </span>
-            <span class="bar" style="height:5px"><i class="${l}" style="width:${s.percent}%"></i></span>
+            <span class="bar" style="height:5px"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></span>
             <span class="store__r3"><span>${escapeHtml(fmtBytes(s.used))} / ${escapeHtml(fmtBytes(s.total))}</span><span>${escapeHtml(s.node)}</span></span>
         </button>`;
     }
@@ -918,7 +923,7 @@ class ProxmoxPage extends HTMLElement {
                         const l = level(s.percent);
                         return `<span class="hv__line">
                             <span class="hv__ln">${escapeHtml(s.name)}</span>
-                            <span class="hv__lb"><i class="${l}" style="width:${s.percent}%"></i></span>
+                            <span class="hv__lb"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></span>
                             <span class="hv__lp ${l ? 'metric__v--' + l : ''}">${Math.round(s.percent)}%</span>
                         </span>`;
                     }).join('')}
@@ -938,7 +943,7 @@ class ProxmoxPage extends HTMLElement {
         const l = level(percent);
         return `<span class="hv__m">
             <span class="hv__mk">${escapeHtml(k)}</span>
-            <span class="bar"><i class="${l}" style="width:${Math.min(100, Math.max(0, percent))}%"></i></span>
+            <span class="bar"><i class="${l || 'ok'}" style="width:${Math.min(100, Math.max(0, percent))}%"></i></span>
             <span class="hv__mv ${l ? 'metric__v--' + l : ''}">${escapeHtml(text)}</span>
         </span>`;
     }
@@ -1264,7 +1269,7 @@ class ProxmoxPage extends HTMLElement {
             <div class="panel">
                 <div class="panel__top"><span class="panel__k">${escapeHtml(i18n.t('proxmox.used'))}</span>
                     <span class="panel__now">${Math.round(s.percent)}<small> %</small></span></div>
-                <div class="bar" style="height:8px;border-radius:4px"><i class="${l}" style="width:${s.percent}%"></i></div>
+                <div class="bar" style="height:8px;border-radius:4px"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></div>
                 <div class="panel__ax"><span>0</span><span>${escapeHtml(fmtBytes(s.total))}</span></div>
             </div>
             <div class="kv">

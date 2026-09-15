@@ -221,7 +221,7 @@ class ProxmoxWidget extends HTMLElement {
         const level = pct >= 90 ? 'bad' : pct >= 60 ? 'warn' : '';
         return `<span class="px-m">
             <span class="px-m-top">${escapeHtml(label)}<b class="${level}">${Math.round(pct)}%</b></span>
-            <span class="px-bar"><i class="${level}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
+            <span class="px-bar"><i class="${level || 'ok'}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
         </span>`;
     }
 
@@ -423,6 +423,7 @@ const CSS = `
 .px-bar i { display: block; height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.3s var(--ease-out, ease); }
 .px-bar i.warn { background: var(--warning-color); }
 .px-bar i.bad { background: var(--danger-color); }
+.px-bar i.ok { background: var(--success-color); }
 
 .px-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .px-state { padding: 16px; font-size: 12px; color: var(--text-dim); text-align: center; }
