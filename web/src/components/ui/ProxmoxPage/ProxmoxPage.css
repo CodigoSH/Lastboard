@@ -232,7 +232,10 @@
 .node__foot {
     display: flex;
     align-items: center;
-    gap: 8px;
+    /* Wide enough that the gap BETWEEN two labelled figures reads as a bigger
+       break than the one inside either of them: at 8px "16 d" and "CARGA" ran
+       together into one string. */
+    gap: 22px;
     padding-top: 10px;
     margin-top: 4px;
     border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12));
@@ -241,6 +244,9 @@
     color: var(--text-dim);
     font-variant-numeric: tabular-nums;
 }
+.node__f { display: inline-flex; align-items: baseline; gap: 5px; }
+.node__fk { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+.node__fv { font-size: 11px; font-weight: 600; color: var(--text-color); }
 .node__go { margin-inline-start: auto; color: var(--accent); display: grid; place-items: center; }
 
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }

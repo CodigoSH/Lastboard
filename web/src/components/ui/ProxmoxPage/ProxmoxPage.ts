@@ -329,7 +329,13 @@ class ProxmoxPage extends HTMLElement {
     private nodeCard(n: PxNode) {
         const state = level(Math.max(n.cpu, n.mem, n.disk)) === 'bad' ? 'bad'
             : level(Math.max(n.cpu, n.mem, n.disk)) === 'warn' ? 'warn' : 'up';
-        const load = (n.loadavg && n.loadavg.length) ? n.loadavg[0] : '—';
+        // Proxmox hands the load average over as a string, so it arrived here
+        // reading "0.49" in every language while the rest of the page already
+        // wrote 162,4 MiB in Spanish (*casa: i18n*).
+        const raw = (n.loadavg && n.loadavg.length) ? Number(n.loadavg[0]) : NaN;
+        const load = Number.isFinite(raw)
+            ? i18n.formatNumber(raw, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '—';
         return `<button class="card node" data-node="${escapeHtml(n.name)}">
             <span class="node__head">
                 <span class="dot dot--${state}"></span>
@@ -342,10 +348,28 @@ class ProxmoxPage extends HTMLElement {
             ${this.meter(i18n.t('widget.telemetry.ram'), n.mem)}
             ${this.meter(i18n.t('widget.proxmox.disk'), n.disk)}
             <span class="node__foot">
-                <span>${escapeHtml(fmtUptime(n.uptime))} · ${escapeHtml(i18n.t('proxmox.load'))} ${escapeHtml(load)} · ${n.guests}</span>
+                ${this.foot(i18n.t('proxmox.uptime'), fmtUptime(n.uptime))}
+                ${this.foot(i18n.t('proxmox.load'), load)}
                 <span class="node__go">${ICON_CHEVRON}</span>
             </span>
         </button>`;
+    }
+
+    /**
+     * One labelled figure in a node's footer.
+     *
+     * The footer used to be three bare numbers in a row — "16 d · carga 0.49 ·
+     * 29" — and two of them had nothing saying what they were. The machine
+     * count is gone: the same node heads its own row of machines further down,
+     * with the better version of that number (how many are containers and how
+     * many are virtual machines), so the card was spending a slot repeating the
+     * page instead of labelling what only it shows.
+     */
+    private foot(k: string, v: string) {
+        return `<span class="node__f">
+            <span class="node__fk">${escapeHtml(k)}</span>
+            <span class="node__fv">${escapeHtml(v)}</span>
+        </span>`;
     }
 
     private storeCard(s: PxStore) {
