@@ -415,6 +415,7 @@
   "update.restarting": "Installed. Waiting for the new version to come back up…",
   "update.error_title": "Update failed",
   "update.running_badge": "Updating",
+  "update.done": "Updated. Lastboard is now running {version}.",
   "update.done_badge": "Updated",
   "update.signature_unsigned": "No signing key is configured in this build",
   "update.waiting_for_server": "Waiting for the server…",

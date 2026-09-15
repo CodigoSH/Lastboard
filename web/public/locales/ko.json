@@ -415,6 +415,7 @@
   "update.restarting": "설치했습니다. 새 버전이 다시 응답하기를 기다리는 중…",
   "update.error_title": "업데이트 실패",
   "update.running_badge": "업데이트 중",
+  "update.done": "업데이트되었습니다. Lastboard가 현재 {version}에서 실행 중입니다.",
   "update.done_badge": "업데이트 완료",
   "update.signature_unsigned": "이 빌드에는 서명 키가 설정되어 있지 않습니다",
   "update.waiting_for_server": "서버를 기다리는 중…",

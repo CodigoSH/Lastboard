@@ -415,6 +415,7 @@
   "update.restarting": "Установлено. Ожидание, пока новая версия снова ответит…",
   "update.error_title": "Обновление не удалось",
   "update.running_badge": "Обновление",
+  "update.done": "Обновлено. Lastboard теперь работает на версии {version}.",
   "update.done_badge": "Обновлено",
   "update.signature_unsigned": "В этой сборке не настроен ключ подписи",
   "update.waiting_for_server": "Ожидание сервера…",

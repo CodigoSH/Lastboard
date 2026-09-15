@@ -415,6 +415,7 @@
   "update.restarting": "Installée. En attente du retour de la nouvelle version…",
   "update.error_title": "Échec de la mise à jour",
   "update.running_badge": "Mise à jour en cours",
+  "update.done": "Mise à jour terminée. Lastboard fonctionne maintenant en {version}.",
   "update.done_badge": "Mise à jour terminée",
   "update.signature_unsigned": "Aucune clé de signature n'est configurée dans cette version",
   "update.waiting_for_server": "En attente du serveur…",

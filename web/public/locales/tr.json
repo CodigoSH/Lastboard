@@ -415,6 +415,7 @@
   "update.restarting": "Kuruldu. Yeni sürümün yeniden yanıt vermesi bekleniyor…",
   "update.error_title": "Güncelleme başarısız",
   "update.running_badge": "Güncelleniyor",
+  "update.done": "Güncellendi. Lastboard artık {version} sürümünü çalıştırıyor.",
   "update.done_badge": "Güncellendi",
   "update.signature_unsigned": "Bu derlemede imzalama anahtarı yapılandırılmamış",
   "update.waiting_for_server": "Sunucu bekleniyor…",

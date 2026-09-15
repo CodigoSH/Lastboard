@@ -41,8 +41,12 @@ function checkFile(filePath: string) {
     const relativePath = filePath.replace(process.cwd(), '');
 
     // 1. Check for i18n.t('MISSING_KEY')
-    // Regex matches: i18n.t(' or " followed by key followed by ' or "
-    const i18nRegex = /i18n\.t\(['"]([^'"]+)['"]\)/g;
+    // The key, then either the closing paren or a comma: a call that passes
+    // interpolation values is still a call. Requiring ")" right after the quote
+    // made every parameterised key invisible, and `update.done` — the line the
+    // updater shows the moment an update succeeds — was missing from all twenty
+    // locales while this printed "Missing Keys Found: 0".
+    const i18nRegex = /i18n\.t\(\s*['"]([^'"]+)['"]\s*[),]/g;
     let match;
     while ((match = i18nRegex.exec(content)) !== null) {
         const key = match[1];

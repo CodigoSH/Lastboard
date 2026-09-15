@@ -415,6 +415,7 @@
   "update.restarting": "已安装。正在等待新版本重新启动…",
   "update.error_title": "更新失败",
   "update.running_badge": "正在更新",
+  "update.done": "已更新。Lastboard 现在运行的是 {version}。",
   "update.done_badge": "已更新",
   "update.signature_unsigned": "此构建未配置签名密钥",
   "update.waiting_for_server": "正在等待服务器…",

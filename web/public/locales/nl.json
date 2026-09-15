@@ -415,6 +415,7 @@
   "update.restarting": "Geïnstalleerd. Wachten tot de nieuwe versie weer bereikbaar is…",
   "update.error_title": "Update mislukt",
   "update.running_badge": "Bezig met bijwerken",
+  "update.done": "Bijgewerkt. Lastboard draait nu op {version}.",
   "update.done_badge": "Bijgewerkt",
   "update.signature_unsigned": "In deze build is geen ondertekeningssleutel ingesteld",
   "update.waiting_for_server": "Wachten op de server…",

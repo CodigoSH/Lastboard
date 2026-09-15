@@ -415,6 +415,7 @@
   "update.restarting": "نصب شد. در انتظار بازگشت نسخهٔ جدید…",
   "update.error_title": "به‌روزرسانی ناموفق",
   "update.running_badge": "در حال به‌روزرسانی",
+  "update.done": "به‌روزرسانی شد. Lastboard اکنون روی نسخهٔ {version} اجرا می‌شود.",
   "update.done_badge": "به‌روزرسانی شد",
   "update.signature_unsigned": "در این بیلد کلید امضا تنظیم نشده است",
   "update.waiting_for_server": "در انتظار سرور…",

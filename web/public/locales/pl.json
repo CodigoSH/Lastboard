@@ -415,6 +415,7 @@
   "update.restarting": "Zainstalowano. Czekam, aż nowa wersja znów odpowie…",
   "update.error_title": "Aktualizacja nieudana",
   "update.running_badge": "Aktualizowanie",
+  "update.done": "Zaktualizowano. Lastboard działa teraz w wersji {version}.",
   "update.done_badge": "Zaktualizowano",
   "update.signature_unsigned": "W tej kompilacji nie skonfigurowano klucza podpisu",
   "update.waiting_for_server": "Czekam na serwer…",

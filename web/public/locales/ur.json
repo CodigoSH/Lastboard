@@ -415,6 +415,7 @@
   "update.restarting": "انسٹال ہو گیا۔ نئے ورژن کے واپس آنے کا انتظار…",
   "update.error_title": "اپ ڈیٹ ناکام",
   "update.running_badge": "اپ ڈیٹ ہو رہا ہے",
+  "update.done": "اپ ڈیٹ ہو گیا۔ Lastboard اب {version} پر چل رہا ہے۔",
   "update.done_badge": "اپ ڈیٹ ہو گیا",
   "update.signature_unsigned": "اس بلڈ میں دستخط کی کلید مقرر نہیں ہے",
   "update.waiting_for_server": "سرور کا انتظار…",

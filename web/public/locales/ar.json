@@ -415,6 +415,7 @@
   "update.restarting": "تم التثبيت. في انتظار عودة الإصدار الجديد…",
   "update.error_title": "فشل التحديث",
   "update.running_badge": "جارٍ التحديث",
+  "update.done": "تم التحديث. يعمل Lastboard الآن على الإصدار {version}.",
   "update.done_badge": "تم التحديث",
   "update.signature_unsigned": "لا يوجد مفتاح توقيع مُعدّ في هذه النسخة",
   "update.waiting_for_server": "في انتظار الخادم…",

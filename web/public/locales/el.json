@@ -415,6 +415,7 @@
   "update.restarting": "Εγκαταστάθηκε. Αναμονή να επανέλθει η νέα έκδοση…",
   "update.error_title": "Η ενημέρωση απέτυχε",
   "update.running_badge": "Ενημέρωση σε εξέλιξη",
+  "update.done": "Ενημερώθηκε. Το Lastboard εκτελεί τώρα την έκδοση {version}.",
   "update.done_badge": "Ενημερώθηκε",
   "update.signature_unsigned": "Σε αυτό το build δεν έχει ρυθμιστεί κλειδί υπογραφής",
   "update.waiting_for_server": "Αναμονή για τον διακομιστή…",

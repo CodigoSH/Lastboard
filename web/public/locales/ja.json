@@ -415,6 +415,7 @@
   "update.restarting": "インストールしました。新しいバージョンの起動を待っています…",
   "update.error_title": "更新に失敗しました",
   "update.running_badge": "更新中",
+  "update.done": "更新しました。Lastboard は現在 {version} で動作しています。",
   "update.done_badge": "更新完了",
   "update.signature_unsigned": "このビルドには署名鍵が設定されていません",
   "update.waiting_for_server": "サーバーを待っています…",

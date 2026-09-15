@@ -415,6 +415,7 @@
   "update.restarting": "ইনস্টল হয়েছে। নতুন সংস্করণ ফিরে আসার অপেক্ষা…",
   "update.error_title": "আপডেট ব্যর্থ",
   "update.running_badge": "আপডেট হচ্ছে",
+  "update.done": "আপডেট হয়েছে। Lastboard এখন {version} চালাচ্ছে।",
   "update.done_badge": "আপডেট হয়েছে",
   "update.signature_unsigned": "এই বিল্ডে কোনও স্বাক্ষর কী সেট করা নেই",
   "update.waiting_for_server": "সার্ভারের অপেক্ষা…",

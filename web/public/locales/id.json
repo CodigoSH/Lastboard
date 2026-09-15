@@ -415,6 +415,7 @@
   "update.restarting": "Terpasang. Menunggu versi baru kembali aktif…",
   "update.error_title": "Pembaruan gagal",
   "update.running_badge": "Memperbarui",
+  "update.done": "Diperbarui. Lastboard kini menjalankan {version}.",
   "update.done_badge": "Diperbarui",
   "update.signature_unsigned": "Build ini tidak memiliki kunci penandatanganan",
   "update.waiting_for_server": "Menunggu server…",
