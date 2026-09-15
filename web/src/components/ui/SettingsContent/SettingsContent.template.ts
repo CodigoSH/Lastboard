@@ -184,7 +184,7 @@ export const personalizationTemplate = (prefs: Prefs) => `
 
         <!-- Language & Region -->
         <div class="bento-card">
-            <h3 class="settings-content__title">${i18n.t('settings.language_region')}</h3>
+            <h3 class="settings-content__title">${i18n.t('settings.personalization')}</h3>
 
             <div class="settings-content__form-group">
                 <label class="settings-content__label">${i18n.t('settings.language')}</label>
@@ -226,7 +226,7 @@ export const usersTemplate = (users: any[]) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h3 class="settings-content__title" style="margin: 0;">${i18n.t('settings.user_management')}</h3>
+                <h3 class="settings-content__title" style="margin: 0;">${i18n.t('settings.users')}</h3>
                 <app-button variant="primary" data-action="open-add-user" style="width: auto; padding: 0 16px;">+ ${i18n.t('action.add_user')}</app-button>
             </div>
 
