@@ -407,11 +407,16 @@ type proxmoxNode struct {
 	Cores   int     `json:"cores"`
 	// Bytes, beside the percentage: "66%" of a node says nothing about whether
 	// there is room for another machine, and that is the question being asked.
-	MemUsed  int64    `json:"mem_used"`
-	MemTotal int64    `json:"mem_total"`
-	Uptime   int64    `json:"uptime"`
-	LoadAvg  []string `json:"loadavg"`
-	Guests   int      `json:"guests"`
+	MemUsed  int64 `json:"mem_used"`
+	MemTotal int64 `json:"mem_total"`
+	// Same reasoning as the memory pair: a ratio does not say whether the next
+	// backup fits. Taken from the same row the percentage is computed from, so
+	// the two can never disagree.
+	DiskUsed  int64    `json:"disk_used"`
+	DiskTotal int64    `json:"disk_total"`
+	Uptime    int64    `json:"uptime"`
+	LoadAvg   []string `json:"loadavg"`
+	Guests    int      `json:"guests"`
 }
 
 type proxmoxGuest struct {
@@ -532,15 +537,17 @@ func (h *ProxmoxHandler) overviewOf(e proxmoxHost, icons map[string]string) prox
 		switch row.Type {
 		case "node":
 			out.Nodes = append(out.Nodes, proxmoxNode{
-				Name:     row.Node,
-				Status:   row.Status,
-				CPU:      percent(row.CPU),
-				Mem:      ratio(row.Mem, row.MaxMem),
-				Disk:     ratio(row.Disk, row.MaxDisk),
-				Threads:  row.MaxCPU,
-				MemUsed:  row.Mem,
-				MemTotal: row.MaxMem,
-				Uptime:   row.Uptime,
+				Name:      row.Node,
+				Status:    row.Status,
+				CPU:       percent(row.CPU),
+				Mem:       ratio(row.Mem, row.MaxMem),
+				Disk:      ratio(row.Disk, row.MaxDisk),
+				Threads:   row.MaxCPU,
+				MemUsed:   row.Mem,
+				MemTotal:  row.MaxMem,
+				DiskUsed:  row.Disk,
+				DiskTotal: row.MaxDisk,
+				Uptime:    row.Uptime,
 			})
 		case "lxc", "qemu":
 			// A template is a stamp to clone from, not a machine. It has no

@@ -16,6 +16,7 @@ export interface PxNode {
     threads: number; cores: number;
     /** Bytes in use, beside the percentage. */
     mem_used: number; mem_total: number;
+    disk_used: number; disk_total: number;
     uptime: number; loadavg: string[] | null; guests: number;
 }
 

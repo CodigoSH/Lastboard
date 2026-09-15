@@ -750,3 +750,13 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
     color: var(--text-dim);
     white-space: nowrap;
 }
+
+/* The figure behind a tile's memory percentage. Dim and a size down, so the
+   row still reads as "52%" at a glance and the amount is there when the
+   glance turns into a question. */
+.tile__amt {
+    margin-inline-start: 4px;
+    font-size: 9.5px;
+    color: var(--text-dim);
+    white-space: nowrap;
+}

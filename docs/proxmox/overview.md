@@ -104,11 +104,11 @@ The Proxmox icon in the top bar opens it — or the summary above, if you have m
 
 **The header** carries the state of the host beside the title, not on a bar of its own: node name (or *Cluster*, when the host says it is one), how many machines are running out of how many, and **Services down** — how many of your bookmarked services are on a machine that is stopped.
 
-**Nodes** — one card per node with CPU, memory and disk, plus uptime, load average and how many machines it carries. Memory also gives the figure behind the percentage — *48 % (15 GiB)* — because "half full" says nothing about whether another machine fits. The header counts both **cores and threads**, which are not the same number: a chip with 12 cores reports 16 threads, and a card that names only one of them is ambiguous about which. On a cluster the header says so; a single node is never called a cluster.
+**Nodes** — one card per node with CPU, memory and disk, plus uptime, load average and how many machines it carries. Memory and disk also give the figure behind the percentage — *48 % (15 GiB)* — because "half full" says nothing about whether another machine, or another backup, fits. The header counts both **cores and threads**, which are not the same number: a chip with 12 cores reports 16 threads, and a card that names only one of them is ambiguous about which. On a cluster the header says so; a single node is never called a cluster.
 
 **Storage** — one card per store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
 
-**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its CPU with a **trend line over the last 24 hours**, its memory, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
+**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its CPU with a **trend line over the last 24 hours**, its memory as a percentage and in bytes, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
 
 The dot in the corner says which of three things a machine is:
 

@@ -341,7 +341,8 @@ class ProxmoxPage extends HTMLElement {
             ${this.meter(i18n.t('widget.telemetry.cpu'), n.cpu)}
             ${this.meter(i18n.t('widget.telemetry.ram'), n.mem,
                 n.mem_used > 0 ? fmtBytes(n.mem_used) : '')}
-            ${this.meter(i18n.t('widget.proxmox.disk'), n.disk)}
+            ${this.meter(i18n.t('widget.proxmox.disk'), n.disk,
+                n.disk_used > 0 ? fmtBytes(n.disk_used) : '')}
             <span class="node__foot">
                 <span>${escapeHtml(fmtUptime(n.uptime))} · ${escapeHtml(i18n.t('proxmox.load'))} ${escapeHtml(load)} · ${n.guests}</span>
                 <span class="node__go">${ICON_CHEVRON}</span>
@@ -393,7 +394,8 @@ class ProxmoxPage extends HTMLElement {
             <span class="tile__t3">
                 <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
                 <span class="tile__meta">${g.vmid}${g.running
-                    ? ` · <span class="tile__ram" aria-label="${escapeHtml(i18n.t('widget.telemetry.ram'))} ${mem}%"><span class="tile__gi">${ICON_RAM}</span>${mem}%</span>`
+                    ? ` · <span class="tile__ram" aria-label="${escapeHtml(i18n.t('widget.telemetry.ram'))} ${mem}%"><span class="tile__gi">${ICON_RAM}</span>${mem}%${
+                          g.mem > 0 ? `<span class="tile__amt">${escapeHtml(fmtBytes(g.mem))}</span>` : ''}</span>`
                     : ''}</span>
                 ${book ? `<span class="tile__book" title="${escapeHtml(book.label)}">${ICON_BOOK}</span>` : ''}
             </span>
