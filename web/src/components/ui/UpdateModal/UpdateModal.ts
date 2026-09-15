@@ -109,18 +109,46 @@ export class UpdateModal extends HTMLElement {
     private applyState(state: UpdateState) {
         if (!this.dialog?.open) return;
 
-        // A new phase is a different layout; a step changing inside the same
-        // phase is not. Repainting the body for the latter would replay every
-        // dot animation and restart the one that is currently pulsing.
-        if (state.phase !== this.renderedPhase) {
+        // A new phase is usually a different layout; a step changing inside the
+        // same phase is not. Repainting the body for the latter would replay
+        // every dot animation and restart the one that is currently pulsing.
+        //
+        // "Usually", because running and restarting draw the same thing: the
+        // timeline, no close button, no actions. Only the sentence underneath
+        // differs. Treating them as two layouts repainted the body at the exact
+        // moment the list was fullest, and every completed dot popped again at
+        // once — measured, one dot animating before, five after. That is the
+        // jump, and it lands on the last step of an update nobody can cancel.
+        if (state.phase !== this.renderedPhase && !this.sameLayout(state.phase, this.renderedPhase)) {
             this.renderBody();
         } else {
             this.syncSteps(state);
+            this.syncMessage(state);
+            this.renderedPhase = state.phase;
         }
 
         if (state.phase === 'done' && !this.reloadTimer) {
             this.reloadTimer = setTimeout(() => window.location.reload(), RELOAD_DELAY_MS);
         }
+    }
+
+    /**
+     * Whether two phases draw the same body. Only the busy pair does: both show
+     * the timeline, neither offers a way out.
+     */
+    private sameLayout(a: UpdatePhase, b: UpdatePhase | null): boolean {
+        const busy = (p: UpdatePhase | null) => p === 'running' || p === 'restarting';
+        return busy(a) && busy(b);
+    }
+
+    /** The one thing that does change between running and restarting. */
+    private syncMessage(state: UpdateState) {
+        const el = this.shadowRoot?.getElementById('modal-message');
+        if (!el) return;
+        const text = state.phase === 'restarting'
+            ? i18n.t('update.restarting')
+            : i18n.t('update.running_hint');
+        if (el.textContent !== text) el.textContent = text;
     }
 
     private syncSteps(state: UpdateState) {
