@@ -88,21 +88,30 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 ## With more than one: the summary
 
-The Proxmox icon opens a summary when several hypervisors are connected. It answers six questions, in the order they get asked, and the header carries the same counts a cluster page does — services down, machines running, machines stopped — for everything at once.
+The Proxmox icon opens a summary when several hypervisors are connected. It is ordered by what you can act on, not by what is easy to count, and the header carries the same figures a cluster page does — for everything at once. **There are no big-number tiles**: five totals with nothing behind them is inventory, not information, so every count lives on the rule of its own section and every list names the machines instead of counting them.
 
-**Needs attention** — and only when there is something in it. Every bookmarked service on a stopped machine anywhere, every hypervisor that did not answer, and every store past 90%. When all of that is empty the section is not drawn: a banner that is always on screen is a banner people stop reading.
+**Needs attention** — drawn only when there is something in it, and split rather than rolled together:
 
-**Fleet** — five figures with what is behind each: hypervisors (how many are clusters, how many standalone), nodes (cores and threads added up), machines (containers against virtual machines), stopped (and how many are running), and how many machines back a bookmark of yours.
+| | |
+| :--- | :--- |
+| **Services down** | a stopped machine with a bookmark of yours on it. Your service is not answering. |
+| **Stopped, not bookmarked** | a machine somebody turned off. Worth seeing, not worth alarm. |
+| **Could not connect** | a hypervisor that did not answer. The others are unaffected. |
+| **Almost full** | a store past 90%. |
 
-**Fleet load** — CPU and memory across every node over the last day. **Weighted, not averaged**: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so CPU is weighted by cores and memory by total bytes. It costs one request per node, which is what the endpoint answers — it cannot speak for more than one.
+Each entry is a chip you can click to go into the hypervisor it is on.
 
-**Spread** — one stacked bar per hypervisor: containers, virtual machines and stopped, so you can see at a glance where the machines actually live.
+**Not bookmarked** — every machine no bookmark points at, by name, with where it lives; the rule says how many of your machines *are* tied to one. This is the list of what you have not wired up to your board yet.
 
-**Storage** — every store, fullest first, with its kind, its figures and which hypervisor and node it belongs to. Click one to go into the hypervisor it lives on. **A shared store is counted once**: a Ceph pool is reported by every node of the cluster, so adding them up would triple it.
+**Nodes** — a table with figures rather than three anonymous bars: the node and its hypervisor, CPU, memory used against total, disk, cores against threads, and how long it has been up. You can see which node is hot, and how hot, without going in.
 
-Everything on this page that names one hypervisor takes you into it; the figures that speak for all of them at once are readouts and are drawn as readouts, without the pointer and the lit edge a card normally gets.
+**Hypervisors** — the way in, one card each: machines running, containers against virtual machines, and whether it is a cluster or a single node.
 
-**Hypervisors** — the way in, one card each, now carrying its own nodes with a bar for CPU, memory and disk. Until this the summary never admitted nodes existed; you had to go in to find out. A card with a service down wears the accent edge, the same one a stopped machine wears inside, and a hypervisor that cannot be reached says so on its own card without taking the others with it.
+**Storage** — every store, fullest first, with its kind and figures, and a click into the hypervisor it belongs to. **A shared store is counted once**: a Ceph pool is reported by every node of the cluster, so adding them up would triple it.
+
+**Fleet load** — CPU and memory across every node over the last day, and last on the page because it is the least actionable thing on it. **Weighted, not averaged**: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so CPU is weighted by cores and memory by total bytes. It costs one request per node, which is what the endpoint answers.
+
+> **Two connections to the same address are allowed, and warned about.** A second token with narrower permissions is a reasonable thing to want, but the summary adds every hypervisor up, so the same server connected twice lands in every total twice. Settings says so when you save it and saves anyway.
 
 Click a card to go into that cluster. The header then carries its name and an arrow back.
 

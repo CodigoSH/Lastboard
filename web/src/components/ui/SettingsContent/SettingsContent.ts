@@ -9,6 +9,7 @@ import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
+import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
@@ -554,6 +555,14 @@ class SettingsContent extends HTMLElement {
             has_secret: !!existing?.has_secret || !!secret,
             secret,
         };
+        // Two connections to the same address are allowed — a second token with
+        // narrower permissions is a real thing to want — but they are almost
+        // always a mistake, and the summary adds every hypervisor up, so the
+        // same server lands in every total twice. Said once, and it saves.
+        if (this.proxmox.hosts.some((h, i) => i !== index && sameHostUrl(h.url || '', url))) {
+            if (window.notifier) window.notifier.show(i18n.t('proxmox.duplicate_host'), 'warning');
+        }
+
         const hosts = [...this.proxmox.hosts] as (PxSettingsHost & { secret?: string })[];
         if (existing) hosts[index] = edited; else hosts.push(edited);
 

@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
-import { bookmarkKeys, buildNameIndex, guessByName, iconSlug, machineKey } from './proxmoxMatch';
+import { describe, expect, it, test } from 'bun:test';
+import { bookmarkKeys, buildNameIndex, guessByName, iconSlug, machineKey, sameHostUrl } from './proxmoxMatch';
 
 /*
 Every case below is taken from a real host: twenty-nine containers on one node,
@@ -103,5 +103,32 @@ describe('the index', () => {
         const index = buildNameIndex([{ keys: bookmarkKeys('', '', ''), value: 'nameless' }]);
         expect(guessByName(index, '123-')).toBeNull();
         expect(guessByName(index, '')).toBeNull();
+    });
+});
+
+// ── Two connections to the same Proxmox ──────────────────────────────────
+//
+// The summary adds every hypervisor up, so the same server connected twice
+// lands in every total twice — measured on a real instance that had it: 58
+// machines reported against 29 installed, 24 cores against 12, two nodes
+// against one. It is allowed (a second token with narrower permissions is a
+// real thing to want) and warned about.
+describe('sameHostUrl', () => {
+    it('sees through a trailing slash and the case of the host', () => {
+        expect(sameHostUrl('https://192.168.50.2:8006', 'https://192.168.50.2:8006/')).toBe(true);
+        expect(sameHostUrl('https://PVE.local:8006', 'https://pve.local:8006')).toBe(true);
+        expect(sameHostUrl(' https://pve:8006 ', 'https://pve:8006')).toBe(true);
+    });
+
+    it('keeps a different port or host apart', () => {
+        expect(sameHostUrl('https://pve:8006', 'https://pve:8007')).toBe(false);
+        expect(sameHostUrl('https://pve-1:8006', 'https://pve-2:8006')).toBe(false);
+    });
+
+    // Not a guarantee, on purpose: the same box behind two names still reads
+    // as two, and the caller only warns rather than refusing.
+    it('says nothing about an empty address', () => {
+        expect(sameHostUrl('', 'https://pve:8006')).toBe(false);
+        expect(sameHostUrl('https://pve:8006', '')).toBe(false);
     });
 });

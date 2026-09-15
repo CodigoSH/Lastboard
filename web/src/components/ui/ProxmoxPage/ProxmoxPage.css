@@ -294,6 +294,9 @@
 .store__r3 {
     display: flex;
     justify-content: space-between;
+    /* space-between alone leaves nothing between them when both run long, and
+       "75,3 GiB / 150 GiBProxmox · kprox" is what that reads like. */
+    gap: 10px;
     margin-top: 7px;
     font-family: var(--font-mono, monospace);
     font-size: 10.5px;
@@ -511,104 +514,95 @@
 
 /* ── The summary: what every hypervisor adds up to ──────────────── */
 
-/* Five figures and what is behind each one. The width is capped so four or
-   five two-digit numbers do not stretch to half the screen and read as empty
-   cards; below the cap they wrap rather than shrink. */
-/*
- * A readout is not a control.
- *
- * .card carries `cursor: pointer` and a hover that turns the edge accent and
- * the background solid, because every card on the cluster page opens
- * something. These do not: there is no single place a total of five
- * hypervisors could take you. Leaving the recipe untouched made them light up
- * under the pointer and then do nothing, which is a worse answer than looking
- * inert. Everything on this page that names ONE hypervisor — its card, its
- * stores — still enters it.
- *
- * The charts are not in this list: .panel is not a .card, so it never had the
- * pointer to begin with, and naming it here would have given it a hover
- * background it does not have at rest.
- */
-.kpi, .split { cursor: default; }
-.kpi:hover, .split:hover {
-    border-color: var(--card-border, transparent);
-    background: var(--surface);
-}
-
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 8px; }
-.kpi { display: flex; flex-direction: column; padding: 15px 16px 14px; }
-.kpi__n {
-    font-family: var(--font-mono, monospace);
-    font-size: 30px;
-    font-weight: 600;
-    line-height: 1.05;
-    letter-spacing: -0.025em;
-    font-variant-numeric: tabular-nums;
-}
-.kpi__n--bad { color: var(--danger-color); }
-.kpi__k {
-    margin-top: 3px;
+/* Lists that name machines rather than counting them. A count tells you
+   something is wrong; a name tells you what. */
+.alerts { padding: 14px 16px; }
+.alist { margin-bottom: 14px; }
+.alist:last-child { margin-bottom: 0; }
+.alist__k {
+    margin-bottom: 8px;
     font-family: var(--font-mono, monospace);
     font-size: 9.5px;
+    font-weight: 700;
     letter-spacing: 0.11em;
     text-transform: uppercase;
     color: var(--text-dim);
 }
-.kpi__d {
-    margin-top: 9px;
-    padding-top: 9px;
-    border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12));
+.alist__k--bad { color: var(--danger-color); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 5px 10px;
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.chip:hover { border-color: rgba(var(--accent-rgb), 0.45); background: var(--surface-hover); }
+.chip__n { font-size: 12px; font-weight: 600; }
+.chip__w { font-family: var(--font-mono, monospace); font-size: 10px; color: var(--text-dim); }
+
+/* The nodes, with figures. They used to be three anonymous bars inside a
+   hypervisor card: you could see one was hot and not which, or how hot. */
+.ntab { padding: 4px 0; overflow-x: auto; }
+.ntab__row {
+    display: grid;
+    grid-template-columns: minmax(96px, 1.2fr) 74px minmax(136px, 1.4fr) 66px 58px 104px;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 16px;
+    border-bottom: 1px solid var(--card-border, rgba(128, 128, 128, 0.1));
+    min-width: 560px;
+}
+.ntab__row:last-child { border-bottom: none; }
+.ntab__row--h {
+    padding-block: 7px;
     font-family: var(--font-mono, monospace);
-    font-size: 10.5px;
-    line-height: 1.5;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
     color: var(--text-dim);
 }
+.ntab__n { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ntab__h { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ntab__c { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ntab__v {
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.ntab__b { display: block; height: 3px; border-radius: 2px; background: rgba(128, 128, 128, 0.2); overflow: hidden; }
+.ntab__b i { display: block; height: 100%; background: var(--accent); }
+.ntab__b i.warn { background: var(--warning-color); }
+.ntab__b i.bad { background: var(--danger-color); }
 
 /* The two fleet charts, side by side until they stop fitting. */
 .load { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
 
-/* One stacked bar per hypervisor: where the machines actually are. */
-.split { padding: 14px 16px; }
-.split__row { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 11px; margin-bottom: 10px; }
-.split__row:last-child { margin-bottom: 0; }
-.split__n { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.split__bar { display: flex; height: 9px; border-radius: 3px; overflow: hidden; background: rgba(128, 128, 128, 0.14); }
-.split__bar i { display: block; height: 100%; }
-.split__bar i.lxc { background: var(--accent); }
-.split__bar i.vm { background: rgba(var(--accent-rgb), 0.45); }
-.split__bar i.off { background: rgba(128, 128, 128, 0.42); }
-.split__v { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-
-.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12)); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono, monospace); font-size: 10px; color: var(--text-dim); }
-.legend i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
-.legend i.lxc { background: var(--accent); }
-.legend i.vm { background: rgba(var(--accent-rgb), 0.45); }
-.legend i.off { background: rgba(128, 128, 128, 0.42); }
-
-/* A hypervisor's nodes, inside its own card. Until now the summary never
-   admitted nodes existed: you had to go in to find out. */
-.nodos { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12)); }
-.nodo {
-    display: grid;
-    grid-template-columns: 1fr 34px 34px 34px;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    font-family: var(--font-mono, monospace);
-    font-size: 10.5px;
-    color: var(--text-dim);
-}
-.nodo__n { color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nodo__h { font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; }
-.nodo__k { font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; }
-.nodo__b { display: block; height: 3px; border-radius: 2px; background: rgba(128, 128, 128, 0.2); overflow: hidden; }
-.nodo__b i { display: block; height: 100%; background: var(--accent); }
-.nodo__b i.warn { background: var(--warning-color); }
-.nodo__b i.bad { background: var(--danger-color); }
-
-@media (max-width: 560px) {
-    .split__row { grid-template-columns: 76px 1fr auto; }
+/*
+ * A readout is not a control.
+ *
+ * .card carries `cursor: pointer` and a hover that turns the edge accent,
+ * because every card on the cluster page opens something. These two do not:
+ * a list of machines and a table of nodes have no single destination, and the
+ * things inside them that DO — the chips, the store cards — carry it
+ * themselves. The charts are not in this list: .panel is not a .card, so it
+ * never had the pointer, and naming it would give it a hover background it
+ * does not have at rest.
+ */
+.alerts, .ntab { cursor: default; }
+.alerts:hover, .ntab:hover {
+    border-color: var(--card-border, transparent);
+    background: var(--surface);
 }
 
 /* ── Search ─────────────────────────────────────────────────── */

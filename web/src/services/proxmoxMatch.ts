@@ -87,3 +87,17 @@ export function buildNameIndex<T>(entries: { keys: string[]; value: T }[]): Map<
 export function guessByName<T>(index: Map<string, T | null>, machineName: string): T | null {
     return index.get(machineKey(machineName)) ?? null;
 }
+
+/**
+ * Whether two connections point at the same Proxmox.
+ *
+ * Only the address is compared, and loosely: a trailing slash and the case of
+ * the host are not a different server. Deliberately NOT a guarantee — the same
+ * box behind two names, or an IP and its DNS name, still reads as two. It is
+ * enough to catch the mistake people actually make, which is pasting the same
+ * URL twice, and the caller only warns.
+ */
+export function sameHostUrl(a: string, b: string): boolean {
+    const norm = (u: string) => u.trim().replace(/\/+$/, '').toLowerCase();
+    return !!a && !!b && norm(a) === norm(b);
+}
