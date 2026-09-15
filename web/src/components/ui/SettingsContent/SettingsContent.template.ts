@@ -261,7 +261,7 @@ export const usersTemplate = (users: any[]) => `
         </div>
     </div>
     
-     <dialog id="add-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
+     <dialog id="add-user-modal" style="background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px;">
         <div class="modal-header">
             <h3 class="modal-title">${i18n.t('action.add_new_user')}</h3>
             <button class="modal-close" data-action="close-modal" data-modal="add-user-modal" aria-label="${i18n.t('general.close')}">
@@ -284,7 +284,7 @@ export const usersTemplate = (users: any[]) => `
         </div>
     </dialog>
 
-    <dialog id="edit-user-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; backdrop-filter: blur(20px);">
+    <dialog id="edit-user-modal" style="background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px;">
         <div class="modal-header">
             <h3 class="modal-title">${i18n.t('action.edit_user')}</h3>
             <button class="modal-close" data-action="close-modal" data-modal="edit-user-modal" aria-label="${i18n.t('general.close')}">
@@ -539,7 +539,7 @@ export const proxmoxTemplate = (
         </div>
     </div>
 
-    <dialog id="proxmox-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 440px; max-width: calc(100vw - 32px); backdrop-filter: blur(20px);">
+    <dialog id="proxmox-modal" style="background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 440px; max-width: calc(100vw - 32px);">
         <div class="modal-header">
             <h3 class="modal-title" id="proxmox-modal-title">${i18n.t('settings.proxmox_add')}</h3>
             <button class="modal-close" data-action="close-modal" data-modal="proxmox-modal" aria-label="${i18n.t('general.close')}">

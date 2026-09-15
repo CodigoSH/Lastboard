@@ -471,11 +471,17 @@
 
 /* ── The detail sheet ───────────────────────────────────────── */
 
+/* The same surface every other floating window here uses. It had the solid
+   token and no blur, which is why it read as flat beside the bookmark form:
+   --paper-bg exists for exactly this, and --surface-solid for the things that
+   must not be seen through. */
 dialog {
     border: 1px solid var(--border);
     padding: 0;
     margin: auto;
-    background: var(--surface-solid);
+    background: var(--paper-bg);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
     color: var(--text-main);
     border-radius: var(--radius);
     box-shadow: var(--paper-shadow);
