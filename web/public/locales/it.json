@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "Ferme senza segnalibro",
   "proxmox.duplicate_host": "Esiste già una connessione a questo indirizzo. I numeri del riepilogo conteranno quel server due volte.",
   "proxmox.attention": "Da controllare",
-  "proxmox.fleet_load": "Carico del parco",
-  "proxmox.bookmarked": "Con segnalibro",
   "proxmox.single_node": "nodo singolo",
   "role.view_only": "Sola lettura",
   "section.leave_empty": "Lasciare vuoto per nascondere il titolo.",

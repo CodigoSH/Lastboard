@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "Berhenti, tanpa markah",
   "proxmox.duplicate_host": "Sudah ada koneksi ke alamat ini. Angka ringkasan akan menghitung server itu dua kali.",
   "proxmox.attention": "Perlu perhatian",
-  "proxmox.fleet_load": "Beban armada",
-  "proxmox.bookmarked": "Dengan markah",
   "proxmox.single_node": "node tunggal",
   "role.view_only": "Hanya Lihat",
   "section.leave_empty": "Biarkan kosong untuk menyembunyikan judul.",

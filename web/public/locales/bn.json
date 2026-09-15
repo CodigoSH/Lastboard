@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "বন্ধ, বুকমার্কবিহীন",
   "proxmox.duplicate_host": "এই ঠিকানায় ইতিমধ্যে একটি সংযোগ আছে। সারসংক্ষেপের সংখ্যায় এই সার্ভারটি দুবার গণনা হবে।",
   "proxmox.attention": "মনোযোগ প্রয়োজন",
-  "proxmox.fleet_load": "বহরের লোড",
-  "proxmox.bookmarked": "বুকমার্ক করা",
   "proxmox.single_node": "একক নোড",
   "role.view_only": "শুধুমাত্র দেখার জন্য",
   "section.leave_empty": "শিরোনাম লুকাতে খালি রাখুন।",

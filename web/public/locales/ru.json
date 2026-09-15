@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "Остановлены, без закладки",
   "proxmox.duplicate_host": "Подключение к этому адресу уже есть. В сводке этот сервер будет посчитан дважды.",
   "proxmox.attention": "Требует внимания",
-  "proxmox.fleet_load": "Нагрузка парка",
-  "proxmox.bookmarked": "С закладкой",
   "proxmox.single_node": "один узел",
   "role.view_only": "Только чтение",
   "section.leave_empty": "Оставьте пустым, чтобы скрыть заголовок.",

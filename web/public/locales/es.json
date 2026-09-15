@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "Paradas sin marcador",
   "proxmox.duplicate_host": "Ya hay una conexión a esta dirección. Las cifras del resumen contarán ese servidor dos veces.",
   "proxmox.attention": "Atención",
-  "proxmox.fleet_load": "Carga del parque",
-  "proxmox.bookmarked": "Con marcador",
   "proxmox.single_node": "nodo único",
   "role.view_only": "Solo lectura",
   "section.leave_empty": "Dejar vacío para ocultar el título.",

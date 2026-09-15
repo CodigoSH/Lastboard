@@ -88,30 +88,25 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 ## With more than one: the summary
 
-The Proxmox icon opens a summary when several hypervisors are connected. It is ordered by what you can act on, not by what is easy to count, and the header carries the same figures a cluster page does — for everything at once. **There are no big-number tiles**: five totals with nothing behind them is inventory, not information, so every count lives on the rule of its own section and every list names the machines instead of counting them.
+The Proxmox icon opens a summary when several hypervisors are connected. It is a board, like the rest of Lastboard: **one tile per hypervisor, holding everything about it** — its load, its nodes, its storage, what it is missing — and above them the only thing no single tile can say.
 
-**Needs attention** — drawn only when there is something in it, and split rather than rolled together:
+**Needs attention** sits on top, and only when there is something in it. One folded row per concern, so the page stays short enough to take in at once; click a row to see the names, and click a name to go into the hypervisor it is on.
 
 | | |
 | :--- | :--- |
 | **Services down** | a stopped machine with a bookmark of yours on it. Your service is not answering. |
-| **Stopped, not bookmarked** | a machine somebody turned off. Worth seeing, not worth alarm. |
 | **Could not connect** | a hypervisor that did not answer. The others are unaffected. |
 | **Almost full** | a store past 90%. |
+| **Stopped, not bookmarked** | a machine somebody turned off. Worth seeing, not worth alarm. |
+| **Not bookmarked** | every machine no bookmark points at — what you have not wired up to your board yet. |
 
-Each entry is a chip you can click to go into the hypervisor it is on.
+**Each hypervisor's tile** carries, in one place: how many of its machines are running, its CPU over the last day as a curve, CPU and memory now, its nodes with cores against threads and uptime, its fullest stores, and a tag for anything of its own that is stopped or unbookmarked. The arrow goes in.
 
-**Not bookmarked** — every machine no bookmark points at, by name, with where it lives; the rule says how many of your machines *are* tied to one. This is the list of what you have not wired up to your board yet.
+Two figures are weighted rather than averaged, and deliberately: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so a cluster's CPU — the bar and the curve alike — is weighted by cores. The curve costs one request per node, which is what the endpoint answers.
 
-**Nodes** — a table with figures rather than three anonymous bars: the node and its hypervisor, CPU, memory used against total, disk, cores against threads, and how long it has been up. You can see which node is hot, and how hot, without going in.
+**A shared store is counted once.** A Ceph pool is reported by every node of the cluster, so adding them up would triple it.
 
-**Hypervisors** — the way in, one card each: machines running, containers against virtual machines, and whether it is a cluster or a single node.
-
-**Storage** — every store, fullest first, with its kind and figures, and a click into the hypervisor it belongs to. **A shared store is counted once**: a Ceph pool is reported by every node of the cluster, so adding them up would triple it.
-
-**Fleet load** — CPU and memory across every node over the last day, and last on the page because it is the least actionable thing on it. **Weighted, not averaged**: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so CPU is weighted by cores and memory by total bytes. It costs one request per node, which is what the endpoint answers.
-
-> **Two connections to the same address are allowed, and warned about.** A second token with narrower permissions is a reasonable thing to want, but the summary adds every hypervisor up, so the same server connected twice lands in every total twice. Settings says so when you save it and saves anyway.
+> **Two connections to the same address are allowed, and warned about.** A second token with narrower permissions is a reasonable thing to want, but every total on this page adds the hypervisors up, so the same server connected twice lands in each of them twice. Settings says so when you save it, and saves anyway.
 
 Click a card to go into that cluster. The header then carries its name and an arrow back.
 

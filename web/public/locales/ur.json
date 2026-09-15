@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "بند، بغیر بُک مارک",
   "proxmox.duplicate_host": "اس پتے سے پہلے ہی ایک کنکشن موجود ہے۔ خلاصے کے اعداد اس سرور کو دو بار شمار کریں گے۔",
   "proxmox.attention": "توجہ درکار",
-  "proxmox.fleet_load": "بیڑے کا بوجھ",
-  "proxmox.bookmarked": "بُک مارک کے ساتھ",
   "proxmox.single_node": "واحد نوڈ",
   "role.view_only": "صرف دیکھنے کے لیے",
   "section.leave_empty": "عنوان چھپانے کے لیے خالی چھوڑ دیں۔",

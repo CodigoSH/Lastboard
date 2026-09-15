@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "Stopped, not bookmarked",
   "proxmox.duplicate_host": "There is already a connection to this address. The summary figures will count that server twice.",
   "proxmox.attention": "Needs attention",
-  "proxmox.fleet_load": "Fleet load",
-  "proxmox.bookmarked": "Bookmarked",
   "proxmox.single_node": "single node",
   "role.view_only": "View Only",
   "section.leave_empty": "Empty = Hidden",

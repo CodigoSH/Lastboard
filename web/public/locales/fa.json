@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "متوقف و بدون نشانک",
   "proxmox.duplicate_host": "در حال حاضر اتصالی به این نشانی وجود دارد. ارقام خلاصه این سرور را دو بار می‌شمارند.",
   "proxmox.attention": "نیازمند توجه",
-  "proxmox.fleet_load": "بار ناوگان",
-  "proxmox.bookmarked": "دارای نشانک",
   "proxmox.single_node": "تک‌گره",
   "role.view_only": "فقط مشاهده",
   "section.leave_empty": "برای مخفی کردن عنوان خالی بگذارید.",

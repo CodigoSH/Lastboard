@@ -512,23 +512,132 @@
 .ty--vm { border-radius: 3px; }
 .tile--off .ty { opacity: 0.6; }
 
-/* ── The summary: what every hypervisor adds up to ──────────────── */
+/* ── The summary ────────────────────────────────────────────────── */
 
-/* Lists that name machines rather than counting them. A count tells you
-   something is wrong; a name tells you what. */
-.alerts { padding: 14px 16px; }
-.alist { margin-bottom: 14px; }
-.alist:last-child { margin-bottom: 0; }
-.alist__k {
-    margin-bottom: 8px;
+/*
+ * One tile per hypervisor, holding everything about it.
+ *
+ * Three earlier goes at this were a stack of full-width bands — nodes in one,
+ * storage in another, stopped machines in a third — and every one of them read
+ * as disordered, because putting a single hypervisor back together was the
+ * reader's job. A board is made of tiles and a tile holds one object.
+ */
+.hvs { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 10px; }
+
+.hv {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 15px 17px 14px;
+    cursor: default;
+}
+.hv:hover { border-color: var(--card-border, transparent); background: var(--surface); }
+.hv--flag { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.hv--bad { border-color: var(--danger-color); cursor: pointer; }
+.hv--bad:hover { border-color: var(--danger-color); background: var(--surface-solid); }
+
+.hv__head { display: flex; align-items: center; gap: 9px; }
+.hv__name { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
+.hv__shape {
     font-family: var(--font-mono, monospace);
     font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: 0.11em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.alist__k--bad { color: var(--danger-color); }
+.hv__go {
+    margin-inline-start: auto;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
+    border-radius: 999px;
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.hv__go:hover { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.1); }
+.hv__err { font-size: 12px; color: var(--danger-color); }
+
+/* The one figure that carries the tile, with its own day beside it. */
+.hv__lead { display: flex; align-items: baseline; gap: 8px; }
+.hv__big { font-family: var(--font-mono, monospace); font-size: 26px; font-weight: 600; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.hv__big small { font-size: 14px; font-weight: 500; color: var(--text-dim); }
+.hv__cap { font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.hv__curve { margin-inline-start: auto; flex: none; line-height: 0; opacity: 0.9; }
+.hv__curve svg { display: block; width: 150px; height: 34px; }
+
+.hv__meters { display: flex; flex-direction: column; gap: 7px; }
+.hv__m { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 9px; }
+.hv__mk { font-family: var(--font-mono, monospace); font-size: 9px; letter-spacing: 0.08em; color: var(--text-dim); }
+.hv__mv { font-family: var(--font-mono, monospace); font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Its nodes and its storage, side by side and both belonging to it. */
+.hv__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; padding-top: 12px; border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12)); }
+.hv__col { min-width: 0; }
+.hv__k { margin-bottom: 6px; font-family: var(--font-mono, monospace); font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.hv__line { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 7px; padding: 2px 0; font-family: var(--font-mono, monospace); font-size: 10px; }
+.hv__col:last-child .hv__line { grid-template-columns: minmax(0, 1fr) 34px auto; }
+.hv__ln { color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hv__lv { color: var(--text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hv__lb { display: block; height: 3px; border-radius: 2px; background: rgba(128, 128, 128, 0.2); overflow: hidden; }
+.hv__lb i { display: block; height: 100%; background: var(--accent); }
+.hv__lb i.warn { background: var(--warning-color); }
+.hv__lb i.bad { background: var(--danger-color); }
+.hv__lp { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.hv__foot { display: flex; flex-wrap: wrap; gap: 6px; }
+.hv__foot:empty { display: none; }
+.hv__tag {
+    padding: 3px 9px;
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
+    border-radius: 999px;
+    font-family: var(--font-mono, monospace);
+    font-size: 9.5px;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+.hv__tag--bad { color: var(--danger-color); border-color: rgba(var(--danger-rgb), 0.4); }
+
+/* ── What needs attention, folded until asked ────────────────────── */
+
+.worries { padding: 4px 0; cursor: default; }
+.worries:hover { border-color: var(--card-border, transparent); background: var(--surface); }
+.worry { border-bottom: 1px solid var(--card-border, rgba(128, 128, 128, 0.1)); }
+.worry:last-child { border-bottom: none; }
+.worry__head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+.worry__head:hover { background: var(--surface-hover); }
+.worry__caret { display: grid; place-items: center; color: var(--text-dim); transition: transform 0.18s ease; }
+.worry__head[aria-expanded="true"] .worry__caret { transform: rotate(90deg); }
+.worry__k { font-size: 12.5px; font-weight: 600; }
+.worry--bad .worry__k { color: var(--danger-color); }
+.worry__n {
+    margin-inline-start: auto;
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-dim);
+}
+.worry--bad .worry__n { color: var(--danger-color); }
+.worry .chips { padding: 0 16px 12px; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
@@ -536,7 +645,7 @@
     display: inline-flex;
     align-items: baseline;
     gap: 7px;
-    padding: 5px 10px;
+    padding: 4px 10px;
     border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
     border-radius: 999px;
     background: transparent;
@@ -546,63 +655,12 @@
     transition: border-color 0.15s ease, background 0.15s ease;
 }
 .chip:hover { border-color: rgba(var(--accent-rgb), 0.45); background: var(--surface-hover); }
-.chip__n { font-size: 12px; font-weight: 600; }
-.chip__w { font-family: var(--font-mono, monospace); font-size: 10px; color: var(--text-dim); }
+.chip__n { font-size: 11.5px; font-weight: 600; }
+.chip__w { font-family: var(--font-mono, monospace); font-size: 9.5px; color: var(--text-dim); }
 
-/* The nodes, with figures. They used to be three anonymous bars inside a
-   hypervisor card: you could see one was hot and not which, or how hot. */
-.ntab { padding: 4px 0; overflow-x: auto; }
-.ntab__row {
-    display: grid;
-    grid-template-columns: minmax(96px, 1.2fr) 74px minmax(136px, 1.4fr) 66px 58px 104px;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 16px;
-    border-bottom: 1px solid var(--card-border, rgba(128, 128, 128, 0.1));
-    min-width: 560px;
-}
-.ntab__row:last-child { border-bottom: none; }
-.ntab__row--h {
-    padding-block: 7px;
-    font-family: var(--font-mono, monospace);
-    font-size: 8.5px;
-    font-weight: 700;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-}
-.ntab__n { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ntab__h { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ntab__c { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.ntab__v {
-    font-family: var(--font-mono, monospace);
-    font-size: 11px;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-.ntab__b { display: block; height: 3px; border-radius: 2px; background: rgba(128, 128, 128, 0.2); overflow: hidden; }
-.ntab__b i { display: block; height: 100%; background: var(--accent); }
-.ntab__b i.warn { background: var(--warning-color); }
-.ntab__b i.bad { background: var(--danger-color); }
-
-/* The two fleet charts, side by side until they stop fitting. */
-.load { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
-
-/*
- * A readout is not a control.
- *
- * .card carries `cursor: pointer` and a hover that turns the edge accent,
- * because every card on the cluster page opens something. These two do not:
- * a list of machines and a table of nodes have no single destination, and the
- * things inside them that DO — the chips, the store cards — carry it
- * themselves. The charts are not in this list: .panel is not a .card, so it
- * never had the pointer, and naming it would give it a hover background it
- * does not have at rest.
- */
-.alerts, .ntab { cursor: default; }
-.alerts:hover, .ntab:hover {
-    border-color: var(--card-border, transparent);
-    background: var(--surface);
+@media (max-width: 560px) {
+    .hv__cols { grid-template-columns: 1fr; }
+    .hv__curve { display: none; }
 }
 
 /* ── Search ─────────────────────────────────────────────────── */

@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "停止中・ブックマークなし",
   "proxmox.duplicate_host": "このアドレスへの接続はすでにあります。概要の数値はこのサーバーを二重に数えます。",
   "proxmox.attention": "要確認",
-  "proxmox.fleet_load": "全体の負荷",
-  "proxmox.bookmarked": "ブックマーク付き",
   "proxmox.single_node": "単一ノード",
   "role.view_only": "閲覧のみ",
   "section.leave_empty": "タイトルを非表示にするには空のままにします。",

@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "Σταματημένες χωρίς σελιδοδείκτη",
   "proxmox.duplicate_host": "Υπάρχει ήδη σύνδεση σε αυτή τη διεύθυνση. Τα νούμερα της σύνοψης θα μετρήσουν αυτόν τον διακομιστή δύο φορές.",
   "proxmox.attention": "Χρειάζεται προσοχή",
-  "proxmox.fleet_load": "Φόρτος στόλου",
-  "proxmox.bookmarked": "Με σελιδοδείκτη",
   "proxmox.single_node": "Ένας κόμβος",
   "role.view_only": "Μόνο προβολή",
   "section.leave_empty": "Αφήστε κενό για απόκρυψη τίτλου.",

@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "Arrêtées sans favori",
   "proxmox.duplicate_host": "Une connexion à cette adresse existe déjà. Les chiffres du résumé compteront ce serveur deux fois.",
   "proxmox.attention": "À surveiller",
-  "proxmox.fleet_load": "Charge du parc",
-  "proxmox.bookmarked": "Avec favori",
   "proxmox.single_node": "nœud unique",
   "role.view_only": "Lecture seule",
   "section.leave_empty": "Laisser vide pour masquer le titre.",

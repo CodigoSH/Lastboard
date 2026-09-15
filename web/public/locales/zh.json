@@ -212,8 +212,6 @@
   "proxmox.stopped_no_bookmark": "已停止且无书签",
   "proxmox.duplicate_host": "已存在指向该地址的连接。概览中的数字会把这台服务器计算两次。",
   "proxmox.attention": "需要关注",
-  "proxmox.fleet_load": "整体负载",
-  "proxmox.bookmarked": "含书签",
   "proxmox.single_node": "单节点",
   "role.view_only": "仅查看",
   "section.leave_empty": "留空以隐藏标题。",
