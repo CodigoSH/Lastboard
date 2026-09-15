@@ -81,13 +81,13 @@ Coming back later, the secret box is empty and says *Stored*. Leaving it that wa
 
 The Proxmox icon in the top bar opens it, and the **×** in its header closes it — while it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
 
-**The status line** — node name, how many machines are running out of how many, and **Services down**: how many of your bookmarked services are on a machine that is stopped. On the right, the range every chart on the page is drawn over: **1h, 24h, 7d**.
+**The header** carries the state of the host beside the title, not on a bar of its own: node name (or *Cluster*, when the host says it is one), how many machines are running out of how many, and **Services down** — how many of your bookmarked services are on a machine that is stopped.
 
 **Nodes** — one card per node with CPU, memory and disk, plus uptime, load average and how many machines it carries. On a cluster the header says so; a single node is never called a cluster.
 
-**Storage** — one card per store: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
+**Storage** — one card per store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
 
-**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its CPU with a **trend line over the chosen range**, its memory, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
+**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its CPU with a **trend line over the last 24 hours**, its memory, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
 
 The dot in the corner says which of three things a machine is:
 
@@ -176,7 +176,7 @@ To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmo
 | :--- | :--- |
 | Page open or widget tick | `GET /cluster/resources` — one call for nodes, machines and storage |
 | Page open | `GET /nodes/{node}/status` — one per node, for load and cores |
-| Page open, and on a range change | `GET .../rrddata` — one per machine, for the trend line on its tile. Proxmox has no endpoint that returns history for more than one machine, so these are spread out, three at a time, and cached until the range changes |
+| Page open | `GET .../rrddata` — one per machine, for the trend line on its tile. Proxmox has no endpoint that returns history for more than one machine, so these are spread out, three at a time, and each is asked for once while the page stays open |
 | Opening a machine | the history it already has, or a request for it |
 | Pressing a button | `POST .../status/start` or `.../status/shutdown` |
 

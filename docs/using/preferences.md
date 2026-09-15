@@ -2,7 +2,7 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
 
-Four of the sections — **Users**, **Monitoring**, **Data** and **Advanced** — belong to the administrator. A Member account sees My Profile, Look & Feel, Personalization and About.
+Five of the sections — **Users**, **Monitoring**, **Proxmox**, **Data** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. A Member account sees **My Profile**, **Look & Feel**, **Personalization** and **About**, and nothing hints that the rest exist.
 
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
@@ -23,8 +23,8 @@ Everything that changes how the dashboard looks.
 ![Look & Feel](../assets/p-look-feel.png)
 
 - **Accent Color** — pick a preset or set a custom color with the picker.
-- **Dashboard Background** — upload any image; it's optimized for performance and fills the screen without distortion. Each dashboard keeps its own background.
-- **Theme** — switch between **Dark** and **Light**.
+- **Dashboard Background** — upload any image; it is resized in your browser before it is stored, and it fills the screen without distortion. It is a **per-user** setting: one background, behind every one of your dashboards. The **×** on the preview removes it.
+- **Theme** — **Dark**, **Light**, or **System**. *System* follows the device you are reading on and changes with it, so a phone that turns dark at sunset turns Lastboard dark with it.
 
 ## Personalization
 
@@ -33,7 +33,7 @@ Everything that changes how the dashboard looks.
 - **Logo & Panel Name** — customize the title and logo shown in the browser tab and top bar.
 - **Language** — choose from **20 supported languages**.
 - **Measurement Units** — **Metric** (°C, km/h) or **Imperial** (°F, mph). Applies to all compatible widgets (Weather, Telemetry, …).
-- **Grid Layout** — the **Columns** slider sets how many columns the grid uses, for tighter or more spacious layouts.
+- **Grid Layout** — the **Columns** slider sets how many columns the desktop grid uses, from **3 to 16** (default **12**). Fewer, wider columns give larger tiles; more columns let you place things precisely. It does not affect the mobile layout, which has an order of its own — see [Bookmarks](../getting-started/bookmarks.md#mobile-visibility-and-ordering).
 
 ## Users (Administrator Only)
 

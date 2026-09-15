@@ -8,7 +8,7 @@ The easiest way to update is directly from the Lastboard web interface. Installi
 
 1. Open **Settings** and go to **About**.
 2. Click **Check for Updates**. If an update is available, **Update** opens the update window.
-4. Confirm there, and the window follows the process step by step — download, signature,
+3. Confirm there, and the window follows the process step by step — download, signature,
    integrity, extract, install, restart — turning each step green as the server completes it.
    If a step fails, it turns red with the reason and the remaining ones are left untouched.
 

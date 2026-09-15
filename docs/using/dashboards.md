@@ -1,6 +1,6 @@
 # Dashboards
 
-Lastboard gives each user **multiple independent dashboards**. Every dashboard has its own layout, items, and background — useful for separating, say, a media stack from home-automation or work tools.
+Lastboard gives each user **multiple independent dashboards**. Every dashboard has its own layout and its own items — useful for separating, say, a media stack from home-automation or work tools. There is no limit on how many you create beyond the per-user item ceiling (`MAX_ITEMS_PER_USER`, 500 by default).
 
 ![Dashboard switcher](../assets/m-dashboards.png)
 
@@ -43,6 +43,18 @@ All selected items move together and are auto-placed on the target dashboard.
 
 > **On mobile**, dashboards can be switched and reordered, but moving items between dashboards is a desktop editing action.
 
-## Per-Dashboard Background
+## What is shared and what is not
 
-Each dashboard keeps its own background image. Set it from **Settings → Look & Feel** while that dashboard is active. See [Preferences](preferences.md) for the appearance options.
+| | Scope |
+| :--- | :--- |
+| Layout, items, sections, widgets | **Per dashboard** |
+| Which dashboard opens first | Per dashboard (the one marked default) |
+| Order in the switcher | Per dashboard |
+| Background image, accent colour, theme, language, units, grid columns | **Per user** — one setting, every dashboard |
+| Monitoring, Proxmox, users | **Server-wide**, administrator only |
+
+So a background you set in **Settings → Look & Feel** applies to all of your dashboards at once, not only the one that was open. See [Preferences](preferences.md) for the appearance options.
+
+## Deleting a dashboard
+
+Deleting takes every item on it with it, and it cannot be undone — take a [backup](import-export.md) first if the layout matters. You always keep at least one dashboard: the last one cannot be deleted.
