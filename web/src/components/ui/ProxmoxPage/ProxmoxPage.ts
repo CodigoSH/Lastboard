@@ -787,8 +787,6 @@ class ProxmoxPage extends HTMLElement {
     private fitLists() {
         const body = this.shadowRoot?.getElementById('pp-body');
         if (!body) return;
-        const open = this.shadowRoot!.querySelector<HTMLElement>('.info__list');
-        if (!open) return;
 
         const bodyBox = () => body.getBoundingClientRect();
         const roomFor = (el: HTMLElement) => bodyBox().bottom - el.getBoundingClientRect().top - 14;
@@ -797,8 +795,11 @@ class ProxmoxPage extends HTMLElement {
         // is what opening must not add to — not zero. On a short window the
         // hypervisor tiles overflow on their own, and chasing zero drove the
         // list to nothing: measured at 620px, sixteen pixels of list.
-        // Scoped to the cards: the alert strip's own list sizes itself.
-        const lists = () => this.shadowRoot!.querySelectorAll<HTMLElement>('.info .info__list');
+        // Scoped to the cards: the alert strip's own list sizes itself. And
+        // ALL of them, because more than one can be open at a time — they sit
+        // in the same row, so they share a top and must share a height too.
+        const lists = () => [...this.shadowRoot!.querySelectorAll<HTMLElement>('.info .info__list')];
+        if (!lists().length) return;
         for (const el of lists()) el.style.height = '0px';
         const floor = Math.max(0, body.scrollHeight - body.clientHeight);
 
@@ -827,13 +828,19 @@ class ProxmoxPage extends HTMLElement {
         // More than once, because taking height off one element moves what is
         // under it and the remainder is not known until it has: a single pass
         // left sixteen pixels over at every window height tried.
+        // The correction goes to every open list, not the first one found.
+        // Trimming only one left it 28px shorter than its neighbours and the
+        // page 7px over: measured with two open, 427px against 455px.
         for (let pass = 0; pass < 4; pass++) {
             const over = body.scrollHeight - body.clientHeight - floor;
             if (over <= 0) break;
-            const now = open.getBoundingClientRect().height;
+            const now = Math.max(...lists().map(el => el.getBoundingClientRect().height));
             const next = Math.max(0, Math.round(now - over));
             if (next === now) break;
-            open.style.height = `${next}px`;
+            for (const el of lists()) {
+                el.hidden = next < 26;
+                el.style.height = `${next}px`;
+            }
         }
     }
 
