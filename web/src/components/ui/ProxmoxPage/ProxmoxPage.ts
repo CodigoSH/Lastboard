@@ -145,6 +145,7 @@ class ProxmoxPage extends HTMLElement {
     /** Whether entering a cluster left a history entry to come back to. */
     private pushed = false;
     private _popstate: () => void;
+    private _resize: () => void;
 
     /**
      * The hypervisor on screen, and every one connected.
@@ -192,6 +193,8 @@ class ProxmoxPage extends HTMLElement {
         // Back, from the browser's button or a swipe from the edge of a phone.
         // Only meaningful while we are the ones who pushed the entry: at any
         // other moment this is somebody else's navigation and we let it go.
+        // The room left changes with the window, and so does the cap.
+        this._resize = () => { if (this.hasAttribute('open')) this.fitLists(); };
         this._popstate = () => {
             if (!this.pushed) return;
             this.pushed = false;
@@ -204,6 +207,7 @@ class ProxmoxPage extends HTMLElement {
         this._build();
         window.addEventListener('keydown', this._keydown);
         window.addEventListener('popstate', this._popstate);
+        window.addEventListener('resize', this._resize);
         this._unsubscribeI18n = i18n.subscribe(() => {
             // The section labels and the placeholder live in the shell, which
             // is written once: a language change is one of the two things that
@@ -216,6 +220,7 @@ class ProxmoxPage extends HTMLElement {
     disconnectedCallback() {
         window.removeEventListener('keydown', this._keydown);
         window.removeEventListener('popstate', this._popstate);
+        window.removeEventListener('resize', this._resize);
         if (this.timer) clearInterval(this.timer);
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
@@ -744,14 +749,13 @@ class ProxmoxPage extends HTMLElement {
      * weather, not information, and it was what made three earlier goes at
      * this page read as a wall.
      */
-    private info(id: string, icon: string, n: number, label: string, rows: string, bad = false): [string, string] {
-        if (!n) return ['', ''];
+    private info(id: string, icon: string, n: number, label: string, rows: string, bad = false) {
+        if (!n) return '';
         const open = this.opened.has(id);
-        // The list is a sibling that spans the whole row, and it is returned
-        // apart so every card can be laid out BEFORE any panel: growing the
-        // card itself stranded the other two on rows of their own, and putting
-        // the panel straight after its card pushed the third one below it.
-        return [`<div class="info${open ? ' info--open' : ''}${bad ? ' info--bad' : ''}">
+        // The list opens downward inside its own card, in one column, and
+        // scrolls there. Spanning the row instead made the page taller every
+        // time one was opened, which is the opposite of what a summary is for.
+        return `<div class="info${open ? ' info--open' : ''}${bad ? ' info--bad' : ''}">
             <span class="info__top">
                 <span class="info__i">${icon}</span>
                 <span class="info__n">${n}</span>
@@ -761,7 +765,48 @@ class ProxmoxPage extends HTMLElement {
                 <span>${escapeHtml(open ? i18n.t('general.show_less') : i18n.t('general.show_more'))}</span>
                 <span class="info__caret">${ICON_CHEVRON}</span>
             </button>
-        </div>`, open ? `<div class="card info__panel"><div class="info__list">${rows}</div></div>` : ''];
+            ${open ? `<div class="info__list">${rows}</div>` : ''}
+        </div>`;
+    }
+
+    /**
+     * An open list gets exactly the room that is left, and no more.
+     *
+     * A fixed fraction of the window cannot know: measured at 1280x900, 38vh
+     * came to 356px against 272px of space and the page grew by 84px the
+     * moment a card was opened — the one thing a summary must not do. So the
+     * distance from the top of the list to the bottom of the scrolling body is
+     * the height, and the list scrolls inside that.
+     */
+    private fitLists() {
+        const body = this.shadowRoot?.getElementById('pp-body');
+        if (!body) return;
+        const floor = body.getBoundingClientRect().bottom;
+        for (const el of this.shadowRoot!.querySelectorAll<HTMLElement>('.info__list')) {
+            el.style.maxHeight = '';
+            const room = floor - el.getBoundingClientRect().top - 14;
+            // A list too short to be worth opening is worse than one that
+            // costs a little scroll, so there is a floor under the floor.
+            el.style.maxHeight = `${Math.max(140, Math.round(room))}px`;
+        }
+
+        // And then the correction, because the first guess cannot account for
+        // every padding between the list and the bottom of the page. Whatever
+        // still overflows comes off the open list: measured, not derived.
+        //
+        // More than once, because taking height off one element moves what is
+        // under it and the remainder is not known until it has: a single pass
+        // left sixteen pixels over at every window height tried.
+        const open = this.shadowRoot!.querySelector<HTMLElement>('.info__list');
+        if (!open) return;
+        for (let pass = 0; pass < 4; pass++) {
+            const over = body.scrollHeight - body.clientHeight;
+            if (over <= 0) break;
+            const now = open.getBoundingClientRect().height;
+            const next = Math.max(140, Math.round(now - over));
+            if (next === now) break;   // the floor: a list too short to open
+            open.style.maxHeight = `${next}px`;
+        }
     }
 
     /** A machine in one of those lists: its name, and where it lives. */
@@ -806,7 +851,7 @@ class ProxmoxPage extends HTMLElement {
         // Stopped machines, the ones with a bookmark on them first: those are
         // an outage, the rest are a machine somebody turned off.
         const stopped = [...f.stoppedBacked, ...f.stoppedLoose];
-        const pairs = [
+        const cards = [
             this.info('backed', ICON_BOOK, f.backed, i18n.t('proxmox.bookmarked'),
                 f.tagged.filter(g => g.link).map(g => this.row(g.link, `${g.hostName} · ${g.node}`, g.hostId)).join('')),
             this.info('unassigned', ICON_NOBOOK, f.unassigned.length, i18n.t('proxmox.unassigned'),
@@ -814,14 +859,14 @@ class ProxmoxPage extends HTMLElement {
             this.info('stopped', ICON_POWER, stopped.length, i18n.t('proxmox.stopped_count'),
                 stopped.map(g => this.row(g.link || g.name, `${g.hostName} · ${g.node}`, g.hostId, !!g.link)).join(''),
                 f.stoppedBacked.length > 0),
-        ];
-        const cards = pairs.map(x => x[0]).filter(Boolean);
-        const panels = pairs.map(x => x[1]).filter(Boolean);
+        ].filter(Boolean);
 
         const tiles = this.hosts.map(h => this.hostTile(h, f)).join('');
-        body.innerHTML = alarm
-            + (cards.length ? `<div class="infos">${cards.join('')}${panels.join('')}</div>` : '')
-            + this.sec(i18n.t('proxmox.hypervisors'), String(this.hosts.length), `<div class="hvs">${tiles}</div>`);
+        body.innerHTML =
+            this.sec(i18n.t('proxmox.hypervisors'), String(this.hosts.length), `<div class="hvs">${tiles}</div>`)
+            + alarm
+            + (cards.length ? `<div class="infos">${cards.join('')}</div>` : '');
+        this.fitLists();
         this.loadFleetSeries();
     }
 
@@ -862,7 +907,6 @@ class ProxmoxPage extends HTMLElement {
                 <span class="dot dot--${mine ? 'bad' : 'up'}"></span>
                 <span class="hv__name">${escapeHtml(h.name)}</span>
                 <span class="hv__shape">${escapeHtml(shape)}</span>
-                <span class="hv__go">${ICON_CHEVRON}</span>
             </span>
 
             <span class="hv__lead">

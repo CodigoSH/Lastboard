@@ -188,15 +188,22 @@
  * The box is declared here, not inherited.
  *
  * theme.css resets `* { box-sizing: border-box }` at document level and CSS
- * rules do not cross a shadow boundary, so inside this component nothing does.
+ * rules do not cross a shadow boundary, so inside this component nothing did.
  * Every card happens to be a <button>, which the browser's own stylesheet
- * gives border-box, and that is the only reason this has worked: measured, a
+ * gives border-box, and that was the only reason it ever worked: measured, a
  * <button class="card"> comes out border-box and a <div class="card"> beside
- * it content-box. With `width: 100%` below, a content-box card overflows its
- * grid track by its padding and borders and lands on top of its neighbour.
+ * it content-box.
+ *
+ * It bit three times before this rule existed — cards overflowing their grid
+ * track by their padding and landing on the neighbour, and a max-height on a
+ * list coming out sixteen pixels taller than asked because the padding was
+ * added outside it. Declared once, for everything, like the document does.
  */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
 .card {
-    box-sizing: border-box;
     background: var(--surface);
     border: 1px solid var(--card-border, transparent);
     border-radius: var(--radius);
@@ -522,7 +529,7 @@
  * as disordered, because putting a single hypervisor back together was the
  * reader's job. A board is made of tiles and a tile holds one object.
  */
-.hvs { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 10px; }
+.hvs { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 10px; margin-bottom: 4px; }
 
 .hv {
     display: flex;
@@ -532,7 +539,6 @@
 }
 .hv { cursor: pointer; text-align: start; }
 .hv:hover { border-color: rgba(var(--accent-rgb), 0.35); background: var(--surface-solid); }
-.hv:hover .hv__go { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.1); }
 .hv--flag { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .hv--bad { border-color: var(--danger-color); cursor: pointer; }
 .hv--bad:hover { border-color: var(--danger-color); background: var(--surface-solid); }
@@ -548,20 +554,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-/* Not a button any more — the tile is. It stays as the mark that says this
-   goes somewhere, and lights up with the rest of the card. */
-.hv__go {
-    margin-inline-start: auto;
-    display: grid;
-    place-items: center;
-    width: 26px;
-    height: 26px;
-    flex: none;
-    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
-    border-radius: 999px;
-    color: var(--accent);
-    transition: border-color 0.15s ease, background 0.15s ease;
 }
 .hv__err { font-size: 12px; color: var(--danger-color); }
 
@@ -606,8 +598,12 @@
 .hv__tag--bad { color: var(--danger-color); border-color: rgba(var(--danger-rgb), 0.4); }
 
 /* ── The three figures, and the machines behind them ─────────────── */
+/* They sit under the hypervisors: the tiles are what the page is for, and
+   these are the questions you ask about them afterwards. */
 
-.infos { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: 22px; }
+/* align-items: start, so opening one card grows only that one. Stretched, a
+   grid row makes all three as tall as the tallest. */
+.infos { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); align-items: start; gap: 10px; }
 
 .info {
     box-sizing: border-box;
@@ -620,12 +616,6 @@
 }
 .info--open { border-color: rgba(var(--accent-rgb), 0.4); }
 .info--open .info__more { color: var(--accent); }
-
-/* The list spans the whole row, under the three cards. A list of thirty
-   machines in a 210px column is a column of thirty lines, and the point of
-   opening it is to read it. */
-.info__panel { grid-column: 1 / -1; padding: 12px 10px; cursor: default; }
-.info__panel:hover { border-color: var(--card-border, transparent); background: var(--surface); }
 .info--bad { border-color: rgba(var(--danger-rgb), 0.45); }
 
 .info__top { display: flex; align-items: center; gap: 9px; }
@@ -673,14 +663,30 @@
 .info__caret { display: grid; place-items: center; transition: transform 0.18s ease; }
 .info__more[aria-expanded="true"] .info__caret { transform: rotate(90deg); }
 
-/* The list itself: one row per machine, the name left and where it lives on
-   a pill to the right, so the pills line up down the column. */
+/*
+ * One row per machine, the name left and where it lives on a pill to the
+ * right, so the pills line up down the column.
+ *
+ * The height is capped against the window and the list scrolls inside itself:
+ * a card that grows by thirty rows when you open it puts the whole page on a
+ * scrollbar, and a summary you have to scroll to read is not a summary. The
+ * smaller of the two figures wins so a tall screen does not get a lane of
+ * empty card and a short one still gets something worth opening.
+ */
 .info__list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 4px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* A starting value only: fitLists() measures the room actually left and
+       overwrites it, and does so again on every resize. */
+    max-height: min(38vh, 340px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px 0 12px;
+    margin-inline: -4px;
 }
-.alarm { padding: 14px 16px; cursor: default; }
+.alarm { padding: 14px 16px; margin-bottom: 10px; cursor: default; }
+.alarm .info__list { max-height: min(30vh, 220px); }
 .alarm:hover { border-color: var(--card-border, transparent); background: var(--surface); }
 
 

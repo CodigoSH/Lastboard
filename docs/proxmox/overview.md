@@ -90,7 +90,11 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 The Proxmox icon opens a summary when several hypervisors are connected. It is a board, like the rest of Lastboard: **one tile per hypervisor, holding everything about it** — its load, its nodes, its storage, what it is missing — and above them the only thing no single tile can say.
 
-**Three figures** sit on top — **Bookmarked**, **Not bookmarked** and **Stopped** — each an icon, a number and a **Show more**. Open one and the machines behind it appear underneath, across the full width: a name on the left and a pill on the right saying which hypervisor and node it is on, aligned down the column. Click any of them to go into the hypervisor it lives on. The count is the whole answer most days; the names stay out of the way until asked for.
+**The hypervisors come first** — they are what the page is for — and the questions you ask about them come under.
+
+**Three figures** sit below them: **Bookmarked**, **Not bookmarked** and **Stopped**, each an icon, a number and a **Show more**. Open one and it grows downward inside its own card, one machine per line: the name on the left and a pill on the right saying which hypervisor and node it is on. Click any line to go into that hypervisor. The count is the whole answer most days; the names stay out of the way until asked for.
+
+**An open list is measured against the window and scrolls inside itself**, so opening one does not put the whole page on a scrollbar. On a short window it stops shrinking at a point where the list is still worth opening, and there the page does scroll a little.
 
 A stopped machine with a bookmark on it is listed first and marked, because that is an outage — your service is not answering. The rest are machines somebody turned off.
 
@@ -100,7 +104,7 @@ A stopped machine with a bookmark on it is listed first and marked, because that
 
 **Each hypervisor's tile** carries, in one place: how many of its machines are running, its CPU over the last day as a curve, CPU and memory now, its nodes with cores against threads and uptime, its fullest stores, and a tag for anything of its own that is stopped or unbookmarked. The arrow goes in.
 
-**Clicking anywhere on a tile goes in** — the arrow is a mark, not the target. And going in leaves a step in the browser's history, so **Back, or a swipe from the edge of a phone, returns to the summary** rather than leaving Lastboard. Opening the page itself adds no step, so nothing changes for an install with a single hypervisor, which never sees the summary at all.
+**Clicking anywhere on a tile goes in.** There is no button to find: the tile is the target. And going in leaves a step in the browser's history, so **Back, or a swipe from the edge of a phone, returns to the summary** rather than leaving Lastboard. Opening the page itself adds no step, so nothing changes for an install with a single hypervisor, which never sees the summary at all.
 
 Two figures are weighted rather than averaged, and deliberately: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so a cluster's CPU — the bar and the curve alike — is weighted by cores. The curve costs one request per node, which is what the endpoint answers.
 
