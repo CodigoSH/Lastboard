@@ -38,6 +38,10 @@ const ICON_TAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const ICON_NODE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>';
 
 /** The board's own fallback for a bookmark with no icon. */
+/* A bookmark with a stroke through it: the machines nothing points at. Drawn
+   from ICON_BOOK so the pair reads as a pair. */
+const ICON_NOBOOK = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M4 3l16 18"/></svg>';
+
 const ICON_FALLBACK = '<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
 
 const fmtBytes = (n: number): string => {
@@ -138,6 +142,9 @@ class ProxmoxPage extends HTMLElement {
     private collapsed = new Set<string>(readCollapsed());
     /** Which of the summary's concerns are showing their names. */
     private opened = new Set<string>();
+    /** Whether entering a cluster left a history entry to come back to. */
+    private pushed = false;
+    private _popstate: () => void;
 
     /**
      * The hypervisor on screen, and every one connected.
@@ -182,11 +189,21 @@ class ProxmoxPage extends HTMLElement {
             if (dlg?.open) return;   // the sheet closes itself first
             this.close();
         };
+        // Back, from the browser's button or a swipe from the edge of a phone.
+        // Only meaningful while we are the ones who pushed the entry: at any
+        // other moment this is somebody else's navigation and we let it go.
+        this._popstate = () => {
+            if (!this.pushed) return;
+            this.pushed = false;
+            if (!this.hasAttribute('open')) return;
+            this.toSummary();
+        };
     }
 
     connectedCallback() {
         this._build();
         window.addEventListener('keydown', this._keydown);
+        window.addEventListener('popstate', this._popstate);
         this._unsubscribeI18n = i18n.subscribe(() => {
             // The section labels and the placeholder live in the shell, which
             // is written once: a language change is one of the two things that
@@ -198,6 +215,7 @@ class ProxmoxPage extends HTMLElement {
 
     disconnectedCallback() {
         window.removeEventListener('keydown', this._keydown);
+        window.removeEventListener('popstate', this._popstate);
         if (this.timer) clearInterval(this.timer);
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
@@ -216,7 +234,21 @@ class ProxmoxPage extends HTMLElement {
         this.timer = setInterval(() => this.load(), 15000);
     }
 
+    /** Back to the list of hypervisors. */
+    private toSummary() {
+        this.view = 'summary';
+        this.hostId = '';
+        this._shell = false;
+        this.loaded = false;
+        this.paint();
+        this.load();
+    }
+
     close() {
+        // The entry we pushed on the way into a cluster goes with the page, or
+        // the next press of Back would be spent on a screen nobody is looking
+        // at any more.
+        if (this.pushed) { this.pushed = false; history.back(); }
         this.removeAttribute('open');
         this._shell = false;
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: false });
@@ -704,33 +736,40 @@ class ProxmoxPage extends HTMLElement {
             </div>${body}</section>`;
     }
 
-    /** A named machine, and a way into where it lives. */
-    private chip(label: string, where: string, hostId: string) {
-        return `<button class="chip" data-enter="${escapeHtml(hostId)}">
-            <span class="chip__n">${escapeHtml(label)}</span>
-            <span class="chip__w">${escapeHtml(where)}</span>
-        </button>`;
+    /**
+     * One figure, and the machines behind it when asked.
+     *
+     * The count answers the question most days. The names are a click away and
+     * stay out of the way until then: thirty of them on screen at all times is
+     * weather, not information, and it was what made three earlier goes at
+     * this page read as a wall.
+     */
+    private info(id: string, icon: string, n: number, label: string, rows: string, bad = false): [string, string] {
+        if (!n) return ['', ''];
+        const open = this.opened.has(id);
+        // The list is a sibling that spans the whole row, and it is returned
+        // apart so every card can be laid out BEFORE any panel: growing the
+        // card itself stranded the other two on rows of their own, and putting
+        // the panel straight after its card pushed the third one below it.
+        return [`<div class="info${open ? ' info--open' : ''}${bad ? ' info--bad' : ''}">
+            <span class="info__top">
+                <span class="info__i">${icon}</span>
+                <span class="info__n">${n}</span>
+            </span>
+            <span class="info__k">${escapeHtml(label)}</span>
+            <button class="info__more" data-worry="${escapeHtml(id)}" aria-expanded="${open}">
+                <span>${escapeHtml(open ? i18n.t('general.show_less') : i18n.t('general.show_more'))}</span>
+                <span class="info__caret">${ICON_CHEVRON}</span>
+            </button>
+        </div>`, open ? `<div class="card info__panel"><div class="info__list">${rows}</div></div>` : ''];
     }
 
-    /**
-     * One concern, folded. The count is the whole answer most days; the names
-     * are one click away and stay out of the way until asked for.
-     *
-     * A wall of thirty chips is not information, it is weather. This keeps the
-     * page short enough to take in at once, which is the only thing that makes
-     * a summary a summary.
-     */
-    private worry(id: string, label: string, chips: string[], bad: boolean) {
-        if (!chips.length) return '';
-        const open = this.opened.has(id);
-        return `<div class="worry${bad ? ' worry--bad' : ''}">
-            <button class="worry__head" data-worry="${escapeHtml(id)}" aria-expanded="${open}">
-                <span class="worry__caret">${ICON_CHEVRON}</span>
-                <span class="worry__k">${escapeHtml(label)}</span>
-                <span class="worry__n">${chips.length}</span>
-            </button>
-            ${open ? `<div class="chips">${chips.join('')}</div>` : ''}
-        </div>`;
+    /** A machine in one of those lists: its name, and where it lives. */
+    private row(name: string, where: string, hostId: string, bad = false) {
+        return `<button class="mrow${bad ? ' mrow--bad' : ''}" data-enter="${escapeHtml(hostId)}">
+            <span class="mrow__n">${escapeHtml(name)}</span>
+            <span class="mrow__w">${escapeHtml(where)}</span>
+        </button>`;
     }
 
     /**
@@ -753,27 +792,35 @@ class ProxmoxPage extends HTMLElement {
         const broken = this.hosts.filter(h => h.error);
         const hot = stores.filter(s => s.percent >= 90);
 
-        const worries = [
-            this.worry('down', i18n.t('proxmox.services_down'),
-                f.stoppedBacked.map(g => this.chip(g.link, `${g.hostName} · ${g.node}`, g.hostId)), true),
-            this.worry('unreachable', i18n.t('proxmox.connection_error'),
-                broken.map(h => this.chip(h.name, '—', h.id)), true),
-            this.worry('full', i18n.t('proxmox.almost_full'),
-                hot.map(s => this.chip(`${s.name} ${Math.round(s.percent)}%`, `${s.hostName} · ${s.node}`, s.hostId)), true),
-            this.worry('loose', i18n.t('proxmox.stopped_no_bookmark'),
-                f.stoppedLoose.map(g => this.chip(g.name, `${g.hostName} · ${g.node}`, g.hostId)), false),
-            this.worry('unassigned', i18n.t('proxmox.unassigned'),
-                f.unassigned.map(g => this.chip(g.name, `${g.hostName} · ${g.node}`, g.hostId)), false),
-        ].filter(Boolean);
-
-        const attention = worries.length
-            ? this.sec(i18n.t('proxmox.attention'), String(worries.length),
-                `<div class="card worries">${worries.join('')}</div>`,
-                !!(f.stoppedBacked.length || broken.length || hot.length))
+        // The loudest things first, and only when they exist: a hypervisor that
+        // did not answer or a store with no room left is not a figure to browse,
+        // it is something to go and fix.
+        const alarms = [
+            ...broken.map(h => this.row(h.name, i18n.t('proxmox.connection_error'), h.id, true)),
+            ...hot.map(s => this.row(`${s.name} · ${Math.round(s.percent)}%`, `${s.hostName} · ${s.node}`, s.hostId, true)),
+        ];
+        const alarm = alarms.length
+            ? `<div class="card alarm"><div class="info__list">${alarms.join('')}</div></div>`
             : '';
 
+        // Stopped machines, the ones with a bookmark on them first: those are
+        // an outage, the rest are a machine somebody turned off.
+        const stopped = [...f.stoppedBacked, ...f.stoppedLoose];
+        const pairs = [
+            this.info('backed', ICON_BOOK, f.backed, i18n.t('proxmox.bookmarked'),
+                f.tagged.filter(g => g.link).map(g => this.row(g.link, `${g.hostName} · ${g.node}`, g.hostId)).join('')),
+            this.info('unassigned', ICON_NOBOOK, f.unassigned.length, i18n.t('proxmox.unassigned'),
+                f.unassigned.map(g => this.row(g.name, `${g.hostName} · ${g.node}`, g.hostId)).join('')),
+            this.info('stopped', ICON_POWER, stopped.length, i18n.t('proxmox.stopped_count'),
+                stopped.map(g => this.row(g.link || g.name, `${g.hostName} · ${g.node}`, g.hostId, !!g.link)).join(''),
+                f.stoppedBacked.length > 0),
+        ];
+        const cards = pairs.map(x => x[0]).filter(Boolean);
+        const panels = pairs.map(x => x[1]).filter(Boolean);
+
         const tiles = this.hosts.map(h => this.hostTile(h, f)).join('');
-        body.innerHTML = attention
+        body.innerHTML = alarm
+            + (cards.length ? `<div class="infos">${cards.join('')}${panels.join('')}</div>` : '')
             + this.sec(i18n.t('proxmox.hypervisors'), String(this.hosts.length), `<div class="hvs">${tiles}</div>`);
         this.loadFleetSeries();
     }
@@ -808,53 +855,54 @@ class ProxmoxPage extends HTMLElement {
             ? `${i18n.t('proxmox.cluster')} · ${i18n.t('proxmox.nodes')}: ${h.nodes.length}`
             : i18n.t('proxmox.single_node');
 
-        return `<div class="card hv${mine ? ' hv--flag' : ''}">
-            <div class="hv__head">
+        // The whole tile enters. An arrow in the corner made a 340px card with
+        // one 26px target on it, and everything else on it looked dead.
+        return `<button class="card hv${mine ? ' hv--flag' : ''}" data-enter="${escapeHtml(h.id)}">
+            <span class="hv__head">
                 <span class="dot dot--${mine ? 'bad' : 'up'}"></span>
                 <span class="hv__name">${escapeHtml(h.name)}</span>
                 <span class="hv__shape">${escapeHtml(shape)}</span>
-                <button class="hv__go" data-enter="${escapeHtml(h.id)}"
-                        aria-label="${escapeHtml(h.name)}">${ICON_CHEVRON}</button>
-            </div>
+                <span class="hv__go">${ICON_CHEVRON}</span>
+            </span>
 
-            <div class="hv__lead">
+            <span class="hv__lead">
                 <span class="hv__big"><b>${running}</b><small>/${g.length}</small></span>
                 <span class="hv__cap">${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
                 <span class="hv__curve">${curve.length ? this.spark(curve, 'var(--accent)', 150, 34) : ''}</span>
-            </div>
+            </span>
 
-            <div class="hv__meters">
+            <span class="hv__meters">
                 ${this.hvMeter(i18n.t('widget.telemetry.cpu'), cpu, `${Math.round(cpu)} %`)}
                 ${this.hvMeter(i18n.t('widget.telemetry.ram'), memUsed / memTotal * 100, `${fmtBytes(memUsed)} / ${fmtBytes(memTotal)}`)}
-            </div>
+            </span>
 
-            <div class="hv__cols">
-                <div class="hv__col">
-                    <div class="hv__k">${escapeHtml(i18n.t('proxmox.nodes'))}</div>
-                    ${h.nodes.map(n => `<div class="hv__line">
+            <span class="hv__cols">
+                <span class="hv__col">
+                    <span class="hv__k">${escapeHtml(i18n.t('proxmox.nodes'))}</span>
+                    ${h.nodes.map(n => `<span class="hv__line">
                         <span class="hv__ln">${escapeHtml(n.name)}</span>
                         <span class="hv__lv">${n.cores}/${n.threads} · ${escapeHtml(fmtUptime(n.uptime))}</span>
-                    </div>`).join('')}
-                </div>
-                <div class="hv__col">
-                    <div class="hv__k">${escapeHtml(i18n.t('proxmox.storage'))}</div>
+                    </span>`).join('')}
+                </span>
+                <span class="hv__col">
+                    <span class="hv__k">${escapeHtml(i18n.t('proxmox.storage'))}</span>
                     ${mine_stores.slice(0, 4).map(s => {
                         const l = level(s.percent);
-                        return `<div class="hv__line">
+                        return `<span class="hv__line">
                             <span class="hv__ln">${escapeHtml(s.name)}</span>
                             <span class="hv__lb"><i class="${l}" style="width:${s.percent}%"></i></span>
                             <span class="hv__lp ${l ? 'metric__v--' + l : ''}">${Math.round(s.percent)}%</span>
-                        </div>`;
+                        </span>`;
                     }).join('')}
-                </div>
-            </div>
+                </span>
+            </span>
 
-            <div class="hv__foot">
+            <span class="hv__foot">
                 ${mine ? `<span class="hv__tag hv__tag--bad">${escapeHtml(i18n.t('proxmox.services_down'))}: ${mine}</span>` : ''}
                 ${loose ? `<span class="hv__tag">${escapeHtml(i18n.t('proxmox.stopped_count'))}: ${loose}</span>` : ''}
                 ${unassigned ? `<span class="hv__tag">${escapeHtml(i18n.t('proxmox.unassigned'))}: ${unassigned}</span>` : ''}
-            </div>
-        </div>`;
+            </span>
+        </button>`;
     }
 
     /** A meter inside a hypervisor tile: label, bar, and the figure. */
@@ -1336,6 +1384,15 @@ class ProxmoxPage extends HTMLElement {
 
         const enter = t.closest('[data-enter]') as HTMLElement | null;
         if (enter) {
+            // Going into a cluster is a place, so it gets a history entry: the
+            // browser's back button, and the edge swipe on a phone, then come
+            // back to the summary instead of leaving Lastboard altogether.
+            // Only this step pushes one — opening the page itself does not, so
+            // nothing changes for an install with a single hypervisor.
+            if (this.view === 'summary' && !this.pushed) {
+                history.pushState({ lbProxmox: 'cluster' }, '');
+                this.pushed = true;
+            }
             this.hostId = enter.dataset.enter || '';
             this.view = 'cluster';
             this._shell = false;
@@ -1348,12 +1405,10 @@ class ProxmoxPage extends HTMLElement {
         }
 
         if (t.closest('#pp-back')) {
-            this.view = 'summary';
-            this.hostId = '';
-            this._shell = false;
-            this.loaded = false;
-            this.paint();
-            this.load();
+            // If we pushed an entry on the way in, going back is the browser's
+            // job and popstate does the rest. Two paths both changing the view
+            // would leave the history one step out of step with it.
+            if (this.pushed) history.back(); else this.toSummary();
             return;
         }
 
