@@ -310,12 +310,19 @@ class ProxmoxPage extends HTMLElement {
         this.paint();
     }
 
-    private meter(k: string, pct: number) {
+    /**
+     * One bar. `amount` is the figure behind the percentage — "66 %" says
+     * nothing about whether another machine fits, and that is the question
+     * being asked of a node.
+     */
+    private meter(k: string, pct: number, amount = '') {
         const l = level(pct);
         return `<span class="metric">
             <span class="metric__k">${escapeHtml(k)}</span>
             <span class="bar"><i class="${l}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
-            <span class="metric__v ${l ? 'metric__v--' + l : ''}">${Math.round(pct)} %</span>
+            <span class="metric__v ${l ? 'metric__v--' + l : ''}">
+                <span class="metric__p">${Math.round(pct)} %</span>${
+                amount ? `<span class="metric__a">(${escapeHtml(amount)})</span>` : ''}</span>
         </span>`;
     }
 
@@ -327,10 +334,13 @@ class ProxmoxPage extends HTMLElement {
             <span class="node__head">
                 <span class="dot dot--${state}"></span>
                 <span class="node__name">${escapeHtml(n.name)}</span>
-                <span class="node__tail">${n.threads} ${escapeHtml(i18n.t('proxmox.threads'))}</span>
+                <span class="node__tail">${n.cores > 0
+                    ? `${n.cores} ${escapeHtml(i18n.t('proxmox.cores').toLowerCase())} · `
+                    : ''}${n.threads} ${escapeHtml(i18n.t('proxmox.threads'))}</span>
             </span>
             ${this.meter(i18n.t('widget.telemetry.cpu'), n.cpu)}
-            ${this.meter(i18n.t('widget.telemetry.ram'), n.mem)}
+            ${this.meter(i18n.t('widget.telemetry.ram'), n.mem,
+                n.mem_used > 0 ? fmtBytes(n.mem_used) : '')}
             ${this.meter(i18n.t('widget.proxmox.disk'), n.disk)}
             <span class="node__foot">
                 <span>${escapeHtml(fmtUptime(n.uptime))} · ${escapeHtml(i18n.t('proxmox.load'))} ${escapeHtml(load)} · ${n.guests}</span>
@@ -848,8 +858,9 @@ class ProxmoxPage extends HTMLElement {
             ${s ? this.chart(i18n.t('widget.telemetry.ram'), String(Math.round(n.mem)), '%', s.mem, n.mem >= 80 ? 'var(--warning-color)' : 'var(--accent)') : ''}
             <div class="kv">
                 ${this.kv(ICON_CPU, i18n.t('proxmox.threads'), String(n.threads))}
+                ${n.cores > 0 ? this.kv(ICON_CPU, i18n.t('proxmox.cores'), String(n.cores)) : ''}
                 ${this.kv(ICON_CPU, i18n.t('proxmox.cores'), String(n.cores || '—'))}
-                ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), escapeHtml(fmtBytes(n.mem_total)))}
+                ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), escapeHtml(`${fmtBytes(n.mem_used)} / ${fmtBytes(n.mem_total)}`))}
                 ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), escapeHtml(fmtUptime(n.uptime)))}
             </div>`);
     }

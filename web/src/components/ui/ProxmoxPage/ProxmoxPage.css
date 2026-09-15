@@ -213,9 +213,16 @@
     color: var(--text-dim);
 }
 
-.metric { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 9px; margin-bottom: 7px; }
+/* The value column is a fixed width, not `auto`: each row is its own grid, so
+   an auto column sized to its own content leaves the three bars at three
+   different lengths as soon as one of them carries a figure in brackets. */
+.metric { display: grid; grid-template-columns: 42px 1fr 116px; align-items: center; gap: 9px; margin-bottom: 7px; }
 .metric__k { font-family: var(--font-mono, monospace); font-size: 9.5px; letter-spacing: 0.08em; color: var(--text-dim); }
-.metric__v { font-family: var(--font-mono, monospace); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* The percentage keeps its own slot so the three of them line up whatever
+   trails behind: right-aligning the whole cell instead moved the one carrying
+   a figure in brackets out of step with the other two. */
+.metric__v { display: flex; align-items: baseline; gap: 5px; font-family: var(--font-mono, monospace); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.metric__p { min-width: 42px; text-align: end; }
 .metric__v--warn { color: var(--warning-color); }
 .metric__v--bad { color: var(--danger-color); }
 
@@ -733,3 +740,13 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
 
 .sec__label--bad { color: var(--danger-color); border-color: rgba(var(--danger-rgb), 0.35); }
 .sec__note--bad { color: var(--danger-color); }
+
+/* The figure behind a bar's percentage, inside the same cell so the three bars
+   stay the same length. Dim and lighter: it answers the question the percentage
+   raises without competing with it. */
+.metric__a {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-dim);
+    white-space: nowrap;
+}

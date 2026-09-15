@@ -13,7 +13,9 @@ import { apiService } from './apiService';
 export interface PxNode {
     name: string; status: string;
     cpu: number; mem: number; disk: number;
-    threads: number; cores: number; mem_total: number;
+    threads: number; cores: number;
+    /** Bytes in use, beside the percentage. */
+    mem_used: number; mem_total: number;
     uptime: number; loadavg: string[] | null; guests: number;
 }
 

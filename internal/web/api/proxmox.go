@@ -398,13 +398,16 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
  * ------------------------------------------------------------------------ */
 
 type proxmoxNode struct {
-	Name     string   `json:"name"`
-	Status   string   `json:"status"`
-	CPU      float64  `json:"cpu"`  // percent
-	Mem      float64  `json:"mem"`  // percent
-	Disk     float64  `json:"disk"` // percent
-	Threads  int      `json:"threads"`
-	Cores    int      `json:"cores"`
+	Name    string  `json:"name"`
+	Status  string  `json:"status"`
+	CPU     float64 `json:"cpu"`  // percent
+	Mem     float64 `json:"mem"`  // percent
+	Disk    float64 `json:"disk"` // percent
+	Threads int     `json:"threads"`
+	Cores   int     `json:"cores"`
+	// Bytes, beside the percentage: "66%" of a node says nothing about whether
+	// there is room for another machine, and that is the question being asked.
+	MemUsed  int64    `json:"mem_used"`
 	MemTotal int64    `json:"mem_total"`
 	Uptime   int64    `json:"uptime"`
 	LoadAvg  []string `json:"loadavg"`
@@ -535,6 +538,7 @@ func (h *ProxmoxHandler) overviewOf(e proxmoxHost, icons map[string]string) prox
 				Mem:      ratio(row.Mem, row.MaxMem),
 				Disk:     ratio(row.Disk, row.MaxDisk),
 				Threads:  row.MaxCPU,
+				MemUsed:  row.Mem,
 				MemTotal: row.MaxMem,
 				Uptime:   row.Uptime,
 			})
