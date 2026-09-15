@@ -330,7 +330,13 @@
 
 .group__count { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); }
 
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 8px; }
+/* 186px was set before a tile carried the memory figure, and it no longer
+   holds what is on one: measured across 29 real machines at 1600px, a 187px
+   tile clipped 21 names or 26 data lines depending on where the kind pill sat.
+   220 is the first width at which nothing is clipped anywhere — 240 buys the
+   same tile, so it would only cost columns for nothing. The price is six
+   columns instead of eight on a wide screen, which is one extra row of tiles. */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 
 .tile {
     position: relative;
@@ -351,7 +357,6 @@
     background: var(--success-color);
     box-shadow: 0 0 0 2px var(--panel);
 }
-.tile__st--off { background: var(--text-dim); opacity: 0.6; }
 /* Stopped, with nothing behind it: worth seeing, not worth alarm. The red is
    reserved for a machine that takes a bookmarked service down with it. */
 .tile__st--warn { background: var(--warning-color); }
@@ -360,7 +365,14 @@
 /* The one thing that shouts: a machine that is down AND has a bookmark
    pointing at it, because that is a service of yours that stopped answering.
    One that is off on purpose, with nothing behind it, stays quiet. */
-.tile__t1 { display: flex; align-items: center; gap: 8px; min-width: 0; padding-inline-end: 14px; }
+/* The kind pill rides beside the name, not down on the bottom row. Down there
+   it took about 40px off the one line that has something to say — the VMID,
+   the memory and the figure behind it — and measured at the widths this grid
+   actually produces, 26 of 28 tiles were cutting that line short. Up here the
+   space is free. The end padding clears the status dot, which is absolutely
+   positioned 9px in and 9px wide. */
+.tile__t1 { display: flex; align-items: center; gap: 8px; min-width: 0; padding-inline-end: 22px; }
+.tile__t1 .ty { margin-inline-start: -2px; }
 
 .ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; }
 .ico img { display: block; width: 22px; height: 22px; object-fit: contain; }
@@ -405,6 +417,7 @@
 .tile__st { z-index: 2; }
 
 .tile__name {
+    min-width: 0;
     font-size: 13px;
     font-weight: 600;
     white-space: nowrap;

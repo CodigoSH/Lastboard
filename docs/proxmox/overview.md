@@ -108,7 +108,7 @@ The Proxmox icon in the top bar opens it — or the summary above, if you have m
 
 **Storage** — one card per store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
 
-**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its CPU with a **trend line over the last 24 hours**, its memory as a percentage and in bytes, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
+**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its name with its type beside it (`LXC` in a capsule, `VM` in a box), its CPU with a **trend line over the last 24 hours**, and on the bottom line its VMID and its memory as a percentage with the figure behind it — *32% (162,9 MiB)*. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
 
 The dot in the corner says one thing, the two colours the header counts: **green** running, **red** stopped. The tile itself says the rest:
 

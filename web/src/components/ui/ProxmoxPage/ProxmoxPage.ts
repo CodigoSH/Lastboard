@@ -406,7 +406,8 @@ class ProxmoxPage extends HTMLElement {
 
         return `<button class="card tile${g.running ? '' : ' tile--off'}${flag ? ' tile--flag' : ''}" data-guest="${g.vmid}">
             <span class="tile__st tile__st--${dot}"></span>
-            <span class="tile__t1">${icon}<span class="tile__name">${escapeHtml(g.name) || '—'}</span></span>
+            <span class="tile__t1">${icon}<span class="tile__name">${escapeHtml(g.name) || '—'}</span>
+                <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span></span>
             <span class="tile__t2">
                 ${g.running
                     ? `<span class="tile__num" aria-label="${escapeHtml(i18n.t('widget.telemetry.cpu'))} ${pct(g.cpu)}%">
@@ -415,7 +416,6 @@ class ProxmoxPage extends HTMLElement {
                 <span class="tile__spark">${this.spark(line, g.running ? 'var(--accent)' : 'var(--text-dim)', 62, 20)}</span>
             </span>
             <span class="tile__t3">
-                <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
                 <span class="tile__meta">${g.vmid}${g.running
                     ? ` · <span class="tile__ram" aria-label="${escapeHtml(i18n.t('widget.telemetry.ram'))} ${mem}%"><span class="tile__gi">${ICON_RAM}</span>${mem}%${
                           g.mem > 0 ? `<span class="tile__amt">(${escapeHtml(fmtBytes(g.mem))})</span>` : ''}</span>`
