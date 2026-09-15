@@ -103,7 +103,6 @@ Presets fill in the endpoint and authentication for you. Items marked *(beta)* a
 | **Tautulli** | Media | API key | Active streams |
 | **Overseerr / Jellyseerr** | Media | API key | Pending, total requests |
 | **Bazarr** | Media | API key | Episodes, movies missing subtitles |
-| **Proxmox VE** | Infrastructure | API token + node | RAM and disk used |
 | **Home Assistant** | Infrastructure | Access token + entity | Entity state |
 | **Uptime Kuma** | Infrastructure | None + status page | Monitor list |
 | **Forgejo / Gitea** | Dev | Access token | Repository list |
@@ -111,11 +110,16 @@ Presets fill in the endpoint and authentication for you. Items marked *(beta)* a
 | **Nextcloud** *(beta)* | Files | `user:password` | Files, free space |
 | **Prowlarr** *(beta)* | Downloads | API key | Indexer list with query counts |
 
+> **Proxmox VE is not here on purpose.** It used to be a preset that read one node and showed
+> two figures. Lastboard now speaks to Proxmox itself — every hypervisor you run, their nodes,
+> storage and machines, tied to the bookmarks they serve, with start and shutdown. Use the
+> [Proxmox widget](proxmox.md) and [the Proxmox page](../proxmox/overview.md) instead.
+> Widgets already configured with the old preset keep working; they are plain API widgets now.
+
 > Where to find the credential varies per service — usually under Settings → API / Access Tokens. For AdGuard and Nextcloud, use the same username and password you log in with.
 
-Three presets need one extra detail because they read a specific thing rather than the whole server:
+Two presets need one extra detail because they read a specific thing rather than the whole server:
 
-- **Proxmox VE** — the **node** name shown in its web interface (for example `pve`). The token goes in as `user@realm!tokenid=secret`.
 - **Home Assistant** — the **entity ID** to display, found under *Developer tools → States*.
 - **Uptime Kuma** — the **status page** slug, the last part of that page's address. Status pages are public, so no credential is needed.
 

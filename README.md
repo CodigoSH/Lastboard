@@ -84,9 +84,9 @@ It is **one static Go binary** and **one SQLite file**. No database server, no R
 | **Monitoring** | Every monitored service on a tile: status dot, heartbeat, latency and 24-hour uptime |
 | **Docker** | Containers from one or many hosts, with live CPU/RAM and start/stop/restart |
 | **Proxmox** | Your hypervisor's node health and the machines behind your bookmarks, with start and shutdown |
-| **API** | Any JSON endpoint on a tile — 17 guided presets for common self-hosted services, or a fully custom request |
+| **API** | Any JSON endpoint on a tile — 16 guided presets for common self-hosted services, or a fully custom request |
 
-The **API widget** is the escape hatch for everything without a dedicated widget. Seventeen presets — AdGuard Home, Paperless-ngx, Immich, Jellyfin, Sonarr, Radarr, SABnzbd, Tautulli, Overseerr/Jellyseerr, Bazarr, Prowlarr, Proxmox VE, Home Assistant, Uptime Kuma, Forgejo/Gitea, Speedtest Tracker and Nextcloud — ask you for one to three fields and compose the rest. Anything else goes in Advanced: URL, method, headers, JSON field paths, list or metric layout, and number/bytes/percent formatting. The request runs **on the server**, so it reaches private IPs and accepts self-signed certificates that a browser would refuse.
+The **API widget** is the escape hatch for everything without a dedicated widget. Sixteen presets — AdGuard Home, Paperless-ngx, Immich, Jellyfin, Sonarr, Radarr, SABnzbd, Tautulli, Overseerr/Jellyseerr, Bazarr, Prowlarr, Home Assistant, Uptime Kuma, Forgejo/Gitea, Speedtest Tracker and Nextcloud — ask you for one to three fields and compose the rest. Anything else goes in Advanced: URL, method, headers, JSON field paths, list or metric layout, and number/bytes/percent formatting. The request runs **on the server**, so it reaches private IPs and accepts self-signed certificates that a browser would refuse.
 
 ### Uptime monitoring, built in
 

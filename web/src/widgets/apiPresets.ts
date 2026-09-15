@@ -224,28 +224,6 @@ export const API_PRESETS: ApiPreset[] = [
         }),
     },
     {
-        id: 'proxmox',
-        name: 'Proxmox VE',
-        category: 'infra',
-        needsKey: true,
-        keyLabelKey: 'widget.api.key_token',
-        keyHintKey: 'widget.api.key_pve_hint',
-        urlPlaceholder: 'https://10.0.0.3:8006',
-        extraLabelKey: 'widget.api.extra_node',
-        extraHintKey: 'widget.api.extra_node_hint',
-        extraPlaceholder: 'pve',
-        build: (base, key, extra) => ({
-            url: stripSlash(base) + '/api2/json/nodes/' + seg(extra) + '/status',
-            method: 'GET',
-            headers: key ? h({ Authorization: 'PVEAPIToken=' + key }) : {},
-            mappings: [
-                { label: i18n.t('widget.api.label.ram'), path: 'data.memory.used', format: 'bytes' },
-                { label: i18n.t('widget.api.label.disk'), path: 'data.rootfs.used', format: 'bytes' },
-            ],
-            refreshSec: 60,
-        }),
-    },
-    {
         id: 'home-assistant',
         name: 'Home Assistant',
         category: 'infra',
