@@ -28,6 +28,15 @@ class MonitorPage extends HTMLElement {
     private selectedId = 0;
     private _built = false;
     private _keydown: (e: KeyboardEvent) => void;
+    private _popstate: () => void;
+    /**
+     * Whether this page put an entry on the history stack.
+     *
+     * A full-screen page is a place, so Back — the browser's button, the
+     * mouse's fourth button, a swipe from the edge of a phone — should leave
+     * it rather than leave Lastboard.
+     */
+    private pushed = false;
 
     constructor() {
         super();
@@ -36,15 +45,24 @@ class MonitorPage extends HTMLElement {
         this._keydown = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && this.hasAttribute('open')) this.close();
         };
+        // Only ours while the entry is ours; at any other moment this is
+        // somebody else's navigation and we let it through.
+        this._popstate = () => {
+            if (!this.pushed) return;
+            this.pushed = false;
+            if (this.hasAttribute('open')) this.closeQuietly();
+        };
     }
 
     connectedCallback() {
         this._build();
         window.addEventListener('keydown', this._keydown);
+        window.addEventListener('popstate', this._popstate);
     }
 
     disconnectedCallback() {
         window.removeEventListener('keydown', this._keydown);
+        window.removeEventListener('popstate', this._popstate);
     }
 
     private _build() {
@@ -103,6 +121,7 @@ class MonitorPage extends HTMLElement {
     async open() {
         this._build();
         this.setAttribute('open', '');
+        if (!this.pushed) { history.pushState({ lbMonitor: 'page' }, ''); this.pushed = true; }
         document.body.style.overflow = 'hidden';
         // The topbar locks its other actions while the status page is up, the
         // same way it does in edit mode.
@@ -121,11 +140,23 @@ class MonitorPage extends HTMLElement {
         }
     }
 
-    close() {
+    /** Closing without touching history — this is what Back itself calls. */
+    private closeQuietly() {
         this.removeAttribute('open');
         document.body.style.overflow = '';
         this._detail()?.stop();
         eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: false });
+    }
+
+    close() {
+        // Closing by the X or by Escape takes the entry with it, or the next
+        // press of Back would be spent on a page nobody is looking at any
+        // more. Clearing the flag first is what stops the popstate this causes
+        // from being read as the user going back.
+        const had = this.pushed;
+        this.pushed = false;
+        this.closeQuietly();
+        if (had) history.back();
     }
 
     private _select(id: number, name: string) {

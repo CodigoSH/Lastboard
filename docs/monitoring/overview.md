@@ -33,6 +33,8 @@ Recorded checks are kept for **30 days**; older data is pruned automatically eac
 
 ## The Status Page
 
+**Back leaves the page, not Lastboard.** The browser's button, the mouse's fourth button and a swipe from the edge of a phone all close the status page and return you to your board; closing it with the ✕ or with Escape takes its history step with it, so nothing is left behind to press.
+
 The **Service status** page lists every monitored service in one place, each with its current state, a recent-checks strip and its 24-hour uptime. It is built from the same pieces as the [Proxmox](../proxmox/overview.md) page — the same header, the same section labels, the same cards — because they are two views of one product. With 24/7 monitoring on, open it from the **status icon in the top bar**. It is always reachable from **Settings → Monitoring → View status**. Use the search box to filter by name.
 
 Click any service to open its detail view. You can also click the **status indicator on a bookmark tile** to jump straight to that service's history.

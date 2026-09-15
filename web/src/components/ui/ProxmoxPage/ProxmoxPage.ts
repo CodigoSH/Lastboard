@@ -142,8 +142,15 @@ class ProxmoxPage extends HTMLElement {
     private collapsed = new Set<string>(readCollapsed());
     /** Which of the summary's concerns are showing their names. */
     private opened = new Set<string>();
-    /** Whether entering a cluster left a history entry to come back to. */
-    private pushed = false;
+    /**
+     * How many history entries this page has put on the stack.
+     *
+     * Two levels: one for the page itself, and one more for going into a
+     * cluster from the summary. Back walks them in order — cluster to summary,
+     * summary to the board — and only leaves Lastboard once there are none
+     * left, which is what a full-screen page should do.
+     */
+    private depth = 0;
     private _popstate: () => void;
     private _resize: () => void;
 
@@ -190,16 +197,20 @@ class ProxmoxPage extends HTMLElement {
             if (dlg?.open) return;   // the sheet closes itself first
             this.close();
         };
-        // Back, from the browser's button or a swipe from the edge of a phone.
-        // Only meaningful while we are the ones who pushed the entry: at any
-        // other moment this is somebody else's navigation and we let it go.
         // The room left changes with the window, and so does the cap.
         this._resize = () => { if (this.hasAttribute('open')) this.fitLists(); };
+
+        // Back: the browser's button, the mouse's fourth button, or a swipe
+        // from the edge of a phone. Only ours while we have entries on the
+        // stack; at any other moment this is somebody else's navigation.
         this._popstate = () => {
-            if (!this.pushed) return;
-            this.pushed = false;
+            if (this.depth <= 0) return;
+            this.depth--;
             if (!this.hasAttribute('open')) return;
-            this.toSummary();
+            // Two deep means we are inside a cluster: the first step back is
+            // out to the summary, not out of the page.
+            if (this.depth > 0 && this.view === 'cluster') { this.toSummary(); return; }
+            this.closeQuietly();
         };
     }
 
@@ -227,6 +238,9 @@ class ProxmoxPage extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
+        // A full-screen page is a place, so Back leaves it rather than leaving
+        // Lastboard. Pushed once per opening, never stacked.
+        if (this.depth === 0) { history.pushState({ lbProxmox: 'page' }, ''); this.depth = 1; }
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: true });
         // Which view this is cannot be known before asking: it depends on how
         // many hypervisors are connected. The summary is the safe first guess
@@ -249,17 +263,25 @@ class ProxmoxPage extends HTMLElement {
         this.load();
     }
 
-    close() {
-        // The entry we pushed on the way into a cluster goes with the page, or
-        // the next press of Back would be spent on a screen nobody is looking
-        // at any more.
-        if (this.pushed) { this.pushed = false; history.back(); }
+    /** Closing without touching history — this is what Back itself calls. */
+    private closeQuietly() {
         this.removeAttribute('open');
         this._shell = false;
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: false });
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
         const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
         if (dlg?.open) dlg.close();
+    }
+
+    close() {
+        // Closing by the X or by Escape takes our entries off the stack with
+        // it, or the next press of Back would be spent on a page nobody is
+        // looking at any more. Zeroing first is what stops the popstate this
+        // causes from being read as the user going back.
+        const steps = this.depth;
+        this.depth = 0;
+        this.closeQuietly();
+        if (steps > 0) history.go(-steps);
     }
 
     // ── Data ──
@@ -1468,9 +1490,9 @@ class ProxmoxPage extends HTMLElement {
             // back to the summary instead of leaving Lastboard altogether.
             // Only this step pushes one — opening the page itself does not, so
             // nothing changes for an install with a single hypervisor.
-            if (this.view === 'summary' && !this.pushed) {
+            if (this.view === 'summary') {
                 history.pushState({ lbProxmox: 'cluster' }, '');
-                this.pushed = true;
+                this.depth++;
             }
             this.hostId = enter.dataset.enter || '';
             this.view = 'cluster';
@@ -1487,7 +1509,7 @@ class ProxmoxPage extends HTMLElement {
             // If we pushed an entry on the way in, going back is the browser's
             // job and popstate does the rest. Two paths both changing the view
             // would leave the history one step out of step with it.
-            if (this.pushed) history.back(); else this.toSummary();
+            if (this.depth > 1) history.back(); else this.toSummary();
             return;
         }
 

@@ -104,7 +104,9 @@ A stopped machine with a bookmark on it is listed first and marked, because that
 
 **Each hypervisor's tile** carries, in one place: how many of its machines are running, its CPU over the last day as a curve, CPU and memory now, its nodes with cores against threads and uptime, its fullest stores, and a tag for anything of its own that is stopped or unbookmarked. The arrow goes in.
 
-**Clicking anywhere on a tile goes in.** There is no button to find: the tile is the target. And going in leaves a step in the browser's history, so **Back, or a swipe from the edge of a phone, returns to the summary** rather than leaving Lastboard. Opening the page itself adds no step, so nothing changes for an install with a single hypervisor, which never sees the summary at all.
+**Clicking anywhere on a tile goes in.** There is no button to find: the tile is the target.
+
+**Back walks back through the page, not out of Lastboard.** Opening it is one step and going into a cluster is another, so Back — the browser's button, the mouse's fourth button, a swipe from the edge of a phone — takes you from a cluster to the summary, and from there to your board. Closing with the ✕ or with Escape takes those steps off the stack with it, so nothing is left behind to press. The [status page](../monitoring/overview.md) behaves the same way.
 
 Two figures are weighted rather than averaged, and deliberately: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so a cluster's CPU — the bar and the curve alike — is weighted by cores. The curve costs one request per node, which is what the endpoint answers.
 
