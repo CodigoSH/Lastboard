@@ -280,13 +280,6 @@ func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func boolSetting(b bool) string {
-	if b {
-		return "1"
-	}
-	return "0"
-}
-
 /* ---------------------------------------------------------------------------
  * The icon an operator chose for a machine
  * ------------------------------------------------------------------------ */
