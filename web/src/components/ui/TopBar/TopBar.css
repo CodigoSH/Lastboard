@@ -267,32 +267,17 @@ dashboard-switcher.disabled {
     color: var(--accent);
 }
 
-/* Hidden at every width where the search is a pill among icons: there the way
-   out is clicking off it, and a second control would just take room. It earns
-   its place only in the narrow layout below, where the search covers the bar
-   and clicking off it lands on nothing. */
-.search-close {
-    display: none;
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    flex-shrink: 0;
-    order: 2;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: var(--text-dim);
+/* Open, the magnifier stops being decoration and becomes the way out, so it
+   takes a pointer and leads the field. `order` alone would not put it first:
+   with equal order the source order decides, and the input is written before
+   it. */
+.search-wrapper--active {
+    gap: 8px;
+}
+
+.search-wrapper--active .search-icon {
+    order: -1;
     cursor: pointer;
-}
-
-.search-close svg {
-    width: 18px;
-    height: 18px;
-}
-
-.search-close:hover {
-    color: var(--accent);
 }
 
 .add-menu {
@@ -525,27 +510,4 @@ dashboard-switcher.disabled {
         z-index: 5;
     }
 
-    /* Covering the bar, the pill reads as a search field rather than as an
-       icon that grew: the magnifier leads, the text follows it, and the way
-       out sits at the far end. `order` alone is not enough to put it first —
-       with equal order the source order decides, and the input is written
-       before it. */
-    .search-wrapper--active {
-        gap: 8px;
-    }
-
-    .search-wrapper--active .search-icon {
-        order: -1;
-    }
-
-    .search-wrapper--active .search-close {
-        display: flex;
-    }
-
-    /* Two crosses side by side would be a puzzle, so the small one that only
-       empties the field stands down and the close does both. `!important`
-       because the template writes this element's display inline.  */
-    .search-wrapper--active .search-clear {
-        display: none !important;
-    }
 }

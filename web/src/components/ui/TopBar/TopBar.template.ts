@@ -60,20 +60,17 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
                 <input type="text" id="search-input" class="search-input" placeholder="${i18n.t('general.search')}" 
                        value="${escapeHtml(searchQuery || '')}">
                 <div id="search-clear" class="search-clear" style="display: ${searchQuery ? 'flex' : 'none'};">×</div>
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <!-- Opens the search, and closes it again once open: one
+                     control both ways, which is what makes the way out
+                     findable. It leads the field rather than trailing it, so
+                     the pill reads as a search box and not as an icon that
+                     grew. -->
+                <svg class="search-icon" id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     role="button" tabindex="${searchActive ? '0' : '-1'}"
+                     aria-label="${searchActive ? i18n.t('general.close') : i18n.t('general.search')}">
                     <circle cx="11" cy="11" r="8" />
                     <path d="M21 21l-4.35-4.35" stroke-linecap="round" />
                 </svg>
-                <!-- The way out, for the width where the search covers the bar.
-                     Drawn always and revealed by CSS: a media query cannot swap
-                     an SVG path, and asking JS for the viewport would put the
-                     breakpoint in two places that drift apart. -->
-                <button type="button" id="search-close" class="search-close"
-                        aria-label="${i18n.t('general.close')}" title="${i18n.t('general.close')}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                </button>
             </div>
             <!-- Add Item Toggle -->
             <div id="add-toggle" class="top-bar__toggle" title="${i18n.t('topbar.add_tooltip')}" 

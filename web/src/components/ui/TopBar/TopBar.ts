@@ -201,12 +201,15 @@ class TopBar extends HTMLElement {
             if (searchClear) {
                 e.stopPropagation();
                 this.state.searchQuery = '';
+                this.render(); // Re-render to hide X button
+                // After the render, not before: render() rewrites the shadow
+                // root, so anything focused beforehand is a detached node by
+                // the time the user looks at it.
                 const input = this.shadowRoot!.getElementById('search-input') as HTMLInputElement;
                 if (input) {
                     input.value = '';
                     input.focus();
                 }
-                this.render(); // Re-render to hide X button
                 this.dispatchEvent(new CustomEvent('search-input', {
                     detail: { query: '' },
                     bubbles: true,
@@ -215,13 +218,10 @@ class TopBar extends HTMLElement {
                 return;
             }
 
-            // Closing has to empty the field as well as fold the search away.
-            // On a narrow screen the open search covers the bar, so a click off
-            // it lands on nothing, and the window handler below only closes an
-            // empty one: leaving the text would strand the visitor behind a
-            // search box with no way back to their own icons.
-            const searchClose = target.closest('#search-close');
-            if (searchClose) {
+            // The magnifier opens the search and closes it again. Closing
+            // empties the field with it: the alternative is a board still
+            // filtered by a box nobody can see any more.
+            if (this.state.searchActive && target.closest('#search-icon')) {
                 e.stopPropagation();
                 this.closeSearch();
                 return;
