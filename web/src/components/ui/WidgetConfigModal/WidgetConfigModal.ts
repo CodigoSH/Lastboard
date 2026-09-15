@@ -13,6 +13,7 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
+import { loadProxmox } from '../../../services/proxmoxApi';
 import {
     type DockerContainer,
     type DockerHost,
@@ -1381,8 +1382,12 @@ class WidgetConfigModal extends HTMLElement {
         const state = this.shadowRoot?.getElementById('proxmox-state');
         if (!state) return;
         try {
-            const data = await apiService.get<{ caps: { power: boolean }; nodes: any[]; guests: any[] }>('/api/proxmox/overview');
-            state.innerHTML = `<small>${esc(i18n.t(data.caps?.power
+            // Several hypervisors may be connected and their tokens need not
+            // agree: the widget draws a power button wherever one is allowed,
+            // so the line says so if any of them is.
+            const hosts = await loadProxmox();
+            const anyPower = hosts.some(h => h.caps?.power === true);
+            state.innerHTML = `<small>${esc(i18n.t(anyPower
                 ? 'widget.proxmox.can_power'
                 : 'widget.proxmox.read_only'))}</small>`;
         } catch {

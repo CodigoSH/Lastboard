@@ -84,15 +84,20 @@ class ApiService {
 
                 // Proxmox (Demo: synthetic, see demoProxmox)
                 if (url === '/api/proxmox/settings' && method === 'GET') {
-                    return { enabled: true, url: '', token_id: '', insecure: true, has_secret: false } as any;
+                    return {
+                        enabled: true,
+                        hosts: [{ id: 'demo', name: 'Proxmox', url: '', token_id: '', insecure: true, enabled: true, has_secret: false }],
+                    } as any;
                 }
                 if (url === '/api/proxmox/settings' && method === 'POST') {
                     // Nothing to save: the demo has no hypervisor to point at.
                     return { status: 'ok' } as any;
                 }
-                if (url === '/api/proxmox/overview') {
+                if (url.startsWith('/api/proxmox/overview')) {
+                    // The answer is a list of hypervisors now. The demo has one,
+                    // which is what almost every real instance has too.
                     const { buildOverview } = await import('./demoProxmox');
-                    return buildOverview() as any;
+                    return { hosts: [{ id: 'demo', name: 'Proxmox', ...buildOverview() }] } as any;
                 }
                 if (url.startsWith('/api/proxmox/series')) {
                     const { buildSeries } = await import('./demoProxmox');

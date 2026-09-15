@@ -27,14 +27,16 @@ export interface PxLink {
     url: string;
     /** Icon URL or icon name, exactly as the bookmark stores it. */
     icon: string;
+    /** Which hypervisor. Empty on a link made before there could be two. */
+    host: string;
     node: string;
     vmid: number;
 }
 
 /** Both halves of the answer: what was declared, and what can be inferred. */
 interface PxIndex {
-    /** Bookmarks tied to a machine by hand, by VMID. */
-    explicit: Map<number, PxLink>;
+    /** Bookmarks tied to a machine by hand, keyed "host|vmid". */
+    explicit: Map<string, PxLink>;
     /** Every other bookmark, by name — null where two of them would fit. */
     byName: Map<string, PxLink | null>;
 }
@@ -53,7 +55,7 @@ let inFlight: Promise<PxIndex> | null = null;
 interface Candidate { link: PxLink; keys: string[] }
 
 /** Reads one board's bookmarks into the two piles. */
-function collect(items: any[], explicit: Map<number, PxLink>, guessable: Candidate[]): void {
+function collect(items: any[], explicit: Map<string, PxLink>, guessable: Candidate[]): void {
     for (const item of items) {
         if (!item || item.type !== 'bookmark' || !item.content) continue;
         try {
@@ -66,9 +68,14 @@ function collect(items: any[], explicit: Map<number, PxLink>, guessable: Candida
             if (px && Number.isFinite(vmid) && vmid > 0) {
                 // First board wins: two bookmarks on the same machine is a thing
                 // people do (one per board), and either answer is right.
-                if (!explicit.has(vmid)) {
-                    explicit.set(vmid, {
-                        label, url: c.url || '', icon,
+                // Keyed by host and vmid together: VMIDs restart at 100 in
+                // every cluster, so the number alone named two machines the
+                // moment a second hypervisor was connected.
+                const host = typeof px.host === 'string' ? px.host : '';
+                const key = `${host}|${vmid}`;
+                if (!explicit.has(key)) {
+                    explicit.set(key, {
+                        label, url: c.url || '', icon, host,
                         node: typeof px.node === 'string' ? px.node : '',
                         vmid,
                     });
@@ -79,7 +86,7 @@ function collect(items: any[], explicit: Map<number, PxLink>, guessable: Candida
             }
 
             guessable.push({
-                link: { label, url: c.url || '', icon, node: '', vmid: 0 },
+                link: { label, url: c.url || '', icon, host: '', node: '', vmid: 0 },
                 keys: bookmarkKeys(label, c.iconName || '', c.icon || ''),
             });
         } catch { /* a bookmark with unreadable content is simply not linked */ }
@@ -87,7 +94,7 @@ function collect(items: any[], explicit: Map<number, PxLink>, guessable: Candida
 }
 
 async function build(): Promise<PxIndex> {
-    const explicit = new Map<number, PxLink>();
+    const explicit = new Map<string, PxLink>();
     const guessable: Candidate[] = [];
 
     // The open board is already in memory, so it costs nothing and it is the
@@ -139,9 +146,13 @@ export function loadProxmoxLinks(): Promise<PxIndex> {
  * `node` is only checked on a hand-made link, which names one. A guess is made
  * on the name alone, and a name is not per-node.
  */
-export function linkFor(guest: { vmid: number; node: string; name: string }): PxLink | null {
+export function linkFor(guest: { vmid: number; node: string; name: string; host?: string }): PxLink | null {
     if (!cache) return null;
-    const declared = cache.explicit.get(guest.vmid);
+    const host = guest.host || '';
+    // A link made before there could be two hypervisors carries no host, so it
+    // is still honoured for whichever machine matches — there was only one for
+    // it to have meant.
+    const declared = cache.explicit.get(`${host}|${guest.vmid}`) ?? cache.explicit.get(`|${guest.vmid}`);
     if (declared) return declared.node && declared.node !== guest.node ? null : declared;
     return guessByName(cache.byName, guest.name);
 }

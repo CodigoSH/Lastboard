@@ -100,9 +100,11 @@ export function isRunning(vmid: number): boolean {
 /** Icons a visitor chose during this visit, keyed "node|vmid". */
 const icons = new Map<string, string>();
 
+/** Keyed like the real thing: "host|node|vmid". The demo's host is "demo". */
 export function setDemoIcon(node: string, vmid: number, icon: string): void {
-    if (icon) icons.set(`${node}|${vmid}`, icon);
-    else icons.delete(`${node}|${vmid}`);
+    const key = `demo|${node}|${vmid}`;
+    if (icon) icons.set(key, icon);
+    else icons.delete(key);
 }
 
 export function demoIcons(): Record<string, string> {

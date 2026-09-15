@@ -2,6 +2,7 @@ import { template } from './AddBookmarkModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
+import { loadProxmox, allGuests } from '../../../services/proxmoxApi';
 import { safeImageSrc } from '../../../services/escape';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { apiService } from '../../../services/apiService';
@@ -34,7 +35,8 @@ class AddBookmarkModal extends HTMLElement {
     private visibleTouch: boolean = true;
     private borderWidth: number = 1;
     /** The machine that serves this bookmark, if its owner said so. */
-    private proxmox: { node: string; kind: string; vmid: number } | null = null;
+    /** The machine this bookmark is served by, and on which hypervisor. */
+    private proxmox: { host: string; node: string; kind: string; vmid: number } | null = null;
 
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -186,8 +188,8 @@ class AddBookmarkModal extends HTMLElement {
                 if (!v) {
                     this.proxmox = null;
                 } else {
-                    const [node, kind, vmid] = v.split('|');
-                    this.proxmox = { node, kind, vmid: Number(vmid) };
+                    const [host, node, kind, vmid] = v.split('|');
+                    this.proxmox = { host, node, kind, vmid: Number(vmid) };
                 }
             }
 
@@ -512,12 +514,18 @@ class AddBookmarkModal extends HTMLElement {
             const cfg = await apiService.get<{ enabled: boolean }>('/api/proxmox/settings');
             if (!cfg?.enabled) return;
 
-            const data = await apiService.get<{ guests: { vmid: number; name: string; kind: string; node: string }[] }>(
-                '/api/proxmox/overview');
-            const guests = data?.guests ?? [];
+            // Every connected hypervisor: the machine somebody wants to name
+            // may well be on the second one.
+            const hosts = await loadProxmox();
+            const guests = allGuests(hosts);
             if (!guests.length) return;
+            // Two hypervisors can both hold a machine 106, so the row says
+            // which one — but only when there is more than one to confuse.
+            const several = hosts.length > 1;
 
-            const chosen = this.proxmox ? `${this.proxmox.node}|${this.proxmox.kind}|${this.proxmox.vmid}` : '';
+            const chosen = this.proxmox
+                ? `${this.proxmox.host || ''}|${this.proxmox.node}|${this.proxmox.kind}|${this.proxmox.vmid}`
+                : '';
             // Searchable, because a real host has twenty-nine of these and the
             // one you want is the one you can already name.
             sel.searchable = guests.length > 8;
@@ -525,8 +533,9 @@ class AddBookmarkModal extends HTMLElement {
                 [...guests]
                     .sort((a, b) => a.vmid - b.vmid)
                     .map(g => ({
-                        value: `${g.node}|${g.kind}|${g.vmid}`,
-                        label: `${g.name} · ${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`,
+                        value: `${g.host}|${g.node}|${g.kind}|${g.vmid}`,
+                        label: `${g.name} · ${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`
+                            + (several ? ` · ${g.hostName}` : ''),
                     })),
             );
             sel.value = chosen;
@@ -560,7 +569,12 @@ class AddBookmarkModal extends HTMLElement {
         this.visibleTouch = (content.visibleTouch !== false);
         this.borderWidth = content.borderWidth || 1;
         this.proxmox = (content.proxmox && content.proxmox.vmid)
-            ? { node: content.proxmox.node || '', kind: content.proxmox.kind || 'lxc', vmid: Number(content.proxmox.vmid) }
+            ? {
+                host: content.proxmox.host || '',
+                node: content.proxmox.node || '',
+                kind: content.proxmox.kind || 'lxc',
+                vmid: Number(content.proxmox.vmid),
+            }
             : null;
 
         // URL parsing

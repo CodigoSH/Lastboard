@@ -4,39 +4,39 @@ import { dashboardStore } from '../../store/dashboardStore';
 import { escapeHtml } from '../../services/escape';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { loadProxmoxLinks, linkFor } from '../../services/proxmoxLinks';
+import { loadProxmox, type PxHost, type PxNode, type PxGuest } from '../../services/proxmoxApi';
 import { resolveIconUrl } from '../../services/iconUrl';
 
-/** A node as /api/proxmox/overview reports it. Percentages, not fractions. */
-interface PxNode {
-    name: string;
-    status: string;
-    cpu: number;
-    mem: number;
-    disk: number;
-    threads: number;
-    cores: number;
-    uptime: number;
-    guests: number;
-}
-
-interface PxGuest {
-    vmid: number;
-    name: string;
-    kind: 'lxc' | 'qemu';
-    node: string;
-    running: boolean;
-    cpu: number;
-    mem: number;
-    mem_total: number;
-}
+/** A machine, plus which hypervisor it is on: the tile mixes them all. */
+type PxGuestOn = PxGuest & { host: string };
 
 interface PxOverview {
     cluster: boolean;
     caps: { read: boolean; power: boolean };
     nodes: PxNode[];
-    guests: PxGuest[];
-    /** Icons the operator chose on the page, keyed "node|vmid". */
+    guests: PxGuestOn[];
+    /** Icons the operator chose on the page, keyed "host|node|vmid". */
     icons?: Record<string, string>;
+}
+
+/**
+ * Every connected hypervisor folded into the one list a tile can show.
+ *
+ * A widget that showed only the first would go quiet about the machine that
+ * actually went down, which is the one thing it is on the board to say.
+ */
+function mergeHosts(hosts: PxHost[]): PxOverview {
+    const out: PxOverview = { cluster: false, caps: { read: false, power: false }, nodes: [], guests: [], icons: {} };
+    for (const h of hosts) {
+        if (h.error) continue;
+        out.caps.read = out.caps.read || h.caps?.read === true;
+        out.caps.power = out.caps.power || h.caps?.power === true;
+        out.nodes.push(...(h.nodes || []));
+        for (const g of h.guests || []) out.guests.push({ ...g, host: h.id });
+        Object.assign(out.icons!, h.icons || {});
+    }
+    out.cluster = out.nodes.length > 1;
+    return out;
 }
 
 interface ProxmoxConfig {
@@ -75,6 +75,8 @@ class ProxmoxWidget extends HTMLElement {
     private _itemId = 0;
     private _config: ProxmoxConfig = { ...DEFAULT_CONFIG };
     private data: PxOverview | null = null;
+    /** Every connected hypervisor, kept so a row can ask about its own. */
+    private hosts: PxHost[] = [];
     private loaded = false;
     private error = '';
     private timer: ReturnType<typeof setInterval> | null = null;
@@ -162,7 +164,12 @@ class ProxmoxWidget extends HTMLElement {
         // proxmoxLinks. It arrives on its own and repaints when it does.
         loadProxmoxLinks().then(() => { if (this.isConnected) this.refreshBody(); }).catch(() => { });
         try {
-            this.data = await apiService.get<PxOverview>('/api/proxmox/overview');
+            // Every connected hypervisor, folded into one tile: a widget that
+            // showed only the first would go quiet about the machine that
+            // actually went down.
+            const hosts = await loadProxmox();
+            this.hosts = hosts;
+            this.data = mergeHosts(hosts);
             this.error = '';
         } catch (e: any) {
             // The server answers in translation keys; anything else is shown as
@@ -198,7 +205,7 @@ class ProxmoxWidget extends HTMLElement {
         this.refreshBody();
         try {
             await apiService.post('/api/proxmox/power', {
-                node: guest.node, kind: guest.kind, vmid,
+                host: guest.host, node: guest.node, kind: guest.kind, vmid,
                 action: starting ? 'start' : 'shutdown',
             });
         } catch { /* the next poll tells the truth either way */ }
@@ -226,7 +233,7 @@ class ProxmoxWidget extends HTMLElement {
 
     /** The bookmark this machine serves — said by its owner, or by its name. */
     private link(g: PxGuest) {
-        return linkFor(g);
+        return linkFor(g);   // g carries its own host
     }
 
     /** The node the header speaks for: the one under most pressure. */
@@ -237,9 +244,11 @@ class ProxmoxWidget extends HTMLElement {
         )[0];
     }
 
-    private rowHtml(g: PxGuest): string {
+    private rowHtml(g: PxGuestOn): string {
         const busy = this._busy.has(g.vmid);
-        const power = this.data?.caps.power === true;
+        // Asked of the hypervisor this machine is on, not of the set: one
+        // token may carry VM.PowerMgmt while another is read-only.
+        const power = this.hosts.find(h => h.id === g.host)?.caps?.power === true;
         const mem = g.mem_total > 0 ? Math.round((g.mem / g.mem_total) * 100) : 0;
 
         // The icon slot is the bookmark's icon once a machine is tied to one.
@@ -248,7 +257,7 @@ class ProxmoxWidget extends HTMLElement {
         const link = this.link(g);
         // Same order as the page: what the operator chose, then the bookmark's,
         // then the board's fallback.
-        const face = this.data?.icons?.[`${g.node}|${g.vmid}`] || link?.icon || '';
+        const face = this.data?.icons?.[`${g.host}|${g.node}|${g.vmid}`] || link?.icon || '';
         const icon = face
             ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
             : ICON_FALLBACK;
@@ -288,7 +297,7 @@ class ProxmoxWidget extends HTMLElement {
         // be among them or it is not shown at all. The order is by how much it
         // needs saying: a stopped machine that serves a bookmark is an outage,
         // a stopped machine nobody linked is usually on purpose.
-        const rank = (g: PxGuest) => (g.running ? 2 : (this.link(g) ? 0 : 1));
+        const rank = (g: PxGuestOn) => (g.running ? 2 : (this.link(g) ? 0 : 1));
         const sorted = [...guests].sort((a, b) => {
             const d = rank(a) - rank(b);
             return d !== 0 ? d : a.vmid - b.vmid;

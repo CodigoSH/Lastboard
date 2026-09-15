@@ -81,10 +81,10 @@ describe('the demo overview', () => {
 describe('the icon a visitor chooses', () => {
     test('a machine with no bookmark can be given one, and take it back', () => {
         setDemoIcon('pve', 106, '/api/icons/abc');
-        expect(buildOverview(at(12)).icons['pve|106']).toBe('/api/icons/abc');
+        expect(buildOverview(at(12)).icons['demo|pve|106']).toBe('/api/icons/abc');
 
         setDemoIcon('pve', 106, '');
-        expect(buildOverview(at(12)).icons['pve|106']).toBeUndefined();
+        expect(buildOverview(at(12)).icons['demo|pve|106']).toBeUndefined();
     });
 
     test('the reset forgets it, like everything else about the visit', () => {

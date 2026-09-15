@@ -5,37 +5,14 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
+import { loadProxmox, chosenIcon, type PxHost, type PxNode, type PxGuest, type PxStore } from '../../../services/proxmoxApi';
 import { materializeIcon } from '../../../services/iconStore';
 import { userStore } from '../../../store/userStore';
 import '../IconSelectionModal/IconSelectionModal';
 import css from './ProxmoxPage.css' with { type: 'text' };
 
-interface PxNode {
-    name: string; status: string;
-    cpu: number; mem: number; disk: number;
-    threads: number; cores: number; mem_total: number;
-    uptime: number; loadavg: string[] | null; guests: number;
-}
-
-interface PxGuest {
-    vmid: number; name: string; kind: 'lxc' | 'qemu'; node: string;
-    running: boolean; cpu: number; mem: number; mem_total: number; uptime: number;
-}
-
-interface PxStore {
-    name: string; node: string; kind: string;
-    used: number; total: number; percent: number; shared: boolean;
-}
-
-interface PxOverview {
-    cluster: boolean;
-    caps: { read: boolean; power: boolean };
-    nodes: PxNode[];
-    guests: PxGuest[];
-    stores: PxStore[];
-    /** Icons the operator chose, keyed "node|vmid". */
-    icons?: Record<string, string>;
-}
+/** What this page draws: one hypervisor at a time. */
+type PxOverview = PxHost;
 
 interface PxSeries { range: string; cpu: number[]; mem: number[]; points: number; raw: number }
 
@@ -159,6 +136,15 @@ class ProxmoxPage extends HTMLElement {
      */
     private collapsed = new Set<string>(readCollapsed());
 
+    /**
+     * The hypervisor on screen, and every one connected.
+     *
+     * With a single host — which is every instance until somebody adds a
+     * second — the id stays empty and the server hands back the only one, so
+     * nothing here has to know whether a choice was ever made.
+     */
+    private hostId = '';
+
     /** CPU history per machine, keyed `range|vmid`, for the tile sparklines. */
     private series = new Map<string, number[]>();
     /** Machines already asked about, so a repaint does not ask again. */
@@ -223,8 +209,14 @@ class ProxmoxPage extends HTMLElement {
         // machine is flagged the same wherever the visitor happened to be.
         loadProxmoxLinks().then(() => { if (this.hasAttribute('open')) this.paint(); }).catch(() => { });
         try {
-            this.data = await apiService.get<PxOverview>('/api/proxmox/overview');
-            this.error = '';
+            const hosts = await loadProxmox(this.hostId || undefined);
+            const shown = (this.hostId && hosts.find(h => h.id === this.hostId)) || hosts[0];
+            if (!shown) throw new Error('proxmox.not_configured');
+            this.hostId = shown.id;
+            this.data = shown;
+            // A host that answered with an error has no figures to draw, so the
+            // page says what happened instead of showing an empty cluster.
+            this.error = shown.error ? 'proxmox.connection_error' : '';
         } catch (e: any) {
             const key = typeof e?.message === 'string' ? e.message.trim() : '';
             this.error = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/.test(key) ? key : 'proxmox.connection_error';
@@ -250,13 +242,13 @@ class ProxmoxPage extends HTMLElement {
      * dashboard you are reading this on.
      */
     private iconOf(g: PxGuest): string {
-        const own = this.data?.icons?.[`${g.node}|${g.vmid}`];
+        const own = this.data ? chosenIcon(this.data, g.node, g.vmid) : '';
         if (own) return own;
         return this.backing(g)?.icon || '';
     }
 
     private backing(g: PxGuest): Backed | null {
-        const link = linkFor(g);
+        const link = linkFor({ ...g, host: this.hostId });
         return link ? { label: link.label, url: link.url, icon: link.icon } : null;
     }
 
@@ -566,7 +558,7 @@ class ProxmoxPage extends HTMLElement {
                 const g = pending[next++];
                 const key = `${range}|${g.vmid}`;
                 this.asked.add(key);
-                const url = `/api/proxmox/series?range=${range}&node=${encodeURIComponent(g.node)}&kind=${g.kind}&vmid=${g.vmid}`;
+                const url = `/api/proxmox/series?host=${encodeURIComponent(this.hostId)}&range=${range}&node=${encodeURIComponent(g.node)}&kind=${g.kind}&vmid=${g.vmid}`;
                 try {
                     const s = await apiService.get<PxSeries>(url);
                     this.series.set(key, s?.cpu ?? []);
@@ -727,7 +719,7 @@ class ProxmoxPage extends HTMLElement {
         this._charts.clear();
         this.sheet(escapeHtml(n.name), escapeHtml(`${i18n.t('widget.api.extra_node')} · ${n.guests}`), `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`);
         let s: PxSeries | null = null;
-        try { s = await apiService.get<PxSeries>(`/api/proxmox/series?range=${this.range}&node=${encodeURIComponent(name)}`); } catch { /* charts are optional */ }
+        try { s = await apiService.get<PxSeries>(`/api/proxmox/series?host=${encodeURIComponent(this.hostId)}&range=${this.range}&node=${encodeURIComponent(name)}`); } catch { /* charts are optional */ }
 
         const accent = n.cpu >= 60 ? 'var(--warning-color)' : 'var(--accent)';
         this.sheet(escapeHtml(n.name), escapeHtml(`${i18n.t('widget.api.extra_node')} · ${n.guests}`), `
@@ -815,7 +807,7 @@ class ProxmoxPage extends HTMLElement {
         const g = this.data?.guests.find(x => x.vmid === vmid);
         if (!g || !this.isAdmin()) return;
         try {
-            await apiService.post('/api/proxmox/icon', { node: g.node, vmid: g.vmid, icon });
+            await apiService.post('/api/proxmox/icon', { host: this.hostId, node: g.node, vmid: g.vmid, icon });
         } catch {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
             return;
@@ -842,7 +834,7 @@ class ProxmoxPage extends HTMLElement {
         let s: PxSeries | null = null;
         try {
             s = await apiService.get<PxSeries>(
-                `/api/proxmox/series?range=${this.range}&node=${encodeURIComponent(g.node)}&kind=${g.kind}&vmid=${g.vmid}`);
+                `/api/proxmox/series?host=${encodeURIComponent(this.hostId)}&range=${this.range}&node=${encodeURIComponent(g.node)}&kind=${g.kind}&vmid=${g.vmid}`);
         } catch { /* charts are optional */ }
 
         // The sentence only this product can write, and the reason the page
@@ -963,7 +955,7 @@ class ProxmoxPage extends HTMLElement {
         this.busy.add(vmid);
         try {
             await apiService.post('/api/proxmox/power', {
-                node: g.node, kind: g.kind, vmid, action: starting ? 'start' : 'shutdown',
+                host: this.hostId, node: g.node, kind: g.kind, vmid, action: starting ? 'start' : 'shutdown',
             });
         } catch { /* the next poll tells the truth either way */ }
         this.busy.delete(vmid);
