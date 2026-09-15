@@ -234,15 +234,6 @@
     color: var(--accent);
 }
 
-/* Two logouts exist in the markup and one of them is always hidden: the
-   footer's on a desktop, the band's on a phone. The way back is the other way
-   round — a desktop closes this from the top bar, where the control is always
-   in sight. */
-.right-drawer__menu-item--logout-inline,
-.right-drawer__back {
-    display: none;
-}
-
 .right-drawer__footer {
     padding: clamp(12px, 2.5cqi, 16px) clamp(6px, 1.5cqi, 8px);
     border-top: 1px solid var(--border);
@@ -358,33 +349,23 @@ button.right-drawer__menu-item {
         border-inline-start: 1px solid var(--border);
     }
 
-    /* The logout rides the band with the sections; the corner it used to hold
-       becomes the way back to the board. */
-    .right-drawer__menu-item--logout {
+    /* Only the icon fits in a band — so the button has to earn its size from
+       the box, not from a label. 44px is the smallest target a finger hits
+       reliably.
+     *
+       The logout stays pinned in this corner rather than riding the band with
+       the sections: in the band it would scroll out of sight with them. And
+       the way back to the board is the top bar's own control, which is already
+       there — a second copy of it down here would be the same icon twice. */
+    .right-drawer__menu-item--logout span {
         display: none;
     }
 
-    .right-drawer__menu-item--logout-inline {
-        display: flex;
-    }
-
-    /* Only the icon fits in the corner — so the button earns its size from the
-       box, not from a label. 44px is the smallest target a finger hits
-       reliably. */
-    .right-drawer__back {
-        display: flex;
+    .right-drawer__menu-item--logout {
         min-width: 44px;
         min-height: 44px;
         justify-content: center;
         margin: 0;
-        padding: 0;
-        background: none;
-        border: none;
-        color: var(--text-dim);
-    }
-
-    .right-drawer__back:hover {
-        color: var(--text-main);
     }
 
     /* Measured at 390px: the band shows 243 pixels of 1052, so three quarters

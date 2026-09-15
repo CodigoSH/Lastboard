@@ -186,18 +186,9 @@ class RightDrawer extends HTMLElement {
                 this.close();
             }
 
-            // Two of these exist — one in the band, one in the footer — and
-            // only ever one is visible, so they are matched by what they do
-            // rather than by an id neither could share.
-            if (target.closest('[data-action="logout"]')) {
+            if (target.closest('#logout-btn')) {
                 e.preventDefault();
                 this.performLogout();
-                return;
-            }
-
-            if (target.closest('[data-action="close-drawer"]')) {
-                e.preventDefault();
-                this.close();
                 return;
             }
 

@@ -82,33 +82,13 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                         <style>@keyframes blink-badge { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }</style>
                     ` : ''}
                 </div>
-                <!-- On a phone the nav is a band and this rides it, after the
-                     sections, the way it sits under them on a desktop. The
-                     copy in the footer below is the desktop one; CSS shows one
-                     or the other, never both. -->
-                <div class="right-drawer__menu-item right-drawer__menu-item--logout-inline" data-action="logout"
-                     role="button" tabindex="0">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9"/></svg>
-                    <span>${i18n.t('auth.logout')}</span>
-                </div>
             </nav>
         </div>
 
         <div class="right-drawer__footer">
-            <button type="button" id="logout-btn" class="right-drawer__menu-item right-drawer__menu-item--logout" data-action="logout">
+            <button type="button" id="logout-btn" class="right-drawer__menu-item right-drawer__menu-item--logout">
                 <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9"/></svg>
                 <span>${i18n.t('auth.logout')}</span>
-            </button>
-            <!-- The way back to the board, in the corner the logout used to
-                 hold. It wears the same glyph as the control that opened the
-                 panel, because that is the one already learned. -->
-            <button type="button" class="right-drawer__menu-item right-drawer__back" data-action="close-drawer"
-                    aria-label="${i18n.t('general.close')}" title="${i18n.t('general.close')}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5" />
-                    <rect x="15" y="3" width="6" height="18" fill="currentColor" />
-                    <path d="M15 3V21" stroke-width="1.5" />
-                </svg>
             </button>
         </div>
 `;
