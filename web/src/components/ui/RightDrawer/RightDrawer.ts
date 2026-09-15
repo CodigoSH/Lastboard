@@ -97,7 +97,14 @@ class RightDrawer extends HTMLElement {
         this.updateSelection();
         this.setAttribute('open', '');
         document.body.style.overflow = 'hidden';
+        this.measureOnOpen();
         this.dispatchEvent(new CustomEvent('drawer-open', { bubbles: true, composed: true }));
+    }
+
+    /** The band has no width until the panel is on screen. */
+    private measureOnOpen() {
+        requestAnimationFrame(this.updateBandFade);
+        setTimeout(this.updateBandFade, 450);
     }
 
     close() {
@@ -179,9 +186,18 @@ class RightDrawer extends HTMLElement {
                 this.close();
             }
 
-            if (target.closest('#logout-btn')) {
+            // Two of these exist — one in the band, one in the footer — and
+            // only ever one is visible, so they are matched by what they do
+            // rather than by an id neither could share.
+            if (target.closest('[data-action="logout"]')) {
                 e.preventDefault();
                 this.performLogout();
+                return;
+            }
+
+            if (target.closest('[data-action="close-drawer"]')) {
+                e.preventDefault();
+                this.close();
                 return;
             }
 
@@ -216,6 +232,46 @@ class RightDrawer extends HTMLElement {
             <style>${css}</style>
             ${template({ user: this.currentUser(), isOpen: this.isOpen, selectedSection: this.selectedSection, updateAvailable: this.updateAvailable })}
         `;
+        this.watchBandOverflow();
+    }
+
+    /**
+     * Says which way the section band still has content, so the edge can fade
+     * there and stop pretending the list ends at the screen.
+     *
+     * Asked of the boxes rather than of `scrollLeft`: the value that property
+     * takes at the far edge of a mirrored page differs between engines, while
+     * "the first item starts left of what you can see" means the same thing
+     * everywhere.
+     */
+    private updateBandFade = () => {
+        const body = this.shadowRoot?.querySelector('.right-drawer__body') as HTMLElement | null;
+        const menu = body?.querySelector('.right-drawer__menu');
+        const first = menu?.firstElementChild as HTMLElement | null;
+        const last = menu?.lastElementChild as HTMLElement | null;
+        if (!body || !first || !last) return;
+
+        const view = body.getBoundingClientRect();
+        const a = first.getBoundingClientRect();
+        const b2 = last.getBoundingClientRect();
+        // The far ends of the row, not the first and last of the list: mirrored,
+        // the first item sits on the right and the last on the left, so reading
+        // them as leftmost and rightmost found no overflow in Arabic and the
+        // band lost its only clue that three quarters of it was off-screen.
+        const leftmost = Math.min(a.left, b2.left);
+        const rightmost = Math.max(a.right, b2.right);
+        // A pixel of slack: rounding alone should not draw a fade over nothing.
+        body.classList.toggle('right-drawer__body--fade-left', leftmost < view.left - 1);
+        body.classList.toggle('right-drawer__body--fade-right', rightmost > view.right + 1);
+    };
+
+    private watchBandOverflow() {
+        const body = this.shadowRoot?.querySelector('.right-drawer__body');
+        if (!body) return;
+        body.addEventListener('scroll', this.updateBandFade, { passive: true });
+        // Fonts and the avatar land after the first paint and move the ends.
+        requestAnimationFrame(this.updateBandFade);
+        setTimeout(this.updateBandFade, 300);
     }
 
     /**
@@ -236,6 +292,9 @@ class RightDrawer extends HTMLElement {
             selectedSection: this.selectedSection,
             updateAvailable: this.updateAvailable
         });
+        // A language change rewrites the band, so the old node's listener went
+        // with it and the ends it measured no longer exist.
+        this.watchBandOverflow();
     }
 }
 
