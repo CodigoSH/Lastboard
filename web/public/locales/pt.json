@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Tendência no intervalo escolhido",
   "proxmox.container": "contentor",
   "proxmox.vm": "máquina virtual",
+  "proxmox.uptime": "Tempo ligado",
   "settings.alerts": "Alertas",
   "settings.alerts_desc": "Avisa quando um serviço cai ou recupera.",
   "settings.notify_method": "Método de notificação",

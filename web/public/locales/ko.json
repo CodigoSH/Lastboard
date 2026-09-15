@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "선택한 기간의 추이",
   "proxmox.container": "컨테이너",
   "proxmox.vm": "가상 머신",
+  "proxmox.uptime": "가동 시간",
   "settings.alerts": "알림",
   "settings.alerts_desc": "서비스가 다운되거나 복구되면 알립니다.",
   "settings.notify_method": "알림 방법",

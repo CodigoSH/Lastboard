@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "নির্বাচিত সময়ের প্রবণতা",
   "proxmox.container": "কনটেইনার",
   "proxmox.vm": "ভার্চুয়াল মেশিন",
+  "proxmox.uptime": "চালু থাকার সময়",
   "settings.alerts": "অ্যালার্ট",
   "settings.alerts_desc": "কোনো সার্ভিস ডাউন বা পুনরুদ্ধার হলে জানান।",
   "settings.notify_method": "নোটিফিকেশন পদ্ধতি",

@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "所选区间的走势",
   "proxmox.container": "容器",
   "proxmox.vm": "虚拟机",
+  "proxmox.uptime": "运行时长",
   "settings.alerts": "警报",
   "settings.alerts_desc": "服务宕机或恢复时通知。",
   "settings.notify_method": "通知方式",

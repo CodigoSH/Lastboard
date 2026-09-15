@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "選択した期間の推移",
   "proxmox.container": "コンテナ",
   "proxmox.vm": "仮想マシン",
+  "proxmox.uptime": "稼働時間",
   "settings.alerts": "アラート",
   "settings.alerts_desc": "サービスがダウン／復旧したときに通知します。",
   "settings.notify_method": "通知方法",

@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Τάση για το επιλεγμένο διάστημα",
   "proxmox.container": "κοντέινερ",
   "proxmox.vm": "εικονική μηχανή",
+  "proxmox.uptime": "Χρόνος λειτουργίας",
   "settings.alerts": "Ειδοποιήσεις",
   "settings.alerts_desc": "Ειδοποίηση όταν μια υπηρεσία πέφτει ή ανακάμπτει.",
   "settings.notify_method": "Μέθοδος ειδοποίησης",

@@ -48,6 +48,12 @@ const ICON_BOOK = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" s
 const ICON_CPU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"/></svg>';
 const ICON_RAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 17v3M12 17v3M17 17v3M8 11v2M12 11v2M16 11v2"/></svg>';
 
+const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const ICON_POWER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.6 6.6a8 8 0 1 0 10.8 0"/></svg>';
+const ICON_DISK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>';
+const ICON_TAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 12 22l-9-9V4a1 1 0 0 1 1-1h9z"/><path d="M7.5 7.5h.01"/></svg>';
+const ICON_NODE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>';
+
 /** The board's own fallback for a bookmark with no icon. */
 const ICON_FALLBACK = '<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
 
@@ -70,6 +76,19 @@ const fmtUptime = (sec: number): string => {
 };
 
 const level = (p: number) => (p >= 90 ? 'bad' : p >= 60 ? 'warn' : '');
+
+/**
+ * A percentage as a person reads it, in their own language.
+ *
+ * Spanish writes 1,2 and English 1.2, and the page was printing the raw number
+ * either way. This is for TEXT only: an SVG coordinate that went through here
+ * would be cut at the decimal comma and the browser would drop the rest of the
+ * attribute without a word (*casa: i18n*).
+ */
+const pct = (v: number): string => i18n.formatNumber(Math.round(v * 10) / 10, { maximumFractionDigits: 1 });
+
+/** How far back each range reaches, for reading a time off a chart. */
+const RANGE_MS: Record<string, number> = { '1h': 3600e3, '24h': 86400e3, '7d': 604800e3 };
 
 /**
  * The hypervisor, as a page of the board.
@@ -98,6 +117,15 @@ class ProxmoxPage extends HTMLElement {
     private onlyStopped = false;
     private timer: ReturnType<typeof setInterval> | null = null;
     private busy = new Set<number>();
+    /**
+     * Series behind each chart in the open sheet, for the pointer to read.
+     *
+     * Emptied when a sheet is opened, never when one is written: the markup is
+     * composed before `sheet()` is called, so clearing it there threw away what
+     * had just been put in and every chart came back inert under the pointer.
+     */
+    private _charts = new Map<string, { values: number[]; unit: string }>();
+    private _chartSeq = 0;
     /** CPU history per machine, keyed `range|vmid`, for the tile sparklines. */
     private series = new Map<string, number[]>();
     /** Machines already asked about, so a repaint does not ask again. */
@@ -206,6 +234,7 @@ class ProxmoxPage extends HTMLElement {
 
         this.shadowRoot!.addEventListener('click', this.onClick);
         this.shadowRoot!.addEventListener('input', this.onInput);
+        this.shadowRoot!.addEventListener('pointermove', this.onSheetMove as EventListener);
         const dlg = this.shadowRoot!.querySelector('dialog') as HTMLDialogElement;
         dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
         this.paint();
@@ -275,8 +304,8 @@ class ProxmoxPage extends HTMLElement {
             <span class="tile__t1">${icon}<span class="tile__name">${escapeHtml(g.name) || '—'}</span></span>
             <span class="tile__t2">
                 ${g.running
-                    ? `<span class="tile__num" aria-label="${escapeHtml(i18n.t('widget.telemetry.cpu'))} ${g.cpu}%">
-                           <span class="tile__gi">${ICON_CPU}</span>${g.cpu}<small>%</small></span>`
+                    ? `<span class="tile__num" aria-label="${escapeHtml(i18n.t('widget.telemetry.cpu'))} ${pct(g.cpu)}%">
+                           <span class="tile__gi">${ICON_CPU}</span>${pct(g.cpu)}<small>%</small></span>`
                     : `<span class="tile__num">${escapeHtml(i18n.t('docker.state_stopped'))}</span>`}
                 <span class="tile__spark">${this.spark(line, g.running ? 'var(--accent)' : 'var(--text-dim)', 62, 20)}</span>
             </span>
@@ -548,18 +577,92 @@ class ProxmoxPage extends HTMLElement {
     }
 
     private chart(label: string, now: string, unit: string, values: number[], colour: string) {
-        const max = values.length ? Math.round(Math.max(...values)) : 0;
-        return `<div class="panel">
+        // One decimal, like the tooltip: a peak of 0.4 rounded to a flat "0%"
+        // reads as a chart of nothing while the line clearly is not.
+        const max = values.length ? pct(Math.max(...values)) : '0';
+        // The values travel with the panel so the pointer can read them back:
+        // the line is an SVG polyline, and asking a drawing what it was drawn
+        // from is not a thing you can do.
+        const id = `s${++this._chartSeq}`;
+        this._charts.set(id, { values, unit });
+        return `<div class="panel" data-chart="${id}">
             <div class="panel__top"><span class="panel__k">${escapeHtml(label)}</span>
                 <span class="panel__now">${escapeHtml(now)}<small> ${escapeHtml(unit)}</small></span></div>
             ${this.spark(values, colour)}
+            <div class="panel__cross" hidden></div>
+            <div class="panel__tip" hidden></div>
             <div class="panel__ax"><span>${escapeHtml(this.range)}</span><span>${escapeHtml(i18n.t('proxmox.max'))} ${max}%</span><span>${escapeHtml(i18n.t('proxmox.now'))}</span></div>
+        </div>`;
+    }
+
+    /**
+     * The value under the pointer, and when it was taken.
+     *
+     * The series has no timestamps — it is sixty averaged buckets of a known
+     * span — so the time is worked back from the range: the last bucket is now
+     * and each step back is one sixtieth of it.
+     */
+    private onSheetMove = (e: PointerEvent) => {
+        const panel = (e.target as HTMLElement)?.closest?.('.panel[data-chart]') as HTMLElement | null;
+        if (!panel) { this.hideTips(); return; }
+        const svg = panel.querySelector('svg');
+        const tip = panel.querySelector('.panel__tip') as HTMLElement | null;
+        const cross = panel.querySelector('.panel__cross') as HTMLElement | null;
+        const data = this._charts.get(panel.dataset.chart || '');
+        if (!svg || !tip || !cross || !data || !data.values.length) return;
+
+        const box = svg.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (e.clientX - box.left) / Math.max(1, box.width)));
+        const i = Math.round(ratio * (data.values.length - 1));
+        const value = data.values[i];
+
+        const span = RANGE_MS[this.range] ?? RANGE_MS['24h'];
+        const at = new Date(Date.now() - (data.values.length - 1 - i) * (span / (data.values.length - 1)));
+
+        // One decimal, like the tiles: the host answers with the raw average of
+        // the bucket, and 0.14166666666666672 % is not a thing to read.
+        // Hour and minute only — the bucket is minutes wide and the date is in
+        // the axis underneath.
+        const shown = pct(value);
+        const when = i18n.formatDateTime(at, { hour: '2-digit', minute: '2-digit' });
+        tip.textContent = `${shown}${data.unit ? ' ' + data.unit : ''} · ${when}`;
+        tip.hidden = false;
+        cross.hidden = false;
+        // Physical pixels inside the panel: this is geometry the script works
+        // out, so it does not flip with the reading direction.
+        const x = box.left - panel.getBoundingClientRect().left + (i / (data.values.length - 1)) * box.width;
+        cross.style.left = `${Math.round(x)}px`;
+        cross.style.top = `${Math.round(box.top - panel.getBoundingClientRect().top)}px`;
+        cross.style.height = `${Math.round(box.height)}px`;
+        const half = tip.offsetWidth / 2;
+        const limit = panel.clientWidth - tip.offsetWidth - 4;
+        tip.style.left = `${Math.round(Math.min(Math.max(4, x - half), Math.max(4, limit)))}px`;
+        tip.style.top = `${Math.round(box.top - panel.getBoundingClientRect().top - 26)}px`;
+    };
+
+    /**
+     * Hides every crosshair. Called from the move handler itself rather than
+     * from a `pointerleave`: with a listener on the shadow root, leaving any
+     * child inside the panel counts as a leave, so the tooltip was hidden in
+     * the same breath it was shown and the chart looked inert.
+     */
+    private hideTips() {
+        this.shadowRoot?.querySelectorAll('.panel__tip, .panel__cross')
+            .forEach(el => el.setAttribute('hidden', ''));
+    }
+
+    /** One fact in a sheet: a glyph, its name, and the figure. */
+    private kv(icon: string, k: string, v: string): string {
+        return `<div>
+            <div class="kv__k"><span class="kv__i">${icon}</span>${escapeHtml(k)}</div>
+            <div class="kv__v">${v}</div>
         </div>`;
     }
 
     private async openNode(name: string) {
         const n = this.data?.nodes.find(x => x.name === name);
         if (!n) return;
+        this._charts.clear();
         this.sheet(escapeHtml(n.name), escapeHtml(`${i18n.t('widget.api.extra_node')} · ${n.guests}`), `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`);
         let s: PxSeries | null = null;
         try { s = await apiService.get<PxSeries>(`/api/proxmox/series?range=${this.range}&node=${encodeURIComponent(name)}`); } catch { /* charts are optional */ }
@@ -569,16 +672,17 @@ class ProxmoxPage extends HTMLElement {
             ${s ? this.chart(i18n.t('widget.telemetry.cpu'), String(Math.round(n.cpu)), '%', s.cpu, accent) : ''}
             ${s ? this.chart(i18n.t('widget.telemetry.ram'), String(Math.round(n.mem)), '%', s.mem, n.mem >= 80 ? 'var(--warning-color)' : 'var(--accent)') : ''}
             <div class="kv">
-                <div><div class="kv__k">${escapeHtml(i18n.t('proxmox.threads'))}</div><div class="kv__v">${n.threads}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('proxmox.cores'))}</div><div class="kv__v">${n.cores || '—'}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('widget.telemetry.ram'))}</div><div class="kv__v">${escapeHtml(fmtBytes(n.mem_total))}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('monitor.uptime'))}</div><div class="kv__v">${escapeHtml(fmtUptime(n.uptime))}</div></div>
+                ${this.kv(ICON_CPU, i18n.t('proxmox.threads'), String(n.threads))}
+                ${this.kv(ICON_CPU, i18n.t('proxmox.cores'), String(n.cores || '—'))}
+                ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), escapeHtml(fmtBytes(n.mem_total)))}
+                ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), escapeHtml(fmtUptime(n.uptime)))}
             </div>`);
     }
 
     private openStore(name: string) {
         const s = this.data?.stores.find(x => x.name === name);
         if (!s) return;
+        this._charts.clear();
         const l = level(s.percent);
         const free = s.total - s.used;
         this.sheet(escapeHtml(s.name), escapeHtml(`${i18n.t('proxmox.storage')} · ${s.node}`), `
@@ -591,16 +695,17 @@ class ProxmoxPage extends HTMLElement {
                 <div class="panel__ax"><span>0</span><span>${escapeHtml(fmtBytes(s.total))}</span></div>
             </div>
             <div class="kv">
-                <div><div class="kv__k">${escapeHtml(i18n.t('proxmox.used'))}</div><div class="kv__v">${escapeHtml(fmtBytes(s.used))}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('widget.api.label.freespace'))}</div><div class="kv__v">${escapeHtml(fmtBytes(free))}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('docker.host_type'))}</div><div class="kv__v">${escapeHtml(s.kind)}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('widget.api.extra_node'))}</div><div class="kv__v">${escapeHtml(s.node)}</div></div>
+                ${this.kv(ICON_DISK, i18n.t('proxmox.used'), escapeHtml(fmtBytes(s.used)))}
+                ${this.kv(ICON_DISK, i18n.t('widget.api.label.freespace'), escapeHtml(fmtBytes(free)))}
+                ${this.kv(ICON_TAG, i18n.t('docker.host_type'), escapeHtml(s.kind))}
+                ${this.kv(ICON_NODE, i18n.t('widget.api.extra_node'), escapeHtml(s.node))}
             </div>`);
     }
 
     private async openGuest(vmid: number) {
         const g = this.data?.guests.find(x => x.vmid === vmid);
         if (!g) return;
+        this._charts.clear();
         const book = this.backing(g);
         const kind = i18n.t(g.kind === 'lxc' ? 'proxmox.container' : 'proxmox.vm');
         const sub = escapeHtml(`${kind} ${g.vmid} · ${g.node}`);
@@ -628,13 +733,13 @@ class ProxmoxPage extends HTMLElement {
 
         this.sheet(escapeHtml(g.name), sub, `
             ${warn}
-            ${s ? this.chart(i18n.t('widget.telemetry.cpu'), g.running ? String(g.cpu) : '—', g.running ? '%' : '',
+            ${s ? this.chart(i18n.t('widget.telemetry.cpu'), g.running ? pct(g.cpu) : '—', g.running ? '%' : '',
                 s.cpu, g.running ? (g.cpu >= 60 ? 'var(--warning-color)' : 'var(--accent)') : 'var(--text-dim)') : ''}
             <div class="kv">
-                <div><div class="kv__k">${escapeHtml(i18n.t('proxmox.state'))}</div><div class="kv__v">${escapeHtml(i18n.t(g.running ? 'docker.state_running' : 'docker.state_stopped'))}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('widget.telemetry.ram'))}</div><div class="kv__v">${g.running ? escapeHtml(`${fmtBytes(g.mem)} / ${fmtBytes(g.mem_total)}`) : '—'}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('monitor.uptime'))}</div><div class="kv__v">${g.running ? escapeHtml(fmtUptime(g.uptime)) : '—'}</div></div>
-                <div><div class="kv__k">${escapeHtml(i18n.t('proxmox.bookmark'))}</div><div class="kv__v">${book ? escapeHtml(book.label || book.url) : '—'}</div></div>
+                ${this.kv(ICON_POWER, i18n.t('proxmox.state'), escapeHtml(i18n.t(g.running ? 'docker.state_running' : 'docker.state_stopped')))}
+                ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), g.running ? escapeHtml(`${fmtBytes(g.mem)} / ${fmtBytes(g.mem_total)}`) : '—')}
+                ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), g.running ? escapeHtml(fmtUptime(g.uptime)) : '—')}
+                ${this.kv(ICON_BOOK, i18n.t('proxmox.bookmark'), book ? escapeHtml(book.label || book.url) : '—')}
             </div>
             ${actions}`);
     }

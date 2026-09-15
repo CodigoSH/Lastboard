@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "منتخب مدت کا رجحان",
   "proxmox.container": "کنٹینر",
   "proxmox.vm": "ورچوئل مشین",
+  "proxmox.uptime": "چالو رہنے کا دورانیہ",
   "settings.alerts": "الرٹس",
   "settings.alerts_desc": "جب سروس ڈاؤن یا بحال ہو تو مطلع کریں۔",
   "settings.notify_method": "اطلاع کا طریقہ",

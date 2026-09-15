@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Trend over the selected range",
   "proxmox.container": "container",
   "proxmox.vm": "virtual machine",
+  "proxmox.uptime": "Uptime",
   "settings.alerts": "Alerts",
   "settings.alerts_desc": "Notify when a service goes down or recovers.",
   "settings.notify_method": "Notification method",

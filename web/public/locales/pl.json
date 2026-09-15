@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Trend w wybranym zakresie",
   "proxmox.container": "kontener",
   "proxmox.vm": "maszyna wirtualna",
+  "proxmox.uptime": "Czas działania",
   "settings.alerts": "Alerty",
   "settings.alerts_desc": "Powiadom, gdy usługa przestaje działać lub wraca.",
   "settings.notify_method": "Metoda powiadomień",

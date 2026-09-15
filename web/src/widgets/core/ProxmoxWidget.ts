@@ -266,7 +266,7 @@ class ProxmoxWidget extends HTMLElement {
             </span>
             <span class="px-ty px-ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
             <span class="px-use">${g.running
-                ? `<b>${g.cpu}%</b><span class="px-mem"> · ${mem}%</span>`
+                ? `<b>${i18n.formatNumber(Math.round(g.cpu * 10) / 10, { maximumFractionDigits: 1 })}%</b><span class="px-mem"> · ${mem}%</span>`
                 : escapeHtml(i18n.t('docker.state_stopped'))}</span>
             <span class="px-acts">${action}</span>
         </div>`;

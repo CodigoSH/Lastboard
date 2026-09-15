@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "اتجاه المدة المحددة",
   "proxmox.container": "حاوية",
   "proxmox.vm": "آلة افتراضية",
+  "proxmox.uptime": "مدة التشغيل",
   "settings.alerts": "التنبيهات",
   "settings.alerts_desc": "نبّهني عند تعطّل خدمة أو تعافيها.",
   "settings.notify_method": "طريقة الإشعار",

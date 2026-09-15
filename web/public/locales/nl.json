@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Verloop over het gekozen bereik",
   "proxmox.container": "container",
   "proxmox.vm": "virtuele machine",
+  "proxmox.uptime": "Draaitijd",
   "settings.alerts": "Meldingen",
   "settings.alerts_desc": "Meld wanneer een dienst uitvalt of herstelt.",
   "settings.notify_method": "Meldingsmethode",

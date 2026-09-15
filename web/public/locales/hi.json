@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "चुनी गई अवधि का रुझान",
   "proxmox.container": "कंटेनर",
   "proxmox.vm": "वर्चुअल मशीन",
+  "proxmox.uptime": "चालू रहने का समय",
   "settings.alerts": "अलर्ट",
   "settings.alerts_desc": "सेवा डाउन या पुनःप्राप्त होने पर सूचित करें।",
   "settings.notify_method": "सूचना विधि",

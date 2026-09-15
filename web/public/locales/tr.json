@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Seçilen aralıktaki eğilim",
   "proxmox.container": "kapsayıcı",
   "proxmox.vm": "sanal makine",
+  "proxmox.uptime": "Çalışma süresi",
   "settings.alerts": "Uyarılar",
   "settings.alerts_desc": "Bir servis çöktüğünde veya düzeldiğinde bildir.",
   "settings.notify_method": "Bildirim yöntemi",

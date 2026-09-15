@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Tren pada rentang yang dipilih",
   "proxmox.container": "kontainer",
   "proxmox.vm": "mesin virtual",
+  "proxmox.uptime": "Waktu menyala",
   "settings.alerts": "Peringatan",
   "settings.alerts_desc": "Beri tahu saat layanan mati atau pulih.",
   "settings.notify_method": "Metode notifikasi",

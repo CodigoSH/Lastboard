@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "Verlauf im gewählten Zeitraum",
   "proxmox.container": "Container",
   "proxmox.vm": "virtuelle Maschine",
+  "proxmox.uptime": "Laufzeit",
   "settings.alerts": "Warnungen",
   "settings.alerts_desc": "Benachrichtigen, wenn ein Dienst ausfällt oder sich erholt.",
   "settings.notify_method": "Benachrichtigungsmethode",

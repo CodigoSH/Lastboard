@@ -561,6 +561,7 @@
   "proxmox.chart_alt": "روند در بازهٔ انتخاب‌شده",
   "proxmox.container": "کانتینر",
   "proxmox.vm": "ماشین مجازی",
+  "proxmox.uptime": "مدت روشن بودن",
   "settings.alerts": "هشدارها",
   "settings.alerts_desc": "هنگام قطع یا بازیابی سرویس اطلاع بده.",
   "settings.notify_method": "روش اعلان",

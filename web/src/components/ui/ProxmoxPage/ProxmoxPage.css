@@ -472,9 +472,33 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
 .sheet__sub { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 
 .panel {
+    position: relative;
     border: 1px solid var(--card-border, rgba(128, 128, 128, 0.14));
     border-radius: var(--radius);
     padding: 12px 14px;
+}
+
+/* What the pointer is over: a hairline down the chart and the figure it met. */
+.panel__cross {
+    position: absolute;
+    width: 1px;
+    background: rgba(var(--accent-rgb), 0.55);
+    pointer-events: none;
+}
+
+.panel__tip {
+    position: absolute;
+    z-index: 2;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
+    font-family: var(--font-mono, monospace);
+    font-size: 10.5px;
+    color: var(--text-main);
+    white-space: nowrap;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
 }
 .panel__top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
 .panel__k {
@@ -513,12 +537,18 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
 }
 .kv > div { background: var(--surface-solid); padding: 10px 12px; }
 .kv__k {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     font-family: var(--font-mono, monospace);
     font-size: 9.5px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-dim);
 }
+
+.kv__i { display: inline-flex; flex: none; }
+.kv__i svg { width: 12px; height: 12px; }
 .kv__v {
     font-family: var(--font-mono, monospace);
     font-size: 12.5px;
