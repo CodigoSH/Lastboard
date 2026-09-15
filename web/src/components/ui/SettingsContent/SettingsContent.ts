@@ -472,6 +472,12 @@ class SettingsContent extends HTMLElement {
             this.proxmoxFailed = true;
         }
         this.render();
+        // And then ask the hypervisors themselves. Opening the section used to
+        // show every host grey with its address underneath, as though nothing
+        // had ever connected, and only editing one turned it green — so the
+        // list said least about the state of a connection precisely when
+        // somebody had come to look at it.
+        if (this.proxmoxLoaded && !this.proxmoxFailed) this.verifyProxmox();
     }
 
     /** The dialog, empty, for a hypervisor that does not exist yet. */
