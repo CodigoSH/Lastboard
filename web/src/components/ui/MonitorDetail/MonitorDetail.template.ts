@@ -76,14 +76,14 @@ const footerBar = () => `
 // The API sends RFC3339 ("…T…Z"); tolerate the raw "YYYY-MM-DD HH:MM:SS" form too.
 const parseTs = (s: string) => new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z');
 
-const fmtDuration = (sec: number): string => {
-    if (sec < 60) return `${sec}s`;
-    const m = Math.round(sec / 60);
-    if (m < 60) return `${m} min`;
-    const h = Math.floor(m / 60);
-    const rm = m % 60;
-    return rm ? `${h} h ${rm} min` : `${h} h`;
-};
+/**
+ * How long an incident lasted.
+ *
+ * This capped at hours, so an outage of nine days read "231 h" and left the
+ * arithmetic to whoever was looking at it. i18n has said this properly since
+ * the monitoring strip had the same bug; it just was not being asked.
+ */
+const fmtDuration = (sec: number): string => i18n.formatDuration(sec);
 
 const fmtDateTime = (s: string) => i18n.formatDateTime(parseTs(s), {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',

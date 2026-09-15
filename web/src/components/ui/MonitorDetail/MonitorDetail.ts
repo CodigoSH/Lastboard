@@ -158,7 +158,7 @@ class MonitorDetail extends HTMLElement {
             const rtf = new Intl.RelativeTimeFormat(i18n.getLocale().code, { numeric: 'auto' });
             rel = secs < 60 ? rtf.format(-secs, 'second') : rtf.format(-Math.round(secs / 60), 'minute');
         } catch {
-            rel = `${secs}s`;
+            rel = i18n.formatDuration(secs);
         }
         el.textContent = `${i18n.t('monitor.updated')} ${rel}`;
     }

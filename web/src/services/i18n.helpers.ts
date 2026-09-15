@@ -141,14 +141,40 @@ export function formatNumber(
 }
 
 /**
- * How long ago something was, in a unit a person reads without arithmetic.
+ * A length of time, in a unit a person reads without arithmetic.
  *
  * The monitoring strip printed hours whatever the number, so a month of history
  * was labelled "720h" and a week "168h" — true, and useless. Intl says it in the
  * app's own language, so this needs no translation key of its own: "30 days",
- * "30 días", "30 Tage".
+ * "30 días", "30 Tage" — and it gets the plural right in all twenty, including
+ * the three Russian forms and the six Arabic ones, which a key of ours would
+ * not. That is the whole reason this is Intl and not a translated string.
  *
- * Under a minute there is no number worth showing; the caller says "now".
+ * This is the only place in the app that turns seconds into words. It has to
+ * be: it already existed, with these tests, while two components went on
+ * dividing by 86400 themselves — one of them printing "16 d" and the other
+ * capping at hours, which is how an incident came to be labelled "231 h".
+ */
+export function formatDuration(locale: string, seconds: number): string {
+    const s = Math.max(0, Math.round(seconds));
+
+    // Hours up to two days: "36 hours" reads better than "2 days" for something
+    // that is not two days, and days take over once the hours stop being useful.
+    const [value, unit]: [number, Intl.NumberFormatOptions['unit']] =
+        s < 60 ? [s, 'second']
+            : s < 3600 ? [Math.round(s / 60), 'minute']
+                : s < 48 * 3600 ? [Math.round(s / 3600), 'hour']
+                    : [Math.round(s / 86400), 'day'];
+
+    return formatNumber(locale, value, { style: 'unit', unit, unitDisplay: 'long' });
+}
+
+/**
+ * How long ago something was.
+ *
+ * Under a minute there is no number worth showing; the caller says "now". That
+ * is the only difference from formatDuration, which answers "45 seconds"
+ * because for a length of time that is a real answer.
  */
 export function formatSpan(
     locale: string,
@@ -157,15 +183,7 @@ export function formatSpan(
 ): string | null {
     const minutes = Math.max(0, Math.round((nowMs - fromMs) / 60000));
     if (minutes < 1) return null;
-
-    // Hours up to two days: "36 hours" reads better than "2 days" for something
-    // that is not two days, and days take over once the hours stop being useful.
-    const [value, unit]: [number, Intl.NumberFormatOptions['unit']] =
-        minutes < 60 ? [minutes, 'minute']
-            : minutes < 48 * 60 ? [Math.round(minutes / 60), 'hour']
-                : [Math.round(minutes / (60 * 24)), 'day'];
-
-    return formatNumber(locale, value, { style: 'unit', unit, unitDisplay: 'long' });
+    return formatDuration(locale, minutes * 60);
 }
 
 /**

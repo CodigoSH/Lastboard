@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, directionOf, formatSpan } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, directionOf, formatSpan, formatDuration } from './i18n.helpers';
 
 describe('translate', () => {
     const en = { greeting: 'Hello', welcome: 'Welcome {name}', multi: '{a} and {b}' };
@@ -171,5 +171,46 @@ describe('formatSpan', () => {
 
     it('does not go negative when the clock disagrees with the server', () => {
         expect(formatSpan('en', now + 60_000, now)).toBeNull();
+    });
+});
+
+describe('formatDuration', () => {
+    it('counts seconds, then minutes, then hours, then days', () => {
+        expect(formatDuration('en', 45)).toBe('45 seconds');
+        expect(formatDuration('en', 5 * 60)).toBe('5 minutes');
+        expect(formatDuration('en', 90 * 60)).toBe('2 hours');
+        // Two days is where hours stop being worth reading.
+        expect(formatDuration('en', 47 * 3600)).toBe('47 hours');
+        expect(formatDuration('en', 16 * 86400)).toBe('16 days');
+    });
+
+    // The two bugs this exists to stop: a Proxmox node up for sixteen days
+    // reading "16 d", and a nine-day outage reading "231 h".
+    it('never hands the reader arithmetic', () => {
+        expect(formatDuration('es', 16 * 86400)).toBe('16 días');
+        expect(formatDuration('es', 231 * 3600)).toBe('10 días');
+    });
+
+    // A translated key of ours would carry one plural form per language and be
+    // wrong in at least five of the twenty. This is why it is Intl.
+    //
+    // Note there is no one-day case to assert: hours run to 48, so the day unit
+    // starts at 2 and "1 day" is unreachable. Russian still exercises the
+    // singular, because 21 takes its "one" form.
+    it('gets the plural right where a key of ours would not', () => {
+        expect(formatDuration('es', 2 * 86400)).toBe('2 días');
+        expect(formatDuration('ru', 2 * 86400)).toBe('2 дня');
+        expect(formatDuration('ru', 5 * 86400)).toBe('5 дней');
+        expect(formatDuration('ru', 21 * 86400)).toBe('21 день');
+        // Polish says "dób", not the colloquial "dni": CLDR picks *doba*, the
+        // word for a 24-hour period, which is what a duration actually is.
+        // Left asserted rather than "fixed" — hand-maintaining plural tables
+        // for twenty languages is the thing this formatter exists to avoid.
+        expect(formatDuration('pl', 5 * 86400)).toBe('5 dób');
+        expect(formatDuration('ru', 60)).toBe('1 минута');
+    });
+
+    it('does not go negative', () => {
+        expect(formatDuration('en', -10)).toBe('0 seconds');
     });
 });

@@ -49,14 +49,15 @@ const fmtBytes = (n: number): string => {
     return `${i18n.formatNumber ? i18n.formatNumber(Math.round(v * 10) / 10) : (Math.round(v * 10) / 10)} ${u[i]}`;
 };
 
-const fmtUptime = (sec: number): string => {
-    if (!sec || sec < 0) return '—';
-    const d = Math.floor(sec / 86400);
-    if (d >= 1) return `${d} d`;
-    const h = Math.floor(sec / 3600);
-    if (h >= 1) return `${h} h`;
-    return `${Math.max(1, Math.floor(sec / 60))} min`;
-};
+/**
+ * Uptime in words, not initials.
+ *
+ * This used to say "16 d", which is a unit you have to know rather than read,
+ * and it was doing the arithmetic itself while i18n already had the formatter
+ * — with the plural rules of twenty languages behind it (*casa: entrega*).
+ */
+const fmtUptime = (sec: number): string =>
+    (!sec || sec < 0) ? '—' : i18n.formatDuration(sec);
 
 const level = (p: number) => (p >= 90 ? 'bad' : p >= 60 ? 'warn' : '');
 

@@ -49,7 +49,7 @@ Selecting a service (right-hand panel above) shows its history for a chosen time
 | **Response** | Response time, both **current** and the **24-hour average**. |
 | **Latency chart** | Response time plotted across the range, with a hover crosshair. |
 | **Recent checks** | A heartbeat strip of the most recent probes (green = up, red = down). Hover a bar for its timestamp and status. |
-| **Outages** | A table of down periods: status, date & time, duration, and whether the service recovered. |
+| **Outages** | A table of down periods: status, date & time, duration, and whether the service recovered. Durations are written in the unit a person reads — *45 seconds*, *20 minutes*, *36 hours*, *10 days* — in your own language, rather than hours however large the number. |
 
 Use **Refresh** to re-poll immediately; the view also refreshes itself while open.
 

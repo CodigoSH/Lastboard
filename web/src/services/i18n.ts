@@ -1,6 +1,6 @@
 import { availableLocales } from '../locales/metadata';
 import { Locale } from '../locales/types';
-import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, formatSpan, directionOf } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, formatSpan, formatDuration, directionOf } from './i18n.helpers';
 
 class I18nService {
     private currentLanguage: string = 'en';
@@ -100,6 +100,10 @@ class I18nService {
     }
 
     /** How long ago a moment was, as a phrase. Null under a minute. */
+    public formatDuration(seconds: number): string {
+        return formatDuration(this.currentLanguage, seconds);
+    }
+
     public formatSpan(fromMs: number, nowMs?: number): string | null {
         return formatSpan(this.currentLanguage, fromMs, nowMs);
     }
