@@ -558,8 +558,13 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
 }
 .panel__now small { font-size: 10px; color: var(--text-dim); font-weight: 500; }
 .panel svg { display: block; width: 100%; height: 58px; }
+/* The chart underneath is drawn in screen coordinates and does not mirror, so
+   neither may the row that labels it: reflected, "24h" landed on the right and
+   "now" on the left while the line's newest point stayed on the right — the
+   labels saying the opposite of the drawing (*casa: web-components*). */
 .panel__ax {
     display: flex;
+    direction: ltr;
     justify-content: space-between;
     margin-top: 6px;
     font-family: var(--font-mono, monospace);

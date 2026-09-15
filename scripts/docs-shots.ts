@@ -755,7 +755,10 @@ async function main() {
         }
     }
     if (failed.length) console.warn(`\n✗ not taken: ${failed.join(', ')}`);
-    pve.close();
+    // KEEP leaves the instance up to poke at; without the stand-in hypervisor
+    // behind it the Proxmox page is just an error message, which is no use for
+    // the very thing KEEP exists for.
+    if (!process.env.KEEP) pve.close();
     await finish();
 }
 

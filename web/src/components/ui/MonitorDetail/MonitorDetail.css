@@ -164,7 +164,10 @@
 .mhd__chart-cross[hidden], .mhd__chart-dot[hidden] { display: none; }
 
 /* Heartbeat */
-.mhd__heartbeat { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
+/* Time runs the same way as the chart above it — left to right — whatever the
+   reading direction: a strip that mirrored would put "now" on the left while
+   the latency chart beside it keeps it on the right. */
+.mhd__heartbeat { display: flex; direction: ltr; align-items: flex-end; gap: 3px; height: 40px; }
 
 .mhd__beat {
     flex: 1 1 0;
@@ -186,8 +189,11 @@
 .mhd__beat--empty { background: var(--text-dim); opacity: 0.1; cursor: default; }
 .mhd__beat--empty:hover { transform: none; filter: none; }
 
+/* Same reason as the Proxmox page's axis: the strip above it fills from the
+   left whatever the reading direction, so its two ends must keep their order. */
 .mhd__hb-scale {
     display: flex;
+    direction: ltr;
     justify-content: space-between;
     font-size: 11px;
     color: var(--text-dim);
