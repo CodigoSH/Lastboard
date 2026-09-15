@@ -80,6 +80,13 @@ type Shot = {
      * exists until someone finishes it, so it has to be caught on the way in.
      */
     beforeSetup?: boolean;
+    /**
+     * Re-sizes the window to `window.__gridBottom`, which the shot's own `act`
+     * measures. For the full-page shots, where the right height is whatever
+     * the board happens to need today and a number in this file goes stale the
+     * next time a tile is added.
+     */
+    fitHeight?: boolean;
 };
 
 // Reaching into the app from outside: the pieces live in shadow roots, so the
@@ -139,7 +146,17 @@ const SHOTS: Shot[] = [
     // end 840px down at this width. At 760 the bottom row was sliced through the
     // middle — the Docker widget's rows ran off the edge — and the top bar was
     // dropping its right-hand button as well.
-    { name: 'home', w: 1600, h: 880, wait: 3000 },
+    // Tall enough for the row the Proxmox widget added — measured from the
+    // grid itself rather than guessed, because at 880 and again at 1060 the
+    // lead image of the whole manual was publishing a tile sliced in half.
+    {
+        name: 'home', w: 1600, h: 1060, wait: 3000,
+        act: `const grid = document.querySelector('bookmark-grid').shadowRoot;
+              const cards = [...grid.querySelectorAll('.bookmark-grid__card')];
+              const bottom = Math.max(...cards.map((c) => c.getBoundingClientRect().bottom));
+              window.__gridBottom = Math.ceil(bottom + 20);`,
+        fitHeight: true,
+    },
     { name: 'mobile', w: 430, h: 880 },
 
     // ── Settings, one per section, all framed identically ───────────────
@@ -259,8 +276,12 @@ const SHOTS: Shot[] = [
 
     // ── Editing the board ───────────────────────────────────────────────
     {
-        name: 'edit-mode', w: 1600, h: 880, wait: 700,
-        act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(700);`,
+        // Same board as the lead shot, so it is measured the same way.
+        name: 'edit-mode', w: 1600, h: 1060, wait: 700, fitHeight: true,
+        act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(700);
+              const grid = document.querySelector('bookmark-grid').shadowRoot;
+              const cards = [...grid.querySelectorAll('.bookmark-grid__card')];
+              window.__gridBottom = Math.ceil(Math.max(...cards.map((c) => c.getBoundingClientRect().bottom)) + 20);`,
     },
     {
         name: 'm-bookmark', w: 1500, h: 950, pad: 0, wait: 600,
@@ -880,6 +901,18 @@ async function capture(shot: Shot) {
         // Whatever the action opened may bring its own images with it.
         await waitForImages(6000);
         await sleep(shot.wait ?? 400);
+
+        // A full-page shot whose height the page itself decides: the board
+        // grows a row whenever a widget is added, and a number written here
+        // goes stale the next time that happens.
+        if (shot.fitHeight) {
+            const bottom = Number(await evaluate('return window.__gridBottom || 0;'));
+            if (bottom > 0 && Math.abs(bottom - h) > 8) {
+                await cdp('Emulation.setDeviceMetricsOverride', { width: w, height: bottom, deviceScaleFactor: dpr, mobile: phone });
+                await sleep(600);
+                await waitForImages(4000);
+            }
+        }
 
         let clip;
         if (shot.clip) {
