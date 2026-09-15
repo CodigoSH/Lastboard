@@ -7,7 +7,8 @@ import { userService } from '../../../services/userService';
 import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, aboutTemplate, updateZoneTemplate } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus } from './SettingsContent.template';
+import { loadProxmox } from '../../../services/proxmoxApi';
 import { User, UserPreferences } from '../../../types';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
@@ -50,11 +51,12 @@ class SettingsContent extends HTMLElement {
      * secret is not part of the state because the server never sends it — an
      * empty box means "keep the stored one".
      */
-    private proxmox = { enabled: false, url: '', token_id: '', insecure: true, has_secret: false };
+    private proxmox: { enabled: boolean; hosts: PxSettingsHost[] } = { enabled: false, hosts: [] };
     private proxmoxLoaded = false;
     private proxmoxFailed = false;
     /** What the last save found out, shown under the button. */
-    private proxmoxStatus: { state: 'idle' | 'testing' | 'ok' | 'error'; nodes?: number; guests?: number; power?: boolean; key?: string } = { state: 'idle' };
+    /** What the last verification said, per host id. */
+    private proxmoxStatus: Record<string, PxHostStatus> = {};
 
 
     static get observedAttributes() {
@@ -183,6 +185,12 @@ class SettingsContent extends HTMLElement {
                 case 'save-proxmox':
                     this.saveProxmoxForm();
                     break;
+                case 'add-proxmox-host':
+                    this.addProxmoxHost();
+                    break;
+                case 'remove-proxmox-host':
+                    this.removeProxmoxHost(Number(el.dataset.index ?? -1));
+                    break;
             }
         });
 
@@ -228,9 +236,6 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'notify-token':
                     this.saveMonitoring({ notify_token: (el as HTMLInputElement).value.trim() });
-                    break;
-                case 'proxmox-toggle':
-                    this.toggleProxmox((el as HTMLInputElement).checked);
                     break;
             }
         });
@@ -466,89 +471,107 @@ class SettingsContent extends HTMLElement {
         this.render();
     }
 
-    /**
-     * The switch on its own. It saves the flag and nothing else, so turning the
-     * integration off never touches the stored address or token: someone who
-     * turns it off for an afternoon gets it back by turning it on again.
-     */
-    async toggleProxmox(enabled: boolean) {
+    /** A blank card, so the fields to fill are on screen before anything is saved. */
+    addProxmoxHost() {
         if (!this.proxmoxLoaded) return;
-        if (enabled && !this.proxmox.url) {
-            // The top bar would offer a page with nothing behind it.
-            if (window.notifier) window.notifier.show(i18n.t('settings.proxmox_needs_connection'), 'error');
-            this.proxmox = { ...this.proxmox, enabled: false };
-            this.render();
-            return;
-        }
-        await this.putProxmox({ enabled });
-        if (this.proxmox.enabled) this.verifyProxmox();
+        this.proxmox = {
+            ...this.proxmox,
+            hosts: [...this.proxmox.hosts, {
+                id: '', name: '', url: '', token_id: '', insecure: true, enabled: true, has_secret: false,
+            }],
+        };
+        this.render();
     }
 
-    /** The form: address, token and certificate policy, saved in one go. */
+    /**
+     * Drops one card. Nothing is written until Save, so this is undone by
+     * leaving the section — which is why it does not ask for confirmation.
+     */
+    removeProxmoxHost(index: number) {
+        if (!this.proxmoxLoaded) return;
+        const hosts = this.proxmox.hosts.filter((_, i) => i !== index);
+        this.proxmox = { ...this.proxmox, hosts };
+        this.render();
+    }
+
+    /**
+     * The whole list, saved in one go.
+     *
+     * Everything on screen is sent together because the server takes the list
+     * as the truth: a host missing from it is one that was removed. Reading
+     * every card back out of the DOM is what makes that safe — a half-built
+     * payload would delete a hypervisor nobody touched.
+     */
     async saveProxmoxForm() {
         if (!this.proxmoxLoaded) return;
         const root = this.shadowRoot!;
         const val = (id: string) => (root.getElementById(id) as HTMLInputElement | null)?.value.trim() ?? '';
-        const url = val('proxmox-url');
-        const secret = val('proxmox-secret');
-        const tokenId = val('proxmox-token-id');
-        const insecure = !!(root.getElementById('proxmox-insecure') as HTMLInputElement | null)?.checked;
+        const on = (id: string) => !!(root.getElementById(id) as HTMLInputElement | null)?.checked;
 
-        if (!url || !tokenId || (!secret && !this.proxmox.has_secret)) {
+        const payload = this.proxmox.hosts.map((h, i) => ({
+            id: h.id,
+            name: val(`proxmox-name-${i}`),
+            url: val(`proxmox-url-${i}`),
+            token_id: val(`proxmox-token-id-${i}`),
+            secret: val(`proxmox-secret-${i}`),
+            insecure: on(`proxmox-insecure-${i}`),
+            enabled: on(`proxmox-enabled-${i}`),
+        }));
+
+        // A host enabled with nothing behind it would put a page in the top bar
+        // with nothing to draw.
+        const broken = payload.find((h, i) =>
+            h.enabled && (!h.url || !h.token_id || (!h.secret && !this.proxmox.hosts[i].has_secret)));
+        if (broken) {
             if (window.notifier) window.notifier.show(i18n.t('settings.proxmox_needs_connection'), 'error');
             return;
         }
 
-        const ok = await this.putProxmox({ url, token_id: tokenId, insecure, enabled: true }, secret);
-        if (ok) this.verifyProxmox();
-    }
-
-    /**
-     * Writes the settings and re-reads them, because the server decides some of
-     * it: it prefixes a bare address with https:// and it is the only one that
-     * knows whether a secret is now stored.
-     */
-    private async putProxmox(patch: Partial<typeof this.proxmox>, secret = ''): Promise<boolean> {
-        const next = { ...this.proxmox, ...patch };
         try {
-            await apiService.post('/api/proxmox/settings', { ...next, secret });
+            await apiService.post('/api/proxmox/settings', { hosts: payload });
+            // Re-read: the server prefixes a bare address with https://, mints
+            // the ids, and is the only one that knows a secret is now stored.
             this.proxmox = await apiService.get<typeof this.proxmox>('/api/proxmox/settings');
             this.render();
             const { eventBus, EVENTS } = await import('../../../services/EventBus');
             eventBus.emit(EVENTS.PROXMOX_CHANGED, { enabled: this.proxmox.enabled });
             if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
-            return true;
+            this.verifyProxmox();
         } catch {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
-            return false;
         }
     }
 
     /**
-     * Asks the hypervisor, with what was just saved, and says what came back.
+     * Asks every hypervisor, with what was just saved, and says what came back.
      *
-     * "Saved" is not the answer anyone wants here — a typo in the token saves
-     * perfectly. This reads the overview, which is the same call the page makes,
-     * so a green line means the page will work and the permissions line is the
-     * token's real one, straight from /access/permissions.
+     * "Saved" is not the answer anyone wants here — a typo in a token saves
+     * perfectly. This reads the overview, which is the same call the page
+     * makes, so a green line means that host will work and the permissions it
+     * names are the token's real ones, straight from /access/permissions.
      */
     async verifyProxmox() {
-        this.proxmoxStatus = { state: 'testing' };
+        const enabled = this.proxmox.hosts.filter(h => h.enabled && h.id);
+        if (!enabled.length) return;
+        this.proxmoxStatus = Object.fromEntries(enabled.map(h => [h.id, { state: 'testing' } as PxHostStatus]));
         this.render();
         try {
-            const o = await apiService.get<{ nodes: any[]; guests: any[]; caps: { power: boolean } }>('/api/proxmox/overview');
-            this.proxmoxStatus = {
-                state: 'ok',
-                nodes: o.nodes?.length ?? 0,
-                guests: o.guests?.length ?? 0,
-                power: !!o.caps?.power,
-            };
+            const hosts = await loadProxmox();
+            const byId = new Map(hosts.map(h => [h.id, h]));
+            const next: Record<string, PxHostStatus> = {};
+            for (const h of enabled) {
+                const got = byId.get(h.id);
+                // One host failing says nothing about the others, so each card
+                // answers for itself.
+                next[h.id] = !got || got.error
+                    ? { state: 'error', key: 'proxmox.connection_error' }
+                    : { state: 'ok', nodes: got.nodes?.length ?? 0, guests: got.guests?.length ?? 0, power: !!got.caps?.power };
+            }
+            this.proxmoxStatus = next;
         } catch (e) {
-            // The handlers answer with a translation key, which is the message
-            // the operator needs: a rejected token and an unreachable host look
-            // the same from here otherwise.
             const key = String((e as Error)?.message || '').trim();
-            this.proxmoxStatus = { state: 'error', key: key.startsWith('proxmox.') ? key : 'proxmox.connection_error' };
+            const failure: PxHostStatus = { state: 'error', key: key.startsWith('proxmox.') ? key : 'proxmox.connection_error' };
+            this.proxmoxStatus = Object.fromEntries(enabled.map(h => [h.id, failure]));
         }
         this.render();
     }
