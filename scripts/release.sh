@@ -382,7 +382,7 @@ HOUSEKEEPING='^release:|^chore\(release\)|^docs\(release\)|^chore: cleanup|^chor
 # for the typed buckets and `sed 's/^[a-z]*: //'` for everything else, which only
 # matched a bare `word:`. Anything with a scope survived and got capitalized on
 # its way into the public notes: "Ci(release): …", "Docs(update): …", "I18n: …".
-CONVENTIONAL_TYPES='feat|fix|refactor|perf|chore|docs|style|build|ci|test|i18n|revert'
+CONVENTIONAL_TYPES='feat|fix|refactor|perf|chore|docs|style|build|ci|test|i18n|revert|remove'
 
 clean_subjects() {
     grep -vE "$HOUSEKEEPING" | \
@@ -397,7 +397,12 @@ subjects() { git log "$LAST_TAG..HEAD" --pretty=format:"%s"; }
 FEATS=$(subjects | grep -iE "^feat" | clean_subjects || echo "")
 FIXES=$(subjects | grep -iE "^fix" | clean_subjects || echo "")
 REFACTORS=$(subjects | grep -iE "^(refactor|perf)" | clean_subjects || echo "")
-OTHER=$(subjects | grep -viE "^(feat|fix|refactor|perf)" | clean_subjects || echo "")
+# Keep-a-Changelog has a Removed section and this had no bucket for it, so a
+# withdrawal had to be committed as feat and came out under "Added" - the
+# Proxmox preset went out that way in Beta.15, reading to anyone scanning the
+# notes as the opposite of what happened. Commit a withdrawal as `remove:`.
+REMOVALS=$(subjects | grep -iE "^remove" | clean_subjects || echo "")
+OTHER=$(subjects | grep -viE "^(feat|fix|refactor|perf|remove)" | clean_subjects || echo "")
 
 # Update CHANGELOG.md
 if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
@@ -418,6 +423,7 @@ if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
         [ -n "$FEATS" ]      && printf '### Added\n%s\n\n' "$FEATS"
         [ -n "$FIXES" ]      && printf '### Fixed\n%s\n\n' "$FIXES"
         [ -n "$CL_CHANGED" ] && printf '### Changed\n%s\n\n' "$CL_CHANGED"
+        [ -n "$REMOVALS" ]   && printf '### Removed\n%s\n\n' "$REMOVALS"
         true
     } > "$ENTRY_FILE"
 
@@ -457,6 +463,7 @@ else
         [ -n "$FEATS" ]         && printf '### Added\n%s\n\n' "$FEATS"
         [ -n "$FIXES" ]         && printf '### Fixed\n%s\n\n' "$FIXES"
         [ -n "$NOTES_CHANGED" ] && printf '### Changed\n%s\n' "$NOTES_CHANGED"
+        [ -n "$REMOVALS" ]      && printf '### Removed\n%s\n' "$REMOVALS"
         true
     }
 
