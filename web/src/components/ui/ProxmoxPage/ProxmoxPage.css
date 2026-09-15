@@ -248,7 +248,6 @@
 .bar i { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
 .bar i.warn { background: var(--warning-color); }
 .bar i.bad { background: var(--danger-color); }
-.bar i.ok { background: var(--success-color); }
 
 .node__foot {
     display: flex;

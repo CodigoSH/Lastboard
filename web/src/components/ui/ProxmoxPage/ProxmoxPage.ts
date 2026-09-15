@@ -63,6 +63,15 @@ const fmtBytes = (n: number): string => {
 const fmtUptime = (sec: number): string =>
     (!sec || sec < 0) ? '—' : i18n.formatDuration(sec);
 
+/**
+ * How a percentage is coloured, and the rule is the same for every bar on this
+ * page: below 60 it carries no class and the bar stays the brand accent.
+ *
+ * Storage used to force 'ok' below the threshold, so a disk at 50% was green
+ * while the RAM right above it was accent at 48% — the same healthy state drawn
+ * two opposite ways, which reads as an alarm on one card and calm on the other.
+ * Colour is spent where it means something: amber at 60, red at 90.
+ */
 const level = (p: number) => (p >= 90 ? 'bad' : p >= 60 ? 'warn' : '');
 
 /**
@@ -439,7 +448,7 @@ class ProxmoxPage extends HTMLElement {
                 <span class="store__kind">${escapeHtml(s.kind)}</span>
                 <span class="store__pct ${l ? 'store__pct--' + l : ''}">${Math.round(s.percent)}%</span>
             </span>
-            <span class="bar" style="height:5px"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></span>
+            <span class="bar" style="height:5px"><i class="${l}" style="width:${s.percent}%"></i></span>
             <span class="store__r3"><span>${escapeHtml(fmtBytes(s.used))} / ${escapeHtml(fmtBytes(s.total))}</span><span>${escapeHtml(s.node)}</span></span>
         </button>`;
     }
@@ -1255,7 +1264,7 @@ class ProxmoxPage extends HTMLElement {
             <div class="panel">
                 <div class="panel__top"><span class="panel__k">${escapeHtml(i18n.t('proxmox.used'))}</span>
                     <span class="panel__now">${Math.round(s.percent)}<small> %</small></span></div>
-                <div class="bar" style="height:8px;border-radius:4px"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></div>
+                <div class="bar" style="height:8px;border-radius:4px"><i class="${l}" style="width:${s.percent}%"></i></div>
                 <div class="panel__ax"><span>0</span><span>${escapeHtml(fmtBytes(s.total))}</span></div>
             </div>
             <div class="kv">
