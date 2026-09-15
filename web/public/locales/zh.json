@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "用户名已更新！请使用新用户名登录。",
   "notifier.username_required": "需要用户名",
   "notifier.username_updated": "用户名已更改",
+  "proxmox.hypervisors": "虚拟化主机",
   "role.view_only": "仅查看",
   "section.leave_empty": "留空以隐藏标题。",
   "section.placeholder_title": "部分标题",

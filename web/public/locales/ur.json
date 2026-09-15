@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "صارف نام اپ ڈیٹ ہو گیا! نئے نام کے ساتھ لاگ ان کریں۔",
   "notifier.username_required": "صارف نام درکار ہے",
   "notifier.username_updated": "صارف نام تبدیل ہو گیا",
+  "proxmox.hypervisors": "ہائپر وائزرز",
   "role.view_only": "صرف دیکھنے کے لیے",
   "section.leave_empty": "عنوان چھپانے کے لیے خالی چھوڑ دیں۔",
   "section.placeholder_title": "سیکشن کا عنوان",

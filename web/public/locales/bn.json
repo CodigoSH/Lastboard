@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "ব্যবহারকারীর নাম আপডেট করা হয়েছে! আপনার নতুন নাম দিয়ে লগ ইন করুন।",
   "notifier.username_required": "ব্যবহারকারীর নাম প্রয়োজন",
   "notifier.username_updated": "ব্যবহারকারীর নাম পরিবর্তিত",
+  "proxmox.hypervisors": "হাইপারভাইজার",
   "role.view_only": "শুধুমাত্র দেখার জন্য",
   "section.leave_empty": "শিরোনাম লুকাতে খালি রাখুন।",
   "section.placeholder_title": "বিভাগের শিরোনাম",

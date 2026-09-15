@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Nama pengguna diperbarui! Silakan masuk dengan nama pengguna baru Anda.",
   "notifier.username_required": "Nama pengguna diperlukan",
   "notifier.username_updated": "Nama pengguna diubah",
+  "proxmox.hypervisors": "Hypervisor",
   "role.view_only": "Hanya Lihat",
   "section.leave_empty": "Biarkan kosong untuk menyembunyikan judul.",
   "section.placeholder_title": "Judul Bagian",

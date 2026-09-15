@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Gebruikersnaam gewijzigd! Log in met je nieuwe gebruikersnaam.",
   "notifier.username_required": "Gebruikersnaam vereist",
   "notifier.username_updated": "Gebruikersnaam gewijzigd",
+  "proxmox.hypervisors": "Hypervisors",
   "role.view_only": "Alleen lezen",
   "section.leave_empty": "Laat leeg om de titel te verbergen.",
   "section.placeholder_title": "Sectietitel",

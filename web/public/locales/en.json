@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Username updated! Please log in with your new username.",
   "notifier.username_required": "Need a username",
   "notifier.username_updated": "Username changed",
+  "proxmox.hypervisors": "Hypervisors",
   "role.view_only": "View Only",
   "section.leave_empty": "Empty = Hidden",
   "section.placeholder_title": "Section Name",

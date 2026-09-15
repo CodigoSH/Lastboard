@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "사용자 이름이 업데이트되었습니다! 새 이름으로 로그인하세요.",
   "notifier.username_required": "사용자 이름이 필요합니다",
   "notifier.username_updated": "사용자 이름 변경됨",
+  "proxmox.hypervisors": "하이퍼바이저",
   "role.view_only": "읽기 전용",
   "section.leave_empty": "제목을 숨기려면 비워 두세요.",
   "section.placeholder_title": "섹션 제목",

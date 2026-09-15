@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "نام کاربری به‌روز شد! لطفاً با نام کاربری جدید خود وارد شوید.",
   "notifier.username_required": "نام کاربری الزامی است",
   "notifier.username_updated": "نام کاربری تغییر کرد",
+  "proxmox.hypervisors": "هایپروایزرها",
   "role.view_only": "فقط مشاهده",
   "section.leave_empty": "برای مخفی کردن عنوان خالی بگذارید.",
   "section.placeholder_title": "عنوان بخش",

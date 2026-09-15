@@ -145,6 +145,17 @@ class ProxmoxPage extends HTMLElement {
      */
     private hostId = '';
 
+    /**
+     * Which of the two things this page is.
+     *
+     * With one hypervisor connected — every instance until somebody adds a
+     * second — there is no summary and never was: the icon opens the cluster
+     * and a landing page in front of it would be a toll gate charging a click
+     * for nothing.
+     */
+    private view: 'summary' | 'cluster' = 'cluster';
+    private hosts: PxHost[] = [];
+
     /** CPU history per machine, keyed `range|vmid`, for the tile sparklines. */
     private series = new Map<string, number[]>();
     /** Machines already asked about, so a repaint does not ask again. */
@@ -188,6 +199,12 @@ class ProxmoxPage extends HTMLElement {
     open() {
         this.setAttribute('open', '');
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: true });
+        // Which view this is cannot be known before asking: it depends on how
+        // many hypervisors are connected. The summary is the safe first guess
+        // because it collapses to the cluster below when there is only one.
+        this.view = 'summary';
+        this.hostId = '';
+        this._shell = false;
         this.load();
         if (this.timer) clearInterval(this.timer);
         this.timer = setInterval(() => this.load(), 15000);
@@ -209,14 +226,22 @@ class ProxmoxPage extends HTMLElement {
         // machine is flagged the same wherever the visitor happened to be.
         loadProxmoxLinks().then(() => { if (this.hasAttribute('open')) this.paint(); }).catch(() => { });
         try {
-            const hosts = await loadProxmox(this.hostId || undefined);
-            const shown = (this.hostId && hosts.find(h => h.id === this.hostId)) || hosts[0];
-            if (!shown) throw new Error('proxmox.not_configured');
-            this.hostId = shown.id;
-            this.data = shown;
-            // A host that answered with an error has no figures to draw, so the
-            // page says what happened instead of showing an empty cluster.
-            this.error = shown.error ? 'proxmox.connection_error' : '';
+            // The summary needs all of them; a cluster needs its own, which is
+            // what it polls every fifteen seconds.
+            const wanted = this.view === 'summary' ? undefined : (this.hostId || undefined);
+            const hosts = await loadProxmox(wanted);
+            if (this.view === 'summary') {
+                this.hosts = hosts;
+                this.error = hosts.length ? '' : 'proxmox.not_configured';
+            } else {
+                const shown = (this.hostId && hosts.find(h => h.id === this.hostId)) || hosts[0];
+                if (!shown) throw new Error('proxmox.not_configured');
+                this.hostId = shown.id;
+                this.data = shown;
+                // A host that answered with an error has no figures to draw, so
+                // the page says what happened instead of an empty cluster.
+                this.error = shown.error ? 'proxmox.connection_error' : '';
+            }
         } catch (e: any) {
             const key = typeof e?.message === 'string' ? e.message.trim() : '';
             this.error = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/.test(key) ? key : 'proxmox.connection_error';
@@ -261,6 +286,12 @@ class ProxmoxPage extends HTMLElement {
             <style>${css}</style>
             <div class="pp">
                 <header class="pp__header">
+                    <!-- Only drawn once there is a summary to go back to. -->
+                    <button class="pp__back" id="pp-back" hidden
+                            aria-label="${escapeHtml(i18n.t('general.back'))}" title="${escapeHtml(i18n.t('general.back'))}">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
                     <div class="pp__title">${ICON_SERVER}<span id="pp-title"></span></div>
                     <!-- The state of the host reads as part of the title, not as
                          a bar of its own: one line at the top instead of two. -->
@@ -372,6 +403,8 @@ class ProxmoxPage extends HTMLElement {
     private paintStatus() {
         const el = this.shadowRoot?.getElementById('pp-status');
         if (!el) return;
+        // The summary carries its own counts, per hypervisor, in its cards.
+        if (this.view === 'summary') { el.innerHTML = ''; return; }
         const d = this.data;
         const guests = d?.guests ?? [];
         const running = guests.filter(g => g.running).length;
@@ -392,8 +425,17 @@ class ProxmoxPage extends HTMLElement {
 
     private paint() {
         if (!this._built) return;
+        const several = this.hosts.length > 1;
         const title = this.shadowRoot?.getElementById('pp-title');
-        if (title) title.textContent = i18n.t('widget.proxmox.name');
+        // Inside a cluster of several, the title is that cluster: the header
+        // has to say which of them these figures belong to.
+        if (title) {
+            title.textContent = (this.view === 'cluster' && several && this.data)
+                ? this.data.name
+                : i18n.t('widget.proxmox.name');
+        }
+        const back = this.shadowRoot?.getElementById('pp-back') as HTMLElement | null;
+        if (back) back.hidden = !(this.view === 'cluster' && several);
         this.paintStatus();
         this.paintBody();
     }
@@ -447,12 +489,91 @@ class ProxmoxPage extends HTMLElement {
             </section>`;
     }
 
+    /**
+     * Every bookmarked service that is on a stopped machine, anywhere.
+     *
+     * This is the sentence the whole feature exists to write, and the summary
+     * is the only place it can be written about everything at once: a cluster's
+     * own page can only speak for its own machines.
+     */
+    private downEverywhere(): { name: string; host: string }[] {
+        const out: { name: string; host: string }[] = [];
+        for (const h of this.hosts) {
+            for (const g of h.guests || []) {
+                if (g.running) continue;
+                const link = linkFor({ ...g, host: h.id });
+                if (link) out.push({ name: link.label || g.name, host: h.name });
+            }
+        }
+        return out;
+    }
+
+    /** One card per hypervisor, and the outages across all of them. */
+    private paintSummary(body: HTMLElement) {
+        const down = this.downEverywhere();
+        const cards = this.hosts.map(h => {
+            if (h.error) {
+                return `<button class="card px-sum px-sum--bad" data-enter="${escapeHtml(h.id)}">
+                    <span class="px-sum__r1"><span class="dot dot--bad"></span><span class="px-sum__name">${escapeHtml(h.name)}</span></span>
+                    <span class="px-sum__err">${escapeHtml(i18n.t('proxmox.connection_error'))}</span>
+                </button>`;
+            }
+            const running = (h.guests || []).filter(g => g.running).length;
+            const worst = [...(h.nodes || [])].sort((a, b) =>
+                Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk))[0];
+            const peak = worst ? Math.round(Math.max(worst.cpu, worst.mem, worst.disk)) : 0;
+            const store = [...(h.stores || [])].sort((a, b) => b.percent - a.percent)[0];
+            const mine = down.filter(d => d.host === h.name).length;
+            return `<button class="card px-sum${mine ? ' px-sum--flag' : ''}" data-enter="${escapeHtml(h.id)}">
+                <span class="px-sum__r1">
+                    <span class="dot dot--${mine ? 'bad' : 'up'}"></span>
+                    <span class="px-sum__name">${escapeHtml(h.name)}</span>
+                    <span class="px-sum__go">${ICON_CHEVRON}</span>
+                </span>
+                <span class="px-sum__r2">
+                    <b>${running}</b>/${(h.guests || []).length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}
+                    · ${(h.nodes || []).length} ${escapeHtml(i18n.t('proxmox.nodes').toLowerCase())}
+                </span>
+                <span class="px-sum__r3">
+                    <span class="${level(peak) ? 'px-sum__hot px-sum__hot--' + level(peak) : ''}">${escapeHtml(i18n.t('proxmox.peak'))} ${peak}%</span>
+                    ${store ? `<span class="${level(store.percent) ? 'px-sum__hot px-sum__hot--' + level(store.percent) : ''}">${escapeHtml(store.name)} ${Math.round(store.percent)}%</span>` : ''}
+                </span>
+            </button>`;
+        }).join('');
+
+        body.innerHTML = `
+            ${down.length ? `<section class="sec">
+                <div class="sec__head">
+                    <span class="sec__label sec__label--bad">${escapeHtml(i18n.t('proxmox.services_down'))}</span>
+                    <span class="sec__rule"></span>
+                    <span class="sec__note sec__note--bad">${down.length}</span>
+                </div>
+                <div class="px-down">${escapeHtml(i18n.t('proxmox.stopped_breaks'))}
+                    <b>${down.map(d => escapeHtml(d.name)).join(', ')}</b></div>
+            </section>` : ''}
+            <section class="sec">
+                <div class="sec__head">
+                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.hypervisors'))}</span>
+                    <span class="sec__rule"></span>
+                    <span class="sec__note">${this.hosts.length}</span>
+                </div>
+                <div class="px-sums">${cards}</div>
+            </section>`;
+    }
+
     private paintBody() {
         const body = this.shadowRoot?.getElementById('pp-body');
         if (!body) return;
 
         if (!this.loaded) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`; return; }
         if (this.error) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t(this.error))}</div>`; return; }
+        // One hypervisor is not a set worth summarising: the page opens on it.
+        if (this.view === 'summary' && this.hosts.length === 1) {
+            this.view = 'cluster';
+            this.hostId = this.hosts[0].id;
+            this.data = this.hosts[0];
+        }
+        if (this.view === 'summary') { this._shell = false; this.paintSummary(body); return; }
         if (!this._shell) this.buildShell();
 
         const d = this.data!;
@@ -882,6 +1003,29 @@ class ProxmoxPage extends HTMLElement {
         const t = e.target as HTMLElement;
 
         if (t.closest('#pp-close')) { this.close(); return; }
+
+        const enter = t.closest('[data-enter]') as HTMLElement | null;
+        if (enter) {
+            this.hostId = enter.dataset.enter || '';
+            this.view = 'cluster';
+            this._shell = false;
+            this.series.clear();
+            this.asked.clear();
+            this.loaded = false;
+            this.paint();
+            this.load();
+            return;
+        }
+
+        if (t.closest('#pp-back')) {
+            this.view = 'summary';
+            this.hostId = '';
+            this._shell = false;
+            this.loaded = false;
+            this.paint();
+            this.load();
+            return;
+        }
 
         const fold = t.closest('[data-fold]') as HTMLElement | null;
         if (fold) {

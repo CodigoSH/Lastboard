@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Nazwa zaktualizowana! Zaloguj się nową nazwą.",
   "notifier.username_required": "Wymagana nazwa użytkownika",
   "notifier.username_updated": "Nazwa użytkownika zmieniona",
+  "proxmox.hypervisors": "Hipernadzorcy",
   "role.view_only": "Tylko do odczytu",
   "section.leave_empty": "Pozostaw puste, aby ukryć tytuł.",
   "section.placeholder_title": "Tytuł sekcji",

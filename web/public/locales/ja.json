@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "ユーザー名を更新しました。新しいユーザー名でログインしてください。",
   "notifier.username_required": "ユーザー名が必要です",
   "notifier.username_updated": "ユーザー名が変更されました",
+  "proxmox.hypervisors": "ハイパーバイザー",
   "role.view_only": "閲覧のみ",
   "section.leave_empty": "タイトルを非表示にするには空のままにします。",
   "section.placeholder_title": "セクションのタイトル",

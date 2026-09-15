@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "تم تحديث اسم المستخدم! يرجى تسجيل الدخول باسم المستخدم الجديد.",
   "notifier.username_required": "اسم المستخدم مطلوب",
   "notifier.username_updated": "تم تغيير اسم المستخدم",
+  "proxmox.hypervisors": "المشرفون الافتراضيون",
   "role.view_only": "عرض فقط",
   "section.leave_empty": "اتركه فارغًا لإخفاء العنوان.",
   "section.placeholder_title": "عنوان القسم",

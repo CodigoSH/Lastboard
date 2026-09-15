@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Имя пользователя обновлено! Пожалуйста, войдите заново.",
   "notifier.username_required": "Требуется имя пользователя",
   "notifier.username_updated": "Имя пользователя изменено",
+  "proxmox.hypervisors": "Гипервизоры",
   "role.view_only": "Только чтение",
   "section.leave_empty": "Оставьте пустым, чтобы скрыть заголовок.",
   "section.placeholder_title": "Название раздела",

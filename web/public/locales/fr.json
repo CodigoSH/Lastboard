@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Nom d'utilisateur mis à jour ! Veuillez vous connecter avec le nouveau.",
   "notifier.username_required": "Nom d'utilisateur requis",
   "notifier.username_updated": "Nom d'utilisateur modifié",
+  "proxmox.hypervisors": "Hyperviseurs",
   "role.view_only": "Lecture seule",
   "section.leave_empty": "Laisser vide pour masquer le titre.",
   "section.placeholder_title": "Titre de la section",

@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Kullanıcı adı güncellendi! Yeni adınızla giriş yapın.",
   "notifier.username_required": "Kullanıcı adı gerekli",
   "notifier.username_updated": "Kullanıcı adı değiştirildi",
+  "proxmox.hypervisors": "Hipervizörler",
   "role.view_only": "Salt Okunur",
   "section.leave_empty": "Başlığı gizlemek için boş bırakın.",
   "section.placeholder_title": "Bölüm Başlığı",

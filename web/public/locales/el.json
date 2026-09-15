@@ -207,6 +207,7 @@
   "notifier.username_changed_relogin": "Το όνομα χρήστη ενημερώθηκε! Παρακαλώ συνδεθείτε με το νέο σας όνομα.",
   "notifier.username_required": "Απαιτείται όνομα χρήστη",
   "notifier.username_updated": "Το όνομα χρήστη άλλαξε",
+  "proxmox.hypervisors": "Υπερεπόπτες",
   "role.view_only": "Μόνο προβολή",
   "section.leave_empty": "Αφήστε κενό για απόκρυψη τίτλου.",
   "section.placeholder_title": "Τίτλος ενότητας",
