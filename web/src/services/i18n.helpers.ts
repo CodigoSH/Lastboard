@@ -96,9 +96,9 @@ export function resolveLanguage(
  * The formatters are cached because building one is expensive and the monitor
  * tooltips ask for the same one once per heartbeat.
  */
-const formatterCache = new Map<string, Intl.DateTimeFormat | Intl.NumberFormat>();
+const formatterCache = new Map<string, Intl.DateTimeFormat | Intl.NumberFormat | Intl.ListFormat>();
 
-function cached<T extends Intl.DateTimeFormat | Intl.NumberFormat>(
+function cached<T extends Intl.DateTimeFormat | Intl.NumberFormat | Intl.ListFormat>(
     kind: string,
     locale: string,
     options: object | undefined,
@@ -150,31 +150,73 @@ export function formatNumber(
  * the three Russian forms and the six Arabic ones, which a key of ours would
  * not. That is the whole reason this is Intl and not a translated string.
  *
+ * Two units by default, because one leaves the reader doing the division the
+ * other way: "25 hours" is a day and an hour, and saying so costs nothing. The
+ * second unit is dropped when it is zero, so a clean figure stays clean —
+ * "2 days", not "2 days and 0 hours".
+ *
  * This is the only place in the app that turns seconds into words. It has to
  * be: it already existed, with these tests, while two components went on
  * dividing by 86400 themselves — one of them printing "16 d" and the other
  * capping at hours, which is how an incident came to be labelled "231 h".
  */
-export function formatDuration(locale: string, seconds: number): string {
+/** Seconds in each unit, largest first. */
+const durationUnits: [number, Intl.NumberFormatOptions['unit']][] = [
+    [86400, 'day'],
+    [3600, 'hour'],
+    [60, 'minute'],
+    [1, 'second'],
+];
+
+const oneUnit = (locale: string, value: number, unit: Intl.NumberFormatOptions['unit']) =>
+    formatNumber(locale, value, { style: 'unit', unit, unitDisplay: 'long' });
+
+/**
+ * Two figures joined the way the language joins a list.
+ *
+ * Not " y " and not " and ": Intl.ListFormat knows the conjunction for all
+ * twenty, puts it where the language puts it, and in Arabic joins without the
+ * space that Spanish needs. One more thing not to translate by hand.
+ */
+function joinUnits(locale: string, parts: string[]): string {
+    const formatter = cached('list', locale, { style: 'long', type: 'conjunction' },
+        () => new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }));
+    return formatter ? formatter.format(parts) : parts.join(' ');
+}
+
+export function formatDuration(locale: string, seconds: number, units: 1 | 2 = 2): string {
     const s = Math.max(0, Math.round(seconds));
 
-    // Hours up to two days: "36 hours" reads better than "2 days" for something
-    // that is not two days, and days take over once the hours stop being useful.
-    const [value, unit]: [number, Intl.NumberFormatOptions['unit']] =
-        s < 60 ? [s, 'second']
-            : s < 3600 ? [Math.round(s / 60), 'minute']
-                : s < 48 * 3600 ? [Math.round(s / 3600), 'hour']
-                    : [Math.round(s / 86400), 'day'];
+    // The largest unit that has at least one of itself in there. Nothing fits
+    // in zero, and the floor has to be the SMALLEST unit rather than index 0,
+    // which is days: a stopped clock would have read "0 days".
+    const found = durationUnits.findIndex(([size]) => s >= size);
+    const top = found === -1 ? durationUnits.length - 1 : found;
+    const [size, unit] = durationUnits[top];
 
-    return formatNumber(locale, value, { style: 'unit', unit, unitDisplay: 'long' });
+    if (units === 1) return oneUnit(locale, Math.round(s / size), unit);
+
+    const whole = Math.floor(s / size);
+    const next = durationUnits[top + 1];
+    if (!next) return oneUnit(locale, whole, unit);
+
+    const rest = Math.round((s - whole * size) / next[0]);
+    // The carry: rounding the remainder can fill the unit above it, and
+    // "1 day and 24 hours" is a sentence no one should ever read.
+    if (rest * next[0] >= size) return oneUnit(locale, whole + 1, unit);
+    if (rest === 0) return oneUnit(locale, whole, unit);
+
+    return joinUnits(locale, [oneUnit(locale, whole, unit), oneUnit(locale, rest, next[1])]);
 }
 
 /**
  * How long ago something was.
  *
- * Under a minute there is no number worth showing; the caller says "now". That
- * is the only difference from formatDuration, which answers "45 seconds"
- * because for a length of time that is a real answer.
+ * One unit, not two. This labels a span — "the last 30 days" — where the odd
+ * four hours on the end is noise; formatDuration answers "1 day and 1 hour"
+ * because there the remainder is the thing being asked about.
+ *
+ * And under a minute there is no number worth showing: the caller says "now".
  */
 export function formatSpan(
     locale: string,
@@ -183,7 +225,7 @@ export function formatSpan(
 ): string | null {
     const minutes = Math.max(0, Math.round((nowMs - fromMs) / 60000));
     if (minutes < 1) return null;
-    return formatDuration(locale, minutes * 60);
+    return formatDuration(locale, minutes * 60, 1);
 }
 
 /**

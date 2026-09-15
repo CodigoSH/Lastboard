@@ -800,6 +800,19 @@ class ProxmoxPage extends HTMLElement {
         </svg>`;
     }
 
+    /**
+     * How far back the chart goes, said rather than spelled.
+     *
+     * The axis printed `this.range` straight out — "24h", the identifier the
+     * API takes. It is not a label: it is untranslated in twenty languages and
+     * it is the kind of unit a reader has to know (*casa: entrega*). One unit
+     * here, not two: the axis is naming a span, not measuring one.
+     */
+    private rangeLabel(): string {
+        const ms = RANGE_MS[this.range];
+        return ms ? i18n.formatDuration(ms / 1000, 1) : this.range;
+    }
+
     private chart(label: string, now: string, unit: string, values: number[], colour: string) {
         // One decimal, like the tooltip: a peak of 0.4 rounded to a flat "0%"
         // reads as a chart of nothing while the line clearly is not.
@@ -815,7 +828,7 @@ class ProxmoxPage extends HTMLElement {
             ${this.spark(values, colour)}
             <div class="panel__cross" hidden></div>
             <div class="panel__tip" hidden></div>
-            <div class="panel__ax"><span>${escapeHtml(this.range)}</span><span>${escapeHtml(i18n.t('proxmox.max'))} ${max}%</span><span>${escapeHtml(i18n.t('proxmox.now'))}</span></div>
+            <div class="panel__ax"><span>${escapeHtml(this.rangeLabel())}</span><span>${escapeHtml(i18n.t('proxmox.max'))} ${max}%</span><span>${escapeHtml(i18n.t('proxmox.now'))}</span></div>
         </div>`;
     }
 

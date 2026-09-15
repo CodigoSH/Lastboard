@@ -143,12 +143,13 @@ describe('formatSpan', () => {
         expect(formatSpan('en', ago(0.4), now)).toBeNull();
     });
 
-    it('counts minutes, then hours, then days', () => {
+    // One unit, deliberately: this labels a span, and "the last 30 days and 4
+    // hours" is noise. formatDuration is the one that says both.
+    it('counts minutes, then hours, then days, in a single unit', () => {
         expect(formatSpan('en', ago(5), now)).toBe('5 minutes');
         expect(formatSpan('en', ago(90), now)).toBe('2 hours');
-        expect(formatSpan('en', ago(24 * 60), now)).toBe('24 hours');
-        // Two days is where hours stop being worth reading.
-        expect(formatSpan('en', ago(47 * 60), now)).toBe('47 hours');
+        expect(formatSpan('en', ago(24 * 60), now)).toBe('1 day');
+        expect(formatSpan('en', ago(47 * 60), now)).toBe('2 days');
         expect(formatSpan('en', ago(7 * 24 * 60), now)).toBe('7 days');
         expect(formatSpan('en', ago(30 * 24 * 60), now)).toBe('30 days');
     });
@@ -166,7 +167,13 @@ describe('formatSpan', () => {
     it('speaks the language it is given, with no key to translate', () => {
         expect(formatSpan('es', ago(30 * 24 * 60), now)).toBe('30 días');
         expect(formatSpan('de', ago(30 * 24 * 60), now)).toBe('30 Tage');
-        expect(formatSpan('fr', ago(24 * 60), now)).toContain('heures');
+        // 24 hours is a day now, so French says "jour" — the assertion moved
+        // with the threshold rather than the threshold with the assertion.
+        // The space is U+00A0: French does not let a unit break away from its
+        // number, and a plain ' ' here fails with two strings that look
+        // character for character identical in the diff.
+        expect(formatSpan('fr', ago(24 * 60), now)).toBe('1\u00a0jour');
+        expect(formatSpan('fr', ago(3 * 60), now)).toContain('heures');
     });
 
     it('does not go negative when the clock disagrees with the server', () => {
@@ -175,20 +182,44 @@ describe('formatSpan', () => {
 });
 
 describe('formatDuration', () => {
-    it('counts seconds, then minutes, then hours, then days', () => {
+    it('says the unit and what is left over in the next one down', () => {
         expect(formatDuration('en', 45)).toBe('45 seconds');
+        expect(formatDuration('en', 90)).toBe('1 minute and 30 seconds');
+        expect(formatDuration('en', 90 * 60)).toBe('1 hour and 30 minutes');
+        expect(formatDuration('en', 47 * 3600)).toBe('1 day and 23 hours');
+    });
+
+    // A clean figure stays clean: nobody writes "2 days and 0 hours".
+    it('drops the second unit when there is no remainder', () => {
         expect(formatDuration('en', 5 * 60)).toBe('5 minutes');
-        expect(formatDuration('en', 90 * 60)).toBe('2 hours');
-        // Two days is where hours stop being worth reading.
-        expect(formatDuration('en', 47 * 3600)).toBe('47 hours');
+        expect(formatDuration('en', 3 * 3600)).toBe('3 hours');
         expect(formatDuration('en', 16 * 86400)).toBe('16 days');
     });
 
-    // The two bugs this exists to stop: a Proxmox node up for sixteen days
-    // reading "16 d", and a nine-day outage reading "231 h".
+    // The bugs this exists to stop: a node up for sixteen days reading "16 d",
+    // a nine-day outage reading "231 h", and an uptime of just over a day
+    // reading "25 hours" — each of them asking the reader to divide.
     it('never hands the reader arithmetic', () => {
         expect(formatDuration('es', 16 * 86400)).toBe('16 días');
-        expect(formatDuration('es', 231 * 3600)).toBe('10 días');
+        expect(formatDuration('es', 231 * 3600)).toBe('9 días y 15 horas');
+        expect(formatDuration('es', 25 * 3600)).toBe('1 día y 1 hora');
+    });
+
+    // Rounding the remainder can fill the unit above it. "1 day and 24 hours"
+    // is a sentence no one should ever read.
+    it('carries when the remainder rounds up into the unit above', () => {
+        expect(formatDuration('en', 86400 + 23 * 3600 + 59 * 60)).toBe('2 days');
+        expect(formatDuration('en', 3600 + 59 * 60 + 40)).toBe('2 hours');
+    });
+
+    // The conjunction is the language's own, and so is where it goes.
+    it('joins the two the way the language joins a list', () => {
+        expect(formatDuration('en', 25 * 3600)).toBe('1 day and 1 hour');
+        expect(formatDuration('ru', 25 * 3600)).toBe('1 день и 1 час');
+        // Arabic drops the numeral in its "one" form, and joins without a
+        // space before the conjunction. Neither is something we could get
+        // right by writing " y " ourselves.
+        expect(formatDuration('ar', 25 * 3600)).toBe('يوم وساعة');
     });
 
     // A translated key of ours would carry one plural form per language and be
@@ -210,7 +241,11 @@ describe('formatDuration', () => {
         expect(formatDuration('ru', 60)).toBe('1 минута');
     });
 
-    it('does not go negative', () => {
+    // A stopped clock read "0 days" while this floored at index 0, which is
+    // days rather than the smallest unit.
+    it('does not go negative, and floors at seconds rather than days', () => {
         expect(formatDuration('en', -10)).toBe('0 seconds');
+        expect(formatDuration('en', 0)).toBe('0 seconds');
+        expect(formatDuration('en', 1)).toBe('1 second');
     });
 });

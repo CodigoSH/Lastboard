@@ -100,8 +100,9 @@ class I18nService {
     }
 
     /** How long ago a moment was, as a phrase. Null under a minute. */
-    public formatDuration(seconds: number): string {
-        return formatDuration(this.currentLanguage, seconds);
+    /** `units: 1` for a span being named, 2 (the default) for one being measured. */
+    public formatDuration(seconds: number, units: 1 | 2 = 2): string {
+        return formatDuration(this.currentLanguage, seconds, units);
     }
 
     public formatSpan(fromMs: number, nowMs?: number): string | null {
