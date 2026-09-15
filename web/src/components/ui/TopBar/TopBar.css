@@ -180,9 +180,14 @@ dashboard-switcher.disabled {
     background: var(--surface-solid);
     border-color: var(--border);
     cursor: default;
-    padding: 0 4px 0 12px;
+    /* Logical, not `0 4px 0 12px`: the roomy side belongs to the text and the
+       narrow one to the icon, and in Arabic those swap sides. Written
+       physically, Arabic got four pixels before the text and twelve after the
+       icon — the text nearly touching the edge. */
+    padding-block: 0;
+    padding-inline: 12px 4px;
     justify-content: space-between;
-    /* Icon to the right */
+    /* Icon to the end */
 }
 
 .search-wrapper--disabled {
@@ -210,6 +215,12 @@ dashboard-switcher.disabled {
 .search-wrapper--active .search-input {
     flex: 1;
     width: auto;
+    /* `flex: 1` sets a basis of 0, but a flex item still floors at `min-width:
+       auto` — its intrinsic size — and a text input with no `size` attribute
+       asks the browser for about twenty characters. Measured at 390px: the
+       input claimed 162px inside a 65px pill, overflowed it, and `overflow:
+       hidden` clipped the magnifier away at the eighth character typed. */
+    min-width: 0;
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -218,6 +229,8 @@ dashboard-switcher.disabled {
 .search-clear {
     width: 16px;
     height: 16px;
+    /* Without this the pill's overflow eats it before the text stops growing. */
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -251,6 +264,34 @@ dashboard-switcher.disabled {
 
 .search-wrapper:hover .search-icon,
 .search-wrapper--active .search-icon {
+    color: var(--accent);
+}
+
+/* Hidden at every width where the search is a pill among icons: there the way
+   out is clicking off it, and a second control would just take room. It earns
+   its place only in the narrow layout below, where the search covers the bar
+   and clicking off it lands on nothing. */
+.search-close {
+    display: none;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    flex-shrink: 0;
+    order: 2;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+}
+
+.search-close svg {
+    width: 18px;
+    height: 18px;
+}
+
+.search-close:hover {
     color: var(--accent);
 }
 
@@ -447,3 +488,57 @@ dashboard-switcher.disabled {
 }
 
 .tb-bulk__clear:hover { color: var(--text-main); }
+
+/* Narrow screens: the search covers the bar instead of squeezing between the
+   title and the icons.
+ *
+ * Measured at 390px with monitoring and Proxmox on: the actions row is 243px
+ * and the five icons to the right of the search take 180px of it with their
+ * gaps, so the pill opened to 65px — roughly thirty of them typable. The title
+ * carries `flex-shrink: 0` on purpose, so the space to the left is not
+ * negotiable either.
+ *
+ * Covering the bar is one element changing one property. Hiding the icons
+ * instead would mean combining a sixth condition into visibility rules that
+ * already depend on edit mode, monitoring and Proxmox — which is where buttons
+ * that appear and disappear come from — and it would still leave the title's
+ * width untouched.
+ *
+ * 600px, not the 1023px used elsewhere: above it the pill is wide enough, and
+ * the panel name is the operator's to choose, so a long one eats into this
+ * before the viewport does. */
+@media (max-width: 600px) {
+
+    .search-wrapper--active {
+        /* .top-bar is sticky, so it is the containing block already. */
+        position: absolute;
+        inset-inline: 12px;
+        top: 8px;
+        /* The base rule pins the pill at 32px. In flex layout `flex-basis`
+           overrode it; out of flow it does not, and an explicit width beats
+           having both insets set — the box came out 50px wide with the class
+           correctly applied, which is the sort of thing only its geometry
+           tells you. */
+        width: auto;
+        max-width: none;
+        /* Over the icons it covers, under the settings drawer (2000). */
+        z-index: 5;
+    }
+
+    /* The magnifier says "search here" and is the thing you press to open it.
+       Once the bar is covered, what is needed is the way back. */
+    .search-wrapper--active .search-icon {
+        display: none;
+    }
+
+    .search-wrapper--active .search-close {
+        display: flex;
+    }
+
+    /* Two crosses side by side would be a puzzle, so the small one that only
+       empties the field stands down and the close does both. `!important`
+       because the template writes this element's display inline.  */
+    .search-wrapper--active .search-clear {
+        display: none !important;
+    }
+}

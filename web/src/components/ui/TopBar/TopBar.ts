@@ -153,6 +153,26 @@ class TopBar extends HTMLElement {
         }
     }
 
+    /**
+     * Fold the search away and drop the filter with it.
+     *
+     * The query lives in three places — the state, the input, and the board
+     * that is listening — and all three have to agree. Escape used to clear the
+     * first two only, so the next render wrote the stale query back into a box
+     * that was filtering nothing.
+     */
+    closeSearch() {
+        const input = this.shadowRoot?.getElementById('search-input') as HTMLInputElement | null;
+        if (input) input.value = '';
+        this.state.searchQuery = '';
+        this.setState({ searchActive: false });
+        this.dispatchEvent(new CustomEvent('search-input', {
+            detail: { query: '' },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
     setupListeners() {
         this.shadowRoot!.addEventListener('click', (e: Event) => {
             const target = e.target as HTMLElement;
@@ -192,6 +212,18 @@ class TopBar extends HTMLElement {
                     bubbles: true,
                     composed: true
                 }));
+                return;
+            }
+
+            // Closing has to empty the field as well as fold the search away.
+            // On a narrow screen the open search covers the bar, so a click off
+            // it lands on nothing, and the window handler below only closes an
+            // empty one: leaving the text would strand the visitor behind a
+            // search box with no way back to their own icons.
+            const searchClose = target.closest('#search-close');
+            if (searchClose) {
+                e.stopPropagation();
+                this.closeSearch();
                 return;
             }
 
@@ -321,14 +353,8 @@ class TopBar extends HTMLElement {
             }
 
             if (target.id === 'search-input' && keyEvent.key === 'Escape') {
-                target.value = '';
-                this.setState({ searchActive: false });
-                this.dispatchEvent(new CustomEvent('search-input', {
-                    detail: { query: '' },
-                    bubbles: true,
-                    composed: true
-                }));
                 target.blur();
+                this.closeSearch();
             }
         });
 
