@@ -4,14 +4,14 @@
 /* Wider than the shared default (it is a gallery of widget cards), so it must
    out-specify .dialog-base from styles/shared.css. */
 dialog.dialog-base {
-    background: var(--surface);
+    background: var(--paper-bg);
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 32px;
     width: 720px;
     max-width: 95vw;
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
     animation: modalIn 0.3s var(--ease-bounce);
 }

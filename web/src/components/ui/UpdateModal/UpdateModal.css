@@ -3,11 +3,12 @@
 }
 
 dialog {
-    background: var(--surface-solid);
+    background: var(--paper-bg);
     border: 1px solid var(--border);
     padding: 28px;
     width: clamp(320px, 90vw, 460px);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
 }
 
 dialog::backdrop {
