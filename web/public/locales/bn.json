@@ -557,6 +557,7 @@
   "proxmox.bookmark": "বুকমার্ক",
   "proxmox.search": "মেশিন খুঁজুন…",
   "proxmox.services_down": "বন্ধ সেবা",
+  "proxmox.stopped_count": "বন্ধ",
   "proxmox.almost_full": "১০%-এর কম বাকি",
   "proxmox.stopped_title": "বন্ধ",
   "proxmox.stopped_breaks": "এটি সাড়া দিচ্ছে না:",

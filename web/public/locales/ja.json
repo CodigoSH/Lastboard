@@ -557,6 +557,7 @@
   "proxmox.bookmark": "ブックマーク",
   "proxmox.search": "マシンを検索…",
   "proxmox.services_down": "停止中のサービス",
+  "proxmox.stopped_count": "停止中",
   "proxmox.almost_full": "残り 10% を切りました",
   "proxmox.stopped_title": "停止中",
   "proxmox.stopped_breaks": "これが応答しなくなります:",

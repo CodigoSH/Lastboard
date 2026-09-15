@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Signet",
   "proxmox.search": "Rechercher une machine…",
   "proxmox.services_down": "Services hors service",
+  "proxmox.stopped_count": "Arrêtées",
   "proxmox.almost_full": "Moins de 10 % restants",
   "proxmox.stopped_title": "Arrêtée",
   "proxmox.stopped_breaks": "Ceci ne répond plus :",

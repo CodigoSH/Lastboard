@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Lesezeichen",
   "proxmox.search": "Maschine suchen…",
   "proxmox.services_down": "Dienste ausgefallen",
+  "proxmox.stopped_count": "Gestoppt",
   "proxmox.almost_full": "Weniger als 10 % frei",
   "proxmox.stopped_title": "Gestoppt",
   "proxmox.stopped_breaks": "Das antwortet nicht mehr:",

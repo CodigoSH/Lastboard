@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Σελιδοδείκτης",
   "proxmox.search": "Αναζήτηση μηχανής…",
   "proxmox.services_down": "Υπηρεσίες εκτός",
+  "proxmox.stopped_count": "Σταματημένες",
   "proxmox.almost_full": "Απομένει λιγότερο από 10%",
   "proxmox.stopped_title": "Σταματημένη",
   "proxmox.stopped_breaks": "Αυτό δεν απαντά:",

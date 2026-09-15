@@ -129,8 +129,8 @@ shows it beside the services it runs.
   fits" rule — measured on a real host of 29 containers and 55 bookmarks: 16 matched, none
   wrongly. Where no rule should guess, you name the machine on the bookmark itself.
 - **That is the point of it**: a stopped container does not just say *stopped*, it says
-  **which service it takes with it**, and the header counts how many of your bookmarked
-  services are down.
+  **which service it takes with it** — its tile wears your accent colour instead of the grey
+  every other stopped machine gets, and the summary names the service.
 - **Start and shut down** a machine, with confirmation — administrators only, and only when the
   token actually carries `VM.PowerMgmt`, which Lastboard asks the host rather than assuming.
   **Nodes can never be powered off from Lastboard**, deliberately.

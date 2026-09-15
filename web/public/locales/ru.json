@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Закладка",
   "proxmox.search": "Найти машину…",
   "proxmox.services_down": "Службы не работают",
+  "proxmox.stopped_count": "Остановлено",
   "proxmox.almost_full": "Осталось менее 10 %",
   "proxmox.stopped_title": "Остановлена",
   "proxmox.stopped_breaks": "Это перестаёт отвечать:",

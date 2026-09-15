@@ -557,6 +557,7 @@
   "proxmox.bookmark": "बुकमार्क",
   "proxmox.search": "मशीन खोजें…",
   "proxmox.services_down": "सेवाएँ बंद",
+  "proxmox.stopped_count": "बंद",
   "proxmox.almost_full": "10% से कम बचा है",
   "proxmox.stopped_title": "बंद",
   "proxmox.stopped_breaks": "यह जवाब नहीं दे रहा:",

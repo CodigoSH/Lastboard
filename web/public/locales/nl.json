@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Bladwijzer",
   "proxmox.search": "Machine zoeken…",
   "proxmox.services_down": "Diensten uit",
+  "proxmox.stopped_count": "Gestopt",
   "proxmox.almost_full": "Minder dan 10% over",
   "proxmox.stopped_title": "Gestopt",
   "proxmox.stopped_breaks": "Dit reageert niet meer:",

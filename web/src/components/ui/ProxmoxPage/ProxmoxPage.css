@@ -112,7 +112,9 @@
 }
 
 .stat b { color: var(--text-main); font-weight: 600; }
-.stat--hot b { color: var(--accent); }
+/* Up and down, in the two colours the grid uses for the same thing. */
+.stat--up b { color: var(--success-color); }
+.stat--down b { color: var(--danger-color); }
 
 /* The count of stopped machines is the one filter worth having, so it is the
    text that already says it rather than a control of its own. */
@@ -358,11 +360,6 @@
 /* The one thing that shouts: a machine that is down AND has a bookmark
    pointing at it, because that is a service of yours that stopped answering.
    One that is off on purpose, with nothing behind it, stays quiet. */
-.tile--flag {
-    border-color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.06);
-}
-
 .tile__t1 { display: flex; align-items: center; gap: 8px; min-width: 0; padding-inline-end: 14px; }
 
 .ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; }
@@ -374,9 +371,38 @@
    accent edge next to this one is louder on purpose — that one is an outage. */
 .tile--off {
     border-color: rgba(128, 128, 128, 0.5);
-    background: rgba(128, 128, 128, 0.05);
 }
 .tile--off .ico { opacity: 0.45; }
+
+/* The layer that makes a stopped machine look switched off.
+   It sits over the whole tile, contents included — that is the point: the
+   state reads from across the grid, before any of the words are legible.
+   The strength comes from --off-veil, which the theme sets: a dark card is
+   already near black, so it needs a far heavier veil than a white one to look
+   any different at all. The one with a bookmark behind it wears the accent
+   instead: same layer, same edge, a colour that says look here. */
+.tile--off::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--off-veil, rgba(0, 0, 0, 0.16));
+    pointer-events: none;
+    z-index: 1;
+}
+/* After .tile--off on purpose, and it has to stay after it: a flagged tile
+   wears both classes, they score the same, and the one written last wins. The
+   accent edge here was overridden by the grey one for as long as it existed —
+   the rule was three declarations up the file and never applied to anything. */
+.tile--flag {
+    border-color: var(--accent);
+    /* A second ring drawn inside the border, so the edge reads as emphasis
+       without a 2px border moving the contents by a pixel. */
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+.tile--flag::after { background: rgba(var(--accent-rgb), 0.13); }
+/* The state dot is the one thing the layer must not wash out. */
+.tile__st { z-index: 2; }
 
 .tile__name {
     font-size: 13px;

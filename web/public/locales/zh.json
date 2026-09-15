@@ -557,6 +557,7 @@
   "proxmox.bookmark": "书签",
   "proxmox.search": "搜索虚拟机…",
   "proxmox.services_down": "中断的服务",
+  "proxmox.stopped_count": "已停止",
   "proxmox.almost_full": "剩余不到 10%",
   "proxmox.stopped_title": "已停止",
   "proxmox.stopped_breaks": "这个将不再响应：",

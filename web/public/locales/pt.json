@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Marcador",
   "proxmox.search": "Procurar uma máquina…",
   "proxmox.services_down": "Serviços em baixo",
+  "proxmox.stopped_count": "Paradas",
   "proxmox.almost_full": "Resta menos de 10 %",
   "proxmox.stopped_title": "Parada",
   "proxmox.stopped_breaks": "Isto deixa de responder:",

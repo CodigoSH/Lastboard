@@ -397,10 +397,11 @@ class ProxmoxPage extends HTMLElement {
             ? `<span class="ico"><img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy"></span>`
             : `<span class="ico ico--none">${ICON_FALLBACK}</span>`;
 
-        // Three states, three colours: running, stopped, and stopped with a
-        // service on it. The middle one used to wear the same faint grey as
-        // "nothing to say here", which is not what a machine that is off is.
-        const dot = g.running ? 'up' : (flag ? 'bad' : 'warn');
+        // Two states, two colours, the same two the header counts: on or off.
+        // The third thing worth knowing — that a bookmark of yours went down
+        // with this machine — is no longer a third colour in a 9px dot: it is
+        // the accent edge and the accent wash over the whole tile.
+        const dot = g.running ? 'up' : 'bad';
         const line = this.series.get(`${this.range}|${g.vmid}`) ?? [];
 
         return `<button class="card tile${g.running ? '' : ' tile--off'}${flag ? ' tile--flag' : ''}" data-guest="${g.vmid}">
@@ -442,7 +443,13 @@ class ProxmoxPage extends HTMLElement {
         const d = this.data;
         const guests = d?.guests ?? [];
         const running = guests.filter(g => g.running).length;
-        const down = guests.filter(g => !g.running && !!this.backing(g)).length;
+        // Every stopped machine, not only the ones with a bookmark on them.
+        // The header is a headcount — how many are up, how many are down — and
+        // it used to say "Services down: 0" with something plainly stopped on
+        // screen, because it was quietly counting a different thing. The
+        // bookmarked outage still has its own place: the summary says which
+        // service stopped answering, and the tile wears the accent.
+        const down = guests.length - running;
 
         // "Cluster" is what the host says, not what we assume: a standalone node
         // is the common case and must not be called one.
@@ -450,15 +457,28 @@ class ProxmoxPage extends HTMLElement {
 
         el.innerHTML = `
             <span class="stat"><span class="dot dot--up"></span> <b>${escapeHtml(who)}</b></span>
-            <span class="stat"><b>${running}</b>/${guests.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
-            <span class="stat stat--hot ${down ? 'stat--click' : ''} ${this.onlyStopped ? 'stat--on' : ''}" id="pp-down"
+            <span class="stat stat--up"><b>${running}</b>/${guests.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
+            <span class="stat stat--down ${down ? 'stat--click' : ''} ${this.onlyStopped ? 'stat--on' : ''}" id="pp-down"
                   ${down ? 'role="button" tabindex="0"' : ''}>
-                ${escapeHtml(i18n.t('proxmox.services_down'))}: <b>${down}</b>
+                ${escapeHtml(i18n.t('proxmox.stopped_count'))}: <b>${down}</b>
             </span>`;
     }
 
     private paint() {
         if (!this._built) return;
+        // One hypervisor is not a set worth summarising: the page opens on it.
+        //
+        // This decides which view we are in, so it has to run before anything
+        // is painted. It used to live inside paintBody(), which paint() calls
+        // AFTER paintStatus() — so on a single-hypervisor install the header
+        // was painted while the page still called itself a summary, wrote
+        // nothing at all, and stayed empty until the next poll fifteen seconds
+        // later replaced it with the counts.
+        if (this.loaded && !this.error && this.view === 'summary' && this.hosts.length === 1) {
+            this.view = 'cluster';
+            this.hostId = this.hosts[0].id;
+            this.data = this.hosts[0];
+        }
         const several = this.hosts.length > 1;
         const title = this.shadowRoot?.getElementById('pp-title');
         // Inside a cluster of several, the title is that cluster: the header
@@ -601,12 +621,6 @@ class ProxmoxPage extends HTMLElement {
 
         if (!this.loaded) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`; return; }
         if (this.error) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t(this.error))}</div>`; return; }
-        // One hypervisor is not a set worth summarising: the page opens on it.
-        if (this.view === 'summary' && this.hosts.length === 1) {
-            this.view = 'cluster';
-            this.hostId = this.hosts[0].id;
-            this.data = this.hosts[0];
-        }
         if (this.view === 'summary') { this._shell = false; this.paintSummary(body); return; }
         if (!this._shell) this.buildShell();
 

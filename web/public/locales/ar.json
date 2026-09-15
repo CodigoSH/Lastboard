@@ -557,6 +557,7 @@
   "proxmox.bookmark": "إشارة مرجعية",
   "proxmox.search": "ابحث عن جهاز…",
   "proxmox.services_down": "خدمات متوقفة",
+  "proxmox.stopped_count": "متوقفة",
   "proxmox.almost_full": "بقي أقل من ١٠٪",
   "proxmox.stopped_title": "متوقف",
   "proxmox.stopped_breaks": "هذا لا يستجيب:",

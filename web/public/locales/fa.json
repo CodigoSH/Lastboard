@@ -557,6 +557,7 @@
   "proxmox.bookmark": "نشانک",
   "proxmox.search": "جست‌وجوی ماشین…",
   "proxmox.services_down": "سرویس‌های ازکارافتاده",
+  "proxmox.stopped_count": "متوقف",
   "proxmox.almost_full": "کمتر از ۱۰٪ باقی مانده",
   "proxmox.stopped_title": "متوقف",
   "proxmox.stopped_breaks": "این پاسخ نمی‌دهد:",

@@ -557,6 +557,7 @@
   "proxmox.bookmark": "بُک مارک",
   "proxmox.search": "مشین تلاش کریں…",
   "proxmox.services_down": "بند خدمات",
+  "proxmox.stopped_count": "بند",
   "proxmox.almost_full": "دس فیصد سے کم باقی",
   "proxmox.stopped_title": "بند",
   "proxmox.stopped_breaks": "یہ جواب دینا بند کر دیتا ہے:",

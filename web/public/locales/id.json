@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Markah",
   "proxmox.search": "Cari mesin…",
   "proxmox.services_down": "Layanan mati",
+  "proxmox.stopped_count": "Berhenti",
   "proxmox.almost_full": "Sisa kurang dari 10%",
   "proxmox.stopped_title": "Berhenti",
   "proxmox.stopped_breaks": "Ini berhenti merespons:",

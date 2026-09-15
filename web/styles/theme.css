@@ -12,6 +12,12 @@
     --surface-dim: rgba(255, 255, 255, 0.4);
     --glass-blur: none;
     --modal-blur: blur(12px);
+    /* The veil that makes a switched-off thing look switched off. Black in
+       both themes — a grey one would LIGHTEN a dark card, which reads as lit
+       up — but far heavier on dark, where 14% over a near-black surface is
+       invisible. Variables cross shadow roots; rules do not, which is why this
+       lives here and not in the component. */
+    --off-veil: rgba(0, 0, 0, 0.14);
 
     /* Accents */
     --accent: #e8520e;
@@ -117,6 +123,7 @@
     --surface-active: rgba(var(--accent-rgb), 0.2);
     --glass-blur: none;
     --modal-blur: blur(12px);
+    --off-veil: rgba(0, 0, 0, 0.42);
 
     /* Accents */
     --accent-rgb: 232, 82, 14;

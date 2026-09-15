@@ -102,21 +102,21 @@ Click a card to go into that cluster. The header then carries its name and an ar
 
 The Proxmox icon in the top bar opens it — or the summary above, if you have more than one — and the **×** in its header closes it. While it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
 
-**The header** carries the state of the host beside the title, not on a bar of its own: node name (or *Cluster*, when the host says it is one), how many machines are running out of how many, and **Services down** — how many of your bookmarked services are on a machine that is stopped.
+**The header** carries the state of the host beside the title, not on a bar of its own: node name (or *Cluster*, when the host says it is one), how many machines are running out of how many **in green**, and **Stopped** — how many are not — **in red**. It is a headcount of the same machines, counted twice: the two numbers add up to the total, which is the point. Whether one of those stopped machines is serving a bookmark of yours is said where it can be acted on — on the tile itself, and on the summary.
 
-**Nodes** — one card per node with CPU, memory and disk, plus uptime, load average and how many machines it carries. Memory and disk also give the figure behind the percentage — *48 % (15 GiB)* — because "half full" says nothing about whether another machine, or another backup, fits. The header counts both **cores and threads**, which are not the same number: a chip with 12 cores reports 16 threads, and a card that names only one of them is ambiguous about which. On a cluster the header says so; a single node is never called a cluster.
+**Nodes** — one card per node with CPU, memory and disk as percentages, and a labelled footer with **uptime** and **load average**. The full figures behind those percentages — *15 GiB / 31,1 GiB* — are in the sheet the card opens, because "half full" says nothing about whether another machine, or another backup, fits. The header counts both **cores and threads**, which are not the same number: a chip with 12 cores reports 16 threads, and a card that names only one of them is ambiguous about which. On a cluster the header says so; a single node is never called a cluster.
 
 **Storage** — one card per store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
 
 **Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its CPU with a **trend line over the last 24 hours**, its memory as a percentage and in bytes, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
 
-The dot in the corner says which of three things a machine is:
+The dot in the corner says one thing, the two colours the header counts: **green** running, **red** stopped. The tile itself says the rest:
 
 | | |
 | :--- | :--- |
-| **Green** | running |
-| **Amber**, brighter edge | stopped, with no bookmark pointing at it — turning things off is a normal thing to do |
-| **Red**, accent edge and a wash of accent | stopped **and** serving a bookmark: that is an outage |
+| Running | full colour |
+| Stopped | dimmed, as if switched off, with a grey edge — turning things off is a normal thing to do |
+| Stopped **and** serving a bookmark | the same switched-off layer and the same emphasised edge, both in your accent colour: that is an outage, and it is the only thing on the grid wearing the accent |
 
 Tiles keep their place whatever happens to them — by kind, then by VMID. A machine you know where to find stays there, and a stopped one is picked out by how it looks rather than by the grid rearranging itself under your pointer. (The widget is the other way round: it has room for a handful of rows, so what needs attention is lifted into them.)
 
@@ -124,7 +124,7 @@ Tiles keep their place whatever happens to them — by kind, then by VMID. A mac
 
 A folded node's machines are not asked for either: their trend lines are one request per machine, so folding a node you are not looking at spares your host those calls entirely.
 
-The search box in the **Machines** header filters by name or VMID. When something is down, the **Services down** count becomes a button: click it to show only the stopped machines, and click it again to bring the rest back. **While either is active, folds are ignored** — a search that reported nothing because the answer was folded away would be a lie the page told about its own contents.
+The search box in the **Machines** header filters by name or VMID. When something is stopped, the **Stopped** count becomes a button: click it to show only those machines, and click it again to bring the rest back — it now shows exactly what it counts. **While either is active, folds are ignored** — a search that reported nothing because the answer was folded away would be a lie the page told about its own contents.
 
 ## A machine in detail
 

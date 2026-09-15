@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Segnalibro",
   "proxmox.search": "Cerca una macchina…",
   "proxmox.services_down": "Servizi giù",
+  "proxmox.stopped_count": "Arrestate",
   "proxmox.almost_full": "Rimane meno del 10%",
   "proxmox.stopped_title": "Ferma",
   "proxmox.stopped_breaks": "Questo non risponde più:",

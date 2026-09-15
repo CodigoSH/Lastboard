@@ -557,6 +557,7 @@
   "proxmox.bookmark": "북마크",
   "proxmox.search": "머신 검색…",
   "proxmox.services_down": "중단된 서비스",
+  "proxmox.stopped_count": "중지됨",
   "proxmox.almost_full": "10% 미만 남음",
   "proxmox.stopped_title": "중지됨",
   "proxmox.stopped_breaks": "다음이 응답하지 않습니다:",

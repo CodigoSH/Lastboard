@@ -557,6 +557,7 @@
   "proxmox.bookmark": "Yer imi",
   "proxmox.search": "Makine ara…",
   "proxmox.services_down": "Kapalı hizmetler",
+  "proxmox.stopped_count": "Durduruldu",
   "proxmox.almost_full": "%10’dan az kaldı",
   "proxmox.stopped_title": "Durduruldu",
   "proxmox.stopped_breaks": "Şu yanıt vermiyor:",
