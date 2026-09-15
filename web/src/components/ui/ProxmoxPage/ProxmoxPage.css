@@ -680,9 +680,23 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    /* The height is set by fitLists(), which measures the room actually left
-       and does so again on every resize. The same for all three, so opening
-       any of them gives the same box. */
+    /*
+     * A tope and a scrollbar, and nothing else.
+     *
+     * This was six rounds of measuring the layout in JavaScript to keep opening
+     * a card from ever adding page scroll — a promise that is only keepable
+     * when there happens to be room, so every window size became a new special
+     * case and every fix uncovered the next. On a phone it was worse than
+     * fragile: the page always scrolls there, so the rule resolved to "never
+     * show the list at all", and on six phone viewports it opened to nothing.
+     *
+     * What a disclosure does everywhere else: open, cap, scroll inside. The
+     * same at every size, with no code behind it.
+     */
+    /* height, no max-height: con tope, la lista de seis filas para en su
+       contenido y abre más corta que las de treinta. Los tres abren igual, y
+       el hueco que queda en la corta es el precio de esa igualdad. */
+    height: min(60vh, 440px);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 4px 0 12px;

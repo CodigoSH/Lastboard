@@ -152,7 +152,6 @@ class ProxmoxPage extends HTMLElement {
      */
     private depth = 0;
     private _popstate: () => void;
-    private _resize: () => void;
 
     /**
      * The hypervisor on screen, and every one connected.
@@ -197,9 +196,6 @@ class ProxmoxPage extends HTMLElement {
             if (dlg?.open) return;   // the sheet closes itself first
             this.close();
         };
-        // The room left changes with the window, and so does the cap.
-        this._resize = () => { if (this.hasAttribute('open')) this.fitLists(); };
-
         // Back: the browser's button, the mouse's fourth button, or a swipe
         // from the edge of a phone. Only ours while we have entries on the
         // stack; at any other moment this is somebody else's navigation.
@@ -218,7 +214,6 @@ class ProxmoxPage extends HTMLElement {
         this._build();
         window.addEventListener('keydown', this._keydown);
         window.addEventListener('popstate', this._popstate);
-        window.addEventListener('resize', this._resize);
         this._unsubscribeI18n = i18n.subscribe(() => {
             // The section labels and the placeholder live in the shell, which
             // is written once: a language change is one of the two things that
@@ -231,7 +226,6 @@ class ProxmoxPage extends HTMLElement {
     disconnectedCallback() {
         window.removeEventListener('keydown', this._keydown);
         window.removeEventListener('popstate', this._popstate);
-        window.removeEventListener('resize', this._resize);
         if (this.timer) clearInterval(this.timer);
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
@@ -791,81 +785,6 @@ class ProxmoxPage extends HTMLElement {
         </div>`;
     }
 
-    /**
-     * An open list gets exactly the room that is left, and no more.
-     *
-     * A fixed fraction of the window cannot know: measured at 1280x900, 38vh
-     * came to 356px against 272px of space and the page grew by 84px the
-     * moment a card was opened — the one thing a summary must not do. So the
-     * distance from the top of the list to the bottom of the scrolling body is
-     * the height, and the list scrolls inside that.
-     *
-     * HEIGHT, not max-height, so all three open the same. Capped, the short one
-     * stopped at its own content and came out 56px shorter than the other two:
-     * measured, 388px against 332px for the six-row list. A box of a known size
-     * that scrolls when it has to is what a person expects from a disclosure;
-     * three that each pick their own is what makes a row look accidental.
-     */
-    private fitLists() {
-        const body = this.shadowRoot?.getElementById('pp-body');
-        if (!body) return;
-
-        const bodyBox = () => body.getBoundingClientRect();
-        const roomFor = (el: HTMLElement) => bodyBox().bottom - el.getBoundingClientRect().top - 14;
-
-        // What the page already overflowed by before anything was opened. THAT
-        // is what opening must not add to — not zero. On a short window the
-        // hypervisor tiles overflow on their own, and chasing zero drove the
-        // list to nothing: measured at 620px, sixteen pixels of list.
-        // Scoped to the cards: the alert strip's own list sizes itself. And
-        // ALL of them, because more than one can be open at a time — they sit
-        // in the same row, so they share a top and must share a height too.
-        const lists = () => [...this.shadowRoot!.querySelectorAll<HTMLElement>('.info .info__list')];
-        if (!lists().length) return;
-        for (const el of lists()) el.style.height = '0px';
-        const floor = Math.max(0, body.scrollHeight - body.clientHeight);
-
-        // No reset before measuring. roomFor() reads the list's TOP, which is
-        // only where the lift put it for as long as the list still has the
-        // height that made the body scrollable: clearing it first collapsed
-        // the body, bounced the scroll back to zero and undid the lift — the
-        // list came out sixteen pixels tall and the page grew by sixteen.
-        //
-        // And no floor either. A floor is height the page does not have, and
-        // taking it anyway is exactly the scrollbar this exists to avoid.
-        for (const el of lists()) {
-            const room = Math.round(roomFor(el));
-            // Under about a line there is nothing to show, and the list's own
-            // padding would be the only thing added. Below 620px of window the
-            // tiles and the cards already fill the panel on their own: there is
-            // no room to find and nothing clever to do about it.
-            el.hidden = room < 26;
-            el.style.height = `${Math.max(0, room)}px`;
-        }
-
-        // And then the correction, because the first guess cannot account for
-        // every padding between the list and the bottom of the page. Whatever
-        // still overflows comes off the open list: measured, not derived.
-        //
-        // More than once, because taking height off one element moves what is
-        // under it and the remainder is not known until it has: a single pass
-        // left sixteen pixels over at every window height tried.
-        // The correction goes to every open list, not the first one found.
-        // Trimming only one left it 28px shorter than its neighbours and the
-        // page 7px over: measured with two open, 427px against 455px.
-        for (let pass = 0; pass < 4; pass++) {
-            const over = body.scrollHeight - body.clientHeight - floor;
-            if (over <= 0) break;
-            const now = Math.max(...lists().map(el => el.getBoundingClientRect().height));
-            const next = Math.max(0, Math.round(now - over));
-            if (next === now) break;
-            for (const el of lists()) {
-                el.hidden = next < 26;
-                el.style.height = `${next}px`;
-            }
-        }
-    }
-
     /** A machine in one of those lists: its name, and where it lives. */
     private row(name: string, where: string, hostId: string, bad = false) {
         return `<button class="mrow${bad ? ' mrow--bad' : ''}" data-enter="${escapeHtml(hostId)}">
@@ -923,7 +842,6 @@ class ProxmoxPage extends HTMLElement {
             this.sec(i18n.t('proxmox.hypervisors'), String(this.hosts.length), `<div class="hvs">${tiles}</div>`)
             + alarm
             + (cards.length ? `<div class="infos">${cards.join('')}</div>` : '');
-        this.fitLists();
         this.loadFleetSeries();
     }
 
