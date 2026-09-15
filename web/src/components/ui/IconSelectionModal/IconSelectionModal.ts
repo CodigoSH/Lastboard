@@ -51,8 +51,13 @@ export class IconSelectionModal extends HTMLElement {
         // otherwise reopen still showing the last search — tedious when setting
         // icons for one container after another.
         const picker = this.shadowRoot!.querySelector('icon-picker') as
-            (HTMLElement & { reset?: () => void }) | null;
+            (HTMLElement & { reset?: () => void; ensureIcons?: () => Promise<void> }) | null;
         picker?.reset?.();
+
+        // The catalogues are fetched from here, not when the picker mounts, so
+        // a dashboard load talks to no CDN at all. Deliberately not awaited:
+        // the dialog opens now and the grid fills in when they land.
+        void picker?.ensureIcons?.();
 
         this.dialog.showModal();
 

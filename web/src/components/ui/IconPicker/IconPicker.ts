@@ -37,18 +37,39 @@ class IconPicker extends HTMLElement {
 
         this.renderBase();
         this.setupListeners();
+    }
 
-        // Load icons if not already loaded
-        if (this.icons.length === 0) {
-            await this.loadIcons();
-        }
+    /**
+     * Fetch the icon catalogues, and only when someone is about to look at them.
+     *
+     * This used to run from connectedCallback, which sounds harmless until you
+     * follow where the picker is mounted: it sits inside the bookmark modal,
+     * and index.ts appends that to the body on every load. So four requests
+     * went out — three to jsDelivr, one to the GitHub API — on every single
+     * dashboard load, carrying the visitor's address, for a catalogue the grid
+     * does not even display until something is typed in the search box.
+     *
+     * The security page promises that loading your dashboard reports nothing
+     * to a CDN, "neither your address nor ... which services you run". The
+     * second half held, because picked icons are served from the instance. The
+     * first half did not.
+     *
+     * Safe to call on every open: iconService keeps the catalogue once loaded.
+     */
+    async ensureIcons() {
+        if (this.icons.length > 0) return;
+        this.isLoading = true;
+        this.updateGrid();
+        await this.loadIcons();
     }
 
     async loadIcons() {
         try {
 
             this.icons = await iconService.loadIcons();
-            this.filteredIcons = iconService.searchIcons('', 10);
+            // Honour whatever is in the search box: the catalogue now travels
+            // while the dialog is already open, so the user can be typing.
+            this.filteredIcons = iconService.searchIcons(this.searchQuery, 10);
             this.isLoading = false;
             this.updateGrid();
 
