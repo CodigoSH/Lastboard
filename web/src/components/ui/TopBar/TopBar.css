@@ -525,10 +525,17 @@ dashboard-switcher.disabled {
         z-index: 5;
     }
 
-    /* The magnifier says "search here" and is the thing you press to open it.
-       Once the bar is covered, what is needed is the way back. */
+    /* Covering the bar, the pill reads as a search field rather than as an
+       icon that grew: the magnifier leads, the text follows it, and the way
+       out sits at the far end. `order` alone is not enough to put it first —
+       with equal order the source order decides, and the input is written
+       before it. */
+    .search-wrapper--active {
+        gap: 8px;
+    }
+
     .search-wrapper--active .search-icon {
-        display: none;
+        order: -1;
     }
 
     .search-wrapper--active .search-close {
