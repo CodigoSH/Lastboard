@@ -77,6 +77,18 @@ const fmtUptime = (sec: number): string =>
  * The figure beside the bar keeps no class while it is fine, so coloured text
  * still means "look at this" and only the bar carries the healthy green.
  */
+/**
+ * The same three steps as a bar, as a colour a line can be drawn with, so a
+ * curve and the bar under it never disagree. Stopped machines pass their own
+ * dim colour instead: a flat line at zero is not "healthy", it is absent.
+ */
+const levelColour = (p: number): string => {
+    const l = level(p);
+    return l === 'bad' ? 'var(--danger-color)'
+        : l === 'warn' ? 'var(--warning-color)'
+            : 'var(--success-color)';
+};
+
 const level = (p: number) => (p >= 90 ? 'bad' : p >= 60 ? 'warn' : '');
 
 /**
@@ -485,7 +497,7 @@ class ProxmoxPage extends HTMLElement {
                     ? `<span class="tile__num" aria-label="${escapeHtml(i18n.t('widget.telemetry.cpu'))} ${pct(g.cpu)}%">
                            <span class="tile__gi">${ICON_CPU}</span>${pct(g.cpu)}<small>%</small></span>`
                     : `<span class="tile__num">${escapeHtml(i18n.t('docker.state_stopped'))}</span>`}
-                <span class="tile__spark">${this.spark(line, g.running ? 'var(--accent)' : 'var(--text-dim)', 62, 20)}</span>
+                <span class="tile__spark">${this.spark(line, g.running ? levelColour(g.cpu) : 'var(--text-dim)', 62, 20)}</span>
             </span>
             <span class="tile__t3">
                 <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
@@ -901,7 +913,7 @@ class ProxmoxPage extends HTMLElement {
             <span class="hv__lead">
                 <span class="hv__big"><b>${running}</b><small>/${g.length}</small></span>
                 <span class="hv__cap">${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
-                <span class="hv__curve">${curve.length ? this.spark(curve, 'var(--accent)', 150, 34) : ''}</span>
+                <span class="hv__curve">${curve.length ? this.spark(curve, levelColour(cpu), 150, 34) : ''}</span>
             </span>
 
             <span class="hv__meters">
@@ -1087,7 +1099,7 @@ class ProxmoxPage extends HTMLElement {
         if (!slot) return;
         const values = this.series.get(`${this.range}|${g.vmid}`) ?? [];
         slot.innerHTML = values.length
-            ? this.spark(values, g.running ? 'var(--accent)' : 'var(--text-dim)', 62, 20)
+            ? this.spark(values, g.running ? levelColour(g.cpu) : 'var(--text-dim)', 62, 20)
             : '';
     }
 
@@ -1242,10 +1254,9 @@ class ProxmoxPage extends HTMLElement {
         let s: PxSeries | null = null;
         try { s = await apiService.get<PxSeries>(`/api/proxmox/series?host=${encodeURIComponent(this.hostId)}&range=${this.range}&node=${encodeURIComponent(name)}`); } catch { /* charts are optional */ }
 
-        const accent = n.cpu >= 60 ? 'var(--warning-color)' : 'var(--accent)';
         this.sheet(escapeHtml(n.name), escapeHtml(`${i18n.t('widget.api.extra_node')} · ${n.guests}`), `
-            ${s ? this.chart(i18n.t('widget.telemetry.cpu'), String(Math.round(n.cpu)), '%', s.cpu, accent) : ''}
-            ${s ? this.chart(i18n.t('widget.telemetry.ram'), String(Math.round(n.mem)), '%', s.mem, n.mem >= 80 ? 'var(--warning-color)' : 'var(--accent)') : ''}
+            ${s ? this.chart(i18n.t('widget.telemetry.cpu'), String(Math.round(n.cpu)), '%', s.cpu, levelColour(n.cpu)) : ''}
+            ${s ? this.chart(i18n.t('widget.telemetry.ram'), String(Math.round(n.mem)), '%', s.mem, levelColour(n.mem)) : ''}
             <div class="kv">
                 ${this.kv(ICON_CPU, i18n.t('proxmox.threads'), String(n.threads))}
                 ${n.cores > 0 ? this.kv(ICON_CPU, i18n.t('proxmox.cores'), String(n.cores)) : ''}
@@ -1379,7 +1390,7 @@ class ProxmoxPage extends HTMLElement {
         this.sheet(escapeHtml(g.name), sub, `
             ${warn}
             ${s ? this.chart(i18n.t('widget.telemetry.cpu'), g.running ? pct(g.cpu) : '—', g.running ? '%' : '',
-                s.cpu, g.running ? (g.cpu >= 60 ? 'var(--warning-color)' : 'var(--accent)') : 'var(--text-dim)') : ''}
+                s.cpu, g.running ? levelColour(g.cpu) : 'var(--text-dim)') : ''}
             <div class="kv">
                 ${this.kv(ICON_POWER, i18n.t('proxmox.state'), escapeHtml(i18n.t(g.running ? 'docker.state_running' : 'docker.state_stopped')))}
                 ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), g.running ? escapeHtml(`${fmtBytes(g.mem)} / ${fmtBytes(g.mem_total)}`) : '—')}
