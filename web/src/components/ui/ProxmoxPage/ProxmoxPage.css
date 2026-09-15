@@ -331,12 +331,17 @@
 .group__count { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); }
 
 /* 186px was set before a tile carried the memory figure, and it no longer
-   holds what is on one: measured across 29 real machines at 1600px, a 187px
-   tile clipped 21 names or 26 data lines depending on where the kind pill sat.
-   220 is the first width at which nothing is clipped anywhere — 240 buys the
-   same tile, so it would only cost columns for nothing. The price is six
-   columns instead of eight on a wide screen, which is one extra row of tiles. */
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+   holds what is on one: at 187px, 24 of 28 data lines still ended in an
+   ellipsis even with the bookmark moved off that row.
+
+   215 is the threshold, and it is a threshold on the TILE, not on the
+   viewport: auto-fill divides what is left over, so a wider window can hand
+   out NARROWER tiles — at 1920px a 200px minimum produced 201px tiles and
+   clipped again, while 1600px produced 215px and looked perfect. Measured
+   from 390px to 1920px, 215 is the lowest minimum with nothing clipped
+   anywhere. Do not lower it without re-measuring at several widths, and never
+   at one. */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 8px; }
 
 .tile {
     position: relative;
@@ -365,14 +370,10 @@
 /* The one thing that shouts: a machine that is down AND has a bookmark
    pointing at it, because that is a service of yours that stopped answering.
    One that is off on purpose, with nothing behind it, stays quiet. */
-/* The kind pill rides beside the name, not down on the bottom row. Down there
-   it took about 40px off the one line that has something to say — the VMID,
-   the memory and the figure behind it — and measured at the widths this grid
-   actually produces, 26 of 28 tiles were cutting that line short. Up here the
-   space is free. The end padding clears the status dot, which is absolutely
-   positioned 9px in and 9px wide. */
+/* The end padding keeps the name clear of the corner marks: the status dot
+   alone, or the bookmark and the dot when there is one. */
 .tile__t1 { display: flex; align-items: center; gap: 8px; min-width: 0; padding-inline-end: 22px; }
-.tile__t1 .ty { margin-inline-start: -2px; }
+.tile:has(.tile__book) .tile__t1 { padding-inline-end: 40px; }
 
 .ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; }
 .ico img { display: block; width: 22px; height: 22px; object-fit: contain; }
@@ -466,7 +467,18 @@
     color: var(--text-dim);
 }
 .tile__meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile__book { margin-inline-start: auto; display: grid; place-items: center; flex: none; color: var(--accent); }
+/* Up in the corner, beside the status dot, and not down on the data line.
+   Down there it and its gap took 23px off the one row with something to say,
+   and it is a mark rather than a figure: it belongs with the other mark. */
+.tile__book {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 23px;
+    display: grid;
+    place-items: center;
+    color: var(--accent);
+    z-index: 2;
+}
 
 /* Container or full machine, told by the shape alone: colour belongs to the
    service and the icon to its bookmark, so form is the channel left. */
