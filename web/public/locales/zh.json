@@ -237,6 +237,7 @@
   "settings.proxmox_add": "添加虚拟化主机",
   "settings.proxmox_name_desc": "该虚拟化主机在此处的名称，其虚拟机会归入其下。",
   "settings.proxmox_none": "尚未连接任何虚拟化主机。",
+  "settings.proxmox_off": "已关闭",
   "settings.theme_system": "跟随系统",
   "settings.new_password": "新密码",
   "settings.new_version_notif": "新版本可用！",

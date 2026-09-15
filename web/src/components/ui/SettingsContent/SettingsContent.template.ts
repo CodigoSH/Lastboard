@@ -465,78 +465,40 @@ export type PxHostStatus = {
 };
 
 /**
- * One card per hypervisor.
+ * The hypervisors, as a list.
  *
- * It was a single form until a second Proxmox became possible. The fields are
- * the same ones; what changed is that they repeat, and that each set carries
- * the name its machines will be filed under everywhere else.
+ * They were a card each, with every field on screen at once, which turned four
+ * connections into a page nobody could see the end of. This is the shape the
+ * user list already uses here: a row you can read at a glance, and a dialog for
+ * the moment you actually want to type.
  */
-const proxmoxHostCard = (h: PxSettingsHost, i: number, status: PxHostStatus | undefined, removable: boolean) => {
-    const line = !status || status.state === 'idle' ? ''
-        : status.state === 'testing'
-            ? `<p class="settings-content__text-dim" style="font-size:12px;margin:12px 0 0;">${i18n.t('settings.proxmox_testing')}</p>`
-            : status.state === 'ok'
-                ? `<p style="font-size:12px;margin:12px 0 0;color:var(--success-color);">
-                       ${i18n.t('settings.proxmox_connected', { nodes: String(status.nodes ?? 0), guests: String(status.guests ?? 0) })}
-                       <span class="settings-content__text-dim">· ${status.power ? i18n.t('widget.proxmox.can_power') : i18n.t('widget.proxmox.read_only')}</span>
-                   </p>`
-                : `<p style="font-size:12px;margin:12px 0 0;color:var(--danger-color);">${i18n.t(status.key || 'proxmox.connection_error')}</p>`;
+const proxmoxRow = (h: PxSettingsHost, i: number, status: PxHostStatus | undefined) => {
+    const state = !h.enabled ? 'off'
+        : status?.state === 'ok' ? 'up'
+            : status?.state === 'error' ? 'bad' : 'idle';
+    const note = !h.enabled ? i18n.t('settings.proxmox_off')
+        : status?.state === 'ok'
+            ? i18n.t('settings.proxmox_connected', { nodes: String(status.nodes ?? 0), guests: String(status.guests ?? 0) })
+            : status?.state === 'error' ? i18n.t(status.key || 'proxmox.connection_error')
+                : status?.state === 'testing' ? i18n.t('settings.proxmox_testing') : h.url;
 
     return `
-    <div class="bento-card px-host" data-host-index="${i}">
-        <div class="px-host__head">
-            <h3 class="settings-content__title" style="margin:0;">${esc(h.name || i18n.t('widget.proxmox.name'))}</h3>
-            <label class="toggle-switch">
-                <input type="checkbox" id="proxmox-enabled-${i}" ${h.enabled ? 'checked' : ''}>
-                <span class="slider"></span>
-            </label>
-            ${removable ? `<button type="button" class="px-host__remove" data-action="remove-proxmox-host" data-index="${i}"
-                    aria-label="${esc(i18n.t('action.remove'))}" title="${esc(i18n.t('action.remove'))}">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>` : ''}
+    <div class="settings-content__row px-row">
+        <span class="px-row__dot px-row__dot--${state}"></span>
+        <div class="px-row__body">
+            <div class="px-row__name">${esc(h.name || i18n.t('widget.proxmox.name'))}</div>
+            <div class="px-row__note px-row__note--${state}">${esc(note)}</div>
         </div>
-
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('docker.host_name')}</label>
-            <input type="text" id="proxmox-name-${i}" class="settings-content__input" value="${esc(h.name)}" spellcheck="false" placeholder="${esc(i18n.t('widget.proxmox.name'))}" />
-            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_name_desc')}</p>
+        <div class="user-actions">
+            <button class="user-action-btn edit" data-action="edit-proxmox-host" data-index="${i}"
+                    title="${esc(i18n.t('general.edit'))}" aria-label="${esc(i18n.t('general.edit'))}">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="user-action-btn delete" data-action="delete-proxmox-host" data-index="${i}"
+                    title="${esc(i18n.t('action.remove'))}" aria-label="${esc(i18n.t('action.remove'))}">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            </button>
         </div>
-
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('settings.proxmox_url')}</label>
-            <input type="text" id="proxmox-url-${i}" class="settings-content__input" value="${esc(h.url)}" spellcheck="false" placeholder="https://192.168.1.10:8006" />
-            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_url_desc')}</p>
-        </div>
-
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('settings.proxmox_token_id')}</label>
-            <input type="text" id="proxmox-token-id-${i}" class="settings-content__input" value="${esc(h.token_id)}" spellcheck="false" placeholder="lastboard@pve!lastboard" />
-            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_token_id_desc')}</p>
-        </div>
-
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('settings.proxmox_secret')}</label>
-            <div class="pw-wrap">
-                <input type="password" id="proxmox-secret-${i}" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password"
-                       placeholder="${h.has_secret ? i18n.t('settings.proxmox_secret_stored') : '00000000-0000-0000-0000-000000000000'}" />
-                ${pwToggle()}
-            </div>
-            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_secret_desc')}</p>
-        </div>
-
-        <div class="settings-content__action-group">
-            <div class="settings-content__action-row">
-                <div class="settings-content__action-info">
-                    <h3>${i18n.t('settings.proxmox_insecure')}</h3>
-                    <p>${i18n.t('settings.proxmox_insecure_desc')}</p>
-                </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="proxmox-insecure-${i}" ${h.insecure ? 'checked' : ''}>
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-        ${line}
     </div>`;
 };
 
@@ -560,24 +522,85 @@ export const proxmoxTemplate = (
     }
 
     const hosts = px.hosts || [];
-    const cards = hosts.length
-        ? hosts.map((h, i) => proxmoxHostCard(h, i, status[h.id || String(i)], hosts.length > 1)).join('')
-        : `<div class="bento-card">
-               <p class="settings-content__text-dim" style="font-size:13px;margin:0;">${i18n.t('settings.proxmox_none')}</p>
-           </div>`;
 
     return `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
-            <h3 class="settings-content__title">${i18n.t('widget.proxmox.name')}</h3>
-            <p class="settings-content__text-dim" style="font-size: 13px; margin: -6px 0 0;">${i18n.t('settings.proxmox_desc')}</p>
-        </div>
-        ${cards}
-        <div class="settings-content__form-actions" style="justify-content: space-between;">
-            <app-button data-action="add-proxmox-host">+ ${i18n.t('settings.proxmox_add')}</app-button>
-            <app-button variant="primary" data-action="save-proxmox">${i18n.t('settings.proxmox_save')}</app-button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
+                <h3 class="settings-content__title" style="margin:0;">${i18n.t('widget.proxmox.name')}</h3>
+                <app-button variant="primary" data-action="add-proxmox-host" style="width:auto; padding:0 16px;">+ ${i18n.t('settings.proxmox_add')}</app-button>
+            </div>
+            <p class="settings-content__text-dim" style="font-size: 13px; margin: -12px 0 16px;">${i18n.t('settings.proxmox_desc')}</p>
+
+            <div class="settings-content__user-list">
+                ${hosts.map((h, i) => proxmoxRow(h, i, status[h.id || String(i)])).join('')}
+            </div>
+            ${hosts.length === 0 ? `<p class="settings-content__text-dim">${i18n.t('settings.proxmox_none')}</p>` : ''}
         </div>
     </div>
+
+    <dialog id="proxmox-modal" style="background: var(--surface-solid); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 440px; max-width: calc(100vw - 32px); backdrop-filter: blur(20px);">
+        <div class="modal-header">
+            <h3 class="modal-title" id="proxmox-modal-title">${i18n.t('settings.proxmox_add')}</h3>
+            <button class="modal-close" data-action="close-modal" data-modal="proxmox-modal" aria-label="${i18n.t('general.close')}">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        </div>
+
+        <input type="hidden" id="proxmox-edit-index" value="-1">
+
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">${i18n.t('docker.host_name')}</label>
+            <input type="text" id="proxmox-name" class="settings-content__input" spellcheck="false" placeholder="${esc(i18n.t('widget.proxmox.name'))}">
+            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_name_desc')}</p>
+        </div>
+
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">${i18n.t('settings.proxmox_url')}</label>
+            <input type="text" id="proxmox-url" class="settings-content__input" spellcheck="false" placeholder="https://192.168.1.10:8006">
+        </div>
+
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">${i18n.t('settings.proxmox_token_id')}</label>
+            <input type="text" id="proxmox-token-id" class="settings-content__input" spellcheck="false" placeholder="lastboard@pve!lastboard">
+        </div>
+
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">${i18n.t('settings.proxmox_secret')}</label>
+            <div class="pw-wrap">
+                <input type="password" id="proxmox-secret" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password" placeholder="00000000-0000-0000-0000-000000000000">
+                ${pwToggle()}
+            </div>
+            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_secret_desc')}</p>
+        </div>
+
+        <div class="settings-content__action-group">
+            <div class="settings-content__action-row">
+                <div class="settings-content__action-info">
+                    <h3>${i18n.t('settings.proxmox_enabled')}</h3>
+                    <p>${i18n.t('settings.proxmox_enabled_desc')}</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="proxmox-enabled">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-content__action-row">
+                <div class="settings-content__action-info">
+                    <h3>${i18n.t('settings.proxmox_insecure')}</h3>
+                    <p>${i18n.t('settings.proxmox_insecure_desc')}</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="proxmox-insecure">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
+            <app-button variant="primary" data-action="save-proxmox-host">${i18n.t('general.save')}</app-button>
+        </div>
+    </dialog>
 `;
 };
 

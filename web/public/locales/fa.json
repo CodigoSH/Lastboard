@@ -237,6 +237,7 @@
   "settings.proxmox_add": "افزودن هایپروایزر",
   "settings.proxmox_name_desc": "نام این هایپروایزر در اینجا. ماشین‌هایش زیر همین نام دسته‌بندی می‌شوند.",
   "settings.proxmox_none": "هنوز هیچ هایپروایزری متصل نشده است.",
+  "settings.proxmox_off": "خاموش",
   "settings.theme_system": "سیستم",
   "settings.new_password": "رمز عبور جدید",
   "settings.new_version_notif": "نسخه جدید در دسترس است!",

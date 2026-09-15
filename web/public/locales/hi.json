@@ -237,6 +237,7 @@
   "settings.proxmox_add": "हाइपरवाइज़र जोड़ें",
   "settings.proxmox_name_desc": "यहाँ इस हाइपरवाइज़र का नाम। इसकी मशीनें इसी के अंतर्गत दर्ज होती हैं।",
   "settings.proxmox_none": "अभी कोई हाइपरवाइज़र जुड़ा नहीं है।",
+  "settings.proxmox_off": "बंद",
   "settings.theme_system": "सिस्टम",
   "settings.new_password": "नया पासवर्ड",
   "settings.new_version_notif": "नया संस्करण उपलब्ध है!",

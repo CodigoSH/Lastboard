@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Ajouter un hyperviseur",
   "settings.proxmox_name_desc": "Le nom de cet hyperviseur ici. Ses machines sont classées sous ce nom.",
   "settings.proxmox_none": "Aucun hyperviseur connecté pour l'instant.",
+  "settings.proxmox_off": "Désactivé",
   "settings.theme_system": "Système",
   "settings.new_password": "Nouveau mot de passe",
   "settings.new_version_notif": "Nouvelle version disponible !",

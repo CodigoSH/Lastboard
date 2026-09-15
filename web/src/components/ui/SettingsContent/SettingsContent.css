@@ -317,7 +317,8 @@ dialog::backdrop {
     width: 100%;
 }
 
-.settings-content__user-item {
+.settings-content__user-item,
+.settings-content__row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -331,7 +332,8 @@ dialog::backdrop {
     box-sizing: border-box;
 }
 
-.settings-content__user-item:hover {
+.settings-content__user-item:hover,
+.settings-content__row:hover {
     border-color: rgba(var(--accent-rgb), 0.4);
     background: rgba(var(--accent-rgb), 0.04);
 }
@@ -1283,41 +1285,44 @@ input:checked+.slider:before {
     border-color: #ef4444;
     color: #fff;
 }
-/* One card per hypervisor: its name and its switch on the same line as the
-   control that removes it, so the card reads as one thing you can turn off or
-   throw away rather than a form that happens to repeat. */
-.px-host__head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+
+
+/* A hypervisor in the list: a dot for what it is doing, its name, and what it
+   last answered — which is the address until it has answered anything. */
+.px-row { gap: 12px; }
+
+.px-row__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-dim);
 }
 
-.px-host__head .settings-content__title {
-    flex: 1;
-    min-width: 0;
+.px-row__dot--up { background: var(--success-color); }
+.px-row__dot--bad { background: var(--danger-color); }
+.px-row__dot--off { background: var(--border); }
+.px-row__dot--idle { background: var(--text-dim); }
+
+.px-row__body { flex: 1; min-width: 0; }
+
+.px-row__name {
+    font-size: clamp(12px, 1.8cqi, 13px);
+    font-weight: 600;
+    color: var(--text-main);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.px-host__remove {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    padding: 0;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+.px-row__note {
+    font-family: var(--font-mono, monospace);
+    font-size: clamp(10px, 1.4cqi, 11px);
     color: var(--text-dim);
-    cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.px-host__remove:hover {
-    color: var(--danger-color);
-    border-color: var(--danger-color);
-}
+.px-row__note--up { color: var(--success-color); }
+.px-row__note--bad { color: var(--danger-color); }

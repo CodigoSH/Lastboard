@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Hypervisor toevoegen",
   "settings.proxmox_name_desc": "Hoe deze hypervisor hier heet. Zijn machines vallen eronder.",
   "settings.proxmox_none": "Nog geen hypervisor verbonden.",
+  "settings.proxmox_off": "Uit",
   "settings.theme_system": "Systeem",
   "settings.new_password": "Nieuw wachtwoord",
   "settings.new_version_notif": "Nieuwe versie beschikbaar!",

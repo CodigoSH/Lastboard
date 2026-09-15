@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Tambah hypervisor",
   "settings.proxmox_name_desc": "Nama hypervisor ini di sini. Mesinnya dikelompokkan di bawahnya.",
   "settings.proxmox_none": "Belum ada hypervisor yang terhubung.",
+  "settings.proxmox_off": "Nonaktif",
   "settings.theme_system": "Sistem",
   "settings.new_password": "Kata sandi baru",
   "settings.new_version_notif": "Versi baru tersedia!",

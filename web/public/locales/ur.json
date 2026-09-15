@@ -237,6 +237,7 @@
   "settings.proxmox_add": "ہائپر وائزر شامل کریں",
   "settings.proxmox_name_desc": "یہاں اس ہائپر وائزر کا نام۔ اس کی مشینیں اسی کے تحت درج ہوتی ہیں۔",
   "settings.proxmox_none": "ابھی کوئی ہائپر وائزر منسلک نہیں ہے۔",
+  "settings.proxmox_off": "بند",
   "settings.theme_system": "سسٹم",
   "settings.new_password": "نیا پاس ورڈ",
   "settings.new_version_notif": "نیا ورژن دستیاب ہے!",

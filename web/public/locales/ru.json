@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Добавить гипервизор",
   "settings.proxmox_name_desc": "Как этот гипервизор называется здесь. Его машины относятся к нему.",
   "settings.proxmox_none": "Гипервизор ещё не подключён.",
+  "settings.proxmox_off": "Выключен",
   "settings.theme_system": "Системная",
   "settings.new_password": "Новый пароль",
   "settings.new_version_notif": "Доступна новая версия!",

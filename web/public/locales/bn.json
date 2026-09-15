@@ -237,6 +237,7 @@
   "settings.proxmox_add": "হাইপারভাইজার যোগ করুন",
   "settings.proxmox_name_desc": "এখানে এই হাইপারভাইজারের নাম। এর মেশিনগুলি এর অধীনেই থাকে।",
   "settings.proxmox_none": "এখনও কোনও হাইপারভাইজার যুক্ত করা হয়নি।",
+  "settings.proxmox_off": "বন্ধ",
   "settings.theme_system": "সিস্টেম",
   "settings.new_password": "নতুন পাসওয়ার্ড",
   "settings.new_version_notif": "নতুন সংস্করণ উপলব্ধ!",

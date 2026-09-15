@@ -182,14 +182,17 @@ class SettingsContent extends HTMLElement {
                 case 'check-updates':
                     this.handleManualCheckUpdates();
                     break;
-                case 'save-proxmox':
-                    this.saveProxmoxForm();
-                    break;
                 case 'add-proxmox-host':
-                    this.addProxmoxHost();
+                    this.openAddProxmoxHost();
                     break;
-                case 'remove-proxmox-host':
-                    this.removeProxmoxHost(Number(el.dataset.index ?? -1));
+                case 'edit-proxmox-host':
+                    this.openEditProxmoxHost(Number(el.dataset.index ?? -1));
+                    break;
+                case 'delete-proxmox-host':
+                    this.deleteProxmoxHost(Number(el.dataset.index ?? -1));
+                    break;
+                case 'save-proxmox-host':
+                    this.saveProxmoxHost();
                     break;
             }
         });
@@ -471,74 +474,131 @@ class SettingsContent extends HTMLElement {
         this.render();
     }
 
-    /** A blank card, so the fields to fill are on screen before anything is saved. */
-    addProxmoxHost() {
+    /** The dialog, empty, for a hypervisor that does not exist yet. */
+    openAddProxmoxHost() {
         if (!this.proxmoxLoaded) return;
-        this.proxmox = {
-            ...this.proxmox,
-            hosts: [...this.proxmox.hosts, {
-                id: '', name: '', url: '', token_id: '', insecure: true, enabled: true, has_secret: false,
-            }],
+        this.fillProxmoxModal(-1);
+    }
+
+    /** The same dialog, carrying what the row already holds. */
+    openEditProxmoxHost(index: number) {
+        if (!this.proxmoxLoaded || !this.proxmox.hosts[index]) return;
+        this.fillProxmoxModal(index);
+    }
+
+    private fillProxmoxModal(index: number) {
+        const root = this.shadowRoot!;
+        const h = index >= 0 ? this.proxmox.hosts[index] : null;
+        const set = (id: string, v: string) => {
+            const el = root.getElementById(id) as HTMLInputElement | null;
+            if (el) el.value = v;
         };
-        this.render();
+        const check = (id: string, v: boolean) => {
+            const el = root.getElementById(id) as HTMLInputElement | null;
+            if (el) el.checked = v;
+        };
+        set('proxmox-edit-index', String(index));
+        set('proxmox-name', h?.name || '');
+        set('proxmox-url', h?.url || '');
+        set('proxmox-token-id', h?.token_id || '');
+        set('proxmox-secret', '');
+        check('proxmox-enabled', h ? h.enabled : true);
+        check('proxmox-insecure', h ? h.insecure : true);
+
+        const title = root.getElementById('proxmox-modal-title');
+        if (title) title.textContent = i18n.t(h ? 'general.edit' : 'settings.proxmox_add');
+        // The box is empty on purpose: a stored secret never comes back, so the
+        // placeholder is what says whether there is one to keep.
+        const secret = root.getElementById('proxmox-secret') as HTMLInputElement | null;
+        if (secret) {
+            secret.placeholder = h?.has_secret
+                ? i18n.t('settings.proxmox_secret_stored')
+                : '00000000-0000-0000-0000-000000000000';
+        }
+        (root.getElementById('proxmox-modal') as HTMLDialogElement | null)?.showModal();
     }
 
-    /**
-     * Drops one card. Nothing is written until Save, so this is undone by
-     * leaving the section — which is why it does not ask for confirmation.
-     */
-    removeProxmoxHost(index: number) {
-        if (!this.proxmoxLoaded) return;
-        const hosts = this.proxmox.hosts.filter((_, i) => i !== index);
-        this.proxmox = { ...this.proxmox, hosts };
-        this.render();
-    }
-
-    /**
-     * The whole list, saved in one go.
-     *
-     * Everything on screen is sent together because the server takes the list
-     * as the truth: a host missing from it is one that was removed. Reading
-     * every card back out of the DOM is what makes that safe — a half-built
-     * payload would delete a hypervisor nobody touched.
-     */
-    async saveProxmoxForm() {
+    /** What the dialog was opened for: one hypervisor, added or edited. */
+    async saveProxmoxHost() {
         if (!this.proxmoxLoaded) return;
         const root = this.shadowRoot!;
         const val = (id: string) => (root.getElementById(id) as HTMLInputElement | null)?.value.trim() ?? '';
         const on = (id: string) => !!(root.getElementById(id) as HTMLInputElement | null)?.checked;
 
-        const payload = this.proxmox.hosts.map((h, i) => ({
-            id: h.id,
-            name: val(`proxmox-name-${i}`),
-            url: val(`proxmox-url-${i}`),
-            token_id: val(`proxmox-token-id-${i}`),
-            secret: val(`proxmox-secret-${i}`),
-            insecure: on(`proxmox-insecure-${i}`),
-            enabled: on(`proxmox-enabled-${i}`),
-        }));
+        const index = Number(val('proxmox-edit-index'));
+        const existing = index >= 0 ? this.proxmox.hosts[index] : undefined;
+        const url = val('proxmox-url');
+        const tokenId = val('proxmox-token-id');
+        const secret = val('proxmox-secret');
+        const enabled = on('proxmox-enabled');
 
-        // A host enabled with nothing behind it would put a page in the top bar
-        // with nothing to draw.
-        const broken = payload.find((h, i) =>
-            h.enabled && (!h.url || !h.token_id || (!h.secret && !this.proxmox.hosts[i].has_secret)));
-        if (broken) {
+        // Enabled with nothing behind it would put a page in the top bar with
+        // nothing to draw. Left off, an incomplete one is just a draft.
+        if (enabled && (!url || !tokenId || (!secret && !existing?.has_secret))) {
             if (window.notifier) window.notifier.show(i18n.t('settings.proxmox_needs_connection'), 'error');
             return;
         }
 
+        const edited: PxSettingsHost & { secret?: string } = {
+            id: existing?.id || '',
+            name: val('proxmox-name'),
+            url, token_id: tokenId,
+            insecure: on('proxmox-insecure'),
+            enabled,
+            has_secret: !!existing?.has_secret || !!secret,
+            secret,
+        };
+        const hosts = [...this.proxmox.hosts] as (PxSettingsHost & { secret?: string })[];
+        if (existing) hosts[index] = edited; else hosts.push(edited);
+
+        if (await this.putProxmoxHosts(hosts)) {
+            (root.getElementById('proxmox-modal') as HTMLDialogElement | null)?.close();
+            this.verifyProxmox();
+        }
+    }
+
+    /** Removing one asks first: it takes its machines' icons out of reach. */
+    deleteProxmoxHost(index: number) {
+        const h = this.proxmox.hosts[index];
+        if (!h) return;
+        import('../../../services/EventBus').then(({ eventBus, EVENTS }) => {
+            eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+                title: i18n.t('action.remove'),
+                message: h.name || i18n.t('widget.proxmox.name'),
+                onConfirm: async () => {
+                    const hosts = this.proxmox.hosts.filter((_, i) => i !== index);
+                    if (await this.putProxmoxHosts(hosts)) this.verifyProxmox();
+                },
+            });
+        });
+    }
+
+    /**
+     * Writes the whole list, because that is what the server takes as the
+     * truth: a host missing from it is one that was removed.
+     *
+     * Every host that is not the one being edited is sent back exactly as it
+     * came, with no secret — which the server reads as "keep the one you have".
+     */
+    private async putProxmoxHosts(hosts: (PxSettingsHost & { secret?: string })[]): Promise<boolean> {
         try {
-            await apiService.post('/api/proxmox/settings', { hosts: payload });
+            await apiService.post('/api/proxmox/settings', {
+                hosts: hosts.map(h => ({
+                    id: h.id, name: h.name, url: h.url, token_id: h.token_id,
+                    secret: h.secret || '', insecure: h.insecure, enabled: h.enabled,
+                })),
+            });
             // Re-read: the server prefixes a bare address with https://, mints
             // the ids, and is the only one that knows a secret is now stored.
             this.proxmox = await apiService.get<typeof this.proxmox>('/api/proxmox/settings');
             this.render();
-            const { eventBus, EVENTS } = await import('../../../services/EventBus');
-            eventBus.emit(EVENTS.PROXMOX_CHANGED, { enabled: this.proxmox.enabled });
+            const { eventBus: bus, EVENTS: E } = await import('../../../services/EventBus');
+            bus.emit(E.PROXMOX_CHANGED, { enabled: this.proxmox.enabled });
             if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
-            this.verifyProxmox();
+            return true;
         } catch {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+            return false;
         }
     }
 
@@ -552,7 +612,7 @@ class SettingsContent extends HTMLElement {
      */
     async verifyProxmox() {
         const enabled = this.proxmox.hosts.filter(h => h.enabled && h.id);
-        if (!enabled.length) return;
+        if (!enabled.length) { this.proxmoxStatus = {}; this.render(); return; }
         this.proxmoxStatus = Object.fromEntries(enabled.map(h => [h.id, { state: 'testing' } as PxHostStatus]));
         this.render();
         try {
@@ -561,7 +621,7 @@ class SettingsContent extends HTMLElement {
             const next: Record<string, PxHostStatus> = {};
             for (const h of enabled) {
                 const got = byId.get(h.id);
-                // One host failing says nothing about the others, so each card
+                // One host failing says nothing about the others, so each row
                 // answers for itself.
                 next[h.id] = !got || got.error
                     ? { state: 'error', key: 'proxmox.connection_error' }

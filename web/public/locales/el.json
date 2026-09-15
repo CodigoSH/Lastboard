@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Προσθήκη υπερεπόπτη",
   "settings.proxmox_name_desc": "Πώς ονομάζεται εδώ αυτός ο υπερεπόπτης. Οι μηχανές του καταχωρούνται κάτω από αυτόν.",
   "settings.proxmox_none": "Δεν έχει συνδεθεί ακόμη κανένας υπερεπόπτης.",
+  "settings.proxmox_off": "Ανενεργό",
   "settings.theme_system": "Συστήματος",
   "settings.new_password": "Νέος κωδικός",
   "settings.new_version_notif": "Νέα έκδοση διαθέσιμη!",

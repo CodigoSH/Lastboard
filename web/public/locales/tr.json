@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Hipervizör ekle",
   "settings.proxmox_name_desc": "Bu hipervizörün buradaki adı. Makineleri bunun altında toplanır.",
   "settings.proxmox_none": "Henüz bağlı bir hipervizör yok.",
+  "settings.proxmox_off": "Kapalı",
   "settings.theme_system": "Sistem",
   "settings.new_password": "Yeni Şifre",
   "settings.new_version_notif": "Yeni versiyon mevcut!",

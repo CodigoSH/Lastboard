@@ -65,22 +65,22 @@ Open **Settings → Proxmox**. This is a server-wide setting, so only the **admi
 
 ![Proxmox settings](../assets/p-proxmox.png)
 
-There is one card per hypervisor, and **Add hypervisor** gives you another.
+Connected hypervisors are a list, one line each: a dot for what it is doing, its name, and what it last answered. **Add hypervisor** opens a dialog for a new one, the pencil opens the same dialog on an existing one, and the bin removes it. Four connections stay four lines rather than four screens of form.
 
 | Field | Notes |
 | :--- | :--- |
-| **The switch on the card** | Turns this hypervisor on. At least one on puts the Proxmox icon in the top bar |
+| **Proxmox integration** | Turns this hypervisor on. At least one on puts the Proxmox icon in the top bar |
 | **Name** | What this one is called here — *Home*, *Offsite*, whatever you file it under. It appears wherever its machines do |
 | **Address** | The web interface address, port included — `https://192.168.1.10:8006` |
 | **Token id** | `user@realm!name`, exactly as Proxmox printed it |
 | **Token secret** | Shown once by Proxmox. Stored here and never sent back to your browser |
 | **Accept a self-signed certificate** | On by default, because almost every home hypervisor has one |
 
-**Save** stores every card at once and then reads each host with what you gave it, so the line under each card tells you what *that* token can actually see and whether it may start and stop machines. A mistyped token saves perfectly well — this is how you find out before you need it. One host failing says nothing about the others, so each answers for itself.
+**Save** closes the dialog and then reads the host with what you gave it, so the line on its row tells you what *that* token can actually see. A mistyped token saves perfectly well — this is how you find out before you need it. One host failing says nothing about the others, so each row answers for itself.
 
-Coming back later, a secret box is empty and says *Stored*. Leaving it that way keeps the secret saved for that host; you only type it again to replace it.
+Reopening a host, the secret box is empty and says *Stored*. Leaving it that way keeps the secret saved for that host; you only type it again to replace it.
 
-The **×** on a card removes that hypervisor. Nothing is written until you save, so leaving the section undoes it.
+Removing one asks first. Its machines lose the icons you chose for them, which is the part nothing else can give back.
 
 > **The name is yours to change.** Nothing is stored against it: the icons you choose for machines and the bookmarks you tie to them point at an id Lastboard generates, so renaming a cluster costs nothing.
 

@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Dodaj hipernadzorcę",
   "settings.proxmox_name_desc": "Jak ten hipernadzorca nazywa się tutaj. Jego maszyny są pod nim zapisane.",
   "settings.proxmox_none": "Nie podłączono jeszcze żadnego hipernadzorcy.",
+  "settings.proxmox_off": "Wyłączony",
   "settings.theme_system": "Systemowy",
   "settings.new_password": "Nowe hasło",
   "settings.new_version_notif": "Dostępna nowa wersja!",

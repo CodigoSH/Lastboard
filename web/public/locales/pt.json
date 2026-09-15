@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Adicionar hipervisor",
   "settings.proxmox_name_desc": "Como este hipervisor se chama aqui. As suas máquinas ficam agrupadas por ele.",
   "settings.proxmox_none": "Ainda não há nenhum hipervisor ligado.",
+  "settings.proxmox_off": "Desativado",
   "settings.theme_system": "Sistema",
   "settings.new_password": "Nova senha",
   "settings.new_version_notif": "Nova versão disponible!",

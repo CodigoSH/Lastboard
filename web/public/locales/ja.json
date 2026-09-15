@@ -237,6 +237,7 @@
   "settings.proxmox_add": "ハイパーバイザーを追加",
   "settings.proxmox_name_desc": "このハイパーバイザーのここでの名前。マシンはこの名前の下にまとめられます。",
   "settings.proxmox_none": "まだハイパーバイザーが接続されていません。",
+  "settings.proxmox_off": "オフ",
   "settings.theme_system": "システム",
   "settings.new_password": "新しいパスワード",
   "settings.new_version_notif": "新バージョンが利用可能です！",

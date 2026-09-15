@@ -237,6 +237,7 @@
   "settings.proxmox_add": "إضافة مُشرف افتراضي",
   "settings.proxmox_name_desc": "اسم هذا المُشرف الافتراضي هنا. تُدرج أجهزته تحته.",
   "settings.proxmox_none": "لا يوجد مُشرف افتراضي متصل بعد.",
+  "settings.proxmox_off": "مُعطَّل",
   "settings.theme_system": "النظام",
   "settings.new_password": "كلمة مرور جديدة",
   "settings.new_version_notif": "نسخة جديدة متاحة!",

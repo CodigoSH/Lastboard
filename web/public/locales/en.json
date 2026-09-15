@@ -237,6 +237,7 @@
   "settings.proxmox_add": "Add hypervisor",
   "settings.proxmox_name_desc": "What this hypervisor is called here. Machines are filed under it.",
   "settings.proxmox_none": "No hypervisor connected yet.",
+  "settings.proxmox_off": "Off",
   "settings.theme_system": "System",
   "settings.new_password": "New Password",
   "settings.new_version_notif": "Update's ready!",
