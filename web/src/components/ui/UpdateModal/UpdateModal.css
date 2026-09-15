@@ -135,6 +135,24 @@ dialog[open] {
     line-height: 1.6;
 }
 
+/*
+ * Two lines' worth, held whatever the sentence.
+ *
+ * "Don't close this window…" is two lines and "Installed. Waiting for the new
+ * version…" is one, so the swap between them shrank the dialog by 21px at the
+ * exact moment of the restart — and a modal dialog is centred by the browser,
+ * which turns that into everything above moving 11px. That was the third of
+ * the three jumps.
+ *
+ * Scoping this to the run with :has(~ .timeline) was tried and is pointless:
+ * the timeline is on screen from the moment the modal opens, all six steps
+ * pending. And the other two sentences run to two lines in every language
+ * checked, so the reserve costs nothing where it is not needed either.
+ */
+.modal-message {
+    min-height: calc(2 * 1.6 * 13px);
+}
+
 /* ── Docker notice ──────────────────────────────────────────────────────── */
 
 .notice {
@@ -222,10 +240,21 @@ dialog[open] {
     height: 12px;
 }
 
+/*
+ * The note sits BESIDE the label, not under it.
+ *
+ * Under it, a note appearing mid-run made that row 10px taller, and a modal
+ * dialog is centred by the browser: a 10px change moves every step above it up
+ * by five. Measured over a full run, the restart note arriving and leaving cost
+ * two of the three jumps. Beside it costs nothing — the longest note is 119px
+ * against 370px of room — and wrap is there only so a longer translation
+ * degrades to today's behaviour instead of overflowing.
+ */
 .tl-body {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px 8px;
     min-width: 0;
     padding-top: 1px;
 }
