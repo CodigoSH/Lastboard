@@ -281,7 +281,41 @@
 
 .rack { display: flex; flex-direction: column; gap: 14px; }
 .group { display: flex; flex-direction: column; gap: 8px; }
-.group__head { display: flex; align-items: center; gap: 8px; }
+
+/* The whole header folds the node, not a hit area the size of the caret: with
+   a dozen of them it is the row you aim at. */
+.group__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 2px 0;
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.group__head:hover .sec__label { color: var(--text-main); }
+
+.group__caret {
+    display: inline-flex;
+    color: var(--text-dim);
+    /* Points down when the node is open, at its machines; the folded state is
+       the one that keeps the chevron's own direction. */
+    transform: rotate(90deg);
+    transition: transform 0.18s var(--ease-out, ease);
+}
+
+/* Physical, and on purpose: it is a chevron turning, not a layout. Mirrored,
+   a folded node should still point the way the text runs. */
+.group--folded .group__caret { transform: rotate(0deg); }
+:host(:dir(rtl)) .group--folded .group__caret { transform: rotate(180deg); }
+
+.group--folded .tiles { display: none; }
+
 .group__count { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); }
 
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 8px; }

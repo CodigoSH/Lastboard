@@ -93,6 +93,24 @@ const level = (p: number) => (p >= 90 ? 'bad' : p >= 60 ? 'warn' : '');
  */
 const pct = (v: number): string => i18n.formatNumber(Math.round(v * 10) / 10, { maximumFractionDigits: 1 });
 
+/** Where the folded nodes are remembered. */
+const COLLAPSED_KEY = 'proxmox.collapsedNodes';
+
+function readCollapsed(): string[] {
+    try {
+        const raw = JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]');
+        return Array.isArray(raw) ? raw.filter(v => typeof v === 'string') : [];
+    } catch {
+        // A private window, or storage the browser refuses: folding still works
+        // for this visit, it just will not be remembered.
+        return [];
+    }
+}
+
+function writeCollapsed(nodes: Set<string>): void {
+    try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...nodes])); } catch { /* as above */ }
+}
+
 /** How far back each range reaches, for reading a time off a chart. */
 const RANGE_MS: Record<string, number> = { '1h': 3600e3, '24h': 86400e3, '7d': 604800e3 };
 
@@ -132,6 +150,15 @@ class ProxmoxPage extends HTMLElement {
      */
     private _charts = new Map<string, { values: number[]; unit: string }>();
     private _chartSeq = 0;
+    /**
+     * Nodes whose machines are folded away, by name.
+     *
+     * Kept in the browser rather than in memory: a cluster is folded once and
+     * expected to stay that way, and a page that forgets on every visit would
+     * have to be folded again every time — which is the work it exists to save.
+     */
+    private collapsed = new Set<string>(readCollapsed());
+
     /** CPU history per machine, keyed `range|vmid`, for the tile sparklines. */
     private series = new Map<string, number[]>();
     /** Machines already asked about, so a repaint does not ask again. */
@@ -478,17 +505,27 @@ class ProxmoxPage extends HTMLElement {
         const ordered = [...guests].sort((a, b) =>
             a.kind === b.kind ? a.vmid - b.vmid : (a.kind === 'lxc' ? -1 : 1));
 
+        // While something is being looked for, a fold is not allowed to hide the
+        // answer: searching a folded node and being told nothing matched would
+        // be a lie the page told about its own contents.
+        const filtering = !!this.query.trim() || this.onlyStopped;
+        const shown: PxGuest[] = [];
+
         const rack = d.nodes.map(n => {
             const mine = ordered.filter(g => g.node === n.name);
             if (!mine.length) return '';
             const lxc = mine.filter(g => g.kind === 'lxc').length;
-            return `<div class="group">
-                <div class="group__head">
+            const folded = !filtering && this.collapsed.has(n.name);
+            if (!folded) shown.push(...mine);
+            return `<div class="group${folded ? ' group--folded' : ''}">
+                <button class="group__head" data-fold="${escapeHtml(n.name)}"
+                        aria-expanded="${folded ? 'false' : 'true'}">
+                    <span class="group__caret">${ICON_CHEVRON}</span>
                     <span class="dot dot--up"></span>
                     <span class="sec__label">${escapeHtml(n.name)}</span>
                     <span class="group__count">${lxc} LXC · ${mine.length - lxc} VM</span>
-                </div>
-                <div class="tiles">${mine.map(g => this.tile(g)).join('')}</div>
+                </button>
+                <div class="tiles">${folded ? '' : mine.map(g => this.tile(g)).join('')}</div>
             </div>`;
         }).join('');
 
@@ -497,7 +534,10 @@ class ProxmoxPage extends HTMLElement {
         const count = this.shadowRoot!.getElementById('pp-count');
         if (count) count.textContent = `${guests.length}${this.query || this.onlyStopped ? ` / ${d.guests.length}` : ''}`;
 
-        this.loadSeries(ordered);
+        // Only what is on screen. A folded node's machines have no sparkline to
+        // draw, and Proxmox has no endpoint that answers for more than one
+        // machine at a time — so those are requests the host is spared entirely.
+        this.loadSeries(shown);
     }
 
     /**
@@ -850,6 +890,16 @@ class ProxmoxPage extends HTMLElement {
         const t = e.target as HTMLElement;
 
         if (t.closest('#pp-close')) { this.close(); return; }
+
+        const fold = t.closest('[data-fold]') as HTMLElement | null;
+        if (fold) {
+            const node = fold.dataset.fold || '';
+            if (this.collapsed.has(node)) this.collapsed.delete(node);
+            else this.collapsed.add(node);
+            writeCollapsed(this.collapsed);
+            this.paintMachines();
+            return;
+        }
         if (t.closest('[data-close]')) {
             (this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null)?.close();
             return;

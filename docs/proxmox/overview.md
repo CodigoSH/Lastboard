@@ -99,7 +99,11 @@ The dot in the corner says which of three things a machine is:
 
 Tiles keep their place whatever happens to them — by kind, then by VMID. A machine you know where to find stays there, and a stopped one is picked out by how it looks rather than by the grid rearranging itself under your pointer. (The widget is the other way round: it has room for a handful of rows, so what needs attention is lifted into them.)
 
-The search box in the **Machines** header filters by name or VMID. When something is down, the **Services down** count becomes a button: click it to show only the stopped machines, and click it again to bring the rest back.
+**Each node folds.** Click a node's heading in the Machines section and its tiles collapse to a single line, keeping the count so you still know what is inside — useful on a cluster, where every node's machines end to end make a very long page. The fold is remembered in your browser, per node, so a cluster stays the way you left it.
+
+A folded node's machines are not asked for either: their trend lines are one request per machine, so folding a node you are not looking at spares your host those calls entirely.
+
+The search box in the **Machines** header filters by name or VMID. When something is down, the **Services down** count becomes a button: click it to show only the stopped machines, and click it again to bring the rest back. **While either is active, folds are ignored** — a search that reported nothing because the answer was folded away would be a lie the page told about its own contents.
 
 ## A machine in detail
 
