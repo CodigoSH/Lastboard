@@ -394,9 +394,12 @@ const PVE_CLUSTER = [
     { type: 'lxc', vmid: 203, name: 'linkwarden', node: 'vesta', status: 'running', cpu: 0.021, mem: 751619276, maxmem: 2147483648, uptime: 2592000 },
     { type: 'qemu', vmid: 204, name: 'openwebui', node: 'pallas', status: 'running', cpu: 0.412, mem: 12884901888, maxmem: 17179869184, uptime: 604800 },
     { type: 'lxc', vmid: 205, name: 'audiobookshelf', node: 'pallas', status: 'running', cpu: 0.033, mem: 966367641, maxmem: 2147483648, uptime: 2592000 },
-    // Down, and a bookmark points at it: this is what the summary leads with.
-    { type: 'lxc', vmid: 206, name: 'freshrss', node: 'vesta', status: 'stopped', cpu: 0, mem: 0, maxmem: 1073741824, uptime: 0 },
-    // Down, and nothing points at it: someone turned it off on purpose.
+    { type: 'lxc', vmid: 206, name: 'freshrss', node: 'vesta', status: 'running', cpu: 0.017, mem: 402653184, maxmem: 1073741824, uptime: 3456000 },
+    // Down, and nothing points at it: someone turned it off on purpose. Its
+    // hypervisor is therefore NOT flagged, while the other one is, which is
+    // the distinction the summary exists to draw - and with exactly two
+    // machines down the widget shows both kinds plus a running one in the
+    // two rows it gets beside its neighbours.
     { type: 'lxc', vmid: 207, name: 'staging-runner', node: 'pallas', status: 'stopped', cpu: 0, mem: 0, maxmem: 2147483648, uptime: 0 },
     { type: 'storage', storage: 'local', node: 'ceres', plugintype: 'dir', disk: 24696061952, maxdisk: 100931731456, shared: 0 },
     { type: 'storage', storage: 'ceph-pool', node: 'ceres', plugintype: 'rbd', disk: 9895604649984, maxdisk: 17592186044416, shared: 1 },
@@ -588,13 +591,12 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
 
     // Row seven: row five is already full (monitoring, API, Docker), and two
     // tiles sharing a cell is not a layout, it is a bug in a photograph.
-    // Three rows tall, not two. With two hypervisors there are three stopped
-    // machines, and at two rows the widget showed only those: a picture of a
-    // lab where nothing runs, and no example of what a healthy row looks
-    // like. One more row fits the contrast the widget is for — an outage
-    // wearing the accent bar, a machine simply turned off without it — and a
-    // running machine underneath.
-    addWidget(1, 7, 3, 3, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: '' });
+    // Beside its neighbours, not on a row of its own. Row five ran monitor
+    // (1-4) and the Forgejo figures (5-7) and stopped there, so columns 8-12
+    // sat empty while Proxmox sat alone on row seven with the same gap beside
+    // it. At five columns by two rows it closes both, and the board ends in a
+    // full rectangle rather than a lone tile under a hole.
+    addWidget(8, 5, 5, 2, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: '' });
 
     // The Docker widget, pointed at whatever Docker-compatible API is listening
     // on DOCKER_API (Podman serves one too). Without it the widget is left out
@@ -609,7 +611,9 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         // timeout. That is what put "Could not connect to Docker host" across
         // the main board, and it is a product bug, not a rig one.
         const dockerHost = process.env.DOCKER_API.replace(/^tcp:\/\//, '');
-        addWidget(8, 5, 4, 2, {
+        // Row seven now: Proxmox took columns 8-12 of row five, and two tiles
+        // sharing a cell is not a layout, it is a bug in a photograph.
+        addWidget(1, 7, 5, 2, {
             widgetId: 'docker',
             hosts: [{ id: 'docs', name: 'Home server', type: 'tcp', url: dockerHost }],
             activeHost: 'docs',
