@@ -88,11 +88,19 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 ## With more than one: the summary
 
-The Proxmox icon opens a short summary when several hypervisors are connected: a card for each, and above them the thing only this page can say.
+The Proxmox icon opens a summary when several hypervisors are connected. It answers six questions, in the order they get asked, and the header carries the same counts a cluster page does — services down, machines running, machines stopped — for everything at once.
 
-**Which of your services are down, across all of them.** A cluster's own page can only speak for its own machines; the summary names every bookmarked service that is on a stopped machine anywhere — *This stops responding: Plex, Immich* — whichever hypervisor it lives on.
+**Needs attention** — and only when there is something in it. Every bookmarked service on a stopped machine anywhere, every hypervisor that did not answer, and every store past 90%. When all of that is empty the section is not drawn: a banner that is always on screen is a banner people stop reading.
 
-Each card gives that hypervisor at a glance: how many of its machines are running, how many nodes it has, its busiest node and its fullest storage. A card with a service down wears the accent edge, the same one a stopped machine wears inside. A hypervisor that cannot be reached says so on its own card and does not take the others with it.
+**Fleet** — five figures with what is behind each: hypervisors (how many are clusters, how many standalone), nodes (cores and threads added up), machines (containers against virtual machines), stopped (and how many are running), and how many machines back a bookmark of yours.
+
+**Fleet load** — CPU and memory across every node over the last day. **Weighted, not averaged**: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so CPU is weighted by cores and memory by total bytes. It costs one request per node, which is what the endpoint answers — it cannot speak for more than one.
+
+**Spread** — one stacked bar per hypervisor: containers, virtual machines and stopped, so you can see at a glance where the machines actually live.
+
+**Storage** — every store, fullest first, with its kind, its figures and which hypervisor and node it belongs to. **A shared store is counted once**: a Ceph pool is reported by every node of the cluster, so adding them up would triple it.
+
+**Hypervisors** — the way in, one card each, now carrying its own nodes with a bar for CPU, memory and disk. Until this the summary never admitted nodes existed; you had to go in to find out. A card with a service down wears the accent edge, the same one a stopped machine wears inside, and a hypervisor that cannot be reached says so on its own card without taking the others with it.
 
 Click a card to go into that cluster. The header then carries its name and an arrow back.
 

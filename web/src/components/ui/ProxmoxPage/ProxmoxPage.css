@@ -184,7 +184,19 @@
 
 /* ── Cards: the board's own recipe ──────────────────────────── */
 
+/*
+ * The box is declared here, not inherited.
+ *
+ * theme.css resets `* { box-sizing: border-box }` at document level and CSS
+ * rules do not cross a shadow boundary, so inside this component nothing does.
+ * Every card happens to be a <button>, which the browser's own stylesheet
+ * gives border-box, and that is the only reason this has worked: measured, a
+ * <button class="card"> comes out border-box and a <div class="card"> beside
+ * it content-box. With `width: 100%` below, a content-box card overflows its
+ * grid track by its padding and borders and lands on top of its neighbour.
+ */
 .card {
+    box-sizing: border-box;
     background: var(--surface);
     border: 1px solid var(--card-border, transparent);
     border-radius: var(--radius);
@@ -496,6 +508,87 @@
 .ty--lxc { border-radius: 999px; }
 .ty--vm { border-radius: 3px; }
 .tile--off .ty { opacity: 0.6; }
+
+/* ── The summary: what every hypervisor adds up to ──────────────── */
+
+/* Five figures and what is behind each one. The width is capped so four or
+   five two-digit numbers do not stretch to half the screen and read as empty
+   cards; below the cap they wrap rather than shrink. */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 8px; }
+.kpi { display: flex; flex-direction: column; padding: 15px 16px 14px; }
+.kpi__n {
+    font-family: var(--font-mono, monospace);
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+}
+.kpi__n--bad { color: var(--danger-color); }
+.kpi__k {
+    margin-top: 3px;
+    font-family: var(--font-mono, monospace);
+    font-size: 9.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+.kpi__d {
+    margin-top: 9px;
+    padding-top: 9px;
+    border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12));
+    font-family: var(--font-mono, monospace);
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: var(--text-dim);
+}
+
+/* The two fleet charts, side by side until they stop fitting. */
+.load { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
+
+/* One stacked bar per hypervisor: where the machines actually are. */
+.split { padding: 14px 16px; }
+.split__row { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 11px; margin-bottom: 10px; }
+.split__row:last-child { margin-bottom: 0; }
+.split__n { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.split__bar { display: flex; height: 9px; border-radius: 3px; overflow: hidden; background: rgba(128, 128, 128, 0.14); }
+.split__bar i { display: block; height: 100%; }
+.split__bar i.lxc { background: var(--accent); }
+.split__bar i.vm { background: rgba(var(--accent-rgb), 0.45); }
+.split__bar i.off { background: rgba(128, 128, 128, 0.42); }
+.split__v { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12)); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono, monospace); font-size: 10px; color: var(--text-dim); }
+.legend i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+.legend i.lxc { background: var(--accent); }
+.legend i.vm { background: rgba(var(--accent-rgb), 0.45); }
+.legend i.off { background: rgba(128, 128, 128, 0.42); }
+
+/* A hypervisor's nodes, inside its own card. Until now the summary never
+   admitted nodes existed: you had to go in to find out. */
+.nodos { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--card-border, rgba(128, 128, 128, 0.12)); }
+.nodo {
+    display: grid;
+    grid-template-columns: 1fr 34px 34px 34px;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-family: var(--font-mono, monospace);
+    font-size: 10.5px;
+    color: var(--text-dim);
+}
+.nodo__n { color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nodo__h { font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; }
+.nodo__k { font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; }
+.nodo__b { display: block; height: 3px; border-radius: 2px; background: rgba(128, 128, 128, 0.2); overflow: hidden; }
+.nodo__b i { display: block; height: 100%; background: var(--accent); }
+.nodo__b i.warn { background: var(--warning-color); }
+.nodo__b i.bad { background: var(--danger-color); }
+
+@media (max-width: 560px) {
+    .split__row { grid-template-columns: 76px 1fr auto; }
+}
 
 /* ── Search ─────────────────────────────────────────────────── */
 

@@ -159,6 +159,9 @@ class ProxmoxPage extends HTMLElement {
 
     /** CPU history per machine, keyed `range|vmid`, for the tile sparklines. */
     private series = new Map<string, number[]>();
+    /** The fleet's own 24h curves, once every node has answered. */
+    private fleetSeries: { cpu: number[]; mem: number[] } | null = null;
+    private fleetAsked = false;
     /** Machines already asked about, so a repaint does not ask again. */
     private asked = new Set<string>();
     private _built = false;
@@ -439,8 +442,20 @@ class ProxmoxPage extends HTMLElement {
     private paintStatus() {
         const el = this.shadowRoot?.getElementById('pp-status');
         if (!el) return;
-        // The summary carries its own counts, per hypervisor, in its cards.
-        if (this.view === 'summary') { el.innerHTML = ''; return; }
+        // The summary counts every hypervisor at once. It used to write nothing
+        // at all here, which left the most valuable strip on the page blank on
+        // exactly the screen that exists to answer "is everything fine?".
+        if (this.view === 'summary') {
+            const f = this.fleet();
+            const down = this.downEverywhere();
+            el.innerHTML = `
+                ${down.length
+                    ? `<span class="stat stat--down"><span class="dot dot--bad"></span> ${escapeHtml(i18n.t('proxmox.services_down'))}: <b>${down.length}</b></span>`
+                    : `<span class="stat"><span class="dot dot--up"></span> <b>${f.hosts}</b> ${escapeHtml(i18n.t('proxmox.hypervisors').toLowerCase())}</span>`}
+                <span class="stat stat--up"><b>${f.running}</b>/${f.guests.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
+                <span class="stat stat--down">${escapeHtml(i18n.t('proxmox.stopped_count'))}: <b>${f.stopped}</b></span>`;
+            return;
+        }
         const d = this.data;
         const guests = d?.guests ?? [];
         const running = guests.filter(g => g.running).length;
@@ -545,6 +560,59 @@ class ProxmoxPage extends HTMLElement {
     }
 
     /**
+     * What every connected hypervisor adds up to.
+     *
+     * All of it from the answer already on screen — nothing here costs the
+     * server a request. Two of these numbers are wrong if you compute them the
+     * obvious way, and both are written out below rather than left to whoever
+     * reads this next.
+     */
+    private fleet() {
+        const live = this.hosts.filter(h => !h.error);
+        const nodes = live.flatMap(h => h.nodes.map(n => ({ ...n, hostName: h.name })));
+        const guests = live.flatMap(h => h.guests);
+        const sum = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((a, b) => a + f(b), 0);
+
+        // A SHARED store is reported by every node of the cluster, so adding
+        // them up counts a Ceph pool three times in a cluster of three. The
+        // flag is in the answer; the key drops the node for a shared one.
+        const seen = new Set<string>();
+        const stores: (PxStore & { hostName: string })[] = [];
+        for (const h of live) {
+            for (const s of h.stores || []) {
+                const key = s.shared ? `${h.id}|${s.name}` : `${h.id}|${s.node}|${s.name}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                stores.push({ ...s, hostName: h.name });
+            }
+        }
+
+        const backed = guests.filter(g => {
+            const h = live.find(x => x.guests.includes(g));
+            return h ? !!linkFor({ ...g, host: h.id }) : false;
+        }).length;
+
+        const memTotal = sum(nodes, n => n.mem_total);
+        const diskTotal = sum(stores, s => s.total);
+        return {
+            live, nodes, guests, stores,
+            hosts: this.hosts.length,
+            clusters: live.filter(h => h.cluster).length,
+            standalone: live.filter(h => !h.cluster).length,
+            unreachable: this.hosts.length - live.length,
+            cores: sum(nodes, n => n.cores),
+            threads: sum(nodes, n => n.threads),
+            lxc: guests.filter(g => g.kind === 'lxc').length,
+            vm: guests.filter(g => g.kind !== 'lxc').length,
+            running: guests.filter(g => g.running).length,
+            stopped: guests.filter(g => !g.running).length,
+            backed,
+            memUsed: sum(nodes, n => n.mem_used), memTotal,
+            diskUsed: sum(stores, s => s.used), diskTotal,
+        };
+    }
+
+    /**
      * Every bookmarked service that is on a stopped machine, anywhere.
      *
      * This is the sentence the whole feature exists to write, and the summary
@@ -563,57 +631,218 @@ class ProxmoxPage extends HTMLElement {
         return out;
     }
 
+    /**
+     * The fleet's CPU and memory over the last day.
+     *
+     * One request per node, which is what the endpoint answers — it has no way
+     * to speak for more than one. Against four nodes that is four calls, and
+     * the machine grid on a cluster page already makes twenty-nine.
+     *
+     * WEIGHTED, not averaged. A node of 8 cores at 12% and one of 32 at 78%
+     * average to a number that describes neither: CPU is weighted by cores and
+     * memory by total bytes, which is the only thing that makes two nodes of
+     * different sizes comparable. Same reason the summary shows a peak rather
+     * than a mean anywhere it cannot weight.
+     */
+    private async loadFleetSeries() {
+        if (this.fleetAsked) return;
+        this.fleetAsked = true;
+
+        const f = this.fleet();
+        if (!f.nodes.length) return;
+
+        const got: { node: PxNode; cpu: number[]; mem: number[] }[] = [];
+        for (const host of f.live) {
+            for (const node of host.nodes) {
+                if (!this.hasAttribute('open') || this.view !== 'summary') return;
+                try {
+                    const s = await apiService.get<PxSeries>(
+                        `/api/proxmox/series?host=${encodeURIComponent(host.id)}&range=${this.range}&node=${encodeURIComponent(node.name)}`);
+                    if (s?.cpu?.length) got.push({ node, cpu: s.cpu, mem: s.mem });
+                } catch { /* a node that will not answer leaves the others alone */ }
+                await new Promise(r => setTimeout(r, 120));
+            }
+        }
+        if (!got.length) return;
+
+        // The shortest series decides the length: nodes that joined the cluster
+        // at different times come back with different numbers of points, and
+        // reading past the end of one would quietly weight it as zero.
+        const points = Math.min(...got.map(g => g.cpu.length));
+        const cores = got.reduce((a, g) => a + g.node.cores, 0) || 1;
+        const bytes = got.reduce((a, g) => a + g.node.mem_total, 0) || 1;
+        const cpu: number[] = [];
+        const mem: number[] = [];
+        for (let i = 0; i < points; i++) {
+            cpu.push(Math.round(got.reduce((a, g) => a + g.cpu[i] * g.node.cores, 0) / cores * 10) / 10);
+            mem.push(Math.round(got.reduce((a, g) => a + (g.mem[i] ?? 0) * g.node.mem_total, 0) / bytes * 10) / 10);
+        }
+        this.fleetSeries = { cpu, mem };
+        if (this.view === 'summary') this.paint();
+    }
+
     /** One card per hypervisor, and the outages across all of them. */
+    /** One labelled figure in the fleet row. */
+    private kpi(n: string, label: string, detail: string, bad = false) {
+        return `<div class="card kpi">
+            <span class="kpi__n${bad ? ' kpi__n--bad' : ''}">${escapeHtml(n)}</span>
+            <span class="kpi__k">${escapeHtml(label)}</span>
+            <span class="kpi__d">${detail}</span>
+        </div>`;
+    }
+
+    /** A section, with its label, its rule and the figure on the right. */
+    private sec(label: string, note: string, body: string, bad = false) {
+        return `<section class="sec">
+            <div class="sec__head">
+                <span class="sec__label${bad ? ' sec__label--bad' : ''}">${escapeHtml(label)}</span>
+                <span class="sec__rule"></span>
+                <span class="sec__note${bad ? ' sec__note--bad' : ''}">${escapeHtml(note)}</span>
+            </div>${body}</section>`;
+    }
+
+    /**
+     * Everything the hypervisors add up to, in the order the questions get
+     * asked: is anything wrong, how much is there, how hard is it working,
+     * where does it all live, how much disk is left, and where do I go in.
+     */
     private paintSummary(body: HTMLElement) {
+        const f = this.fleet();
         const down = this.downEverywhere();
+        const stores = [...f.stores].sort((a, b) => b.percent - a.percent);
+
+        // ── Attention. Only drawn when there is something in it: a banner that
+        // is always on screen is a banner people stop reading.
+        const alerts: string[] = [];
+        if (down.length) {
+            alerts.push(`${escapeHtml(i18n.t('proxmox.stopped_breaks'))} <b>${down.map(d => escapeHtml(d.name)).join(', ')}</b>`);
+        }
+        for (const h of this.hosts.filter(x => x.error)) {
+            alerts.push(`<b>${escapeHtml(h.name)}</b> — ${escapeHtml(i18n.t('proxmox.connection_error'))}`);
+        }
+        for (const s of stores.filter(x => x.percent >= 90)) {
+            alerts.push(`<b>${escapeHtml(s.name)}</b> — ${escapeHtml(i18n.t('proxmox.almost_full'))} (${escapeHtml(s.hostName)})`);
+        }
+        const attention = alerts.length
+            ? this.sec(i18n.t('proxmox.attention'), String(alerts.length),
+                `<div class="warnbox">${alerts.map(a => `<div class="warnbox__s">${a}</div>`).join('')}</div>`, true)
+            : '';
+
+        // ── The fleet.
+        const kinds = [
+            f.clusters ? `${escapeHtml(i18n.t('proxmox.cluster'))}: ${f.clusters}` : '',
+            f.standalone ? `${escapeHtml(i18n.t('proxmox.standalone'))}: ${f.standalone}` : '',
+        ].filter(Boolean).join(' · ');
+        const fleet = this.sec(i18n.t('proxmox.fleet'),
+            `${i18n.t('proxmox.machines')}: ${f.guests.length}`, `<div class="kpis">
+            ${this.kpi(String(f.hosts), i18n.t('proxmox.hypervisors'), kinds)}
+            ${this.kpi(String(f.nodes.length), i18n.t('proxmox.nodes'),
+                `${escapeHtml(i18n.t('proxmox.cores'))}: ${f.cores}<br>${escapeHtml(i18n.t('proxmox.threads'))}: ${f.threads}`)}
+            ${this.kpi(String(f.guests.length), i18n.t('proxmox.machines'), `${f.lxc} LXC · ${f.vm} VM`)}
+            ${this.kpi(String(f.stopped), i18n.t('proxmox.stopped_count'),
+                `${escapeHtml(i18n.t('widget.proxmox.running_label'))}: ${f.running}`, f.stopped > 0)}
+            ${this.kpi(String(f.backed), i18n.t('proxmox.bookmarked'),
+                `${escapeHtml(i18n.t('proxmox.services_down'))}: ${down.length}`)}
+        </div>`);
+
+        // ── Load. Empty until every node has answered, and then it repaints.
+        const fs = this.fleetSeries;
+        const load = fs ? this.sec(i18n.t('proxmox.fleet_load'), this.rangeLabel(), `<div class="load">
+            ${this.chart(i18n.t('widget.telemetry.cpu'), pct(fs.cpu[fs.cpu.length - 1] ?? 0), '%', fs.cpu,
+                Math.max(...fs.cpu) >= 80 ? 'var(--warning-color)' : 'var(--accent)')}
+            ${this.chart(i18n.t('widget.telemetry.ram'), pct(fs.mem[fs.mem.length - 1] ?? 0), '%', fs.mem,
+                Math.max(...fs.mem) >= 80 ? 'var(--warning-color)' : 'var(--accent)')}
+        </div>`) : '';
+
+        // ── Where the machines are.
+        const rows = f.live.map(h => {
+            const g = h.guests || [];
+            const total = g.length || 1;
+            const lxc = g.filter(x => x.kind === 'lxc' && x.running).length;
+            const vm = g.filter(x => x.kind !== 'lxc' && x.running).length;
+            const off = g.filter(x => !x.running).length;
+            return `<div class="split__row">
+                <span class="split__n">${escapeHtml(h.name)}</span>
+                <span class="split__bar">
+                    <i class="lxc" style="width:${lxc / total * 100}%"></i>
+                    <i class="vm" style="width:${vm / total * 100}%"></i>
+                    <i class="off" style="width:${off / total * 100}%"></i>
+                </span>
+                <span class="split__v">${g.length}</span>
+            </div>`;
+        }).join('');
+        const spread = f.live.length ? this.sec(i18n.t('proxmox.spread'),
+            `${i18n.t('proxmox.hypervisors')}: ${f.live.length}`,
+            `<div class="card split">${rows}
+                <div class="legend">
+                    <span><i class="lxc"></i>LXC</span>
+                    <span><i class="vm"></i>VM</span>
+                    <span><i class="off"></i>${escapeHtml(i18n.t('proxmox.stopped_count').toLowerCase())}</span>
+                </div>
+            </div>`) : '';
+
+        // ── Storage, deduplicated and fullest first.
+        const storage = stores.length ? this.sec(i18n.t('proxmox.storage'),
+            `${fmtBytes(f.diskUsed)} / ${fmtBytes(f.diskTotal)}`,
+            `<div class="stores">${stores.map(s => {
+                const l = level(s.percent);
+                return `<div class="card store">
+                    <span class="store__r1">
+                        <span class="store__name">${escapeHtml(s.name)}</span>
+                        <span class="store__kind">${escapeHtml(s.kind)}</span>
+                        <span class="store__pct ${l ? 'store__pct--' + l : ''}">${Math.round(s.percent)}%</span>
+                    </span>
+                    <span class="bar" style="height:5px"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></span>
+                    <span class="store__r3">
+                        <span>${escapeHtml(fmtBytes(s.used))} / ${escapeHtml(fmtBytes(s.total))}</span>
+                        <span>${escapeHtml(s.hostName)} · ${escapeHtml(s.node)}</span>
+                    </span>
+                </div>`;
+            }).join('')}</div>`) : '';
+
+        // ── And the way in, each card carrying its own nodes.
         const cards = this.hosts.map(h => {
             if (h.error) {
                 return `<button class="card px-sum px-sum--bad" data-enter="${escapeHtml(h.id)}">
-                    <span class="px-sum__r1"><span class="dot dot--bad"></span><span class="px-sum__name">${escapeHtml(h.name)}</span></span>
+                    <span class="px-sum__r1"><span class="dot dot--bad"></span>
+                        <span class="px-sum__name">${escapeHtml(h.name)}</span></span>
                     <span class="px-sum__err">${escapeHtml(i18n.t('proxmox.connection_error'))}</span>
                 </button>`;
             }
-            const running = (h.guests || []).filter(g => g.running).length;
-            const worst = [...(h.nodes || [])].sort((a, b) =>
-                Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk))[0];
-            const peak = worst ? Math.round(Math.max(worst.cpu, worst.mem, worst.disk)) : 0;
-            const store = [...(h.stores || [])].sort((a, b) => b.percent - a.percent)[0];
+            const g = h.guests || [];
+            const running = g.filter(x => x.running).length;
             const mine = down.filter(d => d.host === h.name).length;
+            const shape = h.cluster
+                ? `${i18n.t('proxmox.cluster')} · ${i18n.t('proxmox.nodes')}: ${h.nodes.length}`
+                : i18n.t('proxmox.single_node');
+            const nodes = h.nodes.map(n => `<span class="nodo">
+                <span class="nodo__n">${escapeHtml(n.name)}</span>
+                <span class="nodo__b"><i class="${level(n.cpu)}" style="width:${Math.min(100, n.cpu)}%"></i></span>
+                <span class="nodo__b"><i class="${level(n.mem)}" style="width:${Math.min(100, n.mem)}%"></i></span>
+                <span class="nodo__b"><i class="${level(n.disk)}" style="width:${Math.min(100, n.disk)}%"></i></span>
+            </span>`).join('');
             return `<button class="card px-sum${mine ? ' px-sum--flag' : ''}" data-enter="${escapeHtml(h.id)}">
                 <span class="px-sum__r1">
                     <span class="dot dot--${mine ? 'bad' : 'up'}"></span>
                     <span class="px-sum__name">${escapeHtml(h.name)}</span>
                     <span class="px-sum__go">${ICON_CHEVRON}</span>
                 </span>
-                <span class="px-sum__r2">
-                    <b>${running}</b>/${(h.guests || []).length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}
-                    · ${(h.nodes || []).length} ${escapeHtml(i18n.t('proxmox.nodes').toLowerCase())}
-                </span>
-                <span class="px-sum__r3">
-                    <span class="${level(peak) ? 'px-sum__hot px-sum__hot--' + level(peak) : ''}">${escapeHtml(i18n.t('proxmox.peak'))} ${peak}%</span>
-                    ${store ? `<span class="${level(store.percent) ? 'px-sum__hot px-sum__hot--' + level(store.percent) : ''}">${escapeHtml(store.name)} ${Math.round(store.percent)}%</span>` : ''}
+                <span class="px-sum__r2"><b>${running}</b>/${g.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())} · ${escapeHtml(shape)}</span>
+                <span class="nodos">
+                    <span class="nodo">
+                        <span class="nodo__k">${escapeHtml(i18n.t('widget.api.extra_node'))}</span>
+                        <span class="nodo__h">${escapeHtml(i18n.t('widget.telemetry.cpu'))}</span>
+                        <span class="nodo__h">${escapeHtml(i18n.t('widget.telemetry.ram'))}</span>
+                        <span class="nodo__h">${escapeHtml(i18n.t('widget.proxmox.disk'))}</span>
+                    </span>${nodes}
                 </span>
             </button>`;
         }).join('');
+        const hypervisors = this.sec(i18n.t('proxmox.hypervisors'), String(this.hosts.length),
+            `<div class="px-sums">${cards}</div>`);
 
-        body.innerHTML = `
-            ${down.length ? `<section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label sec__label--bad">${escapeHtml(i18n.t('proxmox.services_down'))}</span>
-                    <span class="sec__rule"></span>
-                    <span class="sec__note sec__note--bad">${down.length}</span>
-                </div>
-                <div class="px-down">${escapeHtml(i18n.t('proxmox.stopped_breaks'))}
-                    <b>${down.map(d => escapeHtml(d.name)).join(', ')}</b></div>
-            </section>` : ''}
-            <section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.hypervisors'))}</span>
-                    <span class="sec__rule"></span>
-                    <span class="sec__note">${this.hosts.length}</span>
-                </div>
-                <div class="px-sums">${cards}</div>
-            </section>`;
+        body.innerHTML = attention + fleet + load + spread + storage + hypervisors;
+        this.loadFleetSeries();
     }
 
     private paintBody() {
@@ -794,7 +1023,13 @@ class ProxmoxPage extends HTMLElement {
         const last = pts[pts.length - 1].split(',');
         return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img"
                      aria-label="${escapeHtml(i18n.t('proxmox.chart_alt'))}">
-            <path fill="${colour}22" stroke="none" d="M${pts.join(' L')} L${W},${H} L0,${H} Z"/>
+            <!-- fill-opacity, no un "22" pegado al color: eso sólo funciona con un
+                 hexadecimal literal, y cada llamante pasa var(--accent) o
+                 var(--text-dim). "var(--accent)22" no es un color, así que el
+                 navegador caía al negro y todas las áreas de esta página se
+                 dibujaban como una losa negra — invisible sobre el tema oscuro
+                 y muy visible sobre el claro. -->
+            <path fill="${colour}" fill-opacity="0.13" stroke="none" d="M${pts.join(' L')} L${W},${H} L0,${H} Z"/>
             <polyline fill="none" stroke="${colour}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts.join(' ')}"/>
             <circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${colour}"/>
         </svg>`;
