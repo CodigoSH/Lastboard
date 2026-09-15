@@ -693,8 +693,18 @@ dialog::backdrop {
     border: none;
     color: var(--text-dim);
     font-family: var(--font-sans);
-    font-size: clamp(11px, 1.6cqi, 13px);
-    padding: clamp(6px, 1.5cqi, 8px) clamp(8px, 2cqi, 12px);
+    /* Sized for the longest label rather than the shortest. Measured in the
+       panel on a desktop: Greek "Συστήματος" wanted 104px of the 92 a segment
+       gets, Russian 100, and Spanish fitted in exactly 92 of 92 — no margin at
+       all, so any reworded string would have clipped too. A point off the cap
+       and four pixels off each side buys the room. */
+    font-size: clamp(11px, 1.5cqi, 12px);
+    padding-block: clamp(6px, 1.5cqi, 8px);
+    padding-inline: clamp(5px, 1.1cqi, 6px);
+    /* A flex item floors at its intrinsic width, so without this a label too
+       long for its share pushes the whole control wider than its column
+       instead of the text simply being tight. */
+    min-width: 0;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
