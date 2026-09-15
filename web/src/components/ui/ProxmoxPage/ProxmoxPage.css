@@ -643,10 +643,13 @@
 }
 
 .info__more {
+    /* The label sits against its own chevron on the right, the way a
+       disclosure does everywhere else. Pushed apart, the word and the mark
+       that opens it read as two separate controls. */
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    justify-content: flex-end;
+    gap: 7px;
     margin-top: 12px;
     padding: 9px 0;
     border: none;
@@ -677,16 +680,22 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    /* A starting value only: fitLists() measures the room actually left and
-       overwrites it, and does so again on every resize. */
-    max-height: min(38vh, 340px);
+    /* The height is set by fitLists(), which measures the room actually left
+       and does so again on every resize. The same for all three, so opening
+       any of them gives the same box. */
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 4px 0 12px;
     margin-inline: -4px;
 }
 .alarm { padding: 14px 16px; margin-bottom: 10px; cursor: default; }
-.alarm .info__list { max-height: min(30vh, 220px); }
+.alarm .info__list { max-height: min(30vh, 220px); height: auto; }
+
+/* `hidden` is display:none at the lowest specificity there is, and
+   `.info__list { display: flex }` beats it. Without this the list stays on
+   screen carrying the attribute, which is the same way a navigation bar once
+   rendered as an empty strip in this codebase. */
+.info__list[hidden] { display: none; }
 .alarm:hover { border-color: var(--card-border, transparent); background: var(--surface); }
 
 

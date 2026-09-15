@@ -94,7 +94,7 @@ The Proxmox icon opens a summary when several hypervisors are connected. It is a
 
 **Three figures** sit below them: **Bookmarked**, **Not bookmarked** and **Stopped**, each an icon, a number and a **Show more**. Open one and it grows downward inside its own card, one machine per line: the name on the left and a pill on the right saying which hypervisor and node it is on. Click any line to go into that hypervisor. The count is the whole answer most days; the names stay out of the way until asked for.
 
-**An open list is measured against the window and scrolls inside itself**, so opening one does not put the whole page on a scrollbar. On a short window it stops shrinking at a point where the list is still worth opening, and there the page does scroll a little.
+**An open list is measured against the window and scrolls inside itself**, so opening one never puts the page on a scrollbar it did not already have. All three open to the same height, whichever you press: a box of a known size that scrolls when it has to, rather than three that each pick their own. Below roughly 620px of window the hypervisors and the cards already fill the panel between them, and there is simply nothing left to open into.
 
 A stopped machine with a bookmark on it is listed first and marked, because that is an outage — your service is not answering. The rest are machines somebody turned off.
 

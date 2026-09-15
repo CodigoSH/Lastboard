@@ -777,17 +777,47 @@ class ProxmoxPage extends HTMLElement {
      * moment a card was opened — the one thing a summary must not do. So the
      * distance from the top of the list to the bottom of the scrolling body is
      * the height, and the list scrolls inside that.
+     *
+     * HEIGHT, not max-height, so all three open the same. Capped, the short one
+     * stopped at its own content and came out 56px shorter than the other two:
+     * measured, 388px against 332px for the six-row list. A box of a known size
+     * that scrolls when it has to is what a person expects from a disclosure;
+     * three that each pick their own is what makes a row look accidental.
      */
     private fitLists() {
         const body = this.shadowRoot?.getElementById('pp-body');
         if (!body) return;
-        const floor = body.getBoundingClientRect().bottom;
-        for (const el of this.shadowRoot!.querySelectorAll<HTMLElement>('.info__list')) {
-            el.style.maxHeight = '';
-            const room = floor - el.getBoundingClientRect().top - 14;
-            // A list too short to be worth opening is worse than one that
-            // costs a little scroll, so there is a floor under the floor.
-            el.style.maxHeight = `${Math.max(140, Math.round(room))}px`;
+        const open = this.shadowRoot!.querySelector<HTMLElement>('.info__list');
+        if (!open) return;
+
+        const bodyBox = () => body.getBoundingClientRect();
+        const roomFor = (el: HTMLElement) => bodyBox().bottom - el.getBoundingClientRect().top - 14;
+
+        // What the page already overflowed by before anything was opened. THAT
+        // is what opening must not add to — not zero. On a short window the
+        // hypervisor tiles overflow on their own, and chasing zero drove the
+        // list to nothing: measured at 620px, sixteen pixels of list.
+        // Scoped to the cards: the alert strip's own list sizes itself.
+        const lists = () => this.shadowRoot!.querySelectorAll<HTMLElement>('.info .info__list');
+        for (const el of lists()) el.style.height = '0px';
+        const floor = Math.max(0, body.scrollHeight - body.clientHeight);
+
+        // No reset before measuring. roomFor() reads the list's TOP, which is
+        // only where the lift put it for as long as the list still has the
+        // height that made the body scrollable: clearing it first collapsed
+        // the body, bounced the scroll back to zero and undid the lift — the
+        // list came out sixteen pixels tall and the page grew by sixteen.
+        //
+        // And no floor either. A floor is height the page does not have, and
+        // taking it anyway is exactly the scrollbar this exists to avoid.
+        for (const el of lists()) {
+            const room = Math.round(roomFor(el));
+            // Under about a line there is nothing to show, and the list's own
+            // padding would be the only thing added. Below 620px of window the
+            // tiles and the cards already fill the panel on their own: there is
+            // no room to find and nothing clever to do about it.
+            el.hidden = room < 26;
+            el.style.height = `${Math.max(0, room)}px`;
         }
 
         // And then the correction, because the first guess cannot account for
@@ -797,15 +827,13 @@ class ProxmoxPage extends HTMLElement {
         // More than once, because taking height off one element moves what is
         // under it and the remainder is not known until it has: a single pass
         // left sixteen pixels over at every window height tried.
-        const open = this.shadowRoot!.querySelector<HTMLElement>('.info__list');
-        if (!open) return;
         for (let pass = 0; pass < 4; pass++) {
-            const over = body.scrollHeight - body.clientHeight;
+            const over = body.scrollHeight - body.clientHeight - floor;
             if (over <= 0) break;
             const now = open.getBoundingClientRect().height;
-            const next = Math.max(140, Math.round(now - over));
-            if (next === now) break;   // the floor: a list too short to open
-            open.style.maxHeight = `${next}px`;
+            const next = Math.max(0, Math.round(now - over));
+            if (next === now) break;
+            open.style.height = `${next}px`;
         }
     }
 
