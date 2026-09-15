@@ -514,6 +514,27 @@
 /* Five figures and what is behind each one. The width is capped so four or
    five two-digit numbers do not stretch to half the screen and read as empty
    cards; below the cap they wrap rather than shrink. */
+/*
+ * A readout is not a control.
+ *
+ * .card carries `cursor: pointer` and a hover that turns the edge accent and
+ * the background solid, because every card on the cluster page opens
+ * something. These do not: there is no single place a total of five
+ * hypervisors could take you. Leaving the recipe untouched made them light up
+ * under the pointer and then do nothing, which is a worse answer than looking
+ * inert. Everything on this page that names ONE hypervisor — its card, its
+ * stores — still enters it.
+ *
+ * The charts are not in this list: .panel is not a .card, so it never had the
+ * pointer to begin with, and naming it here would have given it a hover
+ * background it does not have at rest.
+ */
+.kpi, .split { cursor: default; }
+.kpi:hover, .split:hover {
+    border-color: var(--card-border, transparent);
+    background: var(--surface);
+}
+
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 8px; }
 .kpi { display: flex; flex-direction: column; padding: 15px 16px 14px; }
 .kpi__n {

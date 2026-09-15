@@ -98,7 +98,9 @@ The Proxmox icon opens a summary when several hypervisors are connected. It answ
 
 **Spread** — one stacked bar per hypervisor: containers, virtual machines and stopped, so you can see at a glance where the machines actually live.
 
-**Storage** — every store, fullest first, with its kind, its figures and which hypervisor and node it belongs to. **A shared store is counted once**: a Ceph pool is reported by every node of the cluster, so adding them up would triple it.
+**Storage** — every store, fullest first, with its kind, its figures and which hypervisor and node it belongs to. Click one to go into the hypervisor it lives on. **A shared store is counted once**: a Ceph pool is reported by every node of the cluster, so adding them up would triple it.
+
+Everything on this page that names one hypervisor takes you into it; the figures that speak for all of them at once are readouts and are drawn as readouts, without the pointer and the lit edge a card normally gets.
 
 **Hypervisors** — the way in, one card each, now carrying its own nodes with a bar for CPU, memory and disk. Until this the summary never admitted nodes existed; you had to go in to find out. A card with a service down wears the accent edge, the same one a stopped machine wears inside, and a hypervisor that cannot be reached says so on its own card without taking the others with it.
 

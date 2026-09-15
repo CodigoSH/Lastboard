@@ -577,13 +577,13 @@ class ProxmoxPage extends HTMLElement {
         // them up counts a Ceph pool three times in a cluster of three. The
         // flag is in the answer; the key drops the node for a shared one.
         const seen = new Set<string>();
-        const stores: (PxStore & { hostName: string })[] = [];
+        const stores: (PxStore & { hostName: string; hostId: string })[] = [];
         for (const h of live) {
             for (const s of h.stores || []) {
                 const key = s.shared ? `${h.id}|${s.name}` : `${h.id}|${s.node}|${s.name}`;
                 if (seen.has(key)) continue;
                 seen.add(key);
-                stores.push({ ...s, hostName: h.name });
+                stores.push({ ...s, hostName: h.name, hostId: h.id });
             }
         }
 
@@ -786,7 +786,10 @@ class ProxmoxPage extends HTMLElement {
             `${fmtBytes(f.diskUsed)} / ${fmtBytes(f.diskTotal)}`,
             `<div class="stores">${stores.map(s => {
                 const l = level(s.percent);
-                return `<div class="card store">
+                // It enters the hypervisor it belongs to. Everything on this
+                // page that names one takes you there; the figures that name
+                // no single place do not pretend to.
+                return `<button class="card store" data-enter="${escapeHtml(s.hostId)}">
                     <span class="store__r1">
                         <span class="store__name">${escapeHtml(s.name)}</span>
                         <span class="store__kind">${escapeHtml(s.kind)}</span>
@@ -797,7 +800,7 @@ class ProxmoxPage extends HTMLElement {
                         <span>${escapeHtml(fmtBytes(s.used))} / ${escapeHtml(fmtBytes(s.total))}</span>
                         <span>${escapeHtml(s.hostName)} · ${escapeHtml(s.node)}</span>
                     </span>
-                </div>`;
+                </button>`;
             }).join('')}</div>`) : '';
 
         // ── And the way in, each card carrying its own nodes.
