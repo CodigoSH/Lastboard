@@ -1166,6 +1166,21 @@ input:checked+.slider:before {
 }
 
 @container (max-width: 480px) {
+    /* The two-up rows stack. Measured in the panel at 390px: the background
+       uploader and the theme control shared it, the theme column came out
+       141px, and its three segments were handed 43px each for labels needing
+       60-73 — so every label was cut to an ellipsis and the words vanished
+       entirely. Adding "System" made a tight fit an impossible one. */
+    .settings-content__flex-row {
+        flex-direction: column;
+        /* `align-items: flex-start` keeps the two columns level at the top
+           while they sit side by side. Stacked, the cross axis is the width,
+           so the same line stops meaning "align to the top" and starts meaning
+           "do not fill" — each column shrank to its content and the theme
+           control gained nothing from stacking. */
+        align-items: stretch;
+    }
+
     /* One column: the label above, its control below, both full width. */
     .settings-content__action-row,
     .settings-content__danger-zone {
