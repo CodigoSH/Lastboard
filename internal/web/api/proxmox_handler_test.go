@@ -137,6 +137,18 @@ func pxSave(t *testing.T, serverURL string, s *userSession, body string) *http.R
 	return resp
 }
 
+// pxOnlyHost digs the single configured host out of the settings answer. The
+// tests are about who may read what and what happens to a stored secret, not
+// about the shape of the envelope they arrive in.
+func pxOnlyHost(body map[string]any) map[string]any {
+	hosts, _ := body["hosts"].([]any)
+	if len(hosts) == 0 {
+		return map[string]any{}
+	}
+	h, _ := hosts[0].(map[string]any)
+	return h
+}
+
 func pxGet(t *testing.T, serverURL, path string, s *userSession) (*http.Response, map[string]any) {
 	t.Helper()
 	req, _ := http.NewRequest("GET", serverURL+path, nil)
@@ -159,7 +171,7 @@ func TestTheStoredSecretNeverComesBack(t *testing.T) {
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
 
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"https://pve.home:8006","token_id":"lastboard@pve!lb","secret":"61b6dfca-9f17","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"https://pve.home:8006","token_id":"lastboard@pve!lb","secret":"61b6dfca-9f17","insecure":true}]}`).Body.Close()
 
 	resp, body := pxGet(t, server.URL, "/api/proxmox/settings", s)
 	if resp.StatusCode != http.StatusOK {
@@ -170,8 +182,8 @@ func TestTheStoredSecretNeverComesBack(t *testing.T) {
 			t.Fatalf("the secret came back in %q", k)
 		}
 	}
-	if body["has_secret"] != true {
-		t.Errorf("has_secret = %v, want true: the form cannot tell stored from missing", body["has_secret"])
+	if h := pxOnlyHost(body); h["has_secret"] != true {
+		t.Errorf("has_secret = %v, want true: the form cannot tell stored from missing", h["has_secret"])
 	}
 }
 
@@ -182,7 +194,7 @@ func TestANonAdminLearnsOnlyWhetherProxmoxIsOn(t *testing.T) {
 	createUser(t, db.DB, "guest", "password", "user")
 
 	admin := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, admin, `{"enabled":true,"url":"https://pve.home:8006","token_id":"lastboard@pve!lb","secret":"s3cr3t"}`).Body.Close()
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"https://pve.home:8006","token_id":"lastboard@pve!lb","secret":"s3cr3t"}]}`).Body.Close()
 
 	// The top bar of every account has to know whether to offer the page, and
 	// that is all it gets: the address and the account name are reconnaissance.
@@ -191,11 +203,10 @@ func TestANonAdminLearnsOnlyWhetherProxmoxIsOn(t *testing.T) {
 	if body["enabled"] != true {
 		t.Errorf("enabled = %v, want true", body["enabled"])
 	}
-	if body["url"] != "" || body["token_id"] != "" {
-		t.Errorf("a non-admin was told the address (%v) and the token (%v)", body["url"], body["token_id"])
-	}
-	if body["has_secret"] != false {
-		t.Errorf("has_secret = %v, want false for a non-admin", body["has_secret"])
+	// Not blanked fields inside a host: no host at all. A member has no
+	// business knowing how many hypervisors exist either.
+	if hosts, _ := body["hosts"].([]any); len(hosts) != 0 {
+		t.Errorf("a non-admin was told about %d host(s): %v", len(hosts), hosts)
 	}
 }
 
@@ -206,7 +217,7 @@ func TestOnlyAnAdminCanPointAtAHypervisor(t *testing.T) {
 	createUser(t, db.DB, "guest", "password", "user")
 
 	guest := doLogin(t, server.URL, "guest", "password")
-	resp := pxSave(t, server.URL, guest, `{"enabled":true,"url":"https://evil.example","token_id":"x!y","secret":"z"}`)
+	resp := pxSave(t, server.URL, guest, `{"hosts":[{"enabled":true,"url":"https://evil.example","token_id":"x!y","secret":"z"}]}`)
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusForbidden {
 		t.Fatalf("got %d, want 403: a settings write holds a credential", resp.StatusCode)
@@ -214,8 +225,8 @@ func TestOnlyAnAdminCanPointAtAHypervisor(t *testing.T) {
 
 	admin := doLogin(t, server.URL, "root", "password")
 	_, body := pxGet(t, server.URL, "/api/proxmox/settings", admin)
-	if body["url"] != "" {
-		t.Errorf("the refused write landed anyway: url = %v", body["url"])
+	if h := pxOnlyHost(body); h["url"] != nil {
+		t.Errorf("the refused write landed anyway: url = %v", h["url"])
 	}
 }
 
@@ -226,11 +237,11 @@ func TestSavingTheFormAgainKeepsTheSecretItNeverReceived(t *testing.T) {
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
 
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"lastboard@pve!lb","secret":"first-secret","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"lastboard@pve!lb","secret":"first-secret","insecure":true}]}`).Body.Close()
 	// The form never receives the secret, so the second save sends an empty
 	// one. If that overwrote the stored value, the integration would break the
 	// moment anyone toggled a checkbox.
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"lastboard@pve!lb","secret":"","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"lastboard@pve!lb","secret":"","insecure":true}]}`).Body.Close()
 
 	resp, _ := pxGet(t, server.URL, "/api/proxmox/overview", s)
 	resp.Body.Close()
@@ -245,11 +256,11 @@ func TestABareAddressIsStoredAsHTTPS(t *testing.T) {
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
 
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"192.168.1.10:8006","token_id":"a@pve!b","secret":"c"}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"192.168.1.10:8006","token_id":"a@pve!b","secret":"c"}]}`).Body.Close()
 
 	_, body := pxGet(t, server.URL, "/api/proxmox/settings", s)
-	if body["url"] != "https://192.168.1.10:8006" {
-		t.Errorf("url = %v, want it prefixed with https://", body["url"])
+	if h := pxOnlyHost(body); h["url"] != "https://192.168.1.10:8006" {
+		t.Errorf("url = %v, want it prefixed with https://", h["url"])
 	}
 }
 
@@ -274,10 +285,17 @@ func TestTheOverviewMapsWhatTheHostSends(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
+	// The answer is a list now: with several hypervisors connected the page
+	// asks for all of them at once, and with one it gets a list of one.
+	var envelope struct {
+		Hosts []json.RawMessage `json:"hosts"`
+	}
 	var out struct {
-		Cluster bool `json:"cluster"`
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Cluster bool   `json:"cluster"`
 		Caps    struct {
 			Read  bool `json:"read"`
 			Power bool `json:"power"`
@@ -314,7 +332,18 @@ func TestTheOverviewMapsWhatTheHostSends(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("overview: got %d", resp.StatusCode)
 	}
-	json.NewDecoder(resp.Body).Decode(&out)
+	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
+		t.Fatalf("overview: %v", err)
+	}
+	if len(envelope.Hosts) != 1 {
+		t.Fatalf("want one host in the answer, got %d", len(envelope.Hosts))
+	}
+	if err := json.Unmarshal(envelope.Hosts[0], &out); err != nil {
+		t.Fatalf("host overview: %v", err)
+	}
+	if out.ID == "" || out.Name == "" {
+		t.Errorf("the host is unnamed in the answer, so the interface cannot tell two apart: %+v", out)
+	}
 
 	if len(out.Nodes) != 1 || out.Nodes[0].Name != "kprox" {
 		t.Fatalf("nodes = %+v", out.Nodes)
@@ -384,7 +413,7 @@ func TestANonAdminCannotStopAMachine(t *testing.T) {
 	createUser(t, db.DB, "root", "password", "admin")
 	createUser(t, db.DB, "guest", "password", "user")
 	admin := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, admin, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	guest := doLogin(t, server.URL, "guest", "password")
 	resp := pxPower(t, server.URL, guest, `{"node":"kprox","kind":"lxc","vmid":106,"action":"shutdown"}`)
@@ -404,7 +433,7 @@ func TestAReadOnlyTokenIsToldSoInsteadOfFailingAtTheHost(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	resp := pxPower(t, server.URL, s, `{"node":"kprox","kind":"lxc","vmid":106,"action":"start"}`)
 	defer resp.Body.Close()
@@ -424,7 +453,7 @@ func TestStartingAMachineReachesTheRightPath(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	resp := pxPower(t, server.URL, s, `{"node":"kprox","kind":"qemu","vmid":200,"action":"start"}`)
 	defer resp.Body.Close()
@@ -442,7 +471,7 @@ func TestAnActionThatIsNotOfferedIsRefusedBeforeTheHostSeesIt(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	// Nothing in the interface offers to delete a machine, and the handler is
 	// not willing to relay one either.
@@ -481,10 +510,29 @@ func iconsFrom(t *testing.T, serverURL string, s *userSession) map[string]string
 	}
 	defer resp.Body.Close()
 	var out struct {
-		Icons map[string]string `json:"icons"`
+		Hosts []struct {
+			Icons map[string]string `json:"icons"`
+		} `json:"hosts"`
 	}
 	json.NewDecoder(resp.Body).Decode(&out)
-	return out.Icons
+	if len(out.Hosts) == 0 {
+		return map[string]string{}
+	}
+	return out.Hosts[0].Icons
+}
+
+// pxHostID is the id the server minted for the only configured host. Tests
+// cannot hardcode it — that is the point of it being generated — but the key an
+// icon is stored under is built from it, so they have to ask.
+func pxHostID(t *testing.T, serverURL string, s *userSession) string {
+	t.Helper()
+	_, body := pxGet(t, serverURL, "/api/proxmox/settings", s)
+	h := pxOnlyHost(body)
+	id, _ := h["id"].(string)
+	if id == "" {
+		t.Fatal("no host id came back, so nothing can be keyed against it")
+	}
+	return id
 }
 
 func TestAMachineKeepsTheIconItsOwnerChose(t *testing.T) {
@@ -493,7 +541,7 @@ func TestAMachineKeepsTheIconItsOwnerChose(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	// Nine of twenty-nine machines on a real host have no bookmark and never
 	// will — the runners, the tunnel, the dashboard itself.
@@ -503,7 +551,7 @@ func TestAMachineKeepsTheIconItsOwnerChose(t *testing.T) {
 		t.Fatalf("got %d, want 204", resp.StatusCode)
 	}
 
-	if got := iconsFrom(t, server.URL, s)["kprox|1018"]; got != "/api/icons/abc123" {
+	if got := iconsFrom(t, server.URL, s)[pxHostID(t, server.URL, s)+"|kprox|1018"]; got != "/api/icons/abc123" {
 		t.Errorf("icon = %q, want the one that was chosen", got)
 	}
 }
@@ -514,7 +562,7 @@ func TestChoosingASecondIconLeavesTheFirstAlone(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	// The whole map is one setting row, so each write rewrites it: the second
 	// choice must not be the only one left standing.
@@ -522,7 +570,8 @@ func TestChoosingASecondIconLeavesTheFirstAlone(t *testing.T) {
 	pxIcon(t, server.URL, s, `{"node":"kprox","vmid":200,"icon":"/api/icons/two"}`).Body.Close()
 
 	icons := iconsFrom(t, server.URL, s)
-	if icons["kprox|100"] != "/api/icons/one" || icons["kprox|200"] != "/api/icons/two" {
+	host := pxHostID(t, server.URL, s)
+	if icons[host+"|kprox|100"] != "/api/icons/one" || icons[host+"|kprox|200"] != "/api/icons/two" {
 		t.Fatalf("icons = %v", icons)
 	}
 }
@@ -533,7 +582,7 @@ func TestAnEmptyIconClearsTheChoice(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	pxIcon(t, server.URL, s, `{"node":"kprox","vmid":100,"icon":"/api/icons/one"}`).Body.Close()
 	pxIcon(t, server.URL, s, `{"node":"kprox","vmid":100,"icon":""}`).Body.Close()
@@ -550,7 +599,7 @@ func TestOnlyAnAdminChoosesTheFaceOfAMachine(t *testing.T) {
 	createUser(t, db.DB, "root", "password", "admin")
 	createUser(t, db.DB, "guest", "password", "user")
 	admin := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, admin, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	// Server-wide setting, so it follows the rule the connection follows.
 	resp := pxIcon(t, server.URL, doLogin(t, server.URL, "guest", "password"),
@@ -570,7 +619,7 @@ func TestTheIconMapRefusesToGrowWithoutEnd(t *testing.T) {
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	s := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 
 	// An icon longer than a path could ever be is not an icon.
 	resp := pxIcon(t, server.URL, s, `{"node":"kprox","vmid":100,"icon":"`+strings.Repeat("x", 600)+`"}`)
@@ -589,5 +638,199 @@ func TestTheIconMapRefusesToGrowWithoutEnd(t *testing.T) {
 		if resp.StatusCode != http.StatusBadRequest {
 			t.Errorf("%s: got %d, want 400", body, resp.StatusCode)
 		}
+	}
+}
+
+/*
+Several hypervisors.
+
+The case that forced the host id into every stored key: two clusters, each with
+a node called "pve" — the name a default install gives itself — and each with a
+machine 106. Before this, "pve|106" named both, so an icon chosen for one
+appeared on the other and a bookmark tied to one flagged the other as the
+service that went down.
+*/
+
+func TestTwoHostsAreBothRead(t *testing.T) {
+	a := newFakeProxmox(t)
+	b := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[
+		{"enabled":true,"name":"Main","url":"`+a.URL+`","token_id":"a@pve!b","secret":"c","insecure":true},
+		{"enabled":true,"name":"Offsite","url":"`+b.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}
+	]}`).Body.Close()
+
+	var out struct {
+		Hosts []struct {
+			ID     string `json:"id"`
+			Name   string `json:"name"`
+			Error  string `json:"error"`
+			Guests []struct {
+				VMID int `json:"vmid"`
+			} `json:"guests"`
+		} `json:"hosts"`
+	}
+	req, _ := http.NewRequest("GET", server.URL+"/api/proxmox/overview", nil)
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("overview: %v", err)
+	}
+	defer resp.Body.Close()
+	json.NewDecoder(resp.Body).Decode(&out)
+
+	if len(out.Hosts) != 2 {
+		t.Fatalf("want both hosts in one answer, got %d", len(out.Hosts))
+	}
+	if out.Hosts[0].Name != "Main" || out.Hosts[1].Name != "Offsite" {
+		t.Errorf("the hosts lost their names or their order: %+v", out.Hosts)
+	}
+	if out.Hosts[0].ID == out.Hosts[1].ID {
+		t.Error("both hosts were given the same id, so every key collides again")
+	}
+	for _, h := range out.Hosts {
+		if len(h.Guests) == 0 {
+			t.Errorf("%s came back empty: %q", h.Name, h.Error)
+		}
+	}
+}
+
+func TestOneHostBeingDownDoesNotHideTheOthers(t *testing.T) {
+	up := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	// The second address answers nothing at all: a host that is off, or moved.
+	pxSave(t, server.URL, s, `{"hosts":[
+		{"enabled":true,"name":"Up","url":"`+up.URL+`","token_id":"a@pve!b","secret":"c","insecure":true},
+		{"enabled":true,"name":"Down","url":"http://127.0.0.1:9","token_id":"a@pve!b","secret":"c","insecure":true}
+	]}`).Body.Close()
+
+	var out struct {
+		Hosts []struct {
+			Name   string     `json:"name"`
+			Error  string     `json:"error"`
+			Guests []struct{} `json:"guests"`
+		} `json:"hosts"`
+	}
+	req, _ := http.NewRequest("GET", server.URL+"/api/proxmox/overview", nil)
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("overview: %v", err)
+	}
+	defer resp.Body.Close()
+	// The request itself must succeed: one broken connection is information,
+	// not a failure of the page.
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("got %d, want 200 with the failure named inside", resp.StatusCode)
+	}
+	json.NewDecoder(resp.Body).Decode(&out)
+	if len(out.Hosts) != 2 {
+		t.Fatalf("want both hosts listed, got %d", len(out.Hosts))
+	}
+	if len(out.Hosts[0].Guests) == 0 {
+		t.Error("the working host came back empty because the other one is down")
+	}
+	if out.Hosts[1].Error == "" {
+		t.Error("the unreachable host reported no error, so nothing can say which one is unhappy")
+	}
+}
+
+func TestAskingForOneHostReadsOnlyThatOne(t *testing.T) {
+	a := newFakeProxmox(t)
+	b := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[
+		{"enabled":true,"name":"Main","url":"`+a.URL+`","token_id":"a@pve!b","secret":"c","insecure":true},
+		{"enabled":true,"name":"Offsite","url":"`+b.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}
+	]}`).Body.Close()
+
+	_, body := pxGet(t, server.URL, "/api/proxmox/settings", s)
+	hosts, _ := body["hosts"].([]any)
+	second, _ := hosts[1].(map[string]any)
+	id, _ := second["id"].(string)
+
+	var out struct {
+		Hosts []struct {
+			Name string `json:"name"`
+		} `json:"hosts"`
+	}
+	req, _ := http.NewRequest("GET", server.URL+"/api/proxmox/overview?host="+id, nil)
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("overview: %v", err)
+	}
+	defer resp.Body.Close()
+	json.NewDecoder(resp.Body).Decode(&out)
+
+	// A cluster's own page polls every few seconds. Reading every other
+	// hypervisor on each of those polls is the cost this parameter avoids.
+	if len(out.Hosts) != 1 || out.Hosts[0].Name != "Offsite" {
+		t.Fatalf("want only the host that was asked for, got %+v", out.Hosts)
+	}
+}
+
+func TestTheSameMachineOnTwoHostsKeepsItsOwnIcon(t *testing.T) {
+	a := newFakeProxmox(t)
+	b := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[
+		{"enabled":true,"name":"Main","url":"`+a.URL+`","token_id":"a@pve!b","secret":"c","insecure":true},
+		{"enabled":true,"name":"Offsite","url":"`+b.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}
+	]}`).Body.Close()
+
+	_, body := pxGet(t, server.URL, "/api/proxmox/settings", s)
+	hosts, _ := body["hosts"].([]any)
+	first, _ := hosts[0].(map[string]any)
+	second, _ := hosts[1].(map[string]any)
+	idA, _ := first["id"].(string)
+	idB, _ := second["id"].(string)
+
+	// Same node name, same vmid, different hypervisor — which is exactly what
+	// two default installs look like.
+	pxIcon(t, server.URL, s, `{"host":"`+idA+`","node":"pve","vmid":106,"icon":"/api/icons/plex"}`).Body.Close()
+	pxIcon(t, server.URL, s, `{"host":"`+idB+`","node":"pve","vmid":106,"icon":"/api/icons/other"}`).Body.Close()
+
+	icons := iconsFrom(t, server.URL, s)
+	if icons[idA+"|pve|106"] != "/api/icons/plex" {
+		t.Errorf("the first host's icon was overwritten: %v", icons)
+	}
+	if icons[idB+"|pve|106"] != "/api/icons/other" {
+		t.Errorf("the second host's icon did not land: %v", icons)
+	}
+	if len(icons) != 2 {
+		t.Errorf("want two separate icons, got %d: %v", len(icons), icons)
+	}
+}
+
+func TestAnIconForAHostThatIsNotThereIsRefused(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	// An invented id would write a key nothing will ever read and nothing can
+	// prune, because no host claims it.
+	resp := pxIcon(t, server.URL, s, `{"host":"pxdeadbeef","node":"pve","vmid":106,"icon":"/api/icons/x"}`)
+	resp.Body.Close()
+	if resp.StatusCode == http.StatusNoContent {
+		t.Fatal("an icon was stored against a host that does not exist")
+	}
+	if got := iconsFrom(t, server.URL, s); len(got) != 0 {
+		t.Errorf("icons = %v, want none", got)
 	}
 }

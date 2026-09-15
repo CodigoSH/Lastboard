@@ -1,20 +1,23 @@
 package api
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // ProxmoxHandler serves the Proxmox page and its widget.
 //
-// The connection is server-wide and lives in system_settings, like the
-// monitoring configuration: one hypervisor per instance, configured by an
-// administrator. It is not per-user and not per-widget, because the credential
-// is the administrator's and must not travel to a browser at all.
+// The connections are server-wide and live in system_settings, like the
+// monitoring configuration: a list of hypervisors, configured by an
+// administrator. They are not per-user and not per-widget, because the
+// credentials are the administrator's and must not travel to a browser at all.
 type ProxmoxHandler struct {
 	DB *sql.DB
 }
@@ -37,13 +40,92 @@ func (h *ProxmoxHandler) setSetting(key, value string) error {
 	return err
 }
 
-func (h *ProxmoxHandler) config() proxmoxConfig {
-	return proxmoxConfig{
-		URL:      h.getSetting("proxmox_url"),
-		TokenID:  h.getSetting("proxmox_token_id"),
-		Secret:   h.getSetting("proxmox_token_secret"),
-		Insecure: h.getSetting("proxmox_insecure") != "0",
+/* ---------------------------------------------------------------------------
+ * Hosts
+ *
+ * One entry is one Proxmox endpoint: a cluster, or a standalone node, which
+ * speak the same API. The id is generated once and never derived from the name,
+ * because the name is the operator's to change and everything else — the icon
+ * chosen for a machine, the bookmark tied to one — is stored against the id.
+ * ------------------------------------------------------------------------ */
+
+const proxmoxHostsKey = "proxmox_hosts"
+
+// proxmoxMaxHosts is a ceiling, not an expectation. Each one is a poll and a
+// token; somebody pasting a hundred would be a mistake, not a homelab.
+const proxmoxMaxHosts = 10
+
+type proxmoxHost struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	URL     string `json:"url"`
+	TokenID string `json:"token_id"`
+	// Never leaves the server. See proxmoxSettings for why.
+	Secret   string `json:"secret,omitempty"`
+	Insecure bool   `json:"insecure"`
+	Enabled  bool   `json:"enabled"`
+}
+
+func (h *ProxmoxHandler) hosts() []proxmoxHost {
+	var out []proxmoxHost
+	raw := h.getSetting(proxmoxHostsKey)
+	if raw == "" {
+		return nil
 	}
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		return nil
+	}
+	return out
+}
+
+func (h *ProxmoxHandler) saveHosts(list []proxmoxHost) error {
+	blob, err := json.Marshal(list)
+	if err != nil {
+		return err
+	}
+	return h.setSetting(proxmoxHostsKey, string(blob))
+}
+
+// enabledHosts are the ones worth asking anything of.
+func (h *ProxmoxHandler) enabledHosts() []proxmoxHost {
+	var out []proxmoxHost
+	for _, e := range h.hosts() {
+		if e.Enabled && configOf(e).configured() {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+func configOf(e proxmoxHost) proxmoxConfig {
+	return proxmoxConfig{URL: e.URL, TokenID: e.TokenID, Secret: e.Secret, Insecure: e.Insecure}
+}
+
+// hostFor resolves the host a request names. An empty id means "the only one",
+// which is what every instance had until now and what most will keep having.
+func (h *ProxmoxHandler) hostFor(id string) (proxmoxHost, bool) {
+	list := h.enabledHosts()
+	if id == "" {
+		if len(list) == 1 {
+			return list[0], true
+		}
+		return proxmoxHost{}, false
+	}
+	for _, e := range list {
+		if e.ID == id {
+			return e, true
+		}
+	}
+	return proxmoxHost{}, false
+}
+
+// newHostID is short, url-safe and unmistakable in a settings key.
+func newHostID() string {
+	b := make([]byte, 6)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("px%d", time.Now().UnixNano())
+	}
+	return "px" + hex.EncodeToString(b)
 }
 
 /* ---------------------------------------------------------------------------
@@ -52,15 +134,26 @@ func (h *ProxmoxHandler) config() proxmoxConfig {
 
 // proxmoxSettings is what the configuration screen exchanges.
 //
-// There is no field for the secret on the way out. Not a blanked one, not a
+// There is no field for a secret on the way out. Not a blanked one, not a
 // masked one: absent. The alerting token taught this the hard way — it was
 // readable by every account until 1.7.1 — and a Proxmox token is worth more,
 // because with VM.PowerMgmt it can stop the machines the household runs on.
 type proxmoxSettings struct {
-	Enabled  bool   `json:"enabled"`
+	// Enabled says at least one host is connected and on. It is the only part
+	// every account may read, because the top bar has to decide whether to
+	// offer the page at all.
+	Enabled bool `json:"enabled"`
+	// Hosts is administrator-only and empty for everybody else.
+	Hosts []proxmoxSettingsHost `json:"hosts"`
+}
+
+type proxmoxSettingsHost struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
 	URL      string `json:"url"`
 	TokenID  string `json:"token_id"`
 	Insecure bool   `json:"insecure"`
+	Enabled  bool   `json:"enabled"`
 	// HasSecret says a secret is stored without saying what it is, so the form
 	// can show "saved" instead of an empty box that looks like a missing value.
 	HasSecret bool `json:"has_secret"`
@@ -68,59 +161,122 @@ type proxmoxSettings struct {
 
 // GetSettings answers with the configuration.
 //
-// Everyone authenticated learns whether the integration is on, because the top
-// bar has to know whether to offer the page at all. The address and the token
-// id are administrator-only: they name the hypervisor and the account, which is
-// reconnaissance nobody else on the instance needs.
+// Everyone authenticated learns whether the integration is on. The addresses
+// and token ids are administrator-only: they name the hypervisors and the
+// accounts, which is reconnaissance nobody else on the instance needs.
 func (h *ProxmoxHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
-	s := proxmoxSettings{Enabled: h.getSetting("proxmox_enabled") == "1"}
+	list := h.hosts()
 
-	if isAdminUser(h.DB, r) {
-		s.URL = h.getSetting("proxmox_url")
-		s.TokenID = h.getSetting("proxmox_token_id")
-		s.Insecure = h.getSetting("proxmox_insecure") != "0"
-		s.HasSecret = h.getSetting("proxmox_token_secret") != ""
+	out := proxmoxSettings{Hosts: []proxmoxSettingsHost{}}
+	for _, e := range list {
+		if e.Enabled && configOf(e).configured() {
+			out.Enabled = true
+			break
+		}
 	}
-	writeJSON(w, s)
+	if !isAdminUser(h.DB, r) {
+		writeJSON(w, out)
+		return
+	}
+	for _, e := range list {
+		out.Hosts = append(out.Hosts, proxmoxSettingsHost{
+			ID: e.ID, Name: e.Name, URL: e.URL, TokenID: e.TokenID,
+			Insecure: e.Insecure, Enabled: e.Enabled, HasSecret: e.Secret != "",
+		})
+	}
+	writeJSON(w, out)
 }
 
-// UpdateSettings persists the connection. Admin-only: it is a server-wide
-// setting holding a credential.
+// UpdateSettings persists the whole list. Admin-only: server-wide settings
+// holding credentials.
+//
+// The list arrives complete rather than as a patch, so adding, renaming,
+// reordering and removing are all the same request — and a host that vanishes
+// from it is one the operator removed, which is the only way to remove one.
 func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 	if !isAdminUser(h.DB, r) {
 		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 8*1024)
+	r.Body = http.MaxBytesReader(w, r.Body, 32*1024)
 
 	var in struct {
-		Enabled  bool   `json:"enabled"`
-		URL      string `json:"url"`
-		TokenID  string `json:"token_id"`
-		Secret   string `json:"secret"`
-		Insecure bool   `json:"insecure"`
+		Hosts []struct {
+			ID       string `json:"id"`
+			Name     string `json:"name"`
+			URL      string `json:"url"`
+			TokenID  string `json:"token_id"`
+			Secret   string `json:"secret"`
+			Insecure bool   `json:"insecure"`
+			Enabled  bool   `json:"enabled"`
+		} `json:"hosts"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
-
-	url := strings.TrimSpace(in.URL)
-	if url != "" && !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		url = "https://" + url
+	if len(in.Hosts) > proxmoxMaxHosts {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
 	}
 
-	_ = h.setSetting("proxmox_enabled", boolSetting(in.Enabled))
-	_ = h.setSetting("proxmox_url", url)
-	_ = h.setSetting("proxmox_token_id", strings.TrimSpace(in.TokenID))
-	_ = h.setSetting("proxmox_insecure", boolSetting(in.Insecure))
-
-	// An empty secret in the payload means "leave the stored one alone", so the
-	// form can be saved again without retyping a credential it never received.
-	if s := strings.TrimSpace(in.Secret); s != "" {
-		_ = h.setSetting("proxmox_token_secret", s)
+	// What is stored now, so a host that arrives without a secret keeps the one
+	// it already had. The form never receives a secret, so every save of an
+	// untouched host would otherwise wipe its credential.
+	previous := map[string]proxmoxHost{}
+	for _, e := range h.hosts() {
+		previous[e.ID] = e
 	}
 
+	list := make([]proxmoxHost, 0, len(in.Hosts))
+	seen := map[string]bool{}
+	for _, raw := range in.Hosts {
+		url := strings.TrimSpace(raw.URL)
+		if url != "" && !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+			url = "https://" + url
+		}
+
+		// An id the caller invented, or one it sent twice, would let a browser
+		// point two hosts at the same stored icons. Ids are the server's.
+		id := strings.TrimSpace(raw.ID)
+		if _, known := previous[id]; !known || id == "" || seen[id] {
+			id = ""
+		}
+		// A save that forgets the id would otherwise mint a new host and leave
+		// the secret behind on the old one — the credential lost by a form
+		// field, silently. Same address and same token means the same host.
+		if id == "" {
+			for _, old := range previous {
+				if !seen[old.ID] && old.URL == url && old.TokenID == strings.TrimSpace(raw.TokenID) {
+					id = old.ID
+					break
+				}
+			}
+		}
+		if id == "" {
+			id = newHostID()
+		}
+		seen[id] = true
+
+		e := proxmoxHost{
+			ID: id, Name: strings.TrimSpace(raw.Name), URL: url,
+			TokenID: strings.TrimSpace(raw.TokenID), Insecure: raw.Insecure, Enabled: raw.Enabled,
+		}
+		if secret := strings.TrimSpace(raw.Secret); secret != "" {
+			e.Secret = secret
+		} else if old, ok := previous[id]; ok {
+			e.Secret = old.Secret
+		}
+		if e.Name == "" {
+			e.Name = "Proxmox"
+		}
+		list = append(list, e)
+	}
+
+	if err := h.saveHosts(list); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -161,8 +317,11 @@ const (
 
 // proxmoxIconKey addresses one machine. VMIDs are unique per cluster, but the
 // node is in the key anyway so a machine that moves keeps its own face.
-func proxmoxIconKey(node string, vmid int) string {
-	return fmt.Sprintf("%s|%d", node, vmid)
+// proxmoxIconKey names a machine across every hypervisor connected. The host
+// is part of it because neither of the other two parts is unique: VMIDs restart
+// at 100 in each cluster, and "pve" is what a default install calls its node.
+func proxmoxIconKey(host, node string, vmid int) string {
+	return fmt.Sprintf("%s|%s|%d", host, node, vmid)
 }
 
 func (h *ProxmoxHandler) icons() map[string]string {
@@ -188,6 +347,7 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 
 	var in struct {
+		Host string `json:"host"`
 		Node string `json:"node"`
 		VMID int    `json:"vmid"`
 		Icon string `json:"icon"`
@@ -200,6 +360,14 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
+	// The host is resolved rather than believed: an id the caller invented
+	// would write an icon nothing will ever read, and one belonging to a host
+	// that is gone would leave a key nothing can prune.
+	host, ok := h.hostFor(strings.TrimSpace(in.Host))
+	if !ok {
+		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
+		return
+	}
 	icon := strings.TrimSpace(in.Icon)
 	if len(icon) > proxmoxMaxIconLen {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
@@ -207,7 +375,7 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 	}
 
 	icons := h.icons()
-	key := proxmoxIconKey(in.Node, in.VMID)
+	key := proxmoxIconKey(host.ID, in.Node, in.VMID)
 	if icon == "" {
 		delete(icons, key)
 	} else {
@@ -283,30 +451,80 @@ type proxmoxOverview struct {
 	Icons map[string]string `json:"icons"`
 }
 
-// GetOverview is the one call the page and the widget poll.
+// proxmoxHostOverview is one hypervisor's worth of the answer, named so the
+// interface can tell them apart and say which one failed.
+type proxmoxHostOverview struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Error is set when this host could not be read. The others still are.
+	Error string `json:"error,omitempty"`
+	proxmoxOverview
+}
+
+type proxmoxAll struct {
+	Hosts []proxmoxHostOverview `json:"hosts"`
+}
+
+// GetOverview is the call the page and the widget poll.
 //
-// It is one request to Proxmox (`/cluster/resources`) plus one per node for the
-// four figures the resource list does not carry. A homelab has one or two
-// nodes; this does not grow with the number of machines, which is the whole
-// reason the design leans on that endpoint.
+// `?host=` picks one, which is what a cluster's own page asks for every few
+// seconds. Without it every connected host is read, which is what the summary
+// needs — and what an instance with a single host gets without asking, because
+// that is every instance until somebody adds a second.
+//
+// Per host it is one request to Proxmox (`/cluster/resources`) plus one per
+// node for the four figures the resource list does not carry. It does not grow
+// with the number of machines, which is the whole reason the design leans on
+// that endpoint.
 func (h *ProxmoxHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
-	cfg := h.config()
-	if !cfg.configured() {
+	wanted := strings.TrimSpace(r.URL.Query().Get("host"))
+
+	var targets []proxmoxHost
+	if wanted != "" {
+		e, ok := h.hostFor(wanted)
+		if !ok {
+			http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
+			return
+		}
+		targets = []proxmoxHost{e}
+	} else {
+		targets = h.enabledHosts()
+	}
+	if len(targets) == 0 {
 		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
 		return
 	}
 
+	icons := h.icons()
+	out := proxmoxAll{Hosts: make([]proxmoxHostOverview, 0, len(targets))}
+	for _, e := range targets {
+		one := h.overviewOf(e, icons)
+		out.Hosts = append(out.Hosts, one)
+	}
+	writeJSON(w, out)
+}
+
+// overviewOf reads one host. An error is carried inside the answer rather than
+// returned: with several connected, one that is down or mistyped must not take
+// the others with it — the summary exists precisely to show which is which.
+func (h *ProxmoxHandler) overviewOf(e proxmoxHost, icons map[string]string) proxmoxHostOverview {
+	cfg := configOf(e)
+	res := proxmoxHostOverview{ID: e.ID, Name: e.Name}
+
 	var rows []pxResource
 	if err := proxmoxDo(cfg, http.MethodGet, "/cluster/resources", &rows); err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
+		res.Error = err.Error()
+		res.Nodes = []proxmoxNode{}
+		res.Guests = []proxmoxGuest{}
+		res.Stores = []proxmoxStore{}
+		return res
 	}
 
 	out := proxmoxOverview{
 		Nodes:  []proxmoxNode{},
 		Guests: []proxmoxGuest{},
 		Stores: []proxmoxStore{},
-		Icons:  h.icons(),
+		Icons:  icons,
 	}
 	// Capabilities decide whether the interface offers the power buttons at
 	// all. A failure here is not fatal: the page still reads.
@@ -378,7 +596,8 @@ func (h *ProxmoxHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, out)
+	res.proxmoxOverview = out
+	return res
 }
 
 /* ---------------------------------------------------------------------------
@@ -398,11 +617,14 @@ type proxmoxSeries struct {
 //
 // GET /api/proxmox/series?range=24h[&node=kprox][&kind=lxc&vmid=106]
 func (h *ProxmoxHandler) GetSeries(w http.ResponseWriter, r *http.Request) {
-	cfg := h.config()
-	if !cfg.configured() {
+	// Which hypervisor, resolved the same way everywhere: named, or the only
+	// one there is.
+	host, ok := h.hostFor(strings.TrimSpace(r.URL.Query().Get("host")))
+	if !ok {
 		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
 		return
 	}
+	cfg := configOf(host)
 
 	q := r.URL.Query()
 	frame, ok := proxmoxTimeframe(q.Get("range"))
@@ -475,14 +697,10 @@ func (h *ProxmoxHandler) Power(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
-	cfg := h.config()
-	if !cfg.configured() {
-		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
-		return
-	}
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 
 	var in struct {
+		Host   string `json:"host"`
 		Node   string `json:"node"`
 		Kind   string `json:"kind"`
 		VMID   int    `json:"vmid"`
@@ -492,6 +710,14 @@ func (h *ProxmoxHandler) Power(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
+	// From the body, like everything else this request says: a POST taking half
+	// its meaning from the query string would be the odd one out.
+	host, ok := h.hostFor(strings.TrimSpace(in.Host))
+	if !ok {
+		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
+		return
+	}
+	cfg := configOf(host)
 
 	path, err := proxmoxPowerPath(in.Node, in.Kind, in.VMID, in.Action)
 	if err != nil {
