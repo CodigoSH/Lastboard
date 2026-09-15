@@ -10,6 +10,28 @@
  * Resolve a translation key against the current locale, falling back to the
  * English table, and finally to the key itself. Interpolates `{name}` params.
  */
+/**
+ * Whether a locale table that just arrived belongs to this build.
+ *
+ * The locale URL already carries the build stamp, and that stamp is a hash of
+ * the whole output, so the URL is correct by construction. What it cannot do is
+ * survive a cache that answers by path and ignores the query - a proxy keyed on
+ * $uri, an edge rule with "ignore query string". The file is served with
+ * "immutable, max-age=31536000", so such a cache pins it for a year.
+ *
+ * Measured in Sept-2026: a browser handed the app a dictionary from v1.7.5 while
+ * running the 1.8.0 bundle. Everything added since rendered as its raw key, and
+ * nothing in the app noticed, because a missing key and an old file look exactly
+ * alike from translate(). The stamp inside the file is what tells them apart.
+ *
+ * "dev" means the sources are running outside a build (tests, ts-node), where no
+ * file carries a stamp and there is nothing to compare against.
+ */
+export function localeIsStale(fileStamp: unknown, buildStamp: string): boolean {
+    if (!buildStamp || buildStamp === 'dev') return false;
+    return fileStamp !== buildStamp;
+}
+
 export function translate(
     key: string,
     current: Record<string, string> | undefined,

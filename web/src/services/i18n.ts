@@ -1,6 +1,6 @@
 import { availableLocales } from '../locales/metadata';
 import { Locale } from '../locales/types';
-import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, formatSpan, formatDuration, directionOf } from './i18n.helpers';
+import { translate, sortLocales, resolveLanguage, formatDateTime, formatNumber, formatSpan, formatDuration, directionOf, localeIsStale } from './i18n.helpers';
 
 class I18nService {
     private currentLanguage: string = 'en';
@@ -50,21 +50,48 @@ class I18nService {
         return sortLocales(availableLocales);
     }
 
+    /** One fetch of a locale table. `fresh` bypasses the HTTP cache entirely. */
+    private async fetchLocale(code: string, stamp: string, fresh: boolean): Promise<Record<string, string>> {
+        const res = await fetch(`/locales/${code}.json?v=${stamp}`, fresh ? { cache: 'reload' } : undefined);
+        if (!res.ok) throw new Error(`Failed to load locale ${code}: HTTP ${res.status}`);
+        return await res.json();
+    }
+
     public async loadLocale(code: string): Promise<void> {
         if (this.cache.has(code)) return;
 
+        // Versioned with the build stamp, not the clock: a per-load timestamp
+        // made every request a cache miss, re-downloading the whole locale.
+        // The stamp is substituted at build time, so guard the identifier for
+        // contexts that run the sources directly (tests, ts-node).
+        const stamp = typeof __BUILD_STAMP__ !== 'undefined' ? __BUILD_STAMP__ : 'dev';
+
         try {
-            // Versioned with the build stamp, not the clock: a per-load timestamp
-            // made every request a cache miss, re-downloading the whole locale.
-            // The stamp is substituted at build time, so guard the identifier for
-            // contexts that run the sources directly (tests, ts-node).
-            const stamp = typeof __BUILD_STAMP__ !== 'undefined' ? __BUILD_STAMP__ : 'dev';
-            const res = await fetch(`/locales/${code}.json?v=${stamp}`);
-            if (!res.ok) throw new Error(`Failed to load locale ${code}`);
-            const translations = await res.json();
+            let translations = await this.fetchLocale(code, stamp, false);
+
+            // A table from another build is worse than no table: every key added
+            // since renders as itself, and that is indistinguishable from a
+            // missing translation. Ask again, this time past the HTTP cache.
+            if (localeIsStale(translations.__stamp, stamp)) {
+                const older = translations.__stamp;
+                translations = await this.fetchLocale(code, stamp, true);
+                if (localeIsStale(translations.__stamp, stamp)) {
+                    // Past the browser cache and still wrong: something between
+                    // here and the server is answering by path and ignoring the
+                    // query. Say so, with both stamps, instead of dying quietly.
+                    console.error(
+                        `[I18n] ${code}.json is from another build and a cache-bypassing refetch ` +
+                        `returned the same: expected ${stamp}, got ${String(translations.__stamp)}. ` +
+                        `A proxy or CDN in front of this instance is likely caching by path alone.`,
+                    );
+                } else {
+                    console.warn(`[I18n] ${code}.json was stale (${String(older)}); refetched past the cache.`);
+                }
+            }
+
             this.cache.set(code, translations);
         } catch (e) {
-            console.error(e);
+            console.error(`[I18n] Could not load locale ${code}; text will fall back to its keys.`, e);
             // Fallback: if loading fails, ensured 'en' is loaded in init.
         }
     }

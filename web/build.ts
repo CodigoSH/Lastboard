@@ -73,7 +73,19 @@ if (result.success && resultSetup.success && resultLogin.success) {
             const src = `./web/public/locales/${lang}.json`;
             const dest = `./web/dist/locales/${lang}.json`;
             if (existsSync(src)) {
-                await cp(src, dest);
+                // Carry the stamp inside the file, not just in its URL. The URL
+                // is content-addressed and therefore correct, but any cache in
+                // between - a browser, a proxy keyed on the path alone - can
+                // still answer with last year's copy, and the app had no way to
+                // tell. With the stamp inside, it can: see loadLocale.
+                //
+                // The placeholder is substituted by the same pass that stamps
+                // the bundles, further down, so this needs no extra machinery.
+                // The source files under web/public stay untouched, which keeps
+                // i18n:sync and i18n:audit seeing exactly what a translator sees.
+                const table = JSON.parse(await readFile(src, 'utf-8'));
+                table.__stamp = PLACEHOLDER;
+                await writeFile(dest, JSON.stringify(table, null, 2));
             }
         }
         console.log("✅ Locales copied to web/dist/locales");
