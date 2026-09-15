@@ -79,6 +79,9 @@ SETTINGS_FILE="web/src/components/ui/SettingsContent/SettingsContent.ts"
 UPDATE_SERVICE_FILE="web/src/services/UpdateService.ts"
 
 RELEASE_BRANCH="main"
+# Pinned, and pinned to the same value .forgejo/workflows/tests.yml uses: a
+# checker that is not the one CI runs proves nothing about CI.
+STATICCHECK_VERSION="v0.8.1"
 
 die() { echo "❌ $1" >&2; exit 1; }
 
@@ -151,6 +154,18 @@ else
 
     go vet ./... || die "go vet failed."
     echo "   ✅ go vet"
+
+    # The same analysis the Security Scan job runs, and pinned to the same
+    # version it uses — a release that would turn that job red should not be
+    # taggable. It went red once with the tag already pushed, over a helper the
+    # Proxmox host list had left without callers: nothing here caught it,
+    # because dead code compiles, vets and tests perfectly.
+    #
+    # `go run` rather than an install: no tool has to be present on the machine
+    # cutting the release, and the version cannot drift from CI's by accident.
+    go run honnef.co/go/tools/cmd/staticcheck@"$STATICCHECK_VERSION" ./... || \
+        die "staticcheck failed. Run 'go run honnef.co/go/tools/cmd/staticcheck@$STATICCHECK_VERSION ./...' to see why."
+    echo "   ✅ staticcheck"
 
     go test ./... >/dev/null || die "Go tests failed. Run 'go test ./...' to see why."
     echo "   ✅ go test"

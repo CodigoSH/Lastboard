@@ -168,6 +168,11 @@ jobs:
 
       - name: Run staticcheck
         # Blocking static analysis (dead code, misuse, simplifications).
+        #
+        # Pinned, and pinned to the same version scripts/release.sh runs in its
+        # preflight. On @latest the two drift the day a new release adds a
+        # check, and then a tag passes locally and this job goes red with
+        # nothing to do about it but push another commit.
         run: |
-          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go install honnef.co/go/tools/cmd/staticcheck@v0.8.1
           staticcheck ./...
