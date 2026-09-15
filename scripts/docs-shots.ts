@@ -516,12 +516,16 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     // Proxmox, pointed at the stand-in. The token is nonsense and says so: it
     // is written into the picture of the settings screen, so it has to be a
     // value nobody could mistake for a real one.
+    // A list since 1.8.0: one entry is one hypervisor.
     await api('/proxmox/settings', {
-        enabled: true,
-        url: `http://127.0.0.1:${PVE_PORT}`,
-        token_id: 'lastboard@pve!lastboard',
-        secret: '00000000-0000-0000-0000-000000000000',
-        insecure: true,
+        hosts: [{
+            name: 'Proxmox',
+            url: `http://127.0.0.1:${PVE_PORT}`,
+            token_id: 'lastboard@pve!lastboard',
+            secret: '00000000-0000-0000-0000-000000000000',
+            insecure: true,
+            enabled: true,
+        }],
     });
 
     // Row seven: row five is already full (monitoring, API, Docker), and two
