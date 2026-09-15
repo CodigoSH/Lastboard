@@ -261,8 +261,10 @@ class ProxmoxWidget extends HTMLElement {
         const icon = face
             ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
             : ICON_FALLBACK;
-        // A stopped machine nobody bookmarked is a stopped machine; a stopped
-        // machine with a service on it is an outage, and says so.
+        // The dot says on or off, the same two colours the page uses and its
+        // header counts. That a service of yours went down with this machine is
+        // the accent edge below — a third colour in an 8px dot was asking one
+        // mark to carry two unrelated things.
         const flag = !g.running && !!link;
 
         const action = power
@@ -272,7 +274,7 @@ class ProxmoxWidget extends HTMLElement {
             : '';
 
         return `<div class="px-row${g.running ? '' : ' px-row--off'}${flag ? ' px-row--flag' : ''}">
-            <span class="px-dot px-dot--${g.running ? 'up' : (flag ? 'bad' : 'off')}"></span>
+            <span class="px-dot px-dot--${g.running ? 'up' : 'bad'}"></span>
             <span class="px-ico">${icon}</span>
             <span class="px-name">
                 <b>${escapeHtml(g.name) || '—'}</b>
@@ -441,7 +443,6 @@ const CSS = `
 
 .px-dot { width: 8px; height: 8px; border-radius: 50%; }
 .px-dot--up { background: var(--success-color); }
-.px-dot--off { background: var(--text-dim); opacity: 0.5; }
 
 .px-ico { display: grid; place-items: center; color: var(--text-dim); }
 .px-ico svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5px; fill: none; }

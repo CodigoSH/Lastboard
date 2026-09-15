@@ -10,7 +10,7 @@ What this adds over the [Docker widget](docker.md) is the line of node health in
 
 Reading a row from left to right:
 
-- a status dot: **green** running, **red** stopped with a bookmark behind it, grey stopped
+- a status dot: **green** running, **red** stopped — the same two colours the page uses. A machine that is stopped **and** serves a bookmark says so with an accent bar down its leading edge, not with a third colour in the dot
 - the **icon** of the bookmark that machine serves — [matched by name](../proxmox/overview.md#how-a-machine-is-tied-to-a-bookmark) or chosen by hand — or the board's own fallback
 - the machine's **name** and its type and id (`LXC 106`, `VM 105`)
 - its **CPU** and **memory**, or *stopped*
