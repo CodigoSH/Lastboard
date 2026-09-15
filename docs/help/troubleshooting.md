@@ -48,6 +48,54 @@ The request runs on the **Lastboard server**, not your browser, so what matters 
 
 See [Monitoring & Uptime](../monitoring/overview.md).
 
+## The Proxmox page says the token cannot see anything
+
+Almost always privilege separation on the token. A token created **without** `--privsep 0`
+needs an ACL entry of its own as well as the user's, and what applies is the *intersection* of
+the two — so a brand-new token can end up able to do nothing at all. Recreate it with
+`--privsep 0`, or give the token its own ACL entry.
+
+**Save and connect** reads the host immediately and reports what the token can actually see, so
+you can fix it there rather than discovering it later. See
+[Proxmox → Create the token](../proxmox/overview.md#1-create-the-token-on-your-proxmox-host).
+
+## The Proxmox start and shutdown buttons are missing
+
+Two reasons, and Lastboard tells you which:
+
+- **The token has no `VM.PowerMgmt`.** Lastboard asks the host what the token may do rather than
+  assuming, so the buttons are simply not drawn. Add the privilege to the role, or leave it off
+  deliberately for a read-only integration.
+- **You are not the administrator.** Power actions are administrator-only, on the page and in
+  the widget alike.
+
+Nodes never get these buttons, at any privilege level. That is deliberate — see
+[Starting and stopping](../proxmox/overview.md#starting-and-stopping).
+
+## A Proxmox machine shows the default icon and no bookmark
+
+Matching is deliberately strict: naming the wrong service as the one that went down is worse
+than naming none. A machine goes unmatched when its name does not resolve to **exactly one**
+bookmark — two bookmarks would fit, or none does (`23-jellyfin-musica` against a bookmark
+called *Jellyfin Music* is a different word in a different language).
+
+- If a bookmark does serve it, edit the bookmark and pick the machine under **Served by**. That
+  always wins over the guess.
+- If nothing will ever bookmark it — a CI runner, a tunnel, the container Lastboard itself runs
+  on — open the machine and click its icon to
+  [choose one](../proxmox/overview.md#machines-that-will-never-have-a-bookmark).
+
+## A badge says the dashboard is offline
+
+Lastboard shows an offline indicator when a request to **its own server** fails. It is about
+your browser's link to Lastboard, not about your services — a service being down shows up as a
+red status dot on its tile instead.
+
+The board keeps a copy of its last layout in the browser, so it still draws while the badge is
+up — but changes made in that state cannot reach the server and will not stick. The badge
+clears itself as soon as a request succeeds again. There is no service worker, so an installed Lastboard needs to reach the server exactly
+as the browser tab does.
+
 ## After restoring a backup, the app looks broken or shows old data
 
 A restore replaces the database, but your browser may still hold cached assets or local state.

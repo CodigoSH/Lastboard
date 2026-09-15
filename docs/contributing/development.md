@@ -74,7 +74,16 @@ We use a unified shell script to handle version bumping, changelog generation, a
 
 **Do not manually edit versions.**
 
-To draft a release:
+The full signature is:
+
+```
+./scripts/release.sh [stable|beta|rc] [X.Y.Z] ["release title"] [--dry-run] [--yes] [--skip-checks]
+```
+
+Arguments are matched by shape, not by position: anything looking like `X.Y.Z` is taken as an
+explicit version, and anything else as the title. So the usual call is just the channel and a
+summary:
+
 ```bash
 # For Beta releases
 ./scripts/release.sh beta "One-line summary of the release"
@@ -84,9 +93,12 @@ To draft a release:
 
 # For Official Stable releases
 ./scripts/release.sh stable "One-line summary of the release"
+
+# Pinning the version instead of letting the script work it out
+./scripts/release.sh beta 1.9.0 "One-line summary of the release"
 ```
 
-The title is the summary the changelog is built from. Pass it as an argument, or the script will ask for one.
+The title is the summary the changelog is built from. Pass it as an argument, or the script will ask for one. `--yes` answers the confirmations, for a non-interactive run; without a terminal and without it, a `stable` release stops on the first line rather than after a two-minute preflight.
 
 **Preview a release before making it.** `--dry-run` prints the version it would produce, checks every file it would rewrite, renders the changelog and lists the git commands, without touching the working tree:
 
@@ -104,4 +116,25 @@ The script bumps the version, updates the changelog, commits, and pushes a new t
 2. Create the release on Forgejo with the compiled binaries and `checksums.txt`, signing `checksums.txt` with the `RELEASE_SIGNING_KEY` secret when it is set (uploading `checksums.txt.sig` alongside)
 3. Build and push the multi-arch Docker image to `git.codigosh.com`
 
+`RELEASE_SIGNING_KEY` is a **per-repository** CI secret — each project signs with its own key —
+and it is read only by `cmd/sign`, never by the server. `CI_TOKEN` is inherited from the
+organization and does not need to be created per project.
+
 See [Release Signing](../security/release-signing.md) for the signing key setup.
+
+## Running the checks
+
+The same suite the release preflight runs, so it is worth running before you commit:
+
+```bash
+gofmt -l .          # must print nothing
+go vet ./...
+go test ./...
+bun test
+bunx tsc --noEmit
+bun run build       # never silence this: a broken bundle is only visible in its output
+```
+
+`make restart` rebuilds the frontend bundle **and** the Go binary and restarts the local
+instance. The binary embeds the bundle, so rebuilding only the frontend leaves the server
+handing out the previous one.

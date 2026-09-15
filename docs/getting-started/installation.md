@@ -76,6 +76,27 @@ Once Lastboard is running, it will be available on port `8080` by default. Open 
 
 You will be greeted by the **Setup Wizard**, which walks you through creating your first admin user. Zero configuration files to touch!
 
+## Installing it as an app
+
+Lastboard ships a web app manifest, so a browser can install it to the home screen or the
+desktop and open it in its own window with no address bar. Nothing to enable: the manifest is
+linked from the dashboard **and** from the login page, which is the page you land on from a
+phone with no session.
+
+- **Android (Chrome)** — the menu offers *Install app*. It is minted as a real WebAPK, with
+  the Lastboard icon and no browser badge on it.
+- **Desktop (Chrome, Edge)** — an install control appears at the end of the address bar.
+- **iOS (Safari)** — *Share → Add to Home Screen*.
+
+> **It needs HTTPS with a certificate the device trusts.** Over plain `http://` on the LAN, or
+> with a self-signed certificate, no browser will install it — put Lastboard behind a reverse
+> proxy with a real certificate first (see below). Browsers that do not mint WebAPKs
+> themselves — Brave and Firefox on Android — place a shortcut instead, and their launcher
+> stamps their own badge on the icon. That is the browser, not Lastboard.
+
+There is no service worker, so an installed Lastboard is a window onto your server, not an
+offline copy: it needs to reach the server the same way the browser tab does.
+
 ## Reverse Proxy Setup
 
 If you plan to use a reverse proxy, you must set the `TRUST_PROXY=true` environment variable.
