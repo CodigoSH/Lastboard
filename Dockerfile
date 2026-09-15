@@ -3,7 +3,10 @@
 # ==========================================
 # Stage 1: Frontend Build (Bun)
 # ==========================================
-FROM --platform=$BUILDPLATFORM oven/bun:alpine AS frontend-builder
+# Pinned, and to the same version .forgejo/workflows/tests.yml installs: a
+# floating tag means the image that built the release is not the one the
+# tests ran against, and nothing says so.
+FROM --platform=$BUILDPLATFORM oven/bun:1.3.11-alpine AS frontend-builder
 WORKDIR /app
 
 # Install dependencies (Frozen Lockfile for reproducibility)
@@ -51,7 +54,9 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
 # ==========================================
 # Stage 3: Runtime (Alpine, no RUN = no QEMU)
 # ==========================================
-FROM alpine:3.19
+# 3.19 left Alpine's two-year support window in 2025; this is the runtime
+# image people actually run.
+FROM alpine:3.22
 
 WORKDIR /app
 

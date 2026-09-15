@@ -163,7 +163,7 @@ jobs:
         # Blocking: fails the build when the code calls a known-vulnerable
         # symbol in the stdlib or a dependency. Currently clean.
         run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
           govulncheck ./...
 
       - name: Run staticcheck
