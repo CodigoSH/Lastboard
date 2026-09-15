@@ -109,7 +109,8 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 ### Proxmox VE
 
-- **Read your hypervisor with an API token** — read-only if you want it. Nodes with CPU, memory, disk, load average and uptime; every storage with how full it is; every VM and container as a tile with a 24-hour CPU trend.
+- **Read your hypervisors with an API token** — read-only if you want. Nodes with CPU, memory, disk, load average and uptime; every storage with how full it is; every VM and container as a tile with a 24-hour CPU trend, and every node foldable so a cluster stays readable.
+- **More than one cluster is fine.** Connect as many as you run, each with its own token and certificate policy. The page then opens on a short summary — a card each, and the bookmarked services that are down across *all* of them — and you go into whichever you want.
 - **Machines are tied to your bookmarks automatically**, by name and by the icon a bookmark wears, with filing prefixes (`15-myspeed`) stripped and a strict *only when exactly one bookmark fits* rule. Measured on a real host of 29 containers and 55 bookmarks with nothing configured: **16 matched, none wrongly.**
 - **That is the point of it.** A stopped container doesn't just say *stopped* — it says **which service it takes with it**, and the header counts how many of your bookmarked services are down.
 - **Start and shut down** a machine with confirmation, administrators only, and only when the token really carries `VM.PowerMgmt` — which Lastboard asks the host rather than assuming. **Nodes can never be powered off from Lastboard**, deliberately.

@@ -135,16 +135,25 @@ See [Headers](headers.md) for HSTS in detail.
 
 ## The Proxmox token
 
-The Proxmox integration authenticates with an **API token, never a password**, and the token
-secret is **write-only from the browser's side**: it is stored on the server and no endpoint
-ever sends it back — not masked, not blanked, absent. The address and the token id are visible
-to the administrator alone; every other account learns only *whether* the integration is on,
-which is all the top bar needs to decide whether to offer the page.
+The Proxmox integration authenticates with **API tokens, never passwords**, and a token secret
+is **write-only from the browser's side**: it is stored on the server and no endpoint ever sends
+it back — not masked, not blanked, absent. A save that arrives without one keeps the secret
+already stored, so editing anything else on a connection cannot lose its credential.
 
-Starting and stopping machines is administrator-only and is refused unless the token itself
-carries `VM.PowerMgmt` — asked of the host rather than assumed. The only actions Lastboard will
-relay are **start** and **shutdown of a machine**; nothing addressed at a node, ever. See
-[Proxmox](../proxmox/overview.md).
+More than one hypervisor can be connected, and each is judged on its own: the addresses, the
+names and the token ids are visible to the administrator alone — including **how many** there
+are, which is reconnaissance in itself. Every other account learns only *whether* the
+integration is on, which is all the top bar needs to decide whether to offer the page.
+
+Starting and stopping machines is administrator-only and is refused unless the token of the
+hypervisor **that machine is on** carries `VM.PowerMgmt` — asked of the host rather than
+assumed, and asked per host, so a read-only token is never covered by a permissive one
+elsewhere. The only actions Lastboard will relay are **start** and **shutdown of a machine**;
+nothing addressed at a node, ever. See [Proxmox](../proxmox/overview.md).
+
+An icon chosen for a machine is stored against the hypervisor's own generated id, and the id is
+resolved on the server rather than believed: a browser cannot invent one and write a setting
+nothing will ever read or prune.
 
 ## Running unprivileged
 

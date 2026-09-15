@@ -53,7 +53,7 @@ Turn service monitoring on, choose how often the server checks your services, an
 
 ![Proxmox](../assets/p-proxmox.png)
 
-Connect Lastboard to a Proxmox VE host: address, API token and certificate policy. Saving reads the host straight away and says what the token can see and whether it may start and stop machines. Administrator only, and hidden from every other account. See **[Proxmox](../proxmox/overview.md)** for the token recipe and the page it unlocks.
+Connect Lastboard to one or more Proxmox VE hosts — one card each, with a name, address, API token and certificate policy. Saving reads every host straight away and says, per card, what that token can see and whether it may start and stop machines. Administrator only, and hidden from every other account. See **[Proxmox](../proxmox/overview.md)** for the token recipe and the page it unlocks.
 
 ## Data
 

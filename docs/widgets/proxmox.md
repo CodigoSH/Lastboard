@@ -20,7 +20,9 @@ A machine that is stopped **and** serves a bookmark sorts to the top. A stopped 
 
 The footer counts what did not fit — *Running: 8/9* — and links to the full [Proxmox page](../proxmox/overview.md).
 
-> **Requires a connection.** The widget reads whatever host is configured in **Settings → Proxmox**; without one it says so. See [Proxmox](../proxmox/overview.md) for the token and the four commands that create it.
+> **Requires a connection.** The widget reads whatever hosts are configured in **Settings → Proxmox**; without one it says so. See [Proxmox](../proxmox/overview.md) for the token and the four commands that create it.
+
+**With several hypervisors connected it draws from all of them**, in one list ordered by what needs saying. A tile that showed only the first would go quiet about the machine that actually went down, which is the one thing it is on the board to say. Each row's start and shutdown button follows the token of the hypervisor *that* machine is on, so one being read-only does not take the buttons away from the other.
 
 ## Why it is not a list
 

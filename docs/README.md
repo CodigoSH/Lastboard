@@ -117,8 +117,13 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 Lastboard reads your hypervisor with a **read-only API token** (power control is optional) and
 shows it beside the services it runs.
 
-- **A full page**: node CPU/memory/disk with load average and uptime, every storage with how
-  full it is, and every virtual machine and container as a tile with a 24-hour CPU trend line.
+- **As many hypervisors as you run.** Each is connected on its own terms, with its own token
+  and certificate policy. With more than one, the page opens on a short summary — a card each,
+  and the bookmarked services that are down across all of them — and you go into whichever you
+  want.
+- **A full page** per hypervisor: node CPU/memory/disk with load average and uptime, every
+  storage with how full it is, and every virtual machine and container as a tile with a
+  24-hour CPU trend line. Each node folds away, which is what keeps a cluster readable.
 - **Machines are tied to bookmarks automatically**, by name and by the icon a bookmark wears,
   with the leading ordinal (`15-myspeed`) stripped and a strict "only when exactly one bookmark
   fits" rule — measured on a real host of 29 containers and 55 bookmarks: 16 matched, none

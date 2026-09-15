@@ -8,7 +8,9 @@ That last part is the point. Your Proxmox console at `:8006` already administers
 
 ## What Lastboard needs
 
-One API token, read-only if you want it to be. Lastboard never asks for a Proxmox password, keeps nothing about your machines, and stores no history: every figure on the page is read from the host when you open it.
+One API token per hypervisor, read-only if you want them to be. Lastboard never asks for a Proxmox password, keeps nothing about your machines, and stores no history: every figure on the page is read from the host when you open it.
+
+**More than one hypervisor is fine.** A main cluster and an offsite node, a production one and a lab: each is connected on its own terms, with its own token and its own certificate policy, and one being read-only says nothing about the others. What follows describes connecting one; repeat it for each.
 
 ### 1. Create the token on your Proxmox host
 
@@ -63,23 +65,42 @@ Open **Settings → Proxmox**. This is a server-wide setting, so only the **admi
 
 ![Proxmox settings](../assets/p-proxmox.png)
 
+There is one card per hypervisor, and **Add hypervisor** gives you another.
+
 | Field | Notes |
 | :--- | :--- |
-| **Proxmox integration** | Puts the Proxmox icon in the top bar and lets the widget read the host |
+| **The switch on the card** | Turns this hypervisor on. At least one on puts the Proxmox icon in the top bar |
+| **Name** | What this one is called here — *Home*, *Offsite*, whatever you file it under. It appears wherever its machines do |
 | **Address** | The web interface address, port included — `https://192.168.1.10:8006` |
 | **Token id** | `user@realm!name`, exactly as Proxmox printed it |
 | **Token secret** | Shown once by Proxmox. Stored here and never sent back to your browser |
 | **Accept a self-signed certificate** | On by default, because almost every home hypervisor has one |
 
-**Save and connect** does what it says: it stores the connection and then reads the host with it, so the line underneath tells you what the token can actually see and whether it may start and stop machines. A mistyped token saves perfectly well — this is how you find out before you need it.
+**Save** stores every card at once and then reads each host with what you gave it, so the line under each card tells you what *that* token can actually see and whether it may start and stop machines. A mistyped token saves perfectly well — this is how you find out before you need it. One host failing says nothing about the others, so each answers for itself.
 
-Coming back later, the secret box is empty and says *Stored*. Leaving it that way keeps the secret you saved; you only type it again to replace it.
+Coming back later, a secret box is empty and says *Stored*. Leaving it that way keeps the secret saved for that host; you only type it again to replace it.
+
+The **×** on a card removes that hypervisor. Nothing is written until you save, so leaving the section undoes it.
+
+> **The name is yours to change.** Nothing is stored against it: the icons you choose for machines and the bookmarks you tie to them point at an id Lastboard generates, so renaming a cluster costs nothing.
 
 > **Private addresses just work.** The connection is made by the Lastboard server, so `10.x`, `192.168.x` and `.local` addresses need no extra configuration, and a self-signed certificate is accepted when the switch above is on.
 
+## With more than one: the summary
+
+The Proxmox icon opens a short summary when several hypervisors are connected: a card for each, and above them the thing only this page can say.
+
+**Which of your services are down, across all of them.** A cluster's own page can only speak for its own machines; the summary names every bookmarked service that is on a stopped machine anywhere — *This stops responding: Plex, Immich* — whichever hypervisor it lives on.
+
+Each card gives that hypervisor at a glance: how many of its machines are running, how many nodes it has, its busiest node and its fullest storage. A card with a service down wears the accent edge, the same one a stopped machine wears inside. A hypervisor that cannot be reached says so on its own card and does not take the others with it.
+
+Click a card to go into that cluster. The header then carries its name and an arrow back.
+
+> **With one hypervisor there is no summary**, and there never was: the icon opens the cluster directly. A page in front of a single thing would be a click that buys nothing.
+
 ## The page
 
-The Proxmox icon in the top bar opens it, and the **×** in its header closes it — while it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
+The Proxmox icon in the top bar opens it — or the summary above, if you have more than one — and the **×** in its header closes it. While it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
 
 **The header** carries the state of the host beside the title, not on a bar of its own: node name (or *Cluster*, when the host says it is one), how many machines are running out of how many, and **Services down** — how many of your bookmarked services are on a machine that is stopped.
 
@@ -168,13 +189,18 @@ Once a machine is tied to a bookmark, however it got there:
 
 A hand-made link lives inside the bookmark itself — no extra table, nothing to keep in step — and it works from **any** board: a bookmark on your *Media* board is found while you are looking at *Servers*.
 
+**With several hypervisors, a link names which one.** It has to: VMIDs restart at 100 in every cluster and `pve` is the name a default install gives its node, so two of them sharing a machine `106` on a node `pve` is ordinary rather than exotic. The same goes for an icon you choose for a machine. Links and icons made before a second hypervisor existed keep working untouched — there was only one for them to have meant.
+
 > A hand-made link is **not** part of the YAML export, which carries the portable shape of a bookmark (name, address, icon, group). A full [backup](../using/import-export.md) of the database keeps it. Matching by name needs nothing kept at all.
 
 ## The widget
 
-To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmox.md). It shows the busiest node's health and the machines that need attention, and links through to this page.
+To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmox.md). It shows the busiest node's health and the machines that need attention, and links through to this page. With several hypervisors connected it draws from all of them at once: a tile that showed only the first would go quiet about the machine that actually went down.
 
 ## What Lastboard reads, and how often
+
+Per hypervisor, and only for the one you are looking at — the summary reads one
+call from each, a cluster's page polls only its own.
 
 | When | Request |
 | :--- | :--- |
@@ -187,4 +213,4 @@ To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmo
 Choosing an icon for a machine asks Proxmox nothing at all: it is stored here,
 beside the connection.
 
-The page refreshes every 15 seconds while it is open and the widget on its own interval; neither polls when it is closed. Nothing is written to your database: no machine names, no figures, no history. The only thing Lastboard stores is the connection itself.
+The page refreshes every 15 seconds while it is open and the widget on its own interval; neither polls when it is closed. Nothing is written to your database: no machine names, no figures, no history. The only things Lastboard stores are the connections themselves and the icons you chose.
