@@ -827,7 +827,8 @@ class ProxmoxPage extends HTMLElement {
                     <span class="px-sum__name">${escapeHtml(h.name)}</span>
                     <span class="px-sum__go">${ICON_CHEVRON}</span>
                 </span>
-                <span class="px-sum__r2"><b>${running}</b>/${g.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())} · ${escapeHtml(shape)}</span>
+                <span class="px-sum__r2"><b>${running}</b>/${g.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
+                <span class="px-sum__r3">${escapeHtml(shape)}</span>
                 <span class="nodos">
                     <span class="nodo">
                         <span class="nodo__k">${escapeHtml(i18n.t('widget.api.extra_node'))}</span>
