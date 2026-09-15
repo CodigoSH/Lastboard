@@ -311,18 +311,18 @@ class ProxmoxPage extends HTMLElement {
     }
 
     /**
-     * One bar. `amount` is the figure behind the percentage — "66 %" says
-     * nothing about whether another machine fits, and that is the question
-     * being asked of a node.
+     * One bar: a label, the bar, the percentage.
+     *
+     * The figures behind those percentages live in the node's own sheet. On the
+     * card they made three rows of numbers where a glance wants three lengths.
      */
-    private meter(k: string, pct: number, amount = '') {
+    private meter(k: string, pct: number) {
         const l = level(pct);
         return `<span class="metric">
             <span class="metric__k">${escapeHtml(k)}</span>
             <span class="bar"><i class="${l}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
             <span class="metric__v ${l ? 'metric__v--' + l : ''}">
-                <span class="metric__p">${Math.round(pct)} %</span>${
-                amount ? `<span class="metric__a">(${escapeHtml(amount)})</span>` : ''}</span>
+                <span class="metric__p">${Math.round(pct)} %</span></span>
         </span>`;
     }
 
@@ -339,10 +339,8 @@ class ProxmoxPage extends HTMLElement {
                     : ''}${n.threads} ${escapeHtml(i18n.t('proxmox.threads'))}</span>
             </span>
             ${this.meter(i18n.t('widget.telemetry.cpu'), n.cpu)}
-            ${this.meter(i18n.t('widget.telemetry.ram'), n.mem,
-                n.mem_used > 0 ? fmtBytes(n.mem_used) : '')}
-            ${this.meter(i18n.t('widget.proxmox.disk'), n.disk,
-                n.disk_used > 0 ? fmtBytes(n.disk_used) : '')}
+            ${this.meter(i18n.t('widget.telemetry.ram'), n.mem)}
+            ${this.meter(i18n.t('widget.proxmox.disk'), n.disk)}
             <span class="node__foot">
                 <span>${escapeHtml(fmtUptime(n.uptime))} · ${escapeHtml(i18n.t('proxmox.load'))} ${escapeHtml(load)} · ${n.guests}</span>
                 <span class="node__go">${ICON_CHEVRON}</span>
@@ -395,7 +393,7 @@ class ProxmoxPage extends HTMLElement {
                 <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
                 <span class="tile__meta">${g.vmid}${g.running
                     ? ` · <span class="tile__ram" aria-label="${escapeHtml(i18n.t('widget.telemetry.ram'))} ${mem}%"><span class="tile__gi">${ICON_RAM}</span>${mem}%${
-                          g.mem > 0 ? `<span class="tile__amt">${escapeHtml(fmtBytes(g.mem))}</span>` : ''}</span>`
+                          g.mem > 0 ? `<span class="tile__amt">(${escapeHtml(fmtBytes(g.mem))})</span>` : ''}</span>`
                     : ''}</span>
                 ${book ? `<span class="tile__book" title="${escapeHtml(book.label)}">${ICON_BOOK}</span>` : ''}
             </span>
@@ -861,8 +859,10 @@ class ProxmoxPage extends HTMLElement {
             <div class="kv">
                 ${this.kv(ICON_CPU, i18n.t('proxmox.threads'), String(n.threads))}
                 ${n.cores > 0 ? this.kv(ICON_CPU, i18n.t('proxmox.cores'), String(n.cores)) : ''}
-                ${this.kv(ICON_CPU, i18n.t('proxmox.cores'), String(n.cores || '—'))}
                 ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), escapeHtml(`${fmtBytes(n.mem_used)} / ${fmtBytes(n.mem_total)}`))}
+                ${n.disk_total > 0
+                    ? this.kv(ICON_DISK, i18n.t('widget.proxmox.disk'), escapeHtml(`${fmtBytes(n.disk_used)} / ${fmtBytes(n.disk_total)}`))
+                    : ''}
                 ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), escapeHtml(fmtUptime(n.uptime)))}
             </div>`);
     }
