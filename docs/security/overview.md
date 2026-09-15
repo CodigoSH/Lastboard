@@ -2,17 +2,167 @@
 
 Lastboard is built from the ground up with defense-in-depth principles. We prioritize keeping your personal infrastructure safe and completely isolated.
 
-## Security Features Summary
+## The threat model, stated plainly
 
-- **Authentication System:** Secure sessions using HMAC-SHA256 signed tokens with strict expiration. Passwords are hashed using bcrypt. Constant-time verification mitigates timing attacks.
-- **CSRF Protection:** All state-changing methods (`POST`, `PUT`, `PATCH`, `DELETE`) require a matching `csrf_token` cookie and `X-CSRF-Token` header. Mismatches strictly return `403 Forbidden`.
-- **CSP Headers:** A strict Content-Security-Policy is enforced, restricting resource loading to `self` alongside specific trusted domains (e.g., Open-Meteo, jsdelivr). `X-Frame-Options` and `X-Content-Type-Options: nosniff` are applied to all responses.
-- **Rate Limiting:** A token-bucket algorithm throttles API requests per IP (20 req/s, burst 50), with automatic cleanup of stale entries. Login is additionally protected by an attempt-based lockout: after 5 failed attempts, that IP is locked out for 5 minutes to prevent brute-force attacks.
-- **XSS Prevention:** User-submitted content (like templates or Markdown blobs) is passed through a built-in HTML sanitizer (`htmlSanitizer.ts`) that strips disallowed tags and attributes before attachment to the DOM. No third-party sanitization library is used.
-- **TRUST_PROXY:** For reverse proxy deployments, Lastboard reads the `X-Forwarded-For` header for IP blacklisting/rate-limiting, only when explicitly configured via the `TRUST_PROXY=true` flag. It reads the entry your own proxy appended, not the one the caller sent, so the login lockout cannot be evaded by forging the header. With more than one proxy in the chain, set `TRUST_PROXY_HOPS`.
-- **Locally Stored Icons:** An icon you pick is downloaded once, by your instance, and served from your own database from then on. Loading your dashboard therefore reports nothing to a CDN — neither your address nor, by way of the icons requested, which services you run. Boards built before this existed are brought in when the server starts, so this holds after an upgrade too rather than only for bookmarks made since. Stored icons are served with `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` and `nosniff`, so an SVG opened directly can't execute anything. See [Where icons are stored](../getting-started/bookmarks.md#where-icons-are-stored).
-- **Proxmox Token:** The Proxmox integration authenticates with an API token, never a password, and the token secret is **write-only from the browser's side**: it is stored on the server and no endpoint ever sends it back — not masked, not blanked, absent. The address and the token id are visible to the administrator alone; every other account learns only whether the integration is on, which is what the top bar needs to decide whether to offer the page. Starting and stopping machines is administrator-only and is refused unless the token itself carries `VM.PowerMgmt`, asked of the host rather than assumed, and the only actions Lastboard will relay are start and shutdown of a machine — never anything addressed at a node. See [Proxmox](../proxmox/overview.md).
-- **Unprivileged Execution:** Lastboard can run as a non-root user via `PUID`/`PGID`. It defaults to root to avoid bind-mount permission issues (common on Proxmox/LXC); when `PUID`/`PGID` are set, it fixes the data-directory ownership automatically and then drops privileges before serving any request. See [Configuration](../getting-started/configuration.md#puid--pgid-running-unprivileged).
+Lastboard is **self-hosted and single-tenant**: personal, family or closed-team. Everyone with
+an account is somebody you gave an account to, and the operator owns the network the app sits
+on. Two consequences are deliberate, and they are features rather than oversights:
+
+- **Private addresses are not blocked.** Pointing a bookmark, a monitor, an API widget or a
+  Docker host at `192.168.1.x`, `10.x` or `.local` *is* the product. Blocking them would break
+  it without protecting anybody, because the person entering the address is the person running
+  the server.
+- **Self-signed certificates are accepted on outbound checks.** Home services use internal CAs
+  and bare IPs; refusing them would mean nothing could be monitored.
+
+What that model does **not** excuse is anything on this page: session handling, authorization,
+CSRF, headers, rate limiting, update integrity and input limits are held to the same standard
+they would be on a public service.
+
+## Authentication and sessions
+
+- **Passwords** are hashed with **bcrypt**. They are never stored or logged in any recoverable
+  form, and verification is constant-time so a wrong password cannot be distinguished by timing.
+- **Sessions** are **HMAC-SHA256 signed tokens** carrying their own expiry. The signing secret
+  is generated on first run and kept in the database — there is no `SESSION_SECRET` to set, and
+  nothing to leak into an environment file or a process list.
+- **The session cookie** is `HttpOnly`, `SameSite=Lax`, and `Secure` whenever the request
+  arrives over HTTPS (directly or through a proxy that says so).
+- **Login lockout**: after **5 failed attempts** that client is locked out for **5 minutes**.
+  Expired lockouts are cleaned up as they are read, so the table cannot grow unbounded.
+- **One administrator per instance** — the account the Setup Wizard creates. Every account added
+  afterwards is a Member and cannot be promoted, so there is no path from a Member session to
+  server-wide settings, user management, backups, updates, Docker control or Proxmox power.
+
+## Authorization
+
+**Authorization is declared at each route**, not by a list of public path prefixes inside the
+middleware. A prefix list is the classic way to leak a whole tree: anything under `/dist/` or
+`/styles/` matches, *including paths that do not exist*, and those fall through to the
+application shell — which would then be served with no session. Here a route is protected where
+it is declared, the SPA shell falls through to a **protected** handler, and a static asset is
+only served when it really exists in the embedded filesystem.
+
+## CSRF and cross-site requests
+
+- Every state-changing method (`POST`, `PUT`, `PATCH`, `DELETE`) requires a matching
+  `csrf_token` cookie and `X-CSRF-Token` header. A mismatch is **`403 Forbidden`**, with no
+  partial work done first.
+- On top of that, **`Sec-Fetch-Site`** is checked. The browser writes that header from the real
+  origins and a page cannot forge it, so a write started from another site is rejected before
+  the token is even looked at. When the header is absent — an old browser, or `curl` — nothing
+  breaks: the request falls back to the token check alone.
+
+## Headers
+
+Every response carries:
+
+| Header | Value |
+| :--- | :--- |
+| `Content-Security-Policy` | see below |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` — **only over HTTPS** |
+
+The policy itself:
+
+```
+default-src 'self';
+script-src  'self' 'nonce-<per request>';
+style-src   'self' 'unsafe-inline';
+img-src     'self' data: https:;
+connect-src 'self' wss: ws: https://cdn.jsdelivr.net https://unpkg.com
+            https://api.github.com https://git.codigosh.com
+            https://*.open-meteo.com https://timeapi.io;
+font-src    'self';
+object-src  'none';
+frame-ancestors 'self'
+```
+
+Two details worth knowing:
+
+- **`script-src` carries a fresh nonce on every request** and does *not* allow
+  `'unsafe-inline'`. Markup injected into the page cannot execute as script.
+- **`style-src` keeps `'unsafe-inline'` on purpose, and that is measured, not assumed.** The
+  interface sets inline `style` attributes for everything it computes at runtime — a tooltip's
+  position, a bar's width, a tile being dragged. Removing it on a real instance produced **922
+  violations, every one of them an attribute and none of them a `<style>` block**. There is no
+  nonce mechanism for style attributes, so the directive cannot be tightened without rewriting
+  the interface to stop computing anything.
+
+The hosts in `connect-src` are the icon CDN (jsDelivr and unpkg), the icon and release metadata
+sources (`api.github.com`, `git.codigosh.com`) and the weather and time-zone services
+(`open-meteo.com`, `timeapi.io`) the Clock and Weather widgets call from your browser. Nothing
+else can be reached from the page.
+
+See [Headers](headers.md) for HSTS in detail.
+
+## Rate limiting and request limits
+
+- **Token-bucket rate limiting per client IP**: 20 requests per second with a burst of 50, with
+  stale buckets swept automatically so the table cannot be grown by minting addresses.
+- **Every request body is capped at 16 MiB** by a middleware that applies to every route, and
+  individual handlers declare their own, much tighter, ceilings on top — the smaller of the two
+  wins. Without the global cap, a handler that forgets would read whatever a caller cares to
+  keep sending.
+- **`TRUST_PROXY`**: Lastboard ignores `X-Forwarded-For` unless you say a proxy is in front. A
+  proxy *appends* to that header rather than replacing it, so Lastboard reads the entry **your**
+  proxy added — the rightmost — and not the one the caller sent. Reading the left-hand entry
+  would let anyone pick their own identity and shake off the login lockout with a rotating
+  header. With more than one proxy in the chain, set `TRUST_PROXY_HOPS`; if the count is higher
+  than the real chain, Lastboard falls back to the connecting address, which is the safe
+  failure.
+
+## Data at rest and in flight
+
+- **Everything lives in one SQLite file.** Foreign keys and a busy timeout are set in the
+  connection string itself rather than with a one-off statement, so they apply to every
+  connection in the pool and cascading deletes really cascade.
+- **Locally stored icons.** An icon you pick is downloaded once, by your instance, and served
+  from your own database from then on. Loading your dashboard therefore reports nothing to a
+  CDN — neither your address nor, by way of the icons requested, which services you run. Boards
+  built before this existed are brought in when the server starts, so this holds after an
+  upgrade too rather than only for bookmarks made since. Stored icons are served with
+  `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` and
+  `nosniff`, so an SVG opened directly can't execute anything. See
+  [Where icons are stored](../getting-started/bookmarks.md#where-icons-are-stored).
+- **Credentials you enter** — a Docker agent token, an API widget key, a notification token —
+  are stored with the thing that uses them and sent only to the address you configured.
+- **XSS prevention**: user-submitted content (Markdown, notepad HTML) goes through a built-in
+  sanitizer with an explicit allow-list of tags and attributes before it touches the DOM. No
+  third-party sanitization library is involved.
+
+## The Proxmox token
+
+The Proxmox integration authenticates with an **API token, never a password**, and the token
+secret is **write-only from the browser's side**: it is stored on the server and no endpoint
+ever sends it back — not masked, not blanked, absent. The address and the token id are visible
+to the administrator alone; every other account learns only *whether* the integration is on,
+which is all the top bar needs to decide whether to offer the page.
+
+Starting and stopping machines is administrator-only and is refused unless the token itself
+carries `VM.PowerMgmt` — asked of the host rather than assumed. The only actions Lastboard will
+relay are **start** and **shutdown of a machine**; nothing addressed at a node, ever. See
+[Proxmox](../proxmox/overview.md).
+
+## Running unprivileged
+
+Lastboard can run as a non-root user via `PUID`/`PGID`. It defaults to root to avoid bind-mount
+permission issues (common on Proxmox/LXC); when `PUID`/`PGID` are set, it fixes the
+data-directory ownership automatically and then drops privileges **before serving any request**.
+See [Configuration](../getting-started/configuration.md#puid--pgid-running-unprivileged).
+
+> One consequence: an unprivileged process cannot replace its own binary, so the in-app updater
+> is unavailable in that mode. Update with `docker compose pull` or by re-running the install
+> script.
+
+## Public demo mode
+
+`DEMO_ONLY=true` turns the instance into a frontend-only demo: no authentication, no
+persistence, and every response carries `X-Robots-Tag: noindex, nofollow` so a public demo does
+not compete with the real site in search results. It is not a way to run a read-only instance
+for real data — there is no data.
 
 ## Update Delivery
 

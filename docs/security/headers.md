@@ -1,5 +1,22 @@
 # Security Headers Implementation
 
+Every response Lastboard sends carries the same set of headers. This page goes through them,
+and then through HSTS in detail because it is the only one with a setup cost and a way to lock
+yourself out.
+
+| Header | Value | Sent |
+| :--- | :--- | :--- |
+| `Content-Security-Policy` | `default-src 'self'` plus a **per-request script nonce** — [full policy](overview.md#headers) | always |
+| `X-Content-Type-Options` | `nosniff` | always |
+| `X-Frame-Options` | `SAMEORIGIN` | always |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | always |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | **HTTPS only** |
+| `X-Robots-Tag` | `noindex, nofollow` | only when `DEMO_ONLY=true` |
+
+Stored icons get a second, much tighter policy of their own —
+`default-src 'none'; style-src 'unsafe-inline'; sandbox` — so an SVG opened directly can do
+nothing at all. See the [Security Overview](overview.md) for the reasoning behind each one.
+
 ## HSTS (HTTP Strict Transport Security)
 
 ### What is HSTS?
@@ -114,11 +131,24 @@ To submit your domain to browser preload lists:
 2. Delete `SiteSecurityServiceState.txt` in profile folder
 3. Restart Firefox
 
+### Why the protocol headers are trusted without `TRUST_PROXY`
+
+Deciding whether a request arrived over HTTPS reads `X-Forwarded-Proto` and
+`CloudFront-Forwarded-Proto` **without** gating on `TRUST_PROXY`, and that is deliberate: most
+people run Lastboard behind a reverse proxy, and the `Secure` flag on the session cookie should
+work out of the box rather than after one more environment variable.
+
+The risk profiles are not the same, and they are kept apart on purpose. Forging the protocol
+header only makes cookies *more* strictly scoped. Forging `X-Forwarded-For` would let a caller
+choose their own identity and shake off the login lockout — so **that** one is gated on
+`TRUST_PROXY`, and even then only the entry your own proxy appended is read. Do not unify them.
+
 ### Additional Security Headers (Already Implemented)
 
 - `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
 - `X-Frame-Options: SAMEORIGIN` - Prevents clickjacking
 - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer info
+- `Content-Security-Policy` with a per-request nonce - see the [Security Overview](overview.md#headers)
 
 ### References
 
