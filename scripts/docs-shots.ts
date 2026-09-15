@@ -796,9 +796,20 @@ async function main() {
     mkdirSync(WORK, { recursive: true });
 
     const procs: ChildProcess[] = [];
-    const stop = () => procs.forEach((p) => { try { p.kill(); } catch { } });
+    const closers: (() => void)[] = [];
+    const stop = () => {
+        procs.forEach((p) => { try { p.kill(); } catch { } });
+        closers.forEach((c) => { try { c(); } catch { } });
+    };
     process.on('exit', stop);
-    process.on('SIGINT', () => { stop(); process.exit(1); });
+    // SIGTERM as well as SIGINT, because that is what kill and pkill send by
+    // default and 'exit' does not fire for it. Killing a run used to leave its
+    // instance holding PORT, and the next run then met a database that already
+    // had an account: it died filling a Setup Wizard that was no longer there,
+    // with a TypeError about a null field that looks nothing like its cause.
+    for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
+        process.on(sig, () => { stop(); process.exit(1); });
+    }
 
     // 1. A throwaway instance, seeded with the starter board a new install gets.
     console.log('▶ starting a disposable instance…');
@@ -812,7 +823,7 @@ async function main() {
     // is the screen this cycle was built around.
     const pve = startFakeProxmox(PVE_PORT, PVE_SINGLE);
     const pve2 = startFakeProxmox(PVE_PORT_2, PVE_CLUSTER);
-    process.on('exit', () => { pve.close(); pve2.close(); });
+    closers.push(() => { pve.close(); pve2.close(); });
 
     // The browser comes up first: the Setup Wizard only exists until an account
     // is created, so anything photographing it has to run before that call.
