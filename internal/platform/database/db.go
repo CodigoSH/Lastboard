@@ -391,6 +391,12 @@ func migrateSchema(db *sql.DB) error {
 		}
 	}
 
+	// Migration 9: Proxmox stops being a single host. Everything that pointed at
+	// a machine gains the host it meant. See proxmox_multihost.go.
+	if err = migrateProxmoxToManyHosts(db); err != nil {
+		return fmt.Errorf("migration 9 failed: %w", err)
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.
