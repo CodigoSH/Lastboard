@@ -40,6 +40,7 @@ const CDP_PORT = Number(process.env.CDP_PORT || 9224);
 const APP = `http://localhost:${PORT}/`;
 const OUT_DIR = 'docs/assets';
 const PVE_PORT = Number(process.env.PVE_PORT || 8198);   // the stand-in hypervisor
+const PVE_PORT_2 = Number(process.env.PVE_PORT_2 || 8199); // a second one, so the summary exists
 const WORK = join(tmpdir(), 'lastboard-docs-shots');
 const BIN = './bin/lastboard';
 
@@ -247,6 +248,19 @@ const SHOTS: Shot[] = [
 
     // ── Proxmox, against the stand-in hypervisor ────────────────────────
     {
+        // The screen this cycle was built around, and it only exists with more
+        // than one hypervisor — which is why the rig serves two. Photographed
+        // at rest: the tiles on top, the three cards below them closed, which
+        // is what someone opening the page actually sees.
+        // 780, measured on the rendered page rather than guessed: the three
+        // cards close at 712 and a shot of 1000 left a third of the frame as
+        // empty board, which reads as a page that failed to load.
+        name: 'proxmox-summary', w: 1600, h: 780, wait: 4500,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2600);
+              const page = document.querySelector('proxmox-page').shadowRoot;
+              if (!page.querySelector('.hv')) throw new Error('no hypervisor tiles — did the second stand-in start?');`,
+    },
+    {
         // Opens on the one machine that is stopped, because that is the thing
         // this page does that the Proxmox console does not: it names the
         // service that went down with its container.
@@ -255,14 +269,21 @@ const SHOTS: Shot[] = [
         // carries a trend line. At 790 the last row was sliced in half; at
         // 1000 a third of the window was empty board.
         name: 'proxmox', w: 1600, h: 900, wait: 4000,
-        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2000);`,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2400);
+              const page = document.querySelector('proxmox-page').shadowRoot;
+              const tile = [...page.querySelectorAll('.hv')].find((t) => /Proxmox/.test(t.textContent || ''));
+              if (!tile) throw new Error('no hypervisor tile to enter');
+              tile.click(); await sleep(2200);`,
     },
     {
         // The sheet of the one stopped machine, which is where the page makes
         // its case: it names the service that went down with the container.
         name: 'proxmox-machine', w: 1600, h: 1000, pad: 0, wait: 1200,
-        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2000);
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2400);
               const page = document.querySelector('proxmox-page').shadowRoot;
+              const tile = [...page.querySelectorAll('.hv')].find((t) => /Proxmox/.test(t.textContent || ''));
+              if (!tile) throw new Error('no hypervisor tile to enter');
+              tile.click(); await sleep(2200);
               const tiles = [...page.querySelectorAll('.tile')];
               const hit = tiles.find((t) => /plex/i.test(t.textContent || ''));
               if (!hit) throw new Error('no plex tile on the page — was the fake host seeded?');
@@ -334,19 +355,8 @@ const SHOTS: Shot[] = [
     })),
 ];
 
-/**
- * A hypervisor that is not real, so the pictures can be published.
- *
- * The Docker shots point at whatever Docker API the machine happens to have,
- * and that works because the widget is photographed with a couple of test
- * containers. Proxmox is different: pointing this at anyone's actual cluster
- * would publish the names of the machines their household runs on. So the rig
- * serves the two endpoints the integration reads, with a cluster invented to
- * match the starter board — including one container left stopped, because the
- * page's whole argument is the sentence it writes about it.
- */
-function startFakeProxmox(): { close: () => void } {
-    const resources = [
+/** The starter board's hypervisor: one node, and the container a bookmark needs. */
+const PVE_SINGLE = [
         { type: 'node', node: 'pve', status: 'online', cpu: 0.14, mem: 22548578304, maxmem: 34359738368, disk: 412316860416, maxdisk: 1000204886016, maxcpu: 16, uptime: 3628800 },
         { type: 'lxc', vmid: 100, name: 'jellyfin', node: 'pve', status: 'running', cpu: 0.121, mem: 2254857830, maxmem: 4294967296, uptime: 1382400 },
         { type: 'lxc', vmid: 101, name: 'nextcloud', node: 'pve', status: 'running', cpu: 0.043, mem: 1932735283, maxmem: 4294967296, uptime: 1382400 },
@@ -365,6 +375,47 @@ function startFakeProxmox(): { close: () => void } {
         { type: 'storage', storage: 'tank', node: 'pve', plugintype: 'zfspool', disk: 7477813964800, maxdisk: 11982492172288, shared: 0 },
         { type: 'storage', storage: 'backups', node: 'pve', plugintype: 'pbs', disk: 4266133552005, maxdisk: 4398046511104, shared: 1 },
     ];
+
+/**
+ * A second hypervisor, and deliberately a different shape: three nodes that
+ * call themselves a cluster, so the summary can show the one distinction it
+ * makes — "Cluster - Nodes: 3" against a single node — instead of two tiles
+ * that look alike. It also carries what the summary is for: a machine that is
+ * down with a bookmark on it, one down without, and machines no bookmark
+ * claims, which is the third card.
+ */
+const PVE_CLUSTER = [
+    { type: 'node', node: 'ceres', status: 'online', cpu: 0.31, mem: 51539607552, maxmem: 68719476736, disk: 268435456000, maxdisk: 2000398934016, maxcpu: 32, uptime: 8640000 },
+    { type: 'node', node: 'vesta', status: 'online', cpu: 0.18, mem: 27917287424, maxmem: 68719476736, disk: 214748364800, maxdisk: 2000398934016, maxcpu: 32, uptime: 8640000 },
+    { type: 'node', node: 'pallas', status: 'online', cpu: 0.64, mem: 60129542144, maxmem: 68719476736, disk: 322122547200, maxdisk: 2000398934016, maxcpu: 32, uptime: 1209600 },
+    { type: 'lxc', vmid: 200, name: 'forgejo', node: 'ceres', status: 'running', cpu: 0.074, mem: 2147483648, maxmem: 4294967296, uptime: 5184000 },
+    { type: 'qemu', vmid: 201, name: 'nextcloud-aio', node: 'ceres', status: 'running', cpu: 0.152, mem: 6442450944, maxmem: 8589934592, uptime: 5184000 },
+    { type: 'lxc', vmid: 202, name: 'ntfy', node: 'vesta', status: 'running', cpu: 0.004, mem: 134217728, maxmem: 536870912, uptime: 5184000 },
+    { type: 'lxc', vmid: 203, name: 'linkwarden', node: 'vesta', status: 'running', cpu: 0.021, mem: 751619276, maxmem: 2147483648, uptime: 2592000 },
+    { type: 'qemu', vmid: 204, name: 'openwebui', node: 'pallas', status: 'running', cpu: 0.412, mem: 12884901888, maxmem: 17179869184, uptime: 604800 },
+    { type: 'lxc', vmid: 205, name: 'audiobookshelf', node: 'pallas', status: 'running', cpu: 0.033, mem: 966367641, maxmem: 2147483648, uptime: 2592000 },
+    // Down, and a bookmark points at it: this is what the summary leads with.
+    { type: 'lxc', vmid: 206, name: 'freshrss', node: 'vesta', status: 'stopped', cpu: 0, mem: 0, maxmem: 1073741824, uptime: 0 },
+    // Down, and nothing points at it: someone turned it off on purpose.
+    { type: 'lxc', vmid: 207, name: 'staging-runner', node: 'pallas', status: 'stopped', cpu: 0, mem: 0, maxmem: 2147483648, uptime: 0 },
+    { type: 'storage', storage: 'local', node: 'ceres', plugintype: 'dir', disk: 24696061952, maxdisk: 100931731456, shared: 0 },
+    { type: 'storage', storage: 'ceph-pool', node: 'ceres', plugintype: 'rbd', disk: 9895604649984, maxdisk: 17592186044416, shared: 1 },
+    { type: 'storage', storage: 'ceph-pool', node: 'vesta', plugintype: 'rbd', disk: 9895604649984, maxdisk: 17592186044416, shared: 1 },
+    { type: 'storage', storage: 'ceph-pool', node: 'pallas', plugintype: 'rbd', disk: 9895604649984, maxdisk: 17592186044416, shared: 1 },
+];
+
+/**
+ * A hypervisor that is not real, so the pictures can be published.
+ *
+ * The Docker shots point at whatever Docker API the machine happens to have,
+ * and that works because the widget is photographed with a couple of test
+ * containers. Proxmox is different: pointing this at anyone's actual cluster
+ * would publish the names of the machines their household runs on. So the rig
+ * serves the two endpoints the integration reads, with a cluster invented to
+ * match the starter board — including one container left stopped, because the
+ * page's whole argument is the sentence it writes about it.
+ */
+function startFakeProxmox(port: number, resources: any[]): { close: () => void } {
 
     // An hour of RRD data, so the sparklines in a machine's sheet have a shape.
     // `stopped` is not a detail: a machine that is down has to show a line that
@@ -393,7 +444,7 @@ function startFakeProxmox(): { close: () => void } {
             res.end(JSON.stringify({ data: null }));
         }
     });
-    server.listen(PVE_PORT, '127.0.0.1');
+    server.listen(port, '127.0.0.1');
     return { close: () => server.close() };
 }
 
@@ -525,12 +576,25 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
             secret: '00000000-0000-0000-0000-000000000000',
             insecure: true,
             enabled: true,
+        }, {
+            name: 'Ceres',
+            url: `http://127.0.0.1:${PVE_PORT_2}`,
+            token_id: 'lastboard@pve!lastboard',
+            secret: '00000000-0000-0000-0000-000000000000',
+            insecure: true,
+            enabled: true,
         }],
     });
 
     // Row seven: row five is already full (monitoring, API, Docker), and two
     // tiles sharing a cell is not a layout, it is a bug in a photograph.
-    addWidget(1, 7, 3, 2, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: '' });
+    // Three rows tall, not two. With two hypervisors there are three stopped
+    // machines, and at two rows the widget showed only those: a picture of a
+    // lab where nothing runs, and no example of what a healthy row looks
+    // like. One more row fits the contrast the widget is for — an outage
+    // wearing the accent bar, a machine simply turned off without it — and a
+    // running machine underneath.
+    addWidget(1, 7, 3, 3, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: '' });
 
     // The Docker widget, pointed at whatever Docker-compatible API is listening
     // on DOCKER_API (Podman serves one too). Without it the widget is left out
@@ -689,8 +753,34 @@ async function waitFor(url: string, tries = 40) {
 async function main() {
     const only = process.argv.slice(2);
     const wanted = SHOTS.filter((s) => !only.length || only.some((p) => new RegExp('^' + p.replace(/\*/g, '.*') + '$').test(s.name)));
+
+    // The header promises the Docker shots are "skipped" without a Docker API
+    // to point at, and they were not: the widget went unseeded and the two
+    // shots then failed with a stack trace, which on an otherwise clean run
+    // reads like something broke. Leave them out instead, and say so once.
+    const wantedShots = process.env.DOCKER_API
+        ? wanted
+        : wanted.filter((s) => {
+            const isDocker = s.name === 'w-docker' || s.name === 'w-p-docker';
+            return !isDocker;
+        });
+    if (!process.env.DOCKER_API && wanted.length !== wantedShots.length) {
+        console.log('· no DOCKER_API — leaving the two Docker shots as they are');
+    }
     if (!wanted.length) {
         console.error('Nothing matched. Known shots:\n  ' + SHOTS.map((s) => s.name).join('\n  '));
+        process.exit(1);
+    }
+    // Rebuild before photographing anything. The rig used to take whatever
+    // binary happened to be lying around, and the binary embeds the frontend:
+    // the set of 2026-09-15 was shot at 11:46 against a page that changed at
+    // 16:52, so every Proxmox picture showed a design that no longer existed
+    // and the script's tick appeared beside each one. A stale photograph is
+    // worse than a missing one, because nobody doubts it.
+    console.log('· building, so the pictures are of this commit');
+    const built = spawnSync('make', ['build'], { stdio: 'inherit' });
+    if (built.status !== 0) {
+        console.error('make build failed — not shooting an old binary.');
         process.exit(1);
     }
     if (!existsSync(BIN)) {
@@ -714,8 +804,11 @@ async function main() {
     }));
     await waitFor(APP);
 
-    const pve = startFakeProxmox();
-    process.on('exit', () => pve.close());
+    // Two of them, because the summary only exists with more than one, and it
+    // is the screen this cycle was built around.
+    const pve = startFakeProxmox(PVE_PORT, PVE_SINGLE);
+    const pve2 = startFakeProxmox(PVE_PORT_2, PVE_CLUSTER);
+    process.on('exit', () => { pve.close(); pve2.close(); });
 
     // The browser comes up first: the Setup Wizard only exists until an account
     // is created, so anything photographing it has to run before that call.
@@ -750,7 +843,7 @@ async function main() {
     // half-finished set is how mismatched images got published in the first
     // place. Failures are collected and reported at the end instead.
     const failed: string[] = [];
-    for (const shot of wanted.filter((s) => !s.beforeSetup)) {
+    for (const shot of wantedShots.filter((s) => !s.beforeSetup)) {
         try {
             await capture(shot);
         } catch (err) {
@@ -762,7 +855,7 @@ async function main() {
     // KEEP leaves the instance up to poke at; without the stand-in hypervisor
     // behind it the Proxmox page is just an error message, which is no use for
     // the very thing KEEP exists for.
-    if (!process.env.KEEP) pve.close();
+    if (!process.env.KEEP) { pve.close(); pve2.close(); }
     await finish();
 }
 

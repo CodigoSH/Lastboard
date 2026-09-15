@@ -88,6 +88,8 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 ## With more than one: the summary
 
+![The Proxmox summary](../assets/proxmox-summary.png)
+
 The Proxmox icon opens a summary when several hypervisors are connected. It is a board, like the rest of Lastboard: **one tile per hypervisor, holding everything about it** — its load, its nodes, its storage, what it is missing — and above them the only thing no single tile can say.
 
 **The hypervisors come first** — they are what the page is for — and the questions you ask about them come under.
