@@ -562,6 +562,8 @@
   "proxmox.container": "контейнер",
   "proxmox.vm": "виртуальная машина",
   "proxmox.uptime": "Время работы",
+  "proxmox.icon_set": "Выбрать значок",
+  "proxmox.icon_clear": "Убрать значок",
   "settings.alerts": "Оповещения",
   "settings.alerts_desc": "Уведомлять при падении или восстановлении сервиса.",
   "settings.notify_method": "Способ уведомления",

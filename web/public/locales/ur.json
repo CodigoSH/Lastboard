@@ -562,6 +562,8 @@
   "proxmox.container": "کنٹینر",
   "proxmox.vm": "ورچوئل مشین",
   "proxmox.uptime": "چالو رہنے کا دورانیہ",
+  "proxmox.icon_set": "ایک آئیکن منتخب کریں",
+  "proxmox.icon_clear": "آئیکن ہٹائیں",
   "settings.alerts": "الرٹس",
   "settings.alerts_desc": "جب سروس ڈاؤن یا بحال ہو تو مطلع کریں۔",
   "settings.notify_method": "اطلاع کا طریقہ",

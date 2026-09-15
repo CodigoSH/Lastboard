@@ -562,6 +562,8 @@
   "proxmox.container": "コンテナ",
   "proxmox.vm": "仮想マシン",
   "proxmox.uptime": "稼働時間",
+  "proxmox.icon_set": "アイコンを選ぶ",
+  "proxmox.icon_clear": "アイコンを外す",
   "settings.alerts": "アラート",
   "settings.alerts_desc": "サービスがダウン／復旧したときに通知します。",
   "settings.notify_method": "通知方法",

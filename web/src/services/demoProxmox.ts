@@ -35,6 +35,7 @@ export interface DemoPxOverview {
     nodes: DemoPxNode[];
     guests: DemoPxGuest[];
     stores: DemoPxStore[];
+    icons: Record<string, string>;
 }
 
 export interface DemoPxSeries {
@@ -96,8 +97,21 @@ export function isRunning(vmid: number): boolean {
     return vmid !== DEMO_STOPPED_VMID;
 }
 
+/** Icons a visitor chose during this visit, keyed "node|vmid". */
+const icons = new Map<string, string>();
+
+export function setDemoIcon(node: string, vmid: number, icon: string): void {
+    if (icon) icons.set(`${node}|${vmid}`, icon);
+    else icons.delete(`${node}|${vmid}`);
+}
+
+export function demoIcons(): Record<string, string> {
+    return Object.fromEntries(icons);
+}
+
 export function resetDemoProxmox(): void {
     overrides.clear();
+    icons.clear();
 }
 
 export function buildOverview(now: number = Date.now()): DemoPxOverview {
@@ -155,6 +169,7 @@ export function buildOverview(now: number = Date.now()): DemoPxOverview {
         nodes,
         guests,
         stores,
+        icons: demoIcons(),
     };
 }
 

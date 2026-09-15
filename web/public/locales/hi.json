@@ -562,6 +562,8 @@
   "proxmox.container": "कंटेनर",
   "proxmox.vm": "वर्चुअल मशीन",
   "proxmox.uptime": "चालू रहने का समय",
+  "proxmox.icon_set": "एक आइकन चुनें",
+  "proxmox.icon_clear": "आइकन हटाएँ",
   "settings.alerts": "अलर्ट",
   "settings.alerts_desc": "सेवा डाउन या पुनःप्राप्त होने पर सूचित करें।",
   "settings.notify_method": "सूचना विधि",

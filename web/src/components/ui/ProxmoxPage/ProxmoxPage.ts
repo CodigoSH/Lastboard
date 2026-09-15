@@ -5,6 +5,9 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
+import { materializeIcon } from '../../../services/iconStore';
+import { userStore } from '../../../store/userStore';
+import '../IconSelectionModal/IconSelectionModal';
 import css from './ProxmoxPage.css' with { type: 'text' };
 
 interface PxNode {
@@ -30,6 +33,8 @@ interface PxOverview {
     nodes: PxNode[];
     guests: PxGuest[];
     stores: PxStore[];
+    /** Icons the operator chose, keyed "node|vmid". */
+    icons?: Record<string, string>;
 }
 
 interface PxSeries { range: string; cpu: number[]; mem: number[]; points: number; raw: number }
@@ -48,6 +53,7 @@ const ICON_BOOK = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" s
 const ICON_CPU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"/></svg>';
 const ICON_RAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 17v3M12 17v3M17 17v3M8 11v2M12 11v2M16 11v2"/></svg>';
 
+const ICON_PEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>';
 const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 const ICON_POWER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.6 6.6a8 8 0 1 0 10.8 0"/></svg>';
 const ICON_DISK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>';
@@ -208,6 +214,20 @@ class ProxmoxPage extends HTMLElement {
      * content or read off the names. See proxmoxLinks and proxmoxMatch — both
      * halves of that answer cost the page nothing here.
      */
+    /**
+     * The face of a machine: what its owner chose, then what its bookmark
+     * wears, then the board's own fallback.
+     *
+     * The choice comes first because it is the only one that can speak for the
+     * machines that will never have a bookmark — the runners, the tunnel, the
+     * dashboard you are reading this on.
+     */
+    private iconOf(g: PxGuest): string {
+        const own = this.data?.icons?.[`${g.node}|${g.vmid}`];
+        if (own) return own;
+        return this.backing(g)?.icon || '';
+    }
+
     private backing(g: PxGuest): Backed | null {
         const link = linkFor(g);
         return link ? { label: link.label, url: link.url, icon: link.icon } : null;
@@ -289,8 +309,9 @@ class ProxmoxPage extends HTMLElement {
         const flag = !g.running && !!book;
         const mem = g.mem_total > 0 ? Math.round((g.mem / g.mem_total) * 100) : 0;
 
-        const icon = book?.icon
-            ? `<span class="ico"><img src="${escapeHtml(resolveIconUrl(book.icon))}" alt="" loading="lazy"></span>`
+        const face = this.iconOf(g);
+        const icon = face
+            ? `<span class="ico"><img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy"></span>`
             : `<span class="ico ico--none">${ICON_FALLBACK}</span>`;
 
         // Three states, three colours: running, stopped, and stopped with a
@@ -538,12 +559,13 @@ class ProxmoxPage extends HTMLElement {
 
     // ── The detail sheet ──
 
-    private sheet(title: string, sub: string, inner: string) {
+    private sheet(title: string, sub: string, inner: string, face = '') {
         const box = this.shadowRoot?.getElementById('pp-sheet-body');
         const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
         if (!box || !dlg) return;
         box.innerHTML = `
             <div class="sheet__head">
+                ${face}
                 <div><h3>${title}</h3><div class="sheet__sub">${sub}</div></div>
                 <button class="pp__close" data-close aria-label="${escapeHtml(i18n.t('general.close'))}">${ICON_CLOSE}</button>
             </div>${inner}`;
@@ -702,6 +724,71 @@ class ProxmoxPage extends HTMLElement {
             </div>`);
     }
 
+    /** Is this account allowed to choose what a machine looks like? */
+    private isAdmin(): boolean {
+        const role = (userStore.getUser()?.role || '').toLowerCase();
+        return role === 'admin' || role === 'administrator';
+    }
+
+    /**
+     * The machine's face in its sheet, and the way to change it.
+     *
+     * Only an administrator is offered the picker: the choice is server-wide,
+     * like the connection it belongs to.
+     */
+    private sheetFace(g: PxGuest): string {
+        const face = this.iconOf(g);
+        const inner = face
+            ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
+            : ICON_FALLBACK;
+        if (!this.isAdmin()) return `<span class="sheet__ico">${inner}</span>`;
+        return `<button class="sheet__ico sheet__ico--edit" data-icon="${g.vmid}"
+                    title="${escapeHtml(i18n.t('proxmox.icon_set'))}"
+                    aria-label="${escapeHtml(i18n.t('proxmox.icon_set'))}">${inner}<span class="sheet__ico-pen">${ICON_PEN}</span></button>`;
+    }
+
+    /**
+     * Picks an icon for a machine and stores it on this instance.
+     *
+     * The icon is downloaded once, here, exactly as a bookmark's is: the board
+     * never asks a CDN what it is drawing, and this must not become the one
+     * place that does.
+     */
+    private async chooseIcon(vmid: number) {
+        const g = this.data?.guests.find(x => x.vmid === vmid);
+        if (!g || !this.isAdmin()) return;
+
+        let modal = document.querySelector('icon-selection-modal') as (HTMLElement & { open: () => Promise<string | null> }) | null;
+        if (!modal) {
+            modal = document.createElement('icon-selection-modal') as any;
+            document.body.appendChild(modal!);
+        }
+        const picked = await modal!.open();
+        if (picked === null) return;
+
+        // Downloaded once, here, exactly as a bookmark's is.
+        await this.setIcon(vmid, picked ? await materializeIcon(resolveIconUrl(picked)) : '');
+    }
+
+    /** Writes the choice, or clears it, and redraws what shows it. */
+    private async setIcon(vmid: number, icon: string) {
+        const g = this.data?.guests.find(x => x.vmid === vmid);
+        if (!g || !this.isAdmin()) return;
+        try {
+            await apiService.post('/api/proxmox/icon', { node: g.node, vmid: g.vmid, icon });
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+            return;
+        }
+        if (this.data) {
+            this.data.icons = { ...(this.data.icons || {}) };
+            if (icon) this.data.icons[`${g.node}|${g.vmid}`] = icon;
+            else delete this.data.icons[`${g.node}|${g.vmid}`];
+        }
+        this.paintMachines();
+        this.openGuest(vmid);
+    }
+
     private async openGuest(vmid: number) {
         const g = this.data?.guests.find(x => x.vmid === vmid);
         if (!g) return;
@@ -711,7 +798,7 @@ class ProxmoxPage extends HTMLElement {
         const sub = escapeHtml(`${kind} ${g.vmid} · ${g.node}`);
         const power = this.data?.caps.power === true;
 
-        this.sheet(escapeHtml(g.name), sub, `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`);
+        this.sheet(escapeHtml(g.name), sub, `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`, this.sheetFace(g));
         let s: PxSeries | null = null;
         try {
             s = await apiService.get<PxSeries>(
@@ -725,10 +812,12 @@ class ProxmoxPage extends HTMLElement {
                  <div class="warnbox__s">${escapeHtml(i18n.t('proxmox.stopped_breaks'))} <em>${escapeHtml(book.label || book.url)}</em></div></div>`
             : '';
 
+        const chosen = !!this.data?.icons?.[`${g.node}|${g.vmid}`];
         const actions = `<div class="acts">
             ${power ? `<app-button variant="${g.running ? 'ghost' : 'primary'}" data-power="${g.vmid}">
                 ${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}</app-button>` : ''}
             ${book?.url ? `<app-button variant="ghost" data-open="${escapeHtml(book.url)}">${escapeHtml(i18n.t('proxmox.open_bookmark'))}</app-button>` : ''}
+            ${chosen && this.isAdmin() ? `<app-button variant="ghost" data-icon-clear="${g.vmid}">${escapeHtml(i18n.t('proxmox.icon_clear'))}</app-button>` : ''}
         </div>`;
 
         this.sheet(escapeHtml(g.name), sub, `
@@ -741,7 +830,7 @@ class ProxmoxPage extends HTMLElement {
                 ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), g.running ? escapeHtml(fmtUptime(g.uptime)) : '—')}
                 ${this.kv(ICON_BOOK, i18n.t('proxmox.bookmark'), book ? escapeHtml(book.label || book.url) : '—')}
             </div>
-            ${actions}`);
+            ${actions}`, this.sheetFace(g));
     }
 
     // ── Events ──
@@ -763,6 +852,18 @@ class ProxmoxPage extends HTMLElement {
         if (t.closest('#pp-close')) { this.close(); return; }
         if (t.closest('[data-close]')) {
             (this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null)?.close();
+            return;
+        }
+
+        const clearBtn = t.closest('[data-icon-clear]') as HTMLElement | null;
+        if (clearBtn) {
+            this.setIcon(Number(clearBtn.dataset.iconClear), '');
+            return;
+        }
+
+        const iconBtn = t.closest('[data-icon]') as HTMLElement | null;
+        if (iconBtn) {
+            this.chooseIcon(Number(iconBtn.dataset.icon));
             return;
         }
 

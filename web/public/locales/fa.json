@@ -562,6 +562,8 @@
   "proxmox.container": "کانتینر",
   "proxmox.vm": "ماشین مجازی",
   "proxmox.uptime": "مدت روشن بودن",
+  "proxmox.icon_set": "انتخاب نماد",
+  "proxmox.icon_clear": "حذف نماد",
   "settings.alerts": "هشدارها",
   "settings.alerts_desc": "هنگام قطع یا بازیابی سرویس اطلاع بده.",
   "settings.notify_method": "روش اعلان",

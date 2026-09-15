@@ -469,6 +469,47 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
 
 .sheet__head { display: flex; align-items: center; gap: 10px; }
 .sheet__head h3 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+
+/* The machine's face, and — for an administrator — the way to change it. */
+.sheet__ico {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: none;
+    color: var(--text-dim);
+}
+
+.sheet__ico img { width: 28px; height: 28px; object-fit: contain; }
+.sheet__ico svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5px; fill: none; }
+
+.sheet__ico--edit { cursor: pointer; }
+.sheet__ico--edit:hover { border-color: rgba(var(--accent-rgb), 0.35); background: var(--surface); }
+
+.sheet__ico-pen {
+    position: absolute;
+    inset-block-end: -3px;
+    inset-inline-end: -3px;
+    width: 15px;
+    height: 15px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.3));
+    color: var(--text-dim);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.sheet__ico-pen svg { width: 9px; height: 9px; stroke-width: 2.4px; }
+.sheet__ico--edit:hover .sheet__ico-pen,
+.sheet__ico--edit:focus-visible .sheet__ico-pen { opacity: 1; }
 .sheet__sub { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 
 .panel {

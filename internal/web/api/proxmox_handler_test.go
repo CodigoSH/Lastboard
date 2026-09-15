@@ -114,6 +114,7 @@ func setupProxmoxServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("POST /api/proxmox/settings", protect(http.HandlerFunc(px.UpdateSettings)))
 	mux.Handle("GET /api/proxmox/overview", protect(http.HandlerFunc(px.GetOverview)))
 	mux.Handle("POST /api/proxmox/power", protect(http.HandlerFunc(px.Power)))
+	mux.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(px.SetIcon)))
 
 	server := httptest.NewServer(mux)
 	cleanup := func() {
@@ -452,5 +453,141 @@ func TestAnActionThatIsNotOfferedIsRefusedBeforeTheHostSeesIt(t *testing.T) {
 	}
 	if len(fake.seen) > 0 {
 		t.Fatalf("the host was contacted anyway: %v", fake.seen)
+	}
+}
+
+// ── The icon an operator chose ───────────────────────────────────────────────
+
+func pxIcon(t *testing.T, serverURL string, s *userSession, body string) *http.Response {
+	t.Helper()
+	req, _ := http.NewRequest("POST", serverURL+"/api/proxmox/icon", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("icon: %v", err)
+	}
+	return resp
+}
+
+// iconsFrom reads the icon map out of an overview.
+func iconsFrom(t *testing.T, serverURL string, s *userSession) map[string]string {
+	t.Helper()
+	req, _ := http.NewRequest("GET", serverURL+"/api/proxmox/overview", nil)
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("overview: %v", err)
+	}
+	defer resp.Body.Close()
+	var out struct {
+		Icons map[string]string `json:"icons"`
+	}
+	json.NewDecoder(resp.Body).Decode(&out)
+	return out.Icons
+}
+
+func TestAMachineKeepsTheIconItsOwnerChose(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+
+	// Nine of twenty-nine machines on a real host have no bookmark and never
+	// will — the runners, the tunnel, the dashboard itself.
+	resp := pxIcon(t, server.URL, s, `{"node":"kprox","vmid":1018,"icon":"/api/icons/abc123"}`)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("got %d, want 204", resp.StatusCode)
+	}
+
+	if got := iconsFrom(t, server.URL, s)["kprox|1018"]; got != "/api/icons/abc123" {
+		t.Errorf("icon = %q, want the one that was chosen", got)
+	}
+}
+
+func TestChoosingASecondIconLeavesTheFirstAlone(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+
+	// The whole map is one setting row, so each write rewrites it: the second
+	// choice must not be the only one left standing.
+	pxIcon(t, server.URL, s, `{"node":"kprox","vmid":100,"icon":"/api/icons/one"}`).Body.Close()
+	pxIcon(t, server.URL, s, `{"node":"kprox","vmid":200,"icon":"/api/icons/two"}`).Body.Close()
+
+	icons := iconsFrom(t, server.URL, s)
+	if icons["kprox|100"] != "/api/icons/one" || icons["kprox|200"] != "/api/icons/two" {
+		t.Fatalf("icons = %v", icons)
+	}
+}
+
+func TestAnEmptyIconClearsTheChoice(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+
+	pxIcon(t, server.URL, s, `{"node":"kprox","vmid":100,"icon":"/api/icons/one"}`).Body.Close()
+	pxIcon(t, server.URL, s, `{"node":"kprox","vmid":100,"icon":""}`).Body.Close()
+
+	if _, still := iconsFrom(t, server.URL, s)["kprox|100"]; still {
+		t.Error("the machine kept an icon after it was removed")
+	}
+}
+
+func TestOnlyAnAdminChoosesTheFaceOfAMachine(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	createUser(t, db.DB, "guest", "password", "user")
+	admin := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, admin, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+
+	// Server-wide setting, so it follows the rule the connection follows.
+	resp := pxIcon(t, server.URL, doLogin(t, server.URL, "guest", "password"),
+		`{"node":"kprox","vmid":100,"icon":"/api/icons/one"}`)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("got %d, want 403", resp.StatusCode)
+	}
+	if len(iconsFrom(t, server.URL, admin)) != 0 {
+		t.Error("the refused choice was stored anyway")
+	}
+}
+
+func TestTheIconMapRefusesToGrowWithoutEnd(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}`).Body.Close()
+
+	// An icon longer than a path could ever be is not an icon.
+	resp := pxIcon(t, server.URL, s, `{"node":"kprox","vmid":100,"icon":"`+strings.Repeat("x", 600)+`"}`)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a 600-character icon: got %d, want 400", resp.StatusCode)
+	}
+
+	// Nor is a machine with no id, nor a node name that would forge a key.
+	for _, body := range []string{
+		`{"node":"kprox","vmid":0,"icon":"/api/icons/x"}`,
+		`{"node":"kprox|999","vmid":1,"icon":"/api/icons/x"}`,
+	} {
+		resp := pxIcon(t, server.URL, s, body)
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("%s: got %d, want 400", body, resp.StatusCode)
+		}
 	}
 }

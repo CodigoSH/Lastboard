@@ -562,6 +562,8 @@
   "proxmox.container": "conteneur",
   "proxmox.vm": "machine virtuelle",
   "proxmox.uptime": "Temps de fonctionnement",
+  "proxmox.icon_set": "Choisir une icône",
+  "proxmox.icon_clear": "Retirer l'icône",
   "settings.alerts": "Alertes",
   "settings.alerts_desc": "Avertir quand un service tombe ou se rétablit.",
   "settings.notify_method": "Méthode de notification",

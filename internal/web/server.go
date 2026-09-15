@@ -296,6 +296,7 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/proxmox/overview", protect(http.HandlerFunc(proxmoxHandler.GetOverview)))
 	s.Router.Handle("GET /api/proxmox/series", protect(http.HandlerFunc(proxmoxHandler.GetSeries)))
 	s.Router.Handle("POST /api/proxmox/power", protect(http.HandlerFunc(proxmoxHandler.Power)))
+	s.Router.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(proxmoxHandler.SetIcon)))
 
 	dockerHandler := api.NewDockerHandler(s.DB)
 	s.Router.Handle("GET /api/docker/containers", protect(http.HandlerFunc(dockerHandler.GetContainers)))

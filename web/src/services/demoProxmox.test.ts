@@ -5,6 +5,7 @@ import {
     buildSeries,
     isRunning,
     resetDemoProxmox,
+    setDemoIcon,
     setRunning,
 } from './demoProxmox';
 
@@ -15,7 +16,7 @@ afterEach(() => resetDemoProxmox());
 describe('the demo overview', () => {
     test('has the shape the page and the widget read', () => {
         const o = buildOverview(at(12));
-        expect(Object.keys(o).sort()).toEqual(['caps', 'cluster', 'guests', 'nodes', 'stores']);
+        expect(Object.keys(o).sort()).toEqual(['caps', 'cluster', 'guests', 'icons', 'nodes', 'stores']);
         expect(o.caps).toEqual({ read: true, power: true });
         // One node: a demo that claimed a cluster would draw a heading nobody
         // in the demo owns.
@@ -74,6 +75,22 @@ describe('the demo overview', () => {
         for (const n of ['plex', 'jellyfin', 'nextcloud', 'immich', 'uptime-kuma']) {
             expect(names).toContain(n);
         }
+    });
+});
+
+describe('the icon a visitor chooses', () => {
+    test('a machine with no bookmark can be given one, and take it back', () => {
+        setDemoIcon('pve', 106, '/api/icons/abc');
+        expect(buildOverview(at(12)).icons['pve|106']).toBe('/api/icons/abc');
+
+        setDemoIcon('pve', 106, '');
+        expect(buildOverview(at(12)).icons['pve|106']).toBeUndefined();
+    });
+
+    test('the reset forgets it, like everything else about the visit', () => {
+        setDemoIcon('pve', 100, '/api/icons/abc');
+        resetDemoProxmox();
+        expect(buildOverview(at(12)).icons).toEqual({});
     });
 });
 

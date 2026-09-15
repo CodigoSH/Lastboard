@@ -562,6 +562,8 @@
   "proxmox.container": "κοντέινερ",
   "proxmox.vm": "εικονική μηχανή",
   "proxmox.uptime": "Χρόνος λειτουργίας",
+  "proxmox.icon_set": "Επιλογή εικονιδίου",
+  "proxmox.icon_clear": "Αφαίρεση εικονιδίου",
   "settings.alerts": "Ειδοποιήσεις",
   "settings.alerts_desc": "Ειδοποίηση όταν μια υπηρεσία πέφτει ή ανακάμπτει.",
   "settings.notify_method": "Μέθοδος ειδοποίησης",

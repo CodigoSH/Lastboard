@@ -87,7 +87,7 @@ The Proxmox icon in the top bar opens it, and the **×** in its header closes it
 
 **Storage** — one card per store: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Bars turn amber past 60% and red past 90%.
 
-**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves (matched by name, or told to it — see below), its CPU with a **trend line over the chosen range**, its memory, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
+**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its CPU with a **trend line over the chosen range**, its memory, its type (LXC or VM) and its VMID. A chip and a memory stick mark which figure is which. Templates are left out: they cannot run, so they have no state to show.
 
 The dot in the corner says which of three things a machine is:
 
@@ -131,6 +131,21 @@ The rule is deliberately strict, because naming the wrong service as the one tha
 
 Measured on a host with twenty-nine containers and a board of fifty-five bookmarks, none of them configured: **sixteen machines matched, none wrongly.**
 
+### Machines that will never have a bookmark
+
+Some never will: the CI runners, the tunnel, the test containers, the machine
+Lastboard itself runs on — nobody bookmarks the dashboard they are reading.
+Measured on a real host, that is ten machines out of twenty-nine.
+
+For those, **open the machine and click its icon** (administrators only): the
+same icon picker the bookmarks use. Whatever you choose is downloaded once by
+your instance and served from it afterwards, exactly like a bookmark's icon, so
+the page still asks no CDN what you run. **Remove icon**, in the same sheet,
+gives it back the plain fallback.
+
+The choice is server-wide, like the connection: one hypervisor, one set of
+faces, the same for everyone with an account here.
+
 ### When the names don't agree
 
 Some pairs no rule should guess — a container called `23-jellyfin-musica` serving a bookmark called *Jellyfin Music*, or `90--haos` serving *Home Assistant*. For those, edit the bookmark and pick the machine under **Served by**:
@@ -162,5 +177,8 @@ To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmo
 | Page open, and on a range change | `GET .../rrddata` — one per machine, for the trend line on its tile. Proxmox has no endpoint that returns history for more than one machine, so these are spread out, three at a time, and cached until the range changes |
 | Opening a machine | the history it already has, or a request for it |
 | Pressing a button | `POST .../status/start` or `.../status/shutdown` |
+
+Choosing an icon for a machine asks Proxmox nothing at all: it is stored here,
+beside the connection.
 
 The page refreshes every 15 seconds while it is open and the widget on its own interval; neither polls when it is closed. Nothing is written to your database: no machine names, no figures, no history. The only thing Lastboard stores is the connection itself.

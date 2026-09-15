@@ -100,6 +100,14 @@ class ApiService {
                     const vmid = params.get('vmid');
                     return buildSeries(params.get('range') || '24h', vmid ? parseInt(vmid, 10) : undefined) as any;
                 }
+                if (url === '/api/proxmox/icon' && method === 'POST') {
+                    // The demo really does remember, for as long as the visit
+                    // lasts: choosing a face for a machine is half the point of
+                    // the feature.
+                    const { setDemoIcon } = await import('./demoProxmox');
+                    setDemoIcon(String(body.node || ''), Number(body.vmid), String(body.icon || ''));
+                    return { status: 'ok' } as any;
+                }
                 if (url === '/api/proxmox/power' && method === 'POST') {
                     // The demo really does start and stop its machines, so the
                     // page can be tried end to end — it just forgets on reload.

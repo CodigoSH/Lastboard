@@ -562,6 +562,8 @@
   "proxmox.container": "حاوية",
   "proxmox.vm": "آلة افتراضية",
   "proxmox.uptime": "مدة التشغيل",
+  "proxmox.icon_set": "اختيار أيقونة",
+  "proxmox.icon_clear": "إزالة الأيقونة",
   "settings.alerts": "التنبيهات",
   "settings.alerts_desc": "نبّهني عند تعطّل خدمة أو تعافيها.",
   "settings.notify_method": "طريقة الإشعار",

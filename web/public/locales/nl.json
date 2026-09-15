@@ -562,6 +562,8 @@
   "proxmox.container": "container",
   "proxmox.vm": "virtuele machine",
   "proxmox.uptime": "Draaitijd",
+  "proxmox.icon_set": "Kies een pictogram",
+  "proxmox.icon_clear": "Pictogram verwijderen",
   "settings.alerts": "Meldingen",
   "settings.alerts_desc": "Meld wanneer een dienst uitvalt of herstelt.",
   "settings.notify_method": "Meldingsmethode",

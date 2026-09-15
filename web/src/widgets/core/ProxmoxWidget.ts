@@ -35,6 +35,8 @@ interface PxOverview {
     caps: { read: boolean; power: boolean };
     nodes: PxNode[];
     guests: PxGuest[];
+    /** Icons the operator chose on the page, keyed "node|vmid". */
+    icons?: Record<string, string>;
 }
 
 interface ProxmoxConfig {
@@ -244,8 +246,11 @@ class ProxmoxWidget extends HTMLElement {
         // Until then it wears the board's own fallback, which is what a
         // bookmark with no icon wears too.
         const link = this.link(g);
-        const icon = link?.icon
-            ? `<img src="${escapeHtml(resolveIconUrl(link.icon))}" alt="" loading="lazy">`
+        // Same order as the page: what the operator chose, then the bookmark's,
+        // then the board's fallback.
+        const face = this.data?.icons?.[`${g.node}|${g.vmid}`] || link?.icon || '';
+        const icon = face
+            ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
             : ICON_FALLBACK;
         // A stopped machine nobody bookmarked is a stopped machine; a stopped
         // machine with a service on it is an outage, and says so.

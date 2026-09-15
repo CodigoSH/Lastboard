@@ -562,6 +562,8 @@
   "proxmox.container": "kontainer",
   "proxmox.vm": "mesin virtual",
   "proxmox.uptime": "Waktu menyala",
+  "proxmox.icon_set": "Pilih ikon",
+  "proxmox.icon_clear": "Hapus ikon",
   "settings.alerts": "Peringatan",
   "settings.alerts_desc": "Beri tahu saat layanan mati atau pulih.",
   "settings.notify_method": "Metode notifikasi",

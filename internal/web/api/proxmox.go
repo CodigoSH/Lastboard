@@ -132,6 +132,107 @@ func boolSetting(b bool) string {
 }
 
 /* ---------------------------------------------------------------------------
+ * The icon an operator chose for a machine
+ * ------------------------------------------------------------------------ */
+
+/*
+Some machines will never have a bookmark, and that is not a gap to be filled by
+guessing.
+
+Measured on a real host: of twenty-nine machines, ten are infrastructure — the
+runners, the tunnel, the test containers, Lastboard itself — and nobody
+bookmarks the dashboard they are looking at. Matching them by name against an
+icon catalogue would mean asking a CDN what this household runs, which is the
+one thing the board promises it does not do. So the operator picks, once, and
+the icon is downloaded and stored by this instance like any bookmark's.
+
+Server-wide on purpose: the hypervisor is one, and two accounts choosing
+different faces for the same container is not a feature.
+*/
+
+const proxmoxIconsKey = "proxmox_icons"
+
+// Bounds on what one setting row may hold: enough for a big cluster, small
+// enough that it cannot be grown into a place to keep arbitrary data.
+const (
+	proxmoxMaxIcons   = 500
+	proxmoxMaxIconLen = 512
+)
+
+// proxmoxIconKey addresses one machine. VMIDs are unique per cluster, but the
+// node is in the key anyway so a machine that moves keeps its own face.
+func proxmoxIconKey(node string, vmid int) string {
+	return fmt.Sprintf("%s|%d", node, vmid)
+}
+
+func (h *ProxmoxHandler) icons() map[string]string {
+	raw := h.getSetting(proxmoxIconsKey)
+	if raw == "" {
+		return map[string]string{}
+	}
+	out := map[string]string{}
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		// A setting that cannot be read is a setting nobody set.
+		return map[string]string{}
+	}
+	return out
+}
+
+// SetIcon stores, or clears, the icon of one machine. Administrator-only: it is
+// a server-wide setting, like the connection itself.
+func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
+	if !isAdminUser(h.DB, r) {
+		http.Error(w, "error.forbidden", http.StatusForbidden)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
+
+	var in struct {
+		Node string `json:"node"`
+		VMID int    `json:"vmid"`
+		Icon string `json:"icon"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	if in.VMID <= 0 || strings.ContainsAny(in.Node, "|") {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	icon := strings.TrimSpace(in.Icon)
+	if len(icon) > proxmoxMaxIconLen {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+
+	icons := h.icons()
+	key := proxmoxIconKey(in.Node, in.VMID)
+	if icon == "" {
+		delete(icons, key)
+	} else {
+		// A full map is not a reason to lose what is already there, so only a
+		// machine that is not in it yet is refused.
+		if _, known := icons[key]; !known && len(icons) >= proxmoxMaxIcons {
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
+			return
+		}
+		icons[key] = icon
+	}
+
+	blob, err := json.Marshal(icons)
+	if err != nil {
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
+		return
+	}
+	if err := h.setSetting(proxmoxIconsKey, string(blob)); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+/* ---------------------------------------------------------------------------
  * What the page and the widget read
  * ------------------------------------------------------------------------ */
 
@@ -177,6 +278,9 @@ type proxmoxOverview struct {
 	Nodes   []proxmoxNode  `json:"nodes"`
 	Guests  []proxmoxGuest `json:"guests"`
 	Stores  []proxmoxStore `json:"stores"`
+	// Icons chosen by the operator, keyed "node|vmid". Sent with the overview
+	// rather than fetched on its own: the page asks for this once either way.
+	Icons map[string]string `json:"icons"`
 }
 
 // GetOverview is the one call the page and the widget poll.
@@ -202,6 +306,7 @@ func (h *ProxmoxHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 		Nodes:  []proxmoxNode{},
 		Guests: []proxmoxGuest{},
 		Stores: []proxmoxStore{},
+		Icons:  h.icons(),
 	}
 	// Capabilities decide whether the interface offers the power buttons at
 	// all. A failure here is not fatal: the page still reads.
