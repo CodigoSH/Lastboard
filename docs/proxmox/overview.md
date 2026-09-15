@@ -107,9 +107,11 @@ Click a tile.
 
 ![A stopped machine](../assets/proxmox-machine.png)
 
-The sheet shows the machine's own CPU trend over the range you chose, its state, memory and uptime, the bookmark it serves — and the sentence this page exists for when it is stopped: **This stops responding: Plex**.
+The sheet shows the machine's own CPU trend, its state, memory and uptime, the bookmark it serves — and the sentence this page exists for when it is stopped: **This stops responding: Plex**. Move the pointer across the chart and it says what the line was worth at that minute.
 
-From here you can **Start** or **Shut down** the machine (when the token allows it), and open the bookmark it serves.
+From here you can **Start** or **Shut down** the machine (when the token allows it), open the bookmark it serves, and — as an administrator — click its icon to [choose one](#machines-that-will-never-have-a-bookmark).
+
+The node and the storage cards open the same way, with their own charts and figures.
 
 ## Starting and stopping
 

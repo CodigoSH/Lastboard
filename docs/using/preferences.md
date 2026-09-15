@@ -59,7 +59,7 @@ Connect Lastboard to a Proxmox VE host: address, API token and certificate polic
 
 Full backup & restore, and importing/exporting dashboards. See **[Import, Export & Backup](import-export.md)**.
 
-It also says where your icons come from — how many this server hands out, and how many are still fetched from outside, with a button to bring those in. See **[Where icons are stored](../getting-started/bookmarks.md#boards-made-before-this-existed)**.
+It also says where your icons come from — how many of your bookmarks this server serves, and how many still fetch theirs from outside, with a button to bring those in. See **[Where icons are stored](../getting-started/bookmarks.md#boards-made-before-this-existed)**.
 
 ## Advanced
 

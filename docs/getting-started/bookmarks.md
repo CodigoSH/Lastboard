@@ -71,7 +71,7 @@ If the download fails, the bookmark is still saved and keeps the original URL �
 
 Nothing to do: when Lastboard starts it brings in any icon that is still fetched from elsewhere, so upgrading is enough. A board of 25 bookmarks takes well under a second, and the log says how many were stored.
 
-**Settings → Data** always says where your icons come from: how many this server hands out, and how many are still fetched from outside. If the machine had no connection when it started, the icons stay as they were, it tries again on the next start, and that panel offers a button to fetch them without waiting.
+**Settings → Data** always says where your icons come from: how many of your bookmarks this server serves, and how many still fetch theirs from outside. It counts bookmarks, not stored images — one image can dress several bookmarks, and avatars, the panel logo and the icons chosen for [Proxmox machines](../proxmox/overview.md#machines-that-will-never-have-a-bookmark) are kept here too without appearing in that figure. If the machine had no connection when it started, the icons stay as they were, it tries again on the next start, and that panel offers a button to fetch them without waiting.
 
 ## Sections
 

@@ -211,11 +211,21 @@ const SHOTS: Shot[] = [
         // Opens on a service that actually went down, so the outage table and
         // the uptime figure have something in them.
         name: 'monitor', w: 1600, h: 900, wait: 1600,
-        act: `${TOPBAR}.querySelector('#monitor-toggle').click(); await sleep(1400);
+        // Two things were wrong here and neither made a sound: the row class was
+        // `.mp__row` and the component writes `.mp-row`, so nothing was ever
+        // found; and `if (hit)` swallowed that, leaving the page on whichever
+        // service it selects by default — the one with a clean record and an
+        // empty outage table. It waits for the row now, and throws if it never
+        // comes.
+        act: `${TOPBAR}.querySelector('#monitor-toggle').click();
               const page = document.querySelector('monitor-page').shadowRoot;
-              const rows = [...page.querySelectorAll('.mp__row, .monitor-page__row, [data-item-id]')];
-              const hit = rows.find((r) => /Nextcloud/.test(r.textContent || ''));
-              if (hit) { hit.click(); await sleep(1200); }`,
+              let hit = null;
+              for (let i = 0; i < 40 && !hit; i++) {
+                  hit = [...page.querySelectorAll('.mp-row')].find((r) => /Nextcloud/.test(r.textContent || ''));
+                  if (!hit) await sleep(250);
+              }
+              if (!hit) throw new Error('no Nextcloud row on the status page');
+              hit.click(); await sleep(1600);`,
     },
 
     // ── Proxmox, against the stand-in hypervisor ────────────────────────
@@ -417,17 +427,45 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         db.run(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (1, ?, ?, 0)`, [name, i + 1]);
     }
 
-    // Put a status dot on a handful of recognisable services.
+    // Everything a bookmark needs, written in ONE pass.
+    //
+    // It used to be two — the status dot, then the machine each service runs on
+    // — and the second read the copy of the rows taken before the first, so it
+    // wrote back content without the dot and un-monitored four of the six
+    // services. The status page was photographed with two rows in it and the
+    // failure looked like a product with nothing to show.
     const watched = ['Plex', 'Jellyfin', 'Nextcloud', 'Immich', 'Proxmox', 'Grafana'];
+    const backing: Record<string, { kind: string; vmid: number }> = {
+        Plex: { kind: 'lxc', vmid: 106 },
+        Jellyfin: { kind: 'lxc', vmid: 100 },
+        Nextcloud: { kind: 'lxc', vmid: 101 },
+        Immich: { kind: 'qemu', vmid: 105 },
+        Vaultwarden: { kind: 'lxc', vmid: 107 },
+        Paperless: { kind: 'lxc', vmid: 104 },
+        'Home Assistant': { kind: 'qemu', vmid: 102 },
+        'Pi-hole': { kind: 'lxc', vmid: 103 },
+        'Uptime Kuma': { kind: 'lxc', vmid: 108 },
+    };
     const rows = db.query(`SELECT id, content FROM items WHERE type = 'bookmark'`).all() as { id: number; content: string }[];
     const monitored: number[] = [];
     for (const row of rows) {
         const c = JSON.parse(row.content || '{}');
-        if (!watched.includes(c.label)) continue;
-        c.statusCheck = true;
-        c.statusPos = 'top-right';
-        db.run(`UPDATE items SET content = ? WHERE id = ?`, [JSON.stringify(c), row.id]);
-        monitored.push(row.id);
+        let touched = false;
+        if (watched.includes(c.label)) {
+            c.statusCheck = true;
+            c.statusPos = 'top-right';
+            monitored.push(row.id);
+            touched = true;
+        }
+        // Which bookmark each machine serves. Without it the Proxmox page draws
+        // a grid of container names, which is what the Proxmox console already
+        // does; with it the tiles wear the service's icon and the stopped one
+        // says what it costs.
+        if (backing[c.label]) {
+            c.proxmox = { node: 'pve', ...backing[c.label] };
+            touched = true;
+        }
+        if (touched) db.run(`UPDATE items SET content = ? WHERE id = ?`, [JSON.stringify(c), row.id]);
     }
 
     // A day of checks, every five minutes, with two services having had a rough
@@ -464,28 +502,6 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         secret: '00000000-0000-0000-0000-000000000000',
         insecure: true,
     });
-
-    // Which bookmark each machine serves. Without this the page draws a grid of
-    // container names, which is what the Proxmox console already does; with it
-    // the tiles wear the service's icon and the stopped one says what it costs.
-    const backing: Record<string, { kind: string; vmid: number }> = {
-        Plex: { kind: 'lxc', vmid: 106 },
-        Jellyfin: { kind: 'lxc', vmid: 100 },
-        Nextcloud: { kind: 'lxc', vmid: 101 },
-        Immich: { kind: 'qemu', vmid: 105 },
-        Vaultwarden: { kind: 'lxc', vmid: 107 },
-        Paperless: { kind: 'lxc', vmid: 104 },
-        'Home Assistant': { kind: 'qemu', vmid: 102 },
-        'Pi-hole': { kind: 'lxc', vmid: 103 },
-        'Uptime Kuma': { kind: 'lxc', vmid: 108 },
-    };
-    for (const row of rows) {
-        const c = JSON.parse(row.content || '{}');
-        const px = backing[c.label];
-        if (!px) continue;
-        c.proxmox = { node: 'pve', ...px };
-        db.run(`UPDATE items SET content = ? WHERE id = ?`, [JSON.stringify(c), row.id]);
-    }
 
     // Row seven: row five is already full (monitoring, API, Docker), and two
     // tiles sharing a cell is not a layout, it is a bug in a photograph.
