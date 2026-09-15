@@ -248,6 +248,39 @@ func TestPruneOrphanIcons(t *testing.T) {
 	}
 }
 
+// The icon an operator picks for a Proxmox machine is named in the settings
+// table and nowhere else, and this sweep runs after every item deletion. Before
+// the settings row was counted, deleting any bookmark took those icons with it
+// and the machine tiles were left with a broken image.
+func TestPruneKeepsAnIconNamedOnlyByASetting(t *testing.T) {
+	db, _ := setupTestDB(t)
+
+	hash, err := storeIcon(db, "image/png", onePixelPNG(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(
+		`INSERT INTO system_settings (key, value) VALUES ('proxmox_icons', ?)`,
+		`{"kprox|1018":"/api/icons/`+hash+`"}`,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	removed, err := PruneOrphanIcons(db)
+	if err != nil {
+		t.Fatalf("prune failed: %v", err)
+	}
+	if removed != 0 {
+		t.Errorf("removed %d icons, want 0", removed)
+	}
+
+	var stillThere int
+	db.QueryRow(`SELECT COUNT(*) FROM icons WHERE hash = ?`, hash).Scan(&stillThere)
+	if stillThere != 1 {
+		t.Fatal("a machine's icon was swept away because only items were counted")
+	}
+}
+
 func TestStoreRefusesUnsupportedSources(t *testing.T) {
 	db, _ := setupTestDB(t)
 	h := NewIconHandler(db)

@@ -360,11 +360,18 @@ func (h *IconHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// PruneOrphanIcons deletes icons no longer named by any item, avatar or logo.
+// PruneOrphanIcons deletes icons no longer named by any item, avatar, logo or
+// server setting.
 //
 // Cheap because it is driven by the icons table: a handful of rows, each
 // checked with an indexed-free but tiny LIKE over content the user already
 // loads on every paint.
+//
+// The settings table is in that list for a reason: the icon an operator picks
+// for a Proxmox machine is named there and nowhere else, so a sweep that only
+// looked at items — and one runs after every single item deletion — would have
+// thrown those away and left the tiles with a broken image. Anything else that
+// ever stores an icon outside `items` has to be added here too.
 func PruneOrphanIcons(db *sql.DB) (int, error) {
 	rows, err := db.Query(`SELECT hash FROM icons`)
 	if err != nil {
@@ -392,7 +399,8 @@ func PruneOrphanIcons(db *sql.DB) (int, error) {
 				(SELECT COUNT(*) FROM items WHERE content LIKE '%' || ? || '%')
 			  + (SELECT COUNT(*) FROM users WHERE avatar_url LIKE '%' || ? || '%'
 			                                   OR project_logo LIKE '%' || ? || '%')
-		`, hash, hash, hash).Scan(&used)
+			  + (SELECT COUNT(*) FROM system_settings WHERE value LIKE '%' || ? || '%')
+		`, hash, hash, hash, hash).Scan(&used)
 		if err != nil {
 			return removed, err
 		}
