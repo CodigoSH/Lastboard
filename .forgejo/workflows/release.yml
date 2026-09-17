@@ -253,64 +253,32 @@ jobs:
           echo "Prune dispatch HTTP $CODE"
           [ "$CODE" = "204" ] || { echo "Prune dispatch failed (HTTP $CODE)"; exit 1; }
 
-  # The website reads the latest release from the Forgejo API at build time, and
-  # its Coolify deploy webhook fires on push — which happens minutes before this
-  # release exists (and while it is still a draft). A site built then advertises
-  # the previous version until some unrelated push rebuilds it. Rebuilding here,
-  # gated on a published release, is the only trigger that sees this version.
+  # The site reads the latest release from the Forgejo API at build time, and a
+  # push-triggered build happens minutes before this release exists (and while
+  # it is still a draft), so it would advertise the previous version until some
+  # unrelated push rebuilt it. Asking here, gated on a published release, is the
+  # only trigger that sees this version.
+  #
+  # Dispatched rather than done here: this job used to carry its own copy of
+  # site-rebuild.yml's twenty lines — the Coolify call, the GET-then-POST
+  # handling, the force=true — and the two had already drifted, 40 lines against
+  # 34 with sixteen of them different. One implementation, called twice.
   trigger-site-rebuild:
     name: Rebuild the website
     needs: release
     runs-on: ubuntu-latest
-    # `ubuntu-latest` is a label the runner translates, and by default it lands
-    # on a Node image built on Debian bullseye — 2021, OpenSSL 1.1.1w. Pinned so
-    # what this runs on is a decision in the diff rather than a line in a config
-    # file on the server that nothing versions. See the house rule in
-    # codigosh/releases.md.
+    # See the note on the job above: the label lands on a 2021 Debian image by
+    # default, so it is pinned.
     container: node:22-bookworm
     steps:
-      - name: Redeploy codigosh-web after successful publish
+      - name: Dispatch the website rebuild
         env:
-          COOLIFY_DEPLOY_URL: ${{ secrets.COOLIFY_DEPLOY_URL }}
-          COOLIFY_DEPLOY_TOKEN: ${{ secrets.COOLIFY_DEPLOY_TOKEN }}
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
         run: |
-          # Optional: releases must not fail because the hook is not configured.
-          if [ -z "$COOLIFY_DEPLOY_URL" ] || [ -z "$COOLIFY_DEPLOY_TOKEN" ]; then
-            echo "Coolify deploy secrets not set — skipping website rebuild."
-            exit 0
-          fi
-          # The endpoint authenticates with a Coolify API token; without the
-          # header it answers 401.
-          #
-          # Which verb it wants depends on which URL is in the secret: Coolify's
-          # API deploy endpoint (/api/v1/deploy?uuid=…) is a GET, and a deploy
-          # webhook is a POST. Asking with the wrong one answers 405, which is
-          # what silently stopped the site being rebuilt after v1.7.0 — the
-          # release went out and the website went on advertising 1.6.2. So it
-          # asks one way and, only if the answer is "wrong method", the other.
-          # force=true matters more than it looks. Coolify only redeploys when the
-          # commit touches its configured Watch Paths, and when it doesn't it
-          # skips the deployment and still answers 2xx — which is why a release
-          # could report a successful rebuild and leave the site untouched. The
-          # site's content comes from this repository's API at build time, so a
-          # rebuild is worth doing whatever the commit happened to change.
-          URL="$COOLIFY_DEPLOY_URL"
-          case "$URL" in
-            *\?*) URL="$URL&force=true" ;;
-            *)    URL="$URL?force=true" ;;
-          esac
-          ask() {
-            curl -s -o /dev/null -w "%{http_code}" --max-time 30 -X "$1" \
-              -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
-              "$URL"
-          }
-          CODE=$(ask GET)
-          if [ "$CODE" = "405" ]; then
-            echo "Website rebuild: GET answered 405, retrying as POST"
-            CODE=$(ask POST)
-          fi
-          echo "Website rebuild HTTP $CODE"
-          case "$CODE" in
-            2*) echo "Website rebuild requested." ;;
-            *)  echo "Website rebuild failed (HTTP $CODE)"; exit 1 ;;
-          esac
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: token $CI_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"main"}' \
+            "${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}/actions/workflows/site-rebuild.yml/dispatches")
+          echo "Website rebuild dispatch HTTP $CODE"
+          [ "$CODE" = "204" ] || { echo "Website rebuild dispatch failed (HTTP $CODE)"; exit 1; }
