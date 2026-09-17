@@ -18,7 +18,25 @@ jobs:
 
       - name: Install Docker CLI and Buildx
         run: |
-          apt-get update -qq && apt-get install -y -qq --no-install-recommends curl ca-certificates
+          # Only if they are actually missing. The runner image already ships
+          # curl, tar and the CA bundle, so this apt call bought nothing — and
+          # it is the only thing here that broke: the image `ubuntu-latest`
+          # lands on is built on Debian bullseye, which is out of support, so
+          # its package index still promises files the mirror has stopped
+          # serving. v1.8.0-Beta.18 was published without a container image
+          # because of a 404 on ca-certificates.
+          #
+          # The real fix is a pinned `container:` on this job, which is the
+          # house rule and which every other job here already follows. It is
+          # not done in the same change because this job reaches the Docker
+          # daemon through /var/run/docker.sock, and whether that survives
+          # being moved inside a job container depends on the runner's
+          # configuration — which is a thing to try on purpose, not to discover
+          # during a release.
+          if ! command -v curl >/dev/null || [ ! -e /etc/ssl/certs/ca-certificates.crt ]; then
+            apt-get update -qq
+            apt-get install -y -qq --no-install-recommends curl ca-certificates
+          fi
 
           # Retry transient gateway errors (e.g. 504) on external downloads.
           CURL="curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 30"
