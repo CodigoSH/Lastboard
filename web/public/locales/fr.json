@@ -12,7 +12,7 @@
   "action.download_backup": "Télécharger la sauvegarde",
   "action.edit_user": "Modifier l'utilisateur",
   "action.remove": "Supprimer",
-  "action.report_issue": "Signaler un problème",
+  "action.support": "Assistance",
   "action.reset_system": "Réinitialiser le système",
   "action.select_file": "Sélectionner un fichier",
   "app.title": "Lastboard",
