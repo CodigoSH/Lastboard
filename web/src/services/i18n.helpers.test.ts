@@ -233,11 +233,13 @@ describe('formatDuration', () => {
         expect(formatDuration('ru', 2 * 86400)).toBe('2 дня');
         expect(formatDuration('ru', 5 * 86400)).toBe('5 дней');
         expect(formatDuration('ru', 21 * 86400)).toBe('21 день');
-        // Polish says "dób", not the colloquial "dni": CLDR picks *doba*, the
-        // word for a 24-hour period, which is what a duration actually is.
-        // Left asserted rather than "fixed" — hand-maintaining plural tables
-        // for twenty languages is the thing this formatter exists to avoid.
-        expect(formatDuration('pl', 5 * 86400)).toBe('5 dób');
+        // Polish is whatever the runtime's CLDR says, and it changed: ICU 75
+        // (Bun 1.3) said "dób", from *doba*; ICU 78 (Bun 1.4, and Chrome 154,
+        // where this code actually runs) says "dni". Measured on both, 28 Sep
+        // 2026. Asserted rather than hand-corrected either way — maintaining
+        // plural tables for twenty languages is what this formatter avoids —
+        // so a runtime update that moves it again fails here first.
+        expect(formatDuration('pl', 5 * 86400)).toBe('5 dni');
         expect(formatDuration('ru', 60)).toBe('1 минута');
     });
 

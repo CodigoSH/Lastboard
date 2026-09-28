@@ -31,7 +31,7 @@ jobs:
     # what this runs on is a decision in the diff rather than a line in a config
     # file on the server that nothing versions. See the house rule in
     # codigosh/releases.md.
-    container: node:22-bookworm
+    container: node:24-trixie
     steps:
       - name: Ask Coolify to redeploy codigosh-web
         env:
