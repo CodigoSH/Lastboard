@@ -150,7 +150,7 @@ jobs:
         # codebase has several triaged, accepted gosec findings (G124/G202/G204/
         # G304/G402) that are false positives in this self-hosted context.
         run: |
-          go install github.com/securego/gosec/v2/cmd/gosec@v2.25.0
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0
           gosec -no-fail -fmt sarif -out results.sarif ./...
 
       - name: Upload SARIF results
