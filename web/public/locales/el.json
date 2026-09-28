@@ -272,6 +272,7 @@
   "settings.up_to_date": "Είστε ενημερωμένοι",
   "settings.up_to_date_docker_msg": "Είστε πλήνως ενημερωμένοι.",
   "settings.update_available": "Νέα ενημέρωση!",
+  "settings.update_check_failed": "Ο διακομιστής εκδόσεων δεν είναι προσβάσιμος.",
   "settings.users": "Χρήστες",
   "setup.create_admin": "Δημιουργία κατόχου",
   "setup.creating": "Ρύθμιση...",

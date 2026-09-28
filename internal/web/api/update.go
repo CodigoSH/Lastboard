@@ -30,6 +30,12 @@ import (
 
 type UpdateHandler struct {
 	DB *sql.DB
+
+	// latest replaces the call to the forge in tests; nil means the forge.
+	latest func(beta bool) (tag string, notes string, err error)
+	// docker replaces the /.dockerenv check in tests: the CI runs in a
+	// container, where the real check would skip what a test is asking about.
+	docker func() bool
 }
 
 func NewUpdateHandler(db *sql.DB) *UpdateHandler {
@@ -45,12 +51,18 @@ type UpdateResponse struct {
 	IsDocker       bool   `json:"is_docker"`
 	Os             string `json:"os"`
 	Arch           string `json:"arch"`
+	// CheckError is set when the release server could not be asked. Without
+	// it, a failed check answered exactly like "nothing newer" and the panel
+	// said "You're up to date" to somebody whose server could not look.
+	CheckError string `json:"check_error,omitempty"`
 }
 
 func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	// 1. Check if Docker
 	isDocker := false
-	if _, err := os.Stat("/.dockerenv"); err == nil {
+	if h.docker != nil {
+		isDocker = h.docker()
+	} else if _, err := os.Stat("/.dockerenv"); err == nil {
 		isDocker = true
 	}
 
@@ -58,11 +70,17 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// 2. If ?beta= param present, do full Forgejo check server-side (avoids CORS)
 	betaParam := r.URL.Query().Get("beta")
+	checkError := ""
 	if betaParam != "" && !isDocker {
 		beta := betaParam == "true"
-		latest, releaseNotes, err := h.fetchLatestRelease(beta)
+		fetch := h.fetchLatestRelease
+		if h.latest != nil {
+			fetch = h.latest
+		}
+		latest, releaseNotes, err := fetch(beta)
 		if err != nil {
 			slog.Warn("Update check failed", "error", err)
+			checkError = "settings.update_check_failed"
 		} else {
 			isNewer := compareVersions(latest, version.Current)
 			if isNewer {
@@ -93,6 +111,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		IsDocker:       isDocker,
 		Os:             runtime.GOOS,
 		Arch:           runtime.GOARCH,
+		CheckError:     checkError,
 	})
 }
 

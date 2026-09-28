@@ -272,6 +272,7 @@
   "settings.up_to_date": "U bent up-to-date",
   "settings.up_to_date_docker_msg": "Je bent helemaal bijgewerkt.",
   "settings.update_available": "Nieuwe update!",
+  "settings.update_check_failed": "Releaseserver niet bereikbaar.",
   "settings.users": "Gebruikers",
   "setup.create_admin": "Eigenaar maken",
   "setup.creating": "Dingen instellen...",

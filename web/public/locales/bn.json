@@ -272,6 +272,7 @@
   "settings.up_to_date": "আপনি আপ-টু-ডেট",
   "settings.up_to_date_docker_msg": "আপনি সম্পূর্ণ আপ-টু-ডেট।",
   "settings.update_available": "নতুন আপডেট!",
+  "settings.update_check_failed": "রিলিজ সার্ভারে পৌঁছানো যাচ্ছে না।",
   "settings.users": "ব্যবহারকারীরা",
   "setup.create_admin": "মালিক তৈরি করুন",
   "setup.creating": "সেটআপ হচ্ছে...",

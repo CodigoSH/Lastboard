@@ -272,6 +272,7 @@
   "settings.up_to_date": "आप अप-टू-डेट हैं",
   "settings.up_to_date_docker_msg": "आप पूरी तरह से अपडेट हैं।",
   "settings.update_available": "नया अपडेट!",
+  "settings.update_check_failed": "रिलीज़ सर्वर तक नहीं पहुँचा जा सका।",
   "settings.users": "उपयोगकर्ता",
   "setup.create_admin": "स्वामी बनाएं",
   "setup.creating": "सेटअप हो रहा है...",

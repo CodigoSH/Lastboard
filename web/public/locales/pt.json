@@ -272,6 +272,7 @@
   "settings.up_to_date": "Está atualizado",
   "settings.up_to_date_docker_msg": "Você está rigorosamente atualizado.",
   "settings.update_available": "Nova atualização!",
+  "settings.update_check_failed": "Não é possível contactar o servidor de versões.",
   "settings.users": "Utilizadores",
   "setup.create_admin": "Criar proprietário",
   "setup.creating": "A configurar...",

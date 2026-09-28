@@ -272,6 +272,7 @@
   "settings.up_to_date": "Güncelsiniz",
   "settings.up_to_date_docker_msg": "Tamamen güncelsiniz.",
   "settings.update_available": "Yeni güncelleme!",
+  "settings.update_check_failed": "Sürüm sunucusuna ulaşılamıyor.",
   "settings.users": "Kullanıcılar",
   "setup.create_admin": "Sahip Oluştur",
   "setup.creating": "Ayarlanıyor...",

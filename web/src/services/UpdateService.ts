@@ -6,6 +6,8 @@ export interface UpdateInfo {
     release_notes?: string;
     asset_url?: string;
     is_docker: boolean;
+    /** i18n key, set when the release server could not be asked. Never "up to date". */
+    check_error?: string;
 }
 
 /** One progress notification streamed by the backend while it updates. */
@@ -56,14 +58,18 @@ class UpdateService {
                 release_notes: info.release_notes,
                 asset_url: info.asset_url,
                 is_docker: info.is_docker,
+                check_error: info.check_error,
             };
         } catch (error) {
             console.error('[UpdateService] Failed to check for updates', error);
+            // Not "nothing newer": nothing is known. Saying up to date here is
+            // what told people all was well while their server could not look.
             return {
                 available: false,
                 current_version: this.version || 'v0.0.0',
                 latest_version: this.version || 'v0.0.0',
-                is_docker: false
+                is_docker: false,
+                check_error: 'settings.update_check_failed',
             };
         }
     }

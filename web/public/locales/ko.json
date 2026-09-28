@@ -272,6 +272,7 @@
   "settings.up_to_date": "최신 상태입니다",
   "settings.up_to_date_docker_msg": "최신 상태입니다.",
   "settings.update_available": "새 업데이트!",
+  "settings.update_check_failed": "릴리스 서버에 연결할 수 없습니다.",
   "settings.users": "사용자",
   "setup.create_admin": "소유자 생성",
   "setup.creating": "설정 중...",

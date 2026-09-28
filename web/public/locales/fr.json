@@ -272,6 +272,7 @@
   "settings.up_to_date": "Vous êtes à jour",
   "settings.up_to_date_docker_msg": "Vous êtes strictement à jour.",
   "settings.update_available": "Nouvelle mise à jour !",
+  "settings.update_check_failed": "Serveur de versions injoignable.",
   "settings.users": "Utilisateurs",
   "setup.create_admin": "Créer le propriétaire",
   "setup.creating": "Configuration en cours...",

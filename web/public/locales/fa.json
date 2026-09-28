@@ -272,6 +272,7 @@
   "settings.up_to_date": "شما بروز هستید",
   "settings.up_to_date_docker_msg": "شما کاملاً بروز هستید.",
   "settings.update_available": "به‌روزرسانی جدید!",
+  "settings.update_check_failed": "دسترسی به سرور انتشار ممکن نیست.",
   "settings.users": "کاربران",
   "setup.create_admin": "ایجاد مالک",
   "setup.creating": "در حال تنظیم...",

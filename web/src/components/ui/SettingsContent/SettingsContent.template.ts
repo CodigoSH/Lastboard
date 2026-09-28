@@ -751,6 +751,17 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
         `;
     }
 
+    // The check could not be made. Said as a warning, never as "up to date":
+    // that is the one thing a failed check must not say.
+    if (updateInfo.check_error) {
+        return `
+        <div style="color: var(--warning-color); font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 500;">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            <span>${esc(i18n.t(updateInfo.check_error))}</span>
+        </div>
+    `;
+    }
+
     if (updateInfo.available) {
         return `
             <div class="update-modal">

@@ -272,6 +272,7 @@
   "settings.up_to_date": "You're up to date",
   "settings.up_to_date_docker_msg": "Already on the latest version.",
   "settings.update_available": "New update!",
+  "settings.update_check_failed": "Cannot reach the release server.",
   "settings.users": "Users",
   "setup.create_admin": "Create Owner",
   "setup.creating": "Setting things up...",

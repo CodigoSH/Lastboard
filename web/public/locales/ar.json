@@ -272,6 +272,7 @@
   "settings.up_to_date": "أنت محدث",
   "settings.up_to_date_docker_msg": "أنت محدث تمامًا.",
   "settings.update_available": "تحديث جديد!",
+  "settings.update_check_failed": "تعذّر الوصول إلى خادم الإصدارات.",
   "settings.users": "المستخدمون",
   "setup.create_admin": "إنشاء مالك",
   "setup.creating": "إعداد الأشياء...",

@@ -272,6 +272,7 @@
   "settings.up_to_date": "您已是最新",
   "settings.up_to_date_docker_msg": "您已是最新版本。",
   "settings.update_available": "新更新！",
+  "settings.update_check_failed": "无法连接发布服务器。",
   "settings.users": "用户",
   "setup.create_admin": "创建所有者",
   "setup.creating": "正在设置...",

@@ -272,6 +272,7 @@
   "settings.up_to_date": "Anda sudah terkini",
   "settings.up_to_date_docker_msg": "Anda sudah mutakhir.",
   "settings.update_available": "Pembaruan baru!",
+  "settings.update_check_failed": "Server rilis tidak dapat dijangkau.",
   "settings.users": "Pengguna",
   "setup.create_admin": "Buat Pemilik",
   "setup.creating": "Mengatur...",

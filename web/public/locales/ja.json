@@ -272,6 +272,7 @@
   "settings.up_to_date": "最新の状態です",
   "settings.up_to_date_docker_msg": "最新の状態です。",
   "settings.update_available": "新しい更新！",
+  "settings.update_check_failed": "リリースサーバーに接続できません。",
   "settings.users": "ユーザー",
   "setup.create_admin": "所有者を作成",
   "setup.creating": "設定中...",

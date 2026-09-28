@@ -272,6 +272,7 @@
   "settings.up_to_date": "Все обновлено",
   "settings.up_to_date_docker_msg": "Вы полностью обновлены.",
   "settings.update_available": "Новое обновление!",
+  "settings.update_check_failed": "Сервер выпусков недоступен.",
   "settings.users": "Пользователи",
   "setup.create_admin": "Создать владельца",
   "setup.creating": "Настройка...",
