@@ -6,6 +6,11 @@
     --canvas: #eef0f4;
     --panel: #ffffff;
     --surface: rgba(255, 255, 255, 0.72);
+    /* The shadow under a card that floats on another. Long and strong on
+       light; short and soft on dark, where a long dark shadow over a dark
+       ground has only a dozen grey levels to fade through and draws them as
+       rings. */
+    --float-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     --surface-solid: #ffffff;
     --surface-hover: rgba(var(--accent-rgb), 0.06);
     --surface-active: rgba(var(--accent-rgb), 0.12);
@@ -118,6 +123,7 @@
     --canvas: #121212;
     --panel: #1a1a1a;
     --surface: rgba(28, 22, 20, 0.70);
+    --float-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     --surface-solid: #242424;
     --surface-hover: rgba(var(--accent-rgb), 0.1);
     --surface-active: rgba(var(--accent-rgb), 0.2);
