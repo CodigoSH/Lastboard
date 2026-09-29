@@ -33,7 +33,6 @@ SERVICE_FILE="/etc/systemd/system/lastboard.service"
 
 # ============================================================ uninstall
 #
-# Ported from LastHelp's installer, which is the finished one in the house.
 # There was no way to remove Lastboard cleanly before this: the unit, the
 # binary, the symlink and the service account had to be found and deleted by
 # hand, which is how a half-removed install happens.
