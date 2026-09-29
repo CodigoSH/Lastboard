@@ -26,7 +26,7 @@ export interface ApiPreset {
     urlPlaceholder: string;
     /**
      * Some services need one more piece to address the thing being read — a
-     * Proxmox node, a Home Assistant entity, an Uptime Kuma status page. Set
+     * Home Assistant entity, an Uptime Kuma status page. Set
      * the label to ask for it; the value arrives as build()'s third argument.
      */
     extraLabelKey?: string;
