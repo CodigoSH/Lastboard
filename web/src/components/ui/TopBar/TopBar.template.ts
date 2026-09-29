@@ -34,8 +34,10 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="${safeImageSrc(projectLogo || '/images/logo.png')}" class="top-bar__logo" alt="" aria-hidden="true">
-            <div class="top-bar__title">${escapeHtml(title)}</div>
+            <a class="top-bar__brand" href="/">
+                <img src="${safeImageSrc(projectLogo || '/images/logo.png')}" class="top-bar__logo" alt="" aria-hidden="true">
+                <div class="top-bar__title">${escapeHtml(title)}</div>
+            </a>
             ${isDemo ? `<div class="top-bar__demo-badge">${i18n.t('general.demo_mode')}</div>` : ''}
         </div>
         <div class="top-bar__actions">

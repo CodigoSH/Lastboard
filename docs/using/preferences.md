@@ -30,7 +30,7 @@ Everything that changes how the dashboard looks.
 
 ![Personalization](../assets/p-personalization.png)
 
-- **Logo & Panel Name** — customize the title and logo shown in the browser tab and top bar.
+- **Logo & Panel Name** — customize the title and logo shown in the browser tab and top bar. In the top bar they are a link home: clicking them leaves whatever is open — a full-screen page, the settings — and loads the start page.
 - **Language** — choose from **20 supported languages**.
 - **Measurement Units** — **Metric** (°C, km/h) or **Imperial** (°F, mph). Applies to all compatible widgets (Weather, Telemetry, …).
 - **Grid Layout** — the **Columns** slider sets how many columns the desktop grid uses, from **3 to 16** (default **12**). Fewer, wider columns give larger tiles; more columns let you place things precisely. It does not affect the mobile layout, which has an order of its own — see [Bookmarks](../getting-started/bookmarks.md#mobile-visibility-and-ordering).

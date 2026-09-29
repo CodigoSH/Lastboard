@@ -21,6 +21,23 @@
     box-sizing: border-box;
 }
 
+/* The logo and the name are a link to /, the way a site's mark is on every
+   site: it leaves wherever you are - a full-screen page, the settings - and
+   lands on the board a fresh load opens. A real anchor rather than a click
+   handler, so it also opens in a new tab and reads as a link to a screen reader. */
+.top-bar__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 6px;
+}
+.top-bar__brand:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
 .top-bar__logo {
     width: 24px;
     height: 24px;
