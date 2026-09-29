@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Madde işaretli liste",
   "widget.notepad.tool.center": "Ortala",
   "widget.notepad.tool.check": "Görev listesi",
+  "widget.notepad.tool.hide_toolbar": "Araç çubuğunu gizle",
+  "widget.notepad.tool.show_toolbar": "Araç çubuğunu göster",
   "widget.notepad.tool.clear": "Biçimi temizle",
   "widget.notepad.tool.code": "Kod",
   "widget.notepad.tool.color": "Metin rengi",

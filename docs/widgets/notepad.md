@@ -29,7 +29,7 @@ If you try to leave the page with unsaved changes, the browser asks you to confi
 
 From left to right, in groups: undo and redo; heading 1, 2 and 3; bold, italic, underline, strikethrough and text color; align left, center, right and justify; insert link and insert image; bullet list, numbered list and checklist; quote, code block and clear formatting.
 
-The chevron at the right end collapses the whole toolbar into a small button in the corner, which is worth doing on a small notepad — the editor takes the space back. That choice is remembered per widget, in the browser you made it in.
+The chevron in the widget's bottom corner collapses the whole toolbar, which is worth doing on a small notepad — the editor takes the space back. It stays in that same corner whether the toolbar is open or collapsed, so the control that brings the tools back is exactly where the one that hid them was. That choice is remembered per widget, in the browser you made it in.
 
 ## Writing
 

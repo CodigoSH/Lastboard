@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "نقطہ فہرست",
   "widget.notepad.tool.center": "درمیان میں لائیں",
   "widget.notepad.tool.check": "کام کی فہرست",
+  "widget.notepad.tool.hide_toolbar": "ٹول بار چھپائیں",
+  "widget.notepad.tool.show_toolbar": "ٹول بار دکھائیں",
   "widget.notepad.tool.clear": "فارمیٹ صاف کریں",
   "widget.notepad.tool.code": "کوڈ",
   "widget.notepad.tool.color": "متن کا رنگ",

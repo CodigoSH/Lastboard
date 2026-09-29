@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "项目符号列表",
   "widget.notepad.tool.center": "居中",
   "widget.notepad.tool.check": "任务列表",
+  "widget.notepad.tool.hide_toolbar": "隐藏工具栏",
+  "widget.notepad.tool.show_toolbar": "显示工具栏",
   "widget.notepad.tool.clear": "清除格式",
   "widget.notepad.tool.code": "代码",
   "widget.notepad.tool.color": "文字颜色",

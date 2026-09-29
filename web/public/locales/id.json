@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Daftar berpoin",
   "widget.notepad.tool.center": "Rata tengah",
   "widget.notepad.tool.check": "Daftar tugas",
+  "widget.notepad.tool.hide_toolbar": "Sembunyikan bilah alat",
+  "widget.notepad.tool.show_toolbar": "Tampilkan bilah alat",
   "widget.notepad.tool.clear": "Hapus format",
   "widget.notepad.tool.code": "Kode",
   "widget.notepad.tool.color": "Warna teks",

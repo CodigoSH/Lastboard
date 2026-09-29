@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "قائمة نقطية",
   "widget.notepad.tool.center": "توسيط",
   "widget.notepad.tool.check": "قائمة مهام",
+  "widget.notepad.tool.hide_toolbar": "إخفاء شريط الأدوات",
+  "widget.notepad.tool.show_toolbar": "إظهار شريط الأدوات",
   "widget.notepad.tool.clear": "مسح التنسيق",
   "widget.notepad.tool.code": "كود",
   "widget.notepad.tool.color": "لون النص",

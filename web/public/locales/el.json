@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Λίστα με κουκκίδες",
   "widget.notepad.tool.center": "Στοίχιση κέντρο",
   "widget.notepad.tool.check": "Λίστα εργασιών",
+  "widget.notepad.tool.hide_toolbar": "Απόκρυψη γραμμής εργαλείων",
+  "widget.notepad.tool.show_toolbar": "Εμφάνιση γραμμής εργαλείων",
   "widget.notepad.tool.clear": "Εκκαθάριση μορφοποίησης",
   "widget.notepad.tool.code": "Κώδικας",
   "widget.notepad.tool.color": "Χρώμα κειμένου",

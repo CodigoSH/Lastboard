@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "बुलेट सूची",
   "widget.notepad.tool.center": "केंद्र में लाएं",
   "widget.notepad.tool.check": "कार्य सूची",
+  "widget.notepad.tool.hide_toolbar": "टूलबार छिपाएँ",
+  "widget.notepad.tool.show_toolbar": "टूलबार दिखाएँ",
   "widget.notepad.tool.clear": "प्रारूप साफ़ करें",
   "widget.notepad.tool.code": "कोड",
   "widget.notepad.tool.color": "पाठ का रंग",

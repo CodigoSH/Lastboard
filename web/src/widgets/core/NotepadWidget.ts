@@ -174,8 +174,48 @@ const CSS = `
     font-size: 0.9em;
 }
 
-.checkbox-char { cursor: pointer; font-family: 'Inter', sans-serif; margin-right: 6px; user-select: none; display: inline-block; vertical-align: middle; font-size: 1.1em; }
-.checkbox-char.checked { color: var(--lb-accent); }
+/* The box is drawn, not typed. It used to be the ☐ character at 1.1em, and
+   that glyph comes from whichever fallback font the system has: measured on
+   Linux, its ink was 9px beside text whose capitals are 11 - the size of a
+   lowercase x. Scaling the glyph up would give a different box on every OS.
+   So the character stays (the click handler reads ☐/☑ from it, and it is what
+   gets saved) but is transparent, and the box around it is CSS: one em square,
+   so it follows the text size, with the tick drawn when .checked is set. */
+.checkbox-char {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    box-sizing: border-box;
+    width: 1em;
+    height: 1em;
+    margin-inline-end: 0.45em;
+    margin-top: -0.15em;
+    border: 1.5px solid var(--lb-text-dim);
+    border-radius: 4px;
+    color: transparent;
+    font-size: inherit;
+    line-height: 1;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s, border-color 0.12s;
+}
+.checkbox-char:hover { border-color: var(--lb-accent); }
+.checkbox-char.checked {
+    background: var(--lb-accent);
+    border-color: var(--lb-accent);
+}
+.checkbox-char.checked::after {
+    content: '';
+    position: absolute;
+    left: 34%;
+    top: 12%;
+    width: 28%;
+    height: 55%;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
 
 /* ── Toolbar (docked to the widget's bottom edge, inside the card) ──── */
 .glass-dock {
@@ -188,6 +228,7 @@ const CSS = `
     gap: 2px;
 
     padding: 4px 6px;
+    padding-inline-end: 34px; /* the toggle's corner: 6 + 22 + 6 */
     background: rgba(0, 0, 0, 0.18);
     border-top: 1px solid var(--lb-border, rgba(255, 255, 255, 0.08));
 
@@ -200,31 +241,37 @@ const CSS = `
     display: none;
 }
 
-/* Minimized: collapse to a small floating toggle so the editor reclaims the
-   full height (useful on a small notepad). */
+/* Minimized: the tools go and the dock takes no height, so the editor
+   reclaims all of it. Only the toggle stays, in the same corner it had. */
 .glass-dock.minimized {
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
     padding: 0;
-    background: rgba(20, 20, 20, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    z-index: 100;
+    border: none;
+    background: none;
+    min-height: 0;
 }
 .glass-dock.minimized .dock-group {
     display: none;
 }
 .glass-dock.minimized .dock-minimize-btn {
     opacity: 1;
-    margin-left: 0;
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ── Dock minimize button ─────────────────────────────────────── */
+/* Anchored to the widget's corner in BOTH states. It used to be the last
+   item of the wrapping toolbar, so it landed wherever the last row of tools
+   happened to end, then jumped to the corner once minimized - the control to
+   bring the tools back was never where the one to hide them had been. The
+   :host is the positioned box, so the corner is the widget's, not the
+   dock's, and the dock keeps room at its end so no tool slides under it. */
 .dock-minimize-btn {
+    position: absolute;
+    inset-inline-end: 6px;
+    bottom: 4px;
+    z-index: 100;
     background: transparent;
     border: none;
     color: var(--lb-text-dim);
@@ -235,7 +282,6 @@ const CSS = `
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 4px;
     flex-shrink: 0;
     opacity: 0.5;
     transition: all 0.1s;
@@ -482,7 +528,7 @@ export class NotepadWidget extends HTMLElement {
                     <button class="dock-btn" data-fmt="removeFormat" title="${i18n.t('widget.notepad.tool.clear')}">${ICONS.eraser_clean}</button>
                 </div>
 
-                <button class="dock-minimize-btn" id="dock-minimize-btn" title="Minimizar barra de herramientas">${ICONS.dockMinimize}</button>
+                <button class="dock-minimize-btn" id="dock-minimize-btn" title="${i18n.t(this._isDockMinimized ? 'widget.notepad.tool.show_toolbar' : 'widget.notepad.tool.hide_toolbar')}">${this._isDockMinimized ? ICONS.dockMaximize : ICONS.dockMinimize}</button>
             </div>
 
             <div class="glass-modal" id="glass-modal">
@@ -686,11 +732,17 @@ export class NotepadWidget extends HTMLElement {
         } else if (this._isDockMinimized) {
             this._dock.classList.remove('hidden');
             this._dock.classList.add('minimized');
-            if (this._minimizeBtn) this._minimizeBtn.innerHTML = ICONS.dockMaximize;
+            if (this._minimizeBtn) {
+                this._minimizeBtn.innerHTML = ICONS.dockMaximize;
+                this._minimizeBtn.title = i18n.t('widget.notepad.tool.show_toolbar');
+            }
         } else {
             this._dock.classList.remove('hidden');
             this._dock.classList.remove('minimized');
-            if (this._minimizeBtn) this._minimizeBtn.innerHTML = ICONS.dockMinimize;
+            if (this._minimizeBtn) {
+                this._minimizeBtn.innerHTML = ICONS.dockMinimize;
+                this._minimizeBtn.title = i18n.t('widget.notepad.tool.hide_toolbar');
+            }
         }
     }
 

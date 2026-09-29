@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Lista com marcadores",
   "widget.notepad.tool.center": "Centralizar",
   "widget.notepad.tool.check": "Lista de tarefas",
+  "widget.notepad.tool.hide_toolbar": "Ocultar barra de ferramentas",
+  "widget.notepad.tool.show_toolbar": "Mostrar barra de ferramentas",
   "widget.notepad.tool.clear": "Limpar formato",
   "widget.notepad.tool.code": "Código",
   "widget.notepad.tool.color": "Cor do texto",

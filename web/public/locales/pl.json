@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Lista punktowana",
   "widget.notepad.tool.center": "Wyśrodkuj",
   "widget.notepad.tool.check": "Lista zadań",
+  "widget.notepad.tool.hide_toolbar": "Ukryj pasek narzędzi",
+  "widget.notepad.tool.show_toolbar": "Pokaż pasek narzędzi",
   "widget.notepad.tool.clear": "Wyczyść format",
   "widget.notepad.tool.code": "Kod",
   "widget.notepad.tool.color": "Kolor tekstu",

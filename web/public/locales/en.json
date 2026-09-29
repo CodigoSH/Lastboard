@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Bullet List",
   "widget.notepad.tool.center": "Center",
   "widget.notepad.tool.check": "Checklist",
+  "widget.notepad.tool.hide_toolbar": "Hide toolbar",
+  "widget.notepad.tool.show_toolbar": "Show toolbar",
   "widget.notepad.tool.clear": "Clear Format",
   "widget.notepad.tool.code": "Code",
   "widget.notepad.tool.color": "Text Color",

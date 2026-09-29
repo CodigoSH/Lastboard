@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Elenco puntato",
   "widget.notepad.tool.center": "Centra",
   "widget.notepad.tool.check": "Lista attività",
+  "widget.notepad.tool.hide_toolbar": "Nascondi la barra degli strumenti",
+  "widget.notepad.tool.show_toolbar": "Mostra la barra degli strumenti",
   "widget.notepad.tool.clear": "Cancella formato",
   "widget.notepad.tool.code": "Codice",
   "widget.notepad.tool.color": "Colore testo",

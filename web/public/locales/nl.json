@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Opsommingslijst",
   "widget.notepad.tool.center": "Centreren",
   "widget.notepad.tool.check": "Takenlijst",
+  "widget.notepad.tool.hide_toolbar": "Werkbalk verbergen",
+  "widget.notepad.tool.show_toolbar": "Werkbalk tonen",
   "widget.notepad.tool.clear": "Opmaak wissen",
   "widget.notepad.tool.code": "Code",
   "widget.notepad.tool.color": "Tekstkleur",

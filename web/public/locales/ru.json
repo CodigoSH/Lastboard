@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "Маркированный список",
   "widget.notepad.tool.center": "По центру",
   "widget.notepad.tool.check": "Список задач",
+  "widget.notepad.tool.hide_toolbar": "Скрыть панель инструментов",
+  "widget.notepad.tool.show_toolbar": "Показать панель инструментов",
   "widget.notepad.tool.clear": "Очистить формат",
   "widget.notepad.tool.code": "Код",
   "widget.notepad.tool.color": "Цвет текста",

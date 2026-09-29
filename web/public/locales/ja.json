@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "箇条書きリスト",
   "widget.notepad.tool.center": "中央揃え",
   "widget.notepad.tool.check": "タスクリスト",
+  "widget.notepad.tool.hide_toolbar": "ツールバーを隠す",
+  "widget.notepad.tool.show_toolbar": "ツールバーを表示",
   "widget.notepad.tool.clear": "書式をクリア",
   "widget.notepad.tool.code": "コード",
   "widget.notepad.tool.color": "テキストの色",

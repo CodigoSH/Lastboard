@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "لیست نشانه‌دار",
   "widget.notepad.tool.center": "وسط‌چین",
   "widget.notepad.tool.check": "لیست کارها",
+  "widget.notepad.tool.hide_toolbar": "پنهان کردن نوار ابزار",
+  "widget.notepad.tool.show_toolbar": "نمایش نوار ابزار",
   "widget.notepad.tool.clear": "پاک کردن قالب",
   "widget.notepad.tool.code": "کد",
   "widget.notepad.tool.color": "رنگ متن",

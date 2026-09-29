@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "글머리 기호 목록",
   "widget.notepad.tool.center": "가운데 정렬",
   "widget.notepad.tool.check": "작업 목록",
+  "widget.notepad.tool.hide_toolbar": "도구 모음 숨기기",
+  "widget.notepad.tool.show_toolbar": "도구 모음 표시",
   "widget.notepad.tool.clear": "서식 지우기",
   "widget.notepad.tool.code": "코드",
   "widget.notepad.tool.color": "텍스트 색상",

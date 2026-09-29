@@ -335,6 +335,8 @@
   "widget.notepad.tool.bullet": "বুলেট তালিকা",
   "widget.notepad.tool.center": "কেন্দ্র সারিবদ্ধ করুন",
   "widget.notepad.tool.check": "কাজের তালিকা",
+  "widget.notepad.tool.hide_toolbar": "টুলবার লুকান",
+  "widget.notepad.tool.show_toolbar": "টুলবার দেখান",
   "widget.notepad.tool.clear": "বিন্যাস পরিষ্কার করুন",
   "widget.notepad.tool.code": "কোড",
   "widget.notepad.tool.color": "পাঠ্য রঙ",
