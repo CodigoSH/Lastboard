@@ -74,6 +74,10 @@ fi
 
 # Configuration
 VERSION_FILE="package.json"
+# The other products of the house. Their names never reach what a release
+# publishes — its title, its notes, the changelog: what a project takes from
+# another becomes its own, and is described by what it does.
+OTHER_PRODUCTS=(LastHelp LastGYM LastDAV)
 GO_VERSION_FILE="internal/version/version.go"
 SETTINGS_FILE="web/src/components/ui/SettingsContent/SettingsContent.ts"
 UPDATE_SERVICE_FILE="web/src/services/UpdateService.ts"
@@ -404,6 +408,41 @@ REFACTORS=$(subjects | grep -iE "^(refactor|perf)" | clean_subjects || echo "")
 REMOVALS=$(subjects | grep -iE "^remove" | clean_subjects || echo "")
 OTHER=$(subjects | grep -viE "^(feat|fix|refactor|perf|remove)" | clean_subjects || echo "")
 
+# A hand-written file always wins: the generated one is a list of commit
+# subjects, which is not what a reader wants. It wins for the changelog of a
+# stable too — otherwise a subject the notes were written to leave out would
+# still land in CHANGELOG.md.
+NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
+HAND_WRITTEN=""
+[ -f "$NOTES_FILE" ] && HAND_WRITTEN=$(cat "$NOTES_FILE")
+
+# --- What is published names no other product ------------------------------
+#
+# Checked before the changelog, the notes, the tag or the push, and in a dry
+# run as well: the title, and the notes as written or as generated, which on a
+# stable are also the changelog entry. The notes come from commit subjects, so
+# one subject saying where something came from is a line on the release page.
+# A subject cannot be changed once pushed; the way out is to write the notes by
+# hand.
+if [ -n "$HAND_WRITTEN" ]; then
+    PUBLISHED=$(printf '%s\n' "$TITLE" "$HAND_WRITTEN")
+else
+    PUBLISHED=$(printf '%s\n' "$TITLE" "$FEATS" "$FIXES" "$REFACTORS" "$REMOVALS" "$OTHER")
+fi
+NAMED=$(IFS='|'; printf '%s\n' "$PUBLISHED" | grep -inwE "${OTHER_PRODUCTS[*]}" || true)
+if [ -n "$NAMED" ]; then
+    # Only the version bump has been done, and it is local: undone, so the tree
+    # is as it was and the run can simply be repeated.
+    [ "$DRY_RUN" = "1" ] || git reset -q --hard HEAD~1
+    die "what this release would publish names another product of the house:
+
+$(printf '%s\n' "$NAMED" | sed 's/^[0-9]*:/    /')
+
+    What a project took from another is its own now, and the notes say what it
+    does. Write $NOTES_FILE by hand without it and run this again — a
+    hand-written file always wins, for the notes and for the changelog."
+fi
+
 # Update CHANGELOG.md
 if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     echo "📝 Updating CHANGELOG.md..."
@@ -420,10 +459,17 @@ if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     ENTRY_FILE=$(mktemp)
     {
         printf '## [%s] - %s\n\n' "$VERSION_DISPLAY" "$DATE"
-        [ -n "$FEATS" ]      && printf '### Added\n%s\n\n' "$FEATS"
-        [ -n "$FIXES" ]      && printf '### Fixed\n%s\n\n' "$FIXES"
-        [ -n "$CL_CHANGED" ] && printf '### Changed\n%s\n\n' "$CL_CHANGED"
-        [ -n "$REMOVALS" ]   && printf '### Removed\n%s\n\n' "$REMOVALS"
+        if [ -n "$HAND_WRITTEN" ]; then
+            # The hand-written notes, without the bold title line that heads
+            # the release page.
+            printf '%s\n' "$HAND_WRITTEN" | sed '1{/^\*\*.*\*\*$/d}' | sed '/./,$!d'
+            printf '\n'
+        else
+            [ -n "$FEATS" ]      && printf '### Added\n%s\n\n' "$FEATS"
+            [ -n "$FIXES" ]      && printf '### Fixed\n%s\n\n' "$FIXES"
+            [ -n "$CL_CHANGED" ] && printf '### Changed\n%s\n\n' "$CL_CHANGED"
+            [ -n "$REMOVALS" ]   && printf '### Removed\n%s\n\n' "$REMOVALS"
+        fi
         true
     } > "$ENTRY_FILE"
 
@@ -440,9 +486,7 @@ if [ "$TYPE" == "stable" ] && [ -f "CHANGELOG.md" ]; then
     rm -f "$ENTRY_FILE"
 fi
 
-# Release body for Forgejo. A hand-written file always wins: the generated one
-# is a list of commit subjects, which is not what a reader wants.
-NOTES_FILE="RELEASE_NOTES_$NEW_TAG.md"
+# Release body for Forgejo. A hand-written file always wins (see above).
 if [ -f "$NOTES_FILE" ]; then
     echo "📄 Using existing release notes: $NOTES_FILE"
 else
