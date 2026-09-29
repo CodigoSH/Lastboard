@@ -472,9 +472,6 @@ class ProxmoxPage extends HTMLElement {
 
     private tile(g: PxGuest) {
         const book = this.backing(g);
-        // A machine that is off on purpose, with nothing behind it, has no
-        // reason to shout. One that takes a bookmark down with it does.
-        const flag = !g.running && !!book;
         const mem = g.mem_total > 0 ? Math.round((g.mem / g.mem_total) * 100) : 0;
 
         const face = this.iconOf(g);
@@ -484,12 +481,13 @@ class ProxmoxPage extends HTMLElement {
 
         // Two states, two colours, the same two the header counts: on or off.
         // The third thing worth knowing — that a bookmark of yours went down
-        // with this machine — is no longer a third colour in a 9px dot: it is
-        // the accent edge and the accent wash over the whole tile.
+        // with this machine — is not a colour at all: every stopped tile is the
+        // same soft red, and the bookmark mark in the corner says which ones
+        // carry a service.
         const dot = g.running ? 'up' : 'bad';
         const line = this.series.get(`${this.range}|${g.vmid}`) ?? [];
 
-        return `<button class="card tile${g.running ? '' : ' tile--off'}${flag ? ' tile--flag' : ''}" data-guest="${g.vmid}">
+        return `<button class="card tile${g.running ? '' : ' tile--off'}" data-guest="${g.vmid}">
             <span class="tile__st tile__st--${dot}"></span>
             <span class="tile__t1">${icon}<span class="tile__name">${escapeHtml(g.name) || '—'}</span></span>
             <span class="tile__t2">

@@ -139,8 +139,10 @@ The dot in the corner says one thing, the two colours the header counts: **green
 | | |
 | :--- | :--- |
 | Running | full colour |
-| Stopped | dimmed, as if switched off, with a grey edge — turning things off is a normal thing to do |
-| Stopped **and** serving a bookmark | the same switched-off layer and the same emphasised edge, both in your accent colour: that is an outage, and it is the only thing on the grid wearing the accent |
+| Stopped | dimmed, with a soft red edge and a faint red wash over the whole tile, so it is found from across the grid |
+| Stopped **and** serving a bookmark | exactly the same, plus the bookmark mark in its corner: that one is an outage, and the mark — not a second colour — is what says so |
+
+The red is the danger colour, never your accent. An accent belongs to you and may be orange or blue, and "stopped" has to mean the same on every board. It is deliberately soft: a few machines off is not an emergency.
 
 Tiles keep their place whatever happens to them — by kind, then by VMID. A machine you know where to find stays there, and a stopped one is picked out by how it looks rather than by the grid rearranging itself under your pointer. (The widget is the other way round: it has room for a handful of rows, so what needs attention is lifted into them.)
 
