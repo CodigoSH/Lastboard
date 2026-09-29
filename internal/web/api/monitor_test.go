@@ -581,3 +581,105 @@ func TestBucketBeatsHandlesEmptyWindows(t *testing.T) {
 		}
 	}
 }
+
+// incidentsOver reads the incidents the way GetHistory does for one range.
+func incidentsOver(t *testing.T, h *MonitorHandler, itemID int, since, now time.Time) []incident {
+	t.Helper()
+	checks, err := h.store.History(itemID, since)
+	if err != nil {
+		t.Fatalf("history: %v", err)
+	}
+	_, inc := h.incidentsFor(itemID, checks, now)
+	return inc
+}
+
+// An outage has one start and one length, whichever range it is looked at
+// through. Before this, the list only knew the checks inside the window, so an
+// outage that began two days ago read as starting 24 hours ago under "24h" and
+// as starting two days ago under "7d" - same outage, two dates, two durations.
+func TestIncidentKeepsItsStartAcrossRanges(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := &MonitorStore{DB: db}
+	h := &MonitorHandler{DB: db, store: store}
+	now := time.Now().UTC().Truncate(time.Second)
+
+	// Ongoing: up until 50 hours ago, down ever since.
+	going := seedItem(t, store)
+	for m := 60 * 60; m > 50*60; m -= 30 {
+		record(t, store, going, now.Add(-time.Duration(m)*time.Minute), true, nil)
+	}
+	began := now.Add(-50 * time.Hour)
+	for m := 50 * 60; m >= 0; m -= 30 {
+		record(t, store, going, now.Add(-time.Duration(m)*time.Minute), false, nil)
+	}
+
+	day := incidentsOver(t, h, going, now.Add(-24*time.Hour), now)
+	week := incidentsOver(t, h, going, now.Add(-7*24*time.Hour), now)
+	if len(day) != 1 || len(week) != 1 {
+		t.Fatalf("want one incident in each range, got %d and %d", len(day), len(week))
+	}
+	if !day[0].Start.Equal(began) || !week[0].Start.Equal(began) {
+		t.Errorf("start: 24h says %v, 7d says %v, the outage began %v", day[0].Start, week[0].Start, began)
+	}
+	if day[0].DurationSec != week[0].DurationSec || day[0].DurationSec != 50*3600 {
+		t.Errorf("duration: 24h says %ds, 7d says %ds, want %ds", day[0].DurationSec, week[0].DurationSec, 50*3600)
+	}
+	if day[0].End != nil {
+		t.Errorf("an outage still going on has no end, got %v", day[0].End)
+	}
+
+	// Closed: down from 30 hours ago to 20 hours ago. Under 24h the window
+	// catches only its last four hours; the start and length must still be its own.
+	closed := seedItem2(t, store)
+	record(t, store, closed, now.Add(-31*time.Hour), true, nil)
+	for m := 30 * 60; m > 20*60; m -= 30 {
+		record(t, store, closed, now.Add(-time.Duration(m)*time.Minute), false, nil)
+	}
+	record(t, store, closed, now.Add(-20*time.Hour), true, nil)
+
+	got := incidentsOver(t, h, closed, now.Add(-24*time.Hour), now)
+	if len(got) != 1 {
+		t.Fatalf("want one closed incident, got %d", len(got))
+	}
+	if want := now.Add(-30 * time.Hour); !got[0].Start.Equal(want) {
+		t.Errorf("closed start = %v, want %v", got[0].Start, want)
+	}
+	if got[0].DurationSec != 10*3600 {
+		t.Errorf("closed duration = %ds, want %ds", got[0].DurationSec, 10*3600)
+	}
+}
+
+// When the window opens on a successful check, nothing crosses its edge and
+// the incident is left exactly as the window found it.
+func TestIncidentInsideTheWindowIsUntouched(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	store := &MonitorStore{DB: db}
+	h := &MonitorHandler{DB: db, store: store}
+	now := time.Now().UTC().Truncate(time.Second)
+
+	item := seedItem(t, store)
+	record(t, store, item, now.Add(-40*time.Hour), false, nil) // an older, separate outage
+	record(t, store, item, now.Add(-23*time.Hour), true, nil)
+	record(t, store, item, now.Add(-10*time.Hour), false, nil)
+	record(t, store, item, now.Add(-9*time.Hour), true, nil)
+
+	got := incidentsOver(t, h, item, now.Add(-24*time.Hour), now)
+	if len(got) != 1 {
+		t.Fatalf("want one incident, got %d", len(got))
+	}
+	if want := now.Add(-10 * time.Hour); !got[0].Start.Equal(want) || got[0].DurationSec != 3600 {
+		t.Errorf("got start %v and %ds, want %v and 3600s", got[0].Start, got[0].DurationSec, want)
+	}
+}
+
+// seedItem2 adds a second bookmark to the user seedItem created.
+func seedItem2(t *testing.T, store *MonitorStore) int {
+	t.Helper()
+	var uid int
+	if err := store.DB.QueryRow(`SELECT id FROM users LIMIT 1`).Scan(&uid); err != nil {
+		t.Fatalf("user: %v", err)
+	}
+	return seedItemFor(t, store, uid)
+}

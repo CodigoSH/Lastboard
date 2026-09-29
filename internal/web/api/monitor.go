@@ -261,8 +261,9 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
-// incident is a contiguous down period within the queried window. End is nil
-// while the outage is still ongoing at the end of the window.
+// incident is a contiguous down period that shows in the queried window. Its
+// start is the outage's own, even when that is before the window began (see
+// incidentsFor). End is nil while the outage is still going on.
 type incident struct {
 	Start       time.Time  `json:"start"`
 	End         *time.Time `json:"end"`
@@ -399,6 +400,31 @@ func summarizeHistory(checks []MonitorCheck, now time.Time) (uptimePct float64, 
 	return float64(up) / float64(len(checks)) * 100, incidents
 }
 
+// widenStart moves an incident's start earlier and recomputes its length from
+// that start to its end, or to now while it is still going on.
+func widenStart(inc incident, start, now time.Time) incident {
+	end := now
+	if inc.End != nil {
+		end = *inc.End
+	}
+	inc.Start = start
+	inc.DurationSec = int(end.Sub(start).Seconds())
+	return inc
+}
+
+// incidentsFor summarises a window of checks, then gives the first outage its
+// real start when it began before the window did. Only the first can be cut:
+// every later one starts inside the window by construction.
+func (h *MonitorHandler) incidentsFor(itemID int, checks []MonitorCheck, now time.Time) (float64, []incident) {
+	uptime, incidents := summarizeHistory(checks, now)
+	if len(incidents) > 0 && len(checks) > 0 && !checks[0].Up {
+		if start, ok, err := h.store.OutageStart(itemID, checks[0].CheckedAt); err == nil && ok {
+			incidents[0] = widenStart(incidents[0], start, now)
+		}
+	}
+	return uptime, incidents
+}
+
 // GetHistory returns the availability history for one owned bookmark over the
 // requested range: the raw checks (for heartbeat + latency chart), uptime %,
 // the current status, and the list of outages.
@@ -423,7 +449,7 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uptime, incidents := summarizeHistory(checks, now)
+	uptime, incidents := h.incidentsFor(itemID, checks, now)
 	// Return empty arrays (not null) so the JSON contract stays consistent.
 	if checks == nil {
 		checks = []MonitorCheck{}
@@ -844,6 +870,40 @@ func (s *MonitorStore) History(itemID int, since time.Time) ([]MonitorCheck, err
 	}
 	defer rows.Close()
 	return scanChecks(rows)
+}
+
+// OutageStart finds where an outage that is already under way at `before`
+// really began: the earliest failed check after the last successful one before
+// it. ok is false when the check just before `before` succeeded, i.e. nothing
+// carries over that edge.
+//
+// It exists because an incident list built from one window alone cuts every
+// outage at the window's start. The same outage read as starting at a different
+// time and lasting a different length depending on whether 24 hours, 7 days or
+// 30 days were asked for - which is a statement about the question, not about
+// the outage. It can still only reach back as far as the retention keeps.
+func (s *MonitorStore) OutageStart(itemID int, before time.Time) (time.Time, bool, error) {
+	b := before.UTC().Format("2006-01-02 15:04:05")
+	rows, err := s.DB.Query(
+		`SELECT item_id, checked_at, up, latency_ms, status_code
+		 FROM monitor_checks
+		 WHERE item_id = ? AND up = 0 AND checked_at < ?
+		   AND checked_at > COALESCE(
+		       (SELECT MAX(checked_at) FROM monitor_checks
+		         WHERE item_id = ? AND up = 1 AND checked_at < ?), '')
+		 ORDER BY checked_at ASC, id ASC
+		 LIMIT 1`,
+		itemID, b, itemID, b,
+	)
+	if err != nil {
+		return time.Time{}, false, err
+	}
+	defer rows.Close()
+	found, err := scanChecks(rows)
+	if err != nil || len(found) == 0 {
+		return time.Time{}, false, err
+	}
+	return found[0].CheckedAt, true, nil
 }
 
 // scanChecks reads MonitorCheck rows, decoding the nullable latency and the

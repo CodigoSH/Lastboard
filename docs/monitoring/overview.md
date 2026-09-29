@@ -51,7 +51,7 @@ Selecting a service (right-hand panel above) shows its history for a chosen time
 | **Response** | Response time, both **current** and the **24-hour average**. |
 | **Latency chart** | Response time plotted across the range, with a hover crosshair. |
 | **Recent checks** | A heartbeat strip of the most recent probes (green = up, red = down). Hover a bar for its timestamp and status. |
-| **Outages** | A table of down periods: status, date & time, duration, and whether the service recovered. Durations are written in words and in two units, so nothing needs dividing: *1 day and 1 hour*, *9 days and 15 hours*, *45 seconds* — in your own language, with that language's plural rules. A clean figure stays clean: *2 days*, never *2 days and 0 hours*. |
+| **Outages** | A table of down periods: status, date & time, duration, and whether the service recovered. **An outage keeps its own start and length whatever range you pick**: one that began before the range still shows when it really began and how long it really lasted, not the moment the range happens to cut it — as far back as the 30 days of history kept. Durations are written in words and in two units, so nothing needs dividing: *1 day and 1 hour*, *9 days and 15 hours*, *45 seconds* — in your own language, with that language's plural rules. A clean figure stays clean: *2 days*, never *2 days and 0 hours*. |
 
 Use **Refresh** to re-poll immediately; the view also refreshes itself while open.
 
