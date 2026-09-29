@@ -927,8 +927,8 @@ button {
 .update-modal {
     position: relative;
     overflow: hidden;
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--feature-card-bg);
+    border: 1px solid var(--feature-card-border);
     border-radius: 24px;
     width: 100%;
     box-shadow: var(--float-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
