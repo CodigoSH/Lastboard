@@ -73,5 +73,5 @@ It also says where your icons come from — how many of your bookmarks this serv
 
 - **Version** — the running version, with an at-a-glance up-to-date indicator.
 - **Check for Updates** — manually check for a newer release. See **[Updating](../getting-started/updating.md)** for how updates are applied.
-- **Beta Tester** — opt in to the beta program for early access to new features.
+- **Beta channel** — opt in to beta releases, which arrive earlier and may be unstable.
 - **Source Code / Report Issue** — links to the Forgejo repository and its issue tracker.
