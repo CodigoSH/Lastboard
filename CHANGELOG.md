@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-09-30
+
+### Added
+- Protect a backup with a password: set it when you download, and it is asked for when you restore
+- The backup now carries the Proxmox hosts with their tokens, and the monitoring settings with the notification token, so a restore no longer leaves them to be typed again
+- Passwords are hashed with Argon2id; an account from an earlier version moves over the next time it signs in, with nothing to reset
+
+### Fixed
+- A click in the empty space inside a dialog no longer closes it and throws away what was typed
+- Shrinking a section moves out the items that no longer fit, instead of squeezing them below its edge
+- Under Podman, the in-place update is no longer offered inside the container
+
 ## [1.8.0] - 2026-09-29
 
 ### Added
