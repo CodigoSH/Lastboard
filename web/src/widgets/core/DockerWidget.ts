@@ -14,6 +14,7 @@ import {
     defaultContainerUrl,
     fetchContainers,
     hostParam,
+    dockerPost,
     isDemoMode,
     shortId,
 } from '../../services/dockerShared';
@@ -628,10 +629,7 @@ class DockerWidget extends HTMLElement {
         await Promise.all([...byHost.values()].map(async ({ host, ids }) => {
             if (this._pollingTimer === null) return;
             try {
-                const param = hostParam(host);
-                const res = await fetch(
-                    `/api/docker/stats?host=${encodeURIComponent(param)}&ids=${encodeURIComponent(ids.join(','))}`
-                );
+                const res = await fetch('/api/docker/stats', dockerPost({ host: hostParam(host), ids }));
                 if (!res.ok) {
                     ids.forEach(id => this.clearStatsPending(id));
                     return;

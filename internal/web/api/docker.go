@@ -15,10 +15,42 @@ func NewDockerHandler(db *sql.DB) *DockerHandler {
 	return &DockerHandler{DB: db}
 }
 
-// GET /api/docker/containers?host=<hostURL>
-func (h *DockerHandler) GetContainers(w http.ResponseWriter, r *http.Request) {
-	hostURL := r.URL.Query().Get("host")
+// dockerQuery is what the widget asks with. The host travels in the body
+// because for an agent it carries the agent's token, and a query string ends up
+// in the access log of whatever proxy sits in front of Lastboard.
+type dockerQuery struct {
+	Host string   `json:"host"`
+	IDs  []string `json:"ids"`
+}
 
+func readDockerQuery(w http.ResponseWriter, r *http.Request) (dockerQuery, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+	var q dockerQuery
+	if err := json.NewDecoder(r.Body).Decode(&q); err != nil {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return q, false
+	}
+	return q, true
+}
+
+// POST /api/docker/containers — Body: { "host": string }
+func (h *DockerHandler) ListContainersFor(w http.ResponseWriter, r *http.Request) {
+	q, ok := readDockerQuery(w, r)
+	if !ok {
+		return
+	}
+	h.writeContainers(w, q.Host)
+}
+
+// GET /api/docker/containers?host=<hostURL>
+//
+// Kept for a browser that has not reloaded since the update and still asks
+// this way. Everything current posts the host instead.
+func (h *DockerHandler) GetContainers(w http.ResponseWriter, r *http.Request) {
+	h.writeContainers(w, r.URL.Query().Get("host"))
+}
+
+func (h *DockerHandler) writeContainers(w http.ResponseWriter, hostURL string) {
 	containers, err := ListContainers(hostURL)
 	if err != nil {
 		http.Error(w, "docker.connection_error", http.StatusBadGateway)
@@ -43,12 +75,26 @@ const maxStatsBatch = 200
 //
 // A container the daemon won't report on is absent from the map rather than
 // failing the call.
+//
+// Kept, like the GET for containers, for a browser still on the previous
+// bundle; StatsFor is the one in use.
 func (h *DockerHandler) GetStats(w http.ResponseWriter, r *http.Request) {
-	hostURL := r.URL.Query().Get("host")
+	h.writeStats(w, r.URL.Query().Get("host"), strings.Split(r.URL.Query().Get("ids"), ","))
+}
 
+// POST /api/docker/stats — Body: { "host": string, "ids": [string] }
+func (h *DockerHandler) StatsFor(w http.ResponseWriter, r *http.Request) {
+	q, ok := readDockerQuery(w, r)
+	if !ok {
+		return
+	}
+	h.writeStats(w, q.Host, q.IDs)
+}
+
+func (h *DockerHandler) writeStats(w http.ResponseWriter, hostURL string, raw []string) {
 	var ids []string
-	for _, raw := range strings.Split(r.URL.Query().Get("ids"), ",") {
-		if id := strings.TrimSpace(raw); id != "" {
+	for _, id := range raw {
+		if id = strings.TrimSpace(id); id != "" {
 			ids = append(ids, id)
 		}
 	}

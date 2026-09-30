@@ -1,3 +1,5 @@
+import { csrfToken } from './csrf';
+
 /**
  * Docker types and container fetching, shared by the widget and its config
  * screen.
@@ -60,7 +62,22 @@ function bareHost(url: string | undefined): string {
     return (url ?? '').trim().replace(/^(tcp|http|https|unix|npipe|ssh):\/\//i, '');
 }
 
-/** How a host is addressed in the `host` query parameter. */
+/**
+ * A POST to the Docker endpoints.
+ *
+ * The host goes in the body and never in the address: for an agent it carries
+ * the agent's token, and a query string is what a reverse proxy in front of
+ * Lastboard writes to its access log.
+ */
+export function dockerPost(body: unknown): RequestInit {
+    return {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },
+        body: JSON.stringify(body),
+    };
+}
+
+/** How a host is addressed in the `host` field of a Docker request. */
 export function hostParam(host: DockerHost): string {
     if (host.type === 'local') return '';
     if (host.type === 'agent') return `agent://${bareHost(host.url)}?token=${encodeURIComponent(host.token ?? '')}`;
@@ -142,7 +159,7 @@ export async function fetchContainers(host: DockerHost | undefined): Promise<Doc
     if (isDemoMode()) return DEMO_CONTAINERS;
     if (!host) return [];
 
-    const res = await fetch(`/api/docker/containers?host=${encodeURIComponent(hostParam(host))}`);
+    const res = await fetch('/api/docker/containers', dockerPost({ host: hostParam(host) }));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data : [];
