@@ -3,6 +3,7 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import css from './PasswordConfirmModal.css' with { type: 'text' };
+import { isBackdropClick } from '../../../services/dialogBackdrop';
 
 export class PasswordConfirmModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
@@ -86,7 +87,7 @@ export class PasswordConfirmModal extends HTMLElement {
         // Close on backdrop click
         if (this.dialog) {
             this.dialog.onclick = (e) => {
-                if (e.target === this.dialog) close(null);
+                if (isBackdropClick(this.dialog!, e)) close(null);
             };
             // Escape triggers the native 'cancel' event; resolve the promise so
             // the awaiting caller doesn't hang after the dialog closes itself.

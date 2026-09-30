@@ -2,6 +2,7 @@ import { template } from './ConfirmationModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
 import css from './ConfirmationModal.css' with { type: 'text' };
+import { isBackdropClick } from '../../../services/dialogBackdrop';
 
 export class ConfirmationModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
@@ -46,7 +47,7 @@ export class ConfirmationModal extends HTMLElement {
         // Close on backdrop click
         if (this.dialog) {
             this.dialog.onclick = (e) => {
-                if (e.target === this.dialog) close(false);
+                if (isBackdropClick(this.dialog!, e)) close(false);
             };
             // Escape triggers the native 'cancel' event; resolve the promise so
             // the awaiting caller doesn't hang after the dialog closes itself.

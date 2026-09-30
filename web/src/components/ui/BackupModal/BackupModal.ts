@@ -4,6 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml } from '../../../services/escape';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import css from './BackupModal.css' with { type: 'text' };
+import { isBackdropClick } from '../../../services/dialogBackdrop';
 
 /**
  * Asks how a backup should leave the server: as it is, or sealed under a
@@ -82,7 +83,7 @@ export class BackupModal extends HTMLElement {
 
         if (this.dialog) {
             this.dialog.onclick = (e) => {
-                if (e.target === this.dialog) close(null);
+                if (isBackdropClick(this.dialog!, e)) close(null);
             };
             this.dialog.oncancel = () => close(null);
         }

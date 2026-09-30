@@ -2,6 +2,7 @@ import { template } from './MoveToDashboardModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { Dashboard } from '../../../types';
 import css from './MoveToDashboardModal.css' with { type: 'text' };
+import { isBackdropClick } from '../../../services/dialogBackdrop';
 
 /**
  * Shared dashboard picker for the "Move to…" action. Call pick() with the list
@@ -45,7 +46,7 @@ export class MoveToDashboardModal extends HTMLElement {
         if (this.dialog) {
             // Backdrop click and Escape both dismiss without a selection.
             this.dialog.onclick = (e) => {
-                if (e.target === this.dialog) this.resolve(null);
+                if (isBackdropClick(this.dialog!, e)) this.resolve(null);
             };
             this.dialog.oncancel = () => this.resolve(null);
 
