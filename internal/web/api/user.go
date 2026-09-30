@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/user"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -310,7 +310,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.CurrentPassword)); err != nil {
+	if err := password.Verify(input.CurrentPassword, storedHash); err != nil {
 		http.Error(w, "error.current_password_incorrect", http.StatusUnauthorized)
 		return
 	}
@@ -320,7 +320,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newHash, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	newHash, err := password.Hash(input.NewPassword)
 	if err != nil {
 		slog.Error("Encryption failed", "error", err)
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)
@@ -368,14 +368,13 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 // Admin Endpoints
 
-func (h *UserHandler) verifyPassword(username, password string) bool {
+func (h *UserHandler) verifyPassword(username, plain string) bool {
 	var storedHash string
 	err := h.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
 	if err != nil {
 		return false
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(password))
-	return err == nil
+	return password.Verify(plain, storedHash) == nil
 }
 
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -441,7 +440,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	hashedPassword, err := password.Hash(input.Password)
 	if err != nil {
 		slog.Error("Encryption failed", "error", err)
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)
@@ -518,7 +517,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		hashedPassword, hashErr := password.Hash(input.Password)
 		if hashErr != nil {
 			http.Error(w, "general.internal_error", http.StatusInternalServerError)
 			return

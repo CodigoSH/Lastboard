@@ -17,9 +17,9 @@ import (
 	"syscall"
 	"time"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // POST /api/system/reset
@@ -58,7 +58,7 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.Password)); err != nil {
+	if err := password.Verify(input.Password, storedHash); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusUnauthorized)
 		return
 	}
@@ -526,11 +526,12 @@ func writeRestoreError(w http.ResponseWriter, err error) {
 	http.Error(w, "general.db_error", http.StatusInternalServerError)
 }
 
-// validateBackupUsers rejects backups whose users have non-bcrypt passwords or
-// an unknown role, before any data is written.
+// validateBackupUsers rejects backups whose users have a password hash this
+// version cannot verify, or an unknown role, before any data is written. A
+// backup from before the move to Argon2id carries bcrypt hashes and restores.
 func validateBackupUsers(backup BackupData) error {
 	for _, u := range backup.Users {
-		if !strings.HasPrefix(u.Password, "$2a$") && !strings.HasPrefix(u.Password, "$2b$") {
+		if !password.Recognised(u.Password) {
 			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
 		}
 		role := strings.ToLower(u.Role)

@@ -177,7 +177,7 @@ shows it beside the services it runs.
 
 ## Security
 
-- Sessions as **HMAC-SHA256 signed tokens**, passwords hashed with **bcrypt**, constant-time
+- Sessions as **HMAC-SHA256 signed tokens**, passwords hashed with **Argon2id**, constant-time
   verification.
 - **CSRF protection** on every state-changing method, and a `Sec-Fetch-Site` check on top.
 - A strict **Content-Security-Policy with a per-request nonce**, plus HSTS, `nosniff`,

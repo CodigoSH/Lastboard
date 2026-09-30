@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"golang.org/x/crypto/bcrypt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 )
 
 type SetupHandler struct {
@@ -20,7 +20,7 @@ func NewSetupHandler(db *sql.DB) *SetupHandler {
 func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	// Reject an already-initialised instance before spending any work on the
 	// request. This endpoint is public, so without the early exit every call
-	// would decode an unbounded body and run bcrypt (tens of ms of CPU) only to
+	// would decode an unbounded body and hash a password (tens of ms of CPU and 64 MiB) only to
 	// return 403 at the end. The authoritative check still happens inside the
 	// transaction below, which is what makes concurrent setup attempts safe.
 	var alreadySetUp bool
@@ -83,7 +83,7 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	hashedPassword, err := password.Hash(input.Password)
 	if err != nil {
 		http.Error(w, "setup.encryption_failed", http.StatusInternalServerError)
 		return

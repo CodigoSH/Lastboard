@@ -9,8 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
@@ -20,10 +19,6 @@ const (
 	attemptWindow    = 1 * time.Minute
 	defaultSession   = 24 * time.Hour
 	extendedSession  = 30 * 24 * time.Hour
-
-	// dummyHash is used in timing-safe comparisons when a user does not exist,
-	// preventing user enumeration via response time differences.
-	dummyHash = "$2b$10$KIWAy9N7gtNA4CHEO4YXrOQgZw.wye/ZD98.n6hwFVrEVb.SoU/ya"
 )
 
 type AuthHandler struct {
@@ -87,8 +82,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(input.Password) > 72 {
-		// Dummy bcrypt call to maintain constant timing regardless of failure reason
-		bcrypt.CompareHashAndPassword([]byte(dummyHash), []byte(input.Password))
+		// Spend what a verification spends, so the reason for failing does not
+		// show in how long it took.
+		password.Waste(input.Password)
 		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
@@ -100,17 +96,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	err = h.DB.QueryRowContext(r.Context(), "SELECT password, password_version FROM users WHERE username = ?", input.Username).
 		Scan(&storedHash, &passwordVersion)
 	if err != nil {
-		bcrypt.CompareHashAndPassword([]byte(dummyHash), []byte(input.Password))
+		password.Waste(input.Password)
 		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(input.Password)); err != nil {
+	if err := password.Verify(input.Password, storedHash); err != nil {
 		h.recordFailedAttempt(ip, count)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
+
+	h.upgradeHash(r, input.Username, input.Password, storedHash)
 
 	// Success: clear rate limit record for this IP
 	if _, err := h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip); err != nil {
@@ -203,4 +201,28 @@ func generateCSRFToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// upgradeHash replaces a hash from an earlier version — bcrypt, or Argon2id with
+// other parameters — now that the password is known to be right. Nobody has to
+// reset anything: the move happens at each account's next sign-in.
+//
+// password_version is left alone on purpose. It is the generation that ends
+// sessions when a password changes, and the password has not changed.
+// The UPDATE matches the old hash so a password changed in the meantime is not
+// overwritten. A failure is logged and the sign-in goes on: the old hash still
+// works, and the next sign-in tries again.
+func (h *AuthHandler) upgradeHash(r *http.Request, username, plain, stored string) {
+	if !password.NeedsRehash(stored) {
+		return
+	}
+	fresh, err := password.Hash(plain)
+	if err != nil {
+		log.Printf("login: could not rehash password for %s: %v", username, err)
+		return
+	}
+	if _, err := h.DB.ExecContext(r.Context(),
+		"UPDATE users SET password = ? WHERE username = ? AND password = ?", fresh, username, stored); err != nil {
+		log.Printf("login: could not store rehashed password for %s: %v", username, err)
+	}
 }

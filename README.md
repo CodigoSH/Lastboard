@@ -144,7 +144,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 Lastboard is built with defense-in-depth from the ground up:
 
-- **Sessions** as HMAC-SHA256 signed tokens with strict expiry; passwords hashed with **bcrypt**; constant-time verification.
+- **Sessions** as HMAC-SHA256 signed tokens with strict expiry; passwords hashed with **Argon2id**; constant-time verification.
 - **CSRF protection** on every state-changing method, plus a `Sec-Fetch-Site` check the page cannot forge.
 - **A strict Content-Security-Policy with a per-request nonce**, so injected markup cannot execute as script — alongside HSTS, `nosniff`, `X-Frame-Options` and `Referrer-Policy`.
 - **Rate limiting** at 20 req/s (burst 50) per IP, and a login lockout after 5 failed attempts. Behind a proxy the client IP is read from the entry **your** proxy appended, not the one the caller sent, so the lockout cannot be evaded with a forged header.

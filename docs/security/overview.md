@@ -21,8 +21,10 @@ they would be on a public service.
 
 ## Authentication and sessions
 
-- **Passwords** are hashed with **bcrypt**. They are never stored or logged in any recoverable
-  form, and verification is constant-time so a wrong password cannot be distinguished by timing.
+- **Passwords** are hashed with **Argon2id** (64 MiB, 3 passes). They are never stored or logged
+  in any recoverable form, and verification is constant-time so a wrong password cannot be
+  distinguished by timing. Accounts created on earlier versions have a bcrypt hash; it keeps
+  working, and is replaced by an Argon2id one the next time that account signs in.
 - **Sessions** are **HMAC-SHA256 signed tokens** carrying their own expiry. The signing secret
   is generated on first run and kept in the database — there is no `SESSION_SECRET` to set, and
   nothing to leak into an environment file or a process list.
