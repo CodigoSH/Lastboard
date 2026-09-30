@@ -230,4 +230,4 @@ shows it beside the services it runs.
   - [Development Guide](contributing/development.md)
 
 ---
-[Live Demo](https://lb-demo.codigosh.com) | [Forgejo](https://git.codigosh.com/CodigoSH/Lastboard) | [Report a Bug](https://git.codigosh.com/CodigoSH/Lastboard/issues)
+[Live Demo](https://lb-demo.codigosh.com) | [Forgejo](https://git.codigosh.com/CodigoSH/Lastboard) | [Support](https://support.codigosh.com/codigosh/lastboard)

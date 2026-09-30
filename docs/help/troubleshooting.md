@@ -112,4 +112,4 @@ See [Monitoring → Notifications](../monitoring/overview.md#notifications).
 
 ## Still stuck?
 
-Open an issue on the [Forgejo repository](https://git.codigosh.com/CodigoSH/Lastboard/issues) — include your version, how you run Lastboard (Docker/native), and any relevant logs.
+Contact [Support](https://support.codigosh.com/codigosh/lastboard) — include your version, how you run Lastboard (Docker/native), and any relevant logs.
