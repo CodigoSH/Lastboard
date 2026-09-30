@@ -50,6 +50,7 @@ func setupTestServer(t *testing.T) (*httptest.Server, *sql.DB, func()) {
 	// Routes
 	mux.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
 	mux.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
+	mux.Handle("POST /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadProtectedBackup)))
 	mux.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	mux.Handle("GET /api/dashboard", protect(http.HandlerFunc(dashHandler.GetDashboard)))
 	mux.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).GetSettings)))

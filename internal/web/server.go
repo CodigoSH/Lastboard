@@ -367,6 +367,7 @@ func (s *Server) routes() {
 	// System API
 	systemHandler := api.NewSystemHandler(s.DB)
 	s.Router.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
+	s.Router.Handle("POST /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadProtectedBackup)))
 	s.Router.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
 

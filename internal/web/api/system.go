@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -125,7 +126,17 @@ type BackupData struct {
 	// still looks like the board you left. Omitted from older backups, which
 	// restore fine without them — the items keep whatever URL they had.
 	Icons []BackupIcon `json:"icons,omitempty"`
+	// Settings that are configuration the operator typed in and would have to
+	// type again: the Proxmox hosts with their tokens, and the icons chosen for
+	// their machines. Only the keys in backupSettingKeys travel — the session
+	// secret and the like stay behind. Omitted from older backups, which
+	// restore fine without them and leave whatever is configured alone.
+	Settings map[string]string `json:"settings,omitempty"`
 }
+
+// backupSettingKeys is the whole list of system_settings rows a backup carries
+// and a restore accepts. A restore writes only these, whatever the file says.
+var backupSettingKeys = []string{proxmoxHostsKey, proxmoxIconsKey}
 
 // BackupIcon carries an icon's bytes base64-encoded, since a backup is JSON.
 type BackupIcon struct {
@@ -174,8 +185,30 @@ type BackupItem struct {
 	Content     *string `json:"content"`
 }
 
-// GET /api/system/backup
+// GET /api/system/backup — the plain file.
+//
+// Kept beside the POST because a browser that has not reloaded since the
+// update still asks this way, and answering it with the file it always got is
+// the tolerant thing.
 func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
+	h.serveBackup(w, r, "")
+}
+
+// POST /api/system/backup — with an optional password to protect the file. The
+// password travels in the body: a URL would put it in the access log.
+func (h *SystemHandler) DownloadProtectedBackup(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
+	var input struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	h.serveBackup(w, r, input.Password)
+}
+
+func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, password string) {
 	username := middleware.GetUserFromContext(r)
 	if username == "" {
 		http.Error(w, "error.forbidden", http.StatusForbidden)
@@ -306,10 +339,43 @@ func (h *SystemHandler) DownloadBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send JSON
+	// 5. Settings the operator would otherwise have to type again.
+	for _, key := range backupSettingKeys {
+		var value string
+		if err := h.DB.QueryRowContext(r.Context(), `SELECT value FROM system_settings WHERE key = ?`, key).Scan(&value); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				continue
+			}
+			slog.Error("Failed to fetch setting", "key", key, "error", err)
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+		if backup.Settings == nil {
+			backup.Settings = map[string]string{}
+		}
+		backup.Settings[key] = value
+	}
+
+	name := fmt.Sprintf("lastboard-backup-%s.json", time.Now().Format("2006-01-02-1504"))
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"lastboard-backup-%s.json\"", time.Now().Format("2006-01-02-1504")))
-	json.NewEncoder(w).Encode(backup)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", name))
+
+	if password == "" {
+		json.NewEncoder(w).Encode(backup)
+		return
+	}
+	plain, err := json.Marshal(backup)
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	sealed, err := sealBackup(plain, password)
+	if err != nil {
+		slog.Error("Failed to seal backup", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	w.Write(sealed)
 }
 
 // POST /api/system/restore
@@ -319,8 +385,9 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Limit upload size to 10 MB
-	r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
+	// Limit upload size. A protected file is the backup base64-encoded, a third
+	// larger, so the ceiling sits above the 10 MB a plain one is held to.
+	r.Body = http.MaxBytesReader(w, r.Body, 14*1024*1024)
 
 	// Parse Upload
 	file, _, err := r.FormFile("backup_file")
@@ -330,8 +397,31 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	raw, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "error.invalid_file", http.StatusBadRequest)
+		return
+	}
+	if isSealedBackup(raw) {
+		password := r.FormValue("password")
+		if password == "" {
+			http.Error(w, "backup.password_required", http.StatusBadRequest)
+			return
+		}
+		plain, err := openBackup(raw, password)
+		switch {
+		case errors.Is(err, errBackupUnsupported):
+			http.Error(w, "error.invalid_backup_format", http.StatusBadRequest)
+			return
+		case err != nil:
+			http.Error(w, "backup.wrong_password", http.StatusUnauthorized)
+			return
+		}
+		raw = plain
+	}
+
 	var backup BackupData
-	if err := json.NewDecoder(file).Decode(&backup); err != nil {
+	if err := json.Unmarshal(raw, &backup); err != nil {
 		http.Error(w, "error.invalid_backup_format", http.StatusBadRequest)
 		return
 	}
@@ -372,6 +462,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := restoreIcons(tx, backup); err != nil {
+		writeRestoreError(w, err)
+		return
+	}
+	if err := restoreSettings(tx, backup); err != nil {
 		writeRestoreError(w, err)
 		return
 	}
@@ -447,6 +541,28 @@ func clearExistingData(tx *sql.Tx) error {
 	}
 	if _, err := tx.Exec("DELETE FROM icons"); err != nil {
 		return &restoreError{http.StatusInternalServerError, "Failed to clear icons"}
+	}
+	return nil
+}
+
+// restoreSettings puts back the configuration a backup carries.
+//
+// Only the keys in backupSettingKeys are written, whatever else the file names:
+// a restore must not be a way to set the session secret or any other row. A
+// backup without settings — one taken before they travelled — leaves what is
+// configured here alone.
+func restoreSettings(tx *sql.Tx, backup BackupData) error {
+	for _, key := range backupSettingKeys {
+		value, ok := backup.Settings[key]
+		if !ok {
+			continue
+		}
+		if !json.Valid([]byte(value)) {
+			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+		}
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`, key, value); err != nil {
+			return &restoreError{http.StatusInternalServerError, "Failed to restore settings"}
+		}
 	}
 	return nil
 }
