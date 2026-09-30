@@ -178,3 +178,56 @@ describe('Collision Service', () => {
         });
     });
 });
+
+describe('planSectionResize', () => {
+    const c = (id: number, x: number, y: number, w = 1, h = 1) => ({ id, x, y, w, h });
+    const ids = (list: { id: number }[]) => list.map(i => i.id).sort();
+
+    it('a 2x2 child is four cells, not one', () => {
+        // 4x2 section: a 2x2 and two 1x1 beside it, shrunk to 2x2.
+        const plan = collisionService.planSectionResize([c(1, 1, 1, 2, 2), c(2, 3, 1), c(3, 4, 1)], 2, 2);
+        expect(ids(plan.keep)).toEqual([1]);
+        expect(ids(plan.eject)).toEqual([2, 3]);
+    });
+
+    it('a child far to the right is reflowed in, not ejected', () => {
+        const plan = collisionService.planSectionResize([c(1, 1, 1), c(2, 5, 1)], 3, 2);
+        expect(ids(plan.keep)).toEqual([1, 2]);
+        expect(plan.eject).toEqual([]);
+    });
+
+    it('a child wider than the new section leaves it', () => {
+        const plan = collisionService.planSectionResize([c(1, 1, 1, 3, 1), c(2, 4, 1)], 2, 2);
+        expect(ids(plan.eject)).toEqual([1]);
+        expect(ids(plan.keep)).toEqual([2]);
+    });
+
+    it('a child taller than the new section leaves it', () => {
+        const plan = collisionService.planSectionResize([c(1, 1, 1, 1, 3)], 4, 2);
+        expect(ids(plan.eject)).toEqual([1]);
+    });
+
+    it('an ejected child leaves its room to the next one', () => {
+        // 2x1 box: a 2x2 does not fit, the two 1x1 after it do.
+        const plan = collisionService.planSectionResize([c(1, 1, 1, 2, 2), c(2, 3, 1), c(3, 4, 1)], 2, 1);
+        expect(ids(plan.keep)).toEqual([2, 3]);
+        expect(ids(plan.eject)).toEqual([1]);
+    });
+
+    it('growing never ejects', () => {
+        const plan = collisionService.planSectionResize([c(1, 1, 1, 2, 2), c(2, 3, 1), c(3, 4, 1)], 6, 3);
+        expect(plan.eject).toEqual([]);
+    });
+
+    it('what it keeps is exactly what the store reflow places inside the box', () => {
+        const children = [c(1, 1, 1, 2, 1), c(2, 3, 1), c(3, 1, 2), c(4, 2, 2, 2, 2), c(5, 4, 2)];
+        const plan = collisionService.planSectionResize(children, 3, 2);
+        const placed: { x: number; y: number; w: number; h: number }[] = [];
+        for (const k of plan.keep) {
+            const slot = collisionService.findAvailableSlot(k.w, k.h, placed, 3);
+            placed.push({ ...slot, w: k.w, h: k.h });
+            expect(slot.x + k.w - 1).toBeLessThanOrEqual(3);
+            expect(slot.y + k.h - 1).toBeLessThanOrEqual(2);
+        }
+    });
+});

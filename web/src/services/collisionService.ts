@@ -189,6 +189,41 @@ export const collisionService = {
     },
 
     /**
+     * Which children stay in a section resized to newW x newH, and which must
+     * leave it.
+     *
+     * The children are packed the way the store reflows them after a resize —
+     * top-left first, by width — and a child is ejected when its packed place
+     * does not fit inside the new box. Counting children against cells is not
+     * the same question: a 2x2 child counted as one, so a section shrunk to
+     * 2x2 around it kept two more below its bottom edge, and a child wider
+     * than the section had no column at all.
+     *
+     * An ejected child takes no room, so a smaller one after it can still use
+     * the space it would have had.
+     */
+    planSectionResize<T extends { x: number; y: number; w: number; h: number }>(children: T[], newW: number, newH: number): { keep: T[]; eject: T[] } {
+        const ordered = [...children].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+        const placed: { x: number; y: number; w: number; h: number }[] = [];
+        const keep: T[] = [];
+        const eject: T[] = [];
+        for (const child of ordered) {
+            if (child.w > newW || child.h > newH) {
+                eject.push(child);
+                continue;
+            }
+            const slot = this.findAvailableSlot(child.w, child.h, placed, newW);
+            if (slot.y + child.h - 1 > newH) {
+                eject.push(child);
+                continue;
+            }
+            placed.push({ x: slot.x, y: slot.y, w: child.w, h: child.h });
+            keep.push(child);
+        }
+        return { keep, eject };
+    },
+
+    /**
      * New Helper: Finds the first available slot in a list of items using Bin Packing Logic.
      * Can be used for "Ghost Gravity" simulation.
      */

@@ -925,14 +925,12 @@ class BookmarkGrid extends HTMLElement {
         if (check.valid && (item.w !== newW || item.h !== newH)) {
             // Auto-Eject Logic
             if (item.type === 'section') {
-                const capacity = newW * newH;
                 const children = this.bookmarks.filter(b => b.parent_id === item.id);
-                // Keep top-left items, eject bottom-right ones
-                children.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+                // Keep what still fits once reflowed into the new box; the
+                // rest leaves the section for the main grid.
+                const { eject: toEject } = collisionService.planSectionResize(children, newW, newH);
 
-                if (children.length > capacity) {
-
-                    const toEject = children.slice(capacity);
+                if (toEject.length > 0) {
 
                     // Create a simulation of grid state to prevent stacking ejected items
                     // We start with current bookmarks
