@@ -33,7 +33,7 @@ type UpdateHandler struct {
 
 	// latest replaces the call to the forge in tests; nil means the forge.
 	latest func(beta bool) (tag string, notes string, err error)
-	// docker replaces the /.dockerenv check in tests: the CI runs in a
+	// docker replaces the container check in tests: the CI runs in a
 	// container, where the real check would skip what a test is asking about.
 	docker func() bool
 }
@@ -57,13 +57,40 @@ type UpdateResponse struct {
 	CheckError string `json:"check_error,omitempty"`
 }
 
+// inContainer says whether replacing the binary would achieve anything.
+//
+// Inside a container it would not: the image is what comes back on the next
+// restart, so an in-place update lasts exactly until something restarts the
+// container and then silently reverts.
+func inContainer() bool { return inContainerUnder("/") }
+
+// inContainerUnder is inContainer against a root that a test can build.
+//
+// Each engine leaves its own mark: Docker writes /.dockerenv and Podman
+// /run/.containerenv. The cgroup of the first process does not name the engine
+// under cgroup v2, the default on every current distribution, so it is only a
+// fallback for older hosts.
+func inContainerUnder(root string) bool {
+	for _, mark := range []string{".dockerenv", "run/.containerenv"} {
+		if _, err := os.Stat(filepath.Join(root, mark)); err == nil {
+			return true
+		}
+	}
+	if cgroup, err := os.ReadFile(filepath.Join(root, "proc/1/cgroup")); err == nil {
+		text := string(cgroup)
+		return strings.Contains(text, "docker") || strings.Contains(text, "containerd") ||
+			strings.Contains(text, "kubepods")
+	}
+	return false
+}
+
 func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	// 1. Check if Docker
 	isDocker := false
 	if h.docker != nil {
 		isDocker = h.docker()
-	} else if _, err := os.Stat("/.dockerenv"); err == nil {
-		isDocker = true
+	} else {
+		isDocker = inContainer()
 	}
 
 	w.Header().Set("Content-Type", "application/json")
