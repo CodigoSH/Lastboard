@@ -10,7 +10,7 @@ This means:
 
 - **The source code is fully open.** You can read it, fork it, run it, and learn from it.
 - **We do not accept pull requests** from outside the team at this time.
-- **Issues and bug reports are welcome.** If you find something broken or have a feature idea, open an issue on our [Forgejo repository](https://git.codigosh.com/CodigoSH/Lastboard/issues) — we read everything.
+- **Issues and bug reports are welcome.** If you find something broken or have a feature idea, contact [Support](https://support.codigosh.com/codigosh/lastboard) — we read everything.
 
 ## Join the Team
 
