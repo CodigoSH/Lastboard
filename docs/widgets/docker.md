@@ -28,7 +28,7 @@ When running Lastboard as a Docker container, uncomment the socket volume mount 
 ```
 
 ### 3. Remote via Lastboard Agent
-For remote servers, you can use the official Lastboard Agent to securely proxy Docker API calls over HTTP with an authorization token.
+For remote servers, you can use the official Lastboard Agent to securely proxy Docker API calls with an authorization token, over HTTP or — behind a reverse proxy — HTTPS.
 
 ## Lastboard Agent
 
@@ -73,7 +73,9 @@ docker run -d \
 The agent provides a public, unauthenticated `/health` endpoint to verify connectivity.
 
 ### Using with a Reverse Proxy
-If securing the agent behind a reverse proxy (like Pangolin or Cloudflare Zero Trust), ensure your proxy forwards the `Authorization` header containing the Bearer token intact.
+If securing the agent behind a reverse proxy (like Pangolin or Cloudflare Zero Trust), enter its address in the widget **with `https://`** — `https://agent.example.com` — and Lastboard reaches the agent over HTTPS. Without the scheme it speaks plain HTTP, which is what an agent on your own network answers.
+
+The proxy must forward the `Authorization` header containing the Bearer token intact. As with the Remote TLS type, the certificate is not checked, so a self-signed one or an internal CA works; the connection is still encrypted, and the token no longer crosses the network in the clear.
 
 ## Widget Configuration
 
@@ -94,7 +96,9 @@ match, and so does the port in the example address.
 | **Remote TCP** | `192.168.1.100:2375` | `2375` — an unencrypted Docker daemon |
 | **Remote TLS** | `192.168.1.100:2376` | `2376` — a TLS Docker daemon |
 
-Enter the host and port on their own — Lastboard adds the scheme the connection type needs. If you
+Enter the host and port on their own — Lastboard adds the scheme the connection type needs. The one
+scheme kept is `https://` on an agent, which means *reach it over HTTPS* (see the reverse proxy
+section above). If you
 paste an address that already carries one, the standard forms are understood as written:
 `tcp://10.0.0.5:2375` is what `DOCKER_HOST` holds and what `docker context ls` prints, and
 `unix:///var/run/docker.sock` addresses a socket somewhere other than the default path.

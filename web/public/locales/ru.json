@@ -70,6 +70,7 @@
   "docker.add_new_host": "Добавить новый хост",
   "docker.configure_hint": "Добавьте хост в настройках виджета, чтобы начать",
   "docker.connection_error": "Не удалось подключиться к хосту Docker",
+  "docker.unauthorized": "Токен отклонён",
   "docker.container_visible": "Видимо",
   "docker.containers": "Контейнеры",
   "docker.containers_desc": "Неотмеченные контейнеры не показываются в виджете.",

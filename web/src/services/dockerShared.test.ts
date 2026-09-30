@@ -4,6 +4,8 @@ import {
     defaultContainerUrl,
     hostAddress,
     hostParam,
+    hostErrorKey,
+    DockerHostError,
     shortId,
     type DockerContainer,
     type DockerHost,
@@ -118,5 +120,24 @@ describe('defaultContainerUrl', () => {
     test('ports that are not published are not reachable', () => {
         const c = container({ Ports: [{ PublicPort: 0, PrivatePort: 9000, Type: 'tcp' }] });
         expect(defaultContainerUrl(c, local, 'dash.home')).toBe('');
+    });
+});
+
+describe('an agent behind HTTPS and a refused token', () => {
+    test('keeps https for an agent, and only for https', () => {
+        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'https://agent.example.com', token: 't' }))
+            .toBe('agent://agent.example.com?token=t&tls=1');
+        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'http://nas:9091', token: 't' }))
+            .toBe('agent://nas:9091?token=t');
+        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'nas:9091', token: 't' }))
+            .toBe('agent://nas:9091?token=t');
+    });
+
+    test('names a refused token and nothing else', () => {
+        expect(hostErrorKey(new DockerHostError('docker.unauthorized'))).toBe('docker.unauthorized');
+        expect(hostErrorKey(new DockerHostError('docker.connection_error'))).toBe('docker.connection_error');
+        expect(hostErrorKey(new DockerHostError(''))).toBe('docker.connection_error');
+        expect(hostErrorKey(new DockerHostError('something.else'))).toBe('docker.connection_error');
+        expect(hostErrorKey(new TypeError('Failed to fetch'))).toBe('docker.connection_error');
     });
 });

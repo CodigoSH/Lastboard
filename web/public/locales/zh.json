@@ -70,6 +70,7 @@
   "docker.add_new_host": "添加新主机",
   "docker.configure_hint": "在小部件设置中添加主机以开始使用",
   "docker.connection_error": "无法连接到 Docker 主机",
+  "docker.unauthorized": "令牌被拒绝",
   "docker.container_visible": "可见",
   "docker.containers": "容器",
   "docker.containers_desc": "未勾选的容器不会显示在小部件中。",

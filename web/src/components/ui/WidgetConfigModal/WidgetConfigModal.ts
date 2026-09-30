@@ -20,6 +20,7 @@ import {
     containerName,
     defaultContainerUrl,
     fetchContainers,
+    hostErrorKey,
     shortId,
 } from '../../../services/dockerShared';
 
@@ -1593,15 +1594,15 @@ class WidgetConfigModal extends HTMLElement {
 
         const results = await Promise.all(hosts.map(async (host) => {
             try {
-                return { host, containers: await fetchContainers(host), failed: false };
-            } catch {
-                return { host, containers: [] as DockerContainer[], failed: true };
+                return { host, containers: await fetchContainers(host), failed: false, errorKey: '' };
+            } catch (err) {
+                return { host, containers: [] as DockerContainer[], failed: true, errorKey: hostErrorKey(err) };
             }
         }));
 
-        box.innerHTML = results.map(({ host, containers, failed }) => {
+        box.innerHTML = results.map(({ host, containers, failed, errorKey }) => {
             const body = failed
-                ? `<p class="docker-host-state is-error">${esc(i18n.t('docker.connection_error'))}</p>`
+                ? `<p class="docker-host-state is-error">${esc(i18n.t(errorKey))}</p>`
                 : containers.length === 0
                     ? `<p class="docker-host-state">${esc(i18n.t('docker.no_containers'))}</p>`
                     : containers.map(c => this.dockerContainerRow(c, cfg, host)).join('');

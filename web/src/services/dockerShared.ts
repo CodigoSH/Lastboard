@@ -80,7 +80,13 @@ export function dockerPost(body: unknown): RequestInit {
 /** How a host is addressed in the `host` field of a Docker request. */
 export function hostParam(host: DockerHost): string {
     if (host.type === 'local') return '';
-    if (host.type === 'agent') return `agent://${bareHost(host.url)}?token=${encodeURIComponent(host.token ?? '')}`;
+    if (host.type === 'agent') {
+        // An agent behind a reverse proxy is reached over HTTPS, and the address
+        // someone types says so. The scheme is the one piece of it worth keeping:
+        // dropped, the widget spoke plain HTTP to a proxy that only answers TLS.
+        const tls = /^\s*https:\/\//i.test(host.url ?? '') ? '&tls=1' : '';
+        return `agent://${bareHost(host.url)}?token=${encodeURIComponent(host.token ?? '')}${tls}`;
+    }
     if (host.type === 'tls') return `https://${bareHost(host.url)}`;
     return bareHost(host.url);
 }
@@ -150,6 +156,26 @@ export const DEMO_CONTAINERS: DockerContainer[] = [
 ];
 
 /**
+ * Why a host could not be listed, as the i18n key to show.
+ *
+ * The server tells a refused token apart from a host that is not there, and
+ * the difference is the whole point: one is fixed in the widget's settings,
+ * the other in the network. Anything it does not name is "could not connect".
+ */
+export class DockerHostError extends Error {
+    readonly key: string;
+    constructor(serverKey: string) {
+        super(serverKey || 'docker.connection_error');
+        this.key = serverKey === 'docker.unauthorized' ? 'docker.unauthorized' : 'docker.connection_error';
+    }
+}
+
+/** The key to show for a failed host, whatever was thrown. */
+export function hostErrorKey(err: unknown): string {
+    return err instanceof DockerHostError ? err.key : 'docker.connection_error';
+}
+
+/**
  * Lists a host's containers. Throws when the host can't be reached.
  *
  * The host is optional because demo mode answers before it is ever read —
@@ -160,7 +186,7 @@ export async function fetchContainers(host: DockerHost | undefined): Promise<Doc
     if (!host) return [];
 
     const res = await fetch('/api/docker/containers', dockerPost({ host: hostParam(host) }));
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new DockerHostError((await res.text().catch(() => '')).trim());
     const data = await res.json();
     return Array.isArray(data) ? data : [];
 }

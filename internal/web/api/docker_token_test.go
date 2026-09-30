@@ -68,3 +68,50 @@ func TestTheAgentTokenTravelsInTheBody(t *testing.T) {
 func quote(s string) string {
 	return `"` + strings.ReplaceAll(s, `"`, `\"`) + `"`
 }
+
+// TestAnAgentBehindHTTPSIsReachable.
+//
+// The guide suggests putting the agent behind a reverse proxy, which is HTTPS,
+// and the Agent type used to speak plain HTTP whatever was typed. tls=1 — what
+// the widget sends for an https:// address — now reaches it, with the token.
+func TestAnAgentBehindHTTPSIsReachable(t *testing.T) {
+	var got string
+	agent := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	defer agent.Close()
+	addr := strings.TrimPrefix(agent.URL, "https://")
+
+	if _, err := ListContainers("agent://" + addr + "?token=tls-token&tls=1"); err != nil {
+		t.Fatalf("over HTTPS: %v", err)
+	}
+	if got != "Bearer tls-token" {
+		t.Errorf("the agent got %q over HTTPS", got)
+	}
+	if _, err := ListContainers("agent://" + addr + "?token=tls-token"); err == nil {
+		t.Error("without tls=1 the request went through: it is not asking HTTP")
+	}
+}
+
+// TestARefusedTokenIsNamed. A wrong token used to read as "could not
+// connect", which sends people to a firewall that is fine.
+func TestARefusedTokenIsNamed(t *testing.T) {
+	agent := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+	}))
+	defer agent.Close()
+	host := "agent://" + strings.TrimPrefix(agent.URL, "http://") + "?token=wrong"
+
+	rec := httptest.NewRecorder()
+	NewDockerHandler(nil).ListContainersFor(rec, httptest.NewRequest(http.MethodPost, "/api/docker/containers",
+		strings.NewReader(`{"host":`+quote(host)+`}`)))
+	if msg := strings.TrimSpace(rec.Body.String()); msg != "docker.unauthorized" {
+		t.Errorf("a refused token answered %d %q, want docker.unauthorized", rec.Code, msg)
+	}
+
+	if err := ContainerAction(host, "abc", "restart"); err != errDockerUnauthorized {
+		t.Errorf("an action with a refused token gave %v", err)
+	}
+}

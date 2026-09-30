@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -52,6 +53,10 @@ func (h *DockerHandler) GetContainers(w http.ResponseWriter, r *http.Request) {
 
 func (h *DockerHandler) writeContainers(w http.ResponseWriter, hostURL string) {
 	containers, err := ListContainers(hostURL)
+	if errors.Is(err, errDockerUnauthorized) {
+		http.Error(w, "docker.unauthorized", http.StatusBadGateway)
+		return
+	}
 	if err != nil {
 		http.Error(w, "docker.connection_error", http.StatusBadGateway)
 		return
@@ -155,6 +160,10 @@ func (h *DockerHandler) Action(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := ContainerAction(input.Host, input.ID, input.Action); err != nil {
+		if errors.Is(err, errDockerUnauthorized) {
+			http.Error(w, "docker.unauthorized", http.StatusBadGateway)
+			return
+		}
 		http.Error(w, "docker.action_error", http.StatusBadGateway)
 		return
 	}

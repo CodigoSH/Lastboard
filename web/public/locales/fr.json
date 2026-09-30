@@ -70,6 +70,7 @@
   "docker.add_new_host": "Ajouter un nouvel hôte",
   "docker.configure_hint": "Ajoutez un hôte dans les paramètres du widget pour commencer",
   "docker.connection_error": "Impossible de se connecter à l'hôte Docker",
+  "docker.unauthorized": "Jeton refusé",
   "docker.container_visible": "Visible",
   "docker.containers": "Conteneurs",
   "docker.containers_desc": "Les conteneurs non cochés restent masqués dans le widget.",

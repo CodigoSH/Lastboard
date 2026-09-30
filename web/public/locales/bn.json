@@ -70,6 +70,7 @@
   "docker.add_new_host": "নতুন হোস্ট যোগ করুন",
   "docker.configure_hint": "শুরু করতে উইজেট সেটিংসে একটি হোস্ট যোগ করুন",
   "docker.connection_error": "Docker হোস্টের সাথে সংযোগ করা যায়নি",
+  "docker.unauthorized": "Token প্রত্যাখ্যাত হয়েছে",
   "docker.container_visible": "দৃশ্যমান",
   "docker.containers": "কনটেইনার",
   "docker.containers_desc": "টিক না দেওয়া কনটেইনার উইজেটে দেখানো হয় না।",

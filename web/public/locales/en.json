@@ -70,6 +70,7 @@
   "docker.add_new_host": "Add New Host",
   "docker.configure_hint": "Add a host in the widget settings to get started",
   "docker.connection_error": "Could not connect to Docker host",
+  "docker.unauthorized": "Token rejected",
   "docker.container_visible": "Visible",
   "docker.containers": "Containers",
   "docker.containers_desc": "Unchecked containers stay hidden from the widget.",

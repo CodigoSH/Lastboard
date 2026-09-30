@@ -70,6 +70,7 @@
   "docker.add_new_host": "نیا ہوسٹ شامل کریں",
   "docker.configure_hint": "شروع کرنے کے لیے ویجیٹ سیٹنگز میں ہوسٹ شامل کریں",
   "docker.connection_error": "Docker ہوسٹ سے رابطہ نہیں ہو سکا",
+  "docker.unauthorized": "ٹوکن مسترد کر دیا گیا",
   "docker.container_visible": "نمایاں",
   "docker.containers": "کنٹینرز",
   "docker.containers_desc": "بغیر نشان والے کنٹینرز ویجٹ میں پوشیدہ رہتے ہیں۔",

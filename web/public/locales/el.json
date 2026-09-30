@@ -70,6 +70,7 @@
   "docker.add_new_host": "Προσθήκη νέου Host",
   "docker.configure_hint": "Προσθέστε έναν διακομιστή στις ρυθμίσεις του widget για να ξεκινήσετε",
   "docker.connection_error": "Αδυναμία σύνδεσης στον διακομιστή Docker",
+  "docker.unauthorized": "Το Token απορρίφθηκε",
   "docker.container_visible": "Ορατό",
   "docker.containers": "Κοντέινερ",
   "docker.containers_desc": "Τα κοντέινερ χωρίς επιλογή παραμένουν κρυφά στο widget.",

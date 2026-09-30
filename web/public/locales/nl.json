@@ -70,6 +70,7 @@
   "docker.add_new_host": "Nieuwe host toevoegen",
   "docker.configure_hint": "Voeg een host toe in de widgetinstellingen om te beginnen",
   "docker.connection_error": "Kan geen verbinding maken met Docker-host",
+  "docker.unauthorized": "Token geweigerd",
   "docker.container_visible": "Zichtbaar",
   "docker.containers": "Containers",
   "docker.containers_desc": "Niet-aangevinkte containers blijven verborgen in de widget.",

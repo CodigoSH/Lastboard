@@ -70,6 +70,7 @@
   "docker.add_new_host": "Neuen Host hinzufügen",
   "docker.configure_hint": "Füge in den Widget-Einstellungen einen Host hinzu, um zu beginnen",
   "docker.connection_error": "Verbindung zum Docker-Host fehlgeschlagen",
+  "docker.unauthorized": "Token abgelehnt",
   "docker.container_visible": "Sichtbar",
   "docker.containers": "Container",
   "docker.containers_desc": "Nicht markierte Container bleiben im Widget ausgeblendet.",

@@ -70,6 +70,7 @@
   "docker.add_new_host": "नया होस्ट जोड़ें",
   "docker.configure_hint": "शुरू करने के लिए विजेट सेटिंग्स में एक होस्ट जोड़ें",
   "docker.connection_error": "Docker होस्ट से कनेक्ट नहीं हो सका",
+  "docker.unauthorized": "टोकन अस्वीकार किया गया",
   "docker.container_visible": "दृश्यमान",
   "docker.containers": "कंटेनर",
   "docker.containers_desc": "बिना चुने कंटेनर विजेट में नहीं दिखते।",

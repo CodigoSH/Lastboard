@@ -70,6 +70,7 @@
   "docker.add_new_host": "Yeni Host Ekle",
   "docker.configure_hint": "Başlamak için widget ayarlarına bir host ekleyin",
   "docker.connection_error": "Docker hostuna bağlanılamadı",
+  "docker.unauthorized": "Belirteç reddedildi",
   "docker.container_visible": "Görünür",
   "docker.containers": "Konteynerler",
   "docker.containers_desc": "İşaretlenmemiş konteynerler bileşende gizli kalır.",

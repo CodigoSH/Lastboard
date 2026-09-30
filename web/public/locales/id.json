@@ -70,6 +70,7 @@
   "docker.add_new_host": "Tambah Host Baru",
   "docker.configure_hint": "Tambahkan host di pengaturan widget untuk memulai",
   "docker.connection_error": "Tidak dapat terhubung ke host Docker",
+  "docker.unauthorized": "Token ditolak",
   "docker.container_visible": "Terlihat",
   "docker.containers": "Kontainer",
   "docker.containers_desc": "Kontainer yang tidak dicentang tetap tersembunyi di widget.",

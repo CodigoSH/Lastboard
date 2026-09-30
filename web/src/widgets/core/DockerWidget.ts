@@ -15,6 +15,7 @@ import {
     fetchContainers,
     hostParam,
     dockerPost,
+    hostErrorKey,
     isDemoMode,
     shortId,
 } from '../../services/dockerShared';
@@ -388,6 +389,8 @@ interface HostState {
     containers: DockerContainer[];
     failed: boolean;
     everLoaded: boolean;
+    /** Why it failed, as an i18n key: a refused token or no answer at all. */
+    errorKey?: string;
 }
 
 class DockerWidget extends HTMLElement {
@@ -591,12 +594,13 @@ class DockerWidget extends HTMLElement {
                     failed: false,
                     everLoaded: true,
                 };
-            } catch (_) {
+            } catch (err) {
                 return {
                     host,
                     containers: before?.containers ?? [],
                     failed: true,
                     everLoaded: before?.everLoaded ?? false,
+                    errorKey: hostErrorKey(err),
                 };
             }
         }));
@@ -867,7 +871,7 @@ class DockerWidget extends HTMLElement {
             bodyHTML = `
                 <div class="state-view">
                     <div class="state-icon">${ICON.alert}</div>
-                    <span class="state-text">${i18n.t('docker.connection_error')}</span>
+                    <span class="state-text">${esc(i18n.t(this._byHost.every(s => s.errorKey === 'docker.unauthorized') ? 'docker.unauthorized' : 'docker.connection_error'))}</span>
                     <button class="retry-btn" id="retry-btn">${i18n.t('general.retry') || 'Retry'}</button>
                 </div>`;
 
@@ -889,7 +893,7 @@ class DockerWidget extends HTMLElement {
                 <div class="host-down-row">
                     <span class="host-down-icon">${ICON.alert}</span>
                     <span class="host-down-name">${esc(s.host.name)}</span>
-                    <span class="host-down-text">${esc(i18n.t('docker.host_unreachable'))}</span>
+                    <span class="host-down-text">${esc(i18n.t(s.errorKey === 'docker.unauthorized' ? 'docker.unauthorized' : 'docker.host_unreachable'))}</span>
                 </div>`).join('');
         }
 
@@ -966,7 +970,7 @@ class DockerWidget extends HTMLElement {
         // The host goes under the image. When the host stops answering this is
         // where it says so — on the row of the container it affects.
         const hostLine = stale
-            ? `<span class="container-host is-down">${esc(i18n.t('docker.host_unreachable'))}</span>`
+            ? `<span class="container-host is-down">${esc(i18n.t(state.errorKey === 'docker.unauthorized' ? 'docker.unauthorized' : 'docker.host_unreachable'))}</span>`
             : showHost
                 ? `<span class="container-host">${esc(state.host.name)}</span>`
                 : '';

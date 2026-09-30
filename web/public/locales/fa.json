@@ -70,6 +70,7 @@
   "docker.add_new_host": "افزودن هوسانت جدید",
   "docker.configure_hint": "برای شروع یک هوسانت در تنظیمات ویجت اضافه کنید",
   "docker.connection_error": "اتصال به هوسانت داکر برقرار نشد",
+  "docker.unauthorized": "توکن رد شد",
   "docker.container_visible": "نمایان",
   "docker.containers": "کانتینرها",
   "docker.containers_desc": "کانتینرهای تیک‌نخورده در ابزارک پنهان می‌مانند.",

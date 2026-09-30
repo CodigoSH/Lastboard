@@ -70,6 +70,7 @@
   "docker.add_new_host": "إضافة مضيف جديد",
   "docker.configure_hint": "أضف مضيفًا في إعدادات الودجت للبدء",
   "docker.connection_error": "تعذر الاتصال بمضيف Docker",
+  "docker.unauthorized": "تم رفض Token",
   "docker.container_visible": "مرئي",
   "docker.containers": "الحاويات",
   "docker.containers_desc": "الحاويات غير المحددة تبقى مخفية في الأداة.",

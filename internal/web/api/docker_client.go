@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -17,6 +18,12 @@ import (
 // local Docker Engine. Mount it read-only in docker-compose.yml to enable
 // the Docker widget without granting write access.
 const dockerSocketPath = "/var/run/docker.sock"
+
+// errDockerUnauthorized is a host that answered and refused the credentials —
+// for an agent, a wrong or missing token. It is kept apart from every other
+// failure because the fix is in the widget's settings, not in the network:
+// shown as "could not connect", it sent people to check a firewall that was fine.
+var errDockerUnauthorized = errors.New("docker.unauthorized")
 
 // agentTransport injects an Authorization: Bearer header on every request
 // so that ListContainers / GetContainerStats / ContainerAction work unchanged
@@ -121,19 +128,30 @@ func newDockerClient(hostURL string) (*http.Client, string, error) {
 		raw := strings.TrimPrefix(hostURL, "agent://")
 		host := raw
 		token := ""
+		tlsOn := false
 		if idx := strings.IndexByte(raw, '?'); idx >= 0 {
 			host = raw[:idx]
 			// url.ParseQuery handles percent-decoding and multiple params correctly.
 			if q, err := url.ParseQuery(raw[idx+1:]); err == nil {
 				token = q.Get("token")
+				tlsOn = q.Get("tls") == "1"
 			}
+		}
+		// tls=1 is an agent reached over HTTPS — almost always a reverse proxy
+		// in front of it, which is where the guide suggests putting one. The
+		// agent itself speaks plain HTTP; the proxy holds the certificate. It
+		// is verified as leniently as the Remote TLS type, for the same reason:
+		// self-signed certificates and internal CAs are normal here.
+		scheme, tlsCfg := "http://", (*tls.Config)(nil)
+		if tlsOn {
+			scheme, tlsCfg = "https://", &tls.Config{InsecureSkipVerify: true} //nolint:gosec
 		}
 		transport := &agentTransport{
 			token:     token,
-			transport: pooledTransport(nil),
+			transport: pooledTransport(tlsCfg),
 		}
 		client := &http.Client{Transport: transport, Timeout: timeout}
-		return client, "http://" + host, nil
+		return client, scheme + strings.TrimRight(host, "/"), nil
 
 	case strings.HasPrefix(hostURL, "https://"):
 		transport := pooledTransport(&tls.Config{InsecureSkipVerify: true}) //nolint:gosec
@@ -246,6 +264,9 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, errDockerUnauthorized
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("docker: GET /containers/json returned %d", resp.StatusCode)
 	}
@@ -452,6 +473,8 @@ func ContainerAction(hostURL, containerID, action string) error {
 	case http.StatusNotModified:
 		// Container already in the desired state — not an error.
 		return nil
+	case http.StatusUnauthorized:
+		return errDockerUnauthorized
 	default:
 		return fmt.Errorf("docker: POST /%s returned %d", action, resp.StatusCode)
 	}

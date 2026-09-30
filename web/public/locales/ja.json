@@ -70,6 +70,7 @@
   "docker.add_new_host": "新しいホストを追加",
   "docker.configure_hint": "ウィジェット設定にホストを追加して開始してください",
   "docker.connection_error": "Dockerホストに接続できませんでした",
+  "docker.unauthorized": "トークンが拒否されました",
   "docker.container_visible": "表示",
   "docker.containers": "コンテナ",
   "docker.containers_desc": "チェックを外したコンテナはウィジェットに表示されません。",
