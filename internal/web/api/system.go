@@ -127,8 +127,8 @@ type BackupData struct {
 	// restore fine without them — the items keep whatever URL they had.
 	Icons []BackupIcon `json:"icons,omitempty"`
 	// Settings that are configuration the operator typed in and would have to
-	// type again: the Proxmox hosts with their tokens, and the icons chosen for
-	// their machines. Only the keys in backupSettingKeys travel — the session
+	// type again: the Proxmox hosts with their tokens, the icons chosen for
+	// their machines, and how monitoring runs and where it sends alerts. Only the keys in backupSettingKeys travel — the session
 	// secret and the like stay behind. Omitted from older backups, which
 	// restore fine without them and leave whatever is configured alone.
 	Settings map[string]string `json:"settings,omitempty"`
@@ -136,7 +136,20 @@ type BackupData struct {
 
 // backupSettingKeys is the whole list of system_settings rows a backup carries
 // and a restore accepts. A restore writes only these, whatever the file says.
-var backupSettingKeys = []string{proxmoxHostsKey, proxmoxIconsKey}
+// The value says whether the row holds JSON, which a restore checks before
+// writing; the monitoring rows are plain values.
+var backupSettingKeys = map[string]bool{
+	proxmoxHostsKey: true,
+	proxmoxIconsKey: true,
+
+	"monitoring_mode":           false,
+	"monitoring_interval_sec":   false,
+	"monitoring_fail_threshold": false,
+	"monitoring_alerts_enabled": false,
+	"monitoring_notify_type":    false,
+	"monitoring_notify_url":     false,
+	"monitoring_notify_token":   false,
+}
 
 // BackupIcon carries an icon's bytes base64-encoded, since a backup is JSON.
 type BackupIcon struct {
@@ -340,7 +353,7 @@ func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, pass
 	}
 
 	// 5. Settings the operator would otherwise have to type again.
-	for _, key := range backupSettingKeys {
+	for key := range backupSettingKeys {
 		var value string
 		if err := h.DB.QueryRowContext(r.Context(), `SELECT value FROM system_settings WHERE key = ?`, key).Scan(&value); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -552,12 +565,12 @@ func clearExistingData(tx *sql.Tx) error {
 // backup without settings — one taken before they travelled — leaves what is
 // configured here alone.
 func restoreSettings(tx *sql.Tx, backup BackupData) error {
-	for _, key := range backupSettingKeys {
+	for key, isJSON := range backupSettingKeys {
 		value, ok := backup.Settings[key]
 		if !ok {
 			continue
 		}
-		if !json.Valid([]byte(value)) {
+		if isJSON && !json.Valid([]byte(value)) {
 			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
 		}
 		if _, err := tx.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`, key, value); err != nil {
