@@ -118,9 +118,15 @@ jobs:
           print(f"Keep beta: {[r['tag_name'] for r in betas if r['id'] in keep_beta] or 'none'}")
 
           def del_container(tag):
-              # Only ever deletes the version-specific ref tag (v1.5.5-beta.07 / v1.5.4);
+              # Only ever deletes the version-specific tags (v1.5.5-beta.07 / v1.5.4);
               # never the moving tags latest / beta / <major.minor>.
-              req("DELETE", f"/packages/{PKG_OWNER}/container/{PKG_NAME}/{tag.lower()}", expect_json=False)
+              # The image carries the version twice: as the git tag says it
+              # (v1.8.0-beta.20) and as semver writes it, without the "v"
+              # (1.8.0-beta.20). Leaving the second one behind piles up tags that
+              # look installable for versions this retention has retired. A tag
+              # that was never published answers 404, which is harmless.
+              for name in dict.fromkeys([tag.lower(), tag.lower().lstrip("v")]):
+                  req("DELETE", f"/packages/{PKG_OWNER}/container/{PKG_NAME}/{name}", expect_json=False)
 
           for r in del_betas:
               tag, rid = r["tag_name"], r["id"]
