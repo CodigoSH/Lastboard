@@ -207,7 +207,7 @@ export const API_PRESETS: ApiPreset[] = [
     },
     {
         id: 'speedtest-tracker',
-        name: 'Speedtest Tracker (beta)',
+        name: 'Speedtest Tracker',
         category: 'network',
         needsKey: true,
         keyLabelKey: 'widget.api.key_token',
@@ -304,7 +304,7 @@ export const API_PRESETS: ApiPreset[] = [
     },
     {
         id: 'prowlarr',
-        name: 'Prowlarr (beta)',
+        name: 'Prowlarr',
         category: 'downloads',
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
@@ -324,7 +324,7 @@ export const API_PRESETS: ApiPreset[] = [
     },
     {
         id: 'nextcloud',
-        name: 'Nextcloud (beta)',
+        name: 'Nextcloud',
         category: 'files',
         needsKey: true,
         keyLabelKey: 'widget.api.key_userpass',

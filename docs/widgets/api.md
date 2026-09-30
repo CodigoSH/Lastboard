@@ -89,7 +89,7 @@ A missing value renders as `—`.
 
 ## Supported Service Presets
 
-Presets fill in the endpoint and authentication for you. Items marked *(beta)* are provided on a best-effort basis and may need tweaking for your version.
+Presets fill in the endpoint and authentication for you.
 
 | Service | Category | Credential | Shows |
 | :--- | :--- | :--- | :--- |
@@ -106,9 +106,9 @@ Presets fill in the endpoint and authentication for you. Items marked *(beta)* a
 | **Home Assistant** | Infrastructure | Access token + entity | Entity state |
 | **Uptime Kuma** | Infrastructure | None + status page | Monitor list |
 | **Forgejo / Gitea** | Dev | Access token | Repository list |
-| **Speedtest Tracker** *(beta)* | Network | Bearer token | Download, upload |
-| **Nextcloud** *(beta)* | Files | `user:password` | Files, free space |
-| **Prowlarr** *(beta)* | Downloads | API key | Indexer list with query counts |
+| **Speedtest Tracker** | Network | Bearer token | Download, upload |
+| **Nextcloud** | Files | `user:password` | Files, free space |
+| **Prowlarr** | Downloads | API key | Indexer list with query counts |
 
 > **Proxmox VE is not here on purpose.** It used to be a preset that read one node and showed
 > two figures. Lastboard now speaks to Proxmox itself — every hypervisor you run, their nodes,
