@@ -61,6 +61,10 @@ jobs:
             coverage.out
             coverage.txt
 
+      # `bun build` strips types without checking them.
+      - name: Typecheck
+        run: bun run typecheck
+
       - name: Run Frontend Tests
         run: bun test
 

@@ -53,7 +53,7 @@ const DRAG_STEP = 55;
  * the display it was given.
  */
 const XENV = (() => {
-    const e = { ...process.env, DISPLAY };
+    const e: Record<string, string | undefined> = { ...process.env, DISPLAY };
     delete e.WAYLAND_DISPLAY;
     delete e.XDG_SESSION_TYPE;
     return e;

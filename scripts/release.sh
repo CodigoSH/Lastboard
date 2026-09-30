@@ -180,6 +180,11 @@ else
     bun run build >/dev/null || die "Frontend build failed. Run 'bun run build' to see why."
     echo "   ✅ bun run build"
 
+    # `bun build` strips types without checking them, so a type error only
+    # shows up in the browser.
+    bun run typecheck >/dev/null || die "Typecheck failed. Run 'bun run typecheck' to see why."
+    echo "   ✅ typecheck"
+
     # The build writes into web/dist and internal/web/dist; both are committed,
     # so a diff here means the tree was built from stale sources.
     if [ -n "$(git status --porcelain)" ]; then

@@ -7,9 +7,11 @@
     "i18n:sync": "bun run scripts/i18n-sync.ts",
     "i18n:audit": "bun run scripts/i18n-audit.ts",
     "i18n:scan": "bun run scripts/i18n-scan.ts",
-    "build": "bun web/build.ts"
+    "build": "bun web/build.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "bun-types": "1.4.2"
+    "bun-types": "1.4.2",
+    "typescript": "7.0.2"
   }
 }
