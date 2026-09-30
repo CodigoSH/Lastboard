@@ -1137,15 +1137,33 @@ class SettingsContent extends HTMLElement {
     // --- System Logic ---
 
     async downloadBackup() {
-        const confirmationModal = document.querySelector('confirmation-modal') as any;
-        if (confirmationModal) {
-            const confirmed = await confirmationModal.confirm(
-                i18n.t('action.download_backup'),
-                i18n.t('notifier.backup_confirm')
-            );
-            if (!confirmed) return;
+        const modal = document.querySelector('backup-modal') as any;
+        if (!modal) return;
+
+        // null is a cancelled dialog; an empty string is the plain file.
+        const password: string | null = await modal.prompt();
+        if (password === null) return;
+
+        try {
+            const { blob, filename } = await apiService.postForFile('/api/system/backup', { password });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        } catch (e) {
+            console.error('Backup error', e);
+            if (window.notifier) window.notifier.show(i18n.t('general.error'), 'error');
         }
-        window.location.href = '/api/system/backup';
+    }
+
+    /** A protected backup says so at the top of the file; no need to open it whole. */
+    private async isProtectedBackup(file: File): Promise<boolean> {
+        const head = await file.slice(0, 512).text();
+        return /"encrypted"\s*:\s*true/.test(head);
     }
 
     async restoreBackup(file: File) {
@@ -1160,23 +1178,45 @@ class SettingsContent extends HTMLElement {
             if (!confirmed) return;
         }
 
-        const formData = new FormData();
-        formData.append('backup_file', file);
+        const protectedFile = await this.isProtectedBackup(file);
+        const passwordModal = document.querySelector('password-confirm-modal') as any;
 
-        try {
-            await apiService.postForm('/api/system/restore', formData);
-            if (window.notifier) window.notifier.show(i18n.t('notifier.restore_success'));
-            // Clear all localStorage so stale cached items/dashboard IDs don't
-            // survive into the fresh session. The server also sends Clear-Site-Data
-            // to wipe browser cache and cookies, but localStorage is cleared here
-            // as a fallback for browsers that don't support that header.
-            setTimeout(() => {
-                localStorage.clear();
-                window.location.href = '/';
-            }, 2000);
-        } catch (e) {
-            console.error('Restore error', e);
-            if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');
+        // A wrong password asks again rather than throwing the choice away.
+        for (;;) {
+            const formData = new FormData();
+            formData.append('backup_file', file);
+
+            if (protectedFile) {
+                if (!passwordModal) return;
+                const password = await passwordModal.prompt(
+                    i18n.t('general.restore'),
+                    i18n.t('backup.password_required')
+                );
+                if (!password) return;
+                formData.append('password', password);
+            }
+
+            try {
+                await apiService.postForm('/api/system/restore', formData);
+                if (window.notifier) window.notifier.show(i18n.t('notifier.restore_success'));
+                // Clear all localStorage so stale cached items/dashboard IDs don't
+                // survive into the fresh session. The server also sends Clear-Site-Data
+                // to wipe browser cache and cookies, but localStorage is cleared here
+                // as a fallback for browsers that don't support that header.
+                setTimeout(() => {
+                    localStorage.clear();
+                    window.location.href = '/';
+                }, 2000);
+                return;
+            } catch (e) {
+                console.error('Restore error', e);
+                if (protectedFile && (e as Error).message === 'backup.wrong_password') {
+                    if (window.notifier) window.notifier.show(i18n.t('backup.wrong_password'), 'error');
+                    continue;
+                }
+                if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');
+                return;
+            }
         }
     }
 

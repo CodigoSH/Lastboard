@@ -22,6 +22,18 @@ Saves or restores **everything** — every user, every dashboard, all settings, 
 - **Backup** — download a complete copy of your instance.
 - **Restore** — upload a backup to bring an instance back to that exact state.
 
+### What is inside, and protecting it
+
+A backup holds the **API keys** you typed into your widgets, the **Proxmox tokens**, and every account's **password hash**. Downloaded as it is, it carries all of that unencrypted, so treat the file like the database itself.
+
+When you press **Download Backup**, you can type a **password** (and confirm it). The whole file is then sealed under it: nothing inside can be read without it. Leave the fields empty to download the plain file.
+
+- The password is **not stored anywhere**. **There is no recovery**: a protected backup whose password is lost cannot be opened.
+- To restore a protected backup, choose the file as usual and type its password when asked. A wrong password asks again, and nothing is changed until it is right.
+- Sealing uses Argon2id to derive the key and AES-256-GCM to encrypt, both from the Go standard library and its extended crypto module.
+
+Backups taken on earlier versions restore as they always did. They do not include the Proxmox configuration, so restoring one leaves whatever Proxmox setup the instance already has untouched.
+
 Because the icons travel inside the file, restoring on a machine with no internet still gives you the board exactly as you left it. Backups taken before icons were stored locally restore fine too: their bookmarks come back with the URLs they were saved with, and the next restart stores those pictures for you.
 
 > **Warning:** Restoring **overwrites all current data** and cannot be undone. Use it for recovery, or to move a full setup to another Lastboard instance — not to merge dashboards.

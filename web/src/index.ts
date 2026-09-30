@@ -25,6 +25,7 @@ import './components/ui/MonitorHistoryDrawer/MonitorHistoryDrawer';
 import './components/ui/MonitorPage/MonitorPage';
 import './components/ui/ProxmoxPage/ProxmoxPage';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
+import './components/ui/BackupModal/BackupModal';
 import './components/ui/UpdateModal/UpdateModal';
 // Widget Components
 import './widgets/core/NotepadWidget';
@@ -138,6 +139,8 @@ bootstrap(async () => {
 
     passwordConfirmModal = document.createElement('password-confirm-modal');
     document.body.appendChild(passwordConfirmModal);
+
+    document.body.appendChild(document.createElement('backup-modal'));
 
     const widgetConfigModal = document.createElement('widget-config-modal');
     document.body.appendChild(widgetConfigModal);

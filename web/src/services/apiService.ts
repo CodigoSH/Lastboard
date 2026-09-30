@@ -231,6 +231,24 @@ class ApiService {
         return this.request<T>(url, { method: 'DELETE' });
     }
 
+    /**
+     * POSTs JSON and returns the file the server answers with.
+     *
+     * For downloads that need a secret in the request: it goes in the body, not
+     * in a link the browser would keep in its history.
+     */
+    async postForFile(url: string, data: unknown): Promise<{ blob: Blob; filename: string }> {
+        const token = this.getCsrfToken();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['X-CSRF-Token'] = token;
+        const response = await fetch(`${this.baseUrl}${url}`, { method: 'POST', headers, body: JSON.stringify(data) });
+        if (!response.ok) {
+            throw new Error((await response.text()).trim() || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        const named = /filename="?([^";]+)"?/.exec(response.headers.get('Content-Disposition') || '');
+        return { blob: await response.blob(), filename: named?.[1] || 'lastboard-backup.json' };
+    }
+
     async postForm<T>(url: string, data: FormData): Promise<T> {
         const fullUrl = `${this.baseUrl}${url}`;
         const token = this.getCsrfToken();
