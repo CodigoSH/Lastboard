@@ -89,6 +89,7 @@ const CSS = `
     font-family: var(--font-sans);
     box-sizing: border-box;
     overflow: hidden;
+    container-type: inline-size;
 }
 
 /* ── Header ── */
@@ -164,17 +165,46 @@ const CSS = `
    The name is also the widest flexible column now. It used to be 1.5fr against
    the image's 2fr, so the part people read was narrower than the part they
    don't — the image is abbreviated to library/n... either way. */
+/* Narrow first, as the monitor widget does. The six columns below need about
+   350px before the name gets any, so a widget of four grid columns — or any
+   tile on a small screen — drew every name at zero width with the buttons
+   cut off at the edge. Narrow, a row is two lines: the name beside its
+   buttons, and what it is doing under it. The ports go; they are the least
+   read and the widest to squeeze.
+
+   460px is where the six columns stop leaving the name about 60px. The
+   widget's default size, four grid columns on a desktop, is wider than that
+   and keeps the layout it always had. */
 .container-row {
     display: grid;
-    grid-template-columns: 8px minmax(0, 2fr) 130px minmax(0, 1.4fr) var(--ports-w, 56px) 90px;
+    grid-template-columns: 8px minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-areas:
+        "dot name  name  actions"
+        ".   state image actions";
     align-items: center;
-    gap: 0 8px;
+    gap: 2px 8px;
     padding: 7px 10px;
     border-bottom: 1px solid rgba(128,128,128,0.08);
     transition: background 0.15s, opacity 0.2s;
     min-width: 0;
     overflow: hidden;
 }
+.container-row > .state-dot { grid-area: dot; }
+.container-row > .cell-name { grid-area: name; }
+.container-row > .cell-state { grid-area: state; }
+.container-row > .cell-image { grid-area: image; }
+.container-row > .cell-ports { grid-area: ports; display: none; }
+.container-row > .cell-actions { grid-area: actions; }
+
+@container (min-width: 460px) {
+    .container-row {
+        grid-template-columns: 8px minmax(0, 2fr) 130px minmax(0, 1.4fr) var(--ports-w, 56px) 90px;
+        grid-template-areas: "dot name state image ports actions";
+        gap: 0 8px;
+    }
+    .container-row > .cell-ports { display: flex; }
+}
+
 .container-row:last-child { border-bottom: none; }
 .container-row:hover { background: var(--surface-hover, rgba(128,128,128,0.06)); }
 
@@ -212,8 +242,12 @@ const CSS = `
 .cell-state {
     min-width: 0;
     padding-right: 8px;
+    overflow: hidden;
 }
+/* A block, or the ellipsis never happens: an inline span overflows its cell
+   and, on a narrow row, the figures ran on top of the image beside them. */
 .stats-text {
+    display: block;
     font-family: var(--font-mono); font-size: 10px;
     color: var(--text-dim); opacity: 0.7;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
