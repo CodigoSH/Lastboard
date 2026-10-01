@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "비밀 토큰",
   "docker.host_type": "유형",
   "docker.host_type_agent": "Lastboard 에이전트",
+  "docker.host_tag_agent": "에이전트",
   "docker.host_type_local": "로컬 (소켓)",
   "docker.host_type_tcp": "원격 TCP",
   "docker.host_type_tls": "원격 TLS",

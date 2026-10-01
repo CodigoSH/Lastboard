@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "Token rahasia Anda",
   "docker.host_type": "Tipe",
   "docker.host_type_agent": "Lastboard Agent",
+  "docker.host_tag_agent": "Agent",
   "docker.host_type_local": "Lokal (socket)",
   "docker.host_type_tcp": "TCP Jarak Jauh",
   "docker.host_type_tls": "TLS Jarak Jauh",

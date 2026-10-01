@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "您的秘密令牌",
   "docker.host_type": "类型",
   "docker.host_type_agent": "Lastboard 代理",
+  "docker.host_tag_agent": "代理",
   "docker.host_type_local": "本地 (socket)",
   "docker.host_type_tcp": "远程 TCP",
   "docker.host_type_tls": "远程 TLS",

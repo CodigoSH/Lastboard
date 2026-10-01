@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "Your secret token",
   "docker.host_type": "Type",
   "docker.host_type_agent": "Lastboard Agent",
+  "docker.host_tag_agent": "Agent",
   "docker.host_type_local": "Local (socket)",
   "docker.host_type_tcp": "Remote TCP",
   "docker.host_type_tls": "Remote TLS",

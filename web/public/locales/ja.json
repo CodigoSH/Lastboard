@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "シークレットトークン",
   "docker.host_type": "タイプ",
   "docker.host_type_agent": "Lastboard エージェント",
+  "docker.host_tag_agent": "エージェント",
   "docker.host_type_local": "ローカル（ソケット）",
   "docker.host_type_tcp": "リモートTCP",
   "docker.host_type_tls": "リモートTLS",

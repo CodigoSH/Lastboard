@@ -21,6 +21,7 @@ import {
     defaultContainerUrl,
     fetchContainers,
     hostErrorKey,
+    fetchAgentVersion,
     shortId,
 } from '../../../services/dockerShared';
 
@@ -1109,6 +1110,7 @@ class WidgetConfigModal extends HTMLElement {
             root.getElementById('modal')?.classList.add('dialog--wide');
 
             this.loadDockerContainers(content);
+            this.loadAgentVersions(content);
         }
 
         // Picking a host on the left is what the right-hand column follows.
@@ -1494,7 +1496,10 @@ class WidgetConfigModal extends HTMLElement {
                  data-host-id="${esc(h.id)}"${split ? ' role="button" tabindex="0"' : ''}>
                 <div class="host-info">
                     <span class="host-name">${esc(h.name)}</span>
-                    <span class="host-tag">${h.type === 'local' ? i18n.t('docker.host_type_local') : i18n.t('docker.host_type_' + h.type)}</span>
+                    <span class="host-meta">
+                        <span class="host-tag">${h.type === 'agent' ? i18n.t('docker.host_tag_agent') : i18n.t('docker.host_type_' + h.type)}</span>
+                        ${h.type === 'agent' ? `<span class="host-version" data-agent-version="${esc(h.id)}"></span>` : ''}
+                    </span>
                 </div>
                 <div class="host-actions">
                     <button class="host-action-btn edit" data-id="${esc(h.id)}" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
@@ -1580,6 +1585,25 @@ class WidgetConfigModal extends HTMLElement {
      * hunting for the right host before you can tick a box is busywork. A host
      * that doesn't answer says so in its own section and leaves the rest alone.
      */
+    /**
+     * Fills in the version beside each agent host, once the list is drawn.
+     *
+     * Asked of the agent itself, so it is what is really running there, not
+     * what somebody remembers installing. Each host answers on its own: one
+     * that is slow or down leaves its own line blank and holds up no other.
+     */
+    private loadAgentVersions(content: any) {
+        const hosts: DockerHost[] = content.hosts || [];
+        for (const host of hosts.filter(h => h.type === 'agent')) {
+            fetchAgentVersion(host).then(version => {
+                if (!version) return;
+                const cell = this.shadowRoot?.querySelector<HTMLElement>(
+                    `[data-agent-version="${CSS.escape(host.id)}"]`);
+                if (cell) cell.textContent = version;
+            });
+        }
+    }
+
     private async loadDockerContainers(content: any) {
         const box = this.shadowRoot?.getElementById('docker-containers');
         if (!box) return;

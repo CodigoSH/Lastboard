@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "Gizli belirteciniz",
   "docker.host_type": "Tip",
   "docker.host_type_agent": "Lastboard Agent",
+  "docker.host_tag_agent": "Agent",
   "docker.host_type_local": "Yerel (socket)",
   "docker.host_type_tcp": "Uzak TCP",
   "docker.host_type_tls": "Uzak TLS",

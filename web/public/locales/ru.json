@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "Ваш секретный токен",
   "docker.host_type": "Тип",
   "docker.host_type_agent": "Агент Lastboard",
+  "docker.host_tag_agent": "Агент",
   "docker.host_type_local": "Локальный (сокет)",
   "docker.host_type_tcp": "Удалённый TCP",
   "docker.host_type_tls": "Удалённый TLS",

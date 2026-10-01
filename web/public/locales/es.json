@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "Tu token secreto",
   "docker.host_type": "Tipo",
   "docker.host_type_agent": "Agente Lastboard",
+  "docker.host_tag_agent": "Agente",
   "docker.host_type_local": "Local (socket)",
   "docker.host_type_tcp": "Remoto TCP",
   "docker.host_type_tls": "Remoto TLS",

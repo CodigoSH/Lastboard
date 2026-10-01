@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "آپ کا خفیہ ٹوکن",
   "docker.host_type": "قسم",
   "docker.host_type_agent": "Lastboard ایجنٹ",
+  "docker.host_tag_agent": "ایجنٹ",
   "docker.host_type_local": "مقامی (socket)",
   "docker.host_type_tcp": "ریموٹ TCP",
   "docker.host_type_tls": "ریموٹ TLS",

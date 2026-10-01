@@ -5,6 +5,7 @@ import {
     hostAddress,
     hostParam,
     hostErrorKey,
+    agentVersionLabel,
     DockerHostError,
     shortId,
     type DockerContainer,
@@ -139,5 +140,16 @@ describe('an agent behind HTTPS and a refused token', () => {
         expect(hostErrorKey(new DockerHostError(''))).toBe('docker.connection_error');
         expect(hostErrorKey(new DockerHostError('something.else'))).toBe('docker.connection_error');
         expect(hostErrorKey(new TypeError('Failed to fetch'))).toBe('docker.connection_error');
+    });
+});
+
+describe('agentVersionLabel', () => {
+    test('prints what the agent reports, with its v', () => {
+        expect(agentVersionLabel('v1.1.1')).toBe('v1.1.1');
+        expect(agentVersionLabel('1.1.1')).toBe('v1.1.1');
+        expect(agentVersionLabel(' v1.2.0-Beta.01 ')).toBe('v1.2.0-Beta.01');
+    });
+    test('an agent that reports no version is older than the first that did', () => {
+        expect(agentVersionLabel('')).toBe('< v1.1.0');
     });
 });

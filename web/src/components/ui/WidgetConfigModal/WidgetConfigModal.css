@@ -783,11 +783,19 @@ dialog[open] {
     margin: -3px;
 }
 
+/* The name takes the whole first line: it is the operator's own label and
+   the one thing in the row worth reading in full. The buttons sit on the
+   second, beside the type and an agent's release, which are short and fixed
+   — "Agent v1.1.1" — so they always leave room. Beside the name, the buttons
+   cut every name longer than a word. */
 .host-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "name name"
+        "meta actions";
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 4px 12px;
     flex-shrink: 0;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -864,6 +872,32 @@ dialog[open] {
     width: fit-content;
 }
 
+.host-item > .host-info { display: contents; }
+.host-item > .host-info > .host-name { grid-area: name; }
+.host-item > .host-info > .host-meta { grid-area: meta; }
+.host-item > .host-actions { grid-area: actions; }
+
+/* The type tag, then the release an agent reports: quieter, and empty until
+   the agent answers — and empty if it does not. */
+.host-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.host-version {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.host-version:empty {
+    display: none;
+}
+
 .host-url {
     font-size: 11px;
     color: var(--text-dim);
@@ -873,16 +907,20 @@ dialog[open] {
     text-overflow: ellipsis;
 }
 
+/* Edit and delete read as one pair: the boxes are transparent, so what the
+   eye measures is icon to icon, and at 32px apart plus a gap they looked like
+   two separate controls. 26px wide still leaves a target above the 24px
+   minimum. */
 .host-actions {
     display: flex;
-    gap: 4px;
+    gap: 0;
 }
 
 .host-action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
+    width: 26px;
     height: 32px;
     background: transparent;
     border: none;

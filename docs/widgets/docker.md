@@ -70,7 +70,7 @@ docker run -d \
 | `SOCKET_PATH` | Path to Docker socket (default: `/var/run/docker.sock`). |
 
 ### Health Check Endpoint
-The agent provides a public, unauthenticated `/health` endpoint to verify connectivity.
+The agent provides a public, unauthenticated `/health` endpoint to verify connectivity. Since v1.1.0 it also reports the agent's version there, and the widget's settings show it next to each agent host — so you can tell which release each machine runs without logging into it. An agent older than v1.1.0 reports none and is shown as `< v1.1.0`; one that does not answer shows nothing.
 
 ### Using with a Reverse Proxy
 If securing the agent behind a reverse proxy (like Pangolin or Cloudflare Zero Trust), enter its address in the widget **with `https://`** — `https://agent.example.com` — and Lastboard reaches the agent over HTTPS. Without the scheme it speaks plain HTTP, which is what an agent on your own network answers.

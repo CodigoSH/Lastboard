@@ -303,6 +303,7 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/docker/stats", protect(http.HandlerFunc(dockerHandler.GetStats)))
 	s.Router.Handle("POST /api/docker/containers", protect(http.HandlerFunc(dockerHandler.ListContainersFor)))
 	s.Router.Handle("POST /api/docker/stats", protect(http.HandlerFunc(dockerHandler.StatsFor)))
+	s.Router.Handle("POST /api/docker/agent-version", protect(http.HandlerFunc(dockerHandler.AgentVersionFor)))
 	s.Router.Handle("POST /api/docker/action", protect(http.HandlerFunc(dockerHandler.Action)))
 
 	// User API

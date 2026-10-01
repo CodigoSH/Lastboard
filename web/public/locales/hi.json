@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "गुप्त टोकन",
   "docker.host_type": "प्रकार",
   "docker.host_type_agent": "Lastboard एजेंट",
+  "docker.host_tag_agent": "एजेंट",
   "docker.host_type_local": "स्थानीय (socket)",
   "docker.host_type_tcp": "रिमोट TCP",
   "docker.host_type_tls": "रिमोट TLS",

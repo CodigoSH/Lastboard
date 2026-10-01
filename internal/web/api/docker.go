@@ -43,6 +43,24 @@ func (h *DockerHandler) ListContainersFor(w http.ResponseWriter, r *http.Request
 	h.writeContainers(w, q.Host)
 }
 
+// POST /api/docker/agent-version — Body: { "host": string }
+//
+// Answers { "version": "v1.1.1" }, or an empty version for an agent too old to
+// say. A host that is not an agent, or does not answer, is a 502.
+func (h *DockerHandler) AgentVersionFor(w http.ResponseWriter, r *http.Request) {
+	q, ok := readDockerQuery(w, r)
+	if !ok {
+		return
+	}
+	v, err := AgentVersion(q.Host)
+	if err != nil {
+		http.Error(w, "docker.connection_error", http.StatusBadGateway)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"version": v})
+}
+
 // GET /api/docker/containers?host=<hostURL>
 //
 // Kept for a browser that has not reloaded since the update and still asks

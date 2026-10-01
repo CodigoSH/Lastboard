@@ -170,6 +170,32 @@ export class DockerHostError extends Error {
     }
 }
 
+/**
+ * Which release an agent runs, as it reports it on /health.
+ *
+ * Agents before v1.1.0 answer without a version, which is itself an answer:
+ * they are older than that. A host that does not answer gives null, and the
+ * screen says nothing rather than guess.
+ */
+export async function fetchAgentVersion(host: DockerHost): Promise<string | null> {
+    if (host.type !== 'agent' || isDemoMode()) return null;
+    try {
+        const res = await fetch('/api/docker/agent-version', dockerPost({ host: hostParam(host) }));
+        if (!res.ok) return null;
+        const data = await res.json();
+        return agentVersionLabel(typeof data?.version === 'string' ? data.version : '');
+    } catch {
+        return null;
+    }
+}
+
+/** What the screen prints for an agent's reported version. */
+export function agentVersionLabel(reported: string): string {
+    const v = reported.trim();
+    if (!v) return '< v1.1.0';
+    return v.startsWith('v') ? v : `v${v}`;
+}
+
 /** The key to show for a failed host, whatever was thrown. */
 export function hostErrorKey(err: unknown): string {
     return err instanceof DockerHostError ? err.key : 'docker.connection_error';

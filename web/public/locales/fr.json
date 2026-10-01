@@ -86,6 +86,7 @@
   "docker.host_token_placeholder": "Jeton secret",
   "docker.host_type": "Type",
   "docker.host_type_agent": "Agent Lastboard",
+  "docker.host_tag_agent": "Agent",
   "docker.host_type_local": "Local (socket)",
   "docker.host_type_tcp": "TCP distant",
   "docker.host_type_tls": "TLS distant",

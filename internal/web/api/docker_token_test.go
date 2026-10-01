@@ -115,3 +115,40 @@ func TestARefusedTokenIsNamed(t *testing.T) {
 		t.Errorf("an action with a refused token gave %v", err)
 	}
 }
+
+// TestAnAgentSaysWhichReleaseItRuns covers what the configuration screen
+// shows beside an agent host: the version it reports, nothing from an agent
+// too old to report one, and an error for anything that is not an answer.
+func TestAnAgentSaysWhichReleaseItRuns(t *testing.T) {
+	health := func(status int, body string) string {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/health" {
+				t.Errorf("asked %s, want /health", r.URL.Path)
+			}
+			w.WriteHeader(status)
+			_, _ = w.Write([]byte(body))
+		}))
+		t.Cleanup(srv.Close)
+		return "agent://" + strings.TrimPrefix(srv.URL, "http://") + "?token=t"
+	}
+
+	if v, err := AgentVersion(health(200, `{"status":"ok","version":"v1.1.1"}`)); err != nil || v != "v1.1.1" {
+		t.Errorf("current agent: %q, %v", v, err)
+	}
+	if v, err := AgentVersion(health(200, `{"status":"ok"}`)); err != nil || v != "" {
+		t.Errorf("an agent from before v1.1.0: %q, %v; want empty and no error", v, err)
+	}
+	if _, err := AgentVersion(health(500, `oops`)); err == nil {
+		t.Error("a 500 was taken as an answer")
+	}
+	if _, err := AgentVersion(health(200, `{"version":"`+strings.Repeat("9", 64)+`"}`)); err == nil {
+		t.Error("a 64-character version was accepted")
+	}
+	// A plain Docker host that would answer /health is still not asked: the
+	// version is an agent's, and only the guard can refuse here.
+	plain := strings.Replace(health(200, `{"version":"v9.9.9"}`), "agent://", "tcp://", 1)
+	plain = plain[:strings.Index(plain, "?")]
+	if v, err := AgentVersion(plain); err == nil {
+		t.Errorf("a plain Docker host was asked for an agent version and gave %q", v)
+	}
+}

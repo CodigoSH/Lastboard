@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -478,4 +479,40 @@ func ContainerAction(hostURL, containerID, action string) error {
 	default:
 		return fmt.Errorf("docker: POST /%s returned %d", action, resp.StatusCode)
 	}
+}
+
+// maxAgentVersion bounds what an agent may report as its version. It is text
+// another machine writes and this one shows; anything longer is not a version.
+const maxAgentVersion = 32
+
+// AgentVersion asks a Lastboard Agent which release it is, on its public
+// /health endpoint. An agent from before v1.1.0 answers without a version, and
+// that comes back as "" with no error: it is reachable, just older.
+func AgentVersion(hostURL string) (string, error) {
+	if !strings.HasPrefix(hostURL, "agent://") {
+		return "", fmt.Errorf("docker: not an agent")
+	}
+	client, base, err := newDockerClient(hostURL)
+	if err != nil {
+		return "", fmt.Errorf("docker: build client: %w", err)
+	}
+	resp, err := client.Get(base + "/health")
+	if err != nil {
+		return "", fmt.Errorf("docker: GET /health: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("docker: GET /health returned %d", resp.StatusCode)
+	}
+	var health struct {
+		Version string `json:"version"`
+	}
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&health); err != nil {
+		return "", fmt.Errorf("docker: decode health: %w", err)
+	}
+	v := strings.TrimSpace(health.Version)
+	if len(v) > maxAgentVersion {
+		return "", fmt.Errorf("docker: implausible agent version")
+	}
+	return v, nil
 }
