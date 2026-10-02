@@ -20,7 +20,7 @@ export const HAS_GO = Bun.which('go') !== null;
 
 export interface RealServer {
     base: string;
-    /** The request the interface would make: session cookie, CSRF token echoed. */
+    /** The request the interface would make: session cookie, CSRF token echoed; waits out the rate limit. */
     call(method: string, path: string, body?: unknown): Promise<Response>;
     /** Like the app's apiService: a failure is an Error carrying the server's text; waits out the rate limit. */
     ok<T>(method: string, path: string, body?: unknown): Promise<T>;
@@ -43,11 +43,18 @@ async function freePort(): Promise<number> {
 }
 
 function session(base: string, cookie: string, csrf: string) {
-    const call = (method: string, path: string, body?: unknown) =>
-        fetch(base + path, {
-            method,
-            headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrf },
-            body: body === undefined ? undefined : JSON.stringify(body),
+    // Every request waits out the rate limit, the reads included: the test that
+    // follows a long run of writes starts with an empty bucket, and a read that
+    // was refused there failed a run that had nothing wrong with it.
+    const call = (method: string, path: string, body?: unknown): Promise<Response> =>
+        retryOnRateLimit(async () => {
+            const res = await fetch(base + path, {
+                method,
+                headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-CSRF-Token': csrf },
+                body: body === undefined ? undefined : JSON.stringify(body),
+            });
+            if (res.status === 429) throw new Error((await res.text()).trim());
+            return res;
         });
     const ok = <T>(method: string, path: string, body?: unknown): Promise<T> =>
         retryOnRateLimit(async () => {
