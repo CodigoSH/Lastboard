@@ -615,6 +615,8 @@
   "settings.import_ok": "Impor selesai",
   "settings.import_fail": "Gagal mengimpor berkas",
   "settings.import_empty": "Berkas tidak berisi item",
+  "settings.import_skipped": "{count} entri tanpa alamat yang dapat dipakai akan dilewati.",
+  "settings.import_too_large": "Berkas itu memiliki lebih banyak grup daripada yang muat di satu dasbor.",
   "settings.import_ungrouped": "Tanpa grup",
   "settings.data": "Data",
   "settings.backup_full": "Cadangan penuh",

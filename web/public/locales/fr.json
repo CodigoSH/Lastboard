@@ -615,6 +615,8 @@
   "settings.import_ok": "Importation terminée",
   "settings.import_fail": "Impossible d'importer le fichier",
   "settings.import_empty": "Le fichier ne contient aucun élément",
+  "settings.import_skipped": "{count} entrées sans adresse utilisable seront ignorées.",
+  "settings.import_too_large": "Ce fichier contient plus de groupes qu'un tableau ne peut en contenir.",
   "settings.import_ungrouped": "Sans groupe",
   "settings.data": "Données",
   "settings.backup_full": "Sauvegarde complète",

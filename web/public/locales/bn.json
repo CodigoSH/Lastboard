@@ -615,6 +615,8 @@
   "settings.import_ok": "ইমপোর্ট সম্পন্ন",
   "settings.import_fail": "ফাইল ইমপোর্ট করা যায়নি",
   "settings.import_empty": "ফাইলে কোনো আইটেম নেই",
+  "settings.import_skipped": "ব্যবহারযোগ্য ঠিকানা ছাড়া {count}টি এন্ট্রি বাদ দেওয়া হবে।",
+  "settings.import_too_large": "এই ফাইলে একটি ড্যাশবোর্ডে ধরার চেয়ে বেশি গ্রুপ আছে।",
   "settings.import_ungrouped": "গ্রুপবিহীন",
   "settings.data": "ডেটা",
   "settings.backup_full": "সম্পূর্ণ ব্যাকআপ",

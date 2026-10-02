@@ -7,6 +7,7 @@ import { userService } from '../../../services/userService';
 import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
+import { ImportTooLargeError } from '../../../services/importPlan';
 import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
@@ -329,16 +330,25 @@ class SettingsContent extends HTMLElement {
                 return;
             }
             const { eventBus, EVENTS } = await import('../../../services/EventBus');
+            // Said before anything is created: a file that listed fifty services
+            // and imported forty should not leave the person counting.
+            const skipped = cfg.skipped ?? 0;
+            const message = i18n.t('settings.import_confirm', { count: String(count) })
+                + (skipped > 0 ? ' ' + i18n.t('settings.import_skipped', { count: String(skipped) }) : '');
             eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
                 title: i18n.t('settings.import_dashboards'),
-                message: i18n.t('settings.import_confirm', { count: String(count) }),
+                message,
                 onConfirm: async () => {
                     try {
                         const gridCols = userStore.getUser()?.preferences?.grid_columns || 12;
                         await importService.materialize(cfg, gridCols, i18n.t('settings.import_ungrouped'));
                         if (window.notifier) window.notifier.show(i18n.t('settings.import_ok'));
-                    } catch {
-                        if (window.notifier) window.notifier.show(i18n.t('settings.import_fail'), 'error');
+                    } catch (err) {
+                        // Say why when it is something the person can act on.
+                        const why = err instanceof ImportTooLargeError ? 'settings.import_too_large'
+                            : (err as Error)?.message === 'error.item_limit_reached' ? 'error.item_limit_reached'
+                            : 'settings.import_fail';
+                        if (window.notifier) window.notifier.show(i18n.t(why), 'error');
                     }
                 },
             });

@@ -615,6 +615,8 @@
   "settings.import_ok": "İçe aktarma tamamlandı",
   "settings.import_fail": "Dosya içe aktarılamadı",
   "settings.import_empty": "Dosyada öğe yok",
+  "settings.import_skipped": "Kullanılabilir adresi olmayan {count} kayıt atlanacak.",
+  "settings.import_too_large": "Bu dosyada tek bir panoya sığandan fazla grup var.",
   "settings.import_ungrouped": "Grupsuz",
   "settings.data": "Veri",
   "settings.backup_full": "Tam yedek",

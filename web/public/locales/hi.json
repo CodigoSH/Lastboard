@@ -615,6 +615,8 @@
   "settings.import_ok": "आयात पूर्ण",
   "settings.import_fail": "फ़ाइल आयात नहीं हो सकी",
   "settings.import_empty": "फ़ाइल में कोई आइटम नहीं",
+  "settings.import_skipped": "{count} प्रविष्टियाँ, जिनका कोई उपयोगी पता नहीं है, छोड़ दी जाएँगी।",
+  "settings.import_too_large": "इस फ़ाइल में एक डैशबोर्ड में समाने से अधिक समूह हैं।",
   "settings.import_ungrouped": "बिना समूह",
   "settings.data": "डेटा",
   "settings.backup_full": "पूर्ण बैकअप",

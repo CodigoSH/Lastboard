@@ -615,6 +615,8 @@
   "settings.import_ok": "Import voltooid",
   "settings.import_fail": "Kon het bestand niet importeren",
   "settings.import_empty": "Het bestand bevat geen items",
+  "settings.import_skipped": "{count} items zonder bruikbaar adres worden overgeslagen.",
+  "settings.import_too_large": "Dat bestand bevat meer groepen dan één dashboard kan bevatten.",
   "settings.import_ungrouped": "Zonder groep",
   "settings.data": "Gegevens",
   "settings.backup_full": "Volledige back-up",

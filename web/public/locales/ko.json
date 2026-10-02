@@ -615,6 +615,8 @@
   "settings.import_ok": "가져오기 완료",
   "settings.import_fail": "파일을 가져오지 못했습니다",
   "settings.import_empty": "파일에 항목이 없습니다",
+  "settings.import_skipped": "사용할 수 있는 주소가 없는 {count}개 항목은 제외됩니다.",
+  "settings.import_too_large": "이 파일의 그룹이 대시보드 하나에 담을 수 있는 수보다 많습니다.",
   "settings.import_ungrouped": "그룹 없음",
   "settings.data": "데이터",
   "settings.backup_full": "전체 백업",

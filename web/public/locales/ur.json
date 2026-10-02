@@ -615,6 +615,8 @@
   "settings.import_ok": "امپورٹ مکمل",
   "settings.import_fail": "فائل امپورٹ نہیں ہو سکی",
   "settings.import_empty": "فائل میں کوئی آئٹم نہیں",
+  "settings.import_skipped": "{count} اندراجات جن کا قابلِ استعمال پتہ نہیں، چھوڑ دی جائیں گی۔",
+  "settings.import_too_large": "اس فائل میں اتنے گروپ ہیں جتنے ایک ڈیش بورڈ میں نہیں سما سکتے۔",
   "settings.import_ungrouped": "بلا گروپ",
   "settings.data": "ڈیٹا",
   "settings.backup_full": "مکمل بیک اپ",

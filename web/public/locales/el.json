@@ -615,6 +615,8 @@
   "settings.import_ok": "Η εισαγωγή ολοκληρώθηκε",
   "settings.import_fail": "Αδυναμία εισαγωγής του αρχείου",
   "settings.import_empty": "Το αρχείο δεν έχει στοιχεία",
+  "settings.import_skipped": "{count} εγγραφές χωρίς χρησιμοποιήσιμη διεύθυνση θα παραλειφθούν.",
+  "settings.import_too_large": "Αυτό το αρχείο έχει περισσότερες ομάδες από όσες χωρά ένας πίνακας.",
   "settings.import_ungrouped": "Χωρίς ομάδα",
   "settings.data": "Δεδομένα",
   "settings.backup_full": "Πλήρες αντίγραφο ασφαλείας",

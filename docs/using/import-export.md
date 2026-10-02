@@ -62,7 +62,7 @@ Bring dashboards in from another tool or a native export. **Import always create
 
 1. Choose the **format** of your file.
 2. Pick the **file**.
-3. Confirm — Lastboard tells you how many items it will import before creating anything.
+3. Confirm — Lastboard tells you how many items it will import, and how many entries of the file it leaves out, before creating anything.
 
 ### Supported formats
 
@@ -74,3 +74,14 @@ Bring dashboards in from another tool or a native export. **Import always create
 | **Dashy — conf.yml** | A Dashy configuration file |
 
 Items that don't belong to a named group are placed under an **Ungrouped** section. After importing, you're switched to the first new dashboard so you can review and rearrange it.
+
+### What a Homepage or Dashy file turns into
+
+- **Each group becomes a section**, laid out side by side across the board. A group nested inside another (Homepage allows it) becomes its own section named after both — *Media / Servarr*.
+- **Entries with no usable address are left out**, and the confirmation says how many. That covers a service that only points at a Docker container (it has no `href`) and an address that is still a template such as `{{HOMEPAGE_VAR_URL}}` or `${URL}`, which only Homepage can fill in.
+- **Icons keep their name.** `plex.png`, `sh-plex` and `mdi-server` become `plex` and `server`; a colour after the name (`mdi-home-#ff0000`) is dropped; a file in your own Homepage folder (`/images/unifi.png`) keeps just its name, since that file is not on this server. Dashy's Font Awesome classes and the words `favicon` and `generative` start with no icon, and Lastboard shows the first letter instead. A full address is kept as it is.
+- **`ping` and `siteMonitor` switch the status check on.** Widgets are not imported — Lastboard's own widgets are set up from the dashboard.
+- **Either Homepage option reads either file.** The two files differ only in how an entry is written, so choosing *bookmarks.yaml* for a services file, or the other way round, still works.
+- **A failed import leaves nothing behind.** If it stops half-way — you reach the item limit, the connection drops — the dashboard it was building is removed again, and you are told why when it is something you can fix.
+
+An export keeps the icons you stored on this server as addresses of this server, so a file moved to another Lastboard will not find those icons there. Restoring a full backup carries them along.

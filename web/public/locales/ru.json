@@ -615,6 +615,8 @@
   "settings.import_ok": "Импорт завершён",
   "settings.import_fail": "Не удалось импортировать файл",
   "settings.import_empty": "В файле нет элементов",
+  "settings.import_skipped": "{count} записей без пригодного адреса будут пропущены.",
+  "settings.import_too_large": "В этом файле больше групп, чем помещается в одну панель.",
   "settings.import_ungrouped": "Без группы",
   "settings.data": "Данные",
   "settings.backup_full": "Полная резервная копия",

@@ -615,6 +615,8 @@
   "settings.import_ok": "اكتمل الاستيراد",
   "settings.import_fail": "تعذّر استيراد الملف",
   "settings.import_empty": "الملف لا يحتوي على عناصر",
+  "settings.import_skipped": "سيتم تخطي {count} من الإدخالات التي ليس لها عنوان صالح.",
+  "settings.import_too_large": "يحتوي هذا الملف على مجموعات أكثر مما تتسع له لوحة واحدة.",
   "settings.import_ungrouped": "بدون مجموعة",
   "settings.data": "البيانات",
   "settings.backup_full": "نسخة احتياطية كاملة",

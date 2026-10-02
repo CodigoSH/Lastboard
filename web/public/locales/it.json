@@ -615,6 +615,8 @@
   "settings.import_ok": "Importazione completata",
   "settings.import_fail": "Impossibile importare il file",
   "settings.import_empty": "Il file non contiene elementi",
+  "settings.import_skipped": "{count} voci senza un indirizzo utilizzabile verranno escluse.",
+  "settings.import_too_large": "Quel file ha più gruppi di quanti ne possa contenere una dashboard.",
   "settings.import_ungrouped": "Senza gruppo",
   "settings.data": "Dati",
   "settings.backup_full": "Backup completo",

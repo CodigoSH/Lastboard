@@ -615,6 +615,8 @@
   "settings.import_ok": "Import abgeschlossen",
   "settings.import_fail": "Datei konnte nicht importiert werden",
   "settings.import_empty": "Die Datei enthält keine Elemente",
+  "settings.import_skipped": "{count} Einträge ohne nutzbare Adresse werden ausgelassen.",
+  "settings.import_too_large": "Diese Datei hat mehr Gruppen, als ein Dashboard fassen kann.",
   "settings.import_ungrouped": "Ohne Gruppe",
   "settings.data": "Daten",
   "settings.backup_full": "Vollständige Sicherung",

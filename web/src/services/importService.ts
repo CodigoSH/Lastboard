@@ -1,6 +1,8 @@
 import { apiService } from './apiService';
 import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
+import { planImport } from './importPlan';
+import { retryOnRateLimit } from './retryOnRateLimit';
 
 export interface NativeItem {
     type: string;
@@ -12,7 +14,12 @@ export interface NativeItem {
     status_check?: boolean;
 }
 export interface NativeDashboard { name: string; items: NativeItem[]; }
-export interface NativeConfig { version: number; dashboards: NativeDashboard[]; }
+export interface NativeConfig {
+    version: number;
+    dashboards: NativeDashboard[];
+    /** Entries the file listed that could not become a bookmark. */
+    skipped?: number;
+}
 
 /**
  * Import/export of dashboards. Export downloads the native YAML; import parses a
@@ -46,49 +53,51 @@ class ImportService {
     /**
      * Create the config's dashboards, sections and bookmarks. Returns the id of
      * the first dashboard created (to switch to it), or null if nothing was made.
+     *
+     * The layout is worked out and checked first (see planImport), so a file that
+     * cannot fit is refused before anything exists. If a request still fails
+     * part-way — the item limit, the connection — the dashboard being built is
+     * deleted again: an import that fails leaves nothing behind, instead of an
+     * empty board next to an error message.
      */
     async materialize(cfg: NativeConfig, gridCols: number, ungroupedLabel: string): Promise<number | null> {
+        const plans = planImport(cfg.dashboards || [], gridCols, ungroupedLabel);
         let firstDashId: number | null = null;
-        const SW = Math.max(2, Math.min(gridCols || 12, 4));
+        const made: number[] = [];
 
-        for (const nd of cfg.dashboards || []) {
-            if (!nd.items || nd.items.length === 0) continue;
-            const dash = await dashboardStore.createDashboard(nd.name || 'Import');
-            if (firstDashId === null) firstDashId = dash.id;
+        try {
+            for (const plan of plans) {
+                const dash = await retryOnRateLimit(() => dashboardStore.createDashboard(plan.name || 'Import'));
+                made.push(dash.id);
+                if (firstDashId === null) firstDashId = dash.id;
 
-            // Group items, preserving first-seen order.
-            const groups = new Map<string, NativeItem[]>();
-            for (const it of nd.items) {
-                const g = (it.group || '').trim() || ungroupedLabel;
-                if (!groups.has(g)) groups.set(g, []);
-                groups.get(g)!.push(it);
-            }
-
-            let yCursor = 0;
-            for (const [groupName, its] of groups) {
-                const rows = Math.max(1, Math.ceil(its.length / SW));
-                const section = await dashboardService.createItem({
-                    dashboard_id: dash.id,
-                    type: 'section',
-                    x: 0, y: yCursor, w: SW, h: rows,
-                    content: JSON.stringify({ title: groupName }),
-                } as never);
-
-                for (let k = 0; k < its.length; k++) {
-                    const it = its[k];
-                    await dashboardService.createItem({
+                for (const sec of plan.sections) {
+                    const section = await retryOnRateLimit(() => dashboardService.createItem({
                         dashboard_id: dash.id,
-                        parent_id: section.id,
-                        type: 'bookmark',
-                        x: k % SW, y: Math.floor(k / SW), w: 1, h: 1,
-                        content: JSON.stringify({
-                            label: it.title, url: it.url, icon: it.icon || '',
-                            description: it.description || '', statusCheck: !!it.status_check,
-                        }),
-                    } as never);
+                        type: 'section',
+                        x: sec.x, y: sec.y, w: sec.w, h: sec.h,
+                        content: JSON.stringify({ title: sec.title }),
+                    } as never));
+
+                    for (const it of sec.items) {
+                        await retryOnRateLimit(() => dashboardService.createItem({
+                            dashboard_id: dash.id,
+                            parent_id: section.id,
+                            type: 'bookmark',
+                            x: it.x, y: it.y, w: 1, h: 1,
+                            content: JSON.stringify({
+                                label: it.title, url: it.url, icon: it.icon || '',
+                                description: it.description || '', statusCheck: !!it.status_check,
+                            }),
+                        } as never));
+                    }
                 }
-                yCursor += rows + 1;
             }
+        } catch (err) {
+            for (const id of made) {
+                try { await retryOnRateLimit(() => dashboardStore.deleteDashboard(id)); } catch { /* best effort */ }
+            }
+            throw err;
         }
 
         if (firstDashId !== null) {
