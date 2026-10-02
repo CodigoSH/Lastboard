@@ -1,0 +1,29 @@
+pageInfo:
+  title: Home Lab
+  description: Welcome
+appConfig:
+  theme: colorful
+  statusCheck: true
+sections:
+  - name: Media
+    icon: fas fa-play-circle
+    items:
+      - title: Plex
+        url: https://plex.tv
+        icon: hl-plex
+        statusCheck: true
+        description: Streaming
+      - title: Jellyfin
+        url: https://jellyfin.org
+        icon: favicon
+        subItems:
+          - title: Jellyfin admin
+            url: https://jellyfin.org/admin
+            icon: si-jellyfin
+  - name: Tools
+    items:
+      - title: Router
+        url: http://192.168.1.1
+        icon: fas fa-network-wired
+      - title: Notes
+        icon: generative

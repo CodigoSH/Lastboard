@@ -1,0 +1,59 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/services/
+
+- Media:
+    - Emby:
+        icon: emby.png
+        href: http://emby.host.or.ip/
+        description: Movies & TV Shows
+        widget:
+          type: emby
+          url: http://emby.host.or.ip
+          key: apikeyapikeyapikeyapikeyapikey
+    - Plex:
+        icon: sh-plex
+        href: http://plex.host/
+        siteMonitor: http://plex.host/
+    - Servarr:
+        - Sonarr:
+            icon: sonarr.png
+            href: http://sonarr.host/
+            description: Series management
+            ping: sonarr.host
+            widget:
+              type: sonarr
+              fields: ["wanted", "queued"]
+              url: http://sonarr.host
+              key: ${SONARR_API_KEY}
+              highlight:
+                queued:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 20
+        - Radarr:
+            icon: radarr.png
+            href: http://radarr.host/
+            description: Movie management
+
+- Infrastructure:
+    - Proxmox:
+        icon: mdi-server-#4a90d9
+        href: https://proxmox.host:8006
+    - Docker only:
+        icon: docker.png
+        server: my-server
+        container: my-container
+    - Templated:
+        href: "{{HOMEPAGE_VAR_NAS_URL}}"
+    - UptimeRobot:
+        icon: uptimekuma.png
+        href: https://uptimerobot.com/
+        widgets:
+          - type: uptimerobot
+            url: https://api.uptimerobot.com
+            key: ${UPTIMEROBOT_API_KEY}
+            headers:
+              User-Agent: homepage
+              X-Auth-Key: your-secret-here

@@ -1,0 +1,4 @@
+- SERVICES:
+    - Unifi Console:
+      - icon: /images/unifi.png
+        href: https://unifi.ui.com

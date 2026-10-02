@@ -19,6 +19,12 @@ import (
 type NativeConfig struct {
 	Version    int               `yaml:"version" json:"version"`
 	Dashboards []NativeDashboard `yaml:"dashboards" json:"dashboards"`
+
+	// Skipped counts entries a competitor file listed that Lastboard cannot
+	// make a bookmark of — no address to open, or one that is still a template
+	// placeholder. Only the import preview carries it, so the person is told
+	// how many were left out instead of finding out by counting.
+	Skipped int `yaml:"-" json:"skipped,omitempty"`
 }
 
 type NativeDashboard struct {
@@ -233,6 +239,13 @@ func parseDashy(data []byte) (*NativeConfig, error) {
 				Icon        string `yaml:"icon"`
 				Description string `yaml:"description"`
 				StatusCheck bool   `yaml:"statusCheck"`
+				// SubItems are the links Dashy folds under an item. They are
+				// links like any other, so they are imported beside it.
+				SubItems []struct {
+					Title string `yaml:"title"`
+					URL   string `yaml:"url"`
+					Icon  string `yaml:"icon"`
+				} `yaml:"subItems"`
 			} `yaml:"items"`
 		} `yaml:"sections"`
 	}
@@ -240,95 +253,225 @@ func parseDashy(data []byte) (*NativeConfig, error) {
 		return nil, err
 	}
 	dash := NativeDashboard{Name: "Dashy"}
+	skipped := 0
 	for _, s := range conf.Sections {
 		for _, it := range s.Items {
 			if it.URL == "" && it.Title == "" {
 				continue
 			}
-			dash.Items = append(dash.Items, NativeItem{
-				Type: "bookmark", Title: it.Title, URL: it.URL, Icon: normalizeIcon(it.Icon),
-				Group: s.Name, Description: it.Description, StatusCheck: it.StatusCheck,
-			})
+			if strings.TrimSpace(it.URL) == "" || unresolved(it.URL) {
+				skipped++
+			} else {
+				dash.Items = append(dash.Items, NativeItem{
+					Type: "bookmark", Title: it.Title, URL: it.URL, Icon: normalizeIcon(it.Icon),
+					Group: s.Name, Description: it.Description, StatusCheck: it.StatusCheck,
+				})
+			}
+			for _, sub := range it.SubItems {
+				if strings.TrimSpace(sub.URL) == "" || unresolved(sub.URL) {
+					skipped++
+					continue
+				}
+				dash.Items = append(dash.Items, NativeItem{
+					Type: "bookmark", Title: sub.Title, URL: sub.URL, Icon: normalizeIcon(sub.Icon), Group: s.Name,
+				})
+			}
 		}
 	}
 	if len(dash.Items) == 0 {
 		return nil, fmt.Errorf("no items")
 	}
-	return &NativeConfig{Version: 1, Dashboards: []NativeDashboard{dash}}, nil
+	return &NativeConfig{Version: 1, Dashboards: []NativeDashboard{dash}, Skipped: skipped}, nil
 }
 
 // --- Homepage (services.yaml / bookmarks.yaml) ---
-// Both are lists of single-key group maps whose value is a list of single-key
-// entry maps. We walk them generically since the keys are dynamic names.
+//
+// Both files are a list of groups. A group is a one-key map whose value is a
+// list of entries; an entry is a one-key map whose value is either the
+// definition itself (services: a map with href, icon, description…) or a list
+// holding it (bookmarks: a list with one map of abbr, href, icon…). Since 2024
+// a service list may also hold another group, which is a one-key map whose
+// value is again a list of entries.
+//
+// The walk is over the YAML nodes, not a struct. A struct has to name every
+// shape the file may take, and a nested group, a widget block or a key added
+// next year made the whole decode fail with "cannot unmarshal" — one entry the
+// struct did not expect, and the person was told the file could not be read.
+// One walk also serves both files: nothing separates a bookmarks list from a
+// services list except the shape of its leaves, and people do choose the wrong
+// one of the two.
 
-func parseHomepageServices(data []byte) (*NativeConfig, error) {
-	var groups []map[string][]map[string]struct {
-		Href        string `yaml:"href"`
-		Icon        string `yaml:"icon"`
-		Description string `yaml:"description"`
-		SiteMonitor string `yaml:"siteMonitor"`
-		Ping        string `yaml:"ping"`
+// yamlResolved follows aliases (*anchor) to the node they stand for.
+func yamlResolved(n *yaml.Node) *yaml.Node {
+	for n != nil && n.Kind == yaml.AliasNode {
+		n = n.Alias
 	}
-	if err := yaml.Unmarshal(data, &groups); err != nil {
-		return nil, err
+	return n
+}
+
+// yamlText is a scalar's text, or "" for anything that is not a scalar.
+func yamlText(n *yaml.Node) string {
+	if n = yamlResolved(n); n != nil && n.Kind == yaml.ScalarNode {
+		return strings.TrimSpace(n.Value)
 	}
-	dash := NativeDashboard{Name: "Homepage"}
-	for _, group := range groups {
-		for groupName, services := range group {
-			for _, svc := range services {
-				for name, def := range svc {
-					if def.Href == "" {
-						continue
-					}
-					dash.Items = append(dash.Items, NativeItem{
-						Type: "bookmark", Title: name, URL: def.Href, Icon: normalizeIcon(def.Icon),
-						Group: groupName, Description: def.Description,
-						StatusCheck: def.SiteMonitor != "" || def.Ping != "",
-					})
+	return ""
+}
+
+// yamlPairs lists a mapping's key/value nodes in file order.
+func yamlPairs(n *yaml.Node) [][2]*yaml.Node {
+	n = yamlResolved(n)
+	if n == nil || n.Kind != yaml.MappingNode {
+		return nil
+	}
+	out := make([][2]*yaml.Node, 0, len(n.Content)/2)
+	for i := 0; i+1 < len(n.Content); i += 2 {
+		out = append(out, [2]*yaml.Node{n.Content[i], n.Content[i+1]})
+	}
+	return out
+}
+
+// yamlField reads one scalar key of a mapping.
+func yamlField(n *yaml.Node, key string) string {
+	for _, kv := range yamlPairs(n) {
+		if yamlText(kv[0]) == key {
+			return yamlText(kv[1])
+		}
+	}
+	return ""
+}
+
+// hasLeafKeys says whether a mapping looks like a leaf — a definition with keys
+// of its own — rather than a group whose children are entries.
+func hasLeafKeys(n *yaml.Node) bool {
+	for _, kv := range yamlPairs(n) {
+		switch yamlText(kv[0]) {
+		case "href", "abbr", "icon", "description", "siteMonitor", "ping":
+			return true
+		}
+	}
+	return false
+}
+
+// homepageLeaf finds the definition under an entry's value: the map itself for
+// a service, or the first map holding a leaf's keys inside a list for a bookmark.
+// The second result says the value is a list of entries instead, i.e. a group.
+func homepageLeaf(v *yaml.Node) (leaf *yaml.Node, isGroup bool) {
+	v = yamlResolved(v)
+	if v == nil {
+		return nil, false
+	}
+	switch v.Kind {
+	case yaml.MappingNode:
+		return v, false
+	case yaml.SequenceNode:
+		for _, el := range v.Content {
+			if el = yamlResolved(el); el != nil && el.Kind == yaml.MappingNode && hasLeafKeys(el) {
+				return el, false
+			}
+		}
+		return nil, len(v.Content) > 0
+	}
+	return nil, false
+}
+
+// unresolved says an address is still a template: Homepage fills {{HOMEPAGE_VAR_X}}
+// and ${X} in from its environment, and neither is an address anywhere else.
+func unresolved(href string) bool {
+	return strings.Contains(href, "{{") || strings.Contains(href, "${")
+}
+
+type homepageWalk struct {
+	items   []NativeItem
+	skipped int
+}
+
+// group walks the entries of one group. A nested group is named after its
+// parent — "Media / Servarr" — because a Lastboard section has one title and
+// the two levels would otherwise read as unrelated.
+func (w *homepageWalk) group(name string, entries *yaml.Node) {
+	entries = yamlResolved(entries)
+	if entries == nil || entries.Kind != yaml.SequenceNode {
+		return
+	}
+	for _, entry := range entries.Content {
+		for _, kv := range yamlPairs(entry) {
+			title := yamlText(kv[0])
+			leaf, isGroup := homepageLeaf(kv[1])
+			switch {
+			case isGroup:
+				child := title
+				if name != "" {
+					child = name + " / " + title
 				}
+				w.group(child, kv[1])
+			case title == "", leaf == nil:
+				// A key that is not text cannot be a name, and an entry with
+				// nothing under it (a bare "- Name:") has nothing to import and
+				// nothing to have been left out.
+			case yamlField(leaf, "href") == "", unresolved(yamlField(leaf, "href")):
+				w.skipped++
+			default:
+				w.items = append(w.items, NativeItem{
+					Type: "bookmark", Title: title, URL: yamlField(leaf, "href"),
+					Icon: normalizeIcon(yamlField(leaf, "icon")), Group: name,
+					Description: yamlField(leaf, "description"),
+					StatusCheck: yamlField(leaf, "siteMonitor") != "" || yamlField(leaf, "ping") != "",
+				})
 			}
 		}
 	}
-	if len(dash.Items) == 0 {
-		return nil, fmt.Errorf("no services")
+}
+
+func parseHomepage(data []byte, empty string) (*NativeConfig, error) {
+	var doc yaml.Node
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, err
 	}
-	return &NativeConfig{Version: 1, Dashboards: []NativeDashboard{dash}}, nil
+	top := yamlResolved(&doc)
+	if top != nil && top.Kind == yaml.DocumentNode && len(top.Content) > 0 {
+		top = yamlResolved(top.Content[0])
+	}
+	if top == nil || top.Kind != yaml.SequenceNode {
+		return nil, fmt.Errorf("%s", empty)
+	}
+	var w homepageWalk
+	for _, g := range top.Content {
+		for _, kv := range yamlPairs(g) {
+			// A one-key map whose value is a list of entries is a group.
+			// Anything else at the top is an entry that was never put in one,
+			// and is walked as a group of its own with no name.
+			if _, isGroup := homepageLeaf(kv[1]); isGroup {
+				w.group(yamlText(kv[0]), kv[1])
+				continue
+			}
+			alone := &yaml.Node{Kind: yaml.MappingNode, Content: []*yaml.Node{kv[0], kv[1]}}
+			w.group("", &yaml.Node{Kind: yaml.SequenceNode, Content: []*yaml.Node{alone}})
+		}
+	}
+	if len(w.items) == 0 {
+		return nil, fmt.Errorf("%s", empty)
+	}
+	return &NativeConfig{Version: 1, Dashboards: []NativeDashboard{{Name: "Homepage", Items: w.items}}, Skipped: w.skipped}, nil
+}
+
+func parseHomepageServices(data []byte) (*NativeConfig, error) {
+	return parseHomepage(data, "no services")
 }
 
 func parseHomepageBookmarks(data []byte) (*NativeConfig, error) {
-	var groups []map[string][]map[string][]struct {
-		Href string `yaml:"href"`
-		Abbr string `yaml:"abbr"`
-		Icon string `yaml:"icon"`
-	}
-	if err := yaml.Unmarshal(data, &groups); err != nil {
-		return nil, err
-	}
-	dash := NativeDashboard{Name: "Homepage"}
-	for _, group := range groups {
-		for groupName, entries := range group {
-			for _, entry := range entries {
-				for name, defs := range entry {
-					if len(defs) == 0 || defs[0].Href == "" {
-						continue
-					}
-					dash.Items = append(dash.Items, NativeItem{
-						Type: "bookmark", Title: name, URL: defs[0].Href,
-						Icon: normalizeIcon(defs[0].Icon), Group: groupName,
-					})
-				}
-			}
-		}
-	}
-	if len(dash.Items) == 0 {
-		return nil, fmt.Errorf("no bookmarks")
-	}
-	return &NativeConfig{Version: 1, Dashboards: []NativeDashboard{dash}}, nil
+	return parseHomepage(data, "no bookmarks")
 }
 
 // normalizeIcon maps competitor icon references to something Lastboard can show,
 // keeping full URLs as-is and stripping known prefixes to a bare slug; unknown
-// forms fall through and the UI's initial-avatar fallback handles them.
+// forms become empty and the UI's initial-avatar fallback handles them.
+//
+// What reaches here is whatever people typed into another tool: Homepage's
+// "mdi-home-#ff0000" (a colour after the name), "/images/unifi.png" (a file in
+// their own Homepage folder, which this server does not have), and Dashy's
+// "fas fa-rocket" (a CSS class) or the words "favicon" and "generative". None
+// of those is a slug, and passing them through asked the icon CDN for a name
+// with a slash or a space in it.
 func normalizeIcon(icon string) string {
 	icon = strings.TrimSpace(icon)
 	if icon == "" {
@@ -337,11 +480,22 @@ func normalizeIcon(icon string) string {
 	if strings.HasPrefix(icon, "http://") || strings.HasPrefix(icon, "https://") {
 		return icon
 	}
+	if strings.ContainsAny(icon, " \t") || icon == "favicon" || icon == "generative" {
+		return ""
+	}
+	// A file in the other tool's own folder: its name is the best guess at a slug.
+	if strings.Contains(icon, "/") {
+		icon = icon[strings.LastIndex(icon, "/")+1:]
+	}
+	// "-#ff0000" after the name is a colour, not part of it.
+	if i := strings.Index(icon, "-#"); i > 0 {
+		icon = icon[:i]
+	}
 	for _, p := range []string{"sh-", "si-", "mdi-", "hl-", "fa-"} {
 		if strings.HasPrefix(icon, p) {
 			return strings.TrimSuffix(strings.TrimPrefix(icon, p), ".svg")
 		}
 	}
 	// dashboard-icons style "plex.png" / "plex" -> "plex"
-	return strings.TrimSuffix(strings.TrimSuffix(icon, ".png"), ".svg")
+	return strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(icon, ".png"), ".svg"), ".webp")
 }

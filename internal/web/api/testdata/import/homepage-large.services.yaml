@@ -1,0 +1,563 @@
+---
+# generated: realistic size
+- Media:
+    - Service 1:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.1:8001/
+    - Service 2:
+        href: http://10.0.0.2:8002/
+    - Service 3:
+        icon: plex.png
+        href: http://10.0.0.3:8003/
+        description: Service number 3
+    - Service 4:
+        icon: sh-jellyfin
+        href: http://10.0.0.4:8004/
+    - Service 5:
+        icon: fas fa-rocket
+        href: http://10.0.0.5:8005/
+        ping: 10.0.0.5
+    - Service 6:
+        icon: sh-jellyfin
+        href: http://10.0.0.6:8006/
+        description: Service number 6
+    - Service 7:
+        icon: sonarr.svg
+        href: http://10.0.0.7:8007/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 8:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.8:8008/
+    - Service 9:
+        icon: plex.png
+        href: http://10.0.0.9:8009/
+        description: Service number 9
+    - Service 10:
+        icon: fas fa-rocket
+        href: http://10.0.0.10:8010/
+        ping: 10.0.0.10
+- Downloads:
+    - Service 11:
+        icon: plex.png
+        server: my-docker
+        container: svc11
+    - Service 12:
+        icon: sh-jellyfin
+        href: http://10.0.0.12:8012/
+        description: Service number 12
+    - Service 13:
+        href: http://10.0.0.13:8013/
+    - Service 14:
+        href: http://10.0.0.14:8014/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 15:
+        icon: sh-jellyfin
+        href: http://10.0.0.15:8015/
+        description: Service number 15
+        ping: 10.0.0.15
+    - Service 16:
+        icon: si-github
+        href: http://10.0.0.16:8016/
+    - Service 17:
+        icon: sh-jellyfin
+        href: http://10.0.0.17:8017/
+    - Service 18:
+        icon: fas fa-rocket
+        href: http://10.0.0.18:8018/
+        description: Service number 18
+    - Sub of Downloads:
+        - Nested 19:
+            icon: sonarr.png
+            href: http://10.1.0.0:9019/
+        - Nested 20:
+            icon: sonarr.png
+            href: http://10.1.0.1:9020/
+        - Nested 21:
+            icon: sonarr.png
+            href: http://10.1.0.2:9021/
+- Network:
+    - Service 22:
+        icon: plex.png
+        server: my-docker
+        container: svc22
+    - Service 23:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.23:8023/
+    - Service 24:
+        icon: sh-jellyfin
+        href: http://10.0.0.24:8024/
+        description: Service number 24
+    - Service 25:
+        icon: si-github
+        href: http://10.0.0.25:8025/
+        ping: 10.0.0.25
+    - Service 26:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.26:8026/
+    - Service 27:
+        icon: plex.png
+        href: http://10.0.0.27:8027/
+        description: Service number 27
+    - Service 28:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.28:8028/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 29:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.29:8029/
+    - Service 30:
+        href: http://10.0.0.30:8030/
+        description: Service number 30
+        ping: 10.0.0.30
+    - Service 31:
+        icon: plex.png
+        href: http://10.0.0.31:8031/
+    - Service 32:
+        icon: si-github
+        href: http://10.0.0.32:8032/
+- Home Automation:
+    - Service 33:
+        icon: fas fa-rocket
+        server: my-docker
+        container: svc33
+        description: Service number 33
+    - Service 34:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.34:8034/
+    - Service 35:
+        icon: /images/unifi.png
+        href: http://10.0.0.35:8035/
+        ping: 10.0.0.35
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 36:
+        href: http://10.0.0.36:8036/
+        description: Service number 36
+    - Service 37:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.37:8037/
+- Monitoring:
+    - Service 38:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.38:8038/
+    - Service 39:
+        icon: /images/unifi.png
+        href: http://10.0.0.39:8039/
+        description: Service number 39
+    - Service 40:
+        icon: fas fa-rocket
+        href: http://10.0.0.40:8040/
+        ping: 10.0.0.40
+    - Service 41:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.41:8041/
+    - Service 42:
+        icon: sh-jellyfin
+        href: http://10.0.0.42:8042/
+        description: Service number 42
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 43:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.43:8043/
+- Storage:
+    - Service 44:
+        icon: sonarr.svg
+        server: my-docker
+        container: svc44
+    - Service 45:
+        icon: sh-jellyfin
+        href: http://10.0.0.45:8045/
+        description: Service number 45
+        ping: 10.0.0.45
+    - Service 46:
+        icon: fas fa-rocket
+        href: http://10.0.0.46:8046/
+    - Service 47:
+        icon: sh-jellyfin
+        href: http://10.0.0.47:8047/
+    - Service 48:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.48:8048/
+        description: Service number 48
+    - Service 49:
+        icon: plex.png
+        href: http://10.0.0.49:8049/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 50:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.50:8050/
+        ping: 10.0.0.50
+    - Service 51:
+        icon: si-github
+        href: http://10.0.0.51:8051/
+        description: Service number 51
+    - Sub of Storage:
+        - Nested 52:
+            icon: sonarr.png
+            href: http://10.1.0.0:9052/
+        - Nested 53:
+            icon: sonarr.png
+            href: http://10.1.0.1:9053/
+        - Nested 54:
+            icon: sonarr.png
+            href: http://10.1.0.2:9054/
+- Dev:
+    - Service 55:
+        icon: fas fa-rocket
+        server: my-docker
+        container: svc55
+        ping: 10.0.0.55
+    - Service 56:
+        href: http://10.0.0.56:8056/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 57:
+        icon: sonarr.svg
+        href: http://10.0.0.57:8057/
+        description: Service number 57
+    - Service 58:
+        icon: hl-immich
+        href: http://10.0.0.58:8058/
+    - Service 59:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.59:8059/
+    - Service 60:
+        icon: hl-immich
+        href: http://10.0.0.60:8060/
+        description: Service number 60
+        ping: 10.0.0.60
+    - Service 61:
+        icon: sonarr.svg
+        href: http://10.0.0.61:8061/
+    - Service 62:
+        icon: /images/unifi.png
+        href: http://10.0.0.62:8062/
+    - Service 63:
+        icon: si-github
+        href: http://10.0.0.63:8063/
+        description: Service number 63
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 64:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.64:8064/
+    - Service 65:
+        icon: si-github
+        href: http://10.0.0.65:8065/
+        ping: 10.0.0.65
+    - Service 66:
+        icon: sh-jellyfin
+        server: my-docker
+        container: svc66
+        description: Service number 66
+- Productivity:
+    - Service 67:
+        icon: fas fa-rocket
+        href: http://10.0.0.67:8067/
+    - Service 68:
+        icon: hl-immich
+        href: http://10.0.0.68:8068/
+    - Service 69:
+        icon: sonarr.svg
+        href: http://10.0.0.69:8069/
+        description: Service number 69
+    - Service 70:
+        icon: hl-immich
+        href: http://10.0.0.70:8070/
+        ping: 10.0.0.70
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 71:
+        icon: /images/unifi.png
+        href: http://10.0.0.71:8071/
+    - Service 72:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.72:8072/
+        description: Service number 72
+    - Service 73:
+        icon: sh-jellyfin
+        href: http://10.0.0.73:8073/
+    - Service 74:
+        icon: sh-jellyfin
+        href: http://10.0.0.74:8074/
+    - Service 75:
+        icon: fas fa-rocket
+        href: http://10.0.0.75:8075/
+        description: Service number 75
+        ping: 10.0.0.75
+- Security:
+    - Service 76:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.76:8076/
+    - Service 77:
+        icon: sonarr.svg
+        server: my-docker
+        container: svc77
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 78:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.78:8078/
+        description: Service number 78
+    - Service 79:
+        icon: hl-immich
+        href: http://10.0.0.79:8079/
+    - Service 80:
+        href: http://10.0.0.80:8080/
+        ping: 10.0.0.80
+    - Service 81:
+        icon: plex.png
+        href: http://10.0.0.81:8081/
+        description: Service number 81
+    - Service 82:
+        icon: sh-jellyfin
+        href: http://10.0.0.82:8082/
+    - Service 83:
+        icon: fas fa-rocket
+        href: http://10.0.0.83:8083/
+    - Service 84:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.84:8084/
+        description: Service number 84
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 85:
+        icon: sonarr.svg
+        href: http://10.0.0.85:8085/
+        ping: 10.0.0.85
+    - Service 86:
+        icon: sonarr.svg
+        href: http://10.0.0.86:8086/
+- AI:
+    - Service 87:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.87:8087/
+        description: Service number 87
+    - Service 88:
+        icon: hl-immich
+        server: my-docker
+        container: svc88
+    - Service 89:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.89:8089/
+    - Service 90:
+        icon: hl-immich
+        href: http://10.0.0.90:8090/
+        description: Service number 90
+        ping: 10.0.0.90
+    - Service 91:
+        icon: sh-jellyfin
+        href: http://10.0.0.91:8091/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 92:
+        icon: sh-jellyfin
+        href: http://10.0.0.92:8092/
+    - Service 93:
+        icon: /images/unifi.png
+        href: http://10.0.0.93:8093/
+        description: Service number 93
+    - Service 94:
+        icon: hl-immich
+        href: http://10.0.0.94:8094/
+    - Service 95:
+        icon: sh-jellyfin
+        href: http://10.0.0.95:8095/
+        ping: 10.0.0.95
+    - Service 96:
+        icon: plex.png
+        href: http://10.0.0.96:8096/
+        description: Service number 96
+    - Sub of AI:
+        - Nested 97:
+            icon: sonarr.png
+            href: http://10.1.0.0:9097/
+        - Nested 98:
+            icon: sonarr.png
+            href: http://10.1.0.1:9098/
+        - Nested 99:
+            icon: sonarr.png
+            href: http://10.1.0.2:9099/
+- Finance:
+    - Service 100:
+        icon: https://cdn.example.com/x.png
+        href: http://10.0.0.100:8100/
+        ping: 10.0.0.100
+    - Service 101:
+        icon: hl-immich
+        href: http://10.0.0.101:8101/
+    - Service 102:
+        icon: /images/unifi.png
+        href: http://10.0.0.102:8102/
+        description: Service number 102
+    - Service 103:
+        href: http://10.0.0.103:8103/
+    - Service 104:
+        icon: sonarr.svg
+        href: http://10.0.0.104:8104/
+    - Service 105:
+        icon: plex.png
+        href: http://10.0.0.105:8105/
+        description: Service number 105
+        ping: 10.0.0.105
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 106:
+        icon: hl-immich
+        href: http://10.0.0.106:8106/
+    - Service 107:
+        icon: sonarr.svg
+        href: http://10.0.0.107:8107/
+    - Service 108:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.108:8108/
+        description: Service number 108
+- Social:
+    - Service 109:
+        icon: hl-immich
+        href: http://10.0.0.109:8109/
+    - Service 110:
+        icon: plex.png
+        server: my-docker
+        container: svc110
+        ping: 10.0.0.110
+    - Service 111:
+        icon: si-github
+        href: http://10.0.0.111:8111/
+        description: Service number 111
+    - Service 112:
+        icon: /images/unifi.png
+        href: http://10.0.0.112:8112/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 113:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.113:8113/
+    - Service 114:
+        icon: si-github
+        href: http://10.0.0.114:8114/
+        description: Service number 114
+- Games:
+    - Service 115:
+        href: http://10.0.0.115:8115/
+        ping: 10.0.0.115
+    - Service 116:
+        icon: hl-immich
+        href: http://10.0.0.116:8116/
+    - Service 117:
+        icon: sh-jellyfin
+        href: http://10.0.0.117:8117/
+        description: Service number 117
+    - Service 118:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.118:8118/
+    - Service 119:
+        icon: hl-immich
+        href: http://10.0.0.119:8119/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 120:
+        href: http://10.0.0.120:8120/
+        description: Service number 120
+        ping: 10.0.0.120
+    - Service 121:
+        icon: fas fa-rocket
+        server: my-docker
+        container: svc121
+    - Service 122:
+        icon: /images/unifi.png
+        href: http://10.0.0.122:8122/
+    - Service 123:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.123:8123/
+        description: Service number 123
+    - Service 124:
+        href: http://10.0.0.124:8124/
+    - Service 125:
+        icon: fas fa-rocket
+        href: http://10.0.0.125:8125/
+        ping: 10.0.0.125
+- Admin:
+    - Service 126:
+        href: http://10.0.0.126:8126/
+        description: Service number 126
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 127:
+        icon: sonarr.svg
+        href: http://10.0.0.127:8127/
+    - Service 128:
+        href: http://10.0.0.128:8128/
+    - Service 129:
+        icon: si-github
+        href: http://10.0.0.129:8129/
+        description: Service number 129
+    - Service 130:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.130:8130/
+        ping: 10.0.0.130
+    - Service 131:
+        icon: sh-jellyfin
+        href: http://10.0.0.131:8131/
+    - Service 132:
+        icon: mdi-server-#4a90d9
+        server: my-docker
+        container: svc132
+        description: Service number 132
+    - Service 133:
+        icon: mdi-server-#4a90d9
+        href: http://10.0.0.133:8133/
+        widget:
+          type: custom
+          url: http://x
+          key: ${KEY}
+    - Service 134:
+        icon: si-github
+        href: http://10.0.0.134:8134/
+    - Sub of Admin:
+        - Nested 135:
+            icon: sonarr.png
+            href: http://10.1.0.0:9135/
+        - Nested 136:
+            icon: sonarr.png
+            href: http://10.1.0.1:9136/
+        - Nested 137:
+            icon: sonarr.png
+            href: http://10.1.0.2:9137/
