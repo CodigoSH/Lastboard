@@ -186,6 +186,6 @@ The web installer and in-app update mechanism communicate directly with our self
 
 ## Reporting Vulnerabilities
 
-If you discover a security vulnerability within this project, please contact us directly. 
+If you discover a security vulnerability within this project, please contact us directly at **admin@codigosh.com**.
 
-We ask that you do not report security vulnerabilities through public issue trackers to prevent zero-day exposure. We will acknowledge your report within 48 hours and provide a timeline for resolution.
+We ask that you do not report security vulnerabilities through public issue trackers to prevent zero-day exposure.

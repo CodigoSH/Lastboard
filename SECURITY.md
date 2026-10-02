@@ -13,6 +13,6 @@ The web installer and in-app update mechanism communicate directly with our self
 * **Verified source:** All releases are signed by the CI pipeline and published exclusively to the official `CodigoSH/Lastboard` repository on `git.codigosh.com`.
 
 ### Reporting a Vulnerability
-If you discover a security vulnerability within this project, please contact us directly.
+If you discover a security vulnerability within this project, please contact us directly at **admin@codigosh.com**.
 
-We ask that you do not report security vulnerabilities through public issue trackers. We will acknowledge your report within 48 hours and provide a timeline for resolution.
+We ask that you do not report security vulnerabilities through public issue trackers.
