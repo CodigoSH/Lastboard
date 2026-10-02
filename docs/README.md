@@ -41,7 +41,7 @@ The dashboard itself: a grid you arrange, and the tiles on it.
 - **Move items between dashboards** — one at a time from a tile's menu, or many at once with
   the selection mode in the top bar. Items are auto-placed on arrival and briefly highlighted
   so you can see where they landed.
-- **Live search** in the top bar filters the board by label as you type.
+- **Live search** in the top bar filters the board by label as you type. Press **Ctrl+K** (**Cmd+K** on macOS) to jump to it from the keyboard.
 - **A mobile layout with an order of its own.** Phones get a simplified touch layout, and which
   bookmarks appear there — and in what order — is set independently of the desktop grid, from a
   bottom sheet that only commits when you tap *Save changes*.

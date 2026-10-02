@@ -82,7 +82,7 @@ A **Section** is a container that groups related bookmarks together under a titl
 ## Reordering & Search
 
 - **Drag to reorder**: In Edit Mode, drag any bookmark (or section) to reposition it on the grid. The layout is saved automatically.
-- **Search**: Use the search box in the top bar to filter bookmarks by label in real time.
+- **Search**: Use the search box in the top bar to filter bookmarks by label in real time. Press **Ctrl+K** (**Cmd+K** on macOS) to put the cursor in it without the mouse; the shortcut does nothing while edit mode, the settings drawer or a full-screen page is open.
 
 ## Mobile Visibility and Ordering
 

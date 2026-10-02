@@ -6,6 +6,7 @@ import { i18n } from '../../../services/i18n';
 import '../RenameDashboardModal/RenameDashboardModal';
 import '../MobileReorderModal/MobileReorderModal';
 import css from './TopBar.css' with { type: 'text' };
+import { isTypingTarget, opensSearch } from './searchShortcut';
 
 interface TopBarState {
     editMode: boolean;
@@ -69,6 +70,7 @@ class TopBar extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupListeners();
+        window.addEventListener('keydown', this._shortcutHandler);
         this._unsubscribeDashboard = dashboardStore.subscribe((state) => {
             const selectedCount = state.selectedIds?.length || 0;
             const changed =
@@ -128,6 +130,7 @@ class TopBar extends HTMLElement {
     }
 
     disconnectedCallback() {
+        window.removeEventListener('keydown', this._shortcutHandler);
         if (this._unsubscribeDashboard) this._unsubscribeDashboard();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
         if (this._windowClickHandler) {
@@ -151,6 +154,29 @@ class TopBar extends HTMLElement {
                 composed: true
             }));
         }
+    }
+
+    /**
+     * Ctrl+K / Cmd+K puts the cursor in the search box, from anywhere on the board.
+     * preventDefault matters: browsers take the same combination for their own
+     * address or search bar. The event is read from the window, so it works
+     * whichever shadow root has focus.
+     */
+    private _shortcutHandler = (e: KeyboardEvent) => {
+        const st = this.state;
+        const locked = st.editMode || st.drawerOpen || !!st.monitorOpen || !!st.proxmoxOpen;
+        const target = (e.composedPath()[0] as Element | undefined) ?? null;
+        if (!opensSearch(e, { locked, typing: isTypingTarget(target) })) return;
+        e.preventDefault();
+        this.focusSearch();
+    };
+
+    /** Opens the search if it is folded and puts the cursor in it. */
+    focusSearch() {
+        if (!this.state.searchActive) this.setState({ searchActive: true });
+        const input = this.shadowRoot?.getElementById('search-input') as HTMLInputElement | null;
+        input?.focus();
+        input?.select();
     }
 
     /**
