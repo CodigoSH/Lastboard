@@ -8,6 +8,7 @@
  */
 
 import { dashboardStore } from '../../store/dashboardStore';
+import { decideNoteSync, storedNoteText } from './notepadSync';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { i18n } from '../../services/i18n';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
@@ -402,6 +403,9 @@ export class NotepadWidget extends HTMLElement {
     private _pendingAction: 'link' | 'image' | 'image-edit' | null = null;
     private _boundBeforeUnload: (e: BeforeUnloadEvent) => void;
     private _unsubscribeI18n: (() => void) | undefined;
+    private _unsubscribeStore: (() => void) | undefined;
+    /** The note as the server last had it, in the form the server compares: the raw stored text. */
+    private _baseText: string | null = null;
 
     static get observedAttributes() { return ['item-id']; }
 
@@ -418,6 +422,10 @@ export class NotepadWidget extends HTMLElement {
         }
         this.render();
         this.loadContent();
+        // The note is read once when drawn, from the copy this browser kept, and
+        // the real one arrives a moment later. Without listening, the widget kept
+        // showing the old text until the next reload.
+        this._unsubscribeStore = dashboardStore.subscribe(() => this.syncFromStore());
         window.addEventListener('beforeunload', this._boundBeforeUnload);
         this._unsubscribeI18n = i18n.subscribe(() => { if (this._editor) this._editor.dataset.placeholder = i18n.t('widget.notepad.placeholder'); });
     }
@@ -425,6 +433,7 @@ export class NotepadWidget extends HTMLElement {
     disconnectedCallback() {
         window.removeEventListener('beforeunload', this._boundBeforeUnload);
         if (this._unsubscribeI18n) this._unsubscribeI18n();
+        if (this._unsubscribeStore) this._unsubscribeStore();
     }
 
     attributeChangedCallback(name: string, _old: string, val: string) {
@@ -1019,36 +1028,90 @@ export class NotepadWidget extends HTMLElement {
         }
     }
 
+    private currentItem() {
+        return dashboardStore.getState().items.find((i) => i.id === this._itemId);
+    }
+
     private async loadContent() {
         if (!this._itemId) return;
-        const state = dashboardStore.getState();
-        const item = state.items.find((i) => i.id === this._itemId);
-        if (item) {
-            const contentObj = WidgetContentHelper.parse(item.content);
-            const html = notepadSanitizer.sanitize((contentObj as any).text || '');
-            if (this._editor && this._editor.innerHTML !== html) {
-                this._editor.innerHTML = html;
-            }
-            this.checkPlaceholder();
+        const item = this.currentItem();
+        if (!item) return;
+        this._baseText = storedNoteText(item.content);
+        const html = notepadSanitizer.sanitize(this._baseText ?? '');
+        if (this._editor && this._editor.innerHTML !== html) {
+            this._editor.innerHTML = html;
         }
+        this.checkPlaceholder();
+    }
+
+    /**
+     * Follows the stored note while this widget is on screen.
+     *
+     * A newer note is shown as soon as it is known — unless there are unsaved
+     * edits here, which are never replaced from under the person typing them.
+     */
+    private syncFromStore() {
+        if (!this._editor || !this._itemId) return;
+        const item = this.currentItem();
+        if (!item) return;
+        const incoming = storedNoteText(item.content);
+        if (decideNoteSync(this._baseText, incoming, this._isDirty) !== 'show') return;
+        this._baseText = incoming;
+        this._editor.innerHTML = notepadSanitizer.sanitize(incoming ?? '');
+        this.checkPlaceholder();
     }
 
     private async save() {
         if (!this._itemId || !this._editor) return;
-        const currentHTML = this._editor.innerHTML;
+        const html = this._editor.innerHTML;
 
         try {
-            const state = dashboardStore.getState();
-            const currentItem = state.items.find((i) => i.id === this._itemId);
-            if (currentItem) {
-                const newContent = WidgetContentHelper.setNotepadText(currentItem.content, currentHTML);
-                dashboardStore.updateItem({ ...currentItem, content: newContent }).then(() => {
-                    this._isDirty = false;
-                });
-            }
+            const item = this.currentItem();
+            if (!item) return;
+            await this.saveGuarded(WidgetContentHelper.setNotepadText(item.content, html), html, 0);
         } catch (e) {
             console.error(e);
         }
+    }
+
+    /**
+     * Saves the note only if the server still has the one this widget started
+     * from. If it does not, another device saved first: nothing is written, the
+     * newer note is fetched, and the person decides — replacing it knowingly, or
+     * keeping what they typed here, unsaved, to copy from.
+     *
+     * The write sends the content alone. This used to send the whole item, so a
+     * save from an old copy also put back an old position and size.
+     */
+    private async saveGuarded(content: string, html: string, attempt: number): Promise<void> {
+        const outcome = await dashboardStore.updateItemGuarded(
+            { id: this._itemId, content },
+            { text: this._baseText },
+        );
+        if (outcome === 'saved') {
+            this._baseText = storedNoteText(content);
+            this._isDirty = false;
+            return;
+        }
+        if (outcome === 'offline') return;
+
+        // Conflict. Bring in what the other device saved, which the editor does not
+        // show (it holds unsaved edits), and ask before going any further.
+        await dashboardStore.fetchItems();
+        const modal = document.querySelector('confirmation-modal') as
+            { confirm(title: string, message: string): Promise<boolean> } | null;
+        const replace = attempt < 3 && modal
+            ? await modal.confirm(i18n.t('widget.notepad.conflict_title'), i18n.t('widget.notepad.conflict_message'))
+            : false;
+        if (!replace) {
+            if (window.notifier) window.notifier.show(i18n.t('widget.notepad.conflict_kept'), 'error');
+            return;
+        }
+        // Knowingly replacing: the base becomes the note that is there now, so a
+        // third save in the meantime asks again instead of being overwritten.
+        const there = this.currentItem();
+        this._baseText = there ? storedNoteText(there.content) : null;
+        await this.saveGuarded(content, html, attempt + 1);
     }
 
     private getSelection() {

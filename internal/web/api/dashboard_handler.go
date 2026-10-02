@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -299,6 +301,10 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		Content     *string `json:"content"`
 		MobileOrder *int    `json:"mobile_order"`
 		DashboardID *int    `json:"dashboard_id"`
+		// Expected makes a content change conditional: it is applied only if the
+		// stored content still has these fields as the caller last saw them. A
+		// null means "absent". See contentGuard.
+		Expected map[string]*string `json:"expected"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		slog.Warn("JSON Decode error in UpdateItem", "error", err)
@@ -385,6 +391,14 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	args = append(args, id, userID)
 	query := "UPDATE items SET " + strings.Join(sets, ", ") + " WHERE id=? AND user_id=?"
 
+	guard, guardArgs, err := contentGuard(input.Expected)
+	if err != nil || (len(input.Expected) > 0 && input.Content == nil) {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	query += guard
+	args = append(args, guardArgs...)
+
 	result, err := h.DB.Exec(query, args...)
 	if err != nil {
 		slog.Error("Update error in UpdateItem", "error", err)
@@ -399,6 +413,14 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if rows == 0 {
+		// With a guard, "nothing changed" can mean the row is gone or that it
+		// changed under the caller. The two are different answers: one is a
+		// missing item, the other is the reason to show the person what is there
+		// now instead of writing over it.
+		if len(input.Expected) > 0 && h.userOwnsItem(userID, id) {
+			http.Error(w, "error.conflict", http.StatusConflict)
+			return
+		}
 		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
@@ -406,6 +428,43 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+}
+
+// contentFieldName is what a guarded field may be called: a plain top-level key
+// of the content JSON. It goes into the query text (a JSON path cannot be a
+// bound parameter), so nothing else is let through.
+var contentFieldName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,31}$`)
+
+// contentGuard turns the caller's expectations into an extra condition of the
+// UPDATE itself, so that checking and writing are one atomic statement. Reading
+// the row first and writing after leaves a gap in which another device's save
+// lands and is then overwritten — the very thing the guard is for.
+//
+// Each entry says "this field of the content must still equal this value", with
+// null meaning the field must be absent. Only the fields named are compared:
+// the rest of the content (appearance, size) may change independently and is not
+// a reason to refuse a note.
+func contentGuard(expected map[string]*string) (string, []interface{}, error) {
+	var clause strings.Builder
+	var args []interface{}
+	// Sorted, so the same request always builds the same statement.
+	keys := make([]string, 0, len(expected))
+	for k := range expected {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if !contentFieldName.MatchString(k) {
+			return "", nil, fmt.Errorf("invalid field %q", k)
+		}
+		clause.WriteString(" AND json_extract(content, '$." + k + "') IS ?")
+		if v := expected[k]; v == nil {
+			args = append(args, nil)
+		} else {
+			args = append(args, *v)
+		}
+	}
+	return clause.String(), args, nil
 }
 
 // MoveItem relocates an item to another dashboard, taking its whole subtree

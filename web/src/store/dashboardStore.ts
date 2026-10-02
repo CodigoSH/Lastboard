@@ -390,6 +390,44 @@ class DashboardStore {
         }
     }
 
+    /**
+     * Saves an item's content only if it is still as the caller last saw it.
+     *
+     * 'conflict' means the server holds something newer and nothing was written;
+     * the local copy is left alone so the caller can decide what to do. Any other
+     * failure is treated as updateItem treats it: the change is kept here and the
+     * board is marked offline.
+     */
+    async updateItemGuarded(
+        update: { id: number; content: string },
+        expected: Record<string, string | null>,
+    ): Promise<'saved' | 'conflict' | 'offline'> {
+        if (this.isDemo()) {
+            await this.updateItem(update);
+            return 'saved';
+        }
+        this.ensureItemsIsArray();
+        const apply = () => {
+            const i = this.state.items.findIndex(item => item.id === update.id);
+            if (i !== -1) this.state.items[i] = { ...this.state.items[i], content: update.content };
+            this.saveToLocalStorage();
+        };
+        try {
+            await dashboardService.updateItemGuarded(update, expected);
+        } catch (err) {
+            if ((err as Error)?.message === 'error.conflict') return 'conflict';
+            console.error('[DashboardStore] Failed to sync guarded update (offline?), keeping local state', err);
+            this.state.isOffline = true;
+            apply();
+            this.notify();
+            return 'offline';
+        }
+        this.state.isOffline = false;
+        apply();
+        this.notify();
+        return 'saved';
+    }
+
     async updateItem(updatedItem: Partial<GridItem> & { id: number }) {
         // --- DEMO MODE ---
         if (this.isDemo()) {

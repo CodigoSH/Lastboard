@@ -1,4 +1,5 @@
 import { apiService } from './apiService';
+import { guardedUpdateBody } from './itemUpdate';
 import { GridItem, MessageResponse } from '../types';
 
 /**
@@ -25,6 +26,21 @@ export const dashboardService = {
             payload.clear_parent = true;
         }
         return apiService.patch<MessageResponse>(`/api/dashboard/item/${item.id}`, payload);
+    },
+
+    /**
+     * Saves new content only if the fields named in `expected` still hold what
+     * the caller last saw. Rejects with the server's "error.conflict" when they
+     * do not, which means somebody else saved in between.
+     *
+     * Sends the content and nothing else: the rest of an item (position, size)
+     * is whatever this browser's copy says, and that copy may be the old one.
+     */
+    async updateItemGuarded(
+        item: { id: number; content: string },
+        expected: Record<string, string | null>,
+    ): Promise<MessageResponse> {
+        return apiService.patch<MessageResponse>(`/api/dashboard/item/${item.id}`, guardedUpdateBody(item, expected));
     },
 
     async createItem(item: Omit<GridItem, 'id' | 'created_at'>): Promise<GridItem> {
