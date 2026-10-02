@@ -438,6 +438,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 	}
 
+	// Nothing under /api/ may be kept by anything between the server and the
+	// person: it is per-account data that changes under their feet (a note edited
+	// on another device), and with no instruction at all a proxy or CDN in front
+	// is free to decide for itself how long a copy of it is good for. A handler
+	// that does want caching — the stored icons are immutable — sets its own,
+	// which replaces this.
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		w.Header().Set("Cache-Control", "no-store")
+	}
+
 	s.Router.ServeHTTP(w, r)
 }
 

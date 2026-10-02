@@ -459,3 +459,18 @@ func TestTheSystemThemeScriptShipsOnlyWhenNeededAndEarlyEnough(t *testing.T) {
 		t.Error("the theme is settled after the stylesheet is linked, so the page paints once in the wrong one first")
 	}
 }
+
+// Per-account data must never be kept by a cache between the server and the
+// person. The API said nothing about caching at all, which leaves a proxy or a
+// CDN in front free to decide for itself how long a copy of /api/dashboard is
+// good for — and a note edited on another device then arrives late.
+func TestNothingUnderAPIMayBeCached(t *testing.T) {
+	server := newTestServer(t, true)
+	for _, path := range []string{"/api/dashboard", "/api/dashboards", "/api/me", "/api/monitor/overview", "/api/docker/containers"} {
+		rec := httptest.NewRecorder()
+		server.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		if cc := rec.Header().Get("Cache-Control"); cc != "no-store" {
+			t.Errorf("%s answered %d with Cache-Control %q, want no-store", path, rec.Code, cc)
+		}
+	}
+}
