@@ -163,7 +163,7 @@ func TestABookmarkInASectionRemembersWhichSection(t *testing.T) {
 	alice := userID(t, db.DB, "alice")
 	board := addBoard(t, db.DB, alice, "Home", 0)
 
-	section := addItem(t, db.DB, alice, board, 0, "section", `{"label":"Media"}`)
+	section := addItem(t, db.DB, alice, board, 0, "section", `{"title":"Media"}`)
 	addItem(t, db.DB, alice, board, section, "bookmark", bookmarkJSON("Plex", "https://plex.tv"))
 	addItem(t, db.DB, alice, board, 0, "bookmark", bookmarkJSON("Loose", "https://example.com"))
 
@@ -179,6 +179,26 @@ func TestABookmarkInASectionRemembersWhichSection(t *testing.T) {
 	}
 	if byTitle["Loose"].Group != "" {
 		t.Errorf("a bookmark outside every section was given the group %q", byTitle["Loose"].Group)
+	}
+}
+
+// Sections keep their name under "title" — it is what the interface writes
+// and what a section in the starter board carries. This test used to build
+// them with "label", which is a bookmark's key, so it passed while every real
+// export came out with no groups at all.
+func TestASectionKeptUnderLabelStillNamesItsGroup(t *testing.T) {
+	server, db, cleanup := setupExportServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	alice := userID(t, db.DB, "alice")
+	board := addBoard(t, db.DB, alice, "Home", 0)
+
+	section := addItem(t, db.DB, alice, board, 0, "section", `{"label":"Old"}`)
+	addItem(t, db.DB, alice, board, section, "bookmark", bookmarkJSON("Plex", "https://plex.tv"))
+
+	cfg, _, _ := exportAs(t, server.URL, doLogin(t, server.URL, "alice", "password"))
+	if g := cfg.Dashboards[0].Items[0].Group; g != "Old" {
+		t.Errorf("group = %q, want Old", g)
 	}
 }
 
@@ -242,7 +262,7 @@ func TestOnlyBookmarksAreExported(t *testing.T) {
 	alice := userID(t, db.DB, "alice")
 	board := addBoard(t, db.DB, alice, "Home", 0)
 
-	addItem(t, db.DB, alice, board, 0, "section", `{"label":"Media"}`)
+	addItem(t, db.DB, alice, board, 0, "section", `{"title":"Media"}`)
 	addItem(t, db.DB, alice, board, 0, "widget", `{"widgetId":"clock","city":"Madrid"}`)
 	addItem(t, db.DB, alice, board, 0, "bookmark", bookmarkJSON("Plex", "https://plex.tv"))
 
@@ -313,7 +333,7 @@ func TestWhatComesOutIsWhatTheImporterExpectsToGoBackIn(t *testing.T) {
 	createUser(t, db.DB, "alice", "password", "admin")
 	alice := userID(t, db.DB, "alice")
 	board := addBoard(t, db.DB, alice, "Home", 0)
-	section := addItem(t, db.DB, alice, board, 0, "section", `{"label":"Media"}`)
+	section := addItem(t, db.DB, alice, board, 0, "section", `{"title":"Media"}`)
 	addItem(t, db.DB, alice, board, section, "bookmark", bookmarkJSON("Plex", "https://plex.tv"))
 
 	cfg, _, _ := exportAs(t, server.URL, doLogin(t, server.URL, "alice", "password"))

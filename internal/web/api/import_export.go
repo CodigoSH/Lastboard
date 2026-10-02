@@ -40,6 +40,10 @@ type NativeItem struct {
 
 // itemContent mirrors the bookmark/section content JSON blob.
 type itemContent struct {
+	// Title is what a section is called; Label is what a bookmark is. The two
+	// live in the same JSON blob under different names, and reading the wrong
+	// one lost every group on export.
+	Title       string `json:"title"`
 	Label       string `json:"label"`
 	URL         string `json:"url"`
 	Icon        string `json:"icon"`
@@ -109,7 +113,10 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 		if it.itemType == "section" && it.content.Valid {
 			var c itemContent
 			if json.Unmarshal([]byte(it.content.String), &c) == nil {
-				sectionTitle[it.id] = c.Label
+				sectionTitle[it.id] = c.Title
+				if c.Title == "" {
+					sectionTitle[it.id] = c.Label
+				}
 			}
 		}
 		items = append(items, it)
