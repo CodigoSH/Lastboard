@@ -1,5 +1,6 @@
 import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
+import { OneAtATime, planStatusCheck, type Scope } from './statusPlan';
 
 /**
  * StatusService
@@ -17,6 +18,7 @@ class StatusService {
     private interval: number | null = null;
     private wakeTimer: number | null = null;
     private checkFrequency = 60000 * 5; // Every 5 minutes
+    private gate = new OneAtATime(scope => this.run(scope));
 
     start() {
         if (this.interval) return;
@@ -32,7 +34,8 @@ class StatusService {
             if (loadFinished && (dashboardChanged || hashChanged)) {
                 this.lastDashboardId = state.currentDashboardId;
                 lastItemsHash = itemsHash;
-                this.checkAll();
+                // The board changed, not the world: ask only about what has no answer yet.
+                this.checkAll('unknown');
             }
         });
 
@@ -74,63 +77,40 @@ class StatusService {
         }, WAKE_DELAY_MS);
     };
 
-    async checkAll() {
-        if (!navigator.onLine) return;
-
-        const state = dashboardStore.getState();
-        const items = state.items.filter(item => {
-            if (item.type !== 'bookmark') return false;
-            let content = item.content;
-            if (typeof content === 'string') {
-                try { content = JSON.parse(content); } catch (e) { return false; }
-            }
-            return content && content.statusCheck === true;
-        });
-
-        if (items.length === 0) return;
-
-        // Set all to pending immediately for visual feedback
-        const pendingUpdates = items.map(item => ({ id: item.id, status: 'pending' as const }));
-        dashboardStore.setItemStatuses(pendingUpdates);
-
-        // Collect URLs (items with no valid URL are marked down immediately)
-        const urlMap = new Map<string, number[]>(); // url → [itemIds]
-        for (const item of items) {
-            let content = item.content;
-            if (typeof content === 'string') {
-                try { content = JSON.parse(content); } catch { continue; }
-            }
-            const url = content?.url;
-            if (!url || url === '#' || url.startsWith('javascript:')) {
-                this.updateUIStatus(item.id, 'down');
-                continue;
-            }
-            const ids = urlMap.get(url) ?? [];
-            ids.push(item.id);
-            urlMap.set(url, ids);
-        }
-
-        if (urlMap.size === 0) return;
-
-        try {
-            // Single request — backend fans out with one goroutine per URL
-            const results = await dashboardService.checkHealthBatch(Array.from(urlMap.keys()));
-            const statusUpdates = Array.from(urlMap.entries()).map(([url, ids]) => {
-                const status = (results[url] === 'up' ? 'up' : 'down') as 'up' | 'down';
-                return ids.map(id => ({ id, status }));
-            }).flat();
-            dashboardStore.setItemStatuses(statusUpdates);
-        } catch (error) {
-            if (!navigator.onLine || error instanceof TypeError) {
-                dashboardStore.setItemStatuses(items.map(item => ({ id: item.id, status: 'pending' as const })));
-                return;
-            }
-            dashboardStore.setItemStatuses(items.map(item => ({ id: item.id, status: 'down' as const })));
-        }
+    /** Asks for a check; one runs at a time, and requests made meanwhile run once after it. */
+    checkAll(scope: Scope = 'all'): Promise<void> {
+        return this.gate.request(scope);
     }
 
-    private updateUIStatus(id: number, status: 'up' | 'down' | 'pending') {
-        dashboardStore.setItemStatus(id, status);
+    private async run(scope: Scope): Promise<void> {
+        if (!navigator.onLine) return;
+
+        const plan = planStatusCheck(dashboardStore.getState().items, scope);
+
+        // Only dots with nothing to show yet turn yellow; a known one keeps its colour
+        // until the new answer replaces it.
+        if (plan.pending.length) {
+            dashboardStore.setItemStatuses(plan.pending.map(id => ({ id, status: 'pending' as const })));
+        }
+        if (plan.invalid.length) {
+            dashboardStore.setItemStatuses(plan.invalid.map(id => ({ id, status: 'down' as const })));
+        }
+
+        // Groups are asked together, so a dead host holds back its own group only.
+        await Promise.all(plan.chunks.map(async urls => {
+            try {
+                const results = await dashboardService.checkHealthBatch(urls);
+                dashboardStore.setItemStatuses(urls.flatMap(url => {
+                    const status = (results[url] === 'up' ? 'up' : 'down') as 'up' | 'down';
+                    return (plan.byUrl.get(url) ?? []).map(id => ({ id, status }));
+                }));
+            } catch (error) {
+                // No network is not "down": leave what was known.
+                if (!navigator.onLine || error instanceof TypeError) return;
+                dashboardStore.setItemStatuses(urls.flatMap(url =>
+                    (plan.byUrl.get(url) ?? []).map(id => ({ id, status: 'down' as const }))));
+            }
+        }));
     }
 }
 
