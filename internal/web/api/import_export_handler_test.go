@@ -161,3 +161,73 @@ func TestImportParseRejectsEmptyResult(t *testing.T) {
 		t.Fatalf("expected 422 for an empty Dashy file, got %d (%s)", rec.Code, rec.Body.String())
 	}
 }
+
+// parseVia runs a file through the handler the way the browser does.
+func parseVia(t *testing.T, format, content string) (int, NativeConfig) {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	NewImportExportHandler(nil).ImportParse(rec, importRequest(t, format, "in.yaml", content))
+	var cfg NativeConfig
+	_ = json.Unmarshal(rec.Body.Bytes(), &cfg)
+	return rec.Code, cfg
+}
+
+// A file chosen under the wrong format used to be "couldn't be read", which
+// tells somebody who picked the neighbouring option nothing at all. Each shape
+// is unmistakable, so the file is read as what it is.
+func TestAFileUnderTheWrongFormatIsReadAsWhatItIs(t *testing.T) {
+	native := "version: 1\ndashboards:\n  - name: Home\n    items:\n      - type: bookmark\n        title: Router\n        url: http://192.168.1.1\n"
+	homepage := "- Media:\n    - Plex:\n        href: https://plex.tv\n"
+	cases := []struct{ name, picked, content string }{
+		{"homepage under dashy", "dashy", homepage},
+		{"homepage under native", "native", homepage},
+		{"dashy under homepage", "homepage-services", dashyYAML},
+		{"dashy under native", "native", dashyYAML},
+		{"native under dashy", "dashy", native},
+		{"native under homepage", "homepage-bookmarks", native},
+		{"automatic: homepage", "auto", homepage},
+		{"automatic: dashy", "auto", dashyYAML},
+		{"automatic: native", "auto", native},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			code, cfg := parseVia(t, tc.picked, tc.content)
+			if code != http.StatusOK || len(cfg.Dashboards) == 0 || len(cfg.Dashboards[0].Items) == 0 {
+				t.Fatalf("picked %q: %d %+v", tc.picked, code, cfg)
+			}
+		})
+	}
+}
+
+// What cannot be read as anything is still refused, with the error the
+// interface already translates.
+func TestAFileThatIsNoFormatIsStillRefused(t *testing.T) {
+	for name, content := range map[string]string{
+		"prose":           "this is not yaml: [",
+		"a plain map":     "key: value\nother: 1\n",
+		"an empty list":   "[]\n",
+		"an empty file":   "",
+		"a list of words": "- one\n- two\n",
+	} {
+		if code, _ := parseVia(t, "auto", content); code != http.StatusUnprocessableEntity {
+			t.Errorf("%s: %d, want 422", name, code)
+		}
+	}
+}
+
+// An export carries its icons so that a file moved to another Lastboard still
+// has the pictures, and reading it back hands them to the importer unchanged.
+func TestTheNativeFormatRoundTripsItsIcons(t *testing.T) {
+	in := "version: 1\ndashboards:\n  - name: Home\n    items:\n      - type: bookmark\n        title: Plex\n        url: https://plex.tv\n        icon: /api/icons/abc123\n" +
+		"icons:\n  /api/icons/abc123: data:image/png;base64,iVBORw0KGgo=\n"
+	code, cfg := parseVia(t, "native", in)
+	if code != http.StatusOK {
+		t.Fatalf("%d", code)
+	}
+	if got := cfg.Icons["/api/icons/abc123"]; got != "data:image/png;base64,iVBORw0KGgo=" {
+		t.Errorf("icons block = %v", cfg.Icons)
+	}
+	if cfg.Dashboards[0].Items[0].Icon != "/api/icons/abc123" {
+		t.Errorf("item icon = %q", cfg.Dashboards[0].Items[0].Icon)
+	}
+}

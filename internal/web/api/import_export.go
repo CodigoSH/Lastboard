@@ -2,12 +2,16 @@ package api
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"gopkg.in/yaml.v3"
@@ -25,6 +29,12 @@ type NativeConfig struct {
 	// placeholder. Only the import preview carries it, so the person is told
 	// how many were left out instead of finding out by counting.
 	Skipped int `yaml:"-" json:"skipped,omitempty"`
+
+	// Icons carries the images this server stores for the bookmarks, keyed by the
+	// address a bookmark names them with (/api/icons/<hash>), as data: URIs. An
+	// icon kept on this server is only an address on this server; without the
+	// bytes, a file moved to another Lastboard names pictures it cannot find.
+	Icons map[string]string `yaml:"icons,omitempty" json:"icons,omitempty"`
 }
 
 type NativeDashboard struct {
@@ -156,6 +166,7 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 		})
 	}
 	out.Dashboards = nd
+	out.Icons = h.exportIcons(r, nd)
 
 	blob, err := yaml.Marshal(out)
 	if err != nil {
@@ -168,15 +179,45 @@ func (h *ImportExportHandler) ExportNative(w http.ResponseWriter, r *http.Reques
 	w.Write(blob)
 }
 
+// storedIconPrefix is how a bookmark names an image kept on this server.
+const storedIconPrefix = "/api/icons/"
+
+// exportIcons reads the stored images the exported bookmarks use, so the file
+// can be opened somewhere that has none of them. A reference whose image is
+// gone is left out and simply names nothing there either.
+func (h *ImportExportHandler) exportIcons(r *http.Request, dashboards []NativeDashboard) map[string]string {
+	out := map[string]string{}
+	for _, d := range dashboards {
+		for _, it := range d.Items {
+			if !strings.HasPrefix(it.Icon, storedIconPrefix) || out[it.Icon] != "" {
+				continue
+			}
+			var mime string
+			var data []byte
+			err := h.DB.QueryRowContext(r.Context(),
+				`SELECT mime, data FROM icons WHERE hash = ?`, strings.TrimPrefix(it.Icon, storedIconPrefix)).Scan(&mime, &data)
+			if err != nil {
+				continue
+			}
+			out[it.Icon] = "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data)
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
 // ImportParse parses an uploaded competitor/native file into a NativeConfig and
 // returns it as JSON. The frontend then materializes it (auto-placing items).
 func (h *ImportExportHandler) ImportParse(w http.ResponseWriter, r *http.Request) {
 	// ParseMultipartForm's argument bounds what is kept in memory, not the
 	// upload: anything above it is spilled to disk, so on its own it is no limit
-	// at all. A Homepage or Dashy configuration is a text file; 4 MiB is already
-	// far more than one.
-	r.Body = http.MaxBytesReader(w, r.Body, 4*1024*1024)
-	if err := r.ParseMultipartForm(2 << 20); err != nil { // 2 MiB
+	// at all. A Homepage or Dashy configuration is a text file, far under this.
+	// The ceiling is for a native export, which carries its icons inside it as
+	// data: URIs: a hundred of them run past what a text file ever needs.
+	r.Body = http.MaxBytesReader(w, r.Body, maxImportBytes+1<<20)
+	if err := r.ParseMultipartForm(2 << 20); err != nil { // 2 MiB in memory
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
@@ -187,26 +228,24 @@ func (h *ImportExportHandler) ImportParse(w http.ResponseWriter, r *http.Request
 		return
 	}
 	defer file.Close()
-	data, ferr := io.ReadAll(io.LimitReader(file, 2<<20))
-	if ferr != nil {
+	data, ferr := io.ReadAll(io.LimitReader(file, maxImportBytes+1))
+	if ferr != nil || len(data) > maxImportBytes {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
 
-	var cfg *NativeConfig
-	var err error
-	switch format {
-	case "native":
-		cfg, err = parseNative([]byte(data))
-	case "dashy":
-		cfg, err = parseDashy([]byte(data))
-	case "homepage-services":
-		cfg, err = parseHomepageServices([]byte(data))
-	case "homepage-bookmarks":
-		cfg, err = parseHomepageBookmarks([]byte(data))
-	default:
+	cfg, err := parseAs(format, data)
+	if err == errUnknownFormat {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
+	}
+	if err != nil {
+		// The wrong format picked for a file is the commonest way to fail, and
+		// "couldn't be read" is no help to somebody who picked the one next to it.
+		// If the file plainly is another format, read it as that one.
+		if alt := detectFormat(data); alt != "" && formatFamily(alt) != formatFamily(format) {
+			cfg, err = parseAs(alt, data)
+		}
 	}
 	if err != nil {
 		http.Error(w, "import.parse_failed", http.StatusUnprocessableEntity)
@@ -214,6 +253,72 @@ func (h *ImportExportHandler) ImportParse(w http.ResponseWriter, r *http.Request
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(cfg)
+}
+
+// maxImportBytes bounds the file read for an import.
+const maxImportBytes = 32 << 20
+
+var errUnknownFormat = fmt.Errorf("unknown import format")
+
+// parseAs reads a file as the named format. "auto" is whichever one the file
+// looks like.
+func parseAs(format string, data []byte) (*NativeConfig, error) {
+	if format == "auto" {
+		if format = detectFormat(data); format == "" {
+			return nil, fmt.Errorf("unrecognised file")
+		}
+	}
+	switch format {
+	case "native":
+		return parseNative(data)
+	case "dashy":
+		return parseDashy(data)
+	case "homepage-services":
+		return parseHomepageServices(data)
+	case "homepage-bookmarks":
+		return parseHomepageBookmarks(data)
+	}
+	return nil, errUnknownFormat
+}
+
+// formatFamily groups the two Homepage files: one reader serves both, so
+// switching between them would only run the same parse again.
+func formatFamily(format string) string {
+	if strings.HasPrefix(format, "homepage") {
+		return "homepage"
+	}
+	return format
+}
+
+// detectFormat says which format a file is, from its shape alone: a native
+// export is a map with "dashboards", Dashy's is a map with "sections", and
+// Homepage's is a list of groups.
+func detectFormat(data []byte) string {
+	var doc yaml.Node
+	if yaml.Unmarshal(data, &doc) != nil {
+		return ""
+	}
+	top := yamlResolved(&doc)
+	if top != nil && top.Kind == yaml.DocumentNode && len(top.Content) > 0 {
+		top = yamlResolved(top.Content[0])
+	}
+	if top == nil {
+		return ""
+	}
+	switch top.Kind {
+	case yaml.SequenceNode:
+		return "homepage-services"
+	case yaml.MappingNode:
+		for _, kv := range yamlPairs(top) {
+			switch yamlText(kv[0]) {
+			case "dashboards":
+				return "native"
+			case "sections":
+				return "dashy"
+			}
+		}
+	}
+	return ""
 }
 
 func parseNative(data []byte) (*NativeConfig, error) {
@@ -462,22 +567,30 @@ func parseHomepageBookmarks(data []byte) (*NativeConfig, error) {
 	return parseHomepage(data, "no bookmarks")
 }
 
-// normalizeIcon maps competitor icon references to something Lastboard can show,
-// keeping full URLs as-is and stripping known prefixes to a bare slug; unknown
-// forms become empty and the UI's initial-avatar fallback handles them.
+// slugPattern is what an icon name looks like in every icon library people use.
+var slugPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+
+// normalizeIcon turns an icon reference from another tool into one of the three
+// things Lastboard can show: an image address, a short piece of text (an emoji),
+// or a bare name for the browser to look up in the icon libraries — and into
+// nothing when it is none of them.
 //
-// What reaches here is whatever people typed into another tool: Homepage's
+// A bookmark's icon is drawn as an image only when it is an address; anything
+// else is printed as text. So a name left in the field shows up on the board as
+// the word "plex" instead of the logo, which is what importing used to do to
+// every Homepage icon. The browser turns names into addresses (it holds the
+// same indexes the icon picker uses) and then this server stores the images.
+//
+// What other tools put here: Homepage's "plex.png", "sh-plex" and
 // "mdi-home-#ff0000" (a colour after the name), "/images/unifi.png" (a file in
-// their own Homepage folder, which this server does not have), and Dashy's
-// "fas fa-rocket" (a CSS class) or the words "favicon" and "generative". None
-// of those is a slug, and passing them through asked the icon CDN for a name
-// with a slash or a space in it.
+// their own folder, which this server does not have); Dashy's "hl-plex",
+// "fas fa-rocket" (a CSS class), "favicon", "generative" and plain emoji.
 func normalizeIcon(icon string) string {
 	icon = strings.TrimSpace(icon)
 	if icon == "" {
 		return ""
 	}
-	if strings.HasPrefix(icon, "http://") || strings.HasPrefix(icon, "https://") {
+	if strings.HasPrefix(icon, "http://") || strings.HasPrefix(icon, "https://") || strings.HasPrefix(icon, "data:") {
 		return icon
 	}
 	if strings.ContainsAny(icon, " \t") || icon == "favicon" || icon == "generative" {
@@ -491,11 +604,46 @@ func normalizeIcon(icon string) string {
 	if i := strings.Index(icon, "-#"); i > 0 {
 		icon = icon[:i]
 	}
-	for _, p := range []string{"sh-", "si-", "mdi-", "hl-", "fa-"} {
-		if strings.HasPrefix(icon, p) {
-			return strings.TrimSuffix(strings.TrimPrefix(icon, p), ".svg")
+	lower := strings.ToLower(icon)
+	// Glyph sets drawn in one colour by the other tool (Material Design, Font
+	// Awesome). Lastboard has no copy of them, and a bare "server" would be
+	// looked up among brand logos and could match the wrong thing.
+	for _, p := range []string{"mdi-", "fa-", "fas-", "far-", "fab-", "fal-"} {
+		if strings.HasPrefix(lower, p) {
+			return ""
 		}
 	}
-	// dashboard-icons style "plex.png" / "plex" -> "plex"
-	return strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(icon, ".png"), ".svg"), ".webp")
+	// Brand-logo sets whose names are the brand's: look the name up.
+	for _, p := range []string{"sh-", "si-", "hl-"} {
+		if strings.HasPrefix(lower, p) {
+			icon = icon[len(p):]
+			break
+		}
+	}
+	for _, ext := range []string{".png", ".svg", ".webp"} {
+		if strings.HasSuffix(strings.ToLower(icon), ext) {
+			icon = icon[:len(icon)-len(ext)]
+			break
+		}
+	}
+	if slugPattern.MatchString(icon) {
+		return icon
+	}
+	// Not a name: an emoji is the one thing worth keeping, since the interface
+	// prints it as it is. Short, and made of symbols rather than letters.
+	if utf8.RuneCountInString(icon) <= 8 && !strings.ContainsAny(icon, "/:") {
+		symbols := false
+		for _, r := range icon {
+			if r > unicode.MaxASCII && !unicode.IsLetter(r) {
+				symbols = true
+			}
+			if unicode.IsLetter(r) || unicode.IsDigit(r) {
+				return ""
+			}
+		}
+		if symbols {
+			return icon
+		}
+	}
+	return ""
 }

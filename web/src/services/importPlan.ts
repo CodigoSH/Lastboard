@@ -113,3 +113,30 @@ export function planImport(
     }
     return plans;
 }
+
+/**
+ * The request that creates one section. Shared by the import and by the test
+ * that sends it to a real server, so the body that is tested is the body that is sent.
+ */
+export function sectionRequest(dashboardId: number, sec: PlanSection) {
+    return {
+        dashboard_id: dashboardId,
+        type: 'section',
+        x: sec.x, y: sec.y, w: sec.w, h: sec.h,
+        content: JSON.stringify({ title: sec.title }),
+    };
+}
+
+/** The request that creates one bookmark inside a section. */
+export function bookmarkRequest(dashboardId: number, sectionId: number, it: PlanSection['items'][number]) {
+    return {
+        dashboard_id: dashboardId,
+        parent_id: sectionId,
+        type: 'bookmark',
+        x: it.x, y: it.y, w: 1, h: 1,
+        content: JSON.stringify({
+            label: it.title, url: it.url, icon: it.icon || '',
+            description: it.description || '', statusCheck: !!it.status_check,
+        }),
+    };
+}

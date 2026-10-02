@@ -61,7 +61,7 @@ func TestParseHomepageServices(t *testing.T) {
 	if p, ok := byName["Plex"]; !ok || p.URL != "https://plex.tv" || p.Icon != "plex" || !p.StatusCheck {
 		t.Errorf("bad Plex: %+v", byName["Plex"])
 	}
-	if px, ok := byName["Proxmox"]; !ok || px.Icon != "server" || px.Group != "Infra" {
+	if px, ok := byName["Proxmox"]; !ok || px.Icon != "" || px.Group != "Infra" {
 		t.Errorf("bad Proxmox: %+v", byName["Proxmox"])
 	}
 }
@@ -108,7 +108,8 @@ func TestNormalizeIcon(t *testing.T) {
 	cases := map[string]string{
 		"https://x/i.png": "https://x/i.png",
 		"plex.png":        "plex",
-		"mdi-server":      "server",
+		"mdi-server":      "", // a one-colour glyph set: no copy here, and "server" would match a logo
+		"si-github":       "github",
 		"sh-jellyfin.svg": "jellyfin",
 		"":                "",
 	}

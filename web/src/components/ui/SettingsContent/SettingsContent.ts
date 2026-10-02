@@ -26,7 +26,7 @@ class SettingsContent extends HTMLElement {
     /** Bookmarks of mine already served from this instance. */
     private localIcons = 0;
     private storingIcons = false;
-    private importFormat = 'native';
+    private importFormat = 'auto';
     private monitoring: {
         mode: string; interval_sec: number; alerts_enabled: boolean;
         notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
@@ -1383,6 +1383,7 @@ class SettingsContent extends HTMLElement {
         const importFormatSelect = this.shadowRoot!.getElementById('import-format') as any;
         if (importFormatSelect) {
             importFormatSelect.options = [
+                { value: 'auto', label: i18n.t('settings.import_auto') },
                 { value: 'native', label: i18n.t('settings.import_native') },
                 { value: 'homepage-services', label: 'Homepage — services.yaml' },
                 { value: 'homepage-bookmarks', label: 'Homepage — bookmarks.yaml' },

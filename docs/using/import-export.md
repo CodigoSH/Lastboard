@@ -54,13 +54,13 @@ dashboards:
         group: Media
 ```
 
-Each item has a `type`, `title`, and `url`, plus optional `icon`, `group` (the section it belongs to), `description` and `status_check`.
+Each item has a `type`, `title`, and `url`, plus optional `icon`, `group` (the section it belongs to), `description` and `status_check`. An `icon` is an address, an emoji, or the name of an icon in the libraries (`jellyfin`, as above). When the bookmarks use icons stored on your server, an `icons:` block at the end of the file holds those images, so the file stands on its own.
 
 ## Import Dashboards
 
 Bring dashboards in from another tool or a native export. **Import always creates new dashboards — it never deletes or overwrites what you already have.**
 
-1. Choose the **format** of your file.
+1. Choose the **format** of your file — or leave it on **Detect automatically**, which reads the file as whatever it is. A file picked under the wrong format is read as the right one too.
 2. Pick the **file**.
 3. Confirm — Lastboard tells you how many items it will import, and how many entries of the file it leaves out, before creating anything.
 
@@ -68,6 +68,7 @@ Bring dashboards in from another tool or a native export. **Import always create
 
 | Format | Source file |
 | :--- | :--- |
+| **Detect automatically** | The default: any of the files below |
 | **Native (Lastboard YAML)** | A file produced by *Export (YAML)* above |
 | **Homepage — services.yaml** | Homepage's services configuration |
 | **Homepage — bookmarks.yaml** | Homepage's bookmarks configuration |
@@ -79,9 +80,11 @@ Items that don't belong to a named group are placed under an **Ungrouped** secti
 
 - **Each group becomes a section**, laid out side by side across the board. A group nested inside another (Homepage allows it) becomes its own section named after both — *Media / Servarr*.
 - **Entries with no usable address are left out**, and the confirmation says how many. That covers a service that only points at a Docker container (it has no `href`) and an address that is still a template such as `{{HOMEPAGE_VAR_URL}}` or `${URL}`, which only Homepage can fill in.
-- **Icons keep their name.** `plex.png`, `sh-plex` and `mdi-server` become `plex` and `server`; a colour after the name (`mdi-home-#ff0000`) is dropped; a file in your own Homepage folder (`/images/unifi.png`) keeps just its name, since that file is not on this server. Dashy's Font Awesome classes and the words `favicon` and `generative` start with no icon, and Lastboard shows the first letter instead. A full address is kept as it is.
+- **Icons become the real logos, stored on your server.** A name from Homepage or Dashy (`plex.png`, `sh-sonarr`, `si-github`, `hl-plex`) is looked up in the same icon libraries as the icon picker, and the image is then saved on your server like any other icon — opening the board asks nobody for it. A file in your own Homepage folder (`/images/unifi.png`) is looked up by its file name. An emoji is kept as it is, and so is a full address.
+- **Some icons start empty**, and the bookmark shows the default arrow: the one-colour glyph sets (Material Design `mdi-…`, Font Awesome), Dashy's `favicon` and `generative`, and any name that none of the libraries has. Pick one for them from the icon picker afterwards.
+- **Without a connection to the libraries,** the names are still turned into the address Homepage's own library would give them, and your server stores the images whenever it can reach them.
 - **`ping` and `siteMonitor` switch the status check on.** Widgets are not imported — Lastboard's own widgets are set up from the dashboard.
 - **Either Homepage option reads either file.** The two files differ only in how an entry is written, so choosing *bookmarks.yaml* for a services file, or the other way round, still works.
 - **A failed import leaves nothing behind.** If it stops half-way — you reach the item limit, the connection drops — the dashboard it was building is removed again, and you are told why when it is something you can fix.
 
-An export keeps the icons you stored on this server as addresses of this server, so a file moved to another Lastboard will not find those icons there. Restoring a full backup carries them along.
+The export **carries the images** your bookmarks use inside the file, so it can be opened on another Lastboard and show the same pictures. That makes the file larger — a board of 25 bookmarks comes to about a megabyte. If you import through a reverse proxy, allow bodies of that size (nginx's `client_max_body_size` defaults to 1 MB), or the proxy answers before Lastboard sees the file.

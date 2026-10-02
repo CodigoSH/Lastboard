@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -376,5 +377,42 @@ func TestAwkwardTextSurvivesTheTripIntact(t *testing.T) {
 	}
 	if it.URL != "https://plex.tv/a?b=1&c=2" {
 		t.Errorf("url = %q", it.URL)
+	}
+}
+
+// A bookmark whose icon is kept on this server names it by an address on this
+// server. The export carries the image too, or a file opened on another
+// Lastboard names a picture that is not there; and only the images the exported
+// bookmarks use are carried.
+func TestTheExportCarriesTheStoredIconsItUses(t *testing.T) {
+	server, db, cleanup := setupExportServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	alice := userID(t, db.DB, "alice")
+	board := addBoard(t, db.DB, alice, "Home", 0)
+
+	png := []byte("\x89PNG\r\n\x1a\nstored-icon-bytes")
+	used, other := "aaaa1111", "bbbb2222"
+	for _, h := range []string{used, other} {
+		if _, err := db.DB.Exec(`INSERT INTO icons (hash, mime, data, size) VALUES (?, 'image/png', ?, ?)`, h, png, len(png)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	addItem(t, db.DB, alice, board, 0, "bookmark",
+		`{"label":"Plex","url":"https://plex.tv","icon":"/api/icons/`+used+`"}`)
+	addItem(t, db.DB, alice, board, 0, "bookmark",
+		`{"label":"Loose","url":"https://example.com","icon":"https://cdn.example/x.png"}`)
+
+	cfg, _, _ := exportAs(t, server.URL, doLogin(t, server.URL, "alice", "password"))
+
+	want := "data:image/png;base64," + base64.StdEncoding.EncodeToString(png)
+	if got := cfg.Icons["/api/icons/"+used]; got != want {
+		t.Errorf("the used icon came out as %q, want %q", got, want)
+	}
+	if _, ok := cfg.Icons["/api/icons/"+other]; ok {
+		t.Error("an icon no exported bookmark uses was carried")
+	}
+	if len(cfg.Icons) != 1 {
+		t.Errorf("icons = %d entries, want 1 (a remote address needs no copy)", len(cfg.Icons))
 	}
 }

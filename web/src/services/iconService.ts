@@ -26,6 +26,7 @@ class IconService {
     private icons: IconInfo[] = [];
     private loaded: boolean = false;
     private loading: boolean = false;
+    private fallback: boolean = false;
 
     private BASE_URL = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons';
 
@@ -132,6 +133,7 @@ class IconService {
 
             if (allIcons.length === 0) {
                 allIcons = this.getFallbackIcons();
+                this.fallback = true;
             }
 
             this.icons = allIcons;
@@ -143,6 +145,7 @@ class IconService {
             console.error('[IconService] Global failure loading icons:', error);
             this.loading = false;
             this.icons = this.getFallbackIcons();
+            this.fallback = true;
             this.loaded = true;
             return this.icons;
         }
@@ -160,6 +163,20 @@ class IconService {
             provider: 'homarr-labs/dashboard-icons',
             format: 'svg' as const
         }));
+    }
+
+    /**
+     * True when the libraries' indexes were read. False means only the handful
+     * of built-in names are known, because none could be reached — a name
+     * missing from that list says nothing about whether the library has it.
+     */
+    hasFullIndex(): boolean {
+        return this.loaded && !this.fallback;
+    }
+
+    /** Every icon the libraries listed (the built-in few when none could be reached). */
+    allIcons(): IconInfo[] {
+        return this.icons;
     }
 
     searchIcons(query: string, limit: number = 12): IconInfo[] {

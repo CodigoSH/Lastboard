@@ -76,7 +76,7 @@ func TestHomepageServicesFromTheDocumentation(t *testing.T) {
 		{"Media", "Plex", "http://plex.host/", "plex"},
 		{"Media / Servarr", "Sonarr", "http://sonarr.host/", "sonarr"},
 		{"Media / Servarr", "Radarr", "http://radarr.host/", "radarr"},
-		{"Infrastructure", "Proxmox", "https://proxmox.host:8006", "server"},
+		{"Infrastructure", "Proxmox", "https://proxmox.host:8006", ""},
 		{"Infrastructure", "UptimeRobot", "https://uptimerobot.com/", "uptimekuma"},
 	}
 	items := cfg.Dashboards[0].Items
@@ -148,19 +148,26 @@ func TestNothingToImportIsRefused(t *testing.T) {
 
 func TestNormalizeIconFromOtherTools(t *testing.T) {
 	cases := map[string]string{
-		"/images/unifi.png":    "unifi",
-		"/icons/my-thing.svg":  "my-thing",
-		"mdi-home-#ff0000":     "home",
-		"si-github-#fff":       "github",
-		"sh-nextcloud-light":   "nextcloud-light",
-		"hl-plex":              "plex",
-		"fas fa-rocket":        "",
-		"fab fa-github":        "",
-		"favicon":              "",
-		"generative":           "",
-		"plex.webp":            "plex",
-		"https://x/y/icon.png": "https://x/y/icon.png",
-		"http://x/y/icon.svg":  "http://x/y/icon.svg",
+		"/images/unifi.png":          "unifi",
+		"/icons/my-thing.svg":        "my-thing",
+		"mdi-home-#ff0000":           "",
+		"si-github-#fff":             "github",
+		"sh-nextcloud-light":         "nextcloud-light",
+		"hl-plex":                    "plex",
+		"fas fa-rocket":              "",
+		"fab fa-github":              "",
+		"favicon":                    "",
+		"generative":                 "",
+		"plex.webp":                  "plex",
+		"🩷":                          "🩷",
+		"🚀":                          "🚀",
+		"data:image/png;base64,AAAA": "data:image/png;base64,AAAA",
+		"fal fa-book":                "",
+		"home":                       "home",
+		"Two Words":                  "",
+		"a/b/../c.png":               "c",
+		"https://x/y/icon.png":       "https://x/y/icon.png",
+		"http://x/y/icon.svg":        "http://x/y/icon.svg",
 	}
 	for in, want := range cases {
 		if got := normalizeIcon(in); got != want {
