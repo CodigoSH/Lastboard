@@ -70,6 +70,15 @@ export class MarkdownWidget extends HTMLElement {
                     --lb-text-dim: var(--text-dim, rgba(255,255,255,0.5));
                 }
 
+                /* While the text is open for writing the whole tile wears a thicker
+                   accent border, so nobody walks away from an editor that has not
+                   saved yet. An outline, not a border: it paints over the content. */
+                :host([writing]) {
+                    outline: 3px solid var(--lb-accent);
+                    outline-offset: -3px;
+                    border-radius: var(--radius, 12px);
+                }
+
                 /* Header Actions (Top Right) */
                 .header-actions {
                     position: absolute;
@@ -355,6 +364,7 @@ export class MarkdownWidget extends HTMLElement {
 
     private toggleLock() {
         this._isLocked = !this._isLocked;
+        this.toggleAttribute('writing', !this._isLocked);
 
         // Update Editor State
         if (this._editor) {

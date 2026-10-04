@@ -86,6 +86,15 @@ const CSS = `
     font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* While the note is open for writing the whole tile wears a thicker accent
+   border, so nobody walks away from an editor that has not saved yet. An
+   outline, not a border: it paints over the content and takes no space. */
+:host([writing]) {
+    outline: 3px solid var(--lb-accent);
+    outline-offset: -3px;
+    border-radius: var(--radius, 12px);
+}
+
 /* ── Editor Container ──────────────────────────────────────────────── */
 .editor-container {
     flex: 1;
@@ -800,6 +809,7 @@ export class NotepadWidget extends HTMLElement {
             lockBtn.setAttribute('title', this._isLocked ? i18n.t('widget.notepad.tool.unlock') : i18n.t('widget.notepad.tool.lock'));
         }
 
+        this.toggleAttribute('writing', !this._isLocked);
         this.applyDockVisibility();
 
         if (this._editorContainer) this._editorContainer.classList.toggle('locked', this._isLocked);
