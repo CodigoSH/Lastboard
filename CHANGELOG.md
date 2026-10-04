@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.3] - 2026-10-04
+
+### Added
+- Ctrl+K and Cmd+K reach the search box on the status and Proxmox pages
+- The note and the markdown tile wear a thicker accent border while open for writing
+
+### Fixed
+- A checklist box keeps the caret behind it, and every row sits the same distance apart
+- The side panel's chart fits its card and its tooltips show
+
 ## [1.8.2] - 2026-10-02
 
 ### Added
