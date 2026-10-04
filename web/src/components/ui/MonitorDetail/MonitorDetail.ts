@@ -7,6 +7,7 @@ import {
     loadingInner, emptyInner, dataInner, noSelectionInner, HistoryData,
     barTooltipHtml, sparkTooltipHtml,
 } from './MonitorDetail.template';
+import { chartWidth, placeTip } from './layout';
 import css from './MonitorDetail.css' with { type: 'text' };
 
 const parseMs = (s: string) => new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z').getTime();
@@ -42,6 +43,8 @@ class MonitorDetail extends HTMLElement {
     private _refreshTimer: number | null = null;
     private _agoTimer: number | null = null;
     private _resizeObs: ResizeObserver | null = null;
+    private _chartObs: ResizeObserver | null = null;
+    private _chartW = -1;
     private static readonly REFRESH_MS = 30000;
     private _unsubI18n: (() => void) | undefined;
 
@@ -75,6 +78,7 @@ class MonitorDetail extends HTMLElement {
     disconnectedCallback() {
         if (this._unsubI18n) this._unsubI18n();
         if (this._resizeObs) { this._resizeObs.disconnect(); this._resizeObs = null; }
+        if (this._chartObs) { this._chartObs.disconnect(); this._chartObs = null; }
         this._stopTimers();
     }
 
@@ -203,12 +207,36 @@ class MonitorDetail extends HTMLElement {
         });
     }
 
+    /**
+     * The chart is drawn in pixels, so it has to be drawn again when its box
+     * changes width. The body gains a scrollbar once the incidents arrive and
+     * the box shrinks by its width; nothing was watching the box (only the host,
+     * whose size does not change), so the chart kept its old width and pushed a
+     * horizontal scrollbar into the panel.
+     */
+    private _watchChartBox(box: HTMLElement) {
+        if (!this._chartObs) {
+            this._chartObs = new ResizeObserver(() => {
+                const el = this.shadowRoot?.getElementById('mhd-chart');
+                if (el && this.active && Math.floor(el.clientWidth) !== this._chartW) this._drawChart();
+            });
+        }
+        this._chartObs.disconnect();
+        this._chartObs.observe(box);
+    }
+
     // --- Latency chart (measured pixels + axes) ---
     private _drawChart() {
         const box = this.shadowRoot!.getElementById('mhd-chart') as HTMLElement | null;
         if (!box) return;
+        this._watchChartBox(box);
         const data = this._chartData;
-        const W = Math.max(0, Math.floor(box.clientWidth));
+        // The drawing fits what is INSIDE the card. clientWidth includes the
+        // card's padding, so the chart was 24px wider than the room it had and
+        // stuck out of the right edge of its own box.
+        const cs = getComputedStyle(box);
+        const W = chartWidth(box.clientWidth, parseFloat(cs.paddingLeft), parseFloat(cs.paddingRight));
+        this._chartW = Math.floor(box.clientWidth);
         const H = 190;
         if (data.length < 2 || W < 60) {
             box.innerHTML = `<div class="mhd__chart-empty">—</div>`;
@@ -311,11 +339,18 @@ class MonitorDetail extends HTMLElement {
         if (!tip) return;
         tip.innerHTML = html;
         tip.hidden = false;
-        const tw = tip.offsetWidth, th = tip.offsetHeight;
-        let left = x - tw / 2;
-        left = Math.max(8, Math.min(window.innerWidth - tw - 8, left));
-        let top = y - th - 12;
-        if (top < 8) top = y + 16;
+        // x and y are viewport coordinates, and a fixed element is placed from
+        // its containing block, which is the viewport only when no ancestor has
+        // a transform or a backdrop filter. The side panel has both, so the
+        // tooltip landed a panel's width away, outside the screen: ask where
+        // (0, 0) is and place from there.
+        tip.style.left = '0px';
+        tip.style.top = '0px';
+        const origin = tip.getBoundingClientRect();
+        const { left, top } = placeTip({
+            x, y, width: tip.offsetWidth, height: tip.offsetHeight,
+            viewportWidth: window.innerWidth, originX: origin.left, originY: origin.top,
+        });
         tip.style.left = `${left}px`;
         tip.style.top = `${top}px`;
     }

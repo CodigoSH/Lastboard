@@ -62,7 +62,7 @@
 .mhd__range:hover { color: var(--text-main); }
 .mhd__range--active { background: rgba(var(--accent-rgb), 0.12); color: var(--accent); }
 
-.mhd__body { flex: 1 1 auto; min-height: 0; padding: 20px; overflow-y: auto; }
+.mhd__body { flex: 1 1 auto; min-height: 0; padding: 20px; overflow-y: auto; overflow-x: hidden; }
 
 /* Big status pill */
 .mhd__statuspill {
@@ -151,8 +151,8 @@
 .mhd__legend { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
 .mhd__legend-dot { width: 10px; height: 3px; border-radius: 2px; background: var(--accent); }
 
-.mhd__chart { width: 100%; margin-bottom: 22px; padding: 10px 12px 4px; box-sizing: border-box; }
-.mhd__chartsvg { display: block; }
+.mhd__chart { width: 100%; margin-bottom: 22px; padding: 10px 12px 4px; box-sizing: border-box; overflow: hidden; }
+.mhd__chartsvg { display: block; max-width: 100%; }
 .mhd__chart-empty { height: 190px; display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
 
 .mhd__grid { stroke: var(--border); stroke-width: 1; opacity: 0.5; }
