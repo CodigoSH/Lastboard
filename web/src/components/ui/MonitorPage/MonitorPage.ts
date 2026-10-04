@@ -4,6 +4,7 @@ import { apiService } from '../../../services/apiService';
 import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
+import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import css from './MonitorPage.css' with { type: 'text' };
 
 interface OverviewRow {
@@ -43,7 +44,16 @@ class MonitorPage extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         adoptSharedStyles(this.shadowRoot);
         this._keydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && this.hasAttribute('open')) this.close();
+            if (!this.hasAttribute('open')) return;
+            if (e.key === 'Escape') { this.close(); return; }
+            // The same shortcut as the board's search, aimed at this page's own box.
+            const typing = isTypingTarget(e.composedPath()[0] as Element | undefined, 'mp-search');
+            if (!opensSearch(e, { locked: false, typing })) return;
+            const input = this.shadowRoot?.getElementById('mp-search') as HTMLInputElement | null;
+            if (!input) return;
+            e.preventDefault();
+            input.focus();
+            input.select();
         };
         // Only ours while the entry is ours; at any other moment this is
         // somebody else's navigation and we let it through.

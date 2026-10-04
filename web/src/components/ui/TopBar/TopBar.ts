@@ -6,7 +6,7 @@ import { i18n } from '../../../services/i18n';
 import '../RenameDashboardModal/RenameDashboardModal';
 import '../MobileReorderModal/MobileReorderModal';
 import css from './TopBar.css' with { type: 'text' };
-import { isTypingTarget, opensSearch } from './searchShortcut';
+import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 
 interface TopBarState {
     editMode: boolean;

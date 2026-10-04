@@ -9,6 +9,7 @@ import { loadProxmox, chosenIcon, type PxHost, type PxNode, type PxGuest, type P
 import { materializeIcon } from '../../../services/iconStore';
 import { userStore } from '../../../store/userStore';
 import '../IconSelectionModal/IconSelectionModal';
+import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import css from './ProxmoxPage.css' with { type: 'text' };
 
 /** What this page draws: one hypervisor at a time. */
@@ -217,10 +218,18 @@ class ProxmoxPage extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         adoptSharedStyles(this.shadowRoot);
         this._keydown = (e: KeyboardEvent) => {
-            if (e.key !== 'Escape' || !this.hasAttribute('open')) return;
+            if (!this.hasAttribute('open')) return;
             const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
-            if (dlg?.open) return;   // the sheet closes itself first
-            this.close();
+            if (dlg?.open) return;   // the sheet answers its own keys first
+            if (e.key === 'Escape') { this.close(); return; }
+            // The same shortcut as the board's search, aimed at this page's own box.
+            const typing = isTypingTarget(e.composedPath()[0] as Element | undefined, 'pp-search');
+            if (!opensSearch(e, { locked: false, typing })) return;
+            const input = this.shadowRoot?.getElementById('pp-search') as HTMLInputElement | null;
+            if (!input) return;
+            e.preventDefault();
+            input.focus();
+            input.select();
         };
         // Back: the browser's button, the mouse's fourth button, or a swipe
         // from the edge of a phone. Only ours while we have entries on the
