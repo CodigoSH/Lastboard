@@ -201,6 +201,11 @@ const CSS = `
     user-select: none;
     transition: background 0.12s, border-color 0.12s;
 }
+/* A row with a box is a list row whatever element the browser made it from.
+   Measured: rows in a <div> sat 24.3px apart and rows in a <p> (a note pasted
+   in, or one that went through "clear formatting") 31.9, because <p> carries a
+   margin the <div> does not. One rhythm for every checklist. */
+.editor :is(div, p):has(> .checkbox-char) { margin-block: 0; }
 .checkbox-char:hover { border-color: var(--lb-accent); }
 .checkbox-char.checked {
     background: var(--lb-accent);
@@ -713,7 +718,9 @@ export class NotepadWidget extends HTMLElement {
 
         if (cmd === 'insertChecklist') {
             const span = `<span class="checkbox-char" contenteditable="false">☐</span>&nbsp;`;
+            const had = new Set(this._editor?.querySelectorAll('.checkbox-char') ?? []);
             document.execCommand('insertHTML', false, span);
+            this.placeCaretAfterNewBox(had);
         } else if (cmd === 'removeFormat') {
             // V14.2 Fix: Hard Clear (Strip Block Tags + Inline Styles)
             document.execCommand('removeFormat');
@@ -722,6 +729,28 @@ export class NotepadWidget extends HTMLElement {
         } else {
             document.execCommand(cmd, false, val);
         }
+    }
+
+    /**
+     * Puts the caret after the box that was just inserted. Left to itself the
+     * browser leaves it in front of a non-editable inline at the start of a
+     * line, so the first thing typed went before the box and the next Enter
+     * took the fallback path that builds a different structure.
+     */
+    private placeCaretAfterNewBox(had: Set<Element>) {
+        const box = [...(this._editor?.querySelectorAll('.checkbox-char') ?? [])].find(c => !had.has(c));
+        if (!box) return;
+        const range = document.createRange();
+        const after = box.nextSibling;
+        if (after && after.nodeType === Node.TEXT_NODE && /^[\u00A0 ]/.test((after as Text).data)) {
+            range.setStart(after, 1);
+        } else {
+            range.setStartAfter(box);
+        }
+        range.collapse(true);
+        const sel = this.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
 
     private toggleDockMinimize() {
