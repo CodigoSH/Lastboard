@@ -12,6 +12,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    /* Always as tall as it is with the range buttons: the side panel centres
+       its close button on this height, and the loading and empty states have
+       no buttons to hold it up. */
+    min-height: 56px;
+    box-sizing: border-box;
     padding: 13px 20px;
     /* The drawer that hosts this on a phone puts its own close button over the
        end of this row, and says so by setting the variable. Rules do not cross

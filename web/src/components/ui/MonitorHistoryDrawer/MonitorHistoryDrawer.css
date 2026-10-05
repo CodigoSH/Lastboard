@@ -48,7 +48,8 @@
 
 .mhd-drawer__close {
     position: absolute;
-    top: 15px;
+    /* The header is 56px tall and the button 36: (56 - 36) / 2. */
+    top: 10px;
     inset-inline-end: 16px;
     z-index: 2;
     background: transparent;
