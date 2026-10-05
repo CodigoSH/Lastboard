@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.4] - 2026-10-05
+
+### Fixed
+- The alert token shows as dots and is never sent back
+- The Proxmox token secret is shown as dots, with nothing to reveal
+- The side panel's close button sits on the header's centre line
+
 ## [1.8.3] - 2026-10-04
 
 ### Added
