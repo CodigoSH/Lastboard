@@ -66,9 +66,9 @@ border width, on top of its own options.
 | **[Proxmox](widgets/proxmox.md)** | The busiest node's health and the machines that need attention, with start/shutdown | Title, node health, refresh |
 | **[API](widgets/api.md)** | Any JSON endpoint as a tile — as big metric numbers or as a scrolling list | Preset or fully manual |
 
-The **API widget** is the escape hatch: **17 guided presets** (AdGuard Home, Paperless-ngx,
+The **API widget** is the escape hatch: **16 guided presets** (AdGuard Home, Paperless-ngx,
 Immich, Jellyfin, Sonarr, Radarr, SABnzbd, Tautulli, Overseerr/Jellyseerr, Bazarr, Prowlarr,
-Proxmox VE, Home Assistant, Uptime Kuma, Forgejo/Gitea, Speedtest Tracker, Nextcloud) where you
+Home Assistant, Uptime Kuma, Forgejo/Gitea, Speedtest Tracker, Nextcloud) where you
 fill one to three fields, and an **Advanced** mode for anything else: URL, method, headers,
 field paths and number/bytes/percent formatting. The request runs on the Lastboard server, so
 it reaches private IPs and accepts self-signed certificates.

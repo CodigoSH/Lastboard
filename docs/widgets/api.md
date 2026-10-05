@@ -8,7 +8,7 @@ The API widget turns any JSON HTTP endpoint into a live tile on your dashboard. 
 
 Most self-hosted apps expose a JSON API. The API widget fetches one and renders selected fields, either as **big metric numbers** or as a **scrolling list**. The request runs **on the Lastboard server**, not in your browser — so it can reach services on private IPs and accept self-signed certificates, which a browser can't do because of CORS and network isolation.
 
-Typical uses: AdGuard blocked-queries, Paperless document counts, Immich photo/video totals, Sonarr/Radarr queue size, memory and disk on a Proxmox node, a Home Assistant sensor reading, a Forgejo repo list, and anything else with a JSON endpoint.
+Typical uses: AdGuard blocked-queries, Paperless document counts, Immich photo/video totals, Sonarr/Radarr queue size, a Home Assistant sensor reading, a Forgejo repo list, and anything else with a JSON endpoint.
 
 ## Two Ways to Configure It
 
