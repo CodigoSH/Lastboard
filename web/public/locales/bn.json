@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "ntfy টপিক URL, Gotify সার্ভার URL বা আপনার webhook এন্ডপয়েন্ট।",
   "settings.notify_token": "টোকেন",
   "settings.notify_token_desc": "ঐচ্ছিক। Bearer টোকেন (ntfy/webhook) বা অ্যাপ টোকেন (Gotify)।",
+  "settings.notify_token_saved": "একটি টোকেন সংরক্ষিত ও লুকানো আছে। বদলাতে নতুন টোকেন লিখুন, বা সরাতে ঘরটি খালি করুন।",
   "settings.fail_threshold": "ব্যর্থতার সীমা",
   "settings.fail_threshold_desc": "ডাউন অ্যালার্টের আগে পরপর কতটি ব্যর্থ চেক।",
   "settings.notify_test": "পরীক্ষা",

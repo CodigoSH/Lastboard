@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "URL tematu ntfy, serwera Gotify lub Twojego webhooka.",
   "settings.notify_token": "Token",
   "settings.notify_token_desc": "Opcjonalnie. Token Bearer (ntfy/webhook) lub token aplikacji (Gotify).",
+  "settings.notify_token_saved": "Token jest zapisany i ukryty. Wpisz nowy, aby go zastąpić, lub opróżnij pole, aby go usunąć.",
   "settings.fail_threshold": "Próg błędów",
   "settings.fail_threshold_desc": "Kolejne nieudane sprawdzenia przed alertem awarii.",
   "settings.notify_test": "Test",

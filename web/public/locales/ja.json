@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "ntfy トピック URL、Gotify サーバー URL、または webhook のエンドポイント。",
   "settings.notify_token": "トークン",
   "settings.notify_token_desc": "任意。Bearer トークン（ntfy/webhook）またはアプリトークン（Gotify）。",
+  "settings.notify_token_saved": "トークンは保存され、非表示になっています。置き換えるには新しいトークンを入力し、削除するには欄を空にしてください。",
   "settings.fail_threshold": "失敗のしきい値",
   "settings.fail_threshold_desc": "ダウン通知までの連続失敗回数。",
   "settings.notify_test": "テスト",

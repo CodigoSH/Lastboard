@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "URL du sujet ntfy, du serveur Gotify ou de votre webhook.",
   "settings.notify_token": "Jeton",
   "settings.notify_token_desc": "Facultatif. Jeton Bearer (ntfy/webhook) ou jeton d'app (Gotify).",
+  "settings.notify_token_saved": "Un jeton est enregistré et masqué. Saisissez-en un nouveau pour le remplacer, ou videz le champ pour le supprimer.",
   "settings.fail_threshold": "Seuil d'échecs",
   "settings.fail_threshold_desc": "Vérifications échouées consécutives avant une alerte de panne.",
   "settings.notify_test": "Tester",

@@ -73,7 +73,7 @@ When **24/7 monitoring** is on, Lastboard can send an alert when a service goes 
 | **Alerts** | Turns notifications on. Everything below only appears once it is on. |
 | **Notification method** | **None**, **ntfy**, **Gotify**, or **Webhook**. |
 | **URL** | The ntfy topic URL, the Gotify server URL, or your webhook endpoint. |
-| **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. |
+| **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. Once saved it is never shown: the field holds dots, so you can tell one is there, and has no reveal option. Type a new token to replace it; empty the field to remove it. |
 | **Fail threshold** | How many **consecutive** failed checks trigger a down alert: **1, 2, 3, or 5**. A higher value avoids alerts on brief blips. |
 
 Use **Send test** to fire a test notification with the current settings and confirm delivery before relying on it.

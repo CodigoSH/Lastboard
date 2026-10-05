@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "ntfy-topic-URL, Gotify-server-URL of je webhook-endpoint.",
   "settings.notify_token": "Token",
   "settings.notify_token_desc": "Optioneel. Bearer-token (ntfy/webhook) of app-token (Gotify).",
+  "settings.notify_token_saved": "Er is een token opgeslagen en verborgen. Typ een nieuw token om het te vervangen, of maak het veld leeg om het te verwijderen.",
   "settings.fail_threshold": "Foutdrempel",
   "settings.fail_threshold_desc": "Opeenvolgende mislukte controles vóór een storingsmelding.",
   "settings.notify_test": "Testen",

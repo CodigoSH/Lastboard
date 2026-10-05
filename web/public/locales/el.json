@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "URL θέματος ntfy, διακομιστή Gotify ή του webhook σου.",
   "settings.notify_token": "Διακριτικό",
   "settings.notify_token_desc": "Προαιρετικό. Διακριτικό Bearer (ntfy/webhook) ή εφαρμογής (Gotify).",
+  "settings.notify_token_saved": "Υπάρχει αποθηκευμένο και κρυφό διακριτικό. Πληκτρολογήστε νέο για να το αντικαταστήσετε ή αδειάστε το πεδίο για να το αφαιρέσετε.",
   "settings.fail_threshold": "Όριο αποτυχιών",
   "settings.fail_threshold_desc": "Διαδοχικοί αποτυχημένοι έλεγχοι πριν την ειδοποίηση διακοπής.",
   "settings.notify_test": "Δοκιμή",

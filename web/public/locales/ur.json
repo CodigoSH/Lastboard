@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "ntfy ٹاپک URL، Gotify سرور URL، یا آپ کا webhook اینڈ پوائنٹ۔",
   "settings.notify_token": "ٹوکن",
   "settings.notify_token_desc": "اختیاری۔ Bearer ٹوکن (ntfy/webhook) یا ایپ ٹوکن (Gotify)۔",
+  "settings.notify_token_saved": "ایک ٹوکن محفوظ اور پوشیدہ ہے۔ بدلنے کے لیے نیا ٹوکن لکھیں، یا ہٹانے کے لیے خانہ خالی کر دیں۔",
   "settings.fail_threshold": "ناکامی کی حد",
   "settings.fail_threshold_desc": "ڈاؤن الرٹ سے پہلے مسلسل ناکام چیکس۔",
   "settings.notify_test": "ٹیسٹ",

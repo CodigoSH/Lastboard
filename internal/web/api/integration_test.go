@@ -54,6 +54,7 @@ func setupTestServer(t *testing.T) (*httptest.Server, *sql.DB, func()) {
 	mux.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
 	mux.Handle("GET /api/dashboard", protect(http.HandlerFunc(dashHandler.GetDashboard)))
 	mux.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).GetSettings)))
+	mux.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).UpdateSettings)))
 
 	server := httptest.NewServer(mux)
 
@@ -519,12 +520,16 @@ func TestMonitorSettingsHideTheNotificationCredentialsFromNonAdmins(t *testing.T
 	}
 
 	admin := read("boss")
-	if admin["notify_url"] != "https://ntfy.sh/the-admins-private-topic" || admin["notify_token"] != "tk_secret_bearer_token" {
+	if admin["notify_url"] != "https://ntfy.sh/the-admins-private-topic" || admin["notify_has_token"] != true {
 		t.Errorf("the admin can no longer read their own settings: %v", admin)
+	}
+	// The token itself is never sent back, not even to the admin who saved it.
+	if tok, present := admin["notify_token"]; present && tok != "" {
+		t.Errorf("the saved token came back in the settings: %v", tok)
 	}
 
 	guest := read("guest")
-	if guest["notify_url"] != "" || guest["notify_token"] != "" {
+	if guest["notify_url"] != "" || guest["notify_token"] != nil || guest["notify_has_token"] != false {
 		t.Errorf("a plain user was handed the notification credentials: url=%q token=%q",
 			guest["notify_url"], guest["notify_token"])
 	}

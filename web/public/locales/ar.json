@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "رابط موضوع ntfy أو خادم Gotify أو نقطة webhook.",
   "settings.notify_token": "الرمز",
   "settings.notify_token_desc": "اختياري. رمز Bearer (ntfy/webhook) أو رمز التطبيق (Gotify).",
+  "settings.notify_token_saved": "يوجد رمز محفوظ ومخفي. اكتب رمزًا جديدًا لاستبداله، أو أفرغ الحقل لإزالته.",
   "settings.fail_threshold": "عتبة الفشل",
   "settings.fail_threshold_desc": "عدد الفحوصات الفاشلة المتتالية قبل تنبيه التعطّل.",
   "settings.notify_test": "اختبار",

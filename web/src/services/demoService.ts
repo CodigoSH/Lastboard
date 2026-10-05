@@ -31,7 +31,7 @@ const DEFAULT_MONITOR_SETTINGS = {
     alerts_enabled: true,
     notify_type: 'ntfy',
     notify_url: 'https://ntfy.sh/lastboard-demo',
-    notify_token: '',
+    notify_has_token: false,
     fail_threshold: 2,
 };
 

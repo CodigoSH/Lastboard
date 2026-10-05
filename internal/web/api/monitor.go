@@ -134,8 +134,28 @@ type monitorSettings struct {
 	AlertsEnabled bool   `json:"alerts_enabled"`
 	NotifyType    string `json:"notify_type"` // none | ntfy | gotify | webhook
 	NotifyURL     string `json:"notify_url"`
-	NotifyToken   string `json:"notify_token"`
-	FailThreshold int    `json:"fail_threshold"` // consecutive fails before a down alert
+	// NotifyToken is write-only: it arrives when the admin types one and is never
+	// sent back. The page learns that one is saved from NotifyHasToken, as the
+	// Proxmox secret does, so the credential does not sit in a field on screen
+	// after saving.
+	NotifyToken      string `json:"notify_token,omitempty"`
+	NotifyHasToken   bool   `json:"notify_has_token"`
+	ClearNotifyToken bool   `json:"clear_notify_token,omitempty"` // write-only: remove the saved token
+	FailThreshold    int    `json:"fail_threshold"`               // consecutive fails before a down alert
+}
+
+// resolveNotifyToken is the token a save leaves behind. Nothing typed keeps the
+// saved one: the page does not know it, and a browser that has not reloaded
+// since the token stopped being sent sends the whole form back with an empty
+// field, which must not wipe it.
+func resolveNotifyToken(stored, sent string, clear bool) string {
+	if clear {
+		return ""
+	}
+	if sent != "" {
+		return sent
+	}
+	return stored
 }
 
 // GetSettings returns the current monitoring configuration, filling defaults
@@ -175,7 +195,7 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	// anyone — but where they go and with what credential is.
 	if isAdminUser(h.DB, r) {
 		settings.NotifyURL = h.getSetting("monitoring_notify_url")
-		settings.NotifyToken = h.getSetting("monitoring_notify_token")
+		settings.NotifyHasToken = h.getSetting("monitoring_notify_token") != ""
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -221,8 +241,11 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 	h.setSetting("monitoring_alerts_enabled", boolTo01(s.AlertsEnabled))
 	h.setSetting("monitoring_notify_type", s.NotifyType)
 	h.setSetting("monitoring_notify_url", s.NotifyURL)
-	h.setSetting("monitoring_notify_token", s.NotifyToken)
+	token := resolveNotifyToken(h.getSetting("monitoring_notify_token"), s.NotifyToken, s.ClearNotifyToken)
+	h.setSetting("monitoring_notify_token", token)
 	h.setSetting("monitoring_fail_threshold", strconv.Itoa(s.FailThreshold))
+	// What goes back is what is saved, without the credential.
+	s.NotifyToken, s.ClearNotifyToken, s.NotifyHasToken = "", false, token != ""
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(s)
@@ -248,7 +271,9 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
-	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: s.NotifyToken}
+	// A test sent without a token uses the saved one: the page never has it.
+	token := resolveNotifyToken(h.getSetting("monitoring_notify_token"), s.NotifyToken, false)
+	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: token}
 	if !cfg.active() {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return

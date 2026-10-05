@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "ntfy konu URL'si, Gotify sunucu URL'si veya webhook adresin.",
   "settings.notify_token": "Belirteç",
   "settings.notify_token_desc": "İsteğe bağlı. Bearer belirteci (ntfy/webhook) veya uygulama belirteci (Gotify).",
+  "settings.notify_token_saved": "Bir belirteç kayıtlı ve gizli. Değiştirmek için yenisini yazın veya kaldırmak için alanı boşaltın.",
   "settings.fail_threshold": "Hata eşiği",
   "settings.fail_threshold_desc": "Çöküş uyarısından önceki ardışık başarısız kontrol sayısı.",
   "settings.notify_test": "Test",

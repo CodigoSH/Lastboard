@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "آدرس موضوع ntfy، سرور Gotify یا وب‌هوک شما.",
   "settings.notify_token": "توکن",
   "settings.notify_token_desc": "اختیاری. توکن Bearer (ntfy/webhook) یا توکن اپ (Gotify).",
+  "settings.notify_token_saved": "یک توکن ذخیره و پنهان شده است. برای جایگزینی، توکن جدیدی بنویسید یا برای حذف، کادر را خالی کنید.",
   "settings.fail_threshold": "آستانه خطا",
   "settings.fail_threshold_desc": "تعداد بررسی‌های ناموفق پیاپی پیش از هشدار قطعی.",
   "settings.notify_test": "آزمایش",

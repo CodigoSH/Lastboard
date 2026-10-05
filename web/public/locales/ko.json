@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "ntfy 토픽 URL, Gotify 서버 URL 또는 웹훅 엔드포인트.",
   "settings.notify_token": "토큰",
   "settings.notify_token_desc": "선택 사항. Bearer 토큰(ntfy/webhook) 또는 앱 토큰(Gotify).",
+  "settings.notify_token_saved": "토큰이 저장되어 숨겨져 있습니다. 바꾸려면 새 토큰을 입력하고, 삭제하려면 입력란을 비우세요.",
   "settings.fail_threshold": "실패 임계값",
   "settings.fail_threshold_desc": "다운 알림 전 연속 실패 횟수.",
   "settings.notify_test": "테스트",

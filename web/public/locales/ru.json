@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "URL темы ntfy, сервера Gotify или вашего вебхука.",
   "settings.notify_token": "Токен",
   "settings.notify_token_desc": "Необязательно. Bearer-токен (ntfy/webhook) или токен приложения (Gotify).",
+  "settings.notify_token_saved": "Токен сохранён и скрыт. Введите новый, чтобы заменить его, или очистите поле, чтобы удалить.",
   "settings.fail_threshold": "Порог сбоев",
   "settings.fail_threshold_desc": "Сколько неудачных проверок подряд до оповещения о сбое.",
   "settings.notify_test": "Проверка",

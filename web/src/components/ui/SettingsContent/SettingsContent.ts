@@ -16,6 +16,7 @@ import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
+import { tokenChange } from './notifyToken';
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
@@ -29,8 +30,10 @@ class SettingsContent extends HTMLElement {
     private importFormat = 'auto';
     private monitoring: {
         mode: string; interval_sec: number; alerts_enabled: boolean;
-        notify_type: string; notify_url: string; notify_token: string; fail_threshold: number;
-    } = { mode: 'tab', interval_sec: 300, alerts_enabled: false, notify_type: 'none', notify_url: '', notify_token: '', fail_threshold: 1 };
+        notify_type: string; notify_url: string; notify_has_token: boolean; fail_threshold: number;
+        // Write-only: sent when typed or removed, never received.
+        notify_token?: string; clear_notify_token?: boolean;
+    } = { mode: 'tab', interval_sec: 300, alerts_enabled: false, notify_type: 'none', notify_url: '', notify_has_token: false, fail_threshold: 1 };
     /**
      * Whether the values above came from the server. The object starts as a
      * guess, and drawing switches from a guess is not a cosmetic problem: the
@@ -199,6 +202,13 @@ class SettingsContent extends HTMLElement {
             }
         });
 
+        // Select the dots on entering the box, so the first key typed replaces
+        // them and Delete empties it: there is no button for either.
+        root.addEventListener('focusin', (e) => {
+            const t = e.target as HTMLInputElement;
+            if (t?.id === 'notify-token') t.select();
+        });
+
         root.addEventListener('change', (e) => {
             const el = (e.target as HTMLElement).closest('[data-change]') as HTMLElement | null;
             if (!el) return;
@@ -239,9 +249,14 @@ class SettingsContent extends HTMLElement {
                 case 'notify-url':
                     this.saveMonitoring({ notify_url: (el as HTMLInputElement).value.trim() });
                     break;
-                case 'notify-token':
-                    this.saveMonitoring({ notify_token: (el as HTMLInputElement).value.trim() });
+                case 'notify-token': {
+                    // The box shows dots when one is saved: what happened to them decides.
+                    const change = tokenChange((el as HTMLInputElement).value, this.monitoring.notify_has_token);
+                    if (change.action === 'set') this.saveMonitoring({ notify_token: change.token });
+                    else if (change.action === 'clear') this.saveMonitoring({ clear_notify_token: true });
+                    else this.render();   // untouched, or half-erased dots: draw them whole again
                     break;
+                }
             }
         });
 
@@ -666,7 +681,12 @@ class SettingsContent extends HTMLElement {
             await apiService.post('/api/monitor/test', {
                 notify_type: this.monitoring.notify_type,
                 notify_url: this.monitoring.notify_url,
-                notify_token: this.monitoring.notify_token,
+                // Only what was typed over the dots; with nothing new the server uses the saved one.
+                notify_token: (() => {
+                    const raw = (this.shadowRoot?.getElementById('notify-token') as HTMLInputElement | null)?.value ?? '';
+                    const c = tokenChange(raw, this.monitoring.notify_has_token);
+                    return c.action === 'set' ? c.token : '';
+                })(),
             });
             if (window.notifier) window.notifier.show(i18n.t('settings.notify_test_ok'));
         } catch {

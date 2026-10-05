@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "ntfy 主题 URL、Gotify 服务器 URL 或你的 webhook 地址。",
   "settings.notify_token": "令牌",
   "settings.notify_token_desc": "可选。Bearer 令牌（ntfy/webhook）或应用令牌（Gotify）。",
+  "settings.notify_token_saved": "令牌已保存并隐藏。输入新令牌可替换它，清空此栏可将其移除。",
   "settings.fail_threshold": "失败阈值",
   "settings.fail_threshold_desc": "触发宕机警报前的连续失败次数。",
   "settings.notify_test": "测试",

@@ -596,6 +596,7 @@
   "settings.notify_url_desc": "URL topik ntfy, URL server Gotify, atau endpoint webhook Anda.",
   "settings.notify_token": "Token",
   "settings.notify_token_desc": "Opsional. Token Bearer (ntfy/webhook) atau token aplikasi (Gotify).",
+  "settings.notify_token_saved": "Token sudah tersimpan dan disembunyikan. Ketik yang baru untuk menggantinya, atau kosongkan kolom untuk menghapusnya.",
   "settings.fail_threshold": "Ambang kegagalan",
   "settings.fail_threshold_desc": "Pemeriksaan gagal berturut-turut sebelum peringatan mati.",
   "settings.notify_test": "Uji",
