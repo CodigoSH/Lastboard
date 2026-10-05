@@ -202,13 +202,17 @@ func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 
 	var in struct {
 		Hosts []struct {
-			ID       string `json:"id"`
-			Name     string `json:"name"`
-			URL      string `json:"url"`
-			TokenID  string `json:"token_id"`
-			Secret   string `json:"secret"`
-			Insecure bool   `json:"insecure"`
-			Enabled  bool   `json:"enabled"`
+			ID      string `json:"id"`
+			Name    string `json:"name"`
+			URL     string `json:"url"`
+			TokenID string `json:"token_id"`
+			Secret  string `json:"secret"`
+			// ClearSecret is the operator emptying the box that held the dots:
+			// the stored secret goes. Without it an empty secret means "not
+			// touched", which is also what a page that has not reloaded sends.
+			ClearSecret bool `json:"clear_secret"`
+			Insecure    bool `json:"insecure"`
+			Enabled     bool `json:"enabled"`
 		} `json:"hosts"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
@@ -264,6 +268,8 @@ func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		}
 		if secret := strings.TrimSpace(raw.Secret); secret != "" {
 			e.Secret = secret
+		} else if raw.ClearSecret {
+			e.Secret = ""
 		} else if old, ok := previous[id]; ok {
 			e.Secret = old.Secret
 		}

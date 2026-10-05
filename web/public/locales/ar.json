@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "المستخدم@المجال!الاسم — المعرّف الذي يعرضه Proxmox عند إنشاء الرمز.",
   "settings.proxmox_secret": "سرّ الرمز",
   "settings.proxmox_secret_desc": "يعرضه Proxmox مرة واحدة فقط عند إنشاء الرمز. يُحفظ هنا ولا يعود إلى المتصفّح أبدًا.",
-  "settings.proxmox_secret_stored": "محفوظ — اتركه فارغًا للإبقاء عليه",
   "settings.proxmox_insecure": "قبول شهادة موقَّعة ذاتيًا",
   "settings.proxmox_insecure_desc": "معظم مُشرفات الأجهزة المنزلية تستخدم واحدة. أوقفه إن كانت لديك شهادة من جهة معروفة.",
   "settings.proxmox_save": "حفظ واتصال",

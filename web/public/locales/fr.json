@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "utilisateur@royaume!nom — l’identifiant affiché par Proxmox à la création du jeton.",
   "settings.proxmox_secret": "Secret du jeton",
   "settings.proxmox_secret_desc": "Proxmox ne l’affiche qu’une fois, à la création du jeton. Il reste ici et n’est jamais renvoyé au navigateur.",
-  "settings.proxmox_secret_stored": "Enregistré — laissez vide pour le conserver",
   "settings.proxmox_insecure": "Accepter un certificat auto-signé",
   "settings.proxmox_insecure_desc": "La plupart des hyperviseurs domestiques en utilisent un. Désactivez-le si le vôtre a un certificat d’une autorité reconnue.",
   "settings.proxmox_save": "Enregistrer et connecter",

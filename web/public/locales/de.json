@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "benutzer@realm!name — die Kennung, die Proxmox beim Anlegen des Tokens anzeigt.",
   "settings.proxmox_secret": "Token-Geheimnis",
   "settings.proxmox_secret_desc": "Proxmox zeigt es nur einmal, beim Anlegen des Tokens. Es bleibt hier und geht nie an den Browser zurück.",
-  "settings.proxmox_secret_stored": "Gespeichert — leer lassen, um es zu behalten",
   "settings.proxmox_insecure": "Selbstsigniertes Zertifikat akzeptieren",
   "settings.proxmox_insecure_desc": "Die meisten Heim-Hypervisoren nutzen eines. Schalte es aus, wenn deiner ein Zertifikat einer bekannten Stelle hat.",
   "settings.proxmox_save": "Speichern und verbinden",

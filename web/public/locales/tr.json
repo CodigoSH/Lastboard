@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "kullanıcı@realm!ad — belirteci oluştururken Proxmox’un gösterdiği kimlik.",
   "settings.proxmox_secret": "Belirteç gizi",
   "settings.proxmox_secret_desc": "Proxmox bunu yalnızca belirteç oluşturulurken bir kez gösterir. Burada saklanır ve tarayıcıya asla geri gönderilmez.",
-  "settings.proxmox_secret_stored": "Kayıtlı — korumak için boş bırakın",
   "settings.proxmox_insecure": "Kendinden imzalı sertifikayı kabul et",
   "settings.proxmox_insecure_desc": "Ev tipi hipervizörlerin çoğu bunu kullanır. Sizinkinde bilinen bir otoriteden sertifika varsa kapatın.",
   "settings.proxmox_save": "Kaydet ve bağlan",

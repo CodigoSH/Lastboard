@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "ব্যবহারকারী@realm!নাম — টোকেন তৈরির সময় Proxmox যে শনাক্তকারী দেখায়।",
   "settings.proxmox_secret": "টোকেন সিক্রেট",
   "settings.proxmox_secret_desc": "Proxmox এটি একবারই দেখায়, টোকেন তৈরির সময়। এটি এখানেই রাখা হয় এবং কখনও ব্রাউজারে ফেরত পাঠানো হয় না।",
-  "settings.proxmox_secret_stored": "সংরক্ষিত — অপরিবর্তিত রাখতে ফাঁকা রাখুন",
   "settings.proxmox_insecure": "স্ব-স্বাক্ষরিত সার্টিফিকেট গ্রহণ করুন",
   "settings.proxmox_insecure_desc": "বেশিরভাগ ঘরোয়া হাইপারভাইজার এটিই ব্যবহার করে। আপনার যদি পরিচিত কর্তৃপক্ষের সার্টিফিকেট থাকে, এটি বন্ধ করুন।",
   "settings.proxmox_save": "সংরক্ষণ করে সংযোগ করুন",

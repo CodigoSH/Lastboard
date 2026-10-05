@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "ユーザー@realm!名前 — トークン作成時に Proxmox が表示する識別子です。",
   "settings.proxmox_secret": "トークンのシークレット",
   "settings.proxmox_secret_desc": "Proxmox はトークン作成時に一度だけ表示します。ここに保管され、ブラウザーに返されることはありません。",
-  "settings.proxmox_secret_stored": "保存済み — そのままにするには空欄に",
   "settings.proxmox_insecure": "自己署名証明書を受け入れる",
   "settings.proxmox_insecure_desc": "家庭用のハイパーバイザーはたいてい自己署名です。既知の認証局の証明書を使っている場合はオフにしてください。",
   "settings.proxmox_save": "保存して接続",

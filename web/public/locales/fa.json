@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "کاربر@قلمرو!نام — شناسه‌ای که Proxmox هنگام ساخت توکن نشان می‌دهد.",
   "settings.proxmox_secret": "رمز توکن",
   "settings.proxmox_secret_desc": "Proxmox آن را فقط یک بار، هنگام ساخت توکن، نشان می‌دهد. اینجا نگهداری می‌شود و هرگز به مرورگر بازنمی‌گردد.",
-  "settings.proxmox_secret_stored": "ذخیره شده — برای حفظ آن خالی بگذارید",
   "settings.proxmox_insecure": "پذیرش گواهی خودامضا",
   "settings.proxmox_insecure_desc": "بیشتر هایپروایزرهای خانگی از آن استفاده می‌کنند. اگر گواهی شما از یک مرجع شناخته‌شده است، آن را خاموش کنید.",
   "settings.proxmox_save": "ذخیره و اتصال",

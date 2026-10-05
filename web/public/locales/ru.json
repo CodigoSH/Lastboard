@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "пользователь@realm!имя — идентификатор, который Proxmox показывает при создании токена.",
   "settings.proxmox_secret": "Секрет токена",
   "settings.proxmox_secret_desc": "Proxmox показывает его один раз, при создании токена. Он хранится здесь и никогда не возвращается в браузер.",
-  "settings.proxmox_secret_stored": "Сохранён — оставьте пустым, чтобы не менять",
   "settings.proxmox_insecure": "Принимать самоподписанный сертификат",
   "settings.proxmox_insecure_desc": "Большинство домашних гипервизоров используют его. Отключите, если у вашего сертификат от известного центра.",
   "settings.proxmox_save": "Сохранить и подключиться",

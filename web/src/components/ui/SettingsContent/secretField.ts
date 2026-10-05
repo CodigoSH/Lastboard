@@ -1,5 +1,6 @@
 /**
- * The alert token's field, as the house shows every saved secret: a password
+ * A saved secret's field, as the house shows every one (the alert token, the Proxmox
+ * token secret): a password
  * box, dots when one is saved, no way to reveal it and no button to remove it.
  * The administrator can see THAT there is a token, never WHAT it is. Typing
  * replaces it; emptying the box takes it away.
@@ -8,9 +9,9 @@
  * be told apart from something typed, and that is all this decides.
  */
 
-export const TOKEN_MASK = '••••••••';
+export const SECRET_MASK = '••••••••';
 
-export type TokenChange =
+export type SecretChange =
     | { action: 'keep' }
     | { action: 'clear' }
     | { action: 'set'; token: string };
@@ -21,7 +22,7 @@ export type TokenChange =
  * (a token never contains a dot of this kind); the dots alone, whole or
  * partly erased, are the sign and change nothing; an empty box is an empty token.
  */
-export function tokenChange(raw: string, hasToken: boolean): TokenChange {
+export function secretChange(raw: string, hasToken: boolean): SecretChange {
     const typed = raw.replace(/•/g, '').trim();
     if (typed) return { action: 'set', token: typed };
     if (raw === '') return hasToken ? { action: 'clear' } : { action: 'keep' };

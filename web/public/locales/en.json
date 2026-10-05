@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "user@realm!name — the identifier Proxmox shows when the token is created.",
   "settings.proxmox_secret": "Token secret",
   "settings.proxmox_secret_desc": "Proxmox shows it once, when the token is created. It is kept here and never sent back to the browser.",
-  "settings.proxmox_secret_stored": "Stored — leave empty to keep it",
   "settings.proxmox_insecure": "Accept a self-signed certificate",
   "settings.proxmox_insecure_desc": "Most home hypervisors use one. Turn it off if yours has a certificate from a known authority.",
   "settings.proxmox_save": "Save and connect",

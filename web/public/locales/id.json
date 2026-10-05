@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "pengguna@realm!nama — identitas yang ditampilkan Proxmox saat token dibuat.",
   "settings.proxmox_secret": "Rahasia token",
   "settings.proxmox_secret_desc": "Proxmox menampilkannya sekali saja, saat token dibuat. Rahasia ini disimpan di sini dan tidak pernah dikirim kembali ke peramban.",
-  "settings.proxmox_secret_stored": "Tersimpan — biarkan kosong untuk mempertahankannya",
   "settings.proxmox_insecure": "Terima sertifikat yang ditandatangani sendiri",
   "settings.proxmox_insecure_desc": "Sebagian besar hypervisor rumahan memakainya. Matikan jika milik Anda punya sertifikat dari otoritas yang dikenal.",
   "settings.proxmox_save": "Simpan dan sambungkan",

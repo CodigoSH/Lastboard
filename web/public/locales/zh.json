@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "用户@realm!名称 —— 创建令牌时 Proxmox 显示的标识符。",
   "settings.proxmox_secret": "令牌密钥",
   "settings.proxmox_secret_desc": "Proxmox 只在创建令牌时显示一次。它保存在这里，绝不会回传到浏览器。",
-  "settings.proxmox_secret_stored": "已保存 —— 留空即保持不变",
   "settings.proxmox_insecure": "接受自签名证书",
   "settings.proxmox_insecure_desc": "家用虚拟化主机大多如此。如果你的主机使用受信任机构签发的证书，请关闭此项。",
   "settings.proxmox_save": "保存并连接",

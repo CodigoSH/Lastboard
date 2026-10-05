@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "उपयोगकर्ता@realm!नाम — टोकन बनाते समय Proxmox जो पहचान दिखाता है।",
   "settings.proxmox_secret": "टोकन सीक्रेट",
   "settings.proxmox_secret_desc": "Proxmox इसे केवल एक बार, टोकन बनाते समय दिखाता है। यह यहीं रखा जाता है और ब्राउज़र को कभी वापस नहीं भेजा जाता।",
-  "settings.proxmox_secret_stored": "सहेजा गया — इसे बनाए रखने के लिए खाली छोड़ें",
   "settings.proxmox_insecure": "स्व-हस्ताक्षरित प्रमाणपत्र स्वीकार करें",
   "settings.proxmox_insecure_desc": "ज़्यादातर घरेलू हाइपरवाइज़र यही इस्तेमाल करते हैं। यदि आपके पास किसी ज्ञात प्राधिकरण का प्रमाणपत्र है तो इसे बंद कर दें।",
   "settings.proxmox_save": "सहेजें और जुड़ें",

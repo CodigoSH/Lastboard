@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "użytkownik@realm!nazwa — identyfikator pokazywany przez Proxmox przy tworzeniu tokena.",
   "settings.proxmox_secret": "Sekret tokena",
   "settings.proxmox_secret_desc": "Proxmox pokazuje go tylko raz, przy tworzeniu tokena. Zostaje tutaj i nigdy nie wraca do przeglądarki.",
-  "settings.proxmox_secret_stored": "Zapisany — zostaw puste, aby go zachować",
   "settings.proxmox_insecure": "Akceptuj certyfikat samopodpisany",
   "settings.proxmox_insecure_desc": "Większość domowych hiperwizorów go używa. Wyłącz, jeśli twój ma certyfikat od znanego urzędu.",
   "settings.proxmox_save": "Zapisz i połącz",

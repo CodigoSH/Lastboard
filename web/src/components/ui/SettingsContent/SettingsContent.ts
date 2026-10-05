@@ -16,7 +16,8 @@ import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
-import { tokenChange } from './notifyToken';
+import { SECRET_MASK, secretChange } from './secretField';
+import { proxmoxPayload } from './proxmoxPayload';
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
@@ -206,7 +207,7 @@ class SettingsContent extends HTMLElement {
         // them and Delete empties it: there is no button for either.
         root.addEventListener('focusin', (e) => {
             const t = e.target as HTMLInputElement;
-            if (t?.id === 'notify-token') t.select();
+            if (t?.id === 'notify-token' || t?.id === 'proxmox-secret') t.select();
         });
 
         root.addEventListener('change', (e) => {
@@ -251,7 +252,7 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'notify-token': {
                     // The box shows dots when one is saved: what happened to them decides.
-                    const change = tokenChange((el as HTMLInputElement).value, this.monitoring.notify_has_token);
+                    const change = secretChange((el as HTMLInputElement).value, this.monitoring.notify_has_token);
                     if (change.action === 'set') this.saveMonitoring({ notify_token: change.token });
                     else if (change.action === 'clear') this.saveMonitoring({ clear_notify_token: true });
                     else this.render();   // untouched, or half-erased dots: draw them whole again
@@ -533,20 +534,14 @@ class SettingsContent extends HTMLElement {
         set('proxmox-name', h?.name || '');
         set('proxmox-url', h?.url || '');
         set('proxmox-token-id', h?.token_id || '');
-        set('proxmox-secret', '');
+        // Dots when one is stored: the operator sees that it is there and never
+        // what it is. Typing replaces it, emptying the box removes it.
+        set('proxmox-secret', h?.has_secret ? SECRET_MASK : '');
         check('proxmox-enabled', h ? h.enabled : true);
         check('proxmox-insecure', h ? h.insecure : true);
 
         const title = root.getElementById('proxmox-modal-title');
         if (title) title.textContent = i18n.t(h ? 'general.edit' : 'settings.proxmox_add');
-        // The box is empty on purpose: a stored secret never comes back, so the
-        // placeholder is what says whether there is one to keep.
-        const secret = root.getElementById('proxmox-secret') as HTMLInputElement | null;
-        if (secret) {
-            secret.placeholder = h?.has_secret
-                ? i18n.t('settings.proxmox_secret_stored')
-                : '00000000-0000-0000-0000-000000000000';
-        }
         (root.getElementById('proxmox-modal') as HTMLDialogElement | null)?.showModal();
     }
 
@@ -561,24 +556,27 @@ class SettingsContent extends HTMLElement {
         const existing = index >= 0 ? this.proxmox.hosts[index] : undefined;
         const url = val('proxmox-url');
         const tokenId = val('proxmox-token-id');
-        const secret = val('proxmox-secret');
+        const change = secretChange((root.getElementById('proxmox-secret') as HTMLInputElement | null)?.value ?? '', !!existing?.has_secret);
+        const hasSecret = change.action === 'set' || (change.action === 'keep' && !!existing?.has_secret);
         const enabled = on('proxmox-enabled');
 
         // Enabled with nothing behind it would put a page in the top bar with
         // nothing to draw. Left off, an incomplete one is just a draft.
-        if (enabled && (!url || !tokenId || (!secret && !existing?.has_secret))) {
+        if (enabled && (!url || !tokenId || !hasSecret)) {
             if (window.notifier) window.notifier.show(i18n.t('settings.proxmox_needs_connection'), 'error');
             return;
         }
 
-        const edited: PxSettingsHost & { secret?: string } = {
+        const edited: PxSettingsHost & { secret?: string; clear_secret?: boolean } = {
             id: existing?.id || '',
             name: val('proxmox-name'),
             url, token_id: tokenId,
             insecure: on('proxmox-insecure'),
             enabled,
-            has_secret: !!existing?.has_secret || !!secret,
-            secret,
+            has_secret: hasSecret,
+            // Only what was typed over the dots travels, and removal has its own mark.
+            secret: change.action === 'set' ? change.token : '',
+            clear_secret: change.action === 'clear',
         };
         // Two connections to the same address are allowed — a second token with
         // narrower permissions is a real thing to want — but they are almost
@@ -588,7 +586,7 @@ class SettingsContent extends HTMLElement {
             if (window.notifier) window.notifier.show(i18n.t('proxmox.duplicate_host'), 'warning');
         }
 
-        const hosts = [...this.proxmox.hosts] as (PxSettingsHost & { secret?: string })[];
+        const hosts = [...this.proxmox.hosts] as (PxSettingsHost & { secret?: string; clear_secret?: boolean })[];
         if (existing) hosts[index] = edited; else hosts.push(edited);
 
         if (await this.putProxmoxHosts(hosts)) {
@@ -620,14 +618,9 @@ class SettingsContent extends HTMLElement {
      * Every host that is not the one being edited is sent back exactly as it
      * came, with no secret — which the server reads as "keep the one you have".
      */
-    private async putProxmoxHosts(hosts: (PxSettingsHost & { secret?: string })[]): Promise<boolean> {
+    private async putProxmoxHosts(hosts: (PxSettingsHost & { secret?: string; clear_secret?: boolean })[]): Promise<boolean> {
         try {
-            await apiService.post('/api/proxmox/settings', {
-                hosts: hosts.map(h => ({
-                    id: h.id, name: h.name, url: h.url, token_id: h.token_id,
-                    secret: h.secret || '', insecure: h.insecure, enabled: h.enabled,
-                })),
-            });
+            await apiService.post('/api/proxmox/settings', proxmoxPayload(hosts));
             // Re-read: the server prefixes a bare address with https://, mints
             // the ids, and is the only one that knows a secret is now stored.
             this.proxmox = await apiService.get<typeof this.proxmox>('/api/proxmox/settings');
@@ -684,7 +677,7 @@ class SettingsContent extends HTMLElement {
                 // Only what was typed over the dots; with nothing new the server uses the saved one.
                 notify_token: (() => {
                     const raw = (this.shadowRoot?.getElementById('notify-token') as HTMLInputElement | null)?.value ?? '';
-                    const c = tokenChange(raw, this.monitoring.notify_has_token);
+                    const c = secretChange(raw, this.monitoring.notify_has_token);
                     return c.action === 'set' ? c.token : '';
                 })(),
             });

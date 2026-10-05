@@ -670,7 +670,6 @@
   "settings.proxmox_token_id_desc": "صارف@ریلم!نام — وہ شناخت جو Proxmox ٹوکن بناتے وقت دکھاتا ہے۔",
   "settings.proxmox_secret": "ٹوکن کا خفیہ",
   "settings.proxmox_secret_desc": "Proxmox اسے صرف ایک بار، ٹوکن بناتے وقت دکھاتا ہے۔ یہ یہیں محفوظ رہتا ہے اور کبھی براؤزر کو واپس نہیں بھیجا جاتا۔",
-  "settings.proxmox_secret_stored": "محفوظ — برقرار رکھنے کے لیے خالی چھوڑیں",
   "settings.proxmox_insecure": "خود دستخط شدہ سرٹیفکیٹ قبول کریں",
   "settings.proxmox_insecure_desc": "گھریلو ہائپروائزر عموماً یہی استعمال کرتے ہیں۔ اگر آپ کے پاس کسی معروف ادارے کا سرٹیفکیٹ ہے تو اسے بند کر دیں۔",
   "settings.proxmox_save": "محفوظ کریں اور جُڑیں",

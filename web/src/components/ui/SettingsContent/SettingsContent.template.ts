@@ -1,6 +1,6 @@
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
-import { TOKEN_MASK } from './notifyToken';
+import { SECRET_MASK } from './secretField';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
@@ -416,7 +416,7 @@ export const monitoringTemplate = (monitoring: {
                 </div>
                 <div class="settings-content__form-group" style="margin-top: 14px;">
                     <label class="settings-content__label">${i18n.t('settings.notify_token')}</label>
-                    <input type="password" id="notify-token" class="settings-content__input" data-change="notify-token" value="${monitoring.notify_has_token ? TOKEN_MASK : ''}" spellcheck="false" autocomplete="new-password" placeholder="" />
+                    <input type="password" id="notify-token" class="settings-content__input" data-change="notify-token" value="${monitoring.notify_has_token ? SECRET_MASK : ''}" spellcheck="false" autocomplete="new-password" placeholder="" />
                     <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${monitoring.notify_has_token ? i18n.t('settings.notify_token_saved') : i18n.t('settings.notify_token_desc')}</p>
                 </div>
                 <div class="settings-content__action-row">
@@ -568,10 +568,7 @@ export const proxmoxTemplate = (
 
         <div class="settings-content__form-group">
             <label class="settings-content__label">${i18n.t('settings.proxmox_secret')}</label>
-            <div class="pw-wrap">
-                <input type="password" id="proxmox-secret" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password" placeholder="00000000-0000-0000-0000-000000000000">
-                ${pwToggle()}
-            </div>
+            <input type="password" id="proxmox-secret" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password" placeholder="00000000-0000-0000-0000-000000000000">
             <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_secret_desc')}</p>
         </div>
 
