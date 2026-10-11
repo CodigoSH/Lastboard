@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
-import { isDirectIconUrl, resolveIconUrl } from './iconUrl';
+import { describe, expect, it, test } from 'bun:test';
+import { iconForEdit, isDirectIconUrl, resolveIconUrl } from './iconUrl';
 
 const HOMARR = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/';
 
@@ -39,5 +39,24 @@ describe('resolveIconUrl', () => {
         // A prefix applied to nothing would produce ".../.webp", a request for
         // an icon that cannot exist.
         expect(resolveIconUrl(value)).toBe('');
+    });
+});
+
+describe('iconForEdit', () => {
+    // An imported bookmark has the address and no name: opening it for edit and
+    // saving it erased the icon.
+    it('falls back to the icon address when there is no name', () => {
+        expect(iconForEdit({ icon: 'https://cdn.example/plex.svg' })).toBe('https://cdn.example/plex.svg');
+        expect(iconForEdit({ iconName: '', icon: '/api/icons/abc123' })).toBe('/api/icons/abc123');
+    });
+
+    it('keeps the name when there is one', () => {
+        expect(iconForEdit({ iconName: 'plex', icon: 'https://cdn.example/plex.webp' })).toBe('plex');
+    });
+
+    it('is empty when the bookmark has no icon at all, and never throws on odd content', () => {
+        expect(iconForEdit({})).toBe('');
+        expect(iconForEdit(null)).toBe('');
+        expect(iconForEdit({ iconName: 5, icon: { a: 1 } })).toBe('');
     });
 });

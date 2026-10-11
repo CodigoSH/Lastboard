@@ -4,7 +4,7 @@ import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import { loadProxmox, allGuests } from '../../../services/proxmoxApi';
 import { safeImageSrc } from '../../../services/escape';
-import { resolveIconUrl } from '../../../services/iconUrl';
+import { iconForEdit, resolveIconUrl } from '../../../services/iconUrl';
 import { apiService } from '../../../services/apiService';
 import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
@@ -563,7 +563,7 @@ class AddBookmarkModal extends HTMLElement {
 
         // Populate State
         this.bookmarkTitle = content.label || '';
-        this.selectedIconName = content.iconName || '';
+        this.selectedIconName = iconForEdit(content);
         this.color = content.borderColor || '';
         this.labelPosition = content.labelPos || 'bottom';
         this.visibleTouch = (content.visibleTouch !== false);
