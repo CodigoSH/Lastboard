@@ -187,46 +187,64 @@ func TestTheStoredSecretNeverComesBack(t *testing.T) {
 	}
 }
 
-func TestANonAdminLearnsOnlyWhetherProxmoxIsOn(t *testing.T) {
+func TestEachAccountSeesOnlyItsOwnProxmox(t *testing.T) {
 	server, db, cleanup := setupProxmoxServer(t)
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	createUser(t, db.DB, "guest", "password", "user")
 
 	admin := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"https://pve.home:8006","token_id":"lastboard@pve!lb","secret":"s3cr3t"}]}`).Body.Close()
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"name":"admins-lab","url":"https://pve.home:8006","token_id":"lastboard@pve!lb","secret":"s3cr3t"}]}`).Body.Close()
 
-	// The top bar of every account has to know whether to offer the page, and
-	// that is all it gets: the address and the account name are reconnaissance.
+	// Another account's hypervisors are not its business: not whether there are
+	// any, not their address, not the name of the token.
 	guest := doLogin(t, server.URL, "guest", "password")
 	_, body := pxGet(t, server.URL, "/api/proxmox/settings", guest)
-	if body["enabled"] != true {
-		t.Errorf("enabled = %v, want true", body["enabled"])
+	if body["enabled"] != false {
+		t.Errorf("enabled = %v: the guest was told about the admin's hypervisor", body["enabled"])
 	}
-	// Not blanked fields inside a host: no host at all. A member has no
-	// business knowing how many hypervisors exist either.
 	if hosts, _ := body["hosts"].([]any); len(hosts) != 0 {
-		t.Errorf("a non-admin was told about %d host(s): %v", len(hosts), hosts)
+		t.Errorf("the guest was told about %d host(s): %v", len(hosts), hosts)
+	}
+
+	// Their own, once they add one, is theirs alone.
+	pxSave(t, server.URL, guest, `{"hosts":[{"enabled":true,"name":"guests-nas","url":"https://nas:8006","token_id":"g@pve!g","secret":"g-secret"}]}`).Body.Close()
+	_, body = pxGet(t, server.URL, "/api/proxmox/settings", guest)
+	if body["enabled"] != true || pxOnlyHost(body)["name"] != "guests-nas" {
+		t.Errorf("the guest does not see their own host: %v", body)
+	}
+	_, body = pxGet(t, server.URL, "/api/proxmox/settings", admin)
+	if pxOnlyHost(body)["name"] != "admins-lab" {
+		t.Errorf("the guest's save reached the admin's list: %v", body)
 	}
 }
 
-func TestOnlyAnAdminCanPointAtAHypervisor(t *testing.T) {
+func TestAMemberConfiguresTheirOwnHypervisorNotSomeoneElses(t *testing.T) {
 	server, db, cleanup := setupProxmoxServer(t)
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	createUser(t, db.DB, "guest", "password", "user")
-
-	guest := doLogin(t, server.URL, "guest", "password")
-	resp := pxSave(t, server.URL, guest, `{"hosts":[{"enabled":true,"url":"https://evil.example","token_id":"x!y","secret":"z"}]}`)
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden {
-		t.Fatalf("got %d, want 403: a settings write holds a credential", resp.StatusCode)
-	}
-
 	admin := doLogin(t, server.URL, "root", "password")
-	_, body := pxGet(t, server.URL, "/api/proxmox/settings", admin)
-	if h := pxOnlyHost(body); h["url"] != nil {
-		t.Errorf("the refused write landed anyway: url = %v", h["url"])
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"https://pve.home:8006","token_id":"a!b","secret":"admin-secret"}]}`).Body.Close()
+	adminHost := pxHostID(t, server.URL, admin)
+
+	// A guest can save their own list, and naming the admin's host id in it
+	// neither reaches that host nor its secret: ids are the server's.
+	guest := doLogin(t, server.URL, "guest", "password")
+	resp := pxSave(t, server.URL, guest, `{"hosts":[{"id":"`+adminHost+`","enabled":true,"url":"https://evil.example","token_id":"x!y"}]}`)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("a member saving their own list got %d", resp.StatusCode)
+	}
+	var secret string
+	db.DB.QueryRow(`SELECT value FROM user_settings WHERE user_id = 1 AND key = 'proxmox_hosts'`).Scan(&secret)
+	if !strings.Contains(secret, "admin-secret") || strings.Contains(secret, "evil.example") {
+		t.Errorf("the guest's save changed the admin's connections: %s", secret)
+	}
+	var mine string
+	db.DB.QueryRow(`SELECT value FROM user_settings WHERE user_id = 2 AND key = 'proxmox_hosts'`).Scan(&mine)
+	if strings.Contains(mine, "admin-secret") {
+		t.Errorf("the guest's list carries the admin's secret: %s", mine)
 	}
 }
 
@@ -406,23 +424,40 @@ func pxPower(t *testing.T, serverURL string, s *userSession, body string) *http.
 	return resp
 }
 
-func TestANonAdminCannotStopAMachine(t *testing.T) {
-	fake := newFakeProxmox(t)
+func TestAMemberStopsTheirOwnMachinesAndNobodyElses(t *testing.T) {
+	adminFake := newFakeProxmox(t)
+	guestFake := newFakeProxmox(t)
 	server, db, cleanup := setupProxmoxServer(t)
 	defer cleanup()
 	createUser(t, db.DB, "root", "password", "admin")
 	createUser(t, db.DB, "guest", "password", "user")
+	createUser(t, db.DB, "other", "password", "user")
 	admin := doLogin(t, server.URL, "root", "password")
-	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
-
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+adminFake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
 	guest := doLogin(t, server.URL, "guest", "password")
+	pxSave(t, server.URL, guest, `{"hosts":[{"enabled":true,"url":"`+guestFake.URL+`","token_id":"g@pve!g","secret":"g","insecure":true}]}`).Body.Close()
+	const shutdown = "POST /api2/json/nodes/kprox/lxc/106/status/shutdown"
+
+	// Their own hypervisor: it goes through, to their host and no one else's.
 	resp := pxPower(t, server.URL, guest, `{"node":"kprox","kind":"lxc","vmid":106,"action":"shutdown"}`)
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden {
-		t.Fatalf("got %d, want 403", resp.StatusCode)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("a member stopping their own machine got %d", resp.StatusCode)
 	}
-	if fake.asked("POST /api2/json/nodes/kprox/lxc/106/status/shutdown") {
-		t.Fatal("the machine was stopped anyway")
+	if !guestFake.asked(shutdown) || adminFake.asked(shutdown) {
+		t.Fatalf("the action went to the wrong hypervisor (guest's: %v, admin's: %v)", guestFake.asked(shutdown), adminFake.asked(shutdown))
+	}
+
+	// An account with no hypervisor of its own has nothing to stop, and the
+	// admin's is not reachable by naming it.
+	other := doLogin(t, server.URL, "other", "password")
+	resp = pxPower(t, server.URL, other, `{"host":"`+pxHostID(t, server.URL, admin)+`","node":"kprox","kind":"lxc","vmid":107,"action":"shutdown"}`)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusPreconditionFailed {
+		t.Fatalf("an account with no hypervisor got %d, want 412", resp.StatusCode)
+	}
+	if adminFake.asked("POST /api2/json/nodes/kprox/lxc/107/status/shutdown") {
+		t.Fatal("another account's machine was stopped")
 	}
 }
 
@@ -592,7 +627,7 @@ func TestAnEmptyIconClearsTheChoice(t *testing.T) {
 	}
 }
 
-func TestOnlyAnAdminChoosesTheFaceOfAMachine(t *testing.T) {
+func TestEachAccountChoosesTheFacesOfItsOwnMachines(t *testing.T) {
 	fake := newFakeProxmox(t)
 	server, db, cleanup := setupProxmoxServer(t)
 	defer cleanup()
@@ -600,16 +635,31 @@ func TestOnlyAnAdminChoosesTheFaceOfAMachine(t *testing.T) {
 	createUser(t, db.DB, "guest", "password", "user")
 	admin := doLogin(t, server.URL, "root", "password")
 	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+	guest := doLogin(t, server.URL, "guest", "password")
 
-	// Server-wide setting, so it follows the rule the connection follows.
-	resp := pxIcon(t, server.URL, doLogin(t, server.URL, "guest", "password"),
-		`{"node":"kprox","vmid":100,"icon":"/api/icons/one"}`)
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden {
-		t.Fatalf("got %d, want 403", resp.StatusCode)
+	// Without a connection of their own there is no machine to put a face on —
+	// and the admin's host cannot be borrowed by naming it.
+	resp := pxIcon(t, server.URL, guest, `{"host":"`+pxHostID(t, server.URL, admin)+`","node":"kprox","vmid":100,"icon":"/api/icons/one"}`)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusPreconditionFailed {
+		t.Fatalf("got %d, want 412", resp.StatusCode)
 	}
 	if len(iconsFrom(t, server.URL, admin)) != 0 {
-		t.Error("the refused choice was stored anyway")
+		t.Error("the refused choice was stored on the admin's machines")
+	}
+
+	// With their own, the choice is theirs and the admin's board is untouched.
+	pxSave(t, server.URL, guest, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"g@pve!g","secret":"g","insecure":true}]}`).Body.Close()
+	resp = pxIcon(t, server.URL, guest, `{"node":"kprox","vmid":100,"icon":"/api/icons/one"}`)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("got %d, want 204", resp.StatusCode)
+	}
+	if len(iconsFrom(t, server.URL, guest)) != 1 {
+		t.Error("the guest's choice was not kept")
+	}
+	if len(iconsFrom(t, server.URL, admin)) != 0 {
+		t.Error("the guest's choice shows on the admin's machines")
 	}
 }
 

@@ -65,6 +65,12 @@ func main() {
 	defer db.Close()
 	slog.Info("Database initialized", "path", dbFile)
 
+	// What an earlier version kept for the whole server — the alert channel and
+	// the Proxmox connections — belongs to the first administrator now.
+	if err := api.MigrateUserSettings(db.DB); err != nil {
+		slog.Error("Moving settings to the first administrator failed", "error", err)
+	}
+
 	// Credentials an earlier version left inside widgets move to the secret store
 	// before the first request can carry them to a browser.
 	if _, err := api.MigrateWidgetSecrets(db.DB); err != nil {

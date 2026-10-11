@@ -207,6 +207,16 @@ func initSchema(db *sql.DB) error {
 			PRIMARY KEY (item_id, name),
 			FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE
 		);`,
+		// What belongs to one account and is not a preference of its own: how its
+		// monitoring runs and where its alerts go, its Proxmox connections. A row
+		// follows the account out of the database when it is deleted.
+		`CREATE TABLE IF NOT EXISTS user_settings (
+			user_id INTEGER NOT NULL,
+			key     TEXT NOT NULL,
+			value   TEXT NOT NULL,
+			PRIMARY KEY (user_id, key),
+			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+		);`,
 		// Append-only monitoring history. Keyed by item_id (the monitor IS the
 		// bookmark), so ON DELETE CASCADE prunes a bookmark's history with it.
 		// latency_ms is NULL when the check failed; status_code is 0 with no response.

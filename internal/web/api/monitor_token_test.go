@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// The notification token is a credential the admin types once. After saving it
+// The notification token is a credential its owner types once. After saving it
 // stays out of the page, like the Proxmox secret and the sibling products' tokens:
 // the form learns that one is saved (notify_has_token) and never receives it.
 func TestNotifyTokenIsWriteOnly(t *testing.T) {
@@ -42,7 +42,7 @@ func TestNotifyTokenIsWriteOnly(t *testing.T) {
 	}
 	stored := func() string {
 		var v string
-		db.QueryRow(`SELECT value FROM system_settings WHERE key = 'monitoring_notify_token'`).Scan(&v)
+		db.QueryRow(`SELECT value FROM user_settings WHERE key = 'monitoring_notify_token'`).Scan(&v)
 		return v
 	}
 	noToken := func(label string, got map[string]any) {

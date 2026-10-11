@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
@@ -63,9 +64,10 @@ func (s *MonitorStore) Prune(days int) (int64, error) {
 // MonitoredItem is a bookmark opted into status checking: its id (the monitor
 // key), display name and the URL to probe.
 type MonitoredItem struct {
-	ID   int
-	Name string
-	URL  string
+	ID     int
+	UserID int
+	Name   string
+	URL    string
 }
 
 // MonitoredItems lists every bookmark with statusCheck enabled — the set the
@@ -81,7 +83,7 @@ func (s *MonitorStore) MonitoredItemsForUser(userID int) ([]MonitoredItem, error
 }
 
 func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
-	query := `SELECT id, content FROM items WHERE type = 'bookmark' AND content IS NOT NULL`
+	query := `SELECT id, user_id, content FROM items WHERE type = 'bookmark' AND content IS NOT NULL`
 	args := []any{}
 	if userID > 0 {
 		query += ` AND user_id = ?`
@@ -95,9 +97,9 @@ func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
 
 	var out []MonitoredItem
 	for rows.Next() {
-		var id int
+		var id, owner int
 		var content sql.NullString
-		if err := rows.Scan(&id, &content); err != nil {
+		if err := rows.Scan(&id, &owner, &content); err != nil {
 			return nil, err
 		}
 		if !content.Valid {
@@ -109,15 +111,15 @@ func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
 			Label       string `json:"label"`
 		}
 		if json.Unmarshal([]byte(content.String), &c) == nil && c.StatusCheck && c.URL != "" {
-			out = append(out, MonitoredItem{ID: id, Name: c.Label, URL: c.URL})
+			out = append(out, MonitoredItem{ID: id, UserID: owner, Name: c.Label, URL: c.URL})
 		}
 	}
 	return out, rows.Err()
 }
 
-// MonitorHandler exposes the global monitoring configuration to the frontend.
-// The mode/interval live in system_settings (server-wide, not per-user); the
-// scheduler reads them each cycle.
+// MonitorHandler exposes each account's monitoring configuration to the
+// frontend. The mode, interval and alert channel are the account's own
+// (user_settings); the scheduler reads them each cycle.
 type MonitorHandler struct {
 	DB    *sql.DB
 	store *MonitorStore
@@ -158,57 +160,51 @@ func resolveNotifyToken(stored, sent string, clear bool) string {
 	return stored
 }
 
-// GetSettings returns the current monitoring configuration, filling defaults
+// GetSettings returns the caller's monitoring configuration, filling defaults
 // when unset (mode "tab" = today's frontend-driven behavior).
 //
-// Everyone authenticated may read it — the top bar and the history drawer need
-// the mode to know whether the server is probing — but the notification
-// destination and its token are admin-only. They are the admin's credentials
-// for their own ntfy/gotify channel: handing them to every account lets anyone
-// publish into it and, on ntfy and gotify, subscribe and read the alerts of
-// every service the admin watches.
+// It is the account's own: how its monitoring runs and where its alerts go.
+// Nobody reads another account's channel, and the token is never sent — only
+// whether one is saved.
 func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
-	mode := h.getSetting("monitoring_mode")
+	uid := middleware.GetUserIDFromContext(r)
+	mode := h.getSetting(uid, keyMonMode)
 	if mode == "" {
 		mode = "tab"
 	}
-	interval, _ := strconv.Atoi(h.getSetting("monitoring_interval_sec"))
+	interval, _ := strconv.Atoi(h.getSetting(uid, keyMonInterval))
 	if interval <= 0 {
 		interval = monitorDefaultIntervalSec
 	}
-	threshold, _ := strconv.Atoi(h.getSetting("monitoring_fail_threshold"))
+	threshold, _ := strconv.Atoi(h.getSetting(uid, keyMonThreshold))
 	if threshold < 1 {
 		threshold = 1
 	}
-	notifyType := h.getSetting("monitoring_notify_type")
+	notifyType := h.getSetting(uid, keyMonType)
 	if notifyType == "" {
 		notifyType = "none"
 	}
 	settings := monitorSettings{
 		Mode:          mode,
 		IntervalSec:   interval,
-		AlertsEnabled: h.getSetting("monitoring_alerts_enabled") == "1",
+		AlertsEnabled: h.getSetting(uid, keyMonAlerts) == "1",
 		NotifyType:    notifyType,
 		FailThreshold: threshold,
-	}
-	// The type is not a secret — the interface says "alerts go to ntfy" to
-	// anyone — but where they go and with what credential is.
-	if isAdminUser(h.DB, r) {
-		settings.NotifyURL = h.getSetting("monitoring_notify_url")
-		settings.NotifyHasToken = h.getSetting("monitoring_notify_token") != ""
+		// It is the account's own channel, so it may read where it goes; the
+		// token it may only learn exists.
+		NotifyURL:      h.getSetting(uid, keyMonURL),
+		NotifyHasToken: h.getSetting(uid, keyMonToken) != "",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(settings)
 }
 
-// UpdateSettings persists the monitoring configuration. Admin-only, since the
-// mode is a server-wide setting affecting all users.
+// UpdateSettings persists the caller's monitoring configuration. Each account
+// has its own: it decides whether its bookmarks are probed on the server, how
+// often, and where its alerts go.
 func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
-	if !isAdminUser(h.DB, r) {
-		http.Error(w, "error.forbidden", http.StatusForbidden)
-		return
-	}
+	uid := middleware.GetUserIDFromContext(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var s monitorSettings
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
@@ -236,19 +232,37 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 	if s.NotifyType == "" {
 		s.NotifyType = "none"
 	}
-	h.setSetting("monitoring_mode", s.Mode)
-	h.setSetting("monitoring_interval_sec", strconv.Itoa(s.IntervalSec))
-	h.setSetting("monitoring_alerts_enabled", boolTo01(s.AlertsEnabled))
-	h.setSetting("monitoring_notify_type", s.NotifyType)
-	h.setSetting("monitoring_notify_url", s.NotifyURL)
-	token := resolveNotifyToken(h.getSetting("monitoring_notify_token"), s.NotifyToken, s.ClearNotifyToken)
-	h.setSetting("monitoring_notify_token", token)
-	h.setSetting("monitoring_fail_threshold", strconv.Itoa(s.FailThreshold))
+	if badNotifyURL(s.NotifyURL) {
+		http.Error(w, "error.invalid_url", http.StatusBadRequest)
+		return
+	}
+	h.setSetting(uid, keyMonMode, s.Mode)
+	h.setSetting(uid, keyMonInterval, strconv.Itoa(s.IntervalSec))
+	h.setSetting(uid, keyMonAlerts, boolTo01(s.AlertsEnabled))
+	h.setSetting(uid, keyMonType, s.NotifyType)
+	h.setSetting(uid, keyMonURL, s.NotifyURL)
+	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, s.ClearNotifyToken)
+	h.setSetting(uid, keyMonToken, token)
+	h.setSetting(uid, keyMonThreshold, strconv.Itoa(s.FailThreshold))
 	// What goes back is what is saved, without the credential.
 	s.NotifyToken, s.ClearNotifyToken, s.NotifyHasToken = "", false, token != ""
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(s)
+}
+
+// badNotifyURL refuses an address for alerts that is not an http or https one,
+// or that is the instance's cloud metadata service. Pointing at your own network
+// is the product; that is not.
+func badNotifyURL(raw string) bool {
+	if strings.TrimSpace(raw) == "" {
+		return false
+	}
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" {
+		return true
+	}
+	return util.IsCloudMetadataHost(u.Hostname())
 }
 
 func boolTo01(b bool) string {
@@ -259,12 +273,9 @@ func boolTo01(b bool) string {
 }
 
 // TestNotify sends a one-off test alert using the config in the request body
-// (so it can be tried before saving). Admin-only.
+// (so it can be tried before saving).
 func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
-	if !isAdminUser(h.DB, r) {
-		http.Error(w, "error.forbidden", http.StatusForbidden)
-		return
-	}
+	uid := middleware.GetUserIDFromContext(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 	var s monitorSettings
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
@@ -272,8 +283,12 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// A test sent without a token uses the saved one: the page never has it.
-	token := resolveNotifyToken(h.getSetting("monitoring_notify_token"), s.NotifyToken, false)
+	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, false)
 	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: token}
+	if badNotifyURL(s.NotifyURL) {
+		http.Error(w, "error.invalid_url", http.StatusBadRequest)
+		return
+	}
 	if !cfg.active() {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
@@ -591,21 +606,30 @@ func (h *MonitorHandler) ClearHistory(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{"ok": true, "deleted": deleted})
 }
 
-func (h *MonitorHandler) getSetting(key string) string {
-	var v sql.NullString
-	if err := h.DB.QueryRow(
-		`SELECT value FROM system_settings WHERE key = ?`, key).Scan(&v); err != nil {
-		return ""
+// monitorSetting is one of an account's monitoring settings. An account that
+// has not chosen its own mode, interval or threshold starts from what the server
+// was configured with before accounts had their own; the alert channel has no
+// such starting point.
+func monitorSetting(db *sql.DB, userID int, key string) string {
+	if v, ok := NewUserSettings(db).Get(userID, key); ok {
+		return v
 	}
-	if v.Valid {
-		return v.String
+	switch key {
+	case keyMonMode, keyMonInterval, keyMonThreshold:
+		var v sql.NullString
+		if err := db.QueryRow(`SELECT value FROM system_settings WHERE key = ?`, key).Scan(&v); err == nil && v.Valid {
+			return v.String
+		}
 	}
 	return ""
 }
 
-func (h *MonitorHandler) setSetting(key, value string) {
-	if _, err := h.DB.Exec(
-		`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`, key, value); err != nil {
+func (h *MonitorHandler) getSetting(userID int, key string) string {
+	return monitorSetting(h.DB, userID, key)
+}
+
+func (h *MonitorHandler) setSetting(userID int, key, value string) {
+	if err := NewUserSettings(h.DB).Set(userID, key, value); err != nil {
 		slog.Error("monitor: persisting setting failed", "key", key, "error", err)
 	}
 }

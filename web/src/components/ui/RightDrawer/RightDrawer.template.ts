@@ -46,20 +46,20 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                     <span>${i18n.t('settings.personalization')}</span>
                 </div>
 
+                <div class="right-drawer__menu-item ${selectedSection === 'monitoring' ? 'right-drawer__menu-item--active' : ''}" data-section="monitoring">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span>${i18n.t('settings.monitoring')}</span>
+                </div>
+
+                <div class="right-drawer__menu-item ${selectedSection === 'proxmox' ? 'right-drawer__menu-item--active' : ''}" data-section="proxmox">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
+                    <span>${i18n.t('widget.proxmox.name')}</span>
+                </div>
+
                 ${(user.role?.toLowerCase() === 'admin' || user.role === 'Administrator') ? `
                     <div class="right-drawer__menu-item ${selectedSection === 'users' ? 'right-drawer__menu-item--active' : ''}" data-section="users">
                         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                         <span>${i18n.t('settings.users')}</span>
-                    </div>
-
-                    <div class="right-drawer__menu-item ${selectedSection === 'monitoring' ? 'right-drawer__menu-item--active' : ''}" data-section="monitoring">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        <span>${i18n.t('settings.monitoring')}</span>
-                    </div>
-
-                    <div class="right-drawer__menu-item ${selectedSection === 'proxmox' ? 'right-drawer__menu-item--active' : ''}" data-section="proxmox">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
-                        <span>${i18n.t('widget.proxmox.name')}</span>
                     </div>
 
                     <div class="right-drawer__menu-item ${selectedSection === 'data' ? 'right-drawer__menu-item--active' : ''}" data-section="data">

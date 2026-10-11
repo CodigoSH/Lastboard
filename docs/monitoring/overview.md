@@ -12,7 +12,7 @@ Monitoring adds history and alerting on top of that indicator.
 
 ## 24/7 Monitoring
 
-Open **Settings → Monitoring**. The **24/7 monitoring** toggle is a server-wide setting, so only the **administrator** can change it.
+Open **Settings → Monitoring**. Monitoring is **yours**: the **24/7 monitoring** toggle, the check interval and the alerts apply to your own bookmarks, and every account sets them for itself. Someone who has not chosen yet starts from the values the server had when accounts got their own.
 
 ![Monitoring settings](../assets/p-monitoring.png)
 

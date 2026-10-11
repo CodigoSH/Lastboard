@@ -34,7 +34,9 @@ they would be on a public service.
   Expired lockouts are cleaned up as they are read, so the table cannot grow unbounded.
 - **One administrator per instance** — the account the Setup Wizard creates. Every account added
   afterwards is a Member and cannot be promoted, so there is no path from a Member session to
-  server-wide settings, user management, backups, updates, Docker control or Proxmox power.
+  server-wide settings, user management, backups, updates or Docker control. A Member's monitoring
+  and Proxmox connections are their own: nobody sees or uses another account's hypervisors, tokens or
+  alert channel.
 
 ## Authorization
 

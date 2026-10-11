@@ -2,7 +2,7 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
 
-Five of the sections — **Users**, **Monitoring**, **Proxmox**, **Data** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. A Member account sees **My Profile**, **Look & Feel**, **Personalization** and **About**, and nothing hints that the rest exist.
+Three of the sections — **Users**, **Data** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring** and **Proxmox** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Proxmox** and **About**, and nothing hints that the rest exist.
 
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
@@ -47,13 +47,13 @@ The administrator manages who can access the instance.
 
 ## Monitoring
 
-Turn service monitoring on, choose how often the server checks your services, and configure down/up alerts via ntfy, Gotify or a webhook. See **[Monitoring & Uptime](../monitoring/overview.md)** for the full guide.
+Turn service monitoring on for your own bookmarks, choose how often the server checks them, and configure down/up alerts via ntfy, Gotify or a webhook. Every account has its own settings and its own alert channel. See **[Monitoring & Uptime](../monitoring/overview.md)** for the full guide.
 
 ## Proxmox
 
 ![Proxmox](../assets/p-proxmox.png)
 
-Connect Lastboard to one or more Proxmox VE hosts — one card each, with a name, address, API token and certificate policy. Saving reads every host straight away and says, per card, what that token can see and whether it may start and stop machines. Administrator only, and hidden from every other account. See **[Proxmox](../proxmox/overview.md)** for the token recipe and the page it unlocks.
+Connect Lastboard to one or more Proxmox VE hosts — one card each, with a name, address, API token and certificate policy. Saving reads every host straight away and says, per card, what that token can see and whether it may start and stop machines. Each account connects its own hypervisors: yours are never listed to, and never used by, anybody else. See **[Proxmox](../proxmox/overview.md)** for the token recipe and the page it unlocks.
 
 ## Data
 

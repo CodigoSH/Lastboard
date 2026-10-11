@@ -66,10 +66,10 @@ func TestProtectedBackupRoundTrip(t *testing.T) {
 	if _, err := db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (1, 'widget', 1, 1, 2, 2, '{"headers":{"X-Api-Key":"sonarr-key-777"}}')`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := db.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('proxmox_hosts', ?)`, testProxmoxHosts); err != nil {
+	if _, err := db.Exec(`INSERT OR REPLACE INTO user_settings (user_id, key, value) VALUES (1, 'proxmox_hosts', ?)`, testProxmoxHosts); err != nil {
 		t.Fatal(err)
 	}
-	db.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('monitoring_notify_token', 'ntfy-secret-555'), ('monitoring_interval_sec', '45')`)
+	db.Exec(`INSERT OR REPLACE INTO user_settings (user_id, key, value) VALUES (1, 'monitoring_notify_token', 'ntfy-secret-555'), (1, 'monitoring_interval_sec', '45')`)
 	cookie := loginAndGetCookie(t, server, "adminProtected", "password")
 
 	sealed := downloadBackup(t, server.URL, cookie, "POST", `{"password":"hunter2 hunter2"}`)
@@ -81,7 +81,7 @@ func TestProtectedBackupRoundTrip(t *testing.T) {
 
 	// Lose everything the backup holds.
 	db.Exec("DELETE FROM items")
-	db.Exec("DELETE FROM system_settings WHERE key IN ('proxmox_hosts', 'monitoring_notify_token', 'monitoring_interval_sec')")
+	db.Exec("DELETE FROM user_settings")
 
 	if code, msg := restoreBackup(t, server.URL, cookie, sealed, ""); code != http.StatusBadRequest || msg != "backup.password_required" {
 		t.Errorf("no password: got %d %q", code, msg)
@@ -103,13 +103,15 @@ func TestProtectedBackupRoundTrip(t *testing.T) {
 		t.Errorf("items after restore: %d, want 1", n)
 	}
 	var hosts string
-	db.QueryRow(`SELECT value FROM system_settings WHERE key = 'proxmox_hosts'`).Scan(&hosts)
+	db.QueryRow(`SELECT s.value FROM user_settings s JOIN users u ON u.id = s.user_id
+		WHERE u.username = 'adminProtected' AND s.key = 'proxmox_hosts'`).Scan(&hosts)
 	if hosts != testProxmoxHosts {
 		t.Errorf("Proxmox hosts after restore = %q, want the token back", hosts)
 	}
 	for key, want := range map[string]string{"monitoring_notify_token": "ntfy-secret-555", "monitoring_interval_sec": "45"} {
 		var got string
-		db.QueryRow(`SELECT value FROM system_settings WHERE key = ?`, key).Scan(&got)
+		db.QueryRow(`SELECT s.value FROM user_settings s JOIN users u ON u.id = s.user_id
+			WHERE u.username = 'adminProtected' AND s.key = ?`, key).Scan(&got)
 		if got != want {
 			t.Errorf("%s after restore = %q, want %q", key, got, want)
 		}

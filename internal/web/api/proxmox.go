@@ -10,14 +10,16 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 // ProxmoxHandler serves the Proxmox page and its widget.
 //
-// The connections are server-wide and live in system_settings, like the
-// monitoring configuration: a list of hypervisors, configured by an
-// administrator. They are not per-user and not per-widget, because the
-// credentials are the administrator's and must not travel to a browser at all.
+// The connections belong to the account that configured them and live in its
+// user_settings: a list of hypervisors, each with a token. Nobody sees or uses
+// another account's, and they are not per-widget, because the credentials must
+// not travel to a browser at all.
 type ProxmoxHandler struct {
 	DB *sql.DB
 }
@@ -26,18 +28,23 @@ func NewProxmoxHandler(db *sql.DB) *ProxmoxHandler {
 	return &ProxmoxHandler{DB: db}
 }
 
-func (h *ProxmoxHandler) getSetting(key string) string {
-	var v string
-	if err := h.DB.QueryRow(`SELECT value FROM system_settings WHERE key = ?`, key).Scan(&v); err != nil {
-		return ""
-	}
+// proxmoxScope is the handler looking at one account's connections.
+type proxmoxScope struct {
+	*ProxmoxHandler
+	uid int
+}
+
+func (h *ProxmoxHandler) forUser(r *http.Request) proxmoxScope {
+	return proxmoxScope{h, middleware.GetUserIDFromContext(r)}
+}
+
+func (u proxmoxScope) getSetting(key string) string {
+	v, _ := NewUserSettings(u.DB).Get(u.uid, key)
 	return v
 }
 
-func (h *ProxmoxHandler) setSetting(key, value string) error {
-	_, err := h.DB.Exec(
-		`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`, key, value)
-	return err
+func (u proxmoxScope) setSetting(key, value string) error {
+	return NewUserSettings(u.DB).Set(u.uid, key, value)
 }
 
 /* ---------------------------------------------------------------------------
@@ -66,9 +73,9 @@ type proxmoxHost struct {
 	Enabled  bool   `json:"enabled"`
 }
 
-func (h *ProxmoxHandler) hosts() []proxmoxHost {
+func (u proxmoxScope) hosts() []proxmoxHost {
 	var out []proxmoxHost
-	raw := h.getSetting(proxmoxHostsKey)
+	raw := u.getSetting(proxmoxHostsKey)
 	if raw == "" {
 		return nil
 	}
@@ -78,18 +85,18 @@ func (h *ProxmoxHandler) hosts() []proxmoxHost {
 	return out
 }
 
-func (h *ProxmoxHandler) saveHosts(list []proxmoxHost) error {
+func (u proxmoxScope) saveHosts(list []proxmoxHost) error {
 	blob, err := json.Marshal(list)
 	if err != nil {
 		return err
 	}
-	return h.setSetting(proxmoxHostsKey, string(blob))
+	return u.setSetting(proxmoxHostsKey, string(blob))
 }
 
 // enabledHosts are the ones worth asking anything of.
-func (h *ProxmoxHandler) enabledHosts() []proxmoxHost {
+func (u proxmoxScope) enabledHosts() []proxmoxHost {
 	var out []proxmoxHost
-	for _, e := range h.hosts() {
+	for _, e := range u.hosts() {
 		if e.Enabled && configOf(e).configured() {
 			out = append(out, e)
 		}
@@ -103,8 +110,8 @@ func configOf(e proxmoxHost) proxmoxConfig {
 
 // hostFor resolves the host a request names. An empty id means "the only one",
 // which is what every instance had until now and what most will keep having.
-func (h *ProxmoxHandler) hostFor(id string) (proxmoxHost, bool) {
-	list := h.enabledHosts()
+func (u proxmoxScope) hostFor(id string) (proxmoxHost, bool) {
+	list := u.enabledHosts()
 	if id == "" {
 		if len(list) == 1 {
 			return list[0], true
@@ -143,7 +150,7 @@ type proxmoxSettings struct {
 	// every account may read, because the top bar has to decide whether to
 	// offer the page at all.
 	Enabled bool `json:"enabled"`
-	// Hosts is administrator-only and empty for everybody else.
+	// Hosts are the caller's own: the form that configures them.
 	Hosts []proxmoxSettingsHost `json:"hosts"`
 }
 
@@ -161,11 +168,13 @@ type proxmoxSettingsHost struct {
 
 // GetSettings answers with the configuration.
 //
-// Everyone authenticated learns whether the integration is on. The addresses
-// and token ids are administrator-only: they name the hypervisors and the
-// accounts, which is reconnaissance nobody else on the instance needs.
+// It is the caller's own configuration: whether the integration is on for them,
+// and the addresses and token ids they entered. Another account's hypervisors are
+// never listed — they name machines and accounts nobody else on the instance
+// needs to know about.
 func (h *ProxmoxHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
-	list := h.hosts()
+	u := h.forUser(r)
+	list := u.hosts()
 
 	out := proxmoxSettings{Hosts: []proxmoxSettingsHost{}}
 	for _, e := range list {
@@ -173,10 +182,6 @@ func (h *ProxmoxHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 			out.Enabled = true
 			break
 		}
-	}
-	if !isAdminUser(h.DB, r) {
-		writeJSON(w, out)
-		return
 	}
 	for _, e := range list {
 		out.Hosts = append(out.Hosts, proxmoxSettingsHost{
@@ -187,17 +192,13 @@ func (h *ProxmoxHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, out)
 }
 
-// UpdateSettings persists the whole list. Admin-only: server-wide settings
-// holding credentials.
+// UpdateSettings persists the caller's whole list.
 //
 // The list arrives complete rather than as a patch, so adding, renaming,
 // reordering and removing are all the same request — and a host that vanishes
 // from it is one the operator removed, which is the only way to remove one.
 func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
-	if !isAdminUser(h.DB, r) {
-		http.Error(w, "error.forbidden", http.StatusForbidden)
-		return
-	}
+	u := h.forUser(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 32*1024)
 
 	var in struct {
@@ -228,7 +229,7 @@ func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 	// it already had. The form never receives a secret, so every save of an
 	// untouched host would otherwise wipe its credential.
 	previous := map[string]proxmoxHost{}
-	for _, e := range h.hosts() {
+	for _, e := range u.hosts() {
 		previous[e.ID] = e
 	}
 
@@ -279,7 +280,7 @@ func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		list = append(list, e)
 	}
 
-	if err := h.saveHosts(list); err != nil {
+	if err := u.saveHosts(list); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -323,8 +324,8 @@ func proxmoxIconKey(host, node string, vmid int) string {
 	return fmt.Sprintf("%s|%s|%d", host, node, vmid)
 }
 
-func (h *ProxmoxHandler) icons() map[string]string {
-	raw := h.getSetting(proxmoxIconsKey)
+func (u proxmoxScope) icons() map[string]string {
+	raw := u.getSetting(proxmoxIconsKey)
 	if raw == "" {
 		return map[string]string{}
 	}
@@ -339,10 +340,7 @@ func (h *ProxmoxHandler) icons() map[string]string {
 // SetIcon stores, or clears, the icon of one machine. Administrator-only: it is
 // a server-wide setting, like the connection itself.
 func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
-	if !isAdminUser(h.DB, r) {
-		http.Error(w, "error.forbidden", http.StatusForbidden)
-		return
-	}
+	u := h.forUser(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 
 	var in struct {
@@ -362,7 +360,7 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 	// The host is resolved rather than believed: an id the caller invented
 	// would write an icon nothing will ever read, and one belonging to a host
 	// that is gone would leave a key nothing can prune.
-	host, ok := h.hostFor(strings.TrimSpace(in.Host))
+	host, ok := u.hostFor(strings.TrimSpace(in.Host))
 	if !ok {
 		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
 		return
@@ -373,7 +371,7 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	icons := h.icons()
+	icons := u.icons()
 	key := proxmoxIconKey(host.ID, in.Node, in.VMID)
 	if icon == "" {
 		delete(icons, key)
@@ -392,7 +390,7 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
-	if err := h.setSetting(proxmoxIconsKey, string(blob)); err != nil {
+	if err := u.setSetting(proxmoxIconsKey, string(blob)); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -484,25 +482,26 @@ type proxmoxAll struct {
 // with the number of machines, which is the whole reason the design leans on
 // that endpoint.
 func (h *ProxmoxHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
+	u := h.forUser(r)
 	wanted := strings.TrimSpace(r.URL.Query().Get("host"))
 
 	var targets []proxmoxHost
 	if wanted != "" {
-		e, ok := h.hostFor(wanted)
+		e, ok := u.hostFor(wanted)
 		if !ok {
 			http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
 			return
 		}
 		targets = []proxmoxHost{e}
 	} else {
-		targets = h.enabledHosts()
+		targets = u.enabledHosts()
 	}
 	if len(targets) == 0 {
 		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
 		return
 	}
 
-	icons := h.icons()
+	icons := u.icons()
 	out := proxmoxAll{Hosts: make([]proxmoxHostOverview, 0, len(targets))}
 	for _, e := range targets {
 		one := h.overviewOf(e, icons)
@@ -627,9 +626,10 @@ type proxmoxSeries struct {
 //
 // GET /api/proxmox/series?range=24h[&node=kprox][&kind=lxc&vmid=106]
 func (h *ProxmoxHandler) GetSeries(w http.ResponseWriter, r *http.Request) {
+	u := h.forUser(r)
 	// Which hypervisor, resolved the same way everywhere: named, or the only
 	// one there is.
-	host, ok := h.hostFor(strings.TrimSpace(r.URL.Query().Get("host")))
+	host, ok := u.hostFor(strings.TrimSpace(r.URL.Query().Get("host")))
 	if !ok {
 		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
 		return
@@ -698,15 +698,12 @@ func (h *ProxmoxHandler) GetSeries(w http.ResponseWriter, r *http.Request) {
 
 // Power starts or stops one machine.
 //
-// Admin-only, and deliberately stricter than the Docker widget's equivalent: a
-// container is one service, a virtual machine can be the thing the rest of the
-// household runs on. The interface confirms before it gets here; this refuses
-// regardless of what the interface did.
+// Only against the caller's own hypervisors: the host is resolved from their
+// connections, so a machine of somebody else's cannot be named. A virtual
+// machine can be the thing the rest of the household runs on, so the interface
+// confirms before it gets here.
 func (h *ProxmoxHandler) Power(w http.ResponseWriter, r *http.Request) {
-	if !isAdminUser(h.DB, r) {
-		http.Error(w, "error.forbidden", http.StatusForbidden)
-		return
-	}
+	u := h.forUser(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
 
 	var in struct {
@@ -722,7 +719,7 @@ func (h *ProxmoxHandler) Power(w http.ResponseWriter, r *http.Request) {
 	}
 	// From the body, like everything else this request says: a POST taking half
 	// its meaning from the query string would be the odd one out.
-	host, ok := h.hostFor(strings.TrimSpace(in.Host))
+	host, ok := u.hostFor(strings.TrimSpace(in.Host))
 	if !ok {
 		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
 		return

@@ -66,8 +66,8 @@ Two reasons, and Lastboard tells you which:
 - **The token has no `VM.PowerMgmt`.** Lastboard asks the host what the token may do rather than
   assuming, so the buttons are simply not drawn. Add the privilege to the role, or leave it off
   deliberately for a read-only integration.
-- **You are not the administrator.** Power actions are administrator-only, on the page and in
-  the widget alike.
+- **The machine is not on one of your hypervisors.** Power actions work on the hypervisors you
+  connected yourself, on the page and in the widget alike.
 
 Nodes never get these buttons, at any privilege level. That is deliberate — see
 [Starting and stopping](../proxmox/overview.md#starting-and-stopping).

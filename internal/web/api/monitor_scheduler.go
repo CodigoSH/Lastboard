@@ -16,11 +16,12 @@ const (
 	monitorMaxConcurrency     = 8   // parallel probes per cycle
 )
 
-// MonitorScheduler runs the always-on backend monitoring loop. It probes every
-// bookmark with statusCheck enabled on a configurable interval and appends the
-// results to monitor_checks, plus a daily retention prune. Probing only happens
-// while monitoring_mode is "background"; in "off"/"tab" the loop stays idle and
-// writes nothing, so it is safe to start unconditionally at boot.
+// MonitorScheduler runs the always-on backend monitoring loop. For each account
+// whose mode is "background" it probes that account's bookmarks with statusCheck
+// enabled, on that account's own interval, and appends the results to
+// monitor_checks, plus a daily retention prune. Alerts go to the channel of the
+// account that owns the bookmark. An account in "off" or "tab" is left alone, so
+// the loop writes nothing for it and is safe to start unconditionally at boot.
 type MonitorScheduler struct {
 	store      *MonitorStore
 	alertMu    sync.Mutex
@@ -53,18 +54,56 @@ func (m *MonitorScheduler) Run(ctx context.Context) {
 	wg.Wait()
 }
 
+// monitorTick is how often the loop looks at whose turn it is. Intervals are
+// each account's own, so there is no single sleep to take; thirty seconds is
+// also the shortest interval anyone can ask for.
+const monitorTick = 15 * time.Second
+
 func (m *MonitorScheduler) probeLoop(ctx context.Context) {
+	// When each account was last probed. An account seen for the first time is
+	// probed one interval from now, never at once: the first cycle after a boot
+	// has always been one interval away.
+	last := map[int]time.Time{}
 	for {
-		// Re-read the interval each cycle so config changes apply without a
-		// restart. The first probe happens one interval after boot.
-		if !sleep(ctx, time.Duration(m.intervalSec())*time.Second) {
+		if !sleep(ctx, monitorTick) {
 			return
 		}
-		if m.mode() != "background" {
-			continue
+		now := time.Now()
+		for _, uid := range m.usersWithMonitors() {
+			if m.mode(uid) != "background" {
+				delete(last, uid)
+				continue
+			}
+			since, seen := last[uid]
+			if !seen {
+				last[uid] = now
+				continue
+			}
+			if now.Sub(since) < time.Duration(m.intervalSec(uid))*time.Second {
+				continue
+			}
+			last[uid] = now
+			m.runCycleFor(uid)
 		}
-		m.RunCycle()
 	}
+}
+
+// usersWithMonitors lists the accounts that have a bookmark to probe.
+func (m *MonitorScheduler) usersWithMonitors() []int {
+	items, err := m.store.MonitoredItems()
+	if err != nil {
+		slog.Error("monitor: listing items failed", "error", err)
+		return nil
+	}
+	seen := map[int]bool{}
+	var out []int
+	for _, it := range items {
+		if !seen[it.UserID] {
+			seen[it.UserID] = true
+			out = append(out, it.UserID)
+		}
+	}
+	return out
 }
 
 // sleep waits for d, or returns false as soon as ctx is cancelled. A plain
@@ -96,22 +135,41 @@ func (m *MonitorScheduler) pruneLoop(ctx context.Context) {
 	}
 }
 
-// RunCycle probes every monitored bookmark once (bounded concurrency) and
-// records each result. Exported so it can be unit-tested without the timing loop.
+// RunCycle probes every monitored bookmark of every account once (bounded
+// concurrency) and records each result. Exported so it can be unit-tested
+// without the timing loop; the loop itself runs one account at a time, on its
+// own schedule, through runCycleFor.
 func (m *MonitorScheduler) RunCycle() {
 	items, err := m.store.MonitoredItems()
 	if err != nil {
 		slog.Error("monitor: listing items failed", "error", err)
 		return
 	}
+	m.forgetStaleAlerts(items)
+	m.probe(items)
+}
+
+// runCycleFor probes one account's bookmarks and alerts on its channel.
+func (m *MonitorScheduler) runCycleFor(userID int) {
+	items, err := m.store.MonitoredItemsForUser(userID)
+	if err != nil {
+		slog.Error("monitor: listing items failed", "user", userID, "error", err)
+		return
+	}
+	m.probe(items)
+}
+
+func (m *MonitorScheduler) probe(items []MonitoredItem) {
 	if len(items) == 0 {
 		return
 	}
-
-	m.forgetStaleAlerts(items)
-
-	cfg := m.notifyCfg()
+	cfgs := map[int]notifyConfig{}
 	sem := make(chan struct{}, monitorMaxConcurrency)
+	for _, it := range items {
+		if _, ok := cfgs[it.UserID]; !ok {
+			cfgs[it.UserID] = m.notifyCfg(it.UserID)
+		}
+	}
 	var wg sync.WaitGroup
 	for _, it := range items {
 		wg.Add(1)
@@ -123,23 +181,23 @@ func (m *MonitorScheduler) RunCycle() {
 			if err := m.store.Record(it.ID, up, latency, code); err != nil {
 				slog.Error("monitor: recording check failed", "item", it.ID, "error", err)
 			}
-			m.evalAlert(it, up, cfg)
+			m.evalAlert(it, up, cfgs[it.UserID])
 		}(it)
 	}
 	wg.Wait()
 }
 
-// notifyCfg reads the global alerting configuration from system_settings.
-func (m *MonitorScheduler) notifyCfg() notifyConfig {
-	th, _ := strconv.Atoi(m.setting("monitoring_fail_threshold"))
+// notifyCfg reads one account's alerting configuration.
+func (m *MonitorScheduler) notifyCfg(userID int) notifyConfig {
+	th, _ := strconv.Atoi(m.setting(userID, keyMonThreshold))
 	if th < 1 {
 		th = 1
 	}
 	return notifyConfig{
-		Enabled:       m.setting("monitoring_alerts_enabled") == "1",
-		Type:          m.setting("monitoring_notify_type"),
-		URL:           m.setting("monitoring_notify_url"),
-		Token:         m.setting("monitoring_notify_token"),
+		Enabled:       m.setting(userID, keyMonAlerts) == "1",
+		Type:          m.setting(userID, keyMonType),
+		URL:           m.setting(userID, keyMonURL),
+		Token:         m.setting(userID, keyMonToken),
 		FailThreshold: th,
 	}
 }
@@ -212,19 +270,19 @@ func (m *MonitorScheduler) evalAlert(it MonitoredItem, up bool, cfg notifyConfig
 	}()
 }
 
-// mode returns the configured monitoring_mode, defaulting to "tab" (today's
-// frontend-orchestrated behavior) when unset.
-func (m *MonitorScheduler) mode() string {
-	if s := m.setting("monitoring_mode"); s != "" {
+// mode returns an account's monitoring mode, defaulting to "tab" (today's
+// frontend-orchestrated behavior) when it has none.
+func (m *MonitorScheduler) mode(userID int) string {
+	if s := m.setting(userID, keyMonMode); s != "" {
 		return s
 	}
 	return "tab"
 }
 
-// intervalSec returns the configured probe interval in seconds, clamped to a
-// sane floor and defaulting when unset or invalid.
-func (m *MonitorScheduler) intervalSec() int {
-	n, _ := strconv.Atoi(m.setting("monitoring_interval_sec"))
+// intervalSec returns an account's probe interval in seconds, clamped to a sane
+// floor and defaulting when unset or invalid.
+func (m *MonitorScheduler) intervalSec(userID int) int {
+	n, _ := strconv.Atoi(m.setting(userID, keyMonInterval))
 	if n <= 0 {
 		return monitorDefaultIntervalSec
 	}
@@ -234,14 +292,6 @@ func (m *MonitorScheduler) intervalSec() int {
 	return n
 }
 
-func (m *MonitorScheduler) setting(key string) string {
-	var v sql.NullString
-	if err := m.store.DB.QueryRow(
-		`SELECT value FROM system_settings WHERE key = ?`, key).Scan(&v); err != nil {
-		return ""
-	}
-	if v.Valid {
-		return v.String
-	}
-	return ""
+func (m *MonitorScheduler) setting(userID int, key string) string {
+	return monitorSetting(m.store.DB, userID, key)
 }

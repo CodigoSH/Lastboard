@@ -31,7 +31,7 @@ func TestTheProxmoxSecretIsReplacedKeptOrRemoved(t *testing.T) {
 	}
 	stored := func() string {
 		var v string
-		db.DB.QueryRow(`SELECT value FROM system_settings WHERE key = 'proxmox_hosts'`).Scan(&v)
+		db.DB.QueryRow(`SELECT value FROM user_settings WHERE key = 'proxmox_hosts'`).Scan(&v)
 		return v
 	}
 	const base = `"enabled":true,"url":"https://pve.home:8006","token_id":"lastboard@pve!lb"`

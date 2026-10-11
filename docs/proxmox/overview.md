@@ -61,7 +61,7 @@ Nothing here grants console access, configuration changes, backups, or deletion.
 
 ### 2. Connect it in Lastboard
 
-Open **Settings → Proxmox**. This is a server-wide setting, so only the **administrator** can see or change it.
+Open **Settings → Proxmox**. The connections are **yours**: every account adds its own hypervisors and tokens, sees only those, and cannot use anyone else's. If the instance was set up before accounts had their own, the administrator's existing connections are theirs now.
 
 ![Proxmox settings](../assets/p-proxmox.png)
 
@@ -160,7 +160,7 @@ Click a tile.
 
 The sheet shows the machine's own CPU trend, its state, memory and uptime, the bookmark it serves — and the sentence this page exists for when it is stopped: **This stops responding: Plex**. Move the pointer across the chart and it says what the line was worth at that minute.
 
-From here you can **Start** or **Shut down** the machine (when the token allows it), open the bookmark it serves, and — as an administrator — click its icon to [choose one](#machines-that-will-never-have-a-bookmark).
+From here you can **Start** or **Shut down** the machine (when the token allows it), open the bookmark it serves, and click its icon to [choose one](#machines-that-will-never-have-a-bookmark).
 
 The node and the storage cards open the same way, with their own charts and figures.
 
@@ -170,7 +170,7 @@ Lastboard offers exactly two actions, on machines only: **start** and **shut dow
 
 **Nodes cannot be powered off or rebooted from Lastboard, deliberately.** A stopped container is one service; a stopped node is all of them, and that decision belongs at the console, not on a dashboard.
 
-Actions are **administrator-only**, and the server checks the token's permissions before relaying anything: with no `VM.PowerMgmt` the buttons are not drawn, and a request made anyway is refused here rather than at the host.
+Actions are only offered for your own hypervisors, and the server checks the token's permissions before relaying anything: with no `VM.PowerMgmt` the buttons are not drawn, and a request made anyway is refused here rather than at the host.
 
 ## How a machine is tied to a bookmark
 
@@ -190,14 +190,14 @@ Some never will: the CI runners, the tunnel, the test containers, the machine
 Lastboard itself runs on — nobody bookmarks the dashboard they are reading.
 Measured on a real host, that is ten machines out of twenty-nine.
 
-For those, **open the machine and click its icon** (administrators only): the
+For those, **open the machine and click its icon**: the
 same icon picker the bookmarks use. Whatever you choose is downloaded once by
 your instance and served from it afterwards, exactly like a bookmark's icon, so
 the page still asks no CDN what you run. **Remove icon**, in the same sheet,
 gives it back the plain fallback.
 
-The choice is server-wide, like the connection: one hypervisor, one set of
-faces, the same for everyone with an account here.
+The choice is yours, like the connection: your hypervisors, your faces. Another
+account that connects the same Proxmox picks its own.
 
 ### When the names don't agree
 

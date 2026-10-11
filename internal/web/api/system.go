@@ -137,6 +137,33 @@ type BackupData struct {
 	// secret and the like stay behind. Omitted from older backups, which
 	// restore fine without them and leave whatever is configured alone.
 	Settings map[string]string `json:"settings,omitempty"`
+	// What belongs to one account: how its monitoring runs and where its alerts
+	// go, its Proxmox connections. By user name, like the dashboards and items,
+	// because restore gives accounts new ids. Older backups keep these in
+	// Settings, and a restore moves them to the first administrator.
+	UserSettings []BackupUserSetting `json:"user_settings,omitempty"`
+}
+
+// BackupUserSetting is one row of one account's settings.
+type BackupUserSetting struct {
+	Owner string `json:"owner"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+// userSettingKeys is every user_settings key a backup carries and a restore
+// accepts, and whether its value is JSON.
+var userSettingKeys = map[string]bool{
+	proxmoxHostsKey: true,
+	proxmoxIconsKey: true,
+
+	keyMonMode:      false,
+	keyMonInterval:  false,
+	keyMonThreshold: false,
+	keyMonAlerts:    false,
+	keyMonType:      false,
+	keyMonURL:       false,
+	keyMonToken:     false,
 }
 
 // backupSettingKeys is the whole list of system_settings rows a backup carries
@@ -403,6 +430,30 @@ func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, pass
 		backup.Settings[key] = value
 	}
 
+	// 5b. What each account configured for itself.
+	usRows, err := h.DB.QueryContext(r.Context(), `SELECT u.username, s.key, s.value
+		FROM user_settings s JOIN users u ON u.id = s.user_id ORDER BY u.id, s.key`)
+	if err != nil {
+		slog.Error("Failed to fetch user settings", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer usRows.Close()
+	for usRows.Next() {
+		var us BackupUserSetting
+		if err := usRows.Scan(&us.Owner, &us.Key, &us.Value); err != nil {
+			continue
+		}
+		if _, known := userSettingKeys[us.Key]; known {
+			backup.UserSettings = append(backup.UserSettings, us)
+		}
+	}
+	if err := usRows.Err(); err != nil {
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+
 	name := fmt.Sprintf("lastboard-backup-%s.json", time.Now().Format("2006-01-02-1504"))
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", name))
@@ -516,6 +567,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		writeRestoreError(w, err)
 		return
 	}
+	if err := restoreUserSettings(tx, backup, ownerMap); err != nil {
+		writeRestoreError(w, err)
+		return
+	}
 
 	if err := tx.Commit(); err != nil {
 		slog.Error("Commit failed", "error", err)
@@ -527,6 +582,11 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	// widgets themselves.
 	if _, err := MigrateWidgetSecrets(h.DB); err != nil {
 		slog.Error("Moving widget credentials after a restore failed", "error", err)
+	}
+	// And one from before accounts had their own monitoring and Proxmox carries
+	// them for the whole server.
+	if err := MigrateUserSettings(h.DB); err != nil {
+		slog.Error("Moving settings to the first administrator after a restore failed", "error", err)
 	}
 
 	// Regenerate session secret to invalidate all active sessions.
@@ -605,6 +665,24 @@ func clearExistingData(tx *sql.Tx) error {
 // a restore must not be a way to set the session secret or any other row. A
 // backup without settings — one taken before they travelled — leaves what is
 // configured here alone.
+func restoreUserSettings(tx *sql.Tx, backup BackupData, ownerMap map[string]int) error {
+	for _, us := range backup.UserSettings {
+		isJSON, known := userSettingKeys[us.Key]
+		uid, owned := ownerMap[us.Owner]
+		if !known || !owned {
+			continue
+		}
+		if isJSON && !json.Valid([]byte(us.Value)) {
+			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+		}
+		if _, err := tx.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (?, ?, ?)
+			ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value`, uid, us.Key, us.Value); err != nil {
+			return &restoreError{http.StatusInternalServerError, "Failed to restore settings"}
+		}
+	}
+	return nil
+}
+
 func restoreSettings(tx *sql.Tx, backup BackupData) error {
 	for key, isJSON := range backupSettingKeys {
 		value, ok := backup.Settings[key]

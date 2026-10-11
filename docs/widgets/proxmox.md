@@ -42,7 +42,7 @@ The configuration panel also says, plainly, whether the token this instance hold
 
 ## Starting and stopping
 
-Same rules as the page: **start** and **shut down** only, both with a confirmation, never a node, administrator only, and the buttons are only drawn when the token carries `VM.PowerMgmt`. A machine takes a few seconds to come up; the dot turns green on the following refresh rather than pretending it already has.
+Same rules as the page: **start** and **shut down** only, both with a confirmation, never a node, only on your own hypervisors, and the buttons are only drawn when the token carries `VM.PowerMgmt`. A machine takes a few seconds to come up; the dot turns green on the following refresh rather than pretending it already has.
 
 ## Sizing
 

@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestSchedulerAlertTransitions(t *testing.T) {
@@ -57,8 +59,6 @@ func TestMonitorHandlerGetDefaults(t *testing.T) {
 func TestMonitorHandlerRejectsBadMode(t *testing.T) {
 	db, _ := setupTestDB(t)
 	db.SetMaxOpenConns(1)
-	// Seed an admin so the request passes the admin gate and reaches validation.
-	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'admin', 'p', 'admin')`)
 	h := NewMonitorHandler(db)
 
 	req := httptest.NewRequest("POST", "/api/monitor/settings",
@@ -66,10 +66,8 @@ func TestMonitorHandlerRejectsBadMode(t *testing.T) {
 	rec := httptest.NewRecorder()
 	h.UpdateSettings(rec, req)
 
-	// Without a real session the admin gate returns 403; that already proves the
-	// write is protected. With a session it would reach the 400 validation.
-	if rec.Code != http.StatusForbidden && rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected 403 or 400, got %d", rec.Code)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
 	}
 }
 
@@ -118,25 +116,25 @@ func TestSchedulerSettingsDefaults(t *testing.T) {
 	sched := NewMonitorScheduler(db)
 
 	// Unset → safe defaults: mode "tab" (idle), interval the 5-min default.
-	if got := sched.mode(); got != "tab" {
+	if got := sched.mode(1); got != "tab" {
 		t.Errorf("default mode should be tab, got %q", got)
 	}
-	if got := sched.intervalSec(); got != monitorDefaultIntervalSec {
+	if got := sched.intervalSec(1); got != monitorDefaultIntervalSec {
 		t.Errorf("default interval should be %d, got %d", monitorDefaultIntervalSec, got)
 	}
 
 	// A too-small interval clamps to the floor; a valid one passes through.
 	db.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('monitoring_interval_sec', '5')`)
-	if got := sched.intervalSec(); got != monitorMinIntervalSec {
+	if got := sched.intervalSec(1); got != monitorMinIntervalSec {
 		t.Errorf("interval 5 should clamp to %d, got %d", monitorMinIntervalSec, got)
 	}
 	db.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('monitoring_interval_sec', '120')`)
-	if got := sched.intervalSec(); got != 120 {
+	if got := sched.intervalSec(1); got != 120 {
 		t.Errorf("interval 120 should pass through, got %d", got)
 	}
 
 	db.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('monitoring_mode', 'background')`)
-	if got := sched.mode(); got != "background" {
+	if got := sched.mode(1); got != "background" {
 		t.Errorf("mode should read back as background, got %q", got)
 	}
 }
@@ -179,5 +177,95 @@ func TestForgetStaleAlertsClearsAllWhenNoneMonitored(t *testing.T) {
 
 	if len(sched.alertState) != 0 {
 		t.Fatalf("expected empty alert state, got %d entries", len(sched.alertState))
+	}
+}
+
+// An account's mode, interval and failure threshold are its own; one that never
+// saved them starts from what the server was set to.
+func TestMonitoringSettingsAreEachAccountsOwn(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'a', 'p', 'admin'), (2, 'b', 'p', 'user')`)
+	sched := NewMonitorScheduler(db)
+
+	db.Exec(`INSERT INTO system_settings (key, value) VALUES ('monitoring_mode', 'background'), ('monitoring_interval_sec', '120')`)
+	if sched.mode(1) != "background" || sched.intervalSec(2) != 120 {
+		t.Fatal("an account that chose nothing did not start from the server's setting")
+	}
+
+	db.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (1, 'monitoring_mode', 'off'), (1, 'monitoring_interval_sec', '45')`)
+	if sched.mode(1) != "off" || sched.intervalSec(1) != 45 {
+		t.Errorf("an account's own choice was not used: %s %d", sched.mode(1), sched.intervalSec(1))
+	}
+	if sched.mode(2) != "background" || sched.intervalSec(2) != 120 {
+		t.Errorf("one account's choice reached another: %s %d", sched.mode(2), sched.intervalSec(2))
+	}
+	// The alert channel has no starting point to inherit.
+	db.Exec(`INSERT INTO system_settings (key, value) VALUES ('monitoring_notify_url', 'http://leftover')`)
+	if got := sched.notifyCfg(2).URL; got != "" {
+		t.Errorf("an account inherited a channel nobody gave it: %q", got)
+	}
+}
+
+// Each account's alerts go to its own channel, and only for its own bookmarks.
+func TestAlertsGoToTheChannelOfTheAccountThatOwnsTheBookmark(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'a', 'p', 'admin'), (2, 'b', 'p', 'user')`)
+
+	var mu sync.Mutex
+	got := map[string][]string{}
+	channel := func(who string) *httptest.Server {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			mu.Lock()
+			got[who] = append(got[who], r.Header.Get("Title"))
+			mu.Unlock()
+		}))
+		t.Cleanup(srv.Close)
+		return srv
+	}
+	chA, chB := channel("a"), channel("b")
+
+	dead := httptest.NewServer(http.NotFoundHandler())
+	deadURL := dead.URL
+	dead.Close()
+	for uid, label := range map[int]string{1: "svc-of-a", 2: "svc-of-b"} {
+		db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'bookmark', 0, 0, 1, 1, ?)`,
+			uid, `{"statusCheck":true,"url":"`+deadURL+`","label":"`+label+`"}`)
+	}
+	for uid, ch := range map[int]string{1: chA.URL, 2: chB.URL} {
+		db.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (?, 'monitoring_alerts_enabled', '1'), (?, 'monitoring_notify_type', 'ntfy'), (?, 'monitoring_notify_url', ?), (?, 'monitoring_fail_threshold', '1')`,
+			uid, uid, uid, ch, uid)
+	}
+
+	sched := NewMonitorScheduler(db)
+	// The first sight of a bookmark seeds its state silently, so both start down
+	// without a word. A recovery is the transition that can be observed without
+	// waiting for a flap: bring both services back and each owner hears of its own.
+	sched.RunCycle()
+	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	defer up.Close()
+	for uid, label := range map[int]string{1: "svc-of-a", 2: "svc-of-b"} {
+		db.Exec(`UPDATE items SET content = ? WHERE user_id = ?`, `{"statusCheck":true,"url":"`+up.URL+`","label":"`+label+`"}`, uid)
+	}
+	sched.RunCycle()
+
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		mu.Lock()
+		n := len(got["a"]) + len(got["b"])
+		mu.Unlock()
+		if n >= 2 {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(got["a"]) != 1 || got["a"][0] != "svc-of-a" {
+		t.Errorf("account a's channel got %v, want its own recovery and nothing of b's", got["a"])
+	}
+	if len(got["b"]) != 1 || got["b"][0] != "svc-of-b" {
+		t.Errorf("account b's channel got %v, want its own recovery", got["b"])
 	}
 }

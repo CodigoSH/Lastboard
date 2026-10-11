@@ -7,7 +7,6 @@ import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { loadProxmox, chosenIcon, type PxHost, type PxNode, type PxGuest, type PxStore } from '../../../services/proxmoxApi';
 import { materializeIcon } from '../../../services/iconStore';
-import { userStore } from '../../../store/userStore';
 import '../IconSelectionModal/IconSelectionModal';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import css from './ProxmoxPage.css' with { type: 'text' };
@@ -1298,24 +1297,17 @@ class ProxmoxPage extends HTMLElement {
             </div>`);
     }
 
-    /** Is this account allowed to choose what a machine looks like? */
-    private isAdmin(): boolean {
-        const role = (userStore.getUser()?.role || '').toLowerCase();
-        return role === 'admin' || role === 'administrator';
-    }
-
     /**
      * The machine's face in its sheet, and the way to change it.
      *
-     * Only an administrator is offered the picker: the choice is server-wide,
-     * like the connection it belongs to.
+     * Every account is offered the picker, for the machines of its own
+     * hypervisors: the choice belongs to the account, like the connection does.
      */
     private sheetFace(g: PxGuest): string {
         const face = this.iconOf(g);
         const inner = face
             ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
             : ICON_FALLBACK;
-        if (!this.isAdmin()) return `<span class="sheet__ico">${inner}</span>`;
         return `<button class="sheet__ico sheet__ico--edit" data-icon="${g.vmid}"
                     title="${escapeHtml(i18n.t('proxmox.icon_set'))}"
                     aria-label="${escapeHtml(i18n.t('proxmox.icon_set'))}">${inner}<span class="sheet__ico-pen">${ICON_PEN}</span></button>`;
@@ -1330,7 +1322,7 @@ class ProxmoxPage extends HTMLElement {
      */
     private async chooseIcon(vmid: number) {
         const g = this.data?.guests.find(x => x.vmid === vmid);
-        if (!g || !this.isAdmin()) return;
+        if (!g) return;
 
         let modal = document.querySelector('icon-selection-modal') as (HTMLElement & { open: () => Promise<string | null> }) | null;
         if (!modal) {
@@ -1347,7 +1339,7 @@ class ProxmoxPage extends HTMLElement {
     /** Writes the choice, or clears it, and redraws what shows it. */
     private async setIcon(vmid: number, icon: string) {
         const g = this.data?.guests.find(x => x.vmid === vmid);
-        if (!g || !this.isAdmin()) return;
+        if (!g) return;
         try {
             await apiService.post('/api/proxmox/icon', { host: this.hostId, node: g.node, vmid: g.vmid, icon });
         } catch {
@@ -1391,7 +1383,7 @@ class ProxmoxPage extends HTMLElement {
             ${power ? `<app-button variant="${g.running ? 'ghost' : 'primary'}" data-power="${g.vmid}">
                 ${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}</app-button>` : ''}
             ${book?.url ? `<app-button variant="ghost" data-open="${escapeHtml(book.url)}">${escapeHtml(i18n.t('proxmox.open_bookmark'))}</app-button>` : ''}
-            ${chosen && this.isAdmin() ? `<app-button variant="ghost" data-icon-clear="${g.vmid}">${escapeHtml(i18n.t('proxmox.icon_clear'))}</app-button>` : ''}
+            ${chosen ? `<app-button variant="ghost" data-icon-clear="${g.vmid}">${escapeHtml(i18n.t('proxmox.icon_clear'))}</app-button>` : ''}
         </div>`;
 
         this.sheet(escapeHtml(g.name), sub, `

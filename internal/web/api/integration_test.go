@@ -489,33 +489,25 @@ func TestLockoutCannotBeEvadedByForgingForwardedFor(t *testing.T) {
 	}
 }
 
-// The monitoring settings are readable by everyone — the top bar and the
-// history drawer need the mode to know whether the server is probing — but the
-// destination and its token are the admin's credentials for their own
-// ntfy/gotify channel. Handed to every account, anyone could publish into it
-// and, on ntfy and gotify, subscribe and read the alerts of every service the
-// admin watches.
-func TestMonitorSettingsHideTheNotificationCredentialsFromNonAdmins(t *testing.T) {
+// Where alerts go, and with what token, is the account's own. Nobody reads
+// another account's channel: on ntfy and gotify that would be reading the alerts
+// of every service somebody else watches.
+func TestEachAccountsAlertChannelIsItsOwn(t *testing.T) {
 	server, db, cleanup := setupTestServer(t)
 	defer cleanup()
-
-	if _, err := db.Exec(
-		"INSERT INTO system_settings (key, value) VALUES ('monitoring_notify_url', ?), ('monitoring_notify_token', ?), ('monitoring_notify_type', 'ntfy')",
-		"https://ntfy.sh/the-admins-private-topic", "tk_secret_bearer_token",
-	); err != nil {
-		t.Fatal(err)
-	}
-
 	createUser(t, db, "boss", "correcthorse", "admin")
 	createUser(t, db, "guest", "correcthorse", "user")
 
-	read := func(username string) map[string]any {
+	call := func(username, method, body string) map[string]any {
 		cookie := loginAndGetCookie(t, server, username, "correcthorse")
-		req, err := http.NewRequest(http.MethodGet, server.URL+"/api/monitor/settings", nil)
+		req, err := http.NewRequest(method, server.URL+"/api/monitor/settings", strings.NewReader(body))
 		if err != nil {
 			t.Fatal(err)
 		}
+		req.Header.Set("Content-Type", "application/json")
 		req.AddCookie(cookie)
+		req.AddCookie(&http.Cookie{Name: "csrf_token", Value: "test-csrf-token"})
+		req.Header.Set("X-CSRF-Token", "test-csrf-token")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Fatal(err)
@@ -528,22 +520,30 @@ func TestMonitorSettingsHideTheNotificationCredentialsFromNonAdmins(t *testing.T
 		return out
 	}
 
-	admin := read("boss")
-	if admin["notify_url"] != "https://ntfy.sh/the-admins-private-topic" || admin["notify_has_token"] != true {
-		t.Errorf("the admin can no longer read their own settings: %v", admin)
+	call("boss", "POST", `{"mode":"background","interval_sec":60,"alerts_enabled":true,"notify_type":"ntfy","notify_url":"https://ntfy.sh/the-bosss-private-topic","notify_token":"tk_secret_bearer_token","fail_threshold":2}`)
+
+	boss := call("boss", "GET", "")
+	if boss["notify_url"] != "https://ntfy.sh/the-bosss-private-topic" || boss["notify_has_token"] != true {
+		t.Errorf("an account can no longer read its own settings: %v", boss)
 	}
-	// The token itself is never sent back, not even to the admin who saved it.
-	if tok, present := admin["notify_token"]; present && tok != "" {
+	if tok, present := boss["notify_token"]; present && tok != "" {
 		t.Errorf("the saved token came back in the settings: %v", tok)
 	}
 
-	guest := read("guest")
-	if guest["notify_url"] != "" || guest["notify_token"] != nil || guest["notify_has_token"] != false {
-		t.Errorf("a plain user was handed the notification credentials: url=%q token=%q",
-			guest["notify_url"], guest["notify_token"])
+	// The guest sees none of it, and none of the boss's choices either.
+	guest := call("guest", "GET", "")
+	if guest["notify_url"] != "" || guest["notify_has_token"] != false || guest["notify_type"] != "none" || guest["alerts_enabled"] != false {
+		t.Errorf("an account was handed another's alert channel: %v", guest)
 	}
-	// What they do need still arrives.
-	if guest["mode"] == "" || guest["notify_type"] != "ntfy" {
-		t.Errorf("a plain user lost the settings they legitimately read: %v", guest)
+
+	// Saving their own changes nothing for the boss.
+	call("guest", "POST", `{"mode":"tab","interval_sec":300,"alerts_enabled":true,"notify_type":"webhook","notify_url":"https://hooks.example/guest","notify_token":"guest-tok","fail_threshold":1}`)
+	boss = call("boss", "GET", "")
+	if boss["notify_url"] != "https://ntfy.sh/the-bosss-private-topic" || boss["mode"] != "background" || boss["interval_sec"] != float64(60) {
+		t.Errorf("the guest's save reached the boss: %v", boss)
+	}
+	guest = call("guest", "GET", "")
+	if guest["notify_url"] != "https://hooks.example/guest" || guest["mode"] != "tab" {
+		t.Errorf("the guest's own save did not stick: %v", guest)
 	}
 }
