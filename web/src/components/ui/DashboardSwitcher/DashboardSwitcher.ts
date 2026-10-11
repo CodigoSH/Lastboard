@@ -1,7 +1,5 @@
 import { template } from './DashboardSwitcher.template';
 import { dashboardStore } from '../../../store/dashboardStore';
-import { eventBus, EVENTS } from '../../../services/EventBus';
-import { i18n } from '../../../services/i18n';
 import { Dashboard } from '../../../types';
 import css from './DashboardSwitcher.css' with { type: 'text' };
 
@@ -74,40 +72,6 @@ class DashboardSwitcher extends HTMLElement {
                 this.render();
                 const modal = document.createElement('dashboard-manager-modal');
                 document.body.appendChild(modal);
-                return;
-            }
-
-            // Inside dropdown
-            const btn = target.closest('.switcher-action-btn') as HTMLElement;
-            if (btn) {
-                e.stopPropagation();
-                const action = btn.dataset.action;
-                const id = Number(btn.dataset.id);
-
-                if (action === 'rename') {
-                    const dashName = this.state.dashboards.find(d => d.id === id)?.name || '';
-                    this.dispatchEvent(new CustomEvent('dashboard-rename', {
-                        detail: { id, name: dashName },
-                        bubbles: true,
-                        composed: true
-                    }));
-                } else if (action === 'delete') {
-                    if (this.state.dashboards.length <= 1) {
-                        eventBus.emit(EVENTS.NOTIFY, {
-                            type: 'error',
-                            message: i18n.t('dashboard.cannot_delete_last') || 'You cannot delete your only dashboard'
-                        });
-                    } else {
-                        this.dispatchEvent(new CustomEvent('dashboard-delete', {
-                            detail: { id },
-                            bubbles: true,
-                            composed: true
-                        }));
-                    }
-                }
-
-                this.state.dropdownActive = false;
-                this.render();
                 return;
             }
 

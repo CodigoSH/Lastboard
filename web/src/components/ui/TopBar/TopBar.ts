@@ -402,39 +402,12 @@ class TopBar extends HTMLElement {
         };
         window.addEventListener('click', this._windowClickHandler);
 
-        this.shadowRoot!.addEventListener('dashboard-delete', (e: Event) => {
-            const customEvent = e as CustomEvent;
-            if (customEvent.detail && customEvent.detail.id) {
-                eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
-                    title: i18n.t('dashboard.delete'),
-                    message: i18n.t('bookmark.delete_confirm_message'),
-                    onConfirm: () => dashboardStore.deleteDashboard(customEvent.detail.id)
-                });
-            }
-        });
-
         this.shadowRoot!.addEventListener('dashboard-create', () => {
             this.dispatchEvent(new CustomEvent('add-item', {
                 detail: { action: 'add-dashboard' },
                 bubbles: true,
                 composed: true
             }));
-        });
-
-        this.shadowRoot!.addEventListener('dashboard-rename', (e: Event) => {
-            const customEvent = e as CustomEvent;
-            if (customEvent.detail && customEvent.detail.id) {
-                const modal = document.createElement('rename-dashboard-modal') as HTMLElement;
-                modal.dataset.id = customEvent.detail.id.toString();
-                modal.dataset.name = customEvent.detail.name || '';
-                document.body.appendChild(modal);
-
-                modal.addEventListener('modal-close', () => {
-                    if (modal.parentNode) {
-                        modal.parentNode.removeChild(modal);
-                    }
-                }, { once: true });
-            }
         });
     }
 

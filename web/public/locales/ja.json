@@ -59,7 +59,7 @@
   "dashboard.name_label": "ダッシュボード名",
   "dashboard.rename": "名前を変更",
   "dashboard.save": "保存",
-  "dashboard.manage_order": "順序を管理",
+  "dashboard.manage": "ダッシュボードを管理",
   "dashboard.save_order": "順序を保存",
   "docker.action_error": "アクションに失敗しました",
   "docker.action_restart": "再起動",

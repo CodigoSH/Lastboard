@@ -59,7 +59,7 @@
   "dashboard.name_label": "Dashboard Name",
   "dashboard.rename": "Rename",
   "dashboard.save": "Save",
-  "dashboard.manage_order": "Manage order",
+  "dashboard.manage": "Manage dashboards",
   "dashboard.save_order": "Save order",
   "docker.action_error": "Failed to perform action",
   "docker.action_restart": "Restart",

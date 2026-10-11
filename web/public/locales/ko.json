@@ -59,7 +59,7 @@
   "dashboard.name_label": "대시보드 이름",
   "dashboard.rename": "이름 바꾸기",
   "dashboard.save": "저장",
-  "dashboard.manage_order": "순서 관리",
+  "dashboard.manage": "대시보드 관리",
   "dashboard.save_order": "순서 저장",
   "docker.action_error": "작업에 실패했습니다",
   "docker.action_restart": "재시작",

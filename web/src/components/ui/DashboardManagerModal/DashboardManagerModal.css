@@ -99,6 +99,31 @@
     text-overflow: ellipsis;
 }
 
+.item-action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-dim, rgba(255,255,255,0.5));
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+.item-action svg { width: 16px; height: 16px; }
+.item-action:hover { color: var(--accent, #6366f1); background: rgba(var(--accent-rgb, 99,102,241), 0.1); }
+.item-action--danger:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+.item-action:disabled { opacity: 0.3; cursor: not-allowed; }
+.item-action:disabled:hover { color: var(--text-dim, rgba(255,255,255,0.5)); background: none; }
+
+/* The buttons and the handle are separated so a finger on one is not on the other. */
+.item { gap: 4px; }
+.item-name { margin-inline-end: 8px; }
+
 .drag-handle {
     color: var(--text-dim, rgba(255,255,255,0.3));
     flex-shrink: 0;
@@ -106,6 +131,12 @@
     touch-action: none;
     padding: 4px;
     margin: -4px;
+    margin-inline-start: 8px;
+}
+
+@media (pointer: coarse) {
+    .item-action { width: 40px; height: 40px; }
+    .drag-handle { padding: 11px; margin: -11px; margin-inline-start: 4px; box-sizing: content-box; }
 }
 .drag-handle:active { cursor: grabbing; }
 

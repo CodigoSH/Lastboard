@@ -59,7 +59,7 @@
   "dashboard.name_label": "Nazwa panelu",
   "dashboard.rename": "Zmień nazwę",
   "dashboard.save": "Zapisz",
-  "dashboard.manage_order": "Zarządzaj kolejnością",
+  "dashboard.manage": "Zarządzaj tablicami",
   "dashboard.save_order": "Zapisz kolejność",
   "docker.action_error": "Nie udało się wykonać akcji",
   "docker.action_restart": "Restartuj",

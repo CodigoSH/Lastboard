@@ -59,7 +59,7 @@
   "dashboard.name_label": "Nama dasbor",
   "dashboard.rename": "Ubah nama",
   "dashboard.save": "Simpan",
-  "dashboard.manage_order": "Kelola urutan",
+  "dashboard.manage": "Kelola dasbor",
   "dashboard.save_order": "Simpan urutan",
   "docker.action_error": "Gagal melakukan tindakan",
   "docker.action_restart": "Mulai ulang",

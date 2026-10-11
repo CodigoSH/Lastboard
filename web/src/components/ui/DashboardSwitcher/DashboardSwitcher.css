@@ -110,47 +110,6 @@
     padding-inline-end: 8px;
 }
 
-.switcher-actions {
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.switcher-item:hover .switcher-actions {
-    opacity: 1;
-}
-
-.switcher-action-btn {
-    background: transparent;
-    border: none;
-    padding: 2px;
-    color: var(--text-dim);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 3px;
-    transition: all 0.2s;
-}
-
-.switcher-action-btn svg {
-    width: 14px;
-    height: 14px;
-    stroke: currentColor;
-    stroke-width: 1.5;
-}
-
-.switcher-action-btn:hover {
-    color: var(--accent);
-    background: rgba(var(--accent-rgb, 0, 122, 255), 0.1);
-}
-
-.switcher-action-btn[data-action="delete"]:hover {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-}
-
 .switcher-separator {
     height: 1px;
     background: var(--border);

@@ -1,8 +1,11 @@
 import { dashboardStore } from '../../../store/dashboardStore';
+import { i18n } from '../../../services/i18n';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { Dashboard } from '../../../types';
 import { dashboardManagerTemplate } from './DashboardManagerModal.template';
 import { createFocusTrap, FocusTrap } from '../../../services/focusTrap';
+import { canDeleteDashboard, syncOrder } from './dashboardOrder';
+import { deleteDashboard, renameDashboard } from './dashboardActions';
 import css from './DashboardManagerModal.css' with { type: 'text' };
 
 export class DashboardManagerModal extends HTMLElement {
@@ -11,6 +14,7 @@ export class DashboardManagerModal extends HTMLElement {
     private _dragAbortController: AbortController | null = null;
     private _dragFromHandle: boolean = false;
     private _focusTrap: FocusTrap | null = null;
+    private _unsubscribe: (() => void) | null = null;
 
     constructor() {
         super();
@@ -23,6 +27,26 @@ export class DashboardManagerModal extends HTMLElement {
         this._dashboards = [...state.dashboards].sort((a, b) => a.position - b.position);
         this.render();
         this.bindEvents();
+        // Renaming or deleting happens at once, in the store; the list being
+        // arranged here follows it without losing the order the person made.
+        this._unsubscribe = dashboardStore.subscribe((s) => {
+            const next = syncOrder(this._dashboards, s.dashboards);
+            if (JSON.stringify(next) === JSON.stringify(this._dashboards)) return;
+            this._dashboards = next;
+            this._renderList();
+        });
+    }
+
+    disconnectedCallback() {
+        this._unsubscribe?.();
+        this._unsubscribe = null;
+    }
+
+    private _renderList() {
+        const list = this.shadowRoot?.getElementById('list');
+        if (!list) return;
+        list.innerHTML = this._dashboards.map((d, i) => this._renderItem(d, i)).join('');
+        this._bindDrag();
     }
 
     private render() {
@@ -31,10 +55,18 @@ export class DashboardManagerModal extends HTMLElement {
     }
 
     private _renderItem(d: Dashboard, index: number): string {
+        const canDelete = canDeleteDashboard(this._dashboards.length);
+        const name = this._escape(i18n.t(d.name));
         return `
-            <div class="item" draggable="true" data-index="${index}">
+            <div class="item" draggable="true" data-index="${index}" data-id="${d.id}">
                 <span class="item-dot ${d.is_default ? 'is-default' : ''}"></span>
-                <span class="item-name">${this._escape(d.name)}</span>
+                <span class="item-name">${name}</span>
+                <button type="button" class="item-action" data-action="rename" title="${i18n.t('dashboard.rename')}" aria-label="${i18n.t('dashboard.rename')}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button type="button" class="item-action item-action--danger" data-action="delete" title="${i18n.t(canDelete ? 'dashboard.delete' : 'dashboard.cannot_delete_last')}" aria-label="${i18n.t('dashboard.delete')}" ${canDelete ? '' : 'disabled'}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
                 <svg class="drag-handle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="9" cy="6" r="1.5" fill="currentColor"/>
                     <circle cx="15" cy="6" r="1.5" fill="currentColor"/>
@@ -76,6 +108,17 @@ export class DashboardManagerModal extends HTMLElement {
         this._dragAbortController = new AbortController();
         const signal = this._dragAbortController.signal;
         const list = this.shadowRoot!.getElementById('list')!;
+
+        // Rename and delete sit beside the handle and are only ever pressed on purpose.
+        list.addEventListener('click', (e) => {
+            const btn = (e.target as HTMLElement).closest('.item-action') as HTMLButtonElement | null;
+            if (!btn || btn.disabled) return;
+            const row = btn.closest('[data-id]') as HTMLElement | null;
+            const dash = this._dashboards.find(d => d.id === Number(row?.dataset.id));
+            if (!dash) return;
+            if (btn.dataset.action === 'rename') renameDashboard(dash.id, dash.name);
+            else if (btn.dataset.action === 'delete' && canDeleteDashboard(this._dashboards.length)) deleteDashboard(dash.id);
+        }, { signal });
 
         // Track whether mousedown originated on the drag handle
         list.addEventListener('mousedown', (e) => {

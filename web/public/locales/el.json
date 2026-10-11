@@ -59,7 +59,7 @@
   "dashboard.name_label": "Όνομα πίνακα",
   "dashboard.rename": "Μετονομασία",
   "dashboard.save": "Αποθήκευση",
-  "dashboard.manage_order": "Διαχείριση σειράς",
+  "dashboard.manage": "Διαχείριση πινάκων",
   "dashboard.save_order": "Αποθήκευση σειράς",
   "docker.action_error": "Η ενέργεια απέτυχε",
   "docker.action_restart": "Restart",

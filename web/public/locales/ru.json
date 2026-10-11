@@ -59,7 +59,7 @@
   "dashboard.name_label": "Название панели",
   "dashboard.rename": "Переименовать",
   "dashboard.save": "Сохранить",
-  "dashboard.manage_order": "Управление порядком",
+  "dashboard.manage": "Управление панелями",
   "dashboard.save_order": "Сохранить порядок",
   "docker.action_error": "Не удалось выполнить действие",
   "docker.action_restart": "Перезапустить",

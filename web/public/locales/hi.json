@@ -59,7 +59,7 @@
   "dashboard.name_label": "डैशबोर्ड का नाम",
   "dashboard.rename": "नाम बदलें",
   "dashboard.save": "सहेजें",
-  "dashboard.manage_order": "क्रम प्रबंधित करें",
+  "dashboard.manage": "डैशबोर्ड प्रबंधित करें",
   "dashboard.save_order": "क्रम सहेजें",
   "docker.action_error": "कार्रवाई करने में विफल",
   "docker.action_restart": "पुनरारंभ करें",

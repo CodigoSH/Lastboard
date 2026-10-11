@@ -59,7 +59,7 @@
   "dashboard.name_label": "Nom du tableau de bord",
   "dashboard.rename": "Renommer",
   "dashboard.save": "Enregistrer",
-  "dashboard.manage_order": "Gérer l'ordre",
+  "dashboard.manage": "Gérer les tableaux de bord",
   "dashboard.save_order": "Enregistrer l'ordre",
   "docker.action_error": "Échec de l'action",
   "docker.action_restart": "Redémarrer",

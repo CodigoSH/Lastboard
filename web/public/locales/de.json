@@ -59,7 +59,7 @@
   "dashboard.name_label": "Dashboard-Name",
   "dashboard.rename": "Umbenennen",
   "dashboard.save": "Speichern",
-  "dashboard.manage_order": "Reihenfolge verwalten",
+  "dashboard.manage": "Dashboards verwalten",
   "dashboard.save_order": "Reihenfolge speichern",
   "docker.action_error": "Aktion fehlgeschlagen",
   "docker.action_restart": "Neu starten",

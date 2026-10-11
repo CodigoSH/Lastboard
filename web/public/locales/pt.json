@@ -59,7 +59,7 @@
   "dashboard.name_label": "Nome do painel",
   "dashboard.rename": "Renomear",
   "dashboard.save": "Salvar",
-  "dashboard.manage_order": "Gerir ordem",
+  "dashboard.manage": "Gerir painéis",
   "dashboard.save_order": "Guardar ordem",
   "docker.action_error": "Falha ao executar ação",
   "docker.action_restart": "Reiniciar",
