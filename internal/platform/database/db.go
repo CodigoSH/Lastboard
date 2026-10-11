@@ -192,6 +192,18 @@ func initSchema(db *sql.DB) error {
 			FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_dashboards_user_id ON dashboards(user_id);`,
+		// What a widget keeps secret: a password, the value of a header that carries
+		// a key. One row per named secret, never part of the widget's content (the
+		// browser receives the content and must never receive these). The row has
+		// no owner of its own: its owner is its widget's, and deleting the widget
+		// deletes it.
+		`CREATE TABLE IF NOT EXISTS widget_secrets (
+			item_id INTEGER NOT NULL,
+			name    TEXT NOT NULL,
+			value   TEXT NOT NULL,
+			PRIMARY KEY (item_id, name),
+			FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE
+		);`,
 		// Append-only monitoring history. Keyed by item_id (the monitor IS the
 		// bookmark), so ON DELETE CASCADE prunes a bookmark's history with it.
 		// latency_ms is NULL when the check failed; status_code is 0 with no response.

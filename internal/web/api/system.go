@@ -126,6 +126,11 @@ type BackupData struct {
 	// still looks like the board you left. Omitted from older backups, which
 	// restore fine without them — the items keep whatever URL they had.
 	Icons []BackupIcon `json:"icons,omitempty"`
+	// What widgets keep secret (a password, a key header), against the id the
+	// item had when the backup was made: restore gives items new ids and maps
+	// these across. Omitted from older backups, whose widgets carry whatever
+	// they carried in their content.
+	WidgetSecrets []BackupWidgetSecret `json:"widget_secrets,omitempty"`
 	// Settings that are configuration the operator typed in and would have to
 	// type again: the Proxmox hosts with their tokens, the icons chosen for
 	// their machines, and how monitoring runs and where it sends alerts. Only the keys in backupSettingKeys travel — the session
@@ -175,6 +180,12 @@ type BackupUser struct {
 	UnitSystem          *string `json:"unit_system"`
 	DashboardBackground *string `json:"dashboard_background"`
 	WidgetMinWidth      *int    `json:"widget_min_width"`
+}
+
+type BackupWidgetSecret struct {
+	ItemID int    `json:"item_id"`
+	Name   string `json:"name"`
+	Value  string `json:"value"`
 }
 
 type BackupDashboard struct {
@@ -316,6 +327,29 @@ func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, pass
 		backup.Items = append(backup.Items, i)
 	}
 	if err := itemRows.Err(); err != nil {
+		slog.Error("Database error", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+
+	// 3b. What widgets keep secret. They belong in the backup for the same
+	//     reason the Proxmox tokens do — the operator typed them in — and the
+	//     backup's own password is what protects them on their way out.
+	secretRows, err := h.DB.QueryContext(r.Context(), `SELECT item_id, name, value FROM widget_secrets`)
+	if err != nil {
+		slog.Error("Failed to fetch widget secrets", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer secretRows.Close()
+	for secretRows.Next() {
+		var sec BackupWidgetSecret
+		if err := secretRows.Scan(&sec.ItemID, &sec.Name, &sec.Value); err != nil {
+			continue
+		}
+		backup.WidgetSecrets = append(backup.WidgetSecrets, sec)
+	}
+	if err := secretRows.Err(); err != nil {
 		slog.Error("Database error", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
@@ -746,6 +780,19 @@ func restoreItems(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallba
 		}
 		if _, err := tx.Exec("UPDATE items SET parent_id = ? WHERE id = ?", newParent, newID); err != nil {
 			slog.Warn("Restore: failed to set parent_id", "item_id", newID, "error", err)
+		}
+	}
+
+	// Pass 3: what widgets keep secret, onto the new ids. One whose widget is
+	// not in the file has nowhere to go and is left out.
+	for _, sec := range backup.WidgetSecrets {
+		newID, ok := oldToNewID[sec.ItemID]
+		if !ok || !secretName.MatchString(sec.Name) || sec.Value == "" || len(sec.Value) > maxSecretLen {
+			continue
+		}
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO widget_secrets (item_id, name, value) VALUES (?, ?, ?)`,
+			newID, sec.Name, sec.Value); err != nil {
+			return &restoreError{http.StatusInternalServerError, "Failed to restore widget secrets"}
 		}
 	}
 	return nil

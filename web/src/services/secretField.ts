@@ -28,3 +28,21 @@ export function secretChange(raw: string, hasToken: boolean): SecretChange {
     if (raw === '') return hasToken ? { action: 'clear' } : { action: 'keep' };
     return { action: 'keep' };
 }
+
+/**
+ * The body that saves a widget's secrets, from what became of each field.
+ *
+ * Only what was typed travels; a field left as its dots, or empty when there
+ * was nothing, sends nothing; an emptied one is a clear, named. Returns null
+ * when there is nothing to send, so a save that touched no secret makes no
+ * request.
+ */
+export function secretsPatch(changes: Record<string, SecretChange>): { set: Record<string, string>; clear: string[] } | null {
+    const set: Record<string, string> = {};
+    const clear: string[] = [];
+    for (const [name, change] of Object.entries(changes)) {
+        if (change.action === 'set') set[name] = change.token;
+        else if (change.action === 'clear') clear.push(name);
+    }
+    return Object.keys(set).length || clear.length ? { set, clear } : null;
+}

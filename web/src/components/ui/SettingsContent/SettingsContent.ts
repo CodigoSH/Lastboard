@@ -16,7 +16,7 @@ import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
-import { SECRET_MASK, secretChange } from './secretField';
+import { SECRET_MASK, secretChange } from '../../../services/secretField';
 import { proxmoxPayload } from './proxmoxPayload';
 import css from './SettingsContent.css' with { type: 'text' };
 

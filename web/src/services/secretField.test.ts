@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { SECRET_MASK, secretChange } from './secretField';
+import { SECRET_MASK, secretChange, secretsPatch } from './secretField';
 
 describe('secretChange', () => {
     it('leaves a saved token alone when the dots are untouched', () => {
@@ -22,5 +22,20 @@ describe('secretChange', () => {
 
     it('has nothing to do when there was none and none is typed', () => {
         expect(secretChange('', false)).toEqual({ action: 'keep' });
+    });
+});
+
+describe('secretsPatch', () => {
+    it('sends what was typed and names what was emptied', () => {
+        expect(secretsPatch({
+            password: { action: 'set', token: 'new' },
+            'header.x-api-key': { action: 'clear' },
+            other: { action: 'keep' },
+        })).toEqual({ set: { password: 'new' }, clear: ['header.x-api-key'] });
+    });
+
+    it('makes no request when nothing was touched', () => {
+        expect(secretsPatch({ password: { action: 'keep' } })).toBeNull();
+        expect(secretsPatch({})).toBeNull();
     });
 });

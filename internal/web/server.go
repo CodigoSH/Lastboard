@@ -261,6 +261,9 @@ func (s *Server) routes() {
 	s.Router.Handle("PATCH /api/dashboard/item/{id}/move", protect(http.HandlerFunc(dashHandler.MoveItem)))
 	s.Router.Handle("PATCH /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.UpdateItem)))
 	s.Router.Handle("DELETE /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.DeleteItem)))
+	widgetSecretsHandler := api.NewWidgetSecretsHandler(s.DB)
+	s.Router.Handle("GET /api/widget/{id}/secrets", protect(http.HandlerFunc(widgetSecretsHandler.List)))
+	s.Router.Handle("PUT /api/widget/{id}/secrets", protect(http.HandlerFunc(widgetSecretsHandler.Update)))
 	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))
 	s.Router.Handle("POST /api/dashboard/health/batch", protect(http.HandlerFunc(dashHandler.CheckHealthBatch)))
 
