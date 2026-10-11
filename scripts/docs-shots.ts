@@ -224,6 +224,19 @@ const SHOTS: Shot[] = [
         clip: `${TOPBAR}.querySelector('dashboard-switcher').shadowRoot.querySelector('.switcher-dropdown')`,
     },
 
+    {
+        // The manager the switcher's last row opens: rename and delete beside the handle.
+        name: 'm-dashboard-manager', w: 1400, h: 800, pad: 0, wait: 700, exhibit: true, dpr: 2,
+        act: `const sw = ${TOPBAR}.querySelector('dashboard-switcher').shadowRoot;
+              sw.querySelector('.switcher-trigger').click(); await sleep(700);
+              const manage = sw.querySelector('.switcher-manage-btn');
+              if (!manage) throw new Error('the switcher has no manage button');
+              manage.click();
+              for (let i = 0; i < 25 && !document.querySelector('dashboard-manager-modal')?.shadowRoot?.querySelector('.sheet'); i++) await sleep(200);
+              await sleep(600);`,
+        clip: `document.querySelector('dashboard-manager-modal').shadowRoot.querySelector('.sheet')`,
+    },
+
     // ── Monitoring, end to end ──────────────────────────────────────────
     {
         // Opens on a service that actually went down, so the outage table and
@@ -353,6 +366,32 @@ const SHOTS: Shot[] = [
               }`,
         clip: `document.querySelector('widget-config-modal').shadowRoot.querySelector('dialog')`,
     })),
+
+    {
+        // Server Health pointed at another server: the source, its address and the test.
+        name: 'w-telemetry-conf', w: 1500, h: 980, pad: 0, wait: 900,
+        act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
+              const grid = document.querySelector('bookmark-grid').shadowRoot;
+              const card = grid.querySelector('widget-telemetry').closest('.bookmark-grid__card');
+              const kebab = card.querySelector('.kebab-btn');
+              if (!kebab) throw new Error('no menu button on the widget-telemetry tile');
+              kebab.click(); await sleep(600);
+              grid.querySelector('#kebab-menu .menu-edit').click();
+              for (let i = 0; i < 25; i++) {
+                  const d = document.querySelector('widget-config-modal')?.shadowRoot?.querySelector('dialog');
+                  if (d && d.open) break;
+                  await sleep(200);
+              }
+              const root = document.querySelector('widget-config-modal').shadowRoot;
+              const sel = root.getElementById('telemetry-source');
+              if (!sel) throw new Error('the Server Health settings have no source selector');
+              sel.value = 'glances';
+              sel.dispatchEvent(new CustomEvent('change', { detail: 'glances', bubbles: true }));
+              await sleep(400);
+              const url = root.getElementById('tel-url');
+              url.value = 'http://192.168.1.20:61208'; await sleep(300);`,
+        clip: `document.querySelector('widget-config-modal').shadowRoot.querySelector('dialog')`,
+    },
 ];
 
 /** The starter board's hypervisor: one node, and the container a bookmark needs. */

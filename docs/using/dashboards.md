@@ -14,7 +14,10 @@ New dashboards are **not** created from the switcher. Enter **Edit Mode**, open 
 
 Use the **dashboard switcher** in the top bar. **Switch** — click any dashboard to open it instantly.
 
-Everything else is in **Manage dashboards**, at the bottom of the switcher. Each dashboard is a row with its own buttons beside the drag handle, always visible (so a finger on a tablet never hits one by accident):
+Everything else is in **Manage dashboards**, at the bottom of the switcher.
+
+![Manage dashboards](../assets/m-dashboard-manager.png)
+ Each dashboard is a row with its own buttons beside the drag handle, always visible (so a finger on a tablet never hits one by accident):
 
 - **Rename** — the pencil.
 - **Delete** — the bin: it asks first, removes the dashboard and everything on it, and is switched off for the last one, since you always keep at least one.

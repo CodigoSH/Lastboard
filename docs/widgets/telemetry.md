@@ -40,6 +40,8 @@ Pick **Glances**, **Netdata** or **Custom JSON** as the **Source** and enter the
 | **Netdata** | Netdata 1 and 2 | Enter the address of the agent, for example `http://192.168.1.20:19999`. |
 | **Custom JSON** | Any URL that returns JSON | You say where each number sits, such as `cpu.percent` or `sensors[0].temp`. For RAM give either the percentage, or the used and the total (in the same unit). An optional **Header name** and **Header value** carry an API key. |
 
+![Server Health settings pointed at a Glances server](../assets/w-telemetry-conf.png)
+
 **Test connection** tries what is on the form, without saving: it tells you whether the server answered, which API version it speaks, and which of the metrics you chose it does not report.
 
 - **A metric the server does not report** — the usual case is temperature on a virtual machine or a server without sensors — draws a **grey ring** with a dash, and hovering it says why. It is not drawn as 0.
