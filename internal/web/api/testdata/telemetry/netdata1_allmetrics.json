@@ -1,0 +1,76 @@
+{
+	"system.cpu": {
+		"name":"system.cpu",
+		"family":"cpu",
+		"context":"system.cpu",
+		"units":"percentage",
+		"last_updated": 1791735991,
+		"dimensions": {
+			"guest_nice": {
+				"name": "guest_nice",
+				"value": 0.0000000
+			},
+			"guest": {
+				"name": "guest",
+				"value": 0.0000000
+			},
+			"steal": {
+				"name": "steal",
+				"value": 0.0000000
+			},
+			"softirq": {
+				"name": "softirq",
+				"value": 0.1986097
+			},
+			"irq": {
+				"name": "irq",
+				"value": 0.3475670
+			},
+			"user": {
+				"name": "user",
+				"value": 2.9294935
+			},
+			"system": {
+				"name": "system",
+				"value": 1.3406157
+			},
+			"nice": {
+				"name": "nice",
+				"value": 0.0000000
+			},
+			"iowait": {
+				"name": "iowait",
+				"value": 0.0496524
+			},
+			"idle": {
+				"name": "idle",
+				"value": 95.1340616
+			}
+		}
+	},
+	"system.ram": {
+		"name":"system.ram",
+		"family":"ram",
+		"context":"system.ram",
+		"units":"MiB",
+		"last_updated": 1791735991,
+		"dimensions": {
+			"free": {
+				"name": "free",
+				"value": 1208.2382812
+			},
+			"used": {
+				"name": "used",
+				"value": 7055.8125000
+			},
+			"cached": {
+				"name": "cached",
+				"value": 23507.9062500
+			},
+			"buffers": {
+				"name": "buffers",
+				"value": 4.0312500
+			}
+		}
+	}
+}

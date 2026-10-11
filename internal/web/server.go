@@ -264,6 +264,9 @@ func (s *Server) routes() {
 	widgetSecretsHandler := api.NewWidgetSecretsHandler(s.DB)
 	s.Router.Handle("GET /api/widget/{id}/secrets", protect(http.HandlerFunc(widgetSecretsHandler.List)))
 	s.Router.Handle("PUT /api/widget/{id}/secrets", protect(http.HandlerFunc(widgetSecretsHandler.Update)))
+	remoteStatsHandler := api.NewRemoteStatsHandler(s.DB)
+	s.Router.Handle("GET /api/widget/{id}/remote-stats", protect(http.HandlerFunc(remoteStatsHandler.Get)))
+	s.Router.Handle("POST /api/widget/remote-stats/test", protect(http.HandlerFunc(remoteStatsHandler.Test)))
 	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))
 	s.Router.Handle("POST /api/dashboard/health/batch", protect(http.HandlerFunc(dashHandler.CheckHealthBatch)))
 

@@ -1,0 +1,323 @@
+{
+	"system.cpu": {
+		"name":"system.cpu",
+		"family":"cpu",
+		"context":"system.cpu",
+		"units":"percentage",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"guest_nice": {
+				"name": "guest_nice",
+				"value": 0.0000000
+			},
+			"guest": {
+				"name": "guest",
+				"value": 0.0000000
+			},
+			"steal": {
+				"name": "steal",
+				"value": 0.0000000
+			},
+			"softirq": {
+				"name": "softirq",
+				"value": 0.2469136
+			},
+			"irq": {
+				"name": "irq",
+				"value": 0.3950617
+			},
+			"user": {
+				"name": "user",
+				"value": 4.1975309
+			},
+			"system": {
+				"name": "system",
+				"value": 1.9753086
+			},
+			"nice": {
+				"name": "nice",
+				"value": 0.0000000
+			},
+			"iowait": {
+				"name": "iowait",
+				"value": 0.1481481
+			},
+			"idle": {
+				"name": "idle",
+				"value": 93.0370370
+			}
+		}
+	},
+	"system.ram": {
+		"name":"system.ram",
+		"family":"ram",
+		"context":"system.ram",
+		"units":"MiB",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"free": {
+				"name": "free",
+				"value": 1843.0351562
+			},
+			"used": {
+				"name": "used",
+				"value": 6987.4804688
+			},
+			"cached": {
+				"name": "cached",
+				"value": 22941.4414062
+			},
+			"buffers": {
+				"name": "buffers",
+				"value": 4.0312500
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp1_Package_id_0_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp1_Package_id_0_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 51.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp2_Core_0_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp2_Core_0_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 46.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp6_Core_4_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp6_Core_4_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 45.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp10_Core_8_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp10_Core_8_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 45.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp14_Core_12_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp14_Core_12_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 44.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp18_Core_16_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp18_Core_16_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 42.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp22_Core_20_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp22_Core_20_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 45.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp26_Core_24_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp26_Core_24_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 48.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp27_Core_25_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp27_Core_25_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 48.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp28_Core_26_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp28_Core_26_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 47.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp29_Core_27_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp29_Core_27_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 48.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp30_Core_28_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp30_Core_28_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 47.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp31_Core_29_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp31_Core_29_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 47.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp32_Core_30_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp32_Core_30_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 48.0000000
+			}
+		}
+	},
+	"sensors.temperature_coretemp-isa-0000_temp33_Core_31_input": {
+		"name":"sensors.temperature_coretemp-isa-0000_temp33_Core_31_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 47.0000000
+			}
+		}
+	},
+	"sensors.temperature_acpitz-acpi-0_temp1_input": {
+		"name":"sensors.temperature_acpitz-acpi-0_temp1_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 27.8000000
+			}
+		}
+	},
+	"sensors.temperature_nvme-pci-0100_temp1_Composite_input": {
+		"name":"sensors.temperature_nvme-pci-0100_temp1_Composite_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 45.8500000
+			}
+		}
+	},
+	"sensors.temperature_nvme-pci-0100_temp2_Sensor_1_input": {
+		"name":"sensors.temperature_nvme-pci-0100_temp2_Sensor_1_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 45.8500000
+			}
+		}
+	},
+	"sensors.temperature_nvme-pci-0100_temp3_Sensor_2_input": {
+		"name":"sensors.temperature_nvme-pci-0100_temp3_Sensor_2_input",
+		"family":"Temperature",
+		"context":"system.hw.sensor.temperature.input",
+		"units":"degrees Celsius",
+		"last_updated": 1791735940,
+		"dimensions": {
+			"input": {
+				"name": "input",
+				"value": 49.8500000
+			}
+		}
+	}
+}
