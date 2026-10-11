@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "撤销",
   "widget.notepad.tool.unlock": "解锁编辑",
   "widget.notepad.tool.update_image": "更新图片",
+  "widget.title_hint": "显示在卡片的上边框上。留空则不显示。",
+  "widget.title_label": "标题",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "实时硬件监控",
   "widget.telemetry.metrics": "指标",

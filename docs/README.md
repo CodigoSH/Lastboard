@@ -52,7 +52,9 @@ The dashboard itself: a grid you arrange, and the tiles on it.
 ## Widgets
 
 Nine widgets ship in the box. Each one has a **Personalize** tab with a border colour and
-border width, on top of its own options.
+border width, on top of its own options. The Clock, Weather, Notes, Markdown and Server Health widgets
+also take a **Title** there: a name shown on the tile's top border, like the one a section wears. The
+API, Docker, Monitor and Proxmox widgets have a title of their own in their settings, drawn inside.
 
 | Widget | What it does | Configuration |
 | :--- | :--- | :--- |

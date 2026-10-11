@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Annulla",
   "widget.notepad.tool.unlock": "Sblocca modifica",
   "widget.notepad.tool.update_image": "Aggiorna immagine",
+  "widget.title_hint": "Mostrato sul bordo superiore del riquadro. Lascia vuoto per non mostrarlo.",
+  "widget.title_label": "Titolo",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Monitor hardware live",
   "widget.telemetry.metrics": "Metriche",

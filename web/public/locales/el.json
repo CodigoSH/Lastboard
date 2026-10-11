@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Αναίρεση",
   "widget.notepad.tool.unlock": "Ξεκλείδωμα επεξεργασίας",
   "widget.notepad.tool.update_image": "Ενημέρωση εικόνας",
+  "widget.title_hint": "Εμφανίζεται στο πάνω άκρο του πλακιδίου. Αφήστε το κενό για να μη φαίνεται τίποτα.",
+  "widget.title_label": "Τίτλος",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Ζωντανή παρακολούθηση υλικού",
   "widget.telemetry.metrics": "Μετρήσεις",

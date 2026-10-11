@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "पूर्ववत करें",
   "widget.notepad.tool.unlock": "संपादन अनलॉक करें",
   "widget.notepad.tool.update_image": "छवि अपडेट करें",
+  "widget.title_hint": "टाइल के ऊपरी किनारे पर दिखाया जाता है। कुछ न दिखाने के लिए खाली छोड़ें।",
+  "widget.title_label": "शीर्षक",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "लائیو हार्डवीयर मॉनिटर",
   "widget.telemetry.metrics": "मेट्रिक्स",

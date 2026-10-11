@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Geri Al",
   "widget.notepad.tool.unlock": "Düzenleme kilidini aç",
   "widget.notepad.tool.update_image": "Resmi güncelle",
+  "widget.title_hint": "Kutucuğun üst kenarında gösterilir. Göstermemek için boş bırakın.",
+  "widget.title_label": "Başlık",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Canlı Donanım İzleme",
   "widget.telemetry.metrics": "Metrikler",

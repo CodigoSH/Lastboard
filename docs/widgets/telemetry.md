@@ -25,7 +25,7 @@ Each ring is green while the value is comfortable, amber as it climbs and red wh
 | **Metrics** | All three | Which of CPU, RAM and TEMP the widget draws. At least one has to stay on — the last one you try to switch off comes back. |
 | **Refresh Rate** | 5s | How often the widget redraws: **5s, 10s, 30s or 1m**. A widget saved earlier with 1s or 2s now runs at 5s. |
 
-The **Personalize** tab adds a border color and a border width (Thin, Regular or Thick) for the widget's card.
+The **Personalize** tab adds a border color and a border width (Thin, Regular or Thick) for the widget's card, and a **Title** — a name shown on the tile's top border, like the one a section wears (leave it empty for none) —.
 
 **Saving the metrics resizes the widget.** One metric takes one cell, two take two, three take three — so the gauges keep their proportions instead of stretching. The widget has no resize handle of its own in Edit Mode; this is how its width is set.
 

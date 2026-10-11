@@ -1,4 +1,6 @@
 import { i18n } from '../../../services/i18n';
+import { escapeHtml } from '../../../services/escape';
+import { WIDGET_TITLE_MAX } from '../../../services/widgetTitle';
 
 /**
  * Appearance controls (border color grid + border width segmented control).
@@ -9,11 +11,20 @@ import { i18n } from '../../../services/i18n';
 export const appearanceControlsTemplate = (
     premiumColors: string[],
     color: string,
-    borderWidth: number
+    borderWidth: number,
+    /** Only a widget has a title to offer: null leaves the field out. */
+    title: string | null = null
 ): string => {
     const isCustom = !premiumColors.includes(color) && color !== '';
 
-    return `
+    const titleField = title === null ? '' : `
+            <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+                <label for="widget-title">${i18n.t('widget.title_label')}</label>
+                <input type="text" id="widget-title" maxlength="${WIDGET_TITLE_MAX * 2}" value="${escapeHtml(title)}" autocomplete="off" spellcheck="false">
+                <small>${i18n.t('widget.title_hint')}</small>
+            </div>`;
+
+    return `${titleField}
             <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
                 <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
                 <div class="premium-color-grid">

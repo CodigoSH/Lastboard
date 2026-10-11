@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Cofnij",
   "widget.notepad.tool.unlock": "Odblokuj edycję",
   "widget.notepad.tool.update_image": "Aktualizuj obraz",
+  "widget.title_hint": "Wyświetlany na górnej krawędzi kafelka. Zostaw puste, aby nic nie pokazywać.",
+  "widget.title_label": "Tytuł",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Monitorowanie sprzętu na żywo",
   "widget.telemetry.metrics": "Metryki",

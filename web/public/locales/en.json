@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Undo",
   "widget.notepad.tool.unlock": "Unlock Editing",
   "widget.notepad.tool.update_image": "Update Image",
+  "widget.title_hint": "Shown on the tile's top border. Leave empty for none.",
+  "widget.title_label": "Title",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "This widget displays real-time system metrics.",
   "widget.telemetry.metrics": "Metrics",

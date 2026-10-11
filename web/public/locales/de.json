@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Rückgängig",
   "widget.notepad.tool.unlock": "Bearbeitung entsperren",
   "widget.notepad.tool.update_image": "Bild aktualisieren",
+  "widget.title_hint": "Wird am oberen Rand der Kachel angezeigt. Leer lassen, um keinen anzuzeigen.",
+  "widget.title_label": "Titel",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Live-Hardware-Überwachung",
   "widget.telemetry.metrics": "Metriken",

@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "元に戻す",
   "widget.notepad.tool.unlock": "編集のロック解除",
   "widget.notepad.tool.update_image": "画像を更新",
+  "widget.title_hint": "タイルの上の縁に表示されます。表示しない場合は空のままにしてください。",
+  "widget.title_label": "タイトル",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "ライブハードウェア監視",
   "widget.telemetry.metrics": "メトリクス",

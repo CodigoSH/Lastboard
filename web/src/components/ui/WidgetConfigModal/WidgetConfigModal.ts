@@ -13,6 +13,7 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
+import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle';
 import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import {
@@ -98,6 +99,7 @@ class WidgetConfigModal extends HTMLElement {
     private _clockSelectedLon: number | null = null;
     private _selectedColor: string = '#333333';
     private _selectedBorderWidth: number = 1;
+    private _widgetTitle: string = '';
 
     private readonly premiumColors = [
         '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -131,6 +133,7 @@ class WidgetConfigModal extends HTMLElement {
         }
         this._selectedColor = content.borderColor || '';
         this._selectedBorderWidth = content.borderWidth || 1;
+        this._widgetTitle = cleanWidgetTitle(content.title);
 
         this.render();
 
@@ -609,6 +612,7 @@ class WidgetConfigModal extends HTMLElement {
             // Persist appearance + content, then resize
             newContent.borderColor = this._selectedColor;
             newContent.borderWidth = this._selectedBorderWidth;
+            this._writeTitle(newContent);
             await dashboardStore.updateItem({
                 id: this.currentItem!.id,
                 content: JSON.stringify(newContent),
@@ -629,6 +633,7 @@ class WidgetConfigModal extends HTMLElement {
         // Persist Appearance
         newContent.borderColor = this._selectedColor;
         newContent.borderWidth = this._selectedBorderWidth;
+        this._writeTitle(newContent);
 
         // Optimistic / Store update
         await dashboardStore.updateItem({
@@ -637,6 +642,25 @@ class WidgetConfigModal extends HTMLElement {
         });
 
         this.close();
+    }
+
+    /** A widget offers a title; a section has its own field and nothing else does. */
+    private _titleForForm(): string | null {
+        return this._takesPill() ? this._widgetTitle : null;
+    }
+
+    private _takesPill(): boolean {
+        if (this.currentItem?.type !== 'widget') return false;
+        const c = typeof this.currentItem.content === 'string' ? JSON.parse(this.currentItem.content) : this.currentItem.content;
+        return widgetTakesPill(c?.widgetId);
+    }
+
+    /** Writes the title the person typed, or removes it: no name, no pill. */
+    private _writeTitle(content: any) {
+        if (!this._takesPill()) return;
+        const input = this.shadowRoot?.getElementById('widget-title') as HTMLInputElement | null;
+        const title = cleanWidgetTitle(input ? input.value : this._widgetTitle);
+        if (title) content.title = title; else delete content.title;
     }
 
     render() {
@@ -655,7 +679,7 @@ class WidgetConfigModal extends HTMLElement {
         const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
         const renderForm = () => {
-            const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
+            const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
 
             if (!this.currentItem) return { general: '', customization: '' };
 
@@ -1334,7 +1358,7 @@ class WidgetConfigModal extends HTMLElement {
      * tile shows.
      */
     private renderProxmoxForm(content: any) {
-        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 30;
         const showNode = content.showNode !== false;
 
@@ -1398,7 +1422,7 @@ class WidgetConfigModal extends HTMLElement {
     }
 
     private renderMonitorForm(content: any) {
-        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
 
         const generalTab = `
@@ -1480,7 +1504,7 @@ class WidgetConfigModal extends HTMLElement {
      * widget, not to whichever host is selected.
      */
     private renderDockerForm(content: any) {
-        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
 
         const hosts: DockerHost[] = content.hosts || [];
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;

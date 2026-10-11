@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "واپس کریں",
   "widget.notepad.tool.unlock": "ترمیم ان لاک کریں",
   "widget.notepad.tool.update_image": "تصویر اپ ڈیٹ کریں",
+  "widget.title_hint": "ٹائل کے اوپری کنارے پر دکھایا جاتا ہے۔ کچھ نہ دکھانے کے لیے خالی چھوڑ دیں۔",
+  "widget.title_label": "عنوان",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "لائیو ہارڈویئر مانیٹر",
   "widget.telemetry.metrics": "میٹرکس",

@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "পূর্বাবস্থায় ফেরান",
   "widget.notepad.tool.unlock": "সম্পাদনা আনলক করুন",
   "widget.notepad.tool.update_image": "ছবি আপডেট করুন",
+  "widget.title_hint": "টাইলের উপরের প্রান্তে দেখানো হয়। কিছু না দেখাতে ফাঁকা রাখুন।",
+  "widget.title_label": "শিরোনাম",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "লাইভ হার্ডওয়্যার মনিটর",
   "widget.telemetry.metrics": "মেট্রিক্স",

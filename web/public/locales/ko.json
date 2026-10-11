@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "실행 취소",
   "widget.notepad.tool.unlock": "편집 잠금 해제",
   "widget.notepad.tool.update_image": "이미지 업데이트",
+  "widget.title_hint": "타일 위쪽 테두리에 표시됩니다. 표시하지 않으려면 비워 두세요.",
+  "widget.title_label": "제목",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "실시간 하드웨어 모니터",
   "widget.telemetry.metrics": "메트릭",

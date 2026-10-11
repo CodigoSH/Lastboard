@@ -28,7 +28,7 @@ If you type a city name and save without picking a result, Lastboard still tries
 | **Show City** | On | The city name, above the time. |
 | **Show Seconds** | Off | Add seconds to the time. |
 
-The **Personalize** tab adds a border color and a border width (Thin, Regular or Thick) for the widget's card — the same two settings every widget has.
+The **Personalize** tab adds a border color and a border width (Thin, Regular or Thick) for the widget's card, and a **Title** — a name shown on the tile's top border, like the one a section wears (leave it empty for none) — on top of the two settings every widget has.
 
 ## Notes
 

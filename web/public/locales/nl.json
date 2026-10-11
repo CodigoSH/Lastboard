@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Ongedaan maken",
   "widget.notepad.tool.unlock": "Bewerking ontgrendelen",
   "widget.notepad.tool.update_image": "Afbeelding bijwerken",
+  "widget.title_hint": "Wordt getoond op de bovenrand van de tegel. Laat leeg om niets te tonen.",
+  "widget.title_label": "Titel",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Live hardwaremonitor",
   "widget.telemetry.metrics": "Metrieken",

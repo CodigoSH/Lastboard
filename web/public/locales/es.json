@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Deshacer",
   "widget.notepad.tool.unlock": "Desbloquear edición",
   "widget.notepad.tool.update_image": "Actualizar imagen",
+  "widget.title_hint": "Se muestra en el borde superior de la tesela. Déjalo vacío para no poner ninguno.",
+  "widget.title_label": "Título",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Monitor de hardware en vivo",
   "widget.telemetry.metrics": "Métricas",

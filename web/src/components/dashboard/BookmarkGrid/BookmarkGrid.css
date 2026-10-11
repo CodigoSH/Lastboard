@@ -255,6 +255,56 @@
     color: var(--accent);
 }
 
+/* A widget with a name: the same pill a bookmark or a section wears on its top
+   border. The tile stops clipping so the pill can sit half outside it, and the
+   widget inside clips itself to the tile's corners instead. */
+.bookmark-grid__card[data-type="widget"].has-title {
+    overflow: visible;
+    padding-top: 12px !important;
+}
+
+.bookmark-grid__card[data-type="widget"].has-title > [item-id] {
+    border-radius: inherit;
+    overflow: hidden;
+}
+
+.bookmark-grid__card .widget-title {
+    position: absolute;
+    top: 0;
+    transform: translateY(calc(-50% - 1px));
+    inset-inline: 12px;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border, transparent);
+    border-radius: 12px;
+    padding: 2px 8px;
+
+    font-family: var(--font-mono, monospace);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    color: var(--text-dim);
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    z-index: 5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+    /* A pill over the edge must not take a click meant for the widget beneath it. */
+    pointer-events: none;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.bookmark-grid__card.has-title:hover .widget-title {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 /* Label Position: Off (Hidden) */
 .bookmark-grid__card.label-off .bookmark-grid__label {
     display: none;

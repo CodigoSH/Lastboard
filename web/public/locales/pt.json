@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Desfazer",
   "widget.notepad.tool.unlock": "Desbloquear edição",
   "widget.notepad.tool.update_image": "Atualizar imagem",
+  "widget.title_hint": "Mostrado na borda superior do bloco. Deixe em branco para não mostrar nenhum.",
+  "widget.title_label": "Título",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Monitor de hardware ao vivo",
   "widget.telemetry.metrics": "Métricas",

@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Отменить",
   "widget.notepad.tool.unlock": "Разблокировать редактирование",
   "widget.notepad.tool.update_image": "Обновить изображение",
+  "widget.title_hint": "Показывается на верхней границе плитки. Оставьте пустым, чтобы ничего не показывать.",
+  "widget.title_label": "Заголовок",
   "widget.telemetry.cpu": "ЦП",
   "widget.telemetry.description": "Мониторинг оборудования",
   "widget.telemetry.metrics": "Метрики",

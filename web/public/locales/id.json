@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "Urungkan",
   "widget.notepad.tool.unlock": "Buka kunci pengeditan",
   "widget.notepad.tool.update_image": "Perbarui gambar",
+  "widget.title_hint": "Ditampilkan di tepi atas kotak. Biarkan kosong jika tidak ingin menampilkan.",
+  "widget.title_label": "Judul",
   "widget.telemetry.cpu": "CPU",
   "widget.telemetry.description": "Monitor perangkat keras langsung",
   "widget.telemetry.metrics": "Metrik",

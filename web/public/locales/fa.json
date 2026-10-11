@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "بازگشت",
   "widget.notepad.tool.unlock": "باز کردن قفل ویرایش",
   "widget.notepad.tool.update_image": "بروزرسانی تصویر",
+  "widget.title_hint": "روی لبه بالایی کاشی نمایش داده می‌شود. برای نمایش ندادن، خالی بگذارید.",
+  "widget.title_label": "عنوان",
   "widget.telemetry.cpu": "پردازنده",
   "widget.telemetry.description": "مانیتورینگ سخت‌افزار زنده",
   "widget.telemetry.metrics": "میتریک‌ها",

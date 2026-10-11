@@ -360,6 +360,8 @@
   "widget.notepad.tool.undo": "تراجع",
   "widget.notepad.tool.unlock": "إلغاء قفل التحرير",
   "widget.notepad.tool.update_image": "تحديث الصورة",
+  "widget.title_hint": "يظهر على الحافة العلوية للبلاطة. اتركه فارغًا لعدم إظهار شيء.",
+  "widget.title_label": "العنوان",
   "widget.telemetry.cpu": "المعالج",
   "widget.telemetry.description": "مراقبة الأجهزة الحية",
   "widget.telemetry.metrics": "المقاييس",
