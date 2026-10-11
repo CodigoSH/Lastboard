@@ -39,14 +39,28 @@ func TestPinnedVersionsAgree(t *testing.T) {
 			{
 				what:  "staticcheck",
 				file:  "scripts/release.sh",
-				find:  regexp.MustCompile(`STATICCHECK_VERSION="(v[0-9.]+)"`),
+				find:  regexp.MustCompile(`STATICCHECK_VERSION="(v[0-9][0-9A-Za-z.\-]*)"`),
 				human: `STATICCHECK_VERSION="vX.Y.Z"`,
 			},
 			{
 				what:  "staticcheck",
 				file:  ".forgejo/workflows/tests.yml",
-				find:  regexp.MustCompile(`honnef\.co/go/tools/cmd/staticcheck@(v[0-9.]+)`),
+				find:  regexp.MustCompile(`honnef\.co/go/tools/cmd/staticcheck@(v[0-9][0-9A-Za-z.\-]*)`),
 				human: "go install honnef.co/go/tools/cmd/staticcheck@vX.Y.Z",
+			},
+		},
+		"govulncheck": {
+			{
+				what:  "govulncheck",
+				file:  "scripts/release.sh",
+				find:  regexp.MustCompile(`GOVULNCHECK_VERSION="(v[0-9.]+)"`),
+				human: `GOVULNCHECK_VERSION="vX.Y.Z"`,
+			},
+			{
+				what:  "govulncheck",
+				file:  ".forgejo/workflows/tests.yml",
+				find:  regexp.MustCompile(`golang\.org/x/vuln/cmd/govulncheck@(v[0-9.]+)`),
+				human: "go install golang.org/x/vuln/cmd/govulncheck@vX.Y.Z",
 			},
 		},
 		"bun": {
@@ -174,5 +188,30 @@ func TestNothingIsPinnedToLatest(t *testing.T) {
 	// A walk that finds nothing passes, and reports it as success.
 	if checked < 3 {
 		t.Fatalf("only %d of the files were read — this test is looking in the wrong place", checked)
+	}
+}
+
+// The vulnerability scan that turns the repository red after a release has to be
+// able to stop the release first. A guard on an absence, so comments are stripped:
+// the prose above explains why the step is there, and would satisfy a plain search.
+func TestTheReleaseRunsTheVulnerabilityScanBeforeTagging(t *testing.T) {
+	body, err := os.ReadFile(filepath.Join("..", "..", "scripts/release.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var code []string
+	for _, line := range strings.Split(string(body), "\n") {
+		if !strings.HasPrefix(strings.TrimSpace(line), "#") {
+			code = append(code, line)
+		}
+	}
+	script := strings.Join(code, "\n")
+	scan := strings.Index(script, `govulncheck@"$GOVULNCHECK_VERSION" ./...`)
+	if scan < 0 {
+		t.Fatal("the preflight in scripts/release.sh has no govulncheck step: a release " +
+			"could be tagged with a reachable advisory and turn CI red in public")
+	}
+	if tag := strings.Index(script, "git tag"); tag >= 0 && scan > tag {
+		t.Fatal("the scan runs after the tag is made: it has to be in the preflight")
 	}
 }

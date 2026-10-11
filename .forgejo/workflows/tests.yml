@@ -27,7 +27,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.1'
+          go-version: '1.27.2'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -90,7 +90,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.1'
+          go-version: '1.27.2'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -132,7 +132,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.1'
+          go-version: '1.27.2'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -178,5 +178,5 @@ jobs:
         # check, and then a tag passes locally and this job goes red with
         # nothing to do about it but push another commit.
         run: |
-          go install honnef.co/go/tools/cmd/staticcheck@v0.8.1
+          go install honnef.co/go/tools/cmd/staticcheck@v0.7.0-0.dev.0.20261009230814-452d5bb86b45
           staticcheck ./...
