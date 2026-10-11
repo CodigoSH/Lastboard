@@ -132,3 +132,63 @@ func TestTheTemplatesResolveTheWayThePresetsWriteThem(t *testing.T) {
 		}
 	}
 }
+
+func TestADockerWidgetsAgentTokensMoveAndTheHostsStay(t *testing.T) {
+	old := `{"widgetId":"docker","title":"D","refreshSec":30,"containerConfig":{"abcd1234":{"label":"x"}},` +
+		`"hosts":[{"id":"h_abc123","name":"nas","type":"agent","url":"nas:9091","token":"a b/+c"},` +
+		`{"id":"h_def456","name":"local","type":"local","token":""},` +
+		`{"id":"h_ghi789","name":"tcp","type":"tcp","url":"10.0.0.5:2375"}]}`
+	next, secrets, ok := migrateDockerContent(old)
+	if !ok {
+		t.Fatal("nothing moved")
+	}
+	if len(secrets) != 1 || secrets["docker.h_abc123"] != "a b/+c" {
+		t.Errorf("secrets = %v", secrets)
+	}
+	if strings.Contains(next, "a b/+c") || strings.Contains(next, `"token"`) {
+		t.Errorf("a token is still in the content: %s", next)
+	}
+	var m struct {
+		Hosts []struct {
+			ID, Name, Type, URL string
+		}
+		Title  string
+		Config map[string]any `json:"containerConfig"`
+	}
+	json.Unmarshal([]byte(next), &m)
+	if len(m.Hosts) != 3 || m.Hosts[0].URL != "nas:9091" || m.Hosts[2].ID != "h_ghi789" || m.Title != "D" || len(m.Config) != 1 {
+		t.Errorf("the rest of the widget changed: %s", next)
+	}
+	if _, _, again := migrateDockerContent(next); again {
+		t.Error("not idempotent")
+	}
+	if _, _, ok := migrateDockerContent(`{"widgetId":"docker","hosts":[{"id":"h_1","type":"local"}]}`); ok {
+		t.Error("a widget with no token field was changed")
+	}
+	if _, _, ok := migrateDockerContent(`{"widgetId":"api"}`); ok {
+		t.Error("migrated something that is not a Docker widget")
+	}
+}
+
+// The browser computes the same name (web/src/services/dockerHostSecret.test.ts
+// has this table too): a saved token is found by it.
+func TestADockerSecretNameMatchesTheBrowsers(t *testing.T) {
+	for id, want := range map[string]string{
+		"h_abc123": "docker.h_abc123", "H ABC/1": "docker.h-abc-1", "ünï": "docker.-n-", "1": "docker.1",
+	} {
+		if got := dockerSecretName(id); got != want {
+			t.Errorf("%q -> %q, want %q", id, got, want)
+		}
+	}
+	if len(dockerSecretName(strings.Repeat("x", 200))) != 64 {
+		t.Error("a long id is not cut to 64")
+	}
+}
+
+func TestADockerSecretNameIsAlwaysAValidSecretName(t *testing.T) {
+	for _, id := range []string{"h_abc123", "H ABC/1", "ünï", strings.Repeat("x", 200), "1"} {
+		if n := dockerSecretName(id); !secretName.MatchString(n) {
+			t.Errorf("%q -> %q is not a valid secret name", id, n)
+		}
+	}
+}

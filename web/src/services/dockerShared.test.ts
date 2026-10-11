@@ -4,6 +4,7 @@ import {
     defaultContainerUrl,
     hostAddress,
     hostParam,
+    hostRef,
     hostErrorKey,
     agentVersionLabel,
     DockerHostError,
@@ -151,5 +152,25 @@ describe('agentVersionLabel', () => {
     });
     test('an agent that reports no version is older than the first that did', () => {
         expect(agentVersionLabel('')).toBe('< v1.1.0');
+    });
+});
+
+describe('a host whose token is kept by the server', () => {
+    const agent = { id: 'h_abc123', name: 'nas', type: 'agent' as const, url: 'nas:9091' };
+
+    test('is addressed without a token, and says which saved host it is', () => {
+        expect(hostRef(agent, 12)).toEqual({ host: 'agent://nas:9091', widget: 12, host_id: 'h_abc123' });
+        expect(JSON.stringify(hostRef(agent, 12))).not.toContain('token');
+    });
+
+    test('keeps the https hint, and sends a token only when one was just typed', () => {
+        expect(hostRef({ ...agent, url: 'https://agent.example.com' }, 12).host).toBe('agent://agent.example.com?tls=1');
+        expect(hostRef(agent, 12, 'new tok').host).toBe('agent://nas:9091?token=new%20tok');
+        expect(hostRef({ ...agent, url: 'https://a.b' }, 12, 'x').host).toBe('agent://a.b?token=x&tls=1');
+    });
+
+    test('has nothing to carry for the other connection types', () => {
+        expect(hostRef({ id: 'h_1', name: 'here', type: 'local' }, 3)).toEqual({ host: '', widget: 3, host_id: 'h_1' });
+        expect(hostRef({ id: 'h_2', name: 'x', type: 'tcp', url: 'tcp://10.0.0.5:2375' }, 3).host).toBe('10.0.0.5:2375');
     });
 });

@@ -77,18 +77,32 @@ export function dockerPost(body: unknown): RequestInit {
     };
 }
 
-/** How a host is addressed in the `host` field of a Docker request. */
-export function hostParam(host: DockerHost): string {
+/**
+ * How a host is addressed in the `host` field of a Docker request.
+ *
+ * An agent's token is not part of it: the server reads that from the widget's
+ * secret store, for the widget and host the request names (see hostRef). Only a
+ * token that has just been typed in a form, and so is not saved yet, is sent.
+ */
+export function hostParam(host: DockerHost, typedToken?: string): string {
     if (host.type === 'local') return '';
     if (host.type === 'agent') {
         // An agent behind a reverse proxy is reached over HTTPS, and the address
         // someone types says so. The scheme is the one piece of it worth keeping:
         // dropped, the widget spoke plain HTTP to a proxy that only answers TLS.
-        const tls = /^\s*https:\/\//i.test(host.url ?? '') ? '&tls=1' : '';
-        return `agent://${bareHost(host.url)}?token=${encodeURIComponent(host.token ?? '')}${tls}`;
+        const query: string[] = [];
+        const token = typedToken ?? host.token ?? '';
+        if (token) query.push(`token=${encodeURIComponent(token)}`);
+        if (/^\s*https:\/\//i.test(host.url ?? '')) query.push('tls=1');
+        return `agent://${bareHost(host.url)}${query.length ? '?' + query.join('&') : ''}`;
     }
     if (host.type === 'tls') return `https://${bareHost(host.url)}`;
     return bareHost(host.url);
+}
+
+/** What a Docker request says about the host: where it is, and which saved host it is. */
+export function hostRef(host: DockerHost, widgetId: number, typedToken?: string): { host: string; widget: number; host_id: string } {
+    return { host: hostParam(host, typedToken), widget: widgetId, host_id: host.id };
 }
 
 /** The id containerConfig is keyed by. */
@@ -177,10 +191,10 @@ export class DockerHostError extends Error {
  * they are older than that. A host that does not answer gives null, and the
  * screen says nothing rather than guess.
  */
-export async function fetchAgentVersion(host: DockerHost): Promise<string | null> {
+export async function fetchAgentVersion(host: DockerHost, widgetId = 0, typedToken?: string): Promise<string | null> {
     if (host.type !== 'agent' || isDemoMode()) return null;
     try {
-        const res = await fetch('/api/docker/agent-version', dockerPost({ host: hostParam(host) }));
+        const res = await fetch('/api/docker/agent-version', dockerPost(hostRef(host, widgetId, typedToken)));
         if (!res.ok) return null;
         const data = await res.json();
         return agentVersionLabel(typeof data?.version === 'string' ? data.version : '');
@@ -207,11 +221,11 @@ export function hostErrorKey(err: unknown): string {
  * The host is optional because demo mode answers before it is ever read —
  * there is no daemon and no host to address.
  */
-export async function fetchContainers(host: DockerHost | undefined): Promise<DockerContainer[]> {
+export async function fetchContainers(host: DockerHost | undefined, widgetId = 0, typedToken?: string): Promise<DockerContainer[]> {
     if (isDemoMode()) return DEMO_CONTAINERS;
     if (!host) return [];
 
-    const res = await fetch('/api/docker/containers', dockerPost({ host: hostParam(host) }));
+    const res = await fetch('/api/docker/containers', dockerPost(hostRef(host, widgetId, typedToken)));
     if (!res.ok) throw new DockerHostError((await res.text().catch(() => '')).trim());
     const data = await res.json();
     return Array.isArray(data) ? data : [];

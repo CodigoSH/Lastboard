@@ -121,8 +121,8 @@ func (h *WidgetAPIHandler) Fetch(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// MigrateWidgetSecrets moves the credentials of API widgets saved by an earlier
-// version out of their content and into the secret store. It is safe to run on
+// MigrateWidgetSecrets moves the credentials of API and Docker widgets saved by an
+// earlier version out of their content and into the secret store. It is safe to run on
 // every start and after a restore: a widget with nothing left to move is left
 // alone.
 //
@@ -134,7 +134,8 @@ func (h *WidgetAPIHandler) Fetch(w http.ResponseWriter, r *http.Request) {
 //   - an advanced widget has "headers" of name and value. Every value is treated
 //     as a secret: the names stay in the content, the values move.
 func MigrateWidgetSecrets(db *sql.DB) (int, error) {
-	rows, err := db.Query(`SELECT id, content FROM items WHERE type = 'widget' AND content LIKE '%"api"%'`)
+	rows, err := db.Query(`SELECT id, content FROM items WHERE type = 'widget'
+		AND (content LIKE '%"api"%' OR content LIKE '%"docker"%')`)
 	if err != nil {
 		return 0, err
 	}
@@ -162,6 +163,9 @@ func MigrateWidgetSecrets(db *sql.DB) (int, error) {
 	migrated := 0
 	for _, r := range found {
 		next, secrets, ok := migrateAPIContent(r.content)
+		if !ok {
+			next, secrets, ok = migrateDockerContent(r.content)
+		}
 		if !ok {
 			continue
 		}
@@ -258,6 +262,61 @@ func migrateAPIContent(content string) (next string, secrets map[string]string, 
 		delete(m, "headers")
 	}
 
+	b, err := json.Marshal(m)
+	if err != nil {
+		return "", nil, false
+	}
+	return string(b), secrets, true
+}
+
+// dockerSecretName is where a Docker host's agent token is kept: one secret per
+// host, named after the host's id (which the widget generates as "h_" and six
+// letters or digits).
+func dockerSecretName(hostID string) string {
+	var b strings.Builder
+	for _, r := range strings.ToLower(hostID) {
+		if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '_' || r == '.' || r == '-' {
+			b.WriteRune(r)
+		} else {
+			b.WriteRune('-')
+		}
+	}
+	name := "docker." + b.String()
+	if len(name) > 64 {
+		name = name[:64]
+	}
+	return name
+}
+
+// migrateDockerContent moves the agent token of each host out of a Docker
+// widget's content. Anything else about the hosts stays where it is.
+func migrateDockerContent(content string) (next string, secrets map[string]string, ok bool) {
+	var m map[string]any
+	if json.Unmarshal([]byte(content), &m) != nil || m["widgetId"] != "docker" {
+		return "", nil, false
+	}
+	hosts, _ := m["hosts"].([]any)
+	secrets = map[string]string{}
+	changed := false
+	for _, h := range hosts {
+		host, _ := h.(map[string]any)
+		if host == nil {
+			continue
+		}
+		if _, has := host["token"]; !has {
+			continue
+		}
+		token, _ := host["token"].(string)
+		id, _ := host["id"].(string)
+		if token != "" && id != "" {
+			secrets[dockerSecretName(id)] = token
+		}
+		delete(host, "token")
+		changed = true
+	}
+	if !changed {
+		return "", nil, false
+	}
 	b, err := json.Marshal(m)
 	if err != nil {
 		return "", nil, false

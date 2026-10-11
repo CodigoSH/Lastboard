@@ -13,7 +13,7 @@ import {
     containerName,
     defaultContainerUrl,
     fetchContainers,
-    hostParam,
+    hostRef,
     dockerPost,
     hostErrorKey,
     isDemoMode,
@@ -590,7 +590,7 @@ class DockerWidget extends HTMLElement {
             try {
                 return {
                     host,
-                    containers: await fetchContainers(host),
+                    containers: await fetchContainers(host, this._itemId),
                     failed: false,
                     everLoaded: true,
                 };
@@ -667,7 +667,7 @@ class DockerWidget extends HTMLElement {
         await Promise.all([...byHost.values()].map(async ({ host, ids }) => {
             if (this._pollingTimer === null) return;
             try {
-                const res = await fetch('/api/docker/stats', dockerPost({ host: hostParam(host), ids }));
+                const res = await fetch('/api/docker/stats', dockerPost({ ...hostRef(host, this._itemId), ids }));
                 if (!res.ok) {
                     ids.forEach(id => this.clearStatsPending(id));
                     return;
@@ -728,7 +728,7 @@ class DockerWidget extends HTMLElement {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrfToken(),
                 },
-                body: JSON.stringify({ host: hostParam(host), id: containerID, action }),
+                body: JSON.stringify({ ...hostRef(host, this._itemId), id: containerID, action }),
             });
             if (res.ok) {
                 setTimeout(() => this.loadContainers(), 600);

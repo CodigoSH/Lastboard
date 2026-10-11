@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
 
 type DockerHandler struct {
@@ -22,6 +25,41 @@ func NewDockerHandler(db *sql.DB) *DockerHandler {
 type dockerQuery struct {
 	Host string   `json:"host"`
 	IDs  []string `json:"ids"`
+	// The widget and host the request is for. An agent host asked about this way
+	// carries no token: it is read here, from the widget's secret store.
+	Widget int    `json:"widget"`
+	HostID string `json:"host_id"`
+}
+
+// withStoredToken gives an agent host its token from the widget's secret store.
+// A host that already carries one — typed in a form not yet saved, or sent by a
+// browser that has not reloaded since the update — is left as it is, and so is
+// anything that is not an agent host of a widget the caller owns.
+func (h *DockerHandler) withStoredToken(r *http.Request, host string, widget int, hostID string) string {
+	if widget <= 0 || hostID == "" || !strings.HasPrefix(host, "agent://") {
+		return host
+	}
+	rest := strings.TrimPrefix(host, "agent://")
+	addr, query := rest, ""
+	if i := strings.IndexByte(rest, '?'); i >= 0 {
+		addr, query = rest[:i], rest[i+1:]
+	}
+	q, _ := url.ParseQuery(query)
+	if q.Get("token") != "" {
+		return host
+	}
+	var one int
+	if h.DB.QueryRowContext(r.Context(),
+		`SELECT 1 FROM items WHERE id = ? AND user_id = ? AND type = 'widget'`,
+		widget, middleware.GetUserIDFromContext(r)).Scan(&one) != nil {
+		return host
+	}
+	token, ok := NewWidgetSecrets(h.DB).Get(widget, dockerSecretName(hostID))
+	if !ok {
+		return host
+	}
+	q.Set("token", token)
+	return "agent://" + addr + "?" + q.Encode()
 }
 
 func readDockerQuery(w http.ResponseWriter, r *http.Request) (dockerQuery, bool) {
@@ -40,7 +78,7 @@ func (h *DockerHandler) ListContainersFor(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
-	h.writeContainers(w, q.Host)
+	h.writeContainers(w, h.withStoredToken(r, q.Host, q.Widget, q.HostID))
 }
 
 // POST /api/docker/agent-version — Body: { "host": string }
@@ -52,7 +90,7 @@ func (h *DockerHandler) AgentVersionFor(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
-	v, err := AgentVersion(q.Host)
+	v, err := AgentVersion(h.withStoredToken(r, q.Host, q.Widget, q.HostID))
 	if err != nil {
 		http.Error(w, "docker.connection_error", http.StatusBadGateway)
 		return
@@ -111,7 +149,7 @@ func (h *DockerHandler) StatsFor(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	h.writeStats(w, q.Host, q.IDs)
+	h.writeStats(w, h.withStoredToken(r, q.Host, q.Widget, q.HostID), q.IDs)
 }
 
 func (h *DockerHandler) writeStats(w http.ResponseWriter, hostURL string, raw []string) {
@@ -150,6 +188,8 @@ func (h *DockerHandler) Action(w http.ResponseWriter, r *http.Request) {
 		Host   string `json:"host"`
 		ID     string `json:"id"`
 		Action string `json:"action"`
+		Widget int    `json:"widget"`
+		HostID string `json:"host_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
@@ -177,7 +217,7 @@ func (h *DockerHandler) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ContainerAction(input.Host, input.ID, input.Action); err != nil {
+	if err := ContainerAction(h.withStoredToken(r, input.Host, input.Widget, input.HostID), input.ID, input.Action); err != nil {
 		if errors.Is(err, errDockerUnauthorized) {
 			http.Error(w, "docker.unauthorized", http.StatusBadGateway)
 			return
