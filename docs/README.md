@@ -59,7 +59,7 @@ API, Docker, Monitor and Proxmox widgets have a title of their own in their sett
 | Widget | What it does | Configuration |
 | :--- | :--- | :--- |
 | **[Clock](widgets/clock.md)** *(Time)* | The time and date for a city you search for, on that city's time zone. Several clocks, several cities | 12/24 h, date, city, seconds |
-| **[Telemetry](widgets/telemetry.md)** *(Server Health)* | CPU, RAM and temperature of the machine Lastboard runs on, as ring gauges. No agent, no exporter | Which gauges, redraw rate |
+| **[Telemetry](widgets/telemetry.md)** *(Server Health)* | CPU, RAM and temperature as ring gauges — of the machine Lastboard runs on with no agent and no exporter, or of another server through Glances, Netdata or a JSON endpoint | Source, which gauges, redraw rate |
 | **[Weather](widgets/weather.md)** | Current conditions and an optional multi-day forecast from Open-Meteo. No API key | Coordinates, forecast days |
 | **[Notepad](widgets/notepad.md)** | A rich-text scratchpad with a toolbar: headings, colours, lists, checklists, links, images | None — you write in it |
 | **[Markdown](widgets/markdown.md)** | A Markdown block rendered on the board, with a source/preview toggle | None — you write in it |

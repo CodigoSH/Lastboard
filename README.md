@@ -77,7 +77,7 @@ It is **one static Go binary** and **one SQLite file**. No database server, no R
 | Widget | Description |
 | :--- | :--- |
 | **Clock** | The time and date for any city you search for, on that city's time zone — one dashboard, several clocks |
-| **Server Health** | CPU, RAM and temperature of the host, as ring gauges pushed over WebSocket. No agent, no exporter |
+| **Server Health** | CPU, RAM and temperature as ring gauges: of the host with no agent and no exporter, or of another server through Glances, Netdata or a JSON endpoint |
 | **Weather** | Current conditions and an optional multi-day forecast from Open-Meteo. No API key, no registration |
 | **Notepad** | A rich-text scratchpad with a real toolbar: headings, colours, lists, checklists, links and images |
 | **Markdown** | A Markdown block rendered on the board, with a source/preview toggle and a lock |

@@ -147,6 +147,12 @@ class ApiService {
                     return { ok: true, values: demoApiValues(body.paths || []) } as any;
                 }
 
+                // Server Health reading another server (Demo: plausible numbers that drift)
+                if (/^\/api\/widget\/(\d+\/remote-stats|remote-stats\/test)$/.test(url)) {
+                    const wobble = (base: number, spread: number) => Math.round((base + (Math.random() - 0.5) * spread) * 10) / 10;
+                    return { ok: true, stats: { cpu: wobble(24, 16), ram: wobble(52, 6), temp: wobble(51, 6), version: '4' } } as any;
+                }
+
                 // Admin (Mock success)
                 if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;
                 if (url === '/api/users') return { message: 'Admin action simulated (Demo)' } as any;
