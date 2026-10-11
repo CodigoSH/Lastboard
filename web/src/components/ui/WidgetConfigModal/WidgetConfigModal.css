@@ -1238,3 +1238,15 @@ dialog[open] {
 .docker-container-row input[type="text"].docker-url:hover {
     border-color: var(--border);
 }
+
+/* The fields of one Server Health source. `hidden` has to be restated: a rule
+   that sets display beats the attribute's own display:none. */
+.remote-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.remote-fields[hidden] {
+    display: none;
+}

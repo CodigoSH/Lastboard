@@ -16,6 +16,14 @@ import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
 import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle';
 import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
 import { loadProxmox } from '../../../services/proxmoxApi';
+import { listWidgetSecrets, saveWidgetSecrets } from '../../../services/widgetSecrets';
+import { secretsPatch } from '../../../services/secretField';
+import { testRemoteStats } from '../../../services/remoteStats';
+import { telemetrySource } from '../../../widgets/core/remoteTelemetry';
+import {
+    applySourceVisibility, describeTest, readSourceSettings, secretChanges,
+    showSavedSecrets, sourceOptions, telemetrySourceTemplate, wireSecretBoxes,
+} from './TelemetrySourceForm';
 import {
     type DockerContainer,
     type DockerHost,
@@ -591,6 +599,18 @@ class WidgetConfigModal extends HTMLElement {
 
             newContent.containerConfig = cfg;
         } else if (widgetId === 'telemetry') {
+            for (const k of ['source', 'url', 'username', 'header_name', 'cpu_path', 'ram_path', 'ram_used_path', 'ram_total_path', 'temp_path', 'link']) delete newContent[k];
+            Object.assign(newContent, this.shadowRoot ? readSourceSettings(this.shadowRoot) : {});
+            const patch = this.shadowRoot ? secretsPatch(secretChanges(this.shadowRoot)) : null;
+            if (patch) {
+                try {
+                    await saveWidgetSecrets(this.currentItem!.id, patch);
+                } catch {
+                    const result = this.shadowRoot?.getElementById('tel-test-result');
+                    if (result) result.textContent = i18n.t('general.error');
+                    return;
+                }
+            }
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
             newContent.interval = intervalInput ? telemetryInterval(intervalInput.value) : DEFAULT_TELEMETRY_INTERVAL;
 
@@ -803,6 +823,7 @@ class WidgetConfigModal extends HTMLElement {
                 `).join('');
 
                 const generalTab = `
+                    ${telemetrySourceTemplate(content)}
                     <div class="field-group">
                         <label>${i18n.t('widget.telemetry.metrics') || 'Metrics'}</label>
                         <div class="metric-toggles">${metricsRows}</div>
@@ -993,6 +1014,8 @@ class WidgetConfigModal extends HTMLElement {
 
         this.dialog = this.shadowRoot.querySelector('dialog');
 
+        this.initTelemetrySource();
+
         // Init Selects (if any in DOM)
         const telSelect = this.shadowRoot.getElementById('telemetry-interval') as AppSelect | null;
         if (telSelect) {
@@ -1001,6 +1024,36 @@ class WidgetConfigModal extends HTMLElement {
                 label: i18n.formatDuration(ms / 1000),
             }));
         }
+    }
+
+    /** The "where do the numbers come from" controls of the Server Health settings. */
+    private initTelemetrySource() {
+        const root = this.shadowRoot;
+        const select = root?.getElementById('telemetry-source') as AppSelect | null;
+        if (!root || !select || !this.currentItem) return;
+
+        select.options = sourceOptions();
+        select.addEventListener('change', () => applySourceVisibility(root, telemetrySource(select.value)));
+        wireSecretBoxes(root);
+
+        const id = this.currentItem.id;
+        listWidgetSecrets(id).then(r => showSavedSecrets(root, r.names)).catch(() => { });
+
+        root.getElementById('tel-test')?.addEventListener('click', async () => {
+            const result = root.getElementById('tel-test-result');
+            if (!result) return;
+            result.textContent = i18n.t('general.loading');
+            const typed = secretChanges(root);
+            const password = typed.password?.action === 'set' ? typed.password.token
+                : typed.header_value?.action === 'set' ? typed.header_value.token : '';
+            const metrics = ['cpu', 'ram', 'temp'].filter(k => (root.getElementById(`metric-${k}`) as HTMLInputElement | null)?.checked);
+            try {
+                const reply = await testRemoteStats({ id, config: readSourceSettings(root), password });
+                result.textContent = describeTest(reply, metrics);
+            } catch {
+                result.textContent = describeTest({ ok: false, error: 'unreachable' }, metrics);
+            }
+        });
     }
 
     private async searchClockCity() {

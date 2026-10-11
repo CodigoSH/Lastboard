@@ -3,6 +3,8 @@ import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
 import { userStore } from '../../store/userStore';
 import { DEFAULT_TELEMETRY_INTERVAL, telemetryInterval } from './telemetryInterval';
+import { EMPTY_VIEW, RemoteView, nextRemoteView, remoteErrorKey, remoteSignature, serverLink, telemetrySource } from './remoteTelemetry';
+import { fetchRemoteStats } from '../../services/remoteStats';
 
 // ── Thresholds ─────────────────────────────────────────────────────────────────
 
@@ -30,6 +32,15 @@ class TelemetryWidget extends HTMLElement {
     private _metrics: string[] = ['cpu', 'ram', 'temp'];
     private _unit: string = 'metric';
 
+    // Another server instead of this one. The numbers come from the server by
+    // widget id; the address and the password never reach this file.
+    private _remote = false;
+    private _remoteSig = '';
+    private _link: string | null = null;
+    private _view: RemoteView = EMPTY_VIEW;
+    private _timer: number | undefined;
+    private _polling = false;
+
     private lastUpdate: number = 0;
     private lastKnownStats = { cpu_usage: 0, ram_usage: 0, temperature: 0 };
     private _lastRendered = { cpu: -1, ram: -1, temp: -1 };
@@ -39,6 +50,7 @@ class TelemetryWidget extends HTMLElement {
     attributeChangedCallback(name: string, _old: string, newValue: string) {
         if (name === 'item-id') {
             this._itemId = parseInt(newValue);
+            if (this.isConnected) this.startPolling();
         }
         if (name === 'content') {
             try {
@@ -47,6 +59,7 @@ class TelemetryWidget extends HTMLElement {
                 if (Array.isArray(d?.metrics) && d.metrics.length > 0) {
                     this._metrics = d.metrics;
                 }
+                this.readRemote(d);
             } catch (_) { }
         }
     }
@@ -58,6 +71,7 @@ class TelemetryWidget extends HTMLElement {
 
     connectedCallback() {
         if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+        this.addEventListener('click', this.onClick);
         this.render();
 
         if (this._unsubscribe) return;
@@ -78,9 +92,10 @@ class TelemetryWidget extends HTMLElement {
                     try {
                         const c = typeof item.content === 'string'
                             ? JSON.parse(item.content) : item.content;
-                        let renderNeeded = false;
+                        let renderNeeded = this.readRemote(c);
                         if (c.interval && telemetryInterval(c.interval) !== this._interval) {
                             this._interval = telemetryInterval(c.interval);
+                            if (this._remote) { this.stopPolling(); this.startPolling(); }
                         }
                         if (Array.isArray(c.metrics) && c.metrics.length > 0) {
                             const next = c.metrics.join(',');
@@ -96,22 +111,103 @@ class TelemetryWidget extends HTMLElement {
                     } catch (_) { }
                 }
             }
-            if (state.stats) this.update(state.stats);
+            if (!this._remote && state.stats) this.update(state.stats);
         });
+
+        this.startPolling();
 
         if (!this._unsubscribeI18n) {
             this._unsubscribeI18n = i18n.subscribe(() => {
                 this.render();
                 const s = dashboardStore.getState();
-                if (s.stats) this.update(s.stats);
+                if (!this._remote && s.stats) this.update(s.stats);
             });
         }
     }
 
     disconnectedCallback() {
+        this.removeEventListener('click', this.onClick);
+        this.stopPolling();
         this._unsubscribe?.();
         this._unsubscribeI18n?.();
         this._unsubscribeUser?.();
+        this._unsubscribe = undefined;
+    }
+
+    // ── Another server ──────────────────────────────────────────────────────
+
+    /** Takes the remote settings out of the content. True when the widget must be drawn again. */
+    private readRemote(c: any): boolean {
+        const remote = telemetrySource(c?.source) !== 'local';
+        const sig = remote ? remoteSignature(c) : '';
+        const link = remote ? serverLink(c) : null;
+        const changed = remote !== this._remote || sig !== this._remoteSig || link !== this._link;
+        this._remote = remote;
+        this._remoteSig = sig;
+        this._link = link;
+        if (changed) {
+            this._view = EMPTY_VIEW;
+            this.stopPolling();
+            if (this.isConnected) this.startPolling();
+        }
+        return changed;
+    }
+
+    private startPolling() {
+        if (!this._remote || !this._itemId || this._timer !== undefined) return;
+        const tick = async () => {
+            if (this._polling) return;
+            this._polling = true;
+            const id = this._itemId;
+            try {
+                const reply = await fetchRemoteStats(id);
+                if (this._remote && id === this._itemId) this.showRemote(nextRemoteView(this._view, reply));
+            } catch (_) {
+                if (this._remote) this.showRemote(nextRemoteView(this._view, { ok: false, error: 'unreachable' }));
+            } finally {
+                this._polling = false;
+            }
+        };
+        void tick();
+        this._timer = window.setInterval(tick, this._interval);
+    }
+
+    private stopPolling() {
+        if (this._timer !== undefined) window.clearInterval(this._timer);
+        this._timer = undefined;
+    }
+
+    private showRemote(view: RemoteView) {
+        this._view = view;
+        const root = this.shadowRoot;
+        if (!root) return;
+        const reason = view.offline ? i18n.t(remoteErrorKey(view.error)) : '';
+        const apply = (key: string, value: number | null, state: (v: number) => 'ok' | 'warn' | 'crit', text: (v: number) => string, missing: string) => {
+            const wrap = root.querySelector(`.gauge-wrap[data-key="${key}"]`) as HTMLElement | null;
+            if (!wrap) return;
+            const val = wrap.querySelector('.value-text') as SVGTextElement | null;
+            const circle = wrap.querySelector('.circle') as SVGPathElement | null;
+            if (value === null) {
+                if (val) val.textContent = '—';
+                if (circle) circle.style.strokeDasharray = '0, 100';
+                wrap.dataset.state = 'none';
+                wrap.title = view.offline ? reason : missing;
+                return;
+            }
+            const r = Math.round(value);
+            if (val) val.textContent = text(r);
+            if (circle) circle.style.strokeDasharray = `${Math.min(100, Math.max(0, r))}, 100`;
+            wrap.dataset.state = state(r);
+            wrap.title = '';
+        };
+        const none = i18n.t('widget.telemetry.remote.no_metric');
+        if (this._metrics.includes('cpu')) apply('cpu', view.cpu, percentState, v => `${v}%`, none);
+        if (this._metrics.includes('ram')) apply('ram', view.ram, percentState, v => `${v}%`, none);
+        if (this._metrics.includes('temp')) {
+            const imperial = this._unit === 'imperial';
+            apply('temp', view.temp, tempState, v => imperial ? `${Math.round(v * 9 / 5 + 32)}°F` : `${v}°C`, i18n.t('widget.telemetry.remote.no_sensor'));
+        }
+        this.toggleAttribute('data-offline', view.offline);
     }
 
     // ── Update ──────────────────────────────────────────────────────────────
@@ -275,6 +371,9 @@ class TelemetryWidget extends HTMLElement {
             .gauge-wrap[data-state="ok"] { --gauge-color: var(--success-color); }
             .gauge-wrap[data-state="warn"] { --gauge-color: var(--warning-color); }
             .gauge-wrap[data-state="crit"] { --gauge-color: var(--danger-color); }
+            .gauge-wrap[data-state="none"] .value-text { fill: var(--text-dim); }
+            :host([data-offline]) .label-text { opacity: 0.45; }
+            :host([data-link]) { cursor: pointer; }
             
             /* Apply current gauge color to the gradient stops and circle stroke fallback */
             .gauge-wrap .stop-start { stop-color: var(--gauge-color); }
@@ -287,9 +386,21 @@ class TelemetryWidget extends HTMLElement {
         this._lastRendered = { cpu: -1, ram: -1, temp: -1 };
         this.lastUpdate = 0;
 
+        this.toggleAttribute('data-link', !!this._link);
+        if (!this._remote) this.removeAttribute('data-offline');
+        if (this._remote) {
+            this.showRemote(this._view);
+            return;
+        }
         const state = dashboardStore.getState();
         if (state.stats) this.update(state.stats);
     }
+
+    /** A click opens the server's own page, except while the board is being edited. */
+    private onClick = () => {
+        if (!this._remote || !this._link || dashboardStore.getState().isEditing) return;
+        window.open(this._link, '_blank', 'noopener,noreferrer');
+    };
 }
 
 customElements.define('widget-telemetry', TelemetryWidget);

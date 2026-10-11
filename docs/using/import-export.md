@@ -24,7 +24,7 @@ Saves or restores **everything** — every user, every dashboard, all settings, 
 
 ### What is inside, and protecting it
 
-A backup holds the **API keys** you typed into your widgets, the **Proxmox tokens**, the **monitoring notification token**, and every account's **password hash**. Downloaded as it is, it carries all of that unencrypted, so treat the file like the database itself.
+A backup holds the **API keys** you typed into your widgets, the **passwords** of Server Health widgets that read another server, the **Proxmox tokens**, the **monitoring notification token**, and every account's **password hash**. Downloaded as it is, it carries all of that unencrypted, so treat the file like the database itself.
 
 When you press **Download Backup**, you can type a **password** (and confirm it). The whole file is then sealed under it: nothing inside can be read without it. Leave the fields empty to download the plain file.
 
