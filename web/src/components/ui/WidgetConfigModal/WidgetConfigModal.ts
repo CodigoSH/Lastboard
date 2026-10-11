@@ -13,6 +13,7 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { appearanceControlsTemplate } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
+import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import {
     type DockerContainer,
@@ -588,7 +589,7 @@ class WidgetConfigModal extends HTMLElement {
             newContent.containerConfig = cfg;
         } else if (widgetId === 'telemetry') {
             const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
-            newContent.interval = intervalInput ? parseInt(intervalInput.value) : 5000;
+            newContent.interval = intervalInput ? telemetryInterval(intervalInput.value) : DEFAULT_TELEMETRY_INTERVAL;
 
             // Collect selected metrics (guarantee at least one)
             const allKeys = ['cpu', 'ram', 'temp'];
@@ -757,7 +758,7 @@ class WidgetConfigModal extends HTMLElement {
 
                 // --- TELEMETRY ---
             } else if (widgetId === 'telemetry') {
-                const interval = content.interval || 5000;
+                const interval = telemetryInterval(content.interval);
                 const activeMetrics: string[] = Array.isArray(content.metrics) ? content.metrics : ['cpu', 'ram', 'temp'];
 
                 const metricDef = [
@@ -971,12 +972,10 @@ class WidgetConfigModal extends HTMLElement {
         // Init Selects (if any in DOM)
         const telSelect = this.shadowRoot.getElementById('telemetry-interval') as AppSelect | null;
         if (telSelect) {
-            telSelect.options = [
-                { value: '1000', label: '1s' },
-                { value: '2000', label: '2s' },
-                { value: '5000', label: '5s' },
-                { value: '10000', label: '10s' }
-            ];
+            telSelect.options = TELEMETRY_INTERVALS.map(ms => ({
+                value: String(ms),
+                label: i18n.formatDuration(ms / 1000),
+            }));
         }
     }
 

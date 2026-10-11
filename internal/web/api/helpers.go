@@ -115,7 +115,7 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 		{5, 1, 3, 2, `{"widgetId":"weather","city":"Madrid","latitude":40.4168,"longitude":-3.7038,"unit":"celsius","showForecast":true,"forecastDays":6}`},
 		{8, 1, 2, 2, `{"widgetId":"notepad","text":` + jsonString(seedNotepadHTML) + `}`},
 		{10, 1, 2, 1, `{"widgetId":"clock","city":"Madrid","timezone":"Europe/Madrid","hour12":false,"showDate":true,"showSeconds":true,"showCity":true}`},
-		{10, 2, 3, 1, `{"widgetId":"telemetry","interval":2000}`},
+		{10, 2, 3, 1, `{"widgetId":"telemetry","interval":5000}`},
 	}
 	for _, wgt := range widgets {
 		if _, err := tx.Exec(

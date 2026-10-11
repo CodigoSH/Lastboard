@@ -23,7 +23,7 @@ Each ring is green while the value is comfortable, amber as it climbs and red wh
 | Option | Default | Description |
 | :--- | :--- | :--- |
 | **Metrics** | All three | Which of CPU, RAM and TEMP the widget draws. At least one has to stay on — the last one you try to switch off comes back. |
-| **Refresh Rate** | 5s | How often the widget redraws: **1s, 2s, 5s or 10s**. |
+| **Refresh Rate** | 5s | How often the widget redraws: **5s, 10s, 30s or 1m**. A widget saved earlier with 1s or 2s now runs at 5s. |
 
 The **Personalize** tab adds a border color and a border width (Thin, Regular or Thick) for the widget's card.
 

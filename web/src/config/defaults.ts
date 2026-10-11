@@ -97,7 +97,7 @@ widget(1, 1, 1, 4, 2, { widgetId: 'markdown', text: WELCOME_MD });
 widget(1, 5, 1, 3, 2, { widgetId: 'weather', city: 'Madrid', latitude: 40.4168, longitude: -3.7038, showForecast: true, forecastDays: 6 });
 widget(1, 8, 1, 2, 2, { widgetId: 'notepad', text: NOTEPAD_HOME });
 widget(1, 10, 1, 2, 1, { widgetId: 'clock', city: 'Madrid', timezone: 'Europe/Madrid', hour12: false, showDate: true, showSeconds: true, showCity: true });
-widget(1, 10, 2, 3, 1, { widgetId: 'telemetry', interval: 2000 });
+widget(1, 10, 2, 3, 1, { widgetId: 'telemetry', interval: 5000 });
 fav(1, 12, 1, 'github', 'GitHub', 'https://github.com');
 
 /* Several of these say which machine serves them. It is what makes the Proxmox

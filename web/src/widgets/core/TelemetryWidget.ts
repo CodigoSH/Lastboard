@@ -2,6 +2,7 @@
 import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
 import { userStore } from '../../store/userStore';
+import { DEFAULT_TELEMETRY_INTERVAL, telemetryInterval } from './telemetryInterval';
 
 // ── Thresholds ─────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ class TelemetryWidget extends HTMLElement {
     private _unsubscribeUser: (() => void) | undefined;
 
     private _itemId: number = 0;
-    private _interval: number = 5000;
+    private _interval: number = DEFAULT_TELEMETRY_INTERVAL;
     private _metrics: string[] = ['cpu', 'ram', 'temp'];
     private _unit: string = 'metric';
 
@@ -42,7 +43,7 @@ class TelemetryWidget extends HTMLElement {
         if (name === 'content') {
             try {
                 const d = typeof newValue === 'string' ? JSON.parse(newValue) : newValue;
-                if (d?.interval) this._interval = parseInt(d.interval);
+                if (d?.interval) this._interval = telemetryInterval(d.interval);
                 if (Array.isArray(d?.metrics) && d.metrics.length > 0) {
                     this._metrics = d.metrics;
                 }
@@ -78,8 +79,8 @@ class TelemetryWidget extends HTMLElement {
                         const c = typeof item.content === 'string'
                             ? JSON.parse(item.content) : item.content;
                         let renderNeeded = false;
-                        if (c.interval && c.interval !== this._interval) {
-                            this._interval = parseInt(c.interval);
+                        if (c.interval && telemetryInterval(c.interval) !== this._interval) {
+                            this._interval = telemetryInterval(c.interval);
                         }
                         if (Array.isArray(c.metrics) && c.metrics.length > 0) {
                             const next = c.metrics.join(',');
