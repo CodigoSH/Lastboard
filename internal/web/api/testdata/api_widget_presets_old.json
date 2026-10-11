@@ -1,0 +1,511 @@
+[
+ {
+  "id": "adguard",
+  "key": "us er:p@ss word/1",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "adguard",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "us er:p@ss word/1",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/control/stats",
+   "method": "GET",
+   "headers": {
+    "Authorization": "Basic dXMgZXI6cEBzcyB3b3JkLzE="
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.queries",
+     "path": "num_dns_queries",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.blocked",
+     "path": "num_blocked_filtering",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 60,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "paperless",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "paperless",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/statistics/",
+   "method": "GET",
+   "headers": {
+    "Authorization": "Token k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.documents",
+     "path": "documents_total",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.inbox",
+     "path": "documents_inbox",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 300,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "immich",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "immich",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/assets/statistics",
+   "method": "GET",
+   "headers": {
+    "x-api-key": "k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.photos",
+     "path": "images",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.videos",
+     "path": "videos",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 600,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "jellyfin",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "jellyfin",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/Items/Counts",
+   "method": "GET",
+   "headers": {
+    "X-Emby-Token": "k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.movies",
+     "path": "MovieCount",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.series",
+     "path": "SeriesCount",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 300,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "sonarr",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "sonarr",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/v3/queue?pageSize=1",
+   "method": "GET",
+   "headers": {
+    "X-Api-Key": "k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.queue",
+     "path": "totalRecords",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 120,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "radarr",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "radarr",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/v3/queue?pageSize=1",
+   "method": "GET",
+   "headers": {
+    "X-Api-Key": "k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.queue",
+     "path": "totalRecords",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 120,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "sabnzbd",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "sabnzbd",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api?mode=queue&output=json&apikey=k3y%2B%2F%3D%26Ab%20c!",
+   "method": "GET",
+   "headers": {},
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.queue",
+     "path": "queue.noofslots_total",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.speed",
+     "path": "queue.speed"
+    }
+   ],
+   "refreshSec": 30,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "tautulli",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "tautulli",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/v2?apikey=k3y%2B%2F%3D%26Ab%20c!&cmd=get_activity",
+   "method": "GET",
+   "headers": {},
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.streams",
+     "path": "response.data.stream_count",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 30,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "forgejo",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "forgejo",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/v1/repos/search?limit=30&sort=updated&order=desc",
+   "method": "GET",
+   "headers": {
+    "Authorization": "token k3y+/=&Ab c!"
+   },
+   "arrayPath": "data",
+   "viewMode": "list",
+   "mappings": [
+    {
+     "label": "",
+     "path": "full_name"
+    },
+    {
+     "label": "",
+     "path": "stars_count",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 300,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "speedtest-tracker",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "speedtest-tracker",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/v1/results/latest",
+   "method": "GET",
+   "headers": {
+    "Authorization": "Bearer k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.download",
+     "path": "data.download",
+     "format": "bytes"
+    },
+    {
+     "label": "widget.api.label.upload",
+     "path": "data.upload",
+     "format": "bytes"
+    }
+   ],
+   "refreshSec": 600,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "home-assistant",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "home-assistant",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/states/sensor.x",
+   "method": "GET",
+   "headers": {
+    "Authorization": "Bearer k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.state",
+     "path": "state"
+    }
+   ],
+   "refreshSec": 60,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "uptime-kuma",
+  "key": "",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "uptime-kuma",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/status-page/sensor.x",
+   "method": "GET",
+   "headers": {},
+   "arrayPath": "publicGroupList[0].monitorList",
+   "viewMode": "list",
+   "mappings": [
+    {
+     "label": "",
+     "path": "name"
+    }
+   ],
+   "refreshSec": 120,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "overseerr",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "overseerr",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/v1/request/count",
+   "method": "GET",
+   "headers": {
+    "X-Api-Key": "k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.pending",
+     "path": "pending",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.total",
+     "path": "total",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 300,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "bazarr",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "bazarr",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/badges",
+   "method": "GET",
+   "headers": {
+    "X-API-KEY": "k3y+/=&Ab c!"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.episodes",
+     "path": "episodes",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.movies",
+     "path": "movies",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 300,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "prowlarr",
+  "key": "k3y+/=&Ab c!",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "prowlarr",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "k3y+/=&Ab c!",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/api/v1/indexerstats",
+   "method": "GET",
+   "headers": {
+    "X-Api-Key": "k3y+/=&Ab c!"
+   },
+   "arrayPath": "indexers",
+   "viewMode": "list",
+   "mappings": [
+    {
+     "label": "",
+     "path": "indexerName"
+    },
+    {
+     "label": "",
+     "path": "numberOfQueries",
+     "format": "number"
+    }
+   ],
+   "refreshSec": 600,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ },
+ {
+  "id": "nextcloud",
+  "key": "us er:p@ss word/1",
+  "content": {
+   "widgetId": "api",
+   "title": "T",
+   "preset": "nextcloud",
+   "baseUrl": "http://10.0.0.5:8080/",
+   "apiKey": "us er:p@ss word/1",
+   "apiExtra": "sensor.x",
+   "url": "http://10.0.0.5:8080/ocs/v2.php/apps/serverinfo/api/v1/info?format=json",
+   "method": "GET",
+   "headers": {
+    "Authorization": "Basic dXMgZXI6cEBzcyB3b3JkLzE=",
+    "OCS-APIRequest": "true"
+   },
+   "arrayPath": "",
+   "viewMode": "metrics",
+   "mappings": [
+    {
+     "label": "widget.api.label.files",
+     "path": "ocs.data.nextcloud.storage.num_files",
+     "format": "number"
+    },
+    {
+     "label": "widget.api.label.freespace",
+     "path": "ocs.data.nextcloud.system.freespace",
+     "format": "bytes"
+    }
+   ],
+   "refreshSec": 600,
+   "borderColor": "",
+   "borderWidth": 1
+  }
+ }
+]

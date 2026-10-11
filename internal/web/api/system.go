@@ -523,6 +523,12 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A backup taken by an earlier version carries widget credentials inside the
+	// widgets themselves.
+	if _, err := MigrateWidgetSecrets(h.DB); err != nil {
+		slog.Error("Moving widget credentials after a restore failed", "error", err)
+	}
+
 	// Regenerate session secret to invalidate all active sessions.
 	// After a restore, all users must re-authenticate to ensure they
 	// are accessing data consistent with the restored state.

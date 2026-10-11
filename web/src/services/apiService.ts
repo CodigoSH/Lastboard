@@ -142,7 +142,7 @@ class ApiService {
                 }
 
                 // API widget (Demo: synthetic counters, see demoApi)
-                if (url === '/api/widget/api-fetch' && method === 'POST') {
+                if (/^\/api\/widget\/(\d+\/)?api-fetch$/.test(url) && method === 'POST') {
                     const { demoApiValues } = await import('./demoApi');
                     return { ok: true, values: demoApiValues(body.paths || []) } as any;
                 }

@@ -21,7 +21,7 @@ Pick a known service from the list and you only fill **one to three fields** —
 | Field | Example |
 | :--- | :--- |
 | **Base URL** | `http://10.0.0.5:8000` (host and port, no trailing path) |
-| **Credential** | An API key, token, or `user:password`, depending on the service |
+| **Credential** | An API key, token, or `user:password`, depending on the service. Shown as dots once saved and never shown again — type a new one to replace it, or empty the box to remove it. |
 | **Extra detail** *(a few services)* | The specific node, entity or status page to read — see [Supported Service Presets](#supported-service-presets) |
 
 ### 2. Advanced (manual)
@@ -34,7 +34,7 @@ Full control for any endpoint that has no preset. Set the **Service** selector t
 | :--- | :--- |
 | **Endpoint URL** | The full endpoint, including path and any query string. `http://` or `https://`. |
 | **Method** | `GET` (default) or `POST`. |
-| **Headers** | Custom request headers, **one per line** as `Name: value` — typically for authentication (e.g. `Authorization: Bearer …` or `X-Api-Key: …`). |
+| **Headers** | Custom request headers: a **name** and, beside it, a **value** (three rows; leave a name empty to skip it) — typically for authentication, e.g. `Authorization` with `Bearer …` or `X-Api-Key`. Every value is a secret: shown as dots once saved, never shown again; type a new one to replace it, or empty the box to remove it. |
 | **List array** *(optional)* | A path to an array in the response. Fill it to render a **list**; leave it empty for **metrics**. See [Display Modes](#display-modes). |
 | **Fields** | The values to show, **one per line** — see [Field Mappings](#field-mappings). |
 | **Refresh** | How often to re-fetch: 30s, 1m, 5m or 10m. |
@@ -130,7 +130,7 @@ Two presets need one extra detail because they read a specific thing rather than
 - **Limits.** Each request times out after **8 seconds** and reads at most **512 KiB** of the response. Keep endpoints lightweight (many APIs accept a `limit` or `pageSize` query parameter).
 - **Failure is graceful.** If the service is down or the request fails, the tile shows an **Unreachable** state instead of an error, and retries on the next refresh.
 
-> **Security note:** Reaching private IPs and skipping TLS verification are intentional for a self-hosted, single-tenant instance. Any credential you enter is stored with the widget's configuration and sent only to the URL you configured.
+> **Security note:** Reaching private IPs and skipping TLS verification are intentional for a self-hosted, single-tenant instance. Any credential you enter — the preset's key, or an advanced header's value — is kept on the Lastboard server apart from the widget's configuration, so the board your browser loads never contains it. The server adds it to the request, which is sent only to the URL you configured. A dashboard export leaves credentials out; a full [backup](../using/import-export.md) carries them, so give it a password if it will leave your server.
 
 ## Troubleshooting
 

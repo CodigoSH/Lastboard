@@ -32,7 +32,12 @@ export interface ApiPreset {
     extraLabelKey?: string;
     extraHintKey?: string;
     extraPlaceholder?: string;
-    build: (baseUrl: string, key: string, extra?: string) => ApiPresetConfig;
+    /**
+     * Never sees the key. Where the key goes it writes a template —
+     * `{{key}}`, `{{key|base64}}` or `{{key|url}}` — and the server fills it in
+     * from the widget's secret store, so nothing here holds a credential.
+     */
+    build: (baseUrl: string, hasKey: boolean, extra?: string) => ApiPresetConfig;
 }
 
 const stripSlash = (u: string) => u.trim().replace(/\/+$/, '');
@@ -49,10 +54,10 @@ export const API_PRESETS: ApiPreset[] = [
         keyLabelKey: 'widget.api.key_userpass',
         keyHintKey: 'widget.api.key_userpass_hint',
         urlPlaceholder: 'http://10.0.0.2:3000',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/control/stats',
             method: 'GET',
-            headers: key ? h({ Authorization: 'Basic ' + btoa(key) }) : {},
+            headers: hasKey ? h({ Authorization: 'Basic {{key|base64}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.queries'), path: 'num_dns_queries', format: 'number' },
                 { label: i18n.t('widget.api.label.blocked'), path: 'num_blocked_filtering', format: 'number' },
@@ -67,10 +72,10 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_token',
         urlPlaceholder: 'http://10.0.0.5:8000',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/api/statistics/',
             method: 'GET',
-            headers: key ? h({ Authorization: 'Token ' + key }) : {},
+            headers: hasKey ? h({ Authorization: 'Token {{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.documents'), path: 'documents_total', format: 'number' },
                 { label: i18n.t('widget.api.label.inbox'), path: 'documents_inbox', format: 'number' },
@@ -86,10 +91,10 @@ export const API_PRESETS: ApiPreset[] = [
         keyLabelKey: 'widget.api.key_apikey',
         keyHintKey: 'widget.api.key_immich_hint',
         urlPlaceholder: 'http://10.0.0.6:2283',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/api/assets/statistics',
             method: 'GET',
-            headers: key ? h({ 'x-api-key': key }) : {},
+            headers: hasKey ? h({ 'x-api-key': '{{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.photos'), path: 'images', format: 'number' },
                 { label: i18n.t('widget.api.label.videos'), path: 'videos', format: 'number' },
@@ -104,10 +109,10 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.7:8096',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/Items/Counts',
             method: 'GET',
-            headers: key ? h({ 'X-Emby-Token': key }) : {},
+            headers: hasKey ? h({ 'X-Emby-Token': '{{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.movies'), path: 'MovieCount', format: 'number' },
                 { label: i18n.t('widget.api.label.series'), path: 'SeriesCount', format: 'number' },
@@ -122,10 +127,10 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.8:8989',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/api/v3/queue?pageSize=1',
             method: 'GET',
-            headers: key ? h({ 'X-Api-Key': key }) : {},
+            headers: hasKey ? h({ 'X-Api-Key': '{{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.queue'), path: 'totalRecords', format: 'number' },
             ],
@@ -139,10 +144,10 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.8:7878',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/api/v3/queue?pageSize=1',
             method: 'GET',
-            headers: key ? h({ 'X-Api-Key': key }) : {},
+            headers: hasKey ? h({ 'X-Api-Key': '{{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.queue'), path: 'totalRecords', format: 'number' },
             ],
@@ -156,9 +161,9 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.9:8080',
-        build: (base, key) => ({
+        build: (base) => ({
             // SABnzbd authenticates via ?apikey= query param, not a header.
-            url: stripSlash(base) + '/api?mode=queue&output=json&apikey=' + encodeURIComponent(key),
+            url: stripSlash(base) + '/api?mode=queue&output=json&apikey={{key|url}}',
             method: 'GET',
             headers: {},
             mappings: [
@@ -175,8 +180,8 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.10:8181',
-        build: (base, key) => ({
-            url: stripSlash(base) + '/api/v2?apikey=' + encodeURIComponent(key) + '&cmd=get_activity',
+        build: (base) => ({
+            url: stripSlash(base) + '/api/v2?apikey={{key|url}}&cmd=get_activity',
             method: 'GET',
             headers: {},
             mappings: [
@@ -192,11 +197,11 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_token',
         urlPlaceholder: 'http://10.0.0.11:3000',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             // List mode: most recently updated repos the token can see.
             url: stripSlash(base) + '/api/v1/repos/search?limit=30&sort=updated&order=desc',
             method: 'GET',
-            headers: key ? h({ Authorization: 'token ' + key }) : {},
+            headers: hasKey ? h({ Authorization: 'token {{key}}' }) : {},
             arrayPath: 'data',
             mappings: [
                 { label: '', path: 'full_name' },
@@ -212,10 +217,10 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_token',
         urlPlaceholder: 'http://10.0.0.12:8080',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/api/v1/results/latest',
             method: 'GET',
-            headers: key ? h({ Authorization: 'Bearer ' + key }) : {},
+            headers: hasKey ? h({ Authorization: 'Bearer {{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.download'), path: 'data.download', format: 'bytes' },
                 { label: i18n.t('widget.api.label.upload'), path: 'data.upload', format: 'bytes' },
@@ -234,10 +239,10 @@ export const API_PRESETS: ApiPreset[] = [
         extraLabelKey: 'widget.api.extra_entity',
         extraHintKey: 'widget.api.extra_entity_hint',
         extraPlaceholder: 'sensor.living_room_temperature',
-        build: (base, key, extra) => ({
+        build: (base, hasKey, extra) => ({
             url: stripSlash(base) + '/api/states/' + seg(extra),
             method: 'GET',
-            headers: key ? h({ Authorization: 'Bearer ' + key }) : {},
+            headers: hasKey ? h({ Authorization: 'Bearer {{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.state'), path: 'state' },
             ],
@@ -273,10 +278,10 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.15:5055',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/api/v1/request/count',
             method: 'GET',
-            headers: key ? h({ 'X-Api-Key': key }) : {},
+            headers: hasKey ? h({ 'X-Api-Key': '{{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.pending'), path: 'pending', format: 'number' },
                 { label: i18n.t('widget.api.label.total'), path: 'total', format: 'number' },
@@ -291,10 +296,10 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.16:6767',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/api/badges',
             method: 'GET',
-            headers: key ? h({ 'X-API-KEY': key }) : {},
+            headers: hasKey ? h({ 'X-API-KEY': '{{key}}' }) : {},
             mappings: [
                 { label: i18n.t('widget.api.label.episodes'), path: 'episodes', format: 'number' },
                 { label: i18n.t('widget.api.label.movies'), path: 'movies', format: 'number' },
@@ -309,11 +314,11 @@ export const API_PRESETS: ApiPreset[] = [
         needsKey: true,
         keyLabelKey: 'widget.api.key_apikey',
         urlPlaceholder: 'http://10.0.0.17:9696',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             // List mode: one row per indexer with its query count.
             url: stripSlash(base) + '/api/v1/indexerstats',
             method: 'GET',
-            headers: key ? h({ 'X-Api-Key': key }) : {},
+            headers: hasKey ? h({ 'X-Api-Key': '{{key}}' }) : {},
             arrayPath: 'indexers',
             mappings: [
                 { label: '', path: 'indexerName' },
@@ -330,10 +335,10 @@ export const API_PRESETS: ApiPreset[] = [
         keyLabelKey: 'widget.api.key_userpass',
         keyHintKey: 'widget.api.key_userpass_hint',
         urlPlaceholder: 'http://10.0.0.13',
-        build: (base, key) => ({
+        build: (base, hasKey) => ({
             url: stripSlash(base) + '/ocs/v2.php/apps/serverinfo/api/v1/info?format=json',
             method: 'GET',
-            headers: key ? h({ Authorization: 'Basic ' + btoa(key), 'OCS-APIRequest': 'true' }) : { 'OCS-APIRequest': 'true' },
+            headers: hasKey ? h({ Authorization: 'Basic {{key|base64}}', 'OCS-APIRequest': 'true' }) : { 'OCS-APIRequest': 'true' },
             mappings: [
                 { label: i18n.t('widget.api.label.files'), path: 'ocs.data.nextcloud.storage.num_files', format: 'number' },
                 { label: i18n.t('widget.api.label.freespace'), path: 'ocs.data.nextcloud.system.freespace', format: 'bytes' },

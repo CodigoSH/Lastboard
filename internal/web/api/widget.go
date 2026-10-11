@@ -52,16 +52,26 @@ func NewWidgetHandler() *WidgetHandler {
 func (h *WidgetHandler) ApiFetch(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 32*1024)
 
-	var input struct {
-		URL     string            `json:"url"`
-		Method  string            `json:"method"`
-		Headers map[string]string `json:"headers"`
-		Paths   []string          `json:"paths"`
-	}
+	var input apiFetchInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
+	serveAPIFetch(w, r, input)
+}
+
+// apiFetchInput is one request the API widget asks the server to make.
+type apiFetchInput struct {
+	URL     string            `json:"url"`
+	Method  string            `json:"method"`
+	Headers map[string]string `json:"headers"`
+	Paths   []string          `json:"paths"`
+}
+
+// serveAPIFetch makes the request and answers with the values at the paths. It
+// is the one place the widget's outgoing request is built, whether the browser
+// sent the whole thing or only named the widget.
+func serveAPIFetch(w http.ResponseWriter, r *http.Request, input apiFetchInput) {
 
 	target, err := url.Parse(strings.TrimSpace(input.URL))
 	if err != nil || (target.Scheme != "http" && target.Scheme != "https") {

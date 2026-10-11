@@ -17,7 +17,8 @@ import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle
 import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { listWidgetSecrets, saveWidgetSecrets } from '../../../services/widgetSecrets';
-import { secretsPatch } from '../../../services/secretField';
+import { secretsPatch, SECRET_MASK } from '../../../services/secretField';
+import { HEADER_NAME, planApiSecrets } from '../../../widgets/apiSecrets';
 import { testRemoteStats } from '../../../services/remoteStats';
 import { telemetrySource } from '../../../widgets/core/remoteTelemetry';
 import {
@@ -489,13 +490,16 @@ class WidgetConfigModal extends HTMLElement {
                 // Guided preset: compose the whole config from base URL + key.
                 const preset = getPreset(presetId);
                 const base = val('api-baseurl').trim();
-                const key = val('api-key');
+                // The key is never in the content: what the box holds is only
+                // whether there is one, and the server fills the templates in.
+                const hasKey = val('api-key') !== '';
                 const extra = val('api-extra').trim();
                 if (preset) {
-                    const cfg = preset.build(base, key, extra);
+                    const cfg = preset.build(base, hasKey, extra);
                     newContent.preset = presetId;
                     newContent.baseUrl = base;
-                    newContent.apiKey = key;
+                    delete newContent.apiKey;
+                    delete newContent.secret_headers;
                     newContent.apiExtra = extra;
                     newContent.url = cfg.url;
                     newContent.method = cfg.method || 'GET';
@@ -508,15 +512,7 @@ class WidgetConfigModal extends HTMLElement {
                     newContent.refreshSec = cfg.refreshSec || 60;
                 }
             } else {
-                // Advanced (manual).
-                const headers: Record<string, string> = {};
-                val('api-headers').split('\n').forEach(line => {
-                    const i = line.indexOf(':');
-                    if (i > 0) {
-                        const k = line.slice(0, i).trim();
-                        if (k) headers[k] = line.slice(i + 1).trim();
-                    }
-                });
+                // Advanced (manual). Names stay in the widget; values are secrets.
                 const mappings: { label: string; path: string; format?: string }[] = [];
                 val('api-fields').split('\n').forEach(line => {
                     if (!line.trim()) return;
@@ -535,13 +531,39 @@ class WidgetConfigModal extends HTMLElement {
                 newContent.preset = '';
                 newContent.url = val('api-url').trim();
                 newContent.method = val('api-method') || 'GET';
-                newContent.headers = headers;
+                delete newContent.headers;
+                delete newContent.apiKey;
                 newContent.viewMode = val('api-view') === 'list' ? 'list' : 'metrics';
                 // Only meaningful in list view; clearing it keeps the saved config
                 // honest about what the widget will render.
                 newContent.arrayPath = newContent.viewMode === 'list' ? val('api-array').trim() : '';
                 newContent.mappings = mappings;
                 newContent.refreshSec = parseInt(val('api-refresh')) || 60;
+            }
+
+            const root = this.shadowRoot!;
+            const keyBox = root.getElementById('api-key') as HTMLInputElement | null;
+            const plan = planApiSecrets({
+                preset: !!presetId,
+                rows: Array.from(root.querySelectorAll<HTMLElement>('.header-row')).map(row => {
+                    const name = (row.querySelector('.api-header-name') as HTMLInputElement).value.trim();
+                    const box = row.querySelector('.api-header-value') as HTMLInputElement;
+                    // Dots only mean "saved" for the name they were saved under.
+                    return { name, raw: box.value, saved: box.dataset.saved === '1' && box.dataset.name === name };
+                }).filter(r => r.name === '' || HEADER_NAME.test(r.name)),
+                keyRaw: keyBox?.value ?? '',
+                keySaved: keyBox?.dataset.saved === '1',
+                previousHeaderNames: this._savedHeaderNames(),
+                hadKey: keyBox?.dataset.saved === '1',
+            });
+            if (plan.headerNames.length) newContent.secret_headers = plan.headerNames;
+            else delete newContent.secret_headers;
+            if (plan.patch) {
+                try {
+                    await saveWidgetSecrets(this.currentItem.id, plan.patch);
+                } catch {
+                    return;
+                }
             }
         } else if (widgetId === 'proxmox') {
             const titleInput = this.shadowRoot?.getElementById('proxmox-title') as HTMLInputElement | null;
@@ -872,10 +894,13 @@ class WidgetConfigModal extends HTMLElement {
                 const viewMode = content.viewMode || (arrayPath ? 'list' : 'metrics');
                 const preset = content.preset || '';
                 const baseUrl = content.baseUrl || '';
-                const apiKey = content.apiKey || '';
                 const apiExtra = content.apiExtra || '';
-                const headersText = Object.entries(content.headers || {})
-                    .map(([k, v]) => `${k}: ${v}`).join('\n');
+                const headerNames: string[] = Array.isArray(content.secret_headers) ? content.secret_headers : [];
+                const headerRows = Array.from({ length: Math.max(3, headerNames.length) }, (_, n) => `
+                    <div class="header-row">
+                        <input type="text" class="api-header-name" value="${esc(headerNames[n] || '')}" placeholder="X-Api-Key" spellcheck="false" autocomplete="off" aria-label="${i18n.t('widget.api.header_name')}" />
+                        <input type="password" class="api-header-value" value="" spellcheck="false" autocomplete="new-password" data-secret aria-label="${i18n.t('widget.api.header_value')}" />
+                    </div>`).join('');
                 const fieldsText = (Array.isArray(content.mappings) ? content.mappings : [])
                     .map((m: any) => `${m.label || ''} = ${m.path || ''}${m.format ? ' | ' + m.format : ''}`).join('\n');
 
@@ -897,7 +922,7 @@ class WidgetConfigModal extends HTMLElement {
                         </div>
                         <div class="field-group" id="api-key-group">
                             <label id="api-key-label">${i18n.t('widget.api.key_apikey') || 'API Key'}</label>
-                            <input type="text" id="api-key" value="${esc(apiKey)}" spellcheck="false" placeholder="" />
+                            <input type="password" id="api-key" value="" spellcheck="false" autocomplete="new-password" data-secret />
                             <small id="api-key-hint"></small>
                         </div>
                         <div class="field-group" id="api-extra-group" style="display:none">
@@ -923,8 +948,8 @@ class WidgetConfigModal extends HTMLElement {
                         </div>
                         <div class="field-group">
                             <label>${i18n.t('widget.api.headers_label') || 'Headers'}</label>
-                            <textarea class="field-textarea" id="api-headers" rows="4" spellcheck="false" placeholder="X-Api-Key: your-token">${esc(headersText)}</textarea>
-                            <small>${i18n.t('widget.api.headers_hint') || 'One per line, "Name: value".'}</small>
+                            <div id="api-header-rows" class="header-rows">${headerRows}</div>
+                            <small>${i18n.t('widget.api.headers_hint')}</small>
                         </div>
                         <div class="field-group">
                             <label>${i18n.t('widget.api.fields_label') || 'Fields'}</label>
@@ -1015,6 +1040,7 @@ class WidgetConfigModal extends HTMLElement {
         this.dialog = this.shadowRoot.querySelector('dialog');
 
         this.initTelemetrySource();
+        this.initApiSecrets();
 
         // Init Selects (if any in DOM)
         const telSelect = this.shadowRoot.getElementById('telemetry-interval') as AppSelect | null;
@@ -1024,6 +1050,31 @@ class WidgetConfigModal extends HTMLElement {
                 label: i18n.formatDuration(ms / 1000),
             }));
         }
+    }
+
+    /** Shows which of the API widget's credentials are saved, as dots, and lets the first key replace them. */
+    private initApiSecrets() {
+        const root = this.shadowRoot;
+        const key = root?.getElementById('api-key') as HTMLInputElement | null;
+        if (!root || !key || !this.currentItem) return;
+        root.addEventListener('focusin', (e) => {
+            const el = e.target as HTMLInputElement | null;
+            if (el?.matches?.('input[data-secret]')) el.select();
+        });
+        listWidgetSecrets(this.currentItem.id).then(({ names: saved }) => {
+            const has = new Set(saved);
+            if (has.has('key')) { key.value = SECRET_MASK; key.dataset.saved = '1'; }
+            root.querySelectorAll<HTMLElement>('.header-row').forEach(row => {
+                const name = (row.querySelector('.api-header-name') as HTMLInputElement).value.trim();
+                const box = row.querySelector('.api-header-value') as HTMLInputElement;
+                if (name && has.has(`header.${name.toLowerCase()}`)) { box.value = SECRET_MASK; box.dataset.saved = '1'; box.dataset.name = name; }
+            });
+        }).catch(() => { });
+    }
+
+    private _savedHeaderNames(): string[] {
+        const c = typeof this.currentItem?.content === 'string' ? JSON.parse(this.currentItem.content) : this.currentItem?.content;
+        return Array.isArray(c?.secret_headers) ? c.secret_headers : [];
     }
 
     /** The "where do the numbers come from" controls of the Server Health settings. */

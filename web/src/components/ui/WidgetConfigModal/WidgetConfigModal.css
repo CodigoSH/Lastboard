@@ -1250,3 +1250,21 @@ dialog[open] {
 .remote-fields[hidden] {
     display: none;
 }
+
+/* The API widget's headers: a name and, beside it, a value that is a secret. */
+.header-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.header-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.header-row input[type="text"],
+.header-row input[type="password"] {
+    min-width: 0;
+}

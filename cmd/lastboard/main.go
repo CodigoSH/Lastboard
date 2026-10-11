@@ -65,6 +65,12 @@ func main() {
 	defer db.Close()
 	slog.Info("Database initialized", "path", dbFile)
 
+	// Credentials an earlier version left inside widgets move to the secret store
+	// before the first request can carry them to a browser.
+	if _, err := api.MigrateWidgetSecrets(db.DB); err != nil {
+		slog.Error("Moving widget credentials failed", "error", err)
+	}
+
 	// Cancelled on SIGTERM/SIGINT. Everything that runs in the background takes
 	// it, so a restart tells them to stop rather than being cut off mid-write.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)

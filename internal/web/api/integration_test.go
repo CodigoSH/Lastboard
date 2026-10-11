@@ -56,6 +56,7 @@ func setupTestServer(t *testing.T) (*httptest.Server, *sql.DB, func()) {
 	mux.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).GetSettings)))
 	mux.Handle("GET /api/widget/{id}/secrets", protect(http.HandlerFunc(api.NewWidgetSecretsHandler(db.DB).List)))
 	mux.Handle("PUT /api/widget/{id}/secrets", protect(http.HandlerFunc(api.NewWidgetSecretsHandler(db.DB).Update)))
+	mux.Handle("POST /api/widget/{id}/api-fetch", protect(http.HandlerFunc(api.NewWidgetAPIHandler(db.DB).Fetch)))
 	mux.Handle("GET /api/widget/{id}/remote-stats", protect(http.HandlerFunc(api.NewRemoteStatsHandler(db.DB).Get)))
 	mux.Handle("POST /api/widget/remote-stats/test", protect(http.HandlerFunc(api.NewRemoteStatsHandler(db.DB).Test)))
 	mux.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).UpdateSettings)))

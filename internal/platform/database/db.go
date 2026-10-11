@@ -30,7 +30,10 @@ type DB struct {
 // Raise this whenever a migration changes what an older binary could safely
 // read. Adding a column an older binary simply ignores does not need a bump;
 // changing the meaning of existing data does.
-const schemaVersion = 1
+//
+// 2: an API widget's credentials live in the widget secret store, not in its
+// content. A version 1 binary would send the widget's request without them.
+const schemaVersion = 2
 
 // ErrSchemaTooNew is returned when the database was written by a newer version.
 var ErrSchemaTooNew = errors.New("database schema is newer than this build")

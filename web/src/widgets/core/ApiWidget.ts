@@ -14,7 +14,10 @@ interface ApiConfig {
     title?: string;
     url?: string;
     method?: string;
+    /** Templates and constants only; a credential is never in here. */
     headers?: Record<string, string>;
+    /** Header names whose values the server keeps. */
+    secret_headers?: string[];
     arrayPath?: string;
     mappings?: Mapping[];
     refreshSec?: number;
@@ -131,7 +134,7 @@ class ApiWidget extends HTMLElement {
 
             const prevKey = this._fetchKey;
             this._config = data;
-            this._fetchKey = JSON.stringify([data.url, data.method, data.headers, data.arrayPath, data.mappings, data.refreshSec]);
+            this._fetchKey = JSON.stringify([data.url, data.method, data.headers, data.secret_headers, data.arrayPath, data.mappings, data.refreshSec]);
 
             if (this._fetchKey !== prevKey) {
                 this._scheduleRefresh();
@@ -185,8 +188,8 @@ class ApiWidget extends HTMLElement {
                 ? [this._config.arrayPath]
                 : mappings.map(m => m.path).filter(Boolean);
             const res = await apiService.post<{ ok: boolean; values: Record<string, any> }>(
-                '/api/widget/api-fetch',
-                { url: this._config.url, method: this._config.method || 'GET', headers: this._config.headers || {}, paths }
+                `/api/widget/${this._itemId}/api-fetch`,
+                { paths }
             );
             this._ok = !!res.ok;
             this._values = res.values || {};
