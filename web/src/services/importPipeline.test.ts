@@ -92,6 +92,14 @@ describe('an imported file, from the file to the real server', () => {
 
     it('keeps the groups of a native export when it is read back', async () => {
         if (!HAS_GO) return;
+        // Its own board, made here: it used to rely on what the tests before it had
+        // imported, and failed with a 422 (an export with nothing in it) whenever the
+        // order put it first.
+        const dash = await server.ok<{ id: number }>('POST', '/api/dashboards', { name: 'Round trip' });
+        const section = await server.ok<{ id: number }>('POST', '/api/dashboard/item',
+            sectionRequest(dash.id, { title: 'Media', x: 1, y: 1, w: 4, h: 3, items: [] }));
+        await server.ok('POST', '/api/dashboard/item',
+            bookmarkRequest(dash.id, section.id, { title: 'Player', url: 'http://player.lan', x: 1, y: 1 }));
         const exported = await (await server.call('GET', '/api/export/native')).text();
         const form = new FormData();
         form.append('file', new File([exported], 'export.yaml'));
@@ -100,7 +108,7 @@ describe('an imported file, from the file to the real server', () => {
         expect(res.status).toBe(200);
         const cfg = await res.json();
         const groups = new Set(cfg.dashboards.flatMap((d: { items: { group?: string }[] }) => d.items.map(i => i.group || '')));
-        // The starter board has named sections; losing them is the bug.
+        // The board above has a named section; losing it is the bug.
         expect([...groups].some(g => g !== '')).toBe(true);
     }, 60_000);
 });
