@@ -713,8 +713,11 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     }
     addWidget(5, 5, 3, 2, {
         widgetId: 'api',
-        title: 'Lastboard on Forgejo',
-        url: 'https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard',
+        // The latest release: a version and the size of its Linux download. It was
+        // stars, forks and issues, which the forge no longer shows publicly, so the
+        // screenshots counted something nobody could check.
+        title: 'Latest release',
+        url: 'https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases/latest',
         method: 'GET',
         refreshSec: 300,
         // An object, not an array: the proxy decodes this into a string map and
@@ -723,9 +726,8 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         headers: {},
         arrayPath: '',
         mappings: [
-            { label: 'Stars', path: 'stars_count', format: 'number' },
-            { label: 'Forks', path: 'forks_count', format: 'number' },
-            { label: 'Issues', path: 'open_issues_count', format: 'number' },
+            { label: 'Version', path: 'tag_name' },
+            { label: 'Linux amd64', path: 'assets[2].size', format: 'bytes' },
         ],
     });
     db.close();
