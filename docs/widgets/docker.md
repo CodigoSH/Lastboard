@@ -105,6 +105,8 @@ paste an address that already carries one, the standard forms are understood as 
 `npipe://` and `ssh://` are refused with a message rather than tried, since neither can be reached
 from here.
 
+![A Docker agent host with its token saved](../assets/w-p-docker-host.png)
+
 There is no `?token=` to type: the token has its own field, which appears only for the agent. It is a secret: once saved it shows as dots and is never shown again — type a new one to replace it, or empty the box to remove it. The token is kept on the Lastboard server apart from the widget, so the board your browser loads never contains it, and a dashboard export leaves it out; a full [backup](../using/import-export.md) does carry it, so give the backup a password if it will leave your server.
 
 With more than one host configured, the settings screen splits in two: hosts on the left, the selected host's containers on the right.

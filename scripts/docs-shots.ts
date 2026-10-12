@@ -368,6 +368,49 @@ const SHOTS: Shot[] = [
     })),
 
     {
+        // A Docker agent host's form, with a token already saved: dots, nothing to reveal.
+        name: 'w-p-docker-host', w: 1500, h: 980, pad: 0, wait: 900,
+        act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
+              const grid = document.querySelector('bookmark-grid').shadowRoot;
+              const tile = grid.querySelector('widget-docker');
+              if (!tile) throw new Error('no Docker tile on the board');
+              const itemId = tile.getAttribute('item-id');
+              const csrf = decodeURIComponent((document.cookie.match(/csrf_token=([^;]+)/) || [])[1] || '');
+              const saved = await fetch('/api/widget/' + itemId + '/secrets', { method: 'PUT',
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                  body: JSON.stringify({ set: { 'docker.docs': 'a-token-nobody-will-read' } }) });
+              if (!saved.ok) throw new Error('could not store the sample token: ' + saved.status);
+              const card = tile.closest('.bookmark-grid__card');
+              card.querySelector('.kebab-btn').click(); await sleep(600);
+              grid.querySelector('#kebab-menu .menu-edit').click();
+              for (let i = 0; i < 25; i++) {
+                  const d = document.querySelector('widget-config-modal')?.shadowRoot?.querySelector('dialog');
+                  if (d && d.open) break;
+                  await sleep(200);
+              }
+              await sleep(800);
+              const root = document.querySelector('widget-config-modal').shadowRoot;
+              const edit = root.querySelector('.host-action-btn.edit');
+              if (!edit) throw new Error('the host has no edit button');
+              edit.click(); await sleep(700);
+              const type = root.getElementById('docker-type');
+              if (!type) throw new Error('the host form did not open');
+              type.value = 'agent';
+              type.dispatchEvent(new CustomEvent('change', { detail: { value: 'agent' }, bubbles: true }));
+              await sleep(500);
+              const box = root.getElementById('docker-token');
+              if (!box || box.value === '') throw new Error('the token box is empty: the saved token was not seen');
+              // The form is drawn over the settings and is a little see-through, so
+              // what is under it shows as ghost text. Hidden for the photograph only.
+              root.querySelectorAll('.tab-content, .tab-btn, .modal-footer, #save-btn').forEach((el) => { el.style.visibility = 'hidden'; });
+              // And sized to what it holds, not stretched over the whole settings window.
+              const ov = root.getElementById('docker-host-overlay');
+              ov.style.bottom = 'auto'; ov.style.height = 'auto'; ov.style.minHeight = '0';
+              ov.querySelector('.docker-form-actions').style.marginTop = '8px';
+              await sleep(300);`,
+        clip: `document.querySelector('widget-config-modal').shadowRoot.getElementById('docker-host-overlay')`,
+    },
+    {
         // Server Health pointed at another server: the source, its address and the test.
         name: 'w-telemetry-conf', w: 1500, h: 980, pad: 0, wait: 900,
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
