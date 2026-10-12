@@ -184,7 +184,8 @@ else
     go test ./... >/dev/null || die "Go tests failed. Run 'go test ./...' to see why."
     echo "   ✅ go test"
 
-    bun test >/dev/null 2>&1 || die "Frontend tests failed. Run 'bun test' to see why."
+    # Random order, like the CI: a test that leans on the order files run in passes here and fails there.
+    bun test --randomize >/dev/null 2>&1 || die "Frontend tests failed. Run 'bun test --randomize' to see why."
     echo "   ✅ bun test"
 
     bun run build >/dev/null || die "Frontend build failed. Run 'bun run build' to see why."
