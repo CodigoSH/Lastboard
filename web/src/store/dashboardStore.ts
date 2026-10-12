@@ -130,6 +130,8 @@ class DashboardStore {
             });
 
 
+            this.checkSystemUpdate(true);
+
             socketService.subscribeNotification((type) => {
                 if (type === 'update_available') {
                     this.checkSystemUpdate(); // Re-validate with user preferences (beta toggle)
@@ -138,7 +140,15 @@ class DashboardStore {
         });
     }
 
-    private async checkSystemUpdate() {
+    /**
+     * Asks whether a newer release exists, and lights the dot and the menu mark.
+     *
+     * Run on every load for the administrator, not only when the server
+     * announces one: it announces at start-up and once a day, to whoever is
+     * connected at that moment, so a browser opened afterwards never heard of
+     * an update that had been waiting for hours.
+     */
+    private async checkSystemUpdate(onlyAdmin = false) {
         try {
             // Delay slightly to ensure user prefs are loaded
             setTimeout(async () => {
@@ -146,6 +156,7 @@ class DashboardStore {
                 const { updateService } = await import('../services/UpdateService');
 
                 const user = userStore.getUser();
+                if (onlyAdmin && (user?.role || '').toLowerCase() !== 'admin') return;
                 const betaUpdates = user?.preferences?.beta_updates || false;
 
                 const info = await updateService.check(betaUpdates);
