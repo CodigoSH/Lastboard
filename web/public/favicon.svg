@@ -1,10 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Lastboard">
-  <!-- A board of panels where one is not a panel but a circle: Lastboard
-       arranges your services and watches them. Flat fills, no strokes and no
-       gradients, which is the language of the CodigoSH mark it sits beside,
-       and the two house colours — accent and accent-alt — and nothing else.
-       Every PNG that ships is generated from this file. -->
-  <rect x="11" y="11" width="34" height="78" rx="9" fill="#E8520E"/>
-  <rect x="55" y="11" width="34" height="34" rx="9" fill="#C2410C"/>
-  <circle cx="72" cy="72" r="17" fill="#E8520E"/>
+  <!-- A viewfinder around a board: four corners frame three panels and a dot.
+       The dot is the one thing on the board that is not a panel, and it is red
+       because it is the signal: Lastboard watches your services and that is
+       where it tells you. The corners are the CodigoSH house frame, the mark
+       every product of the house carries. Flat fills only, no strokes and no
+       gradients: the four corners are one path turned a quarter at a time.
+       The accent orange is the house colour; the red is the one exception to
+       the two-orange rule, chosen on purpose. Every PNG that ships is
+       generated from this file. -->
+  <defs>
+    <path id="corner" d="M7 33 V18 A11 11 0 0 1 18 7 H33 V16 H21 A5 5 0 0 0 16 21 V33 Z"/>
+  </defs>
+  <g fill="#E8520E">
+    <use href="#corner"/>
+    <use href="#corner" transform="rotate(90 50 50)"/>
+    <use href="#corner" transform="rotate(180 50 50)"/>
+    <use href="#corner" transform="rotate(270 50 50)"/>
+    <rect x="24" y="24" width="25" height="25" rx="8"/>
+    <rect x="51" y="24" width="25" height="25" rx="8"/>
+    <rect x="24" y="51" width="25" height="25" rx="8"/>
+  </g>
+  <circle cx="63.5" cy="63.5" r="12.5" fill="#B91C1C"/>
 </svg>
