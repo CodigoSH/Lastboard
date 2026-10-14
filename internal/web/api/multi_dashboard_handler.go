@@ -7,10 +7,16 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/dashboard"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
+
+// maxBoardNameChars is how long a board name may be, in characters: what fits on
+// screen is the same in every language, and a byte count made a Japanese name
+// three times shorter.
+const maxBoardNameChars = 50
 
 // MultiDashboardHandler handles CRUD operations for dashboards.
 type MultiDashboardHandler struct {
@@ -111,7 +117,7 @@ func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.R
 		http.Error(w, "error.name_required", http.StatusBadRequest)
 		return
 	}
-	if len(name) > 50 {
+	if utf8.RuneCountInString(name) > maxBoardNameChars {
 		http.Error(w, "error.name_too_long", http.StatusBadRequest)
 		return
 	}
@@ -253,7 +259,7 @@ func (h *MultiDashboardHandler) RenameDashboard(w http.ResponseWriter, r *http.R
 		http.Error(w, "error.name_required", http.StatusBadRequest)
 		return
 	}
-	if len(name) > 50 {
+	if utf8.RuneCountInString(name) > maxBoardNameChars {
 		http.Error(w, "error.name_too_long", http.StatusBadRequest)
 		return
 	}

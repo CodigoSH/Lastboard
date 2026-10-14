@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/user"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
@@ -160,7 +161,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		current.WidgetMinWidth = input.WidgetMinWidth
 	}
 	if input.ProjectName != "" {
-		if len(input.ProjectName) > 64 {
+		if utf8.RuneCountInString(input.ProjectName) > 64 { // characters, not bytes
 			http.Error(w, "error.project_name_too_long", http.StatusBadRequest)
 			return
 		}
