@@ -24,15 +24,9 @@ import (
 
 // POST /api/system/reset
 func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
-	username := middleware.GetUserFromContext(r)
-	if username == "" {
+	userID := middleware.GetUserIDFromContext(r)
+	if userID == 0 {
 		http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var userID int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
-		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 
@@ -263,20 +257,9 @@ func (h *SystemHandler) DownloadProtectedBackup(w http.ResponseWriter, r *http.R
 }
 
 func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, password string) {
-	username := middleware.GetUserFromContext(r)
-	if username == "" {
-		http.Error(w, "error.forbidden", http.StatusForbidden)
-		return
-	}
-
 	// Only the first admin (by ID) may download the backup,
 	// because it contains password hashes for all users.
-	var userID int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username=?", username).Scan(&userID); err != nil {
-		http.Error(w, "error.forbidden", http.StatusForbidden)
-		return
-	}
-	if !isFirstAdmin(h.DB, userID) {
+	if !isAdminUser(h.DB, r) {
 		http.Error(w, "auth.admin_only", http.StatusForbidden)
 		return
 	}

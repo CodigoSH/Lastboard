@@ -291,14 +291,9 @@ func (h *IconHandler) PendingStatus(w http.ResponseWriter, r *http.Request) {
 // currentUser resolves the caller's id, which is what scopes both the count
 // and the action to their own board.
 func (h *IconHandler) currentUser(w http.ResponseWriter, r *http.Request) (int, bool) {
-	username := middleware.GetUserFromContext(r)
-	if username == "" {
+	id := middleware.GetUserIDFromContext(r)
+	if id == 0 {
 		http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
-		return 0, false
-	}
-	var id int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username = ?", username).Scan(&id); err != nil {
-		http.Error(w, "error.not_found", http.StatusNotFound)
 		return 0, false
 	}
 	return id, true
@@ -391,11 +386,4 @@ func PruneOrphanIcons(db *sql.DB) (int, error) {
 	}
 	removed, err := res.RowsAffected()
 	return int(removed), err
-}
-
-// writeJSON is the one-liner these handlers share.
-func writeJSON(w http.ResponseWriter, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(v)
 }

@@ -13,15 +13,8 @@ import (
 // isAdminUser checks whether the currently authenticated user is the first admin
 // (the first user with role='admin' by ID). Single source of truth for all handlers.
 func isAdminUser(db *sql.DB, r *http.Request) bool {
-	username := middleware.GetUserFromContext(r)
-	if username == "" {
-		return false
-	}
-	var userID int
-	if err := db.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
-		return false
-	}
-	return isFirstAdmin(db, userID)
+	// The middleware already resolved the account behind the session.
+	return isFirstAdmin(db, middleware.GetUserIDFromContext(r))
 }
 
 // isFirstAdmin reports whether userID is the first admin (lowest ID with role='admin').
@@ -201,4 +194,15 @@ func SeedDefaultItems(tx *sql.Tx, userID int) error {
 func jsonString(s string) string {
 	b, _ := json.Marshal(s)
 	return string(b)
+}
+
+// writeJSON answers 200 with v as JSON.
+func writeJSON(w http.ResponseWriter, v any) { writeJSONStatus(w, http.StatusOK, v) }
+
+// writeJSONStatus answers with a status and v as JSON. The content type is set
+// before the status is written: a header set after WriteHeader is never sent.
+func writeJSONStatus(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(v)
 }

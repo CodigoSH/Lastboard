@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"regexp"
 	"sort"
@@ -691,48 +690,14 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 	for _, r := range results {
 		out[r.url] = r.status
 	}
-	h.respondJson(w, out)
+	writeJSON(w, out)
 }
 
-// probeURL performs a HEAD request with TCP fallback and returns "up" or "down".
+// probeURL says "up" or "down" for a URL. It is probeTimed without the timing:
+// there is one probe, so the status checks on the board and the background
+// monitor can never disagree about what up means.
 func probeURL(rawUrl string) string {
-	u, err := url.Parse(rawUrl)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
-		return "down"
-	}
-	// Probing your own network is the point; probing the instance metadata
-	// service is not — see util.IsCloudMetadataHost.
-	if util.IsCloudMetadataHost(u.Hostname()) {
-		return "down"
-	}
-
-	hostname := u.Hostname()
-	pinnedIP, err := resolveHostCached(hostname)
-	if err != nil {
-		return "down"
-	}
-
-	req, _ := http.NewRequest("HEAD", rawUrl, nil)
-	resp, err := healthClient.Do(req)
-	if err == nil && resp.StatusCode < 500 {
-		resp.Body.Close()
-		return "up"
-	}
-	if resp != nil {
-		resp.Body.Close()
-	}
-
-	port := u.Port()
-	if port == "" {
-		if u.Scheme == "https" {
-			port = "443"
-		} else {
-			port = "80"
-		}
-	}
-	conn, err := util.NewDialer(2*time.Second, 0).Dial("tcp", net.JoinHostPort(pinnedIP, port))
-	if err == nil {
-		conn.Close()
+	if up, _, _ := probeTimed(rawUrl); up {
 		return "up"
 	}
 	return "down"
@@ -746,15 +711,11 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status := probeURL(rawUrl)
+	code := http.StatusOK
 	if status == "down" {
-		w.WriteHeader(http.StatusServiceUnavailable)
+		code = http.StatusServiceUnavailable
 	}
-	h.respondJson(w, map[string]string{"status": status})
-}
-
-func (h *DashboardHandler) respondJson(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	writeJSONStatus(w, code, map[string]string{"status": status})
 }
 
 func validateContent(itemType string, contentJson string) error {

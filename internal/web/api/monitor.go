@@ -632,8 +632,8 @@ func (h *MonitorHandler) setSetting(userID int, key, value string) {
 
 // probeTimed checks a URL and reports whether it is up, the round-trip latency
 // (nil when down), and the observed HTTP status code (0 when no response came
-// back). It mirrors probeURL's up/down semantics — HTTP <500, or a TCP connect
-// fallback, counts as up — and additionally captures timing and status.
+// back). Up is an HTTP answer below 500, or failing that a TCP connection to the
+// port. It is the only probe: probeURL is this without the timing.
 func probeTimed(rawUrl string) (bool, *int, int) {
 	start := time.Now()
 

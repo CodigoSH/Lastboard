@@ -114,14 +114,14 @@ func serveAPIFetch(w http.ResponseWriter, r *http.Request, input apiFetchInput) 
 
 	resp, err := apiWidgetClient.Do(req)
 	if err != nil {
-		widgetJSON(w, map[string]any{"ok": false, "error": "unreachable"})
+		writeJSON(w, map[string]any{"ok": false, "error": "unreachable"})
 		return
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, apiWidgetMaxBody))
 	if err != nil {
-		widgetJSON(w, map[string]any{"ok": false, "status_code": resp.StatusCode, "error": "read"})
+		writeJSON(w, map[string]any{"ok": false, "status_code": resp.StatusCode, "error": "read"})
 		return
 	}
 
@@ -135,17 +135,11 @@ func serveAPIFetch(w http.ResponseWriter, r *http.Request, input apiFetchInput) 
 		}
 	}
 
-	widgetJSON(w, map[string]any{
+	writeJSON(w, map[string]any{
 		"ok":          resp.StatusCode < 400,
 		"status_code": resp.StatusCode,
 		"values":      values,
 	})
-}
-
-func widgetJSON(w http.ResponseWriter, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(v)
 }
 
 // extractPath walks a decoded JSON value following a dot/bracket path and

@@ -25,7 +25,6 @@ import (
 	"database/sql"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
-	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
@@ -516,16 +515,6 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	// Verify first admin only
 	if !isAdminUser(h.DB, r) {
-		http.Error(w, "auth.unauthorized", http.StatusForbidden)
-		return
-	}
-	username := middleware.GetUserFromContext(r)
-	var userID int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE username = ?", username).Scan(&userID); err != nil {
-		http.Error(w, "auth.unauthorized", http.StatusForbidden)
-		return
-	}
-	if !isFirstAdmin(h.DB, userID) {
 		http.Error(w, "auth.unauthorized", http.StatusForbidden)
 		return
 	}
