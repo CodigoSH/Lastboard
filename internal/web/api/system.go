@@ -573,11 +573,11 @@ func writeRestoreError(w http.ResponseWriter, err error) {
 func validateBackupUsers(backup BackupData) error {
 	for _, u := range backup.Users {
 		if !password.Recognised(u.Password) {
-			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
 		}
 		role := strings.ToLower(u.Role)
 		if role != "admin" && role != "user" {
-			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
 		}
 	}
 	return nil
@@ -586,16 +586,16 @@ func validateBackupUsers(backup BackupData) error {
 // clearExistingData wipes items, dashboards and users in FK-safe order.
 func clearExistingData(tx *sql.Tx) error {
 	if _, err := tx.Exec("DELETE FROM items"); err != nil {
-		return &restoreError{http.StatusInternalServerError, "Failed to clear items"}
+		return &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	if _, err := tx.Exec("DELETE FROM dashboards"); err != nil {
-		return &restoreError{http.StatusInternalServerError, "Failed to clear dashboards"}
+		return &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	if _, err := tx.Exec("DELETE FROM users"); err != nil {
-		return &restoreError{http.StatusInternalServerError, "Failed to clear users"}
+		return &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	if _, err := tx.Exec("DELETE FROM icons"); err != nil {
-		return &restoreError{http.StatusInternalServerError, "Failed to clear icons"}
+		return &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	return nil
 }
@@ -614,11 +614,11 @@ func restoreUserSettings(tx *sql.Tx, backup BackupData, ownerMap map[string]int)
 			continue
 		}
 		if isJSON && !json.Valid([]byte(us.Value)) {
-			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
 		}
 		if _, err := tx.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (?, ?, ?)
 			ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value`, uid, us.Key, us.Value); err != nil {
-			return &restoreError{http.StatusInternalServerError, "Failed to restore settings"}
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 	}
 	return nil
@@ -631,10 +631,10 @@ func restoreSettings(tx *sql.Tx, backup BackupData) error {
 			continue
 		}
 		if isJSON && !json.Valid([]byte(value)) {
-			return &restoreError{http.StatusBadRequest, "Invalid backup data"}
+			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
 		}
 		if _, err := tx.Exec(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`, key, value); err != nil {
-			return &restoreError{http.StatusInternalServerError, "Failed to restore settings"}
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 	}
 	return nil
@@ -651,7 +651,7 @@ func restoreIcons(tx *sql.Tx, backup BackupData) error {
 
 	stmt, err := tx.Prepare(`INSERT OR IGNORE INTO icons (hash, mime, data, size) VALUES (?, ?, ?, ?)`)
 	if err != nil {
-		return &restoreError{http.StatusInternalServerError, "Failed to prepare icons"}
+		return &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	defer stmt.Close()
 
@@ -663,7 +663,7 @@ func restoreIcons(tx *sql.Tx, backup BackupData) error {
 			continue
 		}
 		if _, err := stmt.Exec(ic.Hash, ic.Mime, data, len(data)); err != nil {
-			return &restoreError{http.StatusInternalServerError, "Failed to restore icons"}
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 	}
 	return nil
@@ -675,7 +675,7 @@ func restoreUsers(tx *sql.Tx, backup BackupData) error {
 		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, project_logo,
 		beta_updates, unit_system, dashboard_background, widget_min_width, password_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
-		return &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
+		return &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	defer userStmt.Close()
 
@@ -714,7 +714,7 @@ func restoreUsers(tx *sql.Tx, backup BackupData) error {
 			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName, projectLogo,
 			betaUpdates, unitSystem, dashBg, widgetMinWidth, generation)
 		if err != nil {
-			return &restoreError{http.StatusInternalServerError, "Failed to restore backup"}
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 	}
 	return nil
@@ -732,7 +732,7 @@ func buildOwnerMap(tx *sql.Tx, backup BackupData) (map[string]int, int, error) {
 	}
 	var fallbackOwner int
 	if err := tx.QueryRow("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").Scan(&fallbackOwner); err != nil {
-		return nil, 0, &restoreError{http.StatusInternalServerError, "No admin found for item assignment"}
+		return nil, 0, &restoreError{http.StatusInternalServerError, "error.invalid_backup_format"}
 	}
 	return ownerMap, fallbackOwner, nil
 }
@@ -746,7 +746,7 @@ func restoreDashboards(tx *sql.Tx, backup BackupData, ownerMap map[string]int, f
 
 	dashStmt, err := tx.Prepare(`INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, ?, ?, ?)`)
 	if err != nil {
-		return nil, &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
+		return nil, &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	defer dashStmt.Close()
 
@@ -757,7 +757,7 @@ func restoreDashboards(tx *sql.Tx, backup BackupData, ownerMap map[string]int, f
 		}
 		res, err := dashStmt.Exec(uid, d.Name, d.Position, d.IsDefault)
 		if err != nil {
-			return nil, &restoreError{http.StatusInternalServerError, "Failed to restore dashboard"}
+			return nil, &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 		if d.ID > 0 {
 			newID, _ := res.LastInsertId()
@@ -772,7 +772,7 @@ func restoreDashboards(tx *sql.Tx, backup BackupData, ownerMap map[string]int, f
 func restoreItems(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallbackOwner int, oldToNewDashID map[int]int64) error {
 	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, dashboard_id, type, x, y, w, h, content, mobile_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
-		return &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
+		return &restoreError{http.StatusInternalServerError, "general.db_error"}
 	}
 	defer itemStmt.Close()
 
@@ -791,7 +791,7 @@ func restoreItems(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallba
 		}
 		res, err := itemStmt.Exec(uid, newDashID, i.Type, i.X, i.Y, i.W, i.H, i.Content, i.MobileOrder)
 		if err != nil {
-			return &restoreError{http.StatusInternalServerError, "Failed to restore item"}
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 		if i.ID > 0 {
 			newID, _ := res.LastInsertId()
@@ -826,7 +826,7 @@ func restoreItems(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallba
 		}
 		if _, err := tx.Exec(`INSERT OR REPLACE INTO widget_secrets (item_id, name, value) VALUES (?, ?, ?)`,
 			newID, sec.Name, sec.Value); err != nil {
-			return &restoreError{http.StatusInternalServerError, "Failed to restore widget secrets"}
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 	}
 	return nil

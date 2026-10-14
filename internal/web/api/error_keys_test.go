@@ -24,7 +24,10 @@ var keyShape = regexp.MustCompile(`^[a-z0-9_]+(\.[a-z0-9_]+)+$`)
 
 // The mock servers inside tests answer with whatever they like; only the code
 // that ships has to speak in keys.
-var callShape = regexp.MustCompile(`http\.Error\([^,]+,\s*"([^"]+)"`)
+//
+// A restoreError carries its message to http.Error through a variable, so the
+// call shape above never sees it: its literals are scanned too.
+var callShape = regexp.MustCompile(`(?:http\.Error\([^,]+|restoreError\{[^,]+),\s*"([^"]+)"`)
 
 func TestEveryErrorMessageIsATranslationKey(t *testing.T) {
 	root := filepath.Join("..", "..", "..", "internal")
