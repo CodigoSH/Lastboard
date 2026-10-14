@@ -3,6 +3,7 @@
 import { dashboardStore } from '../../../store/dashboardStore';
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
+import { clockTimezone, searchCities } from '../../../services/cityGeocoder';
 import { apiService } from '../../../services/apiService';
 import '../Select/Select';
 import type { AppSelect } from '../Select/Select';
@@ -41,72 +42,13 @@ const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" s
 const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
 const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
-// Cache to avoid repeated queries
-const timezoneCache = new Map<string, string>();
-
-// Function to get timezone from coordinates using TimeAPI
-async function getTimezoneFromCoords(lat: number, lon: number): Promise<string> {
-    try {
-        const response = await fetch(`https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lon}`);
-        if (!response.ok) throw new Error('TimeAPI failed');
-        const data = await response.json();
-        return data.timeZone || 'local';
-    } catch (error) {
-        console.error('[Timezone] TimeAPI error:', error);
-        return 'local';
-    }
-}
-
-// Function to get timezone from city name
-async function getCityTimezone(city: string): Promise<string> {
-    if (!city || city.trim() === '') return 'local';
-
-    const normalized = city.toLowerCase().trim();
-
-    // Check cache primero
-    if (timezoneCache.has(normalized)) {
-        return timezoneCache.get(normalized)!;
-    }
-
-    try {
-        // 1. Geocoding con Nominatim (OpenStreetMap)
-        // No User-Agent header: it is a forbidden header name, so the browser
-        // drops it silently and setting it only looked like we identified
-        // ourselves. From a page, Nominatim identifies the caller by Referer,
-        // which the browser sends on its own.
-        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`;
-        const geocodeResponse = await fetch(geocodeUrl);
-
-        if (!geocodeResponse.ok) throw new Error('Geocoding failed');
-
-        const geocodeData = await geocodeResponse.json();
-        if (!Array.isArray(geocodeData) || geocodeData.length === 0) {
-            return 'local';
-        }
-
-        const { lat, lon } = geocodeData[0];
-
-        // 2. Get timezone from coordinates
-        const timezone = await getTimezoneFromCoords(parseFloat(lat), parseFloat(lon));
-
-        // Save to cache
-        timezoneCache.set(normalized, timezone);
-
-        return timezone;
-
-    } catch (error) {
-        console.error('[Timezone] Error resolving city:', city, error);
-        return 'local';
-    }
-}
-
 class WidgetConfigModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
     private currentItem: GridItem | null = null;
     /** Which host's containers the Docker form is showing. */
     private _dockerSelectedHost = '';
-    private _clockSelectedLat: number | null = null;
-    private _clockSelectedLon: number | null = null;
+    /** The zone of a city picked from the clock's list during this edit. */
+    private _clockPickedTimezone: string | null = null;
     private _selectedColor: string = '#333333';
     private _selectedBorderWidth: number = 1;
     private _widgetTitle: string = '';
@@ -144,6 +86,9 @@ class WidgetConfigModal extends HTMLElement {
         // Each widget starts on its own active host, not on whatever was
         // selected the last time this dialog was open for another one.
         this._dockerSelectedHost = '';
+        // A city picked in an earlier edit, or an edit that was cancelled, is not
+        // this clock's.
+        this._clockPickedTimezone = null;
 
         // Init Appearance State
         let content: any = {};
@@ -204,6 +149,11 @@ class WidgetConfigModal extends HTMLElement {
                 if (clockSearchBtn) {
                     clockSearchBtn.addEventListener('click', () => this.searchClockCity());
                 }
+                // Typing after picking a city means the picked zone no longer
+                // belongs to what is in the box.
+                this.shadowRoot.getElementById('clock-city')?.addEventListener('input', () => {
+                    this._clockPickedTimezone = null;
+                });
             } else if (widgetId === 'weather') {
                 const weatherSearchBtn = this.shadowRoot.getElementById('weather-search-btn');
                 if (weatherSearchBtn) {
@@ -450,13 +400,13 @@ class WidgetConfigModal extends HTMLElement {
                 saveBtn.textContent = i18n.t('general.loading');
             }
 
-            // Use stored coordinates from search, or fall back to Nominatim
-            let timezone = 'local';
-            if (this._clockSelectedLat != null && this._clockSelectedLon != null) {
-                timezone = await getTimezoneFromCoords(this._clockSelectedLat, this._clockSelectedLon);
-            } else if (city) {
-                timezone = await getCityTimezone(city);
-            }
+            const timezone = await clockTimezone({
+                city,
+                previousCity: oldContent.city,
+                previousTimezone: oldContent.timezone,
+                picked: this._clockPickedTimezone,
+                language: i18n.getLocale().code,
+            });
 
             newContent.city = city;
             newContent.timezone = timezone;
@@ -465,9 +415,7 @@ class WidgetConfigModal extends HTMLElement {
             newContent.showCity = cityDisplayInput?.checked ?? true;
             newContent.showSeconds = (this.shadowRoot?.getElementById('clock-seconds') as HTMLInputElement)?.checked ?? true;
 
-            // Reset stored coords
-            this._clockSelectedLat = null;
-            this._clockSelectedLon = null;
+            this._clockPickedTimezone = null;
 
             // Restore button state
             if (saveBtn) {
@@ -1146,31 +1094,25 @@ class WidgetConfigModal extends HTMLElement {
         resultsContainer.style.display = '';
 
         try {
-            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=${i18n.getLocale().code}`);
-            const data = await res.json();
+            const cities = await searchCities(query, i18n.getLocale().code);
 
-            if (!data.results || data.results.length === 0) {
+            if (cities.length === 0) {
                 resultsEl.innerHTML = `<div class="search-empty">${i18n.t('general.no_icons')}</div>`;
                 return;
             }
 
-            resultsEl.innerHTML = data.results.map((r: any) => `
-                <button class="city-result" data-lat="${r.latitude}" data-lon="${r.longitude}" data-name="${esc(r.name)}">
-                    <span class="city-name">${esc(r.name)}</span>
-                    <span class="city-detail">${esc([r.admin1, r.country].filter(Boolean).join(', '))}</span>
+            resultsEl.innerHTML = cities.map((c, i) => `
+                <button class="city-result" data-index="${i}">
+                    <span class="city-name">${esc(c.name)}</span>
+                    <span class="city-detail">${esc(c.detail)}</span>
                 </button>
             `).join('');
 
             resultsEl.querySelectorAll('.city-result').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const lat = parseFloat(btn.getAttribute('data-lat') || '0');
-                    const lon = parseFloat(btn.getAttribute('data-lon') || '0');
-                    const name = btn.getAttribute('data-name') || '';
-
-                    (this.shadowRoot?.getElementById('clock-city') as HTMLInputElement).value = name;
-                    this._clockSelectedLat = lat;
-                    this._clockSelectedLon = lon;
-
+                    const picked = cities[Number(btn.getAttribute('data-index'))];
+                    cityInput.value = picked.name;
+                    this._clockPickedTimezone = picked.timezone || null;
                     resultsContainer.style.display = 'none';
                 });
             });

@@ -78,7 +78,7 @@ style-src   'self' 'unsafe-inline';
 img-src     'self' data: https:;
 connect-src 'self' wss: ws: https://cdn.jsdelivr.net https://unpkg.com
             https://api.github.com https://git.codigosh.com
-            https://*.open-meteo.com https://timeapi.io;
+            https://*.open-meteo.com;
 font-src    'self';
 object-src  'none';
 frame-ancestors 'self'
@@ -96,9 +96,9 @@ Two details worth knowing:
   the interface to stop computing anything.
 
 The hosts in `connect-src` are the icon CDN (jsDelivr and unpkg), the icon and release metadata
-sources (`api.github.com`, `git.codigosh.com`) and the weather and time-zone services
-(`open-meteo.com`, `timeapi.io`) the Clock and Weather widgets call from your browser. Nothing
-else can be reached from the page.
+sources (`api.github.com`, `git.codigosh.com`) and the weather and city-lookup service
+(`open-meteo.com`) the Clock and Weather widgets call from your browser. Nothing else can be
+reached from the page.
 
 See [Headers](headers.md) for HSTS in detail.
 
