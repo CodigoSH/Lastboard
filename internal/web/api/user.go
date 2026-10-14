@@ -379,6 +379,7 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var u user.User
 		if err := rows.Scan(&u.ID, &u.Username, &u.Role, &u.CreatedAt, &u.AvatarUrl); err != nil {
+			slog.Warn("Scan error reading users", "error", err)
 			continue
 		}
 		users = append(users, map[string]interface{}{
