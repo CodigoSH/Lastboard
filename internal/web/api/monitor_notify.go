@@ -21,7 +21,7 @@ var notifyClient = &http.Client{
 	},
 }
 
-// notifyConfig is the global alerting configuration (system_settings).
+// notifyConfig is one account's alerting channel, from its own settings.
 type notifyConfig struct {
 	Enabled       bool
 	Type          string // ntfy | gotify | webhook | none

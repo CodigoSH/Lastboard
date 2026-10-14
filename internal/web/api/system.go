@@ -160,8 +160,10 @@ var userSettingKeys = map[string]bool{
 	keyMonToken:     false,
 }
 
-// backupSettingKeys is the whole list of system_settings rows a backup carries
-// and a restore accepts. A restore writes only these, whatever the file says.
+// backupSettingKeys is the whole list of server-wide settings rows a backup carries
+// and a restore accepts. Since each account has its own settings these now only
+// matter for backups taken before that: a restore hands them to the first
+// administrator. A restore writes only these, whatever the file says.
 // The value says whether the row holds JSON, which a restore checks before
 // writing; the monitoring rows are plain values.
 var backupSettingKeys = map[string]bool{

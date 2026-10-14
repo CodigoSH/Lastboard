@@ -302,8 +302,8 @@ icon catalogue would mean asking a CDN what this household runs, which is the
 one thing the board promises it does not do. So the operator picks, once, and
 the icon is downloaded and stored by this instance like any bookmark's.
 
-Server-wide on purpose: the hypervisor is one, and two accounts choosing
-different faces for the same container is not a feature.
+Per account, like the connection: each account has hypervisors of its own, so
+the faces it gives their machines are its own too.
 */
 
 const proxmoxIconsKey = "proxmox_icons"
@@ -337,8 +337,8 @@ func (u proxmoxScope) icons() map[string]string {
 	return out
 }
 
-// SetIcon stores, or clears, the icon of one machine. Administrator-only: it is
-// a server-wide setting, like the connection itself.
+// SetIcon stores, or clears, the icon of one machine, in the caller's own
+// settings like the connection itself.
 func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 	u := h.forUser(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)

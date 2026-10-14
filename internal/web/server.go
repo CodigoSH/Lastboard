@@ -289,10 +289,10 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/dashboards/{id}/default", protect(http.HandlerFunc(multiDashHandler.SetDefaultDashboard)))
 	s.Router.Handle("PUT /api/dashboards/reorder", protect(http.HandlerFunc(multiDashHandler.ReorderDashboards)))
 
-	// Docker API
-	// Proxmox. The connection is server-wide and the credential never leaves
-	// the server, so unlike the Docker widget nothing about it is passed in a
-	// query string. Power actions are admin-only — see the handler.
+	// Proxmox. Each account has its own connections, and the credential never
+	// leaves the server, so unlike the Docker widget nothing about it is passed
+	// in a query string. Power actions only reach the caller's own hosts — see
+	// the handler.
 	proxmoxHandler := api.NewProxmoxHandler(s.DB)
 	s.Router.Handle("GET /api/proxmox/settings", protect(http.HandlerFunc(proxmoxHandler.GetSettings)))
 	s.Router.Handle("POST /api/proxmox/settings", protect(http.HandlerFunc(proxmoxHandler.UpdateSettings)))
@@ -301,6 +301,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/proxmox/power", protect(http.HandlerFunc(proxmoxHandler.Power)))
 	s.Router.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(proxmoxHandler.SetIcon)))
 
+	// Docker API
 	dockerHandler := api.NewDockerHandler(s.DB)
 	s.Router.Handle("GET /api/docker/containers", protect(http.HandlerFunc(dockerHandler.GetContainers)))
 	s.Router.Handle("GET /api/docker/stats", protect(http.HandlerFunc(dockerHandler.GetStats)))

@@ -42,9 +42,9 @@ const (
 	proxmoxSeriesPoints = 60
 )
 
-// proxmoxConfig is what the administrator saved. The secret never leaves the
-// server: it is read from system_settings here and stripped from every
-// response, the same way the notification token is.
+// proxmoxConfig is one host's connection, as its owner saved it. The secret
+// never leaves the server: it is read from the owner's settings here and stripped
+// from every response, the same way the notification token is.
 type proxmoxConfig struct {
 	URL      string // https://host:8006
 	TokenID  string // user@realm!tokenid
