@@ -1103,7 +1103,7 @@ class SettingsContent extends HTMLElement {
         this.updateUpdateUI();
 
         try {
-            await this.checkForUpdates();
+            await this.checkForUpdates(true);
             if (this.updateInfo && !this.updateInfo.available) {
                 if (window.notifier) window.notifier.show(i18n.t('settings.up_to_date'));
             }
@@ -1113,15 +1113,23 @@ class SettingsContent extends HTMLElement {
         }
     }
 
-    async checkForUpdates() {
-        if (this.checkUpdatesPromise) return this.checkUpdatesPromise;
+    /**
+     * `fresh` is the button: the server looks again instead of repeating its last
+     * answer. If a check is already running it is waited for first — it may have
+     * been started before the release existed — and then asked again.
+     */
+    async checkForUpdates(fresh = false) {
+        if (this.checkUpdatesPromise) {
+            if (!fresh) return this.checkUpdatesPromise;
+            await this.checkUpdatesPromise;
+        }
 
         this.checkUpdatesPromise = (async () => {
             try {
                 const { updateService } = await import('../../../services/UpdateService');
                 const isBeta = this.prefs.beta_updates || false;
 
-                this.updateInfo = await updateService.check(isBeta);
+                this.updateInfo = await updateService.check(isBeta, fresh);
                 if (this.updateInfo) {
                     this.version = this.updateInfo.current_version;
                     // Keep the store current so the modal always opens on the

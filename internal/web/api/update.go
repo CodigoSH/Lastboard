@@ -111,6 +111,9 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	if betaParam != "" {
 		beta := betaParam == "true"
 		fetch := h.fetchLatestRelease
+		if r.URL.Query().Get("fresh") == "1" {
+			fetch = h.fetchLatestReleaseFresh
+		}
 		if h.latest != nil {
 			fetch = h.latest
 		}
@@ -222,7 +225,38 @@ type cachedRelease struct {
 var (
 	releaseCacheMu sync.Mutex
 	releaseCache   = map[bool]cachedRelease{}
+	// releaseForced is when each channel was last asked again on purpose.
+	releaseForced = map[bool]time.Time{}
 )
+
+// freshMinInterval is how soon after a forced lookup another one is answered
+// from what it found. A person pressing "Check for updates" gets a real answer;
+// somebody pressing it in a loop does not turn this server into a way of
+// hammering the release server.
+const freshMinInterval = 5 * time.Second
+
+// fetchLatestReleaseFresh is the lookup behind the "Check for updates" button:
+// it skips the shared ten-minute answer and asks the release server, unless it
+// did so only moments ago. What it finds replaces the shared answer, so the next
+// ordinary lookup — a page load, the dot in the bar — agrees with it.
+func (h *UpdateHandler) fetchLatestReleaseFresh(beta bool) (tagName string, releaseNotes string, err error) {
+	releaseCacheMu.Lock()
+	if c, ok := releaseCache[beta]; ok && time.Since(releaseForced[beta]) < freshMinInterval {
+		releaseCacheMu.Unlock()
+		return c.tag, c.notes, nil
+	}
+	releaseCacheMu.Unlock()
+
+	tag, notes, err := h.fetchLatestReleaseUncached(beta)
+	if err != nil {
+		return "", "", err
+	}
+	releaseCacheMu.Lock()
+	releaseCache[beta] = cachedRelease{at: time.Now(), tag: tag, notes: notes}
+	releaseForced[beta] = time.Now()
+	releaseCacheMu.Unlock()
+	return tag, notes, nil
+}
 
 func (h *UpdateHandler) fetchLatestRelease(beta bool) (tagName string, releaseNotes string, err error) {
 	releaseCacheMu.Lock()

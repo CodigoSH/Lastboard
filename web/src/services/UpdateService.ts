@@ -32,7 +32,12 @@ export type UpdateStepId = typeof UPDATE_STEPS[number];
 class UpdateService {
     private version: string = '';
 
-    async check(betaUpdates: boolean): Promise<UpdateInfo> {
+    /**
+     * `fresh` is for the button a person presses: the server looks again instead
+     * of repeating what it found in the last ten minutes. Everything that checks on
+     * its own leaves it off, and shares that answer.
+     */
+    async check(betaUpdates: boolean, fresh = false): Promise<UpdateInfo> {
         // --- DEMO MODE: skip backend check (API is protected) ---
         if (window.LASTBOARD_CONFIG?.demo_mode === true) {
             return {
@@ -45,7 +50,7 @@ class UpdateService {
 
         try {
             // Backend handles Forgejo fetch + version comparison to avoid CORS issues
-            const res = await fetch(`/api/system/update/check?beta=${betaUpdates}`);
+            const res = await fetch(`/api/system/update/check?beta=${betaUpdates}${fresh ? '&fresh=1' : ''}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const info = await res.json();
