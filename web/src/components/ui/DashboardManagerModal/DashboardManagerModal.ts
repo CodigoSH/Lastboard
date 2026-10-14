@@ -1,3 +1,4 @@
+import { escapeHtml } from '../../../services/escape';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
@@ -56,7 +57,7 @@ export class DashboardManagerModal extends HTMLElement {
 
     private _renderItem(d: Dashboard, index: number): string {
         const canDelete = canDeleteDashboard(this._dashboards.length);
-        const name = this._escape(i18n.t(d.name));
+        const name = escapeHtml(i18n.t(d.name));
         return `
             <div class="item" draggable="true" data-index="${index}" data-id="${d.id}">
                 <span class="item-dot ${d.is_default ? 'is-default' : ''}"></span>
@@ -77,10 +78,6 @@ export class DashboardManagerModal extends HTMLElement {
                 </svg>
             </div>
         `;
-    }
-
-    private _escape(s: string): string {
-        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     private bindEvents() {

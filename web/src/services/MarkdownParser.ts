@@ -1,3 +1,4 @@
+import { escapeHtml } from './escape';
 export class MarkdownParser {
     /**
      * Allow only http/https/mailto (and relative) URLs in generated links and
@@ -17,13 +18,9 @@ export class MarkdownParser {
     static parse(markdown: string): string {
         if (!markdown) return '';
 
-        let html = markdown
-            // Escape HTML characters to prevent XSS (basic)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        // Everything the author typed is escaped first; the rules below then add
+        // the only markup that reaches the page.
+        let html = escapeHtml(markdown);
 
         // Code Blocks (fenced)
         html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');

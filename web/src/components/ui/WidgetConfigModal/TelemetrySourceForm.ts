@@ -1,4 +1,5 @@
 import { i18n } from '../../../services/i18n';
+import { escapeHtml as esc } from '../../../services/escape';
 import { SECRET_MASK, SecretChange, secretChange } from '../../../services/secretField';
 import { REMOTE_SOURCES, TelemetrySource, remoteErrorKey, telemetrySource } from '../../../widgets/core/remoteTelemetry';
 import type { RemoteReply } from '../../../widgets/core/remoteTelemetry';
@@ -13,7 +14,6 @@ import type { SelectOption } from '../Select/Select.template';
  * secretField.ts) and sent apart from the content.
  */
 
-const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export function sourceOptions(): SelectOption[] {
     return [

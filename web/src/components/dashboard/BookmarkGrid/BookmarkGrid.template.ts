@@ -4,6 +4,7 @@
 
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
+import { escapeHtml as esc, safeUrl } from '../../../services/escape';
 import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
@@ -44,18 +45,6 @@ export const WIDGET_TAGS: Record<string, string> = {
     'monitor': 'widget-monitor',
     'proxmox': 'widget-proxmox',
 };
-
-const esc = (s: string): string => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-const safeUrl = (url: string): string => {
-    if (!url) return '#';
-    const trimmed = url.trim().toLowerCase();
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed === '#') return esc(url);
-    return '#';
-};
-
-// DEEP CASCADE REMOVED per strict request.
-// Only strict coordinate rendering is used.
-
 
 export const template = ({ bookmarks, isEditing, isLoading, isSearching, isTouchDevice, maxCols = 12, selectedIds, selectMode }: { bookmarks: GridItem[], isEditing: boolean, isLoading: boolean, isSearching?: boolean, isTouchDevice?: boolean, maxCols?: number, selectedIds?: Set<number>, selectMode?: boolean }) => {
     const safeBookmarks = Array.isArray(bookmarks) ? bookmarks : [];

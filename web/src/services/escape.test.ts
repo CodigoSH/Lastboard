@@ -71,3 +71,30 @@ describe('safeImageSrc', () => {
         );
     });
 });
+
+// There was an escape helper in this file's own header comment's name — "each
+// component shipped its own copy" — and five copies were still there, two of them
+// leaving the single quote alone. A copy is a place the next fix does not reach.
+describe('there is one escaper', () => {
+    it('no other file writes the replacement chain out again', async () => {
+        const { readdirSync, readFileSync, statSync } = await import('node:fs');
+        const { join } = await import('node:path');
+        const root = join(import.meta.dir, '..');
+        const copies: string[] = [];
+        let read = 0;
+        const walk = (dir: string) => {
+            for (const name of readdirSync(dir)) {
+                const path = join(dir, name);
+                if (statSync(path).isDirectory()) { walk(path); continue; }
+                if (!path.endsWith('.ts') || path.endsWith('.test.ts') || path.endsWith(join('services', 'escape.ts'))) continue;
+                read++;
+                // Comments may describe the rule; only code counts.
+                const code = readFileSync(path, 'utf8').split('\n').filter(l => !l.trim().startsWith('//') && !l.trim().startsWith('*')).join('\n');
+                if (/\.replace\(\/&\/g,\s*['"]&amp;['"]\)/.test(code)) copies.push(path.slice(root.length + 1));
+            }
+        };
+        walk(root);
+        expect(read).toBeGreaterThan(100); // it read the tree, not an empty folder
+        expect(copies).toEqual([]);
+    });
+});

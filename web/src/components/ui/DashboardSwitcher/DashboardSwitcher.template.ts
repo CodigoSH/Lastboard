@@ -1,14 +1,6 @@
 import { Dashboard } from '../../../types';
 import { i18n } from '../../../services/i18n';
-
-function escapeHtml(unsafe: string): string {
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+import { escapeHtml } from '../../../services/escape';
 
 export const template = ({ dashboards, currentDashboardId, dropdownActive }: {
     dashboards: Dashboard[],
