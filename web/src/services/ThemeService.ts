@@ -146,16 +146,4 @@ export class ThemeService {
         date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
         document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
     }
-
-    /** Brings the browser in line with the account. */
-    static async sync() {
-        try {
-            const res = await fetch('/api/me');
-            if (!res.ok) return;
-            const user = await res.json();
-            this.apply(asThemeChoice(user.theme));
-        } catch {
-            // Not signed in, or offline: whatever is on screen stands.
-        }
-    }
 }

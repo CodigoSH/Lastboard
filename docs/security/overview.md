@@ -76,7 +76,7 @@ default-src 'self';
 script-src  'self' 'nonce-<per request>';
 style-src   'self' 'unsafe-inline';
 img-src     'self' data: https:;
-connect-src 'self' wss: ws: https://cdn.jsdelivr.net https://unpkg.com
+connect-src 'self' wss: ws: https://cdn.jsdelivr.net
             https://api.github.com https://git.codigosh.com
             https://*.open-meteo.com;
 font-src    'self';
@@ -95,7 +95,7 @@ Two details worth knowing:
   nonce mechanism for style attributes, so the directive cannot be tightened without rewriting
   the interface to stop computing anything.
 
-The hosts in `connect-src` are the icon CDN (jsDelivr and unpkg), the icon and release metadata
+The hosts in `connect-src` are the icon CDN (jsDelivr), the icon and release metadata
 sources (`api.github.com`, `git.codigosh.com`) and the weather and city-lookup service
 (`open-meteo.com`) the Clock and Weather widgets call from your browser. Nothing else can be
 reached from the page.

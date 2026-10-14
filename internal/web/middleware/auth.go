@@ -14,9 +14,8 @@ import (
 type contextKey string
 
 const (
-	userContextKey     contextKey = "user"
-	userIDContextKey   contextKey = "user_id"
-	userRoleContextKey contextKey = "user_role"
+	userContextKey   contextKey = "user"
+	userIDContextKey contextKey = "user_id"
 )
 
 // Why a cookie did not become an account.
@@ -155,11 +154,10 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				}
 				return
 			}
-			username, userID, userRole := session.Username, session.ID, session.Role
+			username, userID := session.Username, session.ID
 
 			ctx := context.WithValue(r.Context(), userContextKey, username)
 			ctx = context.WithValue(ctx, userIDContextKey, userID)
-			ctx = context.WithValue(ctx, userRoleContextKey, userRole)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -177,11 +175,4 @@ func GetUserIDFromContext(r *http.Request) int {
 		return id
 	}
 	return 0
-}
-
-func GetUserRoleFromContext(r *http.Request) string {
-	if v, ok := r.Context().Value(userRoleContextKey).(string); ok {
-		return v
-	}
-	return ""
 }
