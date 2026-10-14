@@ -16,6 +16,17 @@ class ApiService {
         return csrfToken();
     }
 
+    /** The JSON an API answers with; an empty body (204) is an empty object, a failure carries the server's message. */
+    private async readJson<T>(response: Response): Promise<T> {
+        const text = await response.text();
+        if (!response.ok) {
+            let message = text.trim();
+            try { message = JSON.parse(text).error || message; } catch { }
+            throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        return text ? JSON.parse(text) : {} as T;
+    }
+
     private async request<T>(url: string, options: RequestInit): Promise<T> {
         // --- DEMO MODE INTERCEPTION ---
         if (window.LASTBOARD_CONFIG?.demo_mode) {
@@ -191,16 +202,7 @@ class ApiService {
                 cache: 'no-store'
             });
 
-            if (!response.ok) {
-                const text = await response.text();
-                let message = text.trim();
-                try { message = JSON.parse(text).error || message; } catch { }
-                throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            // Handle empty responses (like 204 No Content) or empty bodies
-            const text = await response.text();
-            return text ? JSON.parse(text) : {} as T;
+            return await this.readJson<T>(response);
         } catch (error) {
             console.error(`[ApiService] Request failed: ${fullUrl}`, error);
             // Re-throw to be handled by store/component
@@ -263,14 +265,7 @@ class ApiService {
         // Do NOT set Content-Type — the browser sets it with the correct multipart boundary
         try {
             const response = await fetch(fullUrl, { method: 'POST', headers, body: data });
-            if (!response.ok) {
-                const text = await response.text();
-                let message = text.trim();
-                try { message = JSON.parse(text).error || message; } catch { }
-                throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
-            }
-            const text = await response.text();
-            return text ? JSON.parse(text) : {} as T;
+            return await this.readJson<T>(response);
         } catch (error) {
             console.error(`[ApiService] Request failed: ${fullUrl}`, error);
             throw error;
