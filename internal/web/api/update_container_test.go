@@ -3,10 +3,12 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 )
@@ -93,5 +95,34 @@ func TestAContainerWhoseCheckFailsIsToldSo(t *testing.T) {
 	json.Unmarshal(rec.Body.Bytes(), &r)
 	if r.Available || r.CheckError == "" || !r.IsDocker {
 		t.Errorf("%+v", r)
+	}
+}
+
+// The release lookup used http.Get: the default client, which waits forever. A
+// forge that accepts the connection and never answers held the check open for
+// good, and with it every browser asking whether an update exists.
+func TestAReleaseLookupThatNeverAnswersGivesUp(t *testing.T) {
+	hang := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { <-hang }))
+	defer srv.Close()
+	defer close(hang)
+
+	oldBase, oldClient := releaseAPIBase, releaseClient
+	releaseAPIBase = srv.URL
+	releaseClient = &http.Client{Timeout: 150 * time.Millisecond}
+	defer func() { releaseAPIBase, releaseClient = oldBase, oldClient }()
+
+	done := make(chan error, 1)
+	go func() {
+		_, _, err := (&UpdateHandler{}).fetchLatestReleaseUncached(false)
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("a lookup that never got an answer reported success")
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("the lookup was still waiting after 3s: it has no time limit")
 	}
 }

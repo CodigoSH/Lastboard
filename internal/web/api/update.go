@@ -224,16 +224,24 @@ func (h *UpdateHandler) fetchLatestRelease(beta bool) (tagName string, releaseNo
 	return tag, notes, err
 }
 
+// releaseAPIBase and releaseClient are variables so a test can point the lookup
+// at a server that never answers. The client has a time limit: the default one
+// waits forever, and a forge that took the connection and said nothing held the
+// check open for every browser asking whether an update exists.
+var (
+	releaseAPIBase = "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard"
+	releaseClient  = &http.Client{Timeout: 15 * time.Second}
+)
+
 func (h *UpdateHandler) fetchLatestReleaseUncached(beta bool) (tagName string, releaseNotes string, err error) {
-	const base = "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard"
 	var fetchURL string
 	if beta {
-		fetchURL = base + "/releases?limit=1"
+		fetchURL = releaseAPIBase + "/releases?limit=1"
 	} else {
-		fetchURL = base + "/releases/latest"
+		fetchURL = releaseAPIBase + "/releases/latest"
 	}
 
-	resp, err := http.Get(fetchURL)
+	resp, err := releaseClient.Get(fetchURL)
 	if err != nil {
 		return "", "", err
 	}
