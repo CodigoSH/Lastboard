@@ -40,31 +40,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		log.Printf("login: failed to clean expired lockouts: %v", err)
 	}
 
-	// Check current state for this IP
-	var firstSeen time.Time
-	var lockedUntil sql.NullTime
-
-	err := h.DB.QueryRowContext(r.Context(),
-		"SELECT first_seen, locked_until FROM login_attempts WHERE ip = ?", ip,
-	).Scan(&firstSeen, &lockedUntil)
-
-	if err != nil && err != sql.ErrNoRows {
+	locked, err := attemptsLockedOut(r.Context(), h.DB, ip)
+	if err != nil {
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)
 		return
 	}
-
-	if err == nil { // record exists
-		// Locked out?
-		if lockedUntil.Valid && now.Before(lockedUntil.Time) {
-			http.Error(w, "auth.too_many_attempts", http.StatusTooManyRequests)
-			return
-		}
-		// Attempt window expired — reset stale record
-		if !lockedUntil.Valid && now.Sub(firstSeen) > attemptWindow {
-			if _, err := h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip); err != nil {
-				log.Printf("login: failed to reset stale attempts for %s: %v", ip, err)
-			}
-		}
+	if locked {
+		http.Error(w, "auth.too_many_attempts", http.StatusTooManyRequests)
+		return
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
@@ -83,7 +66,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		// Spend what a verification spends, so the reason for failing does not
 		// show in how long it took.
 		password.Waste(input.Password)
-		h.recordFailedAttempt(ip)
+		recordFailedAttempt(h.DB, ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
@@ -95,13 +78,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Scan(&userID, &storedHash, &passwordVersion)
 	if err != nil {
 		password.Waste(input.Password)
-		h.recordFailedAttempt(ip)
+		recordFailedAttempt(h.DB, ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
 	if err := password.Verify(input.Password, storedHash); err != nil {
-		h.recordFailedAttempt(ip)
+		recordFailedAttempt(h.DB, ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
@@ -109,9 +92,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	h.upgradeHash(r, input.Username, input.Password, storedHash)
 
 	// Success: clear rate limit record for this IP
-	if _, err := h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip); err != nil {
-		log.Printf("login: failed to clear attempts for %s: %v", ip, err)
-	}
+	clearAttempts(h.DB, ip)
 
 	duration := defaultSession
 	if input.RememberMe {
@@ -157,26 +138,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	invalidateSession(w, r)
 	w.WriteHeader(http.StatusOK)
-}
-
-// recordFailedAttempt counts one failed login for an IP and, when that makes
-// maxLoginAttempts, locks it. The increment happens inside the database, in one
-// statement: attempts that arrive together are each counted, where reading the
-// count first and writing back "count + 1" records a burst of N as one.
-func (h *AuthHandler) recordFailedAttempt(ip string) {
-	now := time.Now()
-	if _, err := h.DB.Exec(`
-		INSERT INTO login_attempts (ip, count, first_seen) VALUES (?, 1, ?)
-		ON CONFLICT(ip) DO UPDATE SET
-			count = login_attempts.count + 1,
-			locked_until = CASE
-				WHEN login_attempts.count + 1 >= ? THEN ?
-				ELSE login_attempts.locked_until
-			END`,
-		ip, now, maxLoginAttempts, now.Add(lockoutDuration),
-	); err != nil {
-		log.Printf("rate-limit: failed to record attempt for %s: %v", ip, err)
-	}
 }
 
 func generateCSRFToken() (string, error) {

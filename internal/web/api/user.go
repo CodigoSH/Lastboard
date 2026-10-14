@@ -307,8 +307,15 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := password.Verify(input.CurrentPassword, storedHash); err != nil {
+	switch err := confirmAccountPassword(r.Context(), h.DB, middleware.GetUserIDFromContext(r), storedHash, input.CurrentPassword); {
+	case errors.Is(err, errLockedOut):
+		http.Error(w, "auth.too_many_attempts", http.StatusTooManyRequests)
+		return
+	case errors.Is(err, errWrongPassword):
 		http.Error(w, "error.current_password_incorrect", http.StatusUnauthorized)
+		return
+	case err != nil:
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -351,13 +358,15 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 // Admin Endpoints
 
-func (h *UserHandler) verifyPassword(username, plain string) bool {
+// confirmAdminPassword asks the signed-in account for its password again before
+// something it cannot take back, counting failures against the account.
+func (h *UserHandler) confirmAdminPassword(r *http.Request, plain string) error {
+	userID := middleware.GetUserIDFromContext(r)
 	var storedHash string
-	err := h.DB.QueryRow("SELECT password FROM users WHERE username=?", username).Scan(&storedHash)
-	if err != nil {
-		return false
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT password FROM users WHERE id = ?", userID).Scan(&storedHash); err != nil {
+		return err
 	}
-	return password.Verify(plain, storedHash) == nil
+	return confirmAccountPassword(r.Context(), h.DB, userID, storedHash, plain)
 }
 
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -554,8 +563,11 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error.admin_password_required", http.StatusBadRequest)
 		return
 	}
-	adminUsername := middleware.GetUserFromContext(r)
-	if !h.verifyPassword(adminUsername, adminPassword) {
+	switch err := h.confirmAdminPassword(r, adminPassword); {
+	case errors.Is(err, errLockedOut):
+		http.Error(w, "auth.too_many_attempts", http.StatusTooManyRequests)
+		return
+	case err != nil:
 		http.Error(w, "error.admin_password_invalid", http.StatusUnauthorized)
 		return
 	}

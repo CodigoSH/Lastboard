@@ -51,7 +51,11 @@ func (h *SystemHandler) FactoryReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := password.Verify(input.Password, storedHash); err != nil {
+	switch err := confirmAccountPassword(r.Context(), h.DB, userID, storedHash, input.Password); {
+	case errors.Is(err, errLockedOut):
+		http.Error(w, "auth.too_many_attempts", http.StatusTooManyRequests)
+		return
+	case err != nil:
 		http.Error(w, "general.invalid_input", http.StatusUnauthorized)
 		return
 	}
