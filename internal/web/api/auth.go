@@ -41,13 +41,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check current state for this IP
-	var count int
 	var firstSeen time.Time
 	var lockedUntil sql.NullTime
 
 	err := h.DB.QueryRowContext(r.Context(),
-		"SELECT count, first_seen, locked_until FROM login_attempts WHERE ip = ?", ip,
-	).Scan(&count, &firstSeen, &lockedUntil)
+		"SELECT first_seen, locked_until FROM login_attempts WHERE ip = ?", ip,
+	).Scan(&firstSeen, &lockedUntil)
 
 	if err != nil && err != sql.ErrNoRows {
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)
@@ -65,7 +64,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			if _, err := h.DB.Exec("DELETE FROM login_attempts WHERE ip = ?", ip); err != nil {
 				log.Printf("login: failed to reset stale attempts for %s: %v", ip, err)
 			}
-			count = 0
 		}
 	}
 
@@ -85,7 +83,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		// Spend what a verification spends, so the reason for failing does not
 		// show in how long it took.
 		password.Waste(input.Password)
-		h.recordFailedAttempt(ip, count)
+		h.recordFailedAttempt(ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
@@ -97,13 +95,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Scan(&userID, &storedHash, &passwordVersion)
 	if err != nil {
 		password.Waste(input.Password)
-		h.recordFailedAttempt(ip, count)
+		h.recordFailedAttempt(ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
 
 	if err := password.Verify(input.Password, storedHash); err != nil {
-		h.recordFailedAttempt(ip, count)
+		h.recordFailedAttempt(ip)
 		http.Error(w, "auth.invalid_credentials", http.StatusUnauthorized)
 		return
 	}
@@ -161,37 +159,23 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// recordFailedAttempt increments the failed login count for an IP in SQLite.
-// If the count reaches maxLoginAttempts, sets locked_until.
-func (h *AuthHandler) recordFailedAttempt(ip string, currentCount int) {
+// recordFailedAttempt counts one failed login for an IP and, when that makes
+// maxLoginAttempts, locks it. The increment happens inside the database, in one
+// statement: attempts that arrive together are each counted, where reading the
+// count first and writing back "count + 1" records a burst of N as one.
+func (h *AuthHandler) recordFailedAttempt(ip string) {
 	now := time.Now()
-	newCount := currentCount + 1
-
-	if currentCount == 0 {
-		if _, err := h.DB.Exec(
-			"INSERT OR IGNORE INTO login_attempts (ip, count, first_seen) VALUES (?, 1, ?)",
-			ip, now,
-		); err != nil {
-			log.Printf("rate-limit: failed to record attempt for %s: %v", ip, err)
-		}
-		return
-	}
-
-	if newCount >= maxLoginAttempts {
-		lockedUntil := now.Add(lockoutDuration)
-		if _, err := h.DB.Exec(
-			"UPDATE login_attempts SET count = ?, locked_until = ? WHERE ip = ?",
-			newCount, lockedUntil, ip,
-		); err != nil {
-			log.Printf("rate-limit: failed to lock %s: %v", ip, err)
-		}
-	} else {
-		if _, err := h.DB.Exec(
-			"UPDATE login_attempts SET count = ? WHERE ip = ?",
-			newCount, ip,
-		); err != nil {
-			log.Printf("rate-limit: failed to update count for %s: %v", ip, err)
-		}
+	if _, err := h.DB.Exec(`
+		INSERT INTO login_attempts (ip, count, first_seen) VALUES (?, 1, ?)
+		ON CONFLICT(ip) DO UPDATE SET
+			count = login_attempts.count + 1,
+			locked_until = CASE
+				WHEN login_attempts.count + 1 >= ? THEN ?
+				ELSE login_attempts.locked_until
+			END`,
+		ip, now, maxLoginAttempts, now.Add(lockoutDuration),
+	); err != nil {
+		log.Printf("rate-limit: failed to record attempt for %s: %v", ip, err)
 	}
 }
 
