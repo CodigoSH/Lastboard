@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 
-	"golang.org/x/crypto/argon2"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 )
 
 /*
@@ -64,8 +64,8 @@ func (s sealedBackup) header() []byte {
 	return []byte(fmt.Sprintf("%s/%d/%s/%d/%d/%d", s.Format, s.Version, s.KDF, s.Memory, s.Passes, s.Lanes))
 }
 
-func sealKey(password string, salt []byte, memory, passes uint32, lanes uint8) []byte {
-	return argon2.IDKey([]byte(password), salt, passes, memory, lanes, 32)
+func sealKey(passphrase string, salt []byte, memory, passes uint32, lanes uint8) []byte {
+	return password.IDKey([]byte(passphrase), salt, passes, memory, lanes, 32)
 }
 
 // isSealedBackup says whether the bytes are a protected backup, without

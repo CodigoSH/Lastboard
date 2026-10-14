@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
@@ -48,6 +49,46 @@ const (
 	maxTime   = 10
 )
 
+// MaxConcurrent is how many argon2 derivations may run at once.
+//
+// Each holds memoryCost (64 MiB) for as long as it runs, and signing in is open
+// to anyone who can reach the server. Measured against the real binary: twenty
+// simultaneous attempts took the process from 18 MiB to 1.3 GiB, past the 512 MiB
+// the service unit allows. Go does not hand a finished 64 MiB block back at once,
+// so every slot costs about twice that at its peak: two slots peak at 280 MiB
+// (also with two hundred attempts at once), three at 410, four at 540. Two it is.
+// A person signing in waits a fraction of a second for a slot; the server is not
+// killed.
+const MaxConcurrent = 2
+
+var (
+	slots = make(chan struct{}, MaxConcurrent)
+
+	// running and peak exist so a test can see the limit hold; they cost two
+	// atomic operations per derivation.
+	running atomic.Int32
+	peak    atomic.Int32
+)
+
+// IDKey is argon2id behind the limit. It is the only place the product calls
+// argon2.IDKey — Hash, Verify and Waste go through it, and so does the key a
+// protected backup is sealed under — so the limit has no second door. A test
+// reads the whole tree to keep it that way.
+func IDKey(secret, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte {
+	slots <- struct{}{}
+	defer func() { <-slots }()
+
+	n := running.Add(1)
+	defer running.Add(-1)
+	for {
+		p := peak.Load()
+		if n <= p || peak.CompareAndSwap(p, n) {
+			break
+		}
+	}
+	return argon2.IDKey(secret, salt, time, memory, threads, keyLen)
+}
+
 // Hash returns a PHC-format string: the algorithm, its parameters, the salt and
 // the digest, all in one column. Storing the parameters alongside is what makes
 // them changeable.
@@ -57,7 +98,7 @@ func Hash(plain string) (string, error) {
 		return "", fmt.Errorf("generating a salt: %w", err)
 	}
 
-	key := argon2.IDKey([]byte(plain), salt, timeCost, memoryCost, parallelism, keyLength)
+	key := IDKey([]byte(plain), salt, timeCost, memoryCost, parallelism, keyLength)
 
 	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
 		argon2.Version, memoryCost, timeCost, parallelism,
@@ -132,7 +173,7 @@ func Verify(plain, encoded string) error {
 	if !ok {
 		return ErrMismatch
 	}
-	got := argon2.IDKey([]byte(plain), p.salt, p.time, p.memory, p.threads, uint32(len(p.key)))
+	got := IDKey([]byte(plain), p.salt, p.time, p.memory, p.threads, uint32(len(p.key)))
 	if subtle.ConstantTimeCompare(got, p.key) != 1 {
 		return ErrMismatch
 	}
@@ -156,5 +197,5 @@ var dummySalt = []byte("lastboard-waste!")
 // that does not exist. Without it, a missing user answers faster than a wrong
 // password and the difference says which usernames are real.
 func Waste(plain string) {
-	_ = argon2.IDKey([]byte(plain), dummySalt, timeCost, memoryCost, parallelism, keyLength)
+	_ = IDKey([]byte(plain), dummySalt, timeCost, memoryCost, parallelism, keyLength)
 }
