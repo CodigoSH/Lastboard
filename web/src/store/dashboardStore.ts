@@ -24,22 +24,6 @@ interface DashboardState {
     currentDashboardId: number | null;
 }
 
-// Mock data used only as a last-resort offline fallback when no user-scoped
-// cache exists AND the backend is unreachable.
-const INITIAL_ITEMS: GridItem[] = [
-    {
-        id: 1,
-        type: 'bookmark',
-        x: 1, y: 1, w: 1, h: 1,
-        content: {
-            label: 'CodigoSH',
-            url: 'https://git.codigosh.com/CodigoSH/Lastboard',
-            icon: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/git.webp',
-            iconName: 'git'
-        }
-    }
-];
-
 class DashboardStore {
     private state: DashboardState = {
         isEditing: false,
@@ -383,14 +367,10 @@ class DashboardStore {
             this.state.isOffline = true;
             this.state.loading = false;
 
-            // If we don't even have cache, fallback to mock
-            if (this.state.items.length === 0) {
-                this.state.items = [...INITIAL_ITEMS];
-                this.saveToLocalStorage();
-                this.notify();
-            } else {
-                this.notify(); // Notify so UI knows we're done (offline)
-            }
+            // With no cache either there is nothing to show, and nothing is made
+            // up: a tile of our own would be cached, and edited or deleted it
+            // would address an id that is some other item of this account.
+            this.notify(); // Notify so UI knows we're done (offline)
         }
     }
 
