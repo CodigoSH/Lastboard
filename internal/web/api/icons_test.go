@@ -281,6 +281,37 @@ func TestPruneKeepsAnIconNamedOnlyByASetting(t *testing.T) {
 	}
 }
 
+// Since 1.9 a machine's icon lives in the account's own settings, not in the
+// server-wide table the first version of this test looked at. The sweep has to
+// read where the icon is kept now, or choosing a face for a machine is undone by
+// deleting any bookmark.
+func TestPruneKeepsAnIconNamedOnlyByAnAccountSetting(t *testing.T) {
+	db, _ := setupTestDB(t)
+
+	hash, err := storeIcon(db, "image/png", onePixelPNG(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := db.Exec(`INSERT INTO users (username, password) VALUES ('owner', 'x')`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	uid, _ := res.LastInsertId()
+	if err := NewUserSettings(db).Set(int(uid), proxmoxIconsKey, `{"h1|pve|100":"/api/icons/`+hash+`"}`); err != nil {
+		t.Fatal(err)
+	}
+
+	removed, err := PruneOrphanIcons(db)
+	if err != nil {
+		t.Fatalf("prune failed: %v", err)
+	}
+	var stillThere int
+	db.QueryRow(`SELECT COUNT(*) FROM icons WHERE hash = ?`, hash).Scan(&stillThere)
+	if removed != 0 || stillThere != 1 {
+		t.Fatalf("removed=%d, icon stored=%d: a machine's icon was swept away because user_settings was not read", removed, stillThere)
+	}
+}
+
 func TestStoreRefusesUnsupportedSources(t *testing.T) {
 	db, _ := setupTestDB(t)
 	h := NewIconHandler(db)
