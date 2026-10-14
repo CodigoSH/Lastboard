@@ -61,6 +61,7 @@ func setupFullServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
 	mux.Handle("POST /api/users/delete", protect(http.HandlerFunc(userHandler.DeleteUser)))
 	mux.Handle("POST /api/user/change-password", protect(http.HandlerFunc(userHandler.ChangePassword)))
+	mux.Handle("POST /api/user/update-profile", protect(http.HandlerFunc(userHandler.UpdateProfile)))
 	mux.Handle("POST /api/user/preferences", protect(http.HandlerFunc(userHandler.UpdatePreferences)))
 	mux.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
 

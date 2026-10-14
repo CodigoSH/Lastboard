@@ -277,3 +277,29 @@ func TestTheDashboardBackground(t *testing.T) {
 		t.Errorf("resending the value already stored answered %d, want 200", code)
 	}
 }
+
+func updateProfileAs(t *testing.T, s *userSession, url, body string) int {
+	t.Helper()
+	return postJSONAs(t, s, url+"/api/user/update-profile", body)
+}
+
+// The avatar every account starts with is a path on this server. Renaming
+// yourself sends the avatar along with the name, so an avatar check that only
+// knew addresses and image data refused the rename of anyone who had not
+// uploaded a picture — which is almost everybody.
+func TestRenamingYourselfWithTheDefaultAvatar(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "bob", "password123", "user")
+	db.DB.Exec(`UPDATE users SET avatar_url = '/images/default-avatar.svg' WHERE username = 'bob'`)
+	s := doLogin(t, server.URL, "bob", "password123")
+
+	if code := updateProfileAs(t, s, server.URL, `{"username":"robert","avatar_url":"/images/default-avatar.svg"}`); code != http.StatusOK {
+		t.Errorf("renaming with the default avatar answered %d, want 200", code)
+	}
+	var n int
+	db.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE username = 'robert'`).Scan(&n)
+	if n != 1 {
+		t.Error("the account was not renamed")
+	}
+}

@@ -252,17 +252,9 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Allow HTTP, HTTPS, or Base64 Image Data
-	if input.AvatarUrl != "" {
-		if len(input.AvatarUrl) > 2*1024*1024 {
-			http.Error(w, "error.avatar_too_large", http.StatusBadRequest)
-			return
-		}
-		if !strings.HasPrefix(input.AvatarUrl, "http://") &&
-			!strings.HasPrefix(input.AvatarUrl, "https://") &&
-			!strings.HasPrefix(input.AvatarUrl, "data:image/") {
-			http.Error(w, "error.invalid_url", http.StatusBadRequest)
-			return
-		}
+	if key := avatarProblem(input.AvatarUrl); key != "" {
+		http.Error(w, key, http.StatusBadRequest)
+		return
 	}
 
 	_, err := h.DB.Exec("UPDATE users SET username=?, avatar_url=? WHERE username=?", input.Username, input.AvatarUrl, username)
@@ -665,6 +657,29 @@ func validatePassword(plain string) error {
 	return nil
 }
 
+// avatarProblem returns the translation key of what is wrong with an avatar, or
+// "" when it is fine: nothing (no avatar), an http(s) address, image data, or a
+// path on this server — the one every account starts with, which the page sends
+// back along with a new name.
+func avatarProblem(v string) string {
+	if v == "" {
+		return ""
+	}
+	if len(v) > 2*1024*1024 {
+		return "error.avatar_too_large"
+	}
+	if !strings.HasPrefix(v, "http://") && !strings.HasPrefix(v, "https://") &&
+		!strings.HasPrefix(v, "data:image/") && !isServerPath(v) {
+		return "error.invalid_url"
+	}
+	return ""
+}
+
+// isServerPath: a path on this server, not an address on another one ("//host").
+func isServerPath(v string) bool {
+	return strings.HasPrefix(v, "/") && !strings.HasPrefix(v, "//")
+}
+
 // validBackground says whether a dashboard background is something that can sit
 // inside the page's url(…) without being able to leave it: an image data URL, an
 // http(s) address or a path on this server, with no space, quote, parenthesis or
@@ -682,7 +697,7 @@ func validBackground(v string) bool {
 	case strings.HasPrefix(v, "https://"), strings.HasPrefix(v, "http://"):
 		u, err := url.Parse(v)
 		return err == nil && u.Host != ""
-	case strings.HasPrefix(v, "/") && !strings.HasPrefix(v, "//"):
+	case isServerPath(v):
 		return true
 	}
 	return false

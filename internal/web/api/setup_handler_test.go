@@ -124,3 +124,47 @@ func TestSetupSystemResponseIsJSON(t *testing.T) {
 		t.Fatalf("unexpected payload: %v", out)
 	}
 }
+
+// The first account is held to the same rules as any later edit of it: an avatar
+// is an image address or image data, and the accent is a colour the interface
+// knows — not whatever fits in the request.
+func TestSetupSystemRefusesAnAvatarOrAccentTheProfileWouldRefuse(t *testing.T) {
+	for name, body := range map[string]string{
+		"a script avatar":   `{"username":"admin","password":"sup3rsecret","avatar_url":"javascript:alert(1)"}`,
+		"a bare word":       `{"username":"admin","password":"sup3rsecret","avatar_url":"not an address"}`,
+		"a css accent":      `{"username":"admin","password":"sup3rsecret","accent_color":"red;background:url(//evil)"}`,
+		"an unknown accent": `{"username":"admin","password":"sup3rsecret","accent_color":"chartreuse"}`,
+	} {
+		db, _ := setupTestDB(t)
+		db.SetMaxOpenConns(1)
+		rec := httptest.NewRecorder()
+		NewSetupHandler(db).SetupSystem(rec, newSetupRequest(body))
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: expected 400, got %d", name, rec.Code)
+		}
+		if n := countUsers(t, db); n != 0 {
+			t.Errorf("%s: a user was created anyway", name)
+		}
+	}
+
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	rec := httptest.NewRecorder()
+	NewSetupHandler(db).SetupSystem(rec, newSetupRequest(
+		`{"username":"admin","password":"sup3rsecret","avatar_url":"data:image/png;base64,AAA","accent_color":"teal"}`))
+	if rec.Code != http.StatusOK {
+		t.Errorf("a valid avatar and a named accent were refused: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+// The setup page sends the avatar it starts with, a path on this server.
+func TestSetupSystemAcceptsTheDefaultAvatarThePageSends(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	rec := httptest.NewRecorder()
+	NewSetupHandler(db).SetupSystem(rec, newSetupRequest(
+		`{"username":"admin","password":"sup3rsecret","avatar_url":"/images/default-avatar.svg","accent_color":"#e8520e"}`))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("the page's own default avatar was refused: %d %s", rec.Code, rec.Body.String())
+	}
+}

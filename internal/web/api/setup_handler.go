@@ -77,8 +77,12 @@ func (h *SetupHandler) SetupSystem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
-	if len(input.AccentColor) > 32 {
+	if !isValidAccentColor(input.AccentColor) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	if key := avatarProblem(input.AvatarUrl); key != "" {
+		http.Error(w, key, http.StatusBadRequest)
 		return
 	}
 
