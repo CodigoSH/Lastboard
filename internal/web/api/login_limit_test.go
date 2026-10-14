@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"net/http"
 	"strings"
 	"sync"
@@ -40,5 +41,31 @@ func TestSimultaneousWrongPasswordsAreAllCounted(t *testing.T) {
 	}
 	if locked == nil {
 		t.Errorf("the address was not locked out after %d failures", burst)
+	}
+}
+
+// A passphrase longer than bcrypt's 72 bytes is a normal thing to have with
+// Argon2id, and signing in with it has to work: the login used to refuse
+// anything over 72 before looking at the account.
+func TestALongPassphraseCanSignIn(t *testing.T) {
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+	long := strings.Repeat("correct horse battery staple ", 5) // 145 characters
+	hash, err := password.Hash(long)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO users (username, password, role) VALUES ('boss', ?, 'admin')`, hash); err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := http.Post(server.URL+"/api/login", "application/json",
+		strings.NewReader(`{"username":"boss","password":"`+long+`"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("a 145-character passphrase was refused with %d", resp.StatusCode)
 	}
 }

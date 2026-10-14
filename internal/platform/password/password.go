@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 	"sync/atomic"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
@@ -92,6 +93,17 @@ func IDKey(secret, salt []byte, time, memory uint32, threads uint8, keyLen uint3
 // Hash returns a PHC-format string: the algorithm, its parameters, the salt and
 // the digest, all in one column. Storing the parameters alongside is what makes
 // them changeable.
+// MaxLength is the longest password accepted, counted in characters. It is not
+// a limit of the hash — Argon2id takes any length, unlike the bcrypt this
+// replaced, which silently ignored everything past 72 bytes — only a bound on
+// what one request can make the server hash.
+const MaxLength = 256
+
+// TooLong reports whether a password is over MaxLength characters.
+func TooLong(plain string) bool {
+	return utf8.RuneCountInString(plain) > MaxLength
+}
+
 func Hash(plain string) (string, error) {
 	salt := make([]byte, saltLength)
 	if _, err := rand.Read(salt); err != nil {

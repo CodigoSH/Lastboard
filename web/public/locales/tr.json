@@ -109,7 +109,7 @@
   "error.label_required": "Başlık gerekli",
   "error.missing_url": "URL eksik",
   "error.not_found": "Bu bulunamadı",
-  "error.password_max_length": "Şifre çok uzun (maks. 72 karakter)",
+  "error.password_max_length": "Şifre çok uzun (maks. 256 karakter)",
   "error.password_min_length": "Parola çok kısa (en az 4 karakter)",
   "error.system_error": "Sistem Hatası",
   "error.username_invalid_chars": "Kullanıcı adında garip karakterler var",

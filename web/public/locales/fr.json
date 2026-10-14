@@ -109,7 +109,7 @@
   "error.label_required": "Un titre est requis",
   "error.missing_url": "URL manquante",
   "error.not_found": "Impossible de trouver cela",
-  "error.password_max_length": "Mot de passe trop long (max. 72 caractères)",
+  "error.password_max_length": "Mot de passe trop long (max. 256 caractères)",
   "error.password_min_length": "Mot de passe trop court (min. 4 caractères)",
   "error.system_error": "Erreur système",
   "error.username_invalid_chars": "Le nom d'utilisateur contient des caractères bizarres",

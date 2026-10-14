@@ -109,7 +109,7 @@
   "error.label_required": "需要标题",
   "error.missing_url": "缺少 URL",
   "error.not_found": "找不到该项",
-  "error.password_max_length": "密码太长（最多 72 个字符）",
+  "error.password_max_length": "密码太长（最多 256 个字符）",
   "error.password_min_length": "密码太短（最少 4 个字符）",
   "error.system_error": "系统错误",
   "error.username_invalid_chars": "用户名包含奇怪的字符",

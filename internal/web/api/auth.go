@@ -79,7 +79,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(input.Password) > 72 {
+	if password.TooLong(input.Password) {
 		// Spend what a verification spends, so the reason for failing does not
 		// show in how long it took.
 		password.Waste(input.Password)

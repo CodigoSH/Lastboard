@@ -109,7 +109,7 @@
   "error.label_required": "Titel erforderlich",
   "error.missing_url": "URL fehlt",
   "error.not_found": "Das kann nicht gefunden werden",
-  "error.password_max_length": "Passwort zu lang (max. 72 Zeichen)",
+  "error.password_max_length": "Passwort zu lang (max. 256 Zeichen)",
   "error.password_min_length": "Passwort zu kurz (min. 4 Zeichen)",
   "error.system_error": "Systemfehler",
   "error.username_invalid_chars": "Benutzername enthält seltsame Zeichen",

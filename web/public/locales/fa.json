@@ -109,7 +109,7 @@
   "error.label_required": "عنوان الزامی است",
   "error.missing_url": "آدرس وب موجود نیست",
   "error.not_found": "پیدا نشد",
-  "error.password_max_length": "رمز عبور خیلی طولانی است (حداکثر 72 کاراکتر)",
+  "error.password_max_length": "رمز عبور خیلی طولانی است (حداکثر 256 کاراکتر)",
   "error.password_min_length": "رمز عبور بسیار کوتاه است (حداقل 4 کاراکتر)",
   "error.system_error": "خطای سیستم",
   "error.username_invalid_chars": "نام کاربری دارای کاراکترهای عجیب است",

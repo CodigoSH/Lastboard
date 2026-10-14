@@ -109,7 +109,7 @@
   "error.label_required": "You need a title",
   "error.missing_url": "Where's the URL?",
   "error.not_found": "Can't find that anymore",
-  "error.password_max_length": "Password's too long (max 72 chars)",
+  "error.password_max_length": "Password's too long (max 256 chars)",
   "error.password_min_length": "Password's too short (min 8 chars)",
   "error.system_error": "System Error",
   "error.username_invalid_chars": "Username has some weird characters",

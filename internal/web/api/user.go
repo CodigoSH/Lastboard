@@ -612,11 +612,11 @@ func validateUsername(username string) error {
 	return nil
 }
 
-func validatePassword(password string) error {
-	if len(password) < 8 {
+func validatePassword(plain string) error {
+	if len(plain) < 8 {
 		return fmt.Errorf("error.password_min_length")
 	}
-	if len(password) > 72 {
+	if password.TooLong(plain) {
 		return fmt.Errorf("error.password_max_length")
 	}
 	return nil

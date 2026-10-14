@@ -109,7 +109,7 @@
   "error.label_required": "عنوان درکار ہے",
   "error.missing_url": "یو آر ایل غائب ہے",
   "error.not_found": "وہ نہیں ملا",
-  "error.password_max_length": "پاس ورڈ بہت لمبا ہے (زیادہ سے زیادہ 72 حروف)",
+  "error.password_max_length": "پاس ورڈ بہت لمبا ہے (زیادہ سے زیادہ 256 حروف)",
   "error.password_min_length": "پاس ورڈ بہت چھوٹا ہے (کم از کم 4 حروف)",
   "error.system_error": "سسٹم کی خرابی",
   "error.username_invalid_chars": "صارف نام میں عجیب حروف ہیں",

@@ -109,7 +109,7 @@
   "error.label_required": "Judul diperlukan",
   "error.missing_url": "URL tidak ada",
   "error.not_found": "Tidak dapat ditemukan",
-  "error.password_max_length": "Kata sandi terlalu panjang (maks. 72 karakter)",
+  "error.password_max_length": "Kata sandi terlalu panjang (maks. 256 karakter)",
   "error.password_min_length": "Kata sandi terlalu pendek (min. 4 karakter)",
   "error.system_error": "Kesalahan Sistem",
   "error.username_invalid_chars": "Nama pengguna memiliki karakter aneh",

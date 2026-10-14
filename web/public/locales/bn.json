@@ -109,7 +109,7 @@
   "error.label_required": "শিরোনাম প্রয়োজন",
   "error.missing_url": "URL অনুপস্থিত",
   "error.not_found": "এটি খুঁজে পাওয়া যাচ্ছে না",
-  "error.password_max_length": "পাসওয়ার্ড খুব বড় (সর্বোচ্চ ৭২ অক্ষর)",
+  "error.password_max_length": "পাসওয়ার্ড খুব বড় (সর্বোচ্চ ২৫৬ অক্ষর)",
   "error.password_min_length": "পাসওয়ার্ড খুব ছোট (ন্যূনতম 4 অক্ষর)",
   "error.system_error": "সিস্টেম ত্রুটি",
   "error.username_invalid_chars": "ব্যবহারকারীর নামে অদ্ভুত অক্ষর আছে",

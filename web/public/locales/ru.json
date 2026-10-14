@@ -109,7 +109,7 @@
   "error.label_required": "Требуется заголовок",
   "error.missing_url": "URL отсутствует",
   "error.not_found": "Это не удалось найти",
-  "error.password_max_length": "Пароль слишком длинный (макс. 72 символа)",
+  "error.password_max_length": "Пароль слишком длинный (макс. 256 символов)",
   "error.password_min_length": "Пароль слишком короткий (мин 4 симв.)",
   "error.system_error": "Системная ошибка",
   "error.username_invalid_chars": "Имя пользователя содержит странные символы",

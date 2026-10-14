@@ -109,7 +109,7 @@
   "error.label_required": "タイトルが必要です",
   "error.missing_url": "URLがありません",
   "error.not_found": "見つかりませんでした",
-  "error.password_max_length": "パスワードが長すぎます（最大72文字）",
+  "error.password_max_length": "パスワードが長すぎます（最大256文字）",
   "error.password_min_length": "パスワードが短すぎます (最短4文字)",
   "error.system_error": "システムエラー",
   "error.username_invalid_chars": "ユーザー名に奇妙な文字が含まれています",

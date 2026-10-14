@@ -109,7 +109,7 @@
   "error.label_required": "Απαιτείται τίτλος",
   "error.missing_url": "Λείψι το URL",
   "error.not_found": "Δεν βρέθηκε",
-  "error.password_max_length": "Ο κωδικός είναι πολύ μεγάλος (μέγ. 72 χαρακτήρες)",
+  "error.password_max_length": "Ο κωδικός είναι πολύ μεγάλος (μέγ. 256 χαρακτήρες)",
   "error.password_min_length": "Ο κωδικός είναι πολύ μικρός (ελαχ. 4 χαρακτήρες)",
   "error.system_error": "Σφάλμα συστήματος",
   "error.username_invalid_chars": "Το όνομα χρήστη έχει παράξενους χαρακτήρες",

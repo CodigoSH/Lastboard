@@ -109,7 +109,7 @@
   "error.label_required": "العنوان مطلوب",
   "error.missing_url": "عنوان URL مفقود",
   "error.not_found": "تعذر العثور على ذلك",
-  "error.password_max_length": "كلمة المرور طويلة جدًا (72 حرفًا كحد أقصى)",
+  "error.password_max_length": "كلمة المرور طويلة جدًا (256 حرفًا كحد أقصى)",
   "error.password_min_length": "كلمة المرور قصيرة جداً (الحد الأدنى 4 أحرف)",
   "error.system_error": "خطأ في النظام",
   "error.username_invalid_chars": "اسم المستخدم يحتوي على أحرف غريبة",

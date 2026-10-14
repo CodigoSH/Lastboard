@@ -109,7 +109,7 @@
   "error.label_required": "Titel vereist",
   "error.missing_url": "URL ontbreekt",
   "error.not_found": "Dat kan niet worden gevonden",
-  "error.password_max_length": "Wachtwoord te lang (max. 72 tekens)",
+  "error.password_max_length": "Wachtwoord te lang (max. 256 tekens)",
   "error.password_min_length": "Wachtwoord te kort (min 4 tekens)",
   "error.system_error": "Systeemfout",
   "error.username_invalid_chars": "Gebruikersnaam heeft vreemde tekens",

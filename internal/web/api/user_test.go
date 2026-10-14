@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -125,8 +126,18 @@ func TestValidatePassword(t *testing.T) {
 			wantErr:  true,
 		},
 		{
-			name:     "Invalid - too long (73 chars)",
-			password: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678901234567890",
+			name:     "Valid - a long passphrase (200 chars) is not cut at bcrypt's 72 bytes",
+			password: strings.Repeat("correct horse ", 14) + "battery",
+			wantErr:  false,
+		},
+		{
+			name:     "Valid - 256 characters of three bytes each: the limit counts characters",
+			password: strings.Repeat("ぜ", 256),
+			wantErr:  false,
+		},
+		{
+			name:     "Invalid - too long (257 chars)",
+			password: strings.Repeat("a", 257),
 			wantErr:  true,
 		},
 		{

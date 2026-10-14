@@ -109,7 +109,7 @@
   "error.label_required": "제목이 필요합니다",
   "error.missing_url": "URL 누락",
   "error.not_found": "찾을 수 없습니다",
-  "error.password_max_length": "비밀번호가 너무 깁니다 (최대 72자)",
+  "error.password_max_length": "비밀번호가 너무 깁니다 (최대 256자)",
   "error.password_min_length": "비밀번호가 너무 짧습니다 (최소 4자)",
   "error.system_error": "시스템 오류",
   "error.username_invalid_chars": "사용자 이름에 이상한 문자가 있습니다",

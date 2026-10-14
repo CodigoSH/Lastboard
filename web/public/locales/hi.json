@@ -109,7 +109,7 @@
   "error.label_required": "शीर्षक आवश्यक",
   "error.missing_url": "URL गायब है",
   "error.not_found": "वह नहीं मिला",
-  "error.password_max_length": "पासवर्ड बहुत लंबा है (अधिकतम 72 वर्ण)",
+  "error.password_max_length": "पासवर्ड बहुत लंबा है (अधिकतम 256 वर्ण)",
   "error.password_min_length": "पासवर्ड बहुत छोटा है (न्यूनतम 4 वर्ण)",
   "error.system_error": "सिस्टम त्रुटि",
   "error.username_invalid_chars": "उपयोगकर्ता नाम में अजीब वर्ण हैं",

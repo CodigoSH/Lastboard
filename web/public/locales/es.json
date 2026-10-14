@@ -109,7 +109,7 @@
   "error.label_required": "Necesitas un título",
   "error.missing_url": "Falta la URL",
   "error.not_found": "No se puede encontrar eso",
-  "error.password_max_length": "Contraseña demasiado larga (máx. 72 caracteres)",
+  "error.password_max_length": "Contraseña demasiado larga (máx. 256 caracteres)",
   "error.password_min_length": "Contraseña demasiado corta (mínimo 4 caracteres)",
   "error.system_error": "Error del sistema",
   "error.username_invalid_chars": "El usuario tiene caracteres extraños",

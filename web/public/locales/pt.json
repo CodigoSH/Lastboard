@@ -109,7 +109,7 @@
   "error.label_required": "É necessário um título",
   "error.missing_url": "URL ausente",
   "error.not_found": "Não é posible encontrar isso",
-  "error.password_max_length": "Senha muito longa (máx. 72 caracteres)",
+  "error.password_max_length": "Senha muito longa (máx. 256 caracteres)",
   "error.password_min_length": "Senha muito curta (mín. 4 caracteres)",
   "error.system_error": "Erro do sistema",
   "error.username_invalid_chars": "O nome de utilizador tem caracteres estranhos",

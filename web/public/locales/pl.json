@@ -109,7 +109,7 @@
   "error.label_required": "Wymagany tytuł",
   "error.missing_url": "Brak adresu URL",
   "error.not_found": "Nie można tego znaleźć",
-  "error.password_max_length": "Hasło za długie (maks. 72 znaki)",
+  "error.password_max_length": "Hasło za długie (maks. 256 znaków)",
   "error.password_min_length": "Hasło za krótkie (min 4 znaki)",
   "error.system_error": "Błąd systemu",
   "error.username_invalid_chars": "Nazwa użytkownika zawiera dziwne znaki",
