@@ -55,7 +55,7 @@ func (c proxmoxConfig) configured() bool {
 	return c.URL != "" && c.TokenID != "" && c.Secret != ""
 }
 
-// newProxmoxClient builds the HTTP client for a configuration.
+// newProxmoxClient returns the HTTP client for a configuration.
 //
 // InsecureSkipVerify is offered deliberately. Proxmox ships with a self-signed
 // certificate and the overwhelming majority of installations never replace it;
@@ -63,14 +63,32 @@ func (c proxmoxConfig) configured() bool {
 // administrator's own hypervisor on the administrator's own network, and the
 // choice is theirs to make explicitly — not a default we take for them.
 func newProxmoxClient(cfg proxmoxConfig) *http.Client {
+	if cfg.Insecure {
+		return proxmoxClientLax
+	}
+	return proxmoxClientStrict
+}
+
+// Two clients for the whole process, one per answer to "check the certificate?".
+// A transport pools its connections per server, so every host shares them without
+// ever sharing a connection. Each call used to build a transport of its own and
+// drop it: every call paid a full TCP and TLS handshake and left a connection
+// waiting for a transport nobody would use again.
+var (
+	proxmoxClientStrict = &http.Client{Timeout: proxmoxTimeout, Transport: proxmoxTransport(false)}
+	proxmoxClientLax    = &http.Client{Timeout: proxmoxTimeout, Transport: proxmoxTransport(true)}
+)
+
+func proxmoxTransport(skipVerify bool) *http.Transport {
 	tr := &http.Transport{
+		MaxIdleConns:        32,
 		MaxIdleConnsPerHost: 4,
 		IdleConnTimeout:     30 * time.Second,
 	}
-	if cfg.Insecure {
+	if skipVerify {
 		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402 — see above
 	}
-	return &http.Client{Timeout: proxmoxTimeout, Transport: tr}
+	return tr
 }
 
 // proxmoxDo performs one API call and decodes the `data` envelope every

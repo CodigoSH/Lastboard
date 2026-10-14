@@ -75,7 +75,56 @@ type DockerStats struct {
 
 // ─── Private Helper ────────────────────────────────────────────────────────────
 
-// newDockerClient returns a configured *http.Client and the base URL to use
+// dockerIdleTimeout is how long an unused connection to a daemon is kept.
+const dockerIdleTimeout = 90 * time.Second
+
+// maxDockerClients bounds the cache below. A handful of hosts is the normal
+// case; the bound is for the person who tries many addresses while setting one up.
+const maxDockerClients = 32
+
+type dockerEndpoint struct {
+	client *http.Client
+	base   string
+}
+
+var (
+	dockerClientsMu sync.Mutex
+	dockerClients   = map[string]dockerEndpoint{}
+)
+
+// newDockerClient returns the client for a daemon, the same one every time it is
+// asked for the same address.
+//
+// It used to build a new client on every call, and with it a new connection pool
+// that nobody closed: the widget asks every few seconds for as long as the board
+// is open, and each ask left a connection and the goroutines serving it behind
+// (measured against a real daemon: two hundred asks took the process from 12 to
+// 134 open files). One client per address means one pooled connection, reused.
+//
+// The address includes the agent's token, so two hosts never share a client and
+// one host's token is never sent to another.
+func newDockerClient(hostURL string) (*http.Client, string, error) {
+	dockerClientsMu.Lock()
+	defer dockerClientsMu.Unlock()
+
+	if e, ok := dockerClients[hostURL]; ok {
+		return e.client, e.base, nil
+	}
+	client, base, err := buildDockerClient(hostURL)
+	if err != nil {
+		return nil, "", err
+	}
+	if len(dockerClients) >= maxDockerClients {
+		for _, old := range dockerClients {
+			old.client.CloseIdleConnections()
+		}
+		dockerClients = map[string]dockerEndpoint{}
+	}
+	dockerClients[hostURL] = dockerEndpoint{client: client, base: base}
+	return client, base, nil
+}
+
+// buildDockerClient returns a configured *http.Client and the base URL to use
 // for the given hostURL.
 //
 // The schemes Docker itself uses in DOCKER_HOST are understood, so an address
@@ -92,13 +141,14 @@ type DockerStats struct {
 // "npipe://" and "ssh://" are refused by name rather than mangled: both are
 // valid DOCKER_HOST values that this cannot reach, and saying so beats a
 // four-second timeout and "could not connect".
-func newDockerClient(hostURL string) (*http.Client, string, error) {
+func buildDockerClient(hostURL string) (*http.Client, string, error) {
 	const timeout = 10 * time.Second
 
 	// A Unix socket, wherever it lives.
 	unixClient := func(socket string) *http.Client {
 		transport := &http.Transport{
 			MaxIdleConnsPerHost: statsParallelism,
+			IdleConnTimeout:     dockerIdleTimeout,
 			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 				return (&net.Dialer{Timeout: timeout}).DialContext(ctx, "unix", socket)
 			},
@@ -186,7 +236,7 @@ func pooledTransport(tlsCfg *tls.Config) *http.Transport {
 		TLSClientConfig:     tlsCfg,
 		MaxIdleConns:        statsParallelism * 2,
 		MaxIdleConnsPerHost: statsParallelism,
-		IdleConnTimeout:     90 * time.Second,
+		IdleConnTimeout:     dockerIdleTimeout,
 	}
 }
 

@@ -2,9 +2,11 @@ package api
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -259,5 +261,54 @@ func TestAHugeResponseIsCapped(t *testing.T) {
 	err := proxmoxDo(cfg, http.MethodGet, "/version", &out)
 	if err == nil {
 		t.Fatal("a 12MB body was accepted; the cap is not being applied")
+	}
+}
+
+// Every call used to build its own transport and let go of it, so every call
+// paid a full TCP and TLS handshake and left a connection waiting for a
+// transport nobody would use again. The page asks every fifteen seconds, per
+// host, for as long as it is open.
+func TestAskingProxmoxAgainReusesTheConnection(t *testing.T) {
+	var opened atomic.Int32
+	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":[]}`))
+	}))
+	srv.Config.ConnState = func(_ net.Conn, state http.ConnState) {
+		if state == http.StateNew {
+			opened.Add(1)
+		}
+	}
+	srv.StartTLS()
+	defer srv.Close()
+
+	cfg := proxmoxConfig{URL: srv.URL, TokenID: "u@pam!t", Secret: "s", Insecure: true}
+	for i := 0; i < 10; i++ {
+		var out []pxResource
+		if err := proxmoxDo(cfg, http.MethodGet, "/cluster/resources", &out); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := opened.Load(); got != 1 {
+		t.Fatalf("10 calls opened %d connections, want 1", got)
+	}
+}
+
+// Whether the certificate is checked is the administrator's choice per host, so
+// the two settings never share a client.
+func TestTheCertificateChoiceNeverSharesAClient(t *testing.T) {
+	strict := newProxmoxClient(proxmoxConfig{})
+	lax := newProxmoxClient(proxmoxConfig{Insecure: true})
+	if strict == lax {
+		t.Fatal("a host that checks the certificate and one that does not share a client")
+	}
+	if strict != newProxmoxClient(proxmoxConfig{URL: "https://other:8006"}) {
+		t.Fatal("two hosts that check the certificate do not share one")
+	}
+	if tr := strict.Transport.(*http.Transport); tr.TLSClientConfig != nil && tr.TLSClientConfig.InsecureSkipVerify {
+		t.Fatal("the strict client skips verification")
+	}
+	if tr := lax.Transport.(*http.Transport); tr.TLSClientConfig == nil || !tr.TLSClientConfig.InsecureSkipVerify {
+		t.Fatal("the lax client verifies")
 	}
 }

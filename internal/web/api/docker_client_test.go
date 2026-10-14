@@ -2,10 +2,13 @@ package api
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -310,5 +313,96 @@ func TestNewDockerClient_RejectsWhatItCannotReach(t *testing.T) {
 		if _, _, err := newDockerClient(host); err == nil {
 			t.Errorf("newDockerClient(%q) accepted an address it cannot reach", host)
 		}
+	}
+}
+
+// Asking the same daemon again and again has to reuse one connection. Every
+// call used to build a fresh client, and with it a fresh pool nobody closed: the
+// widget asks every few seconds for as long as the board is open, and each ask
+// left a connection (and the goroutines serving it) behind. Measured against a
+// real daemon, two hundred asks took the process from 12 to 134 open files.
+func TestAskingTheSameDaemonReusesItsConnection(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[]`))
+	})
+	var opened atomic.Int32
+	count := func(_ net.Conn, state http.ConnState) {
+		if state == http.StateNew {
+			opened.Add(1)
+		}
+	}
+
+	t.Run("over TCP", func(t *testing.T) {
+		opened.Store(0)
+		srv := httptest.NewUnstartedServer(handler)
+		srv.Config.ConnState = count
+		srv.Start()
+		defer srv.Close()
+		for i := 0; i < 20; i++ {
+			if _, err := ListContainers(srv.URL); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if got := opened.Load(); got != 1 {
+			t.Fatalf("20 calls opened %d connections, want 1", got)
+		}
+	})
+
+	t.Run("over a Unix socket", func(t *testing.T) {
+		opened.Store(0)
+		sock := filepath.Join(t.TempDir(), "d.sock")
+		ln, err := net.Listen("unix", sock)
+		if err != nil {
+			t.Fatal(err)
+		}
+		srv := &http.Server{Handler: handler, ConnState: count}
+		go srv.Serve(ln)
+		defer srv.Close()
+		for i := 0; i < 20; i++ {
+			if _, err := ListContainers("unix://" + sock); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if got := opened.Load(); got != 1 {
+			t.Fatalf("20 calls opened %d connections, want 1", got)
+		}
+	})
+}
+
+// Two different daemons must not share a client: the token an agent is reached
+// with is part of its address, and a client reused across them would send one
+// host's token to the other.
+func TestDifferentDaemonsDoNotShareAClient(t *testing.T) {
+	a, _, err := newDockerClient("agent://one.example:9?token=A")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _, err := newDockerClient("agent://two.example:9?token=B")
+	if err != nil {
+		t.Fatal(err)
+	}
+	a2, _, _ := newDockerClient("agent://one.example:9?token=A")
+	if a == b {
+		t.Fatal("two hosts got the same client")
+	}
+	if a != a2 {
+		t.Fatal("the same host got a new client")
+	}
+}
+
+// The cache is for the handful of hosts a board really has. Someone trying many
+// addresses while setting one up must not make it grow without end.
+func TestTheClientCacheIsBounded(t *testing.T) {
+	for i := 0; i < maxDockerClients*3; i++ {
+		if _, _, err := newDockerClient(fmt.Sprintf("agent://h%d.example:9?token=t", i)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	dockerClientsMu.Lock()
+	n := len(dockerClients)
+	dockerClientsMu.Unlock()
+	if n > maxDockerClients {
+		t.Fatalf("the cache holds %d clients, the bound is %d", n, maxDockerClients)
 	}
 }
