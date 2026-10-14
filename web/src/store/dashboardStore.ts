@@ -202,7 +202,7 @@ class DashboardStore {
         // Ensure items is always an array before notifying
         this.ensureItemsIsArray();
         // Make a deep copy of state for initial call
-        listener({ ...this.state, items: this.deepCopyItems(this.state.items) });
+        listener({ ...this.state, items: this.copyItems(this.state.items) });
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
@@ -216,22 +216,15 @@ class DashboardStore {
         }
     }
 
-    private deepCopyItems(items: GridItem[]): GridItem[] {
-        return items.map(item => {
-            // Deep copy content if it's an object
-            let contentCopy = item.content;
-            if (typeof item.content === 'string') {
-                try {
-                    const parsed = JSON.parse(item.content);
-                    if (typeof parsed === 'object' && parsed !== null) {
-                        contentCopy = JSON.stringify(parsed);
-                    }
-                } catch {
-                    // Content is not JSON, keep as is
-                }
-            }
-            return { ...item, content: contentCopy, status: item.status };
-        });
+    /**
+     * A fresh array of fresh objects, so a listener that reorders or edits what it
+     * was handed cannot reach the store's own. A content string needs no copy, it
+     * cannot be changed; this used to parse and stringify every one of them on every
+     * notification, which protected nothing and cost a pass over all the content
+     * each time the server reported its load.
+     */
+    private copyItems(items: GridItem[]): GridItem[] {
+        return items.map(item => ({ ...item }));
     }
 
     // Set item status without syncing to backend (transient state)
@@ -274,7 +267,7 @@ class DashboardStore {
         // Always pass a deep copy to prevent mutation
         const safeCopy = {
             ...this.state,
-            items: this.deepCopyItems(this.state.items)
+            items: this.copyItems(this.state.items)
         };
         this.listeners.forEach(listener => listener(safeCopy));
     }
