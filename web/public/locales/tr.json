@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "İndirilen güncelleme bütünlük denetiminden geçemedi. Lütfen tekrar deneyin.",
   "notifier.update_extract_failed": "Güncelleme paketi açılamadı. Lütfen tekrar deneyin.",
   "notifier.update_install_failed": "İndirildi ancak yeni sürüm kurulamadı. Sunucu günlüklerini kontrol edin.",
+  "notifier.update_in_progress": "Bir güncelleme zaten çalışıyor. Bitmesini bekle.",
   "notifier.update_unprivileged": "Otomatik güncelleme kullanılamıyor: uygulama kendi dosyalarını değiştiremiyor. 'docker pull' ile veya kurulum betiğini yeniden çalıştırarak güncelleyin.",
   "notifier.update_invalid_url": "Geçersiz güncelleme kaynağı. Tekrar deneyin veya elle güncelleyin.",
   "update.modal_title": "Yazılım güncellemesi",

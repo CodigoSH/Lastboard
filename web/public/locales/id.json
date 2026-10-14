@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "Pembaruan yang diunduh gagal pemeriksaan integritas. Silakan coba lagi.",
   "notifier.update_extract_failed": "Paket pembaruan tidak dapat diekstrak. Silakan coba lagi.",
   "notifier.update_install_failed": "Terunduh, tetapi versi baru tidak dapat dipasang. Periksa log server.",
+  "notifier.update_in_progress": "Pembaruan sedang berjalan. Tunggu hingga selesai.",
   "notifier.update_unprivileged": "Pembaruan otomatis tidak tersedia: aplikasi tidak dapat mengganti berkasnya sendiri. Perbarui dengan 'docker pull' atau menjalankan ulang skrip instalasi.",
   "notifier.update_invalid_url": "Sumber pembaruan tidak valid. Coba lagi atau perbarui secara manual.",
   "update.modal_title": "Pembaruan sistem",

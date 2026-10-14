@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "فشل التحقق من سلامة التحديث الذي تم تنزيله. يُرجى المحاولة مرة أخرى.",
   "notifier.update_extract_failed": "تعذّر فك ضغط حزمة التحديث. يُرجى المحاولة مرة أخرى.",
   "notifier.update_install_failed": "تم التنزيل، لكن تعذّر تثبيت الإصدار الجديد. راجِع سجلّات الخادم.",
+  "notifier.update_in_progress": "هناك تحديث قيد التنفيذ بالفعل. انتظر حتى ينتهي.",
   "notifier.update_unprivileged": "التحديث التلقائي غير متاح: لا يمكن للتطبيق استبدال ملفاته. حدِّث باستخدام 'docker pull' أو بإعادة تشغيل سكربت التثبيت.",
   "notifier.update_invalid_url": "مصدر التحديث غير صالح. حاول مرة أخرى أو حدِّث يدويًا.",
   "update.modal_title": "تحديث النظام",

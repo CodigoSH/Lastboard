@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "The downloaded update failed its integrity check. Please try again.",
   "notifier.update_extract_failed": "The update package couldn't be unpacked. Please try again.",
   "notifier.update_install_failed": "Downloaded, but the new version couldn't be installed. Check the server logs.",
+  "notifier.update_in_progress": "An update is already running. Wait for it to finish.",
   "notifier.update_unprivileged": "Automatic update isn't available: the app can't replace its own files. Update with 'docker pull' or by re-running the install script.",
   "notifier.update_invalid_url": "Invalid update source. Try again or update manually.",
   "update.modal_title": "Software update",

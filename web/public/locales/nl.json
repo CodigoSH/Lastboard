@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "De gedownloade update is niet door de integriteitscontrole gekomen. Probeer het opnieuw.",
   "notifier.update_extract_failed": "Het updatepakket kon niet worden uitgepakt. Probeer het opnieuw.",
   "notifier.update_install_failed": "Gedownload, maar de nieuwe versie kon niet worden geïnstalleerd. Controleer de serverlogs.",
+  "notifier.update_in_progress": "Er loopt al een update. Wacht tot die klaar is.",
   "notifier.update_unprivileged": "Automatische update niet beschikbaar: de app kan zijn eigen bestanden niet vervangen. Update met 'docker pull' of door het installatiescript opnieuw uit te voeren.",
   "notifier.update_invalid_url": "Ongeldige updatebron. Probeer het opnieuw of update handmatig.",
   "update.modal_title": "Software-update",

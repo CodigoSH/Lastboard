@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "A atualização baixada falhou na verificação de integridade. Tente novamente.",
   "notifier.update_extract_failed": "Não foi possível descompactar o pacote de atualização. Tente novamente.",
   "notifier.update_install_failed": "Baixado, mas não foi possível instalar a nova versão. Verifique os logs do servidor.",
+  "notifier.update_in_progress": "Já existe uma atualização em curso. Aguarda que termine.",
   "notifier.update_unprivileged": "Atualização automática indisponível: o app não pode substituir os próprios arquivos. Atualize com 'docker pull' ou executando novamente o script de instalação.",
   "notifier.update_invalid_url": "Origem de atualização inválida. Tente novamente ou atualize manualmente.",
   "update.modal_title": "Atualização do sistema",

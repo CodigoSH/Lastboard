@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "La actualización descargada no pasó la verificación de integridad. Inténtalo de nuevo.",
   "notifier.update_extract_failed": "No se pudo descomprimir el paquete de actualización. Inténtalo de nuevo.",
   "notifier.update_install_failed": "Se descargó, pero no se pudo instalar la nueva versión. Revisa los registros del servidor.",
+  "notifier.update_in_progress": "Ya hay una actualización en curso. Espera a que termine.",
   "notifier.update_unprivileged": "La actualización automática no está disponible: la app no puede reemplazar sus propios archivos. Actualiza con 'docker pull' o volviendo a ejecutar el script de instalación.",
   "notifier.update_invalid_url": "Origen de actualización no válido. Inténtalo de nuevo o actualiza manualmente.",
   "update.modal_title": "Actualización del sistema",

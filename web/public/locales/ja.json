@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "ダウンロードしたアップデートの整合性チェックに失敗しました。もう一度お試しください。",
   "notifier.update_extract_failed": "アップデートパッケージを展開できませんでした。もう一度お試しください。",
   "notifier.update_install_failed": "ダウンロードしましたが、新しいバージョンをインストールできませんでした。サーバーのログを確認してください。",
+  "notifier.update_in_progress": "すでに更新を実行中です。完了するまでお待ちください。",
   "notifier.update_unprivileged": "自動アップデートは利用できません：アプリが自身のファイルを置き換えられません。「docker pull」またはインストールスクリプトの再実行で更新してください。",
   "notifier.update_invalid_url": "更新元が無効です。もう一度試すか、手動で更新してください。",
   "update.modal_title": "ソフトウェアの更新",

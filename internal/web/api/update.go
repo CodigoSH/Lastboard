@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -28,6 +29,9 @@ import (
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
+// updateInProgress is what a second update is told while one is already running.
+const updateInProgress = "notifier.update_in_progress"
+
 type UpdateHandler struct {
 	DB *sql.DB
 
@@ -36,6 +40,10 @@ type UpdateHandler struct {
 	// docker replaces the container check in tests: the CI runs in a
 	// container, where the real check would skip what a test is asking about.
 	docker func() bool
+
+	// updating is set while an update runs. Two at once would both replace the
+	// same binary, so a second is refused until the first ends.
+	updating atomic.Bool
 }
 
 func NewUpdateHandler(db *sql.DB) *UpdateHandler {
@@ -387,11 +395,25 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 		return "", &ev
 	}
 
+	if !h.updating.CompareAndSwap(false, true) {
+		return fail(StepDownload, updateInProgress, "")
+	}
+	defer h.updating.Store(false)
+
 	// 1. Download the release archive and the checksums that describe it.
 	emit(UpdateEvent{Step: StepDownload, Status: StatusRunning})
 
-	tmpFile := filepath.Join(os.TempDir(), "dashboard_update.tar.gz")
-	defer os.Remove(tmpFile)
+	// Everything this run writes lives in a directory of its own, removed with
+	// the run: fixed names in the shared temp directory let two runs, or a
+	// leftover from a crash, hand each other a half-written file.
+	workDir, err := os.MkdirTemp("", "lastboard-update-*")
+	if err != nil {
+		slog.Error("Update failed: could not create a working directory", "error", err)
+		return fail(StepDownload, "notifier.update_download_failed", "")
+	}
+	defer os.RemoveAll(workDir)
+
+	tmpFile := filepath.Join(workDir, "release.tar.gz")
 
 	if err := h.downloadFile(assetURL, tmpFile); err != nil {
 		slog.Error("Update failed: could not download binary", "asset_url", assetURL, "tmp_file", tmpFile, "error", err)
@@ -401,8 +423,7 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 	checksumCopy := *parsedURL
 	checksumCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt"
 	checksumURL := checksumCopy.String()
-	checksumFile := filepath.Join(os.TempDir(), "checksums.txt")
-	defer os.Remove(checksumFile)
+	checksumFile := filepath.Join(workDir, "checksums.txt")
 
 	if err := h.downloadFile(checksumURL, checksumFile); err != nil {
 		slog.Error("Update failed: could not download checksums.txt", "checksum_url", checksumURL, "error", err)
@@ -422,8 +443,7 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 
 		sigCopy := *parsedURL
 		sigCopy.Path = path.Dir(parsedURL.Path) + "/checksums.txt.sig"
-		sigFile := filepath.Join(os.TempDir(), "checksums.txt.sig")
-		defer os.Remove(sigFile)
+		sigFile := filepath.Join(workDir, "checksums.txt.sig")
 
 		if err := h.downloadFile(sigCopy.String(), sigFile); err != nil {
 			slog.Error("Update failed: checksums.txt.sig missing; refusing to install an unsigned release", "error", err)
@@ -460,7 +480,7 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 	emit(UpdateEvent{Step: StepChecksum, Status: StatusOK})
 
 	// Resolve current executable path (needed for binary name matching and atomic swap)
-	currentExe, err := os.Executable()
+	currentExe, err = os.Executable()
 	if err != nil {
 		slog.Error("Update failed: could not determine executable path", "error", err)
 		return fail(StepExtract, "notifier.update_install_failed", "")
@@ -471,8 +491,7 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 
 	// 4. Extract
 	emit(UpdateEvent{Step: StepExtract, Status: StatusRunning})
-	binaryPath := filepath.Join(os.TempDir(), "dashboard_new")
-	defer os.Remove(binaryPath)
+	binaryPath := filepath.Join(workDir, "new-binary")
 	if err := h.extractTarGz(tmpFile, binaryPath, filepath.Base(currentExe)); err != nil {
 		slog.Error("Update failed: could not extract binary from archive", "error", err)
 		return fail(StepExtract, "notifier.update_extract_failed", "")
@@ -560,7 +579,11 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	if !streaming {
 		currentExe, failure := h.runUpdate(req.AssetUrl, parsedURL, func(UpdateEvent) {})
 		if failure != nil {
-			http.Error(w, failure.Error, http.StatusInternalServerError)
+			status := http.StatusInternalServerError
+			if failure.Error == updateInProgress {
+				status = http.StatusConflict
+			}
+			http.Error(w, failure.Error, status)
 			return
 		}
 		h.scheduleRestart(currentExe)

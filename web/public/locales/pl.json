@@ -443,6 +443,7 @@
   "notifier.update_checksum_failed": "Pobrana aktualizacja nie przeszła weryfikacji integralności. Spróbuj ponownie.",
   "notifier.update_extract_failed": "Nie można rozpakować pakietu aktualizacji. Spróbuj ponownie.",
   "notifier.update_install_failed": "Pobrano, ale nie udało się zainstalować nowej wersji. Sprawdź logi serwera.",
+  "notifier.update_in_progress": "Aktualizacja już trwa. Poczekaj, aż się zakończy.",
   "notifier.update_unprivileged": "Automatyczna aktualizacja niedostępna: aplikacja nie może zastąpić własnych plików. Zaktualizuj przez 'docker pull' lub ponownie uruchamiając skrypt instalacyjny.",
   "notifier.update_invalid_url": "Nieprawidłowe źródło aktualizacji. Spróbuj ponownie lub zaktualizuj ręcznie.",
   "update.modal_title": "Aktualizacja oprogramowania",
