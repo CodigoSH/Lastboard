@@ -2,9 +2,12 @@ package api_test
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 )
 
 func postJSONAs(t *testing.T, s *userSession, url, body string) int {
@@ -139,5 +142,64 @@ func TestAnEndedLockoutStartsFromScratch(t *testing.T) {
 	}
 	if code := change("password123"); code != http.StatusOK {
 		t.Errorf("the right password after one mistake answered %d: the old failures were still counted", code)
+	}
+}
+
+func putJSONAs(t *testing.T, s *userSession, url, body string) (int, string) {
+	t.Helper()
+	req, _ := http.NewRequest("PUT", url, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	return resp.StatusCode, strings.TrimSpace(string(raw))
+}
+
+// Editing an account from the administration panel has to mean something: an id
+// that is nobody's is not "updated", a name already taken is a conflict the
+// panel can word, and the administrator's own password is not changed from here
+// — that goes through the profile, which asks for the current one, so a stolen
+// session cannot be used to set a new password nobody had to know the old one for.
+func TestEditingAccountsFromTheAdminPanel(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "boss", "correcthorse", "admin")
+	createUser(t, db.DB, "bob", "password123", "user")
+	boss := doLogin(t, server.URL, "boss", "correcthorse")
+	var bossID, bobID int
+	db.DB.QueryRow(`SELECT id FROM users WHERE username='boss'`).Scan(&bossID)
+	db.DB.QueryRow(`SELECT id FROM users WHERE username='bob'`).Scan(&bobID)
+	url := server.URL + "/api/users"
+
+	if code, _ := putJSONAs(t, boss, url, `{"id":9999,"username":"ghost"}`); code != http.StatusNotFound {
+		t.Errorf("editing an account that does not exist answered %d, want 404", code)
+	}
+
+	code, body := putJSONAs(t, boss, url, fmt.Sprintf(`{"id":%d,"username":"boss"}`, bobID))
+	if code != http.StatusConflict || body != "error.username_taken" {
+		t.Errorf("renaming to a name that is taken answered %d %q, want 409 error.username_taken", code, body)
+	}
+
+	if code, _ := putJSONAs(t, boss, url, fmt.Sprintf(`{"id":%d,"username":"boss","password":"stolen-session-pass"}`, bossID)); code != http.StatusForbidden {
+		t.Errorf("changing the administrator's own password from the panel answered %d, want 403", code)
+	}
+	var hash string
+	db.DB.QueryRow(`SELECT password FROM users WHERE id = ?`, bossID).Scan(&hash)
+	if err := password.Verify("correcthorse", hash); err != nil {
+		t.Error("the administrator's password was changed anyway")
+	}
+
+	// What the panel does for real still works.
+	if code, _ := putJSONAs(t, boss, url, fmt.Sprintf(`{"id":%d,"username":"robert","password":"a-new-passphrase"}`, bobID)); code != http.StatusOK {
+		t.Errorf("editing another account answered %d, want 200", code)
+	}
+
+	// Creating an account with a name that is taken says so, too.
+	if code := postJSONAs(t, boss, url, `{"username":"robert","password":"another-passphrase"}`); code != http.StatusConflict {
+		t.Errorf("creating a duplicate answered %d, want 409", code)
 	}
 }

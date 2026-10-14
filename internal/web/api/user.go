@@ -453,8 +453,12 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	result, err := stmt.Exec(input.Username, string(hashedPassword), time.Now(), defaultAvatar)
 	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			http.Error(w, "error.username_taken", http.StatusConflict)
+			return
+		}
 		slog.Error("Failed to create user", "error", err)
-		http.Error(w, "general.db_error", http.StatusConflict)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
@@ -498,12 +502,20 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
+	// The administrator's own account is edited from their profile, which asks
+	// for the current password. This panel never asks, so it must not be a way
+	// round that question.
+	if input.ID == middleware.GetUserIDFromContext(r) {
+		http.Error(w, "error.forbidden", http.StatusForbidden)
+		return
+	}
 
 	if err := validateUsername(input.Username); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	var res sql.Result
 	var err error
 	if input.Password != "" {
 		if err := validatePassword(input.Password); err != nil {
@@ -515,14 +527,22 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "general.internal_error", http.StatusInternalServerError)
 			return
 		}
-		_, err = h.DB.Exec("UPDATE users SET username=?, password=?, password_version=password_version+1 WHERE id=?", input.Username, string(hashedPassword), input.ID)
+		res, err = h.DB.ExecContext(r.Context(), "UPDATE users SET username=?, password=?, password_version=password_version+1 WHERE id=?", input.Username, string(hashedPassword), input.ID)
 	} else {
-		_, err = h.DB.Exec("UPDATE users SET username=? WHERE id=?", input.Username, input.ID)
+		res, err = h.DB.ExecContext(r.Context(), "UPDATE users SET username=? WHERE id=?", input.Username, input.ID)
 	}
 
 	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			http.Error(w, "error.username_taken", http.StatusConflict)
+			return
+		}
 		slog.Error("Failed to update user", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 
