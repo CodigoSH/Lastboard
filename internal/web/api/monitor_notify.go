@@ -70,15 +70,17 @@ func sendNtfy(cfg notifyConfig, service, message string, up bool) error {
 
 func sendGotify(cfg notifyConfig, service, message string) error {
 	url := strings.TrimRight(cfg.URL, "/") + "/message"
-	if cfg.Token != "" {
-		url += "?token=" + cfg.Token
-	}
 	body, _ := json.Marshal(map[string]any{"title": service, "message": message, "priority": 5})
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	// The token goes in a header Gotify reads, not in the URL: a URL is written
+	// to the access log of every proxy between here and the server.
+	if cfg.Token != "" {
+		req.Header.Set("X-Gotify-Key", cfg.Token)
+	}
 	return doNotify(req)
 }
 

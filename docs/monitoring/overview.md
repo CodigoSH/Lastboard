@@ -81,7 +81,7 @@ Use **Send test** to fire a test notification with the current settings and conf
 ### What each method sends
 
 - **ntfy** — a message to your topic, titled with the service name. Outages use a high priority and an alarm tag; recoveries use a normal priority and a check-mark tag.
-- **Gotify** — a titled message posted to your Gotify server (`/message`), token passed as a query parameter.
+- **Gotify** — a titled message posted to your Gotify server (`/message`), with the app token sent in the `X-Gotify-Key` header so it never appears in a URL or in the logs of anything between Lastboard and Gotify.
 - **Webhook** — a JSON payload to your endpoint:
   ```json
   {

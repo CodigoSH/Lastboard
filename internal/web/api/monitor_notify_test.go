@@ -102,8 +102,10 @@ func TestSendNtfyRecovery(t *testing.T) {
 	}
 }
 
-// TestSendGotify covers the URL rewriting: Gotify needs /message appended and
-// the token as a query parameter, and a trailing slash must not double up.
+// TestSendGotify covers the URL rewriting — Gotify needs /message appended and a
+// trailing slash must not double up — and where the token travels: in a header,
+// not in the URL, where every proxy and server between here and Gotify would
+// write it into its log.
 func TestSendGotify(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "gotify", URL: srv.URL + "/", Token: "abc"}
@@ -114,8 +116,11 @@ func TestSendGotify(t *testing.T) {
 	if got.path != "/message" {
 		t.Errorf("path = %q, want /message (trailing slash should be trimmed)", got.path)
 	}
-	if got.query != "token=abc" {
-		t.Errorf("query = %q, want token=abc", got.query)
+	if got.query != "" {
+		t.Errorf("query = %q: the token must not be in the URL", got.query)
+	}
+	if k := got.header.Get("X-Gotify-Key"); k != "abc" {
+		t.Errorf("X-Gotify-Key = %q, want the token", k)
 	}
 	if ct := got.header.Get("Content-Type"); ct != "application/json" {
 		t.Errorf("Content-Type = %q", ct)
@@ -138,6 +143,9 @@ func TestSendGotifyWithoutToken(t *testing.T) {
 	}
 	if got.query != "" {
 		t.Errorf("no token configured, but query was %q", got.query)
+	}
+	if k := got.header.Get("X-Gotify-Key"); k != "" {
+		t.Errorf("no token configured, but X-Gotify-Key was %q", k)
 	}
 }
 

@@ -450,8 +450,10 @@ func GetContainersStats(hostURL string, ids []string) (map[string]DockerStats, e
 // client and returns computed CPU and memory percentages using the standard
 // Docker formula.
 func containerStats(client *http.Client, base, containerID string) (DockerStats, error) {
-	url := fmt.Sprintf("%s/containers/%s/stats?stream=false", base, containerID)
-	resp, err := client.Get(url)
+	// The id comes from the browser: escaped, it is one segment of the path and
+	// cannot turn the rest of it into a query or climb out of /containers/.
+	target := fmt.Sprintf("%s/containers/%s/stats?stream=false", base, url.PathEscape(containerID))
+	resp, err := client.Get(target)
 	if err != nil {
 		return DockerStats{}, fmt.Errorf("docker: GET stats: %w", err)
 	}
@@ -513,8 +515,8 @@ func ContainerAction(hostURL, containerID, action string) error {
 		return fmt.Errorf("docker: build client: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/containers/%s/%s", base, containerID, action)
-	resp, err := client.Post(url, "application/json", nil)
+	target := fmt.Sprintf("%s/containers/%s/%s", base, url.PathEscape(containerID), action)
+	resp, err := client.Post(target, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("docker: POST /%s: %w", action, err)
 	}

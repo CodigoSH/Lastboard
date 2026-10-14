@@ -406,3 +406,39 @@ func TestTheClientCacheIsBounded(t *testing.T) {
 		t.Fatalf("the cache holds %d clients, the bound is %d", n, maxDockerClients)
 	}
 }
+
+// A container id comes from the browser and goes into the path of a request to
+// the daemon. Unescaped, an id containing "?" turns the rest of the path into a
+// query string, and a POST meant for /containers/<id>/stop lands somewhere else.
+func TestAContainerIDStaysOneSegmentOfThePath(t *testing.T) {
+	var gotURI string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotURI = r.RequestURI
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	if err := ContainerAction(srv.URL, "x/../../volumes/prune?", "stop"); err != nil {
+		t.Fatalf("action: %v", err)
+	}
+	want := "/containers/x%2F..%2F..%2Fvolumes%2Fprune%3F/stop"
+	if gotURI != want {
+		t.Fatalf("the daemon was asked for %q, want %q", gotURI, want)
+	}
+
+	// And the stats request, which takes the ids from the same place.
+	if _, err := GetContainersStats(srv.URL, []string{"x/../y?"}); err != nil {
+		t.Fatalf("stats: %v", err)
+	}
+	if want := "/containers/x%2F..%2Fy%3F/stats?stream=false"; gotURI != want {
+		t.Fatalf("stats asked the daemon for %q, want %q", gotURI, want)
+	}
+
+	// A plain id is untouched.
+	if err := ContainerAction(srv.URL, "abcdef123456", "restart"); err != nil {
+		t.Fatal(err)
+	}
+	if gotURI != "/containers/abcdef123456/restart" {
+		t.Fatalf("a plain id was changed: %q", gotURI)
+	}
+}
