@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
@@ -17,8 +18,6 @@ import (
 
 // A session secret for the handlers under test. Changing your own password
 // re-issues this browser's cookie, so the handler needs one to sign with.
-var testSessionSecret = []byte("test_secret_key_12345678901234567890123456789012")
-
 // userSession holds both cookies needed for authenticated requests.
 type userSession struct {
 	sessionCookie *http.Cookie
@@ -52,7 +51,7 @@ func setupFullServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	protect := middleware.AuthRequired(db.DB, testSecret)
 
 	authHandler := api.NewAuthHandler(db.DB, testSecret)
-	userHandler := api.NewUserHandler(db.DB, testSessionSecret)
+	userHandler := api.NewUserHandler(db.DB)
 	updateHandler := api.NewUpdateHandler(db.DB)
 
 	mux.Handle("POST /api/login", http.HandlerFunc(authHandler.Login))
@@ -513,5 +512,54 @@ func TestASessionBelongsToTheAccountNotTheName(t *testing.T) {
 	createUser(t, db.DB, "bob", "another-pass", "user")
 	if got := status(); got != http.StatusUnauthorized {
 		t.Fatalf("the old account's session on a new account of the same name: %d, want 401", got)
+	}
+}
+
+// Changing the password ends the session, and the interface says so: "sign in
+// again". The handler used to sign a fresh cookie and then, one line later, send
+// another that expires it, so the response carried two contradictory cookies of
+// the same name and a database read and a signature nobody used.
+func TestChangingThePasswordSendsOneInstructionAboutTheSession(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "oldpass", "user")
+	s := doLogin(t, server.URL, "alice", "oldpass")
+
+	req, _ := http.NewRequest("POST", server.URL+"/api/user/change-password",
+		strings.NewReader(`{"current_password":"oldpass","new_password":"newpass123"}`))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var sessionCookies []*http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == "session_token" {
+			sessionCookies = append(sessionCookies, c)
+		}
+	}
+	if len(sessionCookies) != 1 {
+		t.Fatalf("the response sets the session cookie %d times, want once", len(sessionCookies))
+	}
+	if c := sessionCookies[0]; c.Value != "" || c.MaxAge >= 0 && !c.Expires.Before(time.Now()) {
+		t.Fatalf("the one cookie must end the session, got value %q expiring %v", c.Value, c.Expires)
+	}
+
+	// And the old session no longer works anywhere.
+	me, _ := http.NewRequest("GET", server.URL+"/api/me", nil)
+	s.attach(me)
+	r2, err := http.DefaultClient.Do(me)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r2.Body.Close()
+	if r2.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("the old session still works after the password changed: %d", r2.StatusCode)
 	}
 }

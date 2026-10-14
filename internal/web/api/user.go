@@ -14,18 +14,14 @@ import (
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/user"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
-	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 type UserHandler struct {
 	DB *sql.DB
-	// Secret signs session tokens. Changing your own password mints a new one
-	// for this browser so it stays signed in while the others are cut off.
-	Secret []byte
 }
 
-func NewUserHandler(db *sql.DB, secret []byte) *UserHandler {
-	return &UserHandler{DB: db, Secret: secret}
+func NewUserHandler(db *sql.DB) *UserHandler {
+	return &UserHandler{DB: db}
 }
 
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
@@ -339,26 +335,11 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Every session is now a generation behind, this browser's included. Mint it
-	// a current one: the person who just changed their password should stay
-	// where they are, and everyone else should be thrown out.
-	var newVersion int
-	userID := middleware.GetUserIDFromContext(r)
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT password_version FROM users WHERE id = ?", userID).
-		Scan(&newVersion); err == nil {
-		expiry := time.Now().Add(24 * time.Hour)
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    util.SignToken(util.AccountSessionPayload(userID, newVersion), h.Secret, expiry),
-			Path:     "/",
-			Expires:  expiry,
-			HttpOnly: true,
-			Secure:   util.IsSecureRequest(r),
-			SameSite: http.SameSiteLaxMode,
-		})
-	}
+	// Every session is now a generation behind, this browser's included, and the
+	// interface tells the person to sign in again. So the response ends the
+	// session; it does not first mint a cookie for the new generation only to
+	// expire it on the next line.
 
-	// Invalidate session for security (force re-login with new password)
 	invalidateSession(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
