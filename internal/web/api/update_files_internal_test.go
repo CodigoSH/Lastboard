@@ -94,6 +94,34 @@ func TestDownloadFile_WritesBody(t *testing.T) {
 	}
 }
 
+// A download over the ceiling is an error that says so. Cutting it at the limit
+// and carrying on left a short file that failed the checksum with a message
+// about the checksum, which is not what was wrong.
+func TestDownloadFile_RefusesWhatExceedsTheLimit(t *testing.T) {
+	old := maxDownloadBytes
+	maxDownloadBytes = 1024
+	defer func() { maxDownloadBytes = old }()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(make([]byte, 2048))
+	}))
+	defer srv.Close()
+
+	err := (&UpdateHandler{}).downloadFile(srv.URL, filepath.Join(t.TempDir(), "asset"))
+	if err == nil || !strings.Contains(err.Error(), "too large") {
+		t.Fatalf("a download over the limit answered %v, want a 'too large' error", err)
+	}
+
+	// Exactly at the limit is fine.
+	exact := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(make([]byte, 1024))
+	}))
+	defer exact.Close()
+	if err := (&UpdateHandler{}).downloadFile(exact.URL, filepath.Join(t.TempDir(), "asset")); err != nil {
+		t.Errorf("a download exactly at the limit failed: %v", err)
+	}
+}
+
 func TestDownloadFile_RejectsBadStatus(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "gone", http.StatusNotFound)
@@ -147,7 +175,7 @@ func writeWithChecksums(t *testing.T, content string, realHash bool, extraLines 
 
 func TestVerifyChecksum_AcceptsMatchingHash(t *testing.T) {
 	binPath, sumPath := writeWithChecksums(t, "release-bytes", true)
-	if err := (&UpdateHandler{}).verifyChecksum(binPath, sumPath); err != nil {
+	if err := (&UpdateHandler{}).verifyChecksum(binPath, sumPath, "lastboard-linux-amd64.tar.gz"); err != nil {
 		t.Errorf("expected the checksum to verify, got %v", err)
 	}
 }
@@ -157,14 +185,14 @@ func TestVerifyChecksum_FindsHashAmongOtherLines(t *testing.T) {
 		strings.Repeat("a", 64)+"  lastboard-linux-arm64.tar.gz",
 		strings.Repeat("b", 64)+"  something-else.tar.gz",
 	)
-	if err := (&UpdateHandler{}).verifyChecksum(binPath, sumPath); err != nil {
+	if err := (&UpdateHandler{}).verifyChecksum(binPath, sumPath, "lastboard-linux-amd64.tar.gz"); err != nil {
 		t.Errorf("expected the checksum to verify among several lines, got %v", err)
 	}
 }
 
 func TestVerifyChecksum_RejectsMismatch(t *testing.T) {
 	binPath, sumPath := writeWithChecksums(t, "release-bytes", false)
-	err := (&UpdateHandler{}).verifyChecksum(binPath, sumPath)
+	err := (&UpdateHandler{}).verifyChecksum(binPath, sumPath, "lastboard-linux-amd64.tar.gz")
 	if err == nil {
 		t.Fatal("expected a mismatch error")
 	}
@@ -173,9 +201,43 @@ func TestVerifyChecksum_RejectsMismatch(t *testing.T) {
 	}
 }
 
+// The hash has to be the one listed for the file that was downloaded. Matching
+// any line accepted another platform's archive from the same release, whose
+// hash is in the same trusted file.
+func TestVerifyChecksum_RejectsTheHashOfADifferentFile(t *testing.T) {
+	dir := t.TempDir()
+	binPath := filepath.Join(dir, "download")
+	os.WriteFile(binPath, []byte("the-arm64-archive"), 0o600)
+	sum := sha256.Sum256([]byte("the-arm64-archive"))
+	hash := hex.EncodeToString(sum[:])
+	sumPath := filepath.Join(dir, "checksums.txt")
+	os.WriteFile(sumPath, []byte(strings.Repeat("c", 64)+"  lastboard-linux-amd64.tar.gz\n"+hash+"  lastboard-linux-arm64.tar.gz\n"), 0o600)
+
+	h := &UpdateHandler{}
+	if err := h.verifyChecksum(binPath, sumPath, "lastboard-linux-amd64.tar.gz"); err == nil {
+		t.Error("the arm64 archive was accepted as the amd64 one: its hash is in the file, under another name")
+	}
+	if err := h.verifyChecksum(binPath, sumPath, "lastboard-linux-arm64.tar.gz"); err != nil {
+		t.Errorf("the archive was refused under its own name: %v", err)
+	}
+}
+
+// sha256sum marks a file read in binary mode with a star before its name.
+func TestVerifyChecksum_AcceptsABinaryModeMark(t *testing.T) {
+	dir := t.TempDir()
+	binPath := filepath.Join(dir, "download")
+	os.WriteFile(binPath, []byte("archive"), 0o600)
+	sum := sha256.Sum256([]byte("archive"))
+	sumPath := filepath.Join(dir, "checksums.txt")
+	os.WriteFile(sumPath, []byte(hex.EncodeToString(sum[:])+" *lastboard-linux-amd64.tar.gz\n"), 0o600)
+	if err := (&UpdateHandler{}).verifyChecksum(binPath, sumPath, "lastboard-linux-amd64.tar.gz"); err != nil {
+		t.Errorf("a starred name was refused: %v", err)
+	}
+}
+
 func TestVerifyChecksum_FailsWithoutChecksumFile(t *testing.T) {
 	binPath, _ := writeWithChecksums(t, "release-bytes", true)
-	if err := (&UpdateHandler{}).verifyChecksum(binPath, filepath.Join(t.TempDir(), "nope.txt")); err == nil {
+	if err := (&UpdateHandler{}).verifyChecksum(binPath, filepath.Join(t.TempDir(), "nope.txt"), "lastboard-linux-amd64.tar.gz"); err == nil {
 		t.Fatal("expected an error when checksums.txt is missing")
 	}
 }

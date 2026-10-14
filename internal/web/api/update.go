@@ -482,7 +482,7 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 
 	// 3. Verify the archive against the (now trusted) checksums.
 	emit(UpdateEvent{Step: StepChecksum, Status: StatusRunning})
-	if err := h.verifyChecksum(tmpFile, checksumFile); err != nil {
+	if err := h.verifyChecksum(tmpFile, checksumFile, path.Base(parsedURL.Path)); err != nil {
 		slog.Error("Update failed: checksum verification failed", "asset_url", assetURL, "error", err)
 		return fail(StepChecksum, "notifier.update_checksum_failed", "")
 	}
@@ -719,11 +719,26 @@ func (h *UpdateHandler) downloadFile(url string, dest string) error {
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	_, err = io.Copy(out, io.LimitReader(resp.Body, 200*1024*1024))
-	return err
+	// One byte more than the limit is read, to tell a file that ends there from
+	// one that goes on.
+	n, err := io.Copy(out, io.LimitReader(resp.Body, maxDownloadBytes+1))
+	if err != nil {
+		return err
+	}
+	if n > maxDownloadBytes {
+		return fmt.Errorf("download too large: more than %d bytes", maxDownloadBytes)
+	}
+	return nil
 }
 
-func (h *UpdateHandler) verifyChecksum(binaryPath, checksumPath string) error {
+// maxDownloadBytes is the most one update file may weigh. A variable so a test
+// can use a small one.
+var maxDownloadBytes int64 = 200 * 1024 * 1024
+
+// verifyChecksum checks the downloaded archive against the line of checksums.txt
+// that names it. The hash alone is not enough: the file lists every platform's
+// archive, and one of them must not pass for another.
+func (h *UpdateHandler) verifyChecksum(binaryPath, checksumPath, assetName string) error {
 	// Calculate SHA256 of binary
 	f, err := os.Open(binaryPath)
 	if err != nil {
@@ -743,10 +758,9 @@ func (h *UpdateHandler) verifyChecksum(binaryPath, checksumPath string) error {
 		return err
 	}
 
-	// Verify by exact match against one of the lines in the trusted checksums.txt
 	for _, line := range strings.Split(strings.TrimSpace(string(content)), "\n") {
 		fields := strings.Fields(line)
-		if len(fields) >= 1 && fields[0] == localHash {
+		if len(fields) >= 2 && fields[0] == localHash && strings.TrimPrefix(fields[1], "*") == assetName {
 			return nil
 		}
 	}

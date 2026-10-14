@@ -3,9 +3,11 @@ package api_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -469,5 +471,48 @@ func TestDeleteItem_OtherUserCannotDelete(t *testing.T) {
 	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id=?", itemID).Scan(&count)
 	if count != 1 {
 		t.Error("alice's item was wrongly deleted by bob")
+	}
+}
+
+// The browser translates what the server answers, so a refused item has to come
+// back as a key it can translate. Content that is not valid JSON used to come
+// back as the Go parser's own sentence ("invalid character 'o' in literal…").
+func TestAnItemRefusedForItsContentAnswersWithATranslationKey(t *testing.T) {
+	server, db, cleanup := setupDashServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "user")
+	var aliceID int
+	db.DB.QueryRow("SELECT id FROM users WHERE username='alice'").Scan(&aliceID)
+	res, _ := db.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'bookmark', 1, 1, 1, 1, '{"label":"A"}')`, aliceID)
+	itemID, _ := res.LastInsertId()
+	s := doLogin(t, server.URL, "alice", "password")
+
+	keyShape := regexp.MustCompile(`^[a-z0-9_]+(\.[a-z0-9_]+)+$`)
+	send := func(method, url, body string) (int, string) {
+		req, _ := http.NewRequest(method, url, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		s.attach(req)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		raw, _ := io.ReadAll(resp.Body)
+		return resp.StatusCode, strings.TrimSpace(string(raw))
+	}
+
+	cases := map[string]struct{ method, url, body string }{
+		"a new bookmark whose content is not JSON":     {"POST", server.URL + "/api/dashboard/item", `{"type":"bookmark","x":1,"y":1,"w":1,"h":1,"content":"not json"}`},
+		"a new section whose content is not JSON":      {"POST", server.URL + "/api/dashboard/item", `{"type":"section","x":1,"y":1,"w":1,"h":1,"content":"{oops"}`},
+		"an edited bookmark whose content is not JSON": {"PATCH", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, itemID), `{"content":"not json"}`},
+	}
+	for name, c := range cases {
+		code, body := send(c.method, c.url, c.body)
+		if code != http.StatusBadRequest {
+			t.Errorf("%s: got %d, want 400", name, code)
+		}
+		if !keyShape.MatchString(body) {
+			t.Errorf("%s: answered %q, which the interface cannot translate", name, body)
+		}
 	}
 }

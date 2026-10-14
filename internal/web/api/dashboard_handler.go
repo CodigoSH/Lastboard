@@ -726,7 +726,7 @@ func validateContent(itemType string, contentJson string) error {
 	case "bookmark":
 		var c BookmarkContent
 		if err := json.Unmarshal([]byte(contentJson), &c); err != nil {
-			return err
+			return logError("general.invalid_input")
 		}
 		if c.Label == "" {
 			return logError("error.label_required")
@@ -737,7 +737,7 @@ func validateContent(itemType string, contentJson string) error {
 	case "group", "section":
 		var c GroupContent // Same as SectionContent
 		if err := json.Unmarshal([]byte(contentJson), &c); err != nil {
-			return err
+			return logError("general.invalid_input")
 		}
 	case "widget":
 		return nil // Explicitly allow widgets without further validation per user request (Fixes Notepad PATCH 400)
