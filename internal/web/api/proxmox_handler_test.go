@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
@@ -882,5 +883,56 @@ func TestAnIconForAHostThatIsNotThereIsRefused(t *testing.T) {
 	}
 	if got := iconsFrom(t, server.URL, s); len(got) != 0 {
 		t.Errorf("icons = %v, want none", got)
+	}
+}
+
+// The hypervisors are asked at the same time. Asked one after another, a host
+// that takes ten seconds to give up held back every host listed after it, and
+// the summary page waited for the sum instead of for the slowest.
+func TestSeveralHostsAreReadAtTheSameTime(t *testing.T) {
+	const lag = 400 * time.Millisecond
+	slow := func(name string) *httptest.Server {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			time.Sleep(lag)
+			w.Header().Set("Content-Type", "application/json")
+			if r.URL.Path == "/api2/json/cluster/resources" {
+				w.Write([]byte(`{"data":[{"type":"node","node":"` + name + `","status":"online","maxcpu":4}]}`))
+				return
+			}
+			w.Write([]byte(`{"data":null}`))
+		}))
+		t.Cleanup(srv.Close)
+		return srv
+	}
+	a, b, c := slow("na"), slow("nb"), slow("nc")
+
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[
+		{"enabled":true,"name":"A","url":"`+a.URL+`","token_id":"a@pve!b","secret":"c","insecure":true},
+		{"enabled":true,"name":"B","url":"`+b.URL+`","token_id":"a@pve!b","secret":"c","insecure":true},
+		{"enabled":true,"name":"C","url":"`+c.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}
+	]}`).Body.Close()
+
+	started := time.Now()
+	_, body := pxGet(t, server.URL, "/api/proxmox/overview", s)
+	took := time.Since(started)
+
+	// Each host answers twice (resources, then permissions), so one host alone
+	// takes about two lags. In series three would take about six.
+	if took > 4*lag {
+		t.Errorf("three hosts took %v: they were read one after another", took)
+	}
+	hosts, _ := body["hosts"].([]any)
+	var names []string
+	for _, h := range hosts {
+		m, _ := h.(map[string]any)
+		n, _ := m["name"].(string)
+		names = append(names, n)
+	}
+	if strings.Join(names, ",") != "A,B,C" {
+		t.Errorf("the hosts must come back in the order they were saved: %v", names)
 	}
 }

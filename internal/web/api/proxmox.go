@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
@@ -502,11 +503,19 @@ func (h *ProxmoxHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	icons := u.icons()
-	out := proxmoxAll{Hosts: make([]proxmoxHostOverview, 0, len(targets))}
-	for _, e := range targets {
-		one := h.overviewOf(e, icons)
-		out.Hosts = append(out.Hosts, one)
+	// All the hosts at once, each into its own slot so the order is the one they
+	// were saved in. One that is down costs a timeout; asked in turn, it made
+	// every host after it wait that long too.
+	out := proxmoxAll{Hosts: make([]proxmoxHostOverview, len(targets))}
+	var wg sync.WaitGroup
+	for i, e := range targets {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			out.Hosts[i] = h.overviewOf(e, icons)
+		}()
 	}
+	wg.Wait()
 	writeJSON(w, out)
 }
 

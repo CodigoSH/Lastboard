@@ -157,6 +157,20 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// announceUpdate tells the connected browsers a newer version exists. It waits
+// for room in the hub's queue only as long as the server is running: a send
+// that could not be abandoned would hold this goroutine for good at shutdown.
+func announceUpdate(ctx context.Context, hub *Hub, latest string) {
+	msg := WSMessage{
+		Type:    "update_available",
+		Payload: map[string]string{"latest_version": latest},
+	}
+	select {
+	case hub.broadcast <- msg:
+	case <-ctx.Done():
+	}
+}
+
 // CheckForUpdatesBackground runs a periodic loop to check for updates and notify via WS
 func (h *UpdateHandler) CheckForUpdatesBackground(ctx context.Context, hub *Hub) {
 	// Initial check after 30s to allow system to settle
@@ -177,12 +191,7 @@ func (h *UpdateHandler) CheckForUpdatesBackground(ctx context.Context, hub *Hub)
 
 		if latest != "" && latest != version.Current {
 			slog.Info("New version detected", "latest", latest, "current", version.Current)
-			hub.broadcast <- WSMessage{
-				Type: "update_available",
-				Payload: map[string]string{
-					"latest_version": latest,
-				},
-			}
+			announceUpdate(ctx, hub, latest)
 		}
 	}
 
