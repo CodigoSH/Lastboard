@@ -232,14 +232,20 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "error.invalid_url", http.StatusBadRequest)
 		return
 	}
-	h.setSetting(uid, keyMonMode, s.Mode)
-	h.setSetting(uid, keyMonInterval, strconv.Itoa(s.IntervalSec))
-	h.setSetting(uid, keyMonAlerts, boolTo01(s.AlertsEnabled))
-	h.setSetting(uid, keyMonType, s.NotifyType)
-	h.setSetting(uid, keyMonURL, s.NotifyURL)
 	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, s.ClearNotifyToken)
-	h.setSetting(uid, keyMonToken, token)
-	h.setSetting(uid, keyMonThreshold, strconv.Itoa(s.FailThreshold))
+	if err := NewUserSettings(h.DB).SetMany(uid, map[string]string{
+		keyMonMode:      s.Mode,
+		keyMonInterval:  strconv.Itoa(s.IntervalSec),
+		keyMonAlerts:    boolTo01(s.AlertsEnabled),
+		keyMonType:      s.NotifyType,
+		keyMonURL:       s.NotifyURL,
+		keyMonToken:     token,
+		keyMonThreshold: strconv.Itoa(s.FailThreshold),
+	}); err != nil {
+		slog.Error("monitor: persisting settings failed", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
 	// What goes back is what is saved, without the credential.
 	s.NotifyToken, s.ClearNotifyToken, s.NotifyHasToken = "", false, token != ""
 
@@ -622,12 +628,6 @@ func monitorSetting(db *sql.DB, userID int, key string) string {
 
 func (h *MonitorHandler) getSetting(userID int, key string) string {
 	return monitorSetting(h.DB, userID, key)
-}
-
-func (h *MonitorHandler) setSetting(userID int, key, value string) {
-	if err := NewUserSettings(h.DB).Set(userID, key, value); err != nil {
-		slog.Error("monitor: persisting setting failed", "key", key, "error", err)
-	}
 }
 
 // probeTimed checks a URL and reports whether it is up, the round-trip latency

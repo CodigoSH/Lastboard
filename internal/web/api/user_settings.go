@@ -21,6 +21,23 @@ func (s *UserSettings) Get(userID int, key string) (string, bool) {
 	return v, true
 }
 
+// SetMany stores several settings as one change: either every one is written or
+// none is.
+func (s *UserSettings) SetMany(userID int, values map[string]string) error {
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	for key, value := range values {
+		if _, err := tx.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (?, ?, ?)
+			ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value`, userID, key, value); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
 func (s *UserSettings) Set(userID int, key, value string) error {
 	_, err := s.DB.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (?, ?, ?)
 		ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value`, userID, key, value)

@@ -80,3 +80,52 @@ func TestNotifyTokenIsWriteOnly(t *testing.T) {
 		t.Errorf("remove did not clear it: stored=%q answer=%v", stored(), got)
 	}
 }
+
+// Saving the monitoring settings is one change. When a value cannot be stored the
+// answer says so and none of the others were written: it used to answer "saved"
+// after losing some of them, with the form showing values the server did not have.
+func TestMonitoringSettingsAreSavedAllOrNoneAndFailuresAreReported(t *testing.T) {
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+	createUser(t, db, "boss", "correcthorse", "admin")
+	cookie := loginAndGetCookie(t, server, "boss", "correcthorse")
+
+	save := func(body string) int {
+		t.Helper()
+		req, _ := http.NewRequest("POST", server.URL+"/api/monitor/settings", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(cookie)
+		req.AddCookie(&http.Cookie{Name: "csrf_token", Value: "test-csrf-token"})
+		req.Header.Set("X-CSRF-Token", "test-csrf-token")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		return resp.StatusCode
+	}
+	mode := func() string {
+		var v string
+		db.QueryRow(`SELECT value FROM user_settings WHERE key = 'monitoring_mode'`).Scan(&v)
+		return v
+	}
+
+	if code := save(`{"mode":"tab","interval_sec":60,"fail_threshold":2}`); code != http.StatusOK {
+		t.Fatalf("first save: %d", code)
+	}
+	if _, err := db.Exec(`CREATE TRIGGER no_threshold BEFORE INSERT ON user_settings
+		WHEN NEW.key = 'monitoring_fail_threshold' BEGIN SELECT RAISE(ABORT, 'refused'); END`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`CREATE TRIGGER no_threshold_update BEFORE UPDATE ON user_settings
+		WHEN NEW.key = 'monitoring_fail_threshold' BEGIN SELECT RAISE(ABORT, 'refused'); END`); err != nil {
+		t.Fatal(err)
+	}
+
+	if code := save(`{"mode":"background","interval_sec":120,"fail_threshold":5}`); code != http.StatusInternalServerError {
+		t.Errorf("a save that could not store a value answered %d, want 500", code)
+	}
+	if got := mode(); got != "tab" {
+		t.Errorf("the mode became %q although the save failed: the settings were written in part", got)
+	}
+}
