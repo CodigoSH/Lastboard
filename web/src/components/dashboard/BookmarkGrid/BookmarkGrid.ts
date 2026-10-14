@@ -1039,6 +1039,60 @@ class BookmarkGrid extends HTMLElement {
         });
     }
 
+    /**
+     * Where the dragged tile would land if it were dropped at the pointer: the
+     * cell under its top-left corner, whether anything else is already there,
+     * and the section it would nest into. The hover preview and the drop share
+     * this so they can never disagree.
+     */
+    private _dropTarget(e: DragEvent, host: HTMLElement) {
+        const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
+        if (!draggedItem) return null;
+
+        const gridRect = host.getBoundingClientRect();
+        const gridCols = this.currentGridCols || 12;
+        const gap = 16;
+        const colWidth = (gridRect.width - ((gridCols - 1) * gap)) / gridCols;
+
+        // Top-left of the floating card: the pointer minus where it grabbed it.
+        const relativeTopLeftX = e.clientX - this.dragOffsetX - gridRect.left;
+        const relativeTopLeftY = e.clientY - this.dragOffsetY - gridRect.top;
+
+        // Strict snap to the cell under that corner, 1-based and kept inside the grid.
+        const cellX = Math.floor(relativeTopLeftX / (colWidth + gap));
+        const cellY = Math.floor(relativeTopLeftY / (colWidth + gap));
+        const gridX = Math.max(1, Math.min(gridCols - draggedItem.w + 1, cellX + 1));
+        const gridY = Math.max(1, cellY + 1);
+
+        const potentialRect = {
+            x: gridX,
+            y: gridY,
+            w: draggedItem.w,
+            h: draggedItem.h,
+            id: draggedItem.id,
+            parent_id: draggedItem.parent_id
+        };
+        const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
+
+        // Strict: landing on any other tile in the same scope is a collision,
+        // unless that tile is the section being nested into.
+        const hasOverlap = this.bookmarks.some(b => {
+            if (b.id === draggedItem.id) return false;
+            if (b.parent_id !== draggedItem.parent_id && !check.targetGroup) return false;
+            if (check.targetGroup && b.id === check.targetGroup.id) return false;
+            const bX = b.x || 1; const bY = b.y || 1;
+            const bW = b.w || 1; const bH = b.h || 1;
+            return (
+                gridX < bX + bW &&
+                gridX + draggedItem.w > bX &&
+                gridY < bY + bH &&
+                gridY + draggedItem.h > bY
+            );
+        });
+
+        return { draggedItem, gridCols, gridX, gridY, potentialRect, check, hasOverlap };
+    }
+
     processDragOver(e: DragEvent, host: HTMLElement) {
         if (this.isTouchDevice) return; // Mobile reordering is handled by MobileReorderModal only
         // Auto-Scroll Logic
@@ -1066,83 +1120,10 @@ class BookmarkGrid extends HTMLElement {
             // No dynamic expansion needed - grid has buffer space by default
         }
 
-        const gridRect = host.getBoundingClientRect();
-        // Use dynamically calculated instance property
-        const gridCols = this.currentGridCols || 12;
-
-        const totalWidth = gridRect.width;
-        const gap = 16;
-        const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
-
-        // TOP-LEFT BASED LOGIC (More intuitive for large items)
-        const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
-        if (!draggedItem) return;
-
-        // Mouse is at e.clientX/Y.
-        // TopLeft of floating card = Mouse - Offset.
-        const cardTopLeftX = e.clientX - this.dragOffsetX;
-        const cardTopLeftY = e.clientY - this.dragOffsetY;
-
-        // Calculate grid position from top-left corner (more intuitive)
-        const relativeTopLeftX = cardTopLeftX - gridRect.left;
-        const relativeTopLeftY = cardTopLeftY - gridRect.top;
-
-        // STRICT SNAP: Calculate precise cell under the top-left corner
-        const cellX = Math.floor(relativeTopLeftX / (colWidth + gap));
-        const cellY = Math.floor(relativeTopLeftY / (colWidth + gap));
-
-        // Convert to 1-based grid coords with proper boundary constraints
-        const gridX = Math.max(1, Math.min(gridCols - draggedItem.w + 1, cellX + 1));
-        const gridY = Math.max(1, cellY + 1);
-
-        const potentialRect = {
-            x: gridX,
-            y: gridY,
-            w: draggedItem.w,
-            h: draggedItem.h,
-            id: draggedItem.id,
-            parent_id: draggedItem.parent_id
-        };
-
-        // COLLISION CHECK (NO PUSH)
-        // Check valid drops (boundaries)
-        const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
-
-        // Additional Check: Is the spot OCCUPIED by another item (that isn't self)?
-        // collisionService.calculateDropValidity usually handles this but might try to "find" a spot.
-        // We want STRICT: If occupied -> Invalid (Red).
-
-        // We can manually check occupation if calculateDropValidity is too smart.
-        // Assuming calculateDropValidity returns 'valid: false' if overlaps and it can't move? 
-        // Actually, existing logic often tries to "fit".
-        // Let's rely on `check.valid`. If strictly occupied, it hopefully returns invalid or a different position.
-        // BUT user said: "If a spot is occupied, show the red box or swap positions".
-        // Let's implement RED BOX for now.
-
-        // We need to know if it overlaps ANY item (excluding self).
-        const hasOverlap = this.bookmarks.some(b => {
-            if (b.id === draggedItem.id) return false;
-            // Ignore items in other sections if we are root, etc?
-            // Simplified global check for now (or section specific).
-            // Actually, bookmarks have parent_id.
-            if (b.parent_id !== draggedItem.parent_id && !check.targetGroup) return false; // Different scope?
-
-            // Check overlap
-            const bX = b.x || 1; const bY = b.y || 1;
-            const bW = b.w || 1; const bH = b.h || 1;
-
-            // Allow nesting target
-            if (check.targetGroup && b.id === check.targetGroup.id) return false;
-
-            return (
-                gridX < bX + bW &&
-                gridX + draggedItem.w > bX &&
-                gridY < bY + bH &&
-                gridY + draggedItem.h > bY
-            );
-        });
-
-        const isValid = !hasOverlap && check.valid;
+        const target = this._dropTarget(e, host);
+        if (!target) return;
+        const { check, potentialRect } = target;
+        const isValid = !target.hasOverlap && check.valid;
 
         this.updateGhost(potentialRect, isValid);
 
@@ -1161,61 +1142,9 @@ class BookmarkGrid extends HTMLElement {
         if (!this.isEditing || !this.dragTargetId) return;
         e.preventDefault();
 
-        const draggedItem = this.bookmarks.find(b => b.id === this.dragTargetId);
-        if (!draggedItem) return;
-
-        // Use same calculation as processDragOver for consistency
-        const gridRect = host.getBoundingClientRect();
-        const gridCols = this.currentGridCols || 12;
-        const totalWidth = gridRect.width;
-        const gap = 16;
-        const colWidth = (totalWidth - ((gridCols - 1) * gap)) / gridCols;
-
-        // Top-left of the floating card (same as processDragOver)
-        const cardTopLeftX = e.clientX - this.dragOffsetX;
-        const cardTopLeftY = e.clientY - this.dragOffsetY;
-
-        // Calculate grid position from top-left corner (more intuitive)
-        const relativeTopLeftX = cardTopLeftX - gridRect.left;
-        const relativeTopLeftY = cardTopLeftY - gridRect.top;
-
-        // STRICT SNAP: Calculate precise cell under the top-left corner
-        const cellX = Math.floor(relativeTopLeftX / (colWidth + gap));
-        const cellY = Math.floor(relativeTopLeftY / (colWidth + gap));
-
-        // Convert to 1-based grid coords with proper boundary constraints
-        const gridX = Math.max(1, Math.min(gridCols - draggedItem.w + 1, cellX + 1));
-        const gridY = Math.max(1, cellY + 1);
-
-        const potentialRect = {
-            x: gridX,
-            y: gridY,
-            w: draggedItem.w,
-            h: draggedItem.h,
-            id: draggedItem.id,
-            parent_id: draggedItem.parent_id
-        };
-
-        const check = collisionService.calculateDropValidity(potentialRect, this.bookmarks, gridCols);
-
-        // Check for overlaps manually (STRICT mode)
-        const hasOverlap = this.bookmarks.some(b => {
-            if (b.id === draggedItem.id) return false;
-            // Check scope (parent_id)
-            if (b.parent_id !== draggedItem.parent_id && !check.targetGroup) return false;
-
-            const bX = b.x || 1; const bY = b.y || 1;
-            const bW = b.w || 1; const bH = b.h || 1;
-
-            if (check.targetGroup && b.id === check.targetGroup.id) return false;
-
-            return (
-                gridX < bX + bW &&
-                gridX + draggedItem.w > bX &&
-                gridY < bY + bH &&
-                gridY + draggedItem.h > bY
-            );
-        });
+        const target = this._dropTarget(e, host);
+        if (!target) return;
+        const { draggedItem, check, hasOverlap } = target;
 
         // Block drop if overlapping (unless it's a valid nesting target)
         if (hasOverlap && !check.targetGroup) {
