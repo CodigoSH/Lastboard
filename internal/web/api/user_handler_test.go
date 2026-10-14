@@ -12,6 +12,7 @@ import (
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 // A session secret for the handlers under test. Changing your own password
@@ -465,5 +466,52 @@ func TestCSRF_PostWithoutTokenRejected(t *testing.T) {
 
 	if resp.StatusCode != http.StatusForbidden {
 		t.Errorf("expected 403 without CSRF, got %d", resp.StatusCode)
+	}
+}
+
+// A session belongs to the account that signed in, not to the name it had.
+// Delete bob and create another bob, and the first bob's cookie used to open the
+// second one's data, because the token said "bob" and nothing more.
+func TestASessionBelongsToTheAccountNotTheName(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "bob", "bobsecret1", "user")
+	s := doLogin(t, server.URL, "bob", "bobsecret1")
+
+	// What the login minted names the account by id.
+	payload, err := util.VerifyToken(s.sessionCookie.Value, testSecret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, name, _ := util.ParseSession(payload)
+	var want int
+	if err := db.DB.QueryRow("SELECT id FROM users WHERE username = 'bob'").Scan(&want); err != nil {
+		t.Fatal(err)
+	}
+	if id != want || name != "" {
+		t.Fatalf("the session names (%d, %q), want the account id %d and no name", id, name, want)
+	}
+
+	status := func() int {
+		req, _ := http.NewRequest("GET", server.URL+"/api/me", nil)
+		s.attach(req)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		return resp.StatusCode
+	}
+	if got := status(); got != http.StatusOK {
+		t.Fatalf("before the account is deleted: %d, want 200", got)
+	}
+
+	if _, err := db.DB.Exec("DELETE FROM users WHERE id = ?", want); err != nil {
+		t.Fatal(err)
+	}
+	createUser(t, db.DB, "bob", "another-pass", "user")
+	if got := status(); got != http.StatusUnauthorized {
+		t.Fatalf("the old account's session on a new account of the same name: %d, want 401", got)
 	}
 }

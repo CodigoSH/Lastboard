@@ -35,6 +35,35 @@ func IsSecureRequest(r *http.Request) bool {
 	return false
 }
 
+// AccountSessionPayload is what a session token carries now: the account's id
+// and the generation of its password the session was minted under.
+//
+// The id, not the name: names are reusable. Delete bob, create another bob, and
+// a token that said "bob" was the new account's session. The leading "#" cannot
+// be part of a username (they are [A-Za-z0-9_-]), so this form never reads as
+// the former one.
+func AccountSessionPayload(userID, passwordVersion int) string {
+	return fmt.Sprintf("#%d:%d", userID, passwordVersion)
+}
+
+// ParseSession reads either form of payload. A token minted as an account id
+// returns that id and no name; one minted before sessions carried an id returns
+// the name it was minted with and a zero id, so updating signs nobody out — those
+// tokens run out by themselves, within a month at the most.
+func ParseSession(data string) (userID int, username string, passwordVersion int) {
+	if rest, ok := strings.CutPrefix(data, "#"); ok {
+		if idStr, versionStr, found := strings.Cut(rest, ":"); found {
+			id, err1 := strconv.Atoi(idStr)
+			version, err2 := strconv.Atoi(versionStr)
+			if err1 == nil && err2 == nil && id > 0 {
+				return id, "", version
+			}
+		}
+	}
+	username, passwordVersion = ParseSessionPayload(data)
+	return 0, username, passwordVersion
+}
+
 // SessionPayload is what a session token carries: who you are, and which
 // generation of your password the session was minted under.
 //

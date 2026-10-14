@@ -233,14 +233,10 @@ func (s *Server) routes() {
 			return
 		}
 
-		// Smart Redirect: If already logged in, go to dashboard
-		cookie, err := r.Cookie("session_token")
-		if err == nil && cookie.Value != "" {
-			// Basic Validation to prevent loops
-			if _, err := util.VerifyToken(cookie.Value, s.sessionSecret); err == nil {
-				http.Redirect(w, r, "/", http.StatusSeeOther)
-				return
-			}
+		// Already signed in: go to the dashboard.
+		if s.hasLiveSession(r) {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
 		}
 		// Render login page with template data (e.g. DemoOnly flag)
 		s.serveLoginPage(w, r)
@@ -353,13 +349,10 @@ func (s *Server) routes() {
 		}
 
 		if exists {
-			// Smart Redirect: If already logged in, go to dashboard
-			cookie, err := r.Cookie("session_token")
-			if err == nil && cookie.Value != "" {
-				if _, err := util.VerifyToken(cookie.Value, s.sessionSecret); err == nil {
-					http.Redirect(w, r, "/", http.StatusSeeOther)
-					return
-				}
+			// Already signed in: go to the dashboard.
+			if s.hasLiveSession(r) {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+				return
 			}
 
 			// CRITICAL: Prevent access to HTML
@@ -402,6 +395,16 @@ func (s *Server) routes() {
 
 	// WebSocket Endpoint
 	s.Router.Handle("/ws", protect(http.HandlerFunc(s.WSHub.HandleWebSocket)))
+}
+
+// hasLiveSession says whether the request carries a session that the
+// application itself would accept. Judging by the signature alone is not enough:
+// a session from before a password change is perfectly signed and is refused by
+// the app, which sends the person to the login page — which, believing the
+// signature, sent them straight back. Both ends have to ask the same question.
+func (s *Server) hasLiveSession(r *http.Request) bool {
+	_, err := middleware.ResolveSession(s.DB, s.sessionSecret, r)
+	return err == nil
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -91,10 +91,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch user
+	var userID, passwordVersion int
 	var storedHash string
-	var passwordVersion int
-	err = h.DB.QueryRowContext(r.Context(), "SELECT password, password_version FROM users WHERE username = ?", input.Username).
-		Scan(&storedHash, &passwordVersion)
+	err = h.DB.QueryRowContext(r.Context(), "SELECT id, password, password_version FROM users WHERE username = ?", input.Username).
+		Scan(&userID, &storedHash, &passwordVersion)
 	if err != nil {
 		password.Waste(input.Password)
 		h.recordFailedAttempt(ip, count)
@@ -122,7 +122,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	expiry := time.Now().Add(duration)
 	// The password generation rides along, so changing the password ends every
 	// session that was open under the old one.
-	token := util.SignToken(util.SessionPayload(input.Username, passwordVersion), h.Secret, expiry)
+	token := util.SignToken(util.AccountSessionPayload(userID, passwordVersion), h.Secret, expiry)
 	secure := util.IsSecureRequest(r)
 
 	http.SetCookie(w, &http.Cookie{

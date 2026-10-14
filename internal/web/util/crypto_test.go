@@ -272,3 +272,27 @@ func TestSessionPayloadRoundTrip(t *testing.T) {
 		}
 	}
 }
+
+// A session names the account by its id, not by the name it had when it was
+// minted. The "#" cannot be part of a username, so the two forms never collide.
+func TestAccountSessionPayloadRoundTrip(t *testing.T) {
+	for _, c := range []struct{ id, version int }{{1, 0}, {3, 0}, {42, 7}} {
+		id, name, version := ParseSession(AccountSessionPayload(c.id, c.version))
+		if id != c.id || name != "" || version != c.version {
+			t.Errorf("round trip of (%d, %d) came back as (%d, %q, %d)", c.id, c.version, id, name, version)
+		}
+	}
+}
+
+// A token minted before sessions carried an id still reads as the name it was
+// minted with, so updating does not sign anyone out.
+func TestParseSessionReadsTheFormerPayload(t *testing.T) {
+	id, name, version := ParseSession(SessionPayload("a-user_1", 5))
+	if id != 0 || name != "a-user_1" || version != 5 {
+		t.Errorf("former payload read as (%d, %q, %d)", id, name, version)
+	}
+	// A payload that only looks like the new one is not read as an id.
+	if id, name, _ := ParseSession("#abc:1"); id != 0 || name != "#abc" {
+		t.Errorf("a malformed id must not be taken for one: (%d, %q)", id, name)
+	}
+}

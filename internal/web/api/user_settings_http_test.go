@@ -127,6 +127,10 @@ func TestRestoringBackupsFromBeforeAndAfter(t *testing.T) {
 		if rresp.StatusCode != http.StatusOK {
 			t.Fatalf("restore: %d", rresp.StatusCode)
 		}
+		// A restore replaces every account, so the accounts get new ids and the
+		// sessions bound to the old ones end — which is why the response tells the
+		// browser to drop its cookies. The person signs in again.
+		cookie = loginAndGetCookie(t, server, "boss", "correcthorse")
 	}
 	owned := func(user, key string) string {
 		var v string

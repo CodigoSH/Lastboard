@@ -342,12 +342,13 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	// a current one: the person who just changed their password should stay
 	// where they are, and everyone else should be thrown out.
 	var newVersion int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT password_version FROM users WHERE username = ?", username).
+	userID := middleware.GetUserIDFromContext(r)
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT password_version FROM users WHERE id = ?", userID).
 		Scan(&newVersion); err == nil {
 		expiry := time.Now().Add(24 * time.Hour)
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
-			Value:    util.SignToken(util.SessionPayload(username, newVersion), h.Secret, expiry),
+			Value:    util.SignToken(util.AccountSessionPayload(userID, newVersion), h.Secret, expiry),
 			Path:     "/",
 			Expires:  expiry,
 			HttpOnly: true,

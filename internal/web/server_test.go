@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	_ "modernc.org/sqlite"
 )
 
@@ -472,5 +473,56 @@ func TestNothingUnderAPIMayBeCached(t *testing.T) {
 		if cc := rec.Header().Get("Cache-Control"); cc != "no-store" {
 			t.Errorf("%s answered %d with Cache-Control %q, want no-store", path, rec.Code, cc)
 		}
+	}
+}
+
+// A session from before a password change is perfectly signed and is refused by
+// the app. The login page used to judge by the signature alone, so it sent that
+// person to the app, which sent them back to the login page, which sent them on
+// again — a loop the browser gave up on, with the only way out being to clear
+// the cookies by hand. The login page has to ask what the app asks.
+func TestLoginPageDoesNotSendOnASessionTheAppRefuses(t *testing.T) {
+	srv := newTestServer(t, true)
+	var id int
+	if err := srv.DB.QueryRow("SELECT id FROM users WHERE username = 'probe'").Scan(&id); err != nil {
+		t.Fatal(err)
+	}
+	cookie := func(version int) *http.Cookie {
+		token := util.SignToken(util.AccountSessionPayload(id, version), srv.sessionSecret, time.Now().Add(time.Hour))
+		return &http.Cookie{Name: "session_token", Value: token}
+	}
+	get := func(path string, c *http.Cookie) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		req.AddCookie(c)
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, req)
+		return w
+	}
+
+	// A live session is sent on, from both pages that do so.
+	for _, path := range []string{"/login", "/setup"} {
+		w := get(path, cookie(0))
+		if w.Code != http.StatusSeeOther || w.Header().Get("Location") != "/" {
+			t.Errorf("%s with a live session: %d -> %q, want 303 -> /", path, w.Code, w.Header().Get("Location"))
+		}
+	}
+
+	// The password changes elsewhere: the same cookie is now a generation behind.
+	if _, err := srv.DB.Exec("UPDATE users SET password_version = 1 WHERE id = ?", id); err != nil {
+		t.Fatal(err)
+	}
+	stale := cookie(0)
+
+	// The app refuses it...
+	if w := get("/", stale); w.Code != http.StatusFound || w.Header().Get("Location") != "/login" {
+		t.Fatalf("app with a stale session: %d -> %q, want 302 -> /login", w.Code, w.Header().Get("Location"))
+	}
+	// ...and the login page must show the form, not send it back to the app.
+	if w := get("/login", stale); w.Code != http.StatusOK {
+		t.Errorf("/login with a stale session: %d -> %q, want the login page (200): that is the loop", w.Code, w.Header().Get("Location"))
+	}
+	// /setup, with an account already there, sends to /login, never to the app.
+	if w := get("/setup", stale); w.Header().Get("Location") != "/login" {
+		t.Errorf("/setup with a stale session: -> %q, want /login", w.Header().Get("Location"))
 	}
 }

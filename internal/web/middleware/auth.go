@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"database/sql"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -17,6 +18,74 @@ const (
 	userIDContextKey   contextKey = "user_id"
 	userRoleContextKey contextKey = "user_role"
 )
+
+// Why a cookie did not become an account.
+var (
+	// ErrNoSession: there is no session cookie at all.
+	ErrNoSession = errors.New("no session")
+	// ErrInvalidSession: the cookie is not ours, has run out, or names an
+	// account that no longer exists.
+	ErrInvalidSession = errors.New("invalid session")
+	// ErrSessionExpired: the account exists but its password has changed since
+	// this session was minted, which ends it.
+	ErrSessionExpired = errors.New("session expired")
+)
+
+// Session is the account a valid cookie belongs to.
+type Session struct {
+	ID       int
+	Username string
+	Role     string
+}
+
+// lookupSession turns a verified token payload into the account it belongs to,
+// and refuses it if the password has changed since it was minted.
+//
+// A payload that names an id finds the account by id. One minted before sessions
+// carried an id names the account by name, as it always did.
+func lookupSession(db *sql.DB, payload string) (Session, error) {
+	id, name, tokenVersion := util.ParseSession(payload)
+
+	var (
+		s       Session
+		version int
+		err     error
+	)
+	if id > 0 {
+		err = db.QueryRow("SELECT id, username, role, password_version FROM users WHERE id = ?", id).
+			Scan(&s.ID, &s.Username, &s.Role, &version)
+	} else {
+		err = db.QueryRow("SELECT id, username, role, password_version FROM users WHERE username = ?", name).
+			Scan(&s.ID, &s.Username, &s.Role, &version)
+	}
+	if err != nil {
+		return Session{}, ErrInvalidSession
+	}
+	// The generation the token was minted under has to still be current. This
+	// is what makes changing a password end the sessions that were open under
+	// the old one.
+	if tokenVersion != version {
+		return Session{}, ErrSessionExpired
+	}
+	return s, nil
+}
+
+// ResolveSession is the one place a request's cookie becomes an account. Every
+// page that decides what to do with someone who "has a session" has to ask this
+// and not the signature alone: a cookie can be perfectly signed and belong to a
+// password that has since changed, and treating it as a login sends the person
+// round a loop between the login page and the app.
+func ResolveSession(db *sql.DB, secret []byte, r *http.Request) (Session, error) {
+	cookie, err := r.Cookie("session_token")
+	if err != nil || cookie.Value == "" {
+		return Session{}, ErrNoSession
+	}
+	payload, err := util.VerifyToken(cookie.Value, secret)
+	if err != nil {
+		return Session{}, ErrInvalidSession
+	}
+	return lookupSession(db, payload)
+}
 
 // AuthRequired checks for a valid session cookie.
 // If valid, it allows the request.
@@ -33,25 +102,24 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			// Check for Session Cookie
-			cookie, err := r.Cookie("session_token")
-
-			if err != nil || cookie.Value == "" {
+			// What an unauthenticated request gets: the API says so, a page goes
+			// to the login screen.
+			deny := func(apiMessage string) {
 				if strings.HasPrefix(r.URL.Path, "/api/") {
-					http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
+					http.Error(w, apiMessage, http.StatusUnauthorized)
 					return
 				}
 				http.Redirect(w, r, "/login", http.StatusFound)
-				return
 			}
 
+			cookie, err := r.Cookie("session_token")
+			if err != nil || cookie.Value == "" {
+				deny("auth.unauthorized")
+				return
+			}
 			payload, err := util.VerifyToken(cookie.Value, secret)
-			username, tokenPasswordVersion := util.ParseSessionPayload(payload)
 			if err != nil {
-				if strings.HasPrefix(r.URL.Path, "/api/") {
-					http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
-					return
-				}
-				http.Redirect(w, r, "/login", http.StatusFound)
+				deny("auth.unauthorized")
 				return
 			}
 
@@ -75,35 +143,19 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				}
 			}
 
-			// Resolve the numeric user ID so handlers can scope queries without
-			// an extra round-trip.  A missing row also covers the "account deleted
-			// while session was still live" case.
-			var userID int
-			var userRole string
-			var passwordVersion int
-			if err := db.QueryRow("SELECT id, role, password_version FROM users WHERE username = ?", username).
-				Scan(&userID, &userRole, &passwordVersion); err != nil {
-				if strings.HasPrefix(r.URL.Path, "/api/") {
-					http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
-					return
+			// The account the session belongs to, so handlers can scope queries
+			// without another round-trip. An account deleted while its session was
+			// still live, or a password changed since, ends it here.
+			session, err := lookupSession(db, payload)
+			if err != nil {
+				if errors.Is(err, ErrSessionExpired) {
+					deny("auth.session_expired")
+				} else {
+					deny("auth.unauthorized")
 				}
-				http.Redirect(w, r, "/login", http.StatusFound)
 				return
 			}
-
-			// The generation the token was minted under has to still be current.
-			// This is what makes changing a password end the sessions that were
-			// open under the old one — until now the counter was incremented on
-			// every change and read by nobody, so a stolen session survived the
-			// one action a user takes to stop it.
-			if tokenPasswordVersion != passwordVersion {
-				if strings.HasPrefix(r.URL.Path, "/api/") {
-					http.Error(w, "auth.session_expired", http.StatusUnauthorized)
-					return
-				}
-				http.Redirect(w, r, "/login", http.StatusFound)
-				return
-			}
+			username, userID, userRole := session.Username, session.ID, session.Role
 
 			ctx := context.WithValue(r.Context(), userContextKey, username)
 			ctx = context.WithValue(ctx, userIDContextKey, userID)

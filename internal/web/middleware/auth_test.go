@@ -252,3 +252,76 @@ func TestAuthRequired_RefusesWritesFromAnotherSite(t *testing.T) {
 		}
 	}
 }
+
+// A session belongs to an account, not to a name. Deleting bob and creating
+// another bob must not hand the first bob's cookie the second one's data.
+func TestAuthRequired_ASessionDoesNotPassToAnotherAccountWithTheSameName(t *testing.T) {
+	db, secret := newAuthTestDB(t)
+	res, err := db.Exec("INSERT INTO users (username, password, role) VALUES ('bob','x','user')")
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldID, _ := res.LastInsertId()
+	oldSession := util.SignToken(util.AccountSessionPayload(int(oldID), 0), secret, time.Now().Add(time.Hour))
+
+	if _, err := db.Exec("DELETE FROM users WHERE id = ?", oldID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec("INSERT INTO users (username, password, role) VALUES ('bob','y','user')"); err != nil {
+		t.Fatal(err)
+	}
+
+	reached := false
+	h := AuthRequired(db, secret)(okHandler(&reached))
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard", nil)
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: oldSession})
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+	if reached || w.Code != http.StatusUnauthorized {
+		t.Fatalf("the old account's session reached the new account: %d reached=%v", w.Code, reached)
+	}
+}
+
+// ResolveSession is the one place a cookie becomes an account. The login and
+// setup pages use it to decide whether to send you on: judging by the signature
+// alone sent a session that no longer works to the app, which sent it back to
+// the login page, which sent it on again, forever.
+func TestResolveSession(t *testing.T) {
+	db, secret := newAuthTestDB(t)
+	res, err := db.Exec("INSERT INTO users (username, password, role, password_version) VALUES ('alice','x','admin',3)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, _ := res.LastInsertId()
+	exp := time.Now().Add(time.Hour)
+	request := func(payload string) *http.Request {
+		req := httptest.NewRequest(http.MethodGet, "/login", nil)
+		req.AddCookie(&http.Cookie{Name: "session_token", Value: util.SignToken(payload, secret, exp)})
+		return req
+	}
+
+	cases := []struct {
+		name    string
+		payload string
+		want    error
+	}{
+		{"current", util.AccountSessionPayload(int(id), 3), nil},
+		{"a generation behind", util.AccountSessionPayload(int(id), 2), ErrSessionExpired},
+		{"an account that is gone", util.AccountSessionPayload(int(id)+9, 0), ErrInvalidSession},
+		{"the former payload, current", util.SessionPayload("alice", 3), nil},
+		{"the former payload, behind", util.SessionPayload("alice", 1), ErrSessionExpired},
+		{"the former payload, unknown name", util.SessionPayload("ghost", 0), ErrInvalidSession},
+	}
+	for _, c := range cases {
+		s, err := ResolveSession(db, secret, request(c.payload))
+		if err != c.want {
+			t.Errorf("%s: err = %v, want %v", c.name, err, c.want)
+		}
+		if c.want == nil && (s.ID != int(id) || s.Username != "alice" || s.Role != "admin") {
+			t.Errorf("%s: resolved %+v", c.name, s)
+		}
+	}
+	if _, err := ResolveSession(db, secret, httptest.NewRequest(http.MethodGet, "/login", nil)); err != ErrNoSession {
+		t.Errorf("no cookie: err = %v, want ErrNoSession", err)
+	}
+}
