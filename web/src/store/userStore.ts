@@ -162,7 +162,15 @@ class UserStore {
         }
 
         // 1. Optimistic Update (Immediate UI response)
-        const previousPrefs = { ...this.user.preferences };
+        // The flat copies of some preferences live on the user itself and the next
+        // save is built from them, so a rollback has to put those back too.
+        const previous = {
+            preferences: { ...this.user.preferences },
+            accent_color: this.user.accent_color,
+            language: this.user.language,
+            project_name: this.user.project_name,
+            project_logo: this.user.project_logo,
+        };
         this.user.preferences = { ...this.user.preferences, ...newPrefs };
 
         // Sync flat fields back to main user object if they changed
@@ -203,7 +211,7 @@ class UserStore {
         } catch (e) {
             console.error('[UserStore] Failed to sync preferences, rolling back', e);
             // 3. Rollback on failure
-            this.user.preferences = previousPrefs;
+            Object.assign(this.user, previous);
             this.applyAesthetics();
             this.notify();
             if (window.notifier) window.notifier.show(i18n.t('notifier.save_error'), 'error');
