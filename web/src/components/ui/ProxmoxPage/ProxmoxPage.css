@@ -706,7 +706,6 @@
 .info__list[hidden] { display: none; }
 .alarm:hover { border-color: var(--card-border, transparent); background: var(--surface); }
 
-
 .mrow {
     box-sizing: border-box;
     display: flex;
@@ -1001,46 +1000,8 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
    mirrored interface "back" points the other way. */
 :host(:dir(rtl)) .pp__back svg { transform: scaleX(-1); }
 
-.px-sums {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 8px;
-}
-
-.px-sum {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    padding: 12px 13px 11px;
-    text-align: start;
-}
-
-.px-sum__r1 { display: flex; align-items: center; gap: 8px; }
-.px-sum__name { font-weight: 600; font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.px-sum__go { color: var(--text-dim); display: inline-flex; }
-.px-sum__r2 { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--text-dim); }
-.px-sum__r3 { display: flex; gap: 10px; font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--text-dim); }
-.px-sum__hot--warn { color: var(--warning-color); }
-.px-sum__hot--bad { color: var(--danger-color); }
-.px-sum__err { font-size: 11.5px; color: var(--danger-color); }
-
-/* A hypervisor with a service down wears the same accent edge a stopped
-   machine does on the page inside it. */
-.px-sum--flag { border-color: rgba(var(--accent-rgb), 0.55); background: rgba(var(--accent-rgb), 0.06); }
-.px-sum--bad { border-color: rgba(var(--danger-rgb), 0.5); }
-
-.px-down {
-    font-size: 12.5px;
-    line-height: 1.5;
-    color: var(--text-dim);
-    padding: 2px 2px 0;
-}
-
-.px-down b { color: var(--text-main); }
-
 .sec__label--bad { color: var(--danger-color); border-color: rgba(var(--danger-rgb), 0.35); }
 .sec__note--bad { color: var(--danger-color); }
-
 
 /* The figure behind a tile's memory percentage. Dim and a size down, so the
    row still reads as "52%" at a glance and the amount is there when the

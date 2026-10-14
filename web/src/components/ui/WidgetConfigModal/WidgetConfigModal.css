@@ -533,9 +533,6 @@ dialog[open] {
 }
 
 /* A leftover element from an earlier tab implementation. */
-.tab-header {
-    display: none;
-}
 
 /* Enters from above, not below. The scrolling body is this element's parent, so
    a downward offset makes the content stick out past the bottom and the browser
@@ -761,12 +758,6 @@ dialog[open] {
 }
 
 /* --- Docker Host Management --- */
-.docker-host-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 4px;
-}
 
 /* Hosts stack up like anything else in this dialog: past a few, the list
    scrolls instead of pushing the save button off the screen. */
@@ -837,12 +828,6 @@ dialog[open] {
     text-align: start;
 }
 
-.host-header-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .host-name {
     font-size: 14px;
     font-weight: 600;
@@ -898,15 +883,6 @@ dialog[open] {
     display: none;
 }
 
-.host-url {
-    font-size: 11px;
-    color: var(--text-dim);
-    opacity: 0.8;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /* Edit and delete read as one pair: the boxes are transparent, so what the
    eye measures is icon to icon, and at 32px apart plus a gap they looked like
    two separate controls. 26px wide still leaves a target above the 24px
@@ -941,26 +917,6 @@ dialog[open] {
 .host-action-btn.delete:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
-}
-
-.docker-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 32px 0;
-    text-align: center;
-    opacity: 0.6;
-}
-
-.docker-empty-state svg {
-    color: var(--text-dim);
-    opacity: 0.5;
-}
-
-.docker-empty-text {
-    font-size: 13px;
-    color: var(--text-dim);
 }
 
 .docker-form-actions {

@@ -161,16 +161,6 @@ dialog[open] {
 
 .btn:focus { outline: none; }
 
-.btn-default {
-    background: transparent;
-    color: var(--text-main);
-    border: 1px solid var(--border);
-}
-
-.btn-default:hover {
-    background: var(--surface-hover);
-}
-
 .btn-primary {
     background: transparent;
     color: var(--accent);

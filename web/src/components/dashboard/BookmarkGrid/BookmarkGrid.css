@@ -357,7 +357,6 @@
     transition: background-color 0.3s ease;
 }
 
-
 /* Status Positions — deliberately physical.
    The user picks one of these by name in the settings ("top-right"), so the dot
    must land where the label says regardless of the reading direction. */
@@ -401,7 +400,6 @@
     background-color: #f1c40f;
 }
 
-
 /* Action Buttons (Edit Mode) */
 .bookmark-actions {
     position: absolute;
@@ -443,12 +441,6 @@
     width: 14px;
     height: 14px;
     stroke-width: 2.5px;
-}
-
-.btn-delete:hover {
-    background: var(--surface-solid) !important;
-    color: #ef4444 !important;
-    border-color: rgba(239, 68, 68, 0.5) !important;
 }
 
 /* Edit Mode Styles */
@@ -821,7 +813,6 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
-
 
 @media (prefers-reduced-motion: reduce) {
     .select-box { transition: none; }
