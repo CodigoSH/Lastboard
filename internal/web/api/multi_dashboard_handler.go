@@ -34,34 +34,32 @@ func NewMultiDashboardHandler(db *sql.DB) *MultiDashboardHandler {
 func (h *MultiDashboardHandler) GetDashboards(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserIDFromContext(r)
 
-	// Check whether any dashboards exist for this user.
-	var count int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&count); err != nil {
+	// An account with no board is given one. The check and the insert are one
+	// statement, so requests that arrive together — the page asks for this list
+	// from several places — leave one board, not one each; whichever inserts is
+	// the one that adopts the items from before boards existed.
+	res, err := h.DB.ExecContext(r.Context(),
+		// One name, in English, everywhere. This used to be written in
+		// Spanish whatever language had been chosen, so an English install
+		// carried the only Spanish words in its whole interface.
+		`INSERT INTO dashboards (user_id, name, position, is_default)
+		 SELECT ?, 'Main dashboard', 0, 1
+		 WHERE NOT EXISTS (SELECT 1 FROM dashboards WHERE user_id = ?)`,
+		userID, userID,
+	)
+	if err != nil {
+		slog.Error("Failed to auto-create default dashboard", "error", err, "user_id", userID)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
-
-	if count == 0 {
-		// Auto-create a default dashboard.
-		res, err := h.DB.Exec(
-			// One name, in English, everywhere. This used to be written in
-			// Spanish whatever language had been chosen, so an English install
-			// carried the only Spanish words in its whole interface.
-			"INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, 'Main dashboard', 0, 1)",
-			userID,
-		)
-		if err != nil {
-			slog.Error("Failed to auto-create default dashboard", "error", err, "user_id", userID)
-			http.Error(w, "general.db_error", http.StatusInternalServerError)
-			return
-		}
+	if created, _ := res.RowsAffected(); created > 0 {
 		newID, err := res.LastInsertId()
 		if err != nil {
 			http.Error(w, "general.db_error", http.StatusInternalServerError)
 			return
 		}
 		// Migrate orphaned items that were created before multi-dashboard existed.
-		if _, err := h.DB.Exec(
+		if _, err := h.DB.ExecContext(r.Context(),
 			"UPDATE items SET dashboard_id = ? WHERE user_id = ? AND dashboard_id IS NULL",
 			newID, userID,
 		); err != nil {
@@ -122,16 +120,13 @@ func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Position = current count of dashboards for this user.
-	var pos int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&pos); err != nil {
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-
-	res, err := h.DB.Exec(
-		"INSERT INTO dashboards (user_id, name, position, is_default) VALUES (?, ?, ?, 0)",
-		userID, name, pos,
+	// The position comes from the same statement as the insert: after the last
+	// board, whatever deleted boards have left behind. Counting the boards put a
+	// new one on top of an existing position once an earlier one was gone.
+	res, err := h.DB.ExecContext(r.Context(),
+		`INSERT INTO dashboards (user_id, name, position, is_default)
+		 VALUES (?, ?, (SELECT COALESCE(MAX(position), -1) + 1 FROM dashboards WHERE user_id = ?), 0)`,
+		userID, name, userID,
 	)
 	if err != nil {
 		slog.Error("Failed to create dashboard", "error", err)
@@ -141,6 +136,12 @@ func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.R
 
 	id, err := res.LastInsertId()
 	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+
+	var pos int
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT position FROM dashboards WHERE id = ?", id).Scan(&pos); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -279,24 +280,16 @@ func (h *MultiDashboardHandler) RenameDashboard(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Verify ownership.
-	var exists int
-	if err := h.DB.QueryRowContext(r.Context(),
-		"SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?",
-		dashID, userID,
-	).Scan(&exists); err == sql.ErrNoRows {
-		http.Error(w, "error.not_found", http.StatusNotFound)
-		return
-	} else if err != nil {
+	res, err := h.DB.ExecContext(r.Context(),
+		"UPDATE dashboards SET name = ? WHERE id = ? AND user_id = ?",
+		name, dashID, userID,
+	)
+	if err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
-
-	if _, err := h.DB.Exec(
-		"UPDATE dashboards SET name = ? WHERE id = ? AND user_id = ?",
-		name, dashID, userID,
-	); err != nil {
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 
@@ -323,34 +316,28 @@ func (h *MultiDashboardHandler) SetDefaultDashboard(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// 1. Verify ownership.
-	var exists int
-	if err := h.DB.QueryRowContext(r.Context(),
-		"SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?",
-		dashID, userID,
-	).Scan(&exists); err == sql.ErrNoRows {
-		http.Error(w, "error.not_found", http.StatusNotFound)
-		return
-	} else if err != nil {
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-
-	// 2. Clear other defaults and set the new one in a single transaction.
-	tx, err := h.DB.Begin()
+	// Clearing the old default and setting the new one is one change, and the
+	// board is checked inside it: were it deleted in between, the account would
+	// be left with no default at all.
+	tx, err := h.DB.BeginTx(r.Context(), nil)
 	if err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.Exec("UPDATE dashboards SET is_default = 0 WHERE user_id = ?", userID); err != nil {
+	if _, err := tx.ExecContext(r.Context(), "UPDATE dashboards SET is_default = 0 WHERE user_id = ?", userID); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 
-	if _, err := tx.Exec("UPDATE dashboards SET is_default = 1 WHERE id = ? AND user_id = ?", dashID, userID); err != nil {
+	res, err := tx.ExecContext(r.Context(), "UPDATE dashboards SET is_default = 1 WHERE id = ? AND user_id = ?", dashID, userID)
+	if err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
 	}
 
@@ -388,13 +375,50 @@ func (h *MultiDashboardHandler) ReorderDashboards(w http.ResponseWriter, r *http
 	}
 	defer tx.Rollback()
 
+	named := make(map[int]bool, len(body.IDs))
 	for i, id := range body.IDs {
-		var exists int
-		if err := tx.QueryRowContext(r.Context(), "SELECT 1 FROM dashboards WHERE id = ? AND user_id = ?", id, userID).Scan(&exists); err != nil {
+		if named[id] {
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
+			return
+		}
+		named[id] = true
+		res, err := tx.ExecContext(r.Context(), "UPDATE dashboards SET position = ? WHERE id = ? AND user_id = ?", i, id, userID)
+		if err != nil {
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+		if n, _ := res.RowsAffected(); n == 0 {
 			http.Error(w, "error.not_found", http.StatusNotFound)
 			return
 		}
-		if _, err := tx.Exec("UPDATE dashboards SET position = ? WHERE id = ? AND user_id = ?", i, id, userID); err != nil {
+	}
+
+	// Boards the list did not name follow the ones it did, in the order they
+	// already had, so every board ends at a position of its own.
+	rest, err := tx.QueryContext(r.Context(), "SELECT id FROM dashboards WHERE user_id = ? ORDER BY position, id", userID)
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	var unnamed []int
+	for rest.Next() {
+		var id int
+		if err := rest.Scan(&id); err != nil {
+			rest.Close()
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+		if !named[id] {
+			unnamed = append(unnamed, id)
+		}
+	}
+	rest.Close()
+	if err := rest.Err(); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	for i, id := range unnamed {
+		if _, err := tx.ExecContext(r.Context(), "UPDATE dashboards SET position = ? WHERE id = ?", len(body.IDs)+i, id); err != nil {
 			http.Error(w, "general.db_error", http.StatusInternalServerError)
 			return
 		}

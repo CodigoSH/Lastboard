@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
@@ -492,5 +493,109 @@ func TestDeletingABoardSweepsItsOwnIconsOnly(t *testing.T) {
 	}
 	if kept != 1 {
 		t.Error("an icon another board still shows was swept away")
+	}
+}
+
+// A new account's first board is made by the first request that finds none. The
+// page asks for the list from several places at once, so those requests arrive
+// together and must still leave exactly one board, and exactly one default.
+func TestSimultaneousFirstRequestsMakeOneBoard(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	s := doLogin(t, server.URL, "alice", "password")
+
+	var wg sync.WaitGroup
+	for i := 0; i < 12; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			boardsOf(t, server.URL, s)
+		}()
+	}
+	wg.Wait()
+
+	var boards, defaults int
+	db.DB.QueryRow(`SELECT COUNT(*), COALESCE(SUM(is_default), 0) FROM dashboards`).Scan(&boards, &defaults)
+	if boards != 1 || defaults != 1 {
+		t.Errorf("12 simultaneous first requests left %d boards and %d defaults, want 1 and 1", boards, defaults)
+	}
+}
+
+// A new board goes after the last one. Counting the boards put it at a position
+// another board already held once an earlier one had been deleted, and boards
+// with the same position have no order of their own.
+func TestANewBoardNeverSharesAPosition(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	s := doLogin(t, server.URL, "alice", "password")
+	boardsOf(t, server.URL, s)
+	for _, n := range []string{"B", "C"} {
+		boardCall(t, "POST", server.URL+"/api/dashboards", s, `{"name":"`+n+`"}`).Body.Close()
+	}
+	var b int
+	db.DB.QueryRow(`SELECT id FROM dashboards WHERE name = 'B'`).Scan(&b)
+	boardCall(t, "DELETE", fmt.Sprintf("%s/api/dashboards/%d", server.URL, b), s, "").Body.Close()
+	boardCall(t, "POST", server.URL+"/api/dashboards", s, `{"name":"D"}`).Body.Close()
+
+	var distinct, total int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT position), COUNT(*) FROM dashboards`).Scan(&distinct, &total)
+	if distinct != total {
+		t.Errorf("%d boards share only %d positions", total, distinct)
+	}
+}
+
+// A reorder that names only some of the boards — a tab that has not heard about
+// a board made in another one — puts those first and leaves the rest after them,
+// in the order they had. It never leaves two boards at the same position.
+func TestReorderingSomeBoardsKeepsEveryPositionDistinct(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	s := doLogin(t, server.URL, "alice", "password")
+	boardsOf(t, server.URL, s)
+	for _, n := range []string{"B", "C"} {
+		boardCall(t, "POST", server.URL+"/api/dashboards", s, `{"name":"`+n+`"}`).Body.Close()
+	}
+	var c int
+	db.DB.QueryRow(`SELECT id FROM dashboards WHERE name = 'C'`).Scan(&c)
+
+	resp := boardCall(t, "PUT", server.URL+"/api/dashboards/reorder", s, fmt.Sprintf(`{"ids":[%d]}`, c))
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("reorder answered %d", resp.StatusCode)
+	}
+
+	var names []string
+	rows, _ := db.DB.Query(`SELECT name FROM dashboards ORDER BY position, id`)
+	for rows.Next() {
+		var n string
+		rows.Scan(&n)
+		names = append(names, n)
+	}
+	rows.Close()
+	if strings.Join(names, ",") != "C,Main dashboard,B" {
+		t.Errorf("order is %v, want C first and the others after it as they were", names)
+	}
+	var distinct, total int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT position), COUNT(*) FROM dashboards`).Scan(&distinct, &total)
+	if distinct != total {
+		t.Errorf("%d boards share only %d positions", total, distinct)
+	}
+}
+
+func TestReorderingWithARepeatedBoardIsRefused(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	s := doLogin(t, server.URL, "alice", "password")
+	only := boardsOf(t, server.URL, s)[0]
+	boardCall(t, "POST", server.URL+"/api/dashboards", s, `{"name":"B"}`).Body.Close()
+
+	resp := boardCall(t, "PUT", server.URL+"/api/dashboards/reorder", s, fmt.Sprintf(`{"ids":[%d,%d]}`, only.ID, only.ID))
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a list naming a board twice answered %d, want 400", resp.StatusCode)
 	}
 }
