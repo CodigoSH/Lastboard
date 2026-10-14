@@ -115,3 +115,28 @@ func TestARoleIsStoredInLowerCaseWhateverTheFileSays(t *testing.T) {
 		t.Fatalf("role stored as %q, want %q", role, "admin")
 	}
 }
+
+// A row the backup cannot read is a reason to say so. Skipping it produced a
+// file that looked complete and silently lacked the bookmark, which the person
+// would only find out about after restoring over the original.
+func TestABackupNeverSkipsARowItCannotRead(t *testing.T) {
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+	createUser(t, db, "boss", "correcthorse", "admin")
+	db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES
+		(1, 'bookmark', 1, 1, 1, 1, '{"label":"fine"}'),
+		(1, 'bookmark', 'not-a-number', 1, 1, 1, '{"label":"unreadable"}')`)
+	cookie := loginAndGetCookie(t, server, "boss", "correcthorse")
+
+	req, _ := http.NewRequest("GET", server.URL+"/api/system/backup", nil)
+	req.AddCookie(cookie)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Fatalf("backup of an unreadable row answered %d, want 500; body: %.200s", resp.StatusCode, raw)
+	}
+}

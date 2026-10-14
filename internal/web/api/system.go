@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
@@ -258,6 +259,134 @@ func (h *SystemHandler) DownloadProtectedBackup(w http.ResponseWriter, r *http.R
 	h.serveBackup(w, r, input.Password)
 }
 
+// queryAll runs a query and scans every row. A row that cannot be read is an
+// error, never a row left out: a backup that quietly lacks a bookmark looks
+// complete until the day it is restored.
+func queryAll[T any](ctx context.Context, db *sql.DB, query string, scan func(*sql.Rows) (T, error)) ([]T, error) {
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []T
+	for rows.Next() {
+		v, err := scan(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, rows.Err()
+}
+
+// readBackup gathers everything a backup carries.
+func (h *SystemHandler) readBackup(ctx context.Context) (BackupData, error) {
+	backup := BackupData{Version: version.Current, Timestamp: time.Now()}
+	var err error
+
+	// Users.
+	if backup.Users, err = queryAll(ctx, h.DB, `SELECT username, password, role, theme, accent_color, language,
+		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name,
+		COALESCE(project_logo, ''), COALESCE(beta_updates, 0), COALESCE(unit_system, 'metric'),
+		COALESCE(dashboard_background, ''), COALESCE(widget_min_width, 140) FROM users`,
+		func(rows *sql.Rows) (u BackupUser, err error) {
+			err = rows.Scan(&u.Username, &u.Password, &u.Role, &u.Theme, &u.AccentColor, &u.Language,
+				&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl, &u.ProjectName,
+				&u.ProjectLogo, &u.BetaUpdates, &u.UnitSystem, &u.DashboardBackground, &u.WidgetMinWidth)
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("users: %w", err)
+	}
+	if backup.Users == nil {
+		backup.Users = []BackupUser{}
+	}
+
+	// Dashboards, joined to their owner's username for portability.
+	if backup.Dashboards, err = queryAll(ctx, h.DB, `SELECT d.id, COALESCE(u.username, ''), d.name, d.position, d.is_default
+		FROM dashboards d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id ASC`,
+		func(rows *sql.Rows) (d BackupDashboard, err error) {
+			err = rows.Scan(&d.ID, &d.Owner, &d.Name, &d.Position, &d.IsDefault)
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("dashboards: %w", err)
+	}
+
+	// Items, joined to their owner's username: numeric ids differ after a restore.
+	if backup.Items, err = queryAll(ctx, h.DB, `SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content, i.mobile_order
+		FROM items i LEFT JOIN users u ON i.user_id = u.id ORDER BY i.id`,
+		func(rows *sql.Rows) (i BackupItem, err error) {
+			err = rows.Scan(&i.ID, &i.Owner, &i.DashboardID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &i.MobileOrder)
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("items: %w", err)
+	}
+	if backup.Items == nil {
+		backup.Items = []BackupItem{}
+	}
+
+	// What widgets keep secret. They belong in the backup for the same reason
+	// the Proxmox tokens do — the operator typed them in — and the backup's own
+	// password is what protects them on their way out.
+	if backup.WidgetSecrets, err = queryAll(ctx, h.DB, `SELECT item_id, name, value FROM widget_secrets ORDER BY item_id, name`,
+		func(rows *sql.Rows) (sec BackupWidgetSecret, err error) {
+			err = rows.Scan(&sec.ItemID, &sec.Name, &sec.Value)
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("widget secrets: %w", err)
+	}
+
+	// Stored icons. A backup without them restores a board whose icons only
+	// come back if the machine can reach the internet, which defeats keeping
+	// them locally in the first place.
+	if backup.Icons, err = queryAll(ctx, h.DB, `SELECT hash, mime, data FROM icons ORDER BY hash`,
+		func(rows *sql.Rows) (icon BackupIcon, err error) {
+			var data []byte
+			if err = rows.Scan(&icon.Hash, &icon.Mime, &data); err == nil {
+				icon.Data = base64.StdEncoding.EncodeToString(data)
+			}
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("icons: %w", err)
+	}
+
+	// Settings the operator would otherwise have to type again.
+	type setting struct{ key, value string }
+	settings, err := queryAll(ctx, h.DB, `SELECT key, value FROM system_settings`,
+		func(rows *sql.Rows) (st setting, err error) {
+			err = rows.Scan(&st.key, &st.value)
+			return
+		})
+	if err != nil {
+		return backup, fmt.Errorf("settings: %w", err)
+	}
+	for _, st := range settings {
+		if _, wanted := backupSettingKeys[st.key]; !wanted {
+			continue
+		}
+		if backup.Settings == nil {
+			backup.Settings = map[string]string{}
+		}
+		backup.Settings[st.key] = st.value
+	}
+
+	// What each account configured for itself.
+	userSettings, err := queryAll(ctx, h.DB, `SELECT u.username, s.key, s.value
+		FROM user_settings s JOIN users u ON u.id = s.user_id ORDER BY u.id, s.key`,
+		func(rows *sql.Rows) (us BackupUserSetting, err error) {
+			err = rows.Scan(&us.Owner, &us.Key, &us.Value)
+			return
+		})
+	if err != nil {
+		return backup, fmt.Errorf("user settings: %w", err)
+	}
+	for _, us := range userSettings {
+		if _, known := userSettingKeys[us.Key]; known {
+			backup.UserSettings = append(backup.UserSettings, us)
+		}
+	}
+	return backup, nil
+}
+
 func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, password string) {
 	// Only the first admin (by ID) may download the backup,
 	// because it contains password hashes for all users.
@@ -266,178 +395,9 @@ func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, pass
 		return
 	}
 
-	backup := BackupData{
-		Version:   version.Current,
-		Timestamp: time.Now(),
-		Users:     []BackupUser{},
-		Items:     []BackupItem{},
-	}
-
-	// 1. Fetch Users
-	rows, err := h.DB.QueryContext(r.Context(), `SELECT username, password, role, theme, accent_color, language,
-		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name,
-		COALESCE(project_logo, ''), COALESCE(beta_updates, 0), COALESCE(unit_system, 'metric'),
-		COALESCE(dashboard_background, ''), COALESCE(widget_min_width, 140) FROM users`)
+	backup, err := h.readBackup(r.Context())
 	if err != nil {
-		slog.Error("Failed to fetch users", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var u BackupUser
-		if err := rows.Scan(&u.Username, &u.Password, &u.Role, &u.Theme, &u.AccentColor, &u.Language,
-			&u.GridColumnsPC, &u.GridColumnsTablet, &u.GridColumnsMobile, &u.AvatarUrl, &u.ProjectName,
-			&u.ProjectLogo, &u.BetaUpdates, &u.UnitSystem, &u.DashboardBackground, &u.WidgetMinWidth); err != nil {
-			continue
-		}
-		backup.Users = append(backup.Users, u)
-	}
-	if err := rows.Err(); err != nil {
-		slog.Error("Database error", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-
-	// 2. Fetch Dashboards — join users to store owner username for portability.
-	dashRows, err := h.DB.QueryContext(r.Context(), `SELECT d.id, COALESCE(u.username, ''), d.name, d.position, d.is_default
-		FROM dashboards d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id ASC`)
-	if err != nil {
-		slog.Error("Failed to fetch dashboards", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-	defer dashRows.Close()
-
-	for dashRows.Next() {
-		var d BackupDashboard
-		if err := dashRows.Scan(&d.ID, &d.Owner, &d.Name, &d.Position, &d.IsDefault); err != nil {
-			continue
-		}
-		backup.Dashboards = append(backup.Dashboards, d)
-	}
-	if err := dashRows.Err(); err != nil {
-		slog.Error("Database error", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-
-	// 3. Fetch Items — join users to store owner username; backups must be
-	// portable across restores where numeric IDs will differ.
-	itemRows, err := h.DB.QueryContext(r.Context(), `SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content, i.mobile_order
-		FROM items i LEFT JOIN users u ON i.user_id = u.id`)
-	if err != nil {
-		slog.Error("Failed to fetch items", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-	defer itemRows.Close()
-
-	for itemRows.Next() {
-		var i BackupItem
-		if err := itemRows.Scan(&i.ID, &i.Owner, &i.DashboardID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &i.MobileOrder); err != nil {
-			continue
-		}
-		backup.Items = append(backup.Items, i)
-	}
-	if err := itemRows.Err(); err != nil {
-		slog.Error("Database error", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-
-	// 3b. What widgets keep secret. They belong in the backup for the same
-	//     reason the Proxmox tokens do — the operator typed them in — and the
-	//     backup's own password is what protects them on their way out.
-	secretRows, err := h.DB.QueryContext(r.Context(), `SELECT item_id, name, value FROM widget_secrets`)
-	if err != nil {
-		slog.Error("Failed to fetch widget secrets", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-	defer secretRows.Close()
-	for secretRows.Next() {
-		var sec BackupWidgetSecret
-		if err := secretRows.Scan(&sec.ItemID, &sec.Name, &sec.Value); err != nil {
-			continue
-		}
-		backup.WidgetSecrets = append(backup.WidgetSecrets, sec)
-	}
-	if err := secretRows.Err(); err != nil {
-		slog.Error("Database error", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-
-	// 4. Stored icons. A backup without them restores a board whose icons only
-	//    come back if the machine can reach the internet, which defeats keeping
-	//    them locally in the first place.
-	iconRows, err := h.DB.QueryContext(r.Context(), `SELECT hash, mime, data FROM icons`)
-	if err != nil {
-		slog.Error("Failed to fetch icons", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-	defer iconRows.Close()
-
-	for iconRows.Next() {
-		var (
-			hash, mime string
-			data       []byte
-		)
-		if err := iconRows.Scan(&hash, &mime, &data); err != nil {
-			continue
-		}
-		backup.Icons = append(backup.Icons, BackupIcon{
-			Hash: hash,
-			Mime: mime,
-			Data: base64.StdEncoding.EncodeToString(data),
-		})
-	}
-	if err := iconRows.Err(); err != nil {
-		slog.Error("Database error", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-
-	// 5. Settings the operator would otherwise have to type again.
-	for key := range backupSettingKeys {
-		var value string
-		if err := h.DB.QueryRowContext(r.Context(), `SELECT value FROM system_settings WHERE key = ?`, key).Scan(&value); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				continue
-			}
-			slog.Error("Failed to fetch setting", "key", key, "error", err)
-			http.Error(w, "general.db_error", http.StatusInternalServerError)
-			return
-		}
-		if backup.Settings == nil {
-			backup.Settings = map[string]string{}
-		}
-		backup.Settings[key] = value
-	}
-
-	// 5b. What each account configured for itself.
-	usRows, err := h.DB.QueryContext(r.Context(), `SELECT u.username, s.key, s.value
-		FROM user_settings s JOIN users u ON u.id = s.user_id ORDER BY u.id, s.key`)
-	if err != nil {
-		slog.Error("Failed to fetch user settings", "error", err)
-		http.Error(w, "general.db_error", http.StatusInternalServerError)
-		return
-	}
-	defer usRows.Close()
-	for usRows.Next() {
-		var us BackupUserSetting
-		if err := usRows.Scan(&us.Owner, &us.Key, &us.Value); err != nil {
-			continue
-		}
-		if _, known := userSettingKeys[us.Key]; known {
-			backup.UserSettings = append(backup.UserSettings, us)
-		}
-	}
-	if err := usRows.Err(); err != nil {
-		slog.Error("Database error", "error", err)
+		slog.Error("Failed to read the data for a backup", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
