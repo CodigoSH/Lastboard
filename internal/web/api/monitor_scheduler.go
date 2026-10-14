@@ -26,18 +26,24 @@ type MonitorScheduler struct {
 	store      *MonitorStore
 	alertMu    sync.Mutex
 	alertState map[int]*itemAlert
+
+	// itemsFor lists one account's bookmarks that have a status check. It is a
+	// field so a test can see which accounts are read.
+	itemsFor func(userID int) ([]MonitoredItem, error)
 }
 
 // itemAlert tracks a monitor's alerting state between cycles: consecutive
 // failures and whether we currently consider it down (already alerted).
 type itemAlert struct {
+	user  int // the account that owns the bookmark, so one account's cycle only prunes its own
 	fails int
 	down  bool
 }
 
 // NewMonitorScheduler builds a scheduler over the given database handle.
 func NewMonitorScheduler(db *sql.DB) *MonitorScheduler {
-	return &MonitorScheduler{store: NewMonitorStore(db), alertState: map[int]*itemAlert{}}
+	store := NewMonitorStore(db)
+	return &MonitorScheduler{store: store, alertState: map[int]*itemAlert{}, itemsFor: store.MonitoredItemsForUser}
 }
 
 // Run launches the probe loop and the daily prune. It is meant to be started in
@@ -68,39 +74,47 @@ func (m *MonitorScheduler) probeLoop(ctx context.Context) {
 		if !sleep(ctx, monitorTick) {
 			return
 		}
-		now := time.Now()
-		for _, uid := range m.usersWithMonitors() {
-			if m.mode(uid) != "background" {
-				delete(last, uid)
-				continue
-			}
-			since, seen := last[uid]
-			if !seen {
-				last[uid] = now
-				continue
-			}
-			if now.Sub(since) < time.Duration(m.intervalSec(uid))*time.Second {
-				continue
-			}
-			last[uid] = now
-			m.runCycleFor(uid)
-		}
+		m.tick(time.Now(), last)
 	}
 }
 
-// usersWithMonitors lists the accounts that have a bookmark to probe.
-func (m *MonitorScheduler) usersWithMonitors() []int {
-	items, err := m.store.MonitoredItems()
+// tick looks at each account once: those in background mode whose interval has
+// passed are probed, and only their bookmarks are read. Which accounts to look at
+// is a handful of settings; it used to be found by reading and parsing every
+// bookmark of everyone, every fifteen seconds, whether or not anyone had
+// background monitoring on.
+func (m *MonitorScheduler) tick(now time.Time, last map[int]time.Time) {
+	for _, uid := range m.userIDs() {
+		if m.mode(uid) != "background" {
+			delete(last, uid)
+			continue
+		}
+		since, seen := last[uid]
+		if !seen {
+			last[uid] = now
+			continue
+		}
+		if now.Sub(since) < time.Duration(m.intervalSec(uid))*time.Second {
+			continue
+		}
+		last[uid] = now
+		m.runCycleFor(uid)
+	}
+}
+
+// userIDs lists every account.
+func (m *MonitorScheduler) userIDs() []int {
+	rows, err := m.store.DB.Query(`SELECT id FROM users`)
 	if err != nil {
-		slog.Error("monitor: listing items failed", "error", err)
+		slog.Error("monitor: listing accounts failed", "error", err)
 		return nil
 	}
-	seen := map[int]bool{}
+	defer rows.Close()
 	var out []int
-	for _, it := range items {
-		if !seen[it.UserID] {
-			seen[it.UserID] = true
-			out = append(out, it.UserID)
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err == nil {
+			out = append(out, id)
 		}
 	}
 	return out
@@ -140,22 +154,22 @@ func (m *MonitorScheduler) pruneLoop(ctx context.Context) {
 // without the timing loop; the loop itself runs one account at a time, on its
 // own schedule, through runCycleFor.
 func (m *MonitorScheduler) RunCycle() {
-	items, err := m.store.MonitoredItems()
-	if err != nil {
-		slog.Error("monitor: listing items failed", "error", err)
-		return
+	for _, uid := range m.userIDs() {
+		m.runCycleFor(uid)
 	}
-	m.forgetStaleAlerts(items)
-	m.probe(items)
 }
 
-// runCycleFor probes one account's bookmarks and alerts on its channel.
+// runCycleFor probes one account's bookmarks and alerts on its channel. It also
+// forgets the alert state of that account's bookmarks that no longer exist: the
+// state of a deleted bookmark would otherwise stay for as long as the process
+// lives.
 func (m *MonitorScheduler) runCycleFor(userID int) {
-	items, err := m.store.MonitoredItemsForUser(userID)
+	items, err := m.itemsFor(userID)
 	if err != nil {
 		slog.Error("monitor: listing items failed", "user", userID, "error", err)
 		return
 	}
+	m.forgetStaleAlerts(userID, items)
 	m.probe(items)
 }
 
@@ -202,17 +216,21 @@ func (m *MonitorScheduler) notifyCfg(userID int) notifyConfig {
 	}
 }
 
-// forgetStaleAlerts drops alert state for monitors that no longer exist, so a
-// long-running instance does not accumulate an entry per bookmark ever
-// monitored. Items that come back are re-seeded silently by evalAlert.
-func (m *MonitorScheduler) forgetStaleAlerts(items []MonitoredItem) {
+// forgetStaleAlerts drops the alert state of one account's monitors that no
+// longer exist, so a long-running instance does not accumulate an entry per
+// bookmark ever monitored. Other accounts' state is left to their own cycles.
+// Items that come back are re-seeded silently by evalAlert.
+func (m *MonitorScheduler) forgetStaleAlerts(userID int, items []MonitoredItem) {
 	live := make(map[int]struct{}, len(items))
 	for _, it := range items {
 		live[it.ID] = struct{}{}
 	}
 	m.alertMu.Lock()
 	defer m.alertMu.Unlock()
-	for id := range m.alertState {
+	for id, st := range m.alertState {
+		if st.user != userID {
+			continue // another account's bookmark: its own cycle looks after it
+		}
 		if _, ok := live[id]; !ok {
 			delete(m.alertState, id)
 		}
@@ -226,7 +244,7 @@ func (m *MonitorScheduler) evalAlert(it MonitoredItem, up bool, cfg notifyConfig
 	m.alertMu.Lock()
 	st := m.alertState[it.ID]
 	if st == nil {
-		st = &itemAlert{down: !up}
+		st = &itemAlert{user: it.UserID, down: !up}
 		if !up {
 			st.fails = cfg.FailThreshold
 		}

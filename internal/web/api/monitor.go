@@ -70,14 +70,10 @@ type MonitoredItem struct {
 	URL    string
 }
 
-// MonitoredItems lists every bookmark with statusCheck enabled — the set the
-// scheduler probes each cycle. Both the flag and the URL live in the content
-// JSON blob (the items.url column is unused for bookmarks), so parse them there.
-func (s *MonitorStore) MonitoredItems() ([]MonitoredItem, error) {
-	return s.monitoredItems(0)
-}
-
-// MonitoredItemsForUser is MonitoredItems scoped to one owner, for the overview.
+// MonitoredItemsForUser lists one account's bookmarks that have statusCheck
+// enabled — the set the scheduler probes for it each cycle. Both the flag and the
+// URL live in the content JSON blob (the items.url column is unused for
+// bookmarks), so they are parsed from there.
 func (s *MonitorStore) MonitoredItemsForUser(userID int) ([]MonitoredItem, error) {
 	return s.monitoredItems(userID)
 }

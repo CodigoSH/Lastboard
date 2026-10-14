@@ -154,7 +154,7 @@ func TestForgetStaleAlerts(t *testing.T) {
 	}
 
 	// Item 2 is gone from the monitored set (bookmark deleted).
-	sched.forgetStaleAlerts([]MonitoredItem{{ID: 1, URL: "http://a"}})
+	sched.forgetStaleAlerts(0, []MonitoredItem{{ID: 1, URL: "http://a"}})
 
 	if _, ok := sched.alertState[1]; !ok {
 		t.Error("live monitor 1 should keep its alert state")
@@ -173,7 +173,7 @@ func TestForgetStaleAlertsClearsAllWhenNoneMonitored(t *testing.T) {
 	cfg := notifyConfig{Enabled: false, FailThreshold: 1}
 
 	sched.evalAlert(MonitoredItem{ID: 7, URL: "http://x"}, false, cfg)
-	sched.forgetStaleAlerts(nil)
+	sched.forgetStaleAlerts(0, nil)
 
 	if len(sched.alertState) != 0 {
 		t.Fatalf("expected empty alert state, got %d entries", len(sched.alertState))
@@ -267,5 +267,89 @@ func TestAlertsGoToTheChannelOfTheAccountThatOwnsTheBookmark(t *testing.T) {
 	}
 	if len(got["b"]) != 1 || got["b"][0] != "svc-of-b" {
 		t.Errorf("account b's channel got %v, want its own recovery", got["b"])
+	}
+}
+
+// Which accounts are watched is decided by their mode, which is a handful of
+// settings. The loop used to find the accounts by reading and parsing every
+// bookmark of everyone, every fifteen seconds, even when nobody had background
+// monitoring on.
+func TestATickReadsNoBookmarksWhenNobodyMonitorsInTheBackground(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'a', 'p', 'admin'), (2, 'b', 'p', 'user'), (3, 'c', 'p', 'user')`)
+	db.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (1, 'monitoring_mode', 'tab'), (2, 'monitoring_mode', 'off')`)
+
+	sched := NewMonitorScheduler(db)
+	var read []int
+	sched.itemsFor = func(uid int) ([]MonitoredItem, error) { read = append(read, uid); return nil, nil }
+
+	last := map[int]time.Time{}
+	now := time.Now()
+	for i := 0; i < 5; i++ {
+		sched.tick(now.Add(time.Duration(i)*time.Hour), last)
+	}
+	if len(read) != 0 {
+		t.Fatalf("bookmarks were read for accounts %v although nobody monitors in the background", read)
+	}
+}
+
+// An account in background mode is probed once its interval has passed, and only
+// that account's bookmarks are read.
+func TestATickProbesOnlyTheAccountsInBackgroundModeWhenTheirIntervalPasses(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'a', 'p', 'admin'), (2, 'b', 'p', 'user')`)
+	db.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES
+		(1, 'monitoring_mode', 'background'), (1, 'monitoring_interval_sec', '60'), (2, 'monitoring_mode', 'tab')`)
+
+	sched := NewMonitorScheduler(db)
+	var read []int
+	sched.itemsFor = func(uid int) ([]MonitoredItem, error) { read = append(read, uid); return nil, nil }
+
+	last := map[int]time.Time{}
+	t0 := time.Now()
+	sched.tick(t0, last)                     // first sight: only starts the clock
+	sched.tick(t0.Add(30*time.Second), last) // interval not over
+	if len(read) != 0 {
+		t.Fatalf("probed before the interval passed: %v", read)
+	}
+	sched.tick(t0.Add(61*time.Second), last)
+	if len(read) != 1 || read[0] != 1 {
+		t.Fatalf("read bookmarks of %v, want only account 1", read)
+	}
+}
+
+// Alert state is dropped for bookmarks that no longer exist. That used to happen
+// only in a function the tests ran and the product did not, so a deleted
+// bookmark's state stayed for as long as the process lived.
+func TestACycleForgetsTheAlertStateOfDeletedBookmarks(t *testing.T) {
+	db, _ := setupTestDB(t)
+	db.SetMaxOpenConns(1)
+	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'a', 'p', 'admin'), (2, 'b', 'p', 'user')`)
+
+	sched := NewMonitorScheduler(db)
+	cfg := notifyConfig{FailThreshold: 1}
+	// Two bookmarks of account 1 (one is about to be deleted) and one of account 2.
+	sched.evalAlert(MonitoredItem{ID: 10, UserID: 1, URL: "http://x"}, false, cfg)
+	sched.evalAlert(MonitoredItem{ID: 11, UserID: 1, URL: "http://y"}, false, cfg)
+	sched.evalAlert(MonitoredItem{ID: 20, UserID: 2, URL: "http://z"}, false, cfg)
+
+	sched.itemsFor = func(uid int) ([]MonitoredItem, error) {
+		if uid == 1 {
+			return []MonitoredItem{{ID: 10, UserID: 1, URL: "http://x"}}, nil // 11 is gone
+		}
+		return nil, nil
+	}
+	sched.runCycleFor(1)
+
+	if _, ok := sched.alertState[11]; ok {
+		t.Error("the deleted bookmark kept its alert state")
+	}
+	if _, ok := sched.alertState[10]; !ok {
+		t.Error("a live bookmark lost its alert state")
+	}
+	if _, ok := sched.alertState[20]; !ok {
+		t.Error("cycling account 1 dropped the state of account 2's bookmark")
 	}
 }

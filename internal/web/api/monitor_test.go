@@ -162,7 +162,7 @@ func TestMonitoredItems(t *testing.T) {
 	ins(`{"url":"https://c.example"}`)                     // no flag
 	ins(`{"statusCheck":true}`)                            // no URL → skipped
 
-	items, err := store.MonitoredItems()
+	items, err := store.monitoredItems(0)
 	if err != nil {
 		t.Fatalf("MonitoredItems: %v", err)
 	}
