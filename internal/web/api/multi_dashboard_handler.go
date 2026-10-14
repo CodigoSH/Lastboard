@@ -167,9 +167,18 @@ func (h *MultiDashboardHandler) DeleteDashboard(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// Promoting another board, taking the items and taking the board are one
+	// change: when any step fails, none of them happened.
+	tx, err := h.DB.BeginTx(r.Context(), nil)
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
 	// Verify ownership.
 	var isDefault int
-	err = h.DB.QueryRowContext(r.Context(),
+	err = tx.QueryRowContext(r.Context(),
 		"SELECT is_default FROM dashboards WHERE id = ? AND user_id = ?",
 		dashID, userID,
 	).Scan(&isDefault)
@@ -184,7 +193,7 @@ func (h *MultiDashboardHandler) DeleteDashboard(w http.ResponseWriter, r *http.R
 
 	// Guard: cannot delete the last dashboard.
 	var total int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&total); err != nil {
+	if err := tx.QueryRowContext(r.Context(), "SELECT COUNT(*) FROM dashboards WHERE user_id = ?", userID).Scan(&total); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
@@ -195,7 +204,7 @@ func (h *MultiDashboardHandler) DeleteDashboard(w http.ResponseWriter, r *http.R
 
 	// Find the dashboard that will become the new default (lowest position that remains).
 	var newDefaultID int
-	err = h.DB.QueryRowContext(r.Context(),
+	err = tx.QueryRowContext(r.Context(),
 		"SELECT id FROM dashboards WHERE user_id = ? AND id != ? ORDER BY position ASC LIMIT 1",
 		userID, dashID,
 	).Scan(&newDefaultID)
@@ -206,27 +215,33 @@ func (h *MultiDashboardHandler) DeleteDashboard(w http.ResponseWriter, r *http.R
 
 	// If the deleted dashboard was the default, promote the new one.
 	if isDefault == 1 {
-		if _, err := h.DB.Exec(
-			"UPDATE dashboards SET is_default = 1 WHERE id = ?",
-			newDefaultID,
-		); err != nil {
+		if _, err := tx.ExecContext(r.Context(), "UPDATE dashboards SET is_default = 1 WHERE id = ?", newDefaultID); err != nil {
 			http.Error(w, "general.db_error", http.StatusInternalServerError)
 			return
 		}
 	}
 
 	// Delete items belonging to this dashboard instead of reassigning them.
-	if _, err := h.DB.Exec(
-		"DELETE FROM items WHERE dashboard_id = ? AND user_id = ?",
-		dashID, userID,
-	); err != nil {
-		slog.Warn("Failed to delete dashboard items", "error", err)
+	if _, err := tx.ExecContext(r.Context(), "DELETE FROM items WHERE dashboard_id = ? AND user_id = ?", dashID, userID); err != nil {
+		slog.Error("Failed to delete dashboard items", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
 	}
 
 	// Delete the dashboard row.
-	if _, err := h.DB.Exec("DELETE FROM dashboards WHERE id = ? AND user_id = ?", dashID, userID); err != nil {
+	if _, err := tx.ExecContext(r.Context(), "DELETE FROM dashboards WHERE id = ? AND user_id = ?", dashID, userID); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+
+	// The icons only that board's items used are no longer wanted.
+	if _, err := PruneOrphanIcons(h.DB); err != nil {
+		slog.Warn("Pruning icons after deleting a board failed", "error", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

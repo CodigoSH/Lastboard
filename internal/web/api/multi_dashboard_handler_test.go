@@ -423,3 +423,74 @@ func TestARefusedReorderLeavesTheBoardsWhereTheyWere(t *testing.T) {
 		}
 	}
 }
+
+// Deleting a board is several writes — promote another to default, take the
+// items, take the board — and they stand or fall together. When the items cannot
+// be removed the board must still exist, still be the default, and nothing else
+// may have become the default in the meantime.
+func TestDeletingABoardIsAllOrNothing(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	s := doLogin(t, server.URL, "alice", "password")
+	first := boardsOf(t, server.URL, s)[0] // the default
+	boardCall(t, "POST", server.URL+"/api/dashboards", s, `{"name":"Second"}`).Body.Close()
+	alice := userID(t, db.DB, "alice")
+	addItem(t, db.DB, alice, first.ID, 0, "bookmark", bookmarkJSON("Plex", "https://plex.example"))
+
+	if _, err := db.DB.Exec(`CREATE TRIGGER nothing_leaves BEFORE DELETE ON items BEGIN SELECT RAISE(ABORT, 'refused'); END`); err != nil {
+		t.Fatal(err)
+	}
+
+	resp := boardCall(t, "DELETE", fmt.Sprintf("%s/api/dashboards/%d", server.URL, first.ID), s, "")
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("got %d, want 500 when the items cannot be removed", resp.StatusCode)
+	}
+
+	var defaults, firstStill int
+	db.DB.QueryRow(`SELECT COUNT(*) FROM dashboards WHERE user_id = ? AND is_default = 1`, alice).Scan(&defaults)
+	db.DB.QueryRow(`SELECT COUNT(*) FROM dashboards WHERE id = ? AND is_default = 1`, first.ID).Scan(&firstStill)
+	if defaults != 1 || firstStill != 1 {
+		t.Errorf("after a refused delete there are %d default boards and the original is default=%d, want 1 and 1", defaults, firstStill)
+	}
+	if n := countItems(t, db.DB, first.ID); n != 1 {
+		t.Errorf("the board's items are %d, want the 1 it had", n)
+	}
+}
+
+// The icons only a deleted board's tiles used are no longer wanted; the ones
+// another board still shows stay.
+func TestDeletingABoardSweepsItsOwnIconsOnly(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	s := doLogin(t, server.URL, "alice", "password")
+	first := boardsOf(t, server.URL, s)[0]
+	boardCall(t, "POST", server.URL+"/api/dashboards", s, `{"name":"Second"}`).Body.Close()
+	var second int
+	db.DB.QueryRow(`SELECT id FROM dashboards WHERE name = 'Second'`).Scan(&second)
+	alice := userID(t, db.DB, "alice")
+
+	const goneHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	const keptHash = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	for _, h := range []string{goneHash, keptHash} {
+		if _, err := db.DB.Exec(`INSERT INTO icons (hash, mime, data, size) VALUES (?, 'image/webp', x'00', 1)`, h); err != nil {
+			t.Fatal(err)
+		}
+	}
+	addItem(t, db.DB, alice, first.ID, 0, "bookmark", `{"label":"A","icon":"/api/icons/`+goneHash+`"}`)
+	addItem(t, db.DB, alice, second, 0, "bookmark", `{"label":"B","icon":"/api/icons/`+keptHash+`"}`)
+
+	boardCall(t, "DELETE", fmt.Sprintf("%s/api/dashboards/%d", server.URL, first.ID), s, "").Body.Close()
+
+	var gone, kept int
+	db.DB.QueryRow(`SELECT COUNT(*) FROM icons WHERE hash = ?`, goneHash).Scan(&gone)
+	db.DB.QueryRow(`SELECT COUNT(*) FROM icons WHERE hash = ?`, keptHash).Scan(&kept)
+	if gone != 0 {
+		t.Error("an icon only the deleted board used was left behind")
+	}
+	if kept != 1 {
+		t.Error("an icon another board still shows was swept away")
+	}
+}
