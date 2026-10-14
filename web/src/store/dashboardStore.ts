@@ -130,8 +130,6 @@ class DashboardStore {
             });
 
 
-            this.checkSystemUpdate(true);
-
             socketService.subscribeNotification((type) => {
                 if (type === 'update_available') {
                     this.checkSystemUpdate(); // Re-validate with user preferences (beta toggle)
@@ -143,20 +141,22 @@ class DashboardStore {
     /**
      * Asks whether a newer release exists, and lights the dot and the menu mark.
      *
-     * Run on every load for the administrator, not only when the server
-     * announces one: it announces at start-up and once a day, to whoever is
-     * connected at that moment, so a browser opened afterwards never heard of
-     * an update that had been waiting for hours.
+     * Only for the administrator, who is the one who can install it: anyone else
+     * would be shown a dot they can do nothing about, and every one of their
+     * page loads would ask the release server. Run on every load, not only when
+     * the server announces one: it announces at start-up and once a day, to
+     * whoever is connected at that moment, so a browser opened afterwards never
+     * heard of an update that had been waiting for hours.
      */
-    private async checkSystemUpdate(onlyAdmin = false) {
-        try {
-            // Delay slightly to ensure user prefs are loaded
-            setTimeout(async () => {
+    private checkSystemUpdate() {
+        // Delay slightly to ensure user prefs are loaded
+        setTimeout(async () => {
+            try {
                 const { userStore } = await import('./userStore');
                 const { updateService } = await import('../services/UpdateService');
 
                 const user = userStore.getUser();
-                if (onlyAdmin && (user?.role || '').toLowerCase() !== 'admin') return;
+                if ((user?.role || '').toLowerCase() !== 'admin') return;
                 const betaUpdates = user?.preferences?.beta_updates || false;
 
                 const info = await updateService.check(betaUpdates);
@@ -164,10 +164,10 @@ class DashboardStore {
                     this.state.updateAvailable = true;
                     this.notify();
                 }
-            }, 2000);
-        } catch (e) {
-            // fail silently
-        }
+            } catch {
+                // The dot is a courtesy: a failed check leaves it off.
+            }
+        }, 2000);
     }
 
     private saveToLocalStorage() {
