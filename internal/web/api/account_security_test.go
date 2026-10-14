@@ -1,6 +1,8 @@
 package api_test
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -201,5 +203,77 @@ func TestEditingAccountsFromTheAdminPanel(t *testing.T) {
 	// Creating an account with a name that is taken says so, too.
 	if code := postJSONAs(t, boss, url, `{"username":"robert","password":"another-passphrase"}`); code != http.StatusConflict {
 		t.Errorf("creating a duplicate answered %d, want 409", code)
+	}
+}
+
+func preferencesAs(t *testing.T, s *userSession, url, body string) int {
+	t.Helper()
+	return postJSONAs(t, s, url+"/api/user/preferences", body)
+}
+
+func backgroundOf(t *testing.T, db interface {
+	QueryRow(string, ...any) *sql.Row
+}, name string) string {
+	t.Helper()
+	var v string
+	db.QueryRow(`SELECT COALESCE(dashboard_background, '') FROM users WHERE username = ?`, name).Scan(&v)
+	return v
+}
+
+// The dashboard background is written into the page's CSS as url(…), so it has to
+// be an image address and nothing that could close that url( and add something of
+// its own. Leaving it out of a request keeps what is there, like the logo: a
+// request that sets only the theme must not wipe the background.
+func TestTheDashboardBackground(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "bob", "password123", "user")
+	s := doLogin(t, server.URL, "bob", "password123")
+	const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+
+	if code := preferencesAs(t, s, server.URL, `{"dashboard_background":"`+png+`"}`); code != http.StatusOK {
+		t.Fatalf("a data URL answered %d", code)
+	}
+	if got := backgroundOf(t, db.DB, "bob"); got != png {
+		t.Fatalf("the background was not stored")
+	}
+
+	// A request about something else leaves it alone.
+	if code := preferencesAs(t, s, server.URL, `{"theme":"light"}`); code != http.StatusOK {
+		t.Fatalf("theme answered %d", code)
+	}
+	if got := backgroundOf(t, db.DB, "bob"); got != png {
+		t.Errorf("a request that did not mention the background cleared it")
+	}
+
+	// Sending it empty is how it is cleared.
+	preferencesAs(t, s, server.URL, `{"dashboard_background":""}`)
+	if got := backgroundOf(t, db.DB, "bob"); got != "" {
+		t.Errorf("an empty background did not clear it: %q", got)
+	}
+
+	for _, ok := range []string{"https://images.example.com/a.png", "/images/mine.png"} {
+		if code := preferencesAs(t, s, server.URL, `{"dashboard_background":"`+ok+`"}`); code != http.StatusOK {
+			t.Errorf("%q answered %d, want 200", ok, code)
+		}
+	}
+	for _, bad := range []string{
+		"https://x.example/a.png) , url(https://evil.example/track.png",
+		"data:image/png;base64,AAAA\"); background:url(//evil",
+		"javascript:alert(1)",
+		"https://x.example/a b.png",
+		"//evil.example/a.png",
+	} {
+		body, _ := json.Marshal(map[string]string{"dashboard_background": bad})
+		if code := preferencesAs(t, s, server.URL, string(body)); code != http.StatusBadRequest {
+			t.Errorf("%q answered %d, want 400", bad, code)
+		}
+	}
+
+	// Something already stored in another shape must not make every other
+	// preference fail to save: only a value that changes is checked.
+	db.DB.Exec(`UPDATE users SET dashboard_background = 'old shape (kept)' WHERE username = 'bob'`)
+	if code := preferencesAs(t, s, server.URL, `{"theme":"dark","dashboard_background":"old shape (kept)"}`); code != http.StatusOK {
+		t.Errorf("resending the value already stored answered %d, want 200", code)
 	}
 }

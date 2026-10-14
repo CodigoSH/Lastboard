@@ -699,7 +699,7 @@ func restoreUsers(tx *sql.Tx, backup BackupData) error {
 			unitSystem = *u.UnitSystem
 		}
 		dashBg := ""
-		if u.DashboardBackground != nil {
+		if u.DashboardBackground != nil && validBackground(*u.DashboardBackground) {
 			dashBg = *u.DashboardBackground
 		}
 		widgetMinWidth := 140

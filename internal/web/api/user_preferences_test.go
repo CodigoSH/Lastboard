@@ -52,7 +52,7 @@ func TestUpdatePreferences_ValidFullUpdate(t *testing.T) {
 	createUser(t, db.DB, "alice", "password", "user")
 	s := doLogin(t, server.URL, "alice", "password")
 
-	body := `{"accent_color":"#ff0000","language":"es","theme":"dark","unit_system":"imperial","widget_min_width":200,"project_name":"My Board","beta_updates":true,"grid_columns":10,"dashboard_background":"#000000"}`
+	body := `{"accent_color":"#ff0000","language":"es","theme":"dark","unit_system":"imperial","widget_min_width":200,"project_name":"My Board","beta_updates":true,"grid_columns":10,"dashboard_background":"data:image/png;base64,AAA"}`
 	if code := postPrefs(t, server.URL, s, body); code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", code)
 	}
@@ -216,7 +216,7 @@ func TestUpdatePreferences_InvalidBody(t *testing.T) {
 }
 
 // Empty string fields are treated as "not provided" and preserve current values
-// (except dashboard_background, which is always written — empty clears it).
+// (and so does leaving dashboard_background out; sent empty it clears it).
 func TestUpdatePreferences_EmptyFieldsPreserveCurrent(t *testing.T) {
 	server, db, cleanup := setupFullServer(t)
 	defer cleanup()
@@ -278,23 +278,28 @@ func TestUpdatePreferences_OmittedLogoIsPreserved(t *testing.T) {
 	}
 }
 
-// The background is always written, so omitting it clears whatever was stored.
-func TestUpdatePreferences_OmittedBackgroundIsCleared(t *testing.T) {
+// Like the logo, the background is only changed when the request carries it: a
+// request about something else must not wipe it. Sent empty, it clears.
+func TestUpdatePreferences_OmittedBackgroundIsPreserved(t *testing.T) {
 	server, db, cleanup := setupFullServer(t)
 	defer cleanup()
 
 	createUser(t, db.DB, "alice", "password", "user")
 	s := doLogin(t, server.URL, "alice", "password")
+	const bg = "data:image/png;base64,AAA"
 
-	if code := postPrefs(t, server.URL, s, `{"dashboard_background":"#123456"}`); code != http.StatusOK {
+	if code := postPrefs(t, server.URL, s, `{"dashboard_background":"`+bg+`"}`); code != http.StatusOK {
 		t.Fatalf("seed failed: %d", code)
 	}
-	if got := prefString(t, db.DB, "alice", "dashboard_background"); got != "#123456" {
-		t.Fatalf("dashboard_background = %q, want #123456", got)
-	}
-
 	if code := postPrefs(t, server.URL, s, `{"accent_color":"teal"}`); code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", code)
+	}
+	if got := prefString(t, db.DB, "alice", "dashboard_background"); got != bg {
+		t.Errorf("dashboard_background = %q, want the seeded background preserved", got)
+	}
+
+	if code := postPrefs(t, server.URL, s, `{"dashboard_background":""}`); code != http.StatusOK {
+		t.Fatalf("expected 200 when clearing, got %d", code)
 	}
 	if got := prefString(t, db.DB, "alice", "dashboard_background"); got != "" {
 		t.Errorf("dashboard_background = %q, want it cleared", got)

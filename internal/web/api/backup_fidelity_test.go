@@ -140,3 +140,37 @@ func TestABackupNeverSkipsARowItCannotRead(t *testing.T) {
 		t.Fatalf("backup of an unreadable row answered %d, want 500; body: %.200s", resp.StatusCode, raw)
 	}
 }
+
+// A backup file is typed by hand as easily as it is exported, so the dashboard
+// background it carries is held to the same rule as one typed into the settings:
+// a value that could leave the page's url(…) is dropped, the rest of the restore
+// goes ahead.
+func TestARestoredBackgroundThatCouldLeaveItsCSSValueIsDropped(t *testing.T) {
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+	createUser(t, db, "boss", "correcthorse", "admin")
+	cookie := loginAndGetCookie(t, server, "boss", "correcthorse")
+
+	req, _ := http.NewRequest("GET", server.URL+"/api/system/backup", nil)
+	req.AddCookie(cookie)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	var file map[string]any
+	if err := json.Unmarshal(raw, &file); err != nil {
+		t.Fatal(err)
+	}
+	file["users"].([]any)[0].(map[string]any)["dashboard_background"] = "https://x.example/a.png) , url(https://evil.example/t.png"
+	edited, _ := json.Marshal(file)
+	restoreBytes(t, server.URL, cookie, edited)
+
+	var bg string
+	db.QueryRow(`SELECT COALESCE(dashboard_background, '') FROM users WHERE username = 'boss'`).Scan(&bg)
+	if bg != "" {
+		t.Errorf("the restored background kept %q", bg)
+	}
+}

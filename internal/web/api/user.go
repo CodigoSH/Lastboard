@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -99,7 +100,7 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		ProjectLogo         *string `json:"project_logo"`
 		BetaUpdates         *bool   `json:"beta_updates"`
 		GridColumns         *int    `json:"grid_columns"`
-		DashboardBackground string  `json:"dashboard_background"`
+		DashboardBackground *string `json:"dashboard_background"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
@@ -177,12 +178,22 @@ func (h *UserHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) 
 		current.GridColumnsPC = val
 	}
 
-	// Dashboard Background: accept any string (Base64 or URL). Empty string clears it.
-	if len(input.DashboardBackground) > 2*1024*1024 {
-		http.Error(w, "error.background_too_large", http.StatusBadRequest)
-		return
+	// Dashboard background: only when provided (nil = not sent = keep), like the
+	// logo, so a request about something else does not wipe it. Sent empty it is
+	// cleared. A value is checked only when it changes, so one stored in an older
+	// shape never stops the other preferences from saving.
+	if input.DashboardBackground != nil {
+		bg := *input.DashboardBackground
+		if len(bg) > 2*1024*1024 {
+			http.Error(w, "error.background_too_large", http.StatusBadRequest)
+			return
+		}
+		if bg != current.DashboardBackground && !validBackground(bg) {
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
+			return
+		}
+		current.DashboardBackground = bg
 	}
-	current.DashboardBackground = input.DashboardBackground
 
 	// Project Logo: only update when explicitly provided (nil = not sent = keep current)
 	if input.ProjectLogo != nil {
@@ -652,6 +663,29 @@ func validatePassword(plain string) error {
 		return fmt.Errorf("error.password_max_length")
 	}
 	return nil
+}
+
+// validBackground says whether a dashboard background is something that can sit
+// inside the page's url(…) without being able to leave it: an image data URL, an
+// http(s) address or a path on this server, with no space, quote, parenthesis or
+// backslash in it. Empty means no background.
+func validBackground(v string) bool {
+	if v == "" {
+		return true
+	}
+	if strings.ContainsAny(v, " \t\r\n\"'()\\") {
+		return false
+	}
+	switch {
+	case strings.HasPrefix(v, "data:image/"):
+		return true
+	case strings.HasPrefix(v, "https://"), strings.HasPrefix(v, "http://"):
+		u, err := url.Parse(v)
+		return err == nil && u.Host != ""
+	case strings.HasPrefix(v, "/") && !strings.HasPrefix(v, "//"):
+		return true
+	}
+	return false
 }
 
 func isValidAccentColor(color string) bool {
