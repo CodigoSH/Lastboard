@@ -234,6 +234,9 @@ type BackupItem struct {
 	W           int     `json:"w"`
 	H           int     `json:"h"`
 	Content     *string `json:"content"`
+	// The order a phone shows it in, chosen by hand. Absent in backups made
+	// before it travelled, and for bookmarks never reordered.
+	MobileOrder *int `json:"mobile_order,omitempty"`
 }
 
 // GET /api/system/backup — the plain file.
@@ -337,7 +340,7 @@ func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, pass
 
 	// 3. Fetch Items — join users to store owner username; backups must be
 	// portable across restores where numeric IDs will differ.
-	itemRows, err := h.DB.QueryContext(r.Context(), `SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content
+	itemRows, err := h.DB.QueryContext(r.Context(), `SELECT i.id, COALESCE(u.username, ''), i.dashboard_id, i.parent_id, i.type, i.x, i.y, i.w, i.h, i.content, i.mobile_order
 		FROM items i LEFT JOIN users u ON i.user_id = u.id`)
 	if err != nil {
 		slog.Error("Failed to fetch items", "error", err)
@@ -348,7 +351,7 @@ func (h *SystemHandler) serveBackup(w http.ResponseWriter, r *http.Request, pass
 
 	for itemRows.Next() {
 		var i BackupItem
-		if err := itemRows.Scan(&i.ID, &i.Owner, &i.DashboardID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content); err != nil {
+		if err := itemRows.Scan(&i.ID, &i.Owner, &i.DashboardID, &i.ParentID, &i.Type, &i.X, &i.Y, &i.W, &i.H, &i.Content, &i.MobileOrder); err != nil {
 			continue
 		}
 		backup.Items = append(backup.Items, i)
@@ -760,7 +763,10 @@ func restoreUsers(tx *sql.Tx, backup BackupData) error {
 			projectLogo = *u.ProjectLogo
 		}
 
-		_, err := userStmt.Exec(u.Username, u.Password, u.Role, u.Theme, u.AccentColor, u.Language,
+		// validateBackupUsers compares the role in lower case, so it is stored in
+		// lower case: "Admin" passed the check and then matched no query for
+		// role = 'admin', leaving nobody able to administer the instance.
+		_, err := userStmt.Exec(u.Username, u.Password, strings.ToLower(u.Role), u.Theme, u.AccentColor, u.Language,
 			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName, projectLogo,
 			betaUpdates, unitSystem, dashBg, widgetMinWidth)
 		if err != nil {
@@ -820,7 +826,7 @@ func restoreDashboards(tx *sql.Tx, backup BackupData, ownerMap map[string]int, f
 // restoreItems inserts items in two passes: first the items themselves (building
 // an old to new id map), then the parent_id relationships using that map.
 func restoreItems(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallbackOwner int, oldToNewDashID map[int]int64) error {
-	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, dashboard_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+	itemStmt, err := tx.Prepare(`INSERT INTO items (user_id, dashboard_id, type, x, y, w, h, content, mobile_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
 	}
@@ -839,7 +845,7 @@ func restoreItems(tx *sql.Tx, backup BackupData, ownerMap map[string]int, fallba
 				newDashID = mapped
 			}
 		}
-		res, err := itemStmt.Exec(uid, newDashID, i.Type, i.X, i.Y, i.W, i.H, i.Content)
+		res, err := itemStmt.Exec(uid, newDashID, i.Type, i.X, i.Y, i.W, i.H, i.Content, i.MobileOrder)
 		if err != nil {
 			return &restoreError{http.StatusInternalServerError, "Failed to restore item"}
 		}
