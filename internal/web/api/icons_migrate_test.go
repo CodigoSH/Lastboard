@@ -239,3 +239,60 @@ func TestLocalizeIcons_IsIdempotent(t *testing.T) {
 		t.Errorf("icons table has %d rows, want 1 — identical images should be stored once", rows)
 	}
 }
+
+// The migration downloads an icon, which takes a while, and then writes the
+// bookmark back. It used to write back the whole content it had read before the
+// download, so anything the person changed in between — a rename, a new link —
+// was silently undone. The write now replaces the icon and only the icon, and
+// only if it is still the remote one that was fetched.
+func TestLocalizeIcons_DoesNotUndoAnEditMadeWhileTheIconDownloads(t *testing.T) {
+	var db *sql.DB
+	var id int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		// The person renames the bookmark while this answer is on its way.
+		if _, err := db.Exec(`UPDATE items SET content = json_set(content, '$.label', 'Renamed') WHERE id = ?`, id); err != nil {
+			t.Errorf("editing mid-flight: %v", err)
+		}
+		w.Header().Set("Content-Type", "image/gif")
+		_, _ = w.Write(tinyGIF)
+	}))
+	defer srv.Close()
+
+	db = iconTestDB(t)
+	id = insertItem(t, db, 1, `{"label":"Original","url":"https://plex.tv","icon":"`+srv.URL+`/plex.gif"}`)
+
+	done, failed := LocalizeIcons(context.Background(), db, NewIconHandler(db), nil)
+	if done != 1 || failed != 0 {
+		t.Fatalf("stored=%d failed=%d, want 1 and 0", done, failed)
+	}
+	c := readContent(t, db, id)
+	if c["label"] != "Renamed" {
+		t.Errorf("label = %v: the migration undid the edit made while the icon was downloading", c["label"])
+	}
+	if icon, _ := c["icon"].(string); len(icon) < len("/api/icons/") || icon[:len("/api/icons/")] != "/api/icons/" {
+		t.Errorf("icon = %q, want a stored one", icon)
+	}
+}
+
+// If the person changed the icon itself in the meantime, theirs wins: the
+// migration must not put the one it fetched over it.
+func TestLocalizeIcons_DoesNotOverwriteAnIconChosenMeanwhile(t *testing.T) {
+	var db *sql.DB
+	var id int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := db.Exec(`UPDATE items SET content = json_set(content, '$.icon', '🚀') WHERE id = ?`, id); err != nil {
+			t.Errorf("editing mid-flight: %v", err)
+		}
+		w.Header().Set("Content-Type", "image/gif")
+		_, _ = w.Write(tinyGIF)
+	}))
+	defer srv.Close()
+
+	db = iconTestDB(t)
+	id = insertItem(t, db, 1, `{"label":"Original","icon":"`+srv.URL+`/plex.gif"}`)
+
+	LocalizeIcons(context.Background(), db, NewIconHandler(db), nil)
+	if icon := readContent(t, db, id)["icon"]; icon != "🚀" {
+		t.Errorf("icon = %v, want the one chosen meanwhile", icon)
+	}
+}

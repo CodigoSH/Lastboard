@@ -36,9 +36,8 @@ const iconMigrationConcurrency = 4
 
 // pendingIcon is one bookmark that still points somewhere else.
 type pendingIcon struct {
-	itemID  int
-	content map[string]any
-	src     string
+	itemID int
+	src    string
 }
 
 // isRemoteIcon reports whether an icon value still has to be fetched.
@@ -97,7 +96,7 @@ func findPendingIcons(db *sql.DB, owner *int) ([]pendingIcon, error) {
 		if !ok {
 			continue
 		}
-		out = append(out, pendingIcon{itemID: id, content: content, src: src})
+		out = append(out, pendingIcon{itemID: id, src: src})
 	}
 	return out, rows.Err()
 }
@@ -191,25 +190,32 @@ func LocalizeIcons(ctx context.Context, db *sql.DB, h *IconHandler, owner *int) 
 				return
 			}
 
-			// Only the icon changes. Everything else in the bookmark is
-			// written back exactly as it was read.
-			p.content["icon"] = "/api/icons/" + hash
-			updated, err := json.Marshal(p.content)
+			// One statement replaces the icon and nothing else, and only if the
+			// bookmark still has the remote icon that was fetched. Writing back
+			// the whole content read before the download would undo anything
+			// the person changed while it ran: a rename, a new link, an icon
+			// they picked themselves.
+			res, err := db.Exec(
+				`UPDATE items SET content = json_set(content, '$.icon', ?)
+				 WHERE id = ? AND json_extract(content, '$.icon') = ?`,
+				"/api/icons/"+hash, p.itemID, p.src)
 			if err != nil {
+				slog.Error("Icon migration: could not update bookmark", "item", p.itemID, "error", err)
 				mu.Lock()
 				failed++
 				mu.Unlock()
 				return
 			}
-
-			mu.Lock()
-			defer mu.Unlock()
-			if _, err := db.Exec(`UPDATE items SET content = ? WHERE id = ?`, string(updated), p.itemID); err != nil {
-				slog.Error("Icon migration: could not update bookmark", "item", p.itemID, "error", err)
-				failed++
+			changed, _ := res.RowsAffected()
+			if changed == 0 {
+				// Edited or deleted meanwhile. Not a failure: if the icon is
+				// still remote it is picked up the next time.
+				slog.Debug("Icon migration: bookmark changed while its icon downloaded", "item", p.itemID)
 				return
 			}
+			mu.Lock()
 			done++
+			mu.Unlock()
 		}(p)
 	}
 	wg.Wait()
