@@ -5,6 +5,7 @@ import { userStore } from '../../store/userStore';
 import { DEFAULT_TELEMETRY_INTERVAL, telemetryInterval } from './telemetryInterval';
 import { EMPTY_VIEW, RemoteView, nextRemoteView, remoteErrorKey, remoteSignature, serverLink, telemetrySource } from './remoteTelemetry';
 import { fetchRemoteStats } from '../../services/remoteStats';
+import { whenVisible } from '../../services/whenVisible';
 
 // ── Thresholds ─────────────────────────────────────────────────────────────────
 
@@ -169,7 +170,7 @@ class TelemetryWidget extends HTMLElement {
             }
         };
         void tick();
-        this._timer = window.setInterval(tick, this._interval);
+        this._timer = window.setInterval(whenVisible(tick), this._interval);
     }
 
     private stopPolling() {

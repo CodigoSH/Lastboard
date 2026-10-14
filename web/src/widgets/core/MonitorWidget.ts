@@ -4,6 +4,7 @@ import { dashboardStore } from '../../store/dashboardStore';
 import { escapeHtml } from '../../services/escape';
 import { eventBus, EVENTS } from '../../services/EventBus';
 import { adoptSharedStyles } from '../../services/sharedStyles';
+import { whenVisible } from '../../services/whenVisible';
 
 /** One service as /api/monitor/overview reports it. */
 interface OverviewRow {
@@ -120,7 +121,7 @@ class MonitorWidget extends HTMLElement {
 
     private restartTimer() {
         if (this.timer) clearInterval(this.timer);
-        this.timer = setInterval(() => this.load(), this._config.refreshSec * 1000);
+        this.timer = setInterval(whenVisible(() => this.load()), this._config.refreshSec * 1000);
     }
 
     // ── Data ──

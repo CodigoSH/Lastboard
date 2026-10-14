@@ -3,6 +3,7 @@ import { adoptSharedStyles } from '../../services/sharedStyles';
 import { i18n } from '../../services/i18n';
 import { apiService } from '../../services/apiService';
 import { escapeHtml } from '../../services/escape';
+import { whenVisible } from '../../services/whenVisible';
 
 interface Mapping {
     label: string;
@@ -170,7 +171,7 @@ class ApiWidget extends HTMLElement {
     private _scheduleRefresh() {
         if (this._timer) clearInterval(this._timer);
         const sec = Math.max(MIN_REFRESH_SEC, this._config.refreshSec || 60);
-        this._timer = setInterval(() => this.fetchData(), sec * 1000);
+        this._timer = setInterval(whenVisible(() => this.fetchData()), sec * 1000);
     }
 
     private async fetchData() {

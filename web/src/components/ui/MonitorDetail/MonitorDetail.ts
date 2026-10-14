@@ -9,6 +9,7 @@ import {
 } from './MonitorDetail.template';
 import { chartWidth, placeTip } from './layout';
 import css from './MonitorDetail.css' with { type: 'text' };
+import { whenVisible } from '../../../services/whenVisible';
 
 const parseMs = (s: string) => new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z').getTime();
 
@@ -144,7 +145,7 @@ class MonitorDetail extends HTMLElement {
 
     private _startTimers() {
         this._stopTimers();
-        this._refreshTimer = window.setInterval(() => this._reload(false), MonitorDetail.REFRESH_MS);
+        this._refreshTimer = window.setInterval(whenVisible(() => this._reload(false)), MonitorDetail.REFRESH_MS);
         this._agoTimer = window.setInterval(() => this._updateAgoLabel(), 10000);
     }
 

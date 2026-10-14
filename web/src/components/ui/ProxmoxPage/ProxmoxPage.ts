@@ -10,6 +10,7 @@ import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import css from './ProxmoxPage.css' with { type: 'text' };
+import { whenVisible } from '../../../services/whenVisible';
 
 /** What this page draws: one hypervisor at a time. */
 type PxOverview = PxHost;
@@ -278,7 +279,7 @@ class ProxmoxPage extends HTMLElement {
         this._shell = false;
         this.load();
         if (this.timer) clearInterval(this.timer);
-        this.timer = setInterval(() => this.load(), 15000);
+        this.timer = setInterval(whenVisible(() => this.load()), 15000);
     }
 
     /** Back to the list of hypervisors. */

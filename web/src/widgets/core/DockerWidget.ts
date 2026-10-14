@@ -20,6 +20,7 @@ import {
     shortId,
 } from '../../services/dockerShared';
 import '../../components/ui/Select/Select';
+import { whenVisible } from '../../services/whenVisible';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -548,7 +549,7 @@ class DockerWidget extends HTMLElement {
         const sec = Number(this._config.refreshSec) > 0
             ? Number(this._config.refreshSec)
             : DEFAULT_REFRESH_SEC;
-        this._listTimer = setInterval(() => this.loadContainers(true), sec * 1000);
+        this._listTimer = setInterval(whenVisible(() => this.loadContainers(true)), sec * 1000);
     }
 
     // ── Data fetching ────────────────────────────────────────────────────────

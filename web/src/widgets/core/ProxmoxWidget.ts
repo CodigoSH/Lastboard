@@ -6,6 +6,7 @@ import { adoptSharedStyles } from '../../services/sharedStyles';
 import { loadProxmoxLinks, linkFor } from '../../services/proxmoxLinks';
 import { loadProxmox, type PxHost, type PxNode, type PxGuest } from '../../services/proxmoxApi';
 import { resolveIconUrl } from '../../services/iconUrl';
+import { whenVisible } from '../../services/whenVisible';
 
 /** A machine, plus which hypervisor it is on: the tile mixes them all. */
 type PxGuestOn = PxGuest & { host: string };
@@ -154,7 +155,7 @@ class ProxmoxWidget extends HTMLElement {
 
     private restartTimer() {
         if (this.timer) clearInterval(this.timer);
-        this.timer = setInterval(() => this.load(), this._config.refreshSec * 1000);
+        this.timer = setInterval(whenVisible(() => this.load()), this._config.refreshSec * 1000);
     }
 
     // ── Data ──
