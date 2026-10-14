@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"io"
 	"net"
 	"net/http"
@@ -150,7 +151,7 @@ func buildDockerClient(hostURL string) (*http.Client, string, error) {
 			MaxIdleConnsPerHost: statsParallelism,
 			IdleConnTimeout:     dockerIdleTimeout,
 			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-				return (&net.Dialer{Timeout: timeout}).DialContext(ctx, "unix", socket)
+				return util.NewDialer(timeout, 0).DialContext(ctx, "unix", socket)
 			},
 		}
 		return &http.Client{Transport: transport, Timeout: timeout}
@@ -237,6 +238,7 @@ func pooledTransport(tlsCfg *tls.Config) *http.Transport {
 		MaxIdleConns:        statsParallelism * 2,
 		MaxIdleConnsPerHost: statsParallelism,
 		IdleConnTimeout:     dockerIdleTimeout,
+		DialContext:         util.NewDialer(10*time.Second, 30*time.Second).DialContext,
 	}
 }
 

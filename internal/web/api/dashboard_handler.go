@@ -79,10 +79,7 @@ var healthClient = &http.Client{
 		MaxIdleConnsPerHost: 10,
 		IdleConnTimeout:     60 * time.Second,
 		DisableKeepAlives:   false,
-		DialContext: (&net.Dialer{
-			Timeout:   3 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
+		DialContext:         util.NewDialer(3*time.Second, 30*time.Second).DialContext,
 	},
 }
 
@@ -733,7 +730,7 @@ func probeURL(rawUrl string) string {
 			port = "80"
 		}
 	}
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(pinnedIP, port), time.Second*2)
+	conn, err := util.NewDialer(2*time.Second, 0).Dial("tcp", net.JoinHostPort(pinnedIP, port))
 	if err == nil {
 		conn.Close()
 		return "up"

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"net/http"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ var notifyClient = &http.Client{
 	Timeout: 8 * time.Second,
 	Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 — self-hosted, private targets by design
+		DialContext:     util.NewDialer(5*time.Second, 30*time.Second).DialContext,
 	},
 }
 

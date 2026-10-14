@@ -62,7 +62,13 @@ func NewIconHandler(db *sql.DB) *IconHandler {
 		DB: db,
 		// No redirect ceiling beyond Go's default of 10; providers redirect
 		// (jsDelivr → its CDN edge) and refusing that would fetch nothing.
-		Client: &http.Client{Timeout: iconFetchTimeout},
+		Client: &http.Client{Timeout: iconFetchTimeout, Transport: &http.Transport{
+			Proxy:               http.ProxyFromEnvironment,
+			DialContext:         util.NewDialer(5*time.Second, 30*time.Second).DialContext,
+			ForceAttemptHTTP2:   true,
+			TLSHandshakeTimeout: 10 * time.Second,
+			IdleConnTimeout:     90 * time.Second,
+		}},
 	}
 }
 

@@ -17,6 +17,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"io"
 	"math"
 	"net/http"
@@ -84,6 +85,7 @@ func proxmoxTransport(skipVerify bool) *http.Transport {
 		MaxIdleConns:        32,
 		MaxIdleConnsPerHost: 4,
 		IdleConnTimeout:     30 * time.Second,
+		DialContext:         util.NewDialer(5*time.Second, 30*time.Second).DialContext,
 	}
 	if skipVerify {
 		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402 — see above

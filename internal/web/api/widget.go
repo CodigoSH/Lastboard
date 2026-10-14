@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -30,10 +29,7 @@ var apiWidgetClient = &http.Client{
 		MaxIdleConns:        50,
 		MaxIdleConnsPerHost: 5,
 		IdleConnTimeout:     60 * time.Second,
-		DialContext: (&net.Dialer{
-			Timeout:   4 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
+		DialContext:         util.NewDialer(4*time.Second, 30*time.Second).DialContext,
 	},
 }
 

@@ -674,7 +674,7 @@ func probeTimed(rawUrl string) (bool, *int, int) {
 			port = "80"
 		}
 	}
-	if conn, err := net.DialTimeout("tcp", net.JoinHostPort(pinnedIP, port), 2*time.Second); err == nil {
+	if conn, err := util.NewDialer(2*time.Second, 0).Dial("tcp", net.JoinHostPort(pinnedIP, port)); err == nil {
 		conn.Close()
 		ms := int(time.Since(start).Milliseconds())
 		return true, &ms, statusCode

@@ -1,8 +1,11 @@
 package util
 
 import (
+	"errors"
 	"net"
 	"strings"
+	"syscall"
+	"time"
 )
 
 // IsCloudMetadataHost reports whether a host is a cloud instance's metadata
@@ -77,4 +80,33 @@ var forbiddenOutboundHeaders = map[string]bool{
 // request the server makes for a user.
 func IsForbiddenOutboundHeader(name string) bool {
 	return forbiddenOutboundHeaders[strings.ToLower(strings.TrimSpace(name))]
+}
+
+// ErrMetadataAddress is what a connection to a cloud metadata service fails with.
+var ErrMetadataAddress = errors.New("refused: that address is a cloud metadata service")
+
+// refuseMetadata is a net.Dialer's Control: it runs once the name has been
+// resolved, with the address about to be connected to, and can still say no.
+//
+// That is the only place the block holds. A check on the URL's host sees what
+// the URL says; a redirect, or a name that resolves to the address, says
+// something else. A unix socket has no host, and is let through.
+func refuseMetadata(network, address string, _ syscall.RawConn) error {
+	host, _, err := net.SplitHostPort(address)
+	if err != nil {
+		return nil
+	}
+	if IsCloudMetadataHost(host) {
+		return ErrMetadataAddress
+	}
+	return nil
+}
+
+// NewDialer is the one way this program opens an outbound connection. Everything
+// else about where it may connect is the administrator's business — the machine
+// next door is the point of a dashboard — but the metadata service of the cloud
+// it runs on answers with the instance's credentials, and no URL typed into a
+// widget has a reason to reach it. A test reads the source to keep it the only way.
+func NewDialer(timeout, keepAlive time.Duration) *net.Dialer {
+	return &net.Dialer{Timeout: timeout, KeepAlive: keepAlive, Control: refuseMetadata}
 }

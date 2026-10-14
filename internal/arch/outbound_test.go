@@ -65,6 +65,12 @@ var mayReachTheNetwork = map[string]string{
 	// board's contents leaves, and the credential never reaches the browser.
 	"internal/web/api/proxmox_client.go": "the Proxmox integration, against the operator's own host",
 
+	// The dialer every one of the files above connects through. It opens no
+	// connection of its own and names no host: it exists to refuse the cloud
+	// metadata services at the moment of connecting, which a check on a URL
+	// cannot do.
+	"internal/web/util/outbound.go": "the protected dialer all outbound connections use",
+
 	// A separate binary, run by the container to ask the server whether it is
 	// alive. It dials its own port.
 	"cmd/healthcheck/main.go": "the container health check, dialling this instance",
@@ -201,5 +207,105 @@ func TestTheUpdatePathNamesOneHost(t *testing.T) {
 				"and no third-party services. Either that stopped being true, or the page\n"+
 				"needs to say what else is involved.", host)
 		}
+	}
+}
+
+// Where the block on cloud metadata lives is the dialer, so every connection has
+// to be made by it. This reads the source for the two ways around it: opening a
+// connection (or building a dialer) by hand, and building a transport that does
+// not say how to dial and so falls back to the standard one.
+//
+// cmd/healthcheck dials this instance's own port and has nothing to protect.
+func TestEveryOutboundConnectionGoesThroughTheProtectedDialer(t *testing.T) {
+	root := filepath.Join("..", "..")
+	exempt := map[string]bool{
+		"internal/web/util/outbound.go": true, // it is the dialer
+		"cmd/healthcheck/main.go":       true,
+	}
+
+	files, transports := 0, 0
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		relative, _ := filepath.Rel(root, path)
+		relative = filepath.ToSlash(relative)
+		if d.IsDir() {
+			switch relative {
+			case ".git", "node_modules", "web", "docs", "bin", "deploy":
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") || exempt[relative] {
+			return nil
+		}
+		parsed, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+		if err != nil {
+			return err
+		}
+		files++
+		ast.Inspect(parsed, func(n ast.Node) bool {
+			switch x := n.(type) {
+			case *ast.CallExpr:
+				if sel, ok := x.Fun.(*ast.SelectorExpr); ok {
+					if pkg, ok := sel.X.(*ast.Ident); ok && pkg.Name == "net" && strings.HasPrefix(sel.Sel.Name, "Dial") {
+						t.Errorf("%s calls net.%s: connect through util.NewDialer, which refuses the metadata services", relative, sel.Sel.Name)
+					}
+				}
+			case *ast.CompositeLit:
+				sel, ok := x.Type.(*ast.SelectorExpr)
+				if !ok {
+					return true
+				}
+				pkg, ok := sel.X.(*ast.Ident)
+				if !ok {
+					return true
+				}
+				switch pkg.Name + "." + sel.Sel.Name {
+				case "net.Dialer":
+					t.Errorf("%s builds a net.Dialer: use util.NewDialer, which refuses the metadata services", relative)
+				case "http.Client":
+					// A client with no Transport uses the standard one and its
+					// standard dialer. The update path is the one exception: it
+					// only talks to the host it has checked, git.codigosh.com.
+					if relative == "internal/web/api/update.go" {
+						return true
+					}
+					hasTransport := false
+					for _, el := range x.Elts {
+						if kv, ok := el.(*ast.KeyValueExpr); ok {
+							if key, ok := kv.Key.(*ast.Ident); ok && key.Name == "Transport" {
+								hasTransport = true
+							}
+						}
+					}
+					if !hasTransport {
+						t.Errorf("%s builds an http.Client with no Transport: it would use the standard dialer, which does not refuse the metadata services", relative)
+					}
+				case "http.Transport":
+					transports++
+					has := false
+					for _, el := range x.Elts {
+						if kv, ok := el.(*ast.KeyValueExpr); ok {
+							if key, ok := kv.Key.(*ast.Ident); ok && key.Name == "DialContext" {
+								has = true
+							}
+						}
+					}
+					if !has {
+						t.Errorf("%s builds an http.Transport without DialContext: it would use the standard dialer, which does not refuse the metadata services", relative)
+					}
+				}
+			}
+			return true
+		})
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if files < 20 || transports < 4 {
+		t.Fatalf("read %d files and found %d transports: this test is reading the wrong tree", files, transports)
 	}
 }
