@@ -272,7 +272,7 @@ func (h *UpdateHandler) fetchLatestReleaseUncached(beta bool) (tagName string, r
 			TagName string `json:"tag_name"`
 			Body    string `json:"body"`
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
+		if err := decodeLimited(resp.Body, releaseMaxAnswer, &releases); err != nil {
 			return "", "", err
 		}
 		if len(releases) == 0 {
@@ -285,7 +285,7 @@ func (h *UpdateHandler) fetchLatestReleaseUncached(beta bool) (tagName string, r
 		TagName string `json:"tag_name"`
 		Body    string `json:"body"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+	if err := decodeLimited(resp.Body, releaseMaxAnswer, &release); err != nil {
 		return "", "", err
 	}
 	return release.TagName, release.Body, nil

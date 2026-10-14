@@ -325,7 +325,7 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 	}
 
 	var raw []dockerAPIContainer
-	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+	if err := decodeLimited(resp.Body, dockerMaxAnswer, &raw); err != nil {
 		return nil, fmt.Errorf("docker: decode containers: %w", err)
 	}
 
@@ -464,7 +464,7 @@ func containerStats(client *http.Client, base, containerID string) (DockerStats,
 	}
 
 	var s dockerAPIStats
-	if err := json.NewDecoder(resp.Body).Decode(&s); err != nil {
+	if err := decodeLimited(resp.Body, dockerMaxAnswer, &s); err != nil {
 		return DockerStats{}, fmt.Errorf("docker: decode stats: %w", err)
 	}
 
