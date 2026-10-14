@@ -2,10 +2,8 @@ package api
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -537,14 +535,9 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		slog.Error("Moving settings to the first administrator after a restore failed", "error", err)
 	}
 
-	// Regenerate session secret to invalidate all active sessions.
-	// After a restore, all users must re-authenticate to ensure they
-	// are accessing data consistent with the restored state.
-	newSecret := make([]byte, 32)
-	if _, err := rand.Read(newSecret); err == nil {
-		newSecretHex := hex.EncodeToString(newSecret)
-		_, _ = h.DB.Exec("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('session_secret', ?)", newSecretHex)
-	}
+	// Sessions end through the accounts themselves: restoreUsers gives each one
+	// a new password generation, and the signing secret is left alone, so a
+	// session opened after the restore is still good after a restart.
 
 	// Instruct the browser to wipe all cached data (assets, cookies, localStorage).
 	// This ensures the client starts fresh after a restore — without this, stale
@@ -680,11 +673,17 @@ func restoreIcons(tx *sql.Tx, backup BackupData) error {
 func restoreUsers(tx *sql.Tx, backup BackupData) error {
 	userStmt, err := tx.Prepare(`INSERT INTO users (username, password, role, theme, accent_color, language,
 		grid_columns_pc, grid_columns_tablet, grid_columns_mobile, avatar_url, project_name, project_logo,
-		beta_updates, unit_system, dashboard_background, widget_min_width) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		beta_updates, unit_system, dashboard_background, widget_min_width, password_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return &restoreError{http.StatusInternalServerError, "DB Prepare Error"}
 	}
 	defer userStmt.Close()
+
+	// Every restored account starts a new password generation. A session carries
+	// the generation it was opened under, so none opened before the restore can
+	// match an account that now has this one — which is what ends them all, the
+	// ones minted before sessions carried an account id included.
+	generation := time.Now().Unix()
 
 	for _, u := range backup.Users {
 		betaUpdates := false
@@ -713,7 +712,7 @@ func restoreUsers(tx *sql.Tx, backup BackupData) error {
 		// role = 'admin', leaving nobody able to administer the instance.
 		_, err := userStmt.Exec(u.Username, u.Password, strings.ToLower(u.Role), u.Theme, u.AccentColor, u.Language,
 			u.GridColumnsPC, u.GridColumnsTablet, u.GridColumnsMobile, u.AvatarUrl, u.ProjectName, projectLogo,
-			betaUpdates, unitSystem, dashBg, widgetMinWidth)
+			betaUpdates, unitSystem, dashBg, widgetMinWidth, generation)
 		if err != nil {
 			return &restoreError{http.StatusInternalServerError, "Failed to restore backup"}
 		}
