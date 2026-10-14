@@ -243,7 +243,25 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.DB.Exec(
+	// A browser that has not reloaded since the update still sends a widget's
+	// credentials inside its content. They are moved to the secret store here,
+	// in the same transaction as the insert, so the content that is stored (and
+	// that every page then receives) never carries them.
+	var moved map[string]string
+	if item.Type == "widget" {
+		if next, secrets, ok := migrateWidgetContent(item.Content); ok {
+			item.Content, moved = next, secrets
+		}
+	}
+
+	tx, err := h.DB.Begin()
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	res, err := tx.Exec(
 		"INSERT INTO items (user_id, parent_id, dashboard_id, type, x, y, w, h, content, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		userID, item.ParentID, item.DashboardID, item.Type, item.X, item.Y, item.W, item.H, item.Content, item.Url,
 	)
@@ -259,6 +277,15 @@ func (h *DashboardHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	item.ID = int(id)
+	if err := storeMovedSecrets(tx, item.ID, moved); err != nil {
+		slog.Error("Moving widget credentials failed in CreateItem", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(item)
@@ -321,6 +348,7 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	// Build dynamic update
 	var sets []string
 	var args []interface{}
+	var moved map[string]string // credentials taken out of a widget's content
 
 	if input.X != nil {
 		sets = append(sets, "x=?")
@@ -379,8 +407,17 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Credentials sent inside a widget's content by a browser that has not
+		// reloaded since the update go to the secret store, in the same
+		// transaction as the write below.
+		content := *input.Content
+		if itemType == "widget" {
+			if next, secrets, ok := migrateWidgetContent(content); ok {
+				content, moved = next, secrets
+			}
+		}
 		sets = append(sets, "content=?")
-		args = append(args, *input.Content)
+		args = append(args, content)
 	}
 
 	if len(sets) == 0 {
@@ -399,7 +436,14 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	query += guard
 	args = append(args, guardArgs...)
 
-	result, err := h.DB.Exec(query, args...)
+	tx, err := h.DB.Begin()
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec(query, args...)
 	if err != nil {
 		slog.Error("Update error in UpdateItem", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
@@ -411,6 +455,17 @@ func (h *DashboardHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		slog.Error("RowsAffected error in UpdateItem", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
+	}
+	if rows > 0 {
+		if err := storeMovedSecrets(tx, id, moved); err != nil {
+			slog.Error("Moving widget credentials failed in UpdateItem", "error", err)
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+		if err := tx.Commit(); err != nil {
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
 	}
 	if rows == 0 {
 		// With a guard, "nothing changed" can mean the row is gone or that it

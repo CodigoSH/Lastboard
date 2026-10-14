@@ -121,6 +121,32 @@ func (h *WidgetAPIHandler) Fetch(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// migrateWidgetContent moves the credentials out of a widget's content, whichever
+// kind of widget it is, and says whether there was anything to move. It is the
+// one definition of "content written the old way", used wherever content comes in.
+func migrateWidgetContent(content string) (next string, secrets map[string]string, ok bool) {
+	if next, secrets, ok = migrateAPIContent(content); ok {
+		return next, secrets, true
+	}
+	return migrateDockerContent(content)
+}
+
+// execer is what a database and a transaction have in common.
+type execer interface {
+	Exec(query string, args ...any) (sql.Result, error)
+}
+
+// storeMovedSecrets writes the credentials taken out of a widget's content.
+func storeMovedSecrets(db execer, itemID int, secrets map[string]string) error {
+	for name, value := range secrets {
+		if _, err := db.Exec(`INSERT INTO widget_secrets (item_id, name, value) VALUES (?, ?, ?)
+			ON CONFLICT (item_id, name) DO UPDATE SET value = excluded.value`, itemID, name, value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // MigrateWidgetSecrets moves the credentials of API and Docker widgets saved by an
 // earlier version out of their content and into the secret store. It is safe to run on
 // every start and after a restore: a widget with nothing left to move is left
@@ -162,10 +188,7 @@ func MigrateWidgetSecrets(db *sql.DB) (int, error) {
 
 	migrated := 0
 	for _, r := range found {
-		next, secrets, ok := migrateAPIContent(r.content)
-		if !ok {
-			next, secrets, ok = migrateDockerContent(r.content)
-		}
+		next, secrets, ok := migrateWidgetContent(r.content)
 		if !ok {
 			continue
 		}
@@ -174,11 +197,8 @@ func MigrateWidgetSecrets(db *sql.DB) (int, error) {
 			return migrated, err
 		}
 		fail := func(err error) (int, error) { tx.Rollback(); return migrated, err }
-		for name, value := range secrets {
-			if _, err := tx.Exec(`INSERT INTO widget_secrets (item_id, name, value) VALUES (?, ?, ?)
-				ON CONFLICT (item_id, name) DO UPDATE SET value = excluded.value`, r.id, name, value); err != nil {
-				return fail(err)
-			}
+		if err := storeMovedSecrets(tx, r.id, secrets); err != nil {
+			return fail(err)
 		}
 		if _, err := tx.Exec(`UPDATE items SET content = ? WHERE id = ?`, next, r.id); err != nil {
 			return fail(err)
