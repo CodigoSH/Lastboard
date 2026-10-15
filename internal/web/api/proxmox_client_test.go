@@ -185,6 +185,9 @@ func TestPowerPathRefusesAnythingItDoesNotOffer(t *testing.T) {
 		action           string
 	}{
 		{"an action we do not offer", "kprox", "lxc", 106, "destroy"},
+		// The hard power-off. The interface offers start and the graceful shutdown
+		// only, and says so everywhere: what the server relays has to be the same.
+		{"the hard stop, which is not offered", "kprox", "lxc", 106, "stop"},
 		{"a kind that is not a guest", "kprox", "storage", 106, "start"},
 		{"a node that climbs out of the path", "kprox/../../access", "lxc", 106, "start"},
 		{"no vmid", "kprox", "lxc", 0, "start"},

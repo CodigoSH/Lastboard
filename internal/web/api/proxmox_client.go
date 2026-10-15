@@ -335,7 +335,8 @@ func capsFrom(perms map[string]map[string]int) proxmoxCaps {
  * ------------------------------------------------------------------------ */
 
 // proxmoxPowerPath builds the endpoint for a power action, and refuses
-// anything that is not one of the three this product offers.
+// anything that is not one of the two this product offers: start, and the
+// graceful shutdown. The hard power-off is not among them.
 //
 // The kind and the action are closed sets on purpose: they arrive from a
 // request and end up in a URL path, so an open string would let a caller reach
@@ -348,7 +349,7 @@ func proxmoxPowerPath(node, kind string, vmid int, action string) (string, error
 		return "", fmt.Errorf("general.invalid_input")
 	}
 	switch action {
-	case "start", "stop", "shutdown":
+	case "start", "shutdown":
 	default:
 		return "", fmt.Errorf("general.invalid_input")
 	}

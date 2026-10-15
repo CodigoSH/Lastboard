@@ -449,6 +449,17 @@ func TestAMemberStopsTheirOwnMachinesAndNobodyElses(t *testing.T) {
 		t.Fatalf("the action went to the wrong hypervisor (guest's: %v, admin's: %v)", guestFake.asked(shutdown), adminFake.asked(shutdown))
 	}
 
+	// The hard power-off is not an action this product offers, so it is refused
+	// here and never reaches the hypervisor.
+	resp = pxPower(t, server.URL, guest, `{"node":"kprox","kind":"lxc","vmid":106,"action":"stop"}`)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("the hard stop answered %d, want 400", resp.StatusCode)
+	}
+	if guestFake.asked("POST /api2/json/nodes/kprox/lxc/106/status/stop") {
+		t.Error("the hard stop reached the hypervisor")
+	}
+
 	// An account with no hypervisor of its own has nothing to stop, and the
 	// admin's is not reachable by naming it.
 	other := doLogin(t, server.URL, "other", "password")
