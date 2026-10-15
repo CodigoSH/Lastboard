@@ -100,14 +100,27 @@ const openSettings = (section: string) => `
   ${DRAWER}.querySelector('.right-drawer__menu-item[data-section="${section}"]').click();
   await sleep(900);`;
 
-/** The card on the board that holds a given widget, for framing one tile. */
+/**
+ * The card on the board that holds a given widget, for framing one tile.
+ *
+ * What it hands back is the card's box with the name pill added to it: the pill sits
+ * half over the card's top edge, and a frame cut at the card would take the name's
+ * upper half off the picture.
+ */
 const tile = (widgetTag: string) =>
     `(() => {
         const el = document.querySelector('bookmark-grid').shadowRoot.querySelector('${widgetTag}');
         // Named on purpose: a bare null.closest() aborted a whole run once, and
         // the eleven shots queued behind this one were never taken.
         if (!el) throw new Error('no ${widgetTag} on the board — was it seeded?');
-        return el.closest('.bookmark-grid__card');
+        const card = el.closest('.bookmark-grid__card');
+        const pill = card.querySelector('.widget-title');
+        return { getBoundingClientRect() {
+            const b = card.getBoundingClientRect();
+            if (!pill) return b;
+            const top = Math.min(b.top, pill.getBoundingClientRect().top);
+            return new DOMRect(b.left, top, b.width, b.bottom - top);
+        } };
     })()`;
 
 /** Section names as they appear in the settings nav, and the file each becomes. */
@@ -195,12 +208,20 @@ const SHOTS: Shot[] = [
     // ── Docker, when a Docker-compatible API is available ───────────────
     { name: 'w-docker', exhibit: true, clip: tile('widget-docker'), pad: 0, dpr: 4, h: 1300, wait: 2500 },
     {
-        name: 'w-p-docker', w: 1500, h: 980, pad: 0, wait: 1200,
+        // Tall enough that the dialog is not made to scroll: it now holds the title, the
+        // hosts, seven containers and the switch for new ones, and a shorter window cut it
+        // off under the list.
+        name: 'w-p-docker', w: 1500, h: 1400, pad: 0, wait: 1200,
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
               const grid = document.querySelector('bookmark-grid').shadowRoot;
               const card = grid.querySelector('widget-docker').closest('.bookmark-grid__card');
               card.querySelector('.kebab-btn').click(); await sleep(600);
-              grid.querySelector('#kebab-menu .menu-edit').click(); await sleep(1800);`,
+              grid.querySelector('#kebab-menu .menu-edit').click(); await sleep(1800);
+              // The dialog caps its own height and scrolls inside; for the photograph it
+              // is let grow to what it holds, so the switch for new containers and the
+              // refresh field are not left under the fold.
+              document.querySelector('widget-config-modal').shadowRoot.querySelector('dialog').style.maxHeight = 'none';
+              await sleep(500);`,
         clip: `document.querySelector('widget-config-modal').shadowRoot.querySelector('dialog')`,
     },
 
@@ -678,7 +699,7 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     // sat empty while Proxmox sat alone on row seven with the same gap beside
     // it. At five columns by two rows it closes both, and the board ends in a
     // full rectangle rather than a lone tile under a hole.
-    addWidget(8, 5, 5, 2, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: '' });
+    addWidget(8, 5, 5, 2, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: 'Hypervisors' });
 
     // The Docker widget, pointed at whatever Docker-compatible API is listening
     // on DOCKER_API (Podman serves one too). Without it the widget is left out
@@ -699,6 +720,7 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
             widgetId: 'docker',
             hosts: [{ id: 'docs', name: 'Home server', type: 'tcp', url: dockerHost }],
             activeHost: 'docs',
+            title: 'Containers',
         });
         // Warm the proxy before anything is photographed. The first call to a
         // just-started Podman service takes several seconds to come back, which
