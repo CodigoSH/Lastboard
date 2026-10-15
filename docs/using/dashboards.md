@@ -6,7 +6,7 @@ Lastboard gives each user **multiple independent dashboards**. Every dashboard h
 
 ## Creating a Dashboard
 
-New dashboards are **not** created from the switcher. Enter **Edit Mode**, open the **Add (+) menu** in the top bar, and choose **New dashboard** — the same menu you use to add bookmarks, sections, and widgets.
+A dashboard's name can be up to 50 characters. New dashboards are **not** created from the switcher. Enter **Edit Mode**, open the **Add (+) menu** in the top bar, and choose **New dashboard** — the same menu you use to add bookmarks, sections, and widgets.
 
 ![Add menu](../assets/m-addnew.png)
 

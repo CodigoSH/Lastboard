@@ -4,8 +4,8 @@ This guide is intended for CodigoSH team members. It covers how to set up a loca
 
 ## Prerequisites
 
-- **Go 1.26+** (Strictly required for backend execution)
-- **Bun** (Latest, required for frontend tooling)
+- **Go 1.27.2** — the version `go.mod` pins; an older toolchain cannot build the project
+- **Bun 1.4.3** — the version the project pins, required for frontend tooling
 - **Docker** (Optional, but recommended for containerized testing)
 - **Air** (Optional, but highly recommended for Go hot-reloading)
 
@@ -94,9 +94,14 @@ summary:
 # For Official Stable releases
 ./scripts/release.sh stable "One-line summary of the release"
 
-# Pinning the version instead of letting the script work it out
-./scripts/release.sh beta 1.9.0 "One-line summary of the release"
+# Pinning the version of a stable release instead of letting the script work it out
+./scripts/release.sh stable 1.9.3 "One-line summary of the release"
 ```
+
+**A beta takes no version.** The script counts the `-Beta.NN` itself. Giving `beta` an
+`X.Y.Z` makes it use that exact version, with no `-Beta.NN`, and publish a **stable** release —
+which cannot be taken back once the tag is pushed. Read the tag the `--dry-run` prints
+(`git tag vX.Y.Z-Beta.NN`) before running it for real.
 
 The title is the summary the changelog is built from. Pass it as an argument, or the script will ask for one. `--yes` answers the confirmations, for a non-interactive run; without a terminal and without it, a `stable` release stops on the first line rather than after a two-minute preflight.
 

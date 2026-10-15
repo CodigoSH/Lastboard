@@ -114,11 +114,11 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Machines are tied to your bookmarks automatically**, by name and by the icon a bookmark wears, with filing prefixes (`15-myspeed`) stripped and a strict *only when exactly one bookmark fits* rule. Measured on a real host of 29 containers and 55 bookmarks with nothing configured: **16 matched, none wrongly.**
 - **That is the point of it.** A stopped container doesn't just say *stopped* — it says **which service it takes with it**: every stopped tile turns a soft red, the ones serving a bookmark carry its mark in the corner, and the summary names the service by name.
 - **Start and shut down** a machine with confirmation, only on the hypervisors you connected, and only when the token really carries `VM.PowerMgmt` — which Lastboard asks the host rather than assuming. **Nodes can never be powered off from Lastboard**, deliberately.
-- **Nothing is written to your database**: no machine names, no figures, no history. Only the connection, and the token secret is never sent back to a browser.
+- **Nothing is written to your database**: no machine names, no figures, no history. Only the connection (the token secret is never sent back to a browser) and the icons you choose for machines.
 
 ### Yours to keep
 
-- **Full backup and restore** from the browser — every user, every dashboard, every setting and **every stored icon**, in one file.
+- **Full backup and restore** from the browser — every user, every dashboard, every setting and **every stored icon**, in one file, optionally sealed under a password so nothing in it can be read without it.
 - **Export as open, documented YAML**: readable, editable, version-controllable.
 - **Import from Homepage** (`services.yaml`, `bookmarks.yaml`), **from Dashy** (`conf.yml`), or from a Lastboard export. Import always *adds* dashboards and never overwrites, and tells you how many items it will create first.
 - **Icons are downloaded once and served from your own server.** Loading your board reports nothing to a public CDN — not your address, and not which services you run. Boards built before this existed are brought in automatically on startup.
@@ -144,10 +144,10 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 Lastboard is built with defense-in-depth from the ground up:
 
-- **Sessions** as HMAC-SHA256 signed tokens with strict expiry; passwords hashed with **Argon2id**; constant-time verification.
+- **Sessions** as HMAC-SHA256 signed tokens with strict expiry, tied to the account and ended by a password change; passwords hashed with **Argon2id**, at most two at a time so a flood of sign-ins cannot exhaust a small server; constant-time verification.
 - **CSRF protection** on every state-changing method, plus a `Sec-Fetch-Site` check the page cannot forge.
 - **A strict Content-Security-Policy with a per-request nonce**, so injected markup cannot execute as script — alongside HSTS, `nosniff`, `X-Frame-Options` and `Referrer-Policy`.
-- **Rate limiting** at 20 req/s (burst 50) per IP, and a login lockout after 5 failed attempts. Behind a proxy the client IP is read from the entry **your** proxy appended, not the one the caller sent, so the lockout cannot be evaded with a forged header.
+- **Rate limiting** at 20 req/s (burst 50) per IP, and a lockout after 5 failed attempts — at sign-in, and per account wherever the password is asked for again (changing it, deleting an account, resetting the instance). Behind a proxy the client IP is read from the entry **your** proxy appended, not the one the caller sent, so the lockout cannot be evaded with a forged header.
 - **Signature-verified updates**: `checksums.txt` is signed with **Ed25519** and the public half is embedded in the binary as a list; a missing or invalid signature aborts the update.
 - **Optional unprivileged execution** via `PUID`/`PGID`, with the data directory fixed up automatically before privileges are dropped.
 - **Authorization declared route by route**, not by a list of public path prefixes inside the middleware — so nothing becomes reachable without a session by accident of its URL, including anything that falls through to the app shell. Stored icons are served with their own sandboxed CSP.
@@ -213,9 +213,9 @@ For more details on building from source, check the [Development Guide](https://
 
 ## Updates
 
-Lastboard updates are handled securely via a dedicated proxy to guarantee performance and protect our infrastructure. 
+Updates come straight from the official repository, with no proxy or intermediary in between, and are verified against a signed checksum file before anything is installed.
 
-For detailed updating instructions, visit the [Updates Guide](https://codigosh.com/docs/lastboard/getting-started/updating/), or see our [Security Policy](./SECURITY.md) for info about our proxy infrastructure.
+For detailed updating instructions, visit the [Updates Guide](https://codigosh.com/docs/lastboard/getting-started/updating/), or see our [Security Policy](./SECURITY.md) for how update delivery works.
 
 ---
 

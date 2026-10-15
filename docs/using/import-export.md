@@ -24,7 +24,7 @@ Saves or restores **everything** — every user, every dashboard, all settings, 
 
 ### What is inside, and protecting it
 
-A backup holds the **API keys** you typed into your widgets, the **passwords** of Server Health widgets that read another server, the **agent tokens** of Docker hosts, the **Proxmox tokens**, the **monitoring notification token**, and every account's **password hash**. Downloaded as it is, it carries all of that unencrypted, so treat the file like the database itself.
+A backup holds each account's **Proxmox connections and monitoring settings**, the order a phone shows bookmarks in, the **API keys** you typed into your widgets, the **passwords** of Server Health widgets that read another server, the **agent tokens** of Docker hosts, the **Proxmox tokens**, the **monitoring notification token**, and every account's **password hash**. Downloaded as it is, it carries all of that unencrypted, so treat the file like the database itself.
 
 When you press **Download Backup**, you can type a **password** (and confirm it). The whole file is then sealed under it: nothing inside can be read without it. Leave the fields empty to download the plain file.
 
@@ -32,11 +32,11 @@ When you press **Download Backup**, you can type a **password** (and confirm it)
 - To restore a protected backup, choose the file as usual and type its password when asked. A wrong password asks again, and nothing is changed until it is right.
 - Sealing uses Argon2id to derive the key and AES-256-GCM to encrypt, both from the Go standard library and its extended crypto module.
 
-Backups taken on earlier versions restore as they always did. They do not include the Proxmox or monitoring configuration, so restoring one leaves whatever the instance already has for those untouched.
+Backups taken on earlier versions restore too. One taken before each account had its own settings (before 1.9) holds the Proxmox and monitoring configuration for the whole server, and a restore hands it to the administrator; one taken before settings travelled at all does not include them, and restoring it leaves whatever the instance already has untouched. A backup that cannot be read in full fails with an error instead of producing a file with a gap in it.
 
 Because the icons travel inside the file, restoring on a machine with no internet still gives you the board exactly as you left it. Backups taken before icons were stored locally restore fine too: their bookmarks come back with the URLs they were saved with, and the next restart stores those pictures for you.
 
-> **Warning:** Restoring **overwrites all current data** and cannot be undone. Use it for recovery, or to move a full setup to another Lastboard instance — not to merge dashboards.
+> **Warning:** Restoring **overwrites all current data** and cannot be undone. Every restored account starts a new session generation, so **everybody is signed out**: sign in again afterwards. Use it for recovery, or to move a full setup to another Lastboard instance — not to merge dashboards.
 
 ## Export (YAML)
 

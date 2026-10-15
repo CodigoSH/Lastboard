@@ -14,9 +14,9 @@ The settings open on their own the first time you add the widget. Type a city, p
 
 **Until you pick a location the widget shows "Choose Location" and no clock at all.** Without a location there is no zone to show, and a clock silently running on someone else's time is worse than no clock.
 
-The search, and the time zone lookup that runs when you save, both use online services, so your browser needs internet access at that moment. After that the clock runs on its own and needs no network to keep time.
+The search uses one online service (Open-Meteo, the same one the Weather widget uses), and it gives the time zone along with the city, so your browser needs internet access at that moment. After that the clock runs on its own and needs no network to keep time.
 
-If you type a city name and save without picking a result, Lastboard still tries to resolve it. When that fails the widget falls back to the time zone of the device you are reading it on.
+If you type a city name and save without picking a result, Lastboard still tries to resolve it. When that fails the widget falls back to the time zone of the device you are reading it on. Saving again without changing the city — to show seconds, say — keeps the time zone the clock already has.
 
 ## Configuration Options
 

@@ -23,15 +23,25 @@ they would be on a public service.
 
 - **Passwords** are hashed with **Argon2id** (64 MiB, 3 passes). They are never stored or logged
   in any recoverable form, and verification is constant-time so a wrong password cannot be
-  distinguished by timing. Accounts created on earlier versions have a bcrypt hash; it keeps
-  working, and is replaced by an Argon2id one the next time that account signs in.
+  distinguished by timing. At most **two** passwords are hashed at the same moment, so a flood
+  of sign-in attempts cannot exhaust the memory of a small server. A password can be up to **256
+  characters**. Accounts created on earlier versions have a bcrypt hash; it keeps working, and
+  is replaced by an Argon2id one the next time that account signs in.
 - **Sessions** are **HMAC-SHA256 signed tokens** carrying their own expiry. The signing secret
   is generated on first run and kept in the database — there is no `SESSION_SECRET` to set, and
-  nothing to leak into an environment file or a process list.
+  nothing to leak into an environment file or a process list. A token names the account by its
+  **id** and carries the **password generation** it was opened under: changing a password ends
+  every open session of that account, and a cookie left over from a deleted account cannot sign
+  in to a new one that reuses the name. Restoring a backup gives every restored account a new
+  generation, so it ends every session too — without touching the signing secret, so a session
+  opened afterwards survives a restart.
 - **The session cookie** is `HttpOnly`, `SameSite=Lax`, and `Secure` whenever the request
   arrives over HTTPS (directly or through a proxy that says so).
-- **Login lockout**: after **5 failed attempts** that client is locked out for **5 minutes**.
-  Expired lockouts are cleaned up as they are read, so the table cannot grow unbounded.
+- **Login lockout**: after **5 failed attempts within a minute** that client is locked out for
+  **5 minutes**, and attempts that arrive together are each counted. Expired lockouts are cleaned
+  up as they are read, so the table cannot grow unbounded. The places that ask for the password
+  again — changing it, deleting an account, resetting the instance — are held to the same
+  lockout **per account**, so a stolen session cookie cannot be turned into a way to guess it.
 - **One administrator per instance** — the account the Setup Wizard creates. Every account added
   afterwards is a Member and cannot be promoted, so there is no path from a Member session to
   server-wide settings, user management, backups, updates or Docker control. A Member's monitoring
@@ -106,6 +116,8 @@ See [Headers](headers.md) for HSTS in detail.
 
 - **Token-bucket rate limiting per client IP**: 20 requests per second with a burst of 50, with
   stale buckets swept automatically so the table cannot be grown by minting addresses.
+- **Answers from outside are read up to a ceiling**: what a Docker host or the release server sends is
+  capped, so a misbehaving endpoint cannot fill the server's memory.
 - **Every request body is capped at 16 MiB** by a middleware that applies to every route, and
   individual handlers declare their own, much tighter, ceilings on top — the smaller of the two
   wins. Without the global cap, a handler that forgets would read whatever a caller cares to
@@ -183,7 +195,7 @@ The web installer and in-app update mechanism communicate directly with our self
 
 - **No Tracking:** No IP addresses, user identifiers, or telemetry are collected at any point.
 - **No Modification:** Release metadata and binaries are fetched directly from the official `CodigoSH/Lastboard` repository. Nothing is modified in transit.
-- **Checksum Verification:** Every binary is verified against a `checksums.txt` published with each release. Mismatches abort the installation immediately.
+- **Checksum Verification:** Every binary is verified against the line of the `checksums.txt` published with each release that **names that archive**, so one platform's archive cannot pass for another's. Mismatches abort the installation immediately. A download over the size limit is refused rather than cut short, each update works in a directory of its own, and only one runs at a time.
 - **Signature Verification:** When release signing is enabled, `checksums.txt` is signed with an Ed25519 key whose public half is embedded in the binary. A missing or invalid signature aborts the update — a tampered mirror cannot strip the signature to fall back to a weaker check. See [Release Signing](release-signing.md).
 
 ## Reporting Vulnerabilities

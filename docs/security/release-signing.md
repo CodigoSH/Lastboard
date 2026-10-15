@@ -59,13 +59,15 @@ In `PerformUpdate` (`internal/web/api/update.go`), after downloading
 - If configured and `checksums.txt.sig` is **present** → verify it against the
   embedded key; a bad signature **aborts** the update
   (`notifier.update_signature_failed`).
-- If configured but the `.sig` is **missing** (e.g. a pre-signing release) →
-  a warning is logged and it falls back to checksum-only, so enabling signing
-  never breaks updates during rollout.
+- If configured but the `.sig` is **missing** → the update **aborts**
+  (`notifier.update_signature_failed`). There is no fallback to checksum-only:
+  an attacker who controls the download cannot strip the signature to weaken
+  the check. Every release the updater can reach is signed.
 
-**Hardening once fully rolled out:** after every reachable release is signed,
-change the missing-`.sig` branch in `PerformUpdate` from a warning to a hard
-failure, so an attacker cannot strip the signature to force the fallback.
+Once the signature has made `checksums.txt` trustworthy, the downloaded archive
+must match **the line of that file that names it** (`lastboard-linux-amd64.tar.gz`
+and so on): every platform's hash is in the file, and one platform's archive
+cannot stand in for another's.
 
 ## Rotating the key
 

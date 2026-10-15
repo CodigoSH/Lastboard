@@ -25,6 +25,18 @@ which names the setting, the value found and what will be used instead.
 
 See [Configuration → TRUST_PROXY](../getting-started/configuration.md#trust_proxy).
 
+## "Too many attempts" when changing a password or deleting an account
+
+The same lockout that guards the sign-in page guards every place that asks for your password again — changing it, deleting an account, resetting the system. It counts **per account**: after 5 wrong passwords within a minute, that account waits 5 minutes before it accepts another try, whatever it types. A right password clears the count. Nobody else's account is affected.
+
+## "Check for Updates" says I am up to date, but a release is out
+
+- Turn on the **Beta channel** in **Settings → About** if the release is a beta; it is a setting of each account.
+- A release's page appears about ten minutes after its tag is pushed, and a check made before then keeps its answer for ten minutes. Press **Check for Updates** again a little later.
+- An installed app that was open before you updated keeps running the old interface: close it fully and open it again.
+
+See [Updating](../getting-started/updating.md).
+
 ## The dashboard disconnects or widgets stop updating behind a proxy
 
 Live widgets and status updates use long-lived connections (WebSocket/SSE). Some proxies close idle connections or don't upgrade them.
@@ -101,6 +113,7 @@ as the browser tab does.
 A restore replaces the database, but your browser may still hold cached assets or local state.
 
 - Do a hard refresh (**Ctrl/Cmd + Shift + R**), or open the app in a private window.
+- A restore signs everybody out, because every restored account starts a new session. Sign in again.
 
 ## Notifications never arrive
 
