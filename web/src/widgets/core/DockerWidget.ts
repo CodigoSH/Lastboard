@@ -17,8 +17,8 @@ import {
     dockerPost,
     hostErrorKey,
     isDemoMode,
-    shortId,
 } from '../../services/dockerShared';
+import { entryOf, inChosenOrder, isShown } from '../../services/dockerContainers';
 import '../../components/ui/Select/Select';
 import { whenVisible } from '../../services/whenVisible';
 
@@ -29,6 +29,10 @@ interface DockerWidgetConfig {
     hosts: DockerHost[];
     activeHost: string;
     containerConfig?: Record<string, ContainerCfgEntry>;
+    /** Each host's containers in the order they were arranged in. See dockerContainers.ts. */
+    containerOrder?: Record<string, string[]>;
+    /** Whether a container nobody has chosen yet is shown. On unless it is `false`. */
+    showNew?: boolean;
     /** The tile's name, drawn as a pill on its border by the grid. Not used here. */
     title?: string;
     /** How often the container list is re-listed, in seconds. */
@@ -475,10 +479,14 @@ class DockerWidget extends HTMLElement {
                                 // names, title and interval all land here.
                                 const titleChanged = (c.title || '') !== (this._config.title || '');
                                 const cfgChanged = JSON.stringify(c.containerConfig || {})
-                                    !== JSON.stringify(this._config.containerConfig || {});
+                                    !== JSON.stringify(this._config.containerConfig || {})
+                                    || JSON.stringify(c.containerOrder || {}) !== JSON.stringify(this._config.containerOrder || {})
+                                    || (c.showNew !== false) !== (this._config.showNew !== false);
                                 const intervalChanged = Number(c.refreshSec) !== Number(this._config.refreshSec);
 
                                 this._config.containerConfig = c.containerConfig || this._config.containerConfig;
+                                this._config.containerOrder = c.containerOrder;
+                                this._config.showNew = c.showNew;
                                 this._config.title = c.title;
                                 this._config.refreshSec = c.refreshSec;
 
@@ -517,11 +525,11 @@ class DockerWidget extends HTMLElement {
      * hidden" is what selected means.
      */
     private visibleRows(): Array<{ container: DockerContainer; state: HostState }> {
-        const cfg = this._config.containerConfig || {};
         const rows: Array<{ container: DockerContainer; state: HostState }> = [];
         for (const state of this._byHost) {
-            for (const container of state.containers) {
-                if (cfg[shortId(container.ID)]?.hidden) continue;
+            const order = this._config.containerOrder?.[state.host.id];
+            for (const container of inChosenOrder(state.containers, order)) {
+                if (!isShown(this._config, state.host.id, container)) continue;
                 rows.push({ container, state });
             }
         }
@@ -917,8 +925,7 @@ class DockerWidget extends HTMLElement {
         containerCfg: Record<string, ContainerCfgEntry>,
         showHost: boolean
     ): string {
-        const sid = shortId(c.ID);
-        const cfg = containerCfg[sid] || {};
+        const cfg = entryOf({ containerConfig: containerCfg }, state.host.id, c);
         // Its host stopped answering after we listed it. The row stays, because
         // knowing a service is unreachable is worth more than an empty space,
         // but nothing on it pretends to be current any more.

@@ -16,6 +16,7 @@ import { appearanceControlsTemplate, widgetTitleField } from './WidgetConfigModa
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
 import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle';
+import { containerKey, entryOf, inChosenOrder, isShown, settleOrder, settleRows, type ContainerRow } from '../../../services/dockerContainers';
 import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { listWidgetSecrets, saveWidgetSecrets } from '../../../services/widgetSecrets';
@@ -41,6 +42,7 @@ import {
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+const DRAG_HANDLE = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>`;
 
 class WidgetConfigModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
@@ -546,28 +548,31 @@ class WidgetConfigModal extends HTMLElement {
             const refreshSel = this.shadowRoot?.getElementById('docker-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
 
-            // Start from what is stored rather than from scratch: a host that
-            // failed to answer drew no rows, and its containers must keep their
-            // icons and names instead of being wiped by a save.
-            const cfg: Record<string, any> = { ...(newContent.containerConfig || {}) };
+            // Containers nobody has chosen: shown unless this is switched off. Only
+            // the off state is stored, so content that never heard of it means on.
+            const showNew = (this.shadowRoot?.getElementById('docker-show-new') as HTMLInputElement | null)?.checked ?? true;
+            if (showNew) delete newContent.showNew; else newContent.showNew = false;
 
-            this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-container-row').forEach(row => {
-                const sid = row.dataset.sid;
-                if (!sid) return;
+            const rows: ContainerRow[] = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-container-row') || [])
+                .filter(row => row.dataset.key)
+                .map(row => ({
+                    key: row.dataset.key!,
+                    sid: row.dataset.sid || '',
+                    visible: row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true,
+                    label: row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '',
+                    url: row.querySelector<HTMLInputElement>('.docker-url')?.value.trim() || '',
+                }));
+            const cfg = settleRows(newContent.containerConfig, rows, showNew);
 
-                const visible = row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true;
-                const label = row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '';
-                const url = row.querySelector<HTMLInputElement>('.docker-url')?.value.trim() || '';
-                const entry: Record<string, any> = { ...(cfg[sid] || {}) };
-                if (label) entry.label = label; else delete entry.label;
-                // Only an explicit address is stored. An empty field means the
-                // widget keeps deriving one, so it follows the container.
-                if (url) entry.url = url; else delete entry.url;
-                if (visible) delete entry.hidden; else entry.hidden = true;
-                // Don't keep an entry that no longer says anything.
-                if (Object.keys(entry).length) cfg[sid] = entry;
-                else delete cfg[sid];
+            // The order each host's containers were arranged in is the order of its rows.
+            const shown: Record<string, string[]> = {};
+            this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-host-group').forEach(group => {
+                if (!group.dataset.hostId) return;
+                shown[group.dataset.hostId] = Array.from(group.querySelectorAll<HTMLElement>('.docker-container-row'))
+                    .map(row => row.dataset.name || '').filter(Boolean);
             });
+            const order = settleOrder(newContent.containerOrder, shown);
+            if (order) newContent.containerOrder = order; else delete newContent.containerOrder;
 
             newContent.containerConfig = cfg;
 
@@ -1620,6 +1625,18 @@ class WidgetConfigModal extends HTMLElement {
 
         const hint = `<small>${i18n.t('docker.containers_desc')}</small>`;
 
+        // Outside the container column on purpose: it is about every host, and
+        // under one host's list it read as a setting of that host.
+        const showNew = content.showNew !== false;
+        const showNewField = `
+            <div class="field-group">
+                <div class="field-group check-row docker-show-new">
+                    <input type="checkbox" id="docker-show-new" ${showNew ? 'checked' : ''} />
+                    <label for="docker-show-new">${i18n.t('docker.show_new')}</label>
+                </div>
+                <small>${i18n.t('docker.show_new_desc')}</small>
+            </div>`;
+
         const body = split
             ? `
             <div class="docker-split">
@@ -1651,6 +1668,7 @@ class WidgetConfigModal extends HTMLElement {
 
         const generalTab = `
             ${body}
+            ${showNewField}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>
                 <app-select id="docker-refresh" value="${refresh}"></app-select>
@@ -1712,7 +1730,9 @@ class WidgetConfigModal extends HTMLElement {
                 ? `<p class="docker-host-state is-error">${esc(i18n.t(errorKey))}</p>`
                 : containers.length === 0
                     ? `<p class="docker-host-state">${esc(i18n.t('docker.no_containers'))}</p>`
-                    : containers.map(c => this.dockerContainerRow(c, cfg, host)).join('');
+                    : inChosenOrder(containers, content.containerOrder?.[host.id])
+                        .map(c => this.dockerContainerRow(c, cfg, host, isShown({ containerConfig: cfg, showNew: content.showNew }, host.id, c)))
+                        .join('');
 
             // No heading inside: only the selected host's group is ever shown,
             // and the label above the column already names it.
@@ -1720,6 +1740,115 @@ class WidgetConfigModal extends HTMLElement {
         }).join('');
 
         this.applyDockerFilters();
+        this.bindDockerReorder(box);
+    }
+
+    /**
+     * Lets the rows of a host be arranged by their handles.
+     *
+     * The order is whatever the rows are in when the form is saved, so moving a
+     * row is just moving it in the DOM. Mouse and touch both work, and so do the
+     * arrow keys on a focused handle for anybody not using a pointer. A row only
+     * moves within its own host: the order is kept per host.
+     */
+    private bindDockerReorder(box: HTMLElement) {
+        // The list is redrawn when it is filled again; the listeners sit on the box.
+        if (box.dataset.reorder === '1') return;
+        box.dataset.reorder = '1';
+
+        const rowOf = (el: EventTarget | null) => (el as HTMLElement | null)?.closest<HTMLElement>('.docker-container-row') ?? null;
+        const clear = () => box.querySelectorAll('.drag-over-top, .drag-over-bottom, .dragging')
+            .forEach(n => n.classList.remove('drag-over-top', 'drag-over-bottom', 'dragging'));
+        // Above or below the middle of the row it is over.
+        const below = (row: HTMLElement, y: number) => {
+            const r = row.getBoundingClientRect();
+            return y > r.top + r.height / 2;
+        };
+        const mark = (row: HTMLElement, y: number) => {
+            box.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(n => n.classList.remove('drag-over-top', 'drag-over-bottom'));
+            row.classList.add(below(row, y) ? 'drag-over-bottom' : 'drag-over-top');
+        };
+        const drop = (from: HTMLElement | null, onto: HTMLElement | null, y: number) => {
+            if (!from || !onto || from === onto || from.parentElement !== onto.parentElement) return;
+            if (below(onto, y)) onto.after(from); else onto.before(from);
+        };
+
+        // Mouse. The row is only draggable while the handle is held: a draggable
+        // row would take the text selection away from the fields inside it.
+        let dragging: HTMLElement | null = null;
+        box.addEventListener('mousedown', (e) => {
+            const handle = (e.target as HTMLElement).closest('.docker-drag-handle');
+            if (handle) rowOf(handle)!.draggable = true;
+        });
+        box.addEventListener('dragstart', (e) => {
+            const row = rowOf(e.target);
+            if (!row || !row.draggable) { e.preventDefault(); return; }
+            dragging = row;
+            row.classList.add('dragging');
+            e.dataTransfer!.effectAllowed = 'move';
+            e.dataTransfer!.setData('text/plain', row.dataset.name || '');
+        });
+        box.addEventListener('dragover', (e) => {
+            const row = rowOf(e.target);
+            if (!dragging || !row || row.parentElement !== dragging.parentElement) return;
+            e.preventDefault();
+            e.dataTransfer!.dropEffect = 'move';
+            mark(row, e.clientY);
+        });
+        box.addEventListener('drop', (e) => {
+            e.preventDefault();
+            drop(dragging, rowOf(e.target), e.clientY);
+        });
+        box.addEventListener('dragend', () => {
+            if (dragging) dragging.draggable = false;
+            dragging = null;
+            clear();
+        });
+
+        // Touch: the handle starts it, and whichever row is under the finger is the target.
+        let touching: HTMLElement | null = null;
+        let lastY = 0;
+        box.addEventListener('touchstart', (e) => {
+            const handle = (e.target as HTMLElement).closest('.docker-drag-handle');
+            if (!handle) return;
+            touching = rowOf(handle);
+            touching?.classList.add('dragging');
+            e.preventDefault();
+        }, { passive: false });
+        box.addEventListener('touchmove', (e) => {
+            if (!touching) return;
+            e.preventDefault();
+            const t = e.touches[0];
+            lastY = t.clientY;
+            const over = rowOf(this.shadowRoot?.elementFromPoint(t.clientX, t.clientY) ?? null);
+            if (over && over !== touching && over.parentElement === touching.parentElement) mark(over, t.clientY);
+        }, { passive: false });
+        const endTouch = () => {
+            if (!touching) return;
+            const target = box.querySelector<HTMLElement>('.drag-over-top, .drag-over-bottom');
+            drop(touching, target, lastY);
+            touching = null;
+            clear();
+        };
+        box.addEventListener('touchend', endTouch);
+        box.addEventListener('touchcancel', () => { touching = null; clear(); });
+
+        // Keyboard: arrows on a focused handle move its row past the next one shown.
+        box.addEventListener('keydown', (e) => {
+            const handle = (e.target as HTMLElement).closest('.docker-drag-handle');
+            if (!handle || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+            e.preventDefault();
+            const row = rowOf(handle)!;
+            const up = e.key === 'ArrowUp';
+            let next = (up ? row.previousElementSibling : row.nextElementSibling) as HTMLElement | null;
+            // A row the filters hide is not a place the person can see to move past.
+            while (next && next.style.display === 'none') {
+                next = (up ? next.previousElementSibling : next.nextElementSibling) as HTMLElement | null;
+            }
+            if (!next) return;
+            if (up) next.before(row); else next.after(row);
+            row.querySelector<HTMLElement>('.docker-drag-handle')?.focus();
+        });
     }
 
     /**
@@ -1764,9 +1893,11 @@ class WidgetConfigModal extends HTMLElement {
         c: DockerContainer,
         cfg: Record<string, any>,
         host: DockerHost,
+        showing: boolean,
     ): string {
         const sid = shortId(c.ID);
-        const entry = cfg[sid] || {};
+        const key = containerKey(host.id, c);
+        const entry = entryOf({ containerConfig: cfg }, host.id, c);
         const name = containerName(c);
 
         // The derived address is the placeholder, not the value: leaving the
@@ -1775,13 +1906,15 @@ class WidgetConfigModal extends HTMLElement {
         const suggested = defaultContainerUrl(c, host, window.location.hostname);
 
         return `
-            <div class="docker-container-row" data-sid="${esc(sid)}" data-search="${esc((name + ' ' + c.Image).toLowerCase())}">
-                <input type="checkbox" class="docker-container" data-sid="${esc(sid)}"
-                       ${entry.hidden ? '' : 'checked'}
+            <div class="docker-container-row" data-key="${esc(key)}" data-sid="${esc(sid)}" data-name="${esc(name)}" data-search="${esc((name + ' ' + c.Image).toLowerCase())}">
+                <span class="docker-drag-handle" role="button" tabindex="0"
+                      aria-label="${esc(i18n.t('docker.drag_to_arrange'))}" title="${esc(i18n.t('docker.drag_to_arrange'))}">${DRAG_HANDLE}</span>
+                <input type="checkbox" class="docker-container"
+                       ${showing ? 'checked' : ''}
                        title="${esc(i18n.t('docker.container_visible'))}" />
-                <input type="text" class="docker-label" data-sid="${esc(sid)}"
+                <input type="text" class="docker-label"
                        value="${esc(entry.label || '')}" placeholder="${esc(name)}" />
-                <input type="text" class="docker-url" data-sid="${esc(sid)}"
+                <input type="text" class="docker-url"
                        data-suggested="${esc(suggested)}"
                        value="${esc(entry.url || '')}"
                        placeholder="${esc(suggested || i18n.t('docker.container_url_none'))}"
