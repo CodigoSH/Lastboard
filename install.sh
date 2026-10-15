@@ -246,7 +246,9 @@ fi
 if [ "$IS_UPDATE" = true ] && [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" = "$RELEASE_TAG" ] && [ "$REINSTALL" != yes ]; then
     echo ""
     success_msg "You already have the latest $RELEASE_CHANNEL version (${RELEASE_TAG}). Nothing to do."
-    echo -e "${GRAY}  To install it again (repair it, or apply other answers):  curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --reinstall${NC}"
+    echo ""
+    echo -e "  ${GRAY}To install it again, to repair it or to apply other answers, run:${NC}"
+    echo -e "    ${CYAN}curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --reinstall${NC}"
     echo ""
     exit 0
 fi
