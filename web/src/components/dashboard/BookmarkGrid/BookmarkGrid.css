@@ -295,14 +295,27 @@
     overflow: hidden;
     text-overflow: ellipsis;
     box-sizing: border-box;
-    /* A pill over the edge must not take a click meant for the widget beneath it. */
-    pointer-events: none;
-    transition: border-color 0.2s, color 0.2s;
+    /* The same transition as a section's pill. The pill takes the pointer like a
+       section's does, so a name cut short by the width shows in full as a tooltip
+       and the hover state below can apply to the pill itself. It sits over the
+       tile's own padding, so it covers none of the widget. */
+    transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease;
 }
 
-.bookmark-grid__card.has-title:hover .widget-title {
-    border-color: var(--accent);
-    color: var(--accent);
+/* The way a section's pill answers the pointer: when the tile is hovered its
+   border takes the accent at the same strength the tile's own border does, and
+   the name stays quiet; only the pill itself, hovered, lifts the name and the
+   border a step. */
+.bookmark-grid__card[data-type="widget"].has-title:hover .widget-title {
+    border-color: rgba(var(--accent-rgb), 0.3);
+    color: var(--text-dim);
+    background: var(--surface-solid);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.bookmark-grid__card[data-type="widget"].has-title:hover .widget-title:hover {
+    color: var(--text-main);
+    border-color: rgba(var(--accent-rgb), 0.5);
 }
 
 /* Label Position: Off (Hidden) */
