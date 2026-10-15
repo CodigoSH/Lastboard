@@ -239,6 +239,9 @@
     font-family: var(--font-mono, monospace);
     /* EXACT MATCH */
     box-sizing: border-box;
+
+    /* The transition of a section's pill. */
+    transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease;
 }
 
 .bookmark-grid__card.label-section .bookmark-grid__icon-container {
@@ -250,9 +253,19 @@
     width: 100%;
 }
 
+/* Answers the pointer the way a section's pill does: the tile's hover gives the
+   border the accent at the strength the tile's own border takes, the name stays
+   quiet, and only the pill itself, hovered, lifts the name and the border a step. */
 .bookmark-grid__card.label-section:hover .bookmark-grid__label {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: rgba(var(--accent-rgb), 0.3);
+    color: var(--text-dim);
+    background: var(--surface-solid);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.bookmark-grid__card.label-section:hover .bookmark-grid__label:hover {
+    color: var(--text-main);
+    border-color: rgba(var(--accent-rgb), 0.5);
 }
 
 /* A widget with a name: the same pill a bookmark or a section wears on its top
