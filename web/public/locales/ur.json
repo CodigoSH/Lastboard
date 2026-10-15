@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "مشینیں نام کے مطابق بُک مارکس سے جوڑی جاتی ہیں۔ صرف اُس وقت منتخب کریں جب نام مختلف ہوں۔",
   "widget.api.name": "API",
   "widget.api.description": "کسی بھی سروس کے JSON API سے ڈیٹا دکھائیں",
-  "widget.api.title_label": "عنوان",
   "widget.api.url_label": "اینڈ پوائنٹ URL",
   "widget.api.url_hint": "سرور یہ JSON URL آپ کے لیے حاصل کرتا ہے — نجی IPs تک پہنچتا ہے، بغیر CORS۔",
   "widget.api.method_label": "طریقہ",

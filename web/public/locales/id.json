@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Mesin dicocokkan dengan markah berdasarkan nama. Pilih satu hanya jika namanya berbeda.",
   "widget.api.name": "API",
   "widget.api.description": "Tampilkan data dari API JSON layanan apa pun",
-  "widget.api.title_label": "Judul",
   "widget.api.url_label": "URL Endpoint",
   "widget.api.url_hint": "Server mengambil URL JSON ini untukmu — menjangkau IP privat, tanpa CORS.",
   "widget.api.method_label": "Metode",

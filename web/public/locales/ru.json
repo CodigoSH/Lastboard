@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Машины сопоставляются с закладками по имени. Выбирайте вручную, только если имена различаются.",
   "widget.api.name": "API",
   "widget.api.description": "Показывать данные из JSON API любого сервиса",
-  "widget.api.title_label": "Заголовок",
   "widget.api.url_label": "URL эндпоинта",
   "widget.api.url_hint": "Сервер сам запрашивает этот JSON-URL — доступ к приватным IP, без CORS.",
   "widget.api.method_label": "Метод",

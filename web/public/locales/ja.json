@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "マシンは名前でブックマークと照合されます。名前が異なるときだけ選んでください。",
   "widget.api.name": "API",
   "widget.api.description": "任意のサービスのJSON APIからデータを表示",
-  "widget.api.title_label": "タイトル",
   "widget.api.url_label": "エンドポイントURL",
   "widget.api.url_hint": "サーバーがこのJSON URLを取得します — プライベートIPに到達、CORSなし。",
   "widget.api.method_label": "メソッド",

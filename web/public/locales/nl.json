@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Machines worden op naam aan bladwijzers gekoppeld. Kies er alleen een als de namen verschillen.",
   "widget.api.name": "API",
   "widget.api.description": "Toon gegevens uit de JSON-API van elke dienst",
-  "widget.api.title_label": "Titel",
   "widget.api.url_label": "Endpoint-URL",
   "widget.api.url_hint": "De server haalt deze JSON-URL voor je op — bereikt privé-IP's, geen CORS.",
   "widget.api.method_label": "Methode",

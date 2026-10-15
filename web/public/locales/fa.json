@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "ماشین‌ها بر پایهٔ نام با نشانک‌ها تطبیق داده می‌شوند. تنها وقتی نام‌ها فرق دارند یکی را انتخاب کنید.",
   "widget.api.name": "API",
   "widget.api.description": "نمایش داده‌ها از API JSON هر سرویس",
-  "widget.api.title_label": "عنوان",
   "widget.api.url_label": "آدرس Endpoint",
   "widget.api.url_hint": "سرور این آدرس JSON را برای شما دریافت می‌کند — به IPهای خصوصی می‌رسد، بدون CORS.",
   "widget.api.method_label": "متد",

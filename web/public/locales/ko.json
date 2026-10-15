@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "머신은 이름으로 북마크와 연결됩니다. 이름이 다를 때만 직접 고르세요.",
   "widget.api.name": "API",
   "widget.api.description": "모든 서비스의 JSON API에서 데이터 표시",
-  "widget.api.title_label": "제목",
   "widget.api.url_label": "엔드포인트 URL",
   "widget.api.url_hint": "서버가 이 JSON URL을 대신 가져옵니다 — 사설 IP에 접근, CORS 없음.",
   "widget.api.method_label": "메서드",

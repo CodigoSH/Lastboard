@@ -8,23 +8,26 @@ import { WIDGET_TITLE_MAX } from '../../../services/widgetTitle';
  * docker form. Depends on i18n, so it is verified visually rather than via
  * snapshot.
  */
-export const appearanceControlsTemplate = (
-    premiumColors: string[],
-    color: string,
-    borderWidth: number,
-    /** Only a widget has a title to offer: null leaves the field out. */
-    title: string | null = null
-): string => {
-    const isCustom = !premiumColors.includes(color) && color !== '';
-
-    const titleField = title === null ? '' : `
-            <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+/**
+ * The name a widget wears on its border, as the first field of its General tab —
+ * where the widgets that always had a title kept it. Null leaves the field out:
+ * only a widget has one to offer.
+ */
+export const widgetTitleField = (title: string | null): string => title === null ? '' : `
+            <div class="field-group">
                 <label for="widget-title">${i18n.t('widget.title_label')}</label>
                 <input type="text" id="widget-title" maxlength="${WIDGET_TITLE_MAX * 2}" value="${escapeHtml(title)}" autocomplete="off" spellcheck="false">
                 <small>${i18n.t('widget.title_hint')}</small>
             </div>`;
 
-    return `${titleField}
+export const appearanceControlsTemplate = (
+    premiumColors: string[],
+    color: string,
+    borderWidth: number
+): string => {
+    const isCustom = !premiumColors.includes(color) && color !== '';
+
+    return `
             <div class="field-group" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
                 <label>${i18n.t('bookmark.border_color') || 'Border Color'}</label>
                 <div class="premium-color-grid">

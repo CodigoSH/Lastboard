@@ -29,7 +29,7 @@ interface DockerWidgetConfig {
     hosts: DockerHost[];
     activeHost: string;
     containerConfig?: Record<string, ContainerCfgEntry>;
-    /** Header text. Empty falls back to the widget's own name. */
+    /** The tile's name, drawn as a pill on its border by the grid. Not used here. */
     title?: string;
     /** How often the container list is re-listed, in seconds. */
     refreshSec?: number;
@@ -94,11 +94,6 @@ const CSS = `
     container-type: inline-size;
 }
 
-/* ── Header ── */
-/* .widget-header / __top / __icon / __title come from the shared sheet — see
-   styles/shared.css. They used to be declared here, and the monitor widget grew
-   its own smaller variant, which is how two widgets side by side ended up with
-   different headers. */
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* ── Scrollable wrapper ── */
@@ -791,16 +786,10 @@ class DockerWidget extends HTMLElement {
     render() {
         if (!this.shadowRoot) return;
 
-        const title = this._config.title || i18n.t('widget.docker.name');
-
+        // No heading of its own: the tile's name, when it has one, is the pill on
+        // its border, so the whole body is the list.
         this.shadowRoot.innerHTML = `
             <style>${CSS}</style>
-            <div class="widget-header">
-                <div class="widget-header__top">
-                    <span class="widget-header__icon">${ICON.docker}</span>
-                    <span class="widget-header__title">${esc(title)}</span>
-                </div>
-            </div>
             <div class="widget-body" id="body"></div>
         `;
 

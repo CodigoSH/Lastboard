@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Makineler yer imleriyle ada göre eşleştirilir. Yalnızca adlar farklıysa birini seçin.",
   "widget.api.name": "API",
   "widget.api.description": "Herhangi bir servisin JSON API'sinden veri gösterir",
-  "widget.api.title_label": "Başlık",
   "widget.api.url_label": "Uç nokta URL'si",
   "widget.api.url_hint": "Sunucu bu JSON URL'sini senin için getirir — özel IP'lere ulaşır, CORS yok.",
   "widget.api.method_label": "Yöntem",

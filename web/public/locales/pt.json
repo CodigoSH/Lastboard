@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "As máquinas são associadas aos marcadores pelo nome. Escolhe uma só quando os nomes forem diferentes.",
   "widget.api.name": "API",
   "widget.api.description": "Mostra dados da API JSON de qualquer serviço",
-  "widget.api.title_label": "Título",
   "widget.api.url_label": "URL do endpoint",
   "widget.api.url_hint": "O servidor busca este URL JSON por ti — alcança IPs privados, sem CORS.",
   "widget.api.method_label": "Método",

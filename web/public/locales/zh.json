@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "虚拟机按名称与书签自动匹配。只有名称不同时才需要手动选择。",
   "widget.api.name": "API",
   "widget.api.description": "显示任何服务的 JSON API 数据",
-  "widget.api.title_label": "标题",
   "widget.api.url_label": "端点 URL",
   "widget.api.url_hint": "服务器为你抓取此 JSON URL——可访问私有 IP，无需 CORS。",
   "widget.api.method_label": "方法",

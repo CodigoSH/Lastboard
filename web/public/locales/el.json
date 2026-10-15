@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Οι μηχανές αντιστοιχίζονται με τους σελιδοδείκτες κατά όνομα. Διάλεξε μία μόνο αν τα ονόματα διαφέρουν.",
   "widget.api.name": "API",
   "widget.api.description": "Εμφάνιση δεδομένων από το JSON API οποιασδήποτε υπηρεσίας",
-  "widget.api.title_label": "Τίτλος",
   "widget.api.url_label": "URL τελικού σημείου",
   "widget.api.url_hint": "Ο διακομιστής ανακτά αυτό το JSON URL για εσάς — φτάνει σε ιδιωτικές IP, χωρίς CORS.",
   "widget.api.method_label": "Μέθοδος",

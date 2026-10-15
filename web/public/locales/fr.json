@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Les machines sont associées aux favoris par leur nom. N’en choisissez une que si les noms diffèrent.",
   "widget.api.name": "API",
   "widget.api.description": "Affiche les données de l'API JSON de n'importe quel service",
-  "widget.api.title_label": "Titre",
   "widget.api.url_label": "URL du point de terminaison",
   "widget.api.url_hint": "Le serveur récupère cette URL JSON pour vous — atteint les IP privées, sans CORS.",
   "widget.api.method_label": "Méthode",

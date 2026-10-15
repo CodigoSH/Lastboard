@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "মেশিনগুলো নাম অনুসারে বুকমার্কের সঙ্গে মেলানো হয়। নাম আলাদা হলেই কেবল নিজে বেছে নিন।",
   "widget.api.name": "API",
   "widget.api.description": "যেকোনো সার্ভিসের JSON API থেকে ডেটা দেখান",
-  "widget.api.title_label": "শিরোনাম",
   "widget.api.url_label": "এন্ডপয়েন্ট URL",
   "widget.api.url_hint": "সার্ভার আপনার জন্য এই JSON URL আনে — প্রাইভেট IP-তে পৌঁছায়, CORS ছাড়াই।",
   "widget.api.method_label": "মেথড",

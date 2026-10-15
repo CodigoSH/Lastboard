@@ -26,8 +26,6 @@ interface MonitorConfig {
 
 const DEFAULT_CONFIG: MonitorConfig = { items: [], refreshSec: 60, title: '' };
 
-const ICON_PULSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>';
-
 /** How many bars a row draws. Matches what the endpoint returns. */
 const BEATS = 30;
 
@@ -199,15 +197,8 @@ class MonitorWidget extends HTMLElement {
 
     render() {
         if (!this.shadowRoot) return;
-        const title = this._config.title || i18n.t('widget.monitor.name');
-        const header = `
-            <div class="widget-header">
-                <div class="widget-header__top">
-                    <span class="widget-header__icon">${ICON_PULSE}</span>
-                    <span class="widget-header__title">${escapeHtml(title)}</span>
-                </div>
-            </div>`;
-        this.shadowRoot.innerHTML = `<style>${CSS}</style>${header}<div class="mw-body" id="mw-body"></div>`;
+        // The name, when there is one, is the pill on the tile's border: the body is all there is.
+        this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="mw-body" id="mw-body"></div>`;
         this._lastBody = null;
         this.refreshBody();
     }

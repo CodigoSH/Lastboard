@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Machines are matched to bookmarks by name. Pick one only when the names differ.",
   "widget.api.name": "API",
   "widget.api.description": "Show data from any service's JSON API",
-  "widget.api.title_label": "Title",
   "widget.api.url_label": "Endpoint URL",
   "widget.api.url_hint": "The server fetches this JSON URL for you — reaches private IPs, no CORS.",
   "widget.api.method_label": "Method",

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { WIDGET_TITLE_MAX, cleanWidgetTitle, widgetTakesPill } from './widgetTitle';
 
 describe('cleanWidgetTitle', () => {
@@ -29,16 +31,22 @@ describe('cleanWidgetTitle', () => {
 });
 
 describe('widgetTakesPill', () => {
-    it('is for the widgets that have no title of their own', () => {
-        for (const id of ['telemetry', 'clock', 'weather', 'notepad', 'markdown']) expect(widgetTakesPill(id)).toBe(true);
-    });
-
-    // These print their own heading from the same `title` key: a pill too would say it twice.
-    it('leaves out the ones that already draw their title inside', () => {
-        for (const id of ['api', 'docker', 'monitor', 'proxmox']) expect(widgetTakesPill(id)).toBe(false);
+    it('is true for every widget, none left with a heading of its own', () => {
+        for (const id of ['telemetry', 'clock', 'weather', 'notepad', 'markdown', 'docker', 'monitor', 'proxmox', 'api']) {
+            expect(widgetTakesPill(id)).toBe(true);
+        }
     });
 
     it('is false for anything that is not a known widget id', () => {
         for (const id of [undefined, null, '', 'nope', 5]) expect(widgetTakesPill(id)).toBe(false);
+    });
+
+    // The set is written out because this module cannot import the registry. A widget added
+    // to the registry and not to the set would be the one tile that cannot be named.
+    it('names exactly the widgets the registry offers', () => {
+        const registry = readFileSync(join(import.meta.dir, '..', 'widgets', 'registry.ts'), 'utf8');
+        const ids = [...registry.matchAll(/^\s{8}id: '([a-z]+)',/gm)].map(m => m[1]);
+        expect(ids.length).toBeGreaterThanOrEqual(9);
+        for (const id of ids) expect(widgetTakesPill(id)).toBe(true);
     });
 });

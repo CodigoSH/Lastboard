@@ -6,7 +6,7 @@ The Proxmox widget puts the machine underneath your services on the dashboard it
 
 ## Description
 
-What this adds over the [Docker widget](docker.md) is the line of node health in its header. Docker can tell you a container stopped; only this can tell you the machine it lived on is at 90% memory.
+What this adds over the [Docker widget](docker.md) is the line of node health at the top of the tile. Docker can tell you a container stopped; only this can tell you the machine it lived on is at 90% memory.
 
 Reading a row from left to right:
 
@@ -34,8 +34,8 @@ A tile shows the first few machines and the footer counts the rest, because a re
 
 | Option | Default | Description |
 | --- | --- | --- |
-| Title | Proxmox | A name of your own for the tile |
-| Show node health | On | CPU, memory and disk of the busiest node, in the header |
+| Title | None | A name shown on the tile's top border. A widget that had no title keeps the name it showed: "Proxmox" |
+| Show node health | On | CPU, memory and disk of the busiest node, in a strip at the top of the tile |
 | Refresh | 30s | How often the widget asks the server for fresh data |
 
 The configuration panel also says, plainly, whether the token this instance holds can start and stop machines or only watch them — the same answer the settings screen gives, so you are never guessing why a button is missing.
@@ -46,4 +46,4 @@ Same rules as the page: **start** and **shut down** only, both with a confirmati
 
 ## Sizing
 
-The widget adapts to the width of the tile, not of the window: on a narrow one the type pill and the memory figure drop away so the name and the button stay readable — the type is already in the line under the name. Its default size is 3x2, which fits everything; with node health on, the header carries three meters and wants that width.
+The widget adapts to the width of the tile, not of the window: on a narrow one the type pill and the memory figure drop away so the name and the button stay readable — the type is already in the line under the name. Its default size is 3x2, which fits everything; with node health on, the strip at the top carries three meters and wants that width.

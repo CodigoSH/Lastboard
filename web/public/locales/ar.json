@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "تُطابَق الأجهزة مع الإشارات المرجعية بالاسم. اختر جهازًا فقط إذا اختلفت الأسماء.",
   "widget.api.name": "API",
   "widget.api.description": "عرض بيانات من واجهة JSON API لأي خدمة",
-  "widget.api.title_label": "العنوان",
   "widget.api.url_label": "عنوان URL للنقطة النهائية",
   "widget.api.url_hint": "يجلب الخادم عنوان JSON هذا نيابةً عنك — يصل إلى عناوين IP الخاصة، بدون CORS.",
   "widget.api.method_label": "الطريقة",

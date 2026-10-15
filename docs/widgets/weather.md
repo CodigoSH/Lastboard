@@ -27,7 +27,7 @@ The coordinates are what the widget actually uses. **Until they are set it shows
 | **Show Forecast** | Off | Add a row of coming days under the current conditions. |
 | **Forecast Days** | 5 | How many days that row holds, from **1 to 6**. Only shown when the forecast is on. |
 
-The **Personalize** tab adds a border color and a border width (Thin, Regular or Thick) for the widget's card, and a **Title** — a name shown on the tile's top border, like the one a section wears (leave it empty for none) —.
+The **Personalize** tab adds a border color and a border width (Thin, Regular or Thick) for the widget's card. The **General** tab begins with the **Title** — a name shown on the tile's top border, like the one a section wears (leave it empty for none).
 
 ## The forecast row
 

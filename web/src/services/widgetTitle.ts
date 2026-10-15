@@ -11,12 +11,16 @@
 export const WIDGET_TITLE_MAX = 40;
 
 /**
- * Which widgets take the pill. The API, Docker, Monitor and Proxmox widgets
- * already have a title of their own, drawn inside as their heading, and keep
- * it: giving them a pill as well would print the same name twice. The rest have
- * no name to show and are the ones that gain one.
+ * Which widgets take the pill: every one. A widget used to draw its own name as
+ * a heading inside, and four of them still did (Docker, Monitoring, Proxmox and
+ * the API widget) — a row of the tile spent on a word. The pill is the one place
+ * a name goes now, on the border, the way a section wears it; the tile's whole
+ * body is the widget's own.
+ *
+ * Written out rather than read from the registry, which this file must not
+ * import; widgetTitle.test.ts holds the two lists equal.
  */
-const WIDGETS_WITH_A_PILL = new Set(['telemetry', 'clock', 'weather', 'notepad', 'markdown']);
+const WIDGETS_WITH_A_PILL = new Set(['telemetry', 'clock', 'weather', 'notepad', 'markdown', 'docker', 'monitor', 'proxmox', 'api']);
 
 export function widgetTakesPill(widgetId: unknown): boolean {
     return typeof widgetId === 'string' && WIDGETS_WITH_A_PILL.has(widgetId.toLowerCase());

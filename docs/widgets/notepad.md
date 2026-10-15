@@ -42,13 +42,13 @@ The chevron in the widget's bottom corner collapses the whole toolbar, which is 
 
 ## Configuration Options
 
-The widget's settings screen has no options of its own — the note is written in the widget itself. Its **Personalize** tab has the settings every widget has, plus a title:
+The widget's settings screen has no options of its own — the note is written in the widget itself. Its **General** tab holds the title and its **Personalize** tab the settings every widget has:
 
 | Option | Default | Description |
 | :--- | :--- | :--- |
+| **Title** | None | A name shown on the tile's top border. Leave it empty for none. |
 | **Border Color** | None | Border color for the widget's card. |
 | **Border Width** | Thin | Thin, Regular or Thick. |
-| **Title** | None | A name shown on the tile's top border. Leave it empty for none. |
 
 ## Notes
 

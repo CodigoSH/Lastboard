@@ -12,7 +12,7 @@ import type { SelectOption } from '../Select/Select.template';
 import '../ColorPicker/ColorPicker';
 import css from './WidgetConfigModal.css' with { type: 'text' };
 import { adoptSharedStyles } from '../../../services/sharedStyles';
-import { appearanceControlsTemplate } from './WidgetConfigModal.template';
+import { appearanceControlsTemplate, widgetTitleField } from './WidgetConfigModal.template';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
 import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle';
@@ -443,7 +443,6 @@ class WidgetConfigModal extends HTMLElement {
         // had written. The text is already in `newContent` — leave it there.
         } else if (widgetId === 'api') {
             const val = (id: string) => (this.shadowRoot?.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)?.value ?? '';
-            newContent.title = val('api-title').trim();
             const presetId = val('api-preset');
 
             if (presetId) {
@@ -526,9 +525,6 @@ class WidgetConfigModal extends HTMLElement {
                 }
             }
         } else if (widgetId === 'proxmox') {
-            const titleInput = this.shadowRoot?.getElementById('proxmox-title') as HTMLInputElement | null;
-            newContent.title = (titleInput?.value || '').trim();
-
             const refreshSel = this.shadowRoot?.getElementById('proxmox-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 30;
 
@@ -544,15 +540,9 @@ class WidgetConfigModal extends HTMLElement {
             const total = this.shadowRoot?.querySelectorAll('.monitor-service').length || 0;
             newContent.items = (checked.length === total) ? [] : checked;
 
-            const titleInput = this.shadowRoot?.getElementById('monitor-title') as HTMLInputElement | null;
-            newContent.title = (titleInput?.value || '').trim();
-
             const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
         } else if (widgetId === 'docker') {
-            const titleInput = this.shadowRoot?.getElementById('docker-title') as HTMLInputElement | null;
-            newContent.title = (titleInput?.value || '').trim();
-
             const refreshSel = this.shadowRoot?.getElementById('docker-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
 
@@ -694,7 +684,7 @@ class WidgetConfigModal extends HTMLElement {
 
 
         const renderForm = () => {
-            const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
+            const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
 
             if (!this.currentItem) return { general: '', customization: '' };
 
@@ -857,7 +847,6 @@ class WidgetConfigModal extends HTMLElement {
 
                 // --- API ---
             } else if (widgetId === 'api') {
-                const title = content.title || '';
                 const url = content.url || '';
                 const method = content.method || 'GET';
                 const refreshSec = content.refreshSec || 60;
@@ -881,10 +870,6 @@ class WidgetConfigModal extends HTMLElement {
                     <div class="field-group row-aligned">
                         <label>${i18n.t('widget.api.preset_label') || 'Service'}</label>
                         <app-select id="api-preset" value="${esc(preset)}"></app-select>
-                    </div>
-                    <div class="field-group">
-                        <label>${i18n.t('widget.api.title_label') || 'Title'}</label>
-                        <input type="text" id="api-title" value="${esc(title)}" placeholder="Pi-hole" />
                     </div>
 
                     <div id="api-simple" style="display:${preset ? 'block' : 'none'}">
@@ -993,7 +978,7 @@ class WidgetConfigModal extends HTMLElement {
                     <div class="content">
                          <!-- TAB: GENERAL -->
                         <div id="tab-general" class="tab-content active">
-                            ${formData.general}
+                            ${widgetTitleField(this._titleForForm())}${formData.general}
                         </div>
 
                          <!-- TAB: CUSTOMIZATION -->
@@ -1448,16 +1433,11 @@ class WidgetConfigModal extends HTMLElement {
      * tile shows.
      */
     private renderProxmoxForm(content: any) {
-        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 30;
         const showNode = content.showNode !== false;
 
         const generalTab = `
-            <div class="field-group">
-                <label>${i18n.t('widget.api.title_label')}</label>
-                <input type="text" id="proxmox-title" value="${esc(content.title || '')}"
-                       placeholder="${esc(i18n.t('widget.proxmox.name'))}" />
-            </div>
             <!-- check-row, which is the class this modal actually styles: a
                  tick box with no rule behind it falls back to the browser's
                  blue one, beside five orange ones. -->
@@ -1512,15 +1492,10 @@ class WidgetConfigModal extends HTMLElement {
     }
 
     private renderMonitorForm(content: any) {
-        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
 
         const generalTab = `
-            <div class="field-group">
-                <label>${i18n.t('widget.api.title_label')}</label>
-                <input type="text" id="monitor-title" value="${esc(content.title || '')}"
-                       placeholder="${esc(i18n.t('widget.monitor.name'))}" />
-            </div>
             <div class="field-group">
                 <label>${i18n.t('monitor.select_services')}</label>
                 <div id="monitor-services" class="monitor-services">
@@ -1594,7 +1569,7 @@ class WidgetConfigModal extends HTMLElement {
      * widget, not to whichever host is selected.
      */
     private renderDockerForm(content: any) {
-        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth, this._titleForForm());
+        const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
 
         const hosts: DockerHost[] = content.hosts || [];
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
@@ -1675,11 +1650,6 @@ class WidgetConfigModal extends HTMLElement {
             </div>`;
 
         const generalTab = `
-            <div class="field-group">
-                <label>${i18n.t('widget.api.title_label')}</label>
-                <input type="text" id="docker-title" value="${esc(content.title || '')}"
-                       placeholder="${esc(i18n.t('widget.docker.name'))}" />
-            </div>
             ${body}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>

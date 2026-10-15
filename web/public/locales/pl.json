@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Maszyny są dopasowywane do zakładek po nazwie. Wybierz maszynę tylko wtedy, gdy nazwy się różnią.",
   "widget.api.name": "API",
   "widget.api.description": "Pokaż dane z API JSON dowolnej usługi",
-  "widget.api.title_label": "Tytuł",
   "widget.api.url_label": "Adres URL punktu końcowego",
   "widget.api.url_hint": "Serwer pobiera ten adres JSON za Ciebie — sięga prywatnych IP, bez CORS.",
   "widget.api.method_label": "Metoda",

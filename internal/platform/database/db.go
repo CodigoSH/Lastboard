@@ -422,6 +422,12 @@ func migrateSchema(db *sql.DB) error {
 		return fmt.Errorf("migration 9 failed: %w", err)
 	}
 
+	// Migration 10: three widgets stop drawing their name as a heading inside and
+	// wear it as a pill on the border like the rest. See widget_titles.go.
+	if err = migrateWidgetTitles(db); err != nil {
+		return fmt.Errorf("migration 10 failed: %w", err)
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.

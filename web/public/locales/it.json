@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "Le macchine si abbinano ai segnalibri per nome. Scegline una solo se i nomi non coincidono.",
   "widget.api.name": "API",
   "widget.api.description": "Mostra i dati dall'API JSON di qualsiasi servizio",
-  "widget.api.title_label": "Titolo",
   "widget.api.url_label": "URL endpoint",
   "widget.api.url_hint": "Il server recupera questo URL JSON per te — raggiunge IP privati, senza CORS.",
   "widget.api.method_label": "Metodo",

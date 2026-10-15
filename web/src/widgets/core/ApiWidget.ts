@@ -141,7 +141,7 @@ class ApiWidget extends HTMLElement {
                 this._scheduleRefresh();
                 this.fetchData();
             } else {
-                // Only cosmetic fields (title) changed — repaint without refetch.
+                // Only cosmetic fields changed — repaint without refetch.
                 this.render();
             }
         });
@@ -203,7 +203,6 @@ class ApiWidget extends HTMLElement {
 
     render() {
         const c = this._config;
-        const title = c.title || '';
         const mappings = c.mappings || [];
 
         let body: string;
@@ -241,7 +240,6 @@ class ApiWidget extends HTMLElement {
             <style>
                 :host { display:block; width:100%; height:100%; }
                 .wrap { display:flex; flex-direction:column; height:100%; box-sizing:border-box; padding:12px 14px; container-type:size; }
-                .title { font-size:clamp(.6rem,4cqi,.8rem); font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
                 .metrics { flex:1; display:flex; flex-wrap:wrap; align-content:center; justify-content:space-around; gap:8px 14px; min-height:0; }
                 .metric { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; }
                 .metric__val { font-size:clamp(1rem,11cqi,2rem); font-weight:700; color:var(--text-main); line-height:1.1; }
@@ -255,7 +253,6 @@ class ApiWidget extends HTMLElement {
                 .state--err { color:var(--danger-color); opacity:.85; }
             </style>
             <div class="wrap">
-                ${title ? `<div class="title">${escapeHtml(title)}</div>` : ''}
                 ${body}
             </div>
         `;

@@ -488,7 +488,6 @@
   "bookmark.backed_by_hint": "मशीनें नाम से बुकमार्क से जोड़ी जाती हैं। केवल तभी चुनें जब नाम अलग हों।",
   "widget.api.name": "API",
   "widget.api.description": "किसी भी सेवा के JSON API से डेटा दिखाएँ",
-  "widget.api.title_label": "शीर्षक",
   "widget.api.url_label": "एंडपॉइंट URL",
   "widget.api.url_hint": "सर्वर यह JSON URL आपके लिए लाता है — निजी IP तक पहुँचता है, कोई CORS नहीं।",
   "widget.api.method_label": "मेथड",

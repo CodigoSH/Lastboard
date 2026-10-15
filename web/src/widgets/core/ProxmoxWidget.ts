@@ -49,7 +49,6 @@ interface ProxmoxConfig {
 
 const DEFAULT_CONFIG: ProxmoxConfig = { refreshSec: 30, title: '', showNode: true };
 
-const ICON_SERVER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>';
 const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
 const ICON_STOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>';
 /**
@@ -317,7 +316,6 @@ class ProxmoxWidget extends HTMLElement {
 
     render() {
         if (!this.shadowRoot) return;
-        const title = this._config.title || i18n.t('widget.proxmox.name');
         const node = this.worstNode();
 
         // The container is written even with nothing in it yet. render() runs
@@ -329,13 +327,11 @@ class ProxmoxWidget extends HTMLElement {
             ? `<div class="px-health">${node ? this.metersHtml(node) : ''}</div>`
             : '';
 
+        // What is left of the old heading is what only this widget can say: which
+        // node it is reading and how that node is. The name is the pill on the border.
         const header = `
-            <div class="widget-header">
-                <div class="widget-header__top">
-                    <span class="widget-header__icon">${ICON_SERVER}</span>
-                    <span class="widget-header__title">${escapeHtml(title)}</span>
-                    <span class="px-node">${node ? escapeHtml(node.name) : ''}</span>
-                </div>
+            <div class="px-meta">
+                <span class="px-node">${node ? escapeHtml(node.name) : ''}</span>
                 ${health}
             </div>`;
 
@@ -397,8 +393,16 @@ const CSS = `
     container-type: inline-size;
 }
 
-/* The node name sits at the end of the header line, where the Docker widget
-   puts its host. */
+/* The strip at the top: the node's name, and under it its meters. It is there
+   only once there is a node to name — before that, or with Proxmox unset, an
+   empty band with a line under it would say nothing. */
+.px-meta {
+    display: none;
+    flex-direction: column; gap: 6px;
+    padding: 10px 14px 8px; flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+}
+.px-meta:has(.px-node:not(:empty)) { display: flex; }
 .px-node {
     font-family: var(--font-mono, monospace);
     font-size: 11px;

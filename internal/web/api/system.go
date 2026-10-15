@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
@@ -533,6 +534,16 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	if _, err := MigrateWidgetSecrets(h.DB); err != nil {
 		slog.Error("Moving widget credentials after a restore failed", "error", err)
 	}
+	// A backup from before 1.9.4 holds Docker, Monitoring and Proxmox widgets that
+	// drew their name as a heading when they had no title. The name is a title now,
+	// so the ones it brings back are given it, as an upgrade gives it to the ones
+	// already here. A newer backup is left exactly as it was written: clearing a
+	// title is a choice.
+	if backupPredatesBorderTitles(backup.Version) {
+		if _, err := database.GiveWidgetsTheirTitles(h.DB); err != nil {
+			slog.Error("Giving restored widgets their titles failed", "error", err)
+		}
+	}
 	// And one from before accounts had their own monitoring and Proxmox carries
 	// them for the whole server.
 	if err := MigrateUserSettings(h.DB); err != nil {
@@ -993,4 +1004,21 @@ func parseKB(s string) uint64 {
 	s = strings.TrimSuffix(s, " kB")
 	v, _ := strconv.ParseUint(s, 10, 64)
 	return v * 1024
+}
+
+// backupPredatesBorderTitles says whether a backup was taken before widgets wore
+// their name as a pill on the border (1.9.4). A version that cannot be read counts as
+// older: the pass only fills in titles that are empty, so too much costs a widget
+// the heading it always had, and too little costs it for good. A pre-release of
+// 1.9.4 already has the pills, so it counts as new.
+func backupPredatesBorderTitles(version string) bool {
+	var major, minor, patch int
+	core := strings.SplitN(strings.TrimPrefix(version, "v"), "-", 2)[0]
+	if _, err := fmt.Sscanf(core, "%d.%d.%d", &major, &minor, &patch); err != nil {
+		return true
+	}
+	if major != 1 {
+		return major < 1
+	}
+	return minor < 9 || (minor == 9 && patch < 4)
 }
