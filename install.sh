@@ -37,8 +37,11 @@ SERVICE_FILE="/etc/systemd/system/lastboard.service"
 # binary, the symlink and the service account had to be found and deleted by
 # hand, which is how a half-removed install happens.
 #
-#   sudo bash install.sh --uninstall           removes it and keeps the data
-#   sudo bash install.sh --uninstall --purge   removes the data too
+#   curl -fsSL <this script's address> | sudo bash -s -- --uninstall           removes it, keeps the data
+#   curl -fsSL <this script's address> | sudo bash -s -- --uninstall --purge   removes the data too
+#
+# The installer leaves no copy of itself behind, so these are the forms to type;
+# `sudo bash install.sh --uninstall` works only for somebody who saved the file.
 UNINSTALL=no
 PURGE=no
 for ARG in "$@"; do
@@ -46,7 +49,8 @@ for ARG in "$@"; do
         --uninstall) UNINSTALL=yes ;;
         --purge) PURGE=yes ;;
         --help|-h)
-            echo "Usage: sudo bash install.sh [--uninstall [--purge]]"
+            echo "Usage: curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- [--uninstall [--purge]]"
+            echo "       (or, with the script saved:  sudo bash install.sh [--uninstall [--purge]])"
             echo "  --uninstall   stop and remove Lastboard, keeping $DATA_DIR"
             echo "  --purge       with --uninstall, delete the data and the service account too"
             exit 0 ;;
@@ -66,7 +70,7 @@ safe_to_remove() {
 }
 
 if [ "$UNINSTALL" = "yes" ]; then
-    [ "$(id -u)" -eq 0 ] || { echo -e "${RED}Run this as root (sudo bash install.sh --uninstall)${NC}"; exit 1; }
+    [ "$(id -u)" -eq 0 ] || { echo -e "${RED}Run this as root: curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --uninstall${NC}"; exit 1; }
     safe_to_remove "$INSTALL_DIR"
 
     # Confirmed before anything is touched, not after. Somebody who types the

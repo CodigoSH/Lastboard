@@ -89,12 +89,17 @@ behind would be the ones stuck. So rotation overlaps:
 Both keys verify while the list holds both, which is what makes the middle step
 safe.
 
-## install.sh (follow-up)
+## install.sh
 
-The first-time installer (`install.sh`) currently verifies checksums only.
-Because it is a manual, one-time step (unlike the auto-updater, which replaces a
-running binary unattended), signature verification there is optional. To verify
-manually after download, convert the public key to PEM and use OpenSSL ≥ 1.1.1:
+The first-time installer (`install.sh`) verifies the signature too, before it
+believes a single hash: it downloads `checksums.txt.sig`, checks it against the
+public keys compiled into the script, and stops if it is missing or invalid. That
+needs **OpenSSL 3.0 or newer** on the machine — older versions cannot verify
+Ed25519 from the command line at all, and the installer says so rather than
+failing on an unknown option.
+
+To verify a release by hand, convert the public key to PEM and use OpenSSL 3.0 or
+newer (`-rawin` does not exist before it):
 
 ```bash
 # raw base64 pubkey -> PEM (Ed25519 SPKI prefix 302a300506032b6570032100)

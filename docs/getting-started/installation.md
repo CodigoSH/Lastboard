@@ -58,16 +58,27 @@ curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.s
 
 ### Removing it
 
+The installer does not leave a copy of itself on your machine, so there is no
+`install.sh` to run. Fetch it again and pass the option through:
+
 ```bash
-sudo bash install.sh --uninstall
+curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --uninstall
 ```
 
-Stops and disables the service, removes the unit, the binary and the symlink,
-and leaves your database where it is, in `/var/lib/lastboard`.
+The `-s --` is what hands `--uninstall` to the script instead of to `bash`. This stops and
+disables the service, removes the unit, the binary and the symlink, and leaves your database
+where it is, in `/var/lib/lastboard`.
 
-To delete the data and the service account as well, add `--purge`. It asks you
-to type `DELETE` first, and refuses outright when there is no terminal to ask
+To delete the data and the service account as well, add `--purge`:
+
+```bash
+curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --uninstall --purge
+```
+
+It asks you to type `DELETE` first, and refuses outright when there is no terminal to ask
 on — so it cannot erase a database from a script.
+
+> If you saved the script to a file, `sudo bash install.sh --uninstall` (and `--purge`) does the same.
 
 
 ## First Run
