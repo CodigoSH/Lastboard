@@ -72,7 +72,7 @@
   "docker.connection_error": "Could not connect to Docker host",
   "docker.unauthorized": "Token rejected",
   "docker.container_visible": "Visible",
-  "docker.drag_to_arrange": "Drag to arrange, or use the up and down arrows",
+  "widget.drag_to_arrange": "Drag to arrange, or use the up and down arrows",
   "docker.show_new": "Show new containers automatically",
   "docker.show_new_desc": "Turn it off to choose which containers appear: a new container stays hidden until you check it here.",
   "docker.containers": "Containers",

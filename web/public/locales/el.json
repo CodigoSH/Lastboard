@@ -72,7 +72,7 @@
   "docker.connection_error": "Αδυναμία σύνδεσης στον διακομιστή Docker",
   "docker.unauthorized": "Το Token απορρίφθηκε",
   "docker.container_visible": "Ορατό",
-  "docker.drag_to_arrange": "Σύρετε για αναδιάταξη ή χρησιμοποιήστε τα βέλη πάνω και κάτω",
+  "widget.drag_to_arrange": "Σύρετε για αναδιάταξη ή χρησιμοποιήστε τα βέλη πάνω και κάτω",
   "docker.show_new": "Αυτόματη εμφάνιση νέων containers",
   "docker.show_new_desc": "Απενεργοποιήστε το για να επιλέγετε εσείς ποια containers εμφανίζονται: ένα νέο container μένει κρυφό μέχρι να το επιλέξετε εδώ.",
   "docker.containers": "Κοντέινερ",

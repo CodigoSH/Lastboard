@@ -24,6 +24,8 @@ By default every monitored service is shown, including ones you add later. Untic
 
 ![Monitoring widget configuration](../assets/w-p-monitor.png)
 
+Each service has a grip on its left. Drag a row by it to put the service where you want it on the widget, or focus the grip and use the up and down arrow keys. The order is kept apart from the selection, so arranging a list you left fully ticked does not stop it taking new services: one that appears later is shown after the ones you arranged.
+
 Leaving them all ticked is not the same as ticking them one by one: the widget stores "show everything", so new services appear on their own. If you pick a subset and later stop monitoring one of them, it simply drops out of the list.
 
 ## Configuration Options

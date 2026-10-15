@@ -5,6 +5,7 @@ import { escapeHtml } from '../../services/escape';
 import { eventBus, EVENTS } from '../../services/EventBus';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { whenVisible } from '../../services/whenVisible';
+import { chooseServices } from '../../services/monitorServices';
 
 /** One service as /api/monitor/overview reports it. */
 interface OverviewRow {
@@ -19,12 +20,16 @@ interface OverviewRow {
 interface MonitorConfig {
     /** Item ids to show. Empty means every monitored service. */
     items: number[];
+    /** The services in the order they were arranged in. One it does not name comes after. */
+    itemOrder: number[];
     refreshSec: number;
     /** Header text. Empty falls back to the widget's own name. */
     title: string;
 }
 
-const DEFAULT_CONFIG: MonitorConfig = { items: [], refreshSec: 60, title: '' };
+const DEFAULT_CONFIG: MonitorConfig = { items: [], itemOrder: [], refreshSec: 60, title: '' };
+
+const ids = (v: unknown): number[] => (Array.isArray(v) ? v.filter((n): n is number => typeof n === 'number') : []);
 
 /** How many bars a row draws. Matches what the endpoint returns. */
 const BEATS = 30;
@@ -79,10 +84,12 @@ class MonitorWidget extends HTMLElement {
 
                 const next: MonitorConfig = {
                     items: Array.isArray(data.items) ? data.items : [],
+                    itemOrder: ids(data.itemOrder),
                     refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
                     title: typeof data.title === 'string' ? data.title : '',
                 };
-                const selectionChanged = next.items.join(',') !== this._config.items.join(',');
+                const selectionChanged = next.items.join(',') !== this._config.items.join(',')
+                    || next.itemOrder.join(',') !== this._config.itemOrder.join(',');
                 const intervalChanged = next.refreshSec !== this._config.refreshSec;
                 const titleChanged = next.title !== this._config.title;
                 this._config = next;
@@ -111,6 +118,7 @@ class MonitorWidget extends HTMLElement {
             const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
             this._config = {
                 items: Array.isArray(data.items) ? data.items : [],
+                itemOrder: ids(data.itemOrder),
                 refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
                 title: typeof data.title === 'string' ? data.title : '',
             };
@@ -136,13 +144,9 @@ class MonitorWidget extends HTMLElement {
         this.refreshBody();
     }
 
-    /** The chosen services, in the order they were chosen. */
+    /** The services to draw: the chosen ones, in the order they were arranged in. */
     private visibleRows(): OverviewRow[] {
-        if (!this._config.items.length) return this.rows;
-        const byId = new Map(this.rows.map(r => [r.item_id, r]));
-        return this._config.items
-            .map(id => byId.get(id))
-            .filter((r): r is OverviewRow => !!r);
+        return chooseServices(this.rows, this._config.items, this._config.itemOrder);
     }
 
     // ── Events ──

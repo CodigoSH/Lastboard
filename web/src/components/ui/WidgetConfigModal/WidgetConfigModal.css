@@ -1003,6 +1003,20 @@ dialog[open] {
     color: var(--text-dim);
 }
 
+/* A row of the service picker: the grip it is arranged by, then the tick box and name. */
+.monitor-service-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-inline-start: 6px;
+    border-radius: 6px;
+}
+
+.monitor-service-item .monitor-service-row {
+    flex: 1;
+    min-width: 0;
+}
+
 .monitor-service-row {
     display: flex;
     align-items: center;
@@ -1154,7 +1168,7 @@ dialog[open] {
 
 /* The grip a row is arranged by. touch-action: none keeps a finger on it from
    scrolling the list instead of moving the row. */
-.docker-drag-handle {
+.row-grip {
     display: flex;
     align-items: center;
     color: var(--text-dim);
@@ -1165,26 +1179,30 @@ dialog[open] {
     transition: opacity 0.15s, color 0.15s;
 }
 
-.docker-container-row:hover .docker-drag-handle,
-.docker-drag-handle:focus-visible {
+.docker-container-row:hover .row-grip,
+.monitor-service-item:hover .row-grip,
+.row-grip:focus-visible {
     opacity: 1;
     color: var(--accent);
 }
 
-.docker-drag-handle:active {
+.row-grip:active {
     cursor: grabbing;
 }
 
-.docker-container-row.dragging {
+.docker-container-row.dragging,
+.monitor-service-item.dragging {
     opacity: 0.45;
 }
 
 /* Where the row would land: a line on the edge it is nearest. */
-.docker-container-row.drag-over-top {
+.docker-container-row.drag-over-top,
+.monitor-service-item.drag-over-top {
     box-shadow: inset 0 2px 0 var(--accent);
 }
 
-.docker-container-row.drag-over-bottom {
+.docker-container-row.drag-over-bottom,
+.monitor-service-item.drag-over-bottom {
     box-shadow: inset 0 -2px 0 var(--accent);
 }
 

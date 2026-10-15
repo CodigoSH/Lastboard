@@ -16,6 +16,8 @@ import { appearanceControlsTemplate, widgetTitleField } from './WidgetConfigModa
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import { API_PRESETS, getPreset } from '../../../widgets/apiPresets';
 import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle';
+import { bindRowReorder } from '../../../services/rowReorder';
+import { arrangeBy, mergeOrder } from '../../../services/rowOrder';
 import { containerKey, entryOf, inChosenOrder, isShown, settleOrder, settleRows, type ContainerRow } from '../../../services/dockerContainers';
 import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
 import { loadProxmox } from '../../../services/proxmoxApi';
@@ -541,6 +543,13 @@ class WidgetConfigModal extends HTMLElement {
             ).map(cb => parseInt(cb.dataset.id || '0', 10)).filter(id => id > 0);
             const total = this.shadowRoot?.querySelectorAll('.monitor-service').length || 0;
             newContent.items = (checked.length === total) ? [] : checked;
+
+            // The arrangement is kept apart from the selection, so arranging
+            // "everything" does not turn it into a list that stops taking new
+            // services. A list that did not load has no rows and leaves it as it was.
+            const arranged = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.monitor-service-item') || [])
+                .map(row => parseInt(row.dataset.id || '0', 10)).filter(id => id > 0);
+            if (arranged.length) newContent.itemOrder = mergeOrder(arranged, newContent.itemOrder);
 
             const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
@@ -1549,13 +1558,18 @@ class WidgetConfigModal extends HTMLElement {
         const selected: number[] = Array.isArray(content.items) ? content.items : [];
         const all = selected.length === 0;
 
-        box.innerHTML = rows.map(r => `
-            <label class="monitor-service-row">
-                <input type="checkbox" class="monitor-service" data-id="${r.item_id}"
-                       ${all || selected.includes(r.item_id) ? 'checked' : ''} />
-                <span>${esc(r.name) || '—'}</span>
-            </label>
+        box.innerHTML = arrangeBy(rows, r => r.item_id, Array.isArray(content.itemOrder) ? content.itemOrder : undefined).map(r => `
+            <div class="monitor-service-item" data-id="${r.item_id}">
+                <span class="row-grip" role="button" tabindex="0"
+                      aria-label="${esc(i18n.t('widget.drag_to_arrange'))}" title="${esc(i18n.t('widget.drag_to_arrange'))}">${DRAG_HANDLE}</span>
+                <label class="monitor-service-row">
+                    <input type="checkbox" class="monitor-service" data-id="${r.item_id}"
+                           ${all || selected.includes(r.item_id) ? 'checked' : ''} />
+                    <span>${esc(r.name) || '—'}</span>
+                </label>
+            </div>
         `).join('');
+        bindRowReorder(box, this.shadowRoot!, { row: '.monitor-service-item', handle: '.row-grip' });
     }
 
     /** Past this many hosts, scanning the list is slower than typing a name. */
@@ -1743,112 +1757,9 @@ class WidgetConfigModal extends HTMLElement {
         this.bindDockerReorder(box);
     }
 
-    /**
-     * Lets the rows of a host be arranged by their handles.
-     *
-     * The order is whatever the rows are in when the form is saved, so moving a
-     * row is just moving it in the DOM. Mouse and touch both work, and so do the
-     * arrow keys on a focused handle for anybody not using a pointer. A row only
-     * moves within its own host: the order is kept per host.
-     */
+    /** Lets the rows of a host be arranged by their handles — see bindRowReorder. */
     private bindDockerReorder(box: HTMLElement) {
-        // The list is redrawn when it is filled again; the listeners sit on the box.
-        if (box.dataset.reorder === '1') return;
-        box.dataset.reorder = '1';
-
-        const rowOf = (el: EventTarget | null) => (el as HTMLElement | null)?.closest<HTMLElement>('.docker-container-row') ?? null;
-        const clear = () => box.querySelectorAll('.drag-over-top, .drag-over-bottom, .dragging')
-            .forEach(n => n.classList.remove('drag-over-top', 'drag-over-bottom', 'dragging'));
-        // Above or below the middle of the row it is over.
-        const below = (row: HTMLElement, y: number) => {
-            const r = row.getBoundingClientRect();
-            return y > r.top + r.height / 2;
-        };
-        const mark = (row: HTMLElement, y: number) => {
-            box.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(n => n.classList.remove('drag-over-top', 'drag-over-bottom'));
-            row.classList.add(below(row, y) ? 'drag-over-bottom' : 'drag-over-top');
-        };
-        const drop = (from: HTMLElement | null, onto: HTMLElement | null, y: number) => {
-            if (!from || !onto || from === onto || from.parentElement !== onto.parentElement) return;
-            if (below(onto, y)) onto.after(from); else onto.before(from);
-        };
-
-        // Mouse. The row is only draggable while the handle is held: a draggable
-        // row would take the text selection away from the fields inside it.
-        let dragging: HTMLElement | null = null;
-        box.addEventListener('mousedown', (e) => {
-            const handle = (e.target as HTMLElement).closest('.docker-drag-handle');
-            if (handle) rowOf(handle)!.draggable = true;
-        });
-        box.addEventListener('dragstart', (e) => {
-            const row = rowOf(e.target);
-            if (!row || !row.draggable) { e.preventDefault(); return; }
-            dragging = row;
-            row.classList.add('dragging');
-            e.dataTransfer!.effectAllowed = 'move';
-            e.dataTransfer!.setData('text/plain', row.dataset.name || '');
-        });
-        box.addEventListener('dragover', (e) => {
-            const row = rowOf(e.target);
-            if (!dragging || !row || row.parentElement !== dragging.parentElement) return;
-            e.preventDefault();
-            e.dataTransfer!.dropEffect = 'move';
-            mark(row, e.clientY);
-        });
-        box.addEventListener('drop', (e) => {
-            e.preventDefault();
-            drop(dragging, rowOf(e.target), e.clientY);
-        });
-        box.addEventListener('dragend', () => {
-            if (dragging) dragging.draggable = false;
-            dragging = null;
-            clear();
-        });
-
-        // Touch: the handle starts it, and whichever row is under the finger is the target.
-        let touching: HTMLElement | null = null;
-        let lastY = 0;
-        box.addEventListener('touchstart', (e) => {
-            const handle = (e.target as HTMLElement).closest('.docker-drag-handle');
-            if (!handle) return;
-            touching = rowOf(handle);
-            touching?.classList.add('dragging');
-            e.preventDefault();
-        }, { passive: false });
-        box.addEventListener('touchmove', (e) => {
-            if (!touching) return;
-            e.preventDefault();
-            const t = e.touches[0];
-            lastY = t.clientY;
-            const over = rowOf(this.shadowRoot?.elementFromPoint(t.clientX, t.clientY) ?? null);
-            if (over && over !== touching && over.parentElement === touching.parentElement) mark(over, t.clientY);
-        }, { passive: false });
-        const endTouch = () => {
-            if (!touching) return;
-            const target = box.querySelector<HTMLElement>('.drag-over-top, .drag-over-bottom');
-            drop(touching, target, lastY);
-            touching = null;
-            clear();
-        };
-        box.addEventListener('touchend', endTouch);
-        box.addEventListener('touchcancel', () => { touching = null; clear(); });
-
-        // Keyboard: arrows on a focused handle move its row past the next one shown.
-        box.addEventListener('keydown', (e) => {
-            const handle = (e.target as HTMLElement).closest('.docker-drag-handle');
-            if (!handle || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
-            e.preventDefault();
-            const row = rowOf(handle)!;
-            const up = e.key === 'ArrowUp';
-            let next = (up ? row.previousElementSibling : row.nextElementSibling) as HTMLElement | null;
-            // A row the filters hide is not a place the person can see to move past.
-            while (next && next.style.display === 'none') {
-                next = (up ? next.previousElementSibling : next.nextElementSibling) as HTMLElement | null;
-            }
-            if (!next) return;
-            if (up) next.before(row); else next.after(row);
-            row.querySelector<HTMLElement>('.docker-drag-handle')?.focus();
-        });
+        bindRowReorder(box, this.shadowRoot!, { row: '.docker-container-row', handle: '.row-grip' });
     }
 
     /**
@@ -1907,8 +1818,8 @@ class WidgetConfigModal extends HTMLElement {
 
         return `
             <div class="docker-container-row" data-key="${esc(key)}" data-sid="${esc(sid)}" data-name="${esc(name)}" data-search="${esc((name + ' ' + c.Image).toLowerCase())}">
-                <span class="docker-drag-handle" role="button" tabindex="0"
-                      aria-label="${esc(i18n.t('docker.drag_to_arrange'))}" title="${esc(i18n.t('docker.drag_to_arrange'))}">${DRAG_HANDLE}</span>
+                <span class="row-grip" role="button" tabindex="0"
+                      aria-label="${esc(i18n.t('widget.drag_to_arrange'))}" title="${esc(i18n.t('widget.drag_to_arrange'))}">${DRAG_HANDLE}</span>
                 <input type="checkbox" class="docker-container"
                        ${showing ? 'checked' : ''}
                        title="${esc(i18n.t('docker.container_visible'))}" />

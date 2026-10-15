@@ -72,7 +72,7 @@
   "docker.connection_error": "تعذر الاتصال بمضيف Docker",
   "docker.unauthorized": "تم رفض Token",
   "docker.container_visible": "مرئي",
-  "docker.drag_to_arrange": "اسحب لإعادة الترتيب، أو استخدم السهمين لأعلى ولأسفل",
+  "widget.drag_to_arrange": "اسحب لإعادة الترتيب، أو استخدم السهمين لأعلى ولأسفل",
   "docker.show_new": "عرض الحاويات الجديدة تلقائيًا",
   "docker.show_new_desc": "أوقفه لتختار الحاويات التي تظهر: تبقى الحاوية الجديدة مخفية إلى أن تحدّدها هنا.",
   "docker.containers": "الحاويات",

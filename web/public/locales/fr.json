@@ -72,7 +72,7 @@
   "docker.connection_error": "Impossible de se connecter à l'hôte Docker",
   "docker.unauthorized": "Jeton refusé",
   "docker.container_visible": "Visible",
-  "docker.drag_to_arrange": "Faites glisser pour réorganiser, ou utilisez les flèches haut et bas",
+  "widget.drag_to_arrange": "Faites glisser pour réorganiser, ou utilisez les flèches haut et bas",
   "docker.show_new": "Afficher automatiquement les nouveaux conteneurs",
   "docker.show_new_desc": "Désactivez-le pour choisir les conteneurs affichés : un nouveau conteneur reste masqué tant que vous ne le cochez pas ici.",
   "docker.containers": "Conteneurs",

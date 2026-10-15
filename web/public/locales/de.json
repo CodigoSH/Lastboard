@@ -72,7 +72,7 @@
   "docker.connection_error": "Verbindung zum Docker-Host fehlgeschlagen",
   "docker.unauthorized": "Token abgelehnt",
   "docker.container_visible": "Sichtbar",
-  "docker.drag_to_arrange": "Zum Anordnen ziehen oder die Pfeiltasten nach oben und unten verwenden",
+  "widget.drag_to_arrange": "Zum Anordnen ziehen oder die Pfeiltasten nach oben und unten verwenden",
   "docker.show_new": "Neue Container automatisch anzeigen",
   "docker.show_new_desc": "Ausschalten, um selbst zu wählen, welche Container erscheinen: Ein neuer Container bleibt ausgeblendet, bis du ihn hier markierst.",
   "docker.containers": "Container",

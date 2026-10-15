@@ -72,7 +72,7 @@
   "docker.connection_error": "Dockerホストに接続できませんでした",
   "docker.unauthorized": "トークンが拒否されました",
   "docker.container_visible": "表示",
-  "docker.drag_to_arrange": "ドラッグして並べ替えるか、上下の矢印キーを使います",
+  "widget.drag_to_arrange": "ドラッグして並べ替えるか、上下の矢印キーを使います",
   "docker.show_new": "新しいコンテナを自動的に表示する",
   "docker.show_new_desc": "オフにすると表示するコンテナを自分で選べます。新しいコンテナは、ここでチェックするまで非表示のままです。",
   "docker.containers": "コンテナ",

@@ -1,4 +1,5 @@
 import { containerName, shortId, type ContainerCfgEntry, type DockerContainer } from './dockerShared';
+import { arrangeBy, mergeOrder } from './rowOrder';
 
 /**
  * Which containers a Docker widget shows, in what order, and what is set on each.
@@ -63,14 +64,7 @@ export function isShown(settings: ContainerSettings, hostId: string, c: DockerCo
  * ones that are, in the order the host listed them.
  */
 export function inChosenOrder(containers: DockerContainer[], order: string[] | undefined): DockerContainer[] {
-    if (!order || order.length === 0) return containers;
-    const place = new Map<string, number>();
-    order.forEach((name, i) => { if (!place.has(name)) place.set(name, i); });
-    const last = order.length;
-    return containers
-        .map((c, listed) => ({ c, listed, at: place.get(containerName(c)) ?? last }))
-        .sort((a, b) => a.at - b.at || a.listed - b.listed)
-        .map(x => x.c);
+    return arrangeBy(containers, containerName, order);
 }
 
 /**
@@ -80,8 +74,7 @@ export function inChosenOrder(containers: DockerContainer[], order: string[] | u
  * back, instead of being forgotten.
  */
 export function mergedOrder(listed: string[], stored: string[] | undefined): string[] {
-    const seen = new Set(listed);
-    return [...listed, ...(stored || []).filter(name => !seen.has(name))];
+    return mergeOrder(listed, stored);
 }
 
 /** What the config screen read off one container's row. */

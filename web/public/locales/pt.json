@@ -72,7 +72,7 @@
   "docker.connection_error": "Não foi possível conectar ao host Docker",
   "docker.unauthorized": "Token recusado",
   "docker.container_visible": "Visível",
-  "docker.drag_to_arrange": "Arraste para ordenar, ou use as setas para cima e para baixo",
+  "widget.drag_to_arrange": "Arraste para ordenar, ou use as setas para cima e para baixo",
   "docker.show_new": "Mostrar automaticamente os novos contentores",
   "docker.show_new_desc": "Desative para escolher quais contentores aparecem: um contentor novo fica oculto até o marcar aqui.",
   "docker.containers": "Contentores",

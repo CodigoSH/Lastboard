@@ -72,7 +72,7 @@
   "docker.connection_error": "无法连接到 Docker 主机",
   "docker.unauthorized": "令牌被拒绝",
   "docker.container_visible": "可见",
-  "docker.drag_to_arrange": "拖动以排序，或使用上下方向键",
+  "widget.drag_to_arrange": "拖动以排序，或使用上下方向键",
   "docker.show_new": "自动显示新容器",
   "docker.show_new_desc": "关闭后可自行选择显示哪些容器：新容器在你于此处勾选之前保持隐藏。",
   "docker.containers": "容器",

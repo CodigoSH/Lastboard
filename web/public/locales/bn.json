@@ -72,7 +72,7 @@
   "docker.connection_error": "Docker হোস্টের সাথে সংযোগ করা যায়নি",
   "docker.unauthorized": "Token প্রত্যাখ্যাত হয়েছে",
   "docker.container_visible": "দৃশ্যমান",
-  "docker.drag_to_arrange": "সাজাতে টেনে আনুন, অথবা উপর ও নিচের তীর চাপুন",
+  "widget.drag_to_arrange": "সাজাতে টেনে আনুন, অথবা উপর ও নিচের তীর চাপুন",
   "docker.show_new": "নতুন কন্টেইনার স্বয়ংক্রিয়ভাবে দেখান",
   "docker.show_new_desc": "কোন কন্টেইনার দেখা যাবে তা নিজে বেছে নিতে এটি বন্ধ করুন: নতুন কন্টেইনার এখানে টিক না দেওয়া পর্যন্ত লুকানো থাকে।",
   "docker.containers": "কনটেইনার",

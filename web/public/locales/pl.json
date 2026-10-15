@@ -72,7 +72,7 @@
   "docker.connection_error": "Nie można połączyć się z hostem Docker",
   "docker.unauthorized": "Token odrzucony",
   "docker.container_visible": "Widoczne",
-  "docker.drag_to_arrange": "Przeciągnij, aby zmienić kolejność, lub użyj strzałek w górę i w dół",
+  "widget.drag_to_arrange": "Przeciągnij, aby zmienić kolejność, lub użyj strzałek w górę i w dół",
   "docker.show_new": "Pokazuj nowe kontenery automatycznie",
   "docker.show_new_desc": "Wyłącz, aby samodzielnie wybierać, które kontenery się pojawiają: nowy kontener pozostaje ukryty, dopóki go tu nie zaznaczysz.",
   "docker.containers": "Kontenery",
