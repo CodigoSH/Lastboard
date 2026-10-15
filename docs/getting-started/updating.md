@@ -37,6 +37,11 @@ Run the native installation script again. It detects your existing installation 
 curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash
 ```
 
+It tells you which version you have and which it is about to install. If you already have the latest one it says so and changes nothing. To install it again anyway — to repair a damaged binary, or to answer the proxy question differently — add `--reinstall`:
+```bash
+curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --reinstall
+```
+
 ## What Happens During an Update?
 
 When updating natively or via the web interface:

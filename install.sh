@@ -44,13 +44,16 @@ SERVICE_FILE="/etc/systemd/system/lastboard.service"
 # `sudo bash install.sh --uninstall` works only for somebody who saved the file.
 UNINSTALL=no
 PURGE=no
+REINSTALL=no
 for ARG in "$@"; do
     case "$ARG" in
         --uninstall) UNINSTALL=yes ;;
         --purge) PURGE=yes ;;
+        --reinstall) REINSTALL=yes ;;
         --help|-h)
-            echo "Usage: curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- [--uninstall [--purge]]"
-            echo "       (or, with the script saved:  sudo bash install.sh [--uninstall [--purge]])"
+            echo "Usage: curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- [--uninstall [--purge]] [--reinstall]"
+            echo "       (or, with the script saved:  sudo bash install.sh [--uninstall [--purge]] [--reinstall])"
+            echo "  --reinstall   install again even when this version is already the latest, to repair it"
             echo "  --uninstall   stop and remove Lastboard, keeping $DATA_DIR"
             echo "  --purge       with --uninstall, delete the data and the service account too"
             exit 0 ;;
@@ -144,6 +147,7 @@ fi
 # 2. Configuration
 PORT="8080"
 IS_UPDATE=false
+INSTALLED_VERSION=""
 TRUST_PROXY=false
 
 # --- Existing Installation Checks ---
@@ -157,7 +161,14 @@ if [ -f "$SERVICE_FILE" ]; then
         PORT="$DETECTED_PORT"
         TRUST_PROXY="${DETECTED_PROXY:-false}"
         IS_UPDATE=true
-        status_msg "Existing installation found. Updating version on port ${BOLD}${PORT}${NC}..."
+        # "Lastboard v1.9.3" -> "v1.9.3". Empty when the binary is missing or will
+        # not run, which is the very case --reinstall exists for.
+        INSTALLED_VERSION=$("$INSTALL_DIR/$BINARY_NAME" --version 2>/dev/null | awk '{print $2}' | head -1 || true)
+        if [ -n "$INSTALLED_VERSION" ]; then
+            status_msg "Existing installation found (${BOLD}${INSTALLED_VERSION}${NC}) on port ${BOLD}${PORT}${NC}."
+        else
+            status_msg "Existing installation found on port ${BOLD}${PORT}${NC}."
+        fi
     fi
 fi
 
@@ -213,19 +224,15 @@ chown -R lastboard:lastboard "$INSTALL_DIR"
 chmod 750 "$DATA_DIR"
 chmod 755 "$INSTALL_DIR"
 
-status_msg "Downloading latest version..."
-
 # Determine release tag based on user preference
 if [ "$RELEASE_CHANNEL" = "beta" ]; then
     # Fetch latest beta from Proxy
     status_msg "Checking for latest beta version..."
     RELEASE_TAG=$(curl -s "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases?limit=1" | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')
-    status_msg "Installing latest beta: $RELEASE_TAG"
 else
     # Fetch latest stable from Proxy
     status_msg "Checking for latest stable version..."
     RELEASE_TAG=$(curl -s "https://git.codigosh.com/api/v1/repos/CodigoSH/Lastboard/releases/latest" | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')
-    status_msg "Installing latest stable: $RELEASE_TAG"
 fi
 
 if [ -z "$RELEASE_TAG" ]; then
@@ -233,6 +240,26 @@ if [ -z "$RELEASE_TAG" ]; then
     exit 1
 fi
 
+# Nothing to do is an answer, not an error. Compared as text on purpose: the
+# only question is "is it the one I would install", and ordering a beta against
+# a stable is how somebody ends up never offered an update.
+if [ "$IS_UPDATE" = true ] && [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" = "$RELEASE_TAG" ] && [ "$REINSTALL" != yes ]; then
+    echo ""
+    success_msg "You already have the latest $RELEASE_CHANNEL version (${RELEASE_TAG}). Nothing to do."
+    echo -e "${GRAY}  To install it again (repair it, or apply other answers):  curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --reinstall${NC}"
+    echo ""
+    exit 0
+fi
+
+if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" = "$RELEASE_TAG" ]; then
+    status_msg "Reinstalling $RELEASE_TAG..."
+elif [ -n "$INSTALLED_VERSION" ]; then
+    status_msg "Updating $INSTALLED_VERSION → $RELEASE_TAG..."
+else
+    status_msg "Installing $RELEASE_CHANNEL: $RELEASE_TAG"
+fi
+
+status_msg "Downloading..."
 BASE_URL="https://git.codigosh.com/CodigoSH/Lastboard/releases/download/$RELEASE_TAG"
 ARCHIVE_NAME="lastboard-linux-$ARCH_TAG.tar.gz"
 URL="$BASE_URL/$ARCHIVE_NAME"
