@@ -56,6 +56,23 @@ Run the following command:
 curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash
 ```
 
+### Running it again
+
+The same command updates an existing installation. It reads the port and proxy setting from
+your service, tells you which version you have, and installs the latest only if it is
+different:
+
+- **Newer release available** — it shows `Updating v1.9.2 → v1.9.3`, takes a copy of your
+  database and replaces the binary.
+- **Already the latest** — it says so and stops, touching nothing: no download, no database
+  copy, no restart.
+- **Install it anyway** — to repair a damaged binary, or to answer the reverse-proxy question
+  differently, add `--reinstall`:
+
+```bash
+curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.sh | sudo bash -s -- --reinstall
+```
+
 ### Removing it
 
 The installer does not leave a copy of itself on your machine, so there is no

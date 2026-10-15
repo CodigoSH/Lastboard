@@ -136,7 +136,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 - **A web updater** that downloads, verifies the signature and the checksum, extracts, installs and restarts — showing each step as it happens, and putting the old binary back if the swap fails.
 - **Beta channel**, opt-in per user.
-- **One-line install** on Linux with a systemd unit, `--uninstall` and `--purge`, and a timestamped copy of your database taken before every upgrade.
+- **One-line install** on Linux with a systemd unit, `--uninstall`, `--purge` and `--reinstall`, that tells you which version you have and stops when you already have the latest, and a timestamped copy of your database taken before every upgrade.
 - **Runs unprivileged** on request (`PUID`/`PGID`), fixing data-directory ownership itself before dropping privileges.
 - **Structured logging** (`LOG_FORMAT=json`) and a `/api/health` endpoint.
 

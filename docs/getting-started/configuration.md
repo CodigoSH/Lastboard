@@ -23,7 +23,7 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 
 > **Native installs:** the install script keeps everything under `/var/lib/lastboard` and points `DB_FILE` at `/var/lib/lastboard/lastboard.db`. This is a convention of `install.sh`, not an environment variable the binary reads — to move the data, set `DB_FILE`.
 
-> **Upgrades copy the database first.** Before it swaps the binary, `install.sh` stops the service and leaves a copy beside it as `lastboard.db.backup-YYYYMMDD-HHMMSS`, so a migration that goes wrong is recoverable. The three most recent copies are kept and older ones removed. To restore one, stop the service, move the copy over `lastboard.db`, and start it again.
+> **Upgrades copy the database first.** Before it swaps the binary, `install.sh` stops the service and leaves a copy beside it as `lastboard.db.backup-YYYYMMDD-HHMMSS`, so a migration that goes wrong is recoverable. The three most recent copies are kept and older ones removed. Running the installer when you already have the latest version changes nothing and takes no copy; `--reinstall` forces it. To restore one, stop the service, move the copy over `lastboard.db`, and start it again.
 
 ## PUID / PGID (running unprivileged)
 
