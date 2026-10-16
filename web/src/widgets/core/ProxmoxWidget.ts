@@ -4,7 +4,7 @@ import { dashboardStore } from '../../store/dashboardStore';
 import { escapeHtml } from '../../services/escape';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { loadProxmoxLinks, linkFor } from '../../services/proxmoxLinks';
-import { loadProxmox, type PxHost, type PxNode, type PxGuest } from '../../services/proxmoxApi';
+import { loadProxmox, iconKey, type PxHost, type PxNode, type PxGuest } from '../../services/proxmoxApi';
 import { resolveIconUrl } from '../../services/iconUrl';
 import { whenVisible } from '../../services/whenVisible';
 
@@ -257,7 +257,7 @@ class ProxmoxWidget extends HTMLElement {
         const link = this.link(g);
         // Same order as the page: what the operator chose, then the bookmark's,
         // then the board's fallback.
-        const face = this.data?.icons?.[`${g.host}|${g.node}|${g.vmid}`] || link?.icon || '';
+        const face = this.data?.icons?.[iconKey(g.host, g.node, g.vmid)] || link?.icon || '';
         const icon = face
             ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
             : ICON_FALLBACK;

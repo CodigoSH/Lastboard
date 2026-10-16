@@ -5,7 +5,7 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
-import { loadProxmox, chosenIcon, type PxHost, type PxNode, type PxGuest, type PxStore } from '../../../services/proxmoxApi';
+import { loadProxmox, chosenIcon, withIcon, type PxHost, type PxNode, type PxGuest, type PxStore } from '../../../services/proxmoxApi';
 import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
@@ -1347,11 +1347,7 @@ class ProxmoxPage extends HTMLElement {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
             return;
         }
-        if (this.data) {
-            this.data.icons = { ...(this.data.icons || {}) };
-            if (icon) this.data.icons[`${g.node}|${g.vmid}`] = icon;
-            else delete this.data.icons[`${g.node}|${g.vmid}`];
-        }
+        if (this.data) this.data.icons = withIcon(this.data.icons, this.data.id, g.node, g.vmid, icon);
         this.paintMachines();
         this.openGuest(vmid);
     }
@@ -1379,7 +1375,7 @@ class ProxmoxPage extends HTMLElement {
                  <div class="warnbox__s">${escapeHtml(i18n.t('proxmox.stopped_breaks'))} <em>${escapeHtml(book.label || book.url)}</em></div></div>`
             : '';
 
-        const chosen = !!this.data?.icons?.[`${g.node}|${g.vmid}`];
+        const chosen = !!this.data && !!chosenIcon(this.data, g.node, g.vmid);
         const actions = `<div class="acts">
             ${power ? `<app-button variant="${g.running ? 'ghost' : 'primary'}" data-power="${g.vmid}">
                 ${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}</app-button>` : ''}

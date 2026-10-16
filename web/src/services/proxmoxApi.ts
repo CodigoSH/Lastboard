@@ -58,10 +58,7 @@ export async function loadProxmox(hostId?: string): Promise<PxHost[]> {
     return out?.hosts ?? [];
 }
 
-/** The icon the operator chose for a machine, if any. */
-export function chosenIcon(host: PxHost, node: string, vmid: number): string {
-    return host.icons?.[`${host.id}|${node}|${vmid}`] || '';
-}
+export { iconKey, chosenIcon, withIcon } from './proxmoxIcons';
 
 /** Every machine across the hosts given, each carrying the host it is on. */
 export function allGuests(hosts: PxHost[]): (PxGuest & { host: string; hostName: string })[] {
