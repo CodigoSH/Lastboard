@@ -76,8 +76,8 @@ func newProxmoxClient(cfg proxmoxConfig) *http.Client {
 // drop it: every call paid a full TCP and TLS handshake and left a connection
 // waiting for a transport nobody would use again.
 var (
-	proxmoxClientStrict = &http.Client{Timeout: proxmoxTimeout, Transport: proxmoxTransport(false)}
-	proxmoxClientLax    = &http.Client{Timeout: proxmoxTimeout, Transport: proxmoxTransport(true)}
+	proxmoxClientStrict = &http.Client{Timeout: proxmoxTimeout, Transport: proxmoxTransport(false), CheckRedirect: util.KeepToOrigin}
+	proxmoxClientLax    = &http.Client{Timeout: proxmoxTimeout, Transport: proxmoxTransport(true), CheckRedirect: util.KeepToOrigin}
 )
 
 func proxmoxTransport(skipVerify bool) *http.Transport {

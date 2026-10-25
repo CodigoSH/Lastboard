@@ -30,15 +30,33 @@ var errDockerUnauthorized = errors.New("docker.unauthorized")
 // agentTransport injects an Authorization: Bearer header on every request
 // so that ListContainers / GetContainerStats / ContainerAction work unchanged
 // against the Lastboard Agent running on a remote host.
+//
+// Only on requests to the agent's own host. A transport adds its header again on
+// every hop, so a redirect to another server would have carried the token there;
+// the client's redirect policy no longer follows one, and this keeps the token
+// home even if something else ever does.
 type agentTransport struct {
 	token     string
+	host      string
 	transport http.RoundTripper
 }
 
 func (t *agentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req = req.Clone(req.Context())
-	req.Header.Set("Authorization", "Bearer "+t.token)
+	if strings.EqualFold(req.URL.Hostname(), t.host) {
+		req.Header.Set("Authorization", "Bearer "+t.token)
+	}
 	return t.transport.RoundTrip(req)
+}
+
+// hostnameOf is the host part of an address, without port or brackets; empty
+// when the address does not parse, which then matches nothing.
+func hostnameOf(address string) string {
+	u, err := url.Parse(address)
+	if err != nil {
+		return ""
+	}
+	return u.Hostname()
 }
 
 // ─── Public Types ──────────────────────────────────────────────────────────────
@@ -154,7 +172,7 @@ func buildDockerClient(hostURL string) (*http.Client, string, error) {
 				return util.NewDialer(timeout, 0).DialContext(ctx, "unix", socket)
 			},
 		}
-		return &http.Client{Transport: transport, Timeout: timeout}
+		return &http.Client{Transport: transport, Timeout: timeout, CheckRedirect: util.KeepToOrigin}
 	}
 
 	switch {
@@ -198,16 +216,18 @@ func buildDockerClient(hostURL string) (*http.Client, string, error) {
 		if tlsOn {
 			scheme, tlsCfg = "https://", &tls.Config{InsecureSkipVerify: true} //nolint:gosec
 		}
+		base := scheme + strings.TrimRight(host, "/")
 		transport := &agentTransport{
 			token:     token,
+			host:      hostnameOf(base),
 			transport: pooledTransport(tlsCfg),
 		}
-		client := &http.Client{Transport: transport, Timeout: timeout}
-		return client, scheme + strings.TrimRight(host, "/"), nil
+		client := &http.Client{Transport: transport, Timeout: timeout, CheckRedirect: util.KeepToOrigin}
+		return client, base, nil
 
 	case strings.HasPrefix(hostURL, "https://"):
 		transport := pooledTransport(&tls.Config{InsecureSkipVerify: true}) //nolint:gosec
-		client := &http.Client{Transport: transport, Timeout: timeout}
+		client := &http.Client{Transport: transport, Timeout: timeout, CheckRedirect: util.KeepToOrigin}
 		return client, strings.TrimRight(hostURL, "/"), nil
 
 	default:
@@ -219,7 +239,7 @@ func buildDockerClient(hostURL string) (*http.Client, string, error) {
 		if !strings.HasPrefix(base, "http://") {
 			base = "http://" + base
 		}
-		client := &http.Client{Transport: pooledTransport(nil), Timeout: timeout}
+		client := &http.Client{Transport: pooledTransport(nil), Timeout: timeout, CheckRedirect: util.KeepToOrigin}
 		return client, strings.TrimRight(base, "/"), nil
 	}
 }

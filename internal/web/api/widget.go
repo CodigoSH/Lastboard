@@ -24,6 +24,8 @@ const apiWidgetMaxBody = 512 * 1024 // 512 KiB
 // reason the fetch runs on the server.
 var apiWidgetClient = &http.Client{
 	Timeout: 8 * time.Second,
+	// The request carries the widget's key in a header; a redirect elsewhere must not.
+	CheckRedirect: util.KeepToOrigin,
 	Transport: &http.Transport{
 		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 		MaxIdleConns:        50,

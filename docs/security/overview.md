@@ -14,6 +14,12 @@ on. Two consequences are deliberate, and they are features rather than oversight
   the server.
 - **Self-signed certificates are accepted on outbound checks.** Home services use internal CAs
   and bare IPs; refusing them would mean nothing could be monitored.
+- **A credential goes only where you sent it.** Every request that carries one — an API widget's
+  key, a Server Health source's header, a Gotify or ntfy token, a Proxmox token, a Docker
+  agent's token — follows a redirect only on the same server (or from its `http` to its own
+  `https`). A redirect to any other address is not followed, so a service that is misconfigured
+  or taken over cannot pass your key on. Status checks, which carry nothing, follow redirects as
+  a browser would, so a service behind a sign-in page still shows as up.
 
 What that model does **not** excuse is anything on this page: session handling, authorization,
 CSRF, headers, rate limiting, update integrity and input limits are held to the same standard

@@ -15,6 +15,8 @@ import (
 // threat model (private IPs / self-signed notification servers are expected).
 var notifyClient = &http.Client{
 	Timeout: 8 * time.Second,
+	// A Gotify key travels as X-Gotify-Key, which Go would carry to another host.
+	CheckRedirect: util.KeepToOrigin,
 	Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 — self-hosted, private targets by design
 		DialContext:     util.NewDialer(5*time.Second, 30*time.Second).DialContext,
