@@ -325,6 +325,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/user/update-profile", protect(anyAccount(userHandler.UpdateProfile)))
 	s.Router.Handle("POST /api/user/change-password", protect(anyAccount(userHandler.ChangePassword)))
 	s.Router.Handle("POST /api/user/preferences", protect(anyAccount(userHandler.UpdatePreferences)))
+	s.Router.Handle("PUT /api/user/label", protect(need(access.Admin, userHandler.SetOwnLabel)))
 
 	// Admin User Management
 	s.Router.Handle("GET /api/users", protect(need(access.Admin, userHandler.GetUsers)))

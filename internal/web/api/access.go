@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -182,4 +183,51 @@ func accessView(a Account) map[string]any {
 // and after a restore; see database.GiveMembersTheirAccess.
 func GiveMembersTheirAccess(db *sql.DB) (int, error) {
 	return database.GiveMembersTheirAccess(db, access.Encode(access.Existing()))
+}
+
+// accessInput is what the account form sends about permissions: a profile to
+// start from, or the permissions one by one, and the label. Grants win over a
+// profile; neither means "leave them as they are" (or, on creation, the default).
+type accessInput struct {
+	Profile string         `json:"profile"`
+	Grants  *access.Grants `json:"grants"`
+	Label   *string        `json:"label"`
+}
+
+// grantsOr is the permissions the input asks for, or fallback when it asks for
+// none. A profile that is not one is refused; levels outside the scale are
+// clamped, as stored grants are.
+func (in accessInput) grantsOr(fallback access.Grants) (access.Grants, bool) {
+	switch {
+	case in.Grants != nil:
+		return access.Decode(access.Encode(*in.Grants)), true
+	case in.Profile != "":
+		return access.Named(in.Profile)
+	}
+	return fallback, true
+}
+
+// SetOwnLabel is the administrator naming its own account. Members have their
+// label set by the administrator and cannot change it; the route is the
+// administrator's alone.
+func (h *UserHandler) SetOwnLabel(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
+	var in struct {
+		Label string `json:"label"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	uid := middleware.GetUserIDFromContext(r)
+	current, err := LoadAccount(r.Context(), h.DB, uid)
+	if err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if err := storeAccess(r.Context(), h.DB, uid, current.Grants, cleanLabel(in.Label)); err != nil {
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

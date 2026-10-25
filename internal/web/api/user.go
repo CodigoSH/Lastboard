@@ -401,12 +401,20 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			slog.Warn("Scan error reading users", "error", err)
 			continue
 		}
-		users = append(users, map[string]interface{}{
+		entry := map[string]interface{}{
 			"id":         u.ID,
 			"username":   u.Username,
 			"role":       u.Role,
 			"avatar_url": u.AvatarUrl,
-		})
+		}
+		// What the administrator chose for the account: the list shows its
+		// label and profile, and the edit form starts from its grants.
+		if acct, err := LoadAccount(r.Context(), h.DB, u.ID); err == nil {
+			entry["label"] = acct.Label
+			entry["profile"] = access.ProfileOf(acct.Grants)
+			entry["grants"] = acct.Grants
+		}
+		users = append(users, entry)
 	}
 	if err := rows.Err(); err != nil {
 		slog.Error("Failed to fetch users", "error", err)
@@ -428,10 +436,23 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
+		accessInput
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
+	}
+	// What the account may do is chosen when it is created. A request that says
+	// nothing — a browser from before permissions — gets Standard: the profile the
+	// form starts on, and one that reaches nothing on the local network.
+	grants, ok := input.grantsOr(access.Standard())
+	if !ok {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	label := ""
+	if input.Label != nil {
+		label = cleanLabel(*input.Label)
 	}
 
 	if err := validateUsername(input.Username); err != nil {
@@ -478,7 +499,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	// having none (see LoadAccount), so a failure here undoes the account rather
 	// than leaving one that cannot do anything and does not say why.
 	if err == nil && newUserID > 0 {
-		if aerr := storeAccess(r.Context(), h.DB, int(newUserID), access.Existing(), ""); aerr != nil {
+		if aerr := storeAccess(r.Context(), h.DB, int(newUserID), grants, label); aerr != nil {
 			slog.Error("CreateUser: failed to store permissions", "user_id", newUserID, "error", aerr)
 			undoAccount(r.Context(), h.DB, int(newUserID))
 			http.Error(w, "general.db_error", http.StatusInternalServerError)
@@ -513,6 +534,8 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		ID       int    `json:"id"`
 		Username string `json:"username"`
 		Password string `json:"password"` // Optional: if empty, don't change
+		// Optional too: permissions and label change only when they are sent.
+		accessInput
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
@@ -565,6 +588,29 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if n, _ := res.RowsAffected(); n == 0 {
 		http.Error(w, "error.not_found", http.StatusNotFound)
 		return
+	}
+
+	if input.Profile != "" || input.Grants != nil || input.Label != nil {
+		current, err := LoadAccount(r.Context(), h.DB, input.ID)
+		if err != nil {
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+		grants, ok := input.grantsOr(current.Grants)
+		if !ok {
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
+			return
+		}
+		label := current.Label
+		if input.Label != nil {
+			label = cleanLabel(*input.Label)
+		}
+		// Takes effect on the account's next request: every route reads the
+		// permissions afresh, so nobody has to sign in again.
+		if err := storeAccess(r.Context(), h.DB, input.ID, grants, label); err != nil {
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

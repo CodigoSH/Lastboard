@@ -184,3 +184,115 @@ func TestAnInternetOnlyMemberDoesNotReuseAnotherAccountsConnection(t *testing.T)
 		t.Errorf("an internet-only member reached the local server %d times on a connection another account opened", n)
 	}
 }
+
+func idOf(t *testing.T, srv *Server, username string) int {
+	t.Helper()
+	var id int
+	if err := srv.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&id); err != nil {
+		t.Fatalf("no account %s: %v", username, err)
+	}
+	return id
+}
+
+func meOf(t *testing.T, as func(method, path, body string) *httptest.ResponseRecorder) (profile, label string) {
+	t.Helper()
+	var me struct {
+		Label  string `json:"label"`
+		Access struct {
+			Profile string `json:"profile"`
+		} `json:"access"`
+	}
+	if err := json.Unmarshal(as(http.MethodGet, "/api/me", "").Body.Bytes(), &me); err != nil {
+		t.Fatal(err)
+	}
+	return me.Access.Profile, me.Label
+}
+
+// What an account may do is chosen when the administrator creates it, and can
+// be changed later; the change holds from the account's next request.
+func TestTheAdministratorChoosesWhatAnAccountMayDo(t *testing.T) {
+	srv := newTestServer(t, true)
+	admin := adminOf(t, srv)
+
+	create := func(body string) int {
+		t.Helper()
+		w := admin(http.MethodPost, "/api/users", body)
+		if w.Code != http.StatusCreated && w.Code != http.StatusOK {
+			t.Fatalf("POST /api/users %s = %d %s", body, w.Code, w.Body.String())
+		}
+		return w.Code
+	}
+	create(`{"username":"screen","password":"Wall-Screen-1234","profile":"viewer","label":"Living room"}`)
+	create(`{"username":"kid","password":"Kid-Account-1234"}`)
+	create(`{"username":"odd","password":"Odd-Account-1234","grants":{"board_edit":true,"docker":7}}`)
+
+	screen := asAccount(srv, idOf(t, srv, "screen"))
+	if p, l := meOf(t, screen); p != "viewer" || l != "Living room" {
+		t.Errorf("screen: profile %q label %q, want viewer / Living room", p, l)
+	}
+	// Saying nothing about permissions is Standard: the form's starting point.
+	if p, _ := meOf(t, asAccount(srv, idOf(t, srv, "kid"))); p != "standard" {
+		t.Errorf("an account created without permissions is %q, want standard", p)
+	}
+	// Permissions one by one are custom, and a level out of the scale is clamped.
+	var users []map[string]any
+	_ = json.Unmarshal(admin(http.MethodGet, "/api/users", "").Body.Bytes(), &users)
+	for _, u := range users {
+		if u["username"] == "odd" {
+			g, _ := u["grants"].(map[string]any)
+			if u["profile"] != "custom" || g["docker"] != float64(2) {
+				t.Errorf("odd: profile %v docker %v, want custom and 2", u["profile"], g["docker"])
+			}
+		}
+		if u["username"] == "screen" && (u["label"] != "Living room" || u["profile"] != "viewer") {
+			t.Errorf("the list shows screen as %v / %v", u["label"], u["profile"])
+		}
+	}
+
+	// A change holds from the next request, with no new sign-in.
+	if w := screen(http.MethodGet, "/api/proxmox/settings", ""); w.Code != http.StatusForbidden {
+		t.Fatalf("a viewer reading Proxmox = %d, want 403", w.Code)
+	}
+	upd := fmt.Sprintf(`{"id":%d,"username":"screen","profile":"homelab"}`, idOf(t, srv, "screen"))
+	if w := admin(http.MethodPut, "/api/users", upd); w.Code != http.StatusOK {
+		t.Fatalf("changing the profile = %d %s", w.Code, w.Body.String())
+	}
+	if w := screen(http.MethodGet, "/api/proxmox/settings", ""); w.Code != http.StatusOK {
+		t.Errorf("after the change, reading Proxmox = %d, want 200", w.Code)
+	}
+	if _, l := meOf(t, screen); l != "Living room" {
+		t.Errorf("changing the profile lost the label: %q", l)
+	}
+
+	// A profile that is not one is refused, not taken as a default.
+	if w := admin(http.MethodPost, "/api/users", `{"username":"bad","password":"Bad-Account-1234","profile":"root"}`); w.Code != http.StatusBadRequest {
+		t.Errorf("an unknown profile = %d, want 400", w.Code)
+	}
+}
+
+// A label is the administrator's to give. A member cannot change its own; the
+// administrator names its own account through a route of its own.
+func TestLabels(t *testing.T) {
+	srv := newTestServer(t, true)
+	admin := adminOf(t, srv)
+	member := asMember(t, srv, "ana", access.Homelab())
+
+	if w := member(http.MethodPut, "/api/user/label", `{"label":"Boss"}`); w.Code != http.StatusForbidden {
+		t.Errorf("a member setting its own label = %d, want 403", w.Code)
+	}
+	if w := admin(http.MethodPut, "/api/user/label", `{"label":"  Owner\u0007  "}`); w.Code != http.StatusNoContent {
+		t.Fatalf("the administrator setting its own label = %d", w.Code)
+	}
+	if _, l := meOf(t, admin); l != "Owner" {
+		t.Errorf("label = %q, want it trimmed and without control characters", l)
+	}
+	// Counted in characters, not bytes: a Japanese label is cut at 24 of them.
+	long := strings.Repeat("ぜ", 30)
+	upd := fmt.Sprintf(`{"id":%d,"username":"ana","label":%q}`, idOf(t, srv, "ana"), long)
+	if w := admin(http.MethodPut, "/api/users", upd); w.Code != http.StatusOK {
+		t.Fatalf("labelling a member = %d", w.Code)
+	}
+	if _, l := meOf(t, member); len([]rune(l)) != 24 {
+		t.Errorf("a 30-character label kept %d characters, want 24", len([]rune(l)))
+	}
+}
