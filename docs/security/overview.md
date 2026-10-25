@@ -63,6 +63,8 @@ application shell — which would then be served with no session. Here a route i
 it is declared, the SPA shell falls through to a **protected** handler, and a static asset is
 only served when it really exists in the embedded filesystem.
 
+**Each member account has its own permissions**, chosen by the administrator (see [Preferences → Users](../using/preferences.md#users-administrator-only)). Every route checks the permission it needs on every request, reading it afresh, so a change applies from the account's next request. *Reaching the local network* is cut off on the server, in the dialer that makes the outbound connections, not in the browser: an account without it can only make the server reach the internet. There is one administrator, and what only the administrator may do — accounts, backups, restore, reset, updates and the server's own Docker — is not a permission a member can be given.
+
 ## CSRF and cross-site requests
 
 - Every state-changing method (`POST`, `PUT`, `PATCH`, `DELETE`) requires a matching

@@ -13,6 +13,7 @@ Manage your personal profile and security.
 ![My Profile](../assets/p-profile.png)
 
 - **Avatar** — upload a custom profile picture (use **Change Image**).
+- **Label** — shown under your name in place of **Admin** or **Member**. The administrator types its own here and saves it with **Save label**; a member sees the label the administrator gave it and has no field to change it. See [Labels](#labels).
 - **Username** — change your display name, then **Save Name**. This signs you out on this browser, and you sign in again with the new name.
 - **System Password** — update your login credentials. Enter your current password, then the new one twice (up to 256 characters), and **Change Password**. Every open session of the account ends, this one included, so you sign in again with the new password. A wrong current password counts toward a lockout: after 5 failures the account waits 5 minutes before it accepts another try.
 
@@ -37,13 +38,54 @@ Everything that changes how the dashboard looks.
 
 ## Users (Administrator Only)
 
-The administrator manages who can access the instance.
+The administrator manages who can access the instance, and what each account may do.
 
 ![Users](../assets/p-users.png)
 
-- **Add User** — create a new account.
-- **Edit / Delete** — modify or remove an existing account from its row. Editing changes a member's name and, if you type one, their password, which ends their open sessions. Your own account is changed from **My Profile**, never from here. Deleting asks for your password.
+Each row shows the account's name, its **label** (or its role, when it has none) and, in small type, the name of its permission profile.
+
+- **Add User** — opens one window to create an account. **Edit** on a row opens the same window filled with that account's current choices. Editing changes the name and, if you type one, the password, which ends the account's open sessions. Your own account is changed from **My Profile**, never from here. **Delete** asks for your password.
 - **Roles** — an instance has exactly one **Admin**: the account created by the Setup Wizard. Every account added afterwards is a **Member**, and there is no way to promote one. If you need to hand the instance over, change the admin account's own username and password rather than creating a second administrator.
+
+### The account window
+
+![Creating an account: profile, permissions and summary](../assets/p-user-permissions.png)
+
+The window has three steps, one under the other:
+
+1. **Account** — username, password and an optional **label**.
+2. **Profile** — four cards. **Standard** is selected when you create an account. Under them, **Customize permissions** unfolds the full list.
+3. **Summary** — what the account **will** and **won't** be able to do, as it stands now, so you read the consequence before you press **Add User**.
+
+A profile is a starting point, not a link: choosing one copies its values onto the account, and the account keeps them if a later version changes what the profile contains. Touching any permission switches the card to **Custom** (unless the result happens to match one of the three profiles exactly).
+
+| Profile | What it is for |
+|---|---|
+| **View only** | A wall screen or a guest: sees the board it is given, changes nothing, and makes the server reach nothing on its behalf. It can still see this server's load. |
+| **Standard** | A household member: boards of its own (several, importable and exportable), new icons from the internet, widgets that call web services, and the up/down dot on its bookmarks. Nothing on your local network and no infrastructure. |
+| **Homelab** | Somebody trusted with equipment of their own: every permission below, with Docker and Proxmox at **Control**. |
+| **Custom** | Whatever you pick. |
+
+The permissions, by area:
+
+- **Board** — edit the board; have several boards (needs *edit the board*); import and export boards; fetch new icons from the internet. Without *edit the board* the account sees the board prepared for it and changes nothing.
+- **Widgets** — use API widgets; read the health of other machines with Server Health. Clock, weather, notes and Markdown widgets are always available.
+- **Network reach** — **reach the local network**. What the account points the server at may be on your LAN only if this is on. Off, the server reaches only the internet on its behalf.
+- **Infrastructure** — **Docker** and **Proxmox**, each at **None**, **View** or **Control**. They are the account's *own* Docker agents and Proxmox servers (see [Docker](#docker) and [Proxmox](#proxmox)); Proxmox is further limited by what its API token allows.
+- **Monitoring** — see the up/down dots; monitor around the clock; send alerts (needs monitoring).
+- **Server** — see the load (CPU, memory, temperature) of the machine Lastboard runs on.
+
+A permission that depends on another is shown switched off and cannot be touched while the one it needs is off. Changes apply from the account's next request; nobody has to sign in again.
+
+Some things are never given to a member, whatever its profile: managing accounts, backups, restoring, resetting, updating, and the Docker of the server Lastboard itself runs on. A member can only use its own Docker agents.
+
+An account that existed before permissions were introduced was given the **Homelab** set when you updated, so nothing it could do stopped working; edit it to narrow it down.
+
+### Labels
+
+A **label** is a short text of your choosing (24 characters at most) shown where the role would be: in the user list, in **My Profile**, and under the name at the top of the Settings menu — for every account, not only the administrator. Empty, the role (**Admin** or **Member**) is shown, as before. It is only a name: it changes nothing about what the account can do.
+
+Only the administrator sets labels. A member sees its own label but cannot change it. The administrator names its own account from **My Profile**.
 
 ## Monitoring
 

@@ -412,6 +412,29 @@ const SHOTS: Shot[] = [
         clip: `${DRAWER}.querySelector('settings-content').shadowRoot.getElementById('docker-modal')`,
     },
     {
+        // The one dialog that creates and edits an account: its profile chosen, the
+        // permissions unfolded, and the summary that says what it all comes to.
+        name: 'p-user-permissions', w: 1500, h: 2300, pad: 0, wait: 900,
+        act: openSettings('users') + `
+              const sheet = ${DRAWER}.querySelector('settings-content').shadowRoot;
+              sheet.querySelector('[data-action="open-add-user"]').click();
+              await sleep(500);
+              const set = (id, v) => { const el = sheet.getElementById(id); if (!el) throw new Error('no #' + id); el.value = v; };
+              set('user-username', 'sam');
+              set('user-label', 'Lab');
+              const card = sheet.querySelector('[data-action="user-profile"][data-profile="homelab"]');
+              if (!card) throw new Error('no Homelab card in the account dialog');
+              card.click();
+              await sleep(300);
+              const details = sheet.getElementById('user-custom');
+              details.open = true;
+              // Docker down to "View", so the picture shows a profile that was touched.
+              sheet.querySelector('[data-action="user-level"][data-perm="docker"][data-level="1"]').click();
+              await sleep(500);
+              if (sheet.querySelector('.user-dialog__profile.is-selected')?.dataset.profile !== 'custom') throw new Error('touching a permission did not make the profile Custom');`,
+        clip: `${DRAWER}.querySelector('settings-content').shadowRoot.getElementById('user-modal')`,
+    },
+    {
         // Server Health pointed at another server: the source, its address and the test.
         name: 'w-telemetry-conf', w: 1500, h: 980, pad: 0, wait: 900,
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
@@ -553,8 +576,11 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     // Two more accounts. The Users panel is where a household shares a board, and
     // photographed on a fresh install it says "No users here yet." — a picture of
     // an empty room, which explains nothing about what the panel is for.
-    for (const username of ['ana', 'marco']) {
-        await api('/users', { username, password: 'Lastboard123!' });
+    // They are given what an administrator would give them, so the list shows labels
+    // and profiles rather than two identical rows.
+    for (const [username, label, profile] of [['ana', 'Family', 'standard'], ['marco', 'Kitchen display', 'viewer']]) {
+        const res = await api('/users', { username, password: 'Lastboard123!', label, profile });
+        if (!res.ok) throw new Error(`could not seed ${username}: ${res.status}`);
     }
 
     // 24/7 monitoring on, so the status page and the widget have something to say.
