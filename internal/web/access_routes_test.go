@@ -30,10 +30,19 @@ func asMember(t *testing.T, srv *Server, name string, g access.Grants) func(meth
 	return asAccount(srv, int(id))
 }
 
+// nextAddr gives every simulated account an address of its own. The rate limiter
+// keeps one bucket per address for the whole process, and these tests send many
+// requests: from httptest's default address they emptied the bucket that the
+// other tests of this package share, which then failed with a 429.
+var nextAddr atomic.Int32
+
 func asAccount(srv *Server, id int) func(method, path, body string) *httptest.ResponseRecorder {
 	token := util.SignToken(util.AccountSessionPayload(id, 0), srv.sessionSecret, time.Now().Add(time.Hour))
+	n := nextAddr.Add(1)
+	addr := fmt.Sprintf("10.77.%d.%d:4000", n/250, n%250+1)
 	return func(method, path, body string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(method, path, strings.NewReader(body))
+		req.RemoteAddr = addr
 		req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
 		req.AddCookie(&http.Cookie{Name: "csrf_token", Value: "t"})
 		req.Header.Set("X-CSRF-Token", "t")
