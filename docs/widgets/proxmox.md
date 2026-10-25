@@ -26,7 +26,7 @@ The footer counts what did not fit — *Running: 8/9* — and links to the full 
 
 ## Why it is not a list
 
-A tile shows the first few machines and the footer counts the rest, because a real host has more machines than a tile has room — measured on one with twenty-nine on a single node. So the order is by how much each one needs saying, and anything that needs attention is at the top where it can be seen. To go through all of them, open the page.
+A tile shows the first few machines and the footer counts the rest, because a real host has more machines than a tile has room — measured on one with twenty-nine on a single node. So the order is by how much each one needs saying, and anything that needs attention is at the top where it can be seen. To go through all of them, open the page: **See all** on the tile opens it without leaving the board, and the same page has its own address, `/?view=proxmox`, so it can be opened in a new tab or kept as a bookmark.
 
 ## Configuration
 

@@ -157,6 +157,15 @@ bootstrap(async () => {
     const proxmoxPage = document.createElement('proxmox-page');
     document.body.appendChild(proxmoxPage);
 
+    // An address can ask for a full-screen page ("/?view=proxmox", which is what
+    // the Proxmox tile's "see all" is, so it also works from a new tab). The
+    // request is taken out of the address first: left there, a reload would open
+    // the page again and closing it would still leave the bar saying it was open.
+    if (viewFromSearch(window.location.search) === 'proxmox') {
+        history.replaceState(history.state, '', withoutView(window.location.pathname, window.location.search, window.location.hash));
+        (proxmoxPage as any).open();
+    }
+
     // Lives outside the settings panel so an update keeps running (and keeps
     // being visible) no matter what happens to the drawer behind it.
     const updateModal = document.createElement('update-modal');
@@ -165,6 +174,7 @@ bootstrap(async () => {
 
 // 2. Handle Component Events (TopBar)
 import { eventBus, EVENTS } from './services/EventBus';
+import { viewFromSearch, withoutView } from './services/startupView';
 
 // Centralized Event Listeners
 eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: CustomEvent) => {

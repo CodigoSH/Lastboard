@@ -122,7 +122,7 @@ Click a card to go into that cluster. The header then carries its name and an ar
 
 ## The page
 
-The Proxmox icon in the top bar opens it — or the summary above, if you have more than one — and the **×** in its header closes it. While it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
+The Proxmox icon in the top bar opens it — or the summary above, if you have more than one — and the **×** in its header closes it. The page also has an address of its own, `/?view=proxmox`, which opens it straight away — in a new tab, or from a bookmark — and **See all** on the [widget](../widgets/proxmox.md) opens it the same way without reloading the board. You still sign in first, and the request is taken out of the address once the page is open. While it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
 
 **The header** carries the state of the host beside the title, not on a bar of its own: node name (or *Cluster*, when the host says it is one), how many machines are running out of how many **in green**, and **Stopped** — how many are not — **in red**. It is a headcount of the same machines, counted twice: the two numbers add up to the total, which is the point. Whether one of those stopped machines is serving a bookmark of yours is said where it can be acted on — on the tile itself, and on the summary.
 

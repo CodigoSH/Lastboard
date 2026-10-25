@@ -7,6 +7,7 @@ import { loadProxmoxLinks, linkFor } from '../../services/proxmoxLinks';
 import { loadProxmox, iconKey, type PxHost, type PxNode, type PxGuest } from '../../services/proxmoxApi';
 import { resolveIconUrl } from '../../services/iconUrl';
 import { whenVisible } from '../../services/whenVisible';
+import { eventBus, EVENTS } from '../../services/EventBus';
 
 /** A machine, plus which hypervisor it is on: the tile mixes them all. */
 type PxGuestOn = PxGuest & { host: string };
@@ -182,6 +183,19 @@ class ProxmoxWidget extends HTMLElement {
     }
 
     private onClick = async (e: Event) => {
+        // "See all" is a link so it can be opened in a tab, but a plain click
+        // opens the page here: a full load of "/?view=proxmox" would throw away
+        // the board the person is standing on.
+        const more = (e.target as HTMLElement).closest('.px-more') as HTMLAnchorElement | null;
+        if (more) {
+            const me = e as MouseEvent;
+            if (me.button === 0 && !me.ctrlKey && !me.metaKey && !me.shiftKey && !me.altKey) {
+                e.preventDefault();
+                eventBus.emit(EVENTS.SHOW_PROXMOX_PAGE);
+            }
+            return;
+        }
+
         const btn = (e.target as HTMLElement).closest('[data-power]') as HTMLElement | null;
         if (!btn) return;
         e.preventDefault();
