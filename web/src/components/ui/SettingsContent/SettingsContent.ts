@@ -18,6 +18,11 @@ import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
 import { SECRET_MASK, secretChange } from '../../../services/secretField';
 import { proxmoxPayload } from './proxmoxPayload';
+import {
+    DEFAULT_PROFILE, PROFILES, createBody, grantsFrom, profileOf, setBool, setLevel, updateBody,
+    type BoolKey, type Grants, type LevelKey, type ProfileName,
+} from '../../../services/accountAccess';
+import { userProfilesTemplate, userPermsTemplate, userSummaryTemplate } from './userDialog.template';
 import { fetchDockerSettings, saveDockerSettings, type AccountDockerHost, type DockerHostEdit } from '../../../services/dockerHosts';
 import { fetchAgentVersion, fetchContainers, hostErrorKey } from '../../../services/dockerShared';
 import css from './SettingsContent.css' with { type: 'text' };
@@ -25,6 +30,9 @@ import css from './SettingsContent.css' with { type: 'text' };
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
     private users: User[] = [];
+    /** The account dialog's choice, kept here and painted into it. */
+    private userGrants: Grants = { ...PROFILES[DEFAULT_PROFILE] };
+    private userProfile: ProfileName = DEFAULT_PROFILE;
     /** Bookmarks of mine whose icon still comes from somewhere else. */
     private pendingIcons = 0;
     /** Bookmarks of mine already served from this instance. */
@@ -175,16 +183,24 @@ class SettingsContent extends HTMLElement {
                     this.openAddUserModal();
                     break;
                 case 'edit-user':
-                    this.openEditUserModal(Number(el.dataset.userId), el.dataset.username || '');
+                    this.openEditUserModal(Number(el.dataset.userId));
+                    break;
+                case 'user-profile':
+                    this.pickUserProfile(el.dataset.profile as ProfileName);
+                    break;
+                case 'user-level':
+                    this.userGrants = setLevel(this.userGrants, el.dataset.perm as LevelKey, Number(el.dataset.level));
+                    this.userProfile = profileOf(this.userGrants);
+                    this.repaintUserForm();
+                    break;
+                case 'save-user':
+                    this.saveUser();
+                    break;
+                case 'save-own-label':
+                    this.saveOwnLabel();
                     break;
                 case 'delete-user':
                     this.deleteUser(Number(el.dataset.userId));
-                    break;
-                case 'create-user':
-                    this.createUser();
-                    break;
-                case 'update-admin-user':
-                    this.updateAdminUser();
                     break;
                 case 'download-backup':
                     this.downloadBackup();
@@ -236,6 +252,11 @@ class SettingsContent extends HTMLElement {
             const el = (e.target as HTMLElement).closest('[data-change]') as HTMLElement | null;
             if (!el) return;
             switch (el.dataset.change) {
+                case 'user-perm':
+                    this.userGrants = setBool(this.userGrants, el.dataset.perm as BoolKey, (el as HTMLInputElement).checked);
+                    this.userProfile = profileOf(this.userGrants);
+                    this.repaintUserForm();
+                    break;
                 case 'avatar':
                     this.handleAvatarChange(e);
                     break;
@@ -1140,63 +1161,94 @@ class SettingsContent extends HTMLElement {
 
     // --- User Management Logic ---
 
+    private userEl<T extends HTMLElement = HTMLInputElement>(id: string) {
+        return this.shadowRoot!.getElementById(id) as T;
+    }
+
+    /** Profiles, permissions and summary follow the choice; the fields above are never redrawn. */
+    private repaintUserForm() {
+        const t = (k: string) => i18n.t(k);
+        this.userEl('user-profiles').innerHTML = userProfilesTemplate(t, this.userProfile);
+        this.userEl('user-perms').innerHTML = userPermsTemplate(t, this.userGrants);
+        this.userEl('user-summary').innerHTML = userSummaryTemplate(t, this.userGrants);
+    }
+
+    private pickUserProfile(profile: ProfileName) {
+        if (profile === 'custom') {
+            this.userEl<HTMLDetailsElement>('user-custom').open = true;
+        } else {
+            this.userGrants = { ...PROFILES[profile] };
+        }
+        this.userProfile = profile;
+        this.repaintUserForm();
+    }
+
+    private openUserDialog(user: User | null) {
+        const editing = !!user;
+        this.userEl('user-id').value = editing ? String(user!.id) : '';
+        this.userEl('user-username').value = user?.username || '';
+        this.userEl('user-password').value = '';
+        this.userEl('user-password').placeholder = editing ? i18n.t('settings.password_leave_blank') : '';
+        this.userEl('user-password-label').textContent = editing ? i18n.t('settings.new_password') : i18n.t('auth.password');
+        this.userEl('user-label').value = user?.label || '';
+        this.userEl('user-modal-title').textContent = i18n.t(editing ? 'action.edit_user' : 'action.add_new_user');
+        this.userEl('user-save').textContent = i18n.t(editing ? 'general.save' : 'action.add_user');
+        this.userGrants = editing ? grantsFrom(user!.grants as Partial<Grants>) : { ...PROFILES[DEFAULT_PROFILE] };
+        this.userProfile = editing ? profileOf(this.userGrants) : DEFAULT_PROFILE;
+        this.userEl<HTMLDetailsElement>('user-custom').open = this.userProfile === 'custom';
+        this.repaintUserForm();
+        this.userEl<HTMLDialogElement>('user-modal').showModal();
+    }
+
     openAddUserModal() {
-        const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
-        if (modal) modal.showModal();
+        this.openUserDialog(null);
     }
 
-    async createUser() {
-        const username = (this.shadowRoot!.getElementById('new-user-username') as HTMLInputElement).value;
-        const password = (this.shadowRoot!.getElementById('new-user-password') as HTMLInputElement).value;
+    openEditUserModal(id: number) {
+        const user = this.users.find(u => u.id === id);
+        if (user) this.openUserDialog(user);
+    }
 
-        if (!username || !password) {
-            if (window.notifier) window.notifier.show(i18n.t('notifier.fields_required'), 'error');
+    async saveUser() {
+        const idText = this.userEl('user-id').value;
+        const id = idText ? Number(idText) : null;
+        const form = {
+            username: this.userEl('user-username').value.trim(),
+            password: this.userEl('user-password').value,
+            label: this.userEl('user-label').value,
+            profile: this.userProfile,
+            grants: this.userGrants,
+        };
+
+        if (!form.username || (id === null && !form.password)) {
+            if (window.notifier) window.notifier.show(i18n.t(id === null ? 'notifier.fields_required' : 'notifier.username_required'), 'error');
             return;
         }
 
         try {
-            await userService.createUser({ username, password });
-            if (window.notifier) window.notifier.show(i18n.t('notifier.user_created'));
-            const modal = this.shadowRoot!.getElementById('add-user-modal') as HTMLDialogElement;
-            if (modal) modal.close();
+            if (id === null) {
+                await userService.createUser(createBody(form));
+                if (window.notifier) window.notifier.show(i18n.t('notifier.user_created'));
+            } else {
+                await userService.adminUpdateUser(updateBody(id, form));
+                if (window.notifier) window.notifier.show(i18n.t('notifier.user_updated'));
+            }
+            this.userEl<HTMLDialogElement>('user-modal').close();
             this.fetchUsers();
         } catch (e) {
-            if (window.notifier) window.notifier.show(i18n.t('notifier.user_create_error'), 'error');
+            if (window.notifier) window.notifier.show(i18n.t(id === null ? 'notifier.user_create_error' : 'notifier.user_update_error'), 'error');
         }
     }
 
-    openEditUserModal(id: number, username: string) {
-        const modal = this.shadowRoot!.getElementById('edit-user-modal') as HTMLDialogElement;
-        if (modal) {
-            (this.shadowRoot!.getElementById('edit-user-id') as HTMLInputElement).value = id.toString();
-            (this.shadowRoot!.getElementById('edit-user-username') as HTMLInputElement).value = username;
-            (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value = '';
-            modal.showModal();
-        }
-    }
-
-    async updateAdminUser() {
-        const id = parseInt((this.shadowRoot!.getElementById('edit-user-id') as HTMLInputElement).value);
-        const username = (this.shadowRoot!.getElementById('edit-user-username') as HTMLInputElement).value;
-        const password = (this.shadowRoot!.getElementById('edit-user-password') as HTMLInputElement).value;
-
-        if (!username) {
-            if (window.notifier) window.notifier.show(i18n.t('notifier.username_required'), 'error');
-            return;
-        }
-
+    /** The administrator naming its own account from Profile. */
+    async saveOwnLabel() {
+        const input = this.shadowRoot!.getElementById('own-label-input') as HTMLInputElement;
         try {
-            await userService.adminUpdateUser({
-                id,
-                username,
-                password: password || undefined
-            });
-            if (window.notifier) window.notifier.show(i18n.t('notifier.user_updated'));
-            const modal = this.shadowRoot!.getElementById('edit-user-modal') as HTMLDialogElement;
-            if (modal) modal.close();
-            this.fetchUsers();
+            await userService.setOwnLabel(input.value);
+            await userStore.fetchUser();
+            if (window.notifier) window.notifier.show(i18n.t('users.label_saved'));
         } catch (e) {
-            if (window.notifier) window.notifier.show(i18n.t('notifier.user_update_error'), 'error');
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
         }
     }
 

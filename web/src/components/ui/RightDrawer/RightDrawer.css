@@ -145,6 +145,8 @@
 }
 
 .right-drawer__user-info {
+    max-inline-size: 100%;
+    min-inline-size: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -159,6 +161,12 @@
 }
 
 .right-drawer__role {
+    /* A label is free text up to 24 characters: it stays on one line inside the drawer. */
+    max-inline-size: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-family: var(--font-mono);
     font-size: clamp(9px, 1.2cqi, 10px);
     color: var(--accent);

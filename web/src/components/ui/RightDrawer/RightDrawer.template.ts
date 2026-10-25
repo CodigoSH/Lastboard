@@ -1,12 +1,14 @@
 import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
 import { accessAllows } from '../../../services/access';
+import { roleOrLabel } from '../../../services/accountAccess';
 
 interface User {
     initials?: string;
     avatar_url?: string;
     username?: string;
     role?: string;
+    label?: string;
     access?: { profile: string; can: Record<string, boolean> };
 }
 
@@ -28,7 +30,7 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
             <app-avatar class="right-drawer__avatar" initials="${escapeHtml(user.initials)}" src="${safeImageSrc(user.avatar_url || '')}"></app-avatar>
             <div class="right-drawer__user-info">
                 <span class="right-drawer__username">${escapeHtml(user.username)}</span>
-                ${(user.role?.toLowerCase() === 'admin') ? `<span class="right-drawer__role">${i18n.t('settings.role_admin')}</span>` : ''}
+                <span class="right-drawer__role">${escapeHtml(roleOrLabel(user.label, i18n.t(user.role?.toLowerCase() === 'admin' ? 'settings.role_admin' : 'settings.role_user')))}</span>
             </div>
         </div>
         

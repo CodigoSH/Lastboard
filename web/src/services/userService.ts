@@ -1,5 +1,6 @@
 import { apiService } from './apiService';
 import { User, MessageResponse } from '../types';
+import { ownLabelBody } from './accountAccess';
 
 /**
  * User Service
@@ -42,6 +43,11 @@ export const userService = {
 
     async adminUpdateUser(data: unknown): Promise<MessageResponse> {
         return apiService.put<MessageResponse>('/api/users', data);
+    },
+
+    /** The administrator naming its own account; a member's label is set by the administrator. */
+    async setOwnLabel(label: string): Promise<void> {
+        await apiService.put('/api/user/label', ownLabelBody(label));
     },
 
     async deleteUser(id: number, password?: string): Promise<MessageResponse> {

@@ -32,6 +32,11 @@ export interface User {
     project_logo?: string;
     beta_updates?: boolean;
     is_admin?: boolean;
+    /** The tag the administrator gave the account; empty means "show the role". */
+    label?: string;
+    /** In the user list: the permission profile, and the permissions themselves. */
+    profile?: string;
+    grants?: Record<string, boolean | number>;
     /** What this account may do; absent when the server does not say (demo). */
     access?: { profile: string; can: Record<string, boolean> };
     unit_system?: string;

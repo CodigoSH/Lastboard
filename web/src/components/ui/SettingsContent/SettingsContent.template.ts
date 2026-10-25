@@ -2,6 +2,8 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 import { SECRET_MASK } from '../../../services/secretField';
 import type { AccountDockerHost } from '../../../services/dockerHostList';
+import { roleOrLabel } from '../../../services/accountAccess';
+import { userDialogTemplate, MAX_LABEL } from './userDialog.template';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
@@ -15,6 +17,8 @@ interface User {
     avatar_url?: string;
     username?: string;
     role?: string;
+    label?: string;
+    is_admin?: boolean;
 }
 
 interface Prefs {
@@ -22,6 +26,9 @@ interface Prefs {
     language: string;
     [key: string]: any;
 }
+
+const t = (key: string) => i18n.t(key);
+const roleText = (role?: string) => (role || '').toLowerCase() === 'user' ? i18n.t('settings.role_user') : i18n.t('settings.role_admin');
 
 export const accountTemplate = (user: User) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
@@ -35,9 +42,7 @@ export const accountTemplate = (user: User) => `
                 <input type="file" id="avatar-upload" style="display: none;" accept="image/*" data-change="avatar">
                 <div class="settings-content__profile-info">
                     <span class="settings-content__profile-name">${user.username || i18n.t('settings.default_user')}</span>
-                    <span class="mono-tag">
-                        ${(user.role || '').toLowerCase() === 'user' ? i18n.t('settings.role_user') : i18n.t('settings.role_admin')}
-                    </span>
+                    <span class="mono-tag">${esc(roleOrLabel(user.label, roleText(user.role)))}</span>
                 </div>
             </div>
             
@@ -50,6 +55,15 @@ export const accountTemplate = (user: User) => `
                     </div>
                     <p class="settings-content__text-dim" style="font-size: 10px; margin: 4px 0 0 0;">${i18n.t('settings.username_relogin_hint')}</p>
                 </div>
+                ${user.is_admin ? `
+                <div class="settings-content__form-group">
+                    <label class="settings-content__label" for="own-label-input">${i18n.t('users.label')}</label>
+                    <div class="settings-content__input-row">
+                        <input type="text" id="own-label-input" class="settings-content__input" maxlength="${MAX_LABEL}" value="${esc(user.label || '')}" placeholder="${i18n.t('users.label_placeholder')}" autocomplete="off">
+                        <app-button variant="primary" data-action="save-own-label">${i18n.t('users.save_label')}</app-button>
+                    </div>
+                    <p class="settings-content__text-dim" style="font-size: 10px; margin: 4px 0 0 0;">${i18n.t('users.label_own_hint')}</p>
+                </div>` : ''}
             </div>
         </div>
 
@@ -243,15 +257,14 @@ export const usersTemplate = (users: any[]) => `
                             </app-avatar>
                             <div class="user-details">
                                 <div class="user-name">${esc(u.username)}</div>
-                                <div class="user-role-tag">
-                                    ${(u.role || '').toLowerCase() === 'user' ? i18n.t('settings.role_user') : i18n.t('settings.role_admin')}
-                                </div>
+                                <div class="user-role-tag">${esc(roleOrLabel(u.label, roleText(u.role)))}</div>
+                                ${u.role?.toLowerCase() === 'admin' || !u.profile ? '' : `<div class="user-profile-name">${i18n.t('users.profile.' + u.profile)}</div>`}
                             </div>
                         </div>
                         <div class="user-actions">
-                             <button class="user-action-btn edit" data-action="edit-user" data-user-id="${u.id}" data-username="${esc(u.username)}" title="${i18n.t('general.edit')}">
+                             ${u.role?.toLowerCase() === 'admin' ? '' : `<button class="user-action-btn edit" data-action="edit-user" data-user-id="${u.id}" title="${i18n.t('general.edit')}">
                                 ${ICON_EDIT}
-                             </button>
+                             </button>`}
                              <button class="user-action-btn delete" data-action="delete-user" data-user-id="${u.id}" title="${i18n.t('general.delete')}">
                                 ${ICON_TRASH}
                              </button>
@@ -263,52 +276,7 @@ export const usersTemplate = (users: any[]) => `
         </div>
     </div>
     
-     <dialog id="add-user-modal" style="background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px;">
-        <div class="modal-header">
-            <h3 class="modal-title">${i18n.t('action.add_new_user')}</h3>
-            <button class="modal-close" data-action="close-modal" data-modal="add-user-modal" aria-label="${i18n.t('general.close')}">
-                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
-        </div>
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('auth.username')}</label>
-            <input type="text" id="new-user-username" class="settings-content__input">
-        </div>
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('auth.password')}</label>
-            <div class="pw-wrap">
-                <input type="password" id="new-user-password" class="settings-content__input">
-                ${pwToggle()}
-            </div>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" data-action="create-user">${i18n.t('general.save')}</app-button>
-        </div>
-    </dialog>
-
-    <dialog id="edit-user-modal" style="background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px;">
-        <div class="modal-header">
-            <h3 class="modal-title">${i18n.t('action.edit_user')}</h3>
-            <button class="modal-close" data-action="close-modal" data-modal="edit-user-modal" aria-label="${i18n.t('general.close')}">
-                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
-        </div>
-        <input type="hidden" id="edit-user-id">
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('auth.username')}</label>
-            <input type="text" id="edit-user-username" class="settings-content__input">
-        </div>
-        <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('settings.new_password')}</label>
-            <div class="pw-wrap">
-                <input type="password" id="edit-user-password" class="settings-content__input" placeholder="${i18n.t('settings.password_leave_blank')}">
-                ${pwToggle()}
-            </div>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
-            <app-button variant="primary" data-action="update-admin-user">${i18n.t('general.save')}</app-button>
-        </div>
-    </dialog>
+    ${userDialogTemplate(t, pwToggle())}
 `;
 
 /**
