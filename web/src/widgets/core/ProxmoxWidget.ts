@@ -7,6 +7,7 @@ import { loadProxmoxLinks, linkFor } from '../../services/proxmoxLinks';
 import { loadProxmox, iconKey, type PxHost, type PxNode, type PxGuest } from '../../services/proxmoxApi';
 import { resolveIconUrl } from '../../services/iconUrl';
 import { whenVisible } from '../../services/whenVisible';
+import { guestKey, guestLabel, hasChosenOrder, visibleGuests, type GuestSettings } from '../../services/proxmoxGuests';
 import { eventBus, EVENTS } from '../../services/EventBus';
 
 /** A machine, plus which hypervisor it is on: the tile mixes them all. */
@@ -46,9 +47,11 @@ interface ProxmoxConfig {
     title: string;
     /** Show the node meters in the header. */
     showNode: boolean;
+    /** Which machines are on the tile, in what order, under what name. */
+    guests: GuestSettings;
 }
 
-const DEFAULT_CONFIG: ProxmoxConfig = { refreshSec: 30, title: '', showNode: true };
+const DEFAULT_CONFIG: ProxmoxConfig = { refreshSec: 30, title: '', showNode: true, guests: {} };
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
 const ICON_STOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>';
@@ -83,7 +86,7 @@ class ProxmoxWidget extends HTMLElement {
     private timer: ReturnType<typeof setInterval> | null = null;
     /** Last body markup written, so an unchanged refresh writes nothing. */
     private _lastBody: string | null = null;
-    private _busy = new Set<number>();
+    private _busy = new Set<string>();
     private _unsubscribe: (() => void) | null = null;
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -120,8 +123,10 @@ class ProxmoxWidget extends HTMLElement {
                 const titleChanged = next.title !== this._config.title;
                 const nodeChanged = next.showNode !== this._config.showNode;
                 const intervalChanged = next.refreshSec !== this._config.refreshSec;
+                const guestsChanged = JSON.stringify(next.guests) !== JSON.stringify(this._config.guests);
                 this._config = next;
                 if (titleChanged || nodeChanged) this.render();
+                else if (guestsChanged) this.refreshBody();
                 if (intervalChanged) this.restartTimer();
             } catch { /* keep the current config */ }
         });
@@ -141,6 +146,11 @@ class ProxmoxWidget extends HTMLElement {
             refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
             title: typeof data.title === 'string' ? data.title : '',
             showNode: data.showNode !== false,
+            guests: {
+                guestConfig: data.guestConfig && typeof data.guestConfig === 'object' ? data.guestConfig : undefined,
+                guestOrder: data.guestOrder && typeof data.guestOrder === 'object' ? data.guestOrder : undefined,
+                showNew: data.showNew === false ? false : undefined,
+            },
         };
     }
 
@@ -201,21 +211,24 @@ class ProxmoxWidget extends HTMLElement {
         e.preventDefault();
         e.stopPropagation();
 
+        // Host and id together: two hypervisors may both have a machine 100.
         const vmid = Number(btn.dataset.vmid);
-        const guest = this.data?.guests.find(g => g.vmid === vmid);
-        if (!guest || this._busy.has(vmid)) return;
+        const hostId = btn.dataset.host || '';
+        const guest = this.data?.guests.find(g => g.vmid === vmid && g.host === hostId);
+        const busyKey = guestKey(hostId, vmid);
+        if (!guest || this._busy.has(busyKey)) return;
 
         const starting = !guest.running;
         const modal = document.querySelector('confirmation-modal') as any;
         if (modal?.confirm) {
             const ok = await modal.confirm(
-                `${i18n.t(starting ? 'docker.action_start' : 'docker.action_stop')} ${guest.name}`,
+                `${i18n.t(starting ? 'docker.action_start' : 'docker.action_stop')} ${guestLabel(this._config.guests, guest.host, guest.vmid, guest.name)}`,
                 i18n.t(starting ? 'widget.proxmox.confirm_start' : 'widget.proxmox.confirm_stop'),
             );
             if (!ok) return;
         }
 
-        this._busy.add(vmid);
+        this._busy.add(busyKey);
         this.refreshBody();
         try {
             await apiService.post('/api/proxmox/power', {
@@ -225,7 +238,7 @@ class ProxmoxWidget extends HTMLElement {
         } catch { /* the next poll tells the truth either way */ }
         // Starting a machine takes seconds; the poll after this one is what
         // turns the dot green, so nothing here pretends it already happened.
-        this._busy.delete(vmid);
+        this._busy.delete(busyKey);
         this.load();
     };
 
@@ -259,7 +272,7 @@ class ProxmoxWidget extends HTMLElement {
     }
 
     private rowHtml(g: PxGuestOn): string {
-        const busy = this._busy.has(g.vmid);
+        const busy = this._busy.has(guestKey(g.host, g.vmid));
         // Asked of the hypervisor this machine is on, not of the set: one
         // token may carry VM.PowerMgmt while another is read-only.
         const power = this.hosts.find(h => h.id === g.host)?.caps?.power === true;
@@ -282,7 +295,7 @@ class ProxmoxWidget extends HTMLElement {
         const flag = !g.running && !!link;
 
         const action = power
-            ? `<button class="px-act" data-power data-vmid="${g.vmid}" ${busy ? 'disabled' : ''}
+            ? `<button class="px-act" data-power data-host="${escapeHtml(g.host)}" data-vmid="${g.vmid}" ${busy ? 'disabled' : ''}
                     aria-label="${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}"
                >${g.running ? ICON_STOP : ICON_PLAY}</button>`
             : '';
@@ -291,7 +304,7 @@ class ProxmoxWidget extends HTMLElement {
             <span class="px-dot px-dot--${g.running ? 'up' : 'bad'}"></span>
             <span class="px-ico">${icon}</span>
             <span class="px-name">
-                <b>${escapeHtml(g.name) || '—'}</b>
+                <b>${escapeHtml(guestLabel(this._config.guests, g.host, g.vmid, g.name)) || '—'}</b>
                 <span>${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}</span>
             </span>
             <span class="px-ty px-ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
@@ -306,18 +319,24 @@ class ProxmoxWidget extends HTMLElement {
         if (!this.loaded) return `<div class="px-state">${escapeHtml(i18n.t('general.loading'))}</div>`;
         if (this.error) return `<div class="px-state">${escapeHtml(i18n.t(this.error))}</div>`;
 
-        const guests = this.data?.guests ?? [];
+        // What the person left on the tile: the page and its counts still speak
+        // for every machine, the tile only for the ones they chose.
+        const guests = visibleGuests(this._config.guests, this.data?.guests ?? []);
         if (!guests.length) return `<div class="px-state">${escapeHtml(i18n.t('widget.proxmox.empty'))}</div>`;
 
         // A tile shows only the first few rows, so what needs attention has to
         // be among them or it is not shown at all. The order is by how much it
         // needs saying: a stopped machine that serves a bookmark is an outage,
-        // a stopped machine nobody linked is usually on purpose.
+        // a stopped machine nobody linked is usually on purpose. Once somebody
+        // has arranged the machines that choice is the order, as it is on the
+        // Docker tile: they said where each one goes.
         const rank = (g: PxGuestOn) => (g.running ? 2 : (this.link(g) ? 0 : 1));
-        const sorted = [...guests].sort((a, b) => {
-            const d = rank(a) - rank(b);
-            return d !== 0 ? d : a.vmid - b.vmid;
-        });
+        const sorted = hasChosenOrder(this._config.guests)
+            ? guests
+            : [...guests].sort((a, b) => {
+                const d = rank(a) - rank(b);
+                return d !== 0 ? d : a.vmid - b.vmid;
+            });
         const shown = sorted.slice(0, MAX_ROWS);
         const running = guests.filter(g => g.running).length;
 

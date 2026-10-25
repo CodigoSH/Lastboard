@@ -1157,7 +1157,8 @@ dialog[open] {
     .docker-container-row {
         grid-template-columns: auto auto minmax(0, 1fr);
     }
-    .docker-container-row .docker-url {
+    .docker-container-row .docker-url,
+    .docker-container-row .px-machine-meta {
         grid-column: 3 / -1;
     }
 }
@@ -1251,6 +1252,20 @@ dialog[open] {
 
 .docker-container-row input[type="text"].docker-url:hover {
     border-color: var(--border);
+}
+
+/* What a Proxmox row has where a Docker row has its address: what the machine is,
+   which is not something to edit. Same weight and type as the address beside it
+   in the other list, so the two lists read as one kind of control. */
+.px-machine-meta {
+    min-width: 0;
+    padding: 4px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
 }
 
 /* The fields of one Server Health source. `hidden` has to be restated: a rule

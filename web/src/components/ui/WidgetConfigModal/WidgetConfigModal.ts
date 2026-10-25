@@ -20,7 +20,8 @@ import { bindRowReorder } from '../../../services/rowReorder';
 import { arrangeBy, mergeOrder } from '../../../services/rowOrder';
 import { containerKey, entryOf, inChosenOrder, isShown, settleOrder, settleRows, type ContainerRow } from '../../../services/dockerContainers';
 import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
-import { loadProxmox } from '../../../services/proxmoxApi';
+import { loadProxmox, type PxHost } from '../../../services/proxmoxApi';
+import { arrangedIds, guestKey, inGuestOrder, isGuestShown, settleGuestOrder, settleGuests, type GuestRow } from '../../../services/proxmoxGuests';
 import { listWidgetSecrets, saveWidgetSecrets } from '../../../services/widgetSecrets';
 import { secretsPatch, SECRET_MASK, type SecretChange } from '../../../services/secretField';
 import { dockerSecretName, hostTokenChange } from '../../../services/dockerHostSecret';
@@ -51,6 +52,8 @@ class WidgetConfigModal extends HTMLElement {
     private currentItem: GridItem | null = null;
     /** Which host's containers the Docker form is showing. */
     private _dockerSelectedHost = '';
+    /** Which hypervisor's machines the Proxmox list is showing. */
+    private _pxSelectedHost = '';
     /** The zone of a city picked from the clock's list during this edit. */
     private _clockPickedTimezone: string | null = null;
     private _selectedColor: string = '#333333';
@@ -534,6 +537,33 @@ class WidgetConfigModal extends HTMLElement {
 
             const nodeToggle = this.shadowRoot?.getElementById('proxmox-shownode') as HTMLInputElement | null;
             newContent.showNode = nodeToggle ? nodeToggle.checked : true;
+
+            // Machines nobody has chosen: shown unless this is switched off. Only the
+            // off state is stored, so content that never heard of it means on.
+            const showNew = (this.shadowRoot?.getElementById('proxmox-show-new') as HTMLInputElement | null)?.checked ?? true;
+            if (showNew) delete newContent.showNew; else newContent.showNew = false;
+
+            const rows: GuestRow[] = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.px-machine-row') || [])
+                .filter(row => row.dataset.key)
+                .map(row => ({
+                    key: row.dataset.key!,
+                    visible: row.querySelector<HTMLInputElement>('.px-machine')?.checked ?? true,
+                    label: row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '',
+                }));
+            const cfg = settleGuests(newContent.guestConfig, rows, showNew);
+            if (Object.keys(cfg).length) newContent.guestConfig = cfg; else delete newContent.guestConfig;
+
+            // The order each hypervisor's machines were arranged in is the order of its rows.
+            const shown: Record<string, string[]> = {};
+            this.shadowRoot?.querySelectorAll<HTMLElement>('.px-host-group').forEach(group => {
+                if (!group.dataset.hostId) return;
+                const ids = Array.from(group.querySelectorAll<HTMLElement>('.px-machine-row'))
+                    .map(row => row.dataset.id || '').filter(Boolean);
+                shown[group.dataset.hostId] = arrangedIds(
+                    ids, (group.dataset.natural || '').split(',').filter(Boolean), newContent.guestOrder?.[group.dataset.hostId]);
+            });
+            const order = settleGuestOrder(newContent.guestOrder, shown);
+            if (order) newContent.guestOrder = order; else delete newContent.guestOrder;
         } else if (widgetId === 'monitor') {
             // An empty selection means "every monitored service", which is also
             // what a fresh widget starts with — so it keeps working when the
@@ -1451,7 +1481,26 @@ class WidgetConfigModal extends HTMLElement {
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 30;
         const showNode = content.showNode !== false;
 
+        // Which hypervisors there are is only known once they answer, so the list
+        // of machines is a placeholder that setupProxmoxEvents fills in — the same
+        // shape the Docker form uses for its hosts.
+        const showNewField = `
+            <div class="field-group">
+                <div class="field-group check-row docker-show-new">
+                    <input type="checkbox" id="proxmox-show-new" ${content.showNew !== false ? 'checked' : ''} />
+                    <label for="proxmox-show-new">${i18n.t('widget.proxmox.show_new')}</label>
+                </div>
+                <small>${i18n.t('widget.proxmox.show_new_desc')}</small>
+            </div>`;
+
         const generalTab = `
+            <div id="px-machines-box">
+                <div class="field-group">
+                    <label>${i18n.t('proxmox.machines')}</label>
+                    <p class="monitor-services__state">${i18n.t('general.loading')}</p>
+                </div>
+            </div>
+            ${showNewField}
             <!-- check-row, which is the class this modal actually styles: a
                  tick box with no rule behind it falls back to the browser's
                  blue one, beside five orange ones. -->
@@ -1480,7 +1529,9 @@ class WidgetConfigModal extends HTMLElement {
      * the tile shows and cannot start anything. Saying so here beats drawing
      * buttons that answer 403 when somebody finally presses one.
      */
-    private async setupProxmoxEvents(_content: any) {
+    private async setupProxmoxEvents(content: any) {
+        // Wide like the Docker one: two columns when there is more than one hypervisor.
+        this.shadowRoot?.getElementById('modal')?.classList.add('dialog--wide');
         const sel = this.shadowRoot?.getElementById('proxmox-refresh') as AppSelect | null;
         if (sel) sel.options = [
             { value: '15', label: '15s' },
@@ -1490,6 +1541,7 @@ class WidgetConfigModal extends HTMLElement {
         ];
 
         const state = this.shadowRoot?.getElementById('proxmox-state');
+        const box = this.shadowRoot?.getElementById('px-machines-box');
         if (!state) return;
         try {
             // Several hypervisors may be connected and their tokens need not
@@ -1500,9 +1552,135 @@ class WidgetConfigModal extends HTMLElement {
             state.innerHTML = `<small>${esc(i18n.t(anyPower
                 ? 'widget.proxmox.can_power'
                 : 'widget.proxmox.read_only'))}</small>`;
+            if (box) this.renderProxmoxMachines(box, hosts, content);
         } catch {
             state.innerHTML = `<small>${esc(i18n.t('proxmox.not_configured'))}</small>`;
+            if (box) box.innerHTML = `<div class="field-group"><label>${esc(i18n.t('proxmox.machines'))}</label>
+                <p class="monitor-services__state">${esc(i18n.t('proxmox.not_configured'))}</p></div>`;
         }
+    }
+
+    /**
+     * Fills the list of machines: every hypervisor, one group each, the rows of
+     * the Docker list — a handle to arrange by, a tick to show, a name to change.
+     *
+     * With a second hypervisor the same two columns Docker has for its hosts
+     * appear, the left one choosing whose machines the right one lists. They are
+     * all drawn at once and the choice only hides the others, so what is set on a
+     * hypervisor you are not looking at is still read when saving.
+     */
+    private renderProxmoxMachines(box: HTMLElement, hosts: PxHost[], content: any) {
+        const settings = { guestConfig: content.guestConfig, showNew: content.showNew };
+        const split = hosts.length >= 2;
+        if (!this._pxSelectedHost || !hosts.some(h => h.id === this._pxSelectedHost)) {
+            this._pxSelectedHost = hosts[0]?.id || '';
+        }
+
+        const groups = hosts.map(h => {
+            let body: string;
+            if (h.error) {
+                body = `<p class="docker-host-state is-error">${esc(i18n.t('proxmox.connection_error'))}</p>`;
+            } else if (!h.guests?.length) {
+                body = `<p class="docker-host-state">${esc(i18n.t('widget.proxmox.empty'))}</p>`;
+            } else {
+                body = inGuestOrder(h.guests, content.guestOrder?.[h.id]).map(g => {
+                    const key = guestKey(h.id, g.vmid);
+                    const entry = settings.guestConfig?.[key] ?? {};
+                    const kind = g.kind === 'lxc' ? 'LXC' : 'VM';
+                    return `
+            <div class="docker-container-row px-machine-row" data-key="${esc(key)}" data-id="${g.vmid}" data-name="${esc(g.name)}"
+                 data-search="${esc((g.name + ' ' + g.vmid + ' ' + g.node).toLowerCase())}">
+                <span class="row-grip" role="button" tabindex="0"
+                      aria-label="${esc(i18n.t('widget.drag_to_arrange'))}" title="${esc(i18n.t('widget.drag_to_arrange'))}">${DRAG_HANDLE}</span>
+                <input type="checkbox" class="px-machine"
+                       ${isGuestShown(settings, h.id, g.vmid) ? 'checked' : ''}
+                       title="${esc(i18n.t('docker.container_visible'))}" />
+                <input type="text" class="docker-label"
+                       value="${esc(entry.label || '')}" placeholder="${esc(g.name)}" />
+                <span class="px-machine-meta">${kind} ${g.vmid} · ${esc(g.node)}</span>
+            </div>`;
+                }).join('');
+            }
+            // The order Proxmox lists them in, which is what "not arranged" means.
+            const natural = (h.guests || []).map(g => g.vmid).join(',');
+            return `<div class="docker-host-group px-host-group" data-host-id="${esc(h.id)}" data-natural="${esc(natural)}">${body}</div>`;
+        }).join('');
+
+        const search = `<input type="text" id="px-search" placeholder="${esc(i18n.t('widget.proxmox.search_machines'))}" />`;
+        const list = `<div id="px-machines" class="docker-containers">${groups}</div>`;
+        const hint = `<small>${i18n.t('widget.proxmox.machines_desc')}</small>`;
+
+        const hostRow = (h: PxHost) => `
+            <div class="host-item${h.id === this._pxSelectedHost ? ' is-selected' : ''}"
+                 data-host-id="${esc(h.id)}" role="button" tabindex="0">
+                <div class="host-info"><span class="host-name">${esc(h.name)}</span></div>
+            </div>`;
+
+        box.innerHTML = split
+            ? `<div class="docker-split">
+                <div class="field-group">
+                    <label>${i18n.t('proxmox.hypervisors')}</label>
+                    <div class="hosts-list">${hosts.map(hostRow).join('')}</div>
+                </div>
+                <div class="field-group">
+                    <label id="px-machines-label">${i18n.t('proxmox.machines')}</label>
+                    ${search}${list}${hint}
+                </div>
+            </div>`
+            : `<div class="field-group">
+                <label id="px-machines-label">${i18n.t('proxmox.machines')}</label>
+                ${search}${list}${hint}
+            </div>`;
+
+        this.applyProxmoxFilters();
+        bindRowReorder(box.querySelector<HTMLElement>('#px-machines')!, this.shadowRoot!, { row: '.px-machine-row', handle: '.row-grip' });
+
+        const root = this.shadowRoot!;
+        root.querySelectorAll<HTMLElement>('.host-item[data-host-id]').forEach(row => {
+            const select = () => {
+                const id = row.dataset.hostId;
+                if (!id || id === this._pxSelectedHost) return;
+                this._pxSelectedHost = id;
+                root.querySelectorAll('.host-item').forEach(x => x.classList.remove('is-selected'));
+                row.classList.add('is-selected');
+                // A search typed for one hypervisor shouldn't hide the next one's machines.
+                const q = root.getElementById('px-search') as HTMLInputElement | null;
+                if (q) q.value = '';
+                this.applyProxmoxFilters();
+            };
+            row.addEventListener('click', select);
+            row.addEventListener('keydown', (e) => {
+                if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+                    e.preventDefault();
+                    select();
+                }
+            });
+        });
+        root.getElementById('px-search')?.addEventListener('input', () => this.applyProxmoxFilters());
+    }
+
+    /**
+     * Hides what the hypervisor choice and the search box exclude. Filtering, not
+     * re-fetching: the rows carry what is needed to decide, and a hidden row is
+     * still read when saving.
+     */
+    private applyProxmoxFilters() {
+        const root = this.shadowRoot;
+        if (!root) return;
+        const split = !!root.querySelector('.docker-split');
+        const q = ((root.getElementById('px-search') as HTMLInputElement | null)?.value || '').trim().toLowerCase();
+
+        root.querySelectorAll<HTMLElement>('.px-host-group').forEach(group => {
+            const thisHost = !split || group.dataset.hostId === this._pxSelectedHost;
+            group.querySelectorAll<HTMLElement>('.px-machine-row').forEach(row => {
+                row.style.display = thisHost && (!q || (row.dataset.search || '').includes(q)) ? '' : 'none';
+            });
+            group.style.display = thisHost ? '' : 'none';
+        });
+
+        const label = root.getElementById('px-machines-label');
+        const name = root.querySelector('.host-item.is-selected .host-name')?.textContent?.trim();
+        if (label) label.textContent = name ? `${i18n.t('proxmox.machines')} · ${name}` : i18n.t('proxmox.machines');
     }
 
     private renderMonitorForm(content: any) {
