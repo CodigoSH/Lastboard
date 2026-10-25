@@ -58,6 +58,7 @@ func setupTestServer(t *testing.T) (*httptest.Server, *sql.DB, func()) {
 	mux.Handle("GET /api/widget/{id}/secrets", protect(http.HandlerFunc(api.NewWidgetSecretsHandler(db.DB).List)))
 	mux.Handle("PUT /api/widget/{id}/secrets", protect(http.HandlerFunc(api.NewWidgetSecretsHandler(db.DB).Update)))
 	dockerHandler := api.NewDockerHandler(db.DB)
+	mux.Handle("GET /api/docker/settings", protect(http.HandlerFunc(dockerHandler.GetSettings)))
 	mux.Handle("POST /api/docker/containers", protect(http.HandlerFunc(dockerHandler.ListContainersFor)))
 	mux.Handle("POST /api/docker/stats", protect(http.HandlerFunc(dockerHandler.StatsFor)))
 	mux.Handle("POST /api/docker/action", protect(http.HandlerFunc(dockerHandler.Action)))

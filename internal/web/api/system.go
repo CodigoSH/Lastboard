@@ -167,6 +167,7 @@ type BackupUserSetting struct {
 var userSettingKeys = map[string]bool{
 	proxmoxHostsKey: true,
 	proxmoxIconsKey: true,
+	dockerHostsKey:  true,
 
 	keyMonMode:      false,
 	keyMonInterval:  false,
@@ -559,6 +560,11 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	// widgets themselves.
 	if _, err := MigrateWidgetSecrets(h.DB); err != nil {
 		slog.Error("Moving widget credentials after a restore failed", "error", err)
+	}
+	// And one from before Docker hosts belonged to the account carries them in
+	// its widgets.
+	if _, err := MigrateDockerHosts(h.DB); err != nil {
+		slog.Error("Moving restored Docker hosts to their accounts failed", "error", err)
 	}
 	// A backup from before 1.9.4 holds Docker, Monitoring and Proxmox widgets that
 	// drew their name as a heading when they had no title. The name is a title now,

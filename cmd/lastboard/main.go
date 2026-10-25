@@ -77,6 +77,14 @@ func main() {
 		slog.Error("Moving widget credentials failed", "error", err)
 	}
 
+	// Docker hosts move from each widget to the account that owns it, after the
+	// credentials above have reached the secret store they are read from.
+	if n, err := api.MigrateDockerHosts(db.DB); err != nil {
+		slog.Error("Moving Docker hosts to their accounts failed", "error", err)
+	} else if n > 0 {
+		slog.Info("Docker hosts moved to their accounts", "widgets", n)
+	}
+
 	// Members that existed before permissions keep what they could do: they are
 	// given it once, and every later choice the administrator makes is kept.
 	if n, err := api.GiveMembersTheirAccess(db.DB); err != nil {

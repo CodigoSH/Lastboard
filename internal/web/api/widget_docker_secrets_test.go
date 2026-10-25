@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
 )
 
 type recordingAgent struct {
@@ -43,10 +45,11 @@ func (a *recordingAgent) last() string {
 	return a.auth[len(a.auth)-1]
 }
 
-// The agent token is in the secret store, the widget lists the host without it,
-// and the server puts it on the request — for the list, the readings and the
-// start/stop/restart.
-func TestADockerHostTokenIsReadFromTheSecretStore(t *testing.T) {
+// The agent token is kept with the account's host; the browser names the host
+// and the server puts the token on the request — for the list, the readings and
+// the start/stop/restart. A token with characters a URL would mangle arrives as
+// it was typed, and no answer carries it back.
+func TestADockerHostTokenTravelsOnlyToItsAgent(t *testing.T) {
 	server, db, cleanup := setupTestServer(t)
 	defer cleanup()
 	createUser(t, db, "alice", "correcthorse", "admin")
@@ -54,17 +57,13 @@ func TestADockerHostTokenIsReadFromTheSecretStore(t *testing.T) {
 	agent := newRecordingAgent(t)
 	addr := strings.TrimPrefix(agent.URL, "http://")
 
-	res, _ := db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (1, 'widget', 0, 0, 1, 1, ?)`,
-		`{"widgetId":"docker","hosts":[{"id":"h_abc123","name":"nas","type":"agent","url":"`+addr+`"}]}`)
-	wid, _ := res.LastInsertId()
-	db.Exec(`INSERT INTO widget_secrets (item_id, name, value) VALUES (?, 'docker.h_abc123', 's3cret/+=')`, wid)
+	db.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (1, 'docker_hosts', ?)`,
+		`[{"id":"h_abc123","name":"nas","type":"agent","url":"`+addr+`","token":"s3cret/+=","enabled":true}]`)
 
-	host := `"agent://` + addr + `"`
-	ref := `,"widget":` + itoa(wid) + `,"host_id":"h_abc123"`
 	for name, c := range map[string]struct{ path, body string }{
-		"containers": {"/api/docker/containers", `{"host":` + host + ref + `}`},
-		"stats":      {"/api/docker/stats", `{"host":` + host + `,"ids":["abcdef1234567890"]` + ref + `}`},
-		"action":     {"/api/docker/action", `{"host":` + host + `,"id":"abcdef1234567890","action":"restart"` + ref + `}`},
+		"containers": {"/api/docker/containers", `{"host_id":"h_abc123"}`},
+		"stats":      {"/api/docker/stats", `{"host_id":"h_abc123","ids":["abcdef1234567890"]}`},
+		"action":     {"/api/docker/action", `{"host_id":"h_abc123","id":"abcdef1234567890","action":"restart"}`},
 	} {
 		code, body := secretReq(t, "POST", server.URL+c.path, cookie, c.body)
 		if code != http.StatusOK {
@@ -77,37 +76,31 @@ func TestADockerHostTokenIsReadFromTheSecretStore(t *testing.T) {
 			t.Errorf("%s: the answer carries the token", name)
 		}
 	}
-
-	// A host that arrives with its own token — typed in a form, or from a
-	// browser on the previous bundle — keeps working and is not overridden.
-	secretReq(t, "POST", server.URL+"/api/docker/containers", cookie,
-		`{"host":"agent://`+addr+`?token=typed-now"`+ref+`}`)
-	if !strings.HasSuffix(agent.last(), "Bearer typed-now") {
-		t.Errorf("a token that came with the host was replaced: %q", agent.last())
-	}
-
-	// A different host id has no secret: no token is made up.
-	secretReq(t, "POST", server.URL+"/api/docker/containers", cookie,
-		`{"host":`+host+`,"widget":`+itoa(wid)+`,"host_id":"h_other"}`)
-	if strings.Contains(agent.last(), "s3cret") {
-		t.Errorf("another host's token was used: %q", agent.last())
+	code, body := secretReq(t, "GET", server.URL+"/api/docker/settings", cookie, "")
+	if code != http.StatusOK || strings.Contains(body, "s3cret") {
+		t.Errorf("settings: %d, and the answer must not carry the token: %s", code, body)
 	}
 }
 
+// A host is named by id among the caller's own hosts. Another account naming
+// the administrator's host id reaches nothing, and certainly not with its token.
 func TestADockerHostTokenStaysWithItsOwner(t *testing.T) {
 	server, db, cleanup := setupTestServer(t)
 	defer cleanup()
 	createUser(t, db, "alice", "correcthorse", "admin")
 	createUser(t, db, "mallory", "correcthorse", "user")
+	db.Exec(`INSERT INTO user_access (user_id, grants) SELECT id, ? FROM users WHERE username = 'mallory'`,
+		access.Encode(access.Homelab()))
 	agent := newRecordingAgent(t)
 	addr := strings.TrimPrefix(agent.URL, "http://")
-	res, _ := db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (1, 'widget', 0, 0, 1, 1, '{"widgetId":"docker"}')`)
-	wid, _ := res.LastInsertId()
-	db.Exec(`INSERT INTO widget_secrets (item_id, name, value) VALUES (?, 'docker.h_abc123', 'alice-agent-token')`, wid)
+	db.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (1, 'docker_hosts', ?)`,
+		`[{"id":"h_abc123","name":"nas","type":"agent","url":"`+addr+`","token":"alice-agent-token","enabled":true}]`)
 
 	mallory := loginAndGetCookie(t, server, "mallory", "correcthorse")
-	secretReq(t, "POST", server.URL+"/api/docker/containers", mallory,
-		`{"host":"agent://`+addr+`","widget":`+itoa(wid)+`,"host_id":"h_abc123"}`)
+	code, _ := secretReq(t, "POST", server.URL+"/api/docker/containers", mallory, `{"host_id":"h_abc123"}`)
+	if code != http.StatusNotFound {
+		t.Errorf("mallory naming alice's host = %d, want 404", code)
+	}
 	if strings.Contains(agent.last(), "alice-agent-token") {
 		t.Fatalf("mallory used alice's agent token: %q", agent.last())
 	}

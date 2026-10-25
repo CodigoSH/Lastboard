@@ -311,8 +311,9 @@ func (s *Server) routes() {
 
 	// Docker API
 	dockerHandler := api.NewDockerHandler(s.DB)
-	s.Router.Handle("GET /api/docker/containers", protect(need(access.DockerView, dockerHandler.GetContainers)))
-	s.Router.Handle("GET /api/docker/stats", protect(need(access.DockerView, dockerHandler.GetStats)))
+	// The account's own list of hosts, as Proxmox keeps its hypervisors.
+	s.Router.Handle("GET /api/docker/settings", protect(need(access.DockerView, dockerHandler.GetSettings)))
+	s.Router.Handle("POST /api/docker/settings", protect(need(access.DockerView, dockerHandler.UpdateSettings)))
 	s.Router.Handle("POST /api/docker/containers", protect(need(access.DockerView, dockerHandler.ListContainersFor)))
 	s.Router.Handle("POST /api/docker/stats", protect(need(access.DockerView, dockerHandler.StatsFor)))
 	s.Router.Handle("POST /api/docker/agent-version", protect(need(access.DockerView, dockerHandler.AgentVersionFor)))
