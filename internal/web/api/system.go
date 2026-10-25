@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
 	"io"
 	"log/slog"
 	"net/http"
@@ -140,6 +141,18 @@ type BackupData struct {
 	// because restore gives accounts new ids. Older backups keep these in
 	// Settings, and a restore moves them to the first administrator.
 	UserSettings []BackupUserSetting `json:"user_settings,omitempty"`
+	// What each member may do and the label it wears, by user name. Without it a
+	// restore would hand back to a restricted member everything it had before
+	// permissions existed. Omitted from older backups, whose members come back
+	// with what they could do then.
+	Access []BackupAccess `json:"access,omitempty"`
+}
+
+// BackupAccess is one account's permissions and label.
+type BackupAccess struct {
+	Owner  string `json:"owner"`
+	Grants string `json:"grants"`
+	Label  string `json:"label"`
 }
 
 // BackupUserSetting is one row of one account's settings.
@@ -387,6 +400,15 @@ func (h *SystemHandler) readBackup(ctx context.Context) (BackupData, error) {
 			backup.UserSettings = append(backup.UserSettings, us)
 		}
 	}
+
+	if backup.Access, err = queryAll(ctx, h.DB, `SELECT u.username, a.grants, a.label
+		FROM user_access a JOIN users u ON u.id = a.user_id ORDER BY u.id`,
+		func(rows *sql.Rows) (ba BackupAccess, err error) {
+			err = rows.Scan(&ba.Owner, &ba.Grants, &ba.Label)
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("access: %w", err)
+	}
 	return backup, nil
 }
 
@@ -522,6 +544,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		writeRestoreError(w, err)
 		return
 	}
+	if err := restoreAccess(tx, backup, ownerMap); err != nil {
+		writeRestoreError(w, err)
+		return
+	}
 
 	if err := tx.Commit(); err != nil {
 		slog.Error("Commit failed", "error", err)
@@ -548,6 +574,11 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	// them for the whole server.
 	if err := MigrateUserSettings(h.DB); err != nil {
 		slog.Error("Moving settings to the first administrator after a restore failed", "error", err)
+	}
+	// One from before permissions has members with none: they come back with
+	// what they could do then, as an upgrade gives it to the ones already here.
+	if _, err := GiveMembersTheirAccess(h.DB); err != nil {
+		slog.Error("Giving restored members their permissions failed", "error", err)
 	}
 
 	// Sessions end through the accounts themselves: restoreUsers gives each one
@@ -633,6 +664,27 @@ func restoreUserSettings(tx *sql.Tx, backup BackupData, ownerMap map[string]int)
 		}
 		if _, err := tx.Exec(`INSERT INTO user_settings (user_id, key, value) VALUES (?, ?, ?)
 			ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value`, uid, us.Key, us.Value); err != nil {
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
+		}
+	}
+	return nil
+}
+
+// restoreAccess writes back each account's permissions and label. The grants are
+// read and written again through access, so a file that was edited by hand
+// cannot store a level outside the scale or text the server would not read.
+func restoreAccess(tx *sql.Tx, backup BackupData, ownerMap map[string]int) error {
+	for _, ba := range backup.Access {
+		uid, owned := ownerMap[ba.Owner]
+		if !owned {
+			continue
+		}
+		if !json.Valid([]byte(ba.Grants)) {
+			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
+		}
+		if _, err := tx.Exec(`INSERT INTO user_access (user_id, grants, label) VALUES (?, ?, ?)
+			ON CONFLICT (user_id) DO UPDATE SET grants = excluded.grants, label = excluded.label`,
+			uid, access.Encode(access.Decode(ba.Grants)), cleanLabel(ba.Label)); err != nil {
 			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 	}

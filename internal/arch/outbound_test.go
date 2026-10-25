@@ -45,6 +45,10 @@ var mayReachTheNetwork = map[string]string{
 
 	// A widget the user configured, fetching the URL the user gave it.
 	"internal/web/api/widget.go": "the API widget, against the endpoint its owner configured",
+	// Server Health reading another machine: the Glances, Netdata or JSON
+	// endpoint its owner typed in. It went unlisted until this test learned
+	// NewRequestWithContext, which is the call it makes.
+	"internal/web/api/remote_stats_client.go": "Server Health, against the machine its owner configured",
 
 	// The user's own Docker daemon, over a unix socket or their own host.
 	"internal/web/api/docker_client.go": "the Docker widget, against the user's own daemon",
@@ -95,7 +99,7 @@ func outboundCalls(file *ast.File) []string {
 		switch pkg.Name {
 		case "http":
 			switch selector.Sel.Name {
-			case "Client", "DefaultClient", "Get", "Post", "PostForm", "Head", "NewRequest":
+			case "Client", "DefaultClient", "Get", "Post", "PostForm", "Head", "NewRequest", "NewRequestWithContext":
 				found = append(found, name)
 			}
 		case "net":

@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -82,7 +83,7 @@ func TestProbeURLSaysUpOrDown(t *testing.T) {
 		"not an address":                         {"::::", "down"},
 		"a cloud metadata service":               {"http://169.254.169.254/", "down"},
 	} {
-		if got := probeURL(tc.url); got != tc.want {
+		if got := probeURL(context.Background(), tc.url); got != tc.want {
 			t.Errorf("%s: probeURL(%q) = %q, want %q", name, tc.url, got, tc.want)
 		}
 	}

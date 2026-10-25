@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -361,7 +362,7 @@ func TestFetchIconLimits(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		mime, data, err := h.fetchIcon(srv.URL + "/icon.png")
+		mime, data, err := h.fetchIcon(context.Background(), srv.URL+"/icon.png")
 		if err != nil {
 			t.Fatalf("fetchIcon failed: %v", err)
 		}
@@ -377,7 +378,7 @@ func TestFetchIconLimits(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		if _, _, err := h.fetchIcon(srv.URL); err == nil {
+		if _, _, err := h.fetchIcon(context.Background(), srv.URL); err == nil {
 			t.Fatal("an oversized download was accepted")
 		}
 	})
@@ -389,7 +390,7 @@ func TestFetchIconLimits(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		if _, _, err := h.fetchIcon(srv.URL); !errors.Is(err, errIconType) {
+		if _, _, err := h.fetchIcon(context.Background(), srv.URL); !errors.Is(err, errIconType) {
 			t.Fatalf("an HTML page was accepted, want errIconType (got %v)", err)
 		}
 	})
@@ -400,7 +401,7 @@ func TestFetchIconLimits(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		if _, _, err := h.fetchIcon(srv.URL); err == nil {
+		if _, _, err := h.fetchIcon(context.Background(), srv.URL); err == nil {
 			t.Fatal("a 404 was treated as success")
 		}
 	})

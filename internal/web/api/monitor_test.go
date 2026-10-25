@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -180,7 +181,7 @@ func TestProbeTimedUp(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	up, latency, code := probeTimed(srv.URL)
+	up, latency, code := probeTimed(context.Background(), srv.URL)
 	if !up {
 		t.Fatalf("expected up for a 200 server")
 	}
@@ -198,7 +199,7 @@ func TestProbeTimedDown(t *testing.T) {
 	url := srv.URL
 	srv.Close()
 
-	up, latency, _ := probeTimed(url)
+	up, latency, _ := probeTimed(context.Background(), url)
 	if up {
 		t.Fatalf("expected down for a closed server")
 	}
@@ -208,7 +209,7 @@ func TestProbeTimedDown(t *testing.T) {
 }
 
 func TestProbeTimedBadScheme(t *testing.T) {
-	up, latency, code := probeTimed("ftp://example.com")
+	up, latency, code := probeTimed(context.Background(), "ftp://example.com")
 	if up || latency != nil || code != 0 {
 		t.Errorf("non-http scheme should be down/nil/0, got up=%v code=%d", up, code)
 	}

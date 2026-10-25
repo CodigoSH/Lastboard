@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/tls"
 	"database/sql"
 	"encoding/json"
@@ -72,14 +73,16 @@ func resolveHostCached(hostname string) (string, error) {
 // TCP/TLS connections across concurrent health checks.
 var healthClient = &http.Client{
 	Timeout: time.Second * 5,
-	Transport: &http.Transport{
-		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 10,
-		IdleConnTimeout:     60 * time.Second,
-		DisableKeepAlives:   false,
-		DialContext:         util.NewDialer(3*time.Second, 30*time.Second).DialContext,
-	},
+	Transport: util.ByReach(func() *http.Transport {
+		return &http.Transport{
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 10,
+			IdleConnTimeout:     60 * time.Second,
+			DisableKeepAlives:   false,
+			DialContext:         util.NewDialer(3*time.Second, 30*time.Second).DialContext,
+		}
+	}),
 }
 
 type DashboardHandler struct {
@@ -680,7 +683,7 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 		go func(idx int, u string) {
 			defer wg.Done()
 			defer func() { <-gate }()
-			results[idx] = result{url: u, status: probeURL(u)}
+			results[idx] = result{url: u, status: probeURL(r.Context(), u)}
 		}(i, rawUrl)
 	}
 
@@ -696,8 +699,8 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 // probeURL says "up" or "down" for a URL. It is probeTimed without the timing:
 // there is one probe, so the status checks on the board and the background
 // monitor can never disagree about what up means.
-func probeURL(rawUrl string) string {
-	if up, _, _ := probeTimed(rawUrl); up {
+func probeURL(ctx context.Context, rawUrl string) string {
+	if up, _, _ := probeTimed(ctx, rawUrl); up {
 		return "up"
 	}
 	return "down"
@@ -710,7 +713,7 @@ func (h *DashboardHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error.missing_url", http.StatusBadRequest)
 		return
 	}
-	status := probeURL(rawUrl)
+	status := probeURL(r.Context(), rawUrl)
 	code := http.StatusOK
 	if status == "down" {
 		code = http.StatusServiceUnavailable

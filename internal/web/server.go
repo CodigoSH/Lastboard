@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/hex"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
 	htmltemplate "html/template"
 	"io/fs"
 	"log/slog"
@@ -151,6 +152,13 @@ func (s *Server) routes() {
 
 	// Dynamic Index Handler (UNPROTECTED wrapper to check for static files first)
 	// We need 'protect' middleware available for the fallback
+	// Every route behind protect says what it needs: need names the permission,
+	// anyAccount is for what every signed-in account may do. A test reads this
+	// file and refuses a protected route declared with neither, so one added
+	// tomorrow cannot be open to every account by forgetting to say.
+	need := func(c access.Cap, h http.HandlerFunc) http.Handler { return api.Need(s.DB, c, h) }
+	anyAccount := func(h http.HandlerFunc) http.Handler { return api.AnyAccount(s.DB, h) }
+
 	protectedIndex := protect(http.HandlerFunc(s.serveIndex))
 
 	indexHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -248,80 +256,80 @@ func (s *Server) routes() {
 	// compared against, so they have nothing to compare yet — see the comment
 	// on the middleware.
 	s.Router.Handle("POST /api/login", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.Login))))
-	s.Router.Handle("POST /logout", protect(http.HandlerFunc(authHandler.Logout)))
+	s.Router.Handle("POST /logout", protect(anyAccount(authHandler.Logout)))
 
 	// Dashboard API
 	dashHandler := api.NewDashboardHandler(s.DB)
-	s.Router.Handle("/api/dashboard", protect(http.HandlerFunc(dashHandler.GetDashboard)))
-	s.Router.Handle("POST /api/dashboard/item", protect(http.HandlerFunc(dashHandler.CreateItem)))
-	s.Router.Handle("PATCH /api/dashboard/item/{id}/move", protect(http.HandlerFunc(dashHandler.MoveItem)))
-	s.Router.Handle("PATCH /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.UpdateItem)))
-	s.Router.Handle("DELETE /api/dashboard/item/", protect(http.HandlerFunc(dashHandler.DeleteItem)))
+	s.Router.Handle("/api/dashboard", protect(anyAccount(dashHandler.GetDashboard)))
+	s.Router.Handle("POST /api/dashboard/item", protect(need(access.BoardEdit, dashHandler.CreateItem)))
+	s.Router.Handle("PATCH /api/dashboard/item/{id}/move", protect(need(access.BoardEdit, dashHandler.MoveItem)))
+	s.Router.Handle("PATCH /api/dashboard/item/", protect(need(access.BoardEdit, dashHandler.UpdateItem)))
+	s.Router.Handle("DELETE /api/dashboard/item/", protect(need(access.BoardEdit, dashHandler.DeleteItem)))
 	widgetSecretsHandler := api.NewWidgetSecretsHandler(s.DB)
-	s.Router.Handle("GET /api/widget/{id}/secrets", protect(http.HandlerFunc(widgetSecretsHandler.List)))
-	s.Router.Handle("PUT /api/widget/{id}/secrets", protect(http.HandlerFunc(widgetSecretsHandler.Update)))
-	s.Router.Handle("POST /api/widget/{id}/api-fetch", protect(http.HandlerFunc(api.NewWidgetAPIHandler(s.DB).Fetch)))
+	s.Router.Handle("GET /api/widget/{id}/secrets", protect(anyAccount(widgetSecretsHandler.List)))
+	s.Router.Handle("PUT /api/widget/{id}/secrets", protect(need(access.BoardEdit, widgetSecretsHandler.Update)))
+	s.Router.Handle("POST /api/widget/{id}/api-fetch", protect(need(access.WidgetAPI, api.NewWidgetAPIHandler(s.DB).Fetch)))
 	remoteStatsHandler := api.NewRemoteStatsHandler(s.DB)
-	s.Router.Handle("GET /api/widget/{id}/remote-stats", protect(http.HandlerFunc(remoteStatsHandler.Get)))
-	s.Router.Handle("POST /api/widget/remote-stats/test", protect(http.HandlerFunc(remoteStatsHandler.Test)))
-	s.Router.Handle("/api/dashboard/health", protect(http.HandlerFunc(dashHandler.CheckHealth)))
-	s.Router.Handle("POST /api/dashboard/health/batch", protect(http.HandlerFunc(dashHandler.CheckHealthBatch)))
+	s.Router.Handle("GET /api/widget/{id}/remote-stats", protect(need(access.WidgetRemoteStats, remoteStatsHandler.Get)))
+	s.Router.Handle("POST /api/widget/remote-stats/test", protect(need(access.WidgetRemoteStats, remoteStatsHandler.Test)))
+	s.Router.Handle("/api/dashboard/health", protect(need(access.WatchStatus, dashHandler.CheckHealth)))
+	s.Router.Handle("POST /api/dashboard/health/batch", protect(need(access.WatchStatus, dashHandler.CheckHealthBatch)))
 
 	// Icons, kept locally so the dashboard doesn't ask a CDN on every paint.
 	iconHandler := api.NewIconHandler(s.DB)
-	s.Router.Handle("POST /api/icons", protect(http.HandlerFunc(iconHandler.Store)))
+	s.Router.Handle("POST /api/icons", protect(need(access.IconsInternet, iconHandler.Store)))
 	// More specific than the catch-all below it, which ServeMux honours: these
 	// two are about the board's icons, not about serving one.
-	s.Router.Handle("GET /api/icons/pending", protect(http.HandlerFunc(iconHandler.PendingStatus)))
-	s.Router.Handle("POST /api/icons/localize", protect(http.HandlerFunc(iconHandler.Localize)))
-	s.Router.Handle("GET /api/icons/", protect(http.HandlerFunc(iconHandler.Serve)))
+	s.Router.Handle("GET /api/icons/pending", protect(anyAccount(iconHandler.PendingStatus)))
+	s.Router.Handle("POST /api/icons/localize", protect(need(access.IconsInternet, iconHandler.Localize)))
+	s.Router.Handle("GET /api/icons/", protect(anyAccount(iconHandler.Serve)))
 
 	// Generic API widget (server-side fetch + field extraction)
 	widgetHandler := api.NewWidgetHandler()
-	s.Router.Handle("POST /api/widget/api-fetch", protect(http.HandlerFunc(widgetHandler.ApiFetch)))
+	s.Router.Handle("POST /api/widget/api-fetch", protect(need(access.WidgetAPI, widgetHandler.ApiFetch)))
 
 	// Multi-Dashboard API
 	multiDashHandler := api.NewMultiDashboardHandler(s.DB)
-	s.Router.Handle("GET /api/dashboards", protect(http.HandlerFunc(multiDashHandler.GetDashboards)))
-	s.Router.Handle("POST /api/dashboards", protect(http.HandlerFunc(multiDashHandler.CreateDashboard)))
-	s.Router.Handle("DELETE /api/dashboards/", protect(http.HandlerFunc(multiDashHandler.DeleteDashboard)))
-	s.Router.Handle("PATCH /api/dashboards/", protect(http.HandlerFunc(multiDashHandler.RenameDashboard)))
-	s.Router.Handle("POST /api/dashboards/{id}/default", protect(http.HandlerFunc(multiDashHandler.SetDefaultDashboard)))
-	s.Router.Handle("PUT /api/dashboards/reorder", protect(http.HandlerFunc(multiDashHandler.ReorderDashboards)))
+	s.Router.Handle("GET /api/dashboards", protect(anyAccount(multiDashHandler.GetDashboards)))
+	s.Router.Handle("POST /api/dashboards", protect(need(access.BoardMultiple, multiDashHandler.CreateDashboard)))
+	s.Router.Handle("DELETE /api/dashboards/", protect(need(access.BoardEdit, multiDashHandler.DeleteDashboard)))
+	s.Router.Handle("PATCH /api/dashboards/", protect(need(access.BoardEdit, multiDashHandler.RenameDashboard)))
+	s.Router.Handle("POST /api/dashboards/{id}/default", protect(anyAccount(multiDashHandler.SetDefaultDashboard)))
+	s.Router.Handle("PUT /api/dashboards/reorder", protect(need(access.BoardEdit, multiDashHandler.ReorderDashboards)))
 
 	// Proxmox. Each account has its own connections, and the credential never
 	// leaves the server, so unlike the Docker widget nothing about it is passed
 	// in a query string. Power actions only reach the caller's own hosts — see
 	// the handler.
 	proxmoxHandler := api.NewProxmoxHandler(s.DB)
-	s.Router.Handle("GET /api/proxmox/settings", protect(http.HandlerFunc(proxmoxHandler.GetSettings)))
-	s.Router.Handle("POST /api/proxmox/settings", protect(http.HandlerFunc(proxmoxHandler.UpdateSettings)))
-	s.Router.Handle("GET /api/proxmox/overview", protect(http.HandlerFunc(proxmoxHandler.GetOverview)))
-	s.Router.Handle("GET /api/proxmox/series", protect(http.HandlerFunc(proxmoxHandler.GetSeries)))
-	s.Router.Handle("POST /api/proxmox/power", protect(http.HandlerFunc(proxmoxHandler.Power)))
-	s.Router.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(proxmoxHandler.SetIcon)))
+	s.Router.Handle("GET /api/proxmox/settings", protect(need(access.ProxmoxView, proxmoxHandler.GetSettings)))
+	s.Router.Handle("POST /api/proxmox/settings", protect(need(access.ProxmoxView, proxmoxHandler.UpdateSettings)))
+	s.Router.Handle("GET /api/proxmox/overview", protect(need(access.ProxmoxView, proxmoxHandler.GetOverview)))
+	s.Router.Handle("GET /api/proxmox/series", protect(need(access.ProxmoxView, proxmoxHandler.GetSeries)))
+	s.Router.Handle("POST /api/proxmox/power", protect(need(access.ProxmoxControl, proxmoxHandler.Power)))
+	s.Router.Handle("POST /api/proxmox/icon", protect(need(access.ProxmoxView, proxmoxHandler.SetIcon)))
 
 	// Docker API
 	dockerHandler := api.NewDockerHandler(s.DB)
-	s.Router.Handle("GET /api/docker/containers", protect(http.HandlerFunc(dockerHandler.GetContainers)))
-	s.Router.Handle("GET /api/docker/stats", protect(http.HandlerFunc(dockerHandler.GetStats)))
-	s.Router.Handle("POST /api/docker/containers", protect(http.HandlerFunc(dockerHandler.ListContainersFor)))
-	s.Router.Handle("POST /api/docker/stats", protect(http.HandlerFunc(dockerHandler.StatsFor)))
-	s.Router.Handle("POST /api/docker/agent-version", protect(http.HandlerFunc(dockerHandler.AgentVersionFor)))
-	s.Router.Handle("POST /api/docker/action", protect(http.HandlerFunc(dockerHandler.Action)))
+	s.Router.Handle("GET /api/docker/containers", protect(need(access.DockerView, dockerHandler.GetContainers)))
+	s.Router.Handle("GET /api/docker/stats", protect(need(access.DockerView, dockerHandler.GetStats)))
+	s.Router.Handle("POST /api/docker/containers", protect(need(access.DockerView, dockerHandler.ListContainersFor)))
+	s.Router.Handle("POST /api/docker/stats", protect(need(access.DockerView, dockerHandler.StatsFor)))
+	s.Router.Handle("POST /api/docker/agent-version", protect(need(access.DockerView, dockerHandler.AgentVersionFor)))
+	s.Router.Handle("POST /api/docker/action", protect(need(access.DockerControl, dockerHandler.Action)))
 
 	// User API
 	userHandler := api.NewUserHandler(s.DB)
-	s.Router.Handle("/api/me", protect(http.HandlerFunc(userHandler.GetMe)))
-	s.Router.Handle("POST /api/user/update-profile", protect(http.HandlerFunc(userHandler.UpdateProfile)))
-	s.Router.Handle("POST /api/user/change-password", protect(http.HandlerFunc(userHandler.ChangePassword)))
-	s.Router.Handle("POST /api/user/preferences", protect(http.HandlerFunc(userHandler.UpdatePreferences)))
+	s.Router.Handle("/api/me", protect(anyAccount(userHandler.GetMe)))
+	s.Router.Handle("POST /api/user/update-profile", protect(anyAccount(userHandler.UpdateProfile)))
+	s.Router.Handle("POST /api/user/change-password", protect(anyAccount(userHandler.ChangePassword)))
+	s.Router.Handle("POST /api/user/preferences", protect(anyAccount(userHandler.UpdatePreferences)))
 
 	// Admin User Management
-	s.Router.Handle("GET /api/users", protect(http.HandlerFunc(userHandler.GetUsers)))
-	s.Router.Handle("POST /api/users", protect(http.HandlerFunc(userHandler.CreateUser)))
-	s.Router.Handle("PUT /api/users", protect(http.HandlerFunc(userHandler.UpdateUser)))
-	s.Router.Handle("POST /api/users/delete", protect(http.HandlerFunc(userHandler.DeleteUser)))
+	s.Router.Handle("GET /api/users", protect(need(access.Admin, userHandler.GetUsers)))
+	s.Router.Handle("POST /api/users", protect(need(access.Admin, userHandler.CreateUser)))
+	s.Router.Handle("PUT /api/users", protect(need(access.Admin, userHandler.UpdateUser)))
+	s.Router.Handle("POST /api/users/delete", protect(need(access.Admin, userHandler.DeleteUser)))
 
 	// Demo Route — only available when DEMO_ONLY=true.
 	// In normal production installs this returns 404 so the route is invisible.
@@ -370,32 +378,32 @@ func (s *Server) routes() {
 
 	// System API
 	systemHandler := api.NewSystemHandler(s.DB)
-	s.Router.Handle("GET /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadBackup)))
-	s.Router.Handle("POST /api/system/backup", protect(http.HandlerFunc(systemHandler.DownloadProtectedBackup)))
-	s.Router.Handle("POST /api/system/restore", protect(http.HandlerFunc(systemHandler.RestoreBackup)))
-	s.Router.Handle("POST /api/system/reset", protect(http.HandlerFunc(systemHandler.FactoryReset)))
+	s.Router.Handle("GET /api/system/backup", protect(need(access.Admin, systemHandler.DownloadBackup)))
+	s.Router.Handle("POST /api/system/backup", protect(need(access.Admin, systemHandler.DownloadProtectedBackup)))
+	s.Router.Handle("POST /api/system/restore", protect(need(access.Admin, systemHandler.RestoreBackup)))
+	s.Router.Handle("POST /api/system/reset", protect(need(access.Admin, systemHandler.FactoryReset)))
 
 	// Update API
 	updateHandler := api.NewUpdateHandler(s.DB)
-	s.Router.Handle("GET /api/system/update/check", protect(http.HandlerFunc(updateHandler.CheckUpdate)))
-	s.Router.Handle("POST /api/system/update/perform", protect(http.HandlerFunc(updateHandler.PerformUpdate)))
+	s.Router.Handle("GET /api/system/update/check", protect(anyAccount(updateHandler.CheckUpdate)))
+	s.Router.Handle("POST /api/system/update/perform", protect(need(access.Admin, updateHandler.PerformUpdate)))
 
 	// Monitoring settings API
 	monitorHandler := api.NewMonitorHandler(s.DB)
-	s.Router.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.GetSettings)))
-	s.Router.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(monitorHandler.UpdateSettings)))
-	s.Router.Handle("POST /api/monitor/test", protect(http.HandlerFunc(monitorHandler.TestNotify)))
+	s.Router.Handle("GET /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.GetSettings)))
+	s.Router.Handle("POST /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.UpdateSettings)))
+	s.Router.Handle("POST /api/monitor/test", protect(need(access.WatchAlerts, monitorHandler.TestNotify)))
 
 	// Import / export API
 	impExpHandler := api.NewImportExportHandler(s.DB)
-	s.Router.Handle("GET /api/export/native", protect(http.HandlerFunc(impExpHandler.ExportNative)))
-	s.Router.Handle("POST /api/import/parse", protect(http.HandlerFunc(impExpHandler.ImportParse)))
-	s.Router.Handle("GET /api/monitor/history", protect(http.HandlerFunc(monitorHandler.GetHistory)))
-	s.Router.Handle("DELETE /api/monitor/history", protect(http.HandlerFunc(monitorHandler.ClearHistory)))
-	s.Router.Handle("GET /api/monitor/overview", protect(http.HandlerFunc(monitorHandler.GetOverview)))
+	s.Router.Handle("GET /api/export/native", protect(need(access.BoardTransfer, impExpHandler.ExportNative)))
+	s.Router.Handle("POST /api/import/parse", protect(need(access.BoardTransfer, impExpHandler.ImportParse)))
+	s.Router.Handle("GET /api/monitor/history", protect(need(access.WatchMonitor, monitorHandler.GetHistory)))
+	s.Router.Handle("DELETE /api/monitor/history", protect(need(access.WatchMonitor, monitorHandler.ClearHistory)))
+	s.Router.Handle("GET /api/monitor/overview", protect(need(access.WatchMonitor, monitorHandler.GetOverview)))
 
 	// WebSocket Endpoint
-	s.Router.Handle("/ws", protect(http.HandlerFunc(s.WSHub.HandleWebSocket)))
+	s.Router.Handle("/ws", protect(need(access.ServerTelemetry, s.WSHub.HandleWebSocket)))
 }
 
 // hasLiveSession says whether the request carries a session that the

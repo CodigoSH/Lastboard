@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -60,7 +61,7 @@ func TestSendNtfyOutage(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "ntfy", URL: srv.URL, Token: "tok123"}
 
-	if err := sendNtfy(cfg, "Radarr", "Service is down", false); err != nil {
+	if err := sendNtfy(context.Background(), cfg, "Radarr", "Service is down", false); err != nil {
 		t.Fatalf("sendNtfy: %v", err)
 	}
 	if got.method != http.MethodPost {
@@ -88,7 +89,7 @@ func TestSendNtfyRecovery(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "ntfy", URL: srv.URL}
 
-	if err := sendNtfy(cfg, "Radarr", "Service recovered", true); err != nil {
+	if err := sendNtfy(context.Background(), cfg, "Radarr", "Service recovered", true); err != nil {
 		t.Fatalf("sendNtfy: %v", err)
 	}
 	if got.header.Get("Tags") != "white_check_mark" {
@@ -110,7 +111,7 @@ func TestSendGotify(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "gotify", URL: srv.URL + "/", Token: "abc"}
 
-	if err := sendGotify(cfg, "Sonarr", "Service is down"); err != nil {
+	if err := sendGotify(context.Background(), cfg, "Sonarr", "Service is down"); err != nil {
 		t.Fatalf("sendGotify: %v", err)
 	}
 	if got.path != "/message" {
@@ -138,7 +139,7 @@ func TestSendGotifyWithoutToken(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "gotify", URL: srv.URL}
 
-	if err := sendGotify(cfg, "Sonarr", "down"); err != nil {
+	if err := sendGotify(context.Background(), cfg, "Sonarr", "down"); err != nil {
 		t.Fatalf("sendGotify: %v", err)
 	}
 	if got.query != "" {
@@ -159,7 +160,7 @@ func TestSendWebhookStatusField(t *testing.T) {
 		srv, got := notifyServer(t, http.StatusOK)
 		cfg := notifyConfig{Type: "webhook", URL: srv.URL, Token: "s3cret"}
 
-		if err := sendWebhook(cfg, "Plex", "msg", tc.up); err != nil {
+		if err := sendWebhook(context.Background(), cfg, "Plex", "msg", tc.up); err != nil {
 			t.Fatalf("sendWebhook: %v", err)
 		}
 		var payload map[string]any
@@ -188,8 +189,8 @@ func TestSendNotificationDispatch(t *testing.T) {
 		t.Run(typ, func(t *testing.T) {
 			srv, got := notifyServer(t, http.StatusOK)
 			cfg := notifyConfig{Type: typ, URL: srv.URL}
-			if err := sendNotification(cfg, "svc", "message", false); err != nil {
-				t.Fatalf("sendNotification(%s): %v", typ, err)
+			if err := sendNotification(context.Background(), cfg, "svc", "message", false); err != nil {
+				t.Fatalf("sendNotification(context.Background(), %s): %v", typ, err)
 			}
 			if got.method != http.MethodPost {
 				t.Errorf("%s: method = %s", typ, got.method)
@@ -199,7 +200,7 @@ func TestSendNotificationDispatch(t *testing.T) {
 }
 
 func TestSendNotificationUnknownType(t *testing.T) {
-	err := sendNotification(notifyConfig{Type: "carrier-pigeon", URL: "http://x"}, "svc", "msg", false)
+	err := sendNotification(context.Background(), notifyConfig{Type: "carrier-pigeon", URL: "http://x"}, "svc", "msg", false)
 	if err == nil {
 		t.Fatal("expected an error for an unknown notify type")
 	}
@@ -214,7 +215,7 @@ func TestSendNotificationUnknownType(t *testing.T) {
 func TestDoNotifyRejectsErrorStatus(t *testing.T) {
 	for _, status := range []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusInternalServerError} {
 		srv, _ := notifyServer(t, status)
-		err := sendNotification(notifyConfig{Type: "webhook", URL: srv.URL}, "svc", "msg", false)
+		err := sendNotification(context.Background(), notifyConfig{Type: "webhook", URL: srv.URL}, "svc", "msg", false)
 		if err == nil {
 			t.Errorf("HTTP %d should have produced an error", status)
 			continue
@@ -228,7 +229,7 @@ func TestDoNotifyRejectsErrorStatus(t *testing.T) {
 func TestDoNotifyAcceptsSuccessStatuses(t *testing.T) {
 	for _, status := range []int{http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent} {
 		srv, _ := notifyServer(t, status)
-		if err := sendNotification(notifyConfig{Type: "webhook", URL: srv.URL}, "svc", "msg", false); err != nil {
+		if err := sendNotification(context.Background(), notifyConfig{Type: "webhook", URL: srv.URL}, "svc", "msg", false); err != nil {
 			t.Errorf("HTTP %d should have been accepted, got %v", status, err)
 		}
 	}
@@ -241,13 +242,13 @@ func TestDoNotifyUnreachableProvider(t *testing.T) {
 	url := srv.URL
 	srv.Close()
 
-	if err := sendNotification(notifyConfig{Type: "webhook", URL: url}, "svc", "msg", false); err == nil {
+	if err := sendNotification(context.Background(), notifyConfig{Type: "webhook", URL: url}, "svc", "msg", false); err == nil {
 		t.Fatal("expected an error when the provider is unreachable")
 	}
 }
 
 func TestSendNotificationInvalidURL(t *testing.T) {
-	if err := sendNotification(notifyConfig{Type: "ntfy", URL: "://not a url"}, "svc", "msg", false); err == nil {
+	if err := sendNotification(context.Background(), notifyConfig{Type: "ntfy", URL: "://not a url"}, "svc", "msg", false); err == nil {
 		t.Fatal("expected an error for a malformed URL")
 	}
 }

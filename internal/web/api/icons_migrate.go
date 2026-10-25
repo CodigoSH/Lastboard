@@ -173,7 +173,7 @@ func LocalizeIcons(ctx context.Context, db *sql.DB, h *IconHandler, owner *int) 
 			gate <- struct{}{}
 			defer func() { <-gate }()
 
-			mime, data, err := h.fetchIcon(p.src)
+			mime, data, err := h.fetchIcon(ctx, p.src)
 			if err != nil {
 				slog.Debug("Icon migration: could not fetch", "item", p.itemID, "error", err)
 				mu.Lock()

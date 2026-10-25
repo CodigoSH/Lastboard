@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -78,6 +79,12 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"beta_updates":         u.BetaUpdates,
 		"grid_columns":         u.GridColumnsPC,
 		"dashboard_background": u.DashboardBackground,
+	}
+	// What this account may do, so the interface can leave out what it cannot
+	// use. Only a convenience: every route checks for itself.
+	if acct, ok := accountFrom(r); ok {
+		resp["label"] = acct.Label
+		resp["access"] = accessView(acct)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -467,6 +474,17 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// Seed Default Items for New User
 	newUserID, err := result.LastInsertId()
+	// An account is born with its permissions. One without a row would be read as
+	// having none (see LoadAccount), so a failure here undoes the account rather
+	// than leaving one that cannot do anything and does not say why.
+	if err == nil && newUserID > 0 {
+		if aerr := storeAccess(r.Context(), h.DB, int(newUserID), access.Existing(), ""); aerr != nil {
+			slog.Error("CreateUser: failed to store permissions", "user_id", newUserID, "error", aerr)
+			undoAccount(r.Context(), h.DB, int(newUserID))
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+	}
 	if err == nil && newUserID > 0 {
 		tx, err := h.DB.Begin()
 		if err == nil {

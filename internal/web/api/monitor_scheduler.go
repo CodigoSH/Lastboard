@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
 	"log/slog"
 	"strconv"
 	"sync"
@@ -164,16 +165,30 @@ func (m *MonitorScheduler) RunCycle() {
 // state of a deleted bookmark would otherwise stay for as long as the process
 // lives.
 func (m *MonitorScheduler) runCycleFor(userID int) {
+	// The checks run with the owner's permissions, though no request of theirs
+	// is behind them: an account that may not monitor is not monitored, and one
+	// that may only reach the internet is refused the local network here too.
+	acct, err := LoadAccount(context.Background(), m.store.DB, userID)
+	if err != nil {
+		slog.Error("monitor: reading permissions failed", "user", userID, "error", err)
+		return
+	}
+	if !acct.Allows(access.WatchMonitor) {
+		return
+	}
 	items, err := m.itemsFor(userID)
 	if err != nil {
 		slog.Error("monitor: listing items failed", "user", userID, "error", err)
 		return
 	}
 	m.forgetStaleAlerts(userID, items)
-	m.probe(items)
+	m.probe(acct.Context(context.Background()), items, acct.Allows(access.WatchAlerts))
 }
 
-func (m *MonitorScheduler) probe(items []MonitoredItem) {
+// probe checks one account's items in ctx, which carries what that account may
+// reach. alerts says whether it may send alerts at all; without it the channel it
+// configured stays quiet.
+func (m *MonitorScheduler) probe(ctx context.Context, items []MonitoredItem, alerts bool) {
 	if len(items) == 0 {
 		return
 	}
@@ -181,7 +196,9 @@ func (m *MonitorScheduler) probe(items []MonitoredItem) {
 	sem := make(chan struct{}, monitorMaxConcurrency)
 	for _, it := range items {
 		if _, ok := cfgs[it.UserID]; !ok {
-			cfgs[it.UserID] = m.notifyCfg(it.UserID)
+			cfg := m.notifyCfg(it.UserID)
+			cfg.Enabled = cfg.Enabled && alerts
+			cfgs[it.UserID] = cfg
 		}
 	}
 	var wg sync.WaitGroup
@@ -191,11 +208,11 @@ func (m *MonitorScheduler) probe(items []MonitoredItem) {
 		go func(it MonitoredItem) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			up, latency, code := probeTimed(it.URL)
+			up, latency, code := probeTimed(ctx, it.URL)
 			if err := m.store.Record(it.ID, up, latency, code); err != nil {
 				slog.Error("monitor: recording check failed", "item", it.ID, "error", err)
 			}
-			m.evalAlert(it, up, cfgs[it.UserID])
+			m.evalAlert(ctx, it, up, cfgs[it.UserID])
 		}(it)
 	}
 	wg.Wait()
@@ -240,7 +257,7 @@ func (m *MonitorScheduler) forgetStaleAlerts(userID int, items []MonitoredItem) 
 // evalAlert updates a monitor's alert state and fires a notification on a
 // down↔up transition. The first observation of an item seeds state silently so
 // a restart never re-alerts for services that were already down.
-func (m *MonitorScheduler) evalAlert(it MonitoredItem, up bool, cfg notifyConfig) {
+func (m *MonitorScheduler) evalAlert(ctx context.Context, it MonitoredItem, up bool, cfg notifyConfig) {
 	m.alertMu.Lock()
 	st := m.alertState[it.ID]
 	if st == nil {
@@ -282,7 +299,7 @@ func (m *MonitorScheduler) evalAlert(it MonitoredItem, up bool, cfg notifyConfig
 		msg = "Service recovered"
 	}
 	go func() {
-		if err := sendNotification(cfg, name, msg, recovered); err != nil {
+		if err := sendNotification(ctx, cfg, name, msg, recovered); err != nil {
 			slog.Error("monitor: alert failed", "item", it.ID, "error", err)
 		}
 	}()

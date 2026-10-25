@@ -1,11 +1,15 @@
 package api
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -18,19 +22,19 @@ func TestSchedulerAlertTransitions(t *testing.T) {
 	cfg := notifyConfig{Enabled: false, Type: "webhook", URL: "http://x", FailThreshold: 2}
 	it := MonitoredItem{ID: 1, Name: "x", URL: "http://x"}
 
-	sched.evalAlert(it, true, cfg) // seed as up
+	sched.evalAlert(context.Background(), it, true, cfg) // seed as up
 	if sched.alertState[1].down {
 		t.Fatal("seed up should not be down")
 	}
-	sched.evalAlert(it, false, cfg) // 1st fail (threshold 2)
+	sched.evalAlert(context.Background(), it, false, cfg) // 1st fail (threshold 2)
 	if sched.alertState[1].down || sched.alertState[1].fails != 1 {
 		t.Fatalf("after 1 fail: fails=%d down=%v", sched.alertState[1].fails, sched.alertState[1].down)
 	}
-	sched.evalAlert(it, false, cfg) // 2nd fail → down
+	sched.evalAlert(context.Background(), it, false, cfg) // 2nd fail → down
 	if !sched.alertState[1].down {
 		t.Fatal("should be down after reaching threshold")
 	}
-	sched.evalAlert(it, true, cfg) // recover
+	sched.evalAlert(context.Background(), it, true, cfg) // recover
 	if sched.alertState[1].down || sched.alertState[1].fails != 0 {
 		t.Fatal("should recover on next up")
 	}
@@ -84,6 +88,7 @@ func TestSchedulerRunCycleRecords(t *testing.T) {
 	// A monitored bookmark pointing at the live test server.
 	res, _ := db.Exec(`INSERT INTO users (username, password) VALUES ('u', 'p')`)
 	uid, _ := res.LastInsertId()
+	grant(t, db, int(uid), access.Homelab())
 	if _, err := db.Exec(
 		`INSERT INTO items (user_id, type, x, y, w, h, content)
 		 VALUES (?, 'bookmark', 0, 0, 1, 1, ?)`, uid,
@@ -147,8 +152,8 @@ func TestForgetStaleAlerts(t *testing.T) {
 	sched := NewMonitorScheduler(db)
 	cfg := notifyConfig{Enabled: false, FailThreshold: 1}
 
-	sched.evalAlert(MonitoredItem{ID: 1, URL: "http://a"}, false, cfg)
-	sched.evalAlert(MonitoredItem{ID: 2, URL: "http://b"}, false, cfg)
+	sched.evalAlert(context.Background(), MonitoredItem{ID: 1, URL: "http://a"}, false, cfg)
+	sched.evalAlert(context.Background(), MonitoredItem{ID: 2, URL: "http://b"}, false, cfg)
 	if len(sched.alertState) != 2 {
 		t.Fatalf("expected 2 seeded entries, got %d", len(sched.alertState))
 	}
@@ -172,7 +177,7 @@ func TestForgetStaleAlertsClearsAllWhenNoneMonitored(t *testing.T) {
 	sched := NewMonitorScheduler(db)
 	cfg := notifyConfig{Enabled: false, FailThreshold: 1}
 
-	sched.evalAlert(MonitoredItem{ID: 7, URL: "http://x"}, false, cfg)
+	sched.evalAlert(context.Background(), MonitoredItem{ID: 7, URL: "http://x"}, false, cfg)
 	sched.forgetStaleAlerts(0, nil)
 
 	if len(sched.alertState) != 0 {
@@ -212,6 +217,7 @@ func TestAlertsGoToTheChannelOfTheAccountThatOwnsTheBookmark(t *testing.T) {
 	db, _ := setupTestDB(t)
 	db.SetMaxOpenConns(1)
 	db.Exec(`INSERT INTO users (id, username, password, role) VALUES (1, 'a', 'p', 'admin'), (2, 'b', 'p', 'user')`)
+	grant(t, db, 2, access.Homelab())
 
 	var mu sync.Mutex
 	got := map[string][]string{}
@@ -331,9 +337,9 @@ func TestACycleForgetsTheAlertStateOfDeletedBookmarks(t *testing.T) {
 	sched := NewMonitorScheduler(db)
 	cfg := notifyConfig{FailThreshold: 1}
 	// Two bookmarks of account 1 (one is about to be deleted) and one of account 2.
-	sched.evalAlert(MonitoredItem{ID: 10, UserID: 1, URL: "http://x"}, false, cfg)
-	sched.evalAlert(MonitoredItem{ID: 11, UserID: 1, URL: "http://y"}, false, cfg)
-	sched.evalAlert(MonitoredItem{ID: 20, UserID: 2, URL: "http://z"}, false, cfg)
+	sched.evalAlert(context.Background(), MonitoredItem{ID: 10, UserID: 1, URL: "http://x"}, false, cfg)
+	sched.evalAlert(context.Background(), MonitoredItem{ID: 11, UserID: 1, URL: "http://y"}, false, cfg)
+	sched.evalAlert(context.Background(), MonitoredItem{ID: 20, UserID: 2, URL: "http://z"}, false, cfg)
 
 	sched.itemsFor = func(uid int) ([]MonitoredItem, error) {
 		if uid == 1 {
@@ -351,5 +357,53 @@ func TestACycleForgetsTheAlertStateOfDeletedBookmarks(t *testing.T) {
 	}
 	if _, ok := sched.alertState[20]; !ok {
 		t.Error("cycling account 1 dropped the state of account 2's bookmark")
+	}
+}
+
+// grant gives an account these permissions, as the administrator would.
+func grant(t *testing.T, db *sql.DB, userID int, g access.Grants) {
+	t.Helper()
+	if err := storeAccess(context.Background(), db, userID, g, ""); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The background monitor runs with the permissions of the account that owns each
+// bookmark, though no request of theirs is behind it.
+func TestTheMonitorRunsWithItsOwnersPermissions(t *testing.T) {
+	var hits atomic.Int32
+	local := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer local.Close()
+
+	internetOnly := access.Homelab()
+	internetOnly.NetworkLocal = false
+	cases := []struct {
+		name  string
+		g     access.Grants
+		reach bool
+	}{
+		{"may monitor and reach the local network", access.Homelab(), true},
+		{"may not monitor", access.Standard(), false},
+		{"may monitor, internet only", internetOnly, false},
+	}
+	for _, c := range cases {
+		db, _ := setupTestDB(t)
+		db.SetMaxOpenConns(1)
+		sched := NewMonitorScheduler(db)
+		res, _ := db.Exec(`INSERT INTO users (username, password) VALUES ('m', 'p')`)
+		uid, _ := res.LastInsertId()
+		grant(t, db, int(uid), c.g)
+		if _, err := db.Exec(`INSERT INTO items (user_id, type, x, y, w, h, content) VALUES (?, 'bookmark', 0, 0, 1, 1, ?)`,
+			uid, `{"statusCheck":true,"url":"`+local.URL+`"}`); err != nil {
+			t.Fatal(err)
+		}
+		before := hits.Load()
+		sched.RunCycle()
+		if reached := hits.Load() > before; reached != c.reach {
+			t.Errorf("%s: the local server was reached = %v, want %v", c.name, reached, c.reach)
+		}
 	}
 }

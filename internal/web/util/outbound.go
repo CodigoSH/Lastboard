@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"errors"
 	"net"
 	"strings"
@@ -102,11 +103,72 @@ func refuseMetadata(network, address string, _ syscall.RawConn) error {
 	return nil
 }
 
+// ErrLocalAddress is what a connection to the local network fails with when the
+// account it is made for may only reach the internet.
+var ErrLocalAddress = errors.New("refused: that address is on the local network")
+
+type internetOnlyKey struct{}
+
+// InternetOnly marks a context whose outbound connections may not reach the
+// local network: the account the request is made for was not given it. The
+// mark travels with the request into the dialer, which is where it is enforced,
+// after the name has been resolved — so neither a redirect nor a name that
+// resolves to a private address gets past it.
+func InternetOnly(ctx context.Context) context.Context {
+	return context.WithValue(ctx, internetOnlyKey{}, true)
+}
+
+// IsInternetOnly reports whether a context carries that mark.
+func IsInternetOnly(ctx context.Context) bool {
+	v, _ := ctx.Value(internetOnlyKey{}).(bool)
+	return v
+}
+
+// IsLocalAddress reports whether an address is on this machine or its network
+// rather than on the internet: loopback, the private ranges, link-local, the
+// unique-local IPv6 range, carrier-grade NAT and the unspecified address.
+func IsLocalAddress(ip net.IP) bool {
+	if ip == nil {
+		return true
+	}
+	if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsInterfaceLocalMulticast() || ip.IsUnspecified() {
+		return true
+	}
+	// 100.64.0.0/10: shared address space, which is what a tailnet hands out.
+	if v4 := ip.To4(); v4 != nil && v4[0] == 100 && v4[1]&0xc0 == 64 {
+		return true
+	}
+	return false
+}
+
+// control decides, with the address about to be connected to, whether this
+// connection may be made at all.
+func control(ctx context.Context, network, address string, c syscall.RawConn) error {
+	if err := refuseMetadata(network, address, c); err != nil {
+		return err
+	}
+	if !IsInternetOnly(ctx) {
+		return nil
+	}
+	// A unix socket is this machine by definition.
+	if strings.HasPrefix(network, "unix") {
+		return ErrLocalAddress
+	}
+	host, _, err := net.SplitHostPort(address)
+	if err != nil || IsLocalAddress(net.ParseIP(host)) {
+		return ErrLocalAddress
+	}
+	return nil
+}
+
 // NewDialer is the one way this program opens an outbound connection. Everything
 // else about where it may connect is the administrator's business — the machine
 // next door is the point of a dashboard — but the metadata service of the cloud
 // it runs on answers with the instance's credentials, and no URL typed into a
-// widget has a reason to reach it. A test reads the source to keep it the only way.
+// widget has a reason to reach it. Nor may a connection made for an account that
+// was only given the internet reach the local network: see InternetOnly. A test
+// reads the source to keep it the only way.
 func NewDialer(timeout, keepAlive time.Duration) *net.Dialer {
-	return &net.Dialer{Timeout: timeout, KeepAlive: keepAlive, Control: refuseMetadata}
+	return &net.Dialer{Timeout: timeout, KeepAlive: keepAlive, ControlContext: control}
 }

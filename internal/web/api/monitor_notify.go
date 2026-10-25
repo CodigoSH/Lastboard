@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -17,10 +18,12 @@ var notifyClient = &http.Client{
 	Timeout: 8 * time.Second,
 	// A Gotify key travels as X-Gotify-Key, which Go would carry to another host.
 	CheckRedirect: util.KeepToOrigin,
-	Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 — self-hosted, private targets by design
-		DialContext:     util.NewDialer(5*time.Second, 30*time.Second).DialContext,
-	},
+	Transport: util.ByReach(func() *http.Transport {
+		return &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 — self-hosted, private targets by design
+			DialContext:     util.NewDialer(5*time.Second, 30*time.Second).DialContext,
+		}
+	}),
 }
 
 // notifyConfig is one account's alerting channel, from its own settings.
@@ -38,21 +41,21 @@ func (c notifyConfig) active() bool {
 
 // sendNotification dispatches one alert to the configured provider. up reports
 // whether the alert is a recovery (true) or an outage (false).
-func sendNotification(cfg notifyConfig, service, message string, up bool) error {
+func sendNotification(ctx context.Context, cfg notifyConfig, service, message string, up bool) error {
 	switch cfg.Type {
 	case "ntfy":
-		return sendNtfy(cfg, service, message, up)
+		return sendNtfy(ctx, cfg, service, message, up)
 	case "gotify":
-		return sendGotify(cfg, service, message)
+		return sendGotify(ctx, cfg, service, message)
 	case "webhook":
-		return sendWebhook(cfg, service, message, up)
+		return sendWebhook(ctx, cfg, service, message, up)
 	default:
 		return fmt.Errorf("unknown notify type %q", cfg.Type)
 	}
 }
 
-func sendNtfy(cfg notifyConfig, service, message string, up bool) error {
-	req, err := http.NewRequest("POST", cfg.URL, strings.NewReader(message))
+func sendNtfy(ctx context.Context, cfg notifyConfig, service, message string, up bool) error {
+	req, err := http.NewRequestWithContext(ctx, "POST", cfg.URL, strings.NewReader(message))
 	if err != nil {
 		return err
 	}
@@ -70,10 +73,10 @@ func sendNtfy(cfg notifyConfig, service, message string, up bool) error {
 	return doNotify(req)
 }
 
-func sendGotify(cfg notifyConfig, service, message string) error {
+func sendGotify(ctx context.Context, cfg notifyConfig, service, message string) error {
 	url := strings.TrimRight(cfg.URL, "/") + "/message"
 	body, _ := json.Marshal(map[string]any{"title": service, "message": message, "priority": 5})
-	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
@@ -86,7 +89,7 @@ func sendGotify(cfg notifyConfig, service, message string) error {
 	return doNotify(req)
 }
 
-func sendWebhook(cfg notifyConfig, service, message string, up bool) error {
+func sendWebhook(ctx context.Context, cfg notifyConfig, service, message string, up bool) error {
 	status := "down"
 	if up {
 		status = "up"
@@ -95,7 +98,7 @@ func sendWebhook(cfg notifyConfig, service, message string, up bool) error {
 		"service": service, "status": status, "message": message,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	})
-	req, err := http.NewRequest("POST", cfg.URL, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", cfg.URL, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}

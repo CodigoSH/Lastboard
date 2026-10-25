@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
@@ -62,13 +63,15 @@ func NewIconHandler(db *sql.DB) *IconHandler {
 		DB: db,
 		// No redirect ceiling beyond Go's default of 10; providers redirect
 		// (jsDelivr → its CDN edge) and refusing that would fetch nothing.
-		Client: &http.Client{Timeout: iconFetchTimeout, Transport: &http.Transport{
-			Proxy:               http.ProxyFromEnvironment,
-			DialContext:         util.NewDialer(5*time.Second, 30*time.Second).DialContext,
-			ForceAttemptHTTP2:   true,
-			TLSHandshakeTimeout: 10 * time.Second,
-			IdleConnTimeout:     90 * time.Second,
-		}},
+		Client: &http.Client{Timeout: iconFetchTimeout, Transport: util.ByReach(func() *http.Transport {
+			return &http.Transport{
+				Proxy:               http.ProxyFromEnvironment,
+				DialContext:         util.NewDialer(5*time.Second, 30*time.Second).DialContext,
+				ForceAttemptHTTP2:   true,
+				TLSHandshakeTimeout: 10 * time.Second,
+				IdleConnTimeout:     90 * time.Second,
+			}
+		})},
 	}
 }
 
@@ -154,8 +157,8 @@ var errIconTooLarge = fmt.Errorf("icon exceeds %d bytes", maxIconBytes)
 // dashboard's icons routinely live on the same LAN, and this download is
 // triggered by the person editing the bookmark, from a URL they typed — the
 // same trust model the API widget and the monitor already run under.
-func (h *IconHandler) fetchIcon(src string) (mime string, data []byte, err error) {
-	req, err := http.NewRequest(http.MethodGet, src, nil)
+func (h *IconHandler) fetchIcon(ctx context.Context, src string) (mime string, data []byte, err error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, src, nil)
 	if err != nil {
 		return "", nil, err
 	}
@@ -248,7 +251,7 @@ func (h *IconHandler) Store(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(src, "data:"):
 		mime, data, err = decodeDataURI(src)
 	case strings.HasPrefix(src, "http://"), strings.HasPrefix(src, "https://"):
-		mime, data, err = h.fetchIcon(src)
+		mime, data, err = h.fetchIcon(r.Context(), src)
 	default:
 		http.Error(w, "error.unsupported_icon_source", http.StatusBadRequest)
 		return

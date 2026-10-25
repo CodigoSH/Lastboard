@@ -33,7 +33,10 @@ type DB struct {
 //
 // 2: an API widget's credentials live in the widget secret store, not in its
 // content. A version 1 binary would send the widget's request without them.
-const schemaVersion = 2
+//
+// 3: what each member may do lives in user_access. A version 2 binary does not
+// read it, so a member the administrator restricted would get everything back.
+const schemaVersion = 3
 
 // ErrSchemaTooNew is returned when the database was written by a newer version.
 var ErrSchemaTooNew = errors.New("database schema is newer than this build")
@@ -426,6 +429,12 @@ func migrateSchema(db *sql.DB) error {
 	// wear it as a pill on the border like the rest. See widget_titles.go.
 	if err = migrateWidgetTitles(db); err != nil {
 		return fmt.Errorf("migration 10 failed: %w", err)
+	}
+
+	// Migration 11: members gain permissions, and keep what they could do until
+	// now. See user_access.go.
+	if err = migrateUserAccess(db); err != nil {
+		return fmt.Errorf("migration 11 failed: %w", err)
 	}
 
 	// Migration 2: users from versions without multi-dashboard support have items

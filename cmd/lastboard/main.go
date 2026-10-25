@@ -77,6 +77,14 @@ func main() {
 		slog.Error("Moving widget credentials failed", "error", err)
 	}
 
+	// Members that existed before permissions keep what they could do: they are
+	// given it once, and every later choice the administrator makes is kept.
+	if n, err := api.GiveMembersTheirAccess(db.DB); err != nil {
+		slog.Error("Giving members their permissions failed", "error", err)
+	} else if n > 0 {
+		slog.Info("Members given the permissions they had", "count", n)
+	}
+
 	// Cancelled on SIGTERM/SIGINT. Everything that runs in the background takes
 	// it, so a restart tells them to stop rather than being cut off mid-write.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)

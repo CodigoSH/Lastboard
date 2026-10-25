@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -295,7 +296,7 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
-	if err := sendNotification(cfg, "Lastboard", "Test notification", true); err != nil {
+	if err := sendNotification(r.Context(), cfg, "Lastboard", "Test notification", true); err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
@@ -634,7 +635,10 @@ func (h *MonitorHandler) getSetting(userID int, key string) string {
 // (nil when down), and the observed HTTP status code (0 when no response came
 // back). Up is an HTTP answer below 500, or failing that a TCP connection to the
 // port. It is the only probe: probeURL is this without the timing.
-func probeTimed(rawUrl string) (bool, *int, int) {
+//
+// ctx carries who the check is for: an account that may only reach the internet
+// has its checks refused at the dialer when they point at the local network.
+func probeTimed(ctx context.Context, rawUrl string) (bool, *int, int) {
 	start := time.Now()
 
 	u, err := url.Parse(rawUrl)
@@ -654,7 +658,7 @@ func probeTimed(rawUrl string) (bool, *int, int) {
 	}
 
 	statusCode := 0
-	req, _ := http.NewRequest("HEAD", rawUrl, nil)
+	req, _ := http.NewRequestWithContext(ctx, "HEAD", rawUrl, nil)
 	if resp, err := healthClient.Do(req); err == nil {
 		statusCode = resp.StatusCode
 		resp.Body.Close()
@@ -674,7 +678,7 @@ func probeTimed(rawUrl string) (bool, *int, int) {
 			port = "80"
 		}
 	}
-	if conn, err := util.NewDialer(2*time.Second, 0).Dial("tcp", net.JoinHostPort(pinnedIP, port)); err == nil {
+	if conn, err := util.NewDialer(2*time.Second, 0).DialContext(ctx, "tcp", net.JoinHostPort(pinnedIP, port)); err == nil {
 		conn.Close()
 		ms := int(time.Since(start).Milliseconds())
 		return true, &ms, statusCode

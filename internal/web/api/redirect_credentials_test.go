@@ -99,7 +99,7 @@ func TestATelemetryKeyDoesNotFollowARedirectElsewhere(t *testing.T) {
 
 func TestAGotifyKeyDoesNotFollowARedirectElsewhere(t *testing.T) {
 	p := newRedirectPair(t)
-	_ = sendGotify(notifyConfig{Enabled: true, Type: "gotify", URL: p.first.URL, Token: "the-key"}, "svc", "down")
+	_ = sendGotify(context.Background(), notifyConfig{Enabled: true, Type: "gotify", URL: p.first.URL, Token: "the-key"}, "svc", "down")
 	p.leaked(t, "Gotify alert")
 }
 

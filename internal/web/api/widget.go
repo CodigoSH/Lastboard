@@ -26,13 +26,15 @@ var apiWidgetClient = &http.Client{
 	Timeout: 8 * time.Second,
 	// The request carries the widget's key in a header; a redirect elsewhere must not.
 	CheckRedirect: util.KeepToOrigin,
-	Transport: &http.Transport{
-		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
-		MaxIdleConns:        50,
-		MaxIdleConnsPerHost: 5,
-		IdleConnTimeout:     60 * time.Second,
-		DialContext:         util.NewDialer(4*time.Second, 30*time.Second).DialContext,
-	},
+	Transport: util.ByReach(func() *http.Transport {
+		return &http.Transport{
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+			MaxIdleConns:        50,
+			MaxIdleConnsPerHost: 5,
+			IdleConnTimeout:     60 * time.Second,
+			DialContext:         util.NewDialer(4*time.Second, 30*time.Second).DialContext,
+		}
+	}),
 }
 
 // WidgetHandler serves the generic API widget's server-side fetch endpoint.

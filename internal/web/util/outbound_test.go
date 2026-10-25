@@ -130,3 +130,65 @@ func TestARedirectToCloudMetadataIsNotFollowed(t *testing.T) {
 		t.Fatalf("took %v: the redirect was followed to a connection attempt", time.Since(start))
 	}
 }
+
+func TestIsLocalAddress(t *testing.T) {
+	cases := map[string]bool{
+		"127.0.0.1": true, "::1": true, "10.1.2.3": true, "172.16.0.9": true, "192.168.1.20": true,
+		"169.254.10.1": true, "fe80::1": true, "fd12:3456::1": true, "100.64.0.1": true, "100.127.255.254": true,
+		"0.0.0.0": true, "::": true,
+		"1.1.1.1": false, "8.8.8.8": false, "100.128.0.1": false, "2606:4700:4700::1111": false, "172.32.0.1": false,
+	}
+	for addr, want := range cases {
+		if got := IsLocalAddress(net.ParseIP(addr)); got != want {
+			t.Errorf("IsLocalAddress(%s) = %v, want %v", addr, got, want)
+		}
+	}
+	if !IsLocalAddress(nil) {
+		t.Error("an address that does not parse is treated as local, not let through")
+	}
+}
+
+// The mark on the context is enforced by the dialer itself, on the address it is
+// about to connect to: measured against a real listener, not a parsed URL.
+func TestAnInternetOnlyConnectionCannotReachTheLocalNetwork(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			c.Close()
+		}
+	}()
+
+	d := NewDialer(2*time.Second, 0)
+	if c, err := d.DialContext(context.Background(), "tcp", ln.Addr().String()); err != nil {
+		t.Fatalf("an account with the local network should connect, got %v", err)
+	} else {
+		c.Close()
+	}
+	_, err = d.DialContext(InternetOnly(context.Background()), "tcp", ln.Addr().String())
+	if !errors.Is(err, ErrLocalAddress) {
+		t.Fatalf("an internet-only connection to 127.0.0.1 must be refused with ErrLocalAddress, got %v", err)
+	}
+	// A name is resolved before the check, so "localhost" is refused the same way.
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	if _, err := d.DialContext(InternetOnly(context.Background()), "tcp", net.JoinHostPort("localhost", port)); !errors.Is(err, ErrLocalAddress) {
+		t.Fatalf("a name that resolves to the local network must be refused too, got %v", err)
+	}
+}
+
+func TestAnInternetOnlyConnectionCannotReachAUnixSocket(t *testing.T) {
+	err := control(InternetOnly(context.Background()), "unix", "/var/run/docker.sock", nil)
+	if !errors.Is(err, ErrLocalAddress) {
+		t.Errorf("a unix socket is this machine, got %v", err)
+	}
+	if err := control(context.Background(), "unix", "/var/run/docker.sock", nil); err != nil {
+		t.Errorf("without the mark a unix socket is allowed, got %v", err)
+	}
+}
