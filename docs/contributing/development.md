@@ -4,8 +4,8 @@ This guide is intended for CodigoSH team members. It covers how to set up a loca
 
 ## Prerequisites
 
-- **Go 1.27.2** — the version `go.mod` pins; an older toolchain cannot build the project
-- **Bun 1.4.3** — the version the project pins, required for frontend tooling
+- **Go 1.27.3** — the version `go.mod` pins; an older toolchain cannot build the project
+- **Bun 1.4.4** — the version the project pins, required for frontend tooling
 - **Docker** (Optional, but recommended for containerized testing)
 - **Air** (Optional, but highly recommended for Go hot-reloading)
 

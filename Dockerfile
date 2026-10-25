@@ -6,7 +6,7 @@
 # Pinned, and to the same version .forgejo/workflows/tests.yml installs: a
 # floating tag means the image that built the release is not the one the
 # tests ran against, and nothing says so.
-FROM --platform=$BUILDPLATFORM oven/bun:1.4.3-alpine AS frontend-builder
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.4-alpine AS frontend-builder
 WORKDIR /app
 
 # Install dependencies (Frozen Lockfile for reproducibility)
@@ -20,7 +20,7 @@ RUN bun web/build.ts
 # ==========================================
 # Stage 2: Backend Build (Go)
 # ==========================================
-FROM --platform=$BUILDPLATFORM golang:1.27.2-alpine AS backend-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine AS backend-builder
 WORKDIR /app
 
 # Install build dependencies

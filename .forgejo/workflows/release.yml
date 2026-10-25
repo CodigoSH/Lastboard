@@ -30,12 +30,12 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.2'
+          go-version: '1.27.3'
 
       - name: Setup Bun (Frontend)
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - name: Build Frontend
         run: |
@@ -92,7 +92,7 @@ jobs:
       - name: Set up Go (for signing)
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.2'
+          go-version: '1.27.3'
 
       - name: Sign checksums.txt
         # If this build carries a public key, clients expect a signature: a

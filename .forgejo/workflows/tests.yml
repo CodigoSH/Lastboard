@@ -27,12 +27,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.2'
+          go-version: '1.27.3'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - name: Install dependencies
         run: |
@@ -90,12 +90,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.2'
+          go-version: '1.27.3'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - name: Install dependencies
         run: |
@@ -132,12 +132,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.2'
+          go-version: '1.27.3'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.3"
+          bun-version: "1.4.4"
 
       - name: Install dependencies
         run: |
@@ -153,8 +153,13 @@ jobs:
         # Non-blocking (-no-fail): the SARIF is reviewed manually because the
         # codebase has several triaged, accepted gosec findings (G124/G202/G204/
         # G304/G402) that are false positives in this self-hosted context.
+        # The taint rules v2.30 added (G702 on re-executing itself, G703 on paths it
+        # builds, G704 on the services the operator points it at, G706 on logging
+        # its own rate-limit key) and G104 on errors that are deliberately not
+        # checked (a deferred Close, a response being written) were read through
+        # on the same terms; G120 is answered by the MaxBytesReader in front of it.
         run: |
-          go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0
           gosec -no-fail -fmt sarif -out results.sarif ./...
 
       - name: Upload SARIF results
@@ -178,5 +183,5 @@ jobs:
         # check, and then a tag passes locally and this job goes red with
         # nothing to do about it but push another commit.
         run: |
-          go install honnef.co/go/tools/cmd/staticcheck@v0.7.0-0.dev.0.20261009230814-452d5bb86b45
+          go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
           staticcheck ./...
