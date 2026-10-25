@@ -883,74 +883,30 @@ dialog[open] {
     display: none;
 }
 
-/* Edit and delete read as one pair: the boxes are transparent, so what the
-   eye measures is icon to icon, and at 32px apart plus a gap they looked like
-   two separate controls. 26px wide still leaves a target above the 24px
-   minimum. */
+/* The tick that puts a host in this widget. Always there: unlike the other
+   things a row once held, it is the row's whole purpose. */
 .host-actions {
     display: flex;
     gap: 0;
 }
 
-.host-action-btn {
-    display: flex;
+.host-pick {
     align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 32px;
-    background: transparent;
-    border: none;
+    gap: 6px;
+    font-size: 11px;
     color: var(--text-dim);
     cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s;
-    opacity: 0.7;
+    white-space: nowrap;
 }
 
-.host-action-btn:hover {
-    background: var(--surface-hover);
-    color: var(--text-main);
-    opacity: 1;
-    transform: scale(1.1);
+.host-pick input {
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
 }
 
-.host-action-btn.delete:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-.docker-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-}
-
-.docker-overlay {
-    position: absolute;
-    inset: 0;
-    background: var(--paper-bg);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    border-radius: var(--radius);
-    overflow: hidden;
-}
-
-/* Pseudo element trick to ensure zero bleeding effect in blink browser engines regarding nested backdrops */
-.docker-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    backdrop-filter: blur(24px) contrast(1.1) brightness(0.9);
-    -webkit-backdrop-filter: blur(24px) contrast(1.1) brightness(0.9);
-    background: rgba(10, 10, 10, 0.4); /* Extra fallback background layer */
-    box-shadow: inset 0 0 0 2000px var(--paper-bg); /* Opaque color shadow override */
-    z-index: -1;
-    pointer-events: none;
+.host-item.is-off .host-name {
+    opacity: 0.55;
 }
 
 .pw-wrap {
@@ -1090,21 +1046,6 @@ dialog[open] {
    several characters early. */
 .docker-split .host-item {
     padding: 10px 12px;
-}
-
-/* The name is what you scan; editing and deleting are occasional. In the
-   narrow column they hand their width back until you reach for a row — the
-   selected one keeps them, so the current host never changes shape. This
-   dialog is desktop-only, so hover is a safe way to reveal them. */
-.docker-split .host-actions {
-    opacity: 0;
-    transition: opacity 0.15s var(--ease-standard);
-}
-
-.docker-split .host-item:hover .host-actions,
-.docker-split .host-item:focus-within .host-actions,
-.docker-split .host-item.is-selected .host-actions {
-    opacity: 1;
 }
 
 /* A narrow desktop window would squeeze both columns into uselessness. */

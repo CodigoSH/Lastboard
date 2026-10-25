@@ -131,6 +131,7 @@ const SETTINGS_SECTIONS: [string, string][] = [
     ['users', 'p-users'],
     ['monitoring', 'p-monitoring'],
     ['proxmox', 'p-proxmox'],
+    ['docker', 'p-docker'],
     ['data', 'p-data'],
     ['advanced', 'p-advanced'],
     ['about', 'p-about'],
@@ -181,10 +182,16 @@ const SHOTS: Shot[] = [
         // machine, and a manual showing 127.0.0.1 there teaches the wrong
         // thing. The field is dressed for the photograph in the address a
         // reader actually has to type.
-        act: openSettings(section) + (section !== 'proxmox' ? '' : `
+        act: openSettings(section) + (section === 'proxmox' ? `
             const px = ${DRAWER}.querySelector('settings-content').shadowRoot.getElementById('proxmox-url');
             px.value = 'https://192.168.1.10:8006';
-            await sleep(200);`),
+            await sleep(200);` : section === 'docker' ? `
+            const sheet = ${DRAWER}.querySelector('settings-content').shadowRoot;
+            const walker = document.createTreeWalker(sheet, NodeFilter.SHOW_TEXT);
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+                n.nodeValue = n.nodeValue.replace(/127\.0\.0\.1:\d+/g, '192.168.1.20:2375');
+            }
+            await sleep(200);` : ''),
         clip: `${DRAWER}.querySelector('.right-drawer__sheet')`,
     })),
 
@@ -390,46 +397,19 @@ const SHOTS: Shot[] = [
 
     {
         // A Docker agent host's form, with a token already saved: dots, nothing to reveal.
+        // The hosts are the account's, so the form is in Preferences → Docker.
         name: 'w-p-docker-host', w: 1500, h: 980, pad: 0, wait: 900,
-        act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(900);
-              const grid = document.querySelector('bookmark-grid').shadowRoot;
-              const tile = grid.querySelector('widget-docker');
-              if (!tile) throw new Error('no Docker tile on the board');
-              const itemId = tile.getAttribute('item-id');
-              const csrf = decodeURIComponent((document.cookie.match(/csrf_token=([^;]+)/) || [])[1] || '');
-              const saved = await fetch('/api/widget/' + itemId + '/secrets', { method: 'PUT',
-                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-                  body: JSON.stringify({ set: { 'docker.docs': 'a-token-nobody-will-read' } }) });
-              if (!saved.ok) throw new Error('could not store the sample token: ' + saved.status);
-              const card = tile.closest('.bookmark-grid__card');
-              card.querySelector('.kebab-btn').click(); await sleep(600);
-              grid.querySelector('#kebab-menu .menu-edit').click();
-              for (let i = 0; i < 25; i++) {
-                  const d = document.querySelector('widget-config-modal')?.shadowRoot?.querySelector('dialog');
-                  if (d && d.open) break;
-                  await sleep(200);
-              }
-              await sleep(800);
-              const root = document.querySelector('widget-config-modal').shadowRoot;
-              const edit = root.querySelector('.host-action-btn.edit');
-              if (!edit) throw new Error('the host has no edit button');
-              edit.click(); await sleep(700);
-              const type = root.getElementById('docker-type');
-              if (!type) throw new Error('the host form did not open');
-              type.value = 'agent';
-              type.dispatchEvent(new CustomEvent('change', { detail: { value: 'agent' }, bubbles: true }));
-              await sleep(500);
-              const box = root.getElementById('docker-token');
+        act: openSettings('docker') + `
+              const sheet = ${DRAWER}.querySelector('settings-content').shadowRoot;
+              const rows = [...sheet.querySelectorAll('[data-docker-host]')];
+              const agent = rows.find((r) => r.textContent.includes('NAS'));
+              if (!agent) throw new Error('the seeded agent host is not listed');
+              agent.querySelector('[data-action="edit-docker-host"]').click();
+              await sleep(700);
+              const box = sheet.getElementById('docker-token');
               if (!box || box.value === '') throw new Error('the token box is empty: the saved token was not seen');
-              // The form is drawn over the settings and is a little see-through, so
-              // what is under it shows as ghost text. Hidden for the photograph only.
-              root.querySelectorAll('.tab-content, .tab-btn, .modal-footer, #save-btn').forEach((el) => { el.style.visibility = 'hidden'; });
-              // And sized to what it holds, not stretched over the whole settings window.
-              const ov = root.getElementById('docker-host-overlay');
-              ov.style.bottom = 'auto'; ov.style.height = 'auto'; ov.style.minHeight = '0';
-              ov.querySelector('.docker-form-actions').style.marginTop = '8px';
               await sleep(300);`,
-        clip: `document.querySelector('widget-config-modal').shadowRoot.getElementById('docker-host-overlay')`,
+        clip: `${DRAWER}.querySelector('settings-content').shadowRoot.getElementById('docker-modal')`,
     },
     {
         // Server Health pointed at another server: the source, its address and the test.
@@ -716,21 +696,30 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         const dockerHost = process.env.DOCKER_API.replace(/^tcp:\/\//, '');
         // Row seven now: Proxmox took columns 8-12 of row five, and two tiles
         // sharing a cell is not a layout, it is a bug in a photograph.
-        addWidget(1, 7, 5, 2, {
-            widgetId: 'docker',
-            hosts: [{ id: 'docs', name: 'Home server', type: 'tcp', url: dockerHost }],
-            activeHost: 'docs',
-            title: 'Containers',
+        // The hosts belong to the account, as Proxmox's hypervisors do, and the
+        // widget shows all of them. The second is an agent with a token saved and
+        // switched off: it is there for the photograph of its form, with dots in
+        // the token box, and switched off it asks nothing of an address that does
+        // not exist.
+        const savedHosts = await api('/docker/settings', {
+            hosts: [
+                { name: 'Home server', type: 'tcp', url: dockerHost, enabled: true },
+                { name: 'NAS', type: 'agent', url: '192.168.1.30:9876', token: 'a-token-nobody-will-read', enabled: false },
+            ],
         });
+        if (!savedHosts.ok) throw new Error('could not save the Docker hosts: ' + savedHosts.status);
+        addWidget(1, 7, 5, 2, { widgetId: 'docker', title: 'Containers' });
         // Warm the proxy before anything is photographed. The first call to a
         // just-started Podman service takes several seconds to come back, which
         // is longer than any shot waits — the main board was photographed with
         // "Could not connect to Docker host" across its Docker tile, while the
         // tile's own close-up, taken minutes later, was fine.
-        const warm = Date.now();
-        await fetch(`${APP}api/docker/containers?host=${encodeURIComponent(dockerHost)}`, {
+        const listed = await (await fetch(`${APP}api/docker/settings`, {
             headers: { Cookie: `session_token=${token}; csrf_token=${csrf}` },
-        }).catch(() => { });
+        })).json() as { hosts: { id: string; type: string }[] };
+        const home = listed.hosts.find((h) => h.type === 'tcp');
+        const warm = Date.now();
+        await api('/docker/containers', { host_id: home?.id }).catch(() => { });
         console.log(`  docker proxy warmed in ${Date.now() - warm}ms`);
     }
     addWidget(5, 5, 3, 2, {
@@ -871,11 +860,11 @@ async function main() {
     const wantedShots = process.env.DOCKER_API
         ? wanted
         : wanted.filter((s) => {
-            const isDocker = s.name === 'w-docker' || s.name === 'w-p-docker';
+            const isDocker = ['w-docker', 'w-p-docker', 'w-p-docker-host', 'p-docker'].includes(s.name);
             return !isDocker;
         });
     if (!process.env.DOCKER_API && wanted.length !== wantedShots.length) {
-        console.log('· no DOCKER_API — leaving the two Docker shots as they are');
+        console.log('· no DOCKER_API — leaving the Docker shots as they are');
     }
     if (!wanted.length) {
         console.error('Nothing matched. Known shots:\n  ' + SHOTS.map((s) => s.name).join('\n  '));

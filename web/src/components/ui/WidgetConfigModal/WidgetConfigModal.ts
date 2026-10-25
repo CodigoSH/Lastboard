@@ -23,8 +23,8 @@ import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } fr
 import { loadProxmox, type PxHost } from '../../../services/proxmoxApi';
 import { arrangedIds, guestKey, inGuestOrder, isGuestShown, settleGuestOrder, settleGuests, type GuestRow } from '../../../services/proxmoxGuests';
 import { listWidgetSecrets, saveWidgetSecrets } from '../../../services/widgetSecrets';
-import { secretsPatch, SECRET_MASK, type SecretChange } from '../../../services/secretField';
-import { dockerSecretName, hostTokenChange } from '../../../services/dockerHostSecret';
+import { secretsPatch, SECRET_MASK } from '../../../services/secretField';
+import { fetchDockerSettings, hostIdsToStore, type AccountDockerHost } from '../../../services/dockerHosts';
 import { HEADER_NAME, planApiSecrets } from '../../../widgets/apiSecrets';
 import { testRemoteStats } from '../../../services/remoteStats';
 import { telemetrySource } from '../../../widgets/core/remoteTelemetry';
@@ -43,8 +43,6 @@ import {
     shortId,
 } from '../../../services/dockerShared';
 
-const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-const ICON_TRASH = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
 const DRAG_HANDLE = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>`;
 
 class WidgetConfigModal extends HTMLElement {
@@ -77,19 +75,17 @@ class WidgetConfigModal extends HTMLElement {
         this.setupEventListeners(); // Initial setup
     }
 
-    /** The Docker agent tokens that are saved, by secret name, as of opening. */
-    private _dockerSaved = new Set<string>();
-    /** What the host forms decided about tokens; applied when the widget is saved. */
-    private _dockerPending: Record<string, SecretChange> = {};
-    /** A token just typed for a host that is not saved yet, to try it before saving. */
-    private _dockerTyped: Record<string, string> = {};
+    /** The account's Docker hosts, as of opening; empty until they arrive. */
+    private _dockerAccount: AccountDockerHost[] = [];
+    private _dockerAccountLoaded = false;
+    /** The hosts this widget shows. Kept here so redrawing the form does not undo a tick. */
+    private _dockerTicked = new Set<string>();
 
     open(item: GridItem) {
         this.currentItem = item;
-        this._dockerSaved = new Set();
-        this._dockerPending = {};
-        this._dockerTyped = {};
-        listWidgetSecrets(item.id).then(r => { this._dockerSaved = new Set(r.names); }).catch(() => { });
+        this._dockerAccount = [];
+        this._dockerAccountLoaded = false;
+        this._dockerTicked = new Set();
         // Each widget starts on its own active host, not on whatever was
         // selected the last time this dialog was open for another one.
         this._dockerSelectedHost = '';
@@ -118,6 +114,28 @@ class WidgetConfigModal extends HTMLElement {
         this.switchTab('general');
 
         if (this.dialog) this.dialog.showModal();
+
+        if (content?.widgetId === 'docker') this.loadDockerAccount(item, content);
+    }
+
+    /**
+     * Reads the account's hosts, which the widget only chooses among, and draws
+     * the form again with them. Asked fresh: the list was just edited in
+     * Preferences as often as not.
+     */
+    private async loadDockerAccount(item: GridItem, content: any) {
+        try {
+            const settings = await fetchDockerSettings(true);
+            if (this.currentItem !== item) return;
+            this._dockerAccount = settings.hosts;
+            const pickable = settings.hosts.filter(h => h.enabled && h.usable).map(h => h.id);
+            const chosen: string[] = Array.isArray(content.hostIds) ? content.hostIds : [];
+            this._dockerTicked = new Set(chosen.length ? pickable.filter(id => chosen.includes(id)) : pickable);
+            this._dockerAccountLoaded = true;
+            this.refreshDockerContent();
+        } catch {
+            // Nothing to choose among. The form says so, and a save leaves hostIds as it was.
+        }
     }
 
 
@@ -615,18 +633,13 @@ class WidgetConfigModal extends HTMLElement {
 
             newContent.containerConfig = cfg;
 
-            // No host carries its token in the widget; the ones that changed go to the store.
-            if (Array.isArray(newContent.hosts)) {
-                newContent.hosts = newContent.hosts.map((h: any) => { const { token: _gone, ...rest } = h; return rest; });
-            }
-            const dockerPatch = secretsPatch(this._dockerPending);
-            if (dockerPatch) {
-                try {
-                    await saveWidgetSecrets(this.currentItem!.id, dockerPatch);
-                } catch {
-                    return;
-                }
-                this._dockerPending = {};
+            // Hosts are the account's. The widget keeps only which of them it
+            // shows, and nothing at all when it shows every one — so a host
+            // added later appears here too.
+            delete newContent.hosts;
+            if (this._dockerAccountLoaded) {
+                const ids = hostIdsToStore(this._dockerAccount, [...this._dockerTicked]);
+                if (ids) newContent.hostIds = ids; else delete newContent.hostIds;
             }
         } else if (widgetId === 'telemetry') {
             for (const k of ['source', 'url', 'username', 'header_name', 'cpu_path', 'ram_path', 'ram_used_path', 'ram_total_path', 'temp_path', 'link']) delete newContent[k];
@@ -1035,7 +1048,6 @@ class WidgetConfigModal extends HTMLElement {
                 <div class="actions">
                     ${(['clock', 'telemetry', 'weather', 'notepad', 'markdown', 'docker', 'api', 'monitor', 'proxmox'].includes(widgetId) || this.currentItem?.type === 'section') ? `<app-button variant="primary" id="save-btn">${i18n.t('general.save')}</app-button>` : ''}
                 </div>
-                <div id="docker-host-overlay" class="docker-overlay" style="display: none;"></div>
             </dialog>
         `;
 
@@ -1233,7 +1245,7 @@ class WidgetConfigModal extends HTMLElement {
             root.getElementById('modal')?.classList.add('dialog--wide');
 
             this.loadDockerContainers(content);
-            this.loadAgentVersions(content);
+            this.loadAgentVersions();
         }
 
         // Picking a host on the left is what the right-hand column follows.
@@ -1250,9 +1262,9 @@ class WidgetConfigModal extends HTMLElement {
                 if (box) box.value = '';
                 this.applyDockerFilters();
             };
-            // The edit and delete buttons act on the row without selecting it.
+            // The tick acts on the row without selecting it.
             row.addEventListener('click', (e) => {
-                if ((e.target as Element).closest('.host-action-btn')) return;
+                if ((e.target as Element).closest('.host-pick')) return;
                 select();
             });
             row.addEventListener('keydown', (e) => {
@@ -1280,187 +1292,17 @@ class WidgetConfigModal extends HTMLElement {
         search?.addEventListener('input', () => this.applyDockerFilters());
 
 
-        root.getElementById('docker-show-add-btn')?.addEventListener('click', () => {
-            this.showDockerHostForm(null);
-        });
-        root.querySelectorAll('.host-action-btn.edit').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = (e.currentTarget as HTMLElement).dataset.id;
-                if (id) {
-                    this.showDockerHostForm(id);
-                }
-            });
-        });
-        root.querySelectorAll('.host-action-btn.delete').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const id = (e.currentTarget as HTMLElement).dataset.id;
+        // Which hosts this widget shows. At least one stays ticked: none would
+        // be stored as "all", the opposite of what the empty list asks for.
+        root.querySelectorAll<HTMLInputElement>('.docker-host-pick input').forEach(box => {
+            box.addEventListener('change', () => {
+                const id = box.dataset.hostId;
                 if (!id) return;
-
-                const confirmationModal = document.querySelector('confirmation-modal') as any;
-                let confirmed = false;
-                if (confirmationModal) {
-                    confirmed = await confirmationModal.confirm(
-                        i18n.t('general.delete') || 'Delete',
-                        i18n.t('docker.delete_host_confirm') || 'Are you sure you want to delete this host?'
-                    );
-                } else {
-                    confirmed = confirm(i18n.t('general.are_you_sure') || 'Are you sure?');
-                }
-
-                if (confirmed) {
-                    let content = typeof this.currentItem!.content === 'string'
-                        ? JSON.parse(this.currentItem!.content)
-                        : { ...this.currentItem!.content };
-                    content.hosts = (content.hosts || []).filter((h: any) => h.id !== id);
-                    // A host that is gone takes its token with it.
-                    const secret = dockerSecretName(id);
-                    if (this._dockerSaved.has(secret) || this._dockerPending[secret]) this._dockerPending[secret] = { action: 'clear' };
-                    delete this._dockerTyped[id];
-
-                    this.currentItem!.content = JSON.stringify(content);
-                    this.refreshDockerContent();
-                }
+                if (box.checked) this._dockerTicked.add(id);
+                else if (this._dockerTicked.size > 1) this._dockerTicked.delete(id);
+                else box.checked = true;
+                box.closest('.host-item')?.classList.toggle('is-off', !box.checked);
             });
-        });
-    }
-
-    private showDockerHostForm(hostId: string | null) {
-        if (!this.shadowRoot || !this.currentItem) return;
-        const overlay = this.shadowRoot.getElementById('docker-host-overlay');
-        if (!overlay) return;
-
-        const content = typeof this.currentItem.content === 'string'
-            ? JSON.parse(this.currentItem.content)
-            : this.currentItem.content;
-
-        const hosts = content.hosts || [];
-        const editingHost = hostId ? hosts.find((h: any) => h.id === hostId) || { type: 'local' } : { type: 'local' };
-        // Dots when a token is saved, or one was typed for this host and is waiting for Save.
-        const pending = hostId ? this._dockerPending[dockerSecretName(hostId)] : undefined;
-        const tokenSet = !!hostId && (pending ? pending.action === 'set' : this._dockerSaved.has(dockerSecretName(hostId)));
-        
-        overlay.innerHTML = `
-            <div class="modal-header" style="border-radius: var(--radius) var(--radius) 0 0; border-bottom: 1px solid var(--border);">
-                <h3 class="modal-title" style="margin: 0; font-size: 16px; font-weight: 600; color: var(--text-main);">${hostId ? (i18n.t('general.edit') || 'Edit') : (i18n.t('docker.add_new_host') || 'Add Host')}</h3>
-                <button class="modal-close" id="docker-cancel-overlay-btn" title="${i18n.t('general.close') || 'Close'}">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div style="padding: 24px; display: flex; flex-direction: column; flex: 1; overflow-y: auto;">
-                <div class="field-group">
-                    <label>${i18n.t('docker.host_name') || 'Host Name'}</label>
-                    <input type="text" id="docker-name" value="${esc(editingHost.name || '')}" placeholder="${i18n.t('docker.host_name_placeholder')}" />
-                </div>
-                <div class="field-group" style="margin-top: 12px;">
-                    <label>${i18n.t('docker.host_type') || 'Connection Type'}</label>
-                    <app-select id="docker-type" value="${editingHost.type}"></app-select>
-                </div>
-                <div class="field-group" id="docker-url-row" style="margin-top: 12px; ${editingHost.type === 'local' ? 'display: none;' : ''}">
-                    <label>${i18n.t('docker.host_url') || 'Agent URL'}</label>
-                    <input type="text" id="docker-url" value="${esc(editingHost.url || '')}" placeholder="192.168.1.100:2375" />
-                </div>
-                <div class="field-group" id="docker-token-row" style="margin-top: 12px; ${editingHost.type === 'agent' ? '' : 'display: none;'}">
-                    <label>${i18n.t('docker.host_token') || 'Agent Token'}</label>
-                    <input type="password" id="docker-token" value="${tokenSet ? SECRET_MASK : ''}" placeholder="${i18n.t('docker.host_token_placeholder')}" spellcheck="false" autocomplete="new-password" data-secret />
-                </div>
-                <div class="docker-form-actions" style="margin-top: auto; padding-top: 24px;">
-                    <app-button variant="primary" id="docker-save-overlay-btn" style="flex: 1;">${i18n.t('general.save')}</app-button>
-                </div>
-            </div>
-        `;
-
-        overlay.style.display = 'flex';
-
-        // Dots on entering the box: the first key replaces them, Delete empties it.
-        const tokenBox = this.shadowRoot.getElementById('docker-token') as HTMLInputElement | null;
-        tokenBox?.addEventListener('focus', () => tokenBox.select());
-
-        const typeSelect = this.shadowRoot.getElementById('docker-type') as AppSelect | null;
-        if (typeSelect) {
-            typeSelect.options = [
-                { value: 'local', label: i18n.t('docker.host_type_local') || 'Local socket' },
-                { value: 'agent', label: i18n.t('docker.host_type_agent') || 'Remote Agent' },
-                { value: 'tcp', label: i18n.t('docker.host_type_tcp') || 'Remote TCP' },
-                { value: 'tls', label: i18n.t('docker.host_type_tls') || 'Remote TLS' }
-            ];
-
-            // The port belongs to the connection type, and one fixed example for
-            // all three was wrong for TLS: an unencrypted daemon listens on 2375
-            // and a TLS one on 2376, and the agent has its own default. Showing
-            // 2375 whatever you picked is how the ports stopped matching what the
-            // agent and the guides say.
-            const URL_HINT: Record<string, string> = {
-                agent: '192.168.1.100:2375',
-                tcp: '192.168.1.100:2375',
-                tls: '192.168.1.100:2376',
-            };
-
-            const toggle = (val?: string) => {
-                const t = val || typeSelect.value;
-                const url = this.shadowRoot!.getElementById('docker-url-row');
-                const token = this.shadowRoot!.getElementById('docker-token-row');
-                const urlInput = this.shadowRoot!.getElementById('docker-url') as HTMLInputElement | null;
-                if (url) url.style.display = t === 'local' ? 'none' : '';
-                if (token) token.style.display = t === 'agent' ? '' : 'none';
-                if (urlInput && URL_HINT[t]) urlInput.placeholder = URL_HINT[t];
-            };
-            typeSelect.addEventListener('change', (e: Event) => toggle((e as CustomEvent).detail.value));
-            toggle();
-        }
-
-        this.shadowRoot.getElementById('docker-cancel-overlay-btn')?.addEventListener('click', () => {
-            overlay.style.display = 'none';
-        });
-
-        this.shadowRoot.getElementById('docker-save-overlay-btn')?.addEventListener('click', () => {
-            const name = (this.shadowRoot!.getElementById('docker-name') as HTMLInputElement).value.trim();
-            const type = (this.shadowRoot!.getElementById('docker-type') as AppSelect).value;
-            const urlInput = this.shadowRoot!.getElementById('docker-url') as HTMLInputElement;
-            const url = urlInput ? urlInput.value.trim() : '';
-            const tokenInput = this.shadowRoot!.getElementById('docker-token') as HTMLInputElement;
-            const tokenRaw = tokenInput ? tokenInput.value : '';
-
-            if (!name) return;
-
-            let currentContent = typeof this.currentItem!.content === 'string'
-                ? JSON.parse(this.currentItem!.content)
-                : { ...this.currentItem!.content };
-
-            if (!currentContent.hosts) currentContent.hosts = [];
-
-            // The token is never in the widget's content: it is a secret of the
-            // widget, held here until Save.
-            const id = hostId || 'h_' + Math.random().toString(36).slice(2, 8);
-            const secret = dockerSecretName(id);
-            const before = this._dockerPending[secret];
-            const saved = before ? before.action === 'set' : this._dockerSaved.has(secret);
-            const change = hostTokenChange({ type, raw: tokenRaw, saved });
-            if (change.action === 'set') {
-                this._dockerPending[secret] = change;
-                this._dockerTyped[id] = change.token;
-            } else if (change.action === 'clear') {
-                this._dockerPending[secret] = change;
-                delete this._dockerTyped[id];
-            }
-
-            if (hostId) {
-                currentContent.hosts = currentContent.hosts.map((h: any) => {
-                    if (h.id !== hostId) return h;
-                    const { token: _gone, ...rest } = h;
-                    return { ...rest, name, type, url };
-                });
-            } else {
-                currentContent.hosts.push({ id, name, type, url });
-            }
-
-            this.currentItem!.content = JSON.stringify(currentContent);
-            overlay.style.display = 'none';
-            this.refreshDockerContent();
         });
     }
 
@@ -1753,6 +1595,13 @@ class WidgetConfigModal extends HTMLElement {
     /** Past this many hosts, scanning the list is slower than typing a name. */
     private static readonly DOCKER_HOST_SEARCH_FROM = 6;
 
+    /** The account's hosts a widget could show: the ones switched on that this account may use. */
+    private dockerPickableHosts(): DockerHost[] {
+        return this._dockerAccount
+            .filter(h => h.enabled && h.usable)
+            .map(h => ({ id: h.id, name: h.name, type: h.type, url: h.url }));
+    }
+
     /**
      * The Docker form, in one of two shapes.
      *
@@ -1768,16 +1617,16 @@ class WidgetConfigModal extends HTMLElement {
     private renderDockerForm(content: any) {
         const renderAppearanceControls = () => appearanceControlsTemplate(this.premiumColors, this._selectedColor, this._selectedBorderWidth);
 
-        const hosts: DockerHost[] = content.hosts || [];
+        const hosts = this.dockerPickableHosts();
         const refresh = Number(content.refreshSec) > 0 ? Number(content.refreshSec) : 60;
         const split = hosts.length >= 2;
 
         if (!this._dockerSelectedHost || !hosts.some(h => h.id === this._dockerSelectedHost)) {
-            this._dockerSelectedHost = content.activeHost || hosts[0]?.id || '';
+            this._dockerSelectedHost = hosts[0]?.id || '';
         }
 
         const hostRow = (h: DockerHost) => `
-            <div class="host-item${split && h.id === this._dockerSelectedHost ? ' is-selected' : ''}"
+            <div class="host-item${split && h.id === this._dockerSelectedHost ? ' is-selected' : ''}${this._dockerTicked.has(h.id) ? '' : ' is-off'}"
                  data-host-id="${esc(h.id)}"${split ? ' role="button" tabindex="0"' : ''}>
                 <div class="host-info">
                     <span class="host-name">${esc(h.name)}</span>
@@ -1786,15 +1635,16 @@ class WidgetConfigModal extends HTMLElement {
                         ${h.type === 'agent' ? `<span class="host-version" data-agent-version="${esc(h.id)}"></span>` : ''}
                     </span>
                 </div>
-                <div class="host-actions">
-                    <button class="host-action-btn edit" data-id="${esc(h.id)}" title="${i18n.t('general.edit')}">${ICON_EDIT}</button>
-                    <button class="host-action-btn delete" data-id="${esc(h.id)}" title="${i18n.t('general.delete')}">${ICON_TRASH}</button>
-                </div>
+                <label class="host-actions host-pick" title="${esc(i18n.t('docker.show_in_widget'))}">
+                    <input type="checkbox" data-host-id="${esc(h.id)}" ${this._dockerTicked.has(h.id) ? 'checked' : ''}
+                           aria-label="${esc(i18n.t('docker.show_in_widget'))}" />
+                    <span>${esc(i18n.t('docker.show_in_widget_short'))}</span>
+                </label>
             </div>`;
 
         const hostsList = hosts.length > 0
             ? hosts.map(hostRow).join('')
-            : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${i18n.t('docker.no_hosts_configured') || 'No hosts found'}</p>`;
+            : `<p class="no-hosts" style="color: var(--text-dim); text-align: center; padding: 12px;">${esc(this._dockerAccountLoaded ? i18n.t('docker.no_hosts_configured') : i18n.t('general.loading'))}</p>`;
 
         // Every control below lives inside a .field-group, which is what gives
         // labels and inputs their colours, padding and focus ring. Building the
@@ -1805,7 +1655,8 @@ class WidgetConfigModal extends HTMLElement {
                       placeholder="${esc(i18n.t('docker.search_hosts'))}" />`
             : '';
 
-        const addHostBtn = `<app-button variant="ghost" id="docker-show-add-btn" style="width: 100%;">${i18n.t('docker.add_new_host') || 'Add Host'}</app-button>`;
+        // Edit mode locks the preferences drawer, so this points there rather than linking.
+        const addHostBtn = `<small>${esc(i18n.t('docker.hosts_in_preferences'))}</small>`;
 
         const containerSearch = `<input type="text" id="docker-search"
                    placeholder="${esc(i18n.t('docker.search_containers'))}" />`;
@@ -1885,10 +1736,9 @@ class WidgetConfigModal extends HTMLElement {
      * what somebody remembers installing. Each host answers on its own: one
      * that is slow or down leaves its own line blank and holds up no other.
      */
-    private loadAgentVersions(content: any) {
-        const hosts: DockerHost[] = content.hosts || [];
-        for (const host of hosts.filter(h => h.type === 'agent')) {
-            fetchAgentVersion(host, this.currentItem?.id ?? 0, this._dockerTyped[host.id]).then(version => {
+    private loadAgentVersions() {
+        for (const host of this.dockerPickableHosts().filter(h => h.type === 'agent')) {
+            fetchAgentVersion(host).then(version => {
                 if (!version) return;
                 const cell = this.shadowRoot?.querySelector<HTMLElement>(
                     `[data-agent-version="${CSS.escape(host.id)}"]`);
@@ -1901,9 +1751,9 @@ class WidgetConfigModal extends HTMLElement {
         const box = this.shadowRoot?.getElementById('docker-containers');
         if (!box) return;
 
-        const hosts: DockerHost[] = content.hosts || [];
+        const hosts = this.dockerPickableHosts();
         if (!hosts.length) {
-            box.innerHTML = `<p class="monitor-services__state">${esc(i18n.t('docker.no_hosts_configured'))}</p>`;
+            box.innerHTML = `<p class="monitor-services__state">${esc(i18n.t(this._dockerAccountLoaded ? 'docker.no_hosts_configured' : 'general.loading'))}</p>`;
             return;
         }
 
@@ -1911,7 +1761,7 @@ class WidgetConfigModal extends HTMLElement {
 
         const results = await Promise.all(hosts.map(async (host) => {
             try {
-                return { host, containers: await fetchContainers(host, this.currentItem?.id ?? 0, this._dockerTyped[host.id]), failed: false, errorKey: '' };
+                return { host, containers: await fetchContainers(host), failed: false, errorKey: '' };
             } catch (err) {
                 return { host, containers: [] as DockerContainer[], failed: true, errorKey: hostErrorKey(err) };
             }

@@ -2,7 +2,7 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
 
-Three of the sections — **Users**, **Data** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring** and **Proxmox** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Proxmox** and **About**, and nothing hints that the rest exist.
+Three of the sections — **Users**, **Data** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring**, **Proxmox** and **Docker** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Proxmox**, **Docker** and **About** — the ones its permissions allow — and nothing hints that the rest exist.
 
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
@@ -54,6 +54,13 @@ Turn service monitoring on for your own bookmarks, choose how often the server c
 ![Proxmox](../assets/p-proxmox.png)
 
 Connect Lastboard to one or more Proxmox VE hosts — one card each, with a name, address, API token and certificate policy. Saving reads every host straight away and says, per card, what that token can see and whether it may start and stop machines. Each account connects its own hypervisors: yours are never listed to, and never used by, anybody else. See **[Proxmox](../proxmox/overview.md)** for the token recipe and the page it unlocks.
+
+
+## Docker
+
+![Docker](../assets/p-docker.png)
+
+The Docker hosts of your account — a local socket, a Lastboard Agent with its token, or a daemon reached over TCP or TLS — each with a row that says whether it answers and how many containers it has. Every Docker widget reads this one list; a widget only chooses which of them it shows. A member connects through a Lastboard Agent; the other types are the administrator's. See **[Docker](../widgets/docker.md#docker-hosts)** for each type and the token.
 
 ## Data
 

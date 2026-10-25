@@ -10,12 +10,16 @@ import { csrfToken } from './csrf';
  * from disagreeing about which containers exist.
  */
 
+/**
+ * A Docker host as the widget and its config screen know it: one of the
+ * account's own (see dockerHosts.ts). It carries no token — the server keeps
+ * that and reads it itself when a request names the host.
+ */
 export interface DockerHost {
     id: string;
     name: string;
     type: 'local' | 'tcp' | 'tls' | 'agent';
     url?: string;
-    token?: string;
 }
 
 export interface DockerPort {
@@ -51,23 +55,10 @@ export interface ContainerCfgEntry {
 }
 
 /**
- * Drops a scheme the address was typed with.
- *
- * The connection type already says how to reach the host, and people paste what
- * their DOCKER_HOST holds — `tcp://10.0.0.5:2375` — into a field that then adds
- * a scheme of its own. Left alone that produced `https://tcp://10.0.0.5:2376`,
- * which fails with nothing on screen to explain why.
- */
-function bareHost(url: string | undefined): string {
-    return (url ?? '').trim().replace(/^(tcp|http|https|unix|npipe|ssh):\/\//i, '');
-}
-
-/**
  * A POST to the Docker endpoints.
  *
- * The host goes in the body and never in the address: for an agent it carries
- * the agent's token, and a query string is what a reverse proxy in front of
- * Lastboard writes to its access log.
+ * The host goes in the body, not the address, so nothing about it lands in
+ * the access log of a reverse proxy in front of Lastboard.
  */
 export function dockerPost(body: unknown): RequestInit {
     return {
@@ -78,31 +69,12 @@ export function dockerPost(body: unknown): RequestInit {
 }
 
 /**
- * How a host is addressed in the `host` field of a Docker request.
- *
- * An agent's token is not part of it: the server reads that from the widget's
- * secret store, for the widget and host the request names (see hostRef). Only a
- * token that has just been typed in a form, and so is not saved yet, is sent.
+ * What a Docker request says about the host: which of the account's hosts it
+ * is, and nothing about where it is. The address and the agent's token are
+ * the server's to read from the account.
  */
-export function hostParam(host: DockerHost, typedToken?: string): string {
-    if (host.type === 'local') return '';
-    if (host.type === 'agent') {
-        // An agent behind a reverse proxy is reached over HTTPS, and the address
-        // someone types says so. The scheme is the one piece of it worth keeping:
-        // dropped, the widget spoke plain HTTP to a proxy that only answers TLS.
-        const query: string[] = [];
-        const token = typedToken ?? host.token ?? '';
-        if (token) query.push(`token=${encodeURIComponent(token)}`);
-        if (/^\s*https:\/\//i.test(host.url ?? '')) query.push('tls=1');
-        return `agent://${bareHost(host.url)}${query.length ? '?' + query.join('&') : ''}`;
-    }
-    if (host.type === 'tls') return `https://${bareHost(host.url)}`;
-    return bareHost(host.url);
-}
-
-/** What a Docker request says about the host: where it is, and which saved host it is. */
-export function hostRef(host: DockerHost, widgetId: number, typedToken?: string): { host: string; widget: number; host_id: string } {
-    return { host: hostParam(host, typedToken), widget: widgetId, host_id: host.id };
+export function hostRef(host: DockerHost): { host_id: string } {
+    return { host_id: host.id };
 }
 
 /** The id containerConfig is keyed by. */
@@ -173,7 +145,7 @@ export const DEMO_CONTAINERS: DockerContainer[] = [
  * Why a host could not be listed, as the i18n key to show.
  *
  * The server tells a refused token apart from a host that is not there, and
- * the difference is the whole point: one is fixed in the widget's settings,
+ * the difference is the whole point: one is fixed in Preferences → Docker,
  * the other in the network. Anything it does not name is "could not connect".
  */
 export class DockerHostError extends Error {
@@ -191,10 +163,10 @@ export class DockerHostError extends Error {
  * they are older than that. A host that does not answer gives null, and the
  * screen says nothing rather than guess.
  */
-export async function fetchAgentVersion(host: DockerHost, widgetId = 0, typedToken?: string): Promise<string | null> {
+export async function fetchAgentVersion(host: DockerHost): Promise<string | null> {
     if (host.type !== 'agent' || isDemoMode()) return null;
     try {
-        const res = await fetch('/api/docker/agent-version', dockerPost(hostRef(host, widgetId, typedToken)));
+        const res = await fetch('/api/docker/agent-version', dockerPost(hostRef(host)));
         if (!res.ok) return null;
         const data = await res.json();
         return agentVersionLabel(typeof data?.version === 'string' ? data.version : '');
@@ -221,11 +193,11 @@ export function hostErrorKey(err: unknown): string {
  * The host is optional because demo mode answers before it is ever read —
  * there is no daemon and no host to address.
  */
-export async function fetchContainers(host: DockerHost | undefined, widgetId = 0, typedToken?: string): Promise<DockerContainer[]> {
+export async function fetchContainers(host: DockerHost | undefined): Promise<DockerContainer[]> {
     if (isDemoMode()) return DEMO_CONTAINERS;
     if (!host) return [];
 
-    const res = await fetch('/api/docker/containers', dockerPost(hostRef(host, widgetId, typedToken)));
+    const res = await fetch('/api/docker/containers', dockerPost(hostRef(host)));
     if (!res.ok) throw new DockerHostError((await res.text().catch(() => '')).trim());
     const data = await res.json();
     return Array.isArray(data) ? data : [];

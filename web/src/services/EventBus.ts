@@ -15,6 +15,8 @@ export const EVENTS = {
     PROXMOX_PAGE_CHANGED: 'lastboard:proxmox-page-changed',
     /** The integration was turned on or off in settings ({ enabled }). */
     PROXMOX_CHANGED: 'lastboard:proxmox-changed',
+    /** The account's Docker hosts were saved in settings. */
+    DOCKER_CHANGED: 'lastboard:docker-changed',
     MONITORING_CHANGED: 'lastboard:monitoring-changed',
     NOTIFY: 'lastboard:notify'
 };

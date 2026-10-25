@@ -1,11 +1,13 @@
 import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
+import { accessAllows } from '../../../services/access';
 
 interface User {
     initials?: string;
     avatar_url?: string;
     username?: string;
     role?: string;
+    access?: { profile: string; can: Record<string, boolean> };
 }
 
 interface RightDrawerProps {
@@ -55,6 +57,12 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
                     <span>${i18n.t('widget.proxmox.name')}</span>
                 </div>
+
+                ${accessAllows(user, 'docker_view') ? `
+                <div class="right-drawer__menu-item ${selectedSection === 'docker' ? 'right-drawer__menu-item--active' : ''}" data-section="docker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3V9H3zM7 12h3V9H7zM11 12h3V9h-3zM7 8h3V5H7zM11 8h3V5h-3zM15 12h3V9h-3z"/><path d="M2 13.5c.4 3.6 3.5 6 8 6 5.5 0 9.2-3 10.3-7.3.9.1 1.8-.1 2.4-.7-.7-.9-1.8-1.1-2.7-.8-.3-1-1.1-1.7-2-1.9-.3 1.2-.1 2.1.5 2.7"/></svg>
+                    <span>${i18n.t('widget.docker.name')}</span>
+                </div>` : ''}
 
                 ${(user.role?.toLowerCase() === 'admin' || user.role === 'Administrator') ? `
                     <div class="right-drawer__menu-item ${selectedSection === 'users' ? 'right-drawer__menu-item--active' : ''}" data-section="users">

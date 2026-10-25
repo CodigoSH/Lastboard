@@ -8,7 +8,7 @@ import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus } from './SettingsContent.template';
+import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
@@ -18,6 +18,8 @@ import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
 import { SECRET_MASK, secretChange } from '../../../services/secretField';
 import { proxmoxPayload } from './proxmoxPayload';
+import { fetchDockerSettings, saveDockerSettings, type AccountDockerHost, type DockerHostEdit } from '../../../services/dockerHosts';
+import { fetchAgentVersion, fetchContainers, hostErrorKey } from '../../../services/dockerShared';
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
@@ -63,6 +65,14 @@ class SettingsContent extends HTMLElement {
     /** What the last save found out, shown under the button. */
     /** What the last verification said, per host id. */
     private proxmoxStatus: Record<string, PxHostStatus> = {};
+
+    /** The account's Docker hosts, with the same `loaded` flag the sections above keep. */
+    private docker: { admin: boolean; hosts: AccountDockerHost[] } = { admin: false, hosts: [] };
+    private dockerLoaded = false;
+    private dockerFailed = false;
+    private dockerStatus: Record<string, DockerRowStatus> = {};
+    /** Bumped on every check, so a slow answer to an older one is dropped. */
+    private dockerCheckSeq = 0;
 
 
     static get observedAttributes() {
@@ -200,6 +210,18 @@ class SettingsContent extends HTMLElement {
                 case 'save-proxmox-host':
                     this.saveProxmoxHost();
                     break;
+                case 'add-docker-host':
+                    this.fillDockerModal(-1);
+                    break;
+                case 'edit-docker-host':
+                    this.fillDockerModal(Number(el.dataset.index ?? -1));
+                    break;
+                case 'delete-docker-host':
+                    this.deleteDockerHost(Number(el.dataset.index ?? -1));
+                    break;
+                case 'save-docker-host':
+                    this.saveDockerHost();
+                    break;
             }
         });
 
@@ -207,7 +229,7 @@ class SettingsContent extends HTMLElement {
         // them and Delete empties it: there is no button for either.
         root.addEventListener('focusin', (e) => {
             const t = e.target as HTMLInputElement;
-            if (t?.id === 'notify-token' || t?.id === 'proxmox-secret') t.select();
+            if (t?.id === 'notify-token' || t?.id === 'proxmox-secret' || t?.id === 'docker-token') t.select();
         });
 
         root.addEventListener('change', (e) => {
@@ -292,6 +314,9 @@ class SettingsContent extends HTMLElement {
         }
         if (section === 'monitoring' || section === 'notifications') {
             this.fetchMonitoring();
+        }
+        if (section === 'docker') {
+            this.fetchDocker();
         }
         if (section === 'proxmox') {
             this.fetchProxmox();
@@ -669,6 +694,182 @@ class SettingsContent extends HTMLElement {
         this.render();
     }
 
+    async fetchDocker() {
+        this.dockerFailed = false;
+        try {
+            const s = await fetchDockerSettings(true);
+            this.docker = { admin: s.admin, hosts: s.hosts };
+            this.dockerLoaded = true;
+        } catch {
+            this.dockerFailed = true;
+        }
+        this.render();
+        // Ask the hosts themselves, as the hypervisors are asked: a host that
+        // saved fine can still be one nothing answers at.
+        if (this.dockerLoaded && !this.dockerFailed) this.verifyDocker();
+    }
+
+    /**
+     * The dialog for one Docker host, empty or carrying what the row holds.
+     *
+     * A member is offered the agent only, and a host it cannot use (one of an
+     * administrator's kinds, kept from before hosts belonged to the account)
+     * shows just its name and switch: it can be renamed, switched off or
+     * removed, never pointed anywhere.
+     */
+    private fillDockerModal(index: number) {
+        if (!this.dockerLoaded) return;
+        const root = this.shadowRoot!;
+        const h = index >= 0 ? this.docker.hosts[index] : null;
+        if (index >= 0 && !h) return;
+        const set = (id: string, v: string) => {
+            const el = root.getElementById(id) as HTMLInputElement | null;
+            if (el) el.value = v;
+        };
+
+        set('docker-edit-index', String(index));
+        set('docker-name', h?.name || '');
+        set('docker-url', h?.url || '');
+        // Dots when a token is stored: its presence is shown, never its value.
+        set('docker-token', h?.has_token ? SECRET_MASK : '');
+        const enabled = root.getElementById('docker-enabled') as HTMLInputElement | null;
+        if (enabled) enabled.checked = h ? h.enabled : true;
+
+        const locked = !!h && !h.usable;
+        const show = (id: string, on: boolean) => {
+            const el = root.getElementById(id) as HTMLElement | null;
+            if (el) el.style.display = on ? '' : 'none';
+        };
+        show('docker-connection', !locked);
+        show('docker-locked-note', locked);
+
+        const kinds = this.docker.admin ? ['local', 'agent', 'tcp', 'tls'] : ['agent'];
+        const typeSel = root.getElementById('docker-type') as any;
+        if (typeSel) {
+            typeSel.options = kinds.map(k => ({
+                value: k,
+                label: i18n.t(k === 'agent' ? 'docker.host_type_agent' : `docker.host_type_${k}`),
+            }));
+            typeSel.value = h && kinds.includes(h.type) ? h.type : kinds[0];
+        }
+        const sync = () => {
+            const kind = typeSel?.value || 'agent';
+            show('docker-url-row', kind !== 'local');
+            show('docker-token-row', kind === 'agent');
+        };
+        if (typeSel && !typeSel.dataset.bound) {
+            typeSel.dataset.bound = '1';
+            typeSel.addEventListener('change', sync);
+        }
+        sync();
+
+        const title = root.getElementById('docker-modal-title');
+        if (title) title.textContent = i18n.t(h ? 'general.edit' : 'docker.add_new_host');
+        (root.getElementById('docker-modal') as HTMLDialogElement | null)?.showModal();
+    }
+
+    /** What the dialog was opened for: one host, added or edited. */
+    async saveDockerHost() {
+        if (!this.dockerLoaded) return;
+        const root = this.shadowRoot!;
+        const val = (id: string) => (root.getElementById(id) as HTMLInputElement | null)?.value.trim() ?? '';
+
+        const index = Number(val('docker-edit-index'));
+        const existing = index >= 0 ? this.docker.hosts[index] : undefined;
+        const locked = !!existing && !existing.usable;
+        const type = locked ? existing!.type : ((root.getElementById('docker-type') as any)?.value || 'agent');
+        const url = locked ? existing!.url : (type === 'local' ? '' : val('docker-url'));
+
+        if (type !== 'local' && !url) {
+            if (window.notifier) window.notifier.show(i18n.t('docker.missing_url'), 'error');
+            return;
+        }
+
+        const edited: DockerHostEdit = {
+            id: existing?.id || '',
+            name: val('docker-name'),
+            type, url,
+            enabled: !!(root.getElementById('docker-enabled') as HTMLInputElement | null)?.checked,
+            has_token: !!existing?.has_token && type === 'agent',
+            usable: true,
+            // Only an agent has a token; the box says what became of it.
+            tokenBox: type === 'agent' && !locked ? (root.getElementById('docker-token') as HTMLInputElement | null)?.value ?? '' : undefined,
+        };
+
+        const hosts: DockerHostEdit[] = this.docker.hosts.map(h => ({ ...h }));
+        if (existing) hosts[index] = edited; else hosts.push(edited);
+
+        if (await this.putDockerHosts(hosts)) {
+            (root.getElementById('docker-modal') as HTMLDialogElement | null)?.close();
+            this.verifyDocker();
+        }
+    }
+
+    /** Removing one asks first: widgets that showed it lose it, and its token goes with it. */
+    deleteDockerHost(index: number) {
+        const h = this.docker.hosts[index];
+        if (!h) return;
+        import('../../../services/EventBus').then(({ eventBus, EVENTS }) => {
+            eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+                title: i18n.t('action.remove'),
+                message: h.name || i18n.t('widget.docker.name'),
+                onConfirm: async () => {
+                    const hosts = this.docker.hosts.filter((_, i) => i !== index);
+                    if (await this.putDockerHosts(hosts)) this.verifyDocker();
+                },
+            });
+        });
+    }
+
+    /**
+     * Writes the whole list, as the server takes it for the truth. Every host
+     * not being edited goes back as it came, with no token: "keep yours".
+     */
+    private async putDockerHosts(hosts: DockerHostEdit[]): Promise<boolean> {
+        try {
+            const next = await saveDockerSettings(hosts);
+            this.docker = { admin: next.admin, hosts: next.hosts };
+            this.render();
+            if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
+            return true;
+        } catch (e) {
+            const key = String((e as Error)?.message || '').trim();
+            if (window.notifier) window.notifier.show(i18n.t(key.startsWith('docker.') ? key : 'settings.save_error'), 'error');
+            return false;
+        }
+    }
+
+    /** Lists what each host holds, so a green line means a widget will draw it. */
+    /** An answer arriving must not redraw the page under a dialog someone is typing in. */
+    private renderUnlessEditingDocker() {
+        const dialog = this.shadowRoot?.getElementById('docker-modal') as HTMLDialogElement | null;
+        if (!dialog?.open) this.render();
+    }
+
+    async verifyDocker() {
+        const seq = ++this.dockerCheckSeq;
+        const hosts = this.docker.hosts.filter(h => h.enabled && h.usable);
+        if (!hosts.length) { this.dockerStatus = {}; this.renderUnlessEditingDocker(); return; }
+        this.dockerStatus = Object.fromEntries(hosts.map(h => [h.id, { state: 'testing' } as DockerRowStatus]));
+        this.renderUnlessEditingDocker();
+        await Promise.all(hosts.map(async h => {
+            const host = { id: h.id, name: h.name, type: h.type, url: h.url };
+            let status: DockerRowStatus;
+            try {
+                const [containers, version] = await Promise.all([
+                    fetchContainers(host),
+                    h.type === 'agent' ? fetchAgentVersion(host) : Promise.resolve(null),
+                ]);
+                status = { state: 'ok', containers: containers.length, version };
+            } catch (err) {
+                status = { state: 'error', key: hostErrorKey(err) };
+            }
+            if (seq !== this.dockerCheckSeq) return;
+            this.dockerStatus = { ...this.dockerStatus, [h.id]: status };
+            this.renderUnlessEditingDocker();
+        }));
+    }
+
     async testNotify() {
         try {
             await apiService.post('/api/monitor/test', {
@@ -697,6 +898,9 @@ class SettingsContent extends HTMLElement {
             }
             if (newValue === 'proxmox') {
                 this.fetchProxmox();
+            }
+            if (newValue === 'docker') {
+                this.fetchDocker();
             }
             if (newValue === 'data') {
                 this.fetchPendingIcons();
@@ -1076,6 +1280,9 @@ class SettingsContent extends HTMLElement {
             case 'monitoring':
             case 'notifications':
                 return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed);
+
+            case 'docker':
+                return dockerTemplate(this.docker, this.dockerLoaded, this.dockerFailed, this.dockerStatus);
 
             case 'proxmox':
                 return proxmoxTemplate(this.proxmox, this.proxmoxLoaded, this.proxmoxFailed, this.proxmoxStatus);

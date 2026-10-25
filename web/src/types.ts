@@ -32,6 +32,8 @@ export interface User {
     project_logo?: string;
     beta_updates?: boolean;
     is_admin?: boolean;
+    /** What this account may do; absent when the server does not say (demo). */
+    access?: { profile: string; can: Record<string, boolean> };
     unit_system?: string;
     dashboard_background?: string;
     preferences?: UserPreferences; // Derived on client

@@ -19,6 +19,9 @@ import {
     isDemoMode,
 } from '../../services/dockerShared';
 import { entryOf, inChosenOrder, isShown } from '../../services/dockerContainers';
+import { fetchDockerSettings, hostsForWidget } from '../../services/dockerHosts';
+import { accessAllows } from '../../services/access';
+import { eventBus, EVENTS } from '../../services/EventBus';
 import '../../components/ui/Select/Select';
 import { whenVisible } from '../../services/whenVisible';
 
@@ -26,8 +29,8 @@ import { whenVisible } from '../../services/whenVisible';
 
 interface DockerWidgetConfig {
     widgetId: 'docker';
-    hosts: DockerHost[];
-    activeHost: string;
+    /** Which of the account's hosts this widget shows; none stored means all of them. */
+    hostIds?: string[];
     containerConfig?: Record<string, ContainerCfgEntry>;
     /** Each host's containers in the order they were arranged in. See dockerContainers.ts. */
     containerOrder?: Record<string, string[]>;
@@ -63,11 +66,10 @@ function demoStats(): DockerStats {
     };
 }
 
-function isAdmin(): boolean {
+/** Starting, stopping and restarting is a permission of its own, apart from seeing the list. */
+function mayControl(): boolean {
     const user = userStore.getUser();
-    if (!user) return false;
-    const role = (user.role || '').toLowerCase();
-    return role === 'admin';
+    return !!user && accessAllows(user, 'docker_control');
 }
 
 // ── SVG Icons ────────────────────────────────────────────────────────────────
@@ -395,7 +397,10 @@ interface HostState {
 
 class DockerWidget extends HTMLElement {
     private _itemId: number = 0;
-    private _config: DockerWidgetConfig = { widgetId: 'docker', hosts: [], activeHost: '' };
+    private _config: DockerWidgetConfig = { widgetId: 'docker' };
+    /** The account's hosts this widget draws: its chosen ones, switched on and usable. */
+    private _hosts: DockerHost[] = [];
+    private _onHostsChanged = () => { this.loadContainers(); };
 
     private _byHost: HostState[] = [];
     private _stats: Map<string, DockerStats> = new Map();
@@ -428,19 +433,14 @@ class DockerWidget extends HTMLElement {
             try {
                 const d = typeof val === 'string' ? JSON.parse(val) : val;
                 if (d?.widgetId === 'docker') {
-                    const upcomingHosts = d.hosts || [];
-                    let upcomingActiveHost = d.activeHost || '';
+                    const upcomingIds: string[] = Array.isArray(d.hostIds) ? d.hostIds : [];
+                    const idsChanged = JSON.stringify(upcomingIds) !== JSON.stringify(this._config.hostIds ?? []);
 
-                    if (!upcomingActiveHost && upcomingHosts.length > 0) {
-                        upcomingActiveHost = upcomingHosts[0].id;
-                    }
-
-                    const hostsChanged = JSON.stringify(upcomingHosts) !== JSON.stringify(this._config.hosts);
-                    const hostChanged = upcomingActiveHost !== this._config.activeHost;
-
-                    if (hostsChanged || hostChanged || this._config.widgetId !== 'docker') {
-                        this._config = { ...this._config, ...d, hosts: upcomingHosts, activeHost: upcomingActiveHost };
+                    if (idsChanged || this._config.widgetId !== 'docker') {
+                        this._config = { ...this._config, ...d, hostIds: upcomingIds };
                         this.loadContainers();
+                    } else {
+                        this._config = { ...this._config, ...d, hostIds: upcomingIds };
                     }
                 }
             } catch (_) { }
@@ -460,18 +460,11 @@ class DockerWidget extends HTMLElement {
                     try {
                         const c = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
                         if (c?.widgetId === 'docker') {
-                            const incomingHosts = c.hosts || [];
-                            let incomingActiveHost = c.activeHost || '';
+                            const incomingIds: string[] = Array.isArray(c.hostIds) ? c.hostIds : [];
+                            const hostsChanged = JSON.stringify(incomingIds) !== JSON.stringify(this._config.hostIds ?? []);
 
-                            if (!incomingActiveHost && incomingHosts.length > 0) {
-                                incomingActiveHost = incomingHosts[0].id;
-                            }
-
-                            const hostsChanged = JSON.stringify(incomingHosts) !== JSON.stringify(this._config.hosts);
-                            const hostChanged = incomingActiveHost !== this._config.activeHost;
-
-                            if (hostsChanged || hostChanged) {
-                                this._config = { ...this._config, ...c, hosts: incomingHosts, activeHost: incomingActiveHost };
+                            if (hostsChanged) {
+                                this._config = { ...this._config, ...c, hostIds: incomingIds };
                                 this.loadContainers();
                                 this.restartListTimer();
                             } else {
@@ -502,6 +495,10 @@ class DockerWidget extends HTMLElement {
         this._unsubscribeI18n = i18n.subscribe(() => {
             this.render();
         });
+
+        // Hosts are added, renamed and switched off in Preferences; the widget
+        // follows without a reload.
+        eventBus.on(EVENTS.DOCKER_CHANGED, this._onHostsChanged);
     }
 
     disconnectedCallback() {
@@ -509,12 +506,13 @@ class DockerWidget extends HTMLElement {
         this.stopListTimer();
         this._unsubscribeDashboard?.();
         this._unsubscribeI18n?.();
+        eventBus.off(EVENTS.DOCKER_CHANGED, this._onHostsChanged);
     }
 
     // ── Hosts ────────────────────────────────────────────────────────────────
 
     private hostById(id: string): DockerHost | undefined {
-        return this._config.hosts.find(h => h.id === id);
+        return this._hosts.find(h => h.id === id);
     }
 
     /**
@@ -569,7 +567,15 @@ class DockerWidget extends HTMLElement {
      * reshuffle the whole widget.
      */
     private async loadContainers(silent = false) {
-        const hosts = this._config.hosts;
+        // Which hosts, first: the account's list is the truth, and what this
+        // widget chose is only a filter over it. Failing to read it leaves the
+        // widget with no hosts, which it says in its own words.
+        try {
+            this._hosts = hostsForWidget((await fetchDockerSettings()).hosts, this._config.hostIds);
+        } catch {
+            this._hosts = [];
+        }
+        const hosts = this._hosts;
 
         if (!hosts.length && !isDemoMode()) {
             this.stopPolling();
@@ -594,7 +600,7 @@ class DockerWidget extends HTMLElement {
             try {
                 return {
                     host,
-                    containers: await fetchContainers(host, this._itemId),
+                    containers: await fetchContainers(host),
                     failed: false,
                     everLoaded: true,
                 };
@@ -671,7 +677,7 @@ class DockerWidget extends HTMLElement {
         await Promise.all([...byHost.values()].map(async ({ host, ids }) => {
             if (this._pollingTimer === null) return;
             try {
-                const res = await fetch('/api/docker/stats', dockerPost({ ...hostRef(host, this._itemId), ids }));
+                const res = await fetch('/api/docker/stats', dockerPost({ ...hostRef(host), ids }));
                 if (!res.ok) {
                     ids.forEach(id => this.clearStatsPending(id));
                     return;
@@ -732,7 +738,7 @@ class DockerWidget extends HTMLElement {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrfToken(),
                 },
-                body: JSON.stringify({ ...hostRef(host, this._itemId), id: containerID, action }),
+                body: JSON.stringify({ ...hostRef(host), id: containerID, action }),
             });
             if (res.ok) {
                 setTimeout(() => this.loadContainers(), 600);
@@ -831,13 +837,13 @@ class DockerWidget extends HTMLElement {
     }
 
     private buildBody(): string {
-        const hasHosts     = this._config.hosts.length > 0;
-        const admin        = isAdmin();
+        const hasHosts     = this._hosts.length > 0;
+        const admin        = mayControl();
         const containerCfg = this._config.containerConfig || {};
 
         const rows = this.visibleRows();
         // With one host, naming it on every row says nothing you don't know.
-        const showHost = this._config.hosts.length > 1;
+        const showHost = this._hosts.length > 1;
 
         // Hosts that were already down when this loaded have no containers to
         // grey out, so they get a line of their own. Ones that went quiet later

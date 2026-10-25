@@ -3,7 +3,6 @@ import {
     containerName,
     defaultContainerUrl,
     hostAddress,
-    hostParam,
     hostRef,
     hostErrorKey,
     agentVersionLabel,
@@ -36,34 +35,6 @@ describe('shortId', () => {
 describe('containerName', () => {
     test('drops the leading slash Docker adds', () => {
         expect(containerName(container())).toBe('jellyfin');
-    });
-});
-
-describe('hostParam', () => {
-    // People paste what DOCKER_HOST holds. The connection type already says how
-    // to reach the host, so a scheme typed into the address field is dropped
-    // rather than stacked on top of the one the type adds.
-    test('drops a scheme the address was typed with', () => {
-        expect(hostParam({ id: '1', name: 'nas', type: 'tcp', url: 'tcp://10.0.0.5:2375' }))
-            .toBe('10.0.0.5:2375');
-        expect(hostParam({ id: '1', name: 'nas', type: 'tls', url: 'tcp://10.0.0.5:2376' }))
-            .toBe('https://10.0.0.5:2376');
-        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'http://nas:2375', token: 't' }))
-            .toBe('agent://nas:2375?token=t');
-        expect(hostParam({ id: '1', name: 'nas', type: 'tcp', url: '  10.0.0.5:2375  ' }))
-            .toBe('10.0.0.5:2375');
-    });
-
-    test('local sockets address nothing', () => {
-        expect(hostParam({ id: '1', name: 'here', type: 'local' })).toBe('');
-    });
-    test('an agent carries its token', () => {
-        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'nas:9091', token: 'a b' }))
-            .toBe('agent://nas:9091?token=a%20b');
-    });
-    test('tls gets an https scheme', () => {
-        expect(hostParam({ id: '1', name: 'nas', type: 'tls', url: 'nas:2376' }))
-            .toBe('https://nas:2376');
     });
 });
 
@@ -125,16 +96,7 @@ describe('defaultContainerUrl', () => {
     });
 });
 
-describe('an agent behind HTTPS and a refused token', () => {
-    test('keeps https for an agent, and only for https', () => {
-        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'https://agent.example.com', token: 't' }))
-            .toBe('agent://agent.example.com?token=t&tls=1');
-        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'http://nas:9091', token: 't' }))
-            .toBe('agent://nas:9091?token=t');
-        expect(hostParam({ id: '1', name: 'nas', type: 'agent', url: 'nas:9091', token: 't' }))
-            .toBe('agent://nas:9091?token=t');
-    });
-
+describe('a refused token', () => {
     test('names a refused token and nothing else', () => {
         expect(hostErrorKey(new DockerHostError('docker.unauthorized'))).toBe('docker.unauthorized');
         expect(hostErrorKey(new DockerHostError('docker.connection_error'))).toBe('docker.connection_error');
@@ -155,22 +117,9 @@ describe('agentVersionLabel', () => {
     });
 });
 
-describe('a host whose token is kept by the server', () => {
-    const agent = { id: 'h_abc123', name: 'nas', type: 'agent' as const, url: 'nas:9091' };
-
-    test('is addressed without a token, and says which saved host it is', () => {
-        expect(hostRef(agent, 12)).toEqual({ host: 'agent://nas:9091', widget: 12, host_id: 'h_abc123' });
-        expect(JSON.stringify(hostRef(agent, 12))).not.toContain('token');
-    });
-
-    test('keeps the https hint, and sends a token only when one was just typed', () => {
-        expect(hostRef({ ...agent, url: 'https://agent.example.com' }, 12).host).toBe('agent://agent.example.com?tls=1');
-        expect(hostRef(agent, 12, 'new tok').host).toBe('agent://nas:9091?token=new%20tok');
-        expect(hostRef({ ...agent, url: 'https://a.b' }, 12, 'x').host).toBe('agent://a.b?token=x&tls=1');
-    });
-
-    test('has nothing to carry for the other connection types', () => {
-        expect(hostRef({ id: 'h_1', name: 'here', type: 'local' }, 3)).toEqual({ host: '', widget: 3, host_id: 'h_1' });
-        expect(hostRef({ id: 'h_2', name: 'x', type: 'tcp', url: 'tcp://10.0.0.5:2375' }, 3).host).toBe('10.0.0.5:2375');
+describe('a host named in a request', () => {
+    test('is named by its id and nothing else', () => {
+        const agent = { id: 'dk123', name: 'nas', type: 'agent' as const, url: 'https://nas:9091' };
+        expect(hostRef(agent)).toEqual({ host_id: 'dk123' });
     });
 });

@@ -77,6 +77,37 @@ If securing the agent behind a reverse proxy (like Pangolin or Cloudflare Zero T
 
 The proxy must forward the `Authorization` header containing the Bearer token intact. As with the Remote TLS type, the certificate is not checked, so a self-signed one or an internal CA works; the connection is still encrypted, and the token no longer crosses the network in the clear.
 
+## Docker hosts
+
+Hosts belong to your account, as Proxmox hypervisors do: you set them up once in **Preferences → Docker**, and every Docker widget reads the same list. Each row says how the host is doing (*Connected · containers: 12*, or why it isn't), and the version for an agent. Add a host with **Add new host**, change one with the pencil, remove it with the bin, and switch one off to keep it without any widget showing it.
+
+![The Docker hosts of an account](../assets/p-docker.png)
+
+Each host has a name, a **Type**, and — for everything except the local socket — an address. Pick the type first; the fields below it change to match.
+
+| Type | Address to enter | Default port |
+| :--- | :--- | :--- |
+| **Local socket** | nothing — the address field disappears | — |
+| **Lastboard Agent** | `192.168.1.100:2375`, plus the agent's token in its own field | `2375`, or whatever you set in the agent's `PORT` |
+| **Remote TCP** | `192.168.1.100:2375` | `2375` — an unencrypted Docker daemon |
+| **Remote TLS** | `192.168.1.100:2376` | `2376` — a TLS Docker daemon |
+
+Enter the host and port on their own — Lastboard adds the scheme the type needs. The one scheme kept is `https://` on an agent, which means *reach it over HTTPS* (see the reverse proxy section above). An address pasted with a scheme already on it, such as `tcp://10.0.0.5:2375` from `DOCKER_HOST`, is understood as written.
+
+![A Docker agent host with its token saved](../assets/w-p-docker-host.png)
+
+There is no `?token=` to type: the token has its own field, which appears only for the agent. It is a secret: once saved it shows as dots and is never shown again — type a new one to replace it, or empty the box to remove it. The token is kept on the Lastboard server with your account and never travels to your browser, and a dashboard export leaves it out; a full [backup](../using/import-export.md) does carry it, so give the backup a password if it will leave your server.
+
+### Who can use which kind of host
+
+- **The administrator** can use every type.
+- **A member** connects to Docker through a **Lastboard Agent**, with the agent's token. The local socket, Remote TCP and Remote TLS reach Docker by being the server, without any credential, so they are the administrator's: a member's account doesn't offer them. To let someone see the server's own containers, run an agent on it and give them its token.
+- Whether a member has Docker at all, and whether it may start and stop containers, is one of the permissions the administrator sets for that account.
+
+### Coming from an earlier version
+
+Hosts used to be set up inside each widget. The first time the new version starts, they move to the account that owns the widget: the same host configured in two widgets becomes one host, agent tokens come with it, and what each widget had set on its containers — hidden, names, addresses, order — follows the host. A widget that showed every host keeps showing every host. A member who had the server's own socket in a widget keeps it in the list, marked as one only the administrator can use.
+
 ## Widget Configuration
 
 Everything the widget shows is set from its configuration screen: enter the dashboard's edit mode and open the widget's settings.
@@ -85,35 +116,11 @@ Everything the widget shows is set from its configuration screen: enter the dash
 
 ### Hosts
 
-You can add as many hosts as you like. Each one has a name, a **Connection Type**, and — for
-everything except a local socket — an address. Pick the type first; the fields below it change to
-match, and so does the port in the example address.
-
-| Connection Type | Address to enter | Default port |
-| :--- | :--- | :--- |
-| **Local socket** | nothing — the address field disappears | — |
-| **Lastboard Agent** | `192.168.1.100:2375`, plus the agent's token in its own field | `2375`, or whatever you set in the agent's `PORT` |
-| **Remote TCP** | `192.168.1.100:2375` | `2375` — an unencrypted Docker daemon |
-| **Remote TLS** | `192.168.1.100:2376` | `2376` — a TLS Docker daemon |
-
-Enter the host and port on their own — Lastboard adds the scheme the connection type needs. The one
-scheme kept is `https://` on an agent, which means *reach it over HTTPS* (see the reverse proxy
-section above). If you
-paste an address that already carries one, the standard forms are understood as written:
-`tcp://10.0.0.5:2375` is what `DOCKER_HOST` holds and what `docker context ls` prints, and
-`unix:///var/run/docker.sock` addresses a socket somewhere other than the default path.
-`npipe://` and `ssh://` are refused with a message rather than tried, since neither can be reached
-from here.
-
-![A Docker agent host with its token saved](../assets/w-p-docker-host.png)
-
-There is no `?token=` to type: the token has its own field, which appears only for the agent. It is a secret: once saved it shows as dots and is never shown again — type a new one to replace it, or empty the box to remove it. The token is kept on the Lastboard server apart from the widget, so the board your browser loads never contains it, and a dashboard export leaves it out; a full [backup](../using/import-export.md) does carry it, so give the backup a password if it will leave your server.
-
-With more than one host configured, the settings screen splits in two: hosts on the left, the selected host's containers on the right.
+The hosts of your account are listed with a **Show** box each. Leave them all ticked and the widget shows every host, including the ones you add later; untick one to leave it out of this widget. To add, change or remove a host, go to Preferences → Docker.
 
 ### Containers
 
-Pick a host on the left and its containers appear on the right, with a search box for long lists. For each one you can:
+Each host's containers are listed with a search box for long lists. For each one you can:
 
 - **Show or hide it** with the checkbox. Unchecked containers stay out of the widget.
 - **Rename it**, if the container name isn't what you want to read on your dashboard.
@@ -171,6 +178,6 @@ What you set on a container — hidden, a name, an address — is kept under the
 
 The title is the name on the tile's top border, the same as on every widget; leave it empty for none. A widget that had no title keeps the name it showed, "Docker". You can also choose how often the container list is refreshed (30 seconds to 10 minutes). Resource usage for running containers updates continuously regardless of this setting.
 
-## Administrator Controls
+## Starting and stopping
 
-The administrator can start, stop, or restart containers directly from the widget rows. Members see the same containers and their state, without the controls.
+Containers can be started, stopped or restarted directly from the widget rows by an account allowed to control Docker: the administrator on any of its hosts, a member on its own agents. An account that may only look at Docker sees the same containers and their state, without the controls. An agent only accepts the calls it allows, so what it lets through still applies.

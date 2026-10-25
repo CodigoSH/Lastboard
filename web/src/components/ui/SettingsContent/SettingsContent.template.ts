@@ -1,6 +1,7 @@
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 import { SECRET_MASK } from '../../../services/secretField';
+import type { AccountDockerHost } from '../../../services/dockerHostList';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
@@ -597,6 +598,148 @@ export const proxmoxTemplate = (
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
             <app-button variant="primary" data-action="save-proxmox-host">${i18n.t('general.save')}</app-button>
+        </div>
+    </dialog>
+`;
+};
+
+/**
+ * The Docker hosts of the account, as a list like the hypervisors above it.
+ *
+ * A widget only chooses among them, so this is the one place they are added,
+ * renamed and switched off. A member can add only agents, which it reaches with
+ * the agent's own token; the other kinds are the server's own position and the
+ * administrator's.
+ */
+export type DockerRowStatus = {
+    state: 'idle' | 'testing' | 'ok' | 'error';
+    containers?: number; version?: string | null; key?: string;
+};
+
+const dockerTypeLabel = (type: string) =>
+    i18n.t(type === 'agent' ? 'docker.host_tag_agent' : `docker.host_type_${type}`);
+
+const dockerRow = (h: AccountDockerHost, i: number, status: DockerRowStatus | undefined) => {
+    const state = !h.usable ? 'bad'
+        : !h.enabled ? 'off'
+            : status?.state === 'ok' ? 'up'
+                : status?.state === 'error' ? 'bad' : 'idle';
+    const note = !h.usable ? i18n.t('docker.admin_only')
+        : !h.enabled ? i18n.t('settings.docker_off')
+            : status?.state === 'ok'
+                ? i18n.t('settings.docker_connected', { containers: String(status.containers ?? 0) }) + (status.version ? ` · ${status.version}` : '')
+                : status?.state === 'error' ? i18n.t(status.key || 'docker.connection_error')
+                    : status?.state === 'testing' ? i18n.t('settings.docker_testing')
+                        : `${dockerTypeLabel(h.type)}${h.url ? ` · ${h.url}` : ''}`;
+
+    return `
+    <div class="settings-content__row px-row" data-docker-host="${esc(h.id)}">
+        <span class="px-row__dot px-row__dot--${state}"></span>
+        <div class="px-row__body">
+            <div class="px-row__name">${esc(h.name || i18n.t('widget.docker.name'))}</div>
+            <div class="px-row__note px-row__note--${state}">${esc(note)}</div>
+        </div>
+        <div class="user-actions">
+            <button class="user-action-btn edit" data-action="edit-docker-host" data-index="${i}"
+                    title="${esc(i18n.t('general.edit'))}" aria-label="${esc(i18n.t('general.edit'))}">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="user-action-btn delete" data-action="delete-docker-host" data-index="${i}"
+                    title="${esc(i18n.t('action.remove'))}" aria-label="${esc(i18n.t('action.remove'))}">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            </button>
+        </div>
+    </div>`;
+};
+
+export const dockerTemplate = (
+    dk: { admin: boolean; hosts: AccountDockerHost[] },
+    loaded: boolean,
+    failed: boolean,
+    status: Record<string, DockerRowStatus>,
+) => {
+    if (!loaded) {
+        return `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('widget.docker.name')}</h3>
+            <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
+                ${failed ? i18n.t('settings.docker_unavailable') : i18n.t('general.loading')}
+            </p>
+        </div>
+    </div>
+`;
+    }
+
+    const hosts = dk.hosts || [];
+
+    return `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
+                <h3 class="settings-content__title" style="margin:0;">${i18n.t('widget.docker.name')}</h3>
+                <app-button variant="primary" data-action="add-docker-host" style="width:auto; padding:0 16px;">+ ${i18n.t('docker.add_new_host')}</app-button>
+            </div>
+            <p class="settings-content__text-dim" style="font-size: 13px; margin: -12px 0 16px;">${i18n.t('settings.docker_hosts_desc')}</p>
+            ${dk.admin ? '' : `<p class="settings-content__text-dim" style="font-size: 13px; margin: 0 0 16px;">${i18n.t('settings.docker_member_note')}</p>`}
+
+            <div class="settings-content__user-list">
+                ${hosts.map((h, i) => dockerRow(h, i, status[h.id])).join('')}
+            </div>
+            ${hosts.length === 0 ? `<p class="settings-content__text-dim">${i18n.t('settings.docker_none')}</p>` : ''}
+        </div>
+    </div>
+
+    <dialog id="docker-modal" style="background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 440px; max-width: calc(100vw - 32px);">
+        <div class="modal-header">
+            <h3 class="modal-title" id="docker-modal-title">${i18n.t('docker.add_new_host')}</h3>
+            <button class="modal-close" data-action="close-modal" data-modal="docker-modal" aria-label="${i18n.t('general.close')}">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        </div>
+
+        <input type="hidden" id="docker-edit-index" value="-1">
+
+        <div class="settings-content__form-group">
+            <label class="settings-content__label">${i18n.t('docker.host_name')}</label>
+            <input type="text" id="docker-name" class="settings-content__input" spellcheck="false" placeholder="${esc(i18n.t('docker.host_name_placeholder'))}">
+        </div>
+
+        <p class="settings-content__text-dim" id="docker-locked-note" style="font-size: 12px; margin: 0 0 16px; display: none;">${i18n.t('docker.admin_only')}</p>
+
+        <div id="docker-connection">
+            <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('docker.host_type')}</label>
+                <app-select id="docker-type" value="agent"></app-select>
+            </div>
+
+            <div class="settings-content__form-group" id="docker-url-row">
+                <label class="settings-content__label">${i18n.t('docker.host_url')}</label>
+                <input type="text" id="docker-url" class="settings-content__input" spellcheck="false" placeholder="192.168.1.100:9091">
+            </div>
+
+            <div class="settings-content__form-group" id="docker-token-row">
+                <label class="settings-content__label">${i18n.t('docker.host_token')}</label>
+                <input type="password" id="docker-token" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password" placeholder="${esc(i18n.t('docker.host_token_placeholder'))}" data-secret>
+                <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.docker_token_desc')}</p>
+            </div>
+        </div>
+
+        <div class="settings-content__action-group">
+            <div class="settings-content__action-row">
+                <div class="settings-content__action-info">
+                    <h3>${i18n.t('settings.docker_enabled')}</h3>
+                    <p>${i18n.t('settings.docker_enabled_desc')}</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="docker-enabled">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;">
+            <app-button variant="primary" data-action="save-docker-host">${i18n.t('general.save')}</app-button>
         </div>
     </dialog>
 `;

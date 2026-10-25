@@ -146,8 +146,6 @@ fav(1, 12, 4, 'cloudflare', 'Cloudflare', 'https://dash.cloudflare.com');
 widget(2, 1, 1, 5, 3, {
     widgetId: 'docker',
     title: 'Server room',
-    hosts: [{ id: 'demo', name: 'Demo Server', type: 'local' }],
-    activeHost: 'demo',
     refreshSec: 60,
     containerConfig: {
         'demo-red': { url: 'http://redis-commander.home:8081' },
