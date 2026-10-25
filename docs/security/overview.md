@@ -70,8 +70,10 @@ only served when it really exists in the embedded filesystem.
   partial work done first.
 - On top of that, **`Sec-Fetch-Site`** is checked. The browser writes that header from the real
   origins and a page cannot forge it, so a write started from another site is rejected before
-  the token is even looked at. When the header is absent — an old browser, or `curl` — nothing
-  breaks: the request falls back to the token check alone.
+  the token is even looked at. When the header is absent — an old browser, or `curl` — the
+  `Origin` header decides: a write whose `Origin` names another host is rejected the same way,
+  and one with no `Origin` at all (`curl`, a script) falls back to the token check alone. That
+  covers the login and the first-run setup too, the two writes that have no token yet.
 
 ## Headers
 
