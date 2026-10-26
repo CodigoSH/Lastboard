@@ -186,6 +186,10 @@ class ApiService {
                 if (url === '/api/2fa/enable' || url === '/api/2fa/recovery-codes') return { recovery_codes: ['demo-aaaa-bbbb-cccc', 'demo-dddd-eeee-ffff'] } as any;
                 if (url.startsWith('/api/2fa/') || url === '/api/login/2fa' || url === '/api/users/2fa/remove') return {} as T;
 
+                // Passkeys (Demo: cannot hold any; the POSTs change nothing)
+                if (url === '/api/passkeys' && method === 'GET') return { available: false, passkeys: [] } as any;
+                if (url.startsWith('/api/passkeys/') || url.startsWith('/api/login/passkey/')) return {} as T;
+
                 // Admin (Mock success)
                 if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;
                 if (url === '/api/users') return { message: 'Admin action simulated (Demo)' } as any;

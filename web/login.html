@@ -163,6 +163,10 @@
         #twoFactorForm .tf-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
         #twoFactorForm #tfCode { letter-spacing: 0.08em; }
         #twoFactorForm[hidden], #loginForm[hidden] { display: none; }
+        .passkey-row { margin-top: 12px; }
+        .passkey-row[hidden] { display: none; }
+        .passkey-row .premium-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+        .passkey-row svg { width: 16px; height: 16px; flex-shrink: 0; }
 
         .pw-toggle svg {
             width: 18px;
@@ -216,6 +220,12 @@
                     <button type="submit" id="submitBtn" class="premium-btn filled">Sign In</button>
                 </div>
 
+                <div class="passkey-row" id="passkeyRow" hidden>
+                    <button type="button" id="passkeyBtn" class="premium-btn ghost">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M10.85 12.15 19 4"></path><path d="m18 5 3 3"></path><path d="m15 8 2 2"></path></svg>
+                        <span id="passkeyLabel">Use a passkey</span>
+                    </button>
+                </div>
                 {{if .DemoOnly}}
                 <div style="margin-top: 12px; text-align: center;">
                     <button type="button" id="demoBtn" class="premium-btn ghost" style="width: 100%; opacity: 0.75;">

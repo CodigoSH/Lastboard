@@ -52,6 +52,15 @@ they would be on a public service.
   is kept in the database like every other secret (and travels in the backup); recovery codes are
   kept only as hashes. A member who loses the phone and the codes is helped by the administrator;
   the administrator's own way back is `lastboard 2fa reset <username>` on the machine itself.
+- **Passkeys** (optional, per account) sign in without a password: the device asks for its
+  fingerprint, face or screen lock and signs a one-time challenge (WebAuthn; ES256 and Ed25519
+  keys, checked with the Go standard library). The server keeps only each passkey's **public
+  key**. It checks that the browser was on this site's own origin, that the device verified the
+  person (a passkey without verification is refused), the signature, and the signature counter,
+  so a copied passkey is caught. Because a passkey is two factors in itself, signing in with one
+  asks for no code. A challenge answers once, and refused attempts count toward the sign-in
+  lockout. Passkeys belong to a site's **name**: browsers offer them only over https (or on
+  `localhost`), never for a bare IP address, so on `http://192.168.x.x` they are not offered.
 - **The signing secret** is generated on first run and kept in the database — there is no
   `SESSION_SECRET` to set, and nothing to leak into an environment file or a process list.
 - **Sessions opened before they were stored** (before 1.10) keep working after the update: the

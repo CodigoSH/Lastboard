@@ -42,4 +42,8 @@ describe('userAgentLabel', () => {
         expect(userAgentLabel('')).toEqual({ browser: 'unknown', os: 'unknown' });
         expect(userAgentLabel('curl/8.5.0')).toEqual({ browser: 'unknown', os: 'unknown' });
     });
+    test('headless Chrome is still Chrome', () => {
+        expect(userAgentLabel('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36'))
+            .toEqual({ browser: 'chrome', os: 'linux' });
+    });
 });

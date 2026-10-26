@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/totp"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/webauthn"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
@@ -151,6 +152,28 @@ type BackupData struct {
 	// restore would quietly bring an account back without the code it asked
 	// for. Omitted from older backups, which had no second step to carry.
 	TwoFactor []BackupTwoFactor `json:"two_factor,omitempty"`
+	// Each account's passkeys — public keys only — and the id its devices hold
+	// for it, which must come back unchanged or the passkeys stop signing in.
+	Passkeys       []BackupPasskey       `json:"passkeys,omitempty"`
+	PasskeyHandles []BackupPasskeyHandle `json:"passkey_handles,omitempty"`
+}
+
+// BackupPasskey is one passkey: its public key and what is known of its use.
+type BackupPasskey struct {
+	Owner        string `json:"owner"`
+	CredentialID string `json:"credential_id"`
+	PublicKey    []byte `json:"public_key"`
+	Alg          int64  `json:"alg"`
+	SignCount    int64  `json:"sign_count"`
+	Name         string `json:"name"`
+	CreatedAt    int64  `json:"created_at"`
+	LastUsedAt   *int64 `json:"last_used_at,omitempty"`
+}
+
+// BackupPasskeyHandle is the id an account's devices hold for it.
+type BackupPasskeyHandle struct {
+	Owner  string `json:"owner"`
+	Handle []byte `json:"handle"`
 }
 
 // BackupTwoFactor is one account's authenticator secret and recovery codes —
@@ -455,6 +478,28 @@ func (h *SystemHandler) readBackup(ctx context.Context) (BackupData, error) {
 			return backup, fmt.Errorf("recovery codes: %w", err)
 		}
 	}
+
+	if backup.Passkeys, err = queryAll(ctx, h.DB, `SELECT u.username, p.credential_id, p.public_key, p.alg, p.sign_count,
+			p.name, p.created_at, p.last_used_at
+		FROM user_passkeys p JOIN users u ON u.id = p.user_id ORDER BY p.id`,
+		func(rows *sql.Rows) (bp BackupPasskey, err error) {
+			var used sql.NullInt64
+			err = rows.Scan(&bp.Owner, &bp.CredentialID, &bp.PublicKey, &bp.Alg, &bp.SignCount, &bp.Name, &bp.CreatedAt, &used)
+			if used.Valid {
+				bp.LastUsedAt = &used.Int64
+			}
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("passkeys: %w", err)
+	}
+	if backup.PasskeyHandles, err = queryAll(ctx, h.DB, `SELECT u.username, h.handle
+		FROM user_passkey_handles h JOIN users u ON u.id = h.user_id ORDER BY u.id`,
+		func(rows *sql.Rows) (bh BackupPasskeyHandle, err error) {
+			err = rows.Scan(&bh.Owner, &bh.Handle)
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("passkey handles: %w", err)
+	}
 	return backup, nil
 }
 
@@ -603,6 +648,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := restoreTwoFactor(tx, backup, ownerMap); err != nil {
+		writeRestoreError(w, err)
+		return
+	}
+	if err := restorePasskeys(tx, backup, ownerMap); err != nil {
 		writeRestoreError(w, err)
 		return
 	}
@@ -789,6 +838,38 @@ func restoreTwoFactor(tx *sql.Tx, backup BackupData, ownerMap map[string]int) er
 				uid, rc.Hash, rc.UsedAt); err != nil {
 				return &restoreError{http.StatusInternalServerError, "general.db_error"}
 			}
+		}
+	}
+	return nil
+}
+
+// restorePasskeys puts back each account's passkeys and the id its devices
+// hold. A key that cannot be read makes the file unusable rather than leaving a
+// passkey that would never sign in.
+func restorePasskeys(tx *sql.Tx, backup BackupData, ownerMap map[string]int) error {
+	for _, bh := range backup.PasskeyHandles {
+		uid, owned := ownerMap[bh.Owner]
+		if !owned || len(bh.Handle) == 0 {
+			continue
+		}
+		if _, err := tx.Exec(`INSERT INTO user_passkey_handles (user_id, handle) VALUES (?, ?)
+			ON CONFLICT (user_id) DO UPDATE SET handle = excluded.handle`, uid, bh.Handle); err != nil {
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
+		}
+	}
+	for _, bp := range backup.Passkeys {
+		uid, owned := ownerMap[bp.Owner]
+		if !owned {
+			continue
+		}
+		if _, err := webauthn.ParsePublicKey(bp.PublicKey); err != nil || bp.CredentialID == "" {
+			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
+		}
+		if _, err := tx.Exec(`INSERT INTO user_passkeys
+			(user_id, credential_id, public_key, alg, sign_count, name, created_at, last_used_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (credential_id) DO NOTHING`,
+			uid, bp.CredentialID, bp.PublicKey, bp.Alg, bp.SignCount, bp.Name, bp.CreatedAt, bp.LastUsedAt); err != nil {
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
 		}
 	}
 	return nil

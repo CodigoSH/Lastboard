@@ -449,6 +449,11 @@ func migrateSchema(db *sql.DB) error {
 		return fmt.Errorf("migration 13 failed: %w", err)
 	}
 
+	// Migration 14: passkeys, to sign in without a password. See passkeys.go.
+	if err = migratePasskeys(db); err != nil {
+		return fmt.Errorf("migration 14 failed: %w", err)
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.

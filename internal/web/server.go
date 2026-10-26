@@ -259,6 +259,9 @@ func (s *Server) routes() {
 	// The code after the password, for an account with a second step. Public like
 	// the sign-in: what it needs is the challenge the password earned.
 	s.Router.Handle("POST /api/login/2fa", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.LoginSecondStep))))
+	// Signing in with a passkey, instead of the password. Public like the sign-in.
+	s.Router.Handle("POST /api/login/passkey/begin", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.PasskeyLoginBegin))))
+	s.Router.Handle("POST /api/login/passkey/finish", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.PasskeyLoginFinish))))
 	s.Router.Handle("POST /logout", protect(anyAccount(authHandler.Logout)))
 
 	// Where the account is signed in, and ending any of it.
@@ -275,6 +278,13 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/2fa/disable", protect(anyAccount(twoFactorHandler.Disable)))
 	s.Router.Handle("POST /api/2fa/recovery-codes", protect(anyAccount(twoFactorHandler.RecoveryCodes)))
 	s.Router.Handle("POST /api/users/2fa/remove", protect(need(access.Admin, twoFactorHandler.RemoveForUser)))
+
+	// The account's own passkeys.
+	passkeyHandler := &api.PasskeyHandler{DB: s.DB}
+	s.Router.Handle("GET /api/passkeys", protect(anyAccount(passkeyHandler.List)))
+	s.Router.Handle("POST /api/passkeys/register/begin", protect(anyAccount(passkeyHandler.RegisterBegin)))
+	s.Router.Handle("POST /api/passkeys/register/finish", protect(anyAccount(passkeyHandler.RegisterFinish)))
+	s.Router.Handle("DELETE /api/passkeys/{id}", protect(anyAccount(passkeyHandler.Delete)))
 
 	// Dashboard API
 	dashHandler := api.NewDashboardHandler(s.DB)

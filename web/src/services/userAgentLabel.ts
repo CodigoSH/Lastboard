@@ -21,7 +21,7 @@ export function userAgentLabel(ua: string): { browser: BrowserId; os: OsId } {
     if (/\bEdg(e|A|iOS)?\//.test(s)) browser = 'edge';
     else if (/\bOPR\/|\bOpera\b/.test(s)) browser = 'opera';
     else if (/\bFirefox\/|\bFxiOS\//.test(s)) browser = 'firefox';
-    else if (/\bChrome\/|\bCriOS\//.test(s)) browser = 'chrome';
+    else if (/(?:\b|Headless)Chrome\/|\bCriOS\//.test(s)) browser = 'chrome';
     else if (/\bSafari\//.test(s)) browser = 'safari';
 
     let os: OsId = 'unknown';

@@ -4,6 +4,7 @@ import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
 import { setupPasswordToggles } from './services/passwordToggle';
 import { normalizeCode, looksLikeAppCode } from './services/twoFactor';
+import { passkeysSupported, requestOptionsFromServer, assertionToFinishBody } from './services/passkeys';
 import './components/ui/Notifier/Notifier';
 
 // Logic
@@ -99,6 +100,8 @@ bootstrap(async () => {
         const rememberText = document.getElementById('rememberMeText');
         if (rememberText) rememberText.textContent = i18n.t('auth.remember_me');
         if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
+        const passkeyLabel = document.getElementById('passkeyLabel');
+        if (passkeyLabel) passkeyLabel.textContent = i18n.t('passkey.sign_in');
         document.querySelectorAll('.pw-toggle').forEach(btn => {
             btn.setAttribute('aria-label', i18n.t('auth.toggle_password'));
         });
@@ -182,6 +185,65 @@ bootstrap(async () => {
             }
         }
     });
+
+    // Passkey sign-in: no password and no second step; the device proves who it is.
+    const passkeyRow = document.getElementById('passkeyRow') as HTMLElement | null;
+    const passkeyBtn = document.getElementById('passkeyBtn') as HTMLButtonElement | null;
+    if (passkeyRow && passkeyBtn && passkeysSupported(window)) {
+        passkeyRow.hidden = false;
+        passkeyBtn.addEventListener('click', async () => {
+            passkeyBtn.disabled = true;
+            try {
+                const remember = (document.getElementById('remember_me') as HTMLInputElement | null)?.checked ?? false;
+                const begin = await fetch('/api/login/passkey/begin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ remember_me: remember })
+                });
+                if (!begin.ok) {
+                    const key = (await begin.text()).trim();
+                    if (key === 'passkey.not_available') passkeyRow.hidden = true;
+                    notify(i18n.t(key) || i18n.t('auth.connection_error'), 'error');
+                    return;
+                }
+                const options = requestOptionsFromServer(await begin.json());
+                let credential: PublicKeyCredential | null;
+                try {
+                    credential = await navigator.credentials.get({ publicKey: options as unknown as PublicKeyCredentialRequestOptions }) as PublicKeyCredential | null;
+                } catch (err) {
+                    // Closing the browser's dialog is a choice, not a failure.
+                    if ((err as { name?: string })?.name === 'NotAllowedError' || (err as { name?: string })?.name === 'AbortError') return;
+                    throw err;
+                }
+                if (!credential) return;
+                const res = credential.response as AuthenticatorAssertionResponse;
+                const finish = await fetch('/api/login/passkey/finish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(assertionToFinishBody({
+                        rawId: credential.rawId,
+                        clientDataJSON: res.clientDataJSON,
+                        authenticatorData: res.authenticatorData,
+                        signature: res.signature,
+                        userHandle: res.userHandle,
+                    }))
+                });
+                if (finish.ok) {
+                    signedIn();
+                    return;
+                }
+                const key = (await finish.text()).trim();
+                if (key === 'passkey.not_available') passkeyRow.hidden = true;
+                notify(i18n.t(key) || i18n.t('passkey.refused'), 'error');
+                shake();
+            } catch (error) {
+                console.error('Passkey error:', error);
+                notify(i18n.t('auth.connection_error'), 'error');
+            } finally {
+                passkeyBtn.disabled = false;
+            }
+        });
+    }
 
     // Second step: the code (or a recovery code) that finishes the sign-in.
     if (tfForm && tfCode) {

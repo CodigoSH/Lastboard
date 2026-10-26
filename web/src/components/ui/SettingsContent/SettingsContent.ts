@@ -9,12 +9,13 @@ import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
+import { accountTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
 import { qrMatrix, qrSvg } from '../../../services/qrCode';
 import { recoveryCodesText, normalizeCode } from '../../../services/twoFactor';
+import { passkeysSupported, creationOptionsFromServer, attestationToFinishBody, defaultPasskeyName } from '../../../services/passkeys';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
@@ -38,6 +39,8 @@ class SettingsContent extends HTMLElement {
     private userProfile: ProfileName = DEFAULT_PROFILE;
     /** This account's sign-ins, for the Active sessions card. */
     private sessions: SessionsView = { status: 'idle', items: [] };
+    /** This account's passkeys, for the Passkeys card. */
+    private passkeys: PasskeysView = { ...passkeysIdle };
     /** This account's second step, for the Two-step sign-in card. */
     private twoFactor: TwoFactorView = { ...twoFactorIdle };
     /** Bookmarks of mine whose icon still comes from somewhere else. */
@@ -157,6 +160,12 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'close-other-sessions':
                     this.closeOtherSessions();
+                    break;
+                case 'passkey-add':
+                    this.addPasskey();
+                    break;
+                case 'passkey-remove':
+                    this.removePasskey(Number(el.dataset.passkeyId));
                     break;
                 case 'tf-start':
                     this.startTwoFactor();
@@ -378,6 +387,7 @@ class SettingsContent extends HTMLElement {
         if (section === 'account') {
             this.fetchSessions();
             this.fetchTwoFactor();
+            this.fetchPasskeys();
         }
         if (section === 'users') {
             this.fetchUsers();
@@ -482,6 +492,69 @@ class SettingsContent extends HTMLElement {
             this.sessions = { status: 'error', items: [] };
         }
         this.render();
+    }
+
+    /** Reads this account's passkeys; a failure leaves the card saying so and nothing else. */
+    async fetchPasskeys() {
+        try {
+            const r = await apiService.get<{ available?: boolean; passkeys?: PasskeysView['items'] }>('/api/passkeys');
+            this.passkeys = {
+                status: 'ready',
+                canAdd: !!r?.available && passkeysSupported(window),
+                items: Array.isArray(r?.passkeys) ? r.passkeys : [],
+            };
+        } catch {
+            this.passkeys = { status: 'error', canAdd: false, items: [] };
+        }
+        this.render();
+    }
+
+    /** Makes a passkey on this device: ask the server, let the browser make it, hand it back. */
+    async addPasskey() {
+        try {
+            const options = creationOptionsFromServer(await apiService.post<Record<string, unknown>>('/api/passkeys/register/begin', {}));
+            let credential: PublicKeyCredential | null;
+            try {
+                credential = await navigator.credentials.create({ publicKey: options as unknown as PublicKeyCredentialCreationOptions }) as PublicKeyCredential | null;
+            } catch (e) {
+                const name = (e as { name?: string } | null)?.name;
+                if (name === 'NotAllowedError' || name === 'AbortError') return;
+                if (name === 'InvalidStateError') {
+                    if (window.notifier) window.notifier.show(i18n.t('passkey.device_has_one'), 'error');
+                    return;
+                }
+                throw e;
+            }
+            if (!credential) return;
+            const res = credential.response as AuthenticatorAttestationResponse;
+            await apiService.post('/api/passkeys/register/finish', attestationToFinishBody(defaultPasskeyName(navigator.userAgent), {
+                clientDataJSON: res.clientDataJSON,
+                attestationObject: res.attestationObject,
+            }));
+            if (window.notifier) window.notifier.show(i18n.t('passkey.created'));
+        } catch (e) {
+            this.toastError(e);
+        }
+        this.fetchPasskeys();
+    }
+
+    async removePasskey(id: number) {
+        if (!id) return;
+        const name = this.passkeys.items.find(p => p.id === id)?.name || '';
+        const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+            title: i18n.t('action.remove'),
+            message: i18n.t('passkey.remove_confirm', { name }),
+            onConfirm: async () => {
+                try {
+                    await apiService.delete(`/api/passkeys/${id}`);
+                    if (window.notifier) window.notifier.show(i18n.t('passkey.removed'));
+                } catch (e) {
+                    this.toastError(e);
+                }
+                this.fetchPasskeys();
+            },
+        });
     }
 
     async closeSession(id: number) {
@@ -1137,6 +1210,7 @@ class SettingsContent extends HTMLElement {
             if (newValue === 'account') {
                 this.fetchSessions();
                 this.fetchTwoFactor();
+                this.fetchPasskeys();
             }
             if (newValue === 'users') {
                 this.fetchUsers();
@@ -1534,7 +1608,7 @@ class SettingsContent extends HTMLElement {
 
         switch (section) {
             case 'account':
-                return accountTemplate(user, this.sessions, this.twoFactor);
+                return accountTemplate(user, this.sessions, this.twoFactor, this.passkeys);
 
             case 'theme': {
                 const colorMap: Record<string, string> = {

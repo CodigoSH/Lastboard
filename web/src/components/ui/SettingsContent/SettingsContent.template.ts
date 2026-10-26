@@ -94,6 +94,54 @@ export const sessionsCardTemplate = (view: SessionsView) => `
 `;
 
 
+/** One passkey of this account, as the server lists it. */
+export interface PasskeyRow {
+    id: number;
+    name: string;
+    created_at: string;
+    last_used_at: string | null;
+}
+
+/** `idle` until the first answer. `canAdd` is whether this page and address can make passkeys. */
+export interface PasskeysView {
+    status: 'idle' | 'ready' | 'error';
+    canAdd: boolean;
+    items: PasskeyRow[];
+}
+
+export const passkeysIdle: PasskeysView = { status: 'idle', canAdd: false, items: [] };
+
+const passkeyRowTemplate = (p: PasskeyRow) => {
+    const added = i18n.formatDateTime(p.created_at, { dateStyle: 'medium' });
+    const used = p.last_used_at ? i18n.formatDateTime(p.last_used_at, { dateStyle: 'medium' }) : '';
+    return `
+            <div class="settings-content__action-row">
+                <div class="settings-content__action-info">
+                    <h3>${esc(p.name)}</h3>
+                    ${added ? `<p>${esc(i18n.t('passkey.added', { date: added }))}</p>` : ''}
+                    <p>${esc(used ? i18n.t('passkey.last_used', { date: used }) : i18n.t('passkey.never_used'))}</p>
+                </div>
+                <app-button variant="danger" data-action="passkey-remove" data-passkey-id="${p.id}">${i18n.t('action.remove')}</app-button>
+            </div>`;
+};
+
+export const passkeysCardTemplate = (view: PasskeysView) => `
+        <div class="bento-card" id="passkeys-card">
+            <h3 class="settings-content__title">${i18n.t('passkey.title')}</h3>
+            ${view.status === 'error'
+                ? `<p class="settings-content__text-dim">${i18n.t('passkey.load_error')}</p>`
+                : view.status === 'idle' ? '' : `
+            <p class="settings-content__text-dim">${i18n.t('passkey.hint')}</p>
+            ${view.items.length > 0 ? `<div class="settings-content__action-group">${view.items.map(passkeyRowTemplate).join('')}
+            </div>` : ''}
+            ${view.canAdd
+                ? `<div class="settings-content__form-actions">
+                <app-button variant="primary" data-action="passkey-add">${i18n.t('passkey.add')}</app-button>
+            </div>`
+                : `<p class="settings-content__text-dim">${i18n.t('passkey.need_https')}</p>`}`}
+        </div>
+`;
+
 /**
  * The account's second step. `idle` until the server has answered; `step`
  * says which screen of the card is up: the plain state, the setup (QR, key and
@@ -175,7 +223,7 @@ export const twoFactorCardTemplate = (v: TwoFactorView) => `
         </div>
 `;
 
-export const accountTemplate = (user: User, sessions: SessionsView = { status: 'idle', items: [] }, twoFactor: TwoFactorView = twoFactorIdle) => `
+export const accountTemplate = (user: User, sessions: SessionsView = { status: 'idle', items: [] }, twoFactor: TwoFactorView = twoFactorIdle, passkeys: PasskeysView = passkeysIdle) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.profile')}</h3>
@@ -241,6 +289,8 @@ export const accountTemplate = (user: User, sessions: SessionsView = { status: '
         </div>
 
         ${twoFactorCardTemplate(twoFactor)}
+
+        ${passkeysCardTemplate(passkeys)}
 
         ${sessionsCardTemplate(sessions)}
     </div>
