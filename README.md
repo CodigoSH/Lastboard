@@ -102,8 +102,8 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 ### Docker
 
 - **Three ways to connect**: local socket, remote **TCP** or **TLS**, or the [Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent) — a tiny token-authenticated bridge, so you never expose the Docker daemon over the network.
-- **Many hosts, one list.** Tick the containers you care about on each host; they appear together, each row naming where it runs.
-- **Live state and resource use**, and **start / stop / restart** from the row for administrators.
+- **Hosts belong to your account**, set up once in Preferences and chosen by each widget. **Many hosts, one list**: tick the containers you care about on each host; they appear together, each row naming where it runs.
+- **Live state and resource use**, and **start / stop / restart** from the row for any account allowed to control Docker. A member reaches Docker only through its own agents; the server's socket and TCP or TLS daemons are the administrator's.
 - **A container's name is a link**, resolved from what you typed, then a `lastboard.url` or `homepage.href` label, then its first published port — so containers already labelled for another dashboard work here unchanged.
 - **A host that stops answering** doesn't make its containers vanish: they stay, greyed out, with the host line saying it isn't responding.
 
@@ -126,6 +126,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 ### Personal, multi-user and multilingual
 
 - **Multi-user** with per-user boards, preferences, avatar and password. Exactly one administrator — the account the wizard creates.
+- **Per-account permissions**, chosen when the administrator creates an account and editable later: start from *View only*, *Standard* or *Homelab*, or set each one yourself — editing the board, several boards, import and export, fetching icons, API widgets, other machines' health, reaching the local network, the up/down dots, monitoring and alerts, the server's own load, and Docker and Proxmox at none, view or control. What an account may not use is left out of its screens, and the server checks every request. A **label** of your choosing replaces the role under the name.
 - **Real dark/light mode** with dedicated colour token sets per theme, not a CSS filter — plus a **System** option that follows the device and changes with it.
 - **Accent colour**, a **background image** per user, and **your own panel name and logo** in the tab and top bar.
 - **Metric or imperial units**, applied across every widget that shows one.
