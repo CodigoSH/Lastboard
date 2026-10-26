@@ -554,6 +554,7 @@
   "action.upload_icon": "Symbol hochladen",
   "backup.password_required": "Dieses Backup ist geschützt. Gib das Passwort ein.",
   "backup.wrong_password": "Falsches Passwort oder beschädigte Datei.",
+  "backup.newer_version": "Diese Sicherung stammt aus einer neueren Lastboard-Version. Aktualisiere zuerst diesen Server und stelle sie dann wieder her.",
   "backup.warn_plain": "Dieses Backup enthält die API-Schlüssel deiner Dienste, das Proxmox-Token und den Passwort-Hash jedes Kontos, unverschlüsselt. Lege ein Passwort fest, wenn es diesen Server verlässt.",
   "backup.warn_no_recovery": "Es gibt keine Wiederherstellung: Ein Backup, das sich nicht öffnen lässt, ist kein Backup. Bewahre das Passwort sicher auf.",
   "backup.password_label": "Backup-Passwort (optional)",

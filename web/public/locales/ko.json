@@ -554,6 +554,7 @@
   "action.upload_icon": "아이콘 업로드",
   "backup.password_required": "이 백업은 보호되어 있습니다. 비밀번호를 입력하세요.",
   "backup.wrong_password": "비밀번호가 틀렸거나 파일이 손상되었습니다.",
+  "backup.newer_version": "이 백업은 더 새로운 버전의 Lastboard에서 만들어졌습니다. 먼저 이 서버를 업데이트한 다음 복원하세요.",
   "backup.warn_plain": "이 백업에는 서비스의 API 키, Proxmox 토큰, 모든 계정의 비밀번호 해시가 암호화되지 않은 채로 들어 있습니다. 이 서버 밖으로 나갈 백업이라면 비밀번호를 설정하세요.",
   "backup.warn_no_recovery": "복구 방법은 없습니다. 열 수 없는 백업은 백업이 아닙니다. 비밀번호를 안전하게 보관하세요.",
   "backup.password_label": "백업 비밀번호(선택)",

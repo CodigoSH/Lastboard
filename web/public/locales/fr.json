@@ -554,6 +554,7 @@
   "action.upload_icon": "Téléverser une icône",
   "backup.password_required": "Cette sauvegarde est protégée. Saisissez son mot de passe.",
   "backup.wrong_password": "Mot de passe incorrect, ou fichier endommagé.",
+  "backup.newer_version": "Cette sauvegarde vient d'une version plus récente de Lastboard. Mets d'abord ce serveur à jour, puis restaure-la.",
   "backup.warn_plain": "Cette sauvegarde contient les clés d'API de vos services, le jeton Proxmox et le hachage du mot de passe de chaque compte, non chiffrés. Définissez un mot de passe si elle doit quitter ce serveur.",
   "backup.warn_no_recovery": "Il n'y a aucune récupération possible : une sauvegarde impossible à ouvrir n'est pas une sauvegarde. Conservez bien le mot de passe.",
   "backup.password_label": "Mot de passe de la sauvegarde (facultatif)",

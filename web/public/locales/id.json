@@ -554,6 +554,7 @@
   "action.upload_icon": "Unggah ikon",
   "backup.password_required": "Cadangan ini dilindungi. Masukkan kata sandinya.",
   "backup.wrong_password": "Kata sandi salah, atau berkas rusak.",
+  "backup.newer_version": "Cadangan ini berasal dari versi Lastboard yang lebih baru. Perbarui server ini dulu, lalu pulihkan.",
   "backup.warn_plain": "Cadangan ini berisi kunci API layanan Anda, token Proxmox, dan hash kata sandi setiap akun, tanpa enkripsi. Setel kata sandi jika cadangan akan keluar dari server ini.",
   "backup.warn_no_recovery": "Tidak ada pemulihan: cadangan yang tidak bisa dibuka bukanlah cadangan. Simpan kata sandi dengan aman.",
   "backup.password_label": "Kata sandi cadangan (opsional)",

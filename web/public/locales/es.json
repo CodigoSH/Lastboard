@@ -554,6 +554,7 @@
   "action.upload_icon": "Subir icono",
   "backup.password_required": "Esta copia está protegida. Escribe su contraseña.",
   "backup.wrong_password": "Contraseña incorrecta, o el archivo está dañado.",
+  "backup.newer_version": "Esta copia viene de una versión más nueva de Lastboard. Actualiza primero este servidor y después restáurala.",
   "backup.warn_plain": "Esta copia contiene las claves de API de tus servicios, el token de Proxmox y el hash de contraseña de cada cuenta, sin cifrar. Ponle una contraseña si va a salir de este servidor.",
   "backup.warn_no_recovery": "No hay recuperación: una copia que no se puede abrir no es una copia. Guarda bien la contraseña.",
   "backup.password_label": "Contraseña de la copia (opcional)",

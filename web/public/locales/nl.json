@@ -554,6 +554,7 @@
   "action.upload_icon": "Pictogram uploaden",
   "backup.password_required": "Deze back-up is beveiligd. Voer het wachtwoord in.",
   "backup.wrong_password": "Onjuist wachtwoord, of het bestand is beschadigd.",
+  "backup.newer_version": "Deze back-up komt van een nieuwere versie van Lastboard. Werk eerst deze server bij en zet hem daarna terug.",
   "backup.warn_plain": "Deze back-up bevat de API-sleutels van je diensten, het Proxmox-token en de wachtwoordhash van elk account, onversleuteld. Stel een wachtwoord in als hij deze server verlaat.",
   "backup.warn_no_recovery": "Herstel is niet mogelijk: een back-up die je niet kunt openen, is geen back-up. Bewaar het wachtwoord goed.",
   "backup.password_label": "Back-upwachtwoord (optioneel)",

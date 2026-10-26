@@ -27,3 +27,30 @@ func TestEveryMonitoringSettingTravelsInTheBackup(t *testing.T) {
 		}
 	}
 }
+
+// Only a later release is newer. The version this binary carries can be a
+// release tag, a pre-release, or what git describe stamps on a development
+// build, and none of those makes the backups of its own version "newer".
+func TestBackupIsNewer(t *testing.T) {
+	cases := []struct {
+		backup, current string
+		want            bool
+	}{
+		{"v1.10.0", "v1.9.4", true},
+		{"v1.9.5", "v1.9.4", true},
+		{"v2.0.0", "v1.10.0", true},
+		{"v1.9.4", "v1.9.4", false},
+		{"v1.9.3", "v1.9.4", false},
+		{"v1.10.0-Beta.02", "v1.10.0-Beta.01", false},
+		{"v1.9.4", "v1.9.4-50-g0eaa05f", false},
+		{"v1.10.0-Beta.01", "v1.9.4-50-g0eaa05f", true},
+		{"", "v1.9.4", false},
+		{"dev", "v1.9.4", false},
+		{"v1.9.4", "dev", false},
+	}
+	for _, c := range cases {
+		if got := backupIsNewer(c.backup, c.current); got != c.want {
+			t.Errorf("backupIsNewer(%q, %q) = %v, want %v", c.backup, c.current, got, c.want)
+		}
+	}
+}

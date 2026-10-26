@@ -498,6 +498,14 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A newer Lastboard may have written things this one does not know, and
+	// restoring would drop them without a word. It is refused, before anything
+	// is touched, with a reason the screen shows: update first.
+	if backupIsNewer(backup.Version, version.Current) {
+		http.Error(w, "backup.newer_version", http.StatusBadRequest)
+		return
+	}
+
 	if err := validateBackupUsers(backup); err != nil {
 		writeRestoreError(w, err)
 		return
@@ -623,6 +631,7 @@ func writeRestoreError(w http.ResponseWriter, err error) {
 // version cannot verify, or an unknown role, before any data is written. A
 // backup from before the move to Argon2id carries bcrypt hashes and restores.
 func validateBackupUsers(backup BackupData) error {
+	admins := 0
 	for _, u := range backup.Users {
 		if !password.Recognised(u.Password) {
 			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
@@ -631,6 +640,14 @@ func validateBackupUsers(backup BackupData) error {
 		if role != "admin" && role != "user" {
 			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
 		}
+		if role == "admin" {
+			admins++
+		}
+	}
+	// Every backup carries the administrator who took it. A file without one is
+	// not a backup this instance could be left running on.
+	if admins == 0 {
+		return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
 	}
 	return nil
 }
@@ -1062,6 +1079,33 @@ func parseKB(s string) uint64 {
 	s = strings.TrimSuffix(s, " kB")
 	v, _ := strconv.ParseUint(s, 10, 64)
 	return v * 1024
+}
+
+// backupIsNewer says whether a backup was taken by a later release than this
+// one. Only major.minor.patch is read: a pre-release, or a development build
+// stamped by git describe (v1.9.4-50-g0eaa05f), is the version it leads to or
+// follows, not a newer one. A version that cannot be read is not newer — old
+// backups are restored as they always were.
+func backupIsNewer(backup, current string) bool {
+	core := func(v string) ([3]int, bool) {
+		var n [3]int
+		c := strings.SplitN(strings.TrimPrefix(strings.TrimSpace(v), "v"), "-", 2)[0]
+		if _, err := fmt.Sscanf(c, "%d.%d.%d", &n[0], &n[1], &n[2]); err != nil {
+			return n, false
+		}
+		return n, true
+	}
+	b, okB := core(backup)
+	c, okC := core(current)
+	if !okB || !okC {
+		return false
+	}
+	for i := range b {
+		if b[i] != c[i] {
+			return b[i] > c[i]
+		}
+	}
+	return false
 }
 
 // backupPredatesBorderTitles says whether a backup was taken before widgets wore

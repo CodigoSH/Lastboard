@@ -1505,7 +1505,11 @@ class SettingsContent extends HTMLElement {
                     if (window.notifier) window.notifier.show(i18n.t('backup.wrong_password'), 'error');
                     continue;
                 }
-                if (window.notifier) window.notifier.show(i18n.t('notifier.restore_failed'), 'error');
+                // A file the server refused for a reason it named says that
+                // reason; anything else is the general failure.
+                const reason = (e as Error).message;
+                const named = reason === 'error.invalid_backup_format' || reason === 'backup.newer_version';
+                if (window.notifier) window.notifier.show(i18n.t(named ? reason : 'notifier.restore_failed'), 'error');
                 return;
             }
         }

@@ -7,6 +7,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"testing"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 )
 
 // restoreWithVersion backs the instance up, rewrites the version the backup says it
@@ -86,10 +88,15 @@ func TestRestoringAnOldBackupGivesItsWidgetsTheirTitles(t *testing.T) {
 }
 
 func TestRestoringANewBackupLeavesAClearedTitleCleared(t *testing.T) {
-	for _, version := range []string{"v1.9.4-Beta.01", "v1.9.4", "v1.10.0", "v1.10.0-Beta.01", "v2.0.0"} {
-		m := restoreWithVersion(t, version)
+	// A backup is only restored by a Lastboard at least as new as the one that
+	// took it, so the server here is the newest version on the list.
+	was := version.Current
+	version.Current = "v2.0.0"
+	t.Cleanup(func() { version.Current = was })
+	for _, v := range []string{"v1.9.4-Beta.01", "v1.9.4", "v1.10.0", "v1.10.0-Beta.01", "v2.0.0"} {
+		m := restoreWithVersion(t, v)
 		if m["title"] != "" {
-			t.Errorf("a title its owner had cleared came back as %v from a %q backup", m["title"], version)
+			t.Errorf("a title its owner had cleared came back as %v from a %q backup", m["title"], v)
 		}
 	}
 }

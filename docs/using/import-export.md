@@ -34,6 +34,8 @@ When you press **Download Backup**, you can type a **password** (and confirm it)
 
 Backups taken on earlier versions restore too. One taken before each account had its own settings (before 1.9) holds the Proxmox and monitoring configuration for the whole server, and a restore hands it to the administrator; one taken before settings travelled at all does not include them, and restoring it leaves whatever the instance already has untouched. A backup that cannot be read in full fails with an error instead of producing a file with a gap in it.
 
+A file a restore cannot use is refused **before anything is changed**, and the message says why: one that is cut short or is not a Lastboard backup, one without an administrator account, and one taken by a **newer** version of Lastboard — whatever that version added would be lost, so update this server first and restore after. A pre-release of the same version is not newer.
+
 Because the icons travel inside the file, restoring on a machine with no internet still gives you the board exactly as you left it. Backups taken before icons were stored locally restore fine too: their bookmarks come back with the URLs they were saved with, and the next restart stores those pictures for you.
 
 > **Warning:** Restoring **overwrites all current data** and cannot be undone. Every restored account starts a new session generation, so **everybody is signed out**: sign in again afterwards. Use it for recovery, or to move a full setup to another Lastboard instance — not to merge dashboards.

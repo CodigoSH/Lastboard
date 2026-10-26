@@ -554,6 +554,7 @@
   "action.upload_icon": "Enviar ícone",
   "backup.password_required": "Este backup está protegido. Digite a senha dele.",
   "backup.wrong_password": "Senha incorreta, ou o arquivo está danificado.",
+  "backup.newer_version": "Esta cópia vem de uma versão mais recente do Lastboard. Atualiza primeiro este servidor e depois restaura-a.",
   "backup.warn_plain": "Este backup contém as chaves de API dos seus serviços, o token do Proxmox e o hash da senha de cada conta, sem criptografia. Defina uma senha se ele for sair deste servidor.",
   "backup.warn_no_recovery": "Não há recuperação: um backup que não abre não é um backup. Guarde bem a senha.",
   "backup.password_label": "Senha do backup (opcional)",
