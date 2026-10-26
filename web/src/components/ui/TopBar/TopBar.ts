@@ -158,6 +158,8 @@ class TopBar extends HTMLElement {
 
     /** Asks whether monitoring and Proxmox are on, once, and only if the account may see them. */
     private askFlags() {
+        // Until the account is known nothing is asked: an unknown account is not an allowed one.
+        if (!(this.state.user ?? userStore.getUser())) return;
         // Not on the copy of the account kept from the last visit: its
         // permissions may have changed since, and asking with them is a refusal.
         if (!userStore.isFromServer()) return;

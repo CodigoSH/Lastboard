@@ -510,7 +510,9 @@ class AddBookmarkModal extends HTMLElement {
             (HTMLElement & { value: string; options: { value: string; label: string }[]; searchable: boolean }) | null;
         if (!group || !sel) return;
         // It stays hidden, as it starts, for an account without Proxmox.
-        if (!accessAllows(userStore.getUser(), 'proxmox_view')) return;
+        // Nor before the account is known: nothing is taken away without a user, and nothing is asked either.
+        const who = userStore.getUser();
+        if (!who || !accessAllows(who, 'proxmox_view')) return;
         try {
             // Ask the cheap question first. Going straight to the overview made
             // every board without Proxmox log a failed request each time this
