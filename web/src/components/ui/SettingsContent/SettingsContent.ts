@@ -2,6 +2,7 @@ import { i18n } from '../../../services/i18n';
 import { resizeImage } from '../../../services/image';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { userStore } from '../../../store/userStore';
+import { accessAllows, dataSections } from '../../../services/access';
 import { updateStore } from '../../../store/updateStore';
 import { userService } from '../../../services/userService';
 import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
@@ -1325,13 +1326,13 @@ class SettingsContent extends HTMLElement {
                 return advancedTemplate();
 
             case 'data':
-                return dataTemplate(this.pendingIcons, this.localIcons, this.storingIcons);
+                return dataTemplate(this.pendingIcons, this.localIcons, this.storingIcons, dataSections(userStore.getUser()));
 
             // 'notifications' used to be its own section; anything still
             // pointing there lands on the section that absorbed it.
             case 'monitoring':
             case 'notifications':
-                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed);
+                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed, accessAllows(userStore.getUser(), 'watch_alerts'));
 
             case 'docker':
                 return dockerTemplate(this.docker, this.dockerLoaded, this.dockerFailed, this.dockerStatus);

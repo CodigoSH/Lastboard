@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "Searching for icons on the internet isn't turned on for your account. You can still upload your own.",
+  "access.not_enabled": "Your administrator hasn't turned this on for your account.",
   "action.add_bookmark": "Add Bookmark",
   "action.add_dashboard": "New dashboard",
   "action.add_new_user": "Add New User",

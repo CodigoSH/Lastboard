@@ -2,7 +2,7 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
 
-Three of the sections — **Users**, **Data** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring**, **Proxmox** and **Docker** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Proxmox**, **Docker** and **About** — the ones its permissions allow — and nothing hints that the rest exist.
+Two of the sections — **Users** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring**, **Proxmox** and **Docker** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Proxmox**, **Docker**, **Data** and **About** — the ones its permissions allow — and nothing hints that the rest exist.
 
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
@@ -77,6 +77,8 @@ The permissions, by area:
 
 A permission that depends on another is shown switched off and cannot be touched while the one it needs is off. Changes apply from the account's next request; nobody has to sign in again.
 
+What an account may not do is left out of its screens rather than greyed out: without *edit the board* there is no pencil, no **+** and no way to drag or resize; without *several boards* the new-board entry is gone; without *monitoring* or *Proxmox* their icons and their sections of this window disappear, and without *Docker* its section; **Data** shows a member only what it may use — importing and exporting boards, and storing icons — and never the backup; without *the up/down dots* a bookmark shows none and the form does not offer them; without *fetch new icons* the icon picker says so and only uploading remains; and a widget the account may not use is not offered when adding one. A widget that is already on the board stays there, and says in one line that the administrator has not turned it on for the account. The screens follow the permissions the account had when the page was loaded, so a change made while somebody has Lastboard open shows up the next time they reload.
+
 Some things are never given to a member, whatever its profile: managing accounts, backups, restoring, resetting, updating, and the Docker of the server Lastboard itself runs on. A member can only use its own Docker agents.
 
 An account that existed before permissions were introduced was given the **Homelab** set when you updated, so nothing it could do stopped working; edit it to narrow it down.
@@ -107,6 +109,8 @@ The Docker hosts of your account — a local socket, a Lastboard Agent with its 
 ## Data
 
 Full backup & restore, and importing/exporting dashboards. See **[Import, Export & Backup](import-export.md)**.
+
+The backup and its restore are the whole server's, so only the administrator sees them. A member sees the import and export of its own boards if it may *import and export boards*, and the icons below if it may *fetch new icons*; with neither, the section is not there.
 
 It also says where your icons come from — how many of your bookmarks this server serves, and how many still fetch theirs from outside, with a button to bring those in. See **[Where icons are stored](../getting-started/bookmarks.md#boards-made-before-this-existed)**.
 

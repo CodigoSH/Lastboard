@@ -1,6 +1,6 @@
 # Import, Export & Backup
 
-Lastboard has **two separate features** that are easy to confuse. This page explains when to use each. Both live under **Settings → Data**.
+Lastboard has **two separate features** that are easy to confuse. This page explains when to use each. Both live under **Settings → Data**; the full backup is the administrator's, and import and export are also there for any account allowed to move boards in and out.
 
 | | **Full backup** | **Import / Export dashboards** |
 | :--- | :--- | :--- |

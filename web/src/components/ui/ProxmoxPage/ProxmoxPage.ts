@@ -11,6 +11,8 @@ import '../IconSelectionModal/IconSelectionModal';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import css from './ProxmoxPage.css' with { type: 'text' };
 import { whenVisible } from '../../../services/whenVisible';
+import { userStore } from '../../../store/userStore';
+import { accessAllows } from '../../../services/access';
 
 /** What this page draws: one hypervisor at a time. */
 type PxOverview = PxHost;
@@ -1359,7 +1361,7 @@ class ProxmoxPage extends HTMLElement {
         const book = this.backing(g);
         const kind = i18n.t(g.kind === 'lxc' ? 'proxmox.container' : 'proxmox.vm');
         const sub = escapeHtml(`${kind} ${g.vmid} · ${g.node}`);
-        const power = this.data?.caps.power === true;
+        const power = this.data?.caps.power === true && accessAllows(userStore.getUser(), 'proxmox_control');
 
         this.sheet(escapeHtml(g.name), sub, `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`, this.sheetFace(g));
         let s: PxSeries | null = null;

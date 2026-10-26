@@ -5,6 +5,8 @@ import { dashboardStore } from '../../store/dashboardStore';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
 import { MarkdownParser } from '../../services/MarkdownParser';
 import { i18n } from '../../services/i18n';
+import { accessAllows } from '../../services/access';
+import { userStore } from '../../store/userStore';
 
 // ============================================================================
 // ICONS
@@ -240,9 +242,9 @@ export class MarkdownWidget extends HTMLElement {
                 <button class="action-btn toggle-preview" title="${i18n.t('widget.markdown.tool.toggle_preview')}" style="${this._isLocked ? 'display:none' : ''}">
                     ${ICONS.preview}
                 </button>
-                <button class="action-btn lock-btn ${lockClass}" title="${this._isLocked ? i18n.t('widget.markdown.tool.unlock') : i18n.t('widget.markdown.tool.lock')}">
+                ${accessAllows(userStore.getUser(), 'board_edit') ? `<button class="action-btn lock-btn ${lockClass}" title="${this._isLocked ? i18n.t('widget.markdown.tool.unlock') : i18n.t('widget.markdown.tool.lock')}">
                     ${this._isLocked ? ICONS.lock : ICONS.unlock}
-                </button>
+                </button>` : ''}
             </div>
 
             <div class="editor-container">

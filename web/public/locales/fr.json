@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "La recherche d'icônes sur internet n'est pas activée pour ton compte. Tu peux toujours téléverser les tiennes.",
+  "access.not_enabled": "Ton administrateur n'a pas activé cela pour ton compte.",
   "action.add_bookmark": "Ajouter un signet",
   "action.add_dashboard": "Nouveau tableau de bord",
   "action.add_new_user": "Ajouter un utilisateur",

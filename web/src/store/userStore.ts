@@ -8,6 +8,11 @@ type Listener = (user: User | null) => void;
 class UserStore {
     private user: User | null = null;
     private listeners: Listener[] = [];
+    // Whether the account has come from the server in this page, rather than
+    // from the copy kept from the last visit — which may predate a change of
+    // permissions, so nothing that asks the server for what a permission
+    // guards should go by it.
+    private fromServer = false;
 
     // Returns true when running in pure-frontend demo mode.
     private isDemo(): boolean {
@@ -74,6 +79,7 @@ class UserStore {
             project_logo: userData.project_logo || ''
         };
 
+        this.fromServer = true;
         this.applyAesthetics();
         this.notify();
     }
@@ -256,6 +262,11 @@ class UserStore {
             console.error('[UserStore] Change password failed', e);
             throw e;
         }
+    }
+
+    /** Whether the account was read from the server in this page. */
+    isFromServer(): boolean {
+        return this.fromServer;
     }
 
     getUser() {

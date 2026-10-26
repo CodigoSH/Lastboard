@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "İnternette simge arama hesabın için açık değil. Yine de kendi simgelerini yükleyebilirsin.",
+  "access.not_enabled": "Yöneticin bunu hesabın için açmadı.",
   "action.add_bookmark": "Yer imi ekle",
   "action.add_dashboard": "Yeni panel",
   "action.add_new_user": "Kullanıcı ekle",

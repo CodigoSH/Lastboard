@@ -5,6 +5,8 @@
 import { GridItem } from '../../../types';
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeUrl } from '../../../services/escape';
+import { accessAllows, widgetAllowed } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
 import { cleanWidgetTitle, widgetTakesPill } from '../../../services/widgetTitle';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
@@ -138,11 +140,11 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
 
             ${cardControl(b.id, isEditing, selecting, selected)}
             ${title ? `<span class="widget-title" title="${esc(title)}">${esc(title)}</span>` : ''}
-            <${tagName}
+            ${widgetAllowed(userStore.getUser(), widgetId, data.source || 'local') ? `<${tagName}
                 item-id="${b.id}"
                 data-editing="${isEditing}"
                 ${widgetId === 'notepad' ? `content="${dataContent}"` : ''}
-            ></${tagName}>
+            ></${tagName}>` : `<div class="widget-locked">${i18n.t('access.not_enabled')}</div>`}
 
             ${isEditing && !selecting && !['clock', 'telemetry', 'weather'].includes(widgetId) ? '<div class="resize-handle"></div>' : ''}
         </div>
@@ -178,7 +180,7 @@ function renderBookmarkCard(b: GridItem, data: any, isEditing: boolean, vPos: { 
             
             ${isEditing && b.type === 'section' ? '<div class="resize-handle"></div>' : ''}
             
-            ${data.statusCheck ? `
+            ${data.statusCheck && accessAllows(userStore.getUser(), 'watch_status') ? `
                 <div class="status-indicator ${b.status ? `status-${b.status}` : ''} ${data.statusPos ? `status-pos-${data.statusPos}` : ''}"
                      aria-label="${b.status === 'up' ? i18n.t('status.online') : (b.status === 'down' ? i18n.t('status.unreachable') : (b.status === 'pending' ? i18n.t('status.checking') : i18n.t('general.pinging')))}">
                 </div>

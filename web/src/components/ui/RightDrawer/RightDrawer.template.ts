@@ -1,6 +1,6 @@
 import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
-import { accessAllows } from '../../../services/access';
+import { accessAllows, showsData } from '../../../services/access';
 import { roleOrLabel } from '../../../services/accountAccess';
 
 interface User {
@@ -50,15 +50,17 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                     <span>${i18n.t('settings.personalization')}</span>
                 </div>
 
+                ${accessAllows(user, 'watch_monitor') ? `
                 <div class="right-drawer__menu-item ${selectedSection === 'monitoring' ? 'right-drawer__menu-item--active' : ''}" data-section="monitoring">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                     <span>${i18n.t('settings.monitoring')}</span>
-                </div>
+                </div>` : ''}
 
+                ${accessAllows(user, 'proxmox_view') ? `
                 <div class="right-drawer__menu-item ${selectedSection === 'proxmox' ? 'right-drawer__menu-item--active' : ''}" data-section="proxmox">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
                     <span>${i18n.t('widget.proxmox.name')}</span>
-                </div>
+                </div>` : ''}
 
                 ${accessAllows(user, 'docker_view') ? `
                 <div class="right-drawer__menu-item ${selectedSection === 'docker' ? 'right-drawer__menu-item--active' : ''}" data-section="docker">
@@ -71,12 +73,16 @@ export const panelInnerTemplate = ({ user, selectedSection, updateAvailable }: R
                         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                         <span>${i18n.t('settings.users')}</span>
                     </div>
+                ` : ''}
 
+                ${showsData(user) ? `
                     <div class="right-drawer__menu-item ${selectedSection === 'data' ? 'right-drawer__menu-item--active' : ''}" data-section="data">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
                         <span>${i18n.t('settings.data')}</span>
                     </div>
+                ` : ''}
 
+                ${(user.role?.toLowerCase() === 'admin' || user.role === 'Administrator') ? `
                     <div class="right-drawer__menu-item ${selectedSection === 'advanced' ? 'right-drawer__menu-item--active' : ''}" data-section="advanced">
                         <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
                         <span>${i18n.t('settings.advanced')}</span>

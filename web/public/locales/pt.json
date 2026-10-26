@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "A pesquisa de ícones na internet não está ativada para a tua conta. Ainda podes carregar os teus.",
+  "access.not_enabled": "O teu administrador não ativou isto para a tua conta.",
   "action.add_bookmark": "Adicionar favorito",
   "action.add_dashboard": "Novo painel",
   "action.add_new_user": "Adicionar usuário",

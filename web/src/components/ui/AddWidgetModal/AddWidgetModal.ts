@@ -1,5 +1,7 @@
 
 import { WIDGET_REGISTRY, WidgetDefinition } from '../../../widgets/registry';
+import { offeredWidgets } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { addWidgetTemplate } from './AddWidgetModal.template';
 import css from './AddWidgetModal.css' with { type: 'text' };
@@ -18,6 +20,9 @@ class AddWidgetModal extends HTMLElement {
     }
 
     open() {
+        // Drawn again each time: the account's permissions may have changed
+        // since the page loaded.
+        this.render();
         if (this.dialog) this.dialog.showModal();
     }
 
@@ -37,7 +42,7 @@ class AddWidgetModal extends HTMLElement {
     render() {
         if (!this.shadowRoot) return;
 
-        this.shadowRoot.innerHTML = addWidgetTemplate(css);
+        this.shadowRoot.innerHTML = addWidgetTemplate(css, offeredWidgets(userStore.getUser(), WIDGET_REGISTRY));
 
         this.dialog = this.shadowRoot.querySelector('dialog');
 

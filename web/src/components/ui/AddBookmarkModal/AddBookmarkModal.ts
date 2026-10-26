@@ -7,6 +7,8 @@ import { safeImageSrc } from '../../../services/escape';
 import { iconForEdit, resolveIconUrl } from '../../../services/iconUrl';
 import { apiService } from '../../../services/apiService';
 import { materializeIcon } from '../../../services/iconStore';
+import { accessAllows } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
 import '../ColorPicker/ColorPicker';
 import '../Select/Select';
@@ -474,7 +476,9 @@ class AddBookmarkModal extends HTMLElement {
             checkStatus: this.checkStatus,
             labelPosition: this.labelPosition,
             visibleTouch: this.visibleTouch,
-            borderWidth: this.borderWidth
+            borderWidth: this.borderWidth,
+            // The up/down dot is the account's to use or not.
+            canWatch: accessAllows(userStore.getUser(), 'watch_status')
         })}
         `;
 
@@ -505,12 +509,14 @@ class AddBookmarkModal extends HTMLElement {
         const sel = this.shadowRoot?.getElementById('bookmark-proxmox') as
             (HTMLElement & { value: string; options: { value: string; label: string }[]; searchable: boolean }) | null;
         if (!group || !sel) return;
+        // It stays hidden, as it starts, for an account without Proxmox.
+        if (!accessAllows(userStore.getUser(), 'proxmox_view')) return;
         try {
             // Ask the cheap question first. Going straight to the overview made
             // every board without Proxmox log a failed request each time this
             // modal opened — our own noise in a console people read to find
-            // real problems. This endpoint answers for anyone and never calls
-            // the hypervisor.
+            // real problems. This endpoint answers for any account allowed to
+            // see Proxmox and never calls the hypervisor.
             const cfg = await apiService.get<{ enabled: boolean }>('/api/proxmox/settings');
             if (!cfg?.enabled) return;
 

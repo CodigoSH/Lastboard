@@ -2,10 +2,12 @@ import { Dashboard } from '../../../types';
 import { i18n } from '../../../services/i18n';
 import { escapeHtml } from '../../../services/escape';
 
-export const template = ({ dashboards, currentDashboardId, dropdownActive }: {
+export const template = ({ dashboards, currentDashboardId, dropdownActive, canManage = true }: {
     dashboards: Dashboard[],
     currentDashboardId: number | null,
-    dropdownActive: boolean
+    dropdownActive: boolean,
+    /** Renaming, reordering and deleting boards is board editing. */
+    canManage?: boolean
 }): string => {
     const resolveName = (name: string) => escapeHtml(i18n.t(name));
     return `
@@ -24,13 +26,13 @@ export const template = ({ dashboards, currentDashboardId, dropdownActive }: {
                     <span class="switcher-item-name" title="${resolveName(d.name)}">${resolveName(d.name)}</span>
                 </div>
             `).join('')}
-            <div class="switcher-separator"></div>
+            ${canManage ? `<div class="switcher-separator"></div>
             <button class="switcher-manage-btn" data-action="manage">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                     <path d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
                 ${i18n.t('dashboard.manage')}
-            </button>
+            </button>` : ''}
         </div>
     `;
 };

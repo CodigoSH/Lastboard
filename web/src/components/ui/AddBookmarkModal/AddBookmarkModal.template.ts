@@ -13,6 +13,8 @@ interface AddBookmarkModalData {
     labelPosition: string;
     visibleTouch: boolean;
     borderWidth: number;
+    /** Whether the account may have the up/down dot; without it the control is left out. */
+    canWatch?: boolean;
 }
 
 import { i18n } from '../../../services/i18n';
@@ -88,7 +90,8 @@ export const template = ({
     checkStatus,
     labelPosition,
     visibleTouch,
-    borderWidth
+    borderWidth,
+    canWatch = true
 }: AddBookmarkModalData) => `
     <dialog class="dialog-base" id="modal" aria-label="${i18n.t('bookmark.add')}">
         <div class="modal-header">
@@ -144,7 +147,7 @@ export const template = ({
                         <label for="bookmark-url">${i18n.t('bookmark.url')}</label>
                         <div class="input-group">
                             <!-- Status Monitor Dropdown -->
-                            <div class="icon-dropdown">
+                            <div class="icon-dropdown"${canWatch ? '' : ' style="display: none;"'}>
                                 <button type="button" class="icon-dropdown-btn" id="status-pos-btn" title="${i18n.t('bookmark.status_position')}" style="position: relative;">
                                     ${checkStatus ?
         `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-opacity="0.5" />

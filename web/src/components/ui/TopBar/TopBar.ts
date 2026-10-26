@@ -7,6 +7,9 @@ import '../RenameDashboardModal/RenameDashboardModal';
 import '../MobileReorderModal/MobileReorderModal';
 import css from './TopBar.css' with { type: 'text' };
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
+import { accessAllows } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
+import type { User } from '../../../types';
 
 interface TopBarState {
     editMode: boolean;
@@ -16,7 +19,7 @@ interface TopBarState {
     addMenuActive: boolean;
     drawerOpen: boolean;
     searchQuery: string;
-    user?: { role?: string };
+    user?: User | null;
     updateAvailable?: boolean;
     isDemo?: boolean;
     currentDashboardId?: number | null;
@@ -32,6 +35,9 @@ class TopBar extends HTMLElement {
     state: TopBarState;
     _unsubscribeDashboard: (() => void) | undefined;
     _unsubscribeI18n: (() => void) | undefined;
+    _unsubscribeUser: (() => void) | undefined;
+    private _monitorAsked = false;
+    private _proxmoxAsked = false;
     _windowClickHandler: ((e: Event) => void) | undefined;
     _monitoringHandler: ((e: CustomEvent) => void) | undefined;
     _monitorOpenHandler: ((e: CustomEvent) => void) | undefined;
@@ -95,26 +101,28 @@ class TopBar extends HTMLElement {
             this.render();
         });
 
-        // Monitoring icon visibility: on when 24/7 is enabled. Fetch once, then
-        // react to changes made in settings.
-        apiService.get<{ mode: string }>('/api/monitor/settings')
-            .then(s => this.setState({ monitoringOn: s.mode === 'background' }))
-            .catch(() => { /* leave hidden */ });
+        // Monitoring icon visibility: on when 24/7 is enabled. Fetched once
+        // the account is known to be allowed to see it, then reacts to changes
+        // made in settings.
         this._monitoringHandler = (e: CustomEvent) => {
             this.setState({ monitoringOn: e.detail?.mode === 'background' });
         };
         eventBus.on(EVENTS.MONITORING_CHANGED, this._monitoringHandler);
 
-        // The Proxmox icon appears only once a connection is saved and enabled.
-        // Everyone authenticated may read that flag; the address and the token
-        // are admin-only and never come back here.
-        apiService.get<{ enabled: boolean }>('/api/proxmox/settings')
-            .then(s => this.setState({ proxmoxOn: !!s.enabled }))
-            .catch(() => { /* leave hidden */ });
+        // The Proxmox icon appears only once a connection is saved and enabled,
+        // and only for an account that may see Proxmox.
         this._proxmoxHandler = (e: CustomEvent) => {
             this.setState({ proxmoxOn: !!e.detail?.enabled });
         };
         eventBus.on(EVENTS.PROXMOX_CHANGED, this._proxmoxHandler);
+
+        // The account's permissions come from the user store: the bar is drawn
+        // again when they change, and asks for the two flags only when allowed.
+        this._unsubscribeUser = userStore.subscribe(user => {
+            this.setState({ user });
+            this.askFlags();
+        });
+        this.askFlags();
 
         this._proxmoxOpenHandler = (e: CustomEvent) => {
             this.setState({ proxmoxOpen: !!e.detail?.open });
@@ -133,6 +141,7 @@ class TopBar extends HTMLElement {
         window.removeEventListener('keydown', this._shortcutHandler);
         if (this._unsubscribeDashboard) this._unsubscribeDashboard();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
+        if (this._unsubscribeUser) this._unsubscribeUser();
         if (this._windowClickHandler) {
             window.removeEventListener('click', this._windowClickHandler);
         }
@@ -140,6 +149,30 @@ class TopBar extends HTMLElement {
         if (this._monitorOpenHandler) eventBus.off(EVENTS.MONITOR_OVERVIEW_CHANGED, this._monitorOpenHandler);
         if (this._proxmoxHandler) eventBus.off(EVENTS.PROXMOX_CHANGED, this._proxmoxHandler);
         if (this._proxmoxOpenHandler) eventBus.off(EVENTS.PROXMOX_PAGE_CHANGED, this._proxmoxOpenHandler);
+    }
+
+    /** Whether the signed-in account may do this; the demo has no accounts and may do all. */
+    private may(cap: string): boolean {
+        return accessAllows(this.state.user ?? userStore.getUser(), cap);
+    }
+
+    /** Asks whether monitoring and Proxmox are on, once, and only if the account may see them. */
+    private askFlags() {
+        // Not on the copy of the account kept from the last visit: its
+        // permissions may have changed since, and asking with them is a refusal.
+        if (!userStore.isFromServer()) return;
+        if (!this._monitorAsked && this.may('watch_monitor')) {
+            this._monitorAsked = true;
+            apiService.get<{ mode: string }>('/api/monitor/settings')
+                .then(s => this.setState({ monitoringOn: s.mode === 'background' }))
+                .catch(() => { this._monitorAsked = false; /* leave hidden */ });
+        }
+        if (!this._proxmoxAsked && this.may('proxmox_view')) {
+            this._proxmoxAsked = true;
+            apiService.get<{ enabled: boolean }>('/api/proxmox/settings')
+                .then(s => this.setState({ proxmoxOn: !!s.enabled }))
+                .catch(() => { this._proxmoxAsked = false; /* leave hidden */ });
+        }
     }
 
     setState(newState: Partial<TopBarState>) {
@@ -425,7 +458,7 @@ class TopBar extends HTMLElement {
             addMenuActive: this.state.addMenuActive,
             drawerOpen: this.state.drawerOpen,
             searchQuery: this.state.searchQuery,
-            user: this.state.user,
+            user: this.state.user ?? userStore.getUser(),
             updateAvailable: this.state.updateAvailable,
             isDemo: this.state.isDemo,
             currentDashboardId: this.state.currentDashboardId,

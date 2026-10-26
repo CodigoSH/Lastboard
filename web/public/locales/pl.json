@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "Wyszukiwanie ikon w internecie nie jest włączone dla Twojego konta. Nadal możesz przesłać własne.",
+  "access.not_enabled": "Twój administrator nie włączył tego dla Twojego konta.",
   "action.add_bookmark": "Dodaj zakładkę",
   "action.add_dashboard": "Nowy panel",
   "action.add_new_user": "Dodaj użytkownika",

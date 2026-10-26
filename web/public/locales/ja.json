@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "このアカウントではインターネットでのアイコン検索が有効になっていません。自分のアイコンをアップロードすることはできます。",
+  "access.not_enabled": "管理者がこのアカウントではこれを有効にしていません。",
   "action.add_bookmark": "ブックマークを追加",
   "action.add_dashboard": "新しいダッシュボード",
   "action.add_new_user": "ユーザーを追加",

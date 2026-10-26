@@ -5,6 +5,8 @@ import { collisionService } from '../../../services/collisionService';
 import { statusService } from '../../../services/StatusService';
 import { i18n } from '../../../services/i18n';
 import { apiService } from '../../../services/apiService';
+import { accessAllows } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
 import { showStatusTip, updateStatusTip, hideStatusTip } from './statusTooltip';
 // Widgets
 import '../../../widgets/core/ClockWidget';
@@ -414,7 +416,13 @@ class BookmarkGrid extends HTMLElement {
         return item?.status || 'unknown';
     }
 
+    /** The history behind a dot is monitoring's; an account without it sees only the status. */
+    private _mayMonitor(): boolean {
+        return accessAllows(userStore.getUser(), 'watch_monitor');
+    }
+
     private async _loadTipData(id: number): Promise<any | null> {
+        if (!this._mayMonitor()) return null;
         const cached = this._tipCache.get(id);
         if (cached && Date.now() - cached.ts < BookmarkGrid.TIP_TTL) return cached.data;
         try {
@@ -443,7 +451,7 @@ class BookmarkGrid extends HTMLElement {
             <div class="status-tooltip__status status-tooltip__status--${cls}">
                 <span class="status-tooltip__dot"></span>${label}
             </div>
-            <div class="status-tooltip__rows">
+            ${this._mayMonitor() ? `<div class="status-tooltip__rows">
                 <div class="status-tooltip__row">
                     <span class="status-tooltip__row-label">${i18n.t('monitor.uptime')} (24h)</span>
                     <span class="status-tooltip__row-value">${uptime}</span>
@@ -453,7 +461,7 @@ class BookmarkGrid extends HTMLElement {
                     <span class="status-tooltip__row-value">${latency}</span>
                 </div>
             </div>
-            <div class="status-tooltip__hint">${i18n.t('monitor.click_for_history')}</div>`;
+            <div class="status-tooltip__hint">${i18n.t('monitor.click_for_history')}</div>` : ''}`;
     }
 
     private async handleActionClick(e: Event) {
@@ -462,7 +470,7 @@ class BookmarkGrid extends HTMLElement {
 
         // Status dot → open the monitoring history drawer (works in any mode).
         const statusDot = target.closest('.status-indicator');
-        if (statusDot) {
+        if (statusDot && this._mayMonitor()) {
             e.preventDefault();
             e.stopPropagation();
             hideStatusTip();

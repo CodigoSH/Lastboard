@@ -295,7 +295,7 @@ export const usersTemplate = (users: any[]) => `
 export const monitoringTemplate = (monitoring: {
     mode: string; interval_sec: number; alerts_enabled: boolean;
     notify_type: string; notify_url: string; notify_has_token: boolean; fail_threshold: number;
-}, loaded: boolean, failed: boolean) => {
+}, loaded: boolean, failed: boolean, mayAlert = true) => {
     // Until the server has answered there is nothing true to draw. The switches
     // used to be painted from the placeholder, so this section claimed 24/7 and
     // alerts were off before it knew — and a switch flipped in that window saved
@@ -356,7 +356,7 @@ export const monitoringTemplate = (monitoring: {
             </div>
         </div>
 
-        <div class="bento-card">
+        ${mayAlert ? `<div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.notifications')}</h3>
             ${!on24 ? `<p class="settings-content__text-dim" style="font-size:13px;margin:0 0 14px;">${i18n.t('settings.alerts_requires_247')}</p>` : ''}
             <div class="settings-content__action-group">
@@ -407,7 +407,7 @@ export const monitoringTemplate = (monitoring: {
                     <app-button variant="primary" data-action="test-notify">${i18n.t('settings.notify_test_btn')}</app-button>
                 </div>
             </div>` : ''}
-        </div>
+        </div>` : ''}
     </div>
 `;
 };
@@ -752,12 +752,24 @@ const iconsCard = (pending: number, local: number, busy: boolean) => {
         </div>`;
 };
 
-export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = false) => `
+/**
+ * What a section of Data the account sees. The backup and its restore are the
+ * whole server's, so they are the administrator's; storing icons and moving
+ * boards are the account's own, each with its permission.
+ */
+export interface DataSections {
+    backup: boolean;
+    icons: boolean;
+    transfer: boolean;
+}
+
+export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = false,
+    show: DataSections = { backup: true, icons: true, transfer: true }) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
 
-        ${iconsCard(pendingIcons, localIcons, storingIcons)}
+        ${show.icons ? iconsCard(pendingIcons, localIcons, storingIcons) : ''}
 
-        <!-- Full backup (Lastboard-only, restore is destructive) -->
+        ${show.backup ? `<!-- Full backup (Lastboard-only, restore is destructive) -->
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.backup_full')}</h3>
             <p class="settings-content__text-dim" style="font-size: 13px; margin: -6px 0 16px;">${i18n.t('settings.backup_full_desc')}</p>
@@ -785,9 +797,9 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                     </div>
                 </div>
             </div>
-        </div>
+        </div>` : ''}
 
-        <!-- Portable dashboards import/export (safe: creates new) -->
+        ${show.transfer ? `<!-- Portable dashboards import/export (safe: creates new) -->
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.import_export')}</h3>
             <p class="settings-content__text-dim" style="font-size: 13px; margin: -6px 0 16px;">${i18n.t('settings.import_creates_new')}</p>
@@ -813,7 +825,7 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                     <app-button data-action="click-file" data-file="import-file">${i18n.t('action.select_file')}</app-button>
                 </div>
             </div>
-        </div>
+        </div>` : ''}
     </div>
 `;
 

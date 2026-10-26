@@ -1,12 +1,12 @@
 import { i18n } from '../../../services/i18n';
-import { WIDGET_REGISTRY } from '../../../widgets/registry';
+import type { WidgetDefinition } from '../../../widgets/registry';
 
 /**
  * Markup for the "Add widget" modal. The stylesheet is injected by the caller.
  * Depends on i18n / the widget registry, so it is verified visually rather than
  * via snapshot (i18n is a singleton that needs a browser environment).
  */
-export const addWidgetTemplate = (css: string): string => `
+export const addWidgetTemplate = (css: string, widgets: WidgetDefinition[]): string => `
             <style>${css}</style>
             <dialog class="dialog-base" id="modal" aria-labelledby="add-widget-title">
                 <div class="header">
@@ -20,7 +20,7 @@ export const addWidgetTemplate = (css: string): string => `
                 </div>
 
                 <div class="grid">
-                    ${WIDGET_REGISTRY.map(w => `
+                    ${widgets.map(w => `
                         <div class="card" data-id="${w.id}">
                             <div class="icon-container">${w.icon}</div>
                             <div class="name">${i18n.t(`widget.${w.id}.name`) || w.name}</div>

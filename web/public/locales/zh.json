@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "你的账户未开启在互联网上搜索图标。你仍然可以上传自己的图标。",
+  "access.not_enabled": "管理员尚未为你的账户启用此功能。",
   "action.add_bookmark": "添加书签",
   "action.add_dashboard": "新建仪表板",
   "action.add_new_user": "添加用户",

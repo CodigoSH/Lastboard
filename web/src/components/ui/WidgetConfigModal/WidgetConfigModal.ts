@@ -27,6 +27,8 @@ import { secretsPatch, SECRET_MASK } from '../../../services/secretField';
 import { fetchDockerSettings, hostIdsToStore, type AccountDockerHost } from '../../../services/dockerHosts';
 import { HEADER_NAME, planApiSecrets } from '../../../widgets/apiSecrets';
 import { testRemoteStats } from '../../../services/remoteStats';
+import { telemetrySources } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
 import { telemetrySource } from '../../../widgets/core/remoteTelemetry';
 import {
     applySourceVisibility, describeTest, readSourceSettings, secretChanges,
@@ -1097,7 +1099,7 @@ class WidgetConfigModal extends HTMLElement {
         const select = root?.getElementById('telemetry-source') as AppSelect | null;
         if (!root || !select || !this.currentItem) return;
 
-        select.options = sourceOptions();
+        select.options = telemetrySources(userStore.getUser(), sourceOptions(), String(select.value || 'local'));
         select.addEventListener('change', () => applySourceVisibility(root, telemetrySource(select.value)));
         wireSecretBoxes(root);
 

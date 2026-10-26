@@ -1,5 +1,7 @@
 import { csrfToken } from './csrf';
 import { isDirectIconUrl } from './iconUrl';
+import { accessAllows } from './access';
+import { userStore } from '../store/userStore';
 
 /**
  * Keeps a chosen icon on this server instead of pointing at wherever it came
@@ -36,6 +38,10 @@ export async function materializeIcon(source: string | null | undefined): Promis
     // A bare provider name is resolved by the caller before it reaches here;
     // anything that still isn't a URL has nothing to download.
     if (!isDirectIconUrl(src)) return src;
+
+    // Storing an icon is the server fetching it: a permission of its own. An
+    // account without it keeps the source, without asking to be refused.
+    if (!accessAllows(userStore.getUser(), 'icons_internet')) return src;
 
     try {
         const res = await fetch('/api/icons', {

@@ -6,6 +6,8 @@ import { retryOnRateLimit } from './retryOnRateLimit';
 import { buildIconIndex, resolveImportedIcon } from './importIcons';
 import { iconService } from './iconService';
 import { csrfToken } from './csrf';
+import { accessAllows } from './access';
+import { userStore } from '../store/userStore';
 
 export interface NativeItem {
     type: string;
@@ -130,6 +132,7 @@ class ImportService {
     private storeIconsInBackground() {
         // Not awaited: the board is already complete, and the same pass runs at
         // every start, so a connection that drops here loses nothing.
+        if (!accessAllows(userStore.getUser(), 'icons_internet')) return;
         fetch('/api/icons/localize', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },

@@ -1,6 +1,8 @@
 import { template } from './DashboardSwitcher.template';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { Dashboard } from '../../../types';
+import { accessAllows } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
 import css from './DashboardSwitcher.css' with { type: 'text' };
 
 interface DashboardSwitcherState {
@@ -17,6 +19,7 @@ class DashboardSwitcher extends HTMLElement {
     };
 
     private _unsubscribeDashboard: (() => void) | undefined;
+    private _unsubscribeUser: (() => void) | undefined;
     private _windowClickHandler: ((e: Event) => void) | undefined;
 
     constructor() {
@@ -28,6 +31,9 @@ class DashboardSwitcher extends HTMLElement {
         this.render();
         this.setupListeners();
         
+        // Managing the boards is editing them: the button follows the permission.
+        this._unsubscribeUser = userStore.subscribe(() => this.render());
+
         this._unsubscribeDashboard = dashboardStore.subscribe((storeState) => {
             const sameDashboards = JSON.stringify(this.state.dashboards) === JSON.stringify(storeState.dashboards);
             const sameId = this.state.currentDashboardId === storeState.currentDashboardId;
@@ -41,6 +47,7 @@ class DashboardSwitcher extends HTMLElement {
     }
 
     disconnectedCallback() {
+        if (this._unsubscribeUser) this._unsubscribeUser();
         if (this._unsubscribeDashboard) {
             this._unsubscribeDashboard();
         }
@@ -111,7 +118,8 @@ class DashboardSwitcher extends HTMLElement {
             ${template({
                 dashboards: this.state.dashboards,
                 currentDashboardId: this.state.currentDashboardId,
-                dropdownActive: this.state.dropdownActive
+                dropdownActive: this.state.dropdownActive,
+                canManage: accessAllows(userStore.getUser(), 'board_edit')
             })}
         `;
     }

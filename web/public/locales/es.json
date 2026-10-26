@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "La búsqueda de iconos en internet no está activada para tu cuenta. Aún puedes subir los tuyos.",
+  "access.not_enabled": "Tu administrador no ha activado esto para tu cuenta.",
   "action.add_bookmark": "Agregar marcador",
   "action.add_dashboard": "Nuevo tablero",
   "action.add_new_user": "Agregar usuario",

@@ -3,6 +3,8 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { layoutContainer, gridTemplate } from './IconPicker.template';
 import { iconService, IconInfo } from '../../../services/iconService';
 import { safeImageSrc } from '../../../services/escape';
+import { accessAllows } from '../../../services/access';
+import { userStore } from '../../../store/userStore';
 import css from './IconPicker.css' with { type: 'text' };
 
 class IconPicker extends HTMLElement {
@@ -57,10 +59,22 @@ class IconPicker extends HTMLElement {
      * Safe to call on every open: iconService keeps the catalogue once loaded.
      */
     async ensureIcons() {
+        if (this.inputElement) this.inputElement.disabled = !this.mayBrowse();
+        if (!this.mayBrowse()) {
+            // Nothing is fetched from the catalogues; the grid says so, calmly.
+            this.isLoading = false;
+            this.updateGrid();
+            return;
+        }
         if (this.icons.length > 0) return;
         this.isLoading = true;
         this.updateGrid();
         await this.loadIcons();
+    }
+
+    /** The catalogues live on the internet and picking from them stores the icon here: a permission of its own. */
+    private mayBrowse(): boolean {
+        return accessAllows(userStore.getUser(), 'icons_internet');
     }
 
     async loadIcons() {
@@ -230,6 +244,11 @@ class IconPicker extends HTMLElement {
         if (grid) {
             // ALWAYS show grid container to maintain layout stability
             grid.style.display = 'block';
+
+            if (!this.mayBrowse()) {
+                grid.innerHTML = `<div class="icon-picker__empty">${i18n.t('access.icons_not_enabled')}</div>`;
+                return;
+            }
 
             if (!this.searchQuery.trim() && !this.isLoading) {
                 grid.innerHTML = `<div class="icon-picker__empty">${i18n.t('general.search_icons')}</div>`;

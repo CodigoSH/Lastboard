@@ -9,6 +9,8 @@ import { resolveIconUrl } from '../../services/iconUrl';
 import { whenVisible } from '../../services/whenVisible';
 import { guestKey, guestLabel, hasChosenOrder, visibleGuests, type GuestSettings } from '../../services/proxmoxGuests';
 import { eventBus, EVENTS } from '../../services/EventBus';
+import { userStore } from '../../store/userStore';
+import { accessAllows } from '../../services/access';
 
 /** A machine, plus which hypervisor it is on: the tile mixes them all. */
 type PxGuestOn = PxGuest & { host: string };
@@ -275,7 +277,8 @@ class ProxmoxWidget extends HTMLElement {
         const busy = this._busy.has(guestKey(g.host, g.vmid));
         // Asked of the hypervisor this machine is on, not of the set: one
         // token may carry VM.PowerMgmt while another is read-only.
-        const power = this.hosts.find(h => h.id === g.host)?.caps?.power === true;
+        const power = this.hosts.find(h => h.id === g.host)?.caps?.power === true
+            && accessAllows(userStore.getUser(), 'proxmox_control');
         const mem = g.mem_total > 0 ? Math.round((g.mem / g.mem_total) * 100) : 0;
 
         // The icon slot is the bookmark's icon once a machine is tied to one.

@@ -21,9 +21,11 @@ interface TopBarData {
 
 import { i18n } from '../../../services/i18n';
 import { escapeHtml, safeImageSrc } from '../../../services/escape';
+import { accessAllows } from '../../../services/access';
+import type { User } from '../../../types';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn, monitorOpen, proxmoxOn, proxmoxOpen }: TopBarData & { user?: { role?: string }, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
+export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn, monitorOpen, proxmoxOn, proxmoxOpen, user }: TopBarData & { user?: User | null, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
     // Edit mode, the settings drawer and the status page are exclusive: each one
     // takes over the UI, so while any of them is active every unrelated control
     // is greyed out and only the one that leads back out stays clickable.
@@ -31,6 +33,9 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
     // which left the board's own search live under the page's one — two search
     // boxes, one of them filtering a board nobody could see.
     const locked = editMode || drawerOpen || monitorOpen || proxmoxOpen;
+    // What the account may not do is left out, not greyed: the server decides
+    // every route, this only keeps the bar from offering what would be refused.
+    const may = (cap: string) => accessAllows(user, cap);
     return `
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -84,6 +89,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
 
             <!-- Add Menu Dropdown -->
             <div id="add-menu" class="add-menu ${addMenuActive ? 'add-menu--active' : ''}">
+                ${may('board_multiple') ? `
                 <div class="add-menu-item" data-action="add-dashboard" role="button" tabindex="0">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon">
                         <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
@@ -93,7 +99,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
                     </svg>
                     ${i18n.t('action.add_dashboard')}
                 </div>
-                <div style="height: 1px; background: var(--border); margin: 2px 0;"></div>
+                <div style="height: 1px; background: var(--border); margin: 2px 0;"></div>` : ''}
                 <div class="add-menu-item" data-action="add-bookmark" role="button" tabindex="0">
                     <svg viewBox="0 0 24 24" fill="none" class="add-menu-icon"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     ${i18n.t('action.add_bookmark')}
@@ -109,7 +115,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
             </div>
 
             <!-- Edit Mode Toggle -->
-            <div id="edit-toggle" class="top-bar__toggle ${drawerOpen || monitorOpen || proxmoxOpen ? 'top-bar__toggle--disabled' : ''}" title="${i18n.t('topbar.edit_tooltip')}"
+            ${may('board_edit') ? `<div id="edit-toggle" class="top-bar__toggle ${drawerOpen || monitorOpen || proxmoxOpen ? 'top-bar__toggle--disabled' : ''}" title="${i18n.t('topbar.edit_tooltip')}"
                  style="margin-right: -6px; ${editMode ? 'color: var(--accent);' : ''}">
                 <svg id="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     ${editMode ? `
@@ -121,11 +127,11 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
                         <path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5" stroke-linecap="round" />
                     `}
                 </svg>
-            </div>
+            </div>` : ''}
 
             <dashboard-switcher class="${locked ? 'disabled' : ''}"></dashboard-switcher>
 
-            ${monitoringOn ? `
+            ${monitoringOn && may('watch_monitor') ? `
             <!-- Monitoring status page — stays clickable while open: it is the way out -->
             <div id="monitor-toggle" class="top-bar__toggle ${(editMode || drawerOpen || proxmoxOpen) && !monitorOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="${monitorOpen ? 'color: var(--accent);' : ''}"
@@ -133,7 +139,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </div>` : ''}
 
-            ${proxmoxOn ? `
+            ${proxmoxOn && may('proxmox_view') ? `
             <!-- Proxmox page — stays clickable while open: it is the way out -->
             <div id="proxmox-toggle" class="top-bar__toggle ${(editMode || drawerOpen || monitorOpen) && !proxmoxOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="${proxmoxOpen ? 'color: var(--accent);' : ''}"

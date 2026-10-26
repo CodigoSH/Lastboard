@@ -1,5 +1,7 @@
 import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
+import { accessAllows, isForbidden } from './access';
+import { userStore } from '../store/userStore';
 import { OneAtATime, planStatusCheck, type Scope } from './statusPlan';
 
 /**
@@ -84,6 +86,8 @@ class StatusService {
 
     private async run(scope: Scope): Promise<void> {
         if (!navigator.onLine) return;
+        // The dots are an account permission; without it there is nothing to ask.
+        if (!accessAllows(userStore.getUser(), 'watch_status')) return;
 
         const plan = planStatusCheck(dashboardStore.getState().items, scope);
 
@@ -106,7 +110,7 @@ class StatusService {
                 }));
             } catch (error) {
                 // No network is not "down": leave what was known.
-                if (!navigator.onLine || error instanceof TypeError) return;
+                if (!navigator.onLine || error instanceof TypeError || isForbidden(error)) return;
                 dashboardStore.setItemStatuses(urls.flatMap(url =>
                     (plan.byUrl.get(url) ?? []).map(id => ({ id, status: 'down' as const }))));
             }

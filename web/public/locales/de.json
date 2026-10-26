@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "Die Suche nach Icons im Internet ist für dein Konto nicht aktiviert. Eigene Icons kannst du weiterhin hochladen.",
+  "access.not_enabled": "Deine Administration hat das für dein Konto nicht aktiviert.",
   "action.add_bookmark": "Lesezeichen hinzufügen",
   "action.add_dashboard": "Neues Dashboard",
   "action.add_new_user": "Benutzer hinzufügen",

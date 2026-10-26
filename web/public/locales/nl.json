@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "Zoeken naar iconen op internet staat niet aan voor je account. Je kunt nog steeds je eigen iconen uploaden.",
+  "access.not_enabled": "Je beheerder heeft dit niet ingeschakeld voor je account.",
   "action.add_bookmark": "Bladwijzer toevoegen",
   "action.add_dashboard": "Nieuw dashboard",
   "action.add_new_user": "Gebruiker toevoegen",

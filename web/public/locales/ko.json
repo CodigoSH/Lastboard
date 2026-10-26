@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "이 계정에서는 인터넷 아이콘 검색이 켜져 있지 않습니다. 직접 아이콘을 업로드할 수는 있습니다.",
+  "access.not_enabled": "관리자가 이 계정에서는 이 기능을 켜지 않았습니다.",
   "action.add_bookmark": "북마크 추가",
   "action.add_dashboard": "새 대시보드",
   "action.add_new_user": "사용자 추가",

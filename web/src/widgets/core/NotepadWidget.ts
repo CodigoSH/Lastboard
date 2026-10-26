@@ -11,6 +11,8 @@ import { dashboardStore } from '../../store/dashboardStore';
 import { decideNoteSync, storedNoteText } from './notepadSync';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { i18n } from '../../services/i18n';
+import { accessAllows } from '../../services/access';
+import { userStore } from '../../store/userStore';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
 import { notepadSanitizer } from '../../services/htmlSanitizer';
 
@@ -496,9 +498,9 @@ export class NotepadWidget extends HTMLElement {
                 }
             </style>
             
-             <button class="top-lock-btn ${lockClass}" id="lock-btn" title="${this._isLocked ? i18n.t('widget.notepad.tool.unlock') : i18n.t('widget.notepad.tool.lock')}">
+             ${this.mayWrite() ? `<button class="top-lock-btn ${lockClass}" id="lock-btn" title="${this._isLocked ? i18n.t('widget.notepad.tool.unlock') : i18n.t('widget.notepad.tool.lock')}">
                 ${this._isLocked ? ICONS.lock : ICONS.unlock}
-            </button>
+            </button>` : ''}
 
             <div class="editor-container ${containerClass}">
                 <div class="editor" contenteditable="${!this._isLocked}" data-placeholder="${i18n.t('widget.notepad.placeholder')}"></div>
@@ -793,7 +795,13 @@ export class NotepadWidget extends HTMLElement {
         }
     }
 
+    /** Writing a note is editing the board: without that permission the note stays read-only. */
+    private mayWrite(): boolean {
+        return accessAllows(userStore.getUser(), 'board_edit');
+    }
+
     private toggleLock() {
+        if (this._isLocked && !this.mayWrite()) return;
         this._isLocked = !this._isLocked;
         this.updateLockState();
         if (this._isLocked && this._isDirty) this.save();

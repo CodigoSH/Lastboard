@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "La ricerca di icone su internet non è attiva per il tuo account. Puoi comunque caricare le tue.",
+  "access.not_enabled": "Il tuo amministratore non l'ha attivato per il tuo account.",
   "action.add_bookmark": "Aggiungi segnalibro",
   "action.add_dashboard": "Nuova dashboard",
   "action.add_new_user": "Aggiungi utente",

@@ -1,4 +1,13 @@
 import { csrfToken } from './csrf';
+import { isForbidden } from './access';
+
+/** A failed request: the server's message, and the status it came with. */
+export class ApiError extends Error {
+    constructor(message: string, public status: number) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
 
 /**
  * Centalized API Service
@@ -22,7 +31,7 @@ class ApiService {
         if (!response.ok) {
             let message = text.trim();
             try { message = JSON.parse(text).error || message; } catch { }
-            throw new Error(message || `HTTP ${response.status}: ${response.statusText}`);
+            throw new ApiError(message || `HTTP ${response.status}: ${response.statusText}`, response.status);
         }
         return text ? JSON.parse(text) : {} as T;
     }
@@ -204,7 +213,8 @@ class ApiService {
 
             return await this.readJson<T>(response);
         } catch (error) {
-            console.error(`[ApiService] Request failed: ${fullUrl}`, error);
+            // A missing permission is an answer, not a fault worth a red line.
+            if (!isForbidden(error)) console.error(`[ApiService] Request failed: ${fullUrl}`, error);
             // Re-throw to be handled by store/component
             throw error;
         }

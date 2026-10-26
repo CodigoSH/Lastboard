@@ -14,6 +14,9 @@ interface WSMessage {
 
 type NotificationListener = (type: string, payload: any) => void;
 
+import { accessAllows } from './access';
+import { userStore } from '../store/userStore';
+
 class SocketService {
     private socket: WebSocket | null = null;
     private statsListeners: ((stats: SystemStats) => void)[] = [];
@@ -28,7 +31,16 @@ class SocketService {
     private static readonly WARN_AFTER = 3;
 
     constructor() {
-        this.connect();
+        // The stream is the machine's own telemetry. An account without that
+        // permission is refused at the door, so it never knocks: the socket
+        // opens when the account may use it and closes if that is taken away.
+        userStore.subscribe(user => {
+            if (accessAllows(user, 'server_telemetry')) {
+                if (!this.socket) this.connect();
+            } else {
+                this.destroy();
+            }
+        });
     }
 
     private connect() {
@@ -84,6 +96,7 @@ class SocketService {
 
     destroy() {
         if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = undefined;
         if (this.socket) {
             this.socket.onclose = null;
             this.socket.close();

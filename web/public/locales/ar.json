@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "البحث عن الأيقونات على الإنترنت غير مفعّل لحسابك. ما زال بإمكانك رفع أيقوناتك الخاصة.",
+  "access.not_enabled": "لم يفعّل المسؤول هذه الميزة لحسابك.",
   "action.add_bookmark": "إضافة إشارة مرجعية",
   "action.add_dashboard": "لوحة قيادة جديدة",
   "action.add_new_user": "إضافة مستخدم",

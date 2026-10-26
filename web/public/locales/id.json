@@ -1,4 +1,6 @@
 {
+  "access.icons_not_enabled": "Pencarian ikon di internet belum diaktifkan untuk akunmu. Kamu tetap bisa mengunggah ikonmu sendiri.",
+  "access.not_enabled": "Administratormu belum mengaktifkan ini untuk akunmu.",
   "action.add_bookmark": "Tambah bookmark",
   "action.add_dashboard": "Dasbor Baru",
   "action.add_new_user": "Tambah pengguna",
