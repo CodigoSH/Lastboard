@@ -56,6 +56,7 @@ pveum role add Lastboard --privs "Sys.Audit Datastore.Audit VM.Audit"
 | `Datastore.Audit` | Read how full each storage is |
 | `Sys.Audit` | Read node status: load average, cores, uptime |
 | `VM.PowerMgmt` | **Optional.** Start and shut down machines from Lastboard |
+| `Sys.Syslog` | **Optional.** Read a node's system log. Not in the role above; [tasks](#tasks) do not need it |
 
 Nothing here grants console access, configuration changes, backups, or deletion. There is no privilege in the list that can destroy anything.
 
@@ -164,6 +165,14 @@ From here you can **Start** or **Shut down** the machine (when the token allows 
 
 The node and the storage cards open the same way, with their own charts and figures.
 
+### Tasks
+
+A node's sheet and a machine's sheet each have a **Tasks** button. It lists what the hypervisor has recently done there, newest first, up to 50: backups, starts and shutdowns, migrations, clones, snapshots and package updates. Each row shows a dot (green for success, amber for warnings or a task still running, red for failure), what it was, the machine it concerned, who started it, when, how long it took, and the message it ended with when it did not end cleanly. On a machine's sheet only that machine's tasks are listed. The list refreshes every 15 seconds while it is open.
+
+Click a task to read its log, up to its first 1,000 lines, with a button to copy it. While the task is still running the log is read again every 3 seconds, and it stops as soon as the task finishes. Tasks need nothing new: they are read with `Sys.Audit`, which the role above already has. If the token lacks it, the list says so instead of staying empty.
+
+A node's sheet also has a **System log** button, which shows the last 200 lines of the node's own log, with **Refresh** and copy buttons. The system log is optional and needs one more privilege: add `Sys.Syslog` to the token's role (`pveum role modify Lastboard --privs "Sys.Audit Sys.Syslog Datastore.Audit VM.Audit VM.PowerMgmt"`, leaving out `VM.PowerMgmt` if your role does not have it). Without it the button shows a note saying so, and nothing else is affected.
+
 ## Starting and stopping
 
 Lastboard offers exactly two actions, on machines only: **start** and **shut down** (the graceful one — the same thing the Proxmox console's *Shutdown* does). Both ask for confirmation first.
@@ -235,6 +244,8 @@ call from each, a cluster's page polls only its own.
 | Page open | `GET .../rrddata` — one per machine, for the trend line on its tile. Proxmox has no endpoint that returns history for more than one machine, so these are spread out, three at a time, and each is asked for once while the page stays open |
 | Opening a machine | the history it already has, or a request for it |
 | Pressing a button | `POST .../status/start` or `.../status/shutdown` |
+| Tasks open | `GET /nodes/{node}/tasks` every 15 seconds, and for an open log `GET .../tasks/{id}/log` and `.../status` every 3 seconds while the task runs |
+| System log open | `GET /nodes/{node}/journal`, once, and again when you press Refresh |
 
 Choosing an icon for a machine asks Proxmox nothing at all: it is stored here,
 beside the connection.

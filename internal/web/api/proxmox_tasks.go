@@ -186,3 +186,67 @@ func (h *ProxmoxHandler) GetTaskLog(w http.ResponseWriter, r *http.Request) {
 		"truncated": len(raw) >= proxmoxTaskLogLines,
 	})
 }
+
+/* ---------------------------------------------------------------------------
+ * The node's system log
+ *
+ * Optional, on purpose: it needs Sys.Syslog on the node, which the role the
+ * guide recommends does not carry. A token without it is told so by name
+ * instead of failing as if the host were down.
+ * ------------------------------------------------------------------------ */
+
+const (
+	defaultJournalLines = 200
+	maxJournalLines     = 1000
+)
+
+// GetNodeJournal reads the last lines of a node's system log.
+//
+// GET /api/proxmox/journal?host=h&node=kprox[&lines=200]
+func (h *ProxmoxHandler) GetNodeJournal(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	host, ok := h.forUser(r).hostFor(strings.TrimSpace(q.Get("host")))
+	if !ok {
+		http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
+		return
+	}
+	node := q.Get("node")
+	if !validNode(node) {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	n := defaultJournalLines
+	if v := q.Get("lines"); v != "" {
+		parsed, err := strconv.Atoi(v)
+		if err != nil || parsed <= 0 {
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
+			return
+		}
+		n = min(parsed, maxJournalLines)
+	}
+
+	var raw []string
+	err := proxmoxDo(configOf(host), http.MethodGet, "/nodes/"+url.PathEscape(node)+"/journal?lastentries="+strconv.Itoa(n), &raw)
+	if err != nil {
+		if err.Error() == "proxmox.forbidden" {
+			http.Error(w, "proxmox.no_syslog_permission", http.StatusForbidden)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	lines := make([]string, 0, len(raw))
+	for _, l := range raw {
+		// The journal brackets its answer with the cursors it read between;
+		// they are for paging, not for reading.
+		if strings.HasPrefix(l, "-- cursor:") {
+			continue
+		}
+		text := cleanLogText(l)
+		if len(text) > maxLogLine {
+			text = strings.ToValidUTF8(text[:maxLogLine], "") + "…"
+		}
+		lines = append(lines, text)
+	}
+	writeJSON(w, map[string]any{"lines": lines})
+}

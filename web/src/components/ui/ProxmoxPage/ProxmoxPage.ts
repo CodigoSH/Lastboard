@@ -13,6 +13,14 @@ import css from './ProxmoxPage.css' with { type: 'text' };
 import { whenVisible } from '../../../services/whenVisible';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
+import { atBottom } from '../../../services/dockerPage';
+import { copyText } from '../../../services/copyText';
+import {
+    NO_SYSLOG_KEY, shouldPollLog, taskErrorKey, taskLogText, taskSeconds, TASKS_MS, TASK_LOG_MS,
+    type PxTask, type PxTaskLog, type TaskScope,
+} from '../../../services/proxmoxTasks';
+import { fetchTasks, fetchTaskLog, fetchJournal } from '../../../services/proxmoxTasksApi';
+import { errorHtml as taskErrorHtml, logLinesHtml, tasksListHtml, typeLabel, type Fmt as TaskFmt } from './ProxmoxTasks.template';
 
 /** What this page draws: one hypervisor at a time. */
 type PxOverview = PxHost;
@@ -215,6 +223,33 @@ class ProxmoxPage extends HTMLElement {
     private _keydown: (e: KeyboardEvent) => void;
     private _unsubscribeI18n: (() => void) | undefined;
 
+    /**
+     * The tasks view, when the sheet is showing one.
+     *
+     * `back` is what the way back out of it opens: the node's or the machine's
+     * own sheet. The rest is what the list and the one log in front of the
+     * reader need, with a counter on each request so an answer that arrives
+     * after they moved on is dropped.
+     */
+    private tk: { scope: TaskScope; title: string; sub: string; back: () => void } | null = null;
+    private tkTasks: PxTask[] = [];
+    private tkLoaded = false;
+    private tkErr = '';
+    private tkHtml = '';
+    private tkSeq = 0;
+    private tkTimer: ReturnType<typeof setInterval> | null = null;
+    private tkOpen: PxTask | null = null;
+    private tkLog: PxTaskLog | null = null;
+    private tkLogErr = '';
+    private tkLogText = '';
+    private tkLogSeq = 0;
+    private tkLogTimer: ReturnType<typeof setInterval> | null = null;
+    /** A node's system log, when the sheet is showing one. */
+    private sj: { host: string; node: string; back: () => void } | null = null;
+    private sjLines: string[] | null = null;
+    private sjErr = '';
+    private sjSeq = 0;
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -257,6 +292,10 @@ class ProxmoxPage extends HTMLElement {
             // has to write it again.
             this._shell = false;
             if (this.hasAttribute('open')) this.paint();
+            // The sheet is not part of the page's paint: a tasks view in it
+            // has its own words to write again.
+            if (this.tk) this.showTasks();
+            if (this.sj) this.showJournal();
         });
     }
 
@@ -403,6 +442,8 @@ class ProxmoxPage extends HTMLElement {
         this.shadowRoot!.addEventListener('pointermove', this.onSheetMove as EventListener);
         const dlg = this.shadowRoot!.querySelector('dialog') as HTMLDialogElement;
         dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+        // However the sheet goes away, nothing it was asking for keeps being asked.
+        dlg.addEventListener('close', () => { this.stopTasks(); this.stopJournal(); });
         this.paint();
     }
 
@@ -1114,7 +1155,7 @@ class ProxmoxPage extends HTMLElement {
 
     // ── The detail sheet ──
 
-    private sheet(title: string, sub: string, inner: string, face = '') {
+    private sheet(title: string, sub: string, inner: string, face = '', wide = false) {
         const box = this.shadowRoot?.getElementById('pp-sheet-body');
         const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
         if (!box || !dlg) return;
@@ -1124,6 +1165,7 @@ class ProxmoxPage extends HTMLElement {
                 <div><h3>${title}</h3><div class="sheet__sub">${sub}</div></div>
                 <button class="pp__close" data-close aria-label="${escapeHtml(i18n.t('general.close'))}">${ICON_CLOSE}</button>
             </div>${inner}`;
+        dlg.classList.toggle('dlg--wide', wide);
         if (!dlg.open) dlg.showModal();
     }
 
@@ -1274,6 +1316,10 @@ class ProxmoxPage extends HTMLElement {
                     ? this.kv(ICON_DISK, i18n.t('widget.proxmox.disk'), escapeHtml(`${fmtBytes(n.disk_used)} / ${fmtBytes(n.disk_total)}`))
                     : ''}
                 ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), escapeHtml(fmtUptime(n.uptime)))}
+            </div>
+            <div class="acts">
+                <app-button variant="ghost" data-tasks-node="${escapeHtml(n.name)}">${escapeHtml(i18n.t('proxmox.tasks'))}</app-button>
+                <app-button variant="ghost" data-journal-node="${escapeHtml(n.name)}">${escapeHtml(i18n.t('proxmox.syslog'))}</app-button>
             </div>`);
     }
 
@@ -1379,6 +1425,7 @@ class ProxmoxPage extends HTMLElement {
 
         const chosen = !!this.data && !!chosenIcon(this.data, g.node, g.vmid);
         const actions = `<div class="acts">
+            <app-button variant="ghost" data-tasks-guest="${g.vmid}">${escapeHtml(i18n.t('proxmox.tasks'))}</app-button>
             ${power ? `<app-button variant="${g.running ? 'ghost' : 'primary'}" data-power="${g.vmid}">
                 ${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}</app-button>` : ''}
             ${book?.url ? `<app-button variant="ghost" data-open="${escapeHtml(book.url)}">${escapeHtml(i18n.t('proxmox.open_bookmark'))}</app-button>` : ''}
@@ -1396,6 +1443,330 @@ class ProxmoxPage extends HTMLElement {
                 ${this.kv(ICON_BOOK, i18n.t('proxmox.bookmark'), book ? escapeHtml(book.label || book.url) : '—')}
             </div>
             ${actions}`, this.sheetFace(g));
+    }
+
+    // ── Tasks ──
+
+    private tkFmt(): TaskFmt {
+        return {
+            time: (sec) => i18n.formatDateTime(new Date(sec * 1000), { dateStyle: 'medium', timeStyle: 'short' }),
+            span: (sec) => i18n.formatDuration(sec),
+        };
+    }
+
+    private tkT = (key: string, params?: Record<string, string>) => i18n.t(key, params);
+
+    private openNodeTasks(name: string) {
+        const n = this.data?.nodes.find(x => x.name === name);
+        if (!n) return;
+        this.beginTasks({
+            scope: { host: this.hostId, node: n.name },
+            title: n.name,
+            sub: '',
+            back: () => { void this.openNode(name); },
+        });
+    }
+
+    private openGuestTasks(vmid: number) {
+        const g = this.data?.guests.find(x => x.vmid === vmid);
+        if (!g) return;
+        this.beginTasks({
+            scope: { host: this.hostId, node: g.node, vmid: g.vmid },
+            title: g.name,
+            sub: `${g.vmid} · ${g.node}`,
+            back: () => { void this.openGuest(vmid); },
+        });
+    }
+
+    private beginTasks(tk: NonNullable<ProxmoxPage['tk']>) {
+        this.stopTasks();
+        this._charts.clear();
+        this.tk = tk;
+        this.tkTasks = [];
+        this.tkLoaded = false;
+        this.tkErr = '';
+        this.tkOpen = null;
+        this.showTasks();
+        this.tkTimer = setInterval(whenVisible(() => this.loadTasks()), TASKS_MS);
+        void this.loadTasks();
+    }
+
+    /** Writes the tasks sheet: the shell once, then the list into it. */
+    private showTasks() {
+        const tk = this.tk;
+        if (!tk) return;
+        const t = this.tkT;
+        const back = `<button class="pp__back" data-tasks-back
+            aria-label="${escapeHtml(t('general.back'))}" title="${escapeHtml(t('general.back'))}">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>`;
+        const sub = [t('proxmox.tasks'), tk.sub || tk.scope.node].join(' · ');
+        this.sheet(escapeHtml(tk.title), escapeHtml(sub), `
+            <div class="tk-list" id="pt-list"></div>
+            <div class="tk-log" id="pt-log" hidden>
+                <div class="tk-logbar">
+                    <span class="tk-logbar__title" id="pt-logtitle"></span>
+                    <span class="tk-running" id="pt-running" hidden><span class="dot dot--warn dot--pulse"></span>${escapeHtml(t('proxmox.task_state_running'))}</span>
+                    <span class="tk-logbar__gap"></span>
+                    <button type="button" class="tg" data-task-copy id="pt-copy" disabled>${escapeHtml(t('dockerpage.copy'))}</button>
+                </div>
+                <div class="tk-note" id="pt-cut" hidden>${escapeHtml(t('proxmox.task_log_cut'))}</div>
+                <div class="logbox" id="pt-logbox" role="log" aria-live="off" tabindex="0"></div>
+            </div>`, back, true);
+        this.tkHtml = '';
+        this.tkLogText = '';
+        this.paintTasks();
+        if (this.tkOpen) this.showLog();
+    }
+
+    private stopTasks() {
+        this.tkSeq++;
+        this.tkLogSeq++;
+        if (this.tkTimer) { clearInterval(this.tkTimer); this.tkTimer = null; }
+        if (this.tkLogTimer) { clearInterval(this.tkLogTimer); this.tkLogTimer = null; }
+        this.tk = null;
+        this.tkOpen = null;
+        this.tkLog = null;
+    }
+
+    private async loadTasks() {
+        const tk = this.tk;
+        if (!tk) return;
+        const seq = ++this.tkSeq;
+        try {
+            const tasks = await fetchTasks(tk.scope);
+            if (seq !== this.tkSeq) return;
+            this.tkTasks = tasks;
+            this.tkErr = '';
+        } catch (err) {
+            if (seq !== this.tkSeq) return;
+            this.tkErr = taskErrorKey(err);
+        }
+        this.tkLoaded = true;
+        this.paintTasks();
+    }
+
+    /** The list, written only when what it says changed, so a refresh keeps the scroll and the eye where they were. */
+    private paintTasks() {
+        const el = this.shadowRoot?.getElementById('pt-list');
+        if (!el) return;
+        const t = this.tkT;
+        const now = Math.floor(Date.now() / 1000);
+        let html: string;
+        if (this.tkErr) {
+            // The token lacks a privilege: say which, rather than the generic line.
+            html = taskErrorHtml(this.tkErr === 'proxmox.forbidden' ? 'proxmox.tasks_forbidden' : this.tkErr, t);
+        } else if (!this.tkLoaded) {
+            html = `<div class="state">${escapeHtml(t('general.loading'))}</div>`;
+        } else {
+            html = tasksListHtml(this.tkTasks, (k) => taskSeconds(k, now), t, this.tkFmt());
+        }
+        if (html === this.tkHtml) return;
+        const box = this.shadowRoot?.getElementById('pp-sheet-body');
+        const top = box?.scrollTop ?? 0;
+        el.innerHTML = html;
+        this.tkHtml = html;
+        if (box) box.scrollTop = top;
+    }
+
+    private tasksBack() {
+        if (this.tkOpen) { this.closeTaskLog(); return; }
+        const back = this.tk?.back;
+        this.stopTasks();
+        back?.();
+    }
+
+    private openTaskLog(upid: string) {
+        const task = this.tkTasks.find(k => k.upid === upid);
+        if (!task || !this.tk) return;
+        this.tkOpen = task;
+        this.tkLog = null;
+        this.tkLogErr = '';
+        this.tkLogText = '';
+        this.showLog();
+        void this.loadTaskLog(true);
+    }
+
+    private closeTaskLog() {
+        this.tkOpen = null;
+        this.tkLog = null;
+        this.tkLogSeq++;
+        if (this.tkLogTimer) { clearInterval(this.tkLogTimer); this.tkLogTimer = null; }
+        const sr = this.shadowRoot;
+        sr?.getElementById('pt-log')?.setAttribute('hidden', '');
+        sr?.getElementById('pt-list')?.removeAttribute('hidden');
+        void this.loadTasks();
+    }
+
+    /** Swaps the list for the log of the open task. */
+    private showLog() {
+        const sr = this.shadowRoot;
+        const task = this.tkOpen;
+        if (!sr || !task) return;
+        sr.getElementById('pt-list')?.setAttribute('hidden', '');
+        sr.getElementById('pt-log')?.removeAttribute('hidden');
+        const title = sr.getElementById('pt-logtitle');
+        if (title) title.textContent = [typeLabel(task.type, this.tkT), task.id].filter(Boolean).join(' · ');
+        this.paintTaskLog(true);
+    }
+
+    private async loadTaskLog(first = false) {
+        const tk = this.tk;
+        const task = this.tkOpen;
+        if (!tk || !task) return;
+        const seq = ++this.tkLogSeq;
+        const wasRunning = this.tkLog?.running ?? false;
+        try {
+            const log = await fetchTaskLog(tk.scope, task.upid);
+            if (seq !== this.tkLogSeq) return;
+            this.tkLog = log;
+            this.tkLogErr = '';
+        } catch (err) {
+            if (seq !== this.tkLogSeq) return;
+            this.tkLogErr = taskErrorKey(err);
+        }
+        this.paintTaskLog(first);
+        this.syncLogTimer();
+        // The task has just finished: the list behind the log should say so too.
+        if (wasRunning && this.tkLog && !this.tkLog.running) void this.loadTasks();
+    }
+
+    /** The log is asked again exactly while it is open, running and on a visible page. */
+    private syncLogTimer() {
+        const want = shouldPollLog({ running: this.tkLog?.running === true, open: !!this.tkOpen, hidden: false });
+        if (want && !this.tkLogTimer) {
+            this.tkLogTimer = setInterval(whenVisible(() => { void this.loadTaskLog(); }), TASK_LOG_MS);
+        }
+        if (!want && this.tkLogTimer) { clearInterval(this.tkLogTimer); this.tkLogTimer = null; }
+    }
+
+    private paintTaskLog(toBottom: boolean) {
+        const sr = this.shadowRoot;
+        const box = sr?.getElementById('pt-logbox') as HTMLElement | null;
+        if (!sr || !box) return;
+        const log = this.tkLog;
+        const t = this.tkT;
+        let html: string;
+        if (this.tkLogErr) html = taskErrorHtml(this.tkLogErr === 'proxmox.forbidden' ? 'proxmox.tasks_forbidden' : this.tkLogErr, t);
+        else if (!log) html = `<div class="state">${escapeHtml(t('general.loading'))}</div>`;
+        else if (!log.lines.length) html = `<div class="state">${escapeHtml(t('proxmox.task_log_empty'))}</div>`;
+        else html = logLinesHtml(log.lines);
+
+        if (html !== this.tkLogText) {
+            // Follow the end only when the reader is at it: reading up the log is not interrupted.
+            const stay = toBottom || atBottom(box.scrollTop, box.clientHeight, box.scrollHeight);
+            const keep = box.scrollTop;
+            box.innerHTML = html;
+            this.tkLogText = html;
+            box.scrollTop = stay ? box.scrollHeight : keep;
+        }
+        const running = sr.getElementById('pt-running');
+        if (running) (running as HTMLElement).hidden = log?.running !== true;
+        const cut = sr.getElementById('pt-cut');
+        if (cut) (cut as HTMLElement).hidden = log?.truncated !== true;
+        const copy = sr.getElementById('pt-copy') as HTMLButtonElement | null;
+        if (copy) copy.disabled = !log || !log.lines.length;
+    }
+
+    private async copyTaskLog() {
+        const lines = this.tkLog?.lines;
+        if (!lines?.length) return;
+        if (await copyText(taskLogText(lines))) {
+            eventBus.emit(EVENTS.NOTIFY, { message: i18n.t('dockerpage.copied'), type: 'success' });
+        }
+    }
+
+    // ── The node's system log ──
+
+    private openJournal(name: string) {
+        const n = this.data?.nodes.find(x => x.name === name);
+        if (!n) return;
+        this.stopTasks();
+        this.stopJournal();
+        this._charts.clear();
+        this.sj = { host: this.hostId, node: n.name, back: () => { void this.openNode(name); } };
+        this.sjLines = null;
+        this.sjErr = '';
+        this.showJournal();
+        void this.loadJournal(true);
+    }
+
+    private stopJournal() {
+        this.sjSeq++;
+        this.sj = null;
+        this.sjLines = null;
+    }
+
+    private showJournal() {
+        const sj = this.sj;
+        if (!sj) return;
+        const t = this.tkT;
+        const back = `<button class="pp__back" data-journal-back
+            aria-label="${escapeHtml(t('general.back'))}" title="${escapeHtml(t('general.back'))}">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>`;
+        this.sheet(escapeHtml(sj.node), escapeHtml(t('proxmox.syslog')), `
+            <div class="tk-log">
+                <div class="tk-logbar">
+                    <span class="tk-logbar__gap"></span>
+                    <button type="button" class="tg" data-journal-refresh id="sj-refresh">${escapeHtml(t('monitor.refresh'))}</button>
+                    <button type="button" class="tg" data-journal-copy id="sj-copy" disabled>${escapeHtml(t('dockerpage.copy'))}</button>
+                </div>
+                <div id="sj-body"></div>
+            </div>`, back, true);
+        this.paintJournal(true);
+    }
+
+    private async loadJournal(toBottom: boolean) {
+        const sj = this.sj;
+        if (!sj) return;
+        const seq = ++this.sjSeq;
+        const btn = this.shadowRoot?.getElementById('sj-refresh') as HTMLButtonElement | null;
+        if (btn) btn.disabled = true;
+        try {
+            const lines = await fetchJournal(sj.host, sj.node);
+            if (seq !== this.sjSeq) return;
+            this.sjLines = lines;
+            this.sjErr = '';
+        } catch (err) {
+            if (seq !== this.sjSeq) return;
+            this.sjErr = taskErrorKey(err);
+        }
+        this.paintJournal(toBottom);
+    }
+
+    private paintJournal(toBottom: boolean) {
+        const body = this.shadowRoot?.getElementById('sj-body');
+        if (!body) return;
+        const t = this.tkT;
+        let html: string;
+        if (this.sjErr === NO_SYSLOG_KEY) {
+            // Not a failure: the system log is optional, and says what it takes.
+            html = `<div class="tk-note tk-note--calm">${escapeHtml(t('proxmox.syslog_optional'))}</div>`;
+        } else if (this.sjErr) {
+            html = taskErrorHtml(this.sjErr, t);
+        } else if (!this.sjLines) {
+            html = `<div class="state">${escapeHtml(t('general.loading'))}</div>`;
+        } else if (!this.sjLines.length) {
+            html = `<div class="state">${escapeHtml(t('proxmox.syslog_empty'))}</div>`;
+        } else {
+            html = `<div class="logbox" id="sj-logbox" role="log" aria-live="off" tabindex="0">${logLinesHtml(this.sjLines)}</div>`;
+        }
+        body.innerHTML = html;
+        const box = this.shadowRoot?.getElementById('sj-logbox');
+        if (box && toBottom) box.scrollTop = box.scrollHeight;
+        const refresh = this.shadowRoot?.getElementById('sj-refresh') as HTMLButtonElement | null;
+        if (refresh) refresh.disabled = !this.sjLines && !this.sjErr;
+        const copy = this.shadowRoot?.getElementById('sj-copy') as HTMLButtonElement | null;
+        if (copy) copy.disabled = !this.sjLines?.length;
+    }
+
+    private async copyJournal() {
+        const lines = this.sjLines;
+        if (!lines?.length) return;
+        if (await copyText(taskLogText(lines))) {
+            eventBus.emit(EVENTS.NOTIFY, { message: i18n.t('dockerpage.copied'), type: 'success' });
+        }
     }
 
     // ── Events ──
@@ -1463,6 +1834,19 @@ class ProxmoxPage extends HTMLElement {
             this.paintMachines();
             return;
         }
+        const tasksNode = t.closest('[data-tasks-node]') as HTMLElement | null;
+        if (tasksNode?.dataset.tasksNode) { this.openNodeTasks(tasksNode.dataset.tasksNode); return; }
+        const journalNode = t.closest('[data-journal-node]') as HTMLElement | null;
+        if (journalNode?.dataset.journalNode) { this.openJournal(journalNode.dataset.journalNode); return; }
+        if (t.closest('[data-journal-back]')) { const back = this.sj?.back; this.stopJournal(); back?.(); return; }
+        if (t.closest('[data-journal-refresh]')) { void this.loadJournal(true); return; }
+        if (t.closest('[data-journal-copy]')) { void this.copyJournal(); return; }
+        const tasksGuest = t.closest('[data-tasks-guest]') as HTMLElement | null;
+        if (tasksGuest?.dataset.tasksGuest) { this.openGuestTasks(Number(tasksGuest.dataset.tasksGuest)); return; }
+        if (t.closest('[data-tasks-back]')) { this.tasksBack(); return; }
+        const task = t.closest('[data-upid]') as HTMLElement | null;
+        if (task?.dataset.upid) { this.openTaskLog(task.dataset.upid); return; }
+        if (t.closest('[data-task-copy]')) { void this.copyTaskLog(); return; }
         if (t.closest('[data-close]')) {
             (this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null)?.close();
             return;

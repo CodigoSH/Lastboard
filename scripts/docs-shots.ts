@@ -537,10 +537,98 @@ function startFakeProxmox(port: number, resources: any[]): { close: () => void }
         maxmem: 4294967296,
     }));
 
+    // What each node has been doing. A UPID is "UPID:<node>:<pid>:<pstart>:
+    // <starttime>:<type>:<id>:<user>:" in hex, which is the shape the server
+    // insists on before it asks for a log, so the invented ones keep it.
+    const hex8 = (n: number) => n.toString(16).toUpperCase().padStart(8, '0');
+    const tasksOf = (node: string) => {
+        const now = Math.floor(Date.now() / 1000);
+        const guests = resources.filter((r) => r.node === node && (r.type === 'lxc' || r.type === 'qemu'));
+        const pick = (i: number) => guests[i % Math.max(1, guests.length)];
+        // [type, guest index (-1 for none), user, minutes ago, minutes it took (0 = running), status]
+        const plan: [string, number, string, number, number, string][] = [
+            ['vzdump', -1, 'root@pam', 3, 0, ''],
+            ['vzdump', 0, 'root@pam', 190, 4, 'OK'],
+            ['qmstart', 1, 'ana@pve', 340, 0.2, 'OK'],
+            ['vzshutdown', 2, 'root@pam', 620, 0.5, 'OK'],
+            ['vzstart', 2, 'root@pam', 615, 0.1, 'OK'],
+            ['aptupdate', -1, 'root@pam', 1500, 1, 'WARNINGS: 1'],
+            ['vzdump', 1, 'root@pam', 1630, 12, 'job errors'],
+            ['qmsnapshot', 0, 'marco@pve', 2900, 0.3, 'OK'],
+        ];
+        return plan.map(([type, gi, user, ago, took, status], i) => {
+            const g = gi < 0 ? null : pick(gi);
+            const id = g ? String(g.vmid) : '';
+            const start = now - ago * 60;
+            const upid = `UPID:${node}:${hex8(4000 + i * 37)}:${hex8(900000 + i * 911)}:${hex8(start)}:${type}:${id}:${user}:`;
+            const running = took === 0;
+            return {
+                upid, node, pid: 4000 + i * 37, pstart: 900000 + i * 911, starttime: start, type, id, user,
+                ...(running ? {} : { endtime: start + Math.round(took * 60), status }),
+                vmid: g?.vmid,
+            };
+        });
+    };
+    const journal = (node: string) => {
+        const when = new Date();
+        const stamp = (minsAgo: number) => {
+            const d = new Date(when.getTime() - minsAgo * 60000);
+            const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()];
+            return `${m} ${String(d.getDate()).padStart(2, ' ')} ${d.toTimeString().slice(0, 8)}`;
+        };
+        const body: [number, string][] = [
+            [42, 'pvedaemon[1432]: <root@pam> starting task UPID:' + node + ':00000FA0:000DBBA0:6538A1F0:vzdump::root@pam:'],
+            [41, 'pvescheduler[1210]: starting 1 replication job'],
+            [30, 'systemd[1]: Started pvescheduler.service - Proxmox VE scheduler.'],
+            [24, 'pmxcfs[1102]: [status] notice: received log'],
+            [17, 'pveproxy[2011]: worker exit'],
+            [16, 'pveproxy[1044]: worker 2230 started'],
+            [9, 'smartd[742]: Device: /dev/sda [SAT], SMART Prefailure Attribute: 1 Raw_Read_Error_Rate changed from 100 to 99'],
+            [3, 'pvedaemon[1433]: <root@pam> successful auth for user \'root@pam\''],
+        ];
+        return ['-- cursor: s=0a1b2c3d4e5f;i=1;b=7;m=1;t=1;x=2',
+            ...body.map(([m, t]) => `${stamp(m)} ${node} ${t}`),
+            '-- cursor: s=0a1b2c3d4e5f;i=2;b=7;m=2;t=2;x=3'];
+    };
+    const vzdumpLog = (vmid: string) => [
+        `INFO: starting new backup job: vzdump ${vmid || 'all'} --storage local --mode snapshot --compress zstd`,
+        `INFO: Starting Backup of VM ${vmid || '100'} (lxc)`,
+        'INFO: Backup started at 2026-10-26 02:00:01',
+        'INFO: status = running',
+        'INFO: CT Name: backup-target',
+        'INFO: including mount point rootfs (\'/\') in backup',
+        'INFO: creating vzdump archive on local',
+        'INFO: Total bytes written: 3221225472 (3.0GiB, 412MiB/s)',
+        'INFO: archive file size: 1.12GB',
+        'INFO: Finished Backup of VM ' + (vmid || '100') + ' (00:00:08)',
+        'INFO: Backup job finished successfully',
+        'TASK OK',
+    ];
+
     const server = createServer((req, res) => {
-        const path = (req.url || '').split('?')[0];
+        const url = new URL(req.url || '/', 'http://x');
+        const path = url.pathname;
         res.setHeader('content-type', 'application/json');
-        if (path === '/api2/json/cluster/resources') {
+        const taskLog = /^\/api2\/json\/nodes\/([^/]+)\/tasks\/([^/]+)\/(log|status)$/.exec(path);
+        const taskList = /^\/api2\/json\/nodes\/([^/]+)\/tasks$/.exec(path);
+        const journalReq = /^\/api2\/json\/nodes\/([^/]+)\/journal$/.exec(path);
+        // Before the generic /status below, which answers for the NODE.
+        if (taskLog) {
+            const upid = decodeURIComponent(taskLog[2]);
+            if (taskLog[3] === 'status') {
+                const t = tasksOf(decodeURIComponent(taskLog[1])).find((k) => k.upid === upid);
+                res.end(JSON.stringify({ data: { status: t && !('endtime' in t) ? 'running' : 'stopped', upid } }));
+            } else {
+                const lines = vzdumpLog(upid.split(':')[6] || '');
+                res.end(JSON.stringify({ data: lines.map((t, i) => ({ n: i + 1, t })) }));
+            }
+        } else if (taskList) {
+            const vmid = url.searchParams.get('vmid');
+            const all = tasksOf(decodeURIComponent(taskList[1])).filter((t) => !vmid || String(t.vmid) === vmid);
+            res.end(JSON.stringify({ data: all }));
+        } else if (journalReq) {
+            res.end(JSON.stringify({ data: journal(decodeURIComponent(journalReq[1])) }));
+        } else if (path === '/api2/json/cluster/resources') {
             res.end(JSON.stringify({ data: resources }));
         } else if (path === '/api2/json/access/permissions') {
             res.end(JSON.stringify({ data: { '/': { 'VM.Audit': 1, 'VM.PowerMgmt': 1, 'Datastore.Audit': 1, 'Sys.Audit': 1 } } }));

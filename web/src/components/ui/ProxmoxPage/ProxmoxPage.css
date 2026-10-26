@@ -1012,3 +1012,157 @@ dialog[open] { animation: ppIn 0.3s var(--ease-bounce); }
     color: var(--text-dim);
     white-space: nowrap;
 }
+
+/* ── Tasks ───────────────────────────────────────────────────────────────
+   A node's or a machine's recent tasks, in the sheet that already shows it.
+   The log box is the Docker page's: same surface, same tint for a line that
+   went wrong, so a log reads the same wherever it is opened. */
+
+/* A list of tasks and a log are wider than a machine's facts. */
+dialog.dlg--wide { width: clamp(300px, 94vw, 760px); }
+
+.tk-list { display: flex; flex-direction: column; gap: 8px; }
+.tk-list[hidden], .tk-log[hidden] { display: none; }
+
+.tk {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 10px 13px;
+}
+
+.tk .dot { margin-block-start: 5px; }
+
+/* A task that is still running breathes; reduced motion gets a still dot. */
+.dot--pulse { animation: tkPulse 1.6s ease-in-out infinite; }
+@keyframes tkPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dot--pulse { animation: none; }
+}
+
+.tk__main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.tk__line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 9px; }
+.tk__type { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+.tk__id, .tk__user {
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    color: var(--text-dim);
+    unicode-bidi: isolate;
+}
+.tk__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 12px;
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+.tk__dur::before { content: '· '; }
+.tk__msg { font-size: 11.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.tk__msg--error { color: var(--danger-color); }
+.tk__msg--warning { color: var(--warning-color); }
+
+.tk-err {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 13px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(var(--danger-rgb), 0.45);
+    background: rgba(var(--danger-rgb), 0.07);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+.tk-err__ico { color: var(--danger-color); flex: none; display: grid; place-items: center; padding-block-start: 1px; }
+.tk-err__ico svg { width: 16px; height: 16px; }
+
+/* The log of one task. */
+.tk-log { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.tk-logbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tk-logbar__title { font-size: 13px; font-weight: 600; }
+.tk-logbar__gap { flex: 1; }
+
+.tk-running {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono, monospace);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--warning-color);
+}
+.tk-running[hidden] { display: none; }
+
+.tg {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+.tg:hover:not(:disabled) { color: var(--text-main); border-color: rgba(var(--accent-rgb), 0.3); }
+.tg:disabled { opacity: 0.45; cursor: default; }
+.tg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tk-note {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    padding: 6px 10px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+}
+.tk-note[hidden] { display: none; }
+
+.logbox {
+    max-height: min(52vh, 420px);
+    min-height: 120px;
+    overflow: auto;
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border, var(--border));
+    border-radius: var(--radius);
+    padding: 8px 0;
+    font-family: var(--font-mono, monospace);
+    font-size: 11.5px;
+    line-height: 1.55;
+    /* A log is written left to right whatever the language of the page. */
+    direction: ltr;
+}
+.logbox:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.ll {
+    display: flex;
+    padding: 0 12px;
+    min-width: max-content;
+    color: var(--text-main);
+    /* A line that went wrong is marked by a tint and a bar at its start, not by a colour that could be the accent's. */
+    border-inline-start: 2px solid transparent;
+}
+.ll--err {
+    background: rgba(var(--danger-rgb), 0.08);
+    border-inline-start-color: rgba(var(--danger-rgb), 0.6);
+}
+.ll--warn {
+    background: rgba(var(--warning-rgb), 0.08);
+    border-inline-start-color: rgba(var(--warning-rgb), 0.6);
+}
+.ll__x { white-space: pre; }
+
+/* The way back sits in the sheet's head, in place of the machine's face. */
+.sheet__head .pp__back { margin-inline-end: 0; }
+.sheet__head .pp__back[hidden] { display: none; }
+
+/* An optional feature that was not switched on is a note, not an alarm. */
+.tk-note--calm { padding: 12px 14px; font-size: 12.5px; line-height: 1.5; border-style: solid; }

@@ -3,6 +3,7 @@ package api_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -38,6 +39,8 @@ type fakeProxmox struct {
 	powerMgmt bool
 	// The query of the last task listing, to see what was asked of the host.
 	query string
+	// noSyslog answers the journal as a token without Sys.Syslog: 403.
+	noSyslog bool
 }
 
 func newFakeProxmox(t *testing.T) *fakeProxmox {
@@ -68,6 +71,16 @@ func newFakeProxmox(t *testing.T) *fakeProxmox {
 			} else {
 				w.Write([]byte(`{"data":{"/":{"VM.Audit":1}}}`))
 			}
+		case r.URL.Path == "/api2/json/nodes/kprox/journal":
+			f.mu.Lock()
+			f.query = r.URL.RawQuery
+			deny := f.noSyslog
+			f.mu.Unlock()
+			if deny {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			w.Write([]byte(`{"data":["-- cursor: s=abc;i=1","Oct 26 18:00:01 kprox pvedaemon[1234]: <root@pam> starting task","Oct 26 18:00:02 kprox kernel: \u001b[1mvmbr0\u001b[0m: port 2 entered forwarding state","-- cursor: s=abc;i=3"]}`))
 		case r.URL.Path == "/api2/json/nodes/kprox/tasks":
 			f.mu.Lock()
 			f.query = r.URL.RawQuery
@@ -140,6 +153,7 @@ func setupProxmoxServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(px.SetIcon)))
 	mux.Handle("GET /api/proxmox/tasks", protect(http.HandlerFunc(px.GetTasks)))
 	mux.Handle("GET /api/proxmox/task-log", protect(http.HandlerFunc(px.GetTaskLog)))
+	mux.Handle("GET /api/proxmox/journal", protect(http.HandlerFunc(px.GetNodeJournal)))
 
 	server := httptest.NewServer(mux)
 	cleanup := func() {
@@ -1080,5 +1094,46 @@ func TestTasksAreReadOnlyFromTheAccountsOwnHypervisors(t *testing.T) {
 	}
 	if adminFake.asked("GET /api2/json/nodes/kprox/tasks") {
 		t.Error("another account's hypervisor was asked")
+	}
+}
+
+// The node's system log needs Sys.Syslog, which the recommended role does not
+// have: with it the lines come back clean, without it the answer says so.
+func TestTheNodeJournalNamesTheMissingPrivilege(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	resp, body := pxGet(t, server.URL, "/api/proxmox/journal?node=kprox&lines=5000", s)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("journal = %d", resp.StatusCode)
+	}
+	if fake.query != "lastentries=1000" {
+		t.Errorf("the host was asked %q, want at most a thousand lines", fake.query)
+	}
+	lines, _ := body["lines"].([]any)
+	if len(lines) != 2 || lines[1] != "Oct 26 18:00:02 kprox kernel: vmbr0: port 2 entered forwarding state" {
+		t.Errorf("journal lines = %v, want the two entries clean and no cursors", lines)
+	}
+
+	fake.mu.Lock()
+	fake.noSyslog = true
+	fake.mu.Unlock()
+	req, _ := http.NewRequest("GET", server.URL+"/api/proxmox/journal?node=kprox", nil)
+	s.attach(req)
+	r, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := io.ReadAll(r.Body)
+	r.Body.Close()
+	if r.StatusCode != http.StatusForbidden || !strings.Contains(string(b), "proxmox.no_syslog_permission") {
+		t.Errorf("without Sys.Syslog = %d %s, want 403 proxmox.no_syslog_permission", r.StatusCode, b)
+	}
+	if resp, _ := pxGet(t, server.URL, "/api/proxmox/journal?node=kprox&lines=0", s); resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("lines=0 = %d, want 400", resp.StatusCode)
 	}
 }
