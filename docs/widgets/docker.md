@@ -24,8 +24,10 @@ When running Lastboard as a Docker container, uncomment the socket volume mount 
 ```yaml
     volumes:
       - ./data:/var/lib/lastboard
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # Read-only access
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 ```
+
+`:ro` makes the socket file read-only, not what is said through it: Lastboard can still start, stop and restart containers over a socket mounted this way, and so can anything else that reaches it. Access to the Docker socket is control over Docker — and, through it, over the host. That is the same whether Lastboard is installed natively in the `docker` group or runs as a container with the socket mounted. For a Docker on another machine, use the Lastboard Agent: it answers only the few calls the widget makes.
 
 ### 3. Remote via Lastboard Agent
 For remote servers, you can use the official Lastboard Agent to securely proxy Docker API calls with an authorization token, over HTTP or — behind a reverse proxy — HTTPS.
