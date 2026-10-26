@@ -61,3 +61,12 @@ describe('demoApiValues', () => {
         expect(demoApiValues(['records'], at(3))).toEqual(demoApiValues(['records'], at(21)));
     });
 });
+
+describe('demoSessions', () => {
+    test('has exactly one session and it is the current one', async () => {
+        const { demoSessions } = await import('./demoApi');
+        const list = demoSessions();
+        expect(list.length).toBe(1);
+        expect(list[0].current).toBe(true);
+    });
+});

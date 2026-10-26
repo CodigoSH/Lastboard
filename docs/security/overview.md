@@ -33,14 +33,23 @@ they would be on a public service.
   of sign-in attempts cannot exhaust the memory of a small server. A password can be up to **256
   characters**. Accounts created on earlier versions have a bcrypt hash; it keeps working, and
   is replaced by an Argon2id one the next time that account signs in.
-- **Sessions** are **HMAC-SHA256 signed tokens** carrying their own expiry. The signing secret
-  is generated on first run and kept in the database — there is no `SESSION_SECRET` to set, and
-  nothing to leak into an environment file or a process list. A token names the account by its
-  **id** and carries the **password generation** it was opened under: changing a password ends
-  every open session of that account, and a cookie left over from a deleted account cannot sign
-  in to a new one that reuses the name. Restoring a backup gives every restored account a new
-  generation, so it ends every session too — without touching the signing secret, so a session
-  opened afterwards survives a restart.
+- **Sessions live on the server.** Each sign-in is a stored session; the cookie carries a random
+  id signed with **HMAC-SHA256**, and the server keeps only that id's **hash**, the account, the
+  **password generation** it began under, when it runs out (a day, or 30 days with *Remember me*)
+  and when and from where it was last used. **Signing out ends the session on the server**, so a
+  copy of the cookie taken elsewhere stops working too. In **My Profile → Active sessions** an
+  account sees where it is signed in and can close any session, or all but the current one.
+  Changing a password ends every session of that account, and deleting an account ends its
+  sessions with it. Restoring a backup gives every restored account a new generation, so it ends
+  every session too — without touching the signing secret, so a session opened afterwards
+  survives a restart.
+- **The signing secret** is generated on first run and kept in the database — there is no
+  `SESSION_SECRET` to set, and nothing to leak into an environment file or a process list.
+- **Sessions opened before they were stored** (before 1.10) keep working after the update: the
+  first time one is used it becomes a stored session with the same expiry, and the browser gets
+  a new cookie. *Close all other sessions* also ends the old ones not used since. An old-kind
+  cookie that would run out later than any real one could is refused, so a month after updating
+  the old kind is not accepted at all.
 - **The session cookie** is `HttpOnly`, `SameSite=Lax`, and `Secure` whenever the request
   arrives over HTTPS (directly or through a proxy that says so).
 - **Login lockout**: after **5 failed attempts within a minute** that client is locked out for

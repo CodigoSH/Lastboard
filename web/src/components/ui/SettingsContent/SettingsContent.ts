@@ -9,7 +9,7 @@ import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
+import { accountTemplate, type SessionsView, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
@@ -34,6 +34,8 @@ class SettingsContent extends HTMLElement {
     /** The account dialog's choice, kept here and painted into it. */
     private userGrants: Grants = { ...PROFILES[DEFAULT_PROFILE] };
     private userProfile: ProfileName = DEFAULT_PROFILE;
+    /** This account's sign-ins, for the Active sessions card. */
+    private sessions: SessionsView = { status: 'idle', items: [] };
     /** Bookmarks of mine whose icon still comes from somewhere else. */
     private pendingIcons = 0;
     /** Bookmarks of mine already served from this instance. */
@@ -145,6 +147,12 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'update-username':
                     this.updateUsername((root.getElementById('username-input') as HTMLInputElement).value);
+                    break;
+                case 'close-session':
+                    this.closeSession(Number(el.dataset.sessionId));
+                    break;
+                case 'close-other-sessions':
+                    this.closeOtherSessions();
                     break;
                 case 'update-password':
                     this.updatePassword();
@@ -331,6 +339,9 @@ class SettingsContent extends HTMLElement {
         // Trigger fetch which performs the actual state sync
         this.fetchPrefs();
         const section = this.getAttribute('section');
+        if (section === 'account') {
+            this.fetchSessions();
+        }
         if (section === 'users') {
             this.fetchUsers();
         }
@@ -418,6 +429,50 @@ class SettingsContent extends HTMLElement {
         } catch {
             if (window.notifier) window.notifier.show(i18n.t('settings.import_fail'), 'error');
         }
+    }
+
+    /**
+     * Reads the sign-ins of this account.
+     *
+     * A failure leaves the card saying so and nothing else: the rest of My
+     * Profile has to keep working.
+     */
+    async fetchSessions() {
+        try {
+            const items = await apiService.get<SessionsView['items']>('/api/sessions');
+            this.sessions = { status: 'ready', items: Array.isArray(items) ? items : [] };
+        } catch {
+            this.sessions = { status: 'error', items: [] };
+        }
+        this.render();
+    }
+
+    async closeSession(id: number) {
+        if (!id) return;
+        try {
+            await apiService.delete(`/api/sessions/${id}`);
+            if (window.notifier) window.notifier.show(i18n.t('sessions.closed'));
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+        }
+        this.fetchSessions();
+    }
+
+    async closeOtherSessions() {
+        const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+            title: i18n.t('sessions.close_others'),
+            message: i18n.t('sessions.close_others_confirm'),
+            onConfirm: async () => {
+                try {
+                    await apiService.post('/api/sessions/close-others', {});
+                    if (window.notifier) window.notifier.show(i18n.t('sessions.closed'));
+                } catch {
+                    if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+                }
+                this.fetchSessions();
+            },
+        });
     }
 
     async clearMonitorData() {
@@ -912,6 +967,9 @@ class SettingsContent extends HTMLElement {
 
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         if (name === 'section' && oldValue !== newValue) {
+            if (newValue === 'account') {
+                this.fetchSessions();
+            }
             if (newValue === 'users') {
                 this.fetchUsers();
             }
@@ -1307,7 +1365,7 @@ class SettingsContent extends HTMLElement {
 
         switch (section) {
             case 'account':
-                return accountTemplate(user);
+                return accountTemplate(user, this.sessions);
 
             case 'theme': {
                 const colorMap: Record<string, string> = {

@@ -16,6 +16,7 @@ Manage your personal profile and security.
 - **Label** — shown under your name in place of **Admin** or **Member**. The administrator types its own here and saves it with **Save label**; a member sees the label the administrator gave it and has no field to change it. See [Labels](#labels).
 - **Username** — change your display name, then **Save Name**. This signs you out on this browser, and you sign in again with the new name.
 - **System Password** — update your login credentials. Enter your current password, then the new one twice (up to 256 characters), and **Change Password**. Every open session of the account ends, this one included, so you sign in again with the new password. A wrong current password counts toward a lockout: after 5 failures the account waits 5 minutes before it accepts another try.
+- **Active sessions** — every browser and device signed in to your account, with the browser and system, the address it came from and when it was last used. This one is marked **This device**. **Close** signs another one out at once, and **Close all other sessions** signs out every one but this, after asking. Signing out with **Logout** ends this session on the server too, so a copy of its cookie stops working.
 
 ## Look & Feel
 

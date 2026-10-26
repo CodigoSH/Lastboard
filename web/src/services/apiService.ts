@@ -173,6 +173,13 @@ class ApiService {
                     return { ok: true, stats: { cpu: wobble(24, 16), ram: wobble(52, 6), temp: wobble(51, 6), version: '4' } } as any;
                 }
 
+                // Active sessions (Demo: only the visitor's own; closing is a no-op)
+                if (url === '/api/sessions' && method === 'GET') {
+                    const { demoSessions } = await import('./demoApi');
+                    return demoSessions() as any;
+                }
+                if (url.startsWith('/api/sessions/')) return {} as T;
+
                 // Admin (Mock success)
                 if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;
                 if (url === '/api/users') return { message: 'Admin action simulated (Demo)' } as any;

@@ -77,3 +77,24 @@ export function demoApiValues(paths: string[], now: number = Date.now()): Record
     }
     return values;
 }
+
+/**
+ * The one session the demo has: the visitor's own, so the "Active sessions"
+ * card has something to show. Closing it does nothing, there is nobody to
+ * sign out.
+ */
+export function demoSessions(now: number = Date.now()): Array<{
+    id: number; current: boolean; created_at: string; last_seen: string; expires_at: string;
+    remember: boolean; user_agent: string; ip: string;
+}> {
+    return [{
+        id: 1,
+        current: true,
+        created_at: new Date(now - 3600_000).toISOString(),
+        last_seen: new Date(now).toISOString(),
+        expires_at: new Date(now + 30 * 86400_000).toISOString(),
+        remember: false,
+        user_agent: 'Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0',
+        ip: '192.168.1.20',
+    }];
+}

@@ -4,6 +4,7 @@ import { SECRET_MASK } from '../../../services/secretField';
 import type { AccountDockerHost } from '../../../services/dockerHostList';
 import { roleOrLabel } from '../../../services/accountAccess';
 import { userDialogTemplate, MAX_LABEL } from './userDialog.template';
+import { userAgentLabel, type BrowserId, type OsId } from '../../../services/userAgentLabel';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
@@ -30,7 +31,68 @@ interface Prefs {
 const t = (key: string) => i18n.t(key);
 const roleText = (role?: string) => (role || '').toLowerCase() === 'user' ? i18n.t('settings.role_user') : i18n.t('settings.role_admin');
 
-export const accountTemplate = (user: User) => `
+/** One sign-in of this account, as the server lists it. */
+export interface SessionRow {
+    id: number;
+    current: boolean;
+    last_seen: string;
+    user_agent: string;
+    ip: string;
+}
+
+/** `idle` until the first answer, so the card does not flash a message. */
+export interface SessionsView {
+    status: 'idle' | 'ready' | 'error';
+    items: SessionRow[];
+}
+
+const BROWSER_NAMES: Record<Exclude<BrowserId, 'unknown'>, string> = {
+    firefox: 'Firefox', chrome: 'Chrome', edge: 'Edge', safari: 'Safari', opera: 'Opera',
+};
+const OS_NAMES: Record<Exclude<OsId, 'unknown'>, string> = {
+    windows: 'Windows', macos: 'macOS', linux: 'Linux', android: 'Android', ios: 'iOS', chromeos: 'ChromeOS',
+};
+
+/** "Firefox on Linux"; the names are products, so only the joining words are translated. */
+export const deviceName = (userAgent: string): string => {
+    const { browser, os } = userAgentLabel(userAgent);
+    if (browser === 'unknown' && os === 'unknown') return i18n.t('sessions.unknown_device');
+    const b = browser === 'unknown' ? i18n.t('sessions.unknown_browser') : BROWSER_NAMES[browser];
+    if (os === 'unknown') return b;
+    return i18n.t('sessions.device', { browser: b, os: OS_NAMES[os] });
+};
+
+const sessionRowTemplate = (s: SessionRow) => {
+    const seen = i18n.formatDateTime(s.last_seen, { dateStyle: 'medium', timeStyle: 'short' });
+    return `
+            <div class="settings-content__action-row">
+                <div class="settings-content__action-info">
+                    <h3>${esc(deviceName(s.user_agent))}</h3>
+                    ${s.ip ? `<p>${esc(s.ip)}</p>` : ''}
+                    ${seen ? `<p>${esc(i18n.t('sessions.last_active', { date: seen }))}</p>` : ''}
+                </div>
+                ${s.current
+                    ? `<span class="user-role-tag">${i18n.t('sessions.this_device')}</span>`
+                    : `<app-button data-action="close-session" data-session-id="${s.id}">${i18n.t('sessions.close')}</app-button>`}
+            </div>`;
+};
+
+export const sessionsCardTemplate = (view: SessionsView) => `
+        <div class="bento-card" id="sessions-card">
+            <h3 class="settings-content__title">${i18n.t('sessions.title')}</h3>
+            ${view.status === 'error'
+                ? `<p class="settings-content__text-dim">${i18n.t('sessions.load_error')}</p>`
+                : view.status === 'ready' && view.items.length > 0
+                    ? `<div class="settings-content__action-group">${view.items.map(sessionRowTemplate).join('')}
+            </div>
+            ${view.items.some(s => !s.current) ? `<div class="settings-content__form-actions">
+                <app-button data-action="close-other-sessions">${i18n.t('sessions.close_others')}</app-button>
+            </div>` : ''}`
+                    : ''}
+        </div>
+`;
+
+export const accountTemplate = (user: User, sessions: SessionsView = { status: 'idle', items: [] }) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.profile')}</h3>
@@ -94,6 +156,8 @@ export const accountTemplate = (user: User) => `
                 <app-button variant="primary" data-action="update-password">${i18n.t('settings.change_password')}</app-button>
             </div>
         </div>
+
+        ${sessionsCardTemplate(sessions)}
     </div>
 `;
 
