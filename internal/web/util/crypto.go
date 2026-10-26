@@ -107,9 +107,16 @@ func SignToken(data string, secret []byte, expiry time.Time) string {
 
 // VerifyToken validates the signature and expiry, returns the original data.
 func VerifyToken(token string, secret []byte) (string, error) {
+	data, _, err := VerifyTokenExpiry(token, secret)
+	return data, err
+}
+
+// VerifyTokenExpiry is VerifyToken that also says when the token runs out, for a
+// caller that has to carry that date over to something new.
+func VerifyTokenExpiry(token string, secret []byte) (string, time.Time, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 2 {
-		return "", errors.New("invalid token format")
+		return "", time.Time{}, errors.New("invalid token format")
 	}
 
 	encodedData := parts[0]
@@ -122,24 +129,24 @@ func VerifyToken(token string, secret []byte) (string, error) {
 
 	gotSig, err := base64.RawURLEncoding.DecodeString(encodedSig)
 	if err != nil {
-		return "", errors.New("invalid signature encoding")
+		return "", time.Time{}, errors.New("invalid signature encoding")
 	}
 
 	if !hmac.Equal(expectedSig, gotSig) {
-		return "", errors.New("invalid signature")
+		return "", time.Time{}, errors.New("invalid signature")
 	}
 
 	// Decode payload
 	dataBytes, err := base64.RawURLEncoding.DecodeString(encodedData)
 	if err != nil {
-		return "", errors.New("invalid data encoding")
+		return "", time.Time{}, errors.New("invalid data encoding")
 	}
 
 	// Parse "data:expiry" — LastIndex so data containing colons works
 	payload := string(dataBytes)
 	colonIdx := strings.LastIndex(payload, ":")
 	if colonIdx < 1 {
-		return "", errors.New("invalid token payload")
+		return "", time.Time{}, errors.New("invalid token payload")
 	}
 
 	data := payload[:colonIdx]
@@ -147,12 +154,12 @@ func VerifyToken(token string, secret []byte) (string, error) {
 
 	expiry, err := strconv.ParseInt(expiryStr, 10, 64)
 	if err != nil {
-		return "", errors.New("invalid token expiry")
+		return "", time.Time{}, errors.New("invalid token expiry")
 	}
 
 	if time.Now().Unix() > expiry {
-		return "", errors.New("token expired")
+		return "", time.Time{}, errors.New("token expired")
 	}
 
-	return data, nil
+	return data, time.Unix(expiry, 0), nil
 }

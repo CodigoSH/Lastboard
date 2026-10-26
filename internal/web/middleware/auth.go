@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
@@ -16,6 +17,8 @@ type contextKey string
 const (
 	userContextKey   contextKey = "user"
 	userIDContextKey contextKey = "user_id"
+	// sessionIDContextKey holds the stored session the request came in on.
+	sessionIDContextKey contextKey = "session_id"
 )
 
 // Why a cookie did not become an account.
@@ -35,14 +38,31 @@ type Session struct {
 	ID       int
 	Username string
 	Role     string
+	// SessionID is the stored session the cookie names. It is zero only for a
+	// cookie from before sessions were stored, until it has been converted.
+	SessionID int64
+
+	lastSeen time.Time
+	// legacy marks a cookie from before sessions were stored, and generation
+	// is the password generation it was minted under.
+	legacy     bool
+	generation int
 }
 
 // lookupSession turns a verified token payload into the account it belongs to,
-// and refuses it if the password has changed since it was minted.
+// and refuses it if the session was closed, or the password has changed since
+// it began.
 //
-// A payload that names an id finds the account by id. One minted before sessions
-// carried an id names the account by name, as it always did.
-func lookupSession(db *sql.DB, payload string) (Session, error) {
+// A payload that names a stored session is read from the table. The two older
+// forms — an account id, or before that a name — are read as they always were,
+// unless the session they were converted into has been closed.
+func lookupSession(db *sql.DB, secret []byte, cookie, payload string, expiry time.Time) (Session, error) {
+	if sid, ok := parseSessionPayload(payload); ok {
+		return storedSession(db, sid)
+	}
+	if !legacyMayStillBeGenuine(db, expiry) || legacyClosed(db, secret, cookie) {
+		return Session{}, ErrInvalidSession
+	}
 	id, name, tokenVersion := util.ParseSession(payload)
 
 	var (
@@ -66,6 +86,7 @@ func lookupSession(db *sql.DB, payload string) (Session, error) {
 	if tokenVersion != version {
 		return Session{}, ErrSessionExpired
 	}
+	s.legacy, s.generation = true, version
 	return s, nil
 }
 
@@ -79,11 +100,11 @@ func ResolveSession(db *sql.DB, secret []byte, r *http.Request) (Session, error)
 	if err != nil || cookie.Value == "" {
 		return Session{}, ErrNoSession
 	}
-	payload, err := util.VerifyToken(cookie.Value, secret)
+	payload, expiry, err := util.VerifyTokenExpiry(cookie.Value, secret)
 	if err != nil {
 		return Session{}, ErrInvalidSession
 	}
-	return lookupSession(db, payload)
+	return lookupSession(db, secret, cookie.Value, payload, expiry)
 }
 
 // AuthRequired checks for a valid session cookie.
@@ -116,7 +137,7 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				deny("auth.unauthorized")
 				return
 			}
-			payload, err := util.VerifyToken(cookie.Value, secret)
+			payload, expiry, err := util.VerifyTokenExpiry(cookie.Value, secret)
 			if err != nil {
 				deny("auth.unauthorized")
 				return
@@ -145,7 +166,7 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 			// The account the session belongs to, so handlers can scope queries
 			// without another round-trip. An account deleted while its session was
 			// still live, or a password changed since, ends it here.
-			session, err := lookupSession(db, payload)
+			session, err := lookupSession(db, secret, cookie.Value, payload, expiry)
 			if err != nil {
 				if errors.Is(err, ErrSessionExpired) {
 					deny("auth.session_expired")
@@ -154,10 +175,22 @@ func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
 				}
 				return
 			}
+			if session.legacy {
+				// A cookie from before sessions were stored becomes one now,
+				// and the browser gets a cookie of the new kind. If the row
+				// cannot be written the request still goes ahead on the old
+				// cookie; the next one tries again.
+				if fresh, err := convertLegacy(r.Context(), db, secret, r, cookie.Value, &session, session.generation, expiry); err == nil {
+					SetSessionCookie(w, r, fresh, expiry)
+				}
+			} else {
+				touchSession(r.Context(), db, r, session)
+			}
 			username, userID := session.Username, session.ID
 
 			ctx := context.WithValue(r.Context(), userContextKey, username)
 			ctx = context.WithValue(ctx, userIDContextKey, userID)
+			ctx = context.WithValue(ctx, sessionIDContextKey, session.SessionID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -168,6 +201,14 @@ func GetUserFromContext(r *http.Request) string {
 		return u
 	}
 	return ""
+}
+
+// GetSessionIDFromContext is the stored session the request came in on, or zero.
+func GetSessionIDFromContext(r *http.Request) int64 {
+	if id, ok := r.Context().Value(sessionIDContextKey).(int64); ok {
+		return id
+	}
+	return 0
 }
 
 func GetUserIDFromContext(r *http.Request) int {

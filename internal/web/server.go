@@ -258,6 +258,12 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/login", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.Login))))
 	s.Router.Handle("POST /logout", protect(anyAccount(authHandler.Logout)))
 
+	// Where the account is signed in, and ending any of it.
+	sessionHandler := &api.SessionHandler{DB: s.DB}
+	s.Router.Handle("GET /api/sessions", protect(anyAccount(sessionHandler.List)))
+	s.Router.Handle("DELETE /api/sessions/{id}", protect(anyAccount(sessionHandler.Close)))
+	s.Router.Handle("POST /api/sessions/close-others", protect(anyAccount(sessionHandler.CloseOthers)))
+
 	// Dashboard API
 	dashHandler := api.NewDashboardHandler(s.DB)
 	s.Router.Handle("/api/dashboard", protect(anyAccount(dashHandler.GetDashboard)))

@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
@@ -99,20 +101,21 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		duration = extendedSession
 	}
 	expiry := time.Now().Add(duration)
-	// The password generation rides along, so changing the password ends every
-	// session that was open under the old one.
-	token := util.SignToken(util.AccountSessionPayload(userID, passwordVersion), h.Secret, expiry)
-	secure := util.IsSecureRequest(r)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    token,
-		Path:     "/",
-		Expires:  expiry,
-		HttpOnly: true,
-		Secure:   secure,
-		SameSite: http.SameSiteLaxMode,
+	// The session is stored, so signing out — here or from another device —
+	// ends it. The password generation goes with it, so changing the password
+	// ends every session that was open under the old one.
+	if err := middleware.PruneSessions(r.Context(), h.DB); err != nil {
+		log.Printf("login: could not forget expired sessions: %v", err)
+	}
+	token, err := middleware.CreateSession(r.Context(), h.DB, h.Secret, r, middleware.NewSession{
+		UserID: userID, Generation: passwordVersion, Expiry: expiry, Remember: input.RememberMe,
 	})
+	if err != nil {
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
+		return
+	}
+	secure := util.IsSecureRequest(r)
+	middleware.SetSessionCookie(w, r, token, expiry)
 
 	// CSRF double-submit cookie (non-HttpOnly so JS can read it)
 	csrfToken, err := generateCSRFToken()
@@ -135,7 +138,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "auth.welcome"})
 }
 
+// Logout ends the session on the server, not only in this browser: a copy of
+// the cookie taken elsewhere stops working too.
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	if id := middleware.GetSessionIDFromContext(r); id > 0 {
+		err := middleware.RevokeSession(r.Context(), h.DB, middleware.GetUserIDFromContext(r), id)
+		if err != nil && !errors.Is(err, middleware.ErrSessionNotFound) {
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+	}
 	invalidateSession(w, r)
 	w.WriteHeader(http.StatusOK)
 }

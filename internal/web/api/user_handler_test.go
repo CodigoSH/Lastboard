@@ -479,18 +479,22 @@ func TestASessionBelongsToTheAccountNotTheName(t *testing.T) {
 	createUser(t, db.DB, "bob", "bobsecret1", "user")
 	s := doLogin(t, server.URL, "bob", "bobsecret1")
 
-	// What the login minted names the account by id.
-	payload, err := util.VerifyToken(s.sessionCookie.Value, testSecret)
-	if err != nil {
-		t.Fatal(err)
-	}
-	id, name, _ := util.ParseSession(payload)
+	// What the login stored belongs to the account by id, and the cookie does
+	// not carry the name at all.
 	var want int
 	if err := db.DB.QueryRow("SELECT id FROM users WHERE username = 'bob'").Scan(&want); err != nil {
 		t.Fatal(err)
 	}
-	if id != want || name != "" {
-		t.Fatalf("the session names (%d, %q), want the account id %d and no name", id, name, want)
+	var owner int
+	if err := db.DB.QueryRow("SELECT user_id FROM sessions").Scan(&owner); err != nil || owner != want {
+		t.Fatalf("the stored session belongs to %d (%v), want the account id %d", owner, err, want)
+	}
+	payload, err := util.VerifyToken(s.sessionCookie.Value, testSecret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(payload, "bob") {
+		t.Fatalf("the cookie names the account: %q", payload)
 	}
 
 	status := func() int {
