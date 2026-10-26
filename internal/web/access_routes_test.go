@@ -73,6 +73,8 @@ func TestAMemberIsRefusedWhatItWasNotGiven(t *testing.T) {
 		{http.MethodPost, "/api/dashboard/health/batch", `{"urls":["http://example.com"]}`},
 		{http.MethodGet, "/api/monitor/overview", ``},
 		{http.MethodGet, "/api/proxmox/overview", ``},
+		{http.MethodGet, "/api/proxmox/tasks?node=kprox", ``},
+		{http.MethodGet, "/api/proxmox/task-log?node=kprox&upid=x", ``},
 		{http.MethodPost, "/api/docker/containers", `{"host":"local"}`},
 		{http.MethodPost, "/api/docker/detail", `{"host_id":"x","id":"a"}`},
 		{http.MethodPost, "/api/docker/logs", `{"host_id":"x","id":"a"}`},

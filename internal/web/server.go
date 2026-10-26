@@ -339,6 +339,8 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/proxmox/settings", protect(need(access.ProxmoxView, proxmoxHandler.UpdateSettings)))
 	s.Router.Handle("GET /api/proxmox/overview", protect(need(access.ProxmoxView, proxmoxHandler.GetOverview)))
 	s.Router.Handle("GET /api/proxmox/series", protect(need(access.ProxmoxView, proxmoxHandler.GetSeries)))
+	s.Router.Handle("GET /api/proxmox/tasks", protect(need(access.ProxmoxView, proxmoxHandler.GetTasks)))
+	s.Router.Handle("GET /api/proxmox/task-log", protect(need(access.ProxmoxView, proxmoxHandler.GetTaskLog)))
 	s.Router.Handle("POST /api/proxmox/power", protect(need(access.ProxmoxControl, proxmoxHandler.Power)))
 	s.Router.Handle("POST /api/proxmox/icon", protect(need(access.ProxmoxView, proxmoxHandler.SetIcon)))
 

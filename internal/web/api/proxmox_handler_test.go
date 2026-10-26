@@ -2,8 +2,10 @@ package api_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -34,6 +36,8 @@ type fakeProxmox struct {
 	// whether the stored secret was really used.
 	auth      string
 	powerMgmt bool
+	// The query of the last task listing, to see what was asked of the host.
+	query string
 }
 
 func newFakeProxmox(t *testing.T) *fakeProxmox {
@@ -64,6 +68,24 @@ func newFakeProxmox(t *testing.T) *fakeProxmox {
 			} else {
 				w.Write([]byte(`{"data":{"/":{"VM.Audit":1}}}`))
 			}
+		case r.URL.Path == "/api2/json/nodes/kprox/tasks":
+			f.mu.Lock()
+			f.query = r.URL.RawQuery
+			f.mu.Unlock()
+			// Out of order, one of each state, one whose id names another node
+			// (and must not be listed), and one whose id carries an escaped colon.
+			w.Write([]byte(`{"data":[
+				{"upid":"UPID:kprox:0000A1B2:00C0FFEE:6717A8B0:vzdump:106:root@pam:","type":"vzdump","id":"106","user":"root@pam","status":"OK","starttime":1729570992,"endtime":1729571100},
+				{"upid":"UPID:kprox:0000A1B3:00C0FFEF:6717B000:qmstart:200:a@pve!b:","type":"qmstart","id":"200","user":"a@pve!b","starttime":1729572864},
+				{"upid":"UPID:kprox:0000A1B4:00C0FFF0:6717A000:vzdump:107:root@pam:","type":"vzdump","id":"107","user":"root@pam","status":"\u001b[31mcommand 'vzdump' failed\u001b[0m: exit code 2","starttime":1729568768,"endtime":1729568800},
+				{"upid":"UPID:kprox:0000A1B5:00C0FFF1:67179000:aptupdate::root@pam:","type":"aptupdate","id":"","user":"root@pam","status":"WARNINGS: 1","starttime":1729564672,"endtime":1729564700},
+				{"upid":"UPID:other:0000A1B6:00C0FFF2:67179001:vzdump:1:root@pam:","type":"vzdump","id":"1","user":"root@pam","status":"OK","starttime":1729564673,"endtime":1729564700},
+				{"upid":"UPID:kprox:0000A1B7:00C0FFF3:67178000:imgcopy:local\\x3a100:root@pam:","type":"imgcopy","id":"local:100","user":"root@pam","status":"OK","starttime":1729560576,"endtime":1729560600}
+			]}`))
+		case strings.HasPrefix(r.URL.Path, "/api2/json/nodes/kprox/tasks/") && strings.HasSuffix(r.URL.Path, "/log"):
+			w.Write([]byte(`{"data":[{"n":1,"t":"INFO: starting new backup job"},{"n":2,"t":"INFO: \u001b[1mcreating\u001b[0m archive\r"},{"n":3,"t":"TASK OK"}]}`))
+		case strings.HasPrefix(r.URL.Path, "/api2/json/nodes/kprox/tasks/") && strings.HasSuffix(r.URL.Path, "/status"):
+			w.Write([]byte(`{"data":{"status":"running"}}`))
 		case strings.HasSuffix(r.URL.Path, "/status"):
 			w.Write([]byte(`{"data":{"uptime":7200,"loadavg":["0.50","0.40","0.30"],"cpuinfo":{"cores":8}}}`))
 		default:
@@ -116,6 +138,8 @@ func setupProxmoxServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("GET /api/proxmox/overview", protect(http.HandlerFunc(px.GetOverview)))
 	mux.Handle("POST /api/proxmox/power", protect(http.HandlerFunc(px.Power)))
 	mux.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(px.SetIcon)))
+	mux.Handle("GET /api/proxmox/tasks", protect(http.HandlerFunc(px.GetTasks)))
+	mux.Handle("GET /api/proxmox/task-log", protect(http.HandlerFunc(px.GetTaskLog)))
 
 	server := httptest.NewServer(mux)
 	cleanup := func() {
@@ -945,5 +969,116 @@ func TestSeveralHostsAreReadAtTheSameTime(t *testing.T) {
 	}
 	if strings.Join(names, ",") != "A,B,C" {
 		t.Errorf("the hosts must come back in the order they were saved: %v", names)
+	}
+}
+
+// ── Tasks ─────────────────────────────────────────────────────────────────────
+
+func TestTheTasksAreListedNewestFirstWithTheirState(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	resp, body := pxGet(t, server.URL, "/api/proxmox/tasks?node=kprox&vmid=106", s)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("tasks = %d", resp.StatusCode)
+	}
+	if fake.query != "limit=50&vmid=106" {
+		t.Errorf("the host was asked %q, want a bounded list for that guest", fake.query)
+	}
+	tasks, _ := body["tasks"].([]any)
+	var got []string
+	for _, x := range tasks {
+		task := x.(map[string]any)
+		got = append(got, fmt.Sprintf("%v|%v|%v", task["type"], task["state"], task["message"]))
+	}
+	want := []string{
+		"qmstart|running|<nil>",
+		"vzdump|ok|<nil>",
+		"vzdump|error|command 'vzdump' failed: exit code 2",
+		"aptupdate|warning|WARNINGS: 1",
+		"imgcopy|ok|<nil>",
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("tasks\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+func TestATasksLogIsReadCleanAndSaysIfItIsStillRunning(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	upid := "UPID:kprox:0000A1B7:00C0FFF3:67178000:imgcopy:local\\x3a100:root@pam:"
+	resp, body := pxGet(t, server.URL, "/api/proxmox/task-log?node=kprox&upid="+url.QueryEscape(upid), s)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("task log = %d", resp.StatusCode)
+	}
+	lines, _ := body["lines"].([]any)
+	if len(lines) != 3 || lines[1] != "INFO: creating archive" || body["running"] != true {
+		t.Errorf("task log = %v", body)
+	}
+	if !fake.asked("GET /api2/json/nodes/kprox/tasks/" + upid + "/log") {
+		t.Error("the log was not asked of that task")
+	}
+}
+
+// A node name or a task id that would be another path never reaches the host.
+func TestATaskIDThatIsNotOneStopsHere(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	for _, q := range []string{
+		"node=kprox&upid=" + url.QueryEscape("UPID:other:0000A1B6:00C0FFF2:67179001:vzdump:1:root@pam:"),
+		"node=kprox&upid=" + url.QueryEscape("UPID:kprox:1:2:3:vzdump:1:root@pam:/../../../access/users:"),
+		"node=kprox&upid=" + url.QueryEscape("UPID:kprox:1:2:3:vzdump:1:root@pam:?x:"),
+		"node=kprox&upid=" + url.QueryEscape("UPID:kprox:1:2:3:vzdump:1"),
+		"node=kprox&upid=" + url.QueryEscape("UPID:kprox:1:2:3:vzdump:1:root@pam:extra:"),
+		"node=" + url.QueryEscape("kprox/../..") + "&upid=x",
+	} {
+		if resp, _ := pxGet(t, server.URL, "/api/proxmox/task-log?"+q, s); resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("%s = %d, want 400", q, resp.StatusCode)
+		}
+	}
+	if resp, _ := pxGet(t, server.URL, "/api/proxmox/tasks?node="+url.QueryEscape("kprox/qemu"), s); resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a node with a slash = %d, want 400", resp.StatusCode)
+	}
+	if resp, _ := pxGet(t, server.URL, "/api/proxmox/tasks?node=kprox&vmid=-1", s); resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a negative vmid = %d, want 400", resp.StatusCode)
+	}
+	fake.mu.Lock()
+	defer fake.mu.Unlock()
+	for _, p := range fake.seen {
+		if strings.Contains(p, "/tasks") {
+			t.Errorf("the host was asked %s", p)
+		}
+	}
+}
+
+// Another account's hypervisor is not reachable by naming it.
+func TestTasksAreReadOnlyFromTheAccountsOwnHypervisors(t *testing.T) {
+	adminFake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	createUser(t, db.DB, "other", "password", "user")
+	admin := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+adminFake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+	other := doLogin(t, server.URL, "other", "password")
+	if resp, _ := pxGet(t, server.URL, "/api/proxmox/tasks?host="+pxHostID(t, server.URL, admin)+"&node=kprox", other); resp.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("another account's hypervisor = %d, want 412", resp.StatusCode)
+	}
+	if adminFake.asked("GET /api2/json/nodes/kprox/tasks") {
+		t.Error("another account's hypervisor was asked")
 	}
 }
