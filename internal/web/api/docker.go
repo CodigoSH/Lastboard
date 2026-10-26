@@ -140,6 +140,82 @@ func (h *DockerHandler) writeStats(w http.ResponseWriter, hostURL string, raw []
 	json.NewEncoder(w).Encode(stats)
 }
 
+// containerQuery names one container on one of the account's hosts.
+type containerQuery struct {
+	HostID string `json:"host_id"`
+	ID     string `json:"id"`
+	Tail   int    `json:"tail"`
+	After  string `json:"after"`
+}
+
+// containerOf reads which container a request names, and its host, or answers
+// why it cannot be used.
+func (h *DockerHandler) containerOf(w http.ResponseWriter, r *http.Request) (containerQuery, dockerHost, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
+	var q containerQuery
+	if err := json.NewDecoder(r.Body).Decode(&q); err != nil || !containerRef.MatchString(q.ID) {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return q, dockerHost{}, false
+	}
+	e, ok := h.hostOf(w, r, q.HostID)
+	return q, e, ok
+}
+
+// writeReadError answers a details or logs read that failed.
+func writeReadError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, errDockerUnauthorized):
+		http.Error(w, "docker.unauthorized", http.StatusBadGateway)
+	case errors.Is(err, errAgentTooOld):
+		http.Error(w, "docker.agent_too_old", http.StatusBadGateway)
+	case errors.Is(err, errNoSuchContainer):
+		http.Error(w, "docker.not_found", http.StatusNotFound)
+	default:
+		http.Error(w, "docker.connection_error", http.StatusBadGateway)
+	}
+}
+
+// POST /api/docker/detail — Body: { "host_id": string, "id": string }
+//
+// One container's details, with the environment as names only.
+func (h *DockerHandler) Detail(w http.ResponseWriter, r *http.Request) {
+	q, e, ok := h.containerOf(w, r)
+	if !ok {
+		return
+	}
+	d, err := ContainerDetails(e.address(), q.ID)
+	if err != nil {
+		writeReadError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(d)
+}
+
+// POST /api/docker/logs
+// Body: { "host_id": string, "id": string, "tail"?: number, "after"?: string }
+//
+// The last lines of one container's log, oldest first. "after" is the "t" of
+// the last line the page already has; only later lines come back.
+func (h *DockerHandler) Logs(w http.ResponseWriter, r *http.Request) {
+	q, e, ok := h.containerOf(w, r)
+	if !ok {
+		return
+	}
+	after, ok := parseLogAfter(q.After)
+	if !ok {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	logs, err := ContainerLogs(e.address(), q.ID, q.Tail, after)
+	if err != nil {
+		writeReadError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(logs)
+}
+
 // POST /api/docker/action
 // Body: { "host_id": string, "id": string, "action": string }
 //

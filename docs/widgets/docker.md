@@ -180,6 +180,37 @@ What you set on a container — hidden, a name, an address — is kept under the
 
 The title is the name on the tile's top border, the same as on every widget; leave it empty for none. A widget that had no title keeps the name it showed, "Docker". You can also choose how often the container list is refreshed (30 seconds to 10 minutes). Resource usage for running containers updates continuously regardless of this setting.
 
+## The Docker page
+
+The widget is a list you glance at. For one container in detail — how it is set up and what it prints — open the **Docker page**: the Docker icon in the top bar, beside the Proxmox one. It is there for an account that may look at Docker and has at least one host that is switched on and that it can use; with none, there is no icon. While the page is open the rest of the top bar is locked and the same icon (or **Esc**, or the browser's Back button) closes it, as with the Proxmox and status pages.
+
+The list on the left holds every container of every host that is on, running ones first, then by name. With more than one host each has its own heading; a host that doesn't answer says why in its own place and the others still draw. Running containers show their CPU and memory use. Everything refreshes every ten seconds while the page is open and the browser tab is visible. **Ctrl+K** (**Cmd+K** on macOS) puts the cursor in the search box, which filters by name, image or the start of the container id.
+
+Choose a container to see it on the right, under two tabs.
+
+### Overview
+
+State, health (only for an image that defines a health check), when it started, how it ended (the end time and the exit code for a container that is not running, and the exit code alone when it is running again after a non-zero one), its restart policy and how many times it has restarted, when it was created, and its image. Below that: the published ports, the mounts (each marked read-only or read-write), the networks with the container's address on each, and the **names** of its environment variables.
+
+**The values of environment variables are never shown.** They often hold passwords and tokens, so only the names leave the server: the values are removed before the answer is sent to your browser.
+
+### Logs
+
+The last 100 lines when you open the tab, with **Load more lines** to read the last 1,000. Lines the container wrote to its error output are marked with a red tint and a bar; a container started with a terminal (`docker run -t`) does not separate the two, so none of its lines are marked. Colour and cursor codes are removed from the text, so a container that paints its output reads as plain text, and what it prints is only ever shown as text, never as markup.
+
+- **Follow** asks for the lines after the last one you have every three seconds, only while the Logs tab and the browser tab are visible, and keeps the view at the end only if you were already there — scroll up to read and it stays where you left it. Turn it off to stop asking.
+- **Timestamps** shows or hides the time before each line, in your language's format and your browser's time zone. This choice and *Follow* are remembered in this browser.
+- **Copy** puts the lines you see on the clipboard as plain text, with the times if they are showing.
+- The page keeps at most 2,000 lines; when more arrive, the oldest are dropped. If the log was larger than Lastboard reads at once, or a line was very long, a note says part of it was cut.
+
+### Permissions and agents
+
+Seeing the page and its logs needs permission to **view** Docker. **Start**, **Restart** and **Stop** in the container's header need permission to **control** it; an account without it sees no buttons. Restart and stop ask for confirmation first, and Stop is switched off for the Lastboard Agent's own container, as in the widget.
+
+Details and logs of a container on an agent host need **Lastboard Agent v1.3.0 or later** on that host. With an older agent the list works as before, and the page names the host and says its agent needs updating, instead of reporting that it could not connect. Hosts of the other types (local socket, TCP, TLS) need nothing.
+
+On a phone the list takes the screen; choosing a container opens it in its place and the Back button returns to the list.
+
 ## Starting and stopping
 
 Containers can be started, stopped or restarted directly from the widget rows by an account allowed to control Docker: the administrator on any of its hosts, a member on its own agents. An account that may only look at Docker sees the same containers and their state, without the controls. An agent only accepts the calls it allows, so what it lets through still applies.

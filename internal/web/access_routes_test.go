@@ -74,6 +74,8 @@ func TestAMemberIsRefusedWhatItWasNotGiven(t *testing.T) {
 		{http.MethodGet, "/api/monitor/overview", ``},
 		{http.MethodGet, "/api/proxmox/overview", ``},
 		{http.MethodPost, "/api/docker/containers", `{"host":"local"}`},
+		{http.MethodPost, "/api/docker/detail", `{"host_id":"x","id":"a"}`},
+		{http.MethodPost, "/api/docker/logs", `{"host_id":"x","id":"a"}`},
 		{http.MethodGet, "/api/export/native", ``},
 		{http.MethodGet, "/api/users", ``},
 		{http.MethodGet, "/api/system/backup", ``},

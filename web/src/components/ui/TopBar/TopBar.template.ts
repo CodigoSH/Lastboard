@@ -16,6 +16,8 @@ interface TopBarData {
     monitoringOn?: boolean;
     proxmoxOn?: boolean;
     proxmoxOpen?: boolean;
+    dockerOn?: boolean;
+    dockerOpen?: boolean;
     monitorOpen?: boolean;
 }
 
@@ -25,14 +27,14 @@ import { accessAllows } from '../../../services/access';
 import type { User } from '../../../types';
 import '../DashboardSwitcher/DashboardSwitcher';
 
-export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn, monitorOpen, proxmoxOn, proxmoxOpen, user }: TopBarData & { user?: User | null, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
+export const template = ({ title, editMode, selectMode, selectedCount, searchActive, addMenuActive, drawerOpen, searchQuery, updateAvailable, isDemo, projectLogo, monitoringOn, monitorOpen, proxmoxOn, proxmoxOpen, dockerOn, dockerOpen, user }: TopBarData & { user?: User | null, updateAvailable?: boolean, selectMode?: boolean, selectedCount?: number }) => {
     // Edit mode, the settings drawer and the status page are exclusive: each one
     // takes over the UI, so while any of them is active every unrelated control
     // is greyed out and only the one that leads back out stays clickable.
     // A full-screen page locks the bar behind it. Proxmox was missing here,
     // which left the board's own search live under the page's one — two search
     // boxes, one of them filtering a board nobody could see.
-    const locked = editMode || drawerOpen || monitorOpen || proxmoxOpen;
+    const locked = editMode || drawerOpen || monitorOpen || proxmoxOpen || dockerOpen;
     // What the account may not do is left out, not greyed: the server decides
     // every route, this only keeps the bar from offering what would be refused.
     const may = (cap: string) => accessAllows(user, cap);
@@ -115,7 +117,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
             </div>
 
             <!-- Edit Mode Toggle -->
-            ${may('board_edit') ? `<div id="edit-toggle" class="top-bar__toggle ${drawerOpen || monitorOpen || proxmoxOpen ? 'top-bar__toggle--disabled' : ''}" title="${i18n.t('topbar.edit_tooltip')}"
+            ${may('board_edit') ? `<div id="edit-toggle" class="top-bar__toggle ${drawerOpen || monitorOpen || proxmoxOpen || dockerOpen ? 'top-bar__toggle--disabled' : ''}" title="${i18n.t('topbar.edit_tooltip')}"
                  style="margin-right: -6px; ${editMode ? 'color: var(--accent);' : ''}">
                 <svg id="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     ${editMode ? `
@@ -133,7 +135,7 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
 
             ${monitoringOn && may('watch_monitor') ? `
             <!-- Monitoring status page — stays clickable while open: it is the way out -->
-            <div id="monitor-toggle" class="top-bar__toggle ${(editMode || drawerOpen || proxmoxOpen) && !monitorOpen ? 'top-bar__toggle--disabled' : ''}"
+            <div id="monitor-toggle" class="top-bar__toggle ${(editMode || drawerOpen || proxmoxOpen || dockerOpen) && !monitorOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="${monitorOpen ? 'color: var(--accent);' : ''}"
                  title="${i18n.t('monitor.overview_title')}" aria-label="${i18n.t('monitor.overview_title')}" role="button" tabindex="0">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -141,14 +143,22 @@ export const template = ({ title, editMode, selectMode, selectedCount, searchAct
 
             ${proxmoxOn && may('proxmox_view') ? `
             <!-- Proxmox page — stays clickable while open: it is the way out -->
-            <div id="proxmox-toggle" class="top-bar__toggle ${(editMode || drawerOpen || monitorOpen) && !proxmoxOpen ? 'top-bar__toggle--disabled' : ''}"
+            <div id="proxmox-toggle" class="top-bar__toggle ${(editMode || drawerOpen || monitorOpen || dockerOpen) && !proxmoxOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="${proxmoxOpen ? 'color: var(--accent);' : ''}"
                  title="${i18n.t('widget.proxmox.name')}" aria-label="${i18n.t('widget.proxmox.name')}" role="button" tabindex="0">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
             </div>` : ''}
 
+            ${dockerOn && may('docker_view') ? `
+            <!-- Docker page — stays clickable while open: it is the way out -->
+            <div id="docker-toggle" class="top-bar__toggle ${(editMode || drawerOpen || monitorOpen || proxmoxOpen) && !dockerOpen ? 'top-bar__toggle--disabled' : ''}"
+                 style="${dockerOpen ? 'color: var(--accent);' : ''}"
+                 title="${i18n.t('widget.docker.name')}" aria-label="${i18n.t('widget.docker.name')}" role="button" tabindex="0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z"/><path d="M10 21.9V14L2.1 9.1"/><path d="m10 14 11.9-6.9"/><path d="M14 19.8v-8.1"/><path d="M18 17.5V9.4"/></svg>
+            </div>` : ''}
+
             <!-- Sidebar Toggle Icon — stays clickable while open: it is the way out -->
-            <div id="drawer-toggle" class="top-bar__toggle ${editMode || monitorOpen || proxmoxOpen ? 'top-bar__toggle--disabled' : ''}"
+            <div id="drawer-toggle" class="top-bar__toggle ${editMode || monitorOpen || proxmoxOpen || dockerOpen ? 'top-bar__toggle--disabled' : ''}"
                  style="position: relative;" 
                  title="${i18n.t('topbar.drawer_tooltip')}">
                 ${updateAvailable ? '<div class="notification-dot"></div>' : ''}

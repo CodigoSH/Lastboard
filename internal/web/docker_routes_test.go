@@ -133,6 +133,83 @@ func TestAMembersSocketFromBeforeIsKeptAndRefused(t *testing.T) {
 	}
 }
 
+// A container's details and log are read like the list: with Docker view, on the
+// account's own hosts only, and with the environment as names.
+func TestAContainersDetailsAndLogAreReadOnTheAccountsOwnHosts(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/containers/plex/json":
+			w.Write([]byte(`{"Id":"abc123def456","Name":"/plex","Config":{"Image":"plex","Env":["PLEX_CLAIM=claim-secret"]},"State":{"Status":"running"}}`))
+		case "/containers/plex/logs":
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Write([]byte("2026-10-26T17:00:01Z started\n"))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"message":"no such container"}`))
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	server := newTestServer(t, true)
+	admin := adminOf(t, server)
+	view := access.Standard()
+	view.Docker = access.View
+	viewer := asMember(t, server, "viewer", view)
+	none := asMember(t, server, "none", access.Standard())
+
+	body := fmt.Sprintf(`{"hosts":[{"name":"Lab","type":"tcp","url":%q,"enabled":true}]}`, strings.TrimPrefix(srv.URL, "http://"))
+	if w := admin(http.MethodPost, "/api/docker/settings", body); w.Code != http.StatusNoContent {
+		t.Fatalf("adding the host = %d %s", w.Code, w.Body.String())
+	}
+	id := hostsOf(t, admin)[0]["id"].(string)
+
+	w := admin(http.MethodPost, "/api/docker/detail", fmt.Sprintf(`{"host_id":%q,"id":"plex"}`, id))
+	if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), `"PLEX_CLAIM"`) || strings.Contains(w.Body.String(), "claim-secret") {
+		t.Errorf("details = %d %s, want the variable's name and not its value", w.Code, w.Body.String())
+	}
+	if w := admin(http.MethodPost, "/api/docker/logs", fmt.Sprintf(`{"host_id":%q,"id":"plex","tail":10}`, id)); w.Code != http.StatusOK || !strings.Contains(w.Body.String(), "started") {
+		t.Errorf("logs = %d %s", w.Code, w.Body.String())
+	}
+	if w := admin(http.MethodPost, "/api/docker/detail", fmt.Sprintf(`{"host_id":%q,"id":"gone"}`, id)); w.Code != http.StatusNotFound || !strings.Contains(w.Body.String(), "docker.not_found") {
+		t.Errorf("a container that is not there = %d %s, want 404 docker.not_found", w.Code, w.Body.String())
+	}
+	for _, bad := range []string{`"../images/json"`, `""`, `"a/b"`, `"-rf"`} {
+		if w := admin(http.MethodPost, "/api/docker/logs", fmt.Sprintf(`{"host_id":%q,"id":%s}`, id, bad)); w.Code != http.StatusBadRequest {
+			t.Errorf("id %s = %d, want 400", bad, w.Code)
+		}
+	}
+	if w := admin(http.MethodPost, "/api/docker/logs", fmt.Sprintf(`{"host_id":%q,"id":"plex","after":"yesterday"}`, id)); w.Code != http.StatusBadRequest {
+		t.Errorf("an after that is not a time = %d, want 400", w.Code)
+	}
+
+	// The host is the administrator's: a member names it and finds nothing.
+	if w := viewer(http.MethodPost, "/api/docker/detail", fmt.Sprintf(`{"host_id":%q,"id":"plex"}`, id)); w.Code != http.StatusNotFound {
+		t.Errorf("another account's host = %d, want 404", w.Code)
+	}
+	for _, path := range []string{"/api/docker/detail", "/api/docker/logs"} {
+		if w := none(http.MethodPost, path, fmt.Sprintf(`{"host_id":%q,"id":"plex"}`, id)); w.Code != http.StatusForbidden {
+			t.Errorf("%s without Docker = %d, want 403", path, w.Code)
+		}
+	}
+}
+
+// An agent from before v1.3.0 does not have the calls, and the answer says to
+// update it instead of "could not connect".
+func TestAnOldAgentIsAskedToBeUpdated(t *testing.T) {
+	addr, _ := fakeAgent(t, "the-token")
+	srv := newTestServer(t, true)
+	ana := asMember(t, srv, "ana", access.Homelab())
+	body := fmt.Sprintf(`{"hosts":[{"name":"Mine","type":"agent","url":%q,"token":"the-token","enabled":true}]}`, addr)
+	if w := ana(http.MethodPost, "/api/docker/settings", body); w.Code != http.StatusNoContent {
+		t.Fatalf("adding the agent = %d", w.Code)
+	}
+	id := hostsOf(t, ana)[0]["id"].(string)
+	if w := ana(http.MethodPost, "/api/docker/logs", fmt.Sprintf(`{"host_id":%q,"id":"plex"}`, id)); w.Code != http.StatusBadGateway || !strings.Contains(w.Body.String(), "docker.agent_too_old") {
+		t.Errorf("logs from an old agent = %d %s, want 502 docker.agent_too_old", w.Code, w.Body.String())
+	}
+}
+
 // Without the permission there is no Docker at all.
 func TestDockerNeedsItsPermission(t *testing.T) {
 	srv := newTestServer(t, true)

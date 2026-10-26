@@ -9,6 +9,7 @@ import css from './TopBar.css' with { type: 'text' };
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { accessAllows } from '../../../services/access';
 import { userStore } from '../../../store/userStore';
+import { fetchDockerSettings } from '../../../services/dockerHosts';
 import type { User } from '../../../types';
 
 interface TopBarState {
@@ -28,6 +29,8 @@ interface TopBarState {
     monitoringOn?: boolean;
     proxmoxOn?: boolean;
     proxmoxOpen?: boolean;
+    dockerOn?: boolean;
+    dockerOpen?: boolean;
     monitorOpen?: boolean;
 }
 
@@ -38,11 +41,14 @@ class TopBar extends HTMLElement {
     _unsubscribeUser: (() => void) | undefined;
     private _monitorAsked = false;
     private _proxmoxAsked = false;
+    private _dockerAsked = false;
     _windowClickHandler: ((e: Event) => void) | undefined;
     _monitoringHandler: ((e: CustomEvent) => void) | undefined;
     _monitorOpenHandler: ((e: CustomEvent) => void) | undefined;
     _proxmoxHandler: ((e: CustomEvent) => void) | undefined;
     _proxmoxOpenHandler: ((e: CustomEvent) => void) | undefined;
+    _dockerHandler: ((e: CustomEvent) => void) | undefined;
+    _dockerOpenHandler: ((e: CustomEvent) => void) | undefined;
 
     static get observedAttributes() {
         return ['title'];
@@ -62,6 +68,8 @@ class TopBar extends HTMLElement {
             monitorOpen: false,
             proxmoxOn: false,
             proxmoxOpen: false,
+            dockerOn: false,
+            dockerOpen: false,
             isDemo: window.LASTBOARD_CONFIG?.demo_mode || false,
             isTouchDevice: window.innerWidth < 768 && window.matchMedia('(pointer: coarse)').matches
         };
@@ -129,6 +137,17 @@ class TopBar extends HTMLElement {
         };
         eventBus.on(EVENTS.PROXMOX_PAGE_CHANGED, this._proxmoxOpenHandler);
 
+        // The Docker icon is there while the account has a host it can use, and
+        // follows the hosts being saved in settings.
+        this._dockerHandler = (e: CustomEvent) => {
+            this.setState({ dockerOn: !!e.detail?.enabled });
+        };
+        eventBus.on(EVENTS.DOCKER_CHANGED, this._dockerHandler);
+        this._dockerOpenHandler = (e: CustomEvent) => {
+            this.setState({ dockerOpen: !!e.detail?.open });
+        };
+        eventBus.on(EVENTS.DOCKER_PAGE_CHANGED, this._dockerOpenHandler);
+
         // While the status page is up the rest of the topbar is locked, so the
         // only way out is the status icon itself or the page's own close button.
         this._monitorOpenHandler = (e: CustomEvent) => {
@@ -149,6 +168,8 @@ class TopBar extends HTMLElement {
         if (this._monitorOpenHandler) eventBus.off(EVENTS.MONITOR_OVERVIEW_CHANGED, this._monitorOpenHandler);
         if (this._proxmoxHandler) eventBus.off(EVENTS.PROXMOX_CHANGED, this._proxmoxHandler);
         if (this._proxmoxOpenHandler) eventBus.off(EVENTS.PROXMOX_PAGE_CHANGED, this._proxmoxOpenHandler);
+        if (this._dockerHandler) eventBus.off(EVENTS.DOCKER_CHANGED, this._dockerHandler);
+        if (this._dockerOpenHandler) eventBus.off(EVENTS.DOCKER_PAGE_CHANGED, this._dockerOpenHandler);
     }
 
     /** Whether the signed-in account may do this; the demo has no accounts and may do all. */
@@ -175,6 +196,12 @@ class TopBar extends HTMLElement {
                 .then(s => this.setState({ proxmoxOn: !!s.enabled }))
                 .catch(() => { this._proxmoxAsked = false; /* leave hidden */ });
         }
+        if (!this._dockerAsked && this.may('docker_view')) {
+            this._dockerAsked = true;
+            fetchDockerSettings()
+                .then(s => this.setState({ dockerOn: s.enabled }))
+                .catch(() => { this._dockerAsked = false; /* leave hidden */ });
+        }
     }
 
     setState(newState: Partial<TopBarState>) {
@@ -199,7 +226,7 @@ class TopBar extends HTMLElement {
      */
     private _shortcutHandler = (e: KeyboardEvent) => {
         const st = this.state;
-        const locked = st.editMode || st.drawerOpen || !!st.monitorOpen || !!st.proxmoxOpen;
+        const locked = st.editMode || st.drawerOpen || !!st.monitorOpen || !!st.proxmoxOpen || !!st.dockerOpen;
         const target = (e.composedPath()[0] as Element | undefined) ?? null;
         if (!opensSearch(e, { locked, typing: isTypingTarget(target) })) return;
         e.preventDefault();
@@ -243,7 +270,8 @@ class TopBar extends HTMLElement {
             // one opened last (from inside the drawer's own settings). The
             // greyed-out controls are inert in CSS too; this keeps them inert
             // for clicks that never went through the pointer.
-            const exclusiveToggle = this.state.proxmoxOpen ? '#proxmox-toggle'
+            const exclusiveToggle = this.state.dockerOpen ? '#docker-toggle'
+                : this.state.proxmoxOpen ? '#proxmox-toggle'
                 : this.state.monitorOpen ? '#monitor-toggle'
                     : this.state.drawerOpen ? '#drawer-toggle'
                         : null;
@@ -353,6 +381,14 @@ class TopBar extends HTMLElement {
                 eventBus.emit(this.state.proxmoxOpen
                     ? EVENTS.HIDE_PROXMOX_PAGE
                     : EVENTS.SHOW_PROXMOX_PAGE);
+                return;
+            }
+
+            const dockerBtn = target.closest('#docker-toggle');
+            if (dockerBtn) {
+                eventBus.emit(this.state.dockerOpen
+                    ? EVENTS.HIDE_DOCKER_PAGE
+                    : EVENTS.SHOW_DOCKER_PAGE);
                 return;
             }
 
@@ -469,6 +505,8 @@ class TopBar extends HTMLElement {
             monitoringOn: this.state.monitoringOn,
             proxmoxOn: this.state.proxmoxOn,
             proxmoxOpen: this.state.proxmoxOpen,
+            dockerOn: this.state.dockerOn,
+            dockerOpen: this.state.dockerOpen,
             monitorOpen: this.state.monitorOpen
         })}
         `;

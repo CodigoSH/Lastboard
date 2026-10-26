@@ -24,6 +24,7 @@ import './components/ui/MoveToDashboardModal/MoveToDashboardModal';
 import './components/ui/MonitorHistoryDrawer/MonitorHistoryDrawer';
 import './components/ui/MonitorPage/MonitorPage';
 import './components/ui/ProxmoxPage/ProxmoxPage';
+import './components/ui/DockerPage/DockerPage';
 import './components/ui/PasswordConfirmModal/PasswordConfirmModal';
 import './components/ui/BackupModal/BackupModal';
 import './components/ui/UpdateModal/UpdateModal';
@@ -157,6 +158,8 @@ bootstrap(async () => {
     const proxmoxPage = document.createElement('proxmox-page');
     document.body.appendChild(proxmoxPage);
 
+    document.body.appendChild(document.createElement('docker-page'));
+
     // An address can ask for a full-screen page ("/?view=proxmox", which is what
     // the Proxmox tile's "see all" is, so it also works from a new tab). The
     // request is taken out of the address first: left there, a reload would open
@@ -250,6 +253,16 @@ eventBus.on(EVENTS.SHOW_PROXMOX_PAGE, () => {
 
 eventBus.on(EVENTS.HIDE_PROXMOX_PAGE, () => {
     const page = document.querySelector('proxmox-page') as any;
+    if (page) page.close();
+});
+
+eventBus.on(EVENTS.SHOW_DOCKER_PAGE, () => {
+    const page = document.querySelector('docker-page') as any;
+    if (page) page.open();
+});
+
+eventBus.on(EVENTS.HIDE_DOCKER_PAGE, () => {
+    const page = document.querySelector('docker-page') as any;
     if (page) page.close();
 });
 
