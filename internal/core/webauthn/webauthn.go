@@ -16,7 +16,6 @@ package webauthn
 
 import (
 	"bytes"
-	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
@@ -26,7 +25,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
 )
 
 // The algorithms, by their COSE numbers (what the browser is offered).
@@ -233,13 +231,12 @@ func ParsePublicKey(cose []byte) (PublicKey, error) {
 		if len(x) != 32 || len(y) != 32 {
 			return PublicKey{}, refuse("the P-256 point has a bad size")
 		}
-		// crypto/ecdh refuses a point that is not on the curve.
-		if _, err := ecdh.P256().NewPublicKey(append(append([]byte{4}, x...), y...)); err != nil {
+		// It refuses a point that is not on the curve.
+		key, err := ecdsa.ParseUncompressedPublicKey(elliptic.P256(), append(append([]byte{4}, x...), y...))
+		if err != nil {
 			return PublicKey{}, refuse("the P-256 point is not on the curve")
 		}
-		return PublicKey{Alg: AlgES256, ec: &ecdsa.PublicKey{
-			Curve: elliptic.P256(), X: new(big.Int).SetBytes(x), Y: new(big.Int).SetBytes(y),
-		}}, nil
+		return PublicKey{Alg: AlgES256, ec: key}, nil
 	case kty == 1 && alg == AlgEdDSA && crv == 6:
 		if len(x) != ed25519.PublicKeySize {
 			return PublicKey{}, refuse("the Ed25519 key has a bad size")

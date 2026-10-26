@@ -61,8 +61,8 @@ func (k *Key) COSE() []byte {
 	if k.Alg == -8 {
 		return encode(map[int64]any{1: int64(1), 3: int64(-8), -1: int64(6), -2: []byte(k.ed.Public().(ed25519.PublicKey))})
 	}
-	x := k.ec.X.FillBytes(make([]byte, 32))
-	y := k.ec.Y.FillBytes(make([]byte, 32))
+	point, _ := k.ec.PublicKey.Bytes() // 0x04 || x || y
+	x, y := point[1:33], point[33:65]
 	return encode(map[int64]any{1: int64(2), 3: int64(-7), -1: int64(1), -2: x, -3: y})
 }
 
