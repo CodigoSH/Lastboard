@@ -15,6 +15,9 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 | `DEMO_ONLY` | `false` | Set to `true` to run purely in a frontend-only demo mode (no auth, no persistence). Responses also carry `X-Robots-Tag: noindex, nofollow`, so a public demo stays out of search results. |
 | `TRUST_PROXY` | `false` | Enable reading the real client IP from `X-Forwarded-For`. Set to `true` if behind a proxy. |
 | `TRUST_PROXY_HOPS` | `1` | How many proxies sit in front of Lastboard. Only change it if a request passes through more than one before reaching the app. |
+| `AUTH_PROXY_HEADER` | — | Sign in through a proxy that already signed the person in (Authelia, Authentik, oauth2-proxy…): the header that carries the user name, such as `Remote-User`. Off unless set together with `AUTH_PROXY_TRUSTED`. See [Signing in through a proxy](#signing-in-through-a-proxy). |
+| `AUTH_PROXY_TRUSTED` | — | The proxy's own addresses or networks, comma-separated (`172.18.0.5`, `10.0.0.0/24`). The header is believed only from these. |
+| `AUTH_PROXY_LOGOUT_URL` | — | Where **Logout** sends the person afterwards, so the proxy signs them out too. |
 | `MAX_ITEMS_PER_USER` | `500` | Maximum number of dashboard items a single user can create. Enforced by the backend API. |
 | `PUID` | `0` | User id to run as. When non-zero (and started as root) the app chowns the data dir and drops privileges to it. |
 | `PGID` | `0` | Group id to run as. Used together with `PUID`. |
@@ -68,6 +71,25 @@ Count only the proxies that add to the header. If the number is higher than the
 chain really is, Lastboard falls back to the address of whatever connected to
 it, which is the safe choice, but every visitor shares one rate-limit bucket
 again.
+
+## Signing in through a proxy
+
+If a proxy in front of Lastboard already signs people in — Authelia, Authentik, oauth2-proxy, Caddy's or Traefik's `forward_auth` — Lastboard can take its word for who is signed in instead of showing its own sign-in page:
+
+```yaml
+    environment:
+      - AUTH_PROXY_HEADER=Remote-User
+      - AUTH_PROXY_TRUSTED=172.18.0.5          # the proxy's address as Lastboard sees it
+      - AUTH_PROXY_LOGOUT_URL=https://auth.example.com/logout
+```
+
+- **Only existing accounts.** The header names an account by its user name, exactly. A name with no account is shown the usual sign-in page: Lastboard never creates accounts and never changes what an account may do — create them, and choose their permissions, in **Settings → Users**.
+- **Only from the proxy.** The header is believed only when the connection itself comes from an address in `AUTH_PROXY_TRUSTED` — never from `X-Forwarded-For`, which anybody can write. Make sure nothing else can reach Lastboard directly with a request that carries the header, and that the proxy **replaces** any such header a visitor sends with its own — check this in your proxy's documentation.
+- **The proxy is the sign-in.** No password, two-step code or passkey is asked on top; whoever the proxy lets through as an account is that account, the administrator's included. Give the proxy its own two-step sign-in if you want one.
+- **Sessions are ordinary.** The first page load opens a session that shows in **Active sessions** like any other. If the proxy signs somebody else in on the same browser, the session follows. **Logout** ends it and, with `AUTH_PROXY_LOGOUT_URL` set, goes on to the proxy's sign-out; without it, the proxy signs the person straight back in on the next page.
+- **Lastboard still works without the proxy.** Opened directly, without the header, it shows its own sign-in page as usual.
+
+A header set without a usable `AUTH_PROXY_TRUSTED` is ignored, and the server says so at startup.
 
 ## Data Persistence
 

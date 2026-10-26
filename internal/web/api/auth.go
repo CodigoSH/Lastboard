@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/config"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
@@ -26,6 +27,9 @@ const (
 type AuthHandler struct {
 	DB     *sql.DB
 	Secret []byte
+	// AuthProxy is signing in through a proxy in front, when the operator
+	// turned it on: signing out then also sends the person to its sign-out.
+	AuthProxy config.AuthProxy
 }
 
 func NewAuthHandler(db *sql.DB, secret []byte) *AuthHandler {
@@ -130,7 +134,7 @@ func (h *AuthHandler) startSession(w http.ResponseWriter, r *http.Request, userI
 	if err := middleware.PruneSessions(r.Context(), h.DB); err != nil {
 		log.Printf("login: could not forget expired sessions: %v", err)
 	}
-	token, err := middleware.CreateSession(r.Context(), h.DB, h.Secret, r, middleware.NewSession{
+	token, _, err := middleware.CreateSession(r.Context(), h.DB, h.Secret, r, middleware.NewSession{
 		UserID: userID, Generation: passwordVersion, Expiry: expiry, Remember: remember,
 	})
 	if err != nil {
@@ -172,6 +176,12 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	invalidateSession(w, r)
+	// Behind a proxy that signs people in, signing out here alone would be
+	// undone by the next request; the page goes on to the proxy's sign-out.
+	if h.AuthProxy.LogoutURL != "" && middleware.FromAuthProxy(h.AuthProxy, r) {
+		writeJSON(w, map[string]string{"logout_url": h.AuthProxy.LogoutURL})
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 

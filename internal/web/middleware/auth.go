@@ -118,8 +118,34 @@ func ResolveSession(db *sql.DB, secret []byte, r *http.Request) (Session, error)
 // which fall back to the application shell — so an unauthenticated caller got
 // the page by asking for an asset that did not exist.
 func AuthRequired(db *sql.DB, secret []byte) func(http.Handler) http.Handler {
+	proxy := LoadAuthProxy()
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Signed in by the proxy in front: the session the browser carries
+			// is used only if it is that person's. Otherwise — none yet, or
+			// somebody else's from before the proxy changed who is signed in —
+			// a page load opens one for the account the proxy names. A write
+			// never does: its CSRF token belongs to the session it came with.
+			if account, generation, ok := proxiedAccount(db, proxy, r); ok {
+				if current, err := ResolveSession(db, secret, r); err != nil || current.ID != account.ID {
+					if r.Method != http.MethodGet && r.Method != http.MethodHead {
+						if strings.HasPrefix(r.URL.Path, "/api/") {
+							http.Error(w, "auth.unauthorized", http.StatusUnauthorized)
+						} else {
+							http.Redirect(w, r, "/", http.StatusSeeOther)
+						}
+						return
+					}
+					opened, err := startProxySession(w, r, db, secret, account, generation)
+					if err != nil {
+						http.Error(w, "general.internal_error", http.StatusInternalServerError)
+						return
+					}
+					next.ServeHTTP(w, withSession(r, opened))
+					return
+				}
+			}
 
 			// Check for Session Cookie
 			// What an unauthenticated request gets: the API says so, a page goes

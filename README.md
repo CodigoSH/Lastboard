@@ -145,6 +145,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 Lastboard is built with defense-in-depth from the ground up:
 
+- **Two-step sign-in** with any authenticator app, with single-use recovery codes; **passkeys** to sign in with a fingerprint, face or screen lock and no password; and, behind an auth proxy (Authelia, Authentik, oauth2-proxy), **signing in through the proxy** — off unless configured, and only for accounts that already exist.
 - **Sessions stored on the server**, carried by an HMAC-SHA256 signed cookie: signing out ends them everywhere, every account can see where it is signed in and close any session, and a password change ends them all; passwords hashed with **Argon2id**, at most two at a time so a flood of sign-ins cannot exhaust a small server; constant-time verification.
 - **CSRF protection** on every state-changing method, plus a `Sec-Fetch-Site` check the page cannot forge.
 - **A strict Content-Security-Policy with a per-request nonce**, so injected markup cannot execute as script — alongside HSTS, `nosniff`, `X-Frame-Options` and `Referrer-Policy`.

@@ -1,4 +1,5 @@
 import { csrfToken as readCsrfToken } from '../../../services/csrf';
+import { logoutDestination } from '../../../services/logoutDestination';
 import { userStore } from '../../../store/userStore';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { template, panelInnerTemplate } from './RightDrawer.template';
@@ -172,11 +173,13 @@ class RightDrawer extends HTMLElement {
 
     async performLogout() {
         const token = readCsrfToken();
+        let destination = '/login';
         try {
-            await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-Token': token } });
+            const res = await fetch('/logout', { method: 'POST', headers: { 'X-CSRF-Token': token } });
+            destination = logoutDestination(await res.text());
         } catch (e) { /* ignore */ }
         document.body.style.opacity = '0';
-        window.location.href = '/login';
+        window.location.href = destination;
     }
 
     setupListeners() {

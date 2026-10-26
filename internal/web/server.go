@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/config"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
@@ -45,6 +46,8 @@ type Server struct {
 	WSHub         *api.Hub
 	assets        fs.FS
 	sessionSecret []byte
+	// authProxy is signing in through a proxy in front, read once at start.
+	authProxy config.AuthProxy
 	// locales are the language codes actually shipped, read once from the
 	// embedded locale files so the list cannot drift from what exists.
 	locales []string
@@ -142,6 +145,7 @@ func (s *Server) routes() {
 	// Middleware wrapping
 	setupCheck := middleware.SetupRequired(s.DB)
 	authCheck := middleware.AuthRequired(s.DB, s.sessionSecret)
+	s.authProxy = middleware.LoadAuthProxy()
 
 	protect := func(h http.Handler) http.Handler {
 		return middleware.RateLimit(setupCheck(authCheck(h)))
@@ -252,6 +256,7 @@ func (s *Server) routes() {
 
 	// Auth API
 	authHandler := api.NewAuthHandler(s.DB, s.sessionSecret)
+	authHandler.AuthProxy = s.authProxy
 	// RefuseCrossSite because these two create the session the CSRF token is
 	// compared against, so they have nothing to compare yet — see the comment
 	// on the middleware.
@@ -441,9 +446,14 @@ func (s *Server) routes() {
 // a session from before a password change is perfectly signed and is refused by
 // the app, which sends the person to the login page — which, believing the
 // signature, sent them straight back. Both ends have to ask the same question.
+//
+// Behind a proxy that signs people in, the account it names counts too: the
+// sign-in page is not shown to somebody the proxy has already signed in.
 func (s *Server) hasLiveSession(r *http.Request) bool {
-	_, err := middleware.ResolveSession(s.DB, s.sessionSecret, r)
-	return err == nil
+	if _, err := middleware.ResolveSession(s.DB, s.sessionSecret, r); err == nil {
+		return true
+	}
+	return middleware.ProxyNamesAnAccount(s.DB, s.authProxy, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

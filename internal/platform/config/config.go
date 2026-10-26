@@ -65,6 +65,10 @@ func Check(lookup func(string) (string, bool)) []Problem {
 		report("LOG_FORMAT", value, "is neither \"json\" nor \"text\"", "logs will be plain text")
 	}
 
+	// Signing in through a proxy reads three settings together.
+	_, proxyProblems := ReadAuthProxy(lookup)
+	problems = append(problems, proxyProblems...)
+
 	return problems
 }
 

@@ -61,6 +61,11 @@ they would be on a public service.
   asks for no code. A challenge answers once, and refused attempts count toward the sign-in
   lockout. Passkeys belong to a site's **name**: browsers offer them only over https (or on
   `localhost`), never for a bare IP address, so on `http://192.168.x.x` they are not offered.
+- **Signing in through a proxy** (forward-auth) is off unless the operator sets both
+  `AUTH_PROXY_HEADER` and `AUTH_PROXY_TRUSTED`. The header is believed only from the proxy's own
+  addresses — judged by the connection, never by `X-Forwarded-For` — and only for an account that
+  already exists: the proxy can never create an account or change what one may do. See
+  [Configuration](../getting-started/configuration.md#signing-in-through-a-proxy).
 - **The signing secret** is generated on first run and kept in the database — there is no
   `SESSION_SECRET` to set, and nothing to leak into an environment file or a process list.
 - **Sessions opened before they were stored** (before 1.10) keep working after the update: the

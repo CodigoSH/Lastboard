@@ -78,16 +78,18 @@ type NewSession struct {
 }
 
 // CreateSession stores a new session for a sign-in and returns the cookie value
-// that carries it.
-func CreateSession(ctx context.Context, db *sql.DB, secret []byte, r *http.Request, n NewSession) (string, error) {
+// that carries it, and the session's id.
+func CreateSession(ctx context.Context, db *sql.DB, secret []byte, r *http.Request, n NewSession) (string, int64, error) {
 	sid := make([]byte, 32)
 	if _, err := rand.Read(sid); err != nil {
-		return "", err
+		return "", 0, err
 	}
-	if _, err := insertSession(ctx, db, sid, n, r, false); err != nil {
-		return "", err
+	res, err := insertSession(ctx, db, sid, n, r, false)
+	if err != nil {
+		return "", 0, err
 	}
-	return util.SignToken(sessionPayload(sid), secret, n.Expiry), nil
+	id, _ := res.LastInsertId()
+	return util.SignToken(sessionPayload(sid), secret, n.Expiry), id, nil
 }
 
 func insertSession(ctx context.Context, db *sql.DB, sid []byte, n NewSession, r *http.Request, ifAbsent bool) (sql.Result, error) {
