@@ -102,6 +102,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 ### Docker
 
 - **Three ways to connect**: local socket, remote **TCP** or **TLS**, or the [Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent) — a tiny token-authenticated bridge, so you never expose the Docker daemon over the network.
+- **Podman too**, rootless, through its socket: the [Docker guide](https://codigosh.com/docs/lastboard/widgets/docker/#podman) has the two settings it needs and Quadlet files to run Lastboard and the agent as services.
 - **Hosts belong to your account**, set up once in Preferences and chosen by each widget. **Many hosts, one list**: tick the containers you care about on each host; they appear together, each row naming where it runs.
 - **Live state and resource use**, and **start / stop / restart** from the row for any account allowed to control Docker. A member reaches Docker only through its own agents; the server's socket and TCP or TLS daemons are the administrator's.
 - **A Docker page** for one container at a time: how it is set up — ports, mounts, networks, the *names* of its environment variables, never their values — and its log, which can follow live. Details and logs on an agent host need Lastboard Agent v1.3.0 or later.
