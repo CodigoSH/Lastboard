@@ -158,6 +158,12 @@
 
         .pw-toggle:hover { color: var(--text-main); }
 
+        #twoFactorForm .auth-title { margin-top: 8px; text-align: center; }
+        #twoFactorForm .auth-subtitle { text-align: center; text-transform: none; letter-spacing: 0; margin-bottom: 20px; }
+        #twoFactorForm .tf-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+        #twoFactorForm #tfCode { letter-spacing: 0.08em; }
+        #twoFactorForm[hidden], #loginForm[hidden] { display: none; }
+
         .pw-toggle svg {
             width: 18px;
             height: 18px;
@@ -217,6 +223,23 @@
                     </button>
                 </div>
                 {{end}}
+            </form>
+
+            <form id="twoFactorForm" hidden>
+                <h2 id="tfTitle" class="auth-title"></h2>
+                <p id="tfHint" class="auth-subtitle"></p>
+
+                <div class="input-group">
+                    <input type="text" id="tfCode" name="code" placeholder=" " required autocomplete="one-time-code"
+                        inputmode="numeric" maxlength="24" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
+                    <label for="tfCode" id="tfCodeLabel"></label>
+                </div>
+
+                <div class="tf-actions">
+                    <button type="submit" id="tfSubmit" class="premium-btn filled"></button>
+                    <button type="button" id="tfSwitch" class="premium-btn ghost"></button>
+                    <button type="button" id="tfBack" class="premium-btn ghost"></button>
+                </div>
             </form>
         </app-paper>
     </div>

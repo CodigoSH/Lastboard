@@ -180,6 +180,12 @@ class ApiService {
                 }
                 if (url.startsWith('/api/sessions/')) return {} as T;
 
+                // Two-step sign-in (Demo: always off; the POSTs change nothing)
+                if (url === '/api/2fa' && method === 'GET') return { enabled: false, recovery_left: 0 } as any;
+                if (url === '/api/2fa/setup') return { secret: 'JBSWY3DPEHPK3PXP', uri: 'otpauth://totp/Lastboard:demo?secret=JBSWY3DPEHPK3PXP&issuer=Lastboard' } as any;
+                if (url === '/api/2fa/enable' || url === '/api/2fa/recovery-codes') return { recovery_codes: ['demo-aaaa-bbbb-cccc', 'demo-dddd-eeee-ffff'] } as any;
+                if (url.startsWith('/api/2fa/') || url === '/api/login/2fa' || url === '/api/users/2fa/remove') return {} as T;
+
                 // Admin (Mock success)
                 if (url === '/api/users' && method === 'GET') return [await demoService.fetchUser()] as any;
                 if (url === '/api/users') return { message: 'Admin action simulated (Demo)' } as any;

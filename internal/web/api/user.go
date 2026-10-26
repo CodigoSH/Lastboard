@@ -86,6 +86,9 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		resp["label"] = acct.Label
 		resp["access"] = accessView(acct)
 	}
+	if tf, err := twoFactorStatusOf(r.Context(), h.DB, u.ID); err == nil {
+		resp["two_factor"] = tf
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
@@ -413,6 +416,11 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			entry["label"] = acct.Label
 			entry["profile"] = access.ProfileOf(acct.Grants)
 			entry["grants"] = acct.Grants
+		}
+		// Whether it signs in with a second step, so the administrator can take it
+		// off for somebody who lost both the phone and the recovery codes.
+		if on, err := twoFactorEnabled(r.Context(), h.DB, u.ID); err == nil {
+			entry["two_factor"] = on
 		}
 		users = append(users, entry)
 	}

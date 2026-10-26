@@ -30,6 +30,7 @@ func main() {
 
 	// Parse flags
 	versionFlag := flag.Bool("version", false, "Print version and exit")
+	flag.Usage = usage
 	flag.Parse()
 
 	if *versionFlag {
@@ -64,6 +65,11 @@ func main() {
 	}
 	defer db.Close()
 	slog.Info("Database initialized", "path", dbFile)
+
+	// A command on the machine itself, in place of starting the server.
+	if args := flag.Args(); len(args) > 0 {
+		os.Exit(runCommand(db, args))
+	}
 
 	// What an earlier version kept for the whole server — the alert channel and
 	// the Proxmox connections — belongs to the first administrator now.
@@ -166,4 +172,33 @@ func main() {
 	}
 
 	slog.Info("server stopped")
+}
+
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(), `Usage:
+  lastboard                         start the server
+  lastboard -version                print the version and exit
+  lastboard 2fa reset <username>    take the second step of signing in off an account
+
+The commands use the same database as the server (DB_FILE), and run as the same
+user (PUID/PGID), so run them where the server runs: inside its container, or as
+the service's user.
+`)
+}
+
+// runCommand runs a command given on the command line and returns the exit code.
+func runCommand(db *database.DB, args []string) int {
+	switch {
+	case len(args) == 3 && args[0] == "2fa" && args[1] == "reset":
+		// The way back for an account whose phone and recovery codes are both
+		// gone — above all the administrator's, which nobody else can reset.
+		if err := api.ResetTwoFactor(context.Background(), db.DB, args[2]); err != nil {
+			fmt.Fprintf(os.Stderr, "lastboard: %v\n", err)
+			return 1
+		}
+		fmt.Printf("Two-step sign-in is off for %s. They sign in with their password and can turn it on again in My Profile.\n", args[2])
+		return 0
+	}
+	usage()
+	return 2
 }

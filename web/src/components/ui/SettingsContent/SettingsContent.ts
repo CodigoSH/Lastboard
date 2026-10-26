@@ -9,10 +9,12 @@ import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, type SessionsView, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
+import { accountTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
+import { qrMatrix, qrSvg } from '../../../services/qrCode';
+import { recoveryCodesText, normalizeCode } from '../../../services/twoFactor';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import '../Select/Select';
 import '../ColorPicker/ColorPicker';
@@ -36,6 +38,8 @@ class SettingsContent extends HTMLElement {
     private userProfile: ProfileName = DEFAULT_PROFILE;
     /** This account's sign-ins, for the Active sessions card. */
     private sessions: SessionsView = { status: 'idle', items: [] };
+    /** This account's second step, for the Two-step sign-in card. */
+    private twoFactor: TwoFactorView = { ...twoFactorIdle };
     /** Bookmarks of mine whose icon still comes from somewhere else. */
     private pendingIcons = 0;
     /** Bookmarks of mine already served from this instance. */
@@ -153,6 +157,38 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'close-other-sessions':
                     this.closeOtherSessions();
+                    break;
+                case 'tf-start':
+                    this.startTwoFactor();
+                    break;
+                case 'tf-copy-key':
+                    this.copyText(this.twoFactor.secret, 'two_factor.copied');
+                    break;
+                case 'tf-confirm':
+                    this.confirmTwoFactor();
+                    break;
+                case 'tf-cancel':
+                    this.twoFactor = { ...this.twoFactor, step: 'state', secret: '', qr: '' };
+                    this.render();
+                    break;
+                case 'tf-new-codes':
+                    this.newRecoveryCodes();
+                    break;
+                case 'tf-off':
+                    this.turnOffTwoFactor();
+                    break;
+                case 'tf-copy-codes':
+                    this.copyText(recoveryCodesText(this.twoFactor.codes), 'two_factor.copied');
+                    break;
+                case 'tf-download-codes':
+                    this.downloadRecoveryCodes();
+                    break;
+                case 'tf-done':
+                    this.twoFactor = { ...this.twoFactor, step: 'state', codes: [] };
+                    this.render();
+                    break;
+                case 'remove-user-two-factor':
+                    this.removeUserTwoFactor();
                     break;
                 case 'update-password':
                     this.updatePassword();
@@ -341,6 +377,7 @@ class SettingsContent extends HTMLElement {
         const section = this.getAttribute('section');
         if (section === 'account') {
             this.fetchSessions();
+            this.fetchTwoFactor();
         }
         if (section === 'users') {
             this.fetchUsers();
@@ -456,6 +493,136 @@ class SettingsContent extends HTMLElement {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
         }
         this.fetchSessions();
+    }
+
+    /** The text of a failed request when it is a translation key, else the generic failure. */
+    private failureText(e: unknown): string {
+        const key = (e as { message?: string } | null)?.message || '';
+        return /^[a-z_]+(\.[a-z_]+)+$/.test(key) ? i18n.t(key) : i18n.t('settings.save_error');
+    }
+
+    private toastError(e: unknown) {
+        if (window.notifier) window.notifier.show(this.failureText(e), 'error');
+    }
+
+    private async copyText(text: string, doneKey: string) {
+        try {
+            await navigator.clipboard.writeText(text);
+            if (window.notifier) window.notifier.show(i18n.t(doneKey));
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+        }
+    }
+
+    /**
+     * Reads whether this account has a second step. A failure leaves the card
+     * saying so; the rest of My Profile keeps working. A setup or the recovery
+     * codes on screen are not thrown away by a refresh.
+     */
+    async fetchTwoFactor() {
+        try {
+            const r = await apiService.get<{ enabled: boolean; recovery_left: number }>('/api/2fa');
+            this.twoFactor = { ...this.twoFactor, status: 'ready', enabled: !!r.enabled, recoveryLeft: r.recovery_left || 0 };
+        } catch {
+            this.twoFactor = { ...this.twoFactor, status: 'error' };
+        }
+        this.render();
+    }
+
+    async startTwoFactor() {
+        try {
+            const r = await apiService.post<{ secret: string; uri: string }>('/api/2fa/setup', {});
+            this.twoFactor = {
+                ...this.twoFactor, step: 'setup', secret: r.secret,
+                qr: qrSvg(qrMatrix(r.uri), { size: 200 }),
+            };
+            this.render();
+        } catch (e) {
+            this.toastError(e);
+        }
+    }
+
+    async confirmTwoFactor() {
+        const input = this.shadowRoot!.getElementById('tf-enable-code') as HTMLInputElement | null;
+        const code = normalizeCode(input?.value || '');
+        if (!code) return;
+        try {
+            const r = await apiService.post<{ recovery_codes: string[] }>('/api/2fa/enable', { code });
+            this.twoFactor = {
+                ...this.twoFactor, enabled: true, recoveryLeft: r.recovery_codes.length,
+                step: 'codes', codes: r.recovery_codes, secret: '', qr: '',
+            };
+            this.render();
+        } catch (e) {
+            this.toastError(e);
+            input?.focus();
+        }
+    }
+
+    /** Asks for the account password with the same prompt the backup restore uses. */
+    private async askPassword(title: string, message: string): Promise<string | null> {
+        const modal = document.querySelector('password-confirm-modal') as any;
+        if (!modal) return null;
+        return (await modal.prompt(title, message)) || null;
+    }
+
+    async newRecoveryCodes() {
+        const password = await this.askPassword(i18n.t('two_factor.new_codes'), i18n.t('two_factor.new_codes_message'));
+        if (!password) return;
+        try {
+            const r = await apiService.post<{ recovery_codes: string[] }>('/api/2fa/recovery-codes', { current_password: password });
+            this.twoFactor = { ...this.twoFactor, recoveryLeft: r.recovery_codes.length, step: 'codes', codes: r.recovery_codes };
+            this.render();
+        } catch (e) {
+            this.toastError(e);
+        }
+    }
+
+    async turnOffTwoFactor() {
+        const password = await this.askPassword(i18n.t('two_factor.turn_off'), i18n.t('two_factor.turn_off_message'));
+        if (!password) return;
+        try {
+            await apiService.post('/api/2fa/disable', { current_password: password });
+            this.twoFactor = { ...this.twoFactor, enabled: false, recoveryLeft: 0, step: 'state', codes: [] };
+            if (window.notifier) window.notifier.show(i18n.t('two_factor.turned_off'));
+            this.render();
+        } catch (e) {
+            this.toastError(e);
+        }
+    }
+
+    private downloadRecoveryCodes() {
+        const blob = new Blob([recoveryCodesText(this.twoFactor.codes)], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lastboard-recovery-codes.txt';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    /** The administrator lifting the second step from an account whose owner is locked out. */
+    async removeUserTwoFactor() {
+        const id = Number(this.userEl('user-id').value);
+        const user = this.users.find(u => u.id === id);
+        if (!user) return;
+        const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+            title: i18n.t('two_factor.admin_remove'),
+            message: i18n.t('two_factor.admin_remove_confirm', { name: user.username }),
+            onConfirm: async () => {
+                try {
+                    await apiService.post('/api/users/2fa/remove', { id });
+                    if (window.notifier) window.notifier.show(i18n.t('two_factor.admin_removed'));
+                    this.userEl<HTMLDialogElement>('user-modal').close();
+                } catch (e) {
+                    this.toastError(e);
+                }
+                this.fetchUsers();
+            },
+        });
     }
 
     async closeOtherSessions() {
@@ -969,6 +1136,7 @@ class SettingsContent extends HTMLElement {
         if (name === 'section' && oldValue !== newValue) {
             if (newValue === 'account') {
                 this.fetchSessions();
+                this.fetchTwoFactor();
             }
             if (newValue === 'users') {
                 this.fetchUsers();
@@ -1255,6 +1423,7 @@ class SettingsContent extends HTMLElement {
         this.userGrants = editing ? grantsFrom(user!.grants as Partial<Grants>) : { ...PROFILES[DEFAULT_PROFILE] };
         this.userProfile = editing ? profileOf(this.userGrants) : DEFAULT_PROFILE;
         this.userEl<HTMLDetailsElement>('user-custom').open = this.userProfile === 'custom';
+        this.userEl('user-two-factor').hidden = !(editing && user!.two_factor);
         this.repaintUserForm();
         this.userEl<HTMLDialogElement>('user-modal').showModal();
     }
@@ -1365,7 +1534,7 @@ class SettingsContent extends HTMLElement {
 
         switch (section) {
             case 'account':
-                return accountTemplate(user, this.sessions);
+                return accountTemplate(user, this.sessions, this.twoFactor);
 
             case 'theme': {
                 const colorMap: Record<string, string> = {

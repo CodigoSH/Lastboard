@@ -1354,7 +1354,11 @@ input:checked+.slider:before {
     width: 600px;
     max-width: calc(100vw - 32px);
     max-height: calc(100vh - 48px);
-    overflow-y: auto;
+    /* It is taller than a short window, so it scrolls. !important against the
+       rule at the top of this sheet that lets every dialog's dropdowns spill
+       out: without it the bottom of this one — Save included — was out of
+       reach on a laptop screen. */
+    overflow-y: auto !important;
     box-sizing: border-box;
 }
 
@@ -1594,4 +1598,67 @@ input:checked+.slider:before {
         flex-direction: column;
         align-items: flex-start;
     }
+}
+
+
+/* Two-step sign-in card */
+.two-factor__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.two-factor__head .settings-content__title {
+    margin: 0;
+}
+
+.two-factor__qr {
+    width: fit-content;
+    margin: 16px 0;
+    padding: 8px;
+    border-radius: 12px;
+    background: #fff;
+    line-height: 0;
+}
+
+.two-factor__secret {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--text-main);
+    overflow-wrap: anywhere;
+}
+
+.two-factor__code {
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+}
+
+.two-factor__buttons {
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.two-factor__codes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px 16px;
+    max-width: var(--field);
+    margin: 16px 0 0;
+    padding: 12px 16px;
+    list-style: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-main);
+}
+
+.user-dialog__two-factor[hidden] {
+    display: none;
 }

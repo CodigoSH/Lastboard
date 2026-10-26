@@ -3,6 +3,7 @@ import { ThemeService } from './services/ThemeService';
 import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
 import { setupPasswordToggles } from './services/passwordToggle';
+import { normalizeCode, looksLikeAppCode } from './services/twoFactor';
 import './components/ui/Notifier/Notifier';
 
 // Logic
@@ -35,6 +36,55 @@ bootstrap(async () => {
         });
     }
 
+    // Second step (two-step sign-in)
+    const tfForm = document.getElementById('twoFactorForm') as HTMLFormElement | null;
+    const tfCode = document.getElementById('tfCode') as HTMLInputElement | null;
+    const tfSubmit = document.getElementById('tfSubmit') as HTMLButtonElement | null;
+    const tfSwitch = document.getElementById('tfSwitch') as HTMLButtonElement | null;
+    const tfBack = document.getElementById('tfBack') as HTMLButtonElement | null;
+    let challenge = '';
+    let useRecovery = false;
+
+    const localizeSecondStep = () => {
+        const set = (id: string, text: string) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+        set('tfTitle', i18n.t('two_factor.title'));
+        set('tfHint', i18n.t(useRecovery ? 'two_factor.enter_recovery' : 'two_factor.enter_code'));
+        set('tfCodeLabel', i18n.t(useRecovery ? 'two_factor.recovery_code' : 'two_factor.code'));
+        set('tfSwitch', i18n.t(useRecovery ? 'two_factor.use_app' : 'two_factor.use_recovery'));
+        set('tfBack', i18n.t('general.back'));
+        set('tfSubmit', i18n.t('auth.sign_in'));
+        if (tfCode) tfCode.inputMode = useRecovery ? 'text' : 'numeric';
+    };
+
+    const showStep = (step: 'password' | 'code') => {
+        form.hidden = step !== 'password';
+        if (tfForm) tfForm.hidden = step !== 'code';
+        if (step === 'code') {
+            localizeSecondStep();
+            if (tfCode) { tfCode.value = ''; tfCode.focus(); }
+        } else {
+            challenge = '';
+            useRecovery = false;
+            document.getElementById('password')?.focus();
+        }
+    };
+
+    const shake = () => {
+        if (!container) return;
+        container.classList.remove('shake');
+        void container.offsetWidth; // Trigger reflow
+        container.classList.add('shake');
+        setTimeout(() => container.classList.remove('shake'), 500);
+    };
+
+    const signedIn = () => {
+        notify(i18n.t('auth.welcome'), 'success');
+        setTimeout(() => window.location.href = '/', 500);
+    };
+
     // Localize UI
     const localize = () => {
         const titleEl = document.querySelector('.auth-title');
@@ -52,6 +102,8 @@ bootstrap(async () => {
         document.querySelectorAll('.pw-toggle').forEach(btn => {
             btn.setAttribute('aria-label', i18n.t('auth.toggle_password'));
         });
+
+        localizeSecondStep();
 
         // Show UI after text update
         requestAnimationFrame(() => {
@@ -94,9 +146,18 @@ bootstrap(async () => {
             });
 
             if (response.ok) {
-                // Login Success
-                notify(i18n.t('auth.welcome'), 'success');
-                setTimeout(() => window.location.href = '/', 500);
+                // An account with a second step answers with a challenge and no session.
+                let body: { two_factor?: boolean; challenge?: string } = {};
+                try { body = await response.json(); } catch { /* a plain success has nothing to read */ }
+                if (body.two_factor && body.challenge) {
+                    challenge = body.challenge;
+                    useRecovery = false;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = i18n.t('auth.sign_in');
+                    showStep('code');
+                    return;
+                }
+                signedIn();
             } else {
                 // Login Failed
                 const errorKey = (await response.text()).trim();
@@ -109,12 +170,7 @@ bootstrap(async () => {
                 }
 
                 // Shake effect for feedback
-                if (container) {
-                    container.classList.remove('shake');
-                    void container.offsetWidth; // Trigger reflow
-                    container.classList.add('shake');
-                    setTimeout(() => container.classList.remove('shake'), 500);
-                }
+                shake();
             }
         } catch (error) {
             console.error('Login error:', error);
@@ -126,4 +182,48 @@ bootstrap(async () => {
             }
         }
     });
+
+    // Second step: the code (or a recovery code) that finishes the sign-in.
+    if (tfForm && tfCode) {
+        tfSwitch?.addEventListener('click', () => {
+            useRecovery = !useRecovery;
+            tfCode.value = '';
+            localizeSecondStep();
+            tfCode.focus();
+        });
+        tfBack?.addEventListener('click', () => showStep('password'));
+
+        tfForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = normalizeCode(tfCode.value);
+            if (!code) return;
+            if (tfSubmit) tfSubmit.disabled = true;
+            try {
+                const response = await fetch('/api/login/2fa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ challenge, code })
+                });
+                if (response.ok) {
+                    signedIn();
+                    return;
+                }
+                const errorKey = (await response.text()).trim();
+                if (errorKey === 'auth.challenge_expired') {
+                    showStep('password');
+                    notify(i18n.t(errorKey), 'error');
+                } else {
+                    notify(i18n.t(errorKey) || i18n.t('auth.invalid_code'), 'error');
+                    // A six-digit code that missed is retyped; a recovery code stays for the fix.
+                    if (looksLikeAppCode(tfCode.value)) tfCode.value = '';
+                    tfCode.focus();
+                }
+                shake();
+            } catch (error) {
+                console.error('Login error:', error);
+                notify(i18n.t('auth.connection_error'), 'error');
+            }
+            if (tfSubmit) tfSubmit.disabled = false;
+        });
+    }
 });

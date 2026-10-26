@@ -443,6 +443,12 @@ func migrateSchema(db *sql.DB) error {
 		return fmt.Errorf("migration 12 failed: %w", err)
 	}
 
+	// Migration 13: the second step of signing in — authenticator codes and
+	// recovery codes. See two_factor.go.
+	if err = migrateTwoFactor(db); err != nil {
+		return fmt.Errorf("migration 13 failed: %w", err)
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.

@@ -43,6 +43,15 @@ they would be on a public service.
   sessions with it. Restoring a backup gives every restored account a new generation, so it ends
   every session too — without touching the signing secret, so a session opened afterwards
   survives a restart.
+- **Two-step sign-in** (optional, per account): after the password, a six-digit code from an
+  authenticator app (TOTP, RFC 6238, the settings every app understands), or one of ten
+  single-use **recovery codes**. The password alone earns only a **challenge** that lasts five
+  minutes and takes five wrong codes; a code is never accepted twice, and wrong codes lock out
+  like wrong passwords — the address, through the sign-in's own count, and the account, through
+  a count of its own for codes. The authenticator secret
+  is kept in the database like every other secret (and travels in the backup); recovery codes are
+  kept only as hashes. A member who loses the phone and the codes is helped by the administrator;
+  the administrator's own way back is `lastboard 2fa reset <username>` on the machine itself.
 - **The signing secret** is generated on first run and kept in the database — there is no
   `SESSION_SECRET` to set, and nothing to leak into an environment file or a process list.
 - **Sessions opened before they were stored** (before 1.10) keep working after the update: the

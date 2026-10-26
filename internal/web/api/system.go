@@ -17,6 +17,7 @@ import (
 	"syscall"
 	"time"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/totp"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/password"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
@@ -146,6 +147,25 @@ type BackupData struct {
 	// permissions existed. Omitted from older backups, whose members come back
 	// with what they could do then.
 	Access []BackupAccess `json:"access,omitempty"`
+	// Each account's second step of signing in, by user name. Without it a
+	// restore would quietly bring an account back without the code it asked
+	// for. Omitted from older backups, which had no second step to carry.
+	TwoFactor []BackupTwoFactor `json:"two_factor,omitempty"`
+}
+
+// BackupTwoFactor is one account's authenticator secret and recovery codes —
+// the codes as hashes, as they are stored, with when each one was used.
+type BackupTwoFactor struct {
+	Owner    string               `json:"owner"`
+	Secret   string               `json:"secret"`
+	LastStep int64                `json:"last_step"`
+	Recovery []BackupRecoveryCode `json:"recovery"`
+}
+
+// BackupRecoveryCode is one recovery code, as its hash.
+type BackupRecoveryCode struct {
+	Hash   string `json:"hash"`
+	UsedAt *int64 `json:"used_at,omitempty"`
 }
 
 // BackupAccess is one account's permissions and label.
@@ -279,8 +299,8 @@ func (h *SystemHandler) DownloadProtectedBackup(w http.ResponseWriter, r *http.R
 // queryAll runs a query and scans every row. A row that cannot be read is an
 // error, never a row left out: a backup that quietly lacks a bookmark looks
 // complete until the day it is restored.
-func queryAll[T any](ctx context.Context, db *sql.DB, query string, scan func(*sql.Rows) (T, error)) ([]T, error) {
-	rows, err := db.QueryContext(ctx, query)
+func queryAll[T any](ctx context.Context, db *sql.DB, query string, scan func(*sql.Rows) (T, error), args ...any) ([]T, error) {
+	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -409,6 +429,31 @@ func (h *SystemHandler) readBackup(ctx context.Context) (BackupData, error) {
 			return
 		}); err != nil {
 		return backup, fmt.Errorf("access: %w", err)
+	}
+
+	// Only a second step in force travels; one still being scanned does not.
+	if backup.TwoFactor, err = queryAll(ctx, h.DB, `SELECT u.username, t.secret, t.last_step
+		FROM user_totp t JOIN users u ON u.id = t.user_id WHERE t.enabled = 1 ORDER BY u.id`,
+		func(rows *sql.Rows) (bt BackupTwoFactor, err error) {
+			err = rows.Scan(&bt.Owner, &bt.Secret, &bt.LastStep)
+			return
+		}); err != nil {
+		return backup, fmt.Errorf("two-factor: %w", err)
+	}
+	for i := range backup.TwoFactor {
+		bt := &backup.TwoFactor[i]
+		if bt.Recovery, err = queryAll(ctx, h.DB, `SELECT c.code_hash, c.used_at
+			FROM user_recovery_codes c JOIN users u ON u.id = c.user_id WHERE u.username = ? ORDER BY c.id`,
+			func(rows *sql.Rows) (rc BackupRecoveryCode, err error) {
+				var used sql.NullInt64
+				err = rows.Scan(&rc.Hash, &used)
+				if used.Valid {
+					rc.UsedAt = &used.Int64
+				}
+				return
+			}, bt.Owner); err != nil {
+			return backup, fmt.Errorf("recovery codes: %w", err)
+		}
 	}
 	return backup, nil
 }
@@ -554,6 +599,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := restoreAccess(tx, backup, ownerMap); err != nil {
+		writeRestoreError(w, err)
+		return
+	}
+	if err := restoreTwoFactor(tx, backup, ownerMap); err != nil {
 		writeRestoreError(w, err)
 		return
 	}
@@ -709,6 +758,37 @@ func restoreAccess(tx *sql.Tx, backup BackupData, ownerMap map[string]int) error
 			ON CONFLICT (user_id) DO UPDATE SET grants = excluded.grants, label = excluded.label`,
 			uid, access.Encode(access.Decode(ba.Grants)), cleanLabel(ba.Label)); err != nil {
 			return &restoreError{http.StatusInternalServerError, "general.db_error"}
+		}
+	}
+	return nil
+}
+
+// restoreTwoFactor puts back each account's second step. A secret that is not
+// one makes the file unusable rather than leaving an account that can never
+// sign in again.
+func restoreTwoFactor(tx *sql.Tx, backup BackupData, ownerMap map[string]int) error {
+	now := time.Now().Unix()
+	for _, bt := range backup.TwoFactor {
+		uid, owned := ownerMap[bt.Owner]
+		if !owned {
+			continue
+		}
+		if secret, err := totp.DecodeSecret(bt.Secret); err != nil || len(secret) == 0 {
+			return &restoreError{http.StatusBadRequest, "error.invalid_backup_format"}
+		}
+		if _, err := tx.Exec(`INSERT INTO user_totp (user_id, secret, enabled, last_step, created_at) VALUES (?, ?, 1, ?, ?)
+			ON CONFLICT (user_id) DO UPDATE SET secret = excluded.secret, enabled = 1, last_step = excluded.last_step`,
+			uid, bt.Secret, bt.LastStep, now); err != nil {
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
+		}
+		if _, err := tx.Exec(`DELETE FROM user_recovery_codes WHERE user_id = ?`, uid); err != nil {
+			return &restoreError{http.StatusInternalServerError, "general.db_error"}
+		}
+		for _, rc := range bt.Recovery {
+			if _, err := tx.Exec(`INSERT INTO user_recovery_codes (user_id, code_hash, used_at) VALUES (?, ?, ?)`,
+				uid, rc.Hash, rc.UsedAt); err != nil {
+				return &restoreError{http.StatusInternalServerError, "general.db_error"}
+			}
 		}
 	}
 	return nil

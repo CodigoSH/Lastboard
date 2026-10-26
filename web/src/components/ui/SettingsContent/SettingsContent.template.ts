@@ -4,6 +4,7 @@ import { SECRET_MASK } from '../../../services/secretField';
 import type { AccountDockerHost } from '../../../services/dockerHostList';
 import { roleOrLabel } from '../../../services/accountAccess';
 import { userDialogTemplate, MAX_LABEL } from './userDialog.template';
+import { formatSecret, CODE_MAX_LENGTH } from '../../../services/twoFactor';
 import { userAgentLabel, type BrowserId, type OsId } from '../../../services/userAgentLabel';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
@@ -92,7 +93,89 @@ export const sessionsCardTemplate = (view: SessionsView) => `
         </div>
 `;
 
-export const accountTemplate = (user: User, sessions: SessionsView = { status: 'idle', items: [] }) => `
+
+/**
+ * The account's second step. `idle` until the server has answered; `step`
+ * says which screen of the card is up: the plain state, the setup (QR, key and
+ * the code that confirms it) or the recovery codes, which are shown once.
+ */
+export interface TwoFactorView {
+    status: 'idle' | 'ready' | 'error';
+    enabled: boolean;
+    recoveryLeft: number;
+    step: 'state' | 'setup' | 'codes';
+    secret: string;
+    /** The QR as markup, drawn by the caller; it carries no style attribute. */
+    qr: string;
+    codes: string[];
+}
+
+export const twoFactorIdle: TwoFactorView = {
+    status: 'idle', enabled: false, recoveryLeft: 0, step: 'state', secret: '', qr: '', codes: [],
+};
+
+const twoFactorBody = (v: TwoFactorView) => {
+    if (v.step === 'setup') {
+        return `
+            <p class="settings-content__text-dim">${i18n.t('two_factor.scan')}</p>
+            <div class="two-factor__qr">${v.qr}</div>
+            <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('two_factor.setup_key')}</label>
+                <div class="settings-content__input-row">
+                    <code class="two-factor__secret" dir="ltr">${esc(formatSecret(v.secret))}</code>
+                    <app-button data-action="tf-copy-key">${i18n.t('two_factor.copy_key')}</app-button>
+                </div>
+            </div>
+            <div class="settings-content__form-group">
+                <label class="settings-content__label" for="tf-enable-code">${i18n.t('two_factor.confirm_code')}</label>
+                <input type="text" id="tf-enable-code" class="settings-content__input two-factor__code" inputmode="numeric"
+                    autocomplete="one-time-code" maxlength="${CODE_MAX_LENGTH}" placeholder="123456" spellcheck="false">
+            </div>
+            <div class="settings-content__form-actions two-factor__buttons">
+                <app-button variant="primary" data-action="tf-confirm">${i18n.t('general.confirm')}</app-button>
+                <app-button data-action="tf-cancel">${i18n.t('general.cancel')}</app-button>
+            </div>`;
+    }
+    if (v.step === 'codes') {
+        return `
+            <p class="settings-content__text-dim">${i18n.t('two_factor.codes_warning')}</p>
+            <ul class="two-factor__codes" dir="ltr">${v.codes.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+            <div class="settings-content__form-actions two-factor__buttons">
+                <app-button data-action="tf-copy-codes">${i18n.t('two_factor.copy')}</app-button>
+                <app-button data-action="tf-download-codes">${i18n.t('two_factor.download')}</app-button>
+                <app-button variant="primary" data-action="tf-done">${i18n.t('two_factor.done')}</app-button>
+            </div>`;
+    }
+    if (v.status === 'error') {
+        return `<p class="settings-content__text-dim">${i18n.t('two_factor.load_error')}</p>`;
+    }
+    if (v.status === 'idle') return '';
+    if (!v.enabled) {
+        return `
+            <p class="settings-content__text-dim">${i18n.t('two_factor.off_hint')}</p>
+            <div class="settings-content__form-actions">
+                <app-button variant="primary" data-action="tf-start">${i18n.t('two_factor.turn_on')}</app-button>
+            </div>`;
+    }
+    return `
+            <p class="settings-content__text-dim">${i18n.t('two_factor.recovery_left', { count: String(v.recoveryLeft) })}${v.recoveryLeft <= 2 ? ` ${i18n.t('two_factor.recovery_low')}` : ''}</p>
+            <div class="settings-content__form-actions two-factor__buttons">
+                <app-button data-action="tf-new-codes">${i18n.t('two_factor.new_codes')}</app-button>
+                <app-button variant="danger" data-action="tf-off">${i18n.t('two_factor.turn_off')}</app-button>
+            </div>`;
+};
+
+export const twoFactorCardTemplate = (v: TwoFactorView) => `
+        <div class="bento-card" id="two-factor-card">
+            <div class="two-factor__head">
+                <h3 class="settings-content__title">${i18n.t('two_factor.title')}</h3>
+                ${v.status === 'ready' && v.enabled && v.step === 'state' ? `<span class="user-role-tag">${i18n.t('two_factor.on')}</span>` : ''}
+            </div>
+            ${twoFactorBody(v)}
+        </div>
+`;
+
+export const accountTemplate = (user: User, sessions: SessionsView = { status: 'idle', items: [] }, twoFactor: TwoFactorView = twoFactorIdle) => `
     <div class="bento-grid" style="grid-template-columns: 1fr;">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.profile')}</h3>
@@ -156,6 +239,8 @@ export const accountTemplate = (user: User, sessions: SessionsView = { status: '
                 <app-button variant="primary" data-action="update-password">${i18n.t('settings.change_password')}</app-button>
             </div>
         </div>
+
+        ${twoFactorCardTemplate(twoFactor)}
 
         ${sessionsCardTemplate(sessions)}
     </div>
@@ -322,6 +407,7 @@ export const usersTemplate = (users: any[]) => `
                             <div class="user-details">
                                 <div class="user-name">${esc(u.username)}</div>
                                 <div class="user-role-tag">${esc(roleOrLabel(u.label, roleText(u.role)))}</div>
+                                ${u.two_factor ? `<div class="user-role-tag">${i18n.t('two_factor.tag')}</div>` : ''}
                                 ${u.role?.toLowerCase() === 'admin' || !u.profile ? '' : `<div class="user-profile-name">${i18n.t('users.profile.' + u.profile)}</div>`}
                             </div>
                         </div>

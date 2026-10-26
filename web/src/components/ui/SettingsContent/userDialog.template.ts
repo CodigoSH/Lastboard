@@ -64,6 +64,14 @@ export const userDialogTemplate = (t: T, pwToggle: string) => `
             <div id="user-summary" class="user-dialog__summary" aria-live="polite"></div>
         </section>
 
+        <section class="user-dialog__step user-dialog__two-factor" id="user-two-factor" hidden>
+            <h4 class="user-dialog__step-title">${t('two_factor.title')}</h4>
+            <p class="settings-content__text-dim user-dialog__hint">${t('two_factor.admin_remove_hint')}</p>
+            <div class="user-dialog__fields">
+                <app-button variant="danger" data-action="remove-user-two-factor">${t('two_factor.admin_remove')}</app-button>
+            </div>
+        </section>
+
         <div class="user-dialog__actions">
             <app-button variant="primary" data-action="save-user" id="user-save"></app-button>
         </div>

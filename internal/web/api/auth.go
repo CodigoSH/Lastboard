@@ -93,11 +93,34 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	h.upgradeHash(r, input.Username, input.Password, storedHash)
 
+	// An account with a second step does not get a session for the password
+	// alone. It gets a challenge that the code completes; the failed attempts
+	// of this address are cleared only when it does.
+	enabled, err := twoFactorEnabled(r.Context(), h.DB, userID)
+	if err != nil {
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
+		return
+	}
+	if enabled {
+		challenge, err := newLoginChallenge(r.Context(), h.DB, userID, input.RememberMe)
+		if err != nil {
+			http.Error(w, "general.internal_error", http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, map[string]any{"two_factor": true, "challenge": challenge})
+		return
+	}
+
 	// Success: clear rate limit record for this IP
 	clearAttempts(h.DB, ip)
+	h.startSession(w, r, userID, passwordVersion, input.RememberMe)
+}
 
+// startSession is the end of every sign-in, with or without a second step: a
+// stored session, its cookie and the CSRF cookie, and the welcome.
+func (h *AuthHandler) startSession(w http.ResponseWriter, r *http.Request, userID, passwordVersion int, remember bool) {
 	duration := defaultSession
-	if input.RememberMe {
+	if remember {
 		duration = extendedSession
 	}
 	expiry := time.Now().Add(duration)
@@ -108,7 +131,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		log.Printf("login: could not forget expired sessions: %v", err)
 	}
 	token, err := middleware.CreateSession(r.Context(), h.DB, h.Secret, r, middleware.NewSession{
-		UserID: userID, Generation: passwordVersion, Expiry: expiry, Remember: input.RememberMe,
+		UserID: userID, Generation: passwordVersion, Expiry: expiry, Remember: remember,
 	})
 	if err != nil {
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)

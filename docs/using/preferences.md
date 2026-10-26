@@ -16,6 +16,7 @@ Manage your personal profile and security.
 - **Label** — shown under your name in place of **Admin** or **Member**. The administrator types its own here and saves it with **Save label**; a member sees the label the administrator gave it and has no field to change it. See [Labels](#labels).
 - **Username** — change your display name, then **Save Name**. This signs you out on this browser, and you sign in again with the new name.
 - **System Password** — update your login credentials. Enter your current password, then the new one twice (up to 256 characters), and **Change Password**. Every open session of the account ends, this one included, so you sign in again with the new password. A wrong current password counts toward a lockout: after 5 failures the account waits 5 minutes before it accepts another try.
+- **Two-step sign-in** — after your password, ask for a six-digit code from an authenticator app (any app that takes a QR code: Google Authenticator, Microsoft Authenticator, Aegis, 2FAS, 1Password, Bitwarden…). **Turn on** shows a QR code and the same key as text; scan it, type the code the app shows and **Confirm**. You then get ten **recovery codes**, shown only once: **Copy** or **Download** them and keep them somewhere safe — each one signs you in once if you lose the phone. **New recovery codes** replaces them all, and **Turn off** removes the second step; both ask for your password. On the sign-in page, **Use a recovery code** switches the field. Lost the phone and the codes? See [Troubleshooting](../help/troubleshooting.md#i-lost-the-phone-with-my-sign-in-codes).
 - **Active sessions** — every browser and device signed in to your account, with the browser and system, the address it came from and when it was last used. This one is marked **This device**. **Close** signs another one out at once, and **Close all other sessions** signs out every one but this, after asking. Signing out with **Logout** ends this session on the server too, so a copy of its cookie stops working.
 
 ## Look & Feel
@@ -47,6 +48,8 @@ Each row shows the account's name, its **label** (or its role, when it has none)
 
 - **Add User** — opens one window to create an account. **Edit** on a row opens the same window filled with that account's current choices. Editing changes the name and, if you type one, the password, which ends the account's open sessions. Your own account is changed from **My Profile**, never from here. **Delete** asks for your password.
 - **Roles** — an instance has exactly one **Admin**: the account created by the Setup Wizard. Every account added afterwards is a **Member**, and there is no way to promote one. If you need to hand the instance over, change the admin account's own username and password rather than creating a second administrator.
+
+An account that signs in with a second step shows a **2FA** tag in the list. If somebody lost both their phone and their recovery codes, open their account and choose **Remove two-step sign-in**: they sign in with the password alone until they turn it on again.
 
 ### The account window
 

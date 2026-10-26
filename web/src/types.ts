@@ -41,6 +41,8 @@ export interface User {
     access?: { profile: string; can: Record<string, boolean> };
     unit_system?: string;
     dashboard_background?: string;
+    /** In the user list (administrator): whether the account has a second step. */
+    two_factor?: boolean;
     preferences?: UserPreferences; // Derived on client
 }
 

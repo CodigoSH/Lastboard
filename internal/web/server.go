@@ -256,6 +256,9 @@ func (s *Server) routes() {
 	// compared against, so they have nothing to compare yet — see the comment
 	// on the middleware.
 	s.Router.Handle("POST /api/login", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.Login))))
+	// The code after the password, for an account with a second step. Public like
+	// the sign-in: what it needs is the challenge the password earned.
+	s.Router.Handle("POST /api/login/2fa", middleware.RateLimit(middleware.RefuseCrossSite(http.HandlerFunc(authHandler.LoginSecondStep))))
 	s.Router.Handle("POST /logout", protect(anyAccount(authHandler.Logout)))
 
 	// Where the account is signed in, and ending any of it.
@@ -263,6 +266,15 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/sessions", protect(anyAccount(sessionHandler.List)))
 	s.Router.Handle("DELETE /api/sessions/{id}", protect(anyAccount(sessionHandler.Close)))
 	s.Router.Handle("POST /api/sessions/close-others", protect(anyAccount(sessionHandler.CloseOthers)))
+
+	// The account's own second step, and the administrator taking it off another.
+	twoFactorHandler := &api.TwoFactorHandler{DB: s.DB}
+	s.Router.Handle("GET /api/2fa", protect(anyAccount(twoFactorHandler.Status)))
+	s.Router.Handle("POST /api/2fa/setup", protect(anyAccount(twoFactorHandler.Setup)))
+	s.Router.Handle("POST /api/2fa/enable", protect(anyAccount(twoFactorHandler.Enable)))
+	s.Router.Handle("POST /api/2fa/disable", protect(anyAccount(twoFactorHandler.Disable)))
+	s.Router.Handle("POST /api/2fa/recovery-codes", protect(anyAccount(twoFactorHandler.RecoveryCodes)))
+	s.Router.Handle("POST /api/users/2fa/remove", protect(need(access.Admin, twoFactorHandler.RemoveForUser)))
 
 	// Dashboard API
 	dashHandler := api.NewDashboardHandler(s.DB)

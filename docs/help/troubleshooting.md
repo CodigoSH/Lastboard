@@ -29,6 +29,25 @@ See [Configuration → TRUST_PROXY](../getting-started/configuration.md#trust_pr
 
 The same lockout that guards the sign-in page guards every place that asks for your password again — changing it, deleting an account, resetting the system. It counts **per account**: after 5 wrong passwords within a minute, that account waits 5 minutes before it accepts another try, whatever it types. A right password clears the count. Nobody else's account is affected.
 
+## I lost the phone with my sign-in codes
+
+Sign in with one of your **recovery codes** instead: on the code step, choose **Use a recovery code** and type one of the ten you saved when you turned two-step sign-in on. Each one works once. Once in, open **My Profile → Two-step sign-in** and either turn it off and on again with your new phone, or get **New recovery codes**.
+
+Without the phone and without the codes:
+
+- **A member** asks the administrator, who opens the account in **Settings → Users** and chooses **Remove two-step sign-in**. The member then signs in with the password alone and can turn it on again.
+- **The administrator** — or anybody, if the administrator cannot help — runs a command on the machine Lastboard runs on, as the same user the server runs as, so the database keeps its owner:
+
+  ```bash
+  # Docker
+  docker exec lastboard /app/lastboard 2fa reset <username>
+
+  # Installed with install.sh (systemd)
+  sudo -u lastboard env DB_FILE=/var/lib/lastboard/lastboard.db lastboard 2fa reset <username>
+  ```
+
+  It takes two-step sign-in off that account and nothing else; the server can stay running. Having a shell on the machine is what proves you may do it, so there is no way to do this from the browser.
+
 ## "Check for Updates" says I am up to date, but a release is out
 
 - Turn on the **Beta channel** in **Settings → About** if the release is a beta; it is a setting of each account.
