@@ -116,6 +116,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Machines are tied to your bookmarks automatically**, by name and by the icon a bookmark wears, with filing prefixes (`15-myspeed`) stripped and a strict *only when exactly one bookmark fits* rule. Measured on a real host of 29 containers and 55 bookmarks with nothing configured: **16 matched, none wrongly.**
 - **That is the point of it.** A stopped container doesn't just say *stopped* — it says **which service it takes with it**: every stopped tile turns a soft red, the ones serving a bookmark carry its mark in the corner, and the summary names the service by name.
 - **Start and shut down** a machine with confirmation, only on the hypervisors you connected, and only when the token really carries `VM.PowerMgmt` — which Lastboard asks the host rather than assuming. **Nodes can never be powered off from Lastboard**, deliberately.
+- **What the hypervisor has been doing**: each node and each machine opens its last fifty tasks — backups, starts, migrations, snapshots — with their state and log, which keeps following while a task runs. It needs only `Sys.Audit`, which the recommended role already has. A node's **system log** is optional and needs `Sys.Syslog` as well; without it the page says so and nothing else is affected.
 - **Nothing is written to your database**: no machine names, no figures, no history. Only the connection (the token secret is never sent back to a browser) and the icons you choose for machines.
 
 ### Yours to keep
