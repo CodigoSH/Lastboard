@@ -104,14 +104,16 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **Many hosts in one widget**: tick the containers you care about on each host and they all
   appear in one list, each row naming the host it runs on.
 - **Live state and resource use**, with the same status dot the Monitoring widget uses.
-- **Start, stop and restart** from the row — administrators only.
+- **Start, stop and restart** from the row — for any account allowed to control Docker.
 - **A container's name is a link.** The address is worked out from what you typed, then from a
   `lastboard.url` or `homepage.href` label on the container, then from its first published
   port — so containers already labelled for another dashboard work here unchanged.
 - **A host that stops answering** does not make its containers vanish: they stay, greyed out,
   and the host line says it is not responding.
+- **A Docker page** for one container at a time: its ports, mounts, networks and health, the
+  *names* of its environment variables (never their values) and its log, which can follow live.
 
-→ [Docker widget](widgets/docker.md) · [Podman](podman/overview.md)
+→ [Docker](docker/overview.md) · [Docker widget](widgets/docker.md) · [Podman](podman/overview.md)
 
 ## Proxmox VE
 
@@ -132,9 +134,13 @@ shows it beside the services it runs.
 - **That is the point of it**: a stopped container does not just say *stopped*, it says
   **which service it takes with it** — every stopped tile turns a soft red, the ones serving a
   bookmark carry its mark in the corner, and the summary names the service.
-- **Start and shut down** a machine, with confirmation — administrators only, and only when the
-  token actually carries `VM.PowerMgmt`, which Lastboard asks the host rather than assuming.
+- **Start and shut down** a machine, with confirmation — for an account allowed to control Proxmox,
+  only on its own hypervisors, and only when the token actually carries `VM.PowerMgmt`, which
+  Lastboard asks the host rather than assuming.
   **Nodes can never be powered off from Lastboard**, deliberately.
+- **What the hypervisor has been doing**: each node and machine opens its recent tasks — backups,
+  starts, migrations — with their state and log, which need only `Sys.Audit`. A node's system log
+  is optional and needs `Sys.Syslog` too.
 - **An icon for machines that will never have a bookmark** — the runners, the tunnel, the
   container Lastboard itself runs on — chosen from the same picker the bookmarks use and
   stored on your own server.
@@ -219,6 +225,8 @@ shows it beside the services it runs.
   - [API](widgets/api.md)
 - **Monitoring**
   - [Monitoring & Uptime](monitoring/overview.md)
+- **Docker**
+  - [Docker](docker/overview.md)
 - **Proxmox**
   - [Proxmox](proxmox/overview.md)
 - **Podman**

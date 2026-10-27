@@ -198,16 +198,17 @@ is **write-only from the browser's side**: it is stored on the server and no end
 it back — not masked, not blanked, absent. A save that arrives without one keeps the secret
 already stored, so editing anything else on a connection cannot lose its credential.
 
-More than one hypervisor can be connected, and each is judged on its own: the addresses, the
-names and the token ids are visible to the administrator alone — including **how many** there
-are, which is reconnaissance in itself. Every other account learns only *whether* the
-integration is on, which is all the top bar needs to decide whether to offer the page.
+Every account connects its own hypervisors, and each is judged on its own: the addresses, the
+names and the token ids belong to the account that connected them, and a request that names
+another account's hypervisor finds nothing — as if that account had none. An account with
+nothing connected sees no Proxmox page at all.
 
-Starting and stopping machines is administrator-only and is refused unless the token of the
-hypervisor **that machine is on** carries `VM.PowerMgmt` — asked of the host rather than
-assumed, and asked per host, so a read-only token is never covered by a permissive one
-elsewhere. The only actions Lastboard will relay are **start** and **shutdown of a machine**;
-nothing addressed at a node, ever. See [Proxmox](../proxmox/overview.md).
+Starting and stopping machines needs the permission to control Proxmox, only reaches the
+account's own hypervisors, and is refused unless the token of the hypervisor **that machine is
+on** carries `VM.PowerMgmt` — asked of the host rather than assumed, and asked per host, so a
+read-only token is never covered by a permissive one elsewhere. The only actions Lastboard will
+relay are **start** and **shutdown of a machine**; nothing addressed at a node, ever. See
+[Proxmox](../proxmox/overview.md).
 
 An icon chosen for a machine is stored against the hypervisor's own generated id, and the id is
 resolved on the server rather than believed: a browser cannot invent one and write a setting

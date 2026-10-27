@@ -109,7 +109,7 @@ Connect Lastboard to one or more Proxmox VE hosts — one card each, with a name
 
 ![Docker](../assets/p-docker.png)
 
-The Docker hosts of your account — a local socket, a Lastboard Agent with its token, or a daemon reached over TCP or TLS — each with a row that says whether it answers and how many containers it has. Every Docker widget reads this one list; a widget only chooses which of them it shows. A member connects through a Lastboard Agent; the other types are the administrator's. See **[Docker](../widgets/docker.md#docker-hosts)** for each type and the token.
+The Docker hosts of your account — a local socket, a Lastboard Agent with its token, or a daemon reached over TCP or TLS — each with a row that says whether it answers and how many containers it has. Every Docker widget reads this one list; a widget only chooses which of them it shows. A member connects through a Lastboard Agent; the other types are the administrator's. See **[Docker](../docker/overview.md#docker-hosts)** for each type and the token.
 
 ## Data
 
