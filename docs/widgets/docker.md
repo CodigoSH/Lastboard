@@ -32,6 +32,8 @@ When running Lastboard as a Docker container, uncomment the socket volume mount 
 ### 3. Remote via Lastboard Agent
 For remote servers, you can use the official Lastboard Agent to securely proxy Docker API calls with an authorization token, over HTTP or — behind a reverse proxy — HTTPS.
 
+Running **Podman** instead of Docker? Every mode above works with it through Podman's socket. Two settings that Docker does not need, and Quadlet files to run Lastboard as a service, are in the [Podman guide](../podman/overview.md).
+
 ## Lastboard Agent
 
 The Lastboard Agent is a lightweight proxy that exposes specific Docker endpoints.
@@ -78,81 +80,6 @@ The agent provides a public, unauthenticated `/health` endpoint to verify connec
 If securing the agent behind a reverse proxy (like Pangolin or Cloudflare Zero Trust), enter its address in the widget **with `https://`** — `https://agent.example.com` — and Lastboard reaches the agent over HTTPS. Without the scheme it speaks plain HTTP, which is what an agent on your own network answers.
 
 The proxy must forward the `Authorization` header containing the Bearer token intact. As with the Remote TLS type, the certificate is not checked, so a self-signed one or an internal CA works; the connection is still encrypted, and the token no longer crosses the network in the clear.
-
-## Podman
-
-Podman answers the same API through a socket of its own, so the widget, the Docker page and the agent work with it unchanged. What follows is for rootless Podman, the way it is normally run.
-
-**1. Turn the socket on**, once, as the user that runs your containers:
-
-```bash
-systemctl --user enable --now podman.socket
-```
-
-It lives at `$XDG_RUNTIME_DIR/podman/podman.sock` — `/run/user/1000/podman/podman.sock` for the user with id 1000.
-
-**2. Mount it where Docker's would be**, and turn SELinux labelling off for that one container:
-
-```bash
-podman run -d --name lastboard -p 8080:8080 \
-  -v lastboard-data:/var/lib/lastboard \
-  -v $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock \
-  --security-opt label=disable \
-  git.codigosh.com/codigosh/lastboard:latest
-```
-
-Then add a host of type **Local (socket)**. Two things are easy to get wrong here:
-
-- **Without `--security-opt label=disable`**, on a system where SELinux is enforcing (Fedora, RHEL and their relatives), the container is not allowed to open the socket, and the host shows *Could not connect to Docker host*.
-- **Leave `PUID` and `PGID` unset.** In rootless Podman the container's root is your own user on the host — the user that owns the socket — so it gives nothing away. With `PUID` set, Lastboard switches to an id that cannot read the socket, and the host shows *Could not connect to Docker host* again.
-
-The agent is the same, with the same two rules:
-
-```bash
-podman run -d --name lastboard-agent -p 2375:2375 \
-  -e TOKEN=your_secure_random_token \
-  -v $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock \
-  --security-opt label=disable \
-  git.codigosh.com/codigosh/lastboard-agent:latest
-```
-
-### As a service, with Quadlet
-
-Quadlet is how Podman runs a container as a systemd service. Save this as `~/.config/containers/systemd/lastboard.container`:
-
-```ini
-[Unit]
-Description=Lastboard
-Requires=podman.socket
-After=podman.socket
-
-[Container]
-Image=git.codigosh.com/codigosh/lastboard:latest
-ContainerName=lastboard
-PublishPort=8080:8080
-Volume=lastboard-data:/var/lib/lastboard
-Volume=%t/podman/podman.sock:/var/run/docker.sock
-SecurityLabelDisable=true
-
-[Service]
-Restart=always
-
-[Install]
-WantedBy=default.target
-```
-
-`%t` is the same runtime folder as `$XDG_RUNTIME_DIR`. For the agent, the same file as `lastboard-agent.container`, with `Image=git.codigosh.com/codigosh/lastboard-agent:latest`, `ContainerName=lastboard-agent`, `PublishPort=2375:2375`, `Environment=TOKEN=…` and no data volume. Then:
-
-```bash
-systemctl --user daemon-reload
-systemctl --user start lastboard
-```
-
-A user's services stop when that user logs out unless lingering is on for them: `loginctl enable-linger $USER` keeps them running, and starting at boot.
-
-### A native install
-
-A native install reads Docker at `/var/run/docker.sock` and nowhere else. To watch Podman from it, run the agent as above on the same machine and add it as a **Lastboard Agent** host at `127.0.0.1:2375`.
 
 ## Docker hosts
 

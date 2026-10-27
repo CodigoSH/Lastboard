@@ -111,7 +111,7 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **A host that stops answering** does not make its containers vanish: they stay, greyed out,
   and the host line says it is not responding.
 
-→ [Docker widget](widgets/docker.md)
+→ [Docker widget](widgets/docker.md) · [Podman](podman/overview.md)
 
 ## Proxmox VE
 
@@ -221,6 +221,8 @@ shows it beside the services it runs.
   - [Monitoring & Uptime](monitoring/overview.md)
 - **Proxmox**
   - [Proxmox](proxmox/overview.md)
+- **Podman**
+  - [Podman](podman/overview.md)
 - **Security**
   - [Overview](security/overview.md)
   - [Headers](security/headers.md)

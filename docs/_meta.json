@@ -6,6 +6,7 @@
     "widgets",
     "monitoring",
     "proxmox",
+    "podman",
     "security",
     "help",
     "contributing"
@@ -18,6 +19,7 @@
     "proxmox": "Proxmox",
     "security": "Security",
     "help": "Help",
-    "contributing": "Contributing"
+    "contributing": "Contributing",
+    "podman": "Podman"
   }
 }
