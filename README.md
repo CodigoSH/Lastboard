@@ -44,7 +44,7 @@
 
 ## Why Lastboard
 
-Most self-hosted dashboards are either too heavy, too ugly, or too complex to maintain. Lastboard was built with a simple rule: **nothing ships unless it's fast and looks good doing it.**
+Most self-hosted dashboards are either too heavy, too ugly, or too complex to maintain. Lastboard was built with a simple rule: **nothing ships unless it's fast and looks good doing it.** 
 
 It is **one static Go binary** and **one SQLite file**. No database server, no Redis, no Node runtime, no YAML to hand-edit before you see a screen, and no account anywhere. The first run is a three-step wizard in the browser. It fits comfortably on a Raspberry Pi or a 512 MB LXC container, and it ships **zero runtime JavaScript dependencies** on the frontend and a pure-Go SQLite driver on the backend — nothing to compile, nothing to keep in step.
 
