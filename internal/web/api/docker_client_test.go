@@ -442,3 +442,75 @@ func TestAContainerIDStaysOneSegmentOfThePath(t *testing.T) {
 		t.Fatalf("a plain id was changed: %q", gotURI)
 	}
 }
+
+// What the list says about a container's own check and how it ended comes from
+// the status line the daemon writes, so the lines tested here are the daemon's.
+func TestHealthAndExitCodeAreReadFromTheStatusLine(t *testing.T) {
+	ptr := func(n int) *int { return &n }
+	cases := []struct {
+		status string
+		health string
+		exit   *int
+	}{
+		{"Up 6 days (healthy)", "healthy", nil},
+		{"Up 5 hours (unhealthy)", "unhealthy", nil}, // "healthy" is inside it: the longer word has to win
+		{"Up 2 seconds (health: starting)", "starting", nil},
+		{"Up 6 days", "", nil},
+		{"Up 4 hours (Paused)", "", nil},
+		{"Exited (137) 40 minutes ago", "", ptr(137)},
+		{"Exited (0) About an hour ago", "", ptr(0)},
+		{"Restarting (1) 12 seconds ago", "", ptr(1)},
+		{"Created", "", nil},
+		{"", "", nil},
+		// Not a status line: nothing in the middle of a sentence counts as an exit.
+		{"The job Exited (9) badly", "", nil},
+	}
+	for _, c := range cases {
+		if got := healthFromStatus(c.status); got != c.health {
+			t.Errorf("healthFromStatus(%q) = %q, want %q", c.status, got, c.health)
+		}
+		got := exitCodeFromStatus(c.status)
+		switch {
+		case got == nil && c.exit != nil, got != nil && c.exit == nil, got != nil && *got != *c.exit:
+			t.Errorf("exitCodeFromStatus(%q) = %v, want %v", c.status, got, c.exit)
+		}
+	}
+}
+
+func TestListContainers_CarriesHealthExitCodeAndProject(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[
+			{"Id":"aaaaaaaaaaaaaaaa","Names":["/app"],"Image":"app","State":"running","Status":"Up 5 hours (unhealthy)","Created":1,"Ports":[],
+			 "Labels":{"com.docker.compose.project":"media","com.example.other":"ignored"}},
+			{"Id":"bbbbbbbbbbbbbbbb","Names":["/job"],"Image":"job","State":"exited","Status":"Exited (137) 40 minutes ago","Created":2,"Ports":[]},
+			{"Id":"cccccccccccccccc","Names":["/plain"],"Image":"plain","State":"running","Status":"Up 1 hour","Created":3,"Ports":[]}
+		]`))
+	}))
+	defer srv.Close()
+
+	list, err := ListContainers(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if list[0].Health != "unhealthy" || list[0].Project != "media" || list[0].ExitCode != nil {
+		t.Errorf("first: %+v", list[0])
+	}
+	if list[1].ExitCode == nil || *list[1].ExitCode != 137 || list[1].Health != "" || list[1].Project != "" {
+		t.Errorf("second: %+v", list[1])
+	}
+	if list[2].Health != "" || list[2].ExitCode != nil || list[2].Project != "" {
+		t.Errorf("a container with nothing to say carries nothing: %+v", list[2])
+	}
+}
+
+func TestAProjectLabelIsKeptShort(t *testing.T) {
+	long := strings.Repeat("あ", 200)
+	got := projectFromLabels(map[string]string{projectLabel: "  " + long + "  "})
+	if n := len([]rune(got)); n != maxProjectLen {
+		t.Errorf("a long label is cut to %d characters, got %d", maxProjectLen, n)
+	}
+	if projectFromLabels(nil) != "" || projectFromLabels(map[string]string{"x": "y"}) != "" {
+		t.Error("no label, no project")
+	}
+}

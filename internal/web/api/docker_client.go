@@ -11,6 +11,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -82,6 +84,14 @@ type DockerContainer struct {
 	// of labels (reverse-proxy rules, build metadata) and none of the rest is
 	// the browser's business.
 	UrlHint string
+	// Health is what the container's own check says: "healthy", "unhealthy" or
+	// "starting". Empty when it has no check, which is most containers.
+	Health string
+	// ExitCode is how a container that stopped, or keeps restarting, last ended.
+	// Nil for one that is running, or when the daemon does not say.
+	ExitCode *int
+	// Project is the Compose project the container was started by, if any.
+	Project string
 }
 
 // DockerStats holds CPU and memory metrics for a running container.
@@ -306,6 +316,58 @@ func urlFromLabels(labels map[string]string) string {
 	return ""
 }
 
+// projectLabel is what Compose, and Podman's compose, stamp on every container
+// they start. It is the only label besides the two URL ones that is carried.
+const projectLabel = "com.docker.compose.project"
+
+// maxProjectLen keeps a label somebody wrote by hand from becoming a wall of
+// text on a card.
+const maxProjectLen = 64
+
+// projectFromLabels returns the Compose project of a container, if it has one.
+func projectFromLabels(labels map[string]string) string {
+	v := strings.TrimSpace(labels[projectLabel])
+	if r := []rune(v); len(r) > maxProjectLen {
+		v = string(r[:maxProjectLen])
+	}
+	return v
+}
+
+// exitedPattern reads how a container ended out of the status line the daemon
+// writes for it: "Exited (137) 40 minutes ago", "Restarting (1) 12 seconds ago".
+var exitedPattern = regexp.MustCompile(`^(?:Exited|Restarting) \((-?\d+)\)`)
+
+// healthFromStatus reads the result of a container's own check out of the
+// status line: "Up 6 days (healthy)", "Up 5 hours (unhealthy)",
+// "Up 2 seconds (health: starting)". The daemon writes these in English whatever
+// the host's language is, which is what makes reading them safe.
+func healthFromStatus(status string) string {
+	s := strings.ToLower(status)
+	switch {
+	case strings.Contains(s, "(unhealthy)"):
+		return "unhealthy"
+	case strings.Contains(s, "(healthy)"):
+		return "healthy"
+	case strings.Contains(s, "(health: starting)"):
+		return "starting"
+	}
+	return ""
+}
+
+// exitCodeFromStatus returns how a stopped or restarting container last ended,
+// or nil when the status line does not say.
+func exitCodeFromStatus(status string) *int {
+	m := exitedPattern.FindStringSubmatch(strings.TrimSpace(status))
+	if m == nil {
+		return nil
+	}
+	n, err := strconv.Atoi(m[1])
+	if err != nil {
+		return nil
+	}
+	return &n
+}
+
 // normaliseStatus maps Docker's raw container state to the set of values
 // expected by the caller.
 func normaliseStatus(state string) string {
@@ -378,14 +440,17 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 		}
 
 		containers = append(containers, DockerContainer{
-			ID:      shortID,
-			Name:    name,
-			Image:   c.Image,
-			State:   c.State,
-			Status:  normaliseStatus(c.State),
-			Created: c.Created,
-			Ports:   ports,
-			UrlHint: urlFromLabels(c.Labels),
+			ID:       shortID,
+			Name:     name,
+			Image:    c.Image,
+			State:    c.State,
+			Status:   normaliseStatus(c.State),
+			Created:  c.Created,
+			Ports:    ports,
+			UrlHint:  urlFromLabels(c.Labels),
+			Health:   healthFromStatus(c.Status),
+			ExitCode: exitCodeFromStatus(c.Status),
+			Project:  projectFromLabels(c.Labels),
 		})
 	}
 	return containers, nil
