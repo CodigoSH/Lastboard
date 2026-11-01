@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "Göz atılması gerekenler",
   "dockerpage.bar_scale": "çubuk {cores} değerine kadar",
   "dockerpage.host_threads": "İşlemci iş parçacığı: {count}",
-  "proxmoxpage.powered_on": "açık",
   "infra.tab_overview": "Genel bakış",
   "infra.tab_summary": "Özet",
   "infra.all_hosts": "Tüm ana makineler",

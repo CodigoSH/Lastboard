@@ -3,11 +3,12 @@ import {
     attentionHtml, cardHtml, guestFooterHtml, guestHeadHtml, guestSummaryHtml, inventoryHtml, nodeCardHtml, overviewHtml, reasonText,
     rowHtml, storageTabHtml, storeRowHtml, storeSummaryHtml, summaryHtml, type Fmt, type GuestDrawer, type GuestView, type T,
 } from './ProxmoxPage.template';
+import { boxHtml } from '../infra/infra.template';
 import { attentionList, fleetNodes, fleetStores, fleetTotals, type LinkOf } from '../../../services/proxmoxOverview';
 import type { PxGuest, PxHost, PxNode, PxStore } from '../../../services/proxmoxApi';
 
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
-const fmt: Fmt = { num: n => `N(${n})`, pct: n => `P(${n})`, bytes: n => `B(${n})`, dec: n => `D(${n})`, span: s => `S(${s})` };
+const fmt: Fmt = { num: n => `N(${n})`, pct: n => `P(${n})`, bytes: n => `B(${n})`, dec: n => `D(${n})`, uptime: s => ({ long: `L(${s})`, short: `S(${s})` }) };
 const tfmt = { time: (s: number) => `T(${s})`, span: (s: number) => `S(${s})` };
 const evil = '<img src=x onerror=alert(1)>';
 
@@ -16,7 +17,7 @@ const guest = (o: Partial<PxGuest> = {}): PxGuest => ({ vmid: 100, name: 'web', 
 const store = (o: Partial<PxStore> = {}): PxStore => ({ name: 'local', node: 'pve1', kind: 'dir', used: 50, total: 100, percent: 50, shared: false, ...o });
 const host = (o: Partial<PxHost> = {}): PxHost => ({ id: 'h1', name: 'Home', cluster: false, caps: { read: true, power: true }, nodes: [node()], guests: [guest()], stores: [store()], ...o });
 const view = (g: PxGuest, o: Partial<GuestView> = {}): GuestView => ({ hostId: 'h1', hostName: 'Home', showHost: false, guest: g, link: '', face: '', selected: false, ...o });
-const drawer = (v: GuestView, o: Partial<GuestDrawer> = {}): GuestDrawer => ({ view: v, hostName: 'Home', chart: '', canPower: true, busy: false, bookmarkUrl: '', hasChosenIcon: false, uptime: '1d', ...o });
+const drawer = (v: GuestView, o: Partial<GuestDrawer> = {}): GuestDrawer => ({ view: v, hostName: 'Home', chart: '', canPower: true, busy: false, bookmarkUrl: '', hasChosenIcon: false, uptime: 86400, ...o });
 const noLinks: LinkOf = () => '';
 
 describe('what a hypervisor says is escaped', () => {
@@ -82,6 +83,25 @@ describe('the actions', () => {
     });
     test('the buttons are off while the action runs', () => {
         expect(guestFooterHtml(drawer(view(guest()), { busy: true }), t)).toMatch(/data-power="1" disabled/);
+    });
+});
+
+describe('an uptime', () => {
+    test('is written in full and in short, for the page to pick by measuring', () => {
+        const html = nodeCardHtml(fleetNodes([host()])[0], false, t, fmt);
+        expect(html).toContain('data-uptime-long="L(5)"');
+        expect(html).toContain('data-uptime-short="S(5)"');
+        expect(html).toContain('class="fit"');
+        expect(html).not.toContain('load');
+        expect(html).not.toContain('powered_on');
+    });
+});
+
+describe('a box', () => {
+    test('keeps its note inside the pill, beside the name', () => {
+        const html = boxHtml('Nodes', '', '5');
+        expect(html).toMatch(/<span class="pill">Nodes<span class="pill__n">5<\/span><\/span>/);
+        expect(boxHtml('Nodes', '')).not.toContain('pill__n');
     });
 });
 

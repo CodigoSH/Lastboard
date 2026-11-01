@@ -20,7 +20,7 @@ import {
     countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
 } from '../../../services/infraUnits';
 import {
-    attentionList, fleetNodes, fleetStores, fleetTotals, guestUnits, liveHosts, unitId, uptimeUnit, weightedSeries,
+    attentionList, fleetNodes, fleetStores, fleetTotals, guestUnits, liveHosts, unitId, uptimeParts, weightedSeries,
     type FleetNode, type FleetStore, type LinkOf,
 } from '../../../services/proxmoxOverview';
 import {
@@ -131,6 +131,7 @@ class ProxmoxPage extends HTMLElement {
     private _unsubscribeI18n: (() => void) | undefined;
     private readonly _keydown: (e: KeyboardEvent) => void;
     private readonly _popstate: () => void;
+    private readonly _resize = () => { if (this.hasAttribute('open')) this.fitUptimes(); };
 
     private readonly t: T = (key, params) => i18n.t(key, params);
 
@@ -148,11 +149,25 @@ class ProxmoxPage extends HTMLElement {
             const { value, unit } = byteUnit(n);
             return i18n.formatNumber(value, { style: 'unit', unit, unitDisplay: 'short', maximumFractionDigits: value < 10 && unit !== 'byte' ? 1 : 0 });
         },
-        // An uptime: in days for a while, then months, then years.
-        span: (sec) => {
-            if (!sec || sec < 0) return '—';
-            const { value, unit } = uptimeUnit(sec);
-            return i18n.formatNumber(value, { style: 'unit', unit, unitDisplay: 'long', maximumFractionDigits: unit === 'year' ? 1 : 0 });
+        // An uptime counts in years, months and days, and nothing smaller.
+        uptime: (sec) => {
+            const p = uptimeParts(sec);
+            const lang = i18n.getLocale().code;
+            const part = (value: number, unit: string, display: 'long' | 'narrow') =>
+                i18n.formatNumber(value, { style: 'unit', unit, unitDisplay: display, maximumFractionDigits: 0 });
+            const list = (display: 'long' | 'narrow') => {
+                const parts = [
+                    p.years ? part(p.years, 'year', display) : '',
+                    p.months ? part(p.months, 'month', display) : '',
+                    p.days ? part(p.days, 'day', display) : '',
+                ].filter(Boolean);
+                // Not a whole day yet: said as a limit rather than as hours, which a card has no room to be exact about.
+                if (!parts.length) return `< ${part(1, 'day', display)}`;
+                return display === 'long'
+                    ? new Intl.ListFormat(lang, { style: 'long', type: 'unit' }).format(parts)
+                    : parts.join(' ');
+            };
+            return { long: list('long'), short: list('narrow') };
         },
     };
 
@@ -214,6 +229,7 @@ class ProxmoxPage extends HTMLElement {
         this.build();
         window.addEventListener('keydown', this._keydown);
         window.addEventListener('popstate', this._popstate);
+        window.addEventListener('resize', this._resize);
         this._unsubscribeI18n = i18n.subscribe(() => {
             // Every label is written into the shell, so a language change is one of the two moments it is written again.
             this.build();
@@ -226,6 +242,7 @@ class ProxmoxPage extends HTMLElement {
     disconnectedCallback() {
         window.removeEventListener('keydown', this._keydown);
         window.removeEventListener('popstate', this._popstate);
+        window.removeEventListener('resize', this._resize);
         this.stopTimers();
         this.stopPanels();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
@@ -636,7 +653,7 @@ class ProxmoxPage extends HTMLElement {
         this.curveMem = weightedSeries(mem);
         this.curveKey = key;
         this.curveAt = Date.now();
-        if (this.tab === 'overview') this.paintBody();
+        if (this.tab === 'overview') { this.paintBody(); this.fitUptimes(); }
     }
 
     /** The latest tasks of the first node in view: one request, for the overview's box. */
@@ -744,12 +761,23 @@ class ProxmoxPage extends HTMLElement {
 
     // ── Painting ──
 
+    /** Every uptime is written in full where it fits its line and in short where it does not. */
+    private fitUptimes() {
+        for (const line of this.shadowRoot?.querySelectorAll<HTMLElement>('.fit') ?? []) {
+            const spans = line.querySelectorAll<HTMLElement>('[data-uptime-long]');
+            if (!spans.length) continue;
+            spans.forEach(s => { s.textContent = s.dataset.uptimeLong ?? ''; });
+            if (line.scrollWidth > line.clientWidth + 1) spans.forEach(s => { s.textContent = s.dataset.uptimeShort ?? ''; });
+        }
+    }
+
     private paintAll(force = false) {
         if (force) { this.last = blank(); this.bodyTab = ''; }
         this.paintHead();
         this.paintTabs();
         this.paintBody();
         this.paintDrawer();
+        this.fitUptimes();
         this.$('pg')?.classList.toggle('has-drawer', this.drawerOpen);
         this.$('scrim')?.classList.toggle('on', this.drawerOpen);
         this.$('drawer')?.classList.toggle('on', this.drawerOpen);
@@ -1036,7 +1064,7 @@ class ProxmoxPage extends HTMLElement {
             const raw = c.node.loadavg && c.node.loadavg.length ? Number(c.node.loadavg[0]) : NaN;
             const load = Number.isFinite(raw) ? i18n.formatNumber(raw, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
             bHtml = this.drawerTab === 'summary'
-                ? nodeSummaryHtml({ node: c.node, chart, uptime: this.fmt.span(c.node.uptime), load }, t, this.fmt)
+                ? nodeSummaryHtml({ node: c.node, chart, uptime: c.node.uptime, load }, t, this.fmt)
                 : slot;
         } else {
             hHtml = storeHeadHtml(c.store, showHost, t);
@@ -1091,7 +1119,7 @@ class ProxmoxPage extends HTMLElement {
             chart: s ? this.historyCard('d-cpu', this.t('proxmoxpage.history'), s.cpu, g.running ? s.mem : [], 150) : '',
             canPower: this.mayPower(host), busy: this.busy.has(unitId(host.id, g.vmid)),
             bookmarkUrl: link?.url ?? '', hasChosenIcon: !!chosenIcon(host, g.node, g.vmid),
-            uptime: this.fmt.span(g.uptime),
+            uptime: g.uptime,
         };
     }
 }

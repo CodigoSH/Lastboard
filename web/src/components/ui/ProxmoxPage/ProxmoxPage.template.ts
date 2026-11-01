@@ -26,12 +26,18 @@ export interface Fmt {
     pct: (n: number) => string;
     bytes: (n: number) => string;
     dec: (n: number) => string;
-    /** A length of time, from seconds. */
-    span: (sec: number) => string;
+    /** An uptime in words, in full and in short, for the one that fits. */
+    uptime: (sec: number) => { long: string; short: string };
 }
 
 const e = escapeHtml;
 const tech = (v: string): string => `<span class="tech" dir="ltr">${e(v)}</span>`;
+
+/** An uptime that is written in full where there is room and in short where there is not: the page picks, by measuring. */
+export function uptimeHtml(fmt: Fmt, sec: number): string {
+    const u = fmt.uptime(sec);
+    return `<span data-uptime-long="${e(u.long)}" data-uptime-short="${e(u.short)}">${e(u.long)}</span>`;
+}
 
 const FACE_NONE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
 
@@ -102,13 +108,12 @@ const meter = (label: string, percent: number, fmt: Fmt): string =>
 /** A node as a card: its name, what it is made of and its three loads. */
 export function nodeCardHtml(n: FleetNode, showHost: boolean, t: T, fmt: Fmt): string {
     // One line: what it is made of, and how long it has been on.
-    const made = [
-        n.cores > 0 ? `${fmt.num(n.cores)} ${t('proxmox.cores').toLowerCase()} / ${fmt.num(n.threads)} ${t('proxmox.threads')}` : `${fmt.num(n.threads)} ${t('proxmox.threads')}`,
-        `${t('proxmoxpage.powered_on')} ${fmt.span(n.uptime)}`,
-    ].join(' · ');
+    const made = n.cores > 0
+        ? `${e(fmt.num(n.cores))} ${e(t('proxmox.cores').toLowerCase())} / ${e(fmt.num(n.threads))} ${e(t('proxmox.threads'))}`
+        : `${e(fmt.num(n.threads))} ${e(t('proxmox.threads'))}`;
     return `<button type="button" class="card card--btn unit" data-go="node" data-host="${e(n.hostId)}" data-ref="${e(n.name)}">
         <div class="unit__h"><span class="dot ${DOT[nodeLevel(n)]}"></span><span class="unit__n">${e(n.name)}</span>${showHost ? `<span class="unit__tail unit__tail--near"><span class="chip">${e(n.hostName)}</span></span>` : ''}</div>
-        <div class="unit__sub"><span>${e(made)}</span></div>
+        <div class="unit__sub unit__sub--split"><span>${made}</span><span class="fit" title="${e(t('proxmox.uptime'))}">${icon('clock', 12)}${uptimeHtml(fmt, n.uptime)}</span></div>
         <div class="unit__m">${meter(t('widget.telemetry.cpu'), n.cpu, fmt)}${meter(t('widget.telemetry.ram'), n.mem, fmt)}${meter(t('widget.proxmox.disk'), n.disk, fmt)}</div>
     </button>`;
 }
@@ -283,7 +288,7 @@ export interface GuestDrawer {
     busy: boolean;
     bookmarkUrl: string;
     hasChosenIcon: boolean;
-    uptime: string;
+    uptime: number;
 }
 
 export function guestHeadHtml(d: GuestDrawer, t: T): string {
@@ -308,7 +313,7 @@ export function guestSummaryHtml(d: GuestDrawer, t: T, fmt: Fmt): string {
         ? `<div class="live3">
             <div class="card"><span class="lbl">CPU</span><b>${e(fmt.pct(g.cpu))}</b>${barHtml(g.cpu)}</div>
             <div class="card"><span class="lbl">RAM</span><b>${e(fmt.bytes(g.mem))}</b>${barHtml(ramPct(g))}</div>
-            <div class="card"><span class="lbl">${e(t('proxmox.uptime'))}</span><b>${e(d.uptime)}</b></div></div>`
+            <div class="card"><span class="lbl">${e(t('proxmox.uptime'))}</span><b class="fit">${uptimeHtml(fmt, d.uptime)}</b></div></div>`
         : '';
     const facts = [
         fact(t('proxmox.state'), e(t(g.running ? 'docker.state_running' : 'docker.state_stopped'))),
@@ -336,7 +341,7 @@ export interface NodeDrawer {
     node: FleetNode;
     /** CPU and memory history, drawn. */
     chart: string;
-    uptime: string;
+    uptime: number;
     load: string;
 }
 
@@ -357,7 +362,7 @@ export function nodeSummaryHtml(d: NodeDrawer, t: T, fmt: Fmt): string {
         n.cores > 0 ? fact(t('proxmox.cores'), e(fmt.num(n.cores))) : '',
         fact(t('widget.telemetry.ram'), e(`${fmt.bytes(n.mem_used)} / ${fmt.bytes(n.mem_total)}`)),
         n.disk_total > 0 ? fact(t('widget.proxmox.disk'), e(`${fmt.bytes(n.disk_used)} / ${fmt.bytes(n.disk_total)}`)) : '',
-        fact(t('proxmox.uptime'), e(d.uptime)),
+        fact(t('proxmox.uptime'), uptimeHtml(fmt, d.uptime)),
         fact(t('proxmox.load'), e(d.load)),
     ].join('');
     return `${live}${d.chart}<div class="facts">${facts}</div>`;

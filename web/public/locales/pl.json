@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "Co wymaga uwagi",
   "dockerpage.bar_scale": "pasek do {cores}",
   "dockerpage.host_threads": "Wątki procesora: {count}",
-  "proxmoxpage.powered_on": "działa",
   "infra.tab_overview": "Przegląd",
   "infra.tab_summary": "Podsumowanie",
   "infra.all_hosts": "Wszystkie hosty",

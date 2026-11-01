@@ -198,20 +198,18 @@ export function weightedCurve(series: { cores: number; cpu: number[] }[]): numbe
 
 // ── How long something has been on ─────────────────────────────────────────
 
-export type UptimeUnit = 'minute' | 'hour' | 'day' | 'month' | 'year';
-
-const DAY = 86400;
+export interface UptimeParts { years: number; months: number; days: number }
 
 /**
- * An uptime in the one unit that reads best: minutes under an hour, hours under a day, days up to
- * two months, months up to two years, and years after that — so that a machine that has been on for
- * 400 days says "1.1 years" and not "400 days". Months are the average one (30.44 days).
+ * An uptime as the calendar a person counts in — years, months and days, never hours or minutes —
+ * so that "400 days" reads "1 year, 1 month and 4 days". A year is 365 days and a month 30: what
+ * is left after the years is cut into months, and what is left after those is days. Under a day
+ * everything is zero.
  */
-export function uptimeUnit(sec: number): { value: number; unit: UptimeUnit } {
-    const s = Number.isFinite(sec) && sec > 0 ? sec : 0;
-    if (s < 3600) return { value: Math.floor(s / 60), unit: 'minute' };
-    if (s < DAY) return { value: Math.floor(s / 3600), unit: 'hour' };
-    if (s < 60 * DAY) return { value: Math.floor(s / DAY), unit: 'day' };
-    if (s < 730 * DAY) return { value: Math.floor(s / (30.44 * DAY)), unit: 'month' };
-    return { value: Math.round((s / (365.25 * DAY)) * 10) / 10, unit: 'year' };
+export function uptimeParts(sec: number): UptimeParts {
+    const total = Math.floor((Number.isFinite(sec) && sec > 0 ? sec : 0) / 86400);
+    const years = Math.floor(total / 365);
+    const rest = total - years * 365;
+    const months = Math.floor(rest / 30);
+    return { years, months, days: rest - months * 30 };
 }

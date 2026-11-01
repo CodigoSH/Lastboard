@@ -130,7 +130,7 @@ export function tabsHtml(tabs: TabSpec[], active: string, formatCount: (n: numbe
 
 /** The house box: its name is a pill sitting on the border. */
 export function boxHtml(title: string, body: string, tail = ''): string {
-    return `<section class="box"><span class="pill">${e(title)}</span>${tail ? `<span class="tail">${e(tail)}</span>` : ''}${body}</section>`;
+    return `<section class="box"><span class="pill">${e(title)}${tail ? `<span class="pill__n">${e(tail)}</span>` : ''}</span>${body}</section>`;
 }
 
 /** The card a chart lives in: its name and legend on one side, a control or a chip on the other. */

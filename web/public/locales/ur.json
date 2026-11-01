@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "جسے دیکھنے کی ضرورت ہے",
   "dockerpage.bar_scale": "بار {cores} تک",
   "dockerpage.host_threads": "پروسیسر تھریڈز: {count}",
-  "proxmoxpage.powered_on": "چالو",
   "infra.tab_overview": "جائزہ",
   "infra.tab_summary": "خلاصہ",
   "infra.all_hosts": "تمام ہوسٹس",

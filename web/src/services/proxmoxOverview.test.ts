@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionList, fleetStores, fleetTotals, guestUnits, unitId, uptimeUnit, weightedCpu, weightedCurve, type LinkOf,
+    attentionList, fleetStores, fleetTotals, guestUnits, unitId, uptimeParts, weightedCpu, weightedCurve, type LinkOf,
 } from './proxmoxOverview';
 import type { PxGuest, PxHost, PxNode, PxStore } from './proxmoxApi';
 
@@ -119,23 +119,27 @@ describe('weightedCurve', () => {
     });
 });
 
-describe('uptimeUnit', () => {
+describe('uptimeParts', () => {
     const DAY = 86400;
-    test('minutes, hours, days, months, years — each where it reads best', () => {
-        expect(uptimeUnit(59)).toEqual({ value: 0, unit: 'minute' });
-        expect(uptimeUnit(30 * 60)).toEqual({ value: 30, unit: 'minute' });
-        expect(uptimeUnit(3 * 3600)).toEqual({ value: 3, unit: 'hour' });
-        expect(uptimeUnit(42 * DAY)).toEqual({ value: 42, unit: 'day' });
-        expect(uptimeUnit(59 * DAY)).toEqual({ value: 59, unit: 'day' });
-        expect(uptimeUnit(60 * DAY)).toEqual({ value: 1, unit: 'month' });
-        expect(uptimeUnit(200 * DAY)).toEqual({ value: 6, unit: 'month' });
-        expect(uptimeUnit(729 * DAY)).toEqual({ value: 23, unit: 'month' });
-        expect(uptimeUnit(730 * DAY)).toEqual({ value: 2, unit: 'year' });
-        expect(uptimeUnit(400 * DAY).unit).toBe('month');
-        expect(uptimeUnit(1000 * DAY)).toEqual({ value: 2.7, unit: 'year' });
+    test('years, months and days; hours and minutes are never part of it', () => {
+        expect(uptimeParts(0)).toEqual({ years: 0, months: 0, days: 0 });
+        expect(uptimeParts(23 * 3600 + 3599)).toEqual({ years: 0, months: 0, days: 0 });
+        expect(uptimeParts(27 * DAY + 5 * 3600)).toEqual({ years: 0, months: 0, days: 27 });
+        expect(uptimeParts(43 * DAY)).toEqual({ years: 0, months: 1, days: 13 });
+        expect(uptimeParts(365 * DAY)).toEqual({ years: 1, months: 0, days: 0 });
+        expect(uptimeParts((365 + 3 * 30 + 21) * DAY)).toEqual({ years: 1, months: 3, days: 21 });
+        expect(uptimeParts(1000 * DAY)).toEqual({ years: 2, months: 9, days: 0 });
+    });
+    test('the parts add back up to the days, whatever the number', () => {
+        for (const d of [1, 29, 30, 59, 60, 364, 365, 366, 729, 730, 3650]) {
+            const p = uptimeParts(d * DAY);
+            expect(p.years * 365 + p.months * 30 + p.days).toBe(d);
+            expect(p.months).toBeLessThan(13);
+            expect(p.days).toBeLessThan(30);
+        }
     });
     test('nonsense is nothing, not NaN', () => {
-        expect(uptimeUnit(NaN)).toEqual({ value: 0, unit: 'minute' });
-        expect(uptimeUnit(-5)).toEqual({ value: 0, unit: 'minute' });
+        expect(uptimeParts(NaN)).toEqual({ years: 0, months: 0, days: 0 });
+        expect(uptimeParts(-5)).toEqual({ years: 0, months: 0, days: 0 });
     });
 });

@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "ما يحتاج إلى نظرة",
   "dockerpage.bar_scale": "الشريط حتى {cores}",
   "dockerpage.host_threads": "خيوط المعالج: {count}",
-  "proxmoxpage.powered_on": "يعمل منذ",
   "infra.tab_overview": "نظرة عامة",
   "infra.tab_summary": "ملخص",
   "infra.all_hosts": "كل المضيفين",

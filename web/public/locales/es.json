@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "Lo que necesita una mirada",
   "dockerpage.bar_scale": "barra hasta {cores}",
   "dockerpage.host_threads": "Hilos del procesador: {count}",
-  "proxmoxpage.powered_on": "encendido",
   "infra.tab_overview": "Resumen",
   "infra.tab_summary": "Resumen",
   "infra.all_hosts": "Todos los hosts",

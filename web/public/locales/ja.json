@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "確認が必要なもの",
   "dockerpage.bar_scale": "バーは {cores} まで",
   "dockerpage.host_threads": "プロセッサのスレッド数: {count}",
-  "proxmoxpage.powered_on": "稼働",
   "infra.tab_overview": "概要",
   "infra.tab_summary": "概要",
   "infra.all_hosts": "すべてのホスト",

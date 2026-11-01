@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "Wat een blik nodig heeft",
   "dockerpage.bar_scale": "balk tot {cores}",
   "dockerpage.host_threads": "Processorthreads: {count}",
-  "proxmoxpage.powered_on": "actief",
   "infra.tab_overview": "Overzicht",
   "infra.tab_summary": "Samenvatting",
   "infra.all_hosts": "Alle hosts",

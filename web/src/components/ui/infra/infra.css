@@ -532,7 +532,10 @@ app-select {
 .kpi__spark { width: 92px; flex: none; color: var(--ok); }
 .kpi__spark .spark { color: inherit; }
 .legend--below { margin-block-start: 8px; }
-.box > .tail { position: absolute; top: 0; inset-inline-end: 12px; transform: translateY(-50%); font: 600 10px/1.4 var(--font-mono); letter-spacing: 0.06em; color: var(--text-dim); background: var(--canvas); padding: 0 6px; }
+/* What the box holds, right after its name: a number or a word, set off by a thin rule. */
+.box > .pill .pill__n { margin-inline-start: 8px; padding-inline-start: 8px; border-inline-start: 1px solid var(--card-border); font-weight: 600; letter-spacing: 0.04em; color: var(--text-main); opacity: 0.85; }
+/* A line that is measured: it stays on one line, and the page shortens what is in it when it does not fit. */
+.fit { display: block; white-space: nowrap; overflow: hidden; min-width: 0; }
 .box .cards { margin: 0; }
 .chart .seg button { width: auto; padding: 0 11px; font-size: 12px; }
 .dr__h { gap: 14px; }
@@ -544,3 +547,9 @@ app-select {
 
 /* A tag that belongs to the name, right beside it, rather than at the far end of the card. */
 .unit__tail--near { margin-inline-start: 0; }
+
+/* A card's detail line with something on each side: what it is made of, and how long it has been on. */
+.unit__sub--split { justify-content: space-between; flex-wrap: nowrap; }
+.unit__sub--split > span:first-child { flex: none; }
+.unit__sub--split > .fit { display: flex; align-items: center; gap: 5px; flex: 0 1 auto; justify-content: flex-end; }
+.unit__sub--split > .fit svg { flex: none; }

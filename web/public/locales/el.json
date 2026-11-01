@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "Ό,τι θέλει μια ματιά",
   "dockerpage.bar_scale": "γραμμή έως {cores}",
   "dockerpage.host_threads": "Νήματα επεξεργαστή: {count}",
-  "proxmoxpage.powered_on": "ενεργός",
   "infra.tab_overview": "Επισκόπηση",
   "infra.tab_summary": "Σύνοψη",
   "infra.all_hosts": "Όλοι οι κεντρικοί υπολογιστές",

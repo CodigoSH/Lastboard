@@ -197,7 +197,6 @@
   "dockerpage.attention_sub": "살펴봐야 할 것",
   "dockerpage.bar_scale": "막대 최대 {cores}",
   "dockerpage.host_threads": "프로세서 스레드: {count}",
-  "proxmoxpage.powered_on": "가동",
   "infra.tab_overview": "개요",
   "infra.tab_summary": "요약",
   "infra.all_hosts": "모든 호스트",
