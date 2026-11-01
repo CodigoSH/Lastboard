@@ -112,7 +112,7 @@ export function nodeCardHtml(n: FleetNode, showHost: boolean, t: T, fmt: Fmt): s
         ? `${e(fmt.num(n.cores))} ${e(t('proxmox.cores').toLowerCase())} / ${e(fmt.num(n.threads))} ${e(t('proxmox.threads'))}`
         : `${e(fmt.num(n.threads))} ${e(t('proxmox.threads'))}`;
     return `<button type="button" class="card card--btn unit" data-go="node" data-host="${e(n.hostId)}" data-ref="${e(n.name)}">
-        <div class="unit__h"><span class="dot ${DOT[nodeLevel(n)]}"></span><span class="unit__n">${e(n.name)}</span>${showHost ? `<span class="unit__tail unit__tail--near"><span class="chip">${e(n.hostName)}</span></span>` : ''}</div>
+        <div class="unit__h"><span class="dot ${DOT[nodeLevel(n)]}"></span><span class="unit__n">${e(n.name)}</span>${showHost ? `<span class="unit__tail"><span class="chip">${e(n.hostName)}</span></span>` : ''}</div>
         <div class="unit__sub unit__sub--split"><span>${made}</span><span class="fit" title="${e(t('proxmox.uptime'))}">${icon('clock', 12)}${uptimeHtml(fmt, n.uptime)}</span></div>
         <div class="unit__m">${meter(t('widget.telemetry.cpu'), n.cpu, fmt)}${meter(t('widget.telemetry.ram'), n.mem, fmt)}${meter(t('widget.proxmox.disk'), n.disk, fmt)}</div>
     </button>`;

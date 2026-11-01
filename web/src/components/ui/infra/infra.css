@@ -545,8 +545,6 @@ app-select {
 /* The head of a drawer: the name row, then the chips, with room between them. */
 #dr-head { display: flex; flex-direction: column; gap: 14px; }
 
-/* A tag that belongs to the name, right beside it, rather than at the far end of the card. */
-.unit__tail--near { margin-inline-start: 0; }
 
 /* A card's detail line with something on each side: what it is made of, and how long it has been on. */
 .unit__sub--split { justify-content: space-between; flex-wrap: nowrap; }
