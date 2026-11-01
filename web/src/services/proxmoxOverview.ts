@@ -175,19 +175,23 @@ export function guestUnits(hosts: PxHost[], linkOf: LinkOf): InfraUnit[] {
 // ── The fleet's curve ──────────────────────────────────────────────────────
 
 /**
- * One curve for several nodes, WEIGHTED by cores, not averaged. The SHORTEST
- * series sets the length: nodes that joined a cluster at different times come
- * back with different numbers of points, and reading past the end of one
- * would weigh it as zero.
+ * One curve for several nodes, WEIGHTED, not averaged: CPU by cores, memory by bytes. The SHORTEST
+ * series sets the length: nodes that joined a cluster at different times come back with different
+ * numbers of points, and reading past the end of one would weigh it as zero.
  */
-export function weightedCurve(series: { cores: number; cpu: number[] }[]): number[] {
-    const got = series.filter(s => s.cpu.length > 0);
+export function weightedSeries(series: { weight: number; values: number[] }[]): number[] {
+    const got = series.filter(s => s.values.length > 0);
     if (!got.length) return [];
-    const points = Math.min(...got.map(s => s.cpu.length));
-    const cores = got.reduce((a, s) => a + s.cores, 0) || 1;
+    const points = Math.min(...got.map(s => s.values.length));
+    const total = got.reduce((a, s) => a + s.weight, 0) || 1;
     const curve: number[] = [];
     for (let i = 0; i < points; i++) {
-        curve.push(Math.round(got.reduce((a, s) => a + s.cpu[i] * s.cores, 0) / cores * 10) / 10);
+        curve.push(Math.round(got.reduce((a, s) => a + s.values[i] * s.weight, 0) / total * 10) / 10);
     }
     return curve;
+}
+
+/** The CPU curve of several nodes, weighted by cores. */
+export function weightedCurve(series: { cores: number; cpu: number[] }[]): number[] {
+    return weightedSeries(series.map(s => ({ weight: s.cores, values: s.cpu })));
 }

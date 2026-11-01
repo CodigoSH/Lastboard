@@ -20,11 +20,11 @@ import {
     countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
 } from '../../../services/infraUnits';
 import {
-    attentionList, fleetNodes, fleetStores, fleetTotals, guestUnits, liveHosts, unitId, weightedCurve,
+    attentionList, fleetNodes, fleetStores, fleetTotals, guestUnits, liveHosts, unitId, weightedSeries,
     type FleetNode, type FleetStore, type LinkOf,
 } from '../../../services/proxmoxOverview';
 import {
-    chartHtml, chartIndexAt, CHART_WIDTH, icon, sortOptions, tabsHtml, toolbarHtml, type ChartSpec,
+    chartCardHtml, chartHtml, chartIndexAt, CHART_WIDTH, icon, sortOptions, tabsHtml, toolbarHtml, type ChartSpec,
 } from '../infra/infra.template';
 import {
     guestFooterHtml, guestHeadHtml, guestSummaryHtml, hostErrorHtml, inventoryHtml, noMatchHtml, nodeHeadHtml, nodeSummaryHtml,
@@ -41,9 +41,9 @@ const MAX_HOST_BUTTONS = 2;
 const VIEW_KEY = 'proxmox.view';
 const SORT_KEY = 'proxmox.sort';
 const GROUP_KEY = 'proxmox.group';
-/** The range of the charts. Fixed: the page asks for a day, as it always did. */
-const RANGE = '24h';
-const RANGE_MS = 86400e3;
+/** The ranges a history can be read over, as the endpoint names them. */
+const RANGES = [{ id: '1h', sec: 3600 }, { id: '24h', sec: 86400 }, { id: '7d', sec: 604800 }] as const;
+type Range = typeof RANGES[number]['id'];
 /** How long a fleet curve is believed before it is asked again. */
 const CURVE_TTL_MS = 5 * 60e3;
 
@@ -112,7 +112,9 @@ class ProxmoxPage extends HTMLElement {
     private detailSeries: PxSeries | null = null;
     private detailSeq = 0;
 
+    private range: Range = '24h';
     private curve: number[] = [];
+    private curveMem: number[] = [];
     private curveKey = '';
     private curveAt = 0;
     private curveBusy = false;
@@ -386,6 +388,9 @@ class ProxmoxPage extends HTMLElement {
         const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
         if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
 
+        const range = el.closest<HTMLElement>('[data-range]');
+        if (range) { this.setRange(range.dataset.range as Range); return; }
+
         const hostf = el.closest<HTMLElement>('[data-hostf]');
         if (hostf) { this.hostFilter = hostf.dataset.hostf || 'all'; this.paintAll(); return; }
 
@@ -446,7 +451,7 @@ class ProxmoxPage extends HTMLElement {
         cur.setAttribute('opacity', '.7');
         const when = c.at[index] ? i18n.formatDateTime(new Date(c.at[index]), { hour: '2-digit', minute: '2-digit' }) : '';
         tip.innerHTML = `<div class="dim">${escapeHtml(when)}</div>` + c.spec.series.map(s =>
-            `<div><span style="color:${s.color}">●</span> ${escapeHtml(s.name)} <b>${escapeHtml(c.spec.fmt(s.data[index]))}</b></div>`).join('');
+            `<div><span style="color:${s.color}">●</span> ${escapeHtml(s.name)} <b>${escapeHtml(s.labels?.[index] ?? c.spec.fmt(s.data[index]))}</b></div>`).join('');
         // The drawing is left-to-right in every language, so the tip is placed in screen terms.
         const px = (x / CHART_WIDTH) * box.width;
         tip.style.left = `${Math.min(Math.max(px + 12, 0), Math.max(0, box.width - tip.offsetWidth - 4))}px`;
@@ -461,28 +466,43 @@ class ProxmoxPage extends HTMLElement {
         wrap.querySelector('.cur')?.setAttribute('opacity', '0');
     };
 
+    private rangeSec(): number {
+        return RANGES.find(r => r.id === this.range)!.sec;
+    }
+
     /** The points of a series as the moments they were taken: the last is now, each step back is one bucket. */
     private timesOf(n: number): number[] {
-        const step = n > 1 ? RANGE_MS / (n - 1) : 0;
+        const step = n > 1 ? (this.rangeSec() * 1000) / (n - 1) : 0;
         const now = Date.now();
         return Array.from({ length: n }, (_, i) => now - (n - 1 - i) * step);
     }
 
-    private rangeLabel(): string {
-        return i18n.formatDuration(RANGE_MS / 1000, 1);
+    private rangeLabel(sec = this.rangeSec()): string {
+        return i18n.formatDuration(sec, 1);
     }
 
-    private chartFor(id: string, label: string, values: number[], colour: string): string {
-        if (values.length < 2) return '';
-        const spec: ChartSpec = {
-            series: [{ name: label, color: colour, data: values }],
-            max: 100,
-            height: 150,
-            edges: [this.rangeLabel(), this.t('proxmox.now')],
-            fmt: v => this.fmt.pct(v),
-        };
-        this.charts.set(id, { spec, at: this.timesOf(values.length) });
-        return `<div class="card chart"><div class="chart__head"><span class="lbl">${escapeHtml(label)}</span></div>${chartHtml(id, spec)}</div>`;
+    /** CPU in green and memory in amber, the two lines every history of the page draws. */
+    private historySeries(cpu: number[], mem: number[]): ChartSpec['series'] {
+        const out: ChartSpec['series'] = [{ name: this.t('widget.telemetry.cpu'), color: 'var(--ok)', data: cpu }];
+        if (mem.length >= 2) out.push({ name: this.t('widget.telemetry.ram'), color: 'var(--warn)', data: mem });
+        return out;
+    }
+
+    private chartSpec(series: ChartSpec['series'], height?: number): ChartSpec {
+        return { series, max: 100, height, edges: [`-${this.rangeLabel()}`, this.t('proxmox.now')], fmt: v => this.fmt.pct(v) };
+    }
+
+    /** A history in its own card, named, with its legend and the range chooser. */
+    private historyCard(id: string, title: string, cpu: number[], mem: number[], height?: number): string {
+        if (cpu.length < 2) return '';
+        const spec = this.chartSpec(this.historySeries(cpu, mem), height);
+        this.charts.set(id, { spec, at: this.timesOf(cpu.length) });
+        return chartCardHtml(title, spec.series.map(x => ({ name: x.name, color: x.color })), this.rangeChooser(), chartHtml(id, spec), this.t('dockerpage.collecting'));
+    }
+
+    private rangeChooser(): string {
+        return `<div class="seg seg--text" role="group">${RANGES.map(r =>
+            `<button type="button" data-range="${r.id}" aria-pressed="${r.id === this.range}">${escapeHtml(this.rangeLabel(r.sec))}</button>`).join('')}</div>`;
     }
 
     // ── Selection ──
@@ -522,6 +542,18 @@ class ProxmoxPage extends HTMLElement {
         this.drawerTasks.stop();
         this.drawerJournal.stop();
         this.paintAll();
+    }
+
+    /** A different range: what was drawn over the old one is asked again over the new. */
+    private setRange(range: Range) {
+        if (range === this.range || !RANGES.some(r => r.id === range)) return;
+        this.range = range;
+        this.curve = []; this.curveMem = []; this.curveKey = '';
+        this.detailSeries = null;
+        this.last.list = ''; this.last.dbody = '';
+        this.paintAll();
+        void this.loadCurve();
+        void this.loadDetail();
     }
 
     private setTab(tab: Tab) {
@@ -574,23 +606,26 @@ class ProxmoxPage extends HTMLElement {
      * Kept for a few minutes: the curve is a day long and does not move in fifteen seconds.
      */
     private async loadCurve() {
-        const key = this.hostFilter;
+        const key = `${this.hostFilter}|${this.range}`;
         if (this.curveBusy || (this.curveKey === key && Date.now() - this.curveAt < CURVE_TTL_MS)) return;
         const nodes = fleetNodes(this.scope());
         if (!nodes.length) return;
         this.curveBusy = true;
-        const got: { cores: number; cpu: number[] }[] = [];
+        const cpu: { weight: number; values: number[] }[] = [];
+        const mem: { weight: number; values: number[] }[] = [];
         for (const n of nodes) {
             if (!this.hasAttribute('open')) break;
             try {
-                const s = await apiService.get<PxSeries>(`/api/proxmox/series?host=${encodeURIComponent(n.hostId)}&range=${RANGE}&node=${encodeURIComponent(n.name)}`);
-                if (s?.cpu?.length) got.push({ cores: n.cores, cpu: s.cpu });
+                const s = await apiService.get<PxSeries>(`/api/proxmox/series?host=${encodeURIComponent(n.hostId)}&range=${this.range}&node=${encodeURIComponent(n.name)}`);
+                if (s?.cpu?.length) cpu.push({ weight: n.cores, values: s.cpu });
+                if (s?.mem?.length) mem.push({ weight: n.mem_total, values: s.mem });
             } catch { /* a node that will not answer leaves the others alone */ }
             await new Promise(r => setTimeout(r, 120));
         }
         this.curveBusy = false;
-        if (this.hostFilter !== key || !this.hasAttribute('open')) return;
-        this.curve = weightedCurve(got);
+        if (`${this.hostFilter}|${this.range}` !== key || !this.hasAttribute('open')) return;
+        this.curve = weightedSeries(cpu);
+        this.curveMem = weightedSeries(mem);
         this.curveKey = key;
         this.curveAt = Date.now();
         if (this.tab === 'overview') this.paintBody();
@@ -617,7 +652,7 @@ class ProxmoxPage extends HTMLElement {
         const c = this.current();
         if (!c || c.kind === 'store') return;
         const seq = ++this.detailSeq;
-        const base = `/api/proxmox/series?host=${encodeURIComponent(c.host.id)}&range=${RANGE}`;
+        const base = `/api/proxmox/series?host=${encodeURIComponent(c.host.id)}&range=${this.range}`;
         const url = c.kind === 'guest'
             ? `${base}&node=${encodeURIComponent(c.guest.node)}&kind=${c.guest.kind}&vmid=${c.guest.vmid}`
             : `${base}&node=${encodeURIComponent(c.node.name)}`;
@@ -839,15 +874,10 @@ class ProxmoxPage extends HTMLElement {
         if (!ov) return;
         const scope = this.scope();
         this.charts.delete('fleet');
+        const haveCurve = this.curve.length >= 2 && this.curveKey === `${this.hostFilter}|${this.range}`;
         let chart = '';
-        const haveCurve = this.curve.length >= 2 && this.curveKey === this.hostFilter;
         if (haveCurve) {
-            const spec: ChartSpec = {
-                series: [{ name: this.t('widget.telemetry.cpu'), color: 'var(--text-main)', data: this.curve }],
-                max: 100,
-                edges: [this.rangeLabel(), this.t('proxmox.now')],
-                fmt: v => this.fmt.pct(v),
-            };
+            const spec = this.chartSpec(this.historySeries(this.curve, this.curveMem), 190);
             chart = chartHtml('fleet', spec);
             this.charts.set('fleet', { spec, at: this.timesOf(this.curve.length) });
         }
@@ -860,6 +890,8 @@ class ProxmoxPage extends HTMLElement {
             cpuSpark: haveCurve ? this.curve : [],
             chart,
             latest: this.latest,
+            ranges: RANGES.map(r => ({ id: r.id, label: this.rangeLabel(r.sec) })),
+            range: this.range,
         }, this.t, this.fmt, this.tfmt);
         if (html === this.last.list) return;
         this.last.list = html;
@@ -992,9 +1024,7 @@ class ProxmoxPage extends HTMLElement {
         } else if (c.kind === 'node') {
             hHtml = nodeHeadHtml(c.node, showHost, t);
             const s = this.detailSeries;
-            const chart = s
-                ? this.chartFor('d-cpu', t('widget.telemetry.cpu'), s.cpu, 'var(--text-main)') + this.chartFor('d-mem', t('widget.telemetry.ram'), s.mem, 'var(--text-main)')
-                : '';
+            const chart = s ? this.historyCard('d-cpu', t('proxmoxpage.history'), s.cpu, s.mem, 150) : '';
             const raw = c.node.loadavg && c.node.loadavg.length ? Number(c.node.loadavg[0]) : NaN;
             const load = Number.isFinite(raw) ? i18n.formatNumber(raw, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
             bHtml = this.drawerTab === 'summary'
@@ -1050,7 +1080,7 @@ class ProxmoxPage extends HTMLElement {
         const s = this.detailSeries;
         return {
             view, hostName: host.name,
-            chart: s ? this.chartFor('d-cpu', this.t('widget.telemetry.cpu'), s.cpu, g.running ? 'var(--text-main)' : 'var(--text-dim)') : '',
+            chart: s ? this.historyCard('d-cpu', this.t('proxmoxpage.history'), s.cpu, g.running ? s.mem : [], 150) : '',
             canPower: this.mayPower(host), busy: this.busy.has(unitId(host.id, g.vmid)),
             bookmarkUrl: link?.url ?? '', hasChosenIcon: !!chosenIcon(host, g.node, g.vmid),
             uptime: this.fmt.span(g.uptime),

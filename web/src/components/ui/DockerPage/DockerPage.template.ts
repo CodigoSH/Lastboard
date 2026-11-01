@@ -3,7 +3,7 @@ import { containerName, type DockerContainer, type DockerHost } from '../../../s
 import { stateLevel, stateKey, type ContainerStats, type DockerDetail, type HostRows, type LogLine } from '../../../services/dockerPage';
 import { attentionReason, type AttentionItem, type AttentionReason, type DockerTotals, type ProjectRow } from '../../../services/dockerOverview';
 import type { UnitGroup } from '../../../services/infraUnits';
-import { barHtml, boxHtml, emptyHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
+import { barHtml, boxHtml, chartCardHtml, emptyHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
 
 export type { T };
 
@@ -99,6 +99,8 @@ export interface OverviewData {
     /** The chart, already drawn, or '' while there is not enough history. */
     chart: string;
     hostNames: Record<string, string>;
+    /** CPU in use on each host, in cores, from the readings of its running containers. */
+    hostCores: Record<string, number>;
 }
 
 export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNames: Record<string, string>, t: T): string {
@@ -144,27 +146,41 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         }),
     ].join('');
 
-    const chart = `<div class="card chart">
-        <div class="chart__head"><span class="lbl">${e(t('dockerpage.session_history'))}</span><span class="legend"><span><i style="background:var(--text-main)"></i>${e(t('dockerpage.cores_in_use'))}</span></span></div>
-        ${o.chart || `<div class="chart__empty">${e(t('dockerpage.collecting'))}</div>`}
-    </div>`;
+    const chart = chartCardHtml(t('dockerpage.session_history'),
+        [{ name: t('dockerpage.cores_in_use'), color: 'var(--ok)' }, { name: t('dockerpage.mem_of_limit'), color: 'var(--warn)' }],
+        `<span class="chip">${e(t('dockerpage.live'))}</span>`, o.chart, t('dockerpage.collecting'));
 
     const showHost = o.hosts.length > 1;
     const attn = boxHtml(t('dockerpage.attention'), attentionHtml(o.attention, showHost, o.hostNames, t));
 
-    const projects = o.projects.length
-        ? `<div class="plain">${o.projects.map(p => `<div class="plain__row"><span>${e(p.name)}${showHost ? ` <span class="dim">· ${e(p.host.name)}</span>` : ''}</span><span>${e(fmt.num(p.running))}/${e(fmt.num(p.total))}</span></div>`).join('')}</div>`
-        : `<div class="chart__empty">${e(t('dockerpage.no_projects'))}</div>`;
+    // A project as a card: how its containers are doing, each one named in the colour of its own state.
+    const projectCards = o.projects.map(p => {
+        const mine = o.hosts.filter(h => h.host.id === p.host.id).flatMap(h => h.containers.filter(c => c.Project === p.name));
+        const tones = mine.map(dotTone);
+        const tone = tones.includes('bad') ? 'bad' : tones.includes('warn') ? 'warn' : 'ok';
+        return `<article class="card unit"><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(p.name)}</span>
+            <span class="unit__tail"><span class="chip">${e(fmt.num(p.running))}/${e(fmt.num(p.total))}</span></span></div>
+            <div class="unit__sub">${showHost ? `<span>${e(p.host.name)}</span>` : ''}${mine.map(c => { const k = dotTone(c); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></article>`;
+    }).join('');
+    const projects = o.projects.length ? `<div class="cards">${projectCards}</div>` : `<div class="card"><div class="chart__empty">${e(t('dockerpage.no_projects'))}</div></div>`;
 
-    const hosts = `<div class="plain">${o.hosts.map(h => {
+    const TYPE_KEYS: Record<string, string> = { agent: 'docker.host_tag_agent', tcp: 'docker.host_type_tcp', tls: 'docker.host_type_tls', local: 'docker.host_type_local' };
+    const hostCards = o.hosts.map(h => {
         const up = h.containers.filter(c => stateLevel(c.State || c.Status) === 'up').length;
-        const right = h.error ? e(t(h.error)) : h.loaded ? `${e(fmt.num(up))}/${e(fmt.num(h.containers.length))}` : '…';
-        return `<div class="plain__row"><span>${e(h.host.name)}</span><span>${right}</span></div>`;
-    }).join('')}</div>`;
+        const cores = o.hostCores[h.host.id] ?? 0;
+        const tone = h.error ? 'bad' : 'ok';
+        return `<article class="card unit"><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(h.host.name)}</span>
+            <span class="unit__tail"><span class="chip">${e(t(TYPE_KEYS[h.host.type] ?? 'docker.host_type'))}</span></span></div>
+            <div class="unit__sub">${h.host.url ? tech(h.host.url) : ''}</div>
+            ${h.error ? `<div class="unit__off">${e(t(h.error))}</div>` : h.loaded
+                ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('docker.state_running'))}</span><span>CPU ${e(fmt.dec(cores))} ${e(t('dockerpage.cores_in_use'))}</span></div>` : ''}</article>`;
+    }).join('');
+    const hosts = `<div class="cards">${hostCards}</div>`;
 
     return `<div class="kpis">${kpis}</div>
         <div class="grid g-main" style="margin-block-start:12px">${chart}${attn}</div>
-        <div class="grid g-2">${boxHtml(t('dockerpage.projects'), projects)}${boxHtml(t('docker.hosts'), hosts)}</div>`;
+        ${boxHtml(t('dockerpage.projects'), projects, fmt.num(o.projects.length))}
+        ${boxHtml(t('docker.hosts'), hosts, fmt.num(o.hosts.length))}`;
 }
 
 // ── The inventory ──────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import type { UnitGroup } from '../../../services/infraUnits';
 import {
     type AttentionItem, type FleetNode, type FleetStore, type FleetTotals, type AttentionReason,
 } from '../../../services/proxmoxOverview';
-import { barHtml, boxHtml, emptyHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
+import { barHtml, boxHtml, chartCardHtml, emptyHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
 import { typeLabel, type Fmt as TaskFmt } from './ProxmoxTasks.template';
 
 export type { T };
@@ -66,6 +66,9 @@ export interface OverviewData {
     /** The chart, already drawn, or '' while there is none. */
     chart: string;
     latest: { tasks: PxTask[]; where: string } | null;
+    /** The ranges the history can be read over, and the one chosen. */
+    ranges: { id: string; label: string }[];
+    range: string;
 }
 
 const REASON_KEYS: Partial<Record<AttentionReason, string>> = { host_down: 'proxmox.connection_error' };
@@ -93,30 +96,42 @@ export function attentionHtml(items: AttentionItem[], showHost: boolean, t: T, f
 const nodeLevel = (n: FleetNode): Level => meterLevel(Math.max(n.cpu, n.mem, n.disk));
 const DOT: Record<Level, string> = { ok: 'dot--ok', warn: 'dot--warn', bad: 'dot--bad' };
 
-/** A node as a row of the Nodes box: its name and the three loads that matter. */
-export function nodeRowHtml(n: FleetNode, showHost: boolean, t: T, fmt: Fmt): string {
-    return `<button type="button" class="nrow" data-go="node" data-host="${e(n.hostId)}" data-ref="${e(n.name)}">
-        <span class="dot ${DOT[nodeLevel(n)]}"></span>
-        <span class="nrow__n">${e(n.name)}${showHost ? ` <span class="dim">· ${e(n.hostName)}</span>` : ''}</span>
-        <span class="nrow__m"><span class="lbl">${e(t('widget.telemetry.cpu'))}</span>${barHtml(n.cpu)}<b>${e(fmt.pct(n.cpu))}</b></span>
-        <span class="nrow__m"><span class="lbl">${e(t('widget.telemetry.ram'))}</span>${barHtml(n.mem)}<b>${e(fmt.pct(n.mem))}</b></span>
+const meter = (label: string, percent: number, fmt: Fmt): string =>
+    `<div class="mrow"><span>${e(label)}</span>${barHtml(percent)}<b>${e(fmt.pct(percent))}</b></div>`;
+
+/** A node as a card: its name, what it is made of and its three loads. */
+export function nodeCardHtml(n: FleetNode, showHost: boolean, t: T, fmt: Fmt): string {
+    const raw = n.loadavg && n.loadavg.length ? Number(n.loadavg[0]) : NaN;
+    const load = Number.isFinite(raw) ? fmt.dec(raw) : '—';
+    const made = [
+        n.cores > 0 ? `${fmt.num(n.cores)} ${t('proxmox.cores').toLowerCase()}` : '',
+        `${fmt.num(n.threads)} ${t('proxmox.threads')}`,
+        `${t('proxmox.uptime').toLowerCase()} ${fmt.span(n.uptime)}`,
+        `${t('proxmox.load')} ${load}`,
+    ].filter(Boolean).join(' · ');
+    return `<button type="button" class="card card--btn unit" data-go="node" data-host="${e(n.hostId)}" data-ref="${e(n.name)}">
+        <div class="unit__h"><span class="dot ${DOT[nodeLevel(n)]}"></span><span class="unit__n">${e(n.name)}</span>${showHost ? `<span class="unit__tail"><span class="chip">${e(n.hostName)}</span></span>` : ''}</div>
+        <div class="unit__sub"><span>${e(made)}</span></div>
+        <div class="unit__m">${meter(t('widget.telemetry.cpu'), n.cpu, fmt)}${meter(t('widget.telemetry.ram'), n.mem, fmt)}${meter(t('widget.proxmox.disk'), n.disk, fmt)}</div>
     </button>`;
 }
 
+/** A store as a row of a card: its name and kind, how full it is, and the figures. */
 export function storeRowHtml(s: FleetStore, showHost: boolean, t: T, fmt: Fmt): string {
-    return `<button type="button" class="srow" data-go="store" data-host="${e(s.hostId)}" data-ref="${e(s.name)}" data-node="${e(s.node)}">
-        <span class="srow__n">${e(s.name)}<small>${e(s.kind)}${s.shared ? ' · ' + e(t('proxmoxpage.shared')) : ''}${showHost ? ' · ' + e(s.hostName) : ''}</small></span>
-        ${barHtml(s.percent)}
-        <span class="srow__v"><b>${e(fmt.pct(s.percent))}</b><small>${e(fmt.bytes(s.used))} / ${e(fmt.bytes(s.total))}</small></span>
+    return `<button type="button" class="task task--store" data-go="store" data-host="${e(s.hostId)}" data-ref="${e(s.name)}" data-node="${e(s.node)}">
+        <span class="task__main"><b>${e(s.name)}</b><small>${e(s.kind)}${s.shared ? ' · ' + e(t('proxmoxpage.shared')) : ''}${showHost ? ' · ' + e(s.hostName) : ''}</small></span>
+        <span class="task__bar">${barHtml(s.percent)}</span>
+        <span class="task__r"><b>${e(fmt.pct(s.percent))}</b><br>${e(fmt.bytes(s.used))} / ${e(fmt.bytes(s.total))}</span>
     </button>`;
 }
 
 function latestTasksHtml(latest: NonNullable<OverviewData['latest']>, t: T, tfmt: TaskFmt): string {
-    if (!latest.tasks.length) return `<div class="chart__empty">${e(t('proxmox.tasks_empty'))}</div>`;
+    if (!latest.tasks.length) return `<div class="card"><div class="chart__empty">${e(t('proxmox.tasks_empty'))}</div></div>`;
     const tone = { ok: 'ok', error: 'bad', warning: 'warn', running: 'warn' } as const;
-    return `<div class="plain">${latest.tasks.slice(0, 5).map(k => `<div class="plain__row">
-        <span><i class="dot dot--${tone[k.state]}"></i> ${e(typeLabel(k.type, t))}${k.id ? ` <span class="dim">${tech(k.id)}</span>` : ''}</span>
-        <span>${e(tfmt.time(k.start))}</span></div>`).join('')}</div>`;
+    return `<div class="card tasks">${latest.tasks.slice(0, 5).map(k => `<div class="task">
+        <span class="dot dot--${tone[k.state]}${k.state === 'running' ? ' dot--pulse' : ''}"></span>
+        <span class="task__main"><b>${e(typeLabel(k.type, t))}${k.id ? ` ${tech(k.id)}` : ''}</b><small>${tech(k.user)} · ${e(tfmt.time(k.start))}${k.message ? ` · <span class="why why--${k.state}">${e(k.message)}</span>` : ''}</small></span>
+        <span class="task__r">${k.end ? e(tfmt.span(Math.max(0, k.end - k.start))) : e(t('proxmox.task_state_running'))}</span></div>`).join('')}</div>`;
 }
 
 export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): string {
@@ -132,8 +147,9 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): st
             label: t('proxmox.machines'), icon: 'server', value: fmt.num(tt.running), unit: `/ ${fmt.num(tt.guests)}`,
             ring: { percent: runningPct, level: ringLevel, label: `${fmt.num(Math.round(runningPct))}%` },
             chips: [
-                { text: `${fmt.num(tt.lxc)} LXC` }, { text: `${fmt.num(tt.vm)} VM` },
+                { text: `● ${fmt.num(tt.running)} ${t('docker.state_running')}`, tone: 'ok' },
                 ...(tt.stopped ? [{ text: `${fmt.num(tt.stopped)} ${t('docker.state_stopped')}`, tone: (tt.outages ? 'bad' : 'warn') as 'bad' | 'warn' }] : []),
+                { text: `${fmt.num(tt.lxc)} LXC` }, { text: `${fmt.num(tt.vm)} VM` },
             ],
         }),
         kpiHtml({
@@ -141,36 +157,39 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): st
             sub: [`${t('proxmox.nodes')}: ${fmt.num(tt.nodes)}`, `${t('proxmox.threads')}: ${fmt.num(tt.threads)}`],
         }),
         kpiHtml({
-            label: t('widget.telemetry.ram'), icon: 'mem', value: tt.memTotal ? fmt.bytes(tt.memUsed) : '—', bar: tt.memTotal ? memPct : undefined,
-            sub: tt.memTotal ? [`${t('proxmox.used')} ${fmt.pct(memPct)}`, `${t('widget.api.label.freespace')} ${fmt.bytes(tt.memTotal - tt.memUsed)}`] : undefined,
+            label: t('widget.telemetry.ram'), icon: 'mem', value: tt.memTotal ? fmt.bytes(tt.memUsed) : '—', unit: tt.memTotal ? `/ ${fmt.bytes(tt.memTotal)}` : undefined,
+            bar: tt.memTotal ? memPct : undefined,
+            sub: tt.memTotal ? [`${fmt.pct(memPct)} ${t('proxmox.used').toLowerCase()}`, `${fmt.bytes(tt.memTotal - tt.memUsed)} ${t('widget.api.label.freespace').toLowerCase()}`] : undefined,
         }),
         kpiHtml({
             label: t('proxmox.storage'), icon: 'disk', value: worst ? fmt.num(Math.round(worst.percent)) : '—', unit: worst ? `% · ${worst.name}` : undefined,
             bar: worst ? worst.percent : undefined,
-            sub: worst ? [`${t('proxmox.storage')}: ${fmt.num(tt.storeCount)}`, `${t('widget.api.label.freespace')} ${fmt.bytes(tt.storeFree)}`] : undefined,
+            sub: worst ? [`${t('proxmox.storage')}: ${fmt.num(tt.storeCount)}`, `${fmt.bytes(tt.storeFree)} ${t('widget.api.label.freespace').toLowerCase()}`] : undefined,
         }),
     ].join('');
 
-    const chart = `<div class="card chart">
-        <div class="chart__head"><span class="lbl">${e(t('proxmoxpage.cpu_chart'))}</span><span class="legend"><span><i style="background:var(--text-main)"></i>${e(t('widget.telemetry.cpu'))}</span></span></div>
-        ${o.chart || `<div class="chart__empty">${e(t('dockerpage.collecting'))}</div>`}
-    </div>`;
+    const seg = `<div class="seg seg--text" role="group">${o.ranges.map(r => `<button type="button" data-range="${e(r.id)}" aria-pressed="${r.id === o.range}">${e(r.label)}</button>`).join('')}</div>`;
+    const chart = chartCardHtml(t('proxmoxpage.history'),
+        [{ name: t('widget.telemetry.cpu'), color: 'var(--ok)' }, { name: t('widget.telemetry.ram'), color: 'var(--warn)' }], seg, o.chart, t('dockerpage.collecting'));
 
-    const nodes = o.nodes.length ? `<div class="plain">${o.nodes.map(n => nodeRowHtml(n, showHost, t, fmt)).join('')}</div>` : `<div class="chart__empty">${e(t('proxmox.not_configured'))}</div>`;
+    const nodes = o.nodes.length ? `<div class="cards">${o.nodes.map(n => nodeCardHtml(n, showHost, t, fmt)).join('')}</div>` : `<div class="chart__empty">${e(t('proxmox.not_configured'))}</div>`;
     const stores = o.stores.length
-        ? `<div class="plain">${[...o.stores].sort((a, b) => b.percent - a.percent).slice(0, 5).map(s => storeRowHtml(s, showHost, t, fmt)).join('')}</div>`
-        : `<div class="chart__empty">${e(t('dockerpage.none'))}</div>`;
+        ? `<div class="card tasks">${[...o.stores].sort((a, b) => b.percent - a.percent).slice(0, 5).map(s => storeRowHtml(s, showHost, t, fmt)).join('')}</div>`
+        : `<div class="card"><div class="chart__empty">${e(t('dockerpage.none'))}</div></div>`;
     const hosts = showHost
-        ? boxHtml(t('proxmox.hypervisors'), `<div class="plain">${o.hosts.map(h => {
+        ? boxHtml(t('proxmox.hypervisors'), `<div class="cards">${o.hosts.map(h => {
             const shape = h.error ? t('proxmox.connection_error') : h.cluster ? `${t('proxmox.cluster')} · ${fmt.num(h.nodes.length)}` : t('proxmox.single_node');
-            return `<div class="plain__row"><span>${h.error ? '<i class="dot dot--bad"></i> ' : ''}${e(h.name)}</span><span>${e(shape)}</span></div>`;
-        }).join('')}</div>`)
+            const up = (h.guests || []).filter(g => g.running).length;
+            return `<article class="card unit"><div class="unit__h"><span class="dot ${h.error ? 'dot--bad' : 'dot--ok'}"></span><span class="unit__n">${e(h.name)}</span></div>
+                <div class="unit__sub"><span>${e(shape)}</span></div>
+                ${h.error ? '' : `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num((h.guests || []).length))} ${e(t('docker.state_running'))}</span></div>`}</article>`;
+        }).join('')}</div>`, fmt.num(o.hosts.length))
         : '';
 
     return `<div class="kpis">${kpis}</div>
-        <div class="grid g-main" style="margin-block-start:12px">${chart}${boxHtml(t('dockerpage.attention'), attentionHtml(o.attention, showHost, t, fmt))}</div>
-        <div class="grid g-2">${boxHtml(t('proxmox.nodes'), nodes)}${boxHtml(t('proxmox.storage'), stores)}</div>
-        ${o.latest ? boxHtml(`${t('proxmoxpage.latest_tasks')} · ${o.latest.where}`, latestTasksHtml(o.latest, t, tfmt)) : ''}
+        <div class="grid g-main" style="margin-block-start:26px">${chart}${boxHtml(t('dockerpage.attention'), attentionHtml(o.attention, showHost, t, fmt))}</div>
+        ${boxHtml(t('proxmox.nodes'), nodes, fmt.num(o.nodes.length))}
+        <div class="grid g-2">${boxHtml(t('proxmox.storage'), stores, t('proxmoxpage.by_use'))}${o.latest ? boxHtml(t('proxmoxpage.latest_tasks'), latestTasksHtml(o.latest, t, tfmt), o.latest.where) : ''}</div>
         ${hosts}`;
 }
 
@@ -249,8 +268,11 @@ export function hostErrorHtml(key: string, hostName: string, t: T): string {
 
 export function storageTabHtml(stores: FleetStore[], showHost: boolean, t: T, fmt: Fmt): string {
     if (!stores.length) return emptyHtml(t('dockerpage.none'));
-    return `<div class="tools"><span class="lbl">${e(t('proxmox.storage'))} · ${e(fmt.num(stores.length))}</span></div>
-        <div class="card plain plain--pad">${[...stores].sort((a, b) => b.percent - a.percent).map(s => storeRowHtml(s, showHost, t, fmt)).join('')}</div>`;
+    const order = [...new Set(stores.map(s => s.hostId))];
+    return order.map(id => {
+        const mine = stores.filter(s => s.hostId === id).sort((a, b) => b.percent - a.percent);
+        return boxHtml(mine[0].hostName, `<div class="card tasks">${mine.map(s => storeRowHtml(s, false, t, fmt)).join('')}</div>`, showHost ? fmt.num(mine.length) : '');
+    }).join('');
 }
 
 // ── The drawer ─────────────────────────────────────────────────────────────

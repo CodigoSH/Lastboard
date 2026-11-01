@@ -110,9 +110,8 @@ export function kpiHtml(k: KpiSpec): string {
         : '';
     return `<div class="card kpi">
         <div class="kpi__top"><span class="lbl">${e(k.label)}</span>${icon(k.icon, 16)}</div>
-        <div class="kpi__main"><div class="kpi__v">${e(k.value)}${k.unit ? `<small>${e(k.unit)}</small>` : ''}</div>${k.ring ? ringHtml(k.ring.percent, k.ring.level, k.ring.label) : ''}</div>
+        <div class="kpi__main"><div class="kpi__v">${e(k.value)}${k.unit ? `<small>${e(k.unit)}</small>` : ''}</div>${k.ring ? ringHtml(k.ring.percent, k.ring.level, k.ring.label) : (k.spark && k.spark.length > 1 ? `<div class="kpi__spark">${sparkHtml(k.spark)}</div>` : '')}</div>
         ${k.bar !== undefined ? barHtml(k.bar) : ''}
-        ${k.spark ? sparkHtml(k.spark) : ''}
         ${k.sub ? `<div class="kpi__sub"><span>${e(k.sub[0])}</span><span>${e(k.sub[1])}</span></div>` : ''}
         ${chips}
     </div>`;
@@ -128,8 +127,16 @@ export function tabsHtml(tabs: TabSpec[], active: string, formatCount: (n: numbe
 }
 
 /** The house box: its name is a pill sitting on the border. */
-export function boxHtml(title: string, body: string): string {
-    return `<section class="box"><span class="pill">${e(title)}</span>${body}</section>`;
+export function boxHtml(title: string, body: string, tail = ''): string {
+    return `<section class="box"><span class="pill">${e(title)}</span>${tail ? `<span class="tail">${e(tail)}</span>` : ''}${body}</section>`;
+}
+
+/** The card a chart lives in: its name and legend on one side, a control or a chip on the other. */
+export function chartCardHtml(title: string, legend: { name: string; color: string }[], right: string, chart: string, empty: string): string {
+    return `<div class="card chart">
+        <div class="chart__head"><div><span class="lbl">${e(title)}</span><div class="legend legend--below">${legend.map(l => `<span><i style="background:${l.color}"></i>${e(l.name)}</span>`).join('')}</div></div>${right}</div>
+        ${chart || `<div class="chart__empty">${e(empty)}</div>`}
+    </div>`;
 }
 
 export const emptyHtml = (title: string, hint = ''): string =>
@@ -140,7 +147,8 @@ export const errorHtml = (message: string): string =>
 
 // ── Chart ──────────────────────────────────────────────────────────────────
 
-export interface ChartSeries { name: string; color: string; data: number[] }
+/** `labels`, when given, are what the cursor reads out instead of the plotted value: a line drawn on another scale still says its own truth. */
+export interface ChartSeries { name: string; color: string; data: number[]; labels?: string[] }
 
 export interface ChartSpec {
     series: ChartSeries[];

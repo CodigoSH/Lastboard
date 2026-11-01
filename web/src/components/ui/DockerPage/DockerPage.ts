@@ -431,7 +431,7 @@ class DockerPage extends HTMLElement {
         cur.setAttribute('opacity', '.7');
         const when = c.at[index] ? i18n.formatDateTime(new Date(c.at[index]), { timeStyle: 'medium' }) : '';
         tip.innerHTML = `<div class="dim">${escapeHtml(when)}</div>` + c.spec.series.map(s =>
-            `<div><span style="color:${s.color}">●</span> ${escapeHtml(s.name)} <b>${escapeHtml(c.spec.fmt(s.data[index]))}</b></div>`).join('');
+            `<div><span style="color:${s.color}">●</span> ${escapeHtml(s.name)} <b>${escapeHtml(s.labels?.[index] ?? c.spec.fmt(s.data[index]))}</b></div>`).join('');
         // The drawing is left-to-right in every language, so the tip is placed in screen terms.
         const px = (x / CHART_WIDTH) * box.width;
         tip.style.left = `${Math.min(Math.max(px + 12, 0), Math.max(0, box.width - tip.offsetWidth - 4))}px`;
@@ -849,15 +849,25 @@ class DockerPage extends HTMLElement {
         let chart = '';
         this.charts.clear();
         if (hist.length >= 2) {
+            // Cores and a share of the memory limit have no common unit: both are drawn on one height, the axis reads in cores,
+            // and the cursor says what each line is really worth.
+            const top = niceMax(Math.max(...cores));
+            const limit = dockerTotals(scope, stats).memLimit;
+            const series: ChartSpec['series'] = [{ name: this.t('dockerpage.cores_in_use'), color: 'var(--ok)', data: cores, labels: cores.map(v => this.fmt.dec(v)) }];
+            if (limit > 0) {
+                const share = hist.map(h => Math.min(100, (h.memUsed / limit) * 100));
+                series.push({ name: this.t('dockerpage.mem_of_limit'), color: 'var(--warn)', data: share.map(v => (v / 100) * top), labels: share.map(v => this.fmt.pct(v)) });
+            }
             const spec: ChartSpec = {
-                series: [{ name: this.t('dockerpage.cores_in_use'), color: 'var(--text-main)', data: cores }],
-                max: niceMax(Math.max(...cores)),
+                series, max: top, height: 190,
                 edges: [this.clock(hist[0].t), this.clock(hist[hist.length - 1].t)],
                 fmt: v => this.fmt.dec(v),
             };
             chart = chartHtml('session', spec);
             this.charts.set('session', { spec, at: hist.map(h => h.t) });
         }
+        const hostCores: Record<string, number> = {};
+        for (const g of this.groups) hostCores[g.host.id] = g.containers.reduce((a, c) => a + (this.stats.get(c.ID)?.CPUPercent ?? 0) / 100, 0);
         const names: Record<string, string> = {};
         for (const g of this.groups) names[g.host.id] = g.host.name;
         const html = overviewHtml({
@@ -869,6 +879,7 @@ class DockerPage extends HTMLElement {
             mem: hist.map(h => h.memUsed),
             chart,
             hostNames: names,
+            hostCores,
         }, this.t, this.fmt);
         if (html === this.last.list) return;
         this.last.list = html;

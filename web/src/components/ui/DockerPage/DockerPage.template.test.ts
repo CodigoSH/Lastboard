@@ -79,7 +79,7 @@ describe('what a container controls is escaped', () => {
     test('the overview: attention list, projects and hosts', () => {
         const rows: HostRows[] = [{ host: { ...host, name: evil }, loaded: true, containers: [ctr({ Name: '/' + evil, Health: 'unhealthy', Project: evil })] }, { host: { ...host, id: 'h2' }, loaded: true, containers: [] }];
         const html = overviewHtml({
-            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil },
+            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil }, hostCores: {},
         }, t, fmt);
         noMarkup(html, evil);
     });

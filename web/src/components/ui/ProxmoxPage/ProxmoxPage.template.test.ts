@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionHtml, cardHtml, guestFooterHtml, guestHeadHtml, guestSummaryHtml, inventoryHtml, nodeRowHtml, overviewHtml, reasonText,
+    attentionHtml, cardHtml, guestFooterHtml, guestHeadHtml, guestSummaryHtml, inventoryHtml, nodeCardHtml, overviewHtml, reasonText,
     rowHtml, storageTabHtml, storeRowHtml, storeSummaryHtml, summaryHtml, type Fmt, type GuestDrawer, type GuestView, type T,
 } from './ProxmoxPage.template';
 import { attentionList, fleetNodes, fleetStores, fleetTotals, type LinkOf } from '../../../services/proxmoxOverview';
@@ -32,7 +32,7 @@ describe('what a hypervisor says is escaped', () => {
         const h = host({ name: evil, nodes: [node({ name: evil, mem: 99 })], stores: [store({ name: evil, kind: evil, percent: 99 })], guests: [guest({ name: evil, running: false })] });
         const link: LinkOf = () => evil;
         const html = attentionHtml(attentionList([h], link), true, t, fmt)
-            + nodeRowHtml(fleetNodes([h])[0], true, t, fmt) + storeRowHtml(fleetStores([h])[0], true, t, fmt)
+            + nodeCardHtml(fleetNodes([h])[0], true, t, fmt) + storeRowHtml(fleetStores([h])[0], true, t, fmt)
             + storeSummaryHtml(fleetStores([h])[0], t, fmt) + storageTabHtml(fleetStores([h]), true, t, fmt);
         expect(html).not.toContain(evil);
         expect(html).toContain('&lt;');
@@ -88,7 +88,7 @@ describe('the actions', () => {
 describe('the overview', () => {
     const hosts = [host({ guests: [guest(), guest({ vmid: 2, running: false })], stores: [store({ percent: 97 })] })];
     const totals = fleetTotals(hosts, noLinks);
-    const base = { totals, attention: attentionList(hosts, noLinks), nodes: fleetNodes(hosts), stores: fleetStores(hosts), hosts, cpuSpark: [], chart: '', latest: null };
+    const base = { totals, attention: attentionList(hosts, noLinks), nodes: fleetNodes(hosts), stores: fleetStores(hosts), hosts, cpuSpark: [], chart: '', latest: null, ranges: [{ id: '24h', label: '1d' }], range: '24h' };
     test('says how many run, lists what needs a look, and has no tasks box without tasks', () => {
         const html = overviewHtml(base, t, fmt, tfmt);
         expect(html).toContain('N(1)');

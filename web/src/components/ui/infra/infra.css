@@ -525,3 +525,16 @@ app-select {
 /* A segmented control whose segments are words: as wide as the word, in the same box as the icon one. */
 .seg--text button { width: auto; height: 28px; padding: 0 11px; font-size: 12px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 .dot--pulse { animation: pulse 1.6s ease-in-out infinite; }
+
+/* The figure beside a sparkline, as the design has it, and a box's note on the border. */
+.kpi__spark { width: 92px; flex: none; color: var(--text-dim); }
+.legend--below { margin-block-start: 8px; }
+.box > .tail { position: absolute; top: 0; inset-inline-end: 12px; transform: translateY(-50%); font: 600 10px/1.4 var(--font-mono); letter-spacing: 0.06em; color: var(--text-dim); background: var(--canvas); padding: 0 6px; }
+.box .cards { margin: 0; }
+.chart .seg button { width: auto; padding: 0 11px; font-size: 12px; }
+.dr__h { gap: 14px; }
+.dr__chips { margin-block-start: 2px; }
+.dr__t { min-height: 44px; }
+
+/* The head of a drawer: the name row, then the chips, with room between them. */
+#dr-head { display: flex; flex-direction: column; gap: 14px; }
