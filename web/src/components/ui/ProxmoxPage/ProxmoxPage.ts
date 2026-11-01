@@ -416,6 +416,9 @@ class ProxmoxPage extends HTMLElement {
         const go = el.closest<HTMLElement>('[data-go]');
         if (go) { this.go(go.dataset.go || '', go.dataset.host || '', go.dataset.ref || ''); return; }
 
+        // Outside the panel, on bare page: it closes, as it does on a narrow window by its scrim.
+        if (this.drawerOpen && el.closest('#body') && !el.closest('button, input, select, app-select, a, label, .unit, .tr')) { this.closeDrawer(); return; }
+
         // A machine: a card or a row.
         const unit = el.closest<HTMLElement>('.unit, .tr:not(.tr--h)');
         if (unit?.dataset.vmid) { this.choose({ kind: 'guest', hostId: unit.dataset.host || '', ref: unit.dataset.vmid }); return; }

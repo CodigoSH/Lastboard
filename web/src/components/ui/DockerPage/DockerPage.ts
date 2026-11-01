@@ -387,9 +387,18 @@ class DockerPage extends HTMLElement {
             return;
         }
 
+        // A project: the containers tab, narrowed to it. A host: everything is read for that host.
+        const project = el.closest<HTMLElement>('[data-project]');
+        if (project) { this.query = project.dataset.project || ''; this.status = 'all'; this.tab = 'containers'; this.last.tools = ''; this.paintAll(); return; }
+        const hostcard = el.closest<HTMLElement>('[data-hostcard]');
+        if (hostcard) { this.hostFilter = hostcard.dataset.hostcard || 'all'; this.paintAll(); return; }
+
+        // Outside the panel, on bare page: it closes, as it does on a narrow window by its scrim.
+        if (this.drawerOpen && el.closest('#body') && !el.closest('button, input, select, app-select, a, label, .unit, .tr')) { this.closeDrawer(); return; }
+
         // A container: a card, a row, or an item of the attention list.
         const unit = el.closest<HTMLElement>('.unit, .tr:not(.tr--h), .attn__row');
-        if (unit) { this.choose(unit.dataset.host || '', unit.dataset.name || '', true); return; }
+        if (unit?.dataset.name) { this.choose(unit.dataset.host || '', unit.dataset.name || '', true); return; }
 
         const act = el.closest<HTMLButtonElement>('.act[data-action]');
         if (act && !act.disabled) { this.act(act.dataset.action as ContainerAction); return; }

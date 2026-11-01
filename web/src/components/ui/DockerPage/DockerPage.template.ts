@@ -163,9 +163,9 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         const mine = o.hosts.filter(h => h.host.id === p.host.id).flatMap(h => h.containers.filter(c => c.Project === p.name));
         const tones = mine.map(dotTone);
         const tone = tones.includes('bad') ? 'bad' : tones.includes('warn') ? 'warn' : 'ok';
-        return `<article class="card unit"${showHost ? ` title="${e(p.host.name)}"` : ''}><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(p.name)}</span>
+        return `<button type="button" class="card card--btn unit" data-project="${e(p.name)}"${showHost ? ` title="${e(p.host.name)}"` : ''}><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(p.name)}</span>
             <span class="unit__tail"><span class="chip">${e(fmt.num(p.running))}/${e(fmt.num(p.total))}</span></span></div>
-            <div class="unit__sub">${mine.map(c => { const k = dotTone(c); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></article>`;
+            <div class="unit__sub">${mine.map(c => { const k = dotTone(c); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></button>`;
     }).join('');
     const projects = o.projects.length ? `<div class="cards">${projectCards}</div>` : `<div class="card"><div class="chart__empty">${e(t('dockerpage.no_projects'))}</div></div>`;
 
@@ -174,11 +174,11 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         const up = h.containers.filter(c => stateLevel(c.State || c.Status) === 'up').length;
         const cores = o.hostCores[h.host.id] ?? 0;
         const tone = h.error ? 'bad' : 'ok';
-        return `<article class="card unit"><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(h.host.name)}</span>
+        return `<button type="button" class="card card--btn unit" data-hostcard="${e(h.host.id)}"><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(h.host.name)}</span>
             <span class="unit__tail"><span class="chip">${e(t(TYPE_KEYS[h.host.type] ?? 'docker.host_type'))}</span></span></div>
             <div class="unit__sub">${h.host.url ? tech(h.host.url) : ''}</div>
             ${h.error ? `<div class="unit__off">${e(t(h.error))}</div>` : h.loaded
-                ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('docker.state_running'))}</span><span>CPU ${e(fmt.dec(cores))} ${e(t('dockerpage.cores_in_use'))}</span></div>` : ''}</article>`;
+                ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('docker.state_running'))}</span><span>CPU ${e(fmt.dec(cores))} ${e(t('dockerpage.cores_in_use'))}</span></div>` : ''}</button>`;
     }).join('');
     const hosts = `<div class="cards">${hostCards}</div>`;
 
