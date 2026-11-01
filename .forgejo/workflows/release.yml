@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  build-and-release:
+  release:
     name: Build & Release
     runs-on: ubuntu-latest
     # `ubuntu-latest` is a label the runner translates, and by default it lands
@@ -15,84 +15,42 @@ jobs:
     # file on the server that nothing versions. See the house rule in
     # codigosh/releases.md.
     container: node:24-trixie
-    strategy:
-      matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-          - goos: linux
-            goarch: arm64
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
-      - name: Setup Go
-        uses: actions/setup-go@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
 
-      - name: Setup Bun (Frontend)
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.4"
 
-      - name: Build Frontend
+      - name: Build frontend
         run: |
-          bun install
+          bun install --frozen-lockfile
           bun run web/build.ts
 
-      - name: Build Backend
+      - name: Build binaries
+        # Both architectures in one job: with CGO off Go cross-compiles, so a job
+        # per architecture only repeated the checkout and the frontend build and
+        # had to hand its binary to the next job as a stored artifact.
+        #
+        # The names are a contract: the web updater and install.sh ask for
+        # lastboard-linux-<arch>.tar.gz with the binary at the archive's root,
+        # and checksums.txt beside it.
         run: |
           VERSION=${GITHUB_REF_NAME}
-
-          export CGO_ENABLED=0
-          export GOOS=${{ matrix.goos }}
-          export GOARCH=${{ matrix.goarch }}
-
-          go build -trimpath -ldflags "-s -w -extldflags '-static' -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=$VERSION" -o lastboard ./cmd/lastboard
-
-      - name: Package
-        run: tar -czvf lastboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz lastboard
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: lastboard-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
-
-  release:
-    needs: build-and-release
-    runs-on: ubuntu-latest
-    # `ubuntu-latest` is a label the runner translates, and by default it lands
-    # on a Node image built on Debian bullseye — 2021, OpenSSL 1.1.1w. Pinned so
-    # what this runs on is a decision in the diff rather than a line in a config
-    # file on the server that nothing versions. See the house rule in
-    # codigosh/releases.md.
-    container: node:24-trixie
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Install dependencies
-        run: apt-get update -qq && apt-get install -y -qq jq
-
-      - name: Download Artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
-
-      - name: Generate Checksums
-        run: |
-          find artifacts -name "*.tar.gz" | sort | while read f; do
-            sha256sum "$f" | awk '{print $1 "  " $2}' | sed 's|artifacts/[^/]*/||'
-          done > artifacts/checksums.txt
-          cat artifacts/checksums.txt
-
-      - name: Set up Go (for signing)
-        uses: actions/setup-go@v7
-        with:
-          go-version: '1.27.3'
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            mkdir -p "build/$arch"
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath \
+              -ldflags "-s -w -extldflags '-static' -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=$VERSION" \
+              -o "build/$arch/lastboard" ./cmd/lastboard
+            tar -czf "dist/lastboard-linux-$arch.tar.gz" -C "build/$arch" lastboard
+          done
+          (cd dist && sha256sum lastboard-linux-*.tar.gz > checksums.txt)
+          cat dist/checksums.txt
 
       - name: Sign checksums.txt
         # If this build carries a public key, clients expect a signature: a
@@ -113,118 +71,110 @@ jobs:
             echo "No public key embedded and no signing key — shipping an unsigned release."
             exit 0
           fi
-          go run ./cmd/sign artifacts/checksums.txt
-          echo "Signature:"; cat artifacts/checksums.txt.sig
+          go run ./cmd/sign dist/checksums.txt
+          echo "Signature:"; cat dist/checksums.txt.sig
 
-      - name: Debug - List Files
-        run: |
-          echo "Checking for release notes:"
-          ls -l RELEASE_NOTES_${GITHUB_REF_NAME}.md || echo "Release notes file not found, will use default."
-          echo "Checking for artifacts:"
-          ls -R artifacts/
-
-      - name: Create or Update Release
+      - name: Create or update the release
+        # Every call is checked. Uploads used to go through `curl -s`, which
+        # exits 0 on an HTTP error, and the step then took the draft flag off:
+        # a forge that refused a file (a full disk does that) would have
+        # published a release without its binary, and every updater would have
+        # failed on it.
         env:
           CI_TOKEN: ${{ secrets.CI_TOKEN }}
         run: |
+          set -euo pipefail
+          [ -n "${CI_TOKEN:-}" ] || { echo "CI_TOKEN is not set" >&2; exit 1; }
           VERSION="${GITHUB_REF_NAME}"
-          REPO="${GITHUB_REPOSITORY}"
-          API="${GITHUB_SERVER_URL}/api/v1"
+          API="${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}"
+
+          # Prints the body; fails, saying why, on anything but a 2xx.
+          api() {
+            local method=$1 url=$2 out code
+            shift 2
+            out=$(curl -sS -w '\n%{http_code}' -X "$method" -H "Authorization: token $CI_TOKEN" "$@" "$url")
+            code=${out##*$'\n'}
+            if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+              echo "$method $url answered HTTP $code" >&2
+              printf '%s\n' "${out%$'\n'*}" >&2
+              return 1
+            fi
+            printf '%s' "${out%$'\n'*}"
+          }
+          json_id() { python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])'; }
+
+          case "$VERSION" in
+            *Beta*|*beta*|*RC*|*rc*) PRERELEASE=true ;;
+            *) PRERELEASE=false ;;
+          esac
+
           NOTES_FILE="RELEASE_NOTES_${VERSION}.md"
+          if [ -f "$NOTES_FILE" ]; then NOTES=$(cat "$NOTES_FILE"); else NOTES="Release $VERSION"; fi
 
-          # Detect prerelease
-          IS_PRERELEASE=false
-          if [[ "$VERSION" == *"Beta"* || "$VERSION" == *"RC"* || "$VERSION" == *"beta"* || "$VERSION" == *"rc"* ]]; then
-            IS_PRERELEASE=true
-          fi
+          # A draft is not returned by /releases/latest, so the update check
+          # cannot offer this version until every file is on it.
+          payload=$(VERSION="$VERSION" NOTES="$NOTES" PRE="$PRERELEASE" python3 -c 'import json, os; print(json.dumps({"tag_name": os.environ["VERSION"], "name": os.environ["VERSION"], "body": os.environ["NOTES"], "prerelease": os.environ["PRE"] == "true", "draft": True}))')
 
-          # Read release notes
-          if [ -f "$NOTES_FILE" ]; then
-            NOTES=$(cat "$NOTES_FILE")
-          else
-            NOTES="Release $VERSION"
-          fi
+          existing=$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: token $CI_TOKEN" "$API/releases/tags/$VERSION")
+          case "$existing" in
+            200)
+              echo "The release exists: hiding it while its files are replaced."
+              id=$(api GET "$API/releases/tags/$VERSION" | json_id)
+              api PATCH "$API/releases/$id" -H 'Content-Type: application/json' -d "$payload" > /dev/null
+              for asset in $(api GET "$API/releases/$id/assets" | python3 -c 'import json,sys; [print(a["id"]) for a in json.load(sys.stdin)]'); do
+                api DELETE "$API/releases/$id/assets/$asset" > /dev/null
+              done
+              ;;
+            404)
+              id=$(api POST "$API/releases" -H 'Content-Type: application/json' -d "$payload" | json_id)
+              ;;
+            *)
+              echo "Asking whether $VERSION has a release answered HTTP $existing" >&2
+              exit 1
+              ;;
+          esac
+          echo "Release ID: $id"
 
-          NOTES_JSON=$(echo "$NOTES" | jq -Rs .)
-
-          # Check if release already exists
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token $CI_TOKEN" \
-            "$API/repos/$REPO/releases/tags/$VERSION")
-
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "Release exists, updating..."
-
-            RELEASE_ID=$(curl -s \
-              -H "Authorization: token $CI_TOKEN" \
-              "$API/repos/$REPO/releases/tags/$VERSION" | jq -r '.id')
-
-            # Hide the release while we swap assets so clients don't see it
-            # (and prompt an update) with missing/partial downloads.
-            curl -s -X PATCH \
-              -H "Authorization: token $CI_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE, \"draft\": true}" \
-              "$API/repos/$REPO/releases/$RELEASE_ID"
-
-            # Delete existing assets before re-uploading
-            ASSET_IDS=$(curl -s \
-              -H "Authorization: token $CI_TOKEN" \
-              "$API/repos/$REPO/releases/$RELEASE_ID/assets" | jq -r '.[].id')
-            for asset_id in $ASSET_IDS; do
-              curl -s -X DELETE \
-                -H "Authorization: token $CI_TOKEN" \
-                "$API/repos/$REPO/releases/$RELEASE_ID/assets/$asset_id"
-            done
-          else
-            echo "Creating new release..."
-
-            # Create as draft: not returned by /releases/latest or /releases,
-            # so the update check won't surface it until assets are uploaded.
-            RELEASE_ID=$(curl -s -X POST \
-              -H "Authorization: token $CI_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"tag_name\": \"$VERSION\", \"name\": \"$VERSION\", \"body\": $NOTES_JSON, \"prerelease\": $IS_PRERELEASE, \"draft\": true}" \
-              "$API/repos/$REPO/releases" | jq -r '.id')
-          fi
-
-          echo "Release ID: $RELEASE_ID"
-
-          # Upload tar.gz files
-          find artifacts -name "*.tar.gz" | while read f; do
-            filename=$(basename "$f")
-            echo "Uploading $filename..."
-            curl -s -X POST \
-              -H "Authorization: token $CI_TOKEN" \
-              -F "attachment=@$f;filename=$filename" \
-              "$API/repos/$REPO/releases/$RELEASE_ID/assets"
+          for file in dist/*; do
+            name=$(basename "$file")
+            echo "Uploading $name"
+            api POST "$API/releases/$id/assets?name=$name" -F "attachment=@$file" > /dev/null
           done
 
-          # Upload checksums
-          echo "Uploading checksums.txt..."
-          curl -s -X POST \
-            -H "Authorization: token $CI_TOKEN" \
-            -F "attachment=@artifacts/checksums.txt;filename=checksums.txt" \
-            "$API/repos/$REPO/releases/$RELEASE_ID/assets"
+          api PATCH "$API/releases/$id" -H 'Content-Type: application/json' -d '{"draft": false}' > /dev/null
+          echo "Published $VERSION"
 
-          # Upload the signature too, when the release was signed.
-          if [ -f artifacts/checksums.txt.sig ]; then
-            echo "Uploading checksums.txt.sig..."
-            curl -s -X POST \
-              -H "Authorization: token $CI_TOKEN" \
-              -F "attachment=@artifacts/checksums.txt.sig;filename=checksums.txt.sig" \
-              "$API/repos/$REPO/releases/$RELEASE_ID/assets"
+      - name: The release has everything it was built with
+        env:
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: |
+          set -euo pipefail
+          published=$(curl -sSf -H "Authorization: token $CI_TOKEN" \
+            "${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" \
+            | python3 -c 'import json,sys; [print(a["name"]) for a in json.load(sys.stdin).get("assets", [])]' | sort)
+          expected=$(cd dist && ls | sort)
+          missing=$(comm -23 <(printf '%s\n' "$expected") <(printf '%s\n' "$published"))
+          if [ -n "$missing" ]; then
+            echo "These were built and are not on the release:" >&2
+            printf '  %s\n' $missing >&2
+            exit 1
           fi
+          echo "Published: $(printf '%s\n' "$published" | tr '\n' ' ')"
 
-          # Publish: all assets are uploaded, so flip draft off. Only now does the
-          # release become visible to the update check, guaranteeing the binary and
-          # checksums.txt exist before any client can attempt to download them.
-          echo "Publishing release (draft -> false)..."
-          curl -s -X PATCH \
-            -H "Authorization: token $CI_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"draft\": false}" \
-            "$API/repos/$REPO/releases/$RELEASE_ID"
+      - name: A beta is not offered on the stable channel
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *Beta*|*beta*|*RC*|*rc*) ;;
+            *) echo "A stable release; nothing to check here."; exit 0 ;;
+          esac
+          latest=$(curl -sSf "${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}/releases/latest" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin).get("tag_name",""))' 2>/dev/null || true)
+          if [ "$latest" = "$GITHUB_REF_NAME" ]; then
+            echo "$GITHUB_REF_NAME is what /releases/latest answers, and that is what the" >&2
+            echo "stable channel asks: it was published without the prerelease flag." >&2
+            exit 1
+          fi
+          echo "The stable channel sees: ${latest:-no stable release yet}"
 
   # Retention: only after the release is successfully published (needs: release)
   # do we dispatch the pruner. Gating on success guarantees we never delete the
@@ -234,11 +184,8 @@ jobs:
     name: Trigger retention prune
     needs: release
     runs-on: ubuntu-latest
-    # `ubuntu-latest` is a label the runner translates, and by default it lands
-    # on a Node image built on Debian bullseye — 2021, OpenSSL 1.1.1w. Pinned so
-    # what this runs on is a decision in the diff rather than a line in a config
-    # file on the server that nothing versions. See the house rule in
-    # codigosh/releases.md.
+    # See the note on the job above: the label lands on a 2021 Debian image by
+    # default, so it is pinned.
     container: node:24-trixie
     steps:
       - name: Dispatch prune-releases (live) after successful publish
@@ -257,17 +204,13 @@ jobs:
   # push-triggered build happens minutes before this release exists (and while
   # it is still a draft), so it would advertise the previous version until some
   # unrelated push rebuilt it. Asking here, gated on a published release, is the
-  # only trigger that sees this version.
-  #
-  # Dispatched rather than done here: this job used to carry its own copy of
-  # site-rebuild.yml's twenty lines — the Coolify call, the GET-then-POST
-  # handling, the force=true — and the two had already drifted, 40 lines against
-  # 34 with sixteen of them different. One implementation, called twice.
+  # only trigger that sees this version. Dispatched rather than done here, so
+  # how the site is rebuilt lives in one place: site-rebuild.yml.
   trigger-site-rebuild:
     name: Rebuild the website
     needs: release
     runs-on: ubuntu-latest
-    # See the note on the job above: the label lands on a 2021 Debian image by
+    # See the note on the first job: the label lands on a 2021 Debian image by
     # default, so it is pinned.
     container: node:24-trixie
     steps:
