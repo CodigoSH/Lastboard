@@ -58,3 +58,12 @@ button.task:hover { background: var(--surface-hover); }
 .sj-box { border: 0; }
 .ll--warn { border-inline-start-color: var(--warn); background: rgba(var(--warn-rgb), 0.06); }
 .tools .lbl { padding-block: 4px; }
+
+/* A store as a row: name and kind, the bar, then how full it is and the figures, in three columns. */
+.task--store { grid-template-columns: minmax(110px, 160px) minmax(0, 1fr) minmax(110px, 150px); }
+.task__bar .bar { height: 7px; }
+.task--store .task__r b { color: var(--text-main); font-size: 13px; }
+@media (max-width: 700px) {
+    .task--store { grid-template-columns: minmax(0, 1fr) auto; }
+    .task--store .task__bar { grid-column: 1 / -1; order: 3; }
+}

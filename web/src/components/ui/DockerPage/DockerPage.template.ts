@@ -100,8 +100,8 @@ export interface OverviewData {
     /** The chart, already drawn, or '' while there is not enough history. */
     chart: string;
     hostNames: Record<string, string>;
-    /** CPU in use on each host, in cores, from the readings of its running containers. */
-    hostCores: Record<string, number>;
+    /** What each host's running containers use, as a share of the host; null where the host did not say how big it is. */
+    hostUse: Record<string, { cpu: number | null; mem: number | null }>;
     /** What the hosts in view have, when every one of them said; null otherwise, and the figures are read against what was seen. */
     capacity: { cores: number; mem: number } | null;
 }
@@ -143,7 +143,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         kpiHtml(cap ? {
             label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.num(Math.round(cpuPct)), unit: '%',
             bar: cpuPct, spark: o.cores, sparkTone: meterLevel(cpuPct),
-            sub: [`${fmt.dec(tt.cores)} ${t('dockerpage.cores_in_use')}`, t('dockerpage.host_cores', { count: fmt.num(cap.cores) })],
+            sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), t('dockerpage.host_threads', { count: fmt.num(cap.cores) })],
         } : {
             label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.dec(tt.cores), unit: t('dockerpage.cores_in_use'),
             bar: cpuPct, spark: o.cores, sparkTone: meterLevel(cpuPct),
@@ -179,7 +179,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         const tones = mine.map(dotTone);
         const tone = tones.includes('bad') ? 'bad' : tones.includes('warn') ? 'warn' : 'ok';
         return `<button type="button" class="card card--btn unit" data-project="${e(p.name)}"${showHost ? ` title="${e(p.host.name)}"` : ''}><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(p.name)}</span>
-            <span class="unit__tail"><span class="chip">${e(fmt.num(p.running))}/${e(fmt.num(p.total))}</span></span></div>
+            <span class="unit__tail unit__tail--near"><span class="chip">${e(fmt.num(p.running))}/${e(fmt.num(p.total))}</span></span></div>
             <div class="unit__sub">${mine.map(c => { const k = dotTone(c); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></button>`;
     }).join('');
     const projects = o.projects.length ? `<div class="cards">${projectCards}</div>` : `<div class="card"><div class="chart__empty">${e(t('dockerpage.no_projects'))}</div></div>`;
@@ -187,13 +187,13 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     const TYPE_KEYS: Record<string, string> = { agent: 'docker.host_tag_agent', tcp: 'docker.host_type_tcp', tls: 'docker.host_type_tls', local: 'docker.host_type_local' };
     const hostCards = o.hosts.map(h => {
         const up = h.containers.filter(c => stateLevel(c.State || c.Status) === 'up').length;
-        const cores = o.hostCores[h.host.id] ?? 0;
+        const use = o.hostUse[h.host.id];
         const tone = h.error ? 'bad' : 'ok';
         return `<button type="button" class="card card--btn unit" data-hostcard="${e(h.host.id)}"><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(h.host.name)}</span>
-            <span class="unit__tail"><span class="chip">${e(t(TYPE_KEYS[h.host.type] ?? 'docker.host_type'))}</span></span></div>
+            <span class="unit__tail unit__tail--near"><span class="chip">${e(t(TYPE_KEYS[h.host.type] ?? 'docker.host_type'))}</span></span></div>
             <div class="unit__sub">${h.host.url ? tech(h.host.url) : ''}</div>
             ${h.error ? `<div class="unit__off">${e(t(h.error))}</div>` : h.loaded
-                ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('docker.state_running'))}</span><span>CPU ${e(fmt.dec(cores))} ${e(t('dockerpage.cores_in_use'))}</span></div>` : ''}</button>`;
+                ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('docker.state_running'))}</span><span>${use && use.cpu !== null && use.mem !== null ? `CPU ${e(fmt.pct(use.cpu))} · RAM ${e(fmt.pct(use.mem))}` : ''}</span></div>` : ''}</button>`;
     }).join('');
     const hosts = `<div class="cards">${hostCards}</div>`;
 

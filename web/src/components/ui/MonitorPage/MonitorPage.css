@@ -120,7 +120,6 @@
     outline: none;
 }
 
-.search input::-webkit-search-cancel-button { filter: grayscale(1) opacity(0.6); }
 
 .mp__title svg { color: var(--accent); }
 

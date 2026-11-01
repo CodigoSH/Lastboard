@@ -243,28 +243,24 @@ dashboard-switcher.disabled {
     pointer-events: auto;
 }
 
+/* The same plain grey cross every search box has. */
 .search-clear {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     /* Without this the pill's overflow eats it before the text stops growing. */
     flex-shrink: 0;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: rgba(128, 128, 128, 0.2);
-    color: var(--text-dim);
-    font-size: 14px;
-    line-height: 1;
-    cursor: pointer;
     margin: 0 8px;
-    transition: all 0.2s;
-    flex-shrink: 0;
+    font-size: 0;
+    cursor: pointer;
+    background-color: var(--text-dim);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: background-color 0.2s;
 }
 
 .search-clear:hover {
-    background: var(--accent);
-    color: #fff;
+    background-color: var(--text-main);
 }
 
 .search-icon {

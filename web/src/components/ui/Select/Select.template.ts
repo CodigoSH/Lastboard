@@ -30,7 +30,7 @@ export const selectTriggerTemplate = (displayLabel: string): string => `
  */
 export const selectSearchTemplate = (placeholder: string): string => `
             <div class="select-search">
-                <input type="text" id="select-search-input" autocomplete="off" spellcheck="false"
+                <input type="search" id="select-search-input" autocomplete="off" spellcheck="false"
                        placeholder="${escapeHtml(placeholder)}" />
             </div>
         `;

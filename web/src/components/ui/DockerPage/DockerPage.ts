@@ -914,8 +914,13 @@ class DockerPage extends HTMLElement {
             chart = chartHtml('session', spec);
             this.charts.set('session', { spec, at: hist.map(h => h.t) });
         }
-        const hostCores: Record<string, number> = {};
-        for (const g of this.groups) hostCores[g.host.id] = g.containers.reduce((a, c) => a + (this.stats.get(c.ID)?.CPUPercent ?? 0) / 100, 0);
+        const hostUse: Record<string, { cpu: number | null; mem: number | null }> = {};
+        for (const g of this.groups) {
+            const size = this.sizes.get(g.host.id);
+            const cores = g.containers.reduce((a, c) => a + (this.stats.get(c.ID)?.CPUPercent ?? 0) / 100, 0);
+            const mem = g.containers.reduce((a, c) => a + (this.stats.get(c.ID)?.MemUsed ?? 0), 0);
+            hostUse[g.host.id] = size ? { cpu: Math.min(100, (cores / size.cores) * 100), mem: Math.min(100, (mem / size.mem_total) * 100) } : { cpu: null, mem: null };
+        }
         const names: Record<string, string> = {};
         for (const g of this.groups) names[g.host.id] = g.host.name;
         const html = overviewHtml({
@@ -927,7 +932,7 @@ class DockerPage extends HTMLElement {
             mem: hist.map(h => h.memUsed),
             chart,
             hostNames: names,
-            hostCores,
+            hostUse,
             capacity: this.capacity(scope),
         }, this.t, this.fmt);
         if (html === this.last.list) return;

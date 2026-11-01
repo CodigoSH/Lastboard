@@ -1450,7 +1450,7 @@ class WidgetConfigModal extends HTMLElement {
             return `<div class="docker-host-group px-host-group" data-host-id="${esc(h.id)}" data-natural="${esc(natural)}">${body}</div>`;
         }).join('');
 
-        const search = `<input type="text" id="px-search" placeholder="${esc(i18n.t('widget.proxmox.search_machines'))}" />`;
+        const search = `<input type="search" id="px-search" placeholder="${esc(i18n.t('widget.proxmox.search_machines'))}" />`;
         const list = `<div id="px-machines" class="docker-containers">${groups}</div>`;
         const hint = `<small>${i18n.t('widget.proxmox.machines_desc')}</small>`;
 
@@ -1653,14 +1653,14 @@ class WidgetConfigModal extends HTMLElement {
         // columns out of anything else meant restyling each property by hand,
         // and the ones that got missed rendered as bare browser defaults.
         const hostSearch = hosts.length >= WidgetConfigModal.DOCKER_HOST_SEARCH_FROM
-            ? `<input type="text" id="docker-host-search"
+            ? `<input type="search" id="docker-host-search"
                       placeholder="${esc(i18n.t('docker.search_hosts'))}" />`
             : '';
 
         // Edit mode locks the preferences drawer, so this points there rather than linking.
         const addHostBtn = `<small>${esc(i18n.t('docker.hosts_in_preferences'))}</small>`;
 
-        const containerSearch = `<input type="text" id="docker-search"
+        const containerSearch = `<input type="search" id="docker-search"
                    placeholder="${esc(i18n.t('docker.search_containers'))}" />`;
 
         const containerList = `

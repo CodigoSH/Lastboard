@@ -101,16 +101,13 @@ const meter = (label: string, percent: number, fmt: Fmt): string =>
 
 /** A node as a card: its name, what it is made of and its three loads. */
 export function nodeCardHtml(n: FleetNode, showHost: boolean, t: T, fmt: Fmt): string {
-    const raw = n.loadavg && n.loadavg.length ? Number(n.loadavg[0]) : NaN;
-    const load = Number.isFinite(raw) ? fmt.dec(raw) : '—';
+    // One line: what it is made of, and how long it has been on.
     const made = [
-        n.cores > 0 ? `${fmt.num(n.cores)} ${t('proxmox.cores').toLowerCase()}` : '',
-        `${fmt.num(n.threads)} ${t('proxmox.threads')}`,
-        `${t('proxmox.uptime').toLowerCase()} ${fmt.span(n.uptime)}`,
-        `${t('proxmox.load')} ${load}`,
-    ].filter(Boolean).join(' · ');
+        n.cores > 0 ? `${fmt.num(n.cores)} ${t('proxmox.cores').toLowerCase()} / ${fmt.num(n.threads)} ${t('proxmox.threads')}` : `${fmt.num(n.threads)} ${t('proxmox.threads')}`,
+        `${t('proxmoxpage.powered_on')} ${fmt.span(n.uptime)}`,
+    ].join(' · ');
     return `<button type="button" class="card card--btn unit" data-go="node" data-host="${e(n.hostId)}" data-ref="${e(n.name)}">
-        <div class="unit__h"><span class="dot ${DOT[nodeLevel(n)]}"></span><span class="unit__n">${e(n.name)}</span>${showHost ? `<span class="unit__tail"><span class="chip">${e(n.hostName)}</span></span>` : ''}</div>
+        <div class="unit__h"><span class="dot ${DOT[nodeLevel(n)]}"></span><span class="unit__n">${e(n.name)}</span>${showHost ? `<span class="unit__tail unit__tail--near"><span class="chip">${e(n.hostName)}</span></span>` : ''}</div>
         <div class="unit__sub"><span>${e(made)}</span></div>
         <div class="unit__m">${meter(t('widget.telemetry.cpu'), n.cpu, fmt)}${meter(t('widget.telemetry.ram'), n.mem, fmt)}${meter(t('widget.proxmox.disk'), n.disk, fmt)}</div>
     </button>`;
