@@ -30,6 +30,8 @@ import {
 import infraCss from '../infra/infra.css' with { type: 'text' };
 import css from './DockerPage.css' with { type: 'text' };
 
+/** How many hosts get a button each beside "All" before the header switches to a selector. */
+const MAX_HOST_BUTTONS = 2;
 const LIST_MS = 10000;
 const LOG_MS = 3000;
 const FIRST_TAIL = 100;
@@ -363,6 +365,9 @@ class DockerPage extends HTMLElement {
         if (tab) { this.setTab(tab.dataset.tab as Tab); return; }
         const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
         if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
+
+        const hostf = el.closest<HTMLElement>('[data-hostf]');
+        if (hostf) { this.hostFilter = hostf.dataset.hostf || 'all'; this.paintAll(); return; }
 
         const filter = el.closest<HTMLElement>('[data-filter]');
         if (filter && isStatusFilter(filter.dataset.filter)) { this.status = filter.dataset.filter; this.paintTools(); this.paintInventory(); return; }
@@ -732,7 +737,15 @@ class DockerPage extends HTMLElement {
         const t = this.t;
         const ready = this.loaded && !this.fatal && !this.noHosts;
         const summary = ready ? summaryHtml(dockerTotals(this.scope(), this.statsObject()), t, this.fmt) : '';
-        const hosts = this.groups.length > 1 ? '<app-select id="hp-host"></app-select>' : '';
+        // Up to two hosts are buttons beside "All", as in the design; more than that would not fit a header, so it is a selector.
+        const few = this.groups.length > 1 && this.groups.length <= MAX_HOST_BUTTONS;
+        const pressed = (id: string) => `aria-pressed="${this.hostFilter === id}"`;
+        const hosts = few
+            ? `<span class="seg seg--text" role="group" aria-label="${escapeHtml(t('docker.hosts'))}">
+                <button type="button" data-hostf="all" ${pressed('all')}>${escapeHtml(t('infra.filter_all'))}</button>
+                ${this.groups.map(g => `<button type="button" data-hostf="${escapeHtml(g.host.id)}" ${pressed(g.host.id)}>${escapeHtml(g.host.name)}</button>`).join('')}
+            </span>`
+            : this.groups.length > 1 ? '<app-select id="hp-host"></app-select>' : '';
         const html = `<div class="ptitle">${icon('box', 20)}<span>${escapeHtml(t('widget.docker.name'))}</span></div>
             <div class="psum">${summary}</div>
             <span class="pspacer"></span>
