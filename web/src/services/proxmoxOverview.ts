@@ -195,3 +195,23 @@ export function weightedSeries(series: { weight: number; values: number[] }[]): 
 export function weightedCurve(series: { cores: number; cpu: number[] }[]): number[] {
     return weightedSeries(series.map(s => ({ weight: s.cores, values: s.cpu })));
 }
+
+// ── How long something has been on ─────────────────────────────────────────
+
+export type UptimeUnit = 'minute' | 'hour' | 'day' | 'month' | 'year';
+
+const DAY = 86400;
+
+/**
+ * An uptime in the one unit that reads best: minutes under an hour, hours under a day, days up to
+ * two months, months up to two years, and years after that — so that a machine that has been on for
+ * 400 days says "1.1 years" and not "400 days". Months are the average one (30.44 days).
+ */
+export function uptimeUnit(sec: number): { value: number; unit: UptimeUnit } {
+    const s = Number.isFinite(sec) && sec > 0 ? sec : 0;
+    if (s < 3600) return { value: Math.floor(s / 60), unit: 'minute' };
+    if (s < DAY) return { value: Math.floor(s / 3600), unit: 'hour' };
+    if (s < 60 * DAY) return { value: Math.floor(s / DAY), unit: 'day' };
+    if (s < 730 * DAY) return { value: Math.floor(s / (30.44 * DAY)), unit: 'month' };
+    return { value: Math.round((s / (365.25 * DAY)) * 10) / 10, unit: 'year' };
+}

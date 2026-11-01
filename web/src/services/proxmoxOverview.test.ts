@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionList, fleetStores, fleetTotals, guestUnits, unitId, weightedCpu, weightedCurve, type LinkOf,
+    attentionList, fleetStores, fleetTotals, guestUnits, unitId, uptimeUnit, weightedCpu, weightedCurve, type LinkOf,
 } from './proxmoxOverview';
 import type { PxGuest, PxHost, PxNode, PxStore } from './proxmoxApi';
 
@@ -116,5 +116,26 @@ describe('weightedCurve', () => {
         expect(weightedCurve([{ cores: 4, cpu: [] }, { cores: 4, cpu: [10, 20] }])).toEqual([10, 20]);
         expect(weightedCurve([])).toEqual([]);
         expect(weightedCurve([{ cores: 2, cpu: [] }])).toEqual([]);
+    });
+});
+
+describe('uptimeUnit', () => {
+    const DAY = 86400;
+    test('minutes, hours, days, months, years — each where it reads best', () => {
+        expect(uptimeUnit(59)).toEqual({ value: 0, unit: 'minute' });
+        expect(uptimeUnit(30 * 60)).toEqual({ value: 30, unit: 'minute' });
+        expect(uptimeUnit(3 * 3600)).toEqual({ value: 3, unit: 'hour' });
+        expect(uptimeUnit(42 * DAY)).toEqual({ value: 42, unit: 'day' });
+        expect(uptimeUnit(59 * DAY)).toEqual({ value: 59, unit: 'day' });
+        expect(uptimeUnit(60 * DAY)).toEqual({ value: 1, unit: 'month' });
+        expect(uptimeUnit(200 * DAY)).toEqual({ value: 6, unit: 'month' });
+        expect(uptimeUnit(729 * DAY)).toEqual({ value: 23, unit: 'month' });
+        expect(uptimeUnit(730 * DAY)).toEqual({ value: 2, unit: 'year' });
+        expect(uptimeUnit(400 * DAY).unit).toBe('month');
+        expect(uptimeUnit(1000 * DAY)).toEqual({ value: 2.7, unit: 'year' });
+    });
+    test('nonsense is nothing, not NaN', () => {
+        expect(uptimeUnit(NaN)).toEqual({ value: 0, unit: 'minute' });
+        expect(uptimeUnit(-5)).toEqual({ value: 0, unit: 'minute' });
     });
 });

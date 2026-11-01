@@ -20,7 +20,7 @@ import {
     countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
 } from '../../../services/infraUnits';
 import {
-    attentionList, fleetNodes, fleetStores, fleetTotals, guestUnits, liveHosts, unitId, weightedSeries,
+    attentionList, fleetNodes, fleetStores, fleetTotals, guestUnits, liveHosts, unitId, uptimeUnit, weightedSeries,
     type FleetNode, type FleetStore, type LinkOf,
 } from '../../../services/proxmoxOverview';
 import {
@@ -148,7 +148,12 @@ class ProxmoxPage extends HTMLElement {
             const { value, unit } = byteUnit(n);
             return i18n.formatNumber(value, { style: 'unit', unit, unitDisplay: 'short', maximumFractionDigits: value < 10 && unit !== 'byte' ? 1 : 0 });
         },
-        span: (sec) => (!sec || sec < 0 ? '—' : i18n.formatDuration(sec)),
+        // An uptime: in days for a while, then months, then years.
+        span: (sec) => {
+            if (!sec || sec < 0) return '—';
+            const { value, unit } = uptimeUnit(sec);
+            return i18n.formatNumber(value, { style: 'unit', unit, unitDisplay: 'long', maximumFractionDigits: unit === 'year' ? 1 : 0 });
+        },
     };
 
     private readonly pageTasks = new TaskPanel(this.t, this.tfmt);
