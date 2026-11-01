@@ -344,7 +344,9 @@ svg { display: block; flex: none; }
 .group { margin-block-end: 6px; }
 .group__h { margin-block: 14px 8px; }
 
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(262px, 1fr)); gap: 10px; }
+/* A card has a width of its own: with 1fr the tracks stretch to the row, and the room the side panel takes would make every card swell. */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(262px, 320px)); gap: 10px; }
+@media (max-width: 640px) { .cards { grid-template-columns: minmax(0, 1fr); } }
 .unit { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-height: 116px; }
 .unit__h { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .unit__n { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
