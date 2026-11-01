@@ -108,7 +108,7 @@ describe('a box', () => {
 describe('the overview', () => {
     const hosts = [host({ guests: [guest(), guest({ vmid: 2, running: false })], stores: [store({ percent: 97 })] })];
     const totals = fleetTotals(hosts, noLinks);
-    const base = { totals, attention: attentionList(hosts, noLinks), nodes: fleetNodes(hosts), stores: fleetStores(hosts), hosts, cpuSpark: [], chart: '', latest: null, ranges: [{ id: '24h', label: '1d' }], range: '24h' };
+    const base = { totals, attention: attentionList(hosts, noLinks), nodes: fleetNodes(hosts), stores: fleetStores(hosts), hosts, cpuSpark: [], chart: '', memSpark: [], latest: null, ranges: [{ id: '24h', label: '1d' }], range: '24h' };
     test('says how many run, lists what needs a look, and has no tasks box without tasks', () => {
         const html = overviewHtml(base, t, fmt, tfmt);
         expect(html).toContain('N(1)');

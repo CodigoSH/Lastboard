@@ -406,7 +406,8 @@ class ProxmoxPage extends HTMLElement {
         if (el.closest('#dr-close') || el.closest('#scrim')) { this.closeDrawer(); return; }
 
         const tab = el.closest<HTMLElement>('#tabs [data-tab]');
-        if (tab) { this.setTab(tab.dataset.tab as Tab); return; }
+        // Going to another page puts the side panel away: it belongs to what was in front of it.
+        if (tab) { this.closeDrawer(); this.setTab(tab.dataset.tab as Tab); return; }
         const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
         if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
 
@@ -924,6 +925,7 @@ class ProxmoxPage extends HTMLElement {
             stores: fleetStores(scope),
             hosts: scope,
             cpuSpark: haveCurve ? this.curve : [],
+            memSpark: haveCurve ? this.curveMem : [],
             chart,
             latest: this.latest,
             ranges: RANGES.map(r => ({ id: r.id, label: this.rangeLabel(r.sec) })),

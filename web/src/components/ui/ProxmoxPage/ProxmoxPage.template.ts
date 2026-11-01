@@ -69,6 +69,8 @@ export interface OverviewData {
     stores: FleetStore[];
     hosts: PxHost[];
     cpuSpark: number[];
+    /** The memory curve, for the miniature beside the figure. */
+    memSpark: number[];
     /** The chart, already drawn, or '' while there is none. */
     chart: string;
     latest: { tasks: PxTask[]; where: string } | null;
@@ -156,11 +158,11 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): st
         }),
         kpiHtml({
             label: t('widget.telemetry.cpu'), icon: 'cpu', value: fmt.num(Math.round(tt.cpu)), unit: '%', bar: tt.cpu, spark: o.cpuSpark, sparkTone: meterLevel(tt.cpu),
-            sub: [`${t('proxmox.nodes')}: ${fmt.num(tt.nodes)}`, `${t('proxmox.threads')}: ${fmt.num(tt.threads)}`],
+            sub: [`${t('proxmox.nodes')}: ${fmt.num(tt.nodes)}`, tt.cores > 0 ? `${fmt.num(tt.cores)} ${t('proxmox.cores').toLowerCase()} / ${fmt.num(tt.threads)} ${t('proxmox.threads')}` : `${fmt.num(tt.threads)} ${t('proxmox.threads')}`],
         }),
         kpiHtml({
             label: t('widget.telemetry.ram'), icon: 'mem', value: tt.memTotal ? fmt.bytes(tt.memUsed) : '—', unit: tt.memTotal ? `/ ${fmt.bytes(tt.memTotal)}` : undefined,
-            bar: tt.memTotal ? memPct : undefined,
+            bar: tt.memTotal ? memPct : undefined, spark: o.memSpark, sparkTone: meterLevel(memPct),
             sub: tt.memTotal ? [`${fmt.pct(memPct)} ${t('proxmox.used').toLowerCase()}`, `${fmt.bytes(tt.memTotal - tt.memUsed)} ${t('widget.api.label.freespace').toLowerCase()}`] : undefined,
         }),
         kpiHtml({
