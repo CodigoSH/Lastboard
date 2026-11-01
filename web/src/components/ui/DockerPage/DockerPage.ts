@@ -20,8 +20,9 @@ import {
     countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
 } from '../../../services/infraUnits';
 import {
-    chartHtml, chartIndexAt, CHART_WIDTH, icon, tabsHtml, toolbarHtml, type ChartSpec,
+    chartHtml, chartIndexAt, CHART_WIDTH, icon, sortOptions, tabsHtml, toolbarHtml, type ChartSpec,
 } from '../infra/infra.template';
+import '../Select/Select';
 import {
     drawerHeadHtml, envTabHtml, footerHtml, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
     mountsTabHtml, noMatchHtml, overviewHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
@@ -52,6 +53,9 @@ function readFlag(key: string, fallback: boolean): boolean {
 function writeFlag(key: string, on: boolean): void {
     writePref(key, on ? '1' : '0');
 }
+
+/** The product's select, as the page drives it. */
+type SelectEl = HTMLElement & { options: { value: string; label: string }[]; value: string };
 
 type Tab = 'overview' | 'containers' | 'logs';
 type DrawerTab = 'summary' | 'logs' | 'env' | 'mounts';
@@ -328,17 +332,26 @@ class DockerPage extends HTMLElement {
     };
 
     private readonly onChange = (e: Event) => {
-        const el = e.target as HTMLSelectElement;
-        if (el.id === 'hp-host') {
-            this.hostFilter = el.value;
-            this.paintAll();
-        } else if (el.id === 'inv-sort') {
-            if (isSortKey(el.value)) { this.sort = el.value; writePref(SORT_KEY, el.value); this.paintInventory(); }
-        } else if (el.id === 'lg-pick') {
-            const i = el.value.indexOf('/');
-            if (i > 0) this.choose(el.value.slice(0, i), el.value.slice(i + 1), false);
-        }
+        const el = e.target as HTMLElement & { value: string };
+        const value = el.value;
+        // The select closes itself right after it says it changed; painting waits for that.
+        queueMicrotask(() => {
+            if (el.id === 'hp-host') {
+                this.hostFilter = value;
+                this.paintAll();
+            } else if (el.id === 'inv-sort') {
+                if (isSortKey(value)) { this.sort = value; writePref(SORT_KEY, value); this.paintInventory(); }
+            } else if (el.id === 'lg-pick') {
+                const i = value.indexOf('/');
+                if (i > 0) this.choose(value.slice(0, i), value.slice(i + 1), false);
+            }
+        });
     };
+
+    /** A select that is open closes on any scroll, and a repaint scrolls: the refresh waits for the person to choose. */
+    private selectOpen(): boolean {
+        return !!this.shadowRoot?.querySelector('app-select[open]');
+    }
 
     private readonly onClick = (e: Event) => {
         const el = e.target as HTMLElement;
@@ -719,23 +732,36 @@ class DockerPage extends HTMLElement {
         const t = this.t;
         const ready = this.loaded && !this.fatal && !this.noHosts;
         const summary = ready ? summaryHtml(dockerTotals(this.scope(), this.statsObject()), t, this.fmt) : '';
-        const hosts = this.groups.length > 1
-            ? `<select class="sel" id="hp-host" aria-label="${escapeHtml(t('docker.hosts'))}">
-                <option value="all"${this.hostFilter === 'all' ? ' selected' : ''}>${escapeHtml(t('dockerpage.all_hosts'))}</option>
-                ${this.groups.map(g => `<option value="${escapeHtml(g.host.id)}"${this.hostFilter === g.host.id ? ' selected' : ''}>${escapeHtml(g.host.name)}</option>`).join('')}
-            </select>`
-            : '';
+        const hosts = this.groups.length > 1 ? '<app-select id="hp-host"></app-select>' : '';
         const html = `<div class="ptitle">${icon('box', 20)}<span>${escapeHtml(t('widget.docker.name'))}</span></div>
             <div class="psum">${summary}</div>
             <span class="pspacer"></span>
             ${hosts}
-            <button type="button" class="ibtn" id="hp-refresh" aria-label="${escapeHtml(t('infra.refresh'))}" title="${escapeHtml(t('infra.refresh'))}">${icon('refresh', 16, this.loading ? 'spin' : '')}</button>
+            <button type="button" class="ibtn" id="hp-refresh" aria-label="${escapeHtml(t('infra.refresh'))}" title="${escapeHtml(t('infra.refresh'))}">${icon('refresh', 16)}</button>
             <button type="button" class="ibtn" id="hp-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button>`;
-        if (html === this.last.head) return;
-        // A select being used must not be rebuilt under the hand that holds it.
-        if (this.shadowRoot?.activeElement?.id === 'hp-host') return;
-        this.last.head = html;
-        head.innerHTML = html;
+        if (html !== this.last.head) {
+            this.last.head = html;
+            head.innerHTML = html;
+        }
+        // The spinner is a class, not markup: rewriting the header every refresh would close an open selector.
+        head.querySelector('#hp-refresh svg')?.classList.toggle('spin', this.loading);
+        const host = head.querySelector<SelectEl>('#hp-host');
+        if (host) {
+            this.setSelect(host, [
+                { value: 'all', label: t('dockerpage.all_hosts') },
+                ...this.groups.map(g => ({ value: g.host.id, label: g.host.name })),
+            ], this.hostFilter, t('docker.hosts'));
+        }
+    }
+
+    /** Gives the product's select its options and its value. It keeps its own state while open, so only a change is written. */
+    private setSelect(el: SelectEl, options: { value: string; label: string }[], value: string, label: string) {
+        const key = JSON.stringify([options, value]);
+        if (el.dataset.key === key) return;
+        el.dataset.key = key;
+        el.options = options;
+        el.value = value;
+        el.setAttribute('aria-label', label);
     }
 
     private paintTabs() {
@@ -755,7 +781,7 @@ class DockerPage extends HTMLElement {
     /** The body: what the chosen tab shows. Each tab owns regions of its own, written only when they change. */
     private paintBody() {
         const body = this.$('body');
-        if (!body) return;
+        if (!body || this.selectOpen()) return;
         const t = this.t;
 
         if (!this.loaded) { this.setBody(body, 'overview', `<div class="empty">${escapeHtml(t('general.loading'))}</div>`); return; }
@@ -846,16 +872,23 @@ class DockerPage extends HTMLElement {
     private paintTools() {
         const el = this.$('inv-tools');
         if (!el) return;
+        const counts = countUnits(dockerUnits(this.scope(), this.statsObject()));
         const html = toolbarHtml({
-            query: this.query, status: this.status, counts: countUnits(dockerUnits(this.scope(), this.statsObject())), sort: this.sort,
+            query: this.query, status: this.status, counts: { all: 0, up: 0, off: 0, warn: 0 }, sort: this.sort,
             grouped: this.grouped, view: this.viewMode, searchLabel: this.t('docker.search_containers'), groupLabel: this.t('dockerpage.group_project'),
             shortcut: /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K',
         }, this.t, n => this.fmt.num(n));
-        if (html === this.last.tools) return;
-        this.last.tools = html;
-        // Typing in the search must not lose the caret to a rewrite of the box it is in.
-        if (this.shadowRoot?.activeElement?.id === 'inv-q') return;
-        el.innerHTML = html;
+        // The counts are written in place, so that a refresh neither costs the search its caret nor closes the sort selector.
+        if (html !== this.last.tools && !(this.shadowRoot?.activeElement?.id === 'inv-q' && el.firstChild)) {
+            this.last.tools = html;
+            el.innerHTML = html;
+        }
+        el.querySelectorAll<HTMLElement>('[data-filter] .n').forEach(n => {
+            const text = this.fmt.num(counts[(n.parentElement as HTMLElement).dataset.filter as StatusFilter]);
+            if (n.textContent !== text) n.textContent = text;
+        });
+        const sort = el.querySelector<SelectEl>('#inv-sort');
+        if (sort) this.setSelect(sort, sortOptions(this.t), this.sort, this.t('infra.sort'));
     }
 
     private paintInventory() {
@@ -906,16 +939,19 @@ class DockerPage extends HTMLElement {
         const several = this.groups.length > 1;
         const options = this.scope().flatMap(g => g.containers.map(c => {
             const name = containerName(c);
-            const on = !!this.sel && this.sel.hostId === g.host.id && this.sel.name === name;
-            return `<option value="${escapeHtml(`${g.host.id}/${name}`)}"${on ? ' selected' : ''}>${escapeHtml(several ? `${g.host.name} · ${name}` : name)}</option>`;
+            return { value: `${g.host.id}/${name}`, label: several ? `${g.host.name} · ${name}` : name };
         }));
-        const html = `<div class="tools"><select class="sel" id="lg-pick" aria-label="${escapeHtml(this.t('docker.containers'))}">
-            ${this.sel ? '' : `<option value="" selected disabled>${escapeHtml(this.t('dockerpage.pick_container'))}</option>`}${options.join('')}</select></div>
+        const html = `<div class="tools"><app-select id="lg-pick"></app-select></div>
             ${this.sel ? '' : `<div class="empty">${escapeHtml(this.t('dockerpage.select_hint'))}</div>`}`;
-        if (html === this.last.pick) return;
-        if (this.shadowRoot?.activeElement?.id === 'lg-pick') return;
-        this.last.pick = html;
-        el.innerHTML = html;
+        if (html !== this.last.pick) {
+            this.last.pick = html;
+            el.innerHTML = html;
+        }
+        const pick = el.querySelector<SelectEl>('#lg-pick');
+        if (!pick) return;
+        const value = this.sel ? `${this.sel.hostId}/${this.sel.name}` : '';
+        // Nothing chosen yet: the first entry is a prompt rather than a container.
+        this.setSelect(pick, this.sel ? options : [{ value: '', label: this.t('dockerpage.pick_container') }, ...options], value, this.t('docker.containers'));
     }
 
     // ── The drawer ──

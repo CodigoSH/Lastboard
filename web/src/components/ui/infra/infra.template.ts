@@ -216,16 +216,20 @@ const SORT_KEYS: [SortKey, string][] = [
     ['name', 'infra.sort_name'], ['state', 'infra.sort_state'], ['cpu', 'infra.sort_cpu'], ['mem', 'infra.sort_mem'],
 ];
 
+/** The options of the sort selector, in the shape the product's own select takes. */
+export function sortOptions(t: T): { value: string; label: string }[] {
+    return SORT_KEYS.map(([value, key]) => ({ value, label: t(key) }));
+}
+
 export function toolbarHtml(o: ToolbarSpec, t: T, fmt: (n: number) => string): string {
     const chips = FILTER_KEYS.map(([id, key]) =>
         `<button type="button" class="fchip" data-filter="${id}" aria-pressed="${o.status === id}">${e(t(key))} <span class="n">${e(fmt(o.counts[id]))}</span></button>`).join('');
-    const sort = SORT_KEYS.map(([id, key]) => `<option value="${id}"${o.sort === id ? ' selected' : ''}>${e(t(key))}</option>`).join('');
     return `<div class="tools">
         <label class="search">${icon('search', 14)}<input id="inv-q" type="search" value="${e(o.query)}" placeholder="${e(o.searchLabel)}" aria-label="${e(o.searchLabel)}" autocomplete="off"><kbd>${e(o.shortcut)}</kbd></label>
         ${chips}
         <span class="pspacer"></span>
         <button type="button" class="fchip" id="inv-group" aria-pressed="${o.grouped}">${e(o.groupLabel)}</button>
-        <select class="sel" id="inv-sort" aria-label="${e(t('infra.sort'))}">${sort}</select>
+        <app-select id="inv-sort" aria-label="${e(t('infra.sort'))}"></app-select>
         <span class="seg" role="group" aria-label="${e(t('infra.view'))}">
             <button type="button" data-view="cards" aria-pressed="${o.view === 'cards'}" title="${e(t('infra.view_cards'))}" aria-label="${e(t('infra.view_cards'))}">${icon('grid', 15)}</button>
             <button type="button" data-view="list" aria-pressed="${o.view === 'list'}" title="${e(t('infra.view_list'))}" aria-label="${e(t('infra.view_list'))}">${icon('list', 15)}</button>

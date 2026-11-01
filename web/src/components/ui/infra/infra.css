@@ -336,19 +336,6 @@ svg { display: block; flex: none; }
 .fchip:hover { color: var(--text-main); }
 .fchip[aria-pressed="true"] { color: var(--text-main); border-color: rgba(var(--accent-rgb), 0.45); background: var(--surface-active); }
 .fchip .n { font: 600 10.5px/1 var(--font-mono); opacity: 0.8; }
-.sel {
-    height: 34px;
-    padding-block: 0;
-    padding-inline: 10px 28px;
-    border: 1px solid var(--card-border);
-    border-radius: 9px;
-    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23888' stroke-width='1.6'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 10px center;
-    appearance: none;
-    color: var(--text-main);
-    font-size: 12px;
-}
-.sel:dir(rtl) { background-position: left 10px center; }
-.sel option { background: var(--panel); color: var(--text-main); }
 .seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--card-border); border-radius: 10px; background: var(--surface); }
 .seg button { width: 30px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: var(--text-dim); }
 .seg button:hover { color: var(--text-main); }
@@ -521,3 +508,16 @@ button.tr.is-sel { background: var(--surface-active); }
 
 /* An odd last fact takes the whole row instead of leaving a hole the grid's gap colour shows through. */
 .fact:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* The product's own select, sized like the buttons beside it. */
+app-select {
+    display: inline-block;
+    /* The select's own sheet says 100 %; in a toolbar it is as wide as its content, like the native one was. */
+    width: auto;
+    min-width: 120px;
+    max-width: 100%;
+    --select-height: 34px;
+    --select-padding: 0 12px;
+    --select-font-size: 12px;
+    --select-radius: 9px;
+}

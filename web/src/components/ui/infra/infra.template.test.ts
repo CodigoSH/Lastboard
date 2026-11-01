@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    barHtml, boxHtml, chartHtml, chartIndexAt, CHART_WIDTH, kpiHtml, meterLevel, ringHtml, sparkHtml, tabsHtml, toolbarHtml, type T,
+    barHtml, boxHtml, chartHtml, chartIndexAt, CHART_WIDTH, kpiHtml, meterLevel, ringHtml, sortOptions, sparkHtml, tabsHtml, toolbarHtml, type T,
 } from './infra.template';
 
 const t: T = (key) => `[${key}]`;
@@ -75,8 +75,17 @@ describe('the toolbar', () => {
         expect(html).toMatch(/data-filter="all" aria-pressed="false"/);
         expect(html).toMatch(/data-view="list" aria-pressed="true"/);
         expect(html).toMatch(/id="inv-group" aria-pressed="true"/);
-        expect(html).toMatch(/<option value="mem" selected>/);
+        expect(html).toContain('<app-select id="inv-sort"');
         expect(html).toContain('<kbd>Ctrl K</kbd>');
+    });
+});
+
+describe('the sort options', () => {
+    test('are the four the page sorts by, named through t', () => {
+        expect(sortOptions(t)).toEqual([
+            { value: 'name', label: '[infra.sort_name]' }, { value: 'state', label: '[infra.sort_state]' },
+            { value: 'cpu', label: '[infra.sort_cpu]' }, { value: 'mem', label: '[infra.sort_mem]' },
+        ]);
     });
 });
 
