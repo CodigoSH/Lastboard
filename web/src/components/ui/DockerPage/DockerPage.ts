@@ -849,6 +849,7 @@ class DockerPage extends HTMLElement {
         const html = toolbarHtml({
             query: this.query, status: this.status, counts: countUnits(dockerUnits(this.scope(), this.statsObject())), sort: this.sort,
             grouped: this.grouped, view: this.viewMode, searchLabel: this.t('docker.search_containers'), groupLabel: this.t('dockerpage.group_project'),
+            shortcut: /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K',
         }, this.t, n => this.fmt.num(n));
         if (html === this.last.tools) return;
         this.last.tools = html;

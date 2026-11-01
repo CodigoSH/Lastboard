@@ -110,34 +110,59 @@ Hosts used to be set up inside each widget. The first time the new version start
 
 ## The Docker page
 
-The widget is a list you glance at. For one container in detail — how it is set up and what it prints — open the **Docker page**: the Docker icon in the top bar, beside the Proxmox one. It is there for an account that may look at Docker and has at least one host that is switched on and that it can use; with none, there is no icon. While the page is open the rest of the top bar is locked and the same icon (or **Esc**, or the browser's Back button) closes it, as with the Proxmox and status pages.
+The widget is a list you glance at. For the whole picture — what is running, what needs a look, and one container in detail — open the **Docker page**: the Docker icon in the top bar, beside the Proxmox one. It is there for an account that may look at Docker and has at least one host that is switched on and that it can use; with none, there is no icon. While the page is open the rest of the top bar is locked and the same icon (or **Esc**, or the browser's Back button) closes it, as with the Proxmox and status pages.
 
-The list on the left holds every container of every host that is on, running ones first, then by name. With more than one host each has its own heading; a host that doesn't answer says why in its own place and the others still draw. Running containers show their CPU and memory use. Everything refreshes every ten seconds while the page is open and the browser tab is visible. **Ctrl+K** (**Cmd+K** on macOS) puts the cursor in the search box, which filters by name, image or the start of the container id.
-
-Choose a container to see it on the right, under two tabs.
+The header says how many containers are running, how many are stopped and how many have warnings. With more than one host there is a selector beside it to look at all of them or at one; a button asks for a fresh reading at once. Everything refreshes every ten seconds while the page is open and the browser tab is visible. The page has three tabs: **Overview**, **Containers** and **Logs**.
 
 ### Overview
 
-State, health (only for an image that defines a health check), when it started, how it ended (the end time and the exit code for a container that is not running, and the exit code alone when it is running again after a non-zero one), its restart policy and how many times it has restarted, when it was created, and its image. Below that: the published ports, the mounts (each marked read-only or read-write), the networks with the container's address on each, and the **names** of its environment variables.
+Four indicators:
+
+- **Containers** — a ring with the share that is running, and how many are stopped or have warnings.
+- **CPU** — the cores in use: the CPU use of the running containers added up, where 100 % is one core. Docker does not report how many cores the host has, so there is no percentage of the host.
+- **Memory** — what the running containers use together, against the largest limit any of them reports. A container without a limit reports the host's memory, so on most hosts that is the host's total.
+- **Projects** — how many Compose projects there are, and how many of each one's containers are up.
+
+Under them, a chart of the cores in use **since you opened the page** (hover it to read a value). Lastboard does not store this history: the browser keeps it while the browser tab stays open, and it starts again after a reload.
+
+**Needs attention** lists the containers that are failing their own health check, keep restarting, ended with a non-zero exit code, or are paused — the worst first. A container that was stopped on purpose (exit code 0) or has never run is not a warning. Choosing one opens it. When there is nothing to list, the box says everything is running as it should. Below, one box lists the **Projects** with how many of each one's containers are up, and another the **Hosts**; a host that does not answer says why in its own line.
+
+### Containers
+
+Every container of every host that is on, as cards or as a list (the two buttons at the end of the toolbar). Cards show state, CPU and memory for the running ones; the health chip appears only for an image that defines a health check, and a stopped container says how it ended.
+
+- **Search** filters by name, image, project, host or the start of the container id. **Ctrl+K** (**Cmd+K** on macOS) puts the cursor in it from anywhere on the page, taking you to this tab if you are on another.
+- **Chips** — *All*, *Running*, *Stopped* and *Warnings* — each with how many it would show.
+- **Group by project** gathers the containers of each Compose project under its name; the ones started outside Compose go last.
+- **Sort by** name, state, CPU or memory. The view, the sort and the grouping are remembered in this browser.
+
+Choosing a container opens it in a **side panel**. On a wide window the panel pushes the page aside so the list stays in view; on a narrower one it covers the page, and **Esc**, the **×** or the browser's Back button closes it. On a phone it takes the screen.
+
+The panel has four tabs:
+
+- **Summary** — live CPU and memory use and the restart count, then the state, health, when it started, how it ended (the end time and the exit code for a container that is not running, and the exit code alone when it is running again after a non-zero one), its restart policy, when it was created, its image and its Compose project; below that, the published ports.
+- **Logs** — see below.
+- **Environment** — the **names** of its environment variables.
+- **Mounts & networks** — each mount marked read-only or read-write, and the networks with the container's address on each.
 
 **The values of environment variables are never shown.** They often hold passwords and tokens, so only the names leave the server: the values are removed before the answer is sent to your browser.
 
 ### Logs
 
-The last 100 lines when you open the tab, with **Load more lines** to read the last 1,000. Lines the container wrote to its error output are marked with a red tint and a bar; a container started with a terminal (`docker run -t`) does not separate the two, so none of its lines are marked. Colour and cursor codes are removed from the text, so a container that paints its output reads as plain text, and what it prints is only ever shown as text, never as markup.
+The Logs tab and the panel's Logs tab are the same viewer: the one on the tab reads the container chosen in its selector, and choosing a container anywhere makes it the one both show.
 
-- **Follow** asks for the lines after the last one you have every three seconds, only while the Logs tab and the browser tab are visible, and keeps the view at the end only if you were already there — scroll up to read and it stays where you left it. Turn it off to stop asking.
+The last 100 lines when you open it, with **Load more lines** to read the last 1,000. Lines the container wrote to its error output are marked with a red tint and a bar; a container started with a terminal (`docker run -t`) does not separate the two, so none of its lines are marked. Colour and cursor codes are removed from the text, so a container that paints its output reads as plain text, and what it prints is only ever shown as text, never as markup.
+
+- **Follow** asks for the lines after the last one you have every three seconds, only while a log and the browser tab are visible, and keeps the view at the end only if you were already there — scroll up to read and it stays where you left it. Turn it off to stop asking.
 - **Timestamps** shows or hides the time before each line, in your language's format and your browser's time zone. This choice and *Follow* are remembered in this browser.
 - **Copy** puts the lines you see on the clipboard as plain text, with the times if they are showing.
 - The page keeps at most 2,000 lines; when more arrive, the oldest are dropped. If the log was larger than Lastboard reads at once, or a line was very long, a note says part of it was cut.
 
 ### Permissions and agents
 
-Seeing the page and its logs needs permission to **view** Docker. **Start**, **Restart** and **Stop** in the container's header need permission to **control** it; an account without it sees no buttons. Restart and stop ask for confirmation first, and Stop is switched off for the Lastboard Agent's own container, as in the widget.
+Seeing the page and its logs needs permission to **view** Docker. **Start**, **Restart** and **Stop** at the foot of the panel need permission to **control** it; an account without it sees no buttons. Restart and stop ask for confirmation first, and Stop is switched off for the Lastboard Agent's own container, as in the widget.
 
 Details and logs of a container on an agent host need **Lastboard Agent v1.3.0 or later** on that host. With an older agent the list works as before, and the page names the host and says its agent needs updating, instead of reporting that it could not connect. Hosts of the other types (local socket, TCP, TLS) need nothing.
-
-On a phone the list takes the screen; choosing a container opens it in its place and the Back button returns to the list.
 
 ## Starting and stopping
 

@@ -110,8 +110,10 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
   port — so containers already labelled for another dashboard work here unchanged.
 - **A host that stops answering** does not make its containers vanish: they stay, greyed out,
   and the host line says it is not responding.
-- **A Docker page** for one container at a time: its ports, mounts, networks and health, the
-  *names* of its environment variables (never their values) and its log, which can follow live.
+- **A Docker page** with an overview of every host — what is running, what needs attention, CPU and
+  memory — an inventory of all the containers, and a side panel for each one: its ports, mounts,
+  networks and health, the *names* of its environment variables (never their values) and its log,
+  which can follow live.
 
 → [Docker](docker/overview.md) · [Docker widget](widgets/docker.md) · [Podman](podman/overview.md)
 

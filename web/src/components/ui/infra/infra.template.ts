@@ -205,6 +205,8 @@ export interface ToolbarSpec {
     view: 'cards' | 'list';
     searchLabel: string;
     groupLabel: string;
+    /** The key that puts the cursor in the search box, as the person reads it. */
+    shortcut: string;
 }
 
 const FILTER_KEYS: [StatusFilter, string][] = [
@@ -219,7 +221,7 @@ export function toolbarHtml(o: ToolbarSpec, t: T, fmt: (n: number) => string): s
         `<button type="button" class="fchip" data-filter="${id}" aria-pressed="${o.status === id}">${e(t(key))} <span class="n">${e(fmt(o.counts[id]))}</span></button>`).join('');
     const sort = SORT_KEYS.map(([id, key]) => `<option value="${id}"${o.sort === id ? ' selected' : ''}>${e(t(key))}</option>`).join('');
     return `<div class="tools">
-        <label class="search">${icon('search', 14)}<input id="inv-q" type="search" value="${e(o.query)}" placeholder="${e(o.searchLabel)}" aria-label="${e(o.searchLabel)}" autocomplete="off"><kbd>/</kbd></label>
+        <label class="search">${icon('search', 14)}<input id="inv-q" type="search" value="${e(o.query)}" placeholder="${e(o.searchLabel)}" aria-label="${e(o.searchLabel)}" autocomplete="off"><kbd>${e(o.shortcut)}</kbd></label>
         ${chips}
         <span class="pspacer"></span>
         <button type="button" class="fchip" id="inv-group" aria-pressed="${o.grouped}">${e(o.groupLabel)}</button>

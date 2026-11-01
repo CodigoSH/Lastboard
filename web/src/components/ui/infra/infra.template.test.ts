@@ -59,14 +59,14 @@ describe('what a host says is escaped', () => {
     test('the search box keeps what was typed without letting it out of its attribute', () => {
         const html = toolbarHtml({
             query: '"><script>', status: 'all', counts: { all: 1, up: 1, off: 0, warn: 0 }, sort: 'name', grouped: false, view: 'cards',
-            searchLabel: 'q', groupLabel: 'g',
+            searchLabel: 'q', groupLabel: 'g', shortcut: 'Ctrl K',
         }, t, String);
         expect(html).not.toContain('"><script>');
     });
 });
 
 describe('the toolbar', () => {
-    const o = { query: '', status: 'warn' as const, counts: { all: 9, up: 5, off: 3, warn: 1 }, sort: 'mem' as const, grouped: true, view: 'list' as const, searchLabel: 's', groupLabel: 'g' };
+    const o = { query: '', status: 'warn' as const, counts: { all: 9, up: 5, off: 3, warn: 1 }, sort: 'mem' as const, grouped: true, view: 'list' as const, searchLabel: 's', groupLabel: 'g', shortcut: 'Ctrl K' };
     const html = toolbarHtml(o, t, n => `#${n}`);
     test('shows the counts on the chips and presses only the chosen ones', () => {
         expect(html).toContain('#9');
@@ -76,6 +76,7 @@ describe('the toolbar', () => {
         expect(html).toMatch(/data-view="list" aria-pressed="true"/);
         expect(html).toMatch(/id="inv-group" aria-pressed="true"/);
         expect(html).toMatch(/<option value="mem" selected>/);
+        expect(html).toContain('<kbd>Ctrl K</kbd>');
     });
 });
 

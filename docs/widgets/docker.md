@@ -8,7 +8,7 @@ This widget lists containers, shows their running state, exposes port mappings, 
 
 ![Docker Widget](../assets/w-docker.png)
 
-Connecting a host, the Lastboard Agent, who can use which kind of host and the Docker page for one container are in the [Docker guide](../docker/overview.md); this page is about the widget itself.
+Connecting a host, the Lastboard Agent, who can use which kind of host and the Docker page are in the [Docker guide](../docker/overview.md); this page is about the widget itself.
 
 ## Widget Configuration
 
