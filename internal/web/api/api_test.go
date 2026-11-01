@@ -19,6 +19,7 @@ func setupTestDB(t *testing.T) (*sql.DB, []byte) {
 	if err != nil {
 		t.Fatalf("Failed to init test db: %v", err)
 	}
+	t.Cleanup(func() { db.Close() })
 
 	// Secret for signing tokens
 	secret := []byte("test_secret_key_12345678901234567890123456789012")

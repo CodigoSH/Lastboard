@@ -79,7 +79,10 @@ func setupTestServer(t *testing.T) (*httptest.Server, *sql.DB, func()) {
 }
 
 func createUser(t *testing.T, db *sql.DB, username, password, role string) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// The lowest cost: what these tests check is the HTTP layer, not the hash.
+	// Under -race bcrypt is instrumented Go, and at the default cost the 200-odd
+	// users made here took most of the package's ten-minute budget.
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		t.Fatalf("Failed to hash password: %v", err)
 	}
