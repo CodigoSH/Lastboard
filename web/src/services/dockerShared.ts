@@ -38,6 +38,12 @@ export interface DockerContainer {
     Ports: DockerPort[];
     /** Address the container labels itself with, when it does. */
     UrlHint?: string;
+    /** What the container's own check says. Absent or empty when it has none. */
+    Health?: 'healthy' | 'unhealthy' | 'starting' | '';
+    /** How a stopped, or restarting, container last ended. Null while it runs. */
+    ExitCode?: number | null;
+    /** The Compose project that started it, if any. */
+    Project?: string;
 }
 
 /**
