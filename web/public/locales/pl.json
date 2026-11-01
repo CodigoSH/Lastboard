@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Używaj tego hosta",
   "settings.docker_enabled_desc": "Wyłączony host jest zachowywany, ale żaden widżet go nie pokazuje.",
   "settings.docker_hosts_desc": "Hosty Docker tego konta. Każdy widżet Docker pokazuje wszystkie albo tylko wybrane przez Ciebie.",
+  "settings.docker_agent_version": "Wersja agenta: {version}",
+  "settings.docker_agent_old": "Starszy niż v1.3.0: zaktualizuj agenta, aby zobaczyć szczegóły i logi kontenerów.",
   "settings.export_db": "Kopia zapasowa",
   "settings.factory_reset": "Wymaż wszystko",
   "settings.github": "Kod źródłowy",

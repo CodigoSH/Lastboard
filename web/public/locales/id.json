@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Gunakan host ini",
   "settings.docker_enabled_desc": "Host yang nonaktif tetap disimpan, tetapi tidak ditampilkan oleh widget mana pun.",
   "settings.docker_hosts_desc": "Host Docker akun ini. Setiap widget Docker menampilkan semuanya atau hanya yang Anda pilih.",
+  "settings.docker_agent_version": "Versi agen: {version}",
+  "settings.docker_agent_old": "Lebih lama dari v1.3.0: perbarui agen untuk melihat detail dan log kontainer.",
   "settings.export_db": "Cadangan",
   "settings.factory_reset": "Hapus Semua",
   "settings.github": "Kode Sumber",

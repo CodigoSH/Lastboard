@@ -352,6 +352,8 @@
   "settings.docker_enabled": "استفاده از این میزبان",
   "settings.docker_enabled_desc": "میزبان خاموش نگه داشته می‌شود، اما هیچ ویجتی آن را نشان نمی‌دهد.",
   "settings.docker_hosts_desc": "میزبان‌های Docker این حساب. هر ویجت Docker همه یا فقط آن‌هایی را که انتخاب می‌کنید نشان می‌دهد.",
+  "settings.docker_agent_version": "نسخه عامل: {version}",
+  "settings.docker_agent_old": "قدیمی‌تر از v1.3.0: برای دیدن جزئیات و گزارش‌های کانتینرها عامل را به‌روزرسانی کنید.",
   "settings.export_db": "پشتیبان‌گیری",
   "settings.factory_reset": "پاک کردن همه",
   "settings.github": "کد منبع",

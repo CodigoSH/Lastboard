@@ -352,6 +352,8 @@
   "settings.docker_enabled": "इस होस्ट का उपयोग करें",
   "settings.docker_enabled_desc": "बंद होस्ट सहेजा रहता है, लेकिन कोई विजेट उसे नहीं दिखाता।",
   "settings.docker_hosts_desc": "इस खाते के Docker होस्ट। हर Docker विजेट सभी को दिखाता है या केवल उन्हें जिन्हें आप चुनें।",
+  "settings.docker_agent_version": "एजेंट का संस्करण: {version}",
+  "settings.docker_agent_old": "v1.3.0 से पुराना: कंटेनर का विवरण और लॉग देखने के लिए एजेंट अपडेट करें।",
   "settings.export_db": "बैक업",
   "settings.factory_reset": "सब कुछ मिटाएं",
   "settings.github": "स्रोत कोड",

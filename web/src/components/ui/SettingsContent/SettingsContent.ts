@@ -28,7 +28,7 @@ import {
 } from '../../../services/accountAccess';
 import { userProfilesTemplate, userPermsTemplate, userSummaryTemplate } from './userDialog.template';
 import { fetchDockerSettings, saveDockerSettings, type AccountDockerHost, type DockerHostEdit } from '../../../services/dockerHosts';
-import { fetchAgentVersion, fetchContainers, hostErrorKey } from '../../../services/dockerShared';
+import { agentIsOld, fetchAgentVersion, fetchContainers, hostErrorKey } from '../../../services/dockerShared';
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
@@ -1079,10 +1079,26 @@ class SettingsContent extends HTMLElement {
             typeSel.addEventListener('change', sync);
         }
         sync();
+        void this.showAgentVersion(h);
 
         const title = root.getElementById('docker-modal-title');
         if (title) title.textContent = i18n.t(h ? 'general.edit' : 'docker.add_new_host');
         (root.getElementById('docker-modal') as HTMLDialogElement | null)?.showModal();
+    }
+
+    /** The release a saved agent runs, under its address in the editor; nothing for a host that is not saved or not an agent. */
+    private async showAgentVersion(h: { id: string; name: string; type: string; url: string } | null) {
+        const note = this.shadowRoot?.getElementById('docker-agent-note') as HTMLElement | null;
+        if (!note) return;
+        note.style.display = 'none';
+        if (!h || h.type !== 'agent') return;
+        const known = this.dockerStatus[h.id]?.version;
+        const version = known ?? await fetchAgentVersion({ id: h.id, name: h.name, type: 'agent', url: h.url });
+        if (!version || (this.shadowRoot?.getElementById('docker-edit-index') as HTMLInputElement | null)?.value === '-1') return;
+        const old = agentIsOld(version);
+        note.textContent = i18n.t('settings.docker_agent_version', { version }) + (old ? ` — ${i18n.t('settings.docker_agent_old')}` : '');
+        note.style.color = old ? 'var(--warning-color)' : '';
+        note.style.display = '';
     }
 
     /** What the dialog was opened for: one host, added or edited. */

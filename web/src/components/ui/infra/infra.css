@@ -551,3 +551,7 @@ app-select {
 .unit__sub--split > span:first-child { flex: none; }
 .unit__sub--split > .fit { display: flex; align-items: center; gap: 5px; flex: 0 1 auto; justify-content: flex-end; }
 .unit__sub--split > .fit svg { flex: none; }
+
+/* The state of whatever the panel shows, as a dot; the pointer brings up its words. */
+.state-dot { align-self: center; margin-inline: 3px 5px; cursor: help; }
+.dr__t .chip--link { flex: 0 1 auto; max-width: 42%; }

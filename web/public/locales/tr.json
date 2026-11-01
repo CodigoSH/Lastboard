@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Bu host'u kullan",
   "settings.docker_enabled_desc": "Kapalı bir host saklanır, ancak hiçbir widget onu göstermez.",
   "settings.docker_hosts_desc": "Bu hesabın Docker host'ları. Her Docker widget'ı hepsini ya da yalnızca seçtiklerinizi gösterir.",
+  "settings.docker_agent_version": "Ajan sürümü: {version}",
+  "settings.docker_agent_old": "v1.3.0’dan eski: konteyner ayrıntılarını ve günlüklerini görmek için ajanı güncelleyin.",
   "settings.export_db": "Yedekle",
   "settings.factory_reset": "Her Şeyi Sil",
   "settings.github": "Kaynak Kodu",

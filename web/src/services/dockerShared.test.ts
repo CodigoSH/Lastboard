@@ -123,3 +123,25 @@ describe('a host named in a request', () => {
         expect(hostRef(agent)).toEqual({ host_id: 'dk123' });
     });
 });
+
+import { agentIsOld } from './dockerShared';
+
+describe('agentIsOld', () => {
+    test('older than the release that answers the details and the logs', () => {
+        expect(agentIsOld('< v1.1.0')).toBe(true);
+        expect(agentIsOld('v1.1.0')).toBe(true);
+        expect(agentIsOld('v1.2.9')).toBe(true);
+        expect(agentIsOld('v0.9.0')).toBe(true);
+    });
+    test('that release and newer are not', () => {
+        expect(agentIsOld('v1.3.0')).toBe(false);
+        expect(agentIsOld('v1.3.1')).toBe(false);
+        expect(agentIsOld('v1.10.0')).toBe(false);
+        expect(agentIsOld('v2.0.0')).toBe(false);
+        expect(agentIsOld('1.4.0')).toBe(false);
+    });
+    test('what cannot be read is not called old', () => {
+        expect(agentIsOld('dev')).toBe(false);
+        expect(agentIsOld('')).toBe(false);
+    });
+});

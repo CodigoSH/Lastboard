@@ -352,6 +352,8 @@
   "settings.docker_enabled": "このホストを使用",
   "settings.docker_enabled_desc": "オフのホストは保持されますが、どのウィジェットにも表示されません。",
   "settings.docker_hosts_desc": "このアカウントのDockerホストです。各Dockerウィジェットは、すべて、または選んだものだけを表示します。",
+  "settings.docker_agent_version": "エージェントのバージョン: {version}",
+  "settings.docker_agent_old": "v1.3.0 より古い: コンテナの詳細とログを見るにはエージェントを更新してください。",
   "settings.export_db": "バックアップ",
   "settings.factory_reset": "すべて消去",
   "settings.github": "ソースコード",

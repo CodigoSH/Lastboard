@@ -1662,3 +1662,11 @@ input:checked+.slider:before {
 .user-dialog__two-factor[hidden] {
     display: none;
 }
+
+/* The release an agent runs, beside the name of its host. */
+.px-row__ver { display: inline-block; margin-inline-start: 8px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--card-border); font: 600 10.5px/1.5 var(--font-mono); color: var(--text-dim); vertical-align: middle; }
+.px-row__ver--old { color: var(--warning-color); border-color: rgba(var(--warning-rgb), 0.35); background: rgba(var(--warning-rgb), 0.08); }
+
+/* In a dialog the row is as wide as the dialog: its text takes what the switch leaves, instead of a fixed rail that squeezed it to half. */
+dialog .settings-content__action-row { grid-template-columns: minmax(0, 1fr) auto; }
+dialog .settings-content__action-info p { max-width: none; }

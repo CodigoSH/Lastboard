@@ -352,6 +352,8 @@
   "settings.docker_enabled": "এই হোস্ট ব্যবহার করুন",
   "settings.docker_enabled_desc": "বন্ধ হোস্ট সংরক্ষিত থাকে, কিন্তু কোনো উইজেট তা দেখায় না।",
   "settings.docker_hosts_desc": "এই অ্যাকাউন্টের Docker হোস্ট। প্রতিটি Docker উইজেট সবগুলো অথবা শুধু আপনার বেছে নেওয়াগুলো দেখায়।",
+  "settings.docker_agent_version": "এজেন্টের সংস্করণ: {version}",
+  "settings.docker_agent_old": "v1.3.0-এর চেয়ে পুরোনো: কন্টেইনারের বিবরণ ও লগ দেখতে এজেন্ট আপডেট করুন।",
   "settings.export_db": "ব্যাকআপ",
   "settings.factory_reset": "সব মুছে ফেলুন",
   "settings.github": "উৎস কোড",

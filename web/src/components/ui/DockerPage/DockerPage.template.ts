@@ -294,11 +294,10 @@ export interface DrawerHeadData {
 export function drawerHeadHtml(d: DrawerHeadData, t: T): string {
     const c = d.container;
     const state = c.State || c.Status;
-    const lvl = stateLevel(state);
-    const tone = lvl === 'up' ? 'ok' : lvl === 'warn' ? 'warn' : '';
-    return `<div class="dr__t">${dotHtml(c)}<h2 title="${e(containerName(c))}">${e(containerName(c)) || '—'}</h2>
+    const label = t(stateKey(state));
+    return `<div class="dr__t"><h2 title="${e(containerName(c))}">${e(containerName(c)) || '—'}</h2>
             <button type="button" class="ibtn" id="dr-close" aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
-        <div class="dr__chips"><span class="chip${tone ? ' chip--' + tone : ''}">${e(t(stateKey(state)))}</span>${healthChip(c.Health, t)}${d.showHost ? `<span class="chip">${e(d.host.name)}</span>` : ''}${c.Project ? `<span class="chip">${tech(c.Project)}</span>` : ''}</div>`;
+        <div class="dr__chips"><span class="dot state-dot${dotTone(c) ? ' dot--' + dotTone(c) : ''}" role="img" tabindex="0" title="${e(label)}" aria-label="${e(label)}"></span>${healthChip(c.Health, t)}${d.showHost ? `<span class="chip">${e(d.host.name)}</span>` : ''}${c.Project ? `<span class="chip">${tech(c.Project)}</span>` : ''}</div>`;
 }
 
 export interface FooterData {

@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Использовать этот хост",
   "settings.docker_enabled_desc": "Выключенный хост сохраняется, но ни один виджет его не показывает.",
   "settings.docker_hosts_desc": "Хосты Docker этой учётной записи. Каждый виджет Docker показывает все хосты или только выбранные вами.",
+  "settings.docker_agent_version": "Версия агента: {version}",
+  "settings.docker_agent_old": "Старше v1.3.0: обновите агент, чтобы видеть сведения и журналы контейнеров.",
   "settings.export_db": "Бэкап",
   "settings.factory_reset": "Стереть все",
   "settings.github": "Исходный код",

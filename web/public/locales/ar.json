@@ -352,6 +352,8 @@
   "settings.docker_enabled": "استخدام هذا المضيف",
   "settings.docker_enabled_desc": "يبقى المضيف المعطَّل محفوظًا، لكن لا يعرضه أي ودجت.",
   "settings.docker_hosts_desc": "مضيفو Docker لهذا الحساب. يعرضهم كل ودجت Docker جميعًا أو الذين تختارهم فقط.",
+  "settings.docker_agent_version": "إصدار الوكيل: {version}",
+  "settings.docker_agent_old": "أقدم من v1.3.0: حدّث الوكيل لرؤية تفاصيل الحاويات وسجلاتها.",
   "settings.export_db": "نسخ احتياطي",
   "settings.factory_reset": "مسح كل شيء",
   "settings.github": "كود المصدر",

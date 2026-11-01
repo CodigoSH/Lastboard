@@ -352,6 +352,8 @@
   "settings.docker_enabled": "یہ ہوسٹ استعمال کریں",
   "settings.docker_enabled_desc": "بند ہوسٹ محفوظ رہتا ہے، مگر کوئی ویجیٹ اسے نہیں دکھاتا۔",
   "settings.docker_hosts_desc": "اس اکاؤنٹ کے Docker ہوسٹ۔ ہر Docker ویجیٹ سب کو دکھاتا ہے یا صرف وہ جو آپ چنیں۔",
+  "settings.docker_agent_version": "ایجنٹ کا ورژن: {version}",
+  "settings.docker_agent_old": "v1.3.0 سے پرانا: کنٹینرز کی تفصیل اور لاگز دیکھنے کے لیے ایجنٹ کو اپڈیٹ کریں۔",
   "settings.export_db": "بیک اپ",
   "settings.factory_reset": "سب کچھ مٹائیں",
   "settings.github": "سورس کوڈ",

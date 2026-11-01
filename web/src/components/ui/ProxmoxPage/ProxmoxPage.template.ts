@@ -215,6 +215,11 @@ export interface GuestView {
 const dotTone = (v: GuestView): 'ok' | 'warn' | 'bad' | '' =>
     !v.guest.running ? (v.link ? 'bad' : '') : v.guest.cpu >= 90 ? 'warn' : 'ok';
 const dotOf = (v: GuestView): string => { const tone = dotTone(v); return `<span class="dot${tone ? ' dot--' + tone : ''}"></span>`; };
+/** The state as a coloured dot; its words are what the pointer brings up. */
+export function stateDot(tone: 'ok' | 'warn' | 'bad' | '', label: string): string {
+    return `<span class="dot state-dot${tone ? ' dot--' + tone : ''}" role="img" tabindex="0" title="${e(label)}" aria-label="${e(label)}"></span>`;
+}
+
 const kindText = (g: PxGuest): string => `${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`;
 const attrs = (v: GuestView): string => `data-host="${e(v.hostId)}" data-vmid="${v.guest.vmid}"`;
 const bookmarkChip = (v: GuestView): string => v.link ? `<span class="chip chip--link" title="${e(v.link)}">${icon('bookmark', 11)}<span class="chip__t">${e(v.link)}</span></span>` : '';
@@ -298,10 +303,10 @@ export function guestHeadHtml(d: GuestDrawer, t: T): string {
     const kind = t(g.kind === 'lxc' ? 'proxmox.container' : 'proxmox.vm');
     return `<div class="dr__t">
             <button type="button" class="face face--edit" data-icon="${g.vmid}" title="${e(t('proxmox.icon_set'))}" aria-label="${e(t('proxmox.icon_set'))}">${d.view.face ? `<img src="${e(d.view.face)}" alt="">` : FACE_NONE}<span class="face__pen">${icon('pen', 11)}</span></button>
-            <h2 title="${e(g.name)}">${e(g.name) || '—'}</h2>
+            <h2 title="${e(g.name)}">${e(g.name) || '—'}</h2>${bookmarkChip(d.view)}
             <button type="button" class="ibtn" id="dr-close" aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
-        <div class="dr__chips"><span class="chip chip--${g.running ? 'ok' : (d.view.link ? 'bad' : 'warn')}">${e(t(g.running ? 'docker.state_running' : 'docker.state_stopped'))}</span>
-            <span class="chip">${e(kind)} ${tech(String(g.vmid))}</span><span class="chip">${e(g.node)}</span>${d.view.showHost ? `<span class="chip">${e(d.hostName)}</span>` : ''}${bookmarkChip(d.view)}</div>`;
+        <div class="dr__chips">${stateDot(dotTone(d.view), t(g.running ? 'docker.state_running' : 'docker.state_stopped'))}
+            <span class="chip">${e(kind)} ${tech(String(g.vmid))}</span><span class="chip">${e(g.node)}</span>${d.view.showHost ? `<span class="chip">${e(d.hostName)}</span>` : ''}</div>`;
 }
 
 const fact = (k: string, v: string, wide = false): string => `<div class="fact${wide ? ' fact--w' : ''}"><span class="lbl">${e(k)}</span><div>${v}</div></div>`;

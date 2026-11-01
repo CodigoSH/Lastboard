@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Use this host",
   "settings.docker_enabled_desc": "A host that is off is kept, but no widget shows it.",
   "settings.docker_hosts_desc": "The Docker hosts of this account. Each Docker widget shows all of them or only the ones you choose.",
+  "settings.docker_agent_version": "Agent version: {version}",
+  "settings.docker_agent_old": "Older than v1.3.0: update the agent to see container details and logs.",
   "settings.export_db": "Backup",
   "settings.factory_reset": "Wipe Everything",
   "settings.github": "Source Code",

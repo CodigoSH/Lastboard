@@ -188,6 +188,25 @@ export function agentVersionLabel(reported: string): string {
     return v.startsWith('v') ? v : `v${v}`;
 }
 
+/** The oldest agent that answers everything the Docker page asks: the details and the logs of a container. */
+export const MIN_AGENT_VERSION = [1, 3, 0] as const;
+
+/**
+ * Whether an agent, as {@link agentVersionLabel} prints it, is older than the page needs.
+ * "< v1.1.0" is older by definition; a version that cannot be read is not called old, since
+ * saying "update" about something we cannot tell is worse than saying nothing.
+ */
+export function agentIsOld(label: string): boolean {
+    if (label.trim().startsWith('<')) return true;
+    const m = /^v?(\d+)\.(\d+)\.(\d+)/.exec(label.trim());
+    if (!m) return false;
+    const got = [Number(m[1]), Number(m[2]), Number(m[3])];
+    for (let i = 0; i < 3; i++) {
+        if (got[i] !== MIN_AGENT_VERSION[i]) return got[i] < MIN_AGENT_VERSION[i];
+    }
+    return false;
+}
+
 /** The key to show for a failed host, whatever was thrown. */
 export function hostErrorKey(err: unknown): string {
     return err instanceof DockerHostError ? err.key : 'docker.connection_error';

@@ -1,3 +1,4 @@
+import { agentIsOld } from '../../../services/dockerShared';
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 import { SECRET_MASK } from '../../../services/secretField';
@@ -795,16 +796,22 @@ const dockerRow = (h: AccountDockerHost, i: number, status: DockerRowStatus | un
     const note = !h.usable ? i18n.t('docker.admin_only')
         : !h.enabled ? i18n.t('settings.docker_off')
             : status?.state === 'ok'
-                ? i18n.t('settings.docker_connected', { containers: String(status.containers ?? 0) }) + (status.version ? ` · ${status.version}` : '')
+                ? i18n.t('settings.docker_connected', { containers: String(status.containers ?? 0) })
                 : status?.state === 'error' ? i18n.t(status.key || 'docker.connection_error')
                     : status?.state === 'testing' ? i18n.t('settings.docker_testing')
                         : `${dockerTypeLabel(h.type)}${h.url ? ` · ${h.url}` : ''}`;
+
+    // Which release the agent runs, where the person sees it: beside the name, amber when it is older than the page needs.
+    const old = !!status?.version && agentIsOld(status.version);
+    const versionChip = h.type === 'agent' && status?.state === 'ok' && status.version
+        ? ` <span class="px-row__ver${old ? ' px-row__ver--old' : ''}" title="${esc(old ? i18n.t('settings.docker_agent_old') : i18n.t('settings.docker_agent_version', { version: status.version }))}">${esc(status.version)}</span>`
+        : '';
 
     return `
     <div class="settings-content__row px-row" data-docker-host="${esc(h.id)}">
         <span class="px-row__dot px-row__dot--${state}"></span>
         <div class="px-row__body">
-            <div class="px-row__name">${esc(h.name || i18n.t('widget.docker.name'))}</div>
+            <div class="px-row__name">${esc(h.name || i18n.t('widget.docker.name'))}${versionChip}</div>
             <div class="px-row__note px-row__note--${state}">${esc(note)}</div>
         </div>
         <div class="user-actions">
@@ -885,6 +892,8 @@ export const dockerTemplate = (
                 <label class="settings-content__label">${i18n.t('docker.host_url')}</label>
                 <input type="text" id="docker-url" class="settings-content__input" spellcheck="false" placeholder="192.168.1.100:9091">
             </div>
+
+            <p class="settings-content__text-dim" id="docker-agent-note" style="font-size: 12px; margin: -6px 0 16px; display: none;"></p>
 
             <div class="settings-content__form-group" id="docker-token-row">
                 <label class="settings-content__label">${i18n.t('docker.host_token')}</label>

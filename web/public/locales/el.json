@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Χρήση αυτού του host",
   "settings.docker_enabled_desc": "Ένας ανενεργός host διατηρείται, αλλά κανένα widget δεν τον εμφανίζει.",
   "settings.docker_hosts_desc": "Οι hosts Docker αυτού του λογαριασμού. Κάθε widget Docker εμφανίζει όλους ή μόνο όσους επιλέξετε.",
+  "settings.docker_agent_version": "Έκδοση πράκτορα: {version}",
+  "settings.docker_agent_old": "Παλαιότερη από v1.3.0: ενημερώστε τον πράκτορα για λεπτομέρειες και αρχεία καταγραφής κοντέινερ.",
   "settings.export_db": "Αντίγραφο ασφαλείας",
   "settings.factory_reset": "Διαγραφή όλων",
   "settings.github": "Πηγαίος κώδικας",

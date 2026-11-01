@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Diesen Host verwenden",
   "settings.docker_enabled_desc": "Ein ausgeschalteter Host bleibt gespeichert, wird aber von keinem Widget angezeigt.",
   "settings.docker_hosts_desc": "Die Docker-Hosts dieses Kontos. Jedes Docker-Widget zeigt alle oder nur die von dir gewählten.",
+  "settings.docker_agent_version": "Agent-Version: {version}",
+  "settings.docker_agent_old": "Älter als v1.3.0: Aktualisiere den Agent, um Container-Details und Logs zu sehen.",
   "settings.export_db": "Backup",
   "settings.factory_reset": "Alles löschen",
   "settings.github": "Quellcode",

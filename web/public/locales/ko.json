@@ -352,6 +352,8 @@
   "settings.docker_enabled": "이 호스트 사용",
   "settings.docker_enabled_desc": "꺼진 호스트는 보관되지만 어떤 위젯에도 표시되지 않습니다.",
   "settings.docker_hosts_desc": "이 계정의 Docker 호스트입니다. 각 Docker 위젯은 전체 또는 선택한 호스트만 표시합니다.",
+  "settings.docker_agent_version": "에이전트 버전: {version}",
+  "settings.docker_agent_old": "v1.3.0보다 오래됨: 컨테이너 상세와 로그를 보려면 에이전트를 업데이트하세요.",
   "settings.export_db": "백업",
   "settings.factory_reset": "모두 지우기",
   "settings.github": "소스 코드",

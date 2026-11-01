@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Deze host gebruiken",
   "settings.docker_enabled_desc": "Een uitgeschakelde host blijft bewaard, maar geen enkele widget toont hem.",
   "settings.docker_hosts_desc": "De Docker-hosts van dit account. Elke Docker-widget toont ze allemaal of alleen de hosts die je kiest.",
+  "settings.docker_agent_version": "Agentversie: {version}",
+  "settings.docker_agent_old": "Ouder dan v1.3.0: werk de agent bij om containerdetails en logs te zien.",
   "settings.export_db": "Back-up",
   "settings.factory_reset": "Alles wissen",
   "settings.github": "Broncode",

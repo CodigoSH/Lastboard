@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Usa questo host",
   "settings.docker_enabled_desc": "Un host disattivato viene conservato, ma nessun widget lo mostra.",
   "settings.docker_hosts_desc": "Gli host Docker di questo account. Ogni widget Docker li mostra tutti o solo quelli che scegli.",
+  "settings.docker_agent_version": "Versione dell’agente: {version}",
+  "settings.docker_agent_old": "Precedente a v1.3.0: aggiorna l’agente per vedere dettagli e log dei container.",
   "settings.export_db": "Backup",
   "settings.factory_reset": "Cancella tutto",
   "settings.github": "Codice sorgente",

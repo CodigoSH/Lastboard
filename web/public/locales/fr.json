@@ -352,6 +352,8 @@
   "settings.docker_enabled": "Utiliser cet hôte",
   "settings.docker_enabled_desc": "Un hôte désactivé est conservé, mais aucun widget ne l’affiche.",
   "settings.docker_hosts_desc": "Les hôtes Docker de ce compte. Chaque widget Docker les affiche tous ou seulement ceux que vous choisissez.",
+  "settings.docker_agent_version": "Version de l’agent : {version}",
+  "settings.docker_agent_old": "Antérieur à v1.3.0 : mets l’agent à jour pour voir les détails et les journaux des conteneurs.",
   "settings.export_db": "Sauvegarde",
   "settings.factory_reset": "Tout effacer",
   "settings.github": "Code source",

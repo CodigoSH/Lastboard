@@ -352,6 +352,8 @@
   "settings.docker_enabled": "使用此主机",
   "settings.docker_enabled_desc": "已关闭的主机会被保留，但不会在任何小部件中显示。",
   "settings.docker_hosts_desc": "此账户的 Docker 主机。每个 Docker 小部件显示全部主机，或只显示你选择的主机。",
+  "settings.docker_agent_version": "代理版本：{version}",
+  "settings.docker_agent_old": "早于 v1.3.0：请更新代理以查看容器详情和日志。",
   "settings.export_db": "备份",
   "settings.factory_reset": "清除所有数据",
   "settings.github": "源代码",
