@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "মেমরি (সীমার %)",
   "dockerpage.critical": "জটিল",
   "dockerpage.attention_sub": "যেটায় একবার নজর দেওয়া দরকার",
+  "dockerpage.bar_scale": "বার {cores} পর্যন্ত",
   "infra.tab_overview": "সংক্ষিপ্ত বিবরণ",
   "infra.tab_summary": "সারসংক্ষেপ",
   "infra.all_hosts": "সব হোস্ট",

@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "Память (% от лимита)",
   "dockerpage.critical": "критических",
   "dockerpage.attention_sub": "То, на что стоит взглянуть",
+  "dockerpage.bar_scale": "шкала до {cores}",
   "infra.tab_overview": "Обзор",
   "infra.tab_summary": "Сводка",
   "infra.all_hosts": "Все хосты",

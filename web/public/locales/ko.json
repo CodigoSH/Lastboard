@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "메모리(한도 대비 %)",
   "dockerpage.critical": "심각",
   "dockerpage.attention_sub": "살펴봐야 할 것",
+  "dockerpage.bar_scale": "막대 최대 {cores}",
   "infra.tab_overview": "개요",
   "infra.tab_summary": "요약",
   "infra.all_hosts": "모든 호스트",

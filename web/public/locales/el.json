@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "Μνήμη (% του ορίου)",
   "dockerpage.critical": "κρίσιμα",
   "dockerpage.attention_sub": "Ό,τι θέλει μια ματιά",
+  "dockerpage.bar_scale": "γραμμή έως {cores}",
   "infra.tab_overview": "Επισκόπηση",
   "infra.tab_summary": "Σύνοψη",
   "infra.all_hosts": "Όλοι οι κεντρικοί υπολογιστές",

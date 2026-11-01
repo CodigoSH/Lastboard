@@ -3,6 +3,7 @@ import { containerName, type DockerContainer, type DockerHost } from '../../../s
 import { stateLevel, stateKey, type ContainerStats, type DockerDetail, type HostRows, type LogLine } from '../../../services/dockerPage';
 import { attentionReason, type AttentionItem, type AttentionReason, type DockerTotals, type ProjectRow } from '../../../services/dockerOverview';
 import type { UnitGroup } from '../../../services/infraUnits';
+import { niceMax } from '../../../services/dockerOverview';
 import { barHtml, boxHtml, chartCardHtml, emptyHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
 
 export type { T };
@@ -123,6 +124,9 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     const level: Level = tt.attention ? 'bad' : tt.stopped ? 'warn' : 'ok';
     // Failing its own check or ended with an error is critical; restarting and paused are only a warning.
     const critical = o.attention.filter(a => a.reason === 'unhealthy' || a.reason === 'failed').length;
+    // Docker does not say how many cores the host has, so the CPU bar is read against the same top the chart uses.
+    const cpuTop = niceMax(Math.max(tt.cores, ...o.cores));
+    const cpuPct = (tt.cores / cpuTop) * 100;
     const kpis = [
         kpiHtml({
             label: t('dockerpage.kpi_containers'), icon: 'box', value: fmt.num(tt.running), unit: `/ ${fmt.num(tt.total)}`,
@@ -134,11 +138,12 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         }),
         kpiHtml({
             label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.dec(tt.cores), unit: t('dockerpage.cores_in_use'),
-            spark: o.cores, sparkTone: 'ok', sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), ''],
+            bar: cpuPct, spark: o.cores, sparkTone: meterLevel(cpuPct),
+            sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), t('dockerpage.bar_scale', { cores: fmt.dec(cpuTop) })],
         }),
         kpiHtml({
             label: t('dockerpage.kpi_memory'), icon: 'mem', value: tt.reporting ? fmt.bytes(tt.memUsed) : '—',
-            bar: tt.memLimit > 0 ? memPct : undefined,
+            bar: tt.memLimit > 0 ? memPct : undefined, spark: o.mem, sparkTone: meterLevel(memPct),
             sub: tt.memLimit > 0 ? [t('dockerpage.of_limit', { limit: fmt.bytes(tt.memLimit) }), fmt.pct(memPct)] : undefined,
         }),
         kpiHtml({

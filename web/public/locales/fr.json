@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "Mémoire (% de la limite)",
   "dockerpage.critical": "critiques",
   "dockerpage.attention_sub": "Ce qui mérite un coup d’œil",
+  "dockerpage.bar_scale": "barre jusqu’à {cores}",
   "infra.tab_overview": "Aperçu",
   "infra.tab_summary": "Résumé",
   "infra.all_hosts": "Tous les hôtes",

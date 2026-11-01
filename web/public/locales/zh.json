@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "内存（占上限 %）",
   "dockerpage.critical": "严重",
   "dockerpage.attention_sub": "需要看一眼的内容",
+  "dockerpage.bar_scale": "进度条上限 {cores}",
   "infra.tab_overview": "概览",
   "infra.tab_summary": "概要",
   "infra.all_hosts": "所有主机",

@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "الذاكرة (٪ من الحد)",
   "dockerpage.critical": "حرجة",
   "dockerpage.attention_sub": "ما يحتاج إلى نظرة",
+  "dockerpage.bar_scale": "الشريط حتى {cores}",
   "infra.tab_overview": "نظرة عامة",
   "infra.tab_summary": "ملخص",
   "infra.all_hosts": "كل المضيفين",

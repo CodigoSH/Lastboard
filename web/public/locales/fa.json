@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "حافظه (٪ از حد)",
   "dockerpage.critical": "بحرانی",
   "dockerpage.attention_sub": "آنچه نیاز به نگاه دارد",
+  "dockerpage.bar_scale": "نوار تا {cores}",
   "infra.tab_overview": "نمای کلی",
   "infra.tab_summary": "خلاصه",
   "infra.all_hosts": "همه میزبان‌ها",

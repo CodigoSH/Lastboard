@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "मेमोरी (सीमा का %)",
   "dockerpage.critical": "गंभीर",
   "dockerpage.attention_sub": "जिस पर नज़र डालनी है",
+  "dockerpage.bar_scale": "बार {cores} तक",
   "infra.tab_overview": "अवलोकन",
   "infra.tab_summary": "सारांश",
   "infra.all_hosts": "सभी होस्ट",

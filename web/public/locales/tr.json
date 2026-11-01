@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "Bellek (limitin %’si)",
   "dockerpage.critical": "kritik",
   "dockerpage.attention_sub": "Göz atılması gerekenler",
+  "dockerpage.bar_scale": "çubuk {cores} değerine kadar",
   "infra.tab_overview": "Genel bakış",
   "infra.tab_summary": "Özet",
   "infra.all_hosts": "Tüm ana makineler",

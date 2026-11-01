@@ -195,6 +195,7 @@
   "dockerpage.mem_of_limit": "Speicher (% des Limits)",
   "dockerpage.critical": "kritisch",
   "dockerpage.attention_sub": "Was einen Blick braucht",
+  "dockerpage.bar_scale": "Balken bis {cores}",
   "infra.tab_overview": "Übersicht",
   "infra.tab_summary": "Übersicht",
   "infra.all_hosts": "Alle Hosts",
