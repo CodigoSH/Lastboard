@@ -354,6 +354,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/docker/stats", protect(need(access.DockerView, dockerHandler.StatsFor)))
 	s.Router.Handle("POST /api/docker/agent-version", protect(need(access.DockerView, dockerHandler.AgentVersionFor)))
 	s.Router.Handle("POST /api/docker/detail", protect(need(access.DockerView, dockerHandler.Detail)))
+	s.Router.Handle("POST /api/docker/host-size", protect(need(access.DockerView, dockerHandler.HostSize)))
 	s.Router.Handle("POST /api/docker/logs", protect(need(access.DockerView, dockerHandler.Logs)))
 	s.Router.Handle("POST /api/docker/action", protect(need(access.DockerControl, dockerHandler.Action)))
 

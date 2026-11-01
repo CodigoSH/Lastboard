@@ -196,6 +196,7 @@
   "dockerpage.critical": "بحرانی",
   "dockerpage.attention_sub": "آنچه نیاز به نگاه دارد",
   "dockerpage.bar_scale": "نوار تا {cores}",
+  "dockerpage.host_cores": "هسته‌های میزبان: {count}",
   "infra.tab_overview": "نمای کلی",
   "infra.tab_summary": "خلاصه",
   "infra.all_hosts": "همه میزبان‌ها",

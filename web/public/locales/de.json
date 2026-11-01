@@ -196,6 +196,7 @@
   "dockerpage.critical": "kritisch",
   "dockerpage.attention_sub": "Was einen Blick braucht",
   "dockerpage.bar_scale": "Balken bis {cores}",
+  "dockerpage.host_cores": "Kerne des Hosts: {count}",
   "infra.tab_overview": "Übersicht",
   "infra.tab_summary": "Übersicht",
   "infra.all_hosts": "Alle Hosts",

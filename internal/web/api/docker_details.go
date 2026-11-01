@@ -447,3 +447,39 @@ func parseLogAfter(s string) (time.Time, bool) {
 	t, err := time.Parse(time.RFC3339Nano, s)
 	return t, err == nil
 }
+
+// DockerHostSize is how big a Docker host is: what its containers' CPU and
+// memory are read against. Zero means the host did not say.
+type DockerHostSize struct {
+	Cores    int   `json:"cores"`
+	MemTotal int64 `json:"mem_total"`
+}
+
+// HostSize reads how many processors and how much memory the host at hostURL
+// has. A Lastboard Agent from before the call existed is "not known", never an
+// error the page would have to explain: the figures are a refinement.
+func HostSize(hostURL string) (DockerHostSize, error) {
+	client, base, err := newDockerClient(hostURL)
+	if err != nil {
+		return DockerHostSize{}, fmt.Errorf("docker: build client: %w", err)
+	}
+	resp, err := client.Get(base + "/info")
+	if err != nil {
+		return DockerHostSize{}, fmt.Errorf("docker: GET info: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return DockerHostSize{}, readError(hostURL, "info", resp)
+	}
+	var raw struct {
+		NCPU     int   `json:"NCPU"`
+		MemTotal int64 `json:"MemTotal"`
+	}
+	if err := decodeLimited(resp.Body, dockerMaxAnswer, &raw); err != nil {
+		return DockerHostSize{}, fmt.Errorf("docker: decode info: %w", err)
+	}
+	if raw.NCPU < 0 || raw.MemTotal < 0 {
+		return DockerHostSize{}, nil
+	}
+	return DockerHostSize{Cores: raw.NCPU, MemTotal: raw.MemTotal}, nil
+}

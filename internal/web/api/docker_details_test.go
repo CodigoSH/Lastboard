@@ -224,3 +224,44 @@ func TestAnEmptyLogIsAnEmptyList(t *testing.T) {
 		t.Errorf("empty = %+v %v, want [] and no error", logs.Lines, err)
 	}
 }
+
+func TestHostSizeReadsTheProcessorsAndTheMemory(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/info" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"NCPU": 8, "MemTotal": 16777216000, "Name": "prod"}`))
+	}))
+	defer srv.Close()
+	got, err := HostSize(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Cores != 8 || got.MemTotal != 16777216000 {
+		t.Errorf("HostSize = %+v, want 8 cores and 16777216000 bytes", got)
+	}
+}
+
+func TestHostSizeFromAHostThatSaysNothingIsZero(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"NCPU": -1, "MemTotal": -5}`))
+	}))
+	defer srv.Close()
+	got, err := HostSize(srv.URL)
+	if err != nil || got != (DockerHostSize{}) {
+		t.Errorf("HostSize = %+v, %v; want zeros and no error", got, err)
+	}
+}
+
+func TestAnOldAgentHasNoHostSize(t *testing.T) {
+	// The agent's own router answers an unknown call with a plain-text 404.
+	srv := httptest.NewServer(http.HandlerFunc(http.NotFound))
+	defer srv.Close()
+	agent := "agent://" + strings.TrimPrefix(srv.URL, "http://")
+	if _, err := HostSize(agent); !errors.Is(err, errAgentTooOld) {
+		t.Errorf("err = %v, want errAgentTooOld", err)
+	}
+}

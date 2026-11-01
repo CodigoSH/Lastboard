@@ -143,6 +143,16 @@ export async function fetchStats(host: DockerHost, ids: string[]): Promise<Recor
     return out && typeof out === 'object' ? out : {};
 }
 
+/** How big a host is, what the CPU and memory of its containers are read against. Zeros: it did not say. */
+export interface HostSize { cores: number; mem_total: number }
+
+export async function fetchHostSize(host: DockerHost): Promise<HostSize> {
+    if (isDemoMode()) return { cores: 8, mem_total: 32 * 1024 ** 3 };
+    const out = await post<Partial<HostSize>>('/api/docker/host-size', { ...hostRef(host) });
+    const cores = Number(out?.cores), mem = Number(out?.mem_total);
+    return { cores: Number.isFinite(cores) && cores > 0 ? cores : 0, mem_total: Number.isFinite(mem) && mem > 0 ? mem : 0 };
+}
+
 export type ContainerAction = 'start' | 'stop' | 'restart';
 
 export async function runAction(host: DockerHost, id: string, action: ContainerAction): Promise<void> {

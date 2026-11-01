@@ -79,7 +79,7 @@ describe('what a container controls is escaped', () => {
     test('the overview: attention list, projects and hosts', () => {
         const rows: HostRows[] = [{ host: { ...host, name: evil }, loaded: true, containers: [ctr({ Name: '/' + evil, Health: 'unhealthy', Project: evil })] }, { host: { ...host, id: 'h2' }, loaded: true, containers: [] }];
         const html = overviewHtml({
-            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil }, hostCores: {},
+            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil }, hostCores: {}, capacity: null,
         }, t, fmt);
         noMarkup(html, evil);
     });
@@ -194,6 +194,23 @@ describe('what a state looks like', () => {
     test('the reason an item is on the attention list is in words', () => {
         expect(reasonText('failed', 137, t)).toContain('"code":"137"');
         expect(reasonText('unhealthy', undefined, t)).toContain('why_unhealthy');
+    });
+});
+
+describe('the indicators against the real host', () => {
+    const rows: HostRows[] = [{ host, loaded: true, containers: [ctr()] }];
+    const o = { totals: dockerTotals(rows, { abc: { CPUPercent: 200, MemPercent: 0, MemUsed: 4e9, MemLimit: 8e9 } }), attention: [], projects: [], hosts: rows, cores: [2], mem: [], chart: '', hostNames: {}, hostCores: {} };
+    test('with the size of the host the CPU is a share of its cores, and says how many it has', () => {
+        const html = overviewHtml({ ...o, capacity: { cores: 8, mem: 16e9 } }, t, fmt);
+        expect(html).toContain('N(25)');
+        expect(html).toContain('host_cores:{&quot;count&quot;:&quot;N(8)&quot;}');
+        expect(html).toContain('&quot;limit&quot;:&quot;B(16000000000)&quot;');
+        expect(html).not.toContain('bar_scale');
+    });
+    test('without it the CPU is read against the chart and says so', () => {
+        const html = overviewHtml({ ...o, capacity: null }, t, fmt);
+        expect(html).toContain('bar_scale');
+        expect(html).not.toContain('host_cores');
     });
 });
 

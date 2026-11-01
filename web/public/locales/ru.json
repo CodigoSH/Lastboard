@@ -196,6 +196,7 @@
   "dockerpage.critical": "критических",
   "dockerpage.attention_sub": "То, на что стоит взглянуть",
   "dockerpage.bar_scale": "шкала до {cores}",
+  "dockerpage.host_cores": "Ядер у хоста: {count}",
   "infra.tab_overview": "Обзор",
   "infra.tab_summary": "Сводка",
   "infra.all_hosts": "Все хосты",

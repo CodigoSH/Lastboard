@@ -102,6 +102,8 @@ export interface OverviewData {
     hostNames: Record<string, string>;
     /** CPU in use on each host, in cores, from the readings of its running containers. */
     hostCores: Record<string, number>;
+    /** What the hosts in view have, when every one of them said; null otherwise, and the figures are read against what was seen. */
+    capacity: { cores: number; mem: number } | null;
 }
 
 export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNames: Record<string, string>, t: T): string {
@@ -120,13 +122,15 @@ export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNam
 export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     const tt = o.totals;
     const pctRunning = tt.total ? (tt.running / tt.total) * 100 : 0;
-    const memPct = tt.memLimit > 0 ? (tt.memUsed / tt.memLimit) * 100 : 0;
     const level: Level = tt.attention ? 'bad' : tt.stopped ? 'warn' : 'ok';
     // Failing its own check or ended with an error is critical; restarting and paused are only a warning.
     const critical = o.attention.filter(a => a.reason === 'unhealthy' || a.reason === 'failed').length;
-    // Docker does not say how many cores the host has, so the CPU bar is read against the same top the chart uses.
+    // With the size of the hosts the CPU is a share of them; without it (an agent from before the call) it is read against the chart's own top.
+    const cap = o.capacity;
     const cpuTop = niceMax(Math.max(tt.cores, ...o.cores));
-    const cpuPct = (tt.cores / cpuTop) * 100;
+    const cpuPct = cap ? Math.min(100, (tt.cores / cap.cores) * 100) : (tt.cores / cpuTop) * 100;
+    const memBase = cap ? cap.mem : tt.memLimit;
+    const memShare = memBase > 0 ? (tt.memUsed / memBase) * 100 : 0;
     const kpis = [
         kpiHtml({
             label: t('dockerpage.kpi_containers'), icon: 'box', value: fmt.num(tt.running), unit: `/ ${fmt.num(tt.total)}`,
@@ -136,15 +140,19 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
                 ...(tt.attention ? [{ text: `${fmt.num(tt.attention)} ${t('infra.filter_warn').toLowerCase()}`, tone: 'bad' as const }] : []),
             ],
         }),
-        kpiHtml({
+        kpiHtml(cap ? {
+            label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.num(Math.round(cpuPct)), unit: '%',
+            bar: cpuPct, spark: o.cores, sparkTone: meterLevel(cpuPct),
+            sub: [`${fmt.dec(tt.cores)} ${t('dockerpage.cores_in_use')}`, t('dockerpage.host_cores', { count: fmt.num(cap.cores) })],
+        } : {
             label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.dec(tt.cores), unit: t('dockerpage.cores_in_use'),
             bar: cpuPct, spark: o.cores, sparkTone: meterLevel(cpuPct),
             sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), t('dockerpage.bar_scale', { cores: fmt.dec(cpuTop) })],
         }),
         kpiHtml({
             label: t('dockerpage.kpi_memory'), icon: 'mem', value: tt.reporting ? fmt.bytes(tt.memUsed) : '—',
-            bar: tt.memLimit > 0 ? memPct : undefined, spark: o.mem, sparkTone: meterLevel(memPct),
-            sub: tt.memLimit > 0 ? [t('dockerpage.of_limit', { limit: fmt.bytes(tt.memLimit) }), fmt.pct(memPct)] : undefined,
+            bar: memBase > 0 ? memShare : undefined, spark: o.mem, sparkTone: meterLevel(memShare),
+            sub: memBase > 0 ? [t('dockerpage.of_limit', { limit: fmt.bytes(memBase) }), fmt.pct(memShare)] : undefined,
         }),
         kpiHtml({
             label: t('dockerpage.attention'), icon: 'alert', value: fmt.num(o.attention.length), unit: t('infra.filter_warn').toLowerCase(),
@@ -157,7 +165,9 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     ].join('');
 
     const chart = chartCardHtml(t('dockerpage.session_history'),
-        [{ name: t('dockerpage.cores_in_use'), color: 'var(--ok)' }, { name: t('dockerpage.mem_of_limit'), color: 'var(--warn)' }],
+        cap
+            ? [{ name: t('widget.telemetry.cpu'), color: 'var(--ok)' }, { name: t('widget.telemetry.ram'), color: 'var(--warn)' }]
+            : [{ name: t('dockerpage.cores_in_use'), color: 'var(--ok)' }, { name: t('dockerpage.mem_of_limit'), color: 'var(--warn)' }],
         `<span class="chip">${e(t('dockerpage.live'))}</span>`, o.chart, t('dockerpage.collecting'));
 
     const showHost = o.hosts.length > 1;

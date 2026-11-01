@@ -196,6 +196,7 @@
   "dockerpage.critical": "kritis",
   "dockerpage.attention_sub": "Yang perlu dilihat",
   "dockerpage.bar_scale": "bilah hingga {cores}",
+  "dockerpage.host_cores": "Inti host: {count}",
   "infra.tab_overview": "Ringkasan",
   "infra.tab_summary": "Ringkasan",
   "infra.all_hosts": "Semua host",

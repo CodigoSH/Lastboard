@@ -196,6 +196,7 @@
   "dockerpage.critical": "kritiek",
   "dockerpage.attention_sub": "Wat een blik nodig heeft",
   "dockerpage.bar_scale": "balk tot {cores}",
+  "dockerpage.host_cores": "Kernen van de host: {count}",
   "infra.tab_overview": "Overzicht",
   "infra.tab_summary": "Samenvatting",
   "infra.all_hosts": "Alle hosts",

@@ -9,9 +9,9 @@ import { accessAllows } from '../../../services/access';
 import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHosts';
 import { fetchContainers, hostErrorKey, containerName } from '../../../services/dockerShared';
 import {
-    fetchDetail, fetchLogs, fetchStats, runAction, pageErrorKey, findSelected,
+    fetchDetail, fetchHostSize, fetchLogs, fetchStats, runAction, pageErrorKey, findSelected,
     mergeLogLines, overflow, atBottom, logsToText, logDate, stateLevel, MAX_LOG_LINES,
-    type DockerDetail, type HostRows, type LogLine, type ContainerStats, type ContainerAction,
+    type DockerDetail, type HostRows, type HostSize, type LogLine, type ContainerStats, type ContainerAction,
 } from '../../../services/dockerPage';
 import {
     attentionList, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint,
@@ -82,6 +82,8 @@ let sessionHistory: HistoryPoint[] = [];
 class DockerPage extends HTMLElement {
     private groups: HostRows[] = [];
     private stats = new Map<string, ContainerStats>();
+    /** How big each host is, once it has said. Not kept for one that could not: it is asked again on the next opening. */
+    private sizes = new Map<string, HostSize>();
     private loaded = false;
     private fatal = '';
     private noHosts = false;
@@ -566,8 +568,34 @@ class DockerPage extends HTMLElement {
             }
         }
         this.paintAll();
+        void this.loadSizes();
         await this.loadStats();
         if (this.current()) void this.loadDetail();
+    }
+
+    /** Asks each host how big it is, once. Failing is not an error: the page then reads its figures without that scale. */
+    private async loadSizes() {
+        await Promise.all(this.groups.filter(g => !g.error && !this.sizes.has(g.host.id)).map(async g => {
+            try {
+                const size = await fetchHostSize(g.host);
+                if (size.cores > 0 && size.mem_total > 0) this.sizes.set(g.host.id, size);
+            } catch { /* an agent that cannot say, or a host that does not answer, has no scale */ }
+        }));
+        if (this.hasAttribute('open') && this.tab === 'overview') this.paintBody();
+    }
+
+    /** What the hosts in view have together, or null unless every one of them has said. */
+    private capacity(scope: HostRows[]): { cores: number; mem: number } | null {
+        const live = scope.filter(g => !g.error);
+        if (!live.length) return null;
+        let cores = 0, mem = 0;
+        for (const g of live) {
+            const s = this.sizes.get(g.host.id);
+            if (!s) return null;
+            cores += s.cores;
+            mem += s.mem_total;
+        }
+        return { cores, mem };
     }
 
     private async loadStats() {
@@ -858,20 +886,31 @@ class DockerPage extends HTMLElement {
         let chart = '';
         this.charts.clear();
         if (hist.length >= 2) {
-            // Cores and a share of the memory limit have no common unit: both are drawn on one height, the axis reads in cores,
-            // and the cursor says what each line is really worth.
-            const top = niceMax(Math.max(...cores));
-            const limit = dockerTotals(scope, stats).memLimit;
-            const series: ChartSpec['series'] = [{ name: this.t('dockerpage.cores_in_use'), color: 'var(--ok)', data: cores, labels: cores.map(v => this.fmt.dec(v)) }];
-            if (limit > 0) {
-                const share = hist.map(h => Math.min(100, (h.memUsed / limit) * 100));
-                series.push({ name: this.t('dockerpage.mem_of_limit'), color: 'var(--warn)', data: share.map(v => (v / 100) * top), labels: share.map(v => this.fmt.pct(v)) });
+            const cap = this.capacity(scope);
+            let spec: ChartSpec;
+            if (cap) {
+                // Both lines are a share of the host, on one 0–100 scale.
+                const cpuShare = cores.map(v => Math.min(100, (v / cap.cores) * 100));
+                const memShare = hist.map(h => Math.min(100, (h.memUsed / cap.mem) * 100));
+                spec = {
+                    series: [
+                        { name: this.t('widget.telemetry.cpu'), color: 'var(--ok)', data: cpuShare },
+                        { name: this.t('widget.telemetry.ram'), color: 'var(--warn)', data: memShare },
+                    ],
+                    max: 100, height: 190, edges: [this.clock(hist[0].t), this.clock(hist[hist.length - 1].t)], fmt: v => this.fmt.pct(v),
+                };
+            } else {
+                // Without the size of the host, cores and a share of the memory limit have no common unit: both are drawn on one height,
+                // the axis reads in cores, and the cursor says what each line is really worth.
+                const top = niceMax(Math.max(...cores));
+                const limit = dockerTotals(scope, stats).memLimit;
+                const series: ChartSpec['series'] = [{ name: this.t('dockerpage.cores_in_use'), color: 'var(--ok)', data: cores, labels: cores.map(v => this.fmt.dec(v)) }];
+                if (limit > 0) {
+                    const share = hist.map(h => Math.min(100, (h.memUsed / limit) * 100));
+                    series.push({ name: this.t('dockerpage.mem_of_limit'), color: 'var(--warn)', data: share.map(v => (v / 100) * top), labels: share.map(v => this.fmt.pct(v)) });
+                }
+                spec = { series, max: top, height: 190, edges: [this.clock(hist[0].t), this.clock(hist[hist.length - 1].t)], fmt: v => this.fmt.dec(v) };
             }
-            const spec: ChartSpec = {
-                series, max: top, height: 190,
-                edges: [this.clock(hist[0].t), this.clock(hist[hist.length - 1].t)],
-                fmt: v => this.fmt.dec(v),
-            };
             chart = chartHtml('session', spec);
             this.charts.set('session', { spec, at: hist.map(h => h.t) });
         }
@@ -889,6 +928,7 @@ class DockerPage extends HTMLElement {
             chart,
             hostNames: names,
             hostCores,
+            capacity: this.capacity(scope),
         }, this.t, this.fmt);
         if (html === this.last.list) return;
         this.last.list = html;

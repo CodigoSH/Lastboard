@@ -192,6 +192,32 @@ func (h *DockerHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(d)
 }
 
+// POST /api/docker/host-size — Body: { "host_id": string }
+//
+// How many processors and how much memory the host has, so the CPU and the
+// memory of its containers can be read against it. An agent that cannot say
+// answers with zeros: the page then reads what it has without a scale.
+func (h *DockerHandler) HostSize(w http.ResponseWriter, r *http.Request) {
+	q, ok := readDockerQuery(w, r)
+	if !ok {
+		return
+	}
+	e, ok := h.hostOf(w, r, q.HostID)
+	if !ok {
+		return
+	}
+	size, err := HostSize(e.address())
+	if errors.Is(err, errAgentTooOld) {
+		size, err = DockerHostSize{}, nil
+	}
+	if err != nil {
+		writeReadError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(size)
+}
+
 // POST /api/docker/logs
 // Body: { "host_id": string, "id": string, "tail"?: number, "after"?: string }
 //

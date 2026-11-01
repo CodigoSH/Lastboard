@@ -196,6 +196,7 @@
   "dockerpage.critical": "জটিল",
   "dockerpage.attention_sub": "যেটায় একবার নজর দেওয়া দরকার",
   "dockerpage.bar_scale": "বার {cores} পর্যন্ত",
+  "dockerpage.host_cores": "হোস্টের কোর: {count}",
   "infra.tab_overview": "সংক্ষিপ্ত বিবরণ",
   "infra.tab_summary": "সারসংক্ষেপ",
   "infra.all_hosts": "সব হোস্ট",
