@@ -524,3 +524,4 @@ app-select {
 
 /* A segmented control whose segments are words: as wide as the word, in the same box as the icon one. */
 .seg--text button { width: auto; height: 28px; padding: 0 11px; font-size: 12px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.dot--pulse { animation: pulse 1.6s ease-in-out infinite; }

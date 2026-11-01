@@ -87,91 +87,77 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 > **Private addresses just work.** The connection is made by the Lastboard server, so `10.x`, `192.168.x` and `.local` addresses need no extra configuration, and a self-signed certificate is accepted when the switch above is on.
 
-## With more than one: the summary
+## The page
 
-![The Proxmox summary](../assets/proxmox-summary.png)
+The Proxmox icon in the top bar opens it, and the **×** in its header closes it. The page also has an address of its own, `/?view=proxmox`, which opens it straight away — in a new tab, or from a bookmark — and **See all** on the [widget](../widgets/proxmox.md) opens it the same way without reloading the board. You still sign in first, and the request is taken out of the address once the page is open. While it is open the rest of the top bar is locked, the same way the status page behaves, and **Esc**, the **×** or the browser's Back button close it.
 
-The Proxmox icon opens a summary when several hypervisors are connected. It is a board, like the rest of Lastboard: **one tile per hypervisor, holding everything about it** — its load, its nodes, its storage, what it is missing — and above them the only thing no single tile can say.
+The header says how many machines are running, how many are stopped and how many have warnings. **With more than one hypervisor** connected there is a filter beside it: *All* and one button per hypervisor when there are two, a selector when there are more, so every figure on the page can be read for all of them at once or for one. A button asks for a fresh reading at once; otherwise everything refreshes every 15 seconds while the page is open and the browser tab is visible. The page has five tabs: **Overview**, **Machines**, **Storage**, **Tasks** and **System log**.
 
-**The hypervisors come first** — they are what the page is for — and the questions you ask about them come under.
+### Overview
 
-**Three figures** sit below them: **Bookmarked**, **Not bookmarked** and **Stopped**, each an icon, a number and a **Show more**. Open one and it grows downward inside its own card, one machine per line: the name on the left and a pill on the right saying which hypervisor and node it is on. Click any line to go into that hypervisor. The count is the whole answer most days; the names stay out of the way until asked for.
+![The Proxmox overview](../assets/proxmox-summary.png)
 
-**An open list is measured against the window and scrolls inside itself**, so opening one never puts the page on a scrollbar it did not already have. All three open to the same height, whichever you press: a box of a known size that scrolls when it has to, rather than three that each pick their own. Below roughly 620px of window the hypervisors and the cards already fill the panel between them, and there is simply nothing left to open into.
+Four indicators:
 
-A stopped machine with a bookmark on it is listed first and marked, because that is an outage — your service is not answering. The rest are machines somebody turned off.
+- **Machines** — a ring with the share that is running, and chips for how many are containers (`LXC`), how many are virtual machines (`VM`) and how many are stopped.
+- **CPU** — the CPU of all the nodes in view, **weighted by cores**, with its curve.
+- **RAM** — what the nodes use together against what they have, and what is free.
+- **Storage** — the fullest store, with how many there are and how much space is free in all of them.
 
-**Anything urgent sits above them and only when it exists**: a hypervisor that did not answer, and a store past 90%.
+Under them, a chart of the CPU over the last day (move the pointer over it to read a value), and **Needs attention**, worst first:
 
-**Not bookmarked** is the list of what you have not wired up to your board yet.
+- a hypervisor that did not answer;
+- a stopped machine that serves a bookmark of yours, which is an outage — your service is not answering — and is named: **This stops responding: Plex**;
+- a store at 90% or more (red from 95%);
+- a machine whose CPU is at 90% or more;
+- a node whose memory is at 85% or more.
 
-**Each hypervisor's tile** carries, in one place: how many of its machines are running, its CPU over the last day as a curve, CPU and memory now, its nodes with cores against threads and uptime, its fullest stores, and a tag for anything of its own that is stopped or unbookmarked. The arrow goes in.
+A machine somebody turned off, with no bookmark depending on it, is not an alarm: it is under **Stopped** in the Machines tab. Choosing an item opens it. When there is nothing to list the box says everything is running as it should.
 
-**Clicking anywhere on a tile goes in.** There is no button to find: the tile is the target.
+Below, a box for the **Nodes** (CPU and memory of each), one for the five fullest **Storage** and one with the **latest tasks** of the first node in view. With several hypervisors, a box lists them with whether each is a cluster or a single node, and which did not answer.
 
-**Back walks back through the page, not out of Lastboard.** Opening it is one step and going into a cluster is another, so Back — the browser's button, the mouse's fourth button, a swipe from the edge of a phone — takes you from a cluster to the summary, and from there to your board. Closing with the ✕ or with Escape takes those steps off the stack with it, so nothing is left behind to press. The [status page](../monitoring/overview.md) behaves the same way.
-
-Two figures are weighted rather than averaged, and deliberately: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so a cluster's CPU — the bar and the curve alike — is weighted by cores. The curve costs one request per node, which is what the endpoint answers.
+Two figures are weighted rather than averaged, and deliberately: a node of 8 cores at 12% and one of 32 at 78% average to a number that describes neither, so the CPU — the figure and the curve alike — is weighted by cores. The curve costs one request per node, which is what the endpoint answers; it is kept for five minutes.
 
 **A shared store is counted once.** A Ceph pool is reported by every node of the cluster, so adding them up would triple it.
 
 > **Two connections to the same address are allowed, and warned about.** A second token with narrower permissions is a reasonable thing to want, but every total on this page adds the hypervisors up, so the same server connected twice lands in each of them twice. Settings says so when you save it, and saves anyway.
 
-Click a card to go into that cluster. The header then carries its name and an arrow back.
+**Every bar on the page reads the same way**, whether it measures a node's CPU, a hypervisor's memory or how full a store is: **green** while the figure is comfortable, **amber from 60%** and **red from 90%**. They are deliberately not your accent colour — an accent belongs to you and may itself be red, and a healthy bar has to look healthy to someone who has never seen your palette. The widget follows the same rule, so a board with both reads one way rather than two.
 
-> **With one hypervisor there is no summary**, and there never was: the icon opens the cluster directly. A page in front of a single thing would be a click that buys nothing.
+### Machines
 
-## The page
+One card per virtual machine or container (or a list, with the two buttons at the end of the toolbar). A card carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below) — its name, its type and VMID, its node, the bookmark it serves as a chip, and CPU and memory. A stopped machine is dimmed and says so; if a bookmark of yours runs on it, it says which service it takes with it and its dot is red. Templates are left out: they cannot run, so they have no state to show.
 
-The Proxmox icon in the top bar opens it — or the summary above, if you have more than one — and the **×** in its header closes it. The page also has an address of its own, `/?view=proxmox`, which opens it straight away — in a new tab, or from a bookmark — and **See all** on the [widget](../widgets/proxmox.md) opens it the same way without reloading the board. You still sign in first, and the request is taken out of the address once the page is open. While it is open the rest of the top bar is locked, the same way the status page behaves. Top to bottom:
+- **Search** filters by name, VMID, node, hypervisor or bookmark. **Ctrl+K** (**Cmd+K** on macOS) puts the cursor in it from anywhere on the page.
+- **Chips** — *All*, *Running*, *Stopped* and *Warnings* — each with how many it would show. *Warnings* are the stopped machines a bookmark depends on and the ones at 90% CPU or more.
+- **Group by node** gathers the machines of each node under its name.
+- **Sort by** name, state, CPU or memory. The view, the sort and the grouping are remembered in this browser.
 
-**The header** carries the state of the host beside the title, not on a bar of its own: node name (or *Cluster*, when the host says it is one), how many machines are running out of how many **in green**, and **Stopped** — how many are not — **in red**. It is a headcount of the same machines, counted twice: the two numbers add up to the total, which is the point. Whether one of those stopped machines is serving a bookmark of yours is said where it can be acted on — on the tile itself, and on the summary.
+### Storage
 
-**Nodes** — one card per node with CPU, memory and disk as percentages, and a labelled footer with **uptime** and **load average**. The uptime is spelled out in two units — *6 days and 17 hours*, not *17 d* and not *161 hours* — in your own language and with its own plural rules. The full figures behind those percentages — *15 GiB / 31,1 GiB* — are in the sheet the card opens, because "half full" says nothing about whether another machine, or another backup, fits. The header counts both **cores and threads**, which are not the same number: a chip with 12 cores reports 16 threads, and a card that names only one of them is ambiguous about which. On a cluster the header says so; a single node is never called a cluster.
+Every store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Choosing one opens its figures.
 
-**Storage** — one card per store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to.
+## The side panel
 
-**Every bar on the page reads the same way**, whether it measures a node's CPU, a hypervisor's memory or how full a store is: **green** while the figure is comfortable, **amber from 60%** and **red from 90%**. They are deliberately not your accent colour — an accent belongs to you and may itself be red, and a healthy bar has to look healthy to someone who has never seen your palette. The widget follows the same rule, so a board with both reads one way rather than two. **The trend lines take the same three colours**, from the figure they end on — a tile's 24-hour CPU curve, a hypervisor's load curve, the charts in a detail sheet — so a curve and the bar beneath it never disagree. A stopped machine's line is drawn dim instead: a flat line at zero is not health, it is absence.
-
-**Machines** — one tile per virtual machine or container, grouped by node. A tile carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below), its name, its CPU with a **trend line over the last 24 hours**, and on the bottom line its type (`LXC` in a capsule, `VM` in a box), its VMID and its memory as a percentage with the figure behind it — *32% (165,6 MiB)*. A chip and a memory stick mark which figure is which. The corner carries the marks rather than figures: the status dot, and a bookmark glyph beside it when a bookmark of yours runs on this machine. Templates are left out: they cannot run, so they have no state to show.
-
-The dot in the corner says one thing, the two colours the header counts: **green** running, **red** stopped. The tile itself says the rest:
-
-| | |
-| :--- | :--- |
-| Running | full colour |
-| Stopped | dimmed, with a soft red edge and a faint red wash over the whole tile, so it is found from across the grid |
-| Stopped **and** serving a bookmark | exactly the same, plus the bookmark mark in its corner: that one is an outage, and the mark — not a second colour — is what says so |
-
-The red is the danger colour, never your accent. An accent belongs to you and may be orange or blue, and "stopped" has to mean the same on every board. It is deliberately soft: a few machines off is not an emergency.
-
-Tiles keep their place whatever happens to them — by kind, then by VMID. A machine you know where to find stays there, and a stopped one is picked out by how it looks rather than by the grid rearranging itself under your pointer. (The widget is the other way round: it has room for a handful of rows, so what needs attention is lifted into them.)
-
-**Each node folds.** Click a node's heading in the Machines section and its tiles collapse to a single line, keeping the count so you still know what is inside — useful on a cluster, where every node's machines end to end make a very long page. The fold is remembered in your browser, per node, so a cluster stays the way you left it.
-
-A folded node's machines are not asked for either: their trend lines are one request per machine, so folding a node you are not looking at spares your host those calls entirely.
-
-The search box in the **Machines** header filters by name or VMID. When something is stopped, the **Stopped** count becomes a button: click it to show only those machines, and click it again to bring the rest back — it now shows exactly what it counts. **While either is active, folds are ignored** — a search that reported nothing because the answer was folded away would be a lie the page told about its own contents.
-
-## A machine in detail
-
-Click a tile.
+Choosing a machine, a node or a store opens it in a **side panel**. On a wide window it pushes the page aside so the list stays in view; on a narrower one it covers the page, and **Esc**, the **×** or the browser's Back button closes it. On a phone it takes the screen and Back returns to the page.
 
 ![A stopped machine](../assets/proxmox-machine.png)
 
-The sheet shows the machine's own CPU trend, its state, memory and uptime, the bookmark it serves — and the sentence this page exists for when it is stopped: **This stops responding: Plex**. Move the pointer across the chart and it says what the line was worth at that minute.
+**A machine** has two tabs. **Summary** shows its state, CPU, memory and uptime, the bookmark it serves, its CPU over the last day, and the sentence this page exists for when it is stopped. **Tasks** lists what the hypervisor has done to it. At the foot: **Start** or **Shut down** (when the token allows it), **Open bookmark**, and **Remove icon**. Click its icon to [choose one](#machines-that-will-never-have-a-bookmark).
 
-From here you can **Start** or **Shut down** the machine (when the token allows it), open the bookmark it serves, and click its icon to [choose one](#machines-that-will-never-have-a-bookmark).
+**A node** has **Summary** (CPU, memory and disk now, the figures behind those percentages — *15 GiB / 31,1 GiB* — cores and threads, uptime and load, and its CPU and memory over the last day), **Tasks** and **System log**. The header counts both **cores and threads**, which are not the same number: a chip with 12 cores reports 16 threads.
 
-The node and the storage cards open the same way, with their own charts and figures.
+**A store** shows how full it is and how much is left, with a warning from 90%.
 
 ### Tasks
 
-A node's sheet and a machine's sheet each have a **Tasks** button. It lists what the hypervisor has recently done there, newest first, up to 50: backups, starts and shutdowns, migrations, clones, snapshots and package updates. Each row shows a dot (green for success, amber for warnings or a task still running, red for failure), what it was, the machine it concerned, who started it, when, how long it took, and the message it ended with when it did not end cleanly. On a machine's sheet only that machine's tasks are listed. The list refreshes every 15 seconds while it is open.
+The **Tasks** tab, and the Tasks tab of a node or a machine, list what the hypervisor has recently done there, newest first, up to 50: backups, starts and shutdowns, migrations, clones, snapshots and package updates. The tab asks which node to read. Each row shows a dot (green for success, amber for warnings or a task still running, red for failure), what it was, the machine it concerned, who started it, when, how long it took, and the message it ended with when it did not end cleanly. On a machine only that machine's tasks are listed. The list refreshes every 15 seconds while it is open.
 
 Click a task to read its log, up to its first 1,000 lines, with a button to copy it. While the task is still running the log is read again every 3 seconds, and it stops as soon as the task finishes. Tasks need nothing new: they are read with `Sys.Audit`, which the role above already has. If the token lacks it, the list says so instead of staying empty.
 
-A node's sheet also has a **System log** button, which shows the last 200 lines of the node's own log, with **Refresh** and copy buttons. The system log is optional and needs one more privilege: add `Sys.Syslog` to the token's role (`pveum role modify Lastboard --privs "Sys.Audit Sys.Syslog Datastore.Audit VM.Audit VM.PowerMgmt"`, leaving out `VM.PowerMgmt` if your role does not have it). Without it the button shows a note saying so, and nothing else is affected.
+### System log
+
+The **System log** tab, and a node's panel, show the last 200 lines of the node's own log, with **Refresh** and copy buttons. The system log is optional and needs one more privilege: add `Sys.Syslog` to the token's role (`pveum role modify Lastboard --privs "Sys.Audit Sys.Syslog Datastore.Audit VM.Audit VM.PowerMgmt"`, leaving out `VM.PowerMgmt` if your role does not have it). Without it the tab shows a note saying so, and nothing else is affected.
 
 ## Starting and stopping
 
@@ -234,15 +220,14 @@ To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmo
 
 ## What Lastboard reads, and how often
 
-Per hypervisor, and only for the one you are looking at — the summary reads one
-call from each, a cluster's page polls only its own.
+Per hypervisor. The page reads every connected one at once, and the widget reads them all too.
 
 | When | Request |
 | :--- | :--- |
 | Page open or widget tick | `GET /cluster/resources` — one call for nodes, machines and storage |
 | Page open | `GET /nodes/{node}/status` — one per node, for load and cores |
-| Page open | `GET .../rrddata` — one per machine, for the trend line on its tile. Proxmox has no endpoint that returns history for more than one machine, so these are spread out, three at a time, and each is asked for once while the page stays open |
-| Opening a machine | the history it already has, or a request for it |
+| Overview open | `GET .../rrddata` — one per node, for the CPU curve. Proxmox has no endpoint that returns history for more than one node, so these are spread out, and the curve is kept for five minutes |
+| Opening a machine or a node | `GET .../rrddata` for that one, for the charts in its panel |
 | Pressing a button | `POST .../status/start` or `.../status/shutdown` |
 | Tasks open | `GET /nodes/{node}/tasks` every 15 seconds, and for an open log `GET .../tasks/{id}/log` and `.../status` every 3 seconds while the task runs |
 | System log open | `GET /nodes/{node}/journal`, once, and again when you press Refresh |

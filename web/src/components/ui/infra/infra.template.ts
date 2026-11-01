@@ -28,6 +28,7 @@ const ICONS = {
     stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
     x: '<path d="M6 6l12 12M18 6 6 18"/>',
     chevR: '<path d="M9 6l6 6-6 6"/>',
+    chevL: '<path d="M15 6l-6 6 6 6"/>',
     grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
     list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
     alert: '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v5M12 18h.01"/>',
@@ -35,6 +36,10 @@ const ICONS = {
     copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
     down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    disk: '<rect x="3" y="13" width="18" height="6" rx="1.5"/><path d="M3 13l2-8h14l2 8M7 16h.01M11 16h2"/>',
+    bookmark: '<path d="M6 4h12v17l-6-4-6 4V4z"/>',
+    pen: '<path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/>',
+    link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

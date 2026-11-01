@@ -5,1920 +5,1061 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
-import { loadProxmox, chosenIcon, withIcon, type PxHost, type PxNode, type PxGuest, type PxStore } from '../../../services/proxmoxApi';
+import { loadProxmox, chosenIcon, withIcon, type PxGuest, type PxHost } from '../../../services/proxmoxApi';
 import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal';
+import '../Select/Select';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
-import css from './ProxmoxPage.css' with { type: 'text' };
 import { whenVisible } from '../../../services/whenVisible';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
-import { atBottom } from '../../../services/dockerPage';
-import { copyText } from '../../../services/copyText';
+import { byteUnit } from '../../../services/dockerOverview';
+import { fetchTasks } from '../../../services/proxmoxTasksApi';
+import type { PxTask } from '../../../services/proxmoxTasks';
 import {
-    NO_SYSLOG_KEY, shouldPollLog, taskErrorKey, taskLogText, taskSeconds, TASKS_MS, TASK_LOG_MS,
-    type PxTask, type PxTaskLog, type TaskScope,
-} from '../../../services/proxmoxTasks';
-import { fetchTasks, fetchTaskLog, fetchJournal } from '../../../services/proxmoxTasksApi';
-import { errorHtml as taskErrorHtml, logLinesHtml, tasksListHtml, typeLabel, type Fmt as TaskFmt } from './ProxmoxTasks.template';
+    countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
+} from '../../../services/infraUnits';
+import {
+    attentionList, fleetNodes, fleetStores, fleetTotals, guestUnits, liveHosts, unitId, weightedCurve,
+    type FleetNode, type FleetStore, type LinkOf,
+} from '../../../services/proxmoxOverview';
+import {
+    chartHtml, chartIndexAt, CHART_WIDTH, icon, sortOptions, tabsHtml, toolbarHtml, type ChartSpec,
+} from '../infra/infra.template';
+import {
+    guestFooterHtml, guestHeadHtml, guestSummaryHtml, hostErrorHtml, inventoryHtml, noMatchHtml, nodeHeadHtml, nodeSummaryHtml,
+    overviewHtml, storageTabHtml, storeHeadHtml, storeSummaryHtml, summaryHtml, type Fmt, type GuestDrawer, type GuestView, type T,
+} from './ProxmoxPage.template';
+import type { Fmt as TaskFmt } from './ProxmoxTasks.template';
+import { JournalPanel, TaskPanel } from './ProxmoxPanels';
+import infraCss from '../infra/infra.css' with { type: 'text' };
+import css from './ProxmoxPage.css' with { type: 'text' };
 
-/** What this page draws: one hypervisor at a time. */
-type PxOverview = PxHost;
+const POLL_MS = 15000;
+/** How many hosts get a button each beside "All" before the header switches to a selector. */
+const MAX_HOST_BUTTONS = 2;
+const VIEW_KEY = 'proxmox.view';
+const SORT_KEY = 'proxmox.sort';
+const GROUP_KEY = 'proxmox.group';
+/** The range of the charts. Fixed: the page asks for a day, as it always did. */
+const RANGE = '24h';
+const RANGE_MS = 86400e3;
+/** How long a fleet curve is believed before it is asked again. */
+const CURVE_TTL_MS = 5 * 60e3;
+
+function readPref(key: string): string | null {
+    try { return localStorage.getItem(key); } catch { return null; }
+}
+function writePref(key: string, value: string): void {
+    try { localStorage.setItem(key, value); } catch { /* a private window: it holds for this visit */ }
+}
 
 interface PxSeries { range: string; cpu: number[]; mem: number[]; points: number; raw: number }
 
-/** A bookmark that says which machine backs it. */
-interface Backed { label: string; url: string; icon: string }
+/** The product's select, as the page drives it. */
+type SelectEl = HTMLElement & { options: { value: string; label: string }[]; value: string };
 
-const ICON_SERVER = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>';
-const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-const ICON_CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
-const ICON_SEARCH = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>';
-const ICON_BOOK = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
-/* A chip and a memory stick, drawn in the same stroke as every other icon on
-   this page. They label two bare numbers that otherwise read as "12.1%" and
-   "52%" with nothing to say which is which. */
-const ICON_CPU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"/></svg>';
-const ICON_RAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 17v3M12 17v3M17 17v3M8 11v2M12 11v2M16 11v2"/></svg>';
+type Tab = 'overview' | 'machines' | 'storage' | 'tasks' | 'syslog';
+type DrawerTab = 'summary' | 'tasks' | 'syslog';
+type Sel = { kind: 'guest' | 'node' | 'store'; hostId: string; ref: string };
+type Current =
+    | { kind: 'guest'; host: PxHost; guest: PxGuest }
+    | { kind: 'node'; host: PxHost; node: FleetNode }
+    | { kind: 'store'; host: PxHost; store: FleetStore };
 
-const ICON_PEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>';
-const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-const ICON_POWER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.6 6.6a8 8 0 1 0 10.8 0"/></svg>';
-const ICON_DISK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>';
-const ICON_TAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 12 22l-9-9V4a1 1 0 0 1 1-1h9z"/><path d="M7.5 7.5h.01"/></svg>';
-const ICON_NODE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>';
-
-/** The board's own fallback for a bookmark with no icon. */
-/* A bookmark with a stroke through it: the machines nothing points at. Drawn
-   from ICON_BOOK so the pair reads as a pair. */
-const ICON_NOBOOK = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M4 3l16 18"/></svg>';
-
-const ICON_FALLBACK = '<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
-
-const fmtBytes = (n: number): string => {
-    if (!n || n < 0) return '—';
-    const u = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
-    let i = 0;
-    let v = n;
-    while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
-    return `${i18n.formatNumber ? i18n.formatNumber(Math.round(v * 10) / 10) : (Math.round(v * 10) / 10)} ${u[i]}`;
-};
-
-/**
- * Uptime in words, not initials.
- *
- * This used to say "16 d", which is a unit you have to know rather than read,
- * and it was doing the arithmetic itself while i18n already had the formatter
- * — with the plural rules of twenty languages behind it (*casa: entrega*).
- */
-const fmtUptime = (sec: number): string =>
-    (!sec || sec < 0) ? '—' : i18n.formatDuration(sec);
-
-/**
- * How a percentage is coloured, and the rule is the same for every bar on this
- * page and on the widget: green below 60, amber from 60, red from 90.
- *
- * Green for the healthy case rather than the brand accent, which is the part
- * that is easy to get wrong. The accent belongs to the operator and it can BE
- * red: on a board with a red accent every bar read as an alarm, a CPU at 3%
- * included, and the page looked broken while nothing was. A meter is read at a
- * glance by someone who has never seen the palette, so it uses the colours that
- * mean the same thing everywhere instead of the ones that match the brand.
- *
- * The figure beside the bar keeps no class while it is fine, so coloured text
- * still means "look at this" and only the bar carries the healthy green.
- */
-/**
- * The same three steps as a bar, as a colour a line can be drawn with, so a
- * curve and the bar under it never disagree. Stopped machines pass their own
- * dim colour instead: a flat line at zero is not "healthy", it is absent.
- */
-const levelColour = (p: number): string => {
-    const l = level(p);
-    return l === 'bad' ? 'var(--danger-color)'
-        : l === 'warn' ? 'var(--warning-color)'
-            : 'var(--success-color)';
-};
-
-const level = (p: number) => (p >= 90 ? 'bad' : p >= 60 ? 'warn' : '');
-
-/**
- * A percentage as a person reads it, in their own language.
- *
- * Spanish writes 1,2 and English 1.2, and the page was printing the raw number
- * either way. This is for TEXT only: an SVG coordinate that went through here
- * would be cut at the decimal comma and the browser would drop the rest of the
- * attribute without a word (*casa: i18n*).
- */
-const pct = (v: number): string => i18n.formatNumber(Math.round(v * 10) / 10, { maximumFractionDigits: 1 });
-
-/** Where the folded nodes are remembered. */
-const COLLAPSED_KEY = 'proxmox.collapsedNodes';
-
-function readCollapsed(): string[] {
-    try {
-        const raw = JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]');
-        return Array.isArray(raw) ? raw.filter(v => typeof v === 'string') : [];
-    } catch {
-        // A private window, or storage the browser refuses: folding still works
-        // for this visit, it just will not be remembered.
-        return [];
-    }
+interface Written {
+    head: string; tabs: string; body: string; list: string; tools: string; pick: string;
+    dhead: string; dtabs: string; dbody: string; dfoot: string;
 }
-
-function writeCollapsed(nodes: Set<string>): void {
-    try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...nodes])); } catch { /* as above */ }
-}
-
-/** How far back each range reaches, for reading a time off a chart. */
-const RANGE_MS: Record<string, number> = { '1h': 3600e3, '24h': 86400e3, '7d': 604800e3 };
+const blank = (): Written => ({ head: '', tabs: '', body: '', list: '', tools: '', pick: '', dhead: '', dtabs: '', dbody: '', dfoot: '' });
 
 /**
- * The hypervisor, as a page of the board.
+ * The hypervisors, as a page of the board.
  *
  * The constraint that shaped it: what does this do that the Proxmox console at
  * :8006 does not? Not administration — that console is one click away and does
  * it better. What only this can do is show the machines beside the bookmarks
  * they serve, and say that a service stopped answering because the container
  * under it is down.
+ *
+ * Drawn from the same shell as the Docker page: a header, tabs, four
+ * indicators, an inventory and a drawer for whatever is chosen.
  */
 class ProxmoxPage extends HTMLElement {
-    private data: PxOverview | null = null;
-    private error = '';
-    private loaded = false;
-    /**
-     * Every chart on this page is drawn over the last day.
-     *
-     * It used to be a choice — three buttons on a bar of its own — and the bar
-     * went with them: the state of the host belongs next to its name, and a
-     * control that changes every line at once is a lot of furniture for a
-     * question nobody was asking of the whole grid at once. A machine's own
-     * sheet is where a range would earn its place, if it ever does.
-     */
-    private readonly range = '24h';
-    private query = '';
-    private onlyStopped = false;
-    private timer: ReturnType<typeof setInterval> | null = null;
-    private busy = new Set<number>();
-    /**
-     * Series behind each chart in the open sheet, for the pointer to read.
-     *
-     * Emptied when a sheet is opened, never when one is written: the markup is
-     * composed before `sheet()` is called, so clearing it there threw away what
-     * had just been put in and every chart came back inert under the pointer.
-     */
-    private _charts = new Map<string, { values: number[]; unit: string }>();
-    private _chartSeq = 0;
-    /**
-     * Nodes whose machines are folded away, by name.
-     *
-     * Kept in the browser rather than in memory: a cluster is folded once and
-     * expected to stay that way, and a page that forgets on every visit would
-     * have to be folded again every time — which is the work it exists to save.
-     */
-    private collapsed = new Set<string>(readCollapsed());
-    /** Which of the summary's concerns are showing their names. */
-    private opened = new Set<string>();
-    /**
-     * How many history entries this page has put on the stack.
-     *
-     * Two levels: one for the page itself, and one more for going into a
-     * cluster from the summary. Back walks them in order — cluster to summary,
-     * summary to the board — and only leaves Lastboard once there are none
-     * left, which is what a full-screen page should do.
-     */
-    private depth = 0;
-    private _popstate: () => void;
-
-    /**
-     * The hypervisor on screen, and every one connected.
-     *
-     * With a single host — which is every instance until somebody adds a
-     * second — the id stays empty and the server hands back the only one, so
-     * nothing here has to know whether a choice was ever made.
-     */
-    private hostId = '';
-
-    /**
-     * Which of the two things this page is.
-     *
-     * With one hypervisor connected — every instance until somebody adds a
-     * second — there is no summary and never was: the icon opens the cluster
-     * and a landing page in front of it would be a toll gate charging a click
-     * for nothing.
-     */
-    private view: 'summary' | 'cluster' = 'cluster';
     private hosts: PxHost[] = [];
+    private loaded = false;
+    private error = '';
+    private loading = false;
+    private timer: ReturnType<typeof setInterval> | null = null;
 
-    /** CPU history per machine, keyed `range|vmid`, for the tile sparklines. */
-    private series = new Map<string, number[]>();
-    /** A 24h CPU curve per hypervisor, once its nodes have answered. */
-    private hostSeries = new Map<string, number[]>();
-    private fleetAsked = false;
-    /** Machines already asked about, so a repaint does not ask again. */
-    private asked = new Set<string>();
-    private _built = false;
-    /** Whether the three sections exist; their labels change with the language. */
-    private _shell = false;
-    private _keydown: (e: KeyboardEvent) => void;
+    private tab: Tab = 'overview';
+    private hostFilter = 'all';
+    private query = '';
+    private status: StatusFilter = 'all';
+    private sort: SortKey = isSortKey(readPref(SORT_KEY)) ? readPref(SORT_KEY) as SortKey : 'name';
+    private grouped = readPref(GROUP_KEY) === '1';
+    private viewMode: 'cards' | 'list' = readPref(VIEW_KEY) === 'list' ? 'list' : 'cards';
+
+    private sel: Sel | null = null;
+    private drawerOpen = false;
+    private drawerTab: DrawerTab = 'summary';
+    private busy = new Set<string>();
+
+    /** The node whose tasks, or system log, the page tabs show: "host/node". */
+    private nodePick = '';
+
+    /** History of the open machine or node, asked when the drawer opens. */
+    private detailSeries: PxSeries | null = null;
+    private detailSeq = 0;
+
+    private curve: number[] = [];
+    private curveKey = '';
+    private curveAt = 0;
+    private curveBusy = false;
+
+    private latest: { tasks: PxTask[]; where: string } | null = null;
+    private latestBusy = false;
+
+    private depth = 0;
+    private charts = new Map<string, { spec: ChartSpec; at: number[] }>();
+    private last: Written = blank();
+    private bodyTab: Tab | '' = '';
+    private _listening = false;
+
     private _unsubscribeI18n: (() => void) | undefined;
+    private readonly _keydown: (e: KeyboardEvent) => void;
+    private readonly _popstate: () => void;
 
-    /**
-     * The tasks view, when the sheet is showing one.
-     *
-     * `back` is what the way back out of it opens: the node's or the machine's
-     * own sheet. The rest is what the list and the one log in front of the
-     * reader need, with a counter on each request so an answer that arrives
-     * after they moved on is dropped.
-     */
-    private tk: { scope: TaskScope; title: string; sub: string; back: () => void } | null = null;
-    private tkTasks: PxTask[] = [];
-    private tkLoaded = false;
-    private tkErr = '';
-    private tkHtml = '';
-    private tkSeq = 0;
-    private tkTimer: ReturnType<typeof setInterval> | null = null;
-    private tkOpen: PxTask | null = null;
-    private tkLog: PxTaskLog | null = null;
-    private tkLogErr = '';
-    private tkLogText = '';
-    private tkLogSeq = 0;
-    private tkLogTimer: ReturnType<typeof setInterval> | null = null;
-    /** A node's system log, when the sheet is showing one. */
-    private sj: { host: string; node: string; back: () => void } | null = null;
-    private sjLines: string[] | null = null;
-    private sjErr = '';
-    private sjSeq = 0;
+    private readonly t: T = (key, params) => i18n.t(key, params);
+
+    private readonly tfmt: TaskFmt = {
+        time: (sec) => i18n.formatDateTime(new Date(sec * 1000), { dateStyle: 'medium', timeStyle: 'short' }),
+        span: (sec) => i18n.formatDuration(sec),
+    };
+
+    private readonly fmt: Fmt = {
+        num: (n) => i18n.formatNumber(n),
+        pct: (n) => i18n.formatNumber(n / 100, { style: 'percent', maximumFractionDigits: 1 }),
+        dec: (n) => i18n.formatNumber(n, { maximumFractionDigits: 2 }),
+        bytes: (n) => {
+            if (!n || n < 0) return '—';
+            const { value, unit } = byteUnit(n);
+            return i18n.formatNumber(value, { style: 'unit', unit, unitDisplay: 'short', maximumFractionDigits: value < 10 && unit !== 'byte' ? 1 : 0 });
+        },
+        span: (sec) => (!sec || sec < 0 ? '—' : i18n.formatDuration(sec)),
+    };
+
+    private readonly pageTasks = new TaskPanel(this.t, this.tfmt);
+    private readonly drawerTasks = new TaskPanel(this.t, this.tfmt);
+    private readonly pageJournal = new JournalPanel(this.t);
+    private readonly drawerJournal = new JournalPanel(this.t);
+
+    /** The bookmark that backs a machine, if its owner said so: written in the bookmark itself or read off the names. */
+    private readonly linkOf: LinkOf = (hostId, g) => {
+        const l = linkFor({ ...g, host: hostId });
+        return l ? (l.label || l.url || g.name) : '';
+    };
 
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         adoptSharedStyles(this.shadowRoot);
+
         this._keydown = (e: KeyboardEvent) => {
             if (!this.hasAttribute('open')) return;
-            const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
-            if (dlg?.open) return;   // the sheet answers its own keys first
-            if (e.key === 'Escape') { this.close(); return; }
-            // The same shortcut as the board's search, aimed at this page's own box.
-            const typing = isTypingTarget(e.composedPath()[0] as Element | undefined, 'pp-search');
+            // A confirmation answers its own Escape; closing the page under it would be a second effect of one key.
+            if (document.querySelector('confirmation-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
+            if (document.querySelector('icon-selection-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
+            if (e.key === 'Escape') {
+                if (this.drawerOpen) this.closeDrawer(); else this.close();
+                return;
+            }
+            const typing = isTypingTarget(e.composedPath()[0] as Element | undefined, 'inv-q');
             if (!opensSearch(e, { locked: false, typing })) return;
-            const input = this.shadowRoot?.getElementById('pp-search') as HTMLInputElement | null;
-            if (!input) return;
             e.preventDefault();
-            input.focus();
-            input.select();
+            if (this.tab !== 'machines') this.setTab('machines');
+            const input = this.$('inv-q') as HTMLInputElement | null;
+            input?.focus();
+            input?.select();
         };
-        // Back: the browser's button, the mouse's fourth button, or a swipe
-        // from the edge of a phone. Only ours while we have entries on the
-        // stack; at any other moment this is somebody else's navigation.
+
+        // Back: the browser's button, the mouse's fourth button, or a swipe from the edge of a phone.
+        // Only ours while we have entries on the stack; at any other moment this is somebody else's navigation.
         this._popstate = () => {
             if (this.depth <= 0) return;
             this.depth--;
             if (!this.hasAttribute('open')) return;
-            // Two deep means we are inside a cluster: the first step back is
-            // out to the summary, not out of the page.
-            if (this.depth > 0 && this.view === 'cluster') { this.toSummary(); return; }
+            if (this.depth > 0 && this.drawerOpen) { this.hideDrawer(); return; }
             this.closeQuietly();
         };
     }
 
     connectedCallback() {
-        this._build();
+        if (!this._listening) {
+            this._listening = true;
+            const root = this.shadowRoot!;
+            root.addEventListener('click', this.onClick);
+            root.addEventListener('input', this.onInput);
+            root.addEventListener('change', this.onChange);
+            root.addEventListener('mousemove', this.onChartMove as EventListener);
+            root.addEventListener('mouseout', this.onChartLeave);
+        }
+        this.build();
         window.addEventListener('keydown', this._keydown);
         window.addEventListener('popstate', this._popstate);
         this._unsubscribeI18n = i18n.subscribe(() => {
-            // The section labels and the placeholder live in the shell, which
-            // is written once: a language change is one of the two things that
-            // has to write it again.
-            this._shell = false;
-            if (this.hasAttribute('open')) this.paint();
-            // The sheet is not part of the page's paint: a tasks view in it
-            // has its own words to write again.
-            if (this.tk) this.showTasks();
-            if (this.sj) this.showJournal();
+            // Every label is written into the shell, so a language change is one of the two moments it is written again.
+            this.build();
+            for (const p of [this.pageTasks, this.drawerTasks]) p.relabel();
+            for (const p of [this.pageJournal, this.drawerJournal]) p.relabel();
+            if (this.hasAttribute('open')) this.paintAll(true);
         });
     }
 
     disconnectedCallback() {
         window.removeEventListener('keydown', this._keydown);
         window.removeEventListener('popstate', this._popstate);
-        if (this.timer) clearInterval(this.timer);
+        this.stopTimers();
+        this.stopPanels();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
 
+    // ── Opening and closing ──
+
     open() {
         this.setAttribute('open', '');
-        // A full-screen page is a place, so Back leaves it rather than leaving
-        // Lastboard. Pushed once per opening, never stacked.
+        // A full-screen page is a place, so Back leaves it rather than leaving Lastboard. Pushed once per opening, never stacked.
         if (this.depth === 0) { history.pushState({ lbProxmox: 'page' }, ''); this.depth = 1; }
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: true });
-        // Which view this is cannot be known before asking: it depends on how
-        // many hypervisors are connected. The summary is the safe first guess
-        // because it collapses to the cluster below when there is only one.
-        this.view = 'summary';
-        this.hostId = '';
-        this._shell = false;
-        this.load();
-        if (this.timer) clearInterval(this.timer);
-        this.timer = setInterval(whenVisible(() => this.load()), 15000);
-    }
-
-    /** Back to the list of hypervisors. */
-    private toSummary() {
-        this.view = 'summary';
-        this.hostId = '';
-        this._shell = false;
+        this.drawerOpen = false;
         this.loaded = false;
-        this.paint();
-        this.load();
+        this.curveAt = 0;
+        this.paintAll(true);
+        void this.load();
+        if (this.timer) clearInterval(this.timer);
+        this.timer = setInterval(whenVisible(() => { void this.load(); }), POLL_MS);
     }
 
-    /** Closing without touching history — this is what Back itself calls. */
     private closeQuietly() {
         this.removeAttribute('open');
-        this._shell = false;
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: false });
-        if (this.timer) { clearInterval(this.timer); this.timer = null; }
-        const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
-        if (dlg?.open) dlg.close();
+        this.stopTimers();
+        this.stopPanels();
+        this.detailSeq++;
     }
 
     close() {
-        // Closing by the X or by Escape takes our entries off the stack with
-        // it, or the next press of Back would be spent on a page nobody is
-        // looking at any more. Zeroing first is what stops the popstate this
-        // causes from being read as the user going back.
+        // Closing by the X or by Escape takes our entries off the stack with it. Zeroing first
+        // is what stops the popstate this causes from being read as the user going back.
         const steps = this.depth;
         this.depth = 0;
         this.closeQuietly();
         if (steps > 0) history.go(-steps);
     }
 
+    private stopTimers() {
+        if (this.timer) { clearInterval(this.timer); this.timer = null; }
+    }
+
+    private stopPanels() {
+        this.pageTasks.stop();
+        this.drawerTasks.stop();
+        this.pageJournal.stop();
+        this.drawerJournal.stop();
+    }
+
+    // ── Small helpers ──
+
+    private $(id: string): HTMLElement | null {
+        return this.shadowRoot?.getElementById(id) ?? null;
+    }
+
+    private isNarrow(): boolean {
+        return window.innerWidth <= 640;
+    }
+
+    private scope(): PxHost[] {
+        return this.hostFilter === 'all' ? this.hosts : this.hosts.filter(h => h.id === this.hostFilter);
+    }
+
+    private hostOf(id: string): PxHost | undefined {
+        return this.hosts.find(h => h.id === id);
+    }
+
+    private guestOf(hostId: string, vmid: number): PxGuest | undefined {
+        return this.hostOf(hostId)?.guests?.find(g => g.vmid === vmid);
+    }
+
+    /** The face of a machine: what its owner chose, then what its bookmark wears. */
+    private faceOf(h: PxHost, g: PxGuest): string {
+        const own = chosenIcon(h, g.node, g.vmid);
+        const face = own || linkFor({ ...g, host: h.id })?.icon || '';
+        return face ? resolveIconUrl(face) : '';
+    }
+
+    private viewOfGuest(h: PxHost, g: PxGuest): GuestView {
+        return {
+            hostId: h.id, hostName: h.name, showHost: this.hosts.length > 1, guest: g, link: this.linkOf(h.id, g), face: this.faceOf(h, g),
+            selected: !!this.sel && this.sel.kind === 'guest' && this.sel.hostId === h.id && this.sel.ref === String(g.vmid),
+        };
+    }
+
+    private mayPower(h: PxHost): boolean {
+        return h.caps?.power === true && accessAllows(userStore.getUser(), 'proxmox_control');
+    }
+
+    /** What the drawer is showing, resolved against the latest reading, or null when it is gone. */
+    private current(): Current | null {
+        const s = this.sel;
+        if (!s) return null;
+        const host = this.hostOf(s.hostId);
+        if (!host || host.error) return null;
+        if (s.kind === 'guest') {
+            const guest = this.guestOf(s.hostId, Number(s.ref));
+            return guest ? { kind: 'guest', host, guest } : null;
+        }
+        if (s.kind === 'node') {
+            const node = fleetNodes([host]).find(n => n.name === s.ref);
+            return node ? { kind: 'node', host, node } : null;
+        }
+        const store = fleetStores([host]).find(x => x.name === s.ref);
+        return store ? { kind: 'store', host, store } : null;
+    }
+
+    // ── Shell ──
+
+    private build() {
+        const t = this.t;
+        this.shadowRoot!.innerHTML = `
+            <style>${infraCss}${css}</style>
+            <div class="pg" id="pg">
+                <header class="phead" id="phead"></header>
+                <nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.proxmox.name'))}"></nav>
+                <div class="pbody" id="body"></div>
+            </div>
+            <div class="scrim" id="scrim"></div>
+            <aside class="drawer" id="drawer" aria-label="${escapeHtml(t('proxmoxpage.details'))}">
+                <div class="dr__h"><div id="dr-head"></div><div class="dr__tabs" id="dr-tabs" role="tablist"></div></div>
+                <div class="dr__b" id="dr-body"></div>
+                <div class="dr__f" id="dr-foot"></div>
+            </aside>`;
+        // The regions are new and empty: nothing written before is still there.
+        this.last = blank();
+        this.bodyTab = '';
+        this.charts.clear();
+    }
+
+    // ── Events ──
+
+    private readonly onInput = (e: Event) => {
+        const el = e.target as HTMLElement;
+        if (el.id !== 'inv-q') return;
+        this.query = (el as HTMLInputElement).value;
+        this.paintInventory();
+    };
+
+    private readonly onChange = (e: Event) => {
+        const el = e.target as HTMLElement & { value: string };
+        const value = el.value;
+        // The select closes itself right after it says it changed; painting waits for that.
+        queueMicrotask(() => {
+            if (el.id === 'hp-host') { this.hostFilter = value; this.paintAll(); }
+            else if (el.id === 'inv-sort') {
+                if (isSortKey(value)) { this.sort = value; writePref(SORT_KEY, value); this.paintInventory(); }
+            } else if (el.id === 'node-pick') { this.nodePick = value; this.paintBody(); }
+        });
+    };
+
+    /** A select that is open closes on any scroll, and a repaint scrolls: the refresh waits for the person to choose. */
+    private selectOpen(): boolean {
+        return !!this.shadowRoot?.querySelector('app-select[open]');
+    }
+
+    private readonly onClick = (e: Event) => {
+        const el = e.target as HTMLElement;
+        if (el.closest('#hp-close')) { this.close(); return; }
+        if (el.closest('#hp-refresh')) { void this.load(); return; }
+        if (el.closest('#dr-close') || el.closest('#scrim')) { this.closeDrawer(); return; }
+
+        const tab = el.closest<HTMLElement>('#tabs [data-tab]');
+        if (tab) { this.setTab(tab.dataset.tab as Tab); return; }
+        const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
+        if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
+
+        const hostf = el.closest<HTMLElement>('[data-hostf]');
+        if (hostf) { this.hostFilter = hostf.dataset.hostf || 'all'; this.paintAll(); return; }
+
+        const filter = el.closest<HTMLElement>('[data-filter]');
+        if (filter && isStatusFilter(filter.dataset.filter)) { this.status = filter.dataset.filter; this.paintTools(); this.paintInventory(); return; }
+        if (el.closest('#inv-group')) {
+            this.grouped = !this.grouped;
+            writePref(GROUP_KEY, this.grouped ? '1' : '0');
+            this.paintTools();
+            this.paintInventory();
+            return;
+        }
+        const view = el.closest<HTMLElement>('[data-view]');
+        if (view) {
+            this.viewMode = view.dataset.view === 'list' ? 'list' : 'cards';
+            writePref(VIEW_KEY, this.viewMode);
+            this.paintTools();
+            this.paintInventory();
+            return;
+        }
+
+        // Something the attention list, a node or a store points at.
+        const go = el.closest<HTMLElement>('[data-go]');
+        if (go) { this.go(go.dataset.go || '', go.dataset.host || '', go.dataset.ref || ''); return; }
+
+        // A machine: a card or a row.
+        const unit = el.closest<HTMLElement>('.unit, .tr:not(.tr--h)');
+        if (unit?.dataset.vmid) { this.choose({ kind: 'guest', hostId: unit.dataset.host || '', ref: unit.dataset.vmid }); return; }
+
+        if (el.closest('[data-power]')) { void this.power(); return; }
+        const open = el.closest<HTMLElement>('[data-open]');
+        if (open?.dataset.open) { window.open(open.dataset.open, '_blank', 'noopener'); return; }
+        if (el.closest('[data-icon-clear]')) { void this.setIcon(''); return; }
+        if (el.closest('[data-icon]')) { void this.chooseIcon(); return; }
+    };
+
+    private go(kind: string, hostId: string, ref: string) {
+        if (kind === 'host') { this.hostFilter = hostId; this.paintAll(); return; }
+        if (kind === 'guest' || kind === 'node' || kind === 'store') this.choose({ kind, hostId, ref });
+    }
+
+    // ── The chart's cursor ──
+
+    private readonly onChartMove = (e: MouseEvent) => {
+        const wrap = (e.target as HTMLElement).closest<HTMLElement>('.chart__wrap');
+        if (!wrap) return;
+        const c = this.charts.get(wrap.dataset.chart || '');
+        const svg = wrap.querySelector('svg');
+        const tip = wrap.querySelector<HTMLElement>('.tip');
+        const cur = wrap.querySelector('.cur');
+        if (!c || !svg || !tip || !cur) return;
+        const box = svg.getBoundingClientRect();
+        if (!box.width) return;
+        const n = c.spec.series[0].data.length;
+        const { index, x } = chartIndexAt(n, (e.clientX - box.left) / box.width);
+        cur.setAttribute('x1', String(x));
+        cur.setAttribute('x2', String(x));
+        cur.setAttribute('opacity', '.7');
+        const when = c.at[index] ? i18n.formatDateTime(new Date(c.at[index]), { hour: '2-digit', minute: '2-digit' }) : '';
+        tip.innerHTML = `<div class="dim">${escapeHtml(when)}</div>` + c.spec.series.map(s =>
+            `<div><span style="color:${s.color}">●</span> ${escapeHtml(s.name)} <b>${escapeHtml(c.spec.fmt(s.data[index]))}</b></div>`).join('');
+        // The drawing is left-to-right in every language, so the tip is placed in screen terms.
+        const px = (x / CHART_WIDTH) * box.width;
+        tip.style.left = `${Math.min(Math.max(px + 12, 0), Math.max(0, box.width - tip.offsetWidth - 4))}px`;
+        tip.style.top = '6px';
+        tip.classList.add('on');
+    };
+
+    private readonly onChartLeave = (e: Event) => {
+        const wrap = (e.target as HTMLElement).closest<HTMLElement>('.chart__wrap');
+        if (!wrap) return;
+        wrap.querySelector('.tip')?.classList.remove('on');
+        wrap.querySelector('.cur')?.setAttribute('opacity', '0');
+    };
+
+    /** The points of a series as the moments they were taken: the last is now, each step back is one bucket. */
+    private timesOf(n: number): number[] {
+        const step = n > 1 ? RANGE_MS / (n - 1) : 0;
+        const now = Date.now();
+        return Array.from({ length: n }, (_, i) => now - (n - 1 - i) * step);
+    }
+
+    private rangeLabel(): string {
+        return i18n.formatDuration(RANGE_MS / 1000, 1);
+    }
+
+    private chartFor(id: string, label: string, values: number[], colour: string): string {
+        if (values.length < 2) return '';
+        const spec: ChartSpec = {
+            series: [{ name: label, color: colour, data: values }],
+            max: 100,
+            height: 150,
+            edges: [this.rangeLabel(), this.t('proxmox.now')],
+            fmt: v => this.fmt.pct(v),
+        };
+        this.charts.set(id, { spec, at: this.timesOf(values.length) });
+        return `<div class="card chart"><div class="chart__head"><span class="lbl">${escapeHtml(label)}</span></div>${chartHtml(id, spec)}</div>`;
+    }
+
+    // ── Selection ──
+
+    private choose(sel: Sel) {
+        const same = !!this.sel && this.sel.kind === sel.kind && this.sel.hostId === sel.hostId && this.sel.ref === sel.ref;
+        if (!same) {
+            this.sel = sel;
+            this.detailSeries = null;
+            this.detailSeq++;
+            this.drawerTab = 'summary';
+            this.last.dbody = this.last.dhead = this.last.dfoot = this.last.dtabs = '';
+            this.drawerTasks.stop();
+            this.drawerJournal.stop();
+        }
+        this.showDrawer();
+        this.paintAll();
+        if (!same) void this.loadDetail();
+    }
+
+    private showDrawer() {
+        if (this.drawerOpen) return;
+        this.drawerOpen = true;
+        // On a phone the drawer takes the screen, and Back returns to the page.
+        if (this.isNarrow()) { history.pushState({ lbProxmox: 'detail' }, ''); this.depth++; }
+    }
+
+    /** Closes the drawer by the X, the scrim or Escape. On a phone it takes its history entry with it. */
+    private closeDrawer() {
+        if (!this.drawerOpen) return;
+        if (this.isNarrow() && this.depth > 1) { history.back(); return; }
+        this.hideDrawer();
+    }
+
+    private hideDrawer() {
+        this.drawerOpen = false;
+        this.drawerTasks.stop();
+        this.drawerJournal.stop();
+        this.paintAll();
+    }
+
+    private setTab(tab: Tab) {
+        if (tab === this.tab) return;
+        this.tab = tab;
+        this.paintAll();
+    }
+
+    private setDrawerTab(tab: DrawerTab) {
+        if (tab === this.drawerTab) return;
+        this.drawerTab = tab;
+        this.paintDrawer();
+    }
+
     // ── Data ──
 
     private async load() {
-        // The links come from every board, not the one behind this page, so a
-        // machine is flagged the same wherever the visitor happened to be.
-        loadProxmoxLinks().then(() => { if (this.hasAttribute('open')) this.paint(); }).catch(() => { });
+        if (this.loading) return;
+        this.loading = true;
+        this.paintHead();
+        // The links come from every board, not the one behind this page, so a machine is flagged the same wherever the visitor was.
+        loadProxmoxLinks().then(() => { if (this.hasAttribute('open')) this.paintAll(); }).catch(() => { });
         try {
-            // The summary needs all of them; a cluster needs its own, which is
-            // what it polls every fifteen seconds.
-            const wanted = this.view === 'summary' ? undefined : (this.hostId || undefined);
-            const hosts = await loadProxmox(wanted);
-            if (this.view === 'summary') {
-                this.hosts = hosts;
-                this.error = hosts.length ? '' : 'proxmox.not_configured';
-            } else {
-                const shown = (this.hostId && hosts.find(h => h.id === this.hostId)) || hosts[0];
-                if (!shown) throw new Error('proxmox.not_configured');
-                this.hostId = shown.id;
-                this.data = shown;
-                // A host that answered with an error has no figures to draw, so
-                // the page says what happened instead of an empty cluster.
-                this.error = shown.error ? 'proxmox.connection_error' : '';
-            }
-        } catch (e: any) {
-            const key = typeof e?.message === 'string' ? e.message.trim() : '';
+            this.hosts = await loadProxmox();
+            this.error = this.hosts.length ? '' : 'proxmox.not_configured';
+            if (this.hostFilter !== 'all' && !this.hosts.some(h => h.id === this.hostFilter)) this.hostFilter = 'all';
+        } catch (e: unknown) {
+            const key = typeof (e as { message?: unknown })?.message === 'string' ? (e as { message: string }).message.trim() : '';
             this.error = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/.test(key) ? key : 'proxmox.connection_error';
         }
+        this.loading = false;
         this.loaded = true;
-        this.paint();
-    }
+        if (!this.hasAttribute('open')) return;
 
-    /**
-     * The bookmark a machine backs, if its owner said so.
-     *
-     * This is the whole point of the page, and it needed no column and no
-     * migration: the association is either written in the bookmark's own
-     * content or read off the names. See proxmoxLinks and proxmoxMatch — both
-     * halves of that answer cost the page nothing here.
-     */
-    /**
-     * The face of a machine: what its owner chose, then what its bookmark
-     * wears, then the board's own fallback.
-     *
-     * The choice comes first because it is the only one that can speak for the
-     * machines that will never have a bookmark — the runners, the tunnel, the
-     * dashboard you are reading this on.
-     */
-    private iconOf(g: PxGuest): string {
-        const own = this.data ? chosenIcon(this.data, g.node, g.vmid) : '';
-        if (own) return own;
-        return this.backing(g)?.icon || '';
-    }
-
-    private backing(g: PxGuest): Backed | null {
-        const link = linkFor({ ...g, host: this.hostId });
-        return link ? { label: link.label, url: link.url, icon: link.icon } : null;
-    }
-
-    // ── Markup ──
-
-    private _build() {
-        if (this._built) return;
-        this._built = true;
-        this.shadowRoot!.innerHTML = `
-            <style>${css}</style>
-            <div class="pp">
-                <header class="pp__header">
-                    <!-- Only drawn once there is a summary to go back to. -->
-                    <button class="pp__back" id="pp-back" hidden
-                            aria-label="${escapeHtml(i18n.t('general.back'))}" title="${escapeHtml(i18n.t('general.back'))}">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-                             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                    </button>
-                    <div class="pp__title">${ICON_SERVER}<span id="pp-title"></span></div>
-                    <!-- The state of the host reads as part of the title, not as
-                         a bar of its own: one line at the top instead of two. -->
-                    <div class="pp__status" id="pp-status"></div>
-                    <button class="pp__close" id="pp-close" aria-label="${escapeHtml(i18n.t('general.close'))}">${ICON_CLOSE}</button>
-                </header>
-                <div class="pp__body" id="pp-body"></div>
-            </div>
-            <dialog id="pp-sheet"><div class="sheet" id="pp-sheet-body"></div></dialog>`;
-
-        this.shadowRoot!.addEventListener('click', this.onClick);
-        this.shadowRoot!.addEventListener('input', this.onInput);
-        this.shadowRoot!.addEventListener('pointermove', this.onSheetMove as EventListener);
-        const dlg = this.shadowRoot!.querySelector('dialog') as HTMLDialogElement;
-        dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
-        // However the sheet goes away, nothing it was asking for keeps being asked.
-        dlg.addEventListener('close', () => { this.stopTasks(); this.stopJournal(); });
-        this.paint();
-    }
-
-    /**
-     * One bar: a label, the bar, the percentage.
-     *
-     * The figures behind those percentages live in the node's own sheet. On the
-     * card they made three rows of numbers where a glance wants three lengths.
-     */
-    private meter(k: string, pct: number) {
-        const l = level(pct);
-        return `<span class="metric">
-            <span class="metric__k">${escapeHtml(k)}</span>
-            <span class="bar"><i class="${l || 'ok'}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
-            <span class="metric__v ${l ? 'metric__v--' + l : ''}">
-                <span class="metric__p">${Math.round(pct)} %</span></span>
-        </span>`;
-    }
-
-    private nodeCard(n: PxNode) {
-        const state = level(Math.max(n.cpu, n.mem, n.disk)) === 'bad' ? 'bad'
-            : level(Math.max(n.cpu, n.mem, n.disk)) === 'warn' ? 'warn' : 'up';
-        // Proxmox hands the load average over as a string, so it arrived here
-        // reading "0.49" in every language while the rest of the page already
-        // wrote 162,4 MiB in Spanish (*casa: i18n*).
-        const raw = (n.loadavg && n.loadavg.length) ? Number(n.loadavg[0]) : NaN;
-        const load = Number.isFinite(raw)
-            ? i18n.formatNumber(raw, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            : '—';
-        return `<button class="card node" data-node="${escapeHtml(n.name)}">
-            <span class="node__head">
-                <span class="dot dot--${state}"></span>
-                <span class="node__name">${escapeHtml(n.name)}</span>
-                <span class="node__tail">${n.cores > 0
-                    ? `${n.cores} ${escapeHtml(i18n.t('proxmox.cores').toLowerCase())} · `
-                    : ''}${n.threads} ${escapeHtml(i18n.t('proxmox.threads'))}</span>
-            </span>
-            ${this.meter(i18n.t('widget.telemetry.cpu'), n.cpu)}
-            ${this.meter(i18n.t('widget.telemetry.ram'), n.mem)}
-            ${this.meter(i18n.t('widget.proxmox.disk'), n.disk)}
-            <span class="node__foot">
-                ${this.foot(i18n.t('proxmox.uptime'), fmtUptime(n.uptime))}
-                ${this.foot(i18n.t('proxmox.load'), load)}
-                <span class="node__go">${ICON_CHEVRON}</span>
-            </span>
-        </button>`;
-    }
-
-    /**
-     * One labelled figure in a node's footer.
-     *
-     * The footer used to be three bare numbers in a row — "16 d · carga 0.49 ·
-     * 29" — and two of them had nothing saying what they were. The machine
-     * count is gone: the same node heads its own row of machines further down,
-     * with the better version of that number (how many are containers and how
-     * many are virtual machines), so the card was spending a slot repeating the
-     * page instead of labelling what only it shows.
-     */
-    private foot(k: string, v: string) {
-        return `<span class="node__f">
-            <span class="node__fk">${escapeHtml(k)}</span>
-            <span class="node__fv">${escapeHtml(v)}</span>
-        </span>`;
-    }
-
-    private storeCard(s: PxStore) {
-        const l = level(s.percent);
-        return `<button class="card store" data-store="${escapeHtml(s.name)}">
-            <span class="store__r1">
-                <span class="store__name">${escapeHtml(s.name)}</span>
-                <span class="store__kind">${escapeHtml(s.kind)}</span>
-                <span class="store__pct ${l ? 'store__pct--' + l : ''}">${Math.round(s.percent)}%</span>
-            </span>
-            <span class="bar" style="height:5px"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></span>
-            <span class="store__r3"><span>${escapeHtml(fmtBytes(s.used))} / ${escapeHtml(fmtBytes(s.total))}</span><span>${escapeHtml(s.node)}</span></span>
-        </button>`;
-    }
-
-    private tile(g: PxGuest) {
-        const book = this.backing(g);
-        const mem = g.mem_total > 0 ? Math.round((g.mem / g.mem_total) * 100) : 0;
-
-        const face = this.iconOf(g);
-        const icon = face
-            ? `<span class="ico"><img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy"></span>`
-            : `<span class="ico ico--none">${ICON_FALLBACK}</span>`;
-
-        // Two states, two colours, the same two the header counts: on or off.
-        // The third thing worth knowing — that a bookmark of yours went down
-        // with this machine — is not a colour at all: every stopped tile is the
-        // same soft red, and the bookmark mark in the corner says which ones
-        // carry a service.
-        const dot = g.running ? 'up' : 'bad';
-        const line = this.series.get(`${this.range}|${g.vmid}`) ?? [];
-
-        return `<button class="card tile${g.running ? '' : ' tile--off'}" data-guest="${g.vmid}">
-            <span class="tile__st tile__st--${dot}"></span>
-            <span class="tile__t1">${icon}<span class="tile__name">${escapeHtml(g.name) || '—'}</span></span>
-            <span class="tile__t2">
-                ${g.running
-                    ? `<span class="tile__num" aria-label="${escapeHtml(i18n.t('widget.telemetry.cpu'))} ${pct(g.cpu)}%">
-                           <span class="tile__gi">${ICON_CPU}</span>${pct(g.cpu)}<small>%</small></span>`
-                    : `<span class="tile__num">${escapeHtml(i18n.t('docker.state_stopped'))}</span>`}
-                <span class="tile__spark">${this.spark(line, g.running ? levelColour(g.cpu) : 'var(--text-dim)', 62, 20)}</span>
-            </span>
-            <span class="tile__t3">
-                <span class="ty ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
-                <span class="tile__meta">${g.vmid}${g.running
-                    ? ` · <span class="tile__ram" aria-label="${escapeHtml(i18n.t('widget.telemetry.ram'))} ${mem}%"><span class="tile__gi">${ICON_RAM}</span>${mem}%${
-                          g.mem > 0 ? `<span class="tile__amt">(${escapeHtml(fmtBytes(g.mem))})</span>` : ''}</span>`
-                    : ''}</span>
-            </span>
-            ${book ? `<span class="tile__book" title="${escapeHtml(book.label)}">${ICON_BOOK}</span>` : ''}
-        </button>`;
-    }
-
-    private visibleGuests(): PxGuest[] {
-        const all = this.data?.guests ?? [];
-        const q = this.query.trim().toLowerCase();
-        return all.filter(g => {
-            if (this.onlyStopped && g.running) return false;
-            if (!q) return true;
-            return g.name.toLowerCase().includes(q) || String(g.vmid).includes(q);
-        });
-    }
-
-    private paintStatus() {
-        const el = this.shadowRoot?.getElementById('pp-status');
-        if (!el) return;
-        // The summary counts every hypervisor at once. It used to write nothing
-        // at all here, which left the most valuable strip on the page blank on
-        // exactly the screen that exists to answer "is everything fine?".
-        if (this.view === 'summary') {
-            const f = this.fleet();
-            const down = this.downEverywhere();
-            el.innerHTML = `
-                ${down.length
-                    ? `<span class="stat stat--down"><span class="dot dot--bad"></span> ${escapeHtml(i18n.t('proxmox.services_down'))}: <b>${down.length}</b></span>`
-                    : `<span class="stat"><span class="dot dot--up"></span> <b>${f.hosts}</b> ${escapeHtml(i18n.t('proxmox.hypervisors').toLowerCase())}</span>`}
-                <span class="stat stat--up"><b>${f.running}</b>/${f.guests.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
-                <span class="stat stat--down">${escapeHtml(i18n.t('proxmox.stopped_count'))}: <b>${f.stopped}</b></span>`;
-            return;
+        // A machine that is gone is gone; one whose hypervisor did not answer is only out of sight.
+        if (this.sel && !this.current()) {
+            const h = this.hostOf(this.sel.hostId);
+            if (!h || !h.error) { this.sel = null; this.closeDrawer(); }
         }
-        const d = this.data;
-        const guests = d?.guests ?? [];
-        const running = guests.filter(g => g.running).length;
-        // Every stopped machine, not only the ones with a bookmark on them.
-        // The header is a headcount — how many are up, how many are down — and
-        // it used to say "Services down: 0" with something plainly stopped on
-        // screen, because it was quietly counting a different thing. The
-        // bookmarked outage still has its own place: the summary says which
-        // service stopped answering, and the tile wears the accent.
-        const down = guests.length - running;
-
-        // "Cluster" is what the host says, not what we assume: a standalone node
-        // is the common case and must not be called one.
-        const who = d?.cluster ? i18n.t('proxmox.cluster') : (d?.nodes[0]?.name ?? '');
-
-        el.innerHTML = `
-            <span class="stat"><span class="dot dot--up"></span> <b>${escapeHtml(who)}</b></span>
-            <span class="stat stat--up"><b>${running}</b>/${guests.length} ${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
-            <span class="stat stat--down ${down ? 'stat--click' : ''} ${this.onlyStopped ? 'stat--on' : ''}" id="pp-down"
-                  ${down ? 'role="button" tabindex="0"' : ''}>
-                ${escapeHtml(i18n.t('proxmox.stopped_count'))}: <b>${down}</b>
-            </span>`;
-    }
-
-    private paint() {
-        if (!this._built) return;
-        // One hypervisor is not a set worth summarising: the page opens on it.
-        //
-        // This decides which view we are in, so it has to run before anything
-        // is painted. It used to live inside paintBody(), which paint() calls
-        // AFTER paintStatus() — so on a single-hypervisor install the header
-        // was painted while the page still called itself a summary, wrote
-        // nothing at all, and stayed empty until the next poll fifteen seconds
-        // later replaced it with the counts.
-        if (this.loaded && !this.error && this.view === 'summary' && this.hosts.length === 1) {
-            this.view = 'cluster';
-            this.hostId = this.hosts[0].id;
-            this.data = this.hosts[0];
-        }
-        const several = this.hosts.length > 1;
-        const title = this.shadowRoot?.getElementById('pp-title');
-        // Inside a cluster of several, the title is that cluster: the header
-        // has to say which of them these figures belong to.
-        if (title) {
-            title.textContent = (this.view === 'cluster' && several && this.data)
-                ? this.data.name
-                : i18n.t('widget.proxmox.name');
-        }
-        const back = this.shadowRoot?.getElementById('pp-back') as HTMLElement | null;
-        if (back) back.hidden = !(this.view === 'cluster' && several);
-        this.paintStatus();
-        this.paintBody();
+        this.paintAll();
+        void this.loadCurve();
+        void this.loadLatest();
     }
 
     /**
-     * The three sections, written once.
+     * The fleet's CPU over the last day.
      *
-     * They used to be rewritten whole on every poll, and the search box lived
-     * inside them: typing for longer than fifteen seconds meant losing the
-     * caret mid-word. Now the shell holds the parts that do not change and the
-     * data is poured into the containers below it.
+     * One request per node, which is what the endpoint answers — it has no way to speak for more than one.
+     * Spaced out, not fired together: against many nodes a burst trips the server's own rate limit.
+     * Kept for a few minutes: the curve is a day long and does not move in fifteen seconds.
      */
-    private buildShell() {
-        const body = this.shadowRoot?.getElementById('pp-body');
-        if (!body) return;
-        this._shell = true;
-        body.innerHTML = `
-            <section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.nodes'))}</span>
-                    <span class="sec__rule"></span>
-                    <span class="sec__note" id="pp-nodes-note"></span>
-                </div>
-                <div class="nodes" id="pp-nodes"></div>
-            </section>
-
-            <section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.storage'))}</span>
-                    <span class="sec__rule"></span>
-                    <span class="sec__note" id="pp-stores-note"></span>
-                </div>
-                <div class="stores" id="pp-stores"></div>
-            </section>
-
-            <section class="sec">
-                <div class="sec__head">
-                    <span class="sec__label">${escapeHtml(i18n.t('proxmox.machines'))}</span>
-                    <span class="sec__rule"></span>
-                    <!-- The search belongs to the machines, not to a bar of its
-                         own: on a bar it sat directly under the board's own
-                         search box and read as the same thing twice. -->
-                    <span class="search">${ICON_SEARCH}
-                        <input type="search" id="pp-search" value="${escapeHtml(this.query)}"
-                               placeholder="${escapeHtml(i18n.t('proxmox.search'))}"
-                               aria-label="${escapeHtml(i18n.t('proxmox.search'))}">
-                    </span>
-                    <span class="sec__note" id="pp-count"></span>
-                </div>
-                <div id="pp-machines"></div>
-            </section>`;
+    private async loadCurve() {
+        const key = this.hostFilter;
+        if (this.curveBusy || (this.curveKey === key && Date.now() - this.curveAt < CURVE_TTL_MS)) return;
+        const nodes = fleetNodes(this.scope());
+        if (!nodes.length) return;
+        this.curveBusy = true;
+        const got: { cores: number; cpu: number[] }[] = [];
+        for (const n of nodes) {
+            if (!this.hasAttribute('open')) break;
+            try {
+                const s = await apiService.get<PxSeries>(`/api/proxmox/series?host=${encodeURIComponent(n.hostId)}&range=${RANGE}&node=${encodeURIComponent(n.name)}`);
+                if (s?.cpu?.length) got.push({ cores: n.cores, cpu: s.cpu });
+            } catch { /* a node that will not answer leaves the others alone */ }
+            await new Promise(r => setTimeout(r, 120));
+        }
+        this.curveBusy = false;
+        if (this.hostFilter !== key || !this.hasAttribute('open')) return;
+        this.curve = weightedCurve(got);
+        this.curveKey = key;
+        this.curveAt = Date.now();
+        if (this.tab === 'overview') this.paintBody();
     }
 
-    /**
-     * What every connected hypervisor adds up to.
-     *
-     * All of it from the answer already on screen — nothing here costs the
-     * server a request. Two of these numbers are wrong if you compute them the
-     * obvious way, and both are written out below rather than left to whoever
-     * reads this next.
-     */
-    private fleet() {
-        const live = this.hosts.filter(h => !h.error);
-        const nodes = live.flatMap(h => h.nodes.map(n => ({ ...n, hostName: h.name })));
-        const guests = live.flatMap(h => h.guests);
-        const sum = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((a, b) => a + f(b), 0);
+    /** The latest tasks of the first node in view: one request, for the overview's box. */
+    private async loadLatest() {
+        const n = fleetNodes(this.scope())[0];
+        if (!n || this.latestBusy) return;
+        this.latestBusy = true;
+        try {
+            const tasks = await fetchTasks({ host: n.hostId, node: n.name });
+            this.latest = { tasks, where: n.name };
+        } catch {
+            // Tasks are optional: a token without the privilege simply has no box.
+            this.latest = null;
+        }
+        this.latestBusy = false;
+        if (this.tab === 'overview' && this.hasAttribute('open')) this.paintBody();
+    }
 
-        // A SHARED store is reported by every node of the cluster, so adding
-        // them up counts a Ceph pool three times in a cluster of three. The
-        // flag is in the answer; the key drops the node for a shared one.
-        const seen = new Set<string>();
-        const stores: (PxStore & { hostName: string; hostId: string })[] = [];
-        for (const h of live) {
-            for (const s of h.stores || []) {
-                const key = s.shared ? `${h.id}|${s.name}` : `${h.id}|${s.node}|${s.name}`;
-                if (seen.has(key)) continue;
-                seen.add(key);
-                stores.push({ ...s, hostName: h.name, hostId: h.id });
-            }
+    /** The history of the open machine or node, for the drawer's charts. */
+    private async loadDetail() {
+        const c = this.current();
+        if (!c || c.kind === 'store') return;
+        const seq = ++this.detailSeq;
+        const base = `/api/proxmox/series?host=${encodeURIComponent(c.host.id)}&range=${RANGE}`;
+        const url = c.kind === 'guest'
+            ? `${base}&node=${encodeURIComponent(c.guest.node)}&kind=${c.guest.kind}&vmid=${c.guest.vmid}`
+            : `${base}&node=${encodeURIComponent(c.node.name)}`;
+        try {
+            const s = await apiService.get<PxSeries>(url);
+            if (seq !== this.detailSeq) return;
+            this.detailSeries = s;
+        } catch {
+            if (seq !== this.detailSeq) return;
+            this.detailSeries = null;
+        }
+        this.last.dbody = '';
+        this.paintDrawer();
+    }
+
+    // ── Actions ──
+
+    private async power() {
+        const c = this.current();
+        if (!c || c.kind !== 'guest' || !this.mayPower(c.host)) return;
+        const { host, guest: g } = c;
+        const key = unitId(host.id, g.vmid);
+        if (this.busy.has(key)) return;
+        const starting = !g.running;
+        const link = this.linkOf(host.id, g);
+
+        const modal = document.querySelector('confirmation-modal') as { confirm?: (t: string, m: string) => Promise<boolean> } | null;
+        if (modal?.confirm) {
+            // The consequence, not just the question. A button label cannot say "and your photo library goes with it"; this can.
+            const message = starting
+                ? this.t('widget.proxmox.confirm_start')
+                : (link ? `${this.t('proxmox.stopped_breaks')} ${link}` : this.t('widget.proxmox.confirm_stop'));
+            const ok = await modal.confirm(`${this.t(starting ? 'docker.action_start' : 'docker.action_stop')} ${g.name}`, message);
+            if (!ok) return;
         }
 
-        // Which machines a bookmark of yours points at, and which not. The
-        // second list is the useful one: it is what you have not wired up.
-        type Tagged = PxGuest & { hostId: string; hostName: string; link: string };
-        const tagged: Tagged[] = [];
-        for (const h of live) {
-            for (const g of h.guests || []) {
-                const l = linkFor({ ...g, host: h.id });
-                tagged.push({ ...g, hostId: h.id, hostName: h.name, link: l ? (l.label || g.name) : '' });
-            }
-        }
-        const backed = tagged.filter(g => g.link).length;
-        const unassigned = tagged.filter(g => !g.link);
-        const stoppedBacked = tagged.filter(g => !g.running && g.link);
-        const stoppedLoose = tagged.filter(g => !g.running && !g.link);
-
-        const memTotal = sum(nodes, n => n.mem_total);
-        const diskTotal = sum(stores, s => s.total);
-        return {
-            live, nodes, guests, stores, tagged, unassigned, stoppedBacked, stoppedLoose,
-            hosts: this.hosts.length,
-            clusters: live.filter(h => h.cluster).length,
-            standalone: live.filter(h => !h.cluster).length,
-            unreachable: this.hosts.length - live.length,
-            cores: sum(nodes, n => n.cores),
-            threads: sum(nodes, n => n.threads),
-            lxc: guests.filter(g => g.kind === 'lxc').length,
-            vm: guests.filter(g => g.kind !== 'lxc').length,
-            running: guests.filter(g => g.running).length,
-            stopped: guests.filter(g => !g.running).length,
-            backed,
-            memUsed: sum(nodes, n => n.mem_used), memTotal,
-            diskUsed: sum(stores, s => s.used), diskTotal,
-        };
+        this.busy.add(key);
+        this.paintDrawer();
+        try {
+            await apiService.post('/api/proxmox/power', { host: host.id, node: g.node, kind: g.kind, vmid: g.vmid, action: starting ? 'start' : 'shutdown' });
+        } catch { /* the next poll tells the truth either way */ }
+        this.busy.delete(key);
+        await this.load();
+        this.paintDrawer();
     }
 
     /**
-     * Every bookmarked service that is on a stopped machine, anywhere.
-     *
-     * This is the sentence the whole feature exists to write, and the summary
-     * is the only place it can be written about everything at once: a cluster's
-     * own page can only speak for its own machines.
-     */
-    private downEverywhere(): { name: string; host: string }[] {
-        const out: { name: string; host: string }[] = [];
-        for (const h of this.hosts) {
-            for (const g of h.guests || []) {
-                if (g.running) continue;
-                const link = linkFor({ ...g, host: h.id });
-                if (link) out.push({ name: link.label || g.name, host: h.name });
-            }
-        }
-        return out;
-    }
-
-    /**
-     * The fleet's CPU and memory over the last day.
-     *
-     * One request per node, which is what the endpoint answers — it has no way
-     * to speak for more than one. Against four nodes that is four calls, and
-     * the machine grid on a cluster page already makes twenty-nine.
-     *
-     * WEIGHTED, not averaged. A node of 8 cores at 12% and one of 32 at 78%
-     * average to a number that describes neither: CPU is weighted by cores and
-     * memory by total bytes, which is the only thing that makes two nodes of
-     * different sizes comparable. Same reason the summary shows a peak rather
-     * than a mean anywhere it cannot weight.
-     */
-    private async loadFleetSeries() {
-        if (this.fleetAsked) return;
-        this.fleetAsked = true;
-
-        const f = this.fleet();
-        if (!f.nodes.length) return;
-
-        for (const host of f.live) {
-            const got: { node: PxNode; cpu: number[] }[] = [];
-            for (const node of host.nodes) {
-                if (!this.hasAttribute('open') || this.view !== 'summary') return;
-                try {
-                    const s = await apiService.get<PxSeries>(
-                        `/api/proxmox/series?host=${encodeURIComponent(host.id)}&range=${this.range}&node=${encodeURIComponent(node.name)}`);
-                    if (s?.cpu?.length) got.push({ node, cpu: s.cpu });
-                } catch { /* a node that will not answer leaves the others alone */ }
-                await new Promise(r => setTimeout(r, 120));
-            }
-            if (!got.length) continue;
-
-            // WEIGHTED by cores, not averaged: a node of 8 at 12% and one of 32
-            // at 78% average to a number that describes neither.
-            //
-            // And the SHORTEST series sets the length — nodes that joined the
-            // cluster at different times come back with different numbers of
-            // points, and reading past the end of one weights it as zero.
-            const points = Math.min(...got.map(g => g.cpu.length));
-            const cores = got.reduce((a, g) => a + g.node.cores, 0) || 1;
-            const curve: number[] = [];
-            for (let i = 0; i < points; i++) {
-                curve.push(Math.round(got.reduce((a, g) => a + g.cpu[i] * g.node.cores, 0) / cores * 10) / 10);
-            }
-            this.hostSeries.set(host.id, curve);
-            if (this.view === 'summary') this.paint();
-        }
-    }
-
-    /** One card per hypervisor, and the outages across all of them. */
-    /** A section, with its label, its rule and the figure on the right. */
-    private sec(label: string, note: string, body: string, bad = false) {
-        return `<section class="sec">
-            <div class="sec__head">
-                <span class="sec__label${bad ? ' sec__label--bad' : ''}">${escapeHtml(label)}</span>
-                <span class="sec__rule"></span>
-                <span class="sec__note${bad ? ' sec__note--bad' : ''}">${escapeHtml(note)}</span>
-            </div>${body}</section>`;
-    }
-
-    /**
-     * One figure, and the machines behind it when asked.
-     *
-     * The count answers the question most days. The names are a click away and
-     * stay out of the way until then: thirty of them on screen at all times is
-     * weather, not information, and it was what made three earlier goes at
-     * this page read as a wall.
-     */
-    private info(id: string, icon: string, n: number, label: string, rows: string, bad = false) {
-        if (!n) return '';
-        const open = this.opened.has(id);
-        // The list opens downward inside its own card, in one column, and
-        // scrolls there. Spanning the row instead made the page taller every
-        // time one was opened, which is the opposite of what a summary is for.
-        return `<div class="info${open ? ' info--open' : ''}${bad ? ' info--bad' : ''}">
-            <span class="info__top">
-                <span class="info__i">${icon}</span>
-                <span class="info__n">${n}</span>
-            </span>
-            <span class="info__k">${escapeHtml(label)}</span>
-            <button class="info__more" data-worry="${escapeHtml(id)}" aria-expanded="${open}">
-                <span>${escapeHtml(open ? i18n.t('general.show_less') : i18n.t('general.show_more'))}</span>
-                <span class="info__caret">${ICON_CHEVRON}</span>
-            </button>
-            ${open ? `<div class="info__list">${rows}</div>` : ''}
-        </div>`;
-    }
-
-    /** A machine in one of those lists: its name, and where it lives. */
-    private row(name: string, where: string, hostId: string, bad = false) {
-        return `<button class="mrow${bad ? ' mrow--bad' : ''}" data-enter="${escapeHtml(hostId)}">
-            <span class="mrow__n">${escapeHtml(name)}</span>
-            <span class="mrow__w">${escapeHtml(where)}</span>
-        </button>`;
-    }
-
-    /**
-     * The summary, as a board.
-     *
-     * Three goes at this were a stack of six full-width bands, and all three
-     * read as disordered for the same reason: a hypervisor's nodes were in one
-     * band, its storage in another and its stopped machines in a third, so
-     * putting one back together was the reader's job. Lastboard is a board of
-     * tiles, and the thing a tile should hold is one real object.
-     *
-     * So: one tile per hypervisor, with everything about it inside — its load,
-     * its nodes, its storage, what it is missing — and above them the only
-     * thing no single tile can say, which is what needs attention across all
-     * of them.
-     */
-    private paintSummary(body: HTMLElement) {
-        const f = this.fleet();
-        const stores = [...f.stores].sort((a, b) => b.percent - a.percent);
-        const broken = this.hosts.filter(h => h.error);
-        const hot = stores.filter(s => s.percent >= 90);
-
-        // The loudest things first, and only when they exist: a hypervisor that
-        // did not answer or a store with no room left is not a figure to browse,
-        // it is something to go and fix.
-        const alarms = [
-            ...broken.map(h => this.row(h.name, i18n.t('proxmox.connection_error'), h.id, true)),
-            ...hot.map(s => this.row(`${s.name} · ${Math.round(s.percent)}%`, `${s.hostName} · ${s.node}`, s.hostId, true)),
-        ];
-        const alarm = alarms.length
-            ? `<div class="card alarm"><div class="info__list">${alarms.join('')}</div></div>`
-            : '';
-
-        // Stopped machines, the ones with a bookmark on them first: those are
-        // an outage, the rest are a machine somebody turned off.
-        const stopped = [...f.stoppedBacked, ...f.stoppedLoose];
-        const cards = [
-            this.info('backed', ICON_BOOK, f.backed, i18n.t('proxmox.bookmarked'),
-                f.tagged.filter(g => g.link).map(g => this.row(g.link, `${g.hostName} · ${g.node}`, g.hostId)).join('')),
-            this.info('unassigned', ICON_NOBOOK, f.unassigned.length, i18n.t('proxmox.unassigned'),
-                f.unassigned.map(g => this.row(g.name, `${g.hostName} · ${g.node}`, g.hostId)).join('')),
-            this.info('stopped', ICON_POWER, stopped.length, i18n.t('proxmox.stopped_count'),
-                stopped.map(g => this.row(g.link || g.name, `${g.hostName} · ${g.node}`, g.hostId, !!g.link)).join(''),
-                f.stoppedBacked.length > 0),
-        ].filter(Boolean);
-
-        const tiles = this.hosts.map(h => this.hostTile(h, f)).join('');
-        body.innerHTML =
-            this.sec(i18n.t('proxmox.hypervisors'), String(this.hosts.length), `<div class="hvs">${tiles}</div>`)
-            + alarm
-            + (cards.length ? `<div class="infos">${cards.join('')}</div>` : '');
-        this.loadFleetSeries();
-    }
-
-    /** Everything about one hypervisor, in one object. */
-    private hostTile(h: PxHost, f: ReturnType<ProxmoxPage['fleet']>) {
-        if (h.error) {
-            return `<button class="card hv hv--bad" data-enter="${escapeHtml(h.id)}">
-                <span class="hv__head">
-                    <span class="dot dot--bad"></span>
-                    <span class="hv__name">${escapeHtml(h.name)}</span>
-                </span>
-                <span class="hv__err">${escapeHtml(i18n.t('proxmox.connection_error'))}</span>
-            </button>`;
-        }
-
-        const g = h.guests || [];
-        const running = g.filter(x => x.running).length;
-        const mine = f.stoppedBacked.filter(d => d.hostId === h.id).length;
-        const loose = f.stoppedLoose.filter(d => d.hostId === h.id).length;
-        const unassigned = f.unassigned.filter(d => d.hostId === h.id).length;
-
-        // Weighted across this hypervisor's own nodes, same reason as the curve.
-        const sum = (fn: (n: PxNode) => number) => h.nodes.reduce((a, n) => a + fn(n), 0);
-        const cores = sum(n => n.cores) || 1;
-        const cpu = sum(n => n.cpu * n.cores) / cores;
-        const memUsed = sum(n => n.mem_used), memTotal = sum(n => n.mem_total) || 1;
-        const mine_stores = f.stores.filter(s => s.hostId === h.id).sort((a, b) => b.percent - a.percent);
-        const curve = this.hostSeries.get(h.id) || [];
-
-        const shape = h.cluster
-            ? `${i18n.t('proxmox.cluster')} · ${i18n.t('proxmox.nodes')}: ${h.nodes.length}`
-            : i18n.t('proxmox.single_node');
-
-        // The whole tile enters. An arrow in the corner made a 340px card with
-        // one 26px target on it, and everything else on it looked dead.
-        return `<button class="card hv${mine ? ' hv--flag' : ''}" data-enter="${escapeHtml(h.id)}">
-            <span class="hv__head">
-                <span class="dot dot--${mine ? 'bad' : 'up'}"></span>
-                <span class="hv__name">${escapeHtml(h.name)}</span>
-                <span class="hv__shape">${escapeHtml(shape)}</span>
-            </span>
-
-            <span class="hv__lead">
-                <span class="hv__big"><b>${running}</b><small>/${g.length}</small></span>
-                <span class="hv__cap">${escapeHtml(i18n.t('widget.proxmox.running_label').toLowerCase())}</span>
-                <span class="hv__curve">${curve.length ? this.spark(curve, levelColour(cpu), 150, 34) : ''}</span>
-            </span>
-
-            <span class="hv__meters">
-                ${this.hvMeter(i18n.t('widget.telemetry.cpu'), cpu, `${Math.round(cpu)} %`)}
-                ${this.hvMeter(i18n.t('widget.telemetry.ram'), memUsed / memTotal * 100, `${fmtBytes(memUsed)} / ${fmtBytes(memTotal)}`)}
-            </span>
-
-            <span class="hv__cols">
-                <span class="hv__col">
-                    <span class="hv__k">${escapeHtml(i18n.t('proxmox.nodes'))}</span>
-                    ${h.nodes.map(n => `<span class="hv__line">
-                        <span class="hv__ln">${escapeHtml(n.name)}</span>
-                        <span class="hv__lv">${n.cores}/${n.threads} · ${escapeHtml(fmtUptime(n.uptime))}</span>
-                    </span>`).join('')}
-                </span>
-                <span class="hv__col">
-                    <span class="hv__k">${escapeHtml(i18n.t('proxmox.storage'))}</span>
-                    ${mine_stores.slice(0, 4).map(s => {
-                        const l = level(s.percent);
-                        return `<span class="hv__line">
-                            <span class="hv__ln">${escapeHtml(s.name)}</span>
-                            <span class="hv__lb"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></span>
-                            <span class="hv__lp ${l ? 'metric__v--' + l : ''}">${Math.round(s.percent)}%</span>
-                        </span>`;
-                    }).join('')}
-                </span>
-            </span>
-
-            <span class="hv__foot">
-                ${mine ? `<span class="hv__tag hv__tag--bad">${escapeHtml(i18n.t('proxmox.services_down'))}: ${mine}</span>` : ''}
-                ${loose ? `<span class="hv__tag">${escapeHtml(i18n.t('proxmox.stopped_count'))}: ${loose}</span>` : ''}
-                ${unassigned ? `<span class="hv__tag">${escapeHtml(i18n.t('proxmox.unassigned'))}: ${unassigned}</span>` : ''}
-            </span>
-        </button>`;
-    }
-
-    /** A meter inside a hypervisor tile: label, bar, and the figure. */
-    private hvMeter(k: string, percent: number, text: string) {
-        const l = level(percent);
-        return `<span class="hv__m">
-            <span class="hv__mk">${escapeHtml(k)}</span>
-            <span class="bar"><i class="${l || 'ok'}" style="width:${Math.min(100, Math.max(0, percent))}%"></i></span>
-            <span class="hv__mv ${l ? 'metric__v--' + l : ''}">${escapeHtml(text)}</span>
-        </span>`;
-    }
-
-    private paintBody() {
-        const body = this.shadowRoot?.getElementById('pp-body');
-        if (!body) return;
-
-        if (!this.loaded) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`; return; }
-        if (this.error) { this._shell = false; body.innerHTML = `<div class="state">${escapeHtml(i18n.t(this.error))}</div>`; return; }
-        if (this.view === 'summary') { this._shell = false; this.paintSummary(body); return; }
-        if (!this._shell) this.buildShell();
-
-        const d = this.data!;
-        const stores = [...d.stores].sort((a, b) => b.percent - a.percent);
-        const worstStore = stores[0];
-        const worstNode = [...d.nodes].sort((a, b) =>
-            Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk))[0];
-        const peak = worstNode ? Math.round(Math.max(worstNode.cpu, worstNode.mem, worstNode.disk)) : 0;
-
-        const nodes = this.shadowRoot!.getElementById('pp-nodes');
-        if (nodes) nodes.innerHTML = d.nodes.map(n => this.nodeCard(n)).join('');
-        const nodesNote = this.shadowRoot!.getElementById('pp-nodes-note');
-        if (nodesNote) {
-            nodesNote.className = `sec__note ${level(peak) ? 'sec__note--' + level(peak) : ''}`;
-            nodesNote.innerHTML = `${d.nodes.length} · ${escapeHtml(i18n.t('proxmox.peak'))} <b>${peak}%</b>`;
-        }
-
-        const storesEl = this.shadowRoot!.getElementById('pp-stores');
-        if (storesEl) storesEl.innerHTML = stores.map(s => this.storeCard(s)).join('');
-        const storesNote = this.shadowRoot!.getElementById('pp-stores-note');
-        if (storesNote && worstStore) {
-            storesNote.className = `sec__note ${level(worstStore.percent) ? 'sec__note--' + level(worstStore.percent) : ''}`;
-            storesNote.innerHTML = `${stores.length} · <b>${escapeHtml(worstStore.name)} ${Math.round(worstStore.percent)}%</b>`;
-        }
-
-        this.paintMachines();
-    }
-
-    /** Just the machines: what a keystroke in the search box changes. */
-    private paintMachines() {
-        const host = this.shadowRoot?.getElementById('pp-machines');
-        const d = this.data;
-        if (!host || !d) return;
-        const guests = this.visibleGuests();
-
-        // Stable order — by kind, then by id. Never by state, which is how the
-        // design has it: a machine you are looking for stays where you left it,
-        // and a stopped one is found by how it looks, not by where the grid
-        // decided to put it today. (The widget is the other way round, and for
-        // a reason: it shows a handful of rows, so what needs attention has to
-        // be among them or it is not shown at all.)
-        const ordered = [...guests].sort((a, b) =>
-            a.kind === b.kind ? a.vmid - b.vmid : (a.kind === 'lxc' ? -1 : 1));
-
-        // While something is being looked for, a fold is not allowed to hide the
-        // answer: searching a folded node and being told nothing matched would
-        // be a lie the page told about its own contents.
-        const filtering = !!this.query.trim() || this.onlyStopped;
-        const shown: PxGuest[] = [];
-
-        const rack = d.nodes.map(n => {
-            const mine = ordered.filter(g => g.node === n.name);
-            if (!mine.length) return '';
-            const lxc = mine.filter(g => g.kind === 'lxc').length;
-            const folded = !filtering && this.collapsed.has(n.name);
-            if (!folded) shown.push(...mine);
-            return `<div class="group${folded ? ' group--folded' : ''}">
-                <button class="group__head" data-fold="${escapeHtml(n.name)}"
-                        aria-expanded="${folded ? 'false' : 'true'}">
-                    <span class="group__caret">${ICON_CHEVRON}</span>
-                    <span class="dot dot--up"></span>
-                    <span class="sec__label">${escapeHtml(n.name)}</span>
-                    <span class="group__count">${lxc} LXC · ${mine.length - lxc} VM</span>
-                </button>
-                <div class="tiles">${folded ? '' : mine.map(g => this.tile(g)).join('')}</div>
-            </div>`;
-        }).join('');
-
-        host.innerHTML = rack || `<div class="state">${escapeHtml(i18n.t('widget.proxmox.empty'))}</div>`;
-
-        const count = this.shadowRoot!.getElementById('pp-count');
-        if (count) count.textContent = `${guests.length}${this.query || this.onlyStopped ? ` / ${d.guests.length}` : ''}`;
-
-        // Only what is on screen. A folded node's machines have no sparkline to
-        // draw, and Proxmox has no endpoint that answers for more than one
-        // machine at a time — so those are requests the host is spared entirely.
-        this.loadSeries(shown);
-    }
-
-    /**
-     * The little chart on every tile.
-     *
-     * Proxmox keeps the history and has no endpoint that returns it for more
-     * than one machine, so this is one request each — measured at 20-76 ms
-     * against a real host — and they are cached per range, so a poll costs
-     * nothing and only changing the range asks again.
-     *
-     * Three at a time with a gap between them, which is not timidity: fired as
-     * fast as they could go, twenty-nine machines and one change of range put
-     * the page over Lastboard's own rate limit (20/s, burst 50) and half the
-     * tiles came back empty with `error.rate_limited` in the console. A page
-     * filling itself in over two seconds is invisible; a page that trips its
-     * own server is not.
-     */
-    private async loadSeries(guests: PxGuest[]) {
-        const pending = guests.filter(g => !this.asked.has(`${this.range}|${g.vmid}`));
-        if (!pending.length) return;
-
-        const range = this.range;
-        let next = 0;
-        const worker = async () => {
-            while (next < pending.length && this.hasAttribute('open') && this.range === range) {
-                const g = pending[next++];
-                const key = `${range}|${g.vmid}`;
-                this.asked.add(key);
-                const url = `/api/proxmox/series?host=${encodeURIComponent(this.hostId)}&range=${range}&node=${encodeURIComponent(g.node)}&kind=${g.kind}&vmid=${g.vmid}`;
-                try {
-                    const s = await apiService.get<PxSeries>(url);
-                    this.series.set(key, s?.cpu ?? []);
-                    if (this.range === range) this.paintSpark(g);
-                } catch {
-                    // One retry, once the burst has drained. A machine whose
-                    // history still cannot be read simply has no line.
-                    await new Promise(r => setTimeout(r, 1200));
-                    try {
-                        const s = await apiService.get<PxSeries>(url);
-                        this.series.set(key, s?.cpu ?? []);
-                        if (this.range === range) this.paintSpark(g);
-                    } catch { this.series.set(key, []); }
-                }
-                await new Promise(r => setTimeout(r, 120));
-            }
-        };
-        await Promise.all([1, 2, 3].map(() => worker()));
-    }
-
-    /** Draws one tile's line without touching the rest of the grid. */
-    private paintSpark(g: PxGuest) {
-        const slot = this.shadowRoot?.querySelector(`.tile[data-guest="${g.vmid}"] .tile__spark`);
-        if (!slot) return;
-        const values = this.series.get(`${this.range}|${g.vmid}`) ?? [];
-        slot.innerHTML = values.length
-            ? this.spark(values, g.running ? levelColour(g.cpu) : 'var(--text-dim)', 62, 20)
-            : '';
-    }
-
-    // ── The detail sheet ──
-
-    private sheet(title: string, sub: string, inner: string, face = '', wide = false) {
-        const box = this.shadowRoot?.getElementById('pp-sheet-body');
-        const dlg = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
-        if (!box || !dlg) return;
-        box.innerHTML = `
-            <div class="sheet__head">
-                ${face}
-                <div><h3>${title}</h3><div class="sheet__sub">${sub}</div></div>
-                <button class="pp__close" data-close aria-label="${escapeHtml(i18n.t('general.close'))}">${ICON_CLOSE}</button>
-            </div>${inner}`;
-        dlg.classList.toggle('dlg--wide', wide);
-        if (!dlg.open) dlg.showModal();
-    }
-
-    /**
-     * A sparkline drawn by hand, like every other chart in this product.
-     *
-     * The numbers are built with String() and never through the locale
-     * formatter: a decimal comma truncates an SVG attribute and the browser
-     * discards the rest without a word, so the chart would come out blank in
-     * Spanish and perfect in English.
-     */
-    private spark(values: number[], colour: string, w = 300, h = 58): string {
-        if (!values.length) return '';
-        const W = w, H = h, top = Math.max(2, H * 0.1), bot = H - Math.max(2, H * 0.1);
-        const max = Math.max(10, ...values);
-        const pts = values.map((v, i) => {
-            const x = (i / Math.max(1, values.length - 1)) * W;
-            const y = bot - (v / max) * (bot - top);
-            return `${Math.round(x * 10) / 10},${Math.round(y * 10) / 10}`;
-        });
-        const last = pts[pts.length - 1].split(',');
-        return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img"
-                     aria-label="${escapeHtml(i18n.t('proxmox.chart_alt'))}">
-            <!-- fill-opacity, no un "22" pegado al color: eso sólo funciona con un
-                 hexadecimal literal, y cada llamante pasa var(--accent) o
-                 var(--text-dim). "var(--accent)22" no es un color, así que el
-                 navegador caía al negro y todas las áreas de esta página se
-                 dibujaban como una losa negra — invisible sobre el tema oscuro
-                 y muy visible sobre el claro. -->
-            <path fill="${colour}" fill-opacity="0.13" stroke="none" d="M${pts.join(' L')} L${W},${H} L0,${H} Z"/>
-            <polyline fill="none" stroke="${colour}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts.join(' ')}"/>
-            <circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${colour}"/>
-        </svg>`;
-    }
-
-    /**
-     * How far back the chart goes, said rather than spelled.
-     *
-     * The axis printed `this.range` straight out — "24h", the identifier the
-     * API takes. It is not a label: it is untranslated in twenty languages and
-     * it is the kind of unit a reader has to know (*casa: entrega*). One unit
-     * here, not two: the axis is naming a span, not measuring one.
-     */
-    private rangeLabel(): string {
-        const ms = RANGE_MS[this.range];
-        return ms ? i18n.formatDuration(ms / 1000, 1) : this.range;
-    }
-
-    private chart(label: string, now: string, unit: string, values: number[], colour: string) {
-        // One decimal, like the tooltip: a peak of 0.4 rounded to a flat "0%"
-        // reads as a chart of nothing while the line clearly is not.
-        const max = values.length ? pct(Math.max(...values)) : '0';
-        // The values travel with the panel so the pointer can read them back:
-        // the line is an SVG polyline, and asking a drawing what it was drawn
-        // from is not a thing you can do.
-        const id = `s${++this._chartSeq}`;
-        this._charts.set(id, { values, unit });
-        return `<div class="panel" data-chart="${id}">
-            <div class="panel__top"><span class="panel__k">${escapeHtml(label)}</span>
-                <span class="panel__now">${escapeHtml(now)}<small> ${escapeHtml(unit)}</small></span></div>
-            ${this.spark(values, colour)}
-            <div class="panel__cross" hidden></div>
-            <div class="panel__tip" hidden></div>
-            <div class="panel__ax"><span>${escapeHtml(this.rangeLabel())}</span><span>${escapeHtml(i18n.t('proxmox.max'))} ${max}%</span><span>${escapeHtml(i18n.t('proxmox.now'))}</span></div>
-        </div>`;
-    }
-
-    /**
-     * The value under the pointer, and when it was taken.
-     *
-     * The series has no timestamps — it is sixty averaged buckets of a known
-     * span — so the time is worked back from the range: the last bucket is now
-     * and each step back is one sixtieth of it.
-     */
-    private onSheetMove = (e: PointerEvent) => {
-        const panel = (e.target as HTMLElement)?.closest?.('.panel[data-chart]') as HTMLElement | null;
-        if (!panel) { this.hideTips(); return; }
-        const svg = panel.querySelector('svg');
-        const tip = panel.querySelector('.panel__tip') as HTMLElement | null;
-        const cross = panel.querySelector('.panel__cross') as HTMLElement | null;
-        const data = this._charts.get(panel.dataset.chart || '');
-        if (!svg || !tip || !cross || !data || !data.values.length) return;
-
-        const box = svg.getBoundingClientRect();
-        const ratio = Math.min(1, Math.max(0, (e.clientX - box.left) / Math.max(1, box.width)));
-        const i = Math.round(ratio * (data.values.length - 1));
-        const value = data.values[i];
-
-        const span = RANGE_MS[this.range] ?? RANGE_MS['24h'];
-        const at = new Date(Date.now() - (data.values.length - 1 - i) * (span / (data.values.length - 1)));
-
-        // One decimal, like the tiles: the host answers with the raw average of
-        // the bucket, and 0.14166666666666672 % is not a thing to read.
-        // Hour and minute only — the bucket is minutes wide and the date is in
-        // the axis underneath.
-        const shown = pct(value);
-        const when = i18n.formatDateTime(at, { hour: '2-digit', minute: '2-digit' });
-        tip.textContent = `${shown}${data.unit ? ' ' + data.unit : ''} · ${when}`;
-        tip.hidden = false;
-        cross.hidden = false;
-        // Physical pixels inside the panel: this is geometry the script works
-        // out, so it does not flip with the reading direction.
-        const x = box.left - panel.getBoundingClientRect().left + (i / (data.values.length - 1)) * box.width;
-        cross.style.left = `${Math.round(x)}px`;
-        cross.style.top = `${Math.round(box.top - panel.getBoundingClientRect().top)}px`;
-        cross.style.height = `${Math.round(box.height)}px`;
-        const half = tip.offsetWidth / 2;
-        const limit = panel.clientWidth - tip.offsetWidth - 4;
-        tip.style.left = `${Math.round(Math.min(Math.max(4, x - half), Math.max(4, limit)))}px`;
-        tip.style.top = `${Math.round(box.top - panel.getBoundingClientRect().top - 26)}px`;
-    };
-
-    /**
-     * Hides every crosshair. Called from the move handler itself rather than
-     * from a `pointerleave`: with a listener on the shadow root, leaving any
-     * child inside the panel counts as a leave, so the tooltip was hidden in
-     * the same breath it was shown and the chart looked inert.
-     */
-    private hideTips() {
-        this.shadowRoot?.querySelectorAll('.panel__tip, .panel__cross')
-            .forEach(el => el.setAttribute('hidden', ''));
-    }
-
-    /** One fact in a sheet: a glyph, its name, and the figure. */
-    private kv(icon: string, k: string, v: string): string {
-        return `<div>
-            <div class="kv__k"><span class="kv__i">${icon}</span>${escapeHtml(k)}</div>
-            <div class="kv__v">${v}</div>
-        </div>`;
-    }
-
-    private async openNode(name: string) {
-        const n = this.data?.nodes.find(x => x.name === name);
-        if (!n) return;
-        this._charts.clear();
-        this.sheet(escapeHtml(n.name), escapeHtml(`${i18n.t('widget.api.extra_node')} · ${n.guests}`), `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`);
-        let s: PxSeries | null = null;
-        try { s = await apiService.get<PxSeries>(`/api/proxmox/series?host=${encodeURIComponent(this.hostId)}&range=${this.range}&node=${encodeURIComponent(name)}`); } catch { /* charts are optional */ }
-
-        this.sheet(escapeHtml(n.name), escapeHtml(`${i18n.t('widget.api.extra_node')} · ${n.guests}`), `
-            ${s ? this.chart(i18n.t('widget.telemetry.cpu'), String(Math.round(n.cpu)), '%', s.cpu, levelColour(n.cpu)) : ''}
-            ${s ? this.chart(i18n.t('widget.telemetry.ram'), String(Math.round(n.mem)), '%', s.mem, levelColour(n.mem)) : ''}
-            <div class="kv">
-                ${this.kv(ICON_CPU, i18n.t('proxmox.threads'), String(n.threads))}
-                ${n.cores > 0 ? this.kv(ICON_CPU, i18n.t('proxmox.cores'), String(n.cores)) : ''}
-                ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), escapeHtml(`${fmtBytes(n.mem_used)} / ${fmtBytes(n.mem_total)}`))}
-                ${n.disk_total > 0
-                    ? this.kv(ICON_DISK, i18n.t('widget.proxmox.disk'), escapeHtml(`${fmtBytes(n.disk_used)} / ${fmtBytes(n.disk_total)}`))
-                    : ''}
-                ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), escapeHtml(fmtUptime(n.uptime)))}
-            </div>
-            <div class="acts">
-                <app-button variant="ghost" data-tasks-node="${escapeHtml(n.name)}">${escapeHtml(i18n.t('proxmox.tasks'))}</app-button>
-                <app-button variant="ghost" data-journal-node="${escapeHtml(n.name)}">${escapeHtml(i18n.t('proxmox.syslog'))}</app-button>
-            </div>`);
-    }
-
-    private openStore(name: string) {
-        const s = this.data?.stores.find(x => x.name === name);
-        if (!s) return;
-        this._charts.clear();
-        const l = level(s.percent);
-        const free = s.total - s.used;
-        this.sheet(escapeHtml(s.name), escapeHtml(`${i18n.t('proxmox.storage')} · ${s.node}`), `
-            ${s.percent >= 90 ? `<div class="warnbox"><div class="warnbox__h">${escapeHtml(i18n.t('proxmox.almost_full'))}</div>
-                <div class="warnbox__s">${escapeHtml(i18n.t('widget.api.label.freespace'))}: <em>${escapeHtml(fmtBytes(free))}</em></div></div>` : ''}
-            <div class="panel">
-                <div class="panel__top"><span class="panel__k">${escapeHtml(i18n.t('proxmox.used'))}</span>
-                    <span class="panel__now">${Math.round(s.percent)}<small> %</small></span></div>
-                <div class="bar" style="height:8px;border-radius:4px"><i class="${l || 'ok'}" style="width:${s.percent}%"></i></div>
-                <div class="panel__ax"><span>0</span><span>${escapeHtml(fmtBytes(s.total))}</span></div>
-            </div>
-            <div class="kv">
-                ${this.kv(ICON_DISK, i18n.t('proxmox.used'), escapeHtml(fmtBytes(s.used)))}
-                ${this.kv(ICON_DISK, i18n.t('widget.api.label.freespace'), escapeHtml(fmtBytes(free)))}
-                ${this.kv(ICON_TAG, i18n.t('docker.host_type'), escapeHtml(s.kind))}
-                ${this.kv(ICON_NODE, i18n.t('widget.api.extra_node'), escapeHtml(s.node))}
-            </div>`);
-    }
-
-    /**
-     * The machine's face in its sheet, and the way to change it.
-     *
-     * Every account is offered the picker, for the machines of its own
-     * hypervisors: the choice belongs to the account, like the connection does.
-     */
-    private sheetFace(g: PxGuest): string {
-        const face = this.iconOf(g);
-        const inner = face
-            ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
-            : ICON_FALLBACK;
-        return `<button class="sheet__ico sheet__ico--edit" data-icon="${g.vmid}"
-                    title="${escapeHtml(i18n.t('proxmox.icon_set'))}"
-                    aria-label="${escapeHtml(i18n.t('proxmox.icon_set'))}">${inner}<span class="sheet__ico-pen">${ICON_PEN}</span></button>`;
-    }
-
-    /**
-     * Picks an icon for a machine and stores it on this instance.
+     * Picks an icon for the open machine and stores it on this instance.
      *
      * The icon is downloaded once, here, exactly as a bookmark's is: the board
      * never asks a CDN what it is drawing, and this must not become the one
      * place that does.
      */
-    private async chooseIcon(vmid: number) {
-        const g = this.data?.guests.find(x => x.vmid === vmid);
-        if (!g) return;
-
+    private async chooseIcon() {
+        if (this.current()?.kind !== 'guest') return;
         let modal = document.querySelector('icon-selection-modal') as (HTMLElement & { open: () => Promise<string | null> }) | null;
         if (!modal) {
-            modal = document.createElement('icon-selection-modal') as any;
-            document.body.appendChild(modal!);
+            modal = document.createElement('icon-selection-modal') as HTMLElement & { open: () => Promise<string | null> };
+            document.body.appendChild(modal);
         }
-        const picked = await modal!.open();
+        const picked = await modal.open();
         if (picked === null) return;
-
-        // Downloaded once, here, exactly as a bookmark's is.
-        await this.setIcon(vmid, picked ? await materializeIcon(resolveIconUrl(picked)) : '');
+        await this.setIcon(picked ? await materializeIcon(resolveIconUrl(picked)) : '');
     }
 
     /** Writes the choice, or clears it, and redraws what shows it. */
-    private async setIcon(vmid: number, icon: string) {
-        const g = this.data?.guests.find(x => x.vmid === vmid);
-        if (!g) return;
+    private async setIcon(iconName: string) {
+        const c = this.current();
+        if (!c || c.kind !== 'guest') return;
         try {
-            await apiService.post('/api/proxmox/icon', { host: this.hostId, node: g.node, vmid: g.vmid, icon });
+            await apiService.post('/api/proxmox/icon', { host: c.host.id, node: c.guest.node, vmid: c.guest.vmid, icon: iconName });
         } catch {
             if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
             return;
         }
-        if (this.data) this.data.icons = withIcon(this.data.icons, this.data.id, g.node, g.vmid, icon);
-        this.paintMachines();
-        this.openGuest(vmid);
+        c.host.icons = withIcon(c.host.icons, c.host.id, c.guest.node, c.guest.vmid, iconName);
+        this.last.dhead = this.last.dfoot = this.last.dbody = '';
+        this.last.list = '';
+        this.paintAll();
     }
 
-    private async openGuest(vmid: number) {
-        const g = this.data?.guests.find(x => x.vmid === vmid);
-        if (!g) return;
-        this._charts.clear();
-        const book = this.backing(g);
-        const kind = i18n.t(g.kind === 'lxc' ? 'proxmox.container' : 'proxmox.vm');
-        const sub = escapeHtml(`${kind} ${g.vmid} · ${g.node}`);
-        const power = this.data?.caps.power === true && accessAllows(userStore.getUser(), 'proxmox_control');
+    // ── Painting ──
 
-        this.sheet(escapeHtml(g.name), sub, `<div class="state">${escapeHtml(i18n.t('general.loading'))}</div>`, this.sheetFace(g));
-        let s: PxSeries | null = null;
-        try {
-            s = await apiService.get<PxSeries>(
-                `/api/proxmox/series?host=${encodeURIComponent(this.hostId)}&range=${this.range}&node=${encodeURIComponent(g.node)}&kind=${g.kind}&vmid=${g.vmid}`);
-        } catch { /* charts are optional */ }
-
-        // The sentence only this product can write, and the reason the page
-        // exists: the machine is down, so a service of yours is down with it.
-        const warn = !g.running && book
-            ? `<div class="warnbox"><div class="warnbox__h">${escapeHtml(i18n.t('proxmox.stopped_title'))}</div>
-                 <div class="warnbox__s">${escapeHtml(i18n.t('proxmox.stopped_breaks'))} <em>${escapeHtml(book.label || book.url)}</em></div></div>`
-            : '';
-
-        const chosen = !!this.data && !!chosenIcon(this.data, g.node, g.vmid);
-        const actions = `<div class="acts">
-            <app-button variant="ghost" data-tasks-guest="${g.vmid}">${escapeHtml(i18n.t('proxmox.tasks'))}</app-button>
-            ${power ? `<app-button variant="${g.running ? 'ghost' : 'primary'}" data-power="${g.vmid}">
-                ${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}</app-button>` : ''}
-            ${book?.url ? `<app-button variant="ghost" data-open="${escapeHtml(book.url)}">${escapeHtml(i18n.t('proxmox.open_bookmark'))}</app-button>` : ''}
-            ${chosen ? `<app-button variant="ghost" data-icon-clear="${g.vmid}">${escapeHtml(i18n.t('proxmox.icon_clear'))}</app-button>` : ''}
-        </div>`;
-
-        this.sheet(escapeHtml(g.name), sub, `
-            ${warn}
-            ${s ? this.chart(i18n.t('widget.telemetry.cpu'), g.running ? pct(g.cpu) : '—', g.running ? '%' : '',
-                s.cpu, g.running ? levelColour(g.cpu) : 'var(--text-dim)') : ''}
-            <div class="kv">
-                ${this.kv(ICON_POWER, i18n.t('proxmox.state'), escapeHtml(i18n.t(g.running ? 'docker.state_running' : 'docker.state_stopped')))}
-                ${this.kv(ICON_RAM, i18n.t('widget.telemetry.ram'), g.running ? escapeHtml(`${fmtBytes(g.mem)} / ${fmtBytes(g.mem_total)}`) : '—')}
-                ${this.kv(ICON_CLOCK, i18n.t('proxmox.uptime'), g.running ? escapeHtml(fmtUptime(g.uptime)) : '—')}
-                ${this.kv(ICON_BOOK, i18n.t('proxmox.bookmark'), book ? escapeHtml(book.label || book.url) : '—')}
-            </div>
-            ${actions}`, this.sheetFace(g));
+    private paintAll(force = false) {
+        if (force) { this.last = blank(); this.bodyTab = ''; }
+        this.paintHead();
+        this.paintTabs();
+        this.paintBody();
+        this.paintDrawer();
+        this.$('pg')?.classList.toggle('has-drawer', this.drawerOpen);
+        this.$('scrim')?.classList.toggle('on', this.drawerOpen);
+        this.$('drawer')?.classList.toggle('on', this.drawerOpen);
     }
 
-    // ── Tasks ──
-
-    private tkFmt(): TaskFmt {
-        return {
-            time: (sec) => i18n.formatDateTime(new Date(sec * 1000), { dateStyle: 'medium', timeStyle: 'short' }),
-            span: (sec) => i18n.formatDuration(sec),
-        };
+    private ready(): boolean {
+        return this.loaded && !this.error;
     }
 
-    private tkT = (key: string, params?: Record<string, string>) => i18n.t(key, params);
-
-    private openNodeTasks(name: string) {
-        const n = this.data?.nodes.find(x => x.name === name);
-        if (!n) return;
-        this.beginTasks({
-            scope: { host: this.hostId, node: n.name },
-            title: n.name,
-            sub: '',
-            back: () => { void this.openNode(name); },
-        });
+    /** Gives the product's select its options and its value. It keeps its own state while open, so only a change is written. */
+    private setSelect(el: SelectEl, options: { value: string; label: string }[], value: string, label: string) {
+        const key = JSON.stringify([options, value]);
+        if (el.dataset.key === key) return;
+        el.dataset.key = key;
+        el.options = options;
+        el.value = value;
+        el.setAttribute('aria-label', label);
     }
 
-    private openGuestTasks(vmid: number) {
-        const g = this.data?.guests.find(x => x.vmid === vmid);
-        if (!g) return;
-        this.beginTasks({
-            scope: { host: this.hostId, node: g.node, vmid: g.vmid },
-            title: g.name,
-            sub: `${g.vmid} · ${g.node}`,
-            back: () => { void this.openGuest(vmid); },
-        });
-    }
-
-    private beginTasks(tk: NonNullable<ProxmoxPage['tk']>) {
-        this.stopTasks();
-        this._charts.clear();
-        this.tk = tk;
-        this.tkTasks = [];
-        this.tkLoaded = false;
-        this.tkErr = '';
-        this.tkOpen = null;
-        this.showTasks();
-        this.tkTimer = setInterval(whenVisible(() => this.loadTasks()), TASKS_MS);
-        void this.loadTasks();
-    }
-
-    /** Writes the tasks sheet: the shell once, then the list into it. */
-    private showTasks() {
-        const tk = this.tk;
-        if (!tk) return;
-        const t = this.tkT;
-        const back = `<button class="pp__back" data-tasks-back
-            aria-label="${escapeHtml(t('general.back'))}" title="${escapeHtml(t('general.back'))}">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>`;
-        const sub = [t('proxmox.tasks'), tk.sub || tk.scope.node].join(' · ');
-        this.sheet(escapeHtml(tk.title), escapeHtml(sub), `
-            <div class="tk-list" id="pt-list"></div>
-            <div class="tk-log" id="pt-log" hidden>
-                <div class="tk-logbar">
-                    <span class="tk-logbar__title" id="pt-logtitle"></span>
-                    <span class="tk-running" id="pt-running" hidden><span class="dot dot--warn dot--pulse"></span>${escapeHtml(t('proxmox.task_state_running'))}</span>
-                    <span class="tk-logbar__gap"></span>
-                    <button type="button" class="tg" data-task-copy id="pt-copy" disabled>${escapeHtml(t('dockerpage.copy'))}</button>
-                </div>
-                <div class="tk-note" id="pt-cut" hidden>${escapeHtml(t('proxmox.task_log_cut'))}</div>
-                <div class="logbox" id="pt-logbox" role="log" aria-live="off" tabindex="0"></div>
-            </div>`, back, true);
-        this.tkHtml = '';
-        this.tkLogText = '';
-        this.paintTasks();
-        if (this.tkOpen) this.showLog();
-    }
-
-    private stopTasks() {
-        this.tkSeq++;
-        this.tkLogSeq++;
-        if (this.tkTimer) { clearInterval(this.tkTimer); this.tkTimer = null; }
-        if (this.tkLogTimer) { clearInterval(this.tkLogTimer); this.tkLogTimer = null; }
-        this.tk = null;
-        this.tkOpen = null;
-        this.tkLog = null;
-    }
-
-    private async loadTasks() {
-        const tk = this.tk;
-        if (!tk) return;
-        const seq = ++this.tkSeq;
-        try {
-            const tasks = await fetchTasks(tk.scope);
-            if (seq !== this.tkSeq) return;
-            this.tkTasks = tasks;
-            this.tkErr = '';
-        } catch (err) {
-            if (seq !== this.tkSeq) return;
-            this.tkErr = taskErrorKey(err);
+    private paintHead() {
+        const head = this.$('phead');
+        if (!head) return;
+        const t = this.t;
+        const summary = this.ready() ? summaryHtml(fleetTotals(this.scope(), this.linkOf), t, this.fmt) : '';
+        // Up to two hosts are buttons beside "All", as in the design; more than that would not fit a header, so it is a selector.
+        const few = this.hosts.length > 1 && this.hosts.length <= MAX_HOST_BUTTONS;
+        const pressed = (id: string) => `aria-pressed="${this.hostFilter === id}"`;
+        const hosts = few
+            ? `<span class="seg seg--text" role="group" aria-label="${escapeHtml(t('proxmox.hypervisors'))}">
+                <button type="button" data-hostf="all" ${pressed('all')}>${escapeHtml(t('infra.filter_all'))}</button>
+                ${this.hosts.map(h => `<button type="button" data-hostf="${escapeHtml(h.id)}" ${pressed(h.id)}>${escapeHtml(h.name)}</button>`).join('')}
+            </span>`
+            : this.hosts.length > 1 ? '<app-select id="hp-host"></app-select>' : '';
+        const html = `<div class="ptitle">${icon('server', 20)}<span>${escapeHtml(t('widget.proxmox.name'))}</span></div>
+            <div class="psum">${summary}</div>
+            <span class="pspacer"></span>
+            ${hosts}
+            <button type="button" class="ibtn" id="hp-refresh" aria-label="${escapeHtml(t('infra.refresh'))}" title="${escapeHtml(t('infra.refresh'))}">${icon('refresh', 16)}</button>
+            <button type="button" class="ibtn" id="hp-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button>`;
+        if (html !== this.last.head) {
+            this.last.head = html;
+            head.innerHTML = html;
         }
-        this.tkLoaded = true;
-        this.paintTasks();
+        // The spinner is a class, not markup: rewriting the header every refresh would close an open selector.
+        head.querySelector('#hp-refresh svg')?.classList.toggle('spin', this.loading);
+        const host = head.querySelector<SelectEl>('#hp-host');
+        if (host) {
+            this.setSelect(host, [
+                { value: 'all', label: t('infra.all_hosts') },
+                ...this.hosts.map(h => ({ value: h.id, label: h.name })),
+            ], this.hostFilter, t('proxmox.hypervisors'));
+        }
     }
 
-    /** The list, written only when what it says changed, so a refresh keeps the scroll and the eye where they were. */
-    private paintTasks() {
-        const el = this.shadowRoot?.getElementById('pt-list');
+    private paintTabs() {
+        const el = this.$('tabs');
         if (!el) return;
-        const t = this.tkT;
-        const now = Math.floor(Date.now() / 1000);
-        let html: string;
-        if (this.tkErr) {
-            // The token lacks a privilege: say which, rather than the generic line.
-            html = taskErrorHtml(this.tkErr === 'proxmox.forbidden' ? 'proxmox.tasks_forbidden' : this.tkErr, t);
-        } else if (!this.tkLoaded) {
-            html = `<div class="state">${escapeHtml(t('general.loading'))}</div>`;
-        } else {
-            html = tasksListHtml(this.tkTasks, (k) => taskSeconds(k, now), t, this.tkFmt());
-        }
-        if (html === this.tkHtml) return;
-        const box = this.shadowRoot?.getElementById('pp-sheet-body');
-        const top = box?.scrollTop ?? 0;
+        const t = this.t;
+        const tt = this.ready() ? fleetTotals(this.scope(), this.linkOf) : null;
+        const html = tabsHtml([
+            { id: 'overview', label: t('infra.tab_overview') },
+            { id: 'machines', label: t('proxmox.machines'), count: tt?.guests },
+            { id: 'storage', label: t('proxmox.storage'), count: tt?.storeCount },
+            { id: 'tasks', label: t('proxmox.tasks') },
+            { id: 'syslog', label: t('proxmox.syslog') },
+        ], this.tab, n => this.fmt.num(n));
+        if (html === this.last.tabs) return;
+        this.last.tabs = html;
         el.innerHTML = html;
-        this.tkHtml = html;
-        if (box) box.scrollTop = top;
     }
 
-    private tasksBack() {
-        if (this.tkOpen) { this.closeTaskLog(); return; }
-        const back = this.tk?.back;
-        this.stopTasks();
-        back?.();
+    /** Takes the panels out of whatever is about to be rewritten; they are put back where they belong. */
+    private detachPanels() {
+        for (const p of [this.pageTasks, this.pageJournal]) p.el.remove();
     }
 
-    private openTaskLog(upid: string) {
-        const task = this.tkTasks.find(k => k.upid === upid);
-        if (!task || !this.tk) return;
-        this.tkOpen = task;
-        this.tkLog = null;
-        this.tkLogErr = '';
-        this.tkLogText = '';
-        this.showLog();
-        void this.loadTaskLog(true);
-    }
-
-    private closeTaskLog() {
-        this.tkOpen = null;
-        this.tkLog = null;
-        this.tkLogSeq++;
-        if (this.tkLogTimer) { clearInterval(this.tkLogTimer); this.tkLogTimer = null; }
-        const sr = this.shadowRoot;
-        sr?.getElementById('pt-log')?.setAttribute('hidden', '');
-        sr?.getElementById('pt-list')?.removeAttribute('hidden');
-        void this.loadTasks();
-    }
-
-    /** Swaps the list for the log of the open task. */
-    private showLog() {
-        const sr = this.shadowRoot;
-        const task = this.tkOpen;
-        if (!sr || !task) return;
-        sr.getElementById('pt-list')?.setAttribute('hidden', '');
-        sr.getElementById('pt-log')?.removeAttribute('hidden');
-        const title = sr.getElementById('pt-logtitle');
-        if (title) title.textContent = [typeLabel(task.type, this.tkT), task.id].filter(Boolean).join(' · ');
-        this.paintTaskLog(true);
-    }
-
-    private async loadTaskLog(first = false) {
-        const tk = this.tk;
-        const task = this.tkOpen;
-        if (!tk || !task) return;
-        const seq = ++this.tkLogSeq;
-        const wasRunning = this.tkLog?.running ?? false;
-        try {
-            const log = await fetchTaskLog(tk.scope, task.upid);
-            if (seq !== this.tkLogSeq) return;
-            this.tkLog = log;
-            this.tkLogErr = '';
-        } catch (err) {
-            if (seq !== this.tkLogSeq) return;
-            this.tkLogErr = taskErrorKey(err);
-        }
-        this.paintTaskLog(first);
-        this.syncLogTimer();
-        // The task has just finished: the list behind the log should say so too.
-        if (wasRunning && this.tkLog && !this.tkLog.running) void this.loadTasks();
-    }
-
-    /** The log is asked again exactly while it is open, running and on a visible page. */
-    private syncLogTimer() {
-        const want = shouldPollLog({ running: this.tkLog?.running === true, open: !!this.tkOpen, hidden: false });
-        if (want && !this.tkLogTimer) {
-            this.tkLogTimer = setInterval(whenVisible(() => { void this.loadTaskLog(); }), TASK_LOG_MS);
-        }
-        if (!want && this.tkLogTimer) { clearInterval(this.tkLogTimer); this.tkLogTimer = null; }
-    }
-
-    private paintTaskLog(toBottom: boolean) {
-        const sr = this.shadowRoot;
-        const box = sr?.getElementById('pt-logbox') as HTMLElement | null;
-        if (!sr || !box) return;
-        const log = this.tkLog;
-        const t = this.tkT;
-        let html: string;
-        if (this.tkLogErr) html = taskErrorHtml(this.tkLogErr === 'proxmox.forbidden' ? 'proxmox.tasks_forbidden' : this.tkLogErr, t);
-        else if (!log) html = `<div class="state">${escapeHtml(t('general.loading'))}</div>`;
-        else if (!log.lines.length) html = `<div class="state">${escapeHtml(t('proxmox.task_log_empty'))}</div>`;
-        else html = logLinesHtml(log.lines);
-
-        if (html !== this.tkLogText) {
-            // Follow the end only when the reader is at it: reading up the log is not interrupted.
-            const stay = toBottom || atBottom(box.scrollTop, box.clientHeight, box.scrollHeight);
-            const keep = box.scrollTop;
-            box.innerHTML = html;
-            this.tkLogText = html;
-            box.scrollTop = stay ? box.scrollHeight : keep;
-        }
-        const running = sr.getElementById('pt-running');
-        if (running) (running as HTMLElement).hidden = log?.running !== true;
-        const cut = sr.getElementById('pt-cut');
-        if (cut) (cut as HTMLElement).hidden = log?.truncated !== true;
-        const copy = sr.getElementById('pt-copy') as HTMLButtonElement | null;
-        if (copy) copy.disabled = !log || !log.lines.length;
-    }
-
-    private async copyTaskLog() {
-        const lines = this.tkLog?.lines;
-        if (!lines?.length) return;
-        if (await copyText(taskLogText(lines))) {
-            eventBus.emit(EVENTS.NOTIFY, { message: i18n.t('dockerpage.copied'), type: 'success' });
-        }
-    }
-
-    // ── The node's system log ──
-
-    private openJournal(name: string) {
-        const n = this.data?.nodes.find(x => x.name === name);
-        if (!n) return;
-        this.stopTasks();
-        this.stopJournal();
-        this._charts.clear();
-        this.sj = { host: this.hostId, node: n.name, back: () => { void this.openNode(name); } };
-        this.sjLines = null;
-        this.sjErr = '';
-        this.showJournal();
-        void this.loadJournal(true);
-    }
-
-    private stopJournal() {
-        this.sjSeq++;
-        this.sj = null;
-        this.sjLines = null;
-    }
-
-    private showJournal() {
-        const sj = this.sj;
-        if (!sj) return;
-        const t = this.tkT;
-        const back = `<button class="pp__back" data-journal-back
-            aria-label="${escapeHtml(t('general.back'))}" title="${escapeHtml(t('general.back'))}">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>`;
-        this.sheet(escapeHtml(sj.node), escapeHtml(t('proxmox.syslog')), `
-            <div class="tk-log">
-                <div class="tk-logbar">
-                    <span class="tk-logbar__gap"></span>
-                    <button type="button" class="tg" data-journal-refresh id="sj-refresh">${escapeHtml(t('monitor.refresh'))}</button>
-                    <button type="button" class="tg" data-journal-copy id="sj-copy" disabled>${escapeHtml(t('dockerpage.copy'))}</button>
-                </div>
-                <div id="sj-body"></div>
-            </div>`, back, true);
-        this.paintJournal(true);
-    }
-
-    private async loadJournal(toBottom: boolean) {
-        const sj = this.sj;
-        if (!sj) return;
-        const seq = ++this.sjSeq;
-        const btn = this.shadowRoot?.getElementById('sj-refresh') as HTMLButtonElement | null;
-        if (btn) btn.disabled = true;
-        try {
-            const lines = await fetchJournal(sj.host, sj.node);
-            if (seq !== this.sjSeq) return;
-            this.sjLines = lines;
-            this.sjErr = '';
-        } catch (err) {
-            if (seq !== this.sjSeq) return;
-            this.sjErr = taskErrorKey(err);
-        }
-        this.paintJournal(toBottom);
-    }
-
-    private paintJournal(toBottom: boolean) {
-        const body = this.shadowRoot?.getElementById('sj-body');
-        if (!body) return;
-        const t = this.tkT;
-        let html: string;
-        if (this.sjErr === NO_SYSLOG_KEY) {
-            // Not a failure: the system log is optional, and says what it takes.
-            html = `<div class="tk-note tk-note--calm">${escapeHtml(t('proxmox.syslog_optional'))}</div>`;
-        } else if (this.sjErr) {
-            html = taskErrorHtml(this.sjErr, t);
-        } else if (!this.sjLines) {
-            html = `<div class="state">${escapeHtml(t('general.loading'))}</div>`;
-        } else if (!this.sjLines.length) {
-            html = `<div class="state">${escapeHtml(t('proxmox.syslog_empty'))}</div>`;
-        } else {
-            html = `<div class="logbox" id="sj-logbox" role="log" aria-live="off" tabindex="0">${logLinesHtml(this.sjLines)}</div>`;
-        }
+    private setBody(body: HTMLElement, tab: Tab, html: string) {
+        if (this.bodyTab === tab && this.last.body === html) return;
+        this.detachPanels();
         body.innerHTML = html;
-        const box = this.shadowRoot?.getElementById('sj-logbox');
-        if (box && toBottom) box.scrollTop = box.scrollHeight;
-        const refresh = this.shadowRoot?.getElementById('sj-refresh') as HTMLButtonElement | null;
-        if (refresh) refresh.disabled = !this.sjLines && !this.sjErr;
-        const copy = this.shadowRoot?.getElementById('sj-copy') as HTMLButtonElement | null;
-        if (copy) copy.disabled = !this.sjLines?.length;
+        this.bodyTab = tab;
+        this.last.body = html;
+        this.last.list = '';
     }
 
-    private async copyJournal() {
-        const lines = this.sjLines;
-        if (!lines?.length) return;
-        if (await copyText(taskLogText(lines))) {
-            eventBus.emit(EVENTS.NOTIFY, { message: i18n.t('dockerpage.copied'), type: 'success' });
-        }
-    }
+    /** The body: what the chosen tab shows. */
+    private paintBody() {
+        const body = this.$('body');
+        if (!body || this.selectOpen()) return;
+        const t = this.t;
 
-    // ── Events ──
-
-    private onInput = (e: Event) => {
-        const t = e.target as HTMLInputElement;
-        if (t?.id !== 'pp-search') return;
-        this.query = t.value;
-        // ONLY the machines. The input now lives in that section's own header,
-        // so repainting anything above it would replace the element the
-        // browser holds the caret and the composition in — and restoring focus
-        // afterwards is not the same thing.
-        this.paintMachines();
-    };
-
-    private onClick = async (e: Event) => {
-        const t = e.target as HTMLElement;
-
-        if (t.closest('#pp-close')) { this.close(); return; }
-
-        const worry = t.closest('[data-worry]') as HTMLElement | null;
-        if (worry) {
-            const id = worry.dataset.worry || '';
-            if (this.opened.has(id)) this.opened.delete(id); else this.opened.add(id);
-            this.paintBody();
+        if (!this.loaded) { this.setBody(body, 'overview', `<div class="empty">${escapeHtml(t('general.loading'))}</div>`); return; }
+        if (this.error) {
+            this.setBody(body, 'overview', `<div class="empty"><b>${escapeHtml(t(this.error))}</b></div>`);
             return;
         }
 
-        const enter = t.closest('[data-enter]') as HTMLElement | null;
-        if (enter) {
-            // Going into a cluster is a place, so it gets a history entry: the
-            // browser's back button, and the edge swipe on a phone, then come
-            // back to the summary instead of leaving Lastboard altogether.
-            // Only this step pushes one — opening the page itself does not, so
-            // nothing changes for an install with a single hypervisor.
-            if (this.view === 'summary') {
-                history.pushState({ lbProxmox: 'cluster' }, '');
-                this.depth++;
+        // Nothing is asked for a tab nobody is looking at.
+        if (this.tab !== 'tasks') this.pageTasks.stop();
+        if (this.tab !== 'syslog') this.pageJournal.stop();
+
+        if (this.tab === 'overview') {
+            this.setBody(body, 'overview', '<div id="ov"></div>');
+            this.paintOverview();
+        } else if (this.tab === 'machines') {
+            if (this.bodyTab !== 'machines') {
+                this.detachPanels();
+                body.innerHTML = '<div id="inv-tools"></div><div id="inv-errors"></div><div id="inv-list"></div>';
+                this.bodyTab = 'machines';
+                this.last.tools = this.last.list = this.last.body = '';
             }
-            this.hostId = enter.dataset.enter || '';
-            this.view = 'cluster';
-            this._shell = false;
-            this.series.clear();
-            this.asked.clear();
-            this.loaded = false;
-            this.paint();
-            this.load();
-            return;
+            this.paintTools();
+            this.paintInventory();
+        } else if (this.tab === 'storage') {
+            this.setBody(body, 'storage', storageTabHtml(fleetStores(this.scope()), this.hosts.length > 1, t, this.fmt));
+        } else {
+            const kind = this.tab;
+            if (this.bodyTab !== kind) {
+                this.detachPanels();
+                body.innerHTML = '<div id="np-wrap"></div><div id="np-slot"></div>';
+                this.bodyTab = kind;
+                this.last.pick = this.last.body = '';
+            }
+            this.paintNodePicker(kind);
+        }
+    }
+
+    private paintOverview() {
+        const ov = this.$('ov');
+        if (!ov) return;
+        const scope = this.scope();
+        this.charts.delete('fleet');
+        let chart = '';
+        const haveCurve = this.curve.length >= 2 && this.curveKey === this.hostFilter;
+        if (haveCurve) {
+            const spec: ChartSpec = {
+                series: [{ name: this.t('widget.telemetry.cpu'), color: 'var(--text-main)', data: this.curve }],
+                max: 100,
+                edges: [this.rangeLabel(), this.t('proxmox.now')],
+                fmt: v => this.fmt.pct(v),
+            };
+            chart = chartHtml('fleet', spec);
+            this.charts.set('fleet', { spec, at: this.timesOf(this.curve.length) });
+        }
+        const html = overviewHtml({
+            totals: fleetTotals(scope, this.linkOf),
+            attention: attentionList(scope, this.linkOf),
+            nodes: fleetNodes(scope),
+            stores: fleetStores(scope),
+            hosts: scope,
+            cpuSpark: haveCurve ? this.curve : [],
+            chart,
+            latest: this.latest,
+        }, this.t, this.fmt, this.tfmt);
+        if (html === this.last.list) return;
+        this.last.list = html;
+        const body = this.$('body');
+        const top = body?.scrollTop ?? 0;
+        ov.innerHTML = html;
+        if (body) body.scrollTop = top;
+    }
+
+    private paintTools() {
+        const el = this.$('inv-tools');
+        if (!el) return;
+        const counts = countUnits(guestUnits(this.scope(), this.linkOf));
+        const html = toolbarHtml({
+            query: this.query, status: this.status, counts: { all: 0, up: 0, off: 0, warn: 0 }, sort: this.sort,
+            grouped: this.grouped, view: this.viewMode, searchLabel: this.t('proxmox.search'), groupLabel: this.t('proxmoxpage.group_node'),
+            shortcut: /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K',
+        }, this.t, n => this.fmt.num(n));
+        // The counts are written in place, so that a refresh neither costs the search its caret nor closes the sort selector.
+        if (html !== this.last.tools && !(this.shadowRoot?.activeElement?.id === 'inv-q' && el.firstChild)) {
+            this.last.tools = html;
+            el.innerHTML = html;
+        }
+        el.querySelectorAll<HTMLElement>('[data-filter] .n').forEach(n => {
+            const text = this.fmt.num(counts[(n.parentElement as HTMLElement).dataset.filter as StatusFilter]);
+            if (n.textContent !== text) n.textContent = text;
+        });
+        const sort = el.querySelector<SelectEl>('#inv-sort');
+        if (sort) this.setSelect(sort, sortOptions(this.t), this.sort, this.t('infra.sort'));
+    }
+
+    private paintInventory() {
+        const el = this.$('inv-list');
+        const errs = this.$('inv-errors');
+        if (!el || !errs) return;
+        const t = this.t;
+        const scope = this.scope();
+
+        errs.innerHTML = scope.filter(h => h.error).map(h => hostErrorHtml('proxmox.connection_error', h.name, t)).join('');
+
+        const all = guestUnits(scope, this.linkOf);
+        const views = new Map<string, GuestView>();
+        for (const h of liveHosts(scope)) {
+            for (const g of h.guests || []) views.set(unitId(h.id, g.vmid), this.viewOfGuest(h, g));
+        }
+        const shown = sortUnits(all.filter(u => passes(u, this.query, this.status)), this.sort);
+        const html = shown.length
+            ? inventoryHtml(groupUnits(shown, this.grouped), this.viewMode, id => views.get(id), t, this.fmt, this.grouped)
+            : noMatchHtml(t, all.length > 0);
+        if (html === this.last.list) return;
+        this.last.list = html;
+        // The card the keyboard is on must still be on it after the list is written again.
+        const active = this.shadowRoot?.activeElement as HTMLElement | null;
+        const focus = active && el.contains(active) ? { host: active.dataset.host, vmid: active.dataset.vmid } : null;
+        const body = this.$('body');
+        const top = body?.scrollTop ?? 0;
+        el.innerHTML = html;
+        if (body) body.scrollTop = top;
+        if (focus?.host) {
+            for (const n of el.querySelectorAll<HTMLElement>('[data-host]')) {
+                if (n.dataset.host === focus.host && n.dataset.vmid === focus.vmid) { n.focus({ preventScroll: true }); break; }
+            }
+        }
+    }
+
+    /** The node a Tasks or System log tab reads: the one chosen, or the first in view. */
+    private pickedNode(): { host: PxHost; node: FleetNode } | null {
+        const nodes = fleetNodes(this.scope());
+        if (!nodes.length) return null;
+        const found = nodes.find(n => `${n.hostId}/${n.name}` === this.nodePick) ?? nodes[0];
+        const host = this.hostOf(found.hostId);
+        return host ? { host, node: found } : null;
+    }
+
+    private paintNodePicker(kind: 'tasks' | 'syslog') {
+        const wrap = this.$('np-wrap');
+        const slot = this.$('np-slot');
+        if (!wrap || !slot) return;
+        const picked = this.pickedNode();
+        const several = this.hosts.length > 1;
+        const options = fleetNodes(this.scope()).map(n => ({ value: `${n.hostId}/${n.name}`, label: several ? `${n.hostName} · ${n.name}` : n.name }));
+        const html = options.length
+            ? '<div class="tools"><app-select id="node-pick"></app-select></div>'
+            : `<div class="empty">${escapeHtml(this.t('proxmoxpage.pick_node'))}</div>`;
+        if (html !== this.last.pick) { this.last.pick = html; wrap.innerHTML = html; }
+        const sel = wrap.querySelector<SelectEl>('#node-pick');
+        if (sel && picked) this.setSelect(sel, options, `${picked.node.hostId}/${picked.node.name}`, this.t('widget.api.extra_node'));
+
+        const panel = kind === 'tasks' ? this.pageTasks : this.pageJournal;
+        if (!picked) { panel.stop(); return; }
+        const target = { host: picked.host.id, node: picked.node.name };
+        // Another node was picked: show() sees a different scope and asks for the new one.
+        if (kind === 'tasks') this.pageTasks.show(target); else this.pageJournal.show(target);
+        if (panel.el.parentElement !== slot) slot.appendChild(panel.el);
+    }
+
+    // ── The drawer ──
+
+    private drawerTabs(kind: Current['kind']): { id: DrawerTab; label: string }[] {
+        const t = this.t;
+        const summary = { id: 'summary' as const, label: t('infra.tab_summary') };
+        if (kind === 'guest') return [summary, { id: 'tasks', label: t('proxmox.tasks') }];
+        if (kind === 'node') return [summary, { id: 'tasks', label: t('proxmox.tasks') }, { id: 'syslog', label: t('proxmox.syslog') }];
+        return [summary];
+    }
+
+    private paintDrawer() {
+        const head = this.$('dr-head');
+        const tabs = this.$('dr-tabs');
+        const body = this.$('dr-body');
+        const foot = this.$('dr-foot');
+        if (!head || !tabs || !body || !foot) return;
+        const c = this.current();
+        if (!this.drawerOpen || !c) return;
+        const t = this.t;
+        const showHost = this.hosts.length > 1;
+
+        let hHtml = '';
+        let bHtml = '';
+        let fHtml = '';
+        const tabList = this.drawerTabs(c.kind);
+        if (!tabList.some(x => x.id === this.drawerTab)) this.drawerTab = 'summary';
+        const slot = '<div class="panel-slot" id="dr-slot"></div>';
+
+        if (c.kind === 'guest') {
+            const d = this.guestDrawer(c.host, c.guest);
+            hHtml = guestHeadHtml(d, t);
+            fHtml = guestFooterHtml(d, t);
+            bHtml = this.drawerTab === 'summary' ? guestSummaryHtml(d, t, this.fmt) : slot;
+        } else if (c.kind === 'node') {
+            hHtml = nodeHeadHtml(c.node, showHost, t);
+            const s = this.detailSeries;
+            const chart = s
+                ? this.chartFor('d-cpu', t('widget.telemetry.cpu'), s.cpu, 'var(--text-main)') + this.chartFor('d-mem', t('widget.telemetry.ram'), s.mem, 'var(--text-main)')
+                : '';
+            const raw = c.node.loadavg && c.node.loadavg.length ? Number(c.node.loadavg[0]) : NaN;
+            const load = Number.isFinite(raw) ? i18n.formatNumber(raw, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+            bHtml = this.drawerTab === 'summary'
+                ? nodeSummaryHtml({ node: c.node, chart, uptime: this.fmt.span(c.node.uptime), load }, t, this.fmt)
+                : slot;
+        } else {
+            hHtml = storeHeadHtml(c.store, showHost, t);
+            bHtml = storeSummaryHtml(c.store, t, this.fmt);
         }
 
-        if (t.closest('#pp-back')) {
-            // If we pushed an entry on the way in, going back is the browser's
-            // job and popstate does the rest. Two paths both changing the view
-            // would leave the history one step out of step with it.
-            if (this.depth > 1) history.back(); else this.toSummary();
-            return;
+        if (hHtml !== this.last.dhead) { this.last.dhead = hHtml; head.innerHTML = hHtml; }
+        const tHtml = tabList.length > 1 ? tabsHtml(tabList, this.drawerTab, n => this.fmt.num(n)) : '';
+        if (tHtml !== this.last.dtabs) { this.last.dtabs = tHtml; tabs.innerHTML = tHtml; }
+        tabs.hidden = !tHtml;
+        if (fHtml !== this.last.dfoot) { this.last.dfoot = fHtml; foot.innerHTML = fHtml; }
+        foot.hidden = !fHtml;
+
+        if (bHtml !== this.last.dbody) {
+            const top = body.scrollTop;
+            this.drawerTasks.el.remove();
+            this.drawerJournal.el.remove();
+            this.last.dbody = bHtml;
+            body.innerHTML = bHtml;
+            body.scrollTop = top;
         }
+        this.placeDrawerPanels(c);
+    }
 
-        const fold = t.closest('[data-fold]') as HTMLElement | null;
-        if (fold) {
-            const node = fold.dataset.fold || '';
-            if (this.collapsed.has(node)) this.collapsed.delete(node);
-            else this.collapsed.add(node);
-            writeCollapsed(this.collapsed);
-            this.paintMachines();
-            return;
+    /** The panel of the drawer's tab goes into its slot, asking for what this machine or node is. */
+    private placeDrawerPanels(c: Current) {
+        const slot = this.$('dr-slot');
+        const wantTasks = this.drawerTab === 'tasks' && c.kind !== 'store';
+        const wantJournal = this.drawerTab === 'syslog' && c.kind === 'node';
+        if (!wantTasks) this.drawerTasks.stop();
+        if (!wantJournal) this.drawerJournal.stop();
+        if (!slot) return;
+        if (wantTasks) {
+            const scope = c.kind === 'guest'
+                ? { host: c.host.id, node: c.guest.node, vmid: c.guest.vmid }
+                : { host: c.host.id, node: c.node.name };
+            this.drawerTasks.show(scope);
+            if (this.drawerTasks.el.parentElement !== slot) slot.appendChild(this.drawerTasks.el);
         }
-        const tasksNode = t.closest('[data-tasks-node]') as HTMLElement | null;
-        if (tasksNode?.dataset.tasksNode) { this.openNodeTasks(tasksNode.dataset.tasksNode); return; }
-        const journalNode = t.closest('[data-journal-node]') as HTMLElement | null;
-        if (journalNode?.dataset.journalNode) { this.openJournal(journalNode.dataset.journalNode); return; }
-        if (t.closest('[data-journal-back]')) { const back = this.sj?.back; this.stopJournal(); back?.(); return; }
-        if (t.closest('[data-journal-refresh]')) { void this.loadJournal(true); return; }
-        if (t.closest('[data-journal-copy]')) { void this.copyJournal(); return; }
-        const tasksGuest = t.closest('[data-tasks-guest]') as HTMLElement | null;
-        if (tasksGuest?.dataset.tasksGuest) { this.openGuestTasks(Number(tasksGuest.dataset.tasksGuest)); return; }
-        if (t.closest('[data-tasks-back]')) { this.tasksBack(); return; }
-        const task = t.closest('[data-upid]') as HTMLElement | null;
-        if (task?.dataset.upid) { this.openTaskLog(task.dataset.upid); return; }
-        if (t.closest('[data-task-copy]')) { void this.copyTaskLog(); return; }
-        if (t.closest('[data-close]')) {
-            (this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null)?.close();
-            return;
+        if (wantJournal) {
+            this.drawerJournal.show({ host: c.host.id, node: c.node.name });
+            if (this.drawerJournal.el.parentElement !== slot) slot.appendChild(this.drawerJournal.el);
         }
+    }
 
-        const clearBtn = t.closest('[data-icon-clear]') as HTMLElement | null;
-        if (clearBtn) {
-            this.setIcon(Number(clearBtn.dataset.iconClear), '');
-            return;
-        }
-
-        const iconBtn = t.closest('[data-icon]') as HTMLElement | null;
-        if (iconBtn) {
-            this.chooseIcon(Number(iconBtn.dataset.icon));
-            return;
-        }
-
-        if (t.closest('#pp-down')) {
-            this.onlyStopped = !this.onlyStopped;
-            this.paintStatus();
-            this.paintMachines();
-            return;
-        }
-
-        const open = t.closest('[data-open]') as HTMLElement | null;
-        if (open?.dataset.open) { window.open(open.dataset.open, '_blank', 'noopener'); return; }
-
-        const power = t.closest('[data-power]') as HTMLElement | null;
-        if (power) { await this.power(Number(power.dataset.power)); return; }
-
-        const node = t.closest('[data-node]') as HTMLElement | null;
-        if (node?.dataset.node) { this.openNode(node.dataset.node); return; }
-
-        const store = t.closest('[data-store]') as HTMLElement | null;
-        if (store?.dataset.store) { this.openStore(store.dataset.store); return; }
-
-        const guest = t.closest('[data-guest]') as HTMLElement | null;
-        if (guest?.dataset.guest) { this.openGuest(Number(guest.dataset.guest)); return; }
-    };
-
-    private async power(vmid: number) {
-        const g = this.data?.guests.find(x => x.vmid === vmid);
-        if (!g || this.busy.has(vmid)) return;
-        const starting = !g.running;
-        const book = this.backing(g);
-
-        const modal = document.querySelector('confirmation-modal') as any;
-        if (modal?.confirm) {
-            // The consequence, not just the question. A button label cannot say
-            // "and your photo library goes with it"; this can.
-            const message = starting
-                ? i18n.t('widget.proxmox.confirm_start')
-                : (book
-                    ? `${i18n.t('proxmox.stopped_breaks')} ${book.label || book.url}`
-                    : i18n.t('widget.proxmox.confirm_stop'));
-            const ok = await modal.confirm(
-                `${i18n.t(starting ? 'docker.action_start' : 'docker.action_stop')} ${g.name}`, message);
-            if (!ok) return;
-        }
-
-        this.busy.add(vmid);
-        try {
-            await apiService.post('/api/proxmox/power', {
-                host: this.hostId, node: g.node, kind: g.kind, vmid, action: starting ? 'start' : 'shutdown',
-            });
-        } catch { /* the next poll tells the truth either way */ }
-        this.busy.delete(vmid);
-        (this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null)?.close();
-        this.load();
+    private guestDrawer(host: PxHost, g: PxGuest): GuestDrawer {
+        const view = this.viewOfGuest(host, g);
+        const link = linkFor({ ...g, host: host.id });
+        const s = this.detailSeries;
+        return {
+            view, hostName: host.name,
+            chart: s ? this.chartFor('d-cpu', this.t('widget.telemetry.cpu'), s.cpu, g.running ? 'var(--text-main)' : 'var(--text-dim)') : '',
+            canPower: this.mayPower(host), busy: this.busy.has(unitId(host.id, g.vmid)),
+            bookmarkUrl: link?.url ?? '', hasChosenIcon: !!chosenIcon(host, g.node, g.vmid),
+            uptime: this.fmt.span(g.uptime),
+        };
     }
 }
 
 if (!customElements.get('proxmox-page')) {
     customElements.define('proxmox-page', ProxmoxPage);
 }
+
+export { ProxmoxPage };
