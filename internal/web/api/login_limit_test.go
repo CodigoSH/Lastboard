@@ -11,6 +11,12 @@ import (
 // Passwords tried at the same time must all be counted. Each attempt used to
 // read the count before hashing and write back "what I read, plus one", so a
 // burst of N from one address recorded one failure and the lockout never came.
+//
+// Every attempt that was told "wrong password" has to be in the count. Not the
+// whole burst: once the lockout lands, the attempts still arriving are refused
+// before their password is looked at, and those are rightly not failures. How
+// many get through first depends on how fast the hash is, so the burst size
+// is not a number this test can promise.
 func TestSimultaneousWrongPasswordsAreAllCounted(t *testing.T) {
 	server, db, cleanup := setupTestServer(t)
 	defer cleanup()
@@ -18,29 +24,40 @@ func TestSimultaneousWrongPasswordsAreAllCounted(t *testing.T) {
 
 	const burst = 12
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+	statuses := map[int]int{}
 	for i := 0; i < burst; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			resp, err := http.Post(server.URL+"/api/login", "application/json",
 				strings.NewReader(`{"username":"boss","password":"wrong-password"}`))
-			if err == nil {
-				resp.Body.Close()
+			if err != nil {
+				return
 			}
+			resp.Body.Close()
+			mu.Lock()
+			statuses[resp.StatusCode]++
+			mu.Unlock()
 		}()
 	}
 	wg.Wait()
+
+	wrong := statuses[http.StatusUnauthorized]
+	if wrong+statuses[http.StatusTooManyRequests] != burst {
+		t.Fatalf("every attempt should be refused as wrong or locked out, got %v", statuses)
+	}
 
 	var count int
 	var locked *string
 	if err := db.QueryRow(`SELECT count, locked_until FROM login_attempts`).Scan(&count, &locked); err != nil {
 		t.Fatalf("no attempts recorded: %v", err)
 	}
-	if count < burst {
-		t.Errorf("%d simultaneous failures were recorded as %d", burst, count)
+	if count != wrong {
+		t.Errorf("%d simultaneous wrong passwords were recorded as %d", wrong, count)
 	}
 	if locked == nil {
-		t.Errorf("the address was not locked out after %d failures", burst)
+		t.Errorf("the address was not locked out after %d failures", wrong)
 	}
 }
 
