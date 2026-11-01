@@ -121,7 +121,8 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     const pctRunning = tt.total ? (tt.running / tt.total) * 100 : 0;
     const memPct = tt.memLimit > 0 ? (tt.memUsed / tt.memLimit) * 100 : 0;
     const level: Level = tt.attention ? 'bad' : tt.stopped ? 'warn' : 'ok';
-    const topProjects = o.projects.slice(0, 3);
+    // Failing its own check or ended with an error is critical; restarting and paused are only a warning.
+    const critical = o.attention.filter(a => a.reason === 'unhealthy' || a.reason === 'failed').length;
     const kpis = [
         kpiHtml({
             label: t('dockerpage.kpi_containers'), icon: 'box', value: fmt.num(tt.running), unit: `/ ${fmt.num(tt.total)}`,
@@ -133,16 +134,20 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         }),
         kpiHtml({
             label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.dec(tt.cores), unit: t('dockerpage.cores_in_use'),
-            spark: o.cores, sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), ''],
+            spark: o.cores, sparkTone: 'ok', sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), ''],
         }),
         kpiHtml({
             label: t('dockerpage.kpi_memory'), icon: 'mem', value: tt.reporting ? fmt.bytes(tt.memUsed) : '—',
-            bar: tt.memLimit > 0 ? memPct : undefined, spark: o.mem,
+            bar: tt.memLimit > 0 ? memPct : undefined,
             sub: tt.memLimit > 0 ? [t('dockerpage.of_limit', { limit: fmt.bytes(tt.memLimit) }), fmt.pct(memPct)] : undefined,
         }),
         kpiHtml({
-            label: t('dockerpage.kpi_projects'), icon: 'layers', value: fmt.num(tt.projects),
-            chips: topProjects.map(p => ({ text: `${p.name} ${fmt.num(p.running)}/${fmt.num(p.total)}`, tone: (p.running === p.total ? 'ok' : 'warn') as 'ok' | 'warn' })),
+            label: t('dockerpage.attention'), icon: 'alert', value: fmt.num(o.attention.length), unit: t('infra.filter_warn').toLowerCase(),
+            sub: [t('dockerpage.attention_sub'), ''],
+            chips: [
+                { text: `${fmt.num(critical)} ${t('dockerpage.critical')}`, tone: 'bad' },
+                { text: `${fmt.num(o.attention.length - critical)} ${t('infra.filter_warn').toLowerCase()}`, tone: 'warn' },
+            ],
         }),
     ].join('');
 
@@ -158,9 +163,9 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         const mine = o.hosts.filter(h => h.host.id === p.host.id).flatMap(h => h.containers.filter(c => c.Project === p.name));
         const tones = mine.map(dotTone);
         const tone = tones.includes('bad') ? 'bad' : tones.includes('warn') ? 'warn' : 'ok';
-        return `<article class="card unit"><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(p.name)}</span>
+        return `<article class="card unit"${showHost ? ` title="${e(p.host.name)}"` : ''}><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(p.name)}</span>
             <span class="unit__tail"><span class="chip">${e(fmt.num(p.running))}/${e(fmt.num(p.total))}</span></span></div>
-            <div class="unit__sub">${showHost ? `<span>${e(p.host.name)}</span>` : ''}${mine.map(c => { const k = dotTone(c); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></article>`;
+            <div class="unit__sub">${mine.map(c => { const k = dotTone(c); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></article>`;
     }).join('');
     const projects = o.projects.length ? `<div class="cards">${projectCards}</div>` : `<div class="card"><div class="chart__empty">${e(t('dockerpage.no_projects'))}</div></div>`;
 

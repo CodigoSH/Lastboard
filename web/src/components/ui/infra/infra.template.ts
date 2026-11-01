@@ -101,6 +101,8 @@ export interface KpiSpec {
     /** A meter under it. */
     bar?: number;
     spark?: number[];
+    /** The colour the line is drawn in: the level of the figure it ends on. */
+    sparkTone?: Level;
     chips?: { text: string; tone?: 'ok' | 'warn' | 'bad' | '' }[];
 }
 
@@ -110,7 +112,7 @@ export function kpiHtml(k: KpiSpec): string {
         : '';
     return `<div class="card kpi">
         <div class="kpi__top"><span class="lbl">${e(k.label)}</span>${icon(k.icon, 16)}</div>
-        <div class="kpi__main"><div class="kpi__v">${e(k.value)}${k.unit ? `<small>${e(k.unit)}</small>` : ''}</div>${k.ring ? ringHtml(k.ring.percent, k.ring.level, k.ring.label) : (k.spark && k.spark.length > 1 ? `<div class="kpi__spark">${sparkHtml(k.spark)}</div>` : '')}</div>
+        <div class="kpi__main"><div class="kpi__v">${e(k.value)}${k.unit ? `<small>${e(k.unit)}</small>` : ''}</div>${k.ring ? ringHtml(k.ring.percent, k.ring.level, k.ring.label) : (k.spark && k.spark.length > 1 ? `<div class="kpi__spark" style="color:var(--${k.sparkTone === 'bad' ? 'danger' : k.sparkTone ?? 'ok'})">${sparkHtml(k.spark)}</div>` : '')}</div>
         ${k.bar !== undefined ? barHtml(k.bar) : ''}
         ${k.sub ? `<div class="kpi__sub"><span>${e(k.sub[0])}</span><span>${e(k.sub[1])}</span></div>` : ''}
         ${chips}

@@ -153,7 +153,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): st
             ],
         }),
         kpiHtml({
-            label: t('widget.telemetry.cpu'), icon: 'cpu', value: fmt.num(Math.round(tt.cpu)), unit: '%', bar: tt.cpu, spark: o.cpuSpark,
+            label: t('widget.telemetry.cpu'), icon: 'cpu', value: fmt.num(Math.round(tt.cpu)), unit: '%', bar: tt.cpu, spark: o.cpuSpark, sparkTone: meterLevel(tt.cpu),
             sub: [`${t('proxmox.nodes')}: ${fmt.num(tt.nodes)}`, `${t('proxmox.threads')}: ${fmt.num(tt.threads)}`],
         }),
         kpiHtml({
