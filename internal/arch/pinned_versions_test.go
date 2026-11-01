@@ -44,7 +44,7 @@ func TestPinnedVersionsAgree(t *testing.T) {
 			},
 			{
 				what:  "staticcheck",
-				file:  ".forgejo/workflows/tests.yml",
+				file:  ".forgejo/workflows/ci.yml",
 				find:  regexp.MustCompile(`honnef\.co/go/tools/cmd/staticcheck@(v[0-9][0-9A-Za-z.\-]*)`),
 				human: "go install honnef.co/go/tools/cmd/staticcheck@vX.Y.Z",
 			},
@@ -58,7 +58,7 @@ func TestPinnedVersionsAgree(t *testing.T) {
 			},
 			{
 				what:  "govulncheck",
-				file:  ".forgejo/workflows/tests.yml",
+				file:  ".forgejo/workflows/ci.yml",
 				find:  regexp.MustCompile(`golang\.org/x/vuln/cmd/govulncheck@(v[0-9.]+)`),
 				human: "go install golang.org/x/vuln/cmd/govulncheck@vX.Y.Z",
 			},
@@ -72,7 +72,7 @@ func TestPinnedVersionsAgree(t *testing.T) {
 			},
 			{
 				what:  "Bun",
-				file:  ".forgejo/workflows/tests.yml",
+				file:  ".forgejo/workflows/ci.yml",
 				find:  regexp.MustCompile(`bun-version:\s*"([0-9.]+)"`),
 				human: `bun-version: "X.Y.Z"`,
 			},
@@ -98,7 +98,7 @@ func TestPinnedVersionsAgree(t *testing.T) {
 			},
 			{
 				what:  "Go",
-				file:  ".forgejo/workflows/tests.yml",
+				file:  ".forgejo/workflows/ci.yml",
 				find:  regexp.MustCompile(`go-version:\s*'([0-9.]+)'`),
 				human: "go-version: 'X.Y.Z'",
 			},
@@ -150,7 +150,7 @@ func TestNothingIsPinnedToLatest(t *testing.T) {
 	files := []string{
 		"Dockerfile",
 		"package.json",
-		".forgejo/workflows/tests.yml",
+		".forgejo/workflows/ci.yml",
 		".forgejo/workflows/release.yml",
 		"scripts/release.sh",
 	}

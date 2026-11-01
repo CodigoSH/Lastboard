@@ -1,18 +1,32 @@
 name: CI
 
+# One job that does each thing once. This used to be two workflows and five
+# jobs on every push: Go was set up four times, the frontend built five times,
+# the Go tests ran twice (with -short and with -race), and a benchmark run and a
+# non-blocking gosec scan uploaded reports nobody read. On a runner shared with
+# the rest of the house that was twenty-odd minutes of machine per push, all at
+# once, and it is what pushed the -race run past go test's ten-minute limit.
 on:
   push:
     branches: [ main ]
+    # A change that is only words runs nothing: no test reads docs/ or a
+    # Markdown file, and those were a third of the pushes.
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  go:
-    name: Go Build & Test
+  ci:
+    name: Check, test and build
     runs-on: ubuntu-latest
     # `ubuntu-latest` is a label the runner translates, and by default it lands
     # on a Node image built on Debian bullseye — 2021, OpenSSL 1.1.1w. Pinned so
@@ -34,44 +48,61 @@ jobs:
       - name: Install dependencies
         run: |
           go mod download
-          bun install
+          bun install --frozen-lockfile
 
+      # The cheap checks first, so a formatting slip fails in seconds and not
+      # after the test suite.
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l ./cmd ./internal)
+          if [ -n "$unformatted" ]; then
+            echo "these files are not gofmt'd:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: go mod tidy is clean
+        run: go mod tidy -diff
+
+      # The frontend is embedded with //go:embed, so everything that compiles the
+      # Go code needs it built first.
       - name: Build frontend
         run: bun run build
 
-      - name: Build backend
-        run: go build -v -o bin/lastboard ./cmd/lastboard
+      # `bun build` strips types without checking them.
+      - name: Typecheck
+        run: bun run typecheck
 
-      - name: Vet
+      - name: Frontend tests
+        run: bun test --randomize
+
+      - name: go vet
         run: go vet ./...
 
-      - name: Test
-        run: go test ./internal/... -v -short
+      - name: staticcheck
+        # Pinned, and pinned to the same version scripts/release.sh runs in its
+        # preflight. On @latest the two drift the day a new release adds a
+        # check, and then a tag passes locally and this job goes red with
+        # nothing to do about it but push another commit.
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
+          staticcheck ./...
+
+      - name: Go tests
+        # -race catches data races (the WS hub and stores use goroutines).
+        # -cover prints each package's coverage in the log; nothing reads a
+        # coverage file, so none is written.
+        run: go test ./... -race -cover
+
+      - name: govulncheck
+        # Blocking: fails the build when the code calls a known-vulnerable
+        # symbol in the stdlib or a dependency.
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          govulncheck ./...
+
+      - name: Build backend
+        run: go build -o bin/lastboard ./cmd/lastboard
 
       - name: Verify binary
         run: ./bin/lastboard --version
-
-  frontend:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
-    # `ubuntu-latest` is a label the runner translates, and by default it lands
-    # on a Node image built on Debian bullseye — 2021, OpenSSL 1.1.1w. Pinned so
-    # what this runs on is a decision in the diff rather than a line in a config
-    # file on the server that nothing versions. See the house rule in
-    # codigosh/releases.md.
-    container: node:24-trixie
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.4.4"
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build frontend
-        run: bun run build
-
-      - name: Frontend Test
-        run: bun test web/src/services/collisionService.test.ts
