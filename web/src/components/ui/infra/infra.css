@@ -162,7 +162,7 @@ svg { display: block; flex: none; }
     min-height: 0;
     overflow: auto;
     padding: 8px 20px 70px;
-    transition: padding-inline-end 0.25s var(--ease-out);
+    /* No transition on the padding the panel takes: animating it re-flows the grid at every frame, and the cards hop from column to column. */
 }
 /* Wide enough, the drawer pushes the page instead of covering it. */
 @media (min-width: 1380px) { .pg.has-drawer .pbody { padding-inline-end: 548px; } }
