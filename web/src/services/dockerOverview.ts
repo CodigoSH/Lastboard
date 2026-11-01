@@ -143,3 +143,31 @@ export function pushHistory(history: HistoryPoint[], p: HistoryPoint, max = HIST
     const all = history.concat(p);
     return all.length > max ? all.slice(all.length - max) : all;
 }
+
+// ── Figures ────────────────────────────────────────────────────────────────
+
+export type ByteUnit = 'byte' | 'kilobyte' | 'megabyte' | 'gigabyte' | 'terabyte';
+
+const BYTE_UNITS: ByteUnit[] = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'];
+
+/** A size in the largest unit it fills, in steps of 1024 as the daemon counts. */
+export function byteUnit(n: number): { value: number; unit: ByteUnit } {
+    let value = Number.isFinite(n) && n > 0 ? n : 0;
+    let i = 0;
+    while (value >= 1024 && i < BYTE_UNITS.length - 1) { value /= 1024; i++; }
+    return { value, unit: BYTE_UNITS[i] };
+}
+
+/**
+ * The top of a chart's axis: the smallest round figure (1, 2, 5 times a power of ten)
+ * above the readings with a little room, and never so small that a quiet host draws a
+ * wall.
+ */
+export function niceMax(highest: number, floor = 0.5): number {
+    const target = Math.max(floor, (Number.isFinite(highest) ? highest : 0) * 1.2);
+    const pow = Math.pow(10, Math.floor(Math.log10(target)));
+    for (const step of [1, 2, 5, 10]) {
+        if (step * pow >= target) return step * pow;
+    }
+    return 10 * pow;
+}

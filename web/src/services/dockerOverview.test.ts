@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { attentionList, attentionReason, dockerTotals, dockerUnits, projectRows, pushHistory } from './dockerOverview';
+import { attentionList, attentionReason, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory } from './dockerOverview';
 import type { DockerContainer, DockerHost } from './dockerShared';
 import type { HostRows } from './dockerPage';
 
@@ -100,5 +100,39 @@ describe('pushHistory', () => {
         const h = pushHistory([p(10)], p(5));
         expect(h.map(x => x.t)).toEqual([10]);
         expect(pushHistory(h, p(10)).map(x => x.t)).toEqual([10]);
+    });
+});
+
+describe('byteUnit', () => {
+    test('steps of 1024 up to the largest unit it fills', () => {
+        expect(byteUnit(0)).toEqual({ value: 0, unit: 'byte' });
+        expect(byteUnit(1023)).toEqual({ value: 1023, unit: 'byte' });
+        expect(byteUnit(1024)).toEqual({ value: 1, unit: 'kilobyte' });
+        expect(byteUnit(300 * 1024 * 1024)).toEqual({ value: 300, unit: 'megabyte' });
+        expect(byteUnit(1.5 * 1024 ** 3)).toEqual({ value: 1.5, unit: 'gigabyte' });
+        expect(byteUnit(5000 * 1024 ** 4).unit).toBe('terabyte');
+    });
+    test('nothing odd becomes a unit of its own', () => {
+        expect(byteUnit(-5)).toEqual({ value: 0, unit: 'byte' });
+        expect(byteUnit(NaN)).toEqual({ value: 0, unit: 'byte' });
+    });
+});
+
+describe('niceMax', () => {
+    test('a round figure above the readings with room', () => {
+        expect(niceMax(0.3)).toBe(0.5);
+        expect(niceMax(0.5)).toBe(1);
+        expect(niceMax(1.4)).toBe(2);
+        expect(niceMax(3)).toBe(5);
+        expect(niceMax(7)).toBe(10);
+        expect(niceMax(42)).toBe(100);
+    });
+    test('a quiet host keeps a readable axis and nonsense does not break it', () => {
+        expect(niceMax(0)).toBe(0.5);
+        expect(niceMax(NaN)).toBe(0.5);
+        expect(niceMax(0.01, 2)).toBe(2);
+    });
+    test('it always covers the highest reading', () => {
+        for (const v of [0.04, 0.9, 1, 2.3, 4.1, 9.9, 17, 230]) expect(niceMax(v)).toBeGreaterThanOrEqual(v);
     });
 });

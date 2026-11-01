@@ -9,19 +9,25 @@ import { accessAllows } from '../../../services/access';
 import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHosts';
 import { fetchContainers, hostErrorKey, containerName } from '../../../services/dockerShared';
 import {
-    fetchDetail, fetchLogs, fetchStats, runAction, pageErrorKey, visibleGroups, tally, findSelected, level,
+    fetchDetail, fetchLogs, fetchStats, runAction, pageErrorKey, findSelected,
     mergeLogLines, overflow, atBottom, logsToText, logDate, stateLevel, MAX_LOG_LINES,
     type DockerDetail, type HostRows, type LogLine, type ContainerStats, type ContainerAction,
 } from '../../../services/dockerPage';
-import { groupsHtml, headHtml, overviewHtml, logLineHtml, errorHtml, type T, type Fmt } from './DockerPage.template';
+import {
+    attentionList, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint,
+} from '../../../services/dockerOverview';
+import {
+    countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
+} from '../../../services/infraUnits';
+import {
+    chartHtml, chartIndexAt, CHART_WIDTH, icon, tabsHtml, toolbarHtml, type ChartSpec,
+} from '../infra/infra.template';
+import {
+    drawerHeadHtml, envTabHtml, footerHtml, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
+    mountsTabHtml, noMatchHtml, overviewHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
+} from './DockerPage.template';
+import infraCss from '../infra/infra.css' with { type: 'text' };
 import css from './DockerPage.css' with { type: 'text' };
-
-const ICON_CONTAINER = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z"/><path d="M10 21.9V14L2.1 9.1"/><path d="m10 14 11.9-6.9"/><path d="M14 19.8v-8.1"/><path d="M18 17.5V9.4"/></svg>';
-const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-const ICON_BACK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
-const ICON_SEARCH = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>';
-const ICON_COPY = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-const ICON_DOWN = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
 
 const LIST_MS = 10000;
 const LOG_MS = 3000;
@@ -29,26 +35,43 @@ const FIRST_TAIL = 100;
 const MORE_TAIL = 1000;
 const FOLLOW_KEY = 'docker.logFollow';
 const STAMPS_KEY = 'docker.logTimestamps';
+const VIEW_KEY = 'docker.view';
+const SORT_KEY = 'docker.sort';
+const GROUP_KEY = 'docker.group';
 
+function readPref(key: string): string | null {
+    try { return localStorage.getItem(key); } catch { return null; }
+}
+function writePref(key: string, value: string): void {
+    try { localStorage.setItem(key, value); } catch { /* a private window: it holds for this visit */ }
+}
 function readFlag(key: string, fallback: boolean): boolean {
-    try {
-        const v = localStorage.getItem(key);
-        return v === null ? fallback : v === '1';
-    } catch { return fallback; }
+    const v = readPref(key);
+    return v === null ? fallback : v === '1';
 }
 function writeFlag(key: string, on: boolean): void {
-    try { localStorage.setItem(key, on ? '1' : '0'); } catch { /* a private window: it holds for this visit */ }
+    writePref(key, on ? '1' : '0');
 }
 
-type Tab = 'overview' | 'logs';
+type Tab = 'overview' | 'containers' | 'logs';
+type DrawerTab = 'summary' | 'logs' | 'env' | 'mounts';
+
+interface Written {
+    head: string; tabs: string; body: string; list: string; tools: string;
+    dhead: string; dtabs: string; dbody: string; dfoot: string; pick: string;
+}
+const blank = (): Written => ({ head: '', tabs: '', body: '', list: '', tools: '', dhead: '', dtabs: '', dbody: '', dfoot: '', pick: '' });
+
+/** What the page remembers of the session. It outlives closing the page, not the browser tab. */
+let sessionHistory: HistoryPoint[] = [];
 
 /**
  * The Docker containers of the account, as a page of the board.
  *
- * Laid out like the other full-screen pages: the list on the start side, the
- * selected container beside it. What the widget cannot do in a tile is here —
- * the details of one container and its log — and it reads them through the same
- * hosts and the same permissions, so a member only sees what the account may.
+ * Drawn from the same shell as the Proxmox page: a header, tabs, four
+ * indicators, an inventory and a drawer for whatever is chosen. It reads
+ * through the same hosts and the same permissions as the widget, so a member
+ * only sees what the account may.
  */
 class DockerPage extends HTMLElement {
     private groups: HostRows[] = [];
@@ -56,11 +79,21 @@ class DockerPage extends HTMLElement {
     private loaded = false;
     private fatal = '';
     private noHosts = false;
-    private query = '';
-    private sel: { hostId: string; name: string } | null = null;
+
     private tab: Tab = 'overview';
+    private hostFilter = 'all';
+    private query = '';
+    private status: StatusFilter = 'all';
+    private sort: SortKey = isSortKey(readPref(SORT_KEY)) ? readPref(SORT_KEY) as SortKey : 'name';
+    private grouped = readFlag(GROUP_KEY, false);
+    private viewMode: 'cards' | 'list' = readPref(VIEW_KEY) === 'list' ? 'list' : 'cards';
+
+    private sel: { hostId: string; name: string } | null = null;
+    private drawerOpen = false;
+    private drawerTab: DrawerTab = 'summary';
     private detail: DockerDetail | null = null;
     private detailErr = '';
+
     private lines: LogLine[] = [];
     private logsErr = '';
     private logsLoaded = false;
@@ -69,10 +102,9 @@ class DockerPage extends HTMLElement {
     private follow = readFlag(FOLLOW_KEY, true);
     private stamps = readFlag(STAMPS_KEY, true);
     private busy = new Set<string>();
-    private view: 'list' | 'detail' = 'list';
+
     /** History entries this page has put on the stack: the page, and a container on a phone. */
     private depth = 0;
-
     private loading = false;
     private polling = false;
     private detailSeq = 0;
@@ -80,11 +112,14 @@ class DockerPage extends HTMLElement {
     private listTimer: ReturnType<typeof setInterval> | null = null;
     private logTimer: ReturnType<typeof setInterval> | null = null;
 
+    /** The chart on screen, by id, so the cursor can read it out. */
+    private charts = new Map<string, { spec: ChartSpec; at: number[] }>();
+    /** The log viewer is built once and moved between its two places, so its state is one. */
+    private viewer: HTMLElement | null = null;
+
     // What was last written into each region, so a refresh that changes nothing writes nothing.
-    private lastList = '';
-    private lastHead = '';
-    private lastOverview = '';
-    private lastStatus = '';
+    private last: Written = blank();
+    private bodyTab: Tab | '' = '';
 
     private _listening = false;
     private _unsubscribeI18n: (() => void) | undefined;
@@ -101,14 +136,17 @@ class DockerPage extends HTMLElement {
             if (!this.hasAttribute('open')) return;
             // A confirmation answers its own Escape; closing the page under it would be a second effect of one key.
             if (document.querySelector('confirmation-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
-            if (e.key === 'Escape') { this.close(); return; }
-            const typing = isTypingTarget(e.composedPath()[0] as Element | undefined, 'dp-search');
+            if (e.key === 'Escape') {
+                if (this.drawerOpen) this.closeDrawer(); else this.close();
+                return;
+            }
+            const typing = isTypingTarget(e.composedPath()[0] as Element | undefined, 'inv-q');
             if (!opensSearch(e, { locked: false, typing })) return;
-            const input = this.$('dp-search') as HTMLInputElement | null;
-            if (!input) return;
             e.preventDefault();
-            input.focus();
-            input.select();
+            if (this.tab !== 'containers') this.setTab('containers');
+            const input = this.$('inv-q') as HTMLInputElement | null;
+            input?.focus();
+            input?.select();
         };
 
         // Back: only ours while we have entries on the stack.
@@ -116,7 +154,7 @@ class DockerPage extends HTMLElement {
             if (this.depth <= 0) return;
             this.depth--;
             if (!this.hasAttribute('open')) return;
-            if (this.depth > 0 && this.view === 'detail') { this.toList(); return; }
+            if (this.depth > 0 && this.drawerOpen) { this.hideDrawer(); return; }
             this.closeQuietly();
         };
 
@@ -131,8 +169,12 @@ class DockerPage extends HTMLElement {
     connectedCallback() {
         if (!this._listening) {
             this._listening = true;
-            this.shadowRoot!.addEventListener('click', this.onClick);
-            this.shadowRoot!.addEventListener('input', this.onInput);
+            const root = this.shadowRoot!;
+            root.addEventListener('click', this.onClick);
+            root.addEventListener('input', this.onInput);
+            root.addEventListener('change', this.onChange);
+            root.addEventListener('mousemove', this.onChartMove as EventListener);
+            root.addEventListener('mouseout', this.onChartLeave);
         }
         this.build();
         window.addEventListener('keydown', this._keydown);
@@ -160,7 +202,7 @@ class DockerPage extends HTMLElement {
         // A full-screen page is a place: Back leaves it rather than leaving Lastboard.
         if (this.depth === 0) { history.pushState({ lbDocker: 'page' }, ''); this.depth = 1; }
         eventBus.emit(EVENTS.DOCKER_PAGE_CHANGED, { open: true });
-        this.view = 'list';
+        this.drawerOpen = false;
         this.loaded = false;
         this.paintAll(true);
         void this.load(true);
@@ -192,12 +234,6 @@ class DockerPage extends HTMLElement {
         if (this.logTimer) { clearInterval(this.logTimer); this.logTimer = null; }
     }
 
-    private toList() {
-        this.view = 'list';
-        this.syncLayout();
-        this.syncPolling();
-    }
-
     // ── Small helpers ──
 
     private $(id: string): HTMLElement | null {
@@ -212,6 +248,12 @@ class DockerPage extends HTMLElement {
             return d ? i18n.formatDateTime(d, { dateStyle: 'medium', timeStyle: 'medium' }) : '—';
         },
         num: (n) => i18n.formatNumber(n),
+        pct: (n) => i18n.formatNumber(n / 100, { style: 'percent', maximumFractionDigits: 1 }),
+        dec: (n) => i18n.formatNumber(n, { maximumFractionDigits: 2 }),
+        bytes: (n) => {
+            const { value, unit } = byteUnit(n);
+            return i18n.formatNumber(value, { style: 'unit', unit, unitDisplay: 'short', maximumFractionDigits: value < 10 && unit !== 'byte' ? 1 : 0 });
+        },
     };
 
     private stamp = (t: string): string => {
@@ -234,133 +276,194 @@ class DockerPage extends HTMLElement {
         return findSelected(this.groups, this.sel);
     }
 
-    /** Whether the detail is on screen: beside the list, or in place of it on a phone. */
-    private detailVisible(): boolean {
-        return !!this.sel && (!this.isNarrow() || this.view === 'detail');
+    /** The hosts the page is looking at: all of them, or the one chosen in the header. */
+    private scope(): HostRows[] {
+        return this.hostFilter === 'all' ? this.groups : this.groups.filter(g => g.host.id === this.hostFilter);
+    }
+
+    /** Where the log viewer is on screen right now, if it is. */
+    private viewerPlace(): 'drawer' | 'page' | null {
+        if (this.drawerOpen && this.drawerTab === 'logs' && this.sel) return 'drawer';
+        if (this.tab === 'logs' && this.sel) return 'page';
+        return null;
+    }
+
+    private statsObject(): Record<string, ContainerStats> {
+        return Object.fromEntries(this.stats);
     }
 
     // ── Shell ──
 
     private build() {
         const t = this.t;
-        const q = escapeHtml(t('docker.search_containers'));
         this.shadowRoot!.innerHTML = `
-            <style>${css}</style>
-            <div class="dp">
-                <header class="dp__header">
-                    <button type="button" class="dp__back" id="dp-back" hidden
-                            aria-label="${escapeHtml(t('general.back'))}" title="${escapeHtml(t('general.back'))}">${ICON_BACK}</button>
-                    <div class="dp__title">${ICON_CONTAINER}<span>${escapeHtml(t('widget.docker.name'))}</span></div>
-                    <div class="dp__status" id="dp-status"></div>
-                    <button type="button" class="dp__close" id="dp-close"
-                            aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${ICON_CLOSE}</button>
-                </header>
-                <div class="dp__layout" id="dp-layout" data-view="${this.view}">
-                    <aside class="dp__list">
-                        <div class="sec__head dp__listhead">
-                            <span class="sec__label">${escapeHtml(t('docker.containers'))}</span>
-                            <span class="sec__rule"></span>
-                            <span class="search">${ICON_SEARCH}
-                                <input id="dp-search" type="search" placeholder="${q}" aria-label="${q}" autocomplete="off" />
-                            </span>
-                        </div>
-                        <div class="dp__rows" id="dp-rows"></div>
-                    </aside>
-                    <section class="dp__detail">
-                        <div class="dp-hint" id="dp-hint">${escapeHtml(t('dockerpage.select_hint'))}</div>
-                        <div class="dp-pane" id="dp-pane" hidden>
-                            <div class="dp-head" id="dp-head"></div>
-                            <div class="dp-tabs" role="tablist">
-                                <button type="button" class="dp-tab" role="tab" data-tab="overview" id="dp-tab-overview">${escapeHtml(t('dockerpage.tab_overview'))}</button>
-                                <button type="button" class="dp-tab" role="tab" data-tab="logs" id="dp-tab-logs">${escapeHtml(t('dockerpage.tab_logs'))}</button>
-                            </div>
-                            <div class="dp-overview" id="dp-overview"></div>
-                            <div class="dp-logs" id="dp-logs" hidden>
-                                <div class="dp-logbar">
-                                    <button type="button" class="tg" id="dp-follow" aria-pressed="false">${ICON_DOWN}<span>${escapeHtml(t('dockerpage.follow'))}</span></button>
-                                    <button type="button" class="tg" id="dp-ts" aria-pressed="false"><span>${escapeHtml(t('dockerpage.timestamps'))}</span></button>
-                                    <span class="dp-logbar__gap"></span>
-                                    <button type="button" class="tg" id="dp-more"><span>${escapeHtml(t('dockerpage.load_more', { count: i18n.formatNumber(MORE_TAIL) }))}</span></button>
-                                    <button type="button" class="tg" id="dp-copy">${ICON_COPY}<span>${escapeHtml(t('dockerpage.copy'))}</span></button>
-                                </div>
-                                <div class="dp-lognote" id="dp-lognote" hidden>${escapeHtml(t('dockerpage.logs_truncated'))}</div>
-                                <div class="logbox" id="dp-logbox" role="log" aria-live="off" tabindex="0"></div>
-                                <div class="dp-logstate" id="dp-logstate" hidden></div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>`;
-        const input = this.$('dp-search') as HTMLInputElement | null;
-        if (input) input.value = this.query;
+            <style>${infraCss}${css}</style>
+            <div class="pg" id="pg">
+                <header class="phead" id="phead"></header>
+                <nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.docker.name'))}"></nav>
+                <div class="pbody" id="body"></div>
+            </div>
+            <div class="scrim" id="scrim"></div>
+            <aside class="drawer" id="drawer" aria-label="${escapeHtml(t('dockerpage.details'))}">
+                <div class="dr__h"><div id="dr-head"></div><div class="dr__tabs" id="dr-tabs" role="tablist"></div></div>
+                <div class="dr__b" id="dr-body"></div>
+                <div class="dr__f" id="dr-foot"></div>
+            </aside>`;
+        const tmp = document.createElement('div');
+        tmp.innerHTML = logViewerHtml(t, i18n.formatNumber(MORE_TAIL));
+        this.viewer = tmp.firstElementChild as HTMLElement;
         // The regions are new and empty: nothing written before is still there.
-        this.lastList = this.lastHead = this.lastOverview = this.lastStatus = '';
+        this.last = blank();
+        this.bodyTab = '';
+        this.charts.clear();
     }
 
     // ── Events ──
 
     private readonly onInput = (e: Event) => {
         const el = e.target as HTMLElement;
-        if (el.id !== 'dp-search') return;
+        if (el.id !== 'inv-q') return;
         this.query = (el as HTMLInputElement).value;
-        this.paintList();
+        this.paintInventory();
+    };
+
+    private readonly onChange = (e: Event) => {
+        const el = e.target as HTMLSelectElement;
+        if (el.id === 'hp-host') {
+            this.hostFilter = el.value;
+            this.paintAll();
+        } else if (el.id === 'inv-sort') {
+            if (isSortKey(el.value)) { this.sort = el.value; writePref(SORT_KEY, el.value); this.paintInventory(); }
+        } else if (el.id === 'lg-pick') {
+            const i = el.value.indexOf('/');
+            if (i > 0) this.choose(el.value.slice(0, i), el.value.slice(i + 1), false);
+        }
     };
 
     private readonly onClick = (e: Event) => {
         const el = e.target as HTMLElement;
-        if (el.closest('#dp-close')) { this.close(); return; }
-        if (el.closest('#dp-back')) {
-            if (this.depth > 1) history.back(); else this.toList();
+        if (el.closest('#hp-close')) { this.close(); return; }
+        if (el.closest('#hp-refresh')) { void this.load(true); return; }
+        if (el.closest('#dr-close') || el.closest('#scrim')) { this.closeDrawer(); return; }
+
+        const tab = el.closest<HTMLElement>('#tabs [data-tab]');
+        if (tab) { this.setTab(tab.dataset.tab as Tab); return; }
+        const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
+        if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
+
+        const filter = el.closest<HTMLElement>('[data-filter]');
+        if (filter && isStatusFilter(filter.dataset.filter)) { this.status = filter.dataset.filter; this.paintTools(); this.paintInventory(); return; }
+        if (el.closest('#inv-group')) {
+            this.grouped = !this.grouped;
+            writeFlag(GROUP_KEY, this.grouped);
+            this.paintTools();
+            this.paintInventory();
             return;
         }
-        const row = el.closest('.dp-row') as HTMLElement | null;
-        if (row) { this.select(row.dataset.host || '', row.dataset.name || ''); return; }
-        const act = el.closest('.dp-act') as HTMLButtonElement | null;
+        const view = el.closest<HTMLElement>('[data-view]');
+        if (view) {
+            this.viewMode = view.dataset.view === 'list' ? 'list' : 'cards';
+            writePref(VIEW_KEY, this.viewMode);
+            this.paintTools();
+            this.paintInventory();
+            return;
+        }
+
+        // A container: a card, a row, or an item of the attention list.
+        const unit = el.closest<HTMLElement>('.unit, .tr:not(.tr--h), .attn__row');
+        if (unit) { this.choose(unit.dataset.host || '', unit.dataset.name || '', true); return; }
+
+        const act = el.closest<HTMLButtonElement>('.act[data-action]');
         if (act && !act.disabled) { this.act(act.dataset.action as ContainerAction); return; }
-        const tab = el.closest('[data-tab]') as HTMLElement | null;
-        if (tab) { this.setTab(tab.dataset.tab === 'logs' ? 'logs' : 'overview'); return; }
-        if (el.closest('#dp-follow')) {
+
+        if (el.closest('#lg-follow')) {
             this.follow = !this.follow;
             writeFlag(FOLLOW_KEY, this.follow);
             this.paintLogBar();
             this.syncPolling();
-            if (this.follow) { void this.pollLogs(true); }
+            if (this.follow) void this.pollLogs(true);
             return;
         }
-        if (el.closest('#dp-ts')) {
+        if (el.closest('#lg-ts')) {
             this.stamps = !this.stamps;
             writeFlag(STAMPS_KEY, this.stamps);
             this.paintLogBar();
             return;
         }
-        if (el.closest('#dp-more')) { void this.loadLogs(MORE_TAIL); return; }
-        if (el.closest('#dp-copy')) { void this.copyLogs(); }
+        if (el.closest('#lg-more')) { void this.loadLogs(MORE_TAIL); return; }
+        if (el.closest('#lg-copy')) { void this.copyLogs(); }
+    };
+
+    // ── The chart's cursor ──
+
+    private readonly onChartMove = (e: MouseEvent) => {
+        const wrap = (e.target as HTMLElement).closest<HTMLElement>('.chart__wrap');
+        if (!wrap) return;
+        const c = this.charts.get(wrap.dataset.chart || '');
+        const svg = wrap.querySelector('svg');
+        const tip = wrap.querySelector<HTMLElement>('.tip');
+        const cur = wrap.querySelector('.cur');
+        if (!c || !svg || !tip || !cur) return;
+        const box = svg.getBoundingClientRect();
+        if (!box.width) return;
+        const n = c.spec.series[0].data.length;
+        const { index, x } = chartIndexAt(n, (e.clientX - box.left) / box.width);
+        cur.setAttribute('x1', String(x));
+        cur.setAttribute('x2', String(x));
+        cur.setAttribute('opacity', '.7');
+        const when = c.at[index] ? i18n.formatDateTime(new Date(c.at[index]), { timeStyle: 'medium' }) : '';
+        tip.innerHTML = `<div class="dim">${escapeHtml(when)}</div>` + c.spec.series.map(s =>
+            `<div><span style="color:${s.color}">●</span> ${escapeHtml(s.name)} <b>${escapeHtml(c.spec.fmt(s.data[index]))}</b></div>`).join('');
+        // The drawing is left-to-right in every language, so the tip is placed in screen terms.
+        const px = (x / CHART_WIDTH) * box.width;
+        tip.style.left = `${Math.min(Math.max(px + 12, 0), Math.max(0, box.width - tip.offsetWidth - 4))}px`;
+        tip.style.top = '6px';
+        tip.classList.add('on');
+    };
+
+    private readonly onChartLeave = (e: Event) => {
+        const wrap = (e.target as HTMLElement).closest<HTMLElement>('.chart__wrap');
+        if (!wrap) return;
+        wrap.querySelector('.tip')?.classList.remove('on');
+        wrap.querySelector('.cur')?.setAttribute('opacity', '0');
     };
 
     // ── Selection ──
 
-    private select(hostId: string, name: string) {
-        if (this.sel && this.sel.hostId === hostId && this.sel.name === name) {
-            if (this.isNarrow()) this.enterDetail();
-            return;
+    /** Chooses a container. `open` shows it in the drawer; the Logs tab chooses without opening one. */
+    private choose(hostId: string, name: string, open: boolean) {
+        const same = !!this.sel && this.sel.hostId === hostId && this.sel.name === name;
+        if (!same) {
+            this.sel = { hostId, name };
+            this.resetSelected();
         }
-        this.sel = { hostId, name };
-        this.resetSelected();
-        this.enterDetail();
-        this.markSelected();
-        this.paintDetail();
-        void this.loadDetail();
-        if (this.tab === 'logs') void this.loadLogs(FIRST_TAIL);
+        if (open) this.showDrawer();
+        this.paintAll();
+        if (!same) {
+            void this.loadDetail();
+            if (this.viewerPlace()) void this.loadLogs(FIRST_TAIL);
+        }
         this.syncPolling();
     }
 
-    /** On a phone the detail takes the screen, and Back returns to the list. */
-    private enterDetail() {
-        if (!this.isNarrow() || this.view === 'detail') return;
-        this.view = 'detail';
-        history.pushState({ lbDocker: 'detail' }, '');
-        this.depth++;
-        this.syncLayout();
+    private showDrawer() {
+        if (this.drawerOpen) return;
+        this.drawerOpen = true;
+        this.drawerTab = 'summary';
+        // On a phone the drawer takes the screen, and Back returns to the page.
+        if (this.isNarrow()) { history.pushState({ lbDocker: 'detail' }, ''); this.depth++; }
+    }
+
+    /** Closes the drawer by the X, the scrim or Escape. On a phone it takes its history entry with it. */
+    private closeDrawer() {
+        if (!this.drawerOpen) return;
+        if (this.isNarrow() && this.depth > 1) { history.back(); return; }
+        this.hideDrawer();
+    }
+
+    private hideDrawer() {
+        this.drawerOpen = false;
+        this.paintAll();
         this.syncPolling();
     }
 
@@ -375,21 +478,24 @@ class DockerPage extends HTMLElement {
         this.loadedTail = FIRST_TAIL;
         this.detailSeq++;
         this.logSeq++;
-        this.lastHead = this.lastOverview = '';
-        const box = this.$('dp-logbox');
+        this.last.dbody = this.last.dhead = this.last.dfoot = '';
+        const box = this.v('lg-box');
         if (box) box.innerHTML = '';
-        this.paintLogMeta();
     }
 
     private setTab(tab: Tab) {
         if (tab === this.tab) return;
         this.tab = tab;
-        this.paintTabs();
-        if (tab === 'logs') {
-            // The log is drawn when it is shown, not on every refresh of the page: it has a scroll position of its own.
-            if (this.logsLoaded) this.paintLogs(true); else this.paintLogMeta();
-        }
-        if (tab === 'logs' && !this.logsLoaded && this.sel) void this.loadLogs(FIRST_TAIL);
+        this.paintAll();
+        if (tab === 'logs' && this.sel && !this.logsLoaded) void this.loadLogs(FIRST_TAIL);
+        this.syncPolling();
+    }
+
+    private setDrawerTab(tab: DrawerTab) {
+        if (tab === this.drawerTab) return;
+        this.drawerTab = tab;
+        this.paintDrawer();
+        if (tab === 'logs' && this.sel && !this.logsLoaded) void this.loadLogs(FIRST_TAIL);
         this.syncPolling();
     }
 
@@ -398,6 +504,7 @@ class DockerPage extends HTMLElement {
     private async load(fresh = false) {
         if (this.loading) return;
         this.loading = true;
+        this.paintHead();
         try {
             const settings = await fetchDockerSettings(fresh);
             const hosts = hostsForWidget(settings.hosts);
@@ -412,6 +519,7 @@ class DockerPage extends HTMLElement {
                     return { host, containers: [], error: hostErrorKey(err), loaded: previous.get(host.id)?.loaded ?? true };
                 }
             }));
+            if (this.hostFilter !== 'all' && !this.groups.some(g => g.host.id === this.hostFilter)) this.hostFilter = 'all';
         } catch {
             this.groups = [];
             this.fatal = 'docker.connection_error';
@@ -426,12 +534,12 @@ class DockerPage extends HTMLElement {
             if (!g || (!g.error && g.loaded)) {
                 this.sel = null;
                 this.resetSelected();
-                if (this.view === 'detail') { this.view = 'list'; this.syncLayout(); }
+                this.closeDrawer();
                 this.syncPolling();
             }
         }
         this.paintAll();
-        void this.loadStats();
+        await this.loadStats();
         if (this.current()) void this.loadDetail();
     }
 
@@ -448,7 +556,10 @@ class DockerPage extends HTMLElement {
                 }
             } catch { /* no number is better than a wrong one */ }
         }));
-        if (this.hasAttribute('open')) this.applyStats();
+        if (!this.hasAttribute('open')) return;
+        const tt = dockerTotals(this.groups, this.statsObject());
+        if (tt.total > 0) sessionHistory = pushHistory(sessionHistory, { t: Date.now(), cores: tt.cores, memUsed: tt.memUsed, running: tt.running });
+        this.paintAll();
     }
 
     private async loadDetail() {
@@ -464,14 +575,14 @@ class DockerPage extends HTMLElement {
             if (this.logsErr === 'docker.agent_too_old' || this.logsErr === 'docker.not_found') {
                 this.logsErr = '';
                 this.logsLoaded = false;
-                if (this.tab === 'logs') void this.loadLogs(FIRST_TAIL);
+                if (this.viewerPlace()) void this.loadLogs(FIRST_TAIL);
             }
         } catch (err) {
             if (seq !== this.detailSeq) return;
             this.detail = null;
             this.detailErr = pageErrorKey(err);
         }
-        this.paintDetail();
+        this.paintDrawer();
         // A daemon that no longer has it: the list is the one that knows.
         if (this.detailErr === 'docker.not_found') void this.load();
     }
@@ -499,7 +610,7 @@ class DockerPage extends HTMLElement {
 
     /** What the follow timer asks: only the lines after the last one shown. */
     private async pollLogs(immediate = false) {
-        if (this.polling || !this.hasAttribute('open') || this.tab !== 'logs' || !this.detailVisible()) return;
+        if (this.polling || !this.hasAttribute('open') || !this.viewerPlace()) return;
         if (!immediate && !this.follow) return;
         // An agent that does not know the call will not learn it by being asked every three seconds.
         if (this.logsErr === 'docker.agent_too_old' || this.logsErr === 'docker.not_found') return;
@@ -555,7 +666,7 @@ class DockerPage extends HTMLElement {
         const name = containerName(container);
         const run = async () => {
             this.busy.add(container.ID);
-            this.paintHead();
+            this.paintDrawer();
             try {
                 await runAction(host, container.ID, action);
                 eventBus.emit(EVENTS.NOTIFY, { message: this.t('docker.action_success'), type: 'success' });
@@ -570,7 +681,7 @@ class DockerPage extends HTMLElement {
             }
             this.busy.delete(container.ID);
             await this.load();
-            this.paintHead();
+            this.paintDrawer();
         };
         if (action === 'start') { void run(); return; }
         eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
@@ -584,7 +695,7 @@ class DockerPage extends HTMLElement {
 
     /** The log timer runs exactly while there is a log in front of somebody who asked it to follow. */
     private syncPolling() {
-        const want = this.hasAttribute('open') && this.tab === 'logs' && this.follow && this.detailVisible();
+        const want = this.hasAttribute('open') && this.follow && !!this.viewerPlace();
         if (want && !this.logTimer) this.logTimer = setInterval(whenVisible(() => this.pollLogs()), LOG_MS);
         if (!want && this.logTimer) { clearInterval(this.logTimer); this.logTimer = null; }
     }
@@ -592,184 +703,318 @@ class DockerPage extends HTMLElement {
     // ── Painting ──
 
     private paintAll(force = false) {
-        if (force) this.lastList = this.lastHead = this.lastOverview = this.lastStatus = '';
-        this.paintStatus();
-        this.paintList();
-        this.paintDetail();
-        if (force && this.tab === 'logs') {
-            if (this.logsLoaded) this.paintLogs(true); else this.paintLogMeta();
-        }
-        this.syncLayout();
-    }
-
-    private syncLayout() {
-        const layout = this.$('dp-layout');
-        if (layout) layout.dataset.view = this.view;
-        const back = this.$('dp-back') as HTMLElement | null;
-        if (back) back.hidden = !(this.isNarrow() && this.view === 'detail');
-    }
-
-    private paintStatus() {
-        const el = this.$('dp-status');
-        if (!el) return;
-        const tl = tally(this.groups);
-        const html = this.loaded && !this.fatal && !this.noHosts
-            ? `<span class="stat stat--up"><b>${tl.running}</b>/${tl.total} ${escapeHtml(this.t('docker.state_running'))}</span>
-               <span class="stat stat--down">${escapeHtml(this.t('dockerpage.stopped_count'))}: <b>${tl.stopped}</b></span>`
-            : '';
-        if (html === this.lastStatus) return;
-        this.lastStatus = html;
-        el.innerHTML = html;
-    }
-
-    private paintList() {
-        const rows = this.$('dp-rows');
-        if (!rows) return;
-        const t = this.t;
-        let html: string;
-        if (!this.loaded) html = `<div class="dp-empty">${escapeHtml(t('general.loading'))}</div>`;
-        else if (this.fatal) html = errorHtml(this.fatal, '', t);
-        else if (this.noHosts) html = `<div class="dp-empty">${escapeHtml(t('docker.no_hosts_configured'))}<br><small>${escapeHtml(t('docker.configure_hint'))}</small></div>`;
-        else html = groupsHtml(visibleGroups(this.groups, this.query), t, this.query);
-
-        if (html !== this.lastList) {
-            // A list that is rewritten must not jump back to the top.
-            const top = rows.scrollTop;
-            rows.innerHTML = html;
-            rows.scrollTop = top;
-            this.lastList = html;
-        }
-        this.markSelected();
-        this.applyStats();
-        this.paintStatus();
-    }
-
-    private markSelected() {
-        const rows = this.$('dp-rows');
-        if (!rows) return;
-        rows.querySelectorAll<HTMLElement>('.dp-row').forEach(r => {
-            const on = !!this.sel && r.dataset.host === this.sel.hostId && r.dataset.name === this.sel.name;
-            r.classList.toggle('dp-row--active', on);
-            if (on) r.setAttribute('aria-current', 'true'); else r.removeAttribute('aria-current');
-        });
-    }
-
-    /** Writes the readings into their slots; the rows themselves are not touched. */
-    private applyStats() {
-        const rows = this.$('dp-rows');
-        if (!rows) return;
-        const pct = (v: number) => i18n.formatNumber(Math.round(v * 10) / 10, { maximumFractionDigits: 1 }) + '%';
-        const put = (slot: HTMLElement | null, v: number | null) => {
-            const out = slot?.querySelector('span');
-            if (!slot || !out) return;
-            const text = v === null ? '—' : pct(v);
-            if (out.textContent !== text) out.textContent = text;
-            slot.classList.toggle('is-warn', v !== null && level(v) === 'warn');
-            slot.classList.toggle('is-bad', v !== null && level(v) === 'bad');
-        };
-        rows.querySelectorAll<HTMLElement>('[data-cpu]').forEach(cpu => {
-            const s = this.stats.get(cpu.dataset.cpu || '');
-            put(cpu, s ? s.CPUPercent : null);
-            put(cpu.nextElementSibling as HTMLElement | null, s ? s.MemPercent : null);
-        });
-    }
-
-    private paintTabs() {
-        for (const tab of ['overview', 'logs'] as const) {
-            const b = this.$(`dp-tab-${tab}`);
-            if (!b) continue;
-            b.classList.toggle('dp-tab--active', this.tab === tab);
-            b.setAttribute('aria-selected', String(this.tab === tab));
-        }
-        const ov = this.$('dp-overview');
-        const lg = this.$('dp-logs');
-        if (ov) ov.hidden = this.tab !== 'overview';
-        if (lg) lg.hidden = this.tab !== 'logs';
+        if (force) { this.last = blank(); this.bodyTab = ''; }
+        this.paintHead();
+        this.paintTabs();
+        this.paintBody();
+        this.paintDrawer();
+        this.$('pg')?.classList.toggle('has-drawer', this.drawerOpen);
+        this.$('scrim')?.classList.toggle('on', this.drawerOpen);
+        this.$('drawer')?.classList.toggle('on', this.drawerOpen);
     }
 
     private paintHead() {
-        const head = this.$('dp-head');
-        const cur = this.current();
-        if (!head || !cur) return;
-        const html = headHtml({
-            host: cur.host,
-            container: cur.container,
-            showHost: this.groups.length > 1,
-            canControl: this.mayControl(),
-            busy: this.busy.has(cur.container.ID),
-        }, this.t);
-        if (html === this.lastHead) return;
-        this.lastHead = html;
+        const head = this.$('phead');
+        if (!head) return;
+        const t = this.t;
+        const ready = this.loaded && !this.fatal && !this.noHosts;
+        const summary = ready ? summaryHtml(dockerTotals(this.scope(), this.statsObject()), t, this.fmt) : '';
+        const hosts = this.groups.length > 1
+            ? `<select class="sel" id="hp-host" aria-label="${escapeHtml(t('docker.hosts'))}">
+                <option value="all"${this.hostFilter === 'all' ? ' selected' : ''}>${escapeHtml(t('dockerpage.all_hosts'))}</option>
+                ${this.groups.map(g => `<option value="${escapeHtml(g.host.id)}"${this.hostFilter === g.host.id ? ' selected' : ''}>${escapeHtml(g.host.name)}</option>`).join('')}
+            </select>`
+            : '';
+        const html = `<div class="ptitle">${icon('box', 20)}<span>${escapeHtml(t('widget.docker.name'))}</span></div>
+            <div class="psum">${summary}</div>
+            <span class="pspacer"></span>
+            ${hosts}
+            <button type="button" class="ibtn" id="hp-refresh" aria-label="${escapeHtml(t('infra.refresh'))}" title="${escapeHtml(t('infra.refresh'))}">${icon('refresh', 16, this.loading ? 'spin' : '')}</button>
+            <button type="button" class="ibtn" id="hp-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button>`;
+        if (html === this.last.head) return;
+        // A select being used must not be rebuilt under the hand that holds it.
+        if (this.shadowRoot?.activeElement?.id === 'hp-host') return;
+        this.last.head = html;
         head.innerHTML = html;
     }
 
-    private paintDetail() {
-        const cur = this.current();
-        const hint = this.$('dp-hint') as HTMLElement | null;
-        const pane = this.$('dp-pane') as HTMLElement | null;
-        if (!hint || !pane) return;
-        // The container is chosen but its host is not answering right now: what was drawn stays.
-        const show = !!this.sel && (!!cur || !!this.detail);
-        hint.hidden = show;
-        pane.hidden = !show;
-        if (!show || !cur) return;
-        this.paintHead();
-        this.paintTabs();
-        const ov = this.$('dp-overview');
-        if (!ov) return;
+    private paintTabs() {
+        const el = this.$('tabs');
+        if (!el) return;
         const t = this.t;
-        const html = this.detail
-            ? overviewHtml(this.detail, t, this.fmt)
-            : this.detailErr
-                ? errorHtml(this.detailErr, cur.host.name, t)
-                : `<div class="dp-empty">${escapeHtml(t('general.loading'))}</div>`;
-        if (html === this.lastOverview) return;
-        const top = ov.scrollTop;
-        this.lastOverview = html;
+        const html = tabsHtml([
+            { id: 'overview', label: t('dockerpage.tab_overview') },
+            { id: 'containers', label: t('docker.containers'), count: this.loaded && !this.fatal && !this.noHosts ? dockerTotals(this.scope()).total : undefined },
+            { id: 'logs', label: t('dockerpage.tab_logs') },
+        ], this.tab, n => this.fmt.num(n));
+        if (html === this.last.tabs) return;
+        this.last.tabs = html;
+        el.innerHTML = html;
+    }
+
+    /** The body: what the chosen tab shows. Each tab owns regions of its own, written only when they change. */
+    private paintBody() {
+        const body = this.$('body');
+        if (!body) return;
+        const t = this.t;
+
+        if (!this.loaded) { this.setBody(body, 'overview', `<div class="empty">${escapeHtml(t('general.loading'))}</div>`); return; }
+        if (this.fatal) { this.setBody(body, 'overview', hostErrorHtml(this.fatal, '', t)); return; }
+        if (this.noHosts) {
+            this.setBody(body, 'overview', `<div class="empty"><b>${escapeHtml(t('docker.no_hosts_configured'))}</b>${escapeHtml(t('docker.configure_hint'))}</div>`);
+            return;
+        }
+
+        if (this.tab === 'overview') {
+            this.setBody(body, 'overview', '<div id="ov"></div>');
+            this.paintOverview();
+        } else if (this.tab === 'containers') {
+            if (this.bodyTab !== 'containers') {
+                this.viewer?.remove();
+                body.innerHTML = '<div id="inv-tools"></div><div id="inv-errors"></div><div id="inv-list"></div>';
+                this.bodyTab = 'containers';
+                this.last.tools = this.last.list = this.last.body = '';
+            }
+            this.paintTools();
+            this.paintInventory();
+        } else {
+            if (this.bodyTab !== 'logs') {
+                this.viewer?.remove();
+                body.innerHTML = '<div id="lg-pick-wrap"></div><div id="lg-slot-page" class="logv-slot"></div>';
+                this.bodyTab = 'logs';
+                this.last.pick = this.last.body = '';
+            }
+            this.paintPick();
+            this.placeViewer();
+            this.paintLogMeta();
+        }
+    }
+
+    private setBody(body: HTMLElement, tab: Tab, html: string) {
+        if (this.bodyTab === tab && this.last.body === html) return;
+        // Whatever the log viewer was in goes with it; it is kept and put back where it belongs.
+        this.viewer?.remove();
+        body.innerHTML = html;
+        this.bodyTab = tab;
+        this.last.body = html;
+        this.last.list = '';
+    }
+
+    private paintOverview() {
+        const ov = this.$('ov');
+        if (!ov) return;
+        const scope = this.scope();
+        const stats = this.statsObject();
+        const hist = sessionHistory;
+        const cores = hist.map(h => h.cores);
+        let chart = '';
+        this.charts.clear();
+        if (hist.length >= 2) {
+            const spec: ChartSpec = {
+                series: [{ name: this.t('dockerpage.cores_in_use'), color: 'var(--text-main)', data: cores }],
+                max: niceMax(Math.max(...cores)),
+                edges: [this.clock(hist[0].t), this.clock(hist[hist.length - 1].t)],
+                fmt: v => this.fmt.dec(v),
+            };
+            chart = chartHtml('session', spec);
+            this.charts.set('session', { spec, at: hist.map(h => h.t) });
+        }
+        const names: Record<string, string> = {};
+        for (const g of this.groups) names[g.host.id] = g.host.name;
+        const html = overviewHtml({
+            totals: dockerTotals(scope, stats),
+            attention: attentionList(scope),
+            projects: projectRows(scope),
+            hosts: scope,
+            cores,
+            mem: hist.map(h => h.memUsed),
+            chart,
+            hostNames: names,
+        }, this.t, this.fmt);
+        if (html === this.last.list) return;
+        this.last.list = html;
+        const body = this.$('body');
+        const top = body?.scrollTop ?? 0;
         ov.innerHTML = html;
-        ov.scrollTop = top;
+        if (body) body.scrollTop = top;
+    }
+
+    private clock(ms: number): string {
+        return i18n.formatDateTime(new Date(ms), { timeStyle: 'short' });
+    }
+
+    private paintTools() {
+        const el = this.$('inv-tools');
+        if (!el) return;
+        const html = toolbarHtml({
+            query: this.query, status: this.status, counts: countUnits(dockerUnits(this.scope(), this.statsObject())), sort: this.sort,
+            grouped: this.grouped, view: this.viewMode, searchLabel: this.t('docker.search_containers'), groupLabel: this.t('dockerpage.group_project'),
+        }, this.t, n => this.fmt.num(n));
+        if (html === this.last.tools) return;
+        this.last.tools = html;
+        // Typing in the search must not lose the caret to a rewrite of the box it is in.
+        if (this.shadowRoot?.activeElement?.id === 'inv-q') return;
+        el.innerHTML = html;
+    }
+
+    private paintInventory() {
+        const el = this.$('inv-list');
+        const errs = this.$('inv-errors');
+        if (!el || !errs) return;
+        const t = this.t;
+        const scope = this.scope();
+        const several = this.groups.length > 1;
+
+        errs.innerHTML = scope.filter(g => g.error).map(g => hostErrorHtml(g.error!, g.host.name, t)).join('');
+
+        const all = dockerUnits(scope, this.statsObject());
+        const views = new Map<string, UnitView>();
+        for (const g of scope) {
+            for (const c of g.containers) {
+                const name = containerName(c);
+                views.set(`${g.host.id}/${name}`, {
+                    hostId: g.host.id, hostName: g.host.name, showHost: several, container: c, stats: this.stats.get(c.ID),
+                    selected: !!this.sel && this.sel.hostId === g.host.id && this.sel.name === name,
+                });
+            }
+        }
+        const shown = sortUnits(all.filter(u => passes(u, this.query, this.status)), this.sort);
+        const html = shown.length
+            ? inventoryHtml(groupUnits(shown, this.grouped), this.viewMode, id => views.get(id), t, this.fmt, this.grouped)
+            : noMatchHtml(t, all.length > 0);
+        if (html === this.last.list) return;
+        this.last.list = html;
+        // The card the keyboard is on must still be on it after the list is written again.
+        const active = this.shadowRoot?.activeElement as HTMLElement | null;
+        const focus = active && el.contains(active) ? { host: active.dataset.host, name: active.dataset.name } : null;
+        const body = this.$('body');
+        const top = body?.scrollTop ?? 0;
+        el.innerHTML = html;
+        if (body) body.scrollTop = top;
+        if (focus?.host) {
+            for (const n of el.querySelectorAll<HTMLElement>('[data-host]')) {
+                if (n.dataset.host === focus.host && n.dataset.name === focus.name) { n.focus({ preventScroll: true }); break; }
+            }
+        }
+    }
+
+    /** The Logs tab's picker: every container in view, and the one chosen. */
+    private paintPick() {
+        const el = this.$('lg-pick-wrap');
+        if (!el) return;
+        const several = this.groups.length > 1;
+        const options = this.scope().flatMap(g => g.containers.map(c => {
+            const name = containerName(c);
+            const on = !!this.sel && this.sel.hostId === g.host.id && this.sel.name === name;
+            return `<option value="${escapeHtml(`${g.host.id}/${name}`)}"${on ? ' selected' : ''}>${escapeHtml(several ? `${g.host.name} · ${name}` : name)}</option>`;
+        }));
+        const html = `<div class="tools"><select class="sel" id="lg-pick" aria-label="${escapeHtml(this.t('docker.containers'))}">
+            ${this.sel ? '' : `<option value="" selected disabled>${escapeHtml(this.t('dockerpage.pick_container'))}</option>`}${options.join('')}</select></div>
+            ${this.sel ? '' : `<div class="empty">${escapeHtml(this.t('dockerpage.select_hint'))}</div>`}`;
+        if (html === this.last.pick) return;
+        if (this.shadowRoot?.activeElement?.id === 'lg-pick') return;
+        this.last.pick = html;
+        el.innerHTML = html;
+    }
+
+    // ── The drawer ──
+
+    private paintDrawer() {
+        const head = this.$('dr-head');
+        const tabs = this.$('dr-tabs');
+        const body = this.$('dr-body');
+        const foot = this.$('dr-foot');
+        if (!head || !tabs || !body || !foot) return;
+        const cur = this.current();
+        if (!this.drawerOpen || !cur) return;
+        const t = this.t;
+        const c = cur.container;
+
+        const hHtml = drawerHeadHtml({ host: cur.host, container: c, showHost: this.groups.length > 1 }, t);
+        if (hHtml !== this.last.dhead) { this.last.dhead = hHtml; head.innerHTML = hHtml; }
+
+        const tHtml = tabsHtml([
+            { id: 'summary', label: t('dockerpage.tab_summary') },
+            { id: 'logs', label: t('dockerpage.tab_logs') },
+            { id: 'env', label: t('dockerpage.env_short') },
+            { id: 'mounts', label: t('dockerpage.mounts_networks') },
+        ], this.drawerTab, n => this.fmt.num(n));
+        if (tHtml !== this.last.dtabs) { this.last.dtabs = tHtml; tabs.innerHTML = tHtml; }
+
+        const fHtml = footerHtml({ container: c, canControl: this.mayControl(), busy: this.busy.has(c.ID) }, t);
+        if (fHtml !== this.last.dfoot) { this.last.dfoot = fHtml; foot.innerHTML = fHtml; }
+        foot.hidden = !fHtml;
+
+        let bHtml: string;
+        if (this.drawerTab === 'logs') bHtml = '<div class="logv-slot" id="lg-slot-drawer"></div>';
+        else if (!this.detail) {
+            bHtml = this.detailErr
+                ? hostErrorHtml(this.detailErr, cur.host.name, t)
+                : `<div class="empty">${escapeHtml(t('general.loading'))}</div>`;
+        } else if (this.drawerTab === 'summary') bHtml = summaryTabHtml(this.detail, c, this.stats.get(c.ID), t, this.fmt);
+        else if (this.drawerTab === 'env') bHtml = envTabHtml(this.detail, t);
+        else bHtml = mountsTabHtml(this.detail, t);
+
+        if (bHtml !== this.last.dbody) {
+            const top = body.scrollTop;
+            this.viewer?.remove();
+            this.last.dbody = bHtml;
+            body.innerHTML = bHtml;
+            body.scrollTop = top;
+        }
+        this.placeViewer();
+        this.paintLogMeta();
+    }
+
+    /** Puts the one log viewer where it is wanted, and nowhere else. */
+    private placeViewer() {
+        if (!this.viewer) return;
+        const place = this.viewerPlace();
+        const slot = place === 'drawer' ? this.$('lg-slot-drawer') : place === 'page' ? this.$('lg-slot-page') : null;
+        if (!slot) { this.viewer.remove(); return; }
+        if (this.viewer.parentElement !== slot) {
+            slot.appendChild(this.viewer);
+            this.paintLogs(true);
+        }
     }
 
     // ── The log ──
 
+    private v<E extends HTMLElement>(id: string): E | null {
+        return this.viewer?.querySelector<E>(`#${id}`) ?? null;
+    }
+
     private paintLogBar() {
-        const set = (id: string, on: boolean) => {
-            const b = this.$(id);
-            if (!b) return;
-            b.classList.toggle('tg--on', on);
-            b.setAttribute('aria-pressed', String(on));
-        };
-        set('dp-follow', this.follow);
-        set('dp-ts', this.stamps);
-        const box = this.$('dp-logbox');
-        if (box) box.classList.toggle('logbox--no-ts', !this.stamps);
-        const more = this.$('dp-more') as HTMLButtonElement | null;
+        this.v('lg-follow')?.setAttribute('aria-pressed', String(this.follow));
+        this.v('lg-ts')?.setAttribute('aria-pressed', String(this.stamps));
+        this.v('lg-box')?.classList.toggle('logbox--no-ts', !this.stamps);
+        const more = this.v<HTMLButtonElement>('lg-more');
         if (more) more.disabled = this.loadedTail >= MORE_TAIL;
-        const copy = this.$('dp-copy') as HTMLButtonElement | null;
+        const copy = this.v<HTMLButtonElement>('lg-copy');
         if (copy) copy.disabled = !this.lines.length;
     }
 
     /** The note, the empty state and the error — everything about the log that is not a line of it. */
     private paintLogMeta() {
-        const note = this.$('dp-lognote') as HTMLElement | null;
+        const note = this.v('lg-note');
         if (note) note.hidden = !this.truncated;
-        const state = this.$('dp-logstate') as HTMLElement | null;
-        const box = this.$('dp-logbox') as HTMLElement | null;
+        const state = this.v('lg-state');
+        const box = this.v('lg-box');
         const cur = this.current();
         if (!state || !box) return;
         let html = '';
-        if (this.logsErr && cur) html = errorHtml(this.logsErr, cur.host.name, this.t);
-        else if (!this.logsLoaded) html = `<div class="dp-empty">${escapeHtml(this.t('general.loading'))}</div>`;
-        else if (!this.lines.length) html = `<div class="dp-empty">${escapeHtml(this.t('dockerpage.logs_empty'))}</div>`;
+        if (this.logsErr && cur) html = hostErrorHtml(this.logsErr, cur.host.name, this.t);
+        else if (!this.logsLoaded) html = `<div class="empty">${escapeHtml(this.t('general.loading'))}</div>`;
+        else if (!this.lines.length) html = `<div class="empty">${escapeHtml(this.t('dockerpage.logs_empty'))}</div>`;
         if (state.innerHTML !== html) state.innerHTML = html;
         state.hidden = !html;
         box.hidden = !!html;
         this.paintLogBar();
     }
 
-    /** Draws the whole log: on a fresh read, on a change of language, on opening the tab. */
+    /** Draws the whole log: on a fresh read, on a change of language, on moving the viewer. */
     private paintLogs(toBottom: boolean) {
-        const box = this.$('dp-logbox');
+        const box = this.v('lg-box');
         if (!box) return;
         box.innerHTML = this.lines.map(l => logLineHtml(l, this.stamp(l.t))).join('');
         this.paintLogMeta();
@@ -778,7 +1023,7 @@ class DockerPage extends HTMLElement {
 
     /** Adds what a poll brought, drops what falls off the front, and follows only a reader who is at the end. */
     private appendLogs(incoming: LogLine[]) {
-        const box = this.$('dp-logbox');
+        const box = this.v('lg-box');
         const before = this.lines.length;
         const last = before ? this.lines[before - 1].t : '';
         const fresh = last ? incoming.filter(l => l.t > last) : incoming;

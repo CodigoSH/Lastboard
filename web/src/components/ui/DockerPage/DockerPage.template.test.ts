@@ -1,10 +1,14 @@
 import { describe, expect, test } from 'bun:test';
-import { errorHtml, groupsHtml, headHtml, logLineHtml, overviewHtml, portText, rowHtml, type Fmt, type T } from './DockerPage.template';
+import {
+    cardHtml, dotTone, drawerHeadHtml, envTabHtml, footerHtml, healthChip, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
+    mountsTabHtml, overviewHtml, portText, reasonText, rowHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
+} from './DockerPage.template';
+import { attentionList, dockerTotals, projectRows } from '../../../services/dockerOverview';
 import type { DockerDetail, HostRows } from '../../../services/dockerPage';
 import type { DockerContainer, DockerHost } from '../../../services/dockerShared';
 
 const t: T = (key, params) => `<${key}${params ? ':' + JSON.stringify(params) : ''}>`.replace(/</g, '[').replace(/>/g, ']');
-const fmt: Fmt = { date: iso => `D(${iso})`, num: n => `N(${n})` };
+const fmt: Fmt = { date: iso => `D(${iso})`, num: n => `N(${n})`, pct: n => `P(${n})`, bytes: n => `B(${n})`, dec: n => `F(${n})` };
 
 const host: DockerHost = { id: 'h1', name: 'Home <b>box</b>', type: 'tcp', url: 'x' };
 const ctr = (over: Partial<DockerContainer> = {}): DockerContainer => ({
@@ -14,6 +18,9 @@ const detail = (over: Partial<DockerDetail> = {}): DockerDetail => ({
     id: 'abc', name: 'web', image: 'nginx:1', created: '2026-10-01T00:00:00Z', status: 'running', state: 'running',
     started_at: '2026-10-02T00:00:00Z', exit_code: 0, restart_policy: 'always', restart_count: 2,
     ports: [], mounts: [], networks: [], env: [], tty: false, ...over,
+});
+const view = (c: DockerContainer, over: Partial<UnitView> = {}): UnitView => ({
+    hostId: 'h1', hostName: host.name, showHost: false, container: c, selected: false, ...over,
 });
 
 /** Nothing a container says may become markup. */
@@ -32,71 +39,89 @@ describe('what a container controls is escaped', () => {
         expect(html).toContain('ll--err');
     });
 
-    test('a name, an image and a host in the list', () => {
-        const rowsOf: HostRows[] = [{ host, containers: [ctr({ Name: '/' + evil, Image: evil })], loaded: true }];
-        const html = groupsHtml([rowsOf[0], { ...rowsOf[0], host: { ...host, id: 'h2' } }], t, '');
-        noMarkup(html, evil);
-        expect(html).not.toContain('<b>box</b>');
+    test('a name, an image, a host and a project in a card and a row', () => {
+        const c = ctr({ Name: '/' + evil, Image: evil, Project: evil, Health: 'healthy' });
+        const v = view(c, { showHost: true });
+        for (const html of [cardHtml(v, t, fmt), rowHtml(v, t, fmt)]) {
+            noMarkup(html, evil);
+            expect(html).not.toContain('<b>box</b>');
+        }
     });
 
-    test('the data attributes of a row cannot be broken out of', () => {
-        const html = rowHtml('h1', ctr({ Name: '/a" onclick="x' }), t);
+    test('the data attributes of a card cannot be broken out of', () => {
+        const html = cardHtml(view(ctr({ Name: '/a" onclick="x' })), t, fmt);
         expect(html).not.toContain('" onclick="x');
+        expect(rowHtml(view(ctr({ Name: '/a" onclick="x' })), t, fmt)).not.toContain('" onclick="x');
     });
 
-    test('paths, addresses, networks and variable names in the overview', () => {
-        const html = overviewHtml(detail({
-            image: evil,
+    test('a group name and a host that failed', () => {
+        const u = ctr({ Project: evil });
+        const html = inventoryHtml([{ name: evil, units: [{ id: 'h1/web' } as never] }], 'cards', () => view(u), t, fmt, true);
+        noMarkup(html, evil);
+        noMarkup(hostErrorHtml('docker.connection_error', evil, t), evil);
+    });
+
+    test('the drawer: head, facts, ports, mounts, networks and variable names', () => {
+        const c = ctr({ Name: '/' + evil, Project: evil });
+        noMarkup(drawerHeadHtml({ host, container: c, showHost: true }, t), evil);
+        const d = detail({
+            image: evil, health: evil, restart_policy: evil,
             ports: [{ container: evil, host_ip: '0.0.0.0', host_port: '80' }],
             mounts: [{ type: 'bind', source: evil, destination: evil, read_only: true }],
             networks: [{ name: evil, ipv4: evil }],
             env: [evil],
-            health: evil,
-            restart_policy: evil,
-        }), t, fmt);
-        noMarkup(html, evil);
+        });
+        noMarkup(summaryTabHtml(d, c, undefined, t, fmt), evil);
+        noMarkup(mountsTabHtml(d, t), evil);
+        noMarkup(envTabHtml(d, t), evil);
     });
 
-    test('an error naming a host', () => {
-        noMarkup(errorHtml('docker.agent_too_old', evil, t), evil);
+    test('the overview: attention list, projects and hosts', () => {
+        const rows: HostRows[] = [{ host: { ...host, name: evil }, loaded: true, containers: [ctr({ Name: '/' + evil, Health: 'unhealthy', Project: evil })] }, { host: { ...host, id: 'h2' }, loaded: true, containers: [] }];
+        const html = overviewHtml({
+            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil },
+        }, t, fmt);
+        noMarkup(html, evil);
     });
 });
 
-describe('the overview', () => {
-    test('shows the names of the environment, one chip each, and says values are not shown', () => {
-        const html = overviewHtml(detail({ env: ['SECRET_PASSWORD', 'TZ'] }), t, fmt);
-        expect(html).toContain('SECRET_PASSWORD');
-        expect(html).toContain('TZ');
+describe('the summary tab', () => {
+    test('the environment tab shows names, one each, and says values are not shown', () => {
+        const html = envTabHtml(detail({ env: ['TZ', 'LOG_LEVEL'] }), t);
+        expect(html).toContain('<code dir="ltr">TZ</code>');
         expect(html).toContain('dockerpage.env_note');
-        expect(html.match(/class="chip"/g)).toHaveLength(2);
     });
 
     test('the exit code and the end time are for a container that is not running', () => {
-        const up = overviewHtml(detail(), t, fmt);
-        expect(up).not.toContain('dockerpage.exit_code');
-        const down = overviewHtml(detail({ state: 'exited', exit_code: 137, finished_at: '2026-10-03T00:00:00Z' }), t, fmt);
-        expect(down).toContain('dockerpage.exit_code');
-        expect(down).toContain('137');
-        expect(down).toContain('D(2026-10-03T00:00:00Z)');
+        const stopped = summaryTabHtml(detail({ state: 'exited', status: 'stopped', exit_code: 137, finished_at: '2026-10-03T00:00:00Z' }), ctr({ State: 'exited' }), undefined, t, fmt);
+        expect(stopped).toContain('dockerpage.exit_code');
+        expect(stopped).toContain('137');
+        expect(stopped).toContain('dockerpage.finished');
+        const running = summaryTabHtml(detail(), ctr(), undefined, t, fmt);
+        expect(running).not.toContain('dockerpage.exit_code');
+        expect(running).not.toContain('dockerpage.finished');
     });
 
     test('a running container that exited non-zero before still shows its code', () => {
-        expect(overviewHtml(detail({ exit_code: 1 }), t, fmt)).toContain('dockerpage.exit_code');
+        expect(summaryTabHtml(detail({ exit_code: 2 }), ctr(), undefined, t, fmt)).toContain('dockerpage.exit_code');
     });
 
-    test('mounts say whether they are read-only', () => {
-        const html = overviewHtml(detail({ mounts: [
-            { type: 'bind', source: '/srv', destination: '/data', read_only: true },
-            { type: 'volume', name: 'db', source: '/var/lib/x', destination: '/db', read_only: false },
-        ] }), t, fmt);
-        expect(html).toContain('dockerpage.read_only');
-        expect(html).toContain('dockerpage.read_write');
-        expect(html).toContain('>db<');
+    test('live readings only for a running container that has them', () => {
+        const s = { CPUPercent: 12.5, MemPercent: 40, MemUsed: 123, MemLimit: 1000 };
+        expect(summaryTabHtml(detail(), ctr(), s, t, fmt)).toContain('P(12.5)');
+        expect(summaryTabHtml(detail(), ctr(), undefined, t, fmt)).not.toContain('live3');
+        expect(summaryTabHtml(detail({ state: 'exited' }), ctr({ State: 'exited' }), s, t, fmt)).not.toContain('P(12.5)');
     });
 
-    test('empty lists say "none" instead of leaving a hole', () => {
-        const html = overviewHtml(detail(), t, fmt);
-        expect(html.match(/dockerpage\.none/g)?.length).toBe(4);
+    test('mounts say whether they are read-only; empty lists say "none"', () => {
+        const html = mountsTabHtml(detail({ mounts: [
+            { type: 'bind', source: '/a', destination: '/b', read_only: true },
+            { type: 'volume', name: 'data', source: '/v', destination: '/d', read_only: false },
+        ] }), t);
+        expect(html).toContain('mode--ro');
+        expect(html).toContain('mode--rw');
+        expect(html).toContain('data');
+        expect(mountsTabHtml(detail(), t).match(/dockerpage\.none/g)?.length).toBe(2);
     });
 });
 
@@ -106,62 +131,105 @@ describe('ports', () => {
         expect(portText({ container: '80/tcp', host_ip: '::', host_port: '8080' })).toBe('[::]:8080 → 80/tcp');
     });
     test('a port that is not published is only the container side', () => {
-        expect(portText({ container: '80/tcp', host_ip: '', host_port: '' })).toBe('80/tcp');
+        expect(portText({ container: '5432/tcp', host_ip: '', host_port: '' })).toBe('5432/tcp');
     });
 });
 
-describe('the header and its actions', () => {
-    const base = { host, container: ctr(), showHost: false, busy: false };
+describe('the actions', () => {
+    const run = ctr();
+    const stopped = ctr({ State: 'exited', Status: 'stopped' });
 
     test('a running container can be restarted and stopped, not started', () => {
-        const html = headHtml({ ...base, canControl: true }, t);
+        const html = footerHtml({ container: run, canControl: true, busy: false }, t);
         expect(html).toContain('data-action="restart"');
         expect(html).toContain('data-action="stop"');
         expect(html).not.toContain('data-action="start"');
     });
-
     test('a stopped one can be started', () => {
-        const html = headHtml({ ...base, container: ctr({ State: 'exited', Status: 'exited' }), canControl: true }, t);
+        const html = footerHtml({ container: stopped, canControl: true, busy: false }, t);
         expect(html).toContain('data-action="start"');
         expect(html).not.toContain('data-action="stop"');
     });
-
     test('without the permission there are no actions at all', () => {
-        expect(headHtml({ ...base, canControl: false }, t)).not.toContain('data-action');
+        expect(footerHtml({ container: run, canControl: false, busy: false }, t)).toBe('');
     });
-
     test('the agent that serves the page cannot be stopped from it', () => {
-        const html = headHtml({ ...base, container: ctr({ Name: '/lastboard-agent' }), canControl: true }, t);
-        expect(html).toMatch(/data-action="stop"[^>]* disabled/);
+        const html = footerHtml({ container: ctr({ Name: '/lastboard-agent' }), canControl: true, busy: false }, t);
+        expect(html).toMatch(/data-action="stop"[^>]*disabled/);
+        expect(html).toContain('docker.action_stop_disabled');
+        expect(html).not.toMatch(/data-action="restart"[^>]*disabled/);
     });
-
     test('while an action runs, its buttons are off', () => {
-        expect(headHtml({ ...base, canControl: true, busy: true }, t)).toMatch(/data-action="restart"[^>]*disabled/);
+        expect(footerHtml({ container: run, canControl: true, busy: true }, t).match(/disabled/g)?.length).toBe(2);
     });
 });
 
-describe('the list groups', () => {
-    const rowsOf = (h: DockerHost, over: Partial<HostRows> = {}): HostRows => ({ host: h, containers: [ctr()], loaded: true, ...over });
-
-    test('a pill per host only when there is more than one', () => {
-        expect(groupsHtml([rowsOf(host)], t, '')).not.toContain('sec__label');
-        expect(groupsHtml([rowsOf(host), rowsOf({ ...host, id: 'h2' })], t, '')).toContain('sec__label');
+describe('what a state looks like', () => {
+    test('green running, amber when it needs a look, red when failing, grey stopped — never an accent one', () => {
+        expect(dotTone(ctr())).toBe('ok');
+        expect(dotTone(ctr({ Health: 'unhealthy' }))).toBe('bad');
+        expect(dotTone(ctr({ State: 'restarting', Status: 'restarting' }))).toBe('warn');
+        expect(dotTone(ctr({ State: 'paused', Status: 'paused' }))).toBe('warn');
+        expect(dotTone(ctr({ State: 'exited', Status: 'stopped', ExitCode: 1 }))).toBe('bad');
+        expect(dotTone(ctr({ State: 'exited', Status: 'stopped', ExitCode: 0 }))).toBe('');
+        expect(cardHtml(view(ctr()), t, fmt)).not.toContain('accent');
     });
 
-    test('a host that failed shows why in its own group, the other still draws', () => {
-        const html = groupsHtml([rowsOf(host, { containers: [], error: 'docker.agent_too_old' }), rowsOf({ ...host, id: 'h2', name: 'ok' })], t, '');
-        expect(html).toContain('docker.agent_too_old');
-        expect(html).toContain('data-name="web"');
+    test('a health chip only when the container has a check', () => {
+        expect(healthChip('', t)).toBe('');
+        expect(healthChip(undefined, t)).toBe('');
+        expect(healthChip('unhealthy', t)).toContain('chip--bad');
+        expect(healthChip('starting', t)).toContain('chip--warn');
+        expect(healthChip('healthy', t)).toContain('chip--ok');
     });
 
-    test('only a running container has a slot for its readings', () => {
-        expect(rowHtml('h', ctr(), t)).toContain('data-cpu="abc"');
-        expect(rowHtml('h', ctr({ State: 'exited', Status: 'exited' }), t)).not.toContain('data-cpu');
+    test('a stopped card says how it ended, a running one has meters', () => {
+        const stopped = cardHtml(view(ctr({ State: 'exited', Status: 'stopped', ExitCode: 137 })), t, fmt);
+        expect(stopped).toContain('N(137)');
+        expect(stopped).toContain('is-off');
+        expect(stopped).not.toContain('mrow');
+        expect(cardHtml(view(ctr(), { stats: { CPUPercent: 5, MemPercent: 10, MemUsed: 9, MemLimit: 90 } }), t, fmt)).toContain('mrow');
     });
 
-    test('a state is a green, amber or grey dot, never an accent one', () => {
-        expect(rowHtml('h', ctr(), t)).toContain('dot--up');
-        expect(rowHtml('h', ctr({ State: 'restarting' }), t)).toContain('dot--warn');
-        expect(rowHtml('h', ctr({ State: 'exited' }), t)).toContain('dot--off');
+    test('the reason an item is on the attention list is in words', () => {
+        expect(reasonText('failed', 137, t)).toContain('"code":"137"');
+        expect(reasonText('unhealthy', undefined, t)).toContain('why_unhealthy');
+    });
+});
+
+describe('the header and the groups', () => {
+    test('the summary counts, and a warnings count only when there are warnings', () => {
+        const rows: HostRows[] = [{ host, loaded: true, containers: [ctr(), ctr({ Name: '/b', State: 'exited', Status: 'stopped' })] }];
+        const calm = summaryHtml(dockerTotals(rows), t, fmt);
+        expect(calm).toContain('N(1)');
+        expect(calm).not.toContain('dot--bad');
+        const bad: HostRows[] = [{ host, loaded: true, containers: [ctr({ Health: 'unhealthy' })] }];
+        expect(summaryHtml(dockerTotals(bad), t, fmt)).toContain('dot--bad');
+    });
+
+    test('a group head only when grouping, and the nameless group is called "no project"', () => {
+        const u = { id: 'h1/web' } as never;
+        const v = () => view(ctr());
+        expect(inventoryHtml([{ name: '', units: [u] }], 'cards', v, t, fmt, false)).not.toContain('gpill');
+        const html = inventoryHtml([{ name: '', units: [u] }], 'cards', v, t, fmt, true);
+        expect(html).toContain('dockerpage.no_project');
+    });
+
+    test('the list view has a head row and rows; cards have neither', () => {
+        const u = { id: 'h1/web' } as never;
+        const list = inventoryHtml([{ name: '', units: [u] }], 'list', () => view(ctr()), t, fmt, false);
+        expect(list).toContain('tr--h');
+        expect(list).toContain('class="tr');
+        expect(inventoryHtml([{ name: '', units: [u] }], 'cards', () => view(ctr()), t, fmt, false)).not.toContain('tr--h');
+    });
+
+    test('the selected container wears it', () => {
+        expect(cardHtml(view(ctr(), { selected: true }), t, fmt)).toContain('is-sel');
+        expect(cardHtml(view(ctr()), t, fmt)).not.toContain('is-sel');
+    });
+
+    test('the log viewer has the four controls the page drives', () => {
+        const html = logViewerHtml(t, '1000');
+        for (const id of ['lg-follow', 'lg-ts', 'lg-more', 'lg-copy', 'lg-box', 'lg-state', 'lg-note']) expect(html).toContain(`id="${id}"`);
     });
 });

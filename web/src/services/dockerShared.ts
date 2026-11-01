@@ -137,14 +137,14 @@ export function isDemoMode(): boolean {
 }
 
 export const DEMO_CONTAINERS: DockerContainer[] = [
-    { ID: 'demo-lastboard', Name: 'lastboard', Image: 'git.codigosh.com/codigosh/lastboard:latest', Status: 'running', State: 'running', Created: 1717000000, Ports: [{ PublicPort: 8080, PrivatePort: 8080, Type: 'tcp' }] },
-    { ID: 'demo-postgres', Name: 'postgres', Image: 'postgres:16-alpine', Status: 'running', State: 'running', Created: 1716000000, Ports: [{ PublicPort: 5432, PrivatePort: 5432, Type: 'tcp' }] },
+    { ID: 'demo-lastboard', Name: 'lastboard', Image: 'git.codigosh.com/codigosh/lastboard:latest', Status: 'running', State: 'running', Created: 1717000000, Ports: [{ PublicPort: 8080, PrivatePort: 8080, Type: 'tcp' }], Project: 'lastboard' },
+    { ID: 'demo-postgres', Name: 'postgres', Image: 'postgres:16-alpine', Status: 'running', State: 'running', Created: 1716000000, Ports: [{ PublicPort: 5432, PrivatePort: 5432, Type: 'tcp' }], Health: 'healthy', Project: 'lastboard' },
     { ID: 'demo-traefik', Name: 'traefik', Image: 'traefik:v3.1', Status: 'running', State: 'running', Created: 1715000000, Ports: [{ PublicPort: 443, PrivatePort: 443, Type: 'tcp' }] },
     // Carries a label, so the demo shows a container saying where it lives
     // rather than every row falling back to host:port.
     { ID: 'demo-jellyfin', Name: 'jellyfin', Image: 'jellyfin/jellyfin:latest', Status: 'running', State: 'running', Created: 1716500000, Ports: [{ PublicPort: 8096, PrivatePort: 8096, Type: 'tcp' }], UrlHint: 'https://jellyfin.home.example' },
-    { ID: 'demo-redis', Name: 'redis', Image: 'redis:7-alpine', Status: 'running', State: 'running', Created: 1716800000, Ports: [] },
-    { ID: 'demo-backup', Name: 'nightly-backup', Image: 'offen/docker-volume-backup:v2', Status: 'stopped', State: 'stopped', Created: 1714000000, Ports: [] },
+    { ID: 'demo-redis', Name: 'redis', Image: 'redis:7-alpine', Status: 'running', State: 'running', Created: 1716800000, Ports: [], Health: 'healthy', Project: 'lastboard' },
+    { ID: 'demo-backup', Name: 'nightly-backup', Image: 'offen/docker-volume-backup:v2', Status: 'stopped', State: 'stopped', Created: 1714000000, Ports: [], ExitCode: 0 },
 ];
 
 /**
