@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
     attentionCount, attentionList, groupOutagesByService, outageInsights, bucketLatency, countByFilter, fillGaps, filterOutages, fleetTotals, groupRows, isSlow, lowestAvailability,
-    outageTotals, outagesDue, OUTAGES_CALM_MS, OUTAGES_DOWN_MS, passes, readRow, statusSignature, sortOutages, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
+    outageTotals, outagesDue, historyDue, HISTORY_REFRESH_MS, latencySeries, OUTAGES_CALM_MS, OUTAGES_DOWN_MS, passes, readRow, statusSignature, sortOutages, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
 } from './monitorPage';
 
 const row = (over: Partial<ServiceRow> & { name: string }): ServiceRow => readRow({
@@ -273,5 +273,43 @@ describe('when the outages are asked for again', () => {
     test('the signature does not depend on the order the rows came in', () => {
         const x = { item_id: 1, status: 'up' as const, down_since: null }, y = { item_id: 2, status: 'down' as const, down_since: 'z' };
         expect(statusSignature([x, y])).toBe(statusSignature([y, x]));
+    });
+});
+
+describe('the service panel reads its history again only when it has aged', () => {
+    test('a day is read at every refresh, a week and a month only now and then', () => {
+        expect(historyDue('24 h', 0)).toBe(true);
+        expect(historyDue('7 d', 30000)).toBe(false);
+        expect(historyDue('7 d', HISTORY_REFRESH_MS['7 d'])).toBe(true);
+        expect(historyDue('30 d', 30000)).toBe(false);
+        expect(historyDue('30 d', HISTORY_REFRESH_MS['30 d'] - 1)).toBe(false);
+        expect(historyDue('30 d', HISTORY_REFRESH_MS['30 d'])).toBe(true);
+    });
+});
+
+describe('the chart of a service from the points the server folded', () => {
+    test('is the chart the browser drew from every check', () => {
+        const since = Date.UTC(2026, 10, 1, 0, 0, 0), now = since + 6 * 3600000;
+        // Checks every 6 minutes; some without an answer, so some buckets are empty and repeat the one before.
+        const checks = Array.from({ length: 60 }, (_, i) => ({
+            checked_at: new Date(since + i * 6 * 60000).toISOString(), up: i % 9 !== 0, latency_ms: i % 9 === 0 ? null : 100 + i, status_code: 200,
+        }));
+        const drawn = bucketLatency(checks, since, now, 12);
+        // What the server sends: the mean of the answers of each bucket, null where none.
+        const width = (now - since) / 12;
+        const points = Array.from({ length: 12 }, (_, b) => {
+            const own = checks.filter(c => c.up && c.latency_ms !== null && Math.floor((Date.parse(c.checked_at) - since) / width) === b);
+            return { at: new Date(since + b * width).toISOString(), mean_ms: own.length ? own.reduce((s, c) => s + (c.latency_ms as number), 0) / own.length : null };
+        });
+        const folded = latencySeries(points);
+        expect(folded.values).toEqual(drawn.values);
+        expect(folded.at).toEqual(drawn.at);
+    });
+    test('says nothing when nothing answered', () => {
+        expect(latencySeries([{ at: '2026-11-01T00:00:00Z', mean_ms: null }, { at: '2026-11-01T01:00:00Z', mean_ms: null }])).toEqual({ values: [], at: [] });
+    });
+    test('a bucket with no answer repeats the one before it', () => {
+        const r = latencySeries([{ at: '2026-11-01T00:00:00Z', mean_ms: 10 }, { at: '2026-11-01T01:00:00Z', mean_ms: null }, { at: '2026-11-01T02:00:00Z', mean_ms: 30 }]);
+        expect(r.values).toEqual([10, 10, 30]);
     });
 });

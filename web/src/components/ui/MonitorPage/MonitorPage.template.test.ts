@@ -424,3 +424,15 @@ describe('a box waiting for its answer says so, and does not say there is nothin
         expect(chartCardForFleet('', '24 h', RANGES, t)).toContain('[dockerpage.collecting]');
     });
 });
+
+describe('the checks tab when the server sent only the newest', () => {
+    const many = Array.from({ length: CHECK_LINES }, (_, i) => ({ checked_at: `2026-11-01T10:${String(i).padStart(2, '0')}:00Z`, up: true, latency_ms: 10, status_code: 200 }));
+    test('offers all of them by the number the range has, not by the lines it was given', () => {
+        const html = checksTabHtml(many, 86400, t, fmt, false, 43158);
+        expect(html).toContain('data-act="all-checks"');
+        expect(html).toContain('N(43158)');
+    });
+    test('without a total, the lines it has are all there are, as before', () => {
+        expect(checksTabHtml(many, 86400, t, fmt)).not.toContain('data-act="all-checks"');
+    });
+});

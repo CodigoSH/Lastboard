@@ -46,6 +46,9 @@ export interface TrendPoint { at: string; mean_ms: number | null; max_ms: number
 /** One recorded check, as one service's history lists them. */
 export interface Check { checked_at: string; up: boolean; latency_ms: number | null; status_code: number }
 
+/** One bucket of a service's response, as GET /api/monitor/history?lite=1 folds it: null where nothing answered in it. */
+export interface LatencyPoint { at: string; mean_ms: number | null }
+
 const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 
@@ -403,3 +406,18 @@ export function outagesDue(s: { held: string | null; now: string; ageMs: number;
     if (s.held === null || s.held !== s.now) return true;
     return s.ageMs >= (s.anyDown ? OUTAGES_DOWN_MS : OUTAGES_CALM_MS);
 }
+
+/** One service's response as the server folded it, in the shape the chart draws: the same as folding every check here. */
+export function latencySeries(points: LatencyPoint[]): { values: number[]; at: number[] } {
+    const values = fillGaps(points.map(p => p.mean_ms));
+    return { values, at: values.length ? points.map(p => Date.parse(p.at)) : [] };
+}
+
+/**
+ * How old the history of a service the panel holds can be before it is read again
+ * by the page's own refresh. A day is drawn at the resolution of minutes and changes
+ * with every check; a week and a month are drawn in hours and days and do not
+ * change in half a minute. Asking for a range, or the refresh button, always reads.
+ */
+export const HISTORY_REFRESH_MS: Record<RangeLabel, number> = { '24 h': 0, '7 d': 300000, '30 d': 900000 };
+export const historyDue = (range: RangeLabel, ageMs: number): boolean => ageMs >= HISTORY_REFRESH_MS[range];

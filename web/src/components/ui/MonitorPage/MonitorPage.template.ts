@@ -470,7 +470,8 @@ export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt, all = false): s
         : emptyHtml(t('monitor.no_incidents'));
 }
 
-export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: Fmt, all = false): string {
+/** `total`: how many checks the range has, when `checks` are only the newest of them. */
+export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: Fmt, all = false, total = checks.length): string {
     const every = [...checks].reverse();
     const newest = all ? every : every.slice(0, CHECK_LINES);
     const head = `<div class="chk chk--h" aria-hidden="true"><span>${e(t('monitorpage.col_time'))}</span><span>${e(t('monitor.response'))}</span><span>${e(t('monitorpage.col_result'))}</span></div>`;
@@ -479,7 +480,7 @@ export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: 
         : `<div class="chk"><span class="dim">${e(fmt.clock(c.checked_at))}</span><span class="bad">—</span><span class="bad" title="${e(causeCode(c.status_code))}">${e(answerText(false, c.status_code, t))}</span></div>`).join('');
     const note = `<div class="note note--calm">${e(t('monitorpage.checks_note', { time: fmt.span(retentionSec) }))}</div>`;
     return `${all ? '' : note}
-        ${newest.length ? `<div class="card tasks">${head}${lines}</div>${all ? '' : moreHtml('all-checks', newest.length, every.length, t, fmt)}` : emptyHtml(t('monitor.no_data_yet'))}`;
+        ${newest.length ? `<div class="card tasks">${head}${lines}</div>${all ? '' : moreHtml('all-checks', newest.length, Math.max(total, every.length), t, fmt)}` : emptyHtml(t('monitor.no_data_yet'))}`;
 }
 
 export function drawerFooterHtml(row: ServiceRow, t: T): string {

@@ -9,8 +9,8 @@ import { PageNav, type NavState } from '../../../services/pageNav';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import {
     attentionCount, attentionList, bucketLatency, countByFilter, filterOutages, fleetTotals, groupRows, isOutageFilter, isRange, isSortKey, isStateFilter,
-    HELD_MS, lowestAvailability, outagesDue, passes, rangeMs, rangeParam, RANGES, readRow, sortOutages, sortRows, statusSignature, trendSeries,
-    type Check, type Outage, type OutageFilter, type RangeLabel, type ServiceRow, type SortKey, type StateFilter, type TrendPoint,
+    HELD_MS, historyDue, latencySeries, lowestAvailability, outagesDue, passes, rangeMs, rangeParam, RANGES, readRow, sortOutages, sortRows, statusSignature, trendSeries,
+    type Check, type LatencyPoint, type Outage, type OutageFilter, type RangeLabel, type ServiceRow, type SortKey, type StateFilter, type TrendPoint,
 } from '../../../services/monitorPage';
 import {
     chartHtml, chartIndexAt, CHART_WIDTH, icon, tabsHtml, toolbarHtml, type ChartSpec,
@@ -43,7 +43,15 @@ type Tab = 'overview' | 'services' | 'outages';
 type DrawerTab = 'summary' | 'outages' | 'checks';
 
 /** What one service's history answers, as far as the panel reads it. */
-interface History { checks: Check[]; incidents: Outage[] }
+interface History {
+    /** Every check of the range, or the newest few when the server folded the rest (`lite`). */
+    checks: Check[];
+    incidents: Outage[];
+    /** Only from a server that folds the chart: its sixty points, and how many checks the range has. */
+    latency?: LatencyPoint[];
+    total?: number;
+    lite?: boolean;
+}
 
 interface Written { head: string; tabs: string; body: string; list: string; tools: string; dhead: string; dtabs: string; dbody: string; dfoot: string; mdl: string }
 const blank = (): Written => ({ head: '', tabs: '', body: '', list: '', tools: '', dhead: '', dtabs: '', dbody: '', dfoot: '', mdl: '' });
@@ -79,6 +87,8 @@ class MonitorPage extends HTMLElement {
     private rowsAt = 0;
     private trends = new Map<RangeLabel, TrendPoint[]>();
     private histories = new Map<string, History>();
+    /** When each history was read, to ask again only when the range changes fast enough to need it. */
+    private historyAt = new Map<string, number>();
     private loaded = false;
     private failed = false;
 
@@ -387,6 +397,7 @@ class MonitorPage extends HTMLElement {
         if (act === 'visit') { const r = this.current(); if (r?.url) window.open(r.url, '_blank', 'noopener'); return; }
         if (act === 'clear') { this.confirmClear(); return; }
         if (act === 'all-outages' || act === 'all-panel-outages' || act === 'all-checks') { this.openModal(act); return; }
+        if (act === 'more-checks') { void this.loadChecksPage(false); return; }
 
         // Outside the panel, on bare page: it closes, as it does on a narrow window by its scrim.
         if (this.drawerOpen && el.closest('#body') && !el.closest('button, input, select, app-select, a, label, .unit, .tr, .task, .attn__row')) { this.closeDrawer(); return; }
@@ -528,7 +539,7 @@ class MonitorPage extends HTMLElement {
                 } catch {
                     eventBus.emit(EVENTS.NOTIFY, { message: this.t('settings.save_error'), type: 'error' });
                 }
-                this.histories.clear();
+                this.histories.clear(); this.historyAt.clear();
                 await this.load(true);
             },
         });
@@ -555,7 +566,7 @@ class MonitorPage extends HTMLElement {
             if (setup) this.setup = { ...setup, retention_days: setup.retention_days || 30 };
             this.failed = false;
             if (this.board !== 'all' && !this.boards().includes(this.board)) this.board = 'all';
-            if (fresh) this.histories.clear();
+            if (fresh) { this.histories.clear(); this.historyAt.clear(); }
         } catch {
             this.failed = this.rows.length === 0;
         }
@@ -571,7 +582,7 @@ class MonitorPage extends HTMLElement {
             if (fresh || outagesDue({ held: this.outagesSig, now: sig, ageMs: Date.now() - this.outagesAt, anyDown: this.rows.some(r => r.status === 'down') })) void this.loadOutages(sig);
         }
         if (this.fleetRange !== '24 h' && !this.trends.has(this.fleetRange)) void this.loadTrend(this.fleetRange);
-        if (this.drawerOpen) void this.loadHistory();
+        if (this.drawerOpen) void this.loadHistory(fresh);
     }
 
     private async loadDayTrend() {
@@ -606,14 +617,24 @@ class MonitorPage extends HTMLElement {
         if (this.hasAttribute('open') && this.tab === 'overview') { this.last.body = ''; this.paintBody(); }
     }
 
-    private async loadHistory() {
+    /** `force`: a person asked (a service, a range, the button); otherwise it is the refresh, which only reads what has aged. */
+    private async loadHistory(force = true) {
         const r = this.current();
         if (!r) return;
         const key = `${r.item_id}:${this.histRange}`;
+        if (!force && this.histories.has(key) && !historyDue(this.histRange, Date.now() - (this.historyAt.get(key) ?? 0))) return;
         const seq = ++this.histSeq;
         try {
-            const out = await apiService.get<{ checks: Check[]; incidents: Outage[] }>(`/api/monitor/history?item_id=${r.item_id}&range=${rangeParam(this.histRange)}`);
-            this.histories.set(key, { checks: Array.isArray(out?.checks) ? out.checks : [], incidents: Array.isArray(out?.incidents) ? out.incidents : [] });
+            const out = await apiService.get<{ checks: Check[]; incidents: Outage[]; latency?: LatencyPoint[]; total?: number; lite?: boolean }>(
+                `/api/monitor/history?item_id=${r.item_id}&range=${rangeParam(this.histRange)}&lite=1`);
+            this.histories.set(key, {
+                checks: Array.isArray(out?.checks) ? out.checks : [],
+                incidents: Array.isArray(out?.incidents) ? out.incidents : [],
+                latency: out?.lite && Array.isArray(out.latency) ? out.latency : undefined,
+                total: out?.lite && typeof out.total === 'number' ? out.total : undefined,
+                lite: out?.lite === true,
+            });
+            this.historyAt.set(key, Date.now());
         } catch { /* the panel keeps what it had */ }
         if (seq !== this.histSeq || !this.hasAttribute('open')) return;
         this.last.dbody = '';
@@ -828,17 +849,43 @@ class MonitorPage extends HTMLElement {
 
     private modalKind: '' | 'all-outages' | 'all-panel-outages' | 'all-checks' = '';
 
+    /** The checks of the window that lists them all, read by pages from a server that folds the history; newest first. */
+    private pages: { key: string; list: Check[]; next: string; loading: boolean } | null = null;
+
     private openModal(kind: 'all-outages' | 'all-panel-outages' | 'all-checks') {
         this.modalKind = kind;
         this.last.mdl = '';
+        const r = this.current();
+        this.pages = null;
+        if (kind === 'all-checks' && r && this.histories.get(`${r.item_id}:${this.histRange}`)?.lite) {
+            this.pages = { key: `${r.item_id}:${this.histRange}`, list: [], next: '', loading: false };
+            void this.loadChecksPage(true);
+        }
         this.paintModal();
         const dlg = this.$('mdl') as HTMLDialogElement | null;
         if (dlg && !dlg.open) dlg.showModal();
     }
 
+    private async loadChecksPage(first: boolean) {
+        const pg = this.pages, r = this.current();
+        if (!pg || !r || pg.loading || (!first && !pg.next)) return;
+        pg.loading = true;
+        this.paintModal();
+        try {
+            const out = await apiService.get<{ checks: Check[]; next: string }>(
+                `/api/monitor/checks?item_id=${r.item_id}&range=${rangeParam(this.histRange)}&limit=300${first ? '' : `&before=${encodeURIComponent(pg.next)}`}`);
+            if (this.pages !== pg) return;
+            pg.list = first ? (out?.checks ?? []) : pg.list.concat(out?.checks ?? []);
+            pg.next = out?.next ?? '';
+        } catch { /* the window keeps what it has, and the button asks again */ }
+        pg.loading = false;
+        if (this.pages === pg) this.paintModal();
+    }
+
     private closeModal() {
         if (!this.modalKind) return;
         this.modalKind = '';
+        this.pages = null;
         (this.$('mdl') as HTMLDialogElement | null)?.close();
     }
 
@@ -862,9 +909,14 @@ class MonitorPage extends HTMLElement {
                 name = `${r?.name ?? ''} · ${t('monitor.incidents')}`; n = list.length;
                 html = outagesPanelHtml(list, t, fmt, true);
             } else {
-                const checks = hist?.checks ?? [];
-                name = `${r?.name ?? ''} · ${t('monitorpage.tab_checks')}`; n = checks.length;
+                const pg = hist?.lite ? this.pages : null;
+                // Oldest first is how the list is handed in; the pages come newest first.
+                const checks = pg ? [...pg.list].reverse() : hist?.checks ?? [];
+                name = `${r?.name ?? ''} · ${t('monitorpage.tab_checks')}`; n = pg ? (hist?.total ?? checks.length) : checks.length;
                 html = checksTabHtml(checks, (this.setup?.retention_days ?? 30) * 86400, t, fmt, true);
+                if (pg && (pg.next || pg.loading)) {
+                    html += `<button type="button" class="more" data-act="more-checks"${pg.loading ? ' disabled' : ''}>${escapeHtml(t(pg.loading ? 'general.loading' : 'general.show_more'))}</button>`;
+                }
             }
         }
         title.innerHTML = `${escapeHtml(name)}<span class="mdl__n">${escapeHtml(fmt.num(n))}</span>`;
@@ -901,7 +953,7 @@ class MonitorPage extends HTMLElement {
             let chart = '';
             if (hist) {
                 const now = Date.now();
-                const b = bucketLatency(hist.checks, now - rangeMs(this.histRange), now);
+                const b = hist.latency ? latencySeries(hist.latency) : bucketLatency(hist.checks, now - rangeMs(this.histRange), now);
                 if (b.values.length > 1) {
                     const spec: ChartSpec = {
                         series: [{ name: t('monitor.response'), color: 'var(--ok)', data: b.values }],
@@ -916,7 +968,7 @@ class MonitorPage extends HTMLElement {
         } else if (this.drawerTab === 'outages') {
             bHtml = outagesPanelHtml((thirty ?? hist)?.incidents ?? [], t, fmt);
         } else {
-            bHtml = checksTabHtml(hist?.checks ?? [], (this.setup?.retention_days ?? 30) * 86400, t, fmt);
+            bHtml = checksTabHtml(hist?.checks ?? [], (this.setup?.retention_days ?? 30) * 86400, t, fmt, false, hist?.total);
         }
         if (bHtml !== this.last.dbody) {
             const top = body.scrollTop;
@@ -925,7 +977,7 @@ class MonitorPage extends HTMLElement {
             body.scrollTop = top;
         }
         // The outages of the panel are asked for over the whole retention, once, when their tab is opened.
-        if (this.drawerTab === 'outages' && !thirty) void this.loadThirty(r.item_id);
+        if (this.drawerTab === 'outages' && !thirty && this.histRange !== '30 d') void this.loadThirty(r.item_id);
     }
 
     private edgeAt(ms: number): string {
@@ -937,7 +989,7 @@ class MonitorPage extends HTMLElement {
         // A placeholder first, so painting the tab does not ask again while the answer is on its way.
         this.histories.set(key, { checks: [], incidents: [] });
         try {
-            const out = await apiService.get<{ incidents: Outage[] }>(`/api/monitor/history?item_id=${id}&range=30d`);
+            const out = await apiService.get<{ incidents: Outage[] }>(`/api/monitor/history?item_id=${id}&range=30d&lite=1`);
             this.histories.set(key, { checks: [], incidents: Array.isArray(out?.incidents) ? out.incidents : [] });
         } catch { this.histories.delete(key); return; }
         if (this.hasAttribute('open') && this.sel === id) { this.last.dbody = ''; this.paintDrawer(); }
