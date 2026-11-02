@@ -1,4 +1,5 @@
 import { apiService } from './apiService';
+import { holdReading, sharedRead } from './infraReadings';
 import type { PxHostRef } from './proxmoxHosts';
 
 /**
@@ -24,6 +25,8 @@ export interface PxNode {
 export interface PxGuest {
     vmid: number; name: string; kind: 'lxc' | 'qemu'; node: string;
     running: boolean; cpu: number; mem: number; mem_total: number; uptime: number;
+    /** What the machine's own disk holds and its size; both 0 where Proxmox does not say (a full VM without the agent). Absent from an older server. */
+    disk?: number; disk_total?: number;
 }
 
 export interface PxStore {
@@ -55,8 +58,15 @@ export interface PxHost {
  */
 export async function loadProxmox(hostId?: string): Promise<PxHost[]> {
     const url = hostId ? `/api/proxmox/overview?host=${encodeURIComponent(hostId)}` : '/api/proxmox/overview';
-    const out = await apiService.get<{ hosts?: PxHost[] }>(url);
-    return out?.hosts ?? [];
+    const read = async () => (await apiService.get<{ hosts?: PxHost[] }>(url))?.hosts ?? [];
+    if (hostId) return sharedRead(`proxmox:overview:${hostId}`, read);
+    // Every host at once is what a tile asks for: while one such request is on its way the others share it,
+    // and its answer is what the page opens on.
+    return sharedRead('proxmox:overview', async () => {
+        const hosts = await read();
+        holdReading('proxmox', hosts);
+        return hosts;
+    });
 }
 
 export { iconKey, chosenIcon, withIcon } from './proxmoxIcons';

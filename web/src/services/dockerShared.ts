@@ -1,4 +1,5 @@
 import { csrfToken } from './csrf';
+import { sharedRead } from './infraReadings';
 
 /**
  * Docker types and container fetching, shared by the widget and its config
@@ -222,8 +223,11 @@ export async function fetchContainers(host: DockerHost | undefined): Promise<Doc
     if (isDemoMode()) return DEMO_CONTAINERS;
     if (!host) return [];
 
-    const res = await fetch('/api/docker/containers', dockerPost(hostRef(host)));
-    if (!res.ok) throw new DockerHostError((await res.text().catch(() => '')).trim());
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    // A tile and the page asking for the same host at the same moment make one request between them.
+    return sharedRead(`docker:containers:${host.id}`, async () => {
+        const res = await fetch('/api/docker/containers', dockerPost(hostRef(host)));
+        if (!res.ok) throw new DockerHostError((await res.text().catch(() => '')).trim());
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+    });
 }

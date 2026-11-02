@@ -5,6 +5,8 @@ import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
 import { RefreshClock, savingData, whenRefreshing } from '../../../services/refreshClock';
+import { targetTab, type PageTarget } from '../../../services/pageTarget';
+import { heldReading } from '../../../services/infraReadings';
 import { PageNav, type NavState } from '../../../services/pageNav';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
@@ -75,6 +77,7 @@ const blankDisk = (): DiskUsage => ({
 type SelectEl = HTMLElement & { options: { value: string; label: string }[]; value: string };
 
 type Tab = 'overview' | 'containers' | 'logs';
+const TABS: readonly Tab[] = ['overview', 'containers', 'logs'];
 type DrawerTab = 'summary' | 'logs' | 'env' | 'mounts';
 
 interface Written {
@@ -242,20 +245,51 @@ class DockerPage extends HTMLElement {
 
     // ── Opening and closing ──
 
-    open() {
+    /**
+     * Opens the page, at a tab and with a container in the panel when the caller says so (a tile of the board
+     * pointing at one). `sel` is written the way the history writes it, "host/name".
+     */
+    open(target?: PageTarget) {
         this.setAttribute('open', '');
         eventBus.emit(EVENTS.DOCKER_PAGE_CHANGED, { open: true });
         this.drawerOpen = false;
+        // The first entry of the page already says which tab it opened on, so Back from the panel lands there.
+        const asked = targetTab(target, TABS);
+        if (asked) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back.
         this.nav.open(this.navState());
         this.loaded = false;
         this.paintAll(true);
         void this.load(true);
+        this.seedFromTile();
         if (this.listTimer) clearInterval(this.listTimer);
         this.listTimer = setInterval(whenRefreshing(() => this.load()), LIST_MS);
         this.updated.reset();
         this.updated.start();
         this.syncPolling();
+        // The panel opens at once, before the reading: it names the container and fills in when the answer comes.
+        const at = target?.sel ? target.sel.indexOf('/') : -1;
+        if (target?.sel && at > 0) this.choose(target.sel.slice(0, at), target.sel.slice(at + 1), true);
+    }
+
+    /**
+     * What a tile of the board last read is what the page opens on, until its own answer arrives. Only when the tile
+     * read every host the page will show: a page that began with some of its hosts would look as if the others were gone.
+     */
+    private seedFromTile() {
+        const held = heldReading<HostRows[]>('docker');
+        if (!held) return;
+        void fetchDockerSettings().then(settings => {
+            if (this.loaded || !this.hasAttribute('open')) return;
+            const hosts = hostsForWidget(settings.hosts);
+            const byId = new Map(held.value.map(g => [g.host.id, g]));
+            if (!hosts.length || !hosts.every(h => byId.has(h.id))) return;
+            this.groups = hosts.map(h => byId.get(h.id)!);
+            this.icons = settings.icons ?? {};
+            this.loaded = true;
+            this.updated.mark(held.at);
+            this.paintAll();
+        }).catch(() => { });
     }
 
     private closeQuietly() {

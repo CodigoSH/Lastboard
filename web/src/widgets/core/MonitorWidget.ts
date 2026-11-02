@@ -1,42 +1,47 @@
 import { i18n } from '../../services/i18n';
-import { apiService } from '../../services/apiService';
+import { fetchMonitorOverview } from '../../services/monitorOverview';
 import { dashboardStore } from '../../store/dashboardStore';
-import { escapeHtml } from '../../services/escape';
 import { eventBus, EVENTS } from '../../services/EventBus';
 import { adoptSharedStyles } from '../../services/sharedStyles';
+import { resolveIconUrl } from '../../services/iconUrl';
 import { whenVisible } from '../../services/whenVisible';
-import { chooseServices } from '../../services/monitorServices';
-
-/** One service as /api/monitor/overview reports it. */
-interface OverviewRow {
-    item_id: number;
-    name: string;
-    status: 'up' | 'down' | 'none';
-    uptime_pct: number;
-    latency_ms: number | null;
-    heartbeat: { status: 'up' | 'down'; at: string }[];
-}
+import { monitorShell, readItemConfig, type ItemCfg, type WRow } from '../../services/monitorWidget';
+import { showsSeeAll } from '../shell/metrics';
+import { SHELL_CSS, shellHtml } from '../shell/shell';
 
 interface MonitorConfig {
     /** Item ids to show. Empty means every monitored service. */
     items: number[];
     /** The services in the order they were arranged in. One it does not name comes after. */
     itemOrder: number[];
+    /** A name and an icon of this widget's own for a service, by its id. */
+    itemConfig: Record<string, ItemCfg>;
+    /** Whether the foot leads to the page. */
+    showAll: boolean;
     refreshSec: number;
     /** Header text. Empty falls back to the widget's own name. */
     title: string;
 }
 
-const DEFAULT_CONFIG: MonitorConfig = { items: [], itemOrder: [], refreshSec: 60, title: '' };
+const DEFAULT_CONFIG: MonitorConfig = { items: [], itemOrder: [], itemConfig: {}, showAll: true, refreshSec: 60, title: '' };
 
 const ids = (v: unknown): number[] => (Array.isArray(v) ? v.filter((n): n is number => typeof n === 'number') : []);
 
-/** How many bars a row draws. Matches what the endpoint returns. */
-const BEATS = 30;
+function parseConfig(data: any): MonitorConfig {
+    return {
+        items: ids(data.items),
+        itemOrder: ids(data.itemOrder),
+        itemConfig: readItemConfig(data.itemConfig),
+        showAll: showsSeeAll(data.showAll),
+        refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
+        title: typeof data.title === 'string' ? data.title : '',
+    };
+}
 
 /**
  * A compact status page: the services being monitored, their uptime over the
  * last 24h and a heartbeat, with the same reading as the full monitor page.
+ * A click on one opens the status page at that service, in its side panel.
  *
  * It refreshes on a timer, which is why the overview endpoint was rewritten to
  * summarise in SQL first — it used to read a whole day of history per service
@@ -45,7 +50,7 @@ const BEATS = 30;
 class MonitorWidget extends HTMLElement {
     private _itemId = 0;
     private _config: MonitorConfig = { ...DEFAULT_CONFIG };
-    private rows: OverviewRow[] = [];
+    private rows: WRow[] = [];
     private loaded = false;
     private failed = false;
     private timer: ReturnType<typeof setInterval> | null = null;
@@ -82,21 +87,14 @@ class MonitorWidget extends HTMLElement {
                 const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
                 if (data.widgetId !== 'monitor') return;
 
-                const next: MonitorConfig = {
-                    items: Array.isArray(data.items) ? data.items : [],
-                    itemOrder: ids(data.itemOrder),
-                    refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
-                    title: typeof data.title === 'string' ? data.title : '',
-                };
-                const selectionChanged = next.items.join(',') !== this._config.items.join(',')
-                    || next.itemOrder.join(',') !== this._config.itemOrder.join(',');
+                const next = parseConfig(data);
                 const intervalChanged = next.refreshSec !== this._config.refreshSec;
-                const titleChanged = next.title !== this._config.title;
+                const changed = JSON.stringify(next) !== JSON.stringify(this._config);
                 this._config = next;
 
-                // Stats tick every second through this same store; repainting on
-                // every one of them would fight the heartbeat animation.
-                if (selectionChanged || titleChanged) this.render();
+                // Stats tick every second through this same store; repainting on every one of them would fight
+                // the heartbeat, so only a change of this widget's own settings repaints.
+                if (changed) this.refreshBody();
                 if (intervalChanged) this.restartTimer();
             } catch { /* keep the current config */ }
         });
@@ -116,12 +114,7 @@ class MonitorWidget extends HTMLElement {
         if (!item?.content) return;
         try {
             const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
-            this._config = {
-                items: Array.isArray(data.items) ? data.items : [],
-                itemOrder: ids(data.itemOrder),
-                refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
-                title: typeof data.title === 'string' ? data.title : '',
-            };
+            this._config = parseConfig(data);
         } catch { /* defaults */ }
     }
 
@@ -134,8 +127,7 @@ class MonitorWidget extends HTMLElement {
 
     private async load() {
         try {
-            const rows = await apiService.get<OverviewRow[]>('/api/monitor/overview');
-            this.rows = Array.isArray(rows) ? rows : [];
+            this.rows = await fetchMonitorOverview<WRow>();
             this.failed = false;
         } catch {
             this.failed = true;
@@ -144,79 +136,50 @@ class MonitorWidget extends HTMLElement {
         this.refreshBody();
     }
 
-    /** The services to draw: the chosen ones, in the order they were arranged in. */
-    private visibleRows(): OverviewRow[] {
-        return chooseServices(this.rows, this._config.items, this._config.itemOrder);
-    }
-
     // ── Events ──
 
     private onClick = (e: Event) => {
-        const row = (e.target as HTMLElement)?.closest?.('.mw-row') as HTMLElement | null;
-        if (!row) return;
-        const id = parseInt(row.dataset.id || '0', 10);
-        if (id) eventBus.emit(EVENTS.SHOW_MONITOR_HISTORY, { itemId: id, name: row.dataset.name || '' });
+        const target = e.target as HTMLElement;
+        // Both open the status page here, at the services: a full load would throw away the board the person is on.
+        if (target.closest('[data-act="all"]')) {
+            eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW, { tab: 'services' });
+            return;
+        }
+        const row = target.closest('[data-sel]') as HTMLElement | null;
+        if (row) eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW, { tab: 'services', sel: row.dataset.sel });
     };
 
     // ── Render ──
 
-    private state(text: string): string {
-        return `<div class="mw-state">${escapeHtml(text)}</div>`;
-    }
-
-    private rowHtml(r: OverviewRow): string {
-        const uptime = r.uptime_pct < 0 ? '—' : `${Math.round(r.uptime_pct)}%`;
-        const beats = r.heartbeat || [];
-        // Pad on the left so every row ends at "now", however little history a
-        // freshly added service has.
-        const pad = Math.max(0, BEATS - beats.length);
-        const label = (st: string) => st === 'down' ? i18n.t('status.unreachable') : i18n.t('status.online');
-        const bars = '<span class="mw-beat mw-beat--empty"></span>'.repeat(pad)
-            + beats.map(b => `<span class="mw-beat mw-beat--${b.status}" title="${escapeHtml(`${label(b.status)} · ${i18n.formatDateTime(b.at)}`)}"></span>`).join('');
-
-        const latency = r.latency_ms != null ? `${r.latency_ms} ms` : '';
-        return `
-            <button class="mw-row" data-id="${r.item_id}" data-name="${escapeHtml(r.name)}"
-                    title="${escapeHtml(i18n.t('monitor.click_for_history'))}">
-                <span class="mw-dot mw-dot--${r.status}"></span>
-                <span class="mw-name">${escapeHtml(r.name) || '—'}</span>
-                <span class="mw-latency">${escapeHtml(latency)}</span>
-                <span class="mw-uptime mw-uptime--${r.status}">${uptime}</span>
-                <span class="mw-beats">${bars}</span>
-            </button>`;
-    }
-
     private body(): string {
-        if (!this.loaded) return this.state(i18n.t('general.loading'));
-        if (this.failed) return this.state(i18n.t('general.error'));
-        if (!this.rows.length) return this.state(i18n.t('monitor.overview_empty'));
-
-        const visible = this.visibleRows();
-        // Chosen services that no longer exist (deleted or monitoring turned off)
-        // leave the widget empty; say so instead of showing a blank box.
-        if (!visible.length) return this.state(i18n.t('monitor.no_services_selected'));
-
-        return `<div class="mw-rows">${visible.map(r => this.rowHtml(r)).join('')}</div>`;
+        const t = (key: string) => i18n.t(key);
+        const state = !this.loaded ? t('general.loading') : this.failed ? t('general.error') : undefined;
+        return shellHtml(monitorShell({
+            rows: this.rows,
+            items: this._config.items,
+            itemOrder: this._config.itemOrder,
+            itemConfig: this._config.itemConfig,
+            showAll: this._config.showAll,
+            resolveIcon: resolveIconUrl,
+            t,
+            num: n => i18n.formatNumber(n),
+            time: iso => i18n.formatDateTime(iso),
+            state,
+        }));
     }
 
     render() {
         if (!this.shadowRoot) return;
         // The name, when there is one, is the pill on the tile's border: the body is all there is.
-        this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="mw-body" id="mw-body"></div>`;
+        this.shadowRoot.innerHTML = `<style>${SHELL_CSS}</style><div class="sh-body" id="mw-body"></div>`;
         this._lastBody = null;
         this.refreshBody();
     }
 
     /**
-     * Repaints the list without rebuilding the widget.
-     *
-     * The refresh timer used to call render(), which reassigned the whole shadow
-     * root: the list scrolls, so anyone reading past the first few services was
-     * sent back to the top on every cycle, and the heartbeat bars restarted
-     * their animation each time.
-     *
-     * Only the list is touched, and only when it differs — an unchanged refresh
-     * writes nothing at all, which is the common case between state changes.
+     * Repaints the list without rebuilding the widget: the list scrolls, so reassigning the shadow root sent
+     * anyone reading past the first few services back to the top on every cycle. Only the list is touched,
+     * and only when it differs.
      */
     private refreshBody(): void {
         const body = this.shadowRoot?.getElementById('mw-body');
@@ -226,158 +189,12 @@ class MonitorWidget extends HTMLElement {
         if (html === this._lastBody) return;
         this._lastBody = html;
 
-        // Keep the reader where they were: replacing the rows would otherwise
-        // send the scroll box back to the top.
-        const scrollTop = body.querySelector('.mw-rows')?.scrollTop ?? 0;
+        const scrollTop = body.querySelector('.sh-rows')?.scrollTop ?? 0;
         body.innerHTML = html;
-        const rows = body.querySelector('.mw-rows');
+        const rows = body.querySelector('.sh-rows');
         if (rows && scrollTop) rows.scrollTop = scrollTop;
     }
 }
-
-// =============================================================
-// Styles
-// =============================================================
-const CSS = `
-:host {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    color: var(--text-main);
-    container-type: inline-size;
-    overflow: hidden;
-}
-
-/* The header comes from the shared sheet (styles/shared.css), the same one the
-   Docker widget uses. */
-.mw-body {
-    flex: 1;
-    min-height: 0;
-    padding: 6px 8px 8px;
-}
-
-.mw-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    height: 100%;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-}
-
-/* Narrow (a 2-wide widget): the bars drop to their own line so the name stays
-   readable. Wide enough and everything sits on one line, which nearly doubles
-   how many services fit — measured: 3 rows visible in a 4x2 before, 7 after. */
-.mw-row {
-    display: grid;
-    grid-template-columns: 8px minmax(0, 1fr) 4.5em 2.8em;
-    grid-template-areas: "dot name latency uptime" "beats beats beats beats";
-    align-items: center;
-    gap: 2px 8px;
-    width: 100%;
-    padding: 4px 6px;
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    color: inherit;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.mw-row:hover {
-    background: rgba(var(--accent-rgb), 0.08);
-}
-
-.mw-dot {
-    grid-area: dot;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border);
-}
-
-.mw-dot--up { background: var(--success-color); }
-.mw-dot--down { background: var(--danger-color); }
-
-.mw-name {
-    grid-area: name;
-    font-size: clamp(10px, 3.2cqi, 13px);
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.mw-latency {
-    grid-area: latency;
-    font-size: clamp(9px, 2.6cqi, 11px);
-    color: var(--text-dim);
-    font-variant-numeric: tabular-nums;
-    text-align: right;
-}
-
-.mw-uptime {
-    grid-area: uptime;
-    font-size: clamp(9px, 2.8cqi, 12px);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-dim);
-    text-align: right;
-}
-
-.mw-uptime--up { color: var(--success-color); }
-.mw-uptime--down { color: var(--danger-color); }
-
-.mw-beats {
-    grid-area: beats;
-    display: flex;
-    gap: 1px;
-    height: 6px;
-    margin-top: 1px;
-}
-
-@container (min-width: 300px) {
-    .mw-row {
-        /* Fixed widths for the two numeric columns. Sized to their content,
-           "532 ms" and "65 ms" pushed the bars to different places and their
-           right edge came out ragged. */
-        grid-template-columns: 8px minmax(70px, 1fr) minmax(60px, 1.4fr) 4.5em 2.8em;
-        grid-template-areas: "dot name beats latency uptime";
-    }
-
-    .mw-beats {
-        height: 12px;
-        margin-top: 0;
-    }
-}
-
-.mw-beat {
-    flex: 1 1 0;
-    min-width: 0;
-    border-radius: 1px;
-    background: var(--border);
-}
-
-.mw-beat--up { background: var(--success-color); }
-.mw-beat--down { background: var(--danger-color); }
-.mw-beat--empty { background: var(--border); opacity: 0.35; }
-
-.mw-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 8px;
-    text-align: center;
-    font-size: clamp(10px, 3cqi, 12px);
-    color: var(--text-dim);
-}
-`;
 
 if (!customElements.get('widget-monitor')) {
     customElements.define('widget-monitor', MonitorWidget);

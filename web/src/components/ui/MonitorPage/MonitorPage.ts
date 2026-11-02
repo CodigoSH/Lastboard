@@ -5,6 +5,9 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { RefreshClock, savingData, whenRefreshing } from '../../../services/refreshClock';
+import { targetTab, type PageTarget } from '../../../services/pageTarget';
+import { heldReading } from '../../../services/infraReadings';
+import { fetchMonitorOverview } from '../../../services/monitorOverview';
 import { PageNav, type NavState } from '../../../services/pageNav';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import {
@@ -40,6 +43,7 @@ function writePref(key: string, value: string): void {
 
 type SelectEl = HTMLElement & { options: { value: string; label: string }[]; value: string };
 type Tab = 'overview' | 'services' | 'outages';
+const TABS: readonly Tab[] = ['overview', 'services', 'outages'];
 type DrawerTab = 'summary' | 'outages' | 'checks';
 
 /** What one service's history answers, as far as the panel reads it. */
@@ -194,8 +198,11 @@ class MonitorPage extends HTMLElement {
 
     // ── Opening and closing ──
 
-    async open() {
+    /** Opens the page, at a tab and with a service in the panel when the caller says so; `sel` is the service's id. */
+    async open(target?: PageTarget) {
         this.setAttribute('open', '');
+        const asked = targetTab(target, TABS);
+        if (asked) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back.
         this.nav.open(this.navState());
         document.body.style.overflow = 'hidden';
@@ -203,6 +210,12 @@ class MonitorPage extends HTMLElement {
         eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: true });
         this.drawerOpen = false;
         // What the page held when it was last open is shown at once, if it is recent, while the new reading is on its way.
+        // What the page held when it was last open, or what a tile on the board last read, whichever is newer.
+        const fromTile = heldReading<(Partial<ServiceRow> & { item_id: number })[]>('monitor', HELD_MS);
+        if (fromTile && fromTile.at > this.rowsAt) {
+            this.rows = fromTile.value.map(readRow);
+            this.rowsAt = fromTile.at;
+        }
         this.loaded = this.rows.length > 0 && Date.now() - this.rowsAt < HELD_MS;
         this.paintAll(true);
         void this.load(false, true);
@@ -211,6 +224,7 @@ class MonitorPage extends HTMLElement {
         this.updated.reset();
         if (this.loaded) this.updated.mark(this.rowsAt);
         this.updated.start();
+        if (target?.sel && Number.isFinite(Number(target.sel))) this.choose(Number(target.sel));
     }
 
     private closeQuietly() {
@@ -570,7 +584,7 @@ class MonitorPage extends HTMLElement {
         this.paintHead();
         try {
             const [rows, setup] = await Promise.all([
-                apiService.get<(Partial<ServiceRow> & { item_id: number })[]>('/api/monitor/overview'),
+                fetchMonitorOverview<Partial<ServiceRow> & { item_id: number }>(),
                 opening || fresh || !this.setup ? apiService.get<MonitoringSetup>('/api/monitor/settings').catch(() => null) : Promise.resolve(null),
             ]);
             this.rows = (Array.isArray(rows) ? rows : []).map(readRow);

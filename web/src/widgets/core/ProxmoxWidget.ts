@@ -1,27 +1,24 @@
 import { i18n } from '../../services/i18n';
-import { apiService } from '../../services/apiService';
 import { dashboardStore } from '../../store/dashboardStore';
-import { escapeHtml } from '../../services/escape';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { loadProxmoxLinks, linkFor } from '../../services/proxmoxLinks';
-import { loadProxmox, iconKey, type PxHost, type PxNode, type PxGuest } from '../../services/proxmoxApi';
+import { loadProxmox, iconKey, type PxHost } from '../../services/proxmoxApi';
 import { resolveIconUrl } from '../../services/iconUrl';
 import { whenVisible } from '../../services/whenVisible';
-import { guestKey, guestLabel, hasChosenOrder, visibleGuests, type GuestSettings } from '../../services/proxmoxGuests';
+import { type GuestSettings } from '../../services/proxmoxGuests';
+import { proxmoxShell, type WGuest } from '../../services/proxmoxWidget';
 import { eventBus, EVENTS } from '../../services/EventBus';
-import { userStore } from '../../store/userStore';
-import { accessAllows } from '../../services/access';
+import { readMetrics, showsSeeAll, type MetricFlags } from '../shell/metrics';
+import { SHELL_CSS, shellHtml } from '../shell/shell';
 
 /** A machine, plus which hypervisor it is on: the tile mixes them all. */
-type PxGuestOn = PxGuest & { host: string };
+type PxGuestOn = WGuest;
 
 interface PxOverview {
-    cluster: boolean;
-    caps: { read: boolean; power: boolean };
-    nodes: PxNode[];
+    nodes: PxHost['nodes'];
     guests: PxGuestOn[];
     /** Icons the operator chose on the page, keyed "host|node|vmid". */
-    icons?: Record<string, string>;
+    icons: Record<string, string>;
 }
 
 /**
@@ -31,64 +28,52 @@ interface PxOverview {
  * actually went down, which is the one thing it is on the board to say.
  */
 function mergeHosts(hosts: PxHost[]): PxOverview {
-    const out: PxOverview = { cluster: false, caps: { read: false, power: false }, nodes: [], guests: [], icons: {} };
+    const out: PxOverview = { nodes: [], guests: [], icons: {} };
     for (const h of hosts) {
         if (h.error) continue;
-        out.caps.read = out.caps.read || h.caps?.read === true;
-        out.caps.power = out.caps.power || h.caps?.power === true;
         out.nodes.push(...(h.nodes || []));
         for (const g of h.guests || []) out.guests.push({ ...g, host: h.id });
-        Object.assign(out.icons!, h.icons || {});
+        Object.assign(out.icons, h.icons || {});
     }
-    out.cluster = out.nodes.length > 1;
     return out;
 }
 
 interface ProxmoxConfig {
     refreshSec: number;
     title: string;
-    /** Show the node meters in the header. */
+    /** Show the line of totals (of the node under most pressure) under the tile's name. */
     showNode: boolean;
+    /** Which of CPU, memory and disk are shown, in the totals and in every row. */
+    metrics: MetricFlags;
+    /** Whether the foot leads to the page. */
+    showAll: boolean;
     /** Which machines are on the tile, in what order, under what name. */
     guests: GuestSettings;
 }
 
-const DEFAULT_CONFIG: ProxmoxConfig = { refreshSec: 30, title: '', showNode: true, guests: {} };
-
-const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
-const ICON_STOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>';
-/**
- * The same fallback the board draws for a bookmark with no icon
- * (BookmarkGrid.template.ts). Kept identical on purpose: a machine row and a
- * bookmark tile are the same kind of thing wearing different clothes.
- */
-const ICON_FALLBACK = '<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
-
-/** Rows a tile draws before the footer takes over and says "and the rest". */
-const MAX_ROWS = 8;
+const DEFAULT_CONFIG: ProxmoxConfig = {
+    refreshSec: 30, title: '', showNode: true, metrics: { cpu: true, mem: true, disk: true }, showAll: true, guests: {},
+};
 
 /**
  * The hypervisor underneath, on the board beside the things it runs.
  *
  * What it adds over the Docker widget — and the reason it exists — is the line
- * of node health in the header. Docker can say a container stopped; only this
+ * of node health under the name. Docker can say a container stopped; only this
  * can say the machine it lived on is at 90% memory.
  *
- * With twenty-nine machines on one node, measured, a widget cannot be a list.
- * It shows what needs attention and the footer counts the rest.
+ * Reading only: starting and stopping a machine is done on the page, which a click on
+ * a row opens with that machine in its panel.
  */
 class ProxmoxWidget extends HTMLElement {
     private _itemId = 0;
     private _config: ProxmoxConfig = { ...DEFAULT_CONFIG };
     private data: PxOverview | null = null;
-    /** Every connected hypervisor, kept so a row can ask about its own. */
-    private hosts: PxHost[] = [];
     private loaded = false;
     private error = '';
     private timer: ReturnType<typeof setInterval> | null = null;
     /** Last body markup written, so an unchanged refresh writes nothing. */
     private _lastBody: string | null = null;
-    private _busy = new Set<string>();
     private _unsubscribe: (() => void) | null = null;
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -122,13 +107,10 @@ class ProxmoxWidget extends HTMLElement {
                 const data = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
                 if (data.widgetId !== 'proxmox') return;
                 const next = this.parseConfig(data);
-                const titleChanged = next.title !== this._config.title;
-                const nodeChanged = next.showNode !== this._config.showNode;
                 const intervalChanged = next.refreshSec !== this._config.refreshSec;
-                const guestsChanged = JSON.stringify(next.guests) !== JSON.stringify(this._config.guests);
+                const changed = JSON.stringify(next) !== JSON.stringify(this._config);
                 this._config = next;
-                if (titleChanged || nodeChanged) this.render();
-                else if (guestsChanged) this.refreshBody();
+                if (changed) this.refreshBody();
                 if (intervalChanged) this.restartTimer();
             } catch { /* keep the current config */ }
         });
@@ -148,6 +130,8 @@ class ProxmoxWidget extends HTMLElement {
             refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
             title: typeof data.title === 'string' ? data.title : '',
             showNode: data.showNode !== false,
+            metrics: readMetrics(data.metrics, ['cpu', 'mem', 'disk']),
+            showAll: showsSeeAll(data.showAll),
             guests: {
                 guestConfig: data.guestConfig && typeof data.guestConfig === 'object' ? data.guestConfig : undefined,
                 guestOrder: data.guestOrder && typeof data.guestOrder === 'object' ? data.guestOrder : undefined,
@@ -177,12 +161,8 @@ class ProxmoxWidget extends HTMLElement {
         // proxmoxLinks. It arrives on its own and repaints when it does.
         loadProxmoxLinks().then(() => { if (this.isConnected) this.refreshBody(); }).catch(() => { });
         try {
-            // Every connected hypervisor, folded into one tile: a widget that
-            // showed only the first would go quiet about the machine that
-            // actually went down.
-            const hosts = await loadProxmox();
-            this.hosts = hosts;
-            this.data = mergeHosts(hosts);
+            // Every connected hypervisor, folded into one tile.
+            this.data = mergeHosts(await loadProxmox());
             this.error = '';
         } catch (e: any) {
             // The server answers in translation keys; anything else is shown as
@@ -194,362 +174,67 @@ class ProxmoxWidget extends HTMLElement {
         this.refreshBody();
     }
 
-    private onClick = async (e: Event) => {
-        // "See all" is a link so it can be opened in a tab, but a plain click
-        // opens the page here: a full load of "/?view=proxmox" would throw away
-        // the board the person is standing on.
-        const more = (e.target as HTMLElement).closest('.px-more') as HTMLAnchorElement | null;
-        if (more) {
-            const me = e as MouseEvent;
-            if (me.button === 0 && !me.ctrlKey && !me.metaKey && !me.shiftKey && !me.altKey) {
-                e.preventDefault();
-                eventBus.emit(EVENTS.SHOW_PROXMOX_PAGE);
-            }
+    private onClick = (e: Event) => {
+        const target = e.target as HTMLElement;
+        // "See all" opens the page here, at the machines: a full load would throw away the board the person is standing on.
+        if (target.closest('[data-act="all"]')) {
+            eventBus.emit(EVENTS.SHOW_PROXMOX_PAGE, { tab: 'machines' });
             return;
         }
-
-        const btn = (e.target as HTMLElement).closest('[data-power]') as HTMLElement | null;
-        if (!btn) return;
-        e.preventDefault();
-        e.stopPropagation();
-
-        // Host and id together: two hypervisors may both have a machine 100.
-        const vmid = Number(btn.dataset.vmid);
-        const hostId = btn.dataset.host || '';
-        const guest = this.data?.guests.find(g => g.vmid === vmid && g.host === hostId);
-        const busyKey = guestKey(hostId, vmid);
-        if (!guest || this._busy.has(busyKey)) return;
-
-        const starting = !guest.running;
-        const modal = document.querySelector('confirmation-modal') as any;
-        if (modal?.confirm) {
-            const ok = await modal.confirm(
-                `${i18n.t(starting ? 'docker.action_start' : 'docker.action_stop')} ${guestLabel(this._config.guests, guest.host, guest.vmid, guest.name)}`,
-                i18n.t(starting ? 'widget.proxmox.confirm_start' : 'widget.proxmox.confirm_stop'),
-            );
-            if (!ok) return;
-        }
-
-        this._busy.add(busyKey);
-        this.refreshBody();
-        try {
-            await apiService.post('/api/proxmox/power', {
-                host: guest.host, node: guest.node, kind: guest.kind, vmid,
-                action: starting ? 'start' : 'shutdown',
-            });
-        } catch { /* the next poll tells the truth either way */ }
-        // Starting a machine takes seconds; the poll after this one is what
-        // turns the dot green, so nothing here pretends it already happened.
-        this._busy.delete(busyKey);
-        this.load();
+        const row = target.closest('[data-sel]') as HTMLElement | null;
+        if (row) eventBus.emit(EVENTS.SHOW_PROXMOX_PAGE, { tab: 'machines', sel: row.dataset.sel });
     };
 
     // ── Markup ──
 
-    private meter(label: string, pct: number) {
-        const level = pct >= 90 ? 'bad' : pct >= 60 ? 'warn' : '';
-        return `<span class="px-m">
-            <span class="px-m-top">${escapeHtml(label)}<b class="${level}">${Math.round(pct)}%</b></span>
-            <span class="px-bar"><i class="${level || 'ok'}" style="width:${Math.min(100, Math.max(0, pct))}%"></i></span>
-        </span>`;
-    }
-
-    private metersHtml(node: PxNode): string {
-        return this.meter(i18n.t('widget.telemetry.cpu'), node.cpu)
-            + this.meter(i18n.t('widget.telemetry.ram'), node.mem)
-            + this.meter(i18n.t('widget.proxmox.disk'), node.disk);
-    }
-
-    /** The bookmark this machine serves — said by its owner, or by its name. */
-    private link(g: PxGuest) {
-        return linkFor(g);   // g carries its own host
-    }
-
-    /** The node the header speaks for: the one under most pressure. */
-    private worstNode(): PxNode | null {
-        if (!this.data?.nodes.length) return null;
-        return [...this.data.nodes].sort(
-            (a, b) => Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk),
-        )[0];
-    }
-
-    private rowHtml(g: PxGuestOn): string {
-        const busy = this._busy.has(guestKey(g.host, g.vmid));
-        // Asked of the hypervisor this machine is on, not of the set: one
-        // token may carry VM.PowerMgmt while another is read-only.
-        const power = this.hosts.find(h => h.id === g.host)?.caps?.power === true
-            && accessAllows(userStore.getUser(), 'proxmox_control');
-        const mem = g.mem_total > 0 ? Math.round((g.mem / g.mem_total) * 100) : 0;
-
-        // The icon slot is the bookmark's icon once a machine is tied to one.
-        // Until then it wears the board's own fallback, which is what a
-        // bookmark with no icon wears too.
-        const link = this.link(g);
-        // Same order as the page: what the operator chose, then the bookmark's,
-        // then the board's fallback.
-        const face = this.data?.icons?.[iconKey(g.host, g.node, g.vmid)] || link?.icon || '';
-        const icon = face
-            ? `<img src="${escapeHtml(resolveIconUrl(face))}" alt="" loading="lazy">`
-            : ICON_FALLBACK;
-        // The dot says on or off, the same two colours the page uses and its
-        // header counts. That a service of yours went down with this machine is
-        // the accent edge below — a third colour in an 8px dot was asking one
-        // mark to carry two unrelated things.
-        const flag = !g.running && !!link;
-
-        const action = power
-            ? `<button class="px-act" data-power data-host="${escapeHtml(g.host)}" data-vmid="${g.vmid}" ${busy ? 'disabled' : ''}
-                    aria-label="${escapeHtml(i18n.t(g.running ? 'docker.action_stop' : 'docker.action_start'))}"
-               >${g.running ? ICON_STOP : ICON_PLAY}</button>`
-            : '';
-
-        return `<div class="px-row${g.running ? '' : ' px-row--off'}${flag ? ' px-row--flag' : ''}">
-            <span class="px-dot px-dot--${g.running ? 'up' : 'bad'}"></span>
-            <span class="px-ico">${icon}</span>
-            <span class="px-name">
-                <b>${escapeHtml(guestLabel(this._config.guests, g.host, g.vmid, g.name)) || '—'}</b>
-                <span>${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}</span>
-            </span>
-            <span class="px-ty px-ty--${g.kind === 'lxc' ? 'lxc' : 'vm'}">${g.kind === 'lxc' ? 'LXC' : 'VM'}</span>
-            <span class="px-use">${g.running
-                ? `<b>${i18n.formatNumber(Math.round(g.cpu * 10) / 10, { maximumFractionDigits: 1 })}%</b><span class="px-mem"> · ${mem}%</span>`
-                : escapeHtml(i18n.t('docker.state_stopped'))}</span>
-            <span class="px-acts">${action}</span>
-        </div>`;
-    }
-
     private body(): string {
-        if (!this.loaded) return `<div class="px-state">${escapeHtml(i18n.t('general.loading'))}</div>`;
-        if (this.error) return `<div class="px-state">${escapeHtml(i18n.t(this.error))}</div>`;
-
-        // What the person left on the tile: the page and its counts still speak
-        // for every machine, the tile only for the ones they chose.
-        const guests = visibleGuests(this._config.guests, this.data?.guests ?? []);
-        if (!guests.length) return `<div class="px-state">${escapeHtml(i18n.t('widget.proxmox.empty'))}</div>`;
-
-        // A tile shows only the first few rows, so what needs attention has to
-        // be among them or it is not shown at all. The order is by how much it
-        // needs saying: a stopped machine that serves a bookmark is an outage,
-        // a stopped machine nobody linked is usually on purpose. Once somebody
-        // has arranged the machines that choice is the order, as it is on the
-        // Docker tile: they said where each one goes.
-        const rank = (g: PxGuestOn) => (g.running ? 2 : (this.link(g) ? 0 : 1));
-        const sorted = hasChosenOrder(this._config.guests)
-            ? guests
-            : [...guests].sort((a, b) => {
-                const d = rank(a) - rank(b);
-                return d !== 0 ? d : a.vmid - b.vmid;
-            });
-        const shown = sorted.slice(0, MAX_ROWS);
-        const running = guests.filter(g => g.running).length;
-
-        return `<div class="px-rows">${shown.map(g => this.rowHtml(g)).join('')}</div>
-            <div class="px-foot">
-                <span>${escapeHtml(i18n.t('widget.proxmox.running_label'))}: ${running}/${guests.length}</span>
-                <a class="px-more" href="/?view=proxmox">${escapeHtml(i18n.t('widget.proxmox.see_all'))} →</a>
-            </div>`;
+        const t = (key: string) => i18n.t(key);
+        const state = !this.loaded ? t('general.loading') : this.error ? t(this.error) : undefined;
+        const icons = this.data?.icons ?? {};
+        return shellHtml(proxmoxShell({
+            nodes: this.data?.nodes ?? [],
+            guests: this.data?.guests ?? [],
+            settings: this._config.guests,
+            metrics: this._config.metrics,
+            showSummary: this._config.showNode,
+            showAll: this._config.showAll,
+            // Same order as the page: what the operator chose, then the bookmark's, then the board's fallback.
+            faceOf: g => {
+                const face = icons[iconKey(g.host, g.node, g.vmid)] || linkFor(g)?.icon || '';
+                return face ? resolveIconUrl(face) : '';
+            },
+            linked: g => !!linkFor(g),
+            t,
+            num: n => i18n.formatNumber(n, { maximumFractionDigits: 1 }),
+            state,
+        }));
     }
 
     render() {
         if (!this.shadowRoot) return;
-        const node = this.worstNode();
-
-        // The container is written even with nothing in it yet. render() runs
-        // before the first load answers, so making it conditional on having a
-        // node meant the meters were never created at all — and refreshBody,
-        // which fills them in place, had nothing to find. Measured in the
-        // browser: the header said "undefined" and stayed empty forever.
-        const health = this._config.showNode
-            ? `<div class="px-health">${node ? this.metersHtml(node) : ''}</div>`
-            : '';
-
-        // What is left of the old heading is what only this widget can say: which
-        // node it is reading and how that node is. The name is the pill on the border.
-        const header = `
-            <div class="px-meta">
-                <span class="px-node">${node ? escapeHtml(node.name) : ''}</span>
-                ${health}
-            </div>`;
-
-        this.shadowRoot.innerHTML = `<style>${CSS}</style>${header}<div class="px-body" id="px-body"></div>`;
+        // The name, when there is one, is the pill on the tile's border: the body is all there is.
+        this.shadowRoot.innerHTML = `<style>${SHELL_CSS}</style><div class="sh-body" id="px-body"></div>`;
         this._lastBody = null;
         this.refreshBody();
     }
 
     /**
-     * Repaints the list without rebuilding the widget.
-     *
-     * The Docker and monitor widgets both learned this the same way: a timer
-     * that calls render() reassigns the shadow root, which reparses the
-     * stylesheet, closes anything open under the pointer and sends a scrolled
-     * list back to the top — every few seconds, for as long as the board is
-     * open. Only the body is touched, and only when it differs.
+     * Repaints the body without rebuilding the widget: a timer that reassigns the shadow root reparses the
+     * stylesheet, closes anything open under the pointer and sends a scrolled list back to the top. Only
+     * the body is touched, and only when it differs.
      */
     private refreshBody(): void {
         const body = this.shadowRoot?.getElementById('px-body');
         if (!body) return;
-
-        // The header carries live figures too, so it is updated in place rather
-        // than rebuilt: replacing it would take the meters' width transition
-        // back to zero on every poll.
-        const node = this.worstNode();
-        if (node) {
-            const meters = this.shadowRoot?.querySelector('.px-health');
-            if (meters) meters.innerHTML = this.metersHtml(node);
-            const label = this.shadowRoot?.querySelector('.px-node');
-            if (label && label.textContent !== node.name) label.textContent = node.name;
-        }
-
         const html = this.body();
         if (html === this._lastBody) return;
         this._lastBody = html;
-
-        const scrollTop = body.querySelector('.px-rows')?.scrollTop ?? 0;
+        const scrollTop = body.querySelector('.sh-rows')?.scrollTop ?? 0;
         body.innerHTML = html;
-        const rows = body.querySelector('.px-rows');
+        const rows = body.querySelector('.sh-rows');
         if (rows && scrollTop) rows.scrollTop = scrollTop;
     }
 }
-
-const CSS = `
-:host {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-    font-family: var(--font-sans);
-    color: var(--text-main);
-    /* The tile is whatever width the board gives it, and that is what the rows
-       below answer to — not the viewport, which says nothing about a tile.
-       The explicit width is not decoration: inline-size containment means the
-       box stops asking its contents how wide to be, and without a width of its
-       own it collapses to zero — measured at 0x245, and photographed as an
-       empty card while the DOM inside it was perfectly correct. */
-    width: 100%;
-    container-type: inline-size;
-}
-
-/* The strip at the top: the node's name, and under it its meters. It is there
-   only once there is a node to name — before that, or with Proxmox unset, an
-   empty band with a line under it would say nothing. */
-.px-meta {
-    display: none;
-    flex-direction: column; gap: 6px;
-    padding: 10px 14px 8px; flex-shrink: 0;
-    border-bottom: 1px solid var(--border);
-}
-.px-meta:has(.px-node:not(:empty)) { display: flex; }
-.px-node {
-    font-family: var(--font-mono, monospace);
-    font-size: 11px;
-    color: var(--text-dim);
-    white-space: nowrap;
-}
-
-/* Node health: the line only this widget can draw. */
-.px-health { display: flex; gap: 10px; align-items: center; }
-.px-m { flex: 1; min-width: 0; }
-.px-m-top {
-    display: flex; justify-content: space-between;
-    font-family: var(--font-mono, monospace);
-    font-size: 9.5px; letter-spacing: 0.08em; color: var(--text-dim);
-}
-.px-m-top b { color: var(--text-main); font-weight: 600; font-variant-numeric: tabular-nums; }
-.px-m-top b.warn { color: var(--warning-color); }
-.px-m-top b.bad { color: var(--danger-color); }
-.px-bar {
-    display: block; height: 3px; border-radius: 2px; margin-top: 3px;
-    background: rgba(128, 128, 128, 0.18); overflow: hidden;
-}
-.px-bar i { display: block; height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.3s var(--ease-out, ease); }
-.px-bar i.warn { background: var(--warning-color); }
-.px-bar i.bad { background: var(--danger-color); }
-.px-bar i.ok { background: var(--success-color); }
-
-.px-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.px-state { padding: 16px; font-size: 12px; color: var(--text-dim); text-align: center; }
-
-.px-rows { flex: 1; min-height: 0; overflow-y: auto; }
-
-/* The same grid the Docker widget uses for a container, so a board with both
-   does not look assembled from parts. */
-.px-row {
-    display: grid;
-    grid-template-columns: 8px 18px minmax(0, 2fr) 34px minmax(0, 1.1fr) 30px;
-    gap: 0 8px;
-    align-items: center;
-    padding: 7px 10px;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.08);
-}
-.px-row:last-child { border-bottom: none; }
-
-.px-dot { width: 8px; height: 8px; border-radius: 50%; }
-.px-dot--up { background: var(--success-color); }
-
-.px-ico { display: grid; place-items: center; color: var(--text-dim); }
-.px-ico svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5px; fill: none; }
-.px-ico img { width: 16px; height: 16px; object-fit: contain; border-radius: 3px; }
-
-/* An outage wears the accent on its leading edge — logical, so it stays on the
-   side the reader starts from in Arabic too. */
-.px-row--flag { border-inline-start: 2px solid var(--accent); padding-inline-start: 8px; }
-.px-dot--bad { background: var(--danger-color); }
-
-.px-name { min-width: 0; }
-.px-name b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.px-name span { display: block; font-family: var(--font-mono, monospace); font-size: 10px; color: var(--text-dim); opacity: 0.75; }
-
-/* Container or full machine, told by the shape and nothing else: the colour is
-   the service's and the icon is the bookmark's, so form is the channel left. */
-.px-ty {
-    font-family: var(--font-mono, monospace);
-    font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
-    padding: 3px 5px; justify-self: start;
-    color: var(--text-dim);
-    background: rgba(128, 128, 128, 0.14);
-    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
-}
-.px-ty--lxc { border-radius: 999px; }
-.px-ty--vm { border-radius: 3px; }
-
-.px-use {
-    font-family: var(--font-mono, monospace);
-    font-size: 11px; color: var(--text-dim);
-    font-variant-numeric: tabular-nums; text-align: end;
-}
-.px-use b { color: var(--text-main); font-weight: 500; }
-.px-row--off .px-name b { color: var(--text-dim); }
-
-/* A narrow tile keeps the name, the state and the button, and drops what can
-   be read on the page instead: the type is already in the line under the name,
-   and one figure beats two squeezed into nothing. */
-@container (max-width: 250px) {
-    .px-row { grid-template-columns: 8px 18px minmax(0, 1fr) auto 30px; }
-    .px-ty, .px-mem { display: none; }
-}
-
-.px-acts { display: flex; justify-content: flex-end; }
-.px-act {
-    width: 26px; height: 26px; border-radius: 6px;
-    border: 1px solid var(--card-border, rgba(128, 128, 128, 0.2));
-    background: none; color: var(--text-dim);
-    display: grid; place-items: center; cursor: pointer;
-    transition: all 0.15s ease;
-}
-.px-act svg { width: 12px; height: 12px; }
-.px-act:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); }
-.px-act[disabled] { opacity: 0.4; pointer-events: none; }
-
-.px-foot {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 12px;
-    border-top: 1px solid var(--border);
-    font-family: var(--font-mono, monospace);
-    font-size: 10.5px; color: var(--text-dim);
-    flex-shrink: 0;
-}
-.px-more { margin-inline-start: auto; color: var(--accent); font-weight: 600; text-decoration: none; }
-`;
 
 if (!customElements.get('widget-proxmox')) {
     customElements.define('widget-proxmox', ProxmoxWidget);

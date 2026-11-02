@@ -236,9 +236,10 @@ eventBus.on(EVENTS.SHOW_MONITOR_HISTORY, (e: CustomEvent) => {
     if (drawer) drawer.open(itemId, name);
 });
 
-eventBus.on(EVENTS.SHOW_MONITOR_OVERVIEW, () => {
+eventBus.on(EVENTS.SHOW_MONITOR_OVERVIEW, (e: CustomEvent) => {
     const page = document.querySelector('monitor-page') as any;
-    if (page) page.open();
+    // A tile of the board may ask for a tab and an item: { tab, sel }.
+    if (page) page.open(e.detail);
 });
 
 eventBus.on(EVENTS.HIDE_MONITOR_OVERVIEW, () => {
@@ -246,9 +247,10 @@ eventBus.on(EVENTS.HIDE_MONITOR_OVERVIEW, () => {
     if (page) page.close();
 });
 
-eventBus.on(EVENTS.SHOW_PROXMOX_PAGE, () => {
+eventBus.on(EVENTS.SHOW_PROXMOX_PAGE, (e: CustomEvent) => {
     const page = document.querySelector('proxmox-page') as any;
-    if (page) page.open();
+    // A tile of the board may ask for a tab and an item: { tab, sel }.
+    if (page) page.open(e.detail);
 });
 
 eventBus.on(EVENTS.HIDE_PROXMOX_PAGE, () => {
@@ -256,9 +258,10 @@ eventBus.on(EVENTS.HIDE_PROXMOX_PAGE, () => {
     if (page) page.close();
 });
 
-eventBus.on(EVENTS.SHOW_DOCKER_PAGE, () => {
+eventBus.on(EVENTS.SHOW_DOCKER_PAGE, (e: CustomEvent) => {
     const page = document.querySelector('docker-page') as any;
-    if (page) page.open();
+    // A tile of the board may ask for a tab and an item: { tab, sel }.
+    if (page) page.open(e.detail);
 });
 
 eventBus.on(EVENTS.HIDE_DOCKER_PAGE, () => {

@@ -138,6 +138,7 @@ describe('mergedOrder', () => {
 
 describe('settleRows', () => {
     const row = (key: string, over: object = {}) => ({ key, sid: '', visible: true, label: '', url: '', ...over });
+    const rowNoUrl = (key: string, over: object = {}) => ({ key, sid: '', visible: true, label: '', ...over });
 
     it('stores nothing for a container left as it was', () => {
         expect(settleRows({}, [row('h/a')], true)).toEqual({});
@@ -174,6 +175,12 @@ describe('settleRows', () => {
         const stored = { abcdef01: { label: 'Alpha', icon: 'whale' } } as Record<string, ContainerCfgEntry>;
         const out = settleRows(stored, [row('h/a', { sid: 'abcdef01', label: 'Alpha' })], true);
         expect({ ...out['h/a'] } as object).toEqual({ label: 'Alpha', icon: 'whale' });
+    });
+
+    it('a row that does not carry an address leaves a stored one as it is, and an empty one still removes it', () => {
+        const stored = { 'h/a': { label: 'A', url: 'http://a' } };
+        expect(settleRows(stored, [rowNoUrl('h/a', { label: 'A' })], true)).toEqual(stored);
+        expect(settleRows(stored, [row('h/a', { label: 'A', url: '' })], true)).toEqual({ 'h/a': { label: 'A' } });
     });
 
     it('stores a name and an address only when they were typed', () => {

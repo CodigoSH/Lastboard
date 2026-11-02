@@ -12,6 +12,8 @@ import '../IconSelectionModal/IconSelectionModal';
 import '../Select/Select';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { RefreshClock, whenRefreshing } from '../../../services/refreshClock';
+import { targetTab, type PageTarget } from '../../../services/pageTarget';
+import { heldReading, holdReading } from '../../../services/infraReadings';
 import { PageNav, type NavState } from '../../../services/pageNav';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
@@ -64,6 +66,7 @@ interface PxSeries { range: string; cpu: number[]; mem: number[]; points: number
 type SelectEl = HTMLElement & { options: { value: string; label: string }[]; value: string };
 
 type Tab = 'overview' | 'machines' | 'storage' | 'tasks' | 'syslog';
+const TABS: readonly Tab[] = ['overview', 'machines', 'storage', 'tasks', 'syslog'];
 type DrawerTab = 'summary' | 'tasks' | 'syslog';
 type Sel = { kind: 'guest' | 'node' | 'store'; hostId: string; ref: string };
 type Current =
@@ -262,13 +265,19 @@ class ProxmoxPage extends HTMLElement {
 
     // ── Opening and closing ──
 
-    open() {
+    /** Opens the page, at a tab and with an item in the panel when the caller says so; `sel` is written as the history writes it. */
+    open(target?: PageTarget) {
         this.setAttribute('open', '');
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: true });
         this.drawerOpen = false;
+        const asked = targetTab(target, TABS);
+        if (asked) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back. Once per opening, never stacked.
         this.nav.open(this.navState());
-        this.loaded = false;
+        // What a tile of the board last read is what the page opens on, until its own answer arrives.
+        const fromTile = heldReading<PxHost[]>('proxmox');
+        if (fromTile) this.hosts = fromTile.value;
+        this.loaded = !!fromTile;
         this.curveAt = 0;
         this.latestAt = 0;
         this.paintAll(true);
@@ -276,7 +285,12 @@ class ProxmoxPage extends HTMLElement {
         if (this.timer) clearInterval(this.timer);
         this.timer = setInterval(whenRefreshing(() => { void this.load(); }), POLL_MS);
         this.updated.reset();
+        if (fromTile) this.updated.mark(fromTile.at);
         this.updated.start();
+        const parts = target?.sel?.split('|') ?? [];
+        if (parts.length >= 3 && (parts[0] === 'guest' || parts[0] === 'node' || parts[0] === 'store')) {
+            this.choose({ kind: parts[0], hostId: parts[1], ref: parts.slice(2).join('|') });
+        }
     }
 
     private closeQuietly() {
@@ -696,6 +710,7 @@ class ProxmoxPage extends HTMLElement {
                 if (this.hasAttribute('open')) { this.paintAll(); void this.loadCurve(); void this.loadLatest(); }
             }));
             this.hosts = mergeHosts(refs, [], fresh);
+            holdReading('proxmox', this.hosts);
             if (this.hostFilter !== 'all' && !this.hosts.some(h => h.id === this.hostFilter)) this.hostFilter = 'all';
             this.updated.mark();
         }

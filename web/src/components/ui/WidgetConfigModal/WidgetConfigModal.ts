@@ -21,6 +21,12 @@ import { arrangeBy, mergeOrder } from '../../../services/rowOrder';
 import { containerKey, entryOf, inChosenOrder, isShown, settleOrder, settleRows, type ContainerRow } from '../../../services/dockerContainers';
 import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } from '../../../widgets/core/telemetryInterval';
 import { loadProxmox, type PxHost } from '../../../services/proxmoxApi';
+import { metricsFieldHtml, readCommonFields, seeAllFieldHtml } from '../../../widgets/shell/configFields';
+import { readMetrics, showsSeeAll, type Metric } from '../../../widgets/shell/metrics';
+import { SHELL_FALLBACK } from '../../../widgets/shell/shell';
+import { readItemConfig } from '../../../services/monitorWidget';
+import { resolveIconUrl } from '../../../services/iconUrl';
+import { materializeIcon } from '../../../services/iconStore';
 import { arrangedIds, guestKey, inGuestOrder, isGuestShown, settleGuestOrder, settleGuests, type GuestRow } from '../../../services/proxmoxGuests';
 import { listWidgetSecrets, saveWidgetSecrets } from '../../../services/widgetSecrets';
 import { secretsPatch, SECRET_MASK } from '../../../services/secretField';
@@ -38,7 +44,6 @@ import {
     type DockerContainer,
     type DockerHost,
     containerName,
-    defaultContainerUrl,
     fetchContainers,
     hostErrorKey,
     fetchAgentVersion,
@@ -557,6 +562,7 @@ class WidgetConfigModal extends HTMLElement {
 
             const nodeToggle = this.shadowRoot?.getElementById('proxmox-shownode') as HTMLInputElement | null;
             newContent.showNode = nodeToggle ? nodeToggle.checked : true;
+            this.storeCommonFields(newContent, ['cpu', 'mem', 'disk']);
 
             // Machines nobody has chosen: shown unless this is switched off. Only the
             // off state is stored, so content that never heard of it means on.
@@ -601,11 +607,28 @@ class WidgetConfigModal extends HTMLElement {
                 .map(row => parseInt(row.dataset.id || '0', 10)).filter(id => id > 0);
             if (arranged.length) newContent.itemOrder = mergeOrder(arranged, newContent.itemOrder);
 
+            // A name and an icon of this widget's own for a service, by its id. Only what was set is kept; a
+            // service this screen did not list (the list did not load) keeps what it had.
+            const itemConfig: Record<string, { label?: string; icon?: string }> = { ...(newContent.itemConfig || {}) };
+            this.shadowRoot?.querySelectorAll<HTMLElement>('.monitor-service-item').forEach(row => {
+                const id = row.dataset.id;
+                if (!id) return;
+                const label = row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '';
+                const icon = row.dataset.icon || '';
+                const entry: { label?: string; icon?: string } = {};
+                if (label) entry.label = label;
+                if (icon) entry.icon = icon;
+                if (entry.label || entry.icon) itemConfig[id] = entry; else delete itemConfig[id];
+            });
+            if (Object.keys(itemConfig).length) newContent.itemConfig = itemConfig; else delete newContent.itemConfig;
+            this.storeCommonFields(newContent, []);
+
             const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
         } else if (widgetId === 'docker') {
             const refreshSel = this.shadowRoot?.getElementById('docker-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
+            this.storeCommonFields(newContent, ['cpu', 'mem']);
 
             // Containers nobody has chosen: shown unless this is switched off. Only
             // the off state is stored, so content that never heard of it means on.
@@ -619,7 +642,6 @@ class WidgetConfigModal extends HTMLElement {
                     sid: row.dataset.sid || '',
                     visible: row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true,
                     label: row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '',
-                    url: row.querySelector<HTMLInputElement>('.docker-url')?.value.trim() || '',
                 }));
             const cfg = settleRows(newContent.containerConfig, rows, showNew);
 
@@ -1314,6 +1336,13 @@ class WidgetConfigModal extends HTMLElement {
      * placeholder and setupMonitorEvents fills it in — the same shape the docker
      * form uses for its hosts.
      */
+    /** Writes the settings every infrastructure widget has in common into what is being saved. */
+    private storeCommonFields(content: any, allowed: readonly Metric[]) {
+        const common = readCommonFields(this.shadowRoot!, allowed);
+        if (common.metrics) content.metrics = common.metrics; else delete content.metrics;
+        if (common.showAll) delete content.showAll; else content.showAll = false;
+    }
+
     /**
      * The Proxmox tile's own settings. The connection is NOT here: it is one
      * hypervisor per instance, set by an administrator in Preferences, because
@@ -1355,7 +1384,8 @@ class WidgetConfigModal extends HTMLElement {
             <div class="field-group">
                 <small>${i18n.t('widget.proxmox.show_node_desc')}</small>
             </div>
-            <div class="field-group" id="proxmox-state"></div>
+            ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem', 'disk']), ['cpu', 'mem', 'disk'], k => i18n.t(k))}
+            ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>
                 <app-select id="proxmox-refresh" value="${refresh}"></app-select>
@@ -1365,14 +1395,7 @@ class WidgetConfigModal extends HTMLElement {
         return { general: generalTab, customization: renderAppearanceControls() };
     }
 
-    /**
-     * Fills the refresh choices and says, plainly, whether this instance can
-     * drive the machines or only watch them.
-     *
-     * Measured on a real host: a token with the auditor role reads everything
-     * the tile shows and cannot start anything. Saying so here beats drawing
-     * buttons that answer 403 when somebody finally presses one.
-     */
+    /** Fills the refresh choices and the list of machines. The tile only reads, so nothing here is about driving them. */
     private async setupProxmoxEvents(content: any) {
         // Wide like the Docker one: two columns when there is more than one hypervisor.
         this.shadowRoot?.getElementById('modal')?.classList.add('dialog--wide');
@@ -1384,22 +1407,12 @@ class WidgetConfigModal extends HTMLElement {
             { value: '300', label: '5m' },
         ];
 
-        const state = this.shadowRoot?.getElementById('proxmox-state');
         const box = this.shadowRoot?.getElementById('px-machines-box');
-        if (!state) return;
+        if (!box) return;
         try {
-            // Several hypervisors may be connected and their tokens need not
-            // agree: the widget draws a power button wherever one is allowed,
-            // so the line says so if any of them is.
-            const hosts = await loadProxmox();
-            const anyPower = hosts.some(h => h.caps?.power === true);
-            state.innerHTML = `<small>${esc(i18n.t(anyPower
-                ? 'widget.proxmox.can_power'
-                : 'widget.proxmox.read_only'))}</small>`;
-            if (box) this.renderProxmoxMachines(box, hosts, content);
+            this.renderProxmoxMachines(box, await loadProxmox(), content);
         } catch {
-            state.innerHTML = `<small>${esc(i18n.t('proxmox.not_configured'))}</small>`;
-            if (box) box.innerHTML = `<div class="field-group"><label>${esc(i18n.t('proxmox.machines'))}</label>
+            box.innerHTML = `<div class="field-group"><label>${esc(i18n.t('proxmox.machines'))}</label>
                 <p class="monitor-services__state">${esc(i18n.t('proxmox.not_configured'))}</p></div>`;
         }
     }
@@ -1539,6 +1552,7 @@ class WidgetConfigModal extends HTMLElement {
                 </div>
                 <small>${i18n.t('monitor.select_services_desc')}</small>
             </div>
+            ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>
                 <app-select id="monitor-refresh" value="${refresh}"></app-select>
@@ -1564,9 +1578,9 @@ class WidgetConfigModal extends HTMLElement {
         const box = this.shadowRoot?.getElementById('monitor-services');
         if (!box) return;
 
-        let rows: { item_id: number; name: string }[] = [];
+        let rows: { item_id: number; name: string; icon?: string }[] = [];
         try {
-            rows = await apiService.get<{ item_id: number; name: string }[]>('/api/monitor/overview');
+            rows = await apiService.get<{ item_id: number; name: string; icon?: string }[]>('/api/monitor/overview');
         } catch {
             box.innerHTML = `<p class="monitor-services__state">${esc(i18n.t('general.error'))}</p>`;
             return;
@@ -1580,18 +1594,44 @@ class WidgetConfigModal extends HTMLElement {
         const selected: number[] = Array.isArray(content.items) ? content.items : [];
         const all = selected.length === 0;
 
-        box.innerHTML = arrangeBy(rows, r => r.item_id, Array.isArray(content.itemOrder) ? content.itemOrder : undefined).map(r => `
-            <div class="monitor-service-item" data-id="${r.item_id}">
+        const cfgOf = readItemConfig(content.itemConfig);
+        box.innerHTML = arrangeBy(rows, r => r.item_id, Array.isArray(content.itemOrder) ? content.itemOrder : undefined).map(r => {
+            const own = cfgOf[String(r.item_id)] ?? {};
+            const face = own.icon || r.icon || '';
+            return `
+            <div class="monitor-service-item" data-id="${r.item_id}" data-icon="${esc(own.icon || '')}" data-default-icon="${esc(r.icon || '')}">
                 <span class="row-grip" role="button" tabindex="0"
                       aria-label="${esc(i18n.t('widget.drag_to_arrange'))}" title="${esc(i18n.t('widget.drag_to_arrange'))}">${DRAG_HANDLE}</span>
                 <label class="monitor-service-row">
                     <input type="checkbox" class="monitor-service" data-id="${r.item_id}"
                            ${all || selected.includes(r.item_id) ? 'checked' : ''} />
-                    <span>${esc(r.name) || '—'}</span>
                 </label>
-            </div>
-        `).join('');
+                <button type="button" class="mon-face" data-pick-icon title="${esc(i18n.t('proxmox.icon_set'))}" aria-label="${esc(i18n.t('proxmox.icon_set'))}">${face ? `<img src="${esc(resolveIconUrl(face))}" alt="">` : SHELL_FALLBACK}</button>
+                <input type="text" class="docker-label" value="${esc(own.label || '')}" placeholder="${esc(r.name)}" />
+            </div>`;
+        }).join('');
         bindRowReorder(box, this.shadowRoot!, { row: '.monitor-service-item', handle: '.row-grip' });
+        box.addEventListener('click', e => { void this.pickMonitorIcon(e); });
+    }
+
+    /** Opens the icon picker for one service of the list; an empty answer goes back to the bookmark's own icon. */
+    private async pickMonitorIcon(e: Event) {
+        const btn = (e.target as HTMLElement).closest('[data-pick-icon]') as HTMLElement | null;
+        const row = btn?.closest('.monitor-service-item') as HTMLElement | null;
+        if (!btn || !row) return;
+        e.preventDefault();
+        let modal = document.querySelector('icon-selection-modal') as (HTMLElement & { open: () => Promise<string | null> }) | null;
+        if (!modal) {
+            modal = document.createElement('icon-selection-modal') as HTMLElement & { open: () => Promise<string | null> };
+            document.body.appendChild(modal);
+        }
+        const picked = await modal.open();
+        if (picked === null) return;
+        // Downloaded once, here, as a bookmark's is: the board never asks a CDN what it is drawing.
+        const icon = picked ? await materializeIcon(resolveIconUrl(picked)) : '';
+        row.dataset.icon = icon;
+        const shown = icon || row.dataset.defaultIcon || '';
+        btn.innerHTML = shown ? `<img src="${esc(resolveIconUrl(shown))}" alt="">` : SHELL_FALLBACK;
     }
 
     /** Past this many hosts, scanning the list is slower than typing a name. */
@@ -1714,6 +1754,8 @@ class WidgetConfigModal extends HTMLElement {
         const generalTab = `
             ${body}
             ${showNewField}
+            ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem']), ['cpu', 'mem'], k => i18n.t(k))}
+            ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>
                 <app-select id="docker-refresh" value="${refresh}"></app-select>
@@ -1841,11 +1883,6 @@ class WidgetConfigModal extends HTMLElement {
         const entry = entryOf({ containerConfig: cfg }, host.id, c);
         const name = containerName(c);
 
-        // The derived address is the placeholder, not the value: leaving the
-        // field empty means "use whatever you worked out", so a container that
-        // later publishes a different port keeps working without an edit.
-        const suggested = defaultContainerUrl(c, host, window.location.hostname);
-
         return `
             <div class="docker-container-row" data-key="${esc(key)}" data-sid="${esc(sid)}" data-name="${esc(name)}" data-search="${esc((name + ' ' + c.Image).toLowerCase())}">
                 <span class="row-grip" role="button" tabindex="0"
@@ -1855,11 +1892,7 @@ class WidgetConfigModal extends HTMLElement {
                        title="${esc(i18n.t('docker.container_visible'))}" />
                 <input type="text" class="docker-label"
                        value="${esc(entry.label || '')}" placeholder="${esc(name)}" />
-                <input type="text" class="docker-url"
-                       data-suggested="${esc(suggested)}"
-                       value="${esc(entry.url || '')}"
-                       placeholder="${esc(suggested || i18n.t('docker.container_url_none'))}"
-                       title="${esc(i18n.t('docker.container_url'))}" />
+                <span class="px-machine-meta" title="${esc(c.Image)}">${esc(c.Image)}</span>
             </div>`;
     }
 }

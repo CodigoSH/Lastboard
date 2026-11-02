@@ -1000,6 +1000,17 @@ dialog[open] {
     cursor: pointer;
 }
 
+/* The icon of a service in the list: a button that opens the picker. */
+.mon-face {
+    width: 28px; height: 28px; flex: none; display: grid; place-items: center; padding: 0;
+    border-radius: 7px; border: 1px solid var(--card-border); background: var(--surface-solid); cursor: pointer; overflow: hidden;
+}
+.mon-face:hover { border-color: rgba(var(--accent-rgb), 0.5); }
+.mon-face img { width: 100%; height: 100%; object-fit: contain; }
+.mon-face svg { width: 14px; height: 14px; fill: var(--text-dim); opacity: 0.6; }
+.monitor-service-item .docker-label { flex: 1.4; min-width: 0; }
+.monitor-service-item .monitor-service-row { flex: 0 0 auto; padding-inline-end: 2px; }
+
 /* ── Docker: per-container settings ──────────────────────────────────────────
    Same box as the monitor service list, with two extra controls per row: the
    icon and the display name. Grouped by host because the list can span
@@ -1103,7 +1114,6 @@ dialog[open] {
     .docker-container-row {
         grid-template-columns: auto auto minmax(0, 1fr);
     }
-    .docker-container-row .docker-url,
     .docker-container-row .px-machine-meta {
         grid-column: 3 / -1;
     }
@@ -1179,30 +1189,12 @@ dialog[open] {
     border-color: var(--border);
 }
 
-.docker-container-row input[type="text"].docker-label:focus,
-.docker-container-row input[type="text"].docker-url:focus {
+.docker-container-row input[type="text"].docker-label:focus {
     background: var(--input-bg, transparent);
     border-color: var(--accent);
 }
 
-/* The address sits quieter than the name: most of the time the placeholder
-   already says where the row will go, and there is nothing to type. */
-.docker-container-row input[type="text"].docker-url {
-    padding: 4px 8px;
-    background: transparent;
-    border-color: transparent;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-}
-
-.docker-container-row input[type="text"].docker-url:hover {
-    border-color: var(--border);
-}
-
-/* What a Proxmox row has where a Docker row has its address: what the machine is,
-   which is not something to edit. Same weight and type as the address beside it
-   in the other list, so the two lists read as one kind of control. */
+/* What a row says about the thing it is: a machine's kind and number, a container's image — not something to edit. */
 .px-machine-meta {
     min-width: 0;
     padding: 4px 8px;

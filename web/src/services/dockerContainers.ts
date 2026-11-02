@@ -84,7 +84,8 @@ export interface ContainerRow {
     sid: string;
     visible: boolean;
     label: string;
-    url: string;
+    /** An address typed for the row by an earlier version. The screen no longer asks for one, so `undefined` leaves a stored one as it is. */
+    url?: string;
 }
 
 /**
@@ -111,7 +112,7 @@ export function settleRows(
         if (row.label) entry.label = row.label; else delete entry.label;
         // Only an explicit address is stored. An empty field means the widget keeps
         // deriving one, so it follows the container.
-        if (row.url) entry.url = row.url; else delete entry.url;
+        if (row.url !== undefined) { if (row.url) entry.url = row.url; else delete entry.url; }
         if (!row.visible) entry.hidden = true;
         else if (showNew) delete entry.hidden;
         else entry.hidden = false;
