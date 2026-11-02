@@ -87,10 +87,8 @@ const sessionRowTemplate = (s: SessionRow) => {
 export const sessionsListTemplate = (view: SessionsView) => view.status === 'error'
     ? `<p class="settings-content__text-dim">${i18n.t('sessions.load_error')}</p>`
     : view.status === 'ready' && view.items.length > 0
-        ? `<div class="sessions-list">
-                <div class="sessions-head" aria-hidden="true"><span>${i18n.t('sessions.col_device')}</span><span>${i18n.t('sessions.col_address')}</span><span>${i18n.t('sessions.col_seen')}</span><span></span></div>
-                ${sessionsInOrder(view.items).map(sessionRowTemplate).join('')}
-            </div>
+        ? `<div class="sessions-head" aria-hidden="true"><span>${i18n.t('sessions.col_device')}</span><span>${i18n.t('sessions.col_address')}</span><span>${i18n.t('sessions.col_seen')}</span><span></span></div>
+            <div class="sessions-list">${sessionsInOrder(view.items).map(sessionRowTemplate).join('')}</div>
             ${view.items.some(s => !s.current) ? `<div class="sessions-foot">
                 <app-button variant="danger" data-action="close-other-sessions">${i18n.t('sessions.close_others')}</app-button>
             </div>` : ''}`
