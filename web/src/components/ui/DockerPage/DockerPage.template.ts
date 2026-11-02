@@ -141,6 +141,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
             label: t('dockerpage.kpi_containers'), icon: 'box', value: fmt.num(tt.running), unit: `/ ${fmt.num(tt.total)}`,
             ring: { percent: pctRunning, level, label: `${fmt.num(Math.round(pctRunning))}%` },
             chips: [
+                { text: `● ${t('infra.filter_up')}: ${fmt.num(tt.running)}`, tone: 'ok' },
                 { text: `${t('infra.filter_off')}: ${fmt.num(tt.stopped)}`, tone: '' },
                 ...(tt.attention ? [{ text: `${t('infra.filter_warn')}: ${fmt.num(tt.attention)}`, tone: 'bad' as const }] : []),
             ],
