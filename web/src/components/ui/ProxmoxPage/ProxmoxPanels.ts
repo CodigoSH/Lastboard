@@ -42,7 +42,8 @@ export class TaskPanel {
     private logSeq = 0;
     private logTimer: ReturnType<typeof setInterval> | null = null;
 
-    constructor(private readonly t: T, private readonly fmt: Fmt) {
+    /** `limited`: the side panel lists a few and offers the rest in a window; the page's own tab, wide enough, lists them all. */
+    constructor(private readonly t: T, private readonly fmt: Fmt, private readonly limited = false) {
         this.el = document.createElement('div');
         this.el.className = 'panel-tasks';
         this.el.addEventListener('click', (ev) => {
@@ -161,7 +162,7 @@ export class TaskPanel {
         let html: string;
         if (this.err) html = errorHtml(errorKey(this.err), t);
         else if (!this.loaded) html = `<div class="empty">${e(t('general.loading'))}</div>`;
-        else html = tasksListHtml(this.tasks, (k) => taskSeconds(k, now), t, this.fmt);
+        else html = tasksListHtml(this.tasks, (k) => taskSeconds(k, now), t, this.fmt, !this.limited);
         if (html === this.html) return;
         this.html = html;
         el.innerHTML = html;

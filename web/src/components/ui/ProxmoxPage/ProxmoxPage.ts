@@ -176,7 +176,7 @@ class ProxmoxPage extends HTMLElement {
     };
 
     private readonly pageTasks = new TaskPanel(this.t, this.tfmt);
-    private readonly drawerTasks = new TaskPanel(this.t, this.tfmt);
+    private readonly drawerTasks = new TaskPanel(this.t, this.tfmt, true);
     private readonly pageJournal = new JournalPanel(this.t);
     private readonly drawerJournal = new JournalPanel(this.t);
 
