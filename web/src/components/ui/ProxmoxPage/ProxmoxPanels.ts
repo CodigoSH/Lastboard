@@ -99,7 +99,7 @@ export class TaskPanel {
         this.el.innerHTML = `
             <div class="tp-list"></div>
             <dialog class="mdl" data-tp-dlg aria-label="${e(t('proxmox.tasks'))}">
-                <div class="mdl__h"><h3>${e(t('proxmox.tasks'))}<span class="mdl__n tp-n"></span></h3><button type="button" class="ibtn" data-tp-close aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
+                <div class="mdl__h"><h3><span class="mdl__t">${e(t('proxmox.tasks'))}</span><span class="mdl__n tp-n"></span></h3><button type="button" class="ibtn" data-tp-close aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
                 <div class="mdl__b tp-all"></div>
             </dialog>
             <div class="logv tp-log" hidden>

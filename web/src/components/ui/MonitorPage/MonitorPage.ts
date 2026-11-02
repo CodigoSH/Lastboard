@@ -919,7 +919,7 @@ class MonitorPage extends HTMLElement {
                 }
             }
         }
-        title.innerHTML = `${escapeHtml(name)}<span class="mdl__n">${escapeHtml(fmt.num(n))}</span>`;
+        title.innerHTML = `<span class="mdl__t" title="${escapeHtml(name)}">${escapeHtml(name)}</span><span class="mdl__n">${escapeHtml(fmt.num(n))}</span>`;
         if (html !== this.last.mdl) { this.last.mdl = html; const top = body.scrollTop; body.innerHTML = html; body.scrollTop = top; }
     }
 
