@@ -269,6 +269,8 @@ svg { display: block; flex: none; }
 
 .attn { display: flex; flex-direction: column; gap: 6px; }
 .attn__row { display: flex; align-items: center; gap: 11px; padding: 10px 12px; width: 100%; border-radius: var(--radius); border: 1px solid var(--card-border); background: var(--surface-solid); transition: border-color 0.15s; }
+.attn__row--bad { border-color: rgba(var(--danger-rgb), 0.45); }
+.attn__row--warn { border-color: rgba(var(--warn-rgb), 0.45); }
 .attn__row:hover { border-color: rgba(var(--accent-rgb), 0.35); }
 .attn__t { min-width: 0; flex: 1; }
 .attn__t b { display: block; font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionHtml, cardHtml, causeCode, chartCardForFleet, causeText, checksTabHtml, downLine, moreHtml, outageServiceCardHtml, outageServiceTableHtml, outageSpan, outageTableHtml, CHECK_LINES, OUTAGE_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
+    attentionHtml, cardHtml, causeCode, chartCardForFleet, causeText, checksTabHtml, downLine, moreHtml, outageServiceCardHtml, outageServiceTableHtml, outageSpan, outageTableHtml, CHECK_LINES, OUTAGE_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml, lowestBoxHtml,
     monitoringKpi, outageRowHtml, outagesPanelHtml, outagesTabHtml, rowHtml, stateChips, summaryHtml, summaryTabHtml, type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import { attentionList, fleetTotals, groupRows, readRow, RANGES, type Outage, type ServiceRow } from '../../../services/monitorPage';
@@ -102,6 +102,32 @@ describe('the four indicators', () => {
         const s = summaryHtml(totals, t, fmt);
         expect(s).toContain('[monitorpage.down]: <b>N(1)</b>');
         expect(s).toContain('[monitorpage.slow]: <b>N(1)</b>');
+    });
+});
+
+describe('icons in place of the dots', () => {
+    const face = (id: number | undefined) => (id === 7 ? '/api/icons/immich' : '');
+    test('the attention list wears the service icon and keeps the severity on the row', () => {
+        const r = row({ item_id: 7, name: 'Immich', status: 'down', latency_ms: null, status_code: 502, down_since: new Date(Date.now() - 28 * 60000).toISOString() });
+        const html = attentionHtml(attentionList([r], 'background'), new Map([[7, r]]), t, fmt, face);
+        expect(html).toContain('/api/icons/immich');
+        expect(html).toContain('attn__row--bad');
+        expect(html).not.toContain('class="dot');
+        expect(attentionHtml(attentionList([r], 'background'), new Map([[7, r]]), t, fmt)).toContain('class="dot dot--bad"');
+    });
+    test('the lowest availability and the latest outages show the icon of each service', () => {
+        const r = row({ item_id: 7, name: 'Immich', uptime_30d: 90 });
+        expect(lowestBoxHtml([r], t, fmt, face)).toContain('/api/icons/immich');
+        expect(lowestBoxHtml([r], t, fmt)).not.toContain('/api/icons/immich');
+        const o: Outage = { item_id: 7, name: 'Immich', start: 'a', end: null, duration_sec: 600, status_code: 502 };
+        const html = latestOutagesBoxHtml([o], t, fmt, 1, false, face);
+        expect(html).toContain('/api/icons/immich');
+        expect(html).not.toContain('<span class="dot dot--bad');
+    });
+    test('the settings link is text at the foot of the card, not a pill among the chips', () => {
+        const k = monitoringKpi(setup(), t, fmt);
+        expect(k).toContain('class="kpi__more" data-act="settings"');
+        expect(k).not.toContain('chip--link');
     });
 });
 

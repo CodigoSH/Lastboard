@@ -109,21 +109,25 @@ export interface OverviewData {
     disk: { totals: DiskTotals; state: 'ready' | 'measuring' | 'unavailable' };
     /** The bookmark a container serves, by host and name. */
     linkOf: LinkOf;
+    /** The icon of a container, by host and name; without it the attention list keeps its coloured dots. */
+    faceOf?: (hostId: string, name: string) => string;
     /** What each host's running containers use, as a share of the host; null where the host did not say how big it is. */
     hostUse: Record<string, { cpu: number | null; mem: number | null }>;
     /** What the hosts in view have, when every one of them said; null otherwise, and the figures are read against what was seen. */
     capacity: { cores: number; physical: number; mem: number } | null;
 }
 
-export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNames: Record<string, string>, t: T): string {
+export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNames: Record<string, string>, t: T, faceOf?: (hostId: string, name: string) => string): string {
     if (!items.length) return `<div class="allok">${icon('check', 22)}<span>${e(t('dockerpage.all_ok'))}</span></div>`;
     return `<div class="attn">${items.map(a => {
         const tone = a.reason === 'unhealthy' || a.reason === 'failed' || a.reason === 'outage' || a.reason === 'memory' || a.reason === 'host_down' ? 'bad' : 'warn';
         const host = showHost ? ` · ${e(hostNames[a.hostId] ?? '')}` : '';
         // A stopped container that a bookmark depends on says which service goes with it.
         const breaks = a.link && (a.reason === 'outage' || a.reason === 'failed') ? ` · ${e(t('proxmox.stopped_breaks'))} ${e(a.link)}` : '';
-        return `<button type="button" class="attn__row" data-host="${e(a.hostId)}" ${a.reason === 'host_down' ? `data-hostcard="${e(a.hostId)}"` : `data-name="${e(a.name)}"`}>
-            <span class="dot dot--${tone}"></span>
+        // A container wears its own icon and the severity moves to the row's border; a host that is down has no icon of its own.
+        const lead = faceOf && a.reason !== 'host_down' ? faceHtml(faceOf(a.hostId, a.name)) : `<span class="dot dot--${tone}"></span>`;
+        return `<button type="button" class="attn__row${faceOf && a.reason !== 'host_down' ? ` attn__row--${tone}` : ''}" data-host="${e(a.hostId)}" ${a.reason === 'host_down' ? `data-hostcard="${e(a.hostId)}"` : `data-name="${e(a.name)}"`}>
+            ${lead}
             <span class="attn__t"><b>${e(a.name)}</b><span>${e(reasonText(a.reason, a.exitCode, t, a.value))}${breaks}${a.reason === 'host_down' ? '' : host}</span></span>
             ${icon('chevR', 15)}
         </button>`;
@@ -210,7 +214,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         `<span class="chip">${e(t('dockerpage.live'))}</span>`, o.chart, t('dockerpage.collecting'));
 
     const showHost = o.hosts.length > 1;
-    const attn = boxHtml(t('dockerpage.attention'), attentionHtml(o.attention, showHost, o.hostNames, t));
+    const attn = boxHtml(t('dockerpage.attention'), attentionHtml(o.attention, showHost, o.hostNames, t, o.faceOf));
 
     // A project as a card: how its containers are doing, each one named in the colour of its own state.
     const projectCards = o.projects.map(p => {

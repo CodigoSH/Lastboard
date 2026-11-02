@@ -293,6 +293,12 @@ class MonitorPage extends HTMLElement {
         return r.icon ? resolveIconUrl(r.icon) : '';
     }
 
+    /** The icon of a service by its id, for the lists that name services without holding their rows. */
+    private faceOfId = (id: number | undefined): string => {
+        const r = id === undefined ? undefined : this.byId().get(id);
+        return r ? this.faceOf(r) : '';
+    };
+
     private viewOf = (r: ServiceRow): ServiceView => ({
         row: r, face: this.faceOf(r), selected: this.sel === r.item_id, showBoard: !this.grouped,
     });
@@ -794,12 +800,12 @@ class MonitorPage extends HTMLElement {
             this.charts.set('fleet', { spec, at: s.at });
         }
         const items = attentionList(scope, this.setup?.mode ?? 'background');
-        const attn = `<section class="box"><span class="pill">${escapeHtml(t('dockerpage.attention'))}<span class="pill__n">${escapeHtml(fmt.num(attentionCount(items)))}</span></span>${attentionHtml(items, this.byId(), t, fmt)}</section>`;
+        const attn = `<section class="box"><span class="pill">${escapeHtml(t('dockerpage.attention'))}<span class="pill__n">${escapeHtml(fmt.num(attentionCount(items)))}</span></span>${attentionHtml(items, this.byId(), t, fmt, this.faceOfId)}</section>`;
         const mine = new Set(scope.map(r => r.item_id));
         const recent = this.outages.filter(o => o.item_id !== undefined && mine.has(o.item_id));
         return `${kpisHtml(totals, this.setup, sparks, t, fmt)}
             <div class="grid g-main" style="margin-block-start:12px">${chartCardForFleet(chart, this.fleetRange, RANGES, t, this.fleetRange === '24 h' && !this.trendLoaded)}${attn}</div>
-            <div class="grid g-2">${lowestBoxHtml(lowestAvailability(scope), t, fmt)}${latestOutagesBoxHtml(recent.slice(0, 6), t, fmt, recent.length, !this.outagesLoaded)}</div>`;
+            <div class="grid g-2">${lowestBoxHtml(lowestAvailability(scope), t, fmt, this.faceOfId)}${latestOutagesBoxHtml(recent.slice(0, 6), t, fmt, recent.length, !this.outagesLoaded, this.faceOfId)}</div>`;
     }
 
     private edge(ms: number): string {

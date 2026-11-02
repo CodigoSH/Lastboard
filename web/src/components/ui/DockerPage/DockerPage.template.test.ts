@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    cardHtml, diskModalHtml, storageKpiHtml, dotTone, drawerHeadHtml, envTabHtml, footerHtml, healthChip, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
+    attentionHtml, cardHtml, diskModalHtml, storageKpiHtml, dotTone, drawerHeadHtml, envTabHtml, footerHtml, healthChip, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
     mountsTabHtml, overviewHtml, portText, reasonText, rowHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
 } from './DockerPage.template';
 import { attentionList, dockerTotals, projectRows } from '../../../services/dockerOverview';
@@ -198,6 +198,15 @@ describe('the face and the bookmark of a container', () => {
         expect(html).toContain('attn__row');
         expect(html).toContain('proxmox.stopped_breaks');
         expect(attentionList(rows)).toEqual([]);
+    });
+
+    test('the attention list wears the icon of each container and keeps the severity on the row', () => {
+        const rows: HostRows[] = [{ host, loaded: true, containers: [stopped] }];
+        const withIcons = attentionHtml(attentionList(rows, () => 'Plex'), false, {}, t, () => '/api/icons/c');
+        expect(withIcons).toContain('/api/icons/c');
+        expect(withIcons).toMatch(/attn__row attn__row--(bad|warn)/);
+        expect(withIcons).not.toContain('class="dot');
+        expect(attentionHtml(attentionList(rows, () => 'Plex'), false, {}, t)).toContain('class="dot dot--');
     });
 
     test('the panel head offers the icon, and the footer the bookmark and the way back to the default', () => {

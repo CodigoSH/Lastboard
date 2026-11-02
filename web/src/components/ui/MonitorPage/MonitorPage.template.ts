@@ -135,17 +135,15 @@ export function monitoringKpi(setup: MonitoringSetup | null, t: T, fmt: Fmt): st
     const method = NOTIFY_NAMES[setup.notify_type] ?? t('monitorpage.on');
     const chips: { text: string; tone: Tone }[] = setup.mode === 'background' ? [{ text: `● ${t('monitorpage.on')}`, tone: 'ok' }] : [];
     if (alertsOn) chips.push({ text: t('monitorpage.alerts', { method }), tone: '' });
+    const more = { text: t('monitorpage.settings'), act: 'settings' };
     const kpi = setup.mode === 'background'
         ? kpiHtml({
             label, icon: 'gear', value: '24/7', unit: t('monitorpage.every', { time: fmt.span(setup.interval_sec) }),
-            sub: [t('monitorpage.kept', { time: fmt.span(setup.retention_days * 86400) }), alertsOn ? `${t('monitorpage.threshold')}: ${fmt.num(setup.fail_threshold)}` : ''], chips,
+            sub: [t('monitorpage.kept', { time: fmt.span(setup.retention_days * 86400) }), alertsOn ? `${t('monitorpage.threshold')}: ${fmt.num(setup.fail_threshold)}` : ''], chips, more,
         })
-        : kpiHtml({ label, icon: 'gear', value: t('monitorpage.live'), unit: t('monitorpage.no_history'), sub: [t('monitorpage.live_only'), ''], chips });
-    // The way to the settings sits with the chips, inside the same card.
-    const settings = `<button type="button" class="chip chip--link" data-act="settings">${icon('gear', 11)}<span class="chip__t">${e(t('monitorpage.settings'))}</span></button>`;
-    return chips.length
-        ? kpi.replace(/(<div class="kpi__chips">[\s\S]*?)(<\/div>\s*<\/div>\s*)$/, `$1${settings}$2`)
-        : kpi.replace(/(\s*<\/div>\s*)$/, `<div class="kpi__chips">${settings}</div>$1`);
+        : kpiHtml({ label, icon: 'gear', value: t('monitorpage.live'), unit: t('monitorpage.no_history'), sub: [t('monitorpage.live_only'), ''], chips, more });
+    // The way to the settings is a word at the foot of the card, on its end side, as "see more" is in the others.
+    return kpi;
 }
 
 // ── Attention ──────────────────────────────────────────────────────────────
@@ -165,7 +163,10 @@ export function downLine(r: ServiceRow, t: T, fmt: Fmt): string {
         : `${t('monitorpage.just_now')} · ${causeText(r.status_code, t)}`;
 }
 
-export function attentionHtml(items: AttentionItem[], rows: Map<number, ServiceRow>, t: T, fmt: Fmt): string {
+/** The address of the icon a service wears, by its id: the bookmark's own, or '' for the board's default. */
+export type FaceOf = (itemId: number | undefined) => string;
+
+export function attentionHtml(items: AttentionItem[], rows: Map<number, ServiceRow>, t: T, fmt: Fmt, faceOf?: FaceOf): string {
     if (!items.length) return `<div class="allok">${icon('check', 22)}<span>${e(t('infra.all_ok'))}</span></div>`;
     return `<div class="attn">${items.map(a => {
         if (a.kind === 'off') {
@@ -191,7 +192,9 @@ export function attentionHtml(items: AttentionItem[], rows: Map<number, ServiceR
             title = t('monitorpage.att_none', { name });
             sub = t('monitorpage.att_none_sub');
         }
-        return `<button type="button" class="attn__row" data-id="${a.id}"><span class="dot${tone ? ' dot--' + tone : ''}"></span>
+        // The service wears its own icon, and the colour of how it is doing moves to the row's border.
+        const lead = faceOf ? faceHtml(faceOf(a.id)) : `<span class="dot${tone ? ' dot--' + tone : ''}"></span>`;
+        return `<button type="button" class="attn__row${faceOf && tone ? ` attn__row--${tone}` : ''}" data-id="${a.id}">${lead}
             <span class="attn__t"><b>${e(title)}</b><span>${e(sub)}</span></span>${icon('chevR', 15)}</button>`;
     }).join('')}</div>`;
 }
@@ -208,16 +211,16 @@ export function chartCardForFleet(chart: string, range: RangeLabel, ranges: read
         rangeSegHtml('fleet', range, ranges), chart, t(loading ? 'general.loading' : 'dockerpage.collecting'));
 }
 
-const lowRow = (r: ServiceRow, fmt: Fmt): string => {
+const lowRow = (r: ServiceRow, fmt: Fmt, faceOf?: FaceOf): string => {
     const tone = r.uptime_30d >= 99 ? 'ok' : r.uptime_30d >= 95 ? 'warn' : 'bad';
-    return `<button type="button" class="task low" data-id="${r.item_id}"><span><b>${e(r.name)}</b><small>${e(r.board)}</small></span>
+    return `<button type="button" class="task low" data-id="${r.item_id}"><span class="low__who">${faceOf ? faceHtml(faceOf(r.item_id)) : ''}<span><b>${e(r.name)}</b><small>${e(r.board)}</small></span></span>
         <div class="bar bar--thick" data-l="${tone}"><i style="inline-size:${Math.max(0, Math.min(100, r.uptime_30d)).toFixed(1)}%"></i></div>
         <span class="task__r"><b>${e(fmt.avail(r.uptime_30d, 2))}</b></span></button>`;
 };
 
-export function lowestBoxHtml(rows: ServiceRow[], t: T, fmt: Fmt): string {
+export function lowestBoxHtml(rows: ServiceRow[], t: T, fmt: Fmt, faceOf?: FaceOf): string {
     const body = rows.length
-        ? `<div class="card tasks">${rows.map(r => lowRow(r, fmt)).join('')}</div>`
+        ? `<div class="card tasks">${rows.map(r => lowRow(r, fmt, faceOf)).join('')}</div>`
         : `<div class="card"><div class="chart__empty">${e(t('monitor.no_data_yet'))}</div></div>`;
     return boxHtml(t('monitorpage.lowest'), body, '30 d');
 }
@@ -232,7 +235,7 @@ export function outageHeadHtml(named: boolean, t: T): string {
 }
 
 /** One outage as a row: which service, why, since when, for how long, and whether it still is. */
-export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: Map<number, ServiceRow>): string {
+export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: Map<number, ServiceRow>, faceOf?: FaceOf): string {
     const ongoing = o.end === null;
     const cause = causeText(o.status_code, t);
     const code = causeCode(o.status_code);
@@ -242,14 +245,16 @@ export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: 
     const length = ongoing ? '—' : outageSpan(o.duration_sec, t, fmt);
     const down = `<span class="chip chip--bad">${e(t('monitorpage.ongoing'))}</span>`;
     const state = ongoing ? down : `<span class="ok">${e(t('monitorpage.resolved'))}</span>`;
-    return `<button type="button" class="tr" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}><span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>${named ? `<span class="nm" title="${e(who)}">${e(who)}</span>` : ''}<span class="cell" title="${e(code || cause)}">${e(cause)}</span><span class="cell">${e(when)}</span>${named
+    // In a list that mixes services the icon says which one; the state is already in the last column.
+    const lead = named && faceOf ? faceHtml(faceOf(o.item_id)) : `<span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>`;
+    return `<button type="button" class="tr${named && faceOf && ongoing ? ' tr--on' : ''}" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}>${lead}${named ? `<span class="nm" title="${e(who)}">${e(who)}</span>` : ''}<span class="cell" title="${e(code || cause)}">${e(cause)}</span><span class="cell">${e(when)}</span>${named
         ? `<span class="cell">${e(length)}</span><span class="cell">${state}</span>`
         : `<span class="cell">${ongoing ? down : e(length)}</span>`}</button>`;
 }
 
 /** Outages as a table with its head. `named` adds the service column, for lists that mix several. */
-export function outageTableHtml(list: Outage[], named: boolean, t: T, fmt: Fmt, rows?: Map<number, ServiceRow>): string {
-    return `<div class="tbl tbl--out${named ? '' : ' tbl--out-p'}">${outageHeadHtml(named, t)}${list.map(o => outageRowHtml(o, named, t, fmt, rows)).join('')}</div>`;
+export function outageTableHtml(list: Outage[], named: boolean, t: T, fmt: Fmt, rows?: Map<number, ServiceRow>, faceOf?: FaceOf): string {
+    return `<div class="tbl tbl--out${named ? '' : ' tbl--out-p'}">${outageHeadHtml(named, t)}${list.map(o => outageRowHtml(o, named, t, fmt, rows, faceOf)).join('')}</div>`;
 }
 
 /** What a service's outages say in a line: since when the last began. */
@@ -287,10 +292,10 @@ export function moreHtml(act: string, shown: number, total: number, t: T, fmt: F
 }
 
 /** `loading`: the outages have not arrived yet, which is not the same as there being none. */
-export function latestOutagesBoxHtml(list: Outage[], t: T, fmt: Fmt, total: number, loading = false): string {
+export function latestOutagesBoxHtml(list: Outage[], t: T, fmt: Fmt, total: number, loading = false, faceOf?: FaceOf): string {
     if (loading) return boxHtml(t('monitorpage.latest'), `<div class="card"><div class="chart__empty">${e(t('general.loading'))}</div></div>`, '');
     const body = list.length
-        ? `${outageTableHtml(list, true, t, fmt)}${moreHtml('all-outages', list.length, total, t, fmt)}`
+        ? `${outageTableHtml(list, true, t, fmt, undefined, faceOf)}${moreHtml('all-outages', list.length, total, t, fmt)}`
         : `<div class="card"><div class="chart__empty">${e(t('monitor.no_incidents'))}</div></div>`;
     return boxHtml(t('monitorpage.latest'), body, fmt.num(total));
 }

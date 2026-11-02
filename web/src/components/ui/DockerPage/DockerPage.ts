@@ -1077,6 +1077,7 @@ class DockerPage extends HTMLElement {
             mem: hist.map(h => h.memUsed),
             chart,
             hostNames: names,
+            faceOf: (h, n) => this.faceOf(h, n),
             disk: this.diskState(scope),
             linkOf: this.linkOf,
             hostUse,
