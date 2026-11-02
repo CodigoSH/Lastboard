@@ -83,3 +83,8 @@
 
 /* The checks keep their columns, now named. */
 .chk--h { border-block-start: 0; padding-block: 8px; background: var(--surface-solid); font: 700 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+
+/* In the window and the panel the head of a table stays put while its lines scroll under it.
+   `clip`, not `hidden`: hidden would make the table the thing that scrolls, and a sticky head would stick to nothing. */
+.mdl__b .tbl, .mdl__b .tasks, .dr__b .tbl, .dr__b .tasks { overflow: clip; }
+.mdl__b .tr--h, .mdl__b .chk--h, .dr__b .tr--h, .dr__b .chk--h { position: sticky; inset-block-start: 0; z-index: 2; }

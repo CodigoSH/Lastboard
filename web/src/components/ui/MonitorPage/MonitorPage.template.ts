@@ -1,6 +1,6 @@
 import { escapeHtml } from '../../../services/escape';
 import {
-    outageTotals, stateOf,
+    outageTotals, sortOutages, stateOf,
     type AttentionItem, type Check, type FleetTotals, type Outage, type OutageFilter, type RangeLabel, type RowGroup, type ServiceRow, type ServiceState, type StateFilter,
 } from '../../../services/monitorPage';
 import { barHtml, boxHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, type Level, type T } from '../infra/infra.template';
@@ -409,6 +409,7 @@ export function summaryTabHtml(d: SummaryData, t: T, fmt: Fmt): string {
 export const PANEL_LINES = 6;
 
 export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt, all = false): string {
+    list = sortOutages(list);
     const shown = all ? list : list.slice(0, PANEL_LINES);
     return list.length
         ? `${outageTableHtml(shown.map(o => ({ ...o, item_id: undefined })), false, t, fmt)}${all ? '' : moreHtml('all-panel-outages', shown.length, list.length, t, fmt)}`

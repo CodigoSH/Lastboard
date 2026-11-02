@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
     attentionCount, attentionList, bucketLatency, countByFilter, fillGaps, filterOutages, fleetTotals, groupRows, isSlow, lowestAvailability,
-    outageTotals, passes, readRow, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
+    outageTotals, passes, readRow, sortOutages, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
 } from './monitorPage';
 
 const row = (over: Partial<ServiceRow> & { name: string }): ServiceRow => readRow({
@@ -199,5 +199,15 @@ describe('series', () => {
     test('a check outside the window is ignored, and an empty one draws nothing', () => {
         const t0 = Date.parse('2026-01-01T00:00:00Z');
         expect(bucketLatency([{ checked_at: new Date(t0 - 60000).toISOString(), up: true, latency_ms: 9, status_code: 200 }], t0, t0 + 1000, 4)).toEqual({ values: [], at: [] });
+    });
+});
+
+describe('sortOutages', () => {
+    const o = (start: string, end: string | null) => ({ start, end });
+    test('what is down now first, then the newest to the oldest, without touching the list given', () => {
+        const list = [o('2026-01-01T00:00:00Z', 'x'), o('2026-01-03T00:00:00Z', 'x'), o('2026-01-02T00:00:00Z', null), o('2026-01-04T00:00:00Z', 'x')];
+        const copy = [...list];
+        expect(sortOutages(list).map(x => x.start.slice(8, 10))).toEqual(['02', '04', '03', '01']);
+        expect(list).toEqual(copy);
     });
 });

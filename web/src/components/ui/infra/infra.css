@@ -249,7 +249,9 @@ svg { display: block; flex: none; }
 .kpi { padding: 14px 16px; min-height: 134px; display: flex; flex-direction: column; gap: 9px; }
 .kpi__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .kpi__top svg { color: var(--text-dim); opacity: 0.8; }
-.kpi__main { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kpi__main { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-block-size: 56px; }
+/* A tile with no bar keeps the bar's place, so the line under it sits where it does in the tiles beside it. */
+.bar--ghost { visibility: hidden; }
 .kpi__v { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
 .kpi__v small { font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--text-dim); margin-inline-start: 4px; }
 .kpi__sub { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1.3 var(--font-mono); color: var(--text-dim); }

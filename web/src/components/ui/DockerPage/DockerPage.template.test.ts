@@ -242,7 +242,7 @@ describe('the storage card', () => {
     test('an empty Docker is zero, with no bar to read a share of nothing from', () => {
         const html = storageKpiHtml({ totals: { ...totals, total: 0, reclaimable: 0 }, state: 'ready' }, t, fmt);
         expect(html).toContain('B(0)');
-        expect(html).not.toContain('class="bar');
+        expect(html).not.toContain('class="bar" data-l');
     });
 });
 

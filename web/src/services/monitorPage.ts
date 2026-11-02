@@ -259,6 +259,12 @@ export function outageTotals(list: Outage[]): OutageTotals {
 export type OutageFilter = 'all' | 'ongoing' | 'recovered';
 export const isOutageFilter = (v: unknown): v is OutageFilter => v === 'all' || v === 'ongoing' || v === 'recovered';
 
+/** The most pressing first: what is down now, then the rest from the newest to the oldest. Never changes the list it is given. */
+export function sortOutages<T extends { start: string; end: string | null }>(list: T[]): T[] {
+    const at = (o: T) => { const n = Date.parse(o.start); return Number.isFinite(n) ? n : 0; };
+    return [...list].sort((x, y) => (x.end === null ? 0 : 1) - (y.end === null ? 0 : 1) || at(y) - at(x));
+}
+
 export function filterOutages(list: Outage[], filter: OutageFilter): Outage[] {
     return filter === 'ongoing' ? list.filter(o => o.end === null) : filter === 'recovered' ? list.filter(o => o.end !== null) : list;
 }

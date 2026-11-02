@@ -315,6 +315,12 @@ describe('what a person reads about an outage', () => {
         expect(every.match(/class="tr" data-noopen/g)?.length).toBe(PANEL_LINES + 5);
         expect(every).not.toContain('data-act=');
     });
+    test('the side panel lists what is down first and then the newest outage first', () => {
+        const mk = (start: string, end: string | null) => ({ start, end, duration_sec: 600, status_code: 0 } as Outage);
+        const html = outagesPanelHtml([mk('2026-01-01T00:00:00Z', 'x'), mk('2026-01-03T00:00:00Z', 'x'), mk('2026-01-02T00:00:00Z', null)], t, fmt);
+        const order = [...html.matchAll(/G\((2026-01-0\d)/g)].map(m => m[1].slice(-2));
+        expect(order).toEqual(['02', '03', '01']);
+    });
     test('the checks list does the same', () => {
         const checks = Array.from({ length: PANEL_LINES * 2 + 3 }, (_, i) => ({ checked_at: `t${i}`, up: true, latency_ms: 10, status_code: 200 }));
         const few = checksTabHtml(checks as never, 86400, t, fmt);

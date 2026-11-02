@@ -8,7 +8,7 @@ import { whenVisible } from '../../../services/whenVisible';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import {
     attentionCount, attentionList, bucketLatency, countByFilter, filterOutages, fleetTotals, groupRows, isOutageFilter, isRange, isSortKey, isStateFilter,
-    lowestAvailability, passes, rangeMs, rangeParam, RANGES, readRow, sortRows, trendSeries,
+    lowestAvailability, passes, rangeMs, rangeParam, RANGES, readRow, sortOutages, sortRows, trendSeries,
     type Check, type Outage, type OutageFilter, type RangeLabel, type ServiceRow, type SortKey, type StateFilter, type TrendPoint,
 } from '../../../services/monitorPage';
 import {
@@ -511,7 +511,7 @@ class MonitorPage extends HTMLElement {
             ]);
             this.rows = (Array.isArray(rows) ? rows : []).map(readRow);
             this.setup = setup ? { ...setup, retention_days: setup.retention_days || 30 } : null;
-            this.outages = Array.isArray(outages?.incidents) ? outages.incidents : [];
+            this.outages = Array.isArray(outages?.incidents) ? sortOutages(outages.incidents) : [];
             if (trend?.points) this.trends.set('24 h', trend.points);
             this.failed = false;
             if (this.board !== 'all' && !this.boards().includes(this.board)) this.board = 'all';
