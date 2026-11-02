@@ -434,7 +434,11 @@ type proxmoxGuest struct {
 	CPU      float64 `json:"cpu"` // percent
 	Mem      int64   `json:"mem"`
 	MemTotal int64   `json:"mem_total"`
-	Uptime   int64   `json:"uptime"`
+	// Disk is what the machine's own disk holds and DiskTotal how big it is; a full virtual machine reports neither
+	// unless it runs the guest agent, so both can be zero and the figure is then left out.
+	Disk      int64 `json:"disk"`
+	DiskTotal int64 `json:"disk_total"`
+	Uptime    int64 `json:"uptime"`
 }
 
 type proxmoxStore struct {
@@ -586,15 +590,17 @@ func (h *ProxmoxHandler) overviewOf(ctx context.Context, e proxmoxHost, icons ma
 				continue
 			}
 			out.Guests = append(out.Guests, proxmoxGuest{
-				VMID:     row.VMID,
-				Name:     row.Name,
-				Kind:     row.Type,
-				Node:     row.Node,
-				Running:  row.Status == "running",
-				CPU:      percent(row.CPU),
-				Mem:      row.Mem,
-				MemTotal: row.MaxMem,
-				Uptime:   row.Uptime,
+				VMID:      row.VMID,
+				Name:      row.Name,
+				Kind:      row.Type,
+				Node:      row.Node,
+				Running:   row.Status == "running",
+				CPU:       percent(row.CPU),
+				Mem:       row.Mem,
+				MemTotal:  row.MaxMem,
+				Disk:      row.Disk,
+				DiskTotal: row.MaxDisk,
+				Uptime:    row.Uptime,
 			})
 		case "storage":
 			out.Stores = append(out.Stores, proxmoxStore{

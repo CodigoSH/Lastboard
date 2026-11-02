@@ -60,7 +60,7 @@ func newFakeProxmox(t *testing.T) *fakeProxmox {
 			// that must not appear, and one storage.
 			w.Write([]byte(`{"data":[
 				{"type":"node","node":"kprox","status":"online","cpu":0.12,"mem":8589934592,"maxmem":34359738368,"disk":50,"maxdisk":100,"maxcpu":16,"uptime":3600},
-				{"type":"lxc","vmid":106,"name":"plex","node":"kprox","status":"running","cpu":0.5,"mem":1073741824,"maxmem":4294967296,"uptime":60},
+				{"type":"lxc","vmid":106,"name":"plex","node":"kprox","status":"running","cpu":0.5,"mem":1073741824,"maxmem":4294967296,"disk":2147483648,"maxdisk":8589934592,"uptime":60},
 				{"type":"qemu","vmid":200,"name":"win","node":"kprox","status":"stopped","cpu":0,"mem":0,"maxmem":8589934592},
 				{"type":"qemu","vmid":900,"name":"debian-template","node":"kprox","status":"stopped","template":1},
 				{"type":"storage","storage":"tank","node":"kprox","plugintype":"zfspool","disk":30,"maxdisk":100,"shared":1}
@@ -368,11 +368,13 @@ func TestTheOverviewMapsWhatTheHostSends(t *testing.T) {
 			Uptime int64    `json:"uptime"`
 		} `json:"nodes"`
 		Guests []struct {
-			VMID    int     `json:"vmid"`
-			Name    string  `json:"name"`
-			Kind    string  `json:"kind"`
-			Running bool    `json:"running"`
-			CPU     float64 `json:"cpu"`
+			VMID      int     `json:"vmid"`
+			Name      string  `json:"name"`
+			Kind      string  `json:"kind"`
+			Running   bool    `json:"running"`
+			CPU       float64 `json:"cpu"`
+			Disk      int64   `json:"disk"`
+			DiskTotal int64   `json:"disk_total"`
 		} `json:"guests"`
 		Stores []struct {
 			Name    string  `json:"name"`
@@ -438,6 +440,13 @@ func TestTheOverviewMapsWhatTheHostSends(t *testing.T) {
 	}
 	if out.Guests[0].Kind != "lxc" || !out.Guests[0].Running || out.Guests[0].CPU != 50 {
 		t.Errorf("guest = %+v", out.Guests[0])
+	}
+	// What the machine's own disk holds, for the widget's disk reading; a virtual machine that does not say has none.
+	if out.Guests[0].Disk != 2147483648 || out.Guests[0].DiskTotal != 8589934592 {
+		t.Errorf("the container's disk = %d of %d, want 2 GiB of 8 GiB", out.Guests[0].Disk, out.Guests[0].DiskTotal)
+	}
+	if out.Guests[1].Disk != 0 || out.Guests[1].DiskTotal != 0 {
+		t.Errorf("a machine that does not say how big its disk is has %d of %d", out.Guests[1].Disk, out.Guests[1].DiskTotal)
 	}
 	if len(out.Stores) != 1 || out.Stores[0].Percent != 30 || !out.Stores[0].Shared {
 		t.Errorf("stores = %+v", out.Stores)
