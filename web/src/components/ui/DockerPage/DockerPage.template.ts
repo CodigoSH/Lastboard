@@ -358,7 +358,10 @@ export interface FooterData {
     container: DockerContainer;
     canControl: boolean;
     busy: boolean;
+    /** Where the service answers: its bookmark's address, or the one the container advertises or publishes. */
     bookmarkUrl: string;
+    /** Whether that address is a bookmark's. Without a bookmark the action says "Open service", not "Open bookmark". */
+    bookmarked?: boolean;
     hasChosenIcon: boolean;
 }
 
@@ -376,7 +379,7 @@ export function footerHtml(d: FooterData, t: T): string {
             ? btn('restart', 'rotate', t('docker.action_restart')) + btn('stop', 'stop', isAgent ? t('docker.action_stop_disabled') : t('docker.action_stop'), isAgent, true)
             : btn('start', 'play', t('docker.action_start'));
     return control
-        + (d.bookmarkUrl ? side(`data-open="${e(d.bookmarkUrl)}"`, t('proxmox.open_bookmark'), 'link') : '')
+        + (d.bookmarkUrl ? side(`data-open="${e(d.bookmarkUrl)}"`, t(d.bookmarked === false ? 'monitorpage.open_service' : 'proxmox.open_bookmark'), 'link') : '')
         + (d.hasChosenIcon ? side('data-icon-clear="1"', t('proxmox.icon_clear'), 'x') : '');
 }
 

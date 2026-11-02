@@ -209,6 +209,14 @@ describe('the face and the bookmark of a container', () => {
         expect(attentionHtml(attentionList(rows, () => 'Plex'), false, {}, t)).toContain('class="dot dot--');
     });
 
+    test('the footer opens the bookmark, or the service when only the container says where it answers', () => {
+        const base = { container: ctr(), canControl: false, busy: false, hasChosenIcon: false, bookmarkUrl: 'http://x' };
+        expect(footerHtml({ ...base, bookmarked: true }, t)).toContain('proxmox.open_bookmark');
+        expect(footerHtml(base, t)).toContain('proxmox.open_bookmark');
+        expect(footerHtml({ ...base, bookmarked: false }, t)).toContain('monitorpage.open_service');
+        expect(footerHtml({ ...base, bookmarked: false, bookmarkUrl: '' }, t)).not.toContain('data-open');
+    });
+
     test('the panel head offers the icon, and the footer the bookmark and the way back to the default', () => {
         const head = drawerHeadHtml({ host, container: ctr(), showHost: false, link: 'Plex', face: '/api/icons/p' }, t);
         expect(head).toContain('data-icon="1"');

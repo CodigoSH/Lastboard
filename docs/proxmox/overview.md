@@ -218,7 +218,7 @@ A hand-made link lives inside the bookmark itself — no extra table, nothing to
 
 ## The widget
 
-To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmox.md). It shows the busiest node's health and the machines that need attention, and links through to this page. With several hypervisors connected it draws from all of them at once: a tile that showed only the first would go quiet about the machine that actually went down.
+To keep this on the dashboard itself, add the [Proxmox widget](../widgets/proxmox.md). It shows the busiest node's health and the machines that need attention, and a click on a machine opens this page at that machine, in its panel; starting and shutting machines down is done here. With several hypervisors connected it draws from all of them at once: a tile that showed only the first would go quiet about the machine that actually went down.
 
 ## What Lastboard reads, and how often
 

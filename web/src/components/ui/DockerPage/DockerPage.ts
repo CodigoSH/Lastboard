@@ -15,7 +15,7 @@ import { chosenDockerIcon, withDockerIcon } from '../../../services/dockerIcons'
 import { dockerLinkFor, loadDockerLinks } from '../../../services/dockerLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { materializeIcon } from '../../../services/iconStore';
-import { fetchContainers, hostErrorKey, containerName } from '../../../services/dockerShared';
+import { fetchContainers, hostErrorKey, containerName, defaultContainerUrl } from '../../../services/dockerShared';
 import {
     fetchDetail, fetchDiskUsage, fetchHostSize, fetchLogs, fetchStats, runAction, pageErrorKey, findSelected,
     mergeLogLines, overflow, atBottom, logsToText, logDate, stateLevel, MAX_LOG_LINES,
@@ -1279,7 +1279,9 @@ class DockerPage extends HTMLElement {
 
         const fHtml = footerHtml({
             container: c, canControl: this.mayControl(), busy: this.busy.has(c.ID),
-            bookmarkUrl: dockerLinkFor(cur.host.id, name)?.url ?? '', hasChosenIcon: !!chosenDockerIcon(this.icons, cur.host.id, name),
+            // The bookmark's address, or the one the container advertises (a `lastboard.url` or `homepage.href` label) or publishes a port on.
+            bookmarkUrl: dockerLinkFor(cur.host.id, name)?.url || defaultContainerUrl(cur.container, cur.host, window.location.hostname),
+            bookmarked: !!dockerLinkFor(cur.host.id, name)?.url, hasChosenIcon: !!chosenDockerIcon(this.icons, cur.host.id, name),
         }, t);
         if (fHtml !== this.last.dfoot) { this.last.dfoot = fHtml; foot.innerHTML = fHtml; }
         foot.hidden = !fHtml;
