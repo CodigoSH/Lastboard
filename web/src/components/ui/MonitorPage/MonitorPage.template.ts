@@ -457,6 +457,8 @@ export function summaryTabHtml(d: SummaryData, t: T, fmt: Fmt): string {
 export const PANEL_LINES = 6;
 /** The side panel's list of one service's outages shows this many before it offers the rest. */
 export const OUTAGE_LINES = 15;
+/** And its checks, the same number. */
+export const CHECK_LINES = 15;
 
 export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt, all = false): string {
     list = sortOutages(list);
@@ -468,7 +470,7 @@ export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt, all = false): s
 
 export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: Fmt, all = false): string {
     const every = [...checks].reverse();
-    const newest = all ? every : every.slice(0, PANEL_LINES * 2);
+    const newest = all ? every : every.slice(0, CHECK_LINES);
     const head = `<div class="chk chk--h" aria-hidden="true"><span>${e(t('monitorpage.col_time'))}</span><span>${e(t('monitor.response'))}</span><span>${e(t('monitorpage.col_result'))}</span></div>`;
     const lines = newest.map(c => c.up
         ? `<div class="chk"><span class="dim">${e(fmt.clock(c.checked_at))}</span><span>${e(fmt.ms(c.latency_ms))}</span><span class="dim">${e(answerText(true, c.status_code, t))}</span></div>`

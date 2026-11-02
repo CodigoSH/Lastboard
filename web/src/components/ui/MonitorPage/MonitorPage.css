@@ -51,11 +51,7 @@
 .unit__st .mrow { grid-template-columns: minmax(54px, auto) minmax(0, 1fr) auto; }
 
 
-/* "View all" under a list that shows only the lines that matter most. */
-.more { align-self: center; display: inline-flex; align-items: center; gap: 8px; margin-block-start: 10px; padding: 7px 14px; border: 1px solid var(--card-border); border-radius: 999px; background: transparent; color: var(--text-dim); font: 600 11px/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
-.more:hover { color: var(--text-main); border-color: rgba(var(--accent-rgb), 0.4); }
-.more .n { padding-inline-start: 8px; border-inline-start: 1px solid var(--card-border); color: var(--text-main); }
-.dr__b > .more { margin-block-start: 0; }
+
 
 
 

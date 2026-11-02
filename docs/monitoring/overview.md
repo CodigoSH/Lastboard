@@ -58,7 +58,7 @@ Every monitored service as cards or as a list. A card has the service's icon, it
 
 ![A service opened in its side panel: availability over a day, a week and a month, and its response chart](../assets/monitor-service.png)
 
-Choosing a service opens a **side panel** with three tabs: **Summary** (availability over 24 hours, 7 days and 30 days, the response chart for the range you pick, the heartbeat and the facts: last check, result, response, 24-hour mean, check interval and alert threshold), **Outages** (that service's, over the 30 days kept: the fifteen most pressing, and **View all** for the rest) and **Checks** (the latest ones, newest first, with when, how fast and how it went — *Correct* or the cause in words, the HTTP code as a tooltip — and **View all** for every one still kept). The panel's footer opens the service and **clears its history** after asking.
+Choosing a service opens a **side panel** with three tabs: **Summary** (availability over 24 hours, 7 days and 30 days, the response chart for the range you pick, the heartbeat and the facts: last check, result, response, 24-hour mean, check interval and alert threshold), **Outages** (that service's, over the 30 days kept: the fifteen most pressing, and **View all** for the rest) and **Checks** (the fifteen latest, newest first, with when, how fast and how it went — *Correct* or the cause in words, the HTTP code as a tooltip — and **View all** for every one still kept). The panel's footer opens the service and **clears its history** after asking.
 
 ### Outages
 

@@ -52,10 +52,17 @@ export function errorHtml(key: string, t: T): string {
     return `<div class="err" role="alert">${icon('alert', 18)}<span>${e(t(key))}</span></div>`;
 }
 
-/** The list: its rows, or the empty state. */
-export function tasksListHtml(tasks: PxTask[], secondsOf: (task: PxTask) => number | null, t: T, fmt: Fmt): string {
+/** How many tasks the list shows before it offers the rest in a window of their own: as many as the other lists of a panel. */
+export const TASK_LINES = 15;
+
+/** The list: its rows, or the empty state. Beyond TASK_LINES it offers "view all", unless it is asked for all of them. */
+export function tasksListHtml(tasks: PxTask[], secondsOf: (task: PxTask) => number | null, t: T, fmt: Fmt, all = false): string {
     if (!tasks.length) return `<div class="empty">${e(t('proxmox.tasks_empty'))}</div>`;
-    return `<div class="card tasks">${tasks.map(k => taskRowHtml(k, secondsOf(k), t, fmt)).join('')}</div>`;
+    const shown = all ? tasks : tasks.slice(0, TASK_LINES);
+    const more = !all && tasks.length > shown.length
+        ? `<button type="button" class="more" data-tp-all>${e(t('monitorpage.view_all'))}<span class="n">${tasks.length}</span></button>`
+        : '';
+    return `<div class="card tasks">${shown.map(k => taskRowHtml(k, secondsOf(k), t, fmt)).join('')}</div>${more}`;
 }
 
 /** One line of a log. */

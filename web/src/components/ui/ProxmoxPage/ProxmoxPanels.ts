@@ -48,7 +48,9 @@ export class TaskPanel {
         this.el.addEventListener('click', (ev) => {
             const el = ev.target as HTMLElement;
             const row = el.closest<HTMLElement>('[data-upid]');
-            if (row?.dataset.upid) { this.openLog(row.dataset.upid); return; }
+            if (row?.dataset.upid) { this.dialog()?.close(); this.openLog(row.dataset.upid); return; }
+            if (el.closest('[data-tp-all]')) { this.openAll(); return; }
+            if (el.closest('[data-tp-close]') || el === this.dialog()) { this.dialog()?.close(); return; }
             if (el.closest('[data-tp-back]')) { this.closeLog(); return; }
             if (el.closest('[data-tp-copy]')) void this.copy();
         });
@@ -96,6 +98,10 @@ export class TaskPanel {
         const t = this.t;
         this.el.innerHTML = `
             <div class="tp-list"></div>
+            <dialog class="mdl" data-tp-dlg aria-label="${e(t('proxmox.tasks'))}">
+                <div class="mdl__h"><h3>${e(t('proxmox.tasks'))}<span class="mdl__n tp-n"></span></h3><button type="button" class="ibtn" data-tp-close aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
+                <div class="mdl__b tp-all"></div>
+            </dialog>
             <div class="logv tp-log" hidden>
                 <div class="logv__bar">
                     <button type="button" class="tg" data-tp-back>${icon('chevL', 12)}<span>${e(t('general.back'))}</span></button>
@@ -110,6 +116,24 @@ export class TaskPanel {
     }
 
     private q<E extends HTMLElement>(sel: string): E | null { return this.el.querySelector<E>(sel); }
+
+    private dialog(): HTMLDialogElement | null { return this.q<HTMLDialogElement>('[data-tp-dlg]'); }
+
+    /** Every task the hypervisor listed, in a window of their own: choosing one closes it and opens that task's log. */
+    private openAll() {
+        const dlg = this.dialog();
+        if (!dlg) return;
+        this.paintAll();
+        if (!dlg.open) dlg.showModal();
+    }
+
+    private paintAll() {
+        const body = this.q('.tp-all'), n = this.q('.tp-n');
+        if (!body || !n) return;
+        const now = Math.floor(Date.now() / 1000);
+        n.textContent = String(this.tasks.length);
+        body.innerHTML = tasksListHtml(this.tasks, (k) => taskSeconds(k, now), this.t, this.fmt, true);
+    }
 
     private async load() {
         const scope = this.scope;
@@ -141,6 +165,8 @@ export class TaskPanel {
         if (html === this.html) return;
         this.html = html;
         el.innerHTML = html;
+        // The window, if it is open, keeps up with the list behind it.
+        if (this.dialog()?.open) this.paintAll();
     }
 
     private openLog(upid: string) {

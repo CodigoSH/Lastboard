@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageServiceCardHtml, outageServiceTableHtml, outageSpan, outageTableHtml, OUTAGE_LINES, PANEL_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
+    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageServiceCardHtml, outageServiceTableHtml, outageSpan, outageTableHtml, CHECK_LINES, OUTAGE_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
     monitoringKpi, outageRowHtml, outagesPanelHtml, outagesTabHtml, rowHtml, stateChips, summaryHtml, summaryTabHtml, type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import { attentionList, fleetTotals, groupRows, readRow, RANGES, type Outage, type ServiceRow } from '../../../services/monitorPage';
@@ -404,10 +404,10 @@ describe('what a person reads about an outage', () => {
         expect(facts).not.toContain('f_code');
     });
     test('the checks list does the same', () => {
-        const checks = Array.from({ length: PANEL_LINES * 2 + 3 }, (_, i) => ({ checked_at: `t${i}`, up: true, latency_ms: 10, status_code: 200 }));
+        const checks = Array.from({ length: CHECK_LINES + 3 }, (_, i) => ({ checked_at: `t${i}`, up: true, latency_ms: 10, status_code: 200 }));
         const few = checksTabHtml(checks as never, 86400, t, fmt);
-        expect(few.match(/class="chk"/g)?.length).toBe(PANEL_LINES * 2);
+        expect(few.match(/class="chk"/g)?.length).toBe(CHECK_LINES);
         expect(few).toContain('data-act="all-checks"');
-        expect(checksTabHtml(checks as never, 86400, t, fmt, true).match(/class="chk"/g)?.length).toBe(PANEL_LINES * 2 + 3);
+        expect(checksTabHtml(checks as never, 86400, t, fmt, true).match(/class="chk"/g)?.length).toBe(CHECK_LINES + 3);
     });
 });

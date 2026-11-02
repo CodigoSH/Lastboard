@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { logLineHtml, taskRowHtml, typeLabel } from './ProxmoxTasks.template';
+import { logLineHtml, TASK_LINES, taskRowHtml, tasksListHtml, typeLabel } from './ProxmoxTasks.template';
 import type { PxTask } from '../../../services/proxmoxTasks';
 
 const t = (key: string) => `[${key}]`;
@@ -31,5 +31,24 @@ describe('typeLabel', () => {
     test('a known type has a word, an unknown one is shown as it came', () => {
         expect(typeLabel('vzdump', t)).toBe('[proxmox.task_type_backup]');
         expect(typeLabel('hamigrate', t)).toBe('hamigrate');
+    });
+});
+
+describe('the list of tasks', () => {
+    const t = (k: string) => `[${k}]`;
+    const fmt = { time: (n: number) => `T${n}`, span: (n: number) => `S${n}` };
+    const many: PxTask[] = Array.from({ length: TASK_LINES + 7 }, (_, i) => ({ upid: `u${i}`, type: 'vzdump', id: '100', user: 'root@pam', state: 'ok', start: 1000 + i }));
+    test('shows fifteen and offers the rest in a window, which shows them all', () => {
+        const html = tasksListHtml(many, () => 60, t, fmt);
+        expect(html.match(/data-upid=/g)?.length).toBe(TASK_LINES);
+        expect(html).toContain('data-tp-all');
+        expect(html).toContain(`<span class="n">${many.length}</span>`);
+        const all = tasksListHtml(many, () => 60, t, fmt, true);
+        expect(all.match(/data-upid=/g)?.length).toBe(many.length);
+        expect(all).not.toContain('data-tp-all');
+    });
+    test('a short list has no button, and an empty one says so', () => {
+        expect(tasksListHtml(many.slice(0, TASK_LINES), () => 60, t, fmt)).not.toContain('data-tp-all');
+        expect(tasksListHtml([], () => null, t, fmt)).toContain('[proxmox.tasks_empty]');
     });
 });

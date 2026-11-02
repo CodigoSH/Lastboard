@@ -196,6 +196,8 @@ class ProxmoxPage extends HTMLElement {
             // A confirmation answers its own Escape; closing the page under it would be a second effect of one key.
             if (document.querySelector('confirmation-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
             if (document.querySelector('icon-selection-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
+            // The window with every task answers its own Escape.
+            if (this.shadowRoot?.querySelector('dialog[open]')) return;
             if (e.key === 'Escape') {
                 if (this.drawerOpen) this.closeDrawer(); else this.close();
                 return;
