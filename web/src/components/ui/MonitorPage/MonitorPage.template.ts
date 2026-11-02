@@ -247,15 +247,23 @@ const attrs = (v: ServiceView): string => `data-id="${v.row.item_id}"`;
 export function cardHtml(v: ServiceView, t: T, fmt: Fmt): string {
     const r = v.row, st = stateOf(r), down = st === 'down';
     const tail = `${r.uptime_pct >= 0 ? `<span class="chip${down ? ' chip--bad' : ''}">${e(fmt.avail(r.uptime_pct))}</span>` : ''}${dotOf(r)}`;
-    let body: string;
-    if (st === 'none') body = `<div class="unit__off">${e(t('monitorpage.no_checks'))}</div>`;
-    else if (down) body = `<div class="unit__off">${e(downLine(r, t, fmt))}</div>${beatsHtml(r, t, fmt)}`;
-    else {
+    // Every card has the same three layers: the address, a status block of a fixed height, and the heartbeat at the foot.
+    // What the status block holds changes — the response, why it is down, or that nothing was checked — and the heartbeat does not move.
+    let status: string, beats = '';
+    if (st === 'none') {
+        status = `<div class="unit__off">${e(t('monitorpage.no_checks'))}</div>`;
+    } else if (down) {
+        const line = downLine(r, t, fmt);
+        status = `<div class="unit__off" title="${e(line)}">${e(line)}</div>`;
+        beats = beatsHtml(r, t, fmt);
+    } else {
         // The bar is the response against four times what it usually is: full is "as bad as it gets", not "full".
         const base = r.avg_ms_24h && r.avg_ms_24h > 0 ? r.avg_ms_24h * 4 : Math.max(1, r.latency_ms ?? 1);
         const share = Math.max(4, Math.min(100, ((r.latency_ms ?? 0) / base) * 100));
-        body = `<div class="unit__m"><div class="mrow"><span>${e(t('monitor.response'))}</span>${barHtml(st === 'slow' ? Math.max(share, 65) : Math.min(share, 50))}<b>${e(fmt.ms(r.latency_ms))}</b></div>${beatsHtml(r, t, fmt)}</div>`;
+        status = `<div class="mrow"><span>${e(t('monitor.response'))}</span>${barHtml(st === 'slow' ? Math.max(share, 65) : Math.min(share, 50))}<b>${e(fmt.ms(r.latency_ms))}</b></div>`;
+        beats = beatsHtml(r, t, fmt);
     }
+    const body = `<div class="unit__st">${status}</div>${beats}`;
     return `<button type="button" class="card card--btn unit${down ? ' is-off' : ''}${v.selected ? ' is-sel' : ''}" ${attrs(v)}>
         <div class="unit__h">${faceHtml(v.face)}<span class="unit__n">${e(r.name) || '—'}</span><span class="unit__tail">${tail}</span></div>
         <div class="unit__sub">${tech(r.url || '—')}${v.showBoard && r.board ? `<span>· ${e(r.board)}</span>` : ''}</div>

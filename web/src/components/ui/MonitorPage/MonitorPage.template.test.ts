@@ -142,6 +142,13 @@ describe('the inventory', () => {
         expect(tail.indexOf('class="chip')).toBeLessThan(tail.indexOf('class="dot'));
         expect(html.slice(0, html.indexOf('unit__tail'))).not.toContain('class="dot');
     });
+    test('every card holds its status in one block and the heartbeat after it, whatever the state', () => {
+        for (const r of [up, down, none]) {
+            const html = cardHtml(view(r), t, fmt);
+            expect(html).toContain('class="unit__st"');
+            if (r !== none) expect(html.indexOf('class="beats')).toBeGreaterThan(html.indexOf('</div>', html.indexOf('class="unit__st"')));
+        }
+    });
     test('a card carries its id, its address and, if asked, its board', () => {
         const html = cardHtml(view(up, { showBoard: true }), t, fmt);
         expect(html).toContain('data-id="1"');

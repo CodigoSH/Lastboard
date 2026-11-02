@@ -13,8 +13,11 @@
 .beats i.n { background: var(--track); opacity: 1; }
 .beats--sm { block-size: 14px; gap: 1px; }
 .beats--lg { block-size: 30px; gap: 3px; }
-.unit .beats { margin-block-start: 2px; }
-.unit__m { display: flex; flex-direction: column; gap: 8px; }
+/* The status block has the height of two lines whatever it holds, and the heartbeat sits at the foot of the card:
+   so the heartbeats of every card in a row line up, however long the reason a service is down. */
+.unit__st { min-height: 32px; display: flex; flex-direction: column; justify-content: center; }
+.unit__st .unit__off { padding-block-start: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
+.unit .beats { margin-block-start: auto; }
 
 /* The list view: name, address, state, availability, response, and the last checks. */
 .tbl--mon .tr, .tbl--mon .tr--h { grid-template-columns: 16px minmax(150px, 1.3fr) minmax(130px, 1fr) 96px 78px 84px minmax(120px, 150px); }
@@ -45,4 +48,4 @@
 .chk .bad { color: var(--danger); }
 
 /* "Response" is a word, not three letters: its column is as wide as the word. */
-.unit__m .mrow { grid-template-columns: minmax(54px, auto) minmax(0, 1fr) auto; }
+.unit__st .mrow { grid-template-columns: minmax(54px, auto) minmax(0, 1fr) auto; }
