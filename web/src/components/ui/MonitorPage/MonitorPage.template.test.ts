@@ -343,10 +343,13 @@ describe('what a person reads about an outage', () => {
         expect(cards).toContain('class="cards"');
         expect(cards.match(/unit--out/g)?.length).toBe(2);
         expect(cards).not.toContain('tbl--out');
+        // On the page itself, as the services are, so a row holds as many cards as theirs; only the table lives in a box.
+        expect(cards).not.toContain('class="box"');
         expect(cards).toContain('data-view="cards"');
         expect(cards).toContain('data-view="list"');
         const table = outagesTabHtml(list, list, '30 d', RANGES, 'all', t, fmt, rows, 'list');
         expect(table).toContain('tbl--out');
+        expect(table).toContain('class="box"');
         expect(table).not.toContain('unit--out');
         expect(table).toContain('aria-pressed="true"');
     });
@@ -369,6 +372,14 @@ describe('what a person reads about an outage', () => {
         expect(html).toContain('[monitorpage.att_unstable:name=Flaky]');
         expect(html).toContain('A(93.8)');
         expect(html).toContain('dot--warn');
+    });
+    test("the longest outage shows its length, never a state, and says it is not over when it is not", () => {
+        const going: Outage[] = [{ item_id: 1, name: 'Immich', start: 'a', end: null, duration_sec: 28800, status_code: 0 }, { item_id: 2, name: 'Plex', start: 'b', end: 'c', duration_sec: 600, status_code: 0 }];
+        const html = outagesTabHtml(going, going, '30 d', RANGES, 'all', t, fmt, new Map());
+        expect(html).toMatch(/out_longest\]<\/span><b class="num">S\(28800\)<\/b><small>Immich · \[monitorpage.ongoing\]/);
+        expect(html).not.toMatch(/out_longest\][^]*?<b class="num">\[monitorpage.is_down\]/);
+        const over: Outage[] = [{ item_id: 2, name: 'Plex', start: 'b', end: 'c', duration_sec: 600, status_code: 0 }];
+        expect(outagesTabHtml(over, over, '30 d', RANGES, 'all', t, fmt, new Map())).toMatch(/out_longest\]<\/span><b class="num">O\(600\)<\/b><small>Plex · \[monitorpage.ago:time=G\(b\)\]/);
     });
     test("a service's own table has no service and no state column: a line still going says Down where its length would be", () => {
         const o = [{ start: 'a', end: null, duration_sec: 0, status_code: 0 } as Outage, { start: 'b', end: 'c', duration_sec: 600, status_code: 0 } as Outage];

@@ -379,7 +379,7 @@ export function outagesTabHtml(list: Outage[], shown: Outage[], range: RangeLabe
     const sum = `<div class="inc-sum">
         <div class="card"><span class="lbl">${e(t('monitor.incidents'))} · ${e(range)}</span><b class="num">${e(fmt.num(tot.count))}</b><small>${e(t('monitorpage.ongoing'))}: ${e(fmt.num(tot.ongoing))} · ${e(t('monitorpage.out_affected'))}: ${e(fmt.num(ins.affected))}</small></div>
         <div class="card"><span class="lbl">${e(t('monitorpage.out_most'))}</span><b class="num" title="${e(ins.most?.name ?? '')}">${e(ins.most?.name || '—')}</b><small>${ins.most ? `${e(t('monitor.incidents'))}: ${e(fmt.num(ins.most.count))} · ${e(t('monitorpage.out_downtime'))}: ${e(outageSpan(ins.most.downSec, t, fmt))}` : '&nbsp;'}</small></div>
-        <div class="card"><span class="lbl">${e(t('monitorpage.out_longest'))}</span><b class="num">${e(ins.longest ? outageSpan(ins.longest.sec, t, fmt) : '—')}</b><small>${ins.longest ? `${e(ins.longest.name)}${ago ? ` · ${e(t('monitorpage.ago', { time: ago }))}` : ''}${ins.longest.ongoing ? ` · ${e(t('monitorpage.is_down'))}` : ''}` : '&nbsp;'}</small></div>
+        <div class="card"><span class="lbl">${e(t('monitorpage.out_longest'))}</span><b class="num">${e(ins.longest ? outageSpan(ins.longest.sec, t, fmt) : '—')}</b><small>${ins.longest ? `${e(ins.longest.name)}${ins.longest.ongoing ? ` · ${e(t('monitorpage.ongoing'))}` : ago ? ` · ${e(t('monitorpage.ago', { time: ago }))}` : ''}` : '&nbsp;'}</small></div>
     </div>`;
     const chip = (id: OutageFilter, label: string, n: number) =>
         `<button type="button" class="fchip" data-ofilter="${id}" aria-pressed="${filter === id}">${e(label)} <span class="n">${e(fmt.num(n))}</span></button>`;
@@ -387,7 +387,9 @@ export function outagesTabHtml(list: Outage[], shown: Outage[], range: RangeLabe
     const body = shown.length
         ? (view === 'cards' ? `<div class="cards">${shown.map(o => outageCardHtml(o, faceOf(o.item_id), t, fmt, rows)).join('')}</div>` : outageTableHtml(shown, true, t, fmt, rows))
         : emptyHtml(t('monitor.no_incidents'));
-    return `${sum}${tools}${boxHtml(t('monitor.incidents'), body, fmt.num(shown.length))}`;
+    // The cards sit straight on the page, as the services and the containers do, so a row holds as many of them
+    // as the others; the table is the one that lives in a box.
+    return `${sum}${tools}${view === 'cards' && shown.length ? body : boxHtml(t('monitor.incidents'), body, fmt.num(shown.length))}`;
 }
 
 // ── The drawer: one service ────────────────────────────────────────────────
