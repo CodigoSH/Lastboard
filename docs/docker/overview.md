@@ -114,7 +114,7 @@ The widget is a list you glance at. For the whole picture — what is running, w
 
 ![The Docker page's overview of two hosts: four indicators, the chart since the page was opened, what needs attention and the Compose projects](../assets/docker-overview.png)
 
-The header says how many containers are running, how many are stopped and how many have warnings. With more than one host there is a selector beside it to look at all of them or at one; a button asks for a fresh reading at once. Everything refreshes every ten seconds while the page is open and the browser tab is visible. The page has three tabs: **Overview**, **Containers** and **Logs**.
+The header says how many containers are running, how many are stopped and how many have warnings. With more than one host there is a selector beside it to look at all of them or at one; a button asks for a fresh reading at once. Everything refreshes every ten seconds while the page is open and the browser tab is visible. CPU and memory are read from Docker without waiting for it: the daemon answers a one-shot reading at once (Docker 20.10, API 1.41, or later), the CPU is worked out against the reading ten seconds before, and the first time a second reading a second later gives it, for all the containers of a host together. A host's readings are shared for a few seconds, so the page, the widget on the board and a second tab ask the daemon once between them. Through the Lastboard Agent this needs the release that passes `one-shot` on; with an older agent, or an older Docker, the readings come as they always did, a second for each eight containers. The page has three tabs: **Overview**, **Containers** and **Logs**.
 
 ### Overview
 
