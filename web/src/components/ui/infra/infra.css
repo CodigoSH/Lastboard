@@ -254,7 +254,8 @@ svg { display: block; flex: none; }
 .bar--ghost { visibility: hidden; }
 .kpi__v { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
 .kpi__v small { font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--text-dim); margin-inline-start: 4px; }
-.kpi__sub { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1.3 var(--font-mono); color: var(--text-dim); }
+.kpi__sub { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font: 500 11px/1.3 var(--font-mono); color: var(--text-dim); }
+.kpi__sub span { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* a line of two facts wraps between them, never inside one */
 .kpi__more { align-self: flex-end; margin-block-start: auto; padding: 0; border: 0; background: none; color: var(--accent); font: 600 11px/1.3 var(--font-mono); letter-spacing: 0.04em; cursor: pointer; }
 .kpi__more:hover { text-decoration: underline; text-underline-offset: 3px; }
 .kpi__chips { display: flex; gap: 5px; flex-wrap: wrap; margin-block-start: auto; }
@@ -412,6 +413,7 @@ button.tr.is-sel { background: var(--surface-active); }
 .dr__t h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dr__chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .dr__tabs { display: flex; gap: 2px; margin: 4px -18px 0; padding: 0 12px; border-block-end: 1px solid var(--card-border); overflow-x: auto; scrollbar-width: none; }
+.dr__b > * { flex-shrink: 0; } /* the body scrolls: its cards keep their height instead of shrinking to fit and cutting their lines */
 .dr__b { flex: 1; overflow: auto; padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 .dr__f { display: flex; gap: 8px; padding: 12px 18px; border-block-start: 1px solid var(--card-border); background: var(--panel); }
 .act {
@@ -484,7 +486,9 @@ button.tr.is-sel { background: var(--surface-active); }
 .logv__state { padding: 14px; }
 
 @media (max-width: 700px) {
-    .phead { padding: 8px 14px; }
+    /* A phone has no Ctrl K, and the hint costs the box a third of its words. The header's gaps shrink so the close button stays beside the refresh one. */
+    .phead { padding: 8px 14px; gap: 8px; }
+    .search kbd { display: none; }
     .pbody { padding-inline: 14px; }
     .psum { border: 0; padding: 0; width: 100%; order: 5; }
     .live3 { grid-template-columns: 1fr; }
