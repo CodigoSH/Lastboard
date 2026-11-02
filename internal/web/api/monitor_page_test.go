@@ -285,7 +285,7 @@ func TestTheQuickOutageListIsTheFullPassesAnswer(t *testing.T) {
 	rng := rand.New(rand.NewSource(11))
 
 	var ids []int
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 4; i++ {
 		ids = append(ids, monitored(t, store, owner, fmt.Sprintf("svc%d", i)))
 	}
 	// One that is no longer monitored, one with nothing recorded, one of another account.
@@ -294,7 +294,13 @@ func TestTheQuickOutageListIsTheFullPassesAnswer(t *testing.T) {
 	_ = idle
 	stranger := monitored(t, store, anotherUser(t, store), "stranger")
 
-	const minutes = 31 * 24 * 60 / 7 // a check every seven minutes over 31 days
+	// A check every half hour over 31 days. The comparison is about the shape of the
+	// runs, not about volume, and the race detector in CI is slow: ten services at one
+	// check every seven minutes took a minute of it, and with the rest of the package
+	// that was the ten that the job is given.
+	const stepMin = 30
+	const minutes = 31 * 24 * 60 / stepMin
+	const sevenDays = 7 * 24 * 60 / stepMin
 	tx, err := db.Begin()
 	if err != nil {
 		t.Fatal(err)
@@ -308,14 +314,17 @@ func TestTheQuickOutageListIsTheFullPassesAnswer(t *testing.T) {
 	for k, id := range append(append([]int{}, ids...), gone, stranger) {
 		down := false
 		for m := 0; m < minutes; m++ {
-			// A run of failures begins now and then; the first service flaps, the second is down at the end.
+			// A run of failures begins now and then; the first service flaps, the second is down at the end,
+			// and the fourth is down across the start of the window of a week, so one outage is cut by it.
 			switch {
+			case k == 3 && m >= minutes-sevenDays-4 && m < minutes-sevenDays+5:
+				down = true
 			case !down && rng.Intn(60) == 0, !down && k == 0 && rng.Intn(6) == 0:
 				down = true
-			case down && rng.Intn(9) == 0 && !(k == 1 && m > minutes-40):
+			case down && rng.Intn(9) == 0 && !(k == 1 && m > minutes-40) && !(k == 3 && m >= minutes-sevenDays-4 && m < minutes-sevenDays+5):
 				down = false
 			}
-			at := now.Add(-time.Duration(minutes-m) * 7 * time.Minute)
+			at := now.Add(-time.Duration(minutes-m) * stepMin * time.Minute)
 			if down {
 				put(id, at, false, nil, []int{0, 502, 503}[rng.Intn(3)])
 			} else {
@@ -349,7 +358,11 @@ func TestTheQuickOutageListIsTheFullPassesAnswer(t *testing.T) {
 			t.Fatal(err)
 		}
 		want, got = canon(want), canon(got)
-		if len(want) < 5 {
+		least := 5
+		if window == 24*time.Hour {
+			least = 3 // a day holds few checks at this pace
+		}
+		if len(want) < least {
 			t.Fatalf("%v: the full pass found only %d outages: the data does not exercise the comparison", window, len(want))
 		}
 		if len(got) != len(want) {
@@ -460,7 +473,7 @@ func TestTheWindowsAreExactToTheSecondWhereAnHourIsCut(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, id := range ids {
-		for s := 0; s < 31*24*3600; s += 97 { // a check every 97 seconds: none lands on the cut
+		for s := 0; s < 31*24*3600; s += 1201 { // a check every 1201 seconds: none lands on the cut
 			if _, err := tx.Exec(`INSERT INTO monitor_checks (item_id, checked_at, up, latency_ms, status_code) VALUES (?, ?, ?, 10, 200)`,
 				id, now.Add(-time.Duration(s)*time.Second).Format("2006-01-02 15:04:05"), rng.Intn(7) != 0); err != nil {
 				t.Fatal(err)

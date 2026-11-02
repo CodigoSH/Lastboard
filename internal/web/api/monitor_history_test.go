@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// seedHistory gives a service a month of checks every seven minutes, with runs of
+// seedHistory gives a service a month of checks every twenty minutes, with runs of
 // failures (one still going), checks that answered slowly, some without a latency,
 // and two at the very same moment.
 func seedHistory(t *testing.T, store *MonitorStore, itemID int, now time.Time) {
@@ -25,10 +25,11 @@ func seedHistory(t *testing.T, store *MonitorStore, itemID int, now time.Time) {
 			t.Fatal(err)
 		}
 	}
-	const n = 31 * 24 * 60 / 7
+	const step = 20
+	const n = 31 * 24 * 60 / step
 	down := false
 	for i := 0; i < n; i++ {
-		at := now.Add(-time.Duration(n-i) * 7 * time.Minute)
+		at := now.Add(-time.Duration(n-i) * step * time.Minute)
 		switch {
 		case !down && rng.Intn(70) == 0:
 			down = true

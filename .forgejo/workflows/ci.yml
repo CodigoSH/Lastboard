@@ -98,10 +98,17 @@ jobs:
       # cgo. -count=1 is not optional: the architecture rules read the repository
       # from disk, which the test cache does not track. -cover prints each
       # package's coverage in the log; nothing reads a coverage file.
+      #
+      # -timeout 20m: Go's own limit is ten minutes for a package, and under the race
+      # detector on this runner the API package takes more than half of that on a quiet
+      # machine. A package that runs out of time dies in whatever test happened to be
+      # running, which names nobody; the limit is a margin, not a licence — a test that
+      # needs a minute of it is a test to make smaller (the data of a test is volume, and
+      # the race detector makes each row of SQLite cost about a millisecond).
       - name: Go tests
         env:
           CGO_ENABLED: "1"
-        run: go test -count=1 -race -cover ./...
+        run: go test -count=1 -race -cover -timeout 20m ./...
 
       # Blocking, and it blocks on one number: "your code is affected by N
       # vulnerabilities". The other figure it prints — advisories in modules this
