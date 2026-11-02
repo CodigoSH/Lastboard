@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageServiceCardHtml, outageServiceTableHtml, outageSpan, outageTableHtml, CHECK_LINES, OUTAGE_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
+    attentionHtml, cardHtml, causeCode, chartCardForFleet, causeText, checksTabHtml, downLine, moreHtml, outageServiceCardHtml, outageServiceTableHtml, outageSpan, outageTableHtml, CHECK_LINES, OUTAGE_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
     monitoringKpi, outageRowHtml, outagesPanelHtml, outagesTabHtml, rowHtml, stateChips, summaryHtml, summaryTabHtml, type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import { attentionList, fleetTotals, groupRows, readRow, RANGES, type Outage, type ServiceRow } from '../../../services/monitorPage';
@@ -409,5 +409,18 @@ describe('what a person reads about an outage', () => {
         expect(few.match(/class="chk"/g)?.length).toBe(CHECK_LINES);
         expect(few).toContain('data-act="all-checks"');
         expect(checksTabHtml(checks as never, 86400, t, fmt, true).match(/class="chk"/g)?.length).toBe(CHECK_LINES + 3);
+    });
+});
+
+describe('a box waiting for its answer says so, and does not say there is nothing', () => {
+    test('the outages box', () => {
+        const waiting = latestOutagesBoxHtml([], t, fmt, 0, true);
+        expect(waiting).toContain('[general.loading]');
+        expect(waiting).not.toContain('[monitor.no_incidents]');
+        expect(latestOutagesBoxHtml([], t, fmt, 0)).toContain('[monitor.no_incidents]');
+    });
+    test('the fleet chart', () => {
+        expect(chartCardForFleet('', '24 h', RANGES, t, true)).toContain('[general.loading]');
+        expect(chartCardForFleet('', '24 h', RANGES, t)).toContain('[dockerpage.collecting]');
     });
 });

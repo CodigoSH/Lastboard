@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
     attentionCount, attentionList, groupOutagesByService, outageInsights, bucketLatency, countByFilter, fillGaps, filterOutages, fleetTotals, groupRows, isSlow, lowestAvailability,
-    outageTotals, passes, readRow, sortOutages, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
+    outageTotals, outagesDue, OUTAGES_CALM_MS, OUTAGES_DOWN_MS, passes, readRow, statusSignature, sortOutages, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
 } from './monitorPage';
 
 const row = (over: Partial<ServiceRow> & { name: string }): ServiceRow => readRow({
@@ -252,5 +252,26 @@ describe('groupOutagesByService', () => {
         const g = groupOutagesByService([o(1, 'Many', 'a', 10), o(1, 'Many', 'b', 10), o(1, 'Many', 'c', 10), o(2, 'Down', 'd', 5, null), o(3, 'Long', 'e', 900), o(3, 'Long', 'f', 900), o(4, 'Short', 'g', 1), o(4, 'Short', 'h', 1)]);
         expect(g.map(x => x.name)).toEqual(['Down', 'Many', 'Long', 'Short']);
         expect(g[0].ongoing).toBe(true);
+    });
+});
+
+describe('when the outages are asked for again', () => {
+    const a = statusSignature([{ item_id: 1, status: 'up', down_since: null }, { item_id: 2, status: 'down', down_since: '2026-11-01T10:00:00Z' }]);
+    test('never read, or a service fell or recovered, asks at once', () => {
+        expect(outagesDue({ held: null, now: a, ageMs: 0, anyDown: false })).toBe(true);
+        const fell = statusSignature([{ item_id: 1, status: 'down', down_since: '2026-11-01T11:00:00Z' }, { item_id: 2, status: 'down', down_since: '2026-11-01T10:00:00Z' }]);
+        expect(outagesDue({ held: a, now: fell, ageMs: 1000, anyDown: true })).toBe(true);
+        const back = statusSignature([{ item_id: 1, status: 'up', down_since: null }, { item_id: 2, status: 'up', down_since: null }]);
+        expect(outagesDue({ held: a, now: back, ageMs: 1000, anyDown: false })).toBe(true);
+    });
+    test('while nothing changed it waits, longer when everything is up than while something is down', () => {
+        expect(outagesDue({ held: a, now: a, ageMs: 30000, anyDown: true })).toBe(false);
+        expect(outagesDue({ held: a, now: a, ageMs: OUTAGES_DOWN_MS, anyDown: true })).toBe(true);
+        expect(outagesDue({ held: a, now: a, ageMs: OUTAGES_DOWN_MS, anyDown: false })).toBe(false);
+        expect(outagesDue({ held: a, now: a, ageMs: OUTAGES_CALM_MS, anyDown: false })).toBe(true);
+    });
+    test('the signature does not depend on the order the rows came in', () => {
+        const x = { item_id: 1, status: 'up' as const, down_since: null }, y = { item_id: 2, status: 'down' as const, down_since: 'z' };
+        expect(statusSignature([x, y])).toBe(statusSignature([y, x]));
     });
 });

@@ -380,3 +380,26 @@ export const RANGES: readonly RangeLabel[] = ['24 h', '7 d', '30 d'];
 export const rangeParam = (r: RangeLabel): '24h' | '7d' | '30d' => (r === '24 h' ? '24h' : r === '7 d' ? '7d' : '30d');
 export const rangeMs = (r: RangeLabel): number => (r === '24 h' ? 1 : r === '7 d' ? 7 : 30) * 86400000;
 export const isRange = (v: unknown): v is RangeLabel => typeof v === 'string' && (RANGES as readonly string[]).includes(v);
+
+/**
+ * What the page asks for again, and when. The services come back every refresh:
+ * they are what changes. The outages are the heaviest answer the server gives
+ * and change when a service falls or recovers, so they are asked for again then,
+ * and otherwise now and then (sooner while something is down, since the length of
+ * an outage in course grows).
+ */
+export const OUTAGES_CALM_MS = 300000;
+export const OUTAGES_DOWN_MS = 120000;
+/** How old what the page held can be and still be shown at once, while the new reading is on its way. */
+export const HELD_MS = 600000;
+
+/** Who is down, and since when: when it changes, the outages have changed. */
+export function statusSignature(rows: readonly Pick<ServiceRow, 'item_id' | 'status' | 'down_since'>[]): string {
+    return rows.map(r => `${r.item_id}:${r.status}:${r.down_since ?? ''}`).sort().join('|');
+}
+
+/** Whether the outages are asked for again: never read, a service fell or recovered, or the last reading is old enough. */
+export function outagesDue(s: { held: string | null; now: string; ageMs: number; anyDown: boolean }): boolean {
+    if (s.held === null || s.held !== s.now) return true;
+    return s.ageMs >= (s.anyDown ? OUTAGES_DOWN_MS : OUTAGES_CALM_MS);
+}

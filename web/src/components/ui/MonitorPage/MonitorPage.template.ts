@@ -202,10 +202,10 @@ export function rangeSegHtml(act: string, current: RangeLabel, ranges: readonly 
     return `<span class="seg seg--text" role="group">${ranges.map(r => `<button type="button" data-${act}="${r}" aria-pressed="${r === current}">${e(r)}</button>`).join('')}</span>`;
 }
 
-export function chartCardForFleet(chart: string, range: RangeLabel, ranges: readonly RangeLabel[], t: T): string {
+export function chartCardForFleet(chart: string, range: RangeLabel, ranges: readonly RangeLabel[], t: T, loading = false): string {
     return chartCardHtml(t('monitorpage.chart_title'),
         [{ name: t('monitorpage.mean'), color: 'var(--ok)' }, { name: t('monitorpage.slowest'), color: 'var(--warn)' }],
-        rangeSegHtml('fleet', range, ranges), chart, t('dockerpage.collecting'));
+        rangeSegHtml('fleet', range, ranges), chart, t(loading ? 'general.loading' : 'dockerpage.collecting'));
 }
 
 const lowRow = (r: ServiceRow, fmt: Fmt): string => {
@@ -286,7 +286,9 @@ export function moreHtml(act: string, shown: number, total: number, t: T, fmt: F
         : '';
 }
 
-export function latestOutagesBoxHtml(list: Outage[], t: T, fmt: Fmt, total: number): string {
+/** `loading`: the outages have not arrived yet, which is not the same as there being none. */
+export function latestOutagesBoxHtml(list: Outage[], t: T, fmt: Fmt, total: number, loading = false): string {
+    if (loading) return boxHtml(t('monitorpage.latest'), `<div class="card"><div class="chart__empty">${e(t('general.loading'))}</div></div>`, '');
     const body = list.length
         ? `${outageTableHtml(list, true, t, fmt)}${moreHtml('all-outages', list.length, total, t, fmt)}`
         : `<div class="card"><div class="chart__empty">${e(t('monitor.no_incidents'))}</div></div>`;

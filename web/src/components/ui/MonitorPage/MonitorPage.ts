@@ -9,7 +9,7 @@ import { PageNav, type NavState } from '../../../services/pageNav';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import {
     attentionCount, attentionList, bucketLatency, countByFilter, filterOutages, fleetTotals, groupRows, isOutageFilter, isRange, isSortKey, isStateFilter,
-    lowestAvailability, passes, rangeMs, rangeParam, RANGES, readRow, sortOutages, sortRows, trendSeries,
+    HELD_MS, lowestAvailability, outagesDue, passes, rangeMs, rangeParam, RANGES, readRow, sortOutages, sortRows, statusSignature, trendSeries,
     type Check, type Outage, type OutageFilter, type RangeLabel, type ServiceRow, type SortKey, type StateFilter, type TrendPoint,
 } from '../../../services/monitorPage';
 import {
@@ -69,6 +69,14 @@ class MonitorPage extends HTMLElement {
     private rows: ServiceRow[] = [];
     private setup: MonitoringSetup | null = null;
     private outages: Outage[] = [];
+    /** Whether the outages, and the day's trend, have arrived: they come behind the services, so a box waiting for them says so. */
+    private outagesLoaded = false;
+    private trendLoaded = false;
+    /** What the services said when the outages were last read, and when: the outages are asked for again when it changes. */
+    private outagesSig: string | null = null;
+    private outagesAt = 0;
+    /** When the services were last read: what the page holds is shown at once on opening again while it is read anew. */
+    private rowsAt = 0;
     private trends = new Map<RangeLabel, TrendPoint[]>();
     private histories = new Map<string, History>();
     private loaded = false;
@@ -184,9 +192,10 @@ class MonitorPage extends HTMLElement {
         // The top bar locks its other actions while the status page is up, the same way it does in edit mode.
         eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: true });
         this.drawerOpen = false;
-        this.loaded = false;
+        // What the page held when it was last open is shown at once, if it is recent, while the new reading is on its way.
+        this.loaded = this.rows.length > 0 && Date.now() - this.rowsAt < HELD_MS;
         this.paintAll(true);
-        void this.load();
+        void this.load(false, true);
         this.stopTimer();
         this.timer = setInterval(whenVisible(() => this.load()), REFRESH_MS);
     }
@@ -527,21 +536,23 @@ class MonitorPage extends HTMLElement {
 
     // ── Loading ──
 
-    private async load(fresh = false) {
+    /**
+     * The services come first and the page is drawn from them; the outages and the
+     * day's trend, which are the heavy ones, arrive behind and fill their boxes.
+     * `fresh` asks for everything again; `opening` also reads the settings.
+     */
+    private async load(fresh = false, opening = false) {
         if (this.loading) return;
         this.loading = true;
         this.paintHead();
         try {
-            const [rows, setup, outages, trend] = await Promise.all([
+            const [rows, setup] = await Promise.all([
                 apiService.get<(Partial<ServiceRow> & { item_id: number })[]>('/api/monitor/overview'),
-                apiService.get<MonitoringSetup>('/api/monitor/settings').catch(() => null),
-                apiService.get<{ incidents: Outage[] }>('/api/monitor/incidents?range=30d').catch(() => ({ incidents: [] as Outage[] })),
-                apiService.get<{ points: TrendPoint[] }>('/api/monitor/trend?range=24h').catch(() => null),
+                opening || fresh || !this.setup ? apiService.get<MonitoringSetup>('/api/monitor/settings').catch(() => null) : Promise.resolve(null),
             ]);
             this.rows = (Array.isArray(rows) ? rows : []).map(readRow);
-            this.setup = setup ? { ...setup, retention_days: setup.retention_days || 30 } : null;
-            this.outages = Array.isArray(outages?.incidents) ? sortOutages(outages.incidents) : [];
-            if (trend?.points) this.trends.set('24 h', trend.points);
+            this.rowsAt = Date.now();
+            if (setup) this.setup = { ...setup, retention_days: setup.retention_days || 30 };
             this.failed = false;
             if (this.board !== 'all' && !this.boards().includes(this.board)) this.board = 'all';
             if (fresh) this.histories.clear();
@@ -554,8 +565,37 @@ class MonitorPage extends HTMLElement {
         // A service that is gone is gone.
         if (this.sel !== null && !this.current()) { this.sel = null; this.drawerOpen = false; }
         this.paintAll();
+        if (!this.failed) {
+            void this.loadDayTrend();
+            const sig = statusSignature(this.rows);
+            if (fresh || outagesDue({ held: this.outagesSig, now: sig, ageMs: Date.now() - this.outagesAt, anyDown: this.rows.some(r => r.status === 'down') })) void this.loadOutages(sig);
+        }
         if (this.fleetRange !== '24 h' && !this.trends.has(this.fleetRange)) void this.loadTrend(this.fleetRange);
         if (this.drawerOpen) void this.loadHistory();
+    }
+
+    private async loadDayTrend() {
+        try {
+            const trend = await apiService.get<{ points: TrendPoint[] }>('/api/monitor/trend?range=24h');
+            if (trend?.points) this.trends.set('24 h', trend.points);
+        } catch { /* the chart says there is nothing to draw */ }
+        this.trendLoaded = true;
+        if (this.hasAttribute('open') && this.tab === 'overview') { this.last.body = ''; this.paintBody(); }
+    }
+
+    private async loadOutages(sig: string) {
+        try {
+            const out = await apiService.get<{ incidents: Outage[] }>('/api/monitor/incidents?range=30d');
+            this.outages = Array.isArray(out?.incidents) ? sortOutages(out.incidents) : [];
+            this.outagesSig = sig;
+            this.outagesAt = Date.now();
+        } catch { /* what the page held stays, or the boxes say there is none */ }
+        this.outagesLoaded = true;
+        if (!this.hasAttribute('open')) return;
+        this.last.body = '';
+        this.paintTabs();
+        if (this.tab !== 'services') this.paintBody();
+        this.paintModal();
     }
 
     private async loadTrend(range: RangeLabel) {
@@ -717,8 +757,8 @@ class MonitorPage extends HTMLElement {
         const mine = new Set(scope.map(r => r.item_id));
         const recent = this.outages.filter(o => o.item_id !== undefined && mine.has(o.item_id));
         return `${kpisHtml(totals, this.setup, sparks, t, fmt)}
-            <div class="grid g-main" style="margin-block-start:12px">${chartCardForFleet(chart, this.fleetRange, RANGES, t)}${attn}</div>
-            <div class="grid g-2">${lowestBoxHtml(lowestAvailability(scope), t, fmt)}${latestOutagesBoxHtml(recent.slice(0, 6), t, fmt, recent.length)}</div>`;
+            <div class="grid g-main" style="margin-block-start:12px">${chartCardForFleet(chart, this.fleetRange, RANGES, t, this.fleetRange === '24 h' && !this.trendLoaded)}${attn}</div>
+            <div class="grid g-2">${lowestBoxHtml(lowestAvailability(scope), t, fmt)}${latestOutagesBoxHtml(recent.slice(0, 6), t, fmt, recent.length, !this.outagesLoaded)}</div>`;
     }
 
     private edge(ms: number): string {
@@ -726,6 +766,7 @@ class MonitorPage extends HTMLElement {
     }
 
     private outagesHtml(): string {
+        if (!this.outagesLoaded) return `<div class="empty">${escapeHtml(this.t('general.loading'))}</div>`;
         const mine = new Set(this.scope().map(r => r.item_id));
         const now = Date.now();
         const window = rangeMs(this.outRange);
