@@ -109,7 +109,7 @@
   "docker.no_hosts_configured": "No hay hosts Docker configurados",
   "docker.state_paused": "pausado",
   "docker.state_restarting": "reiniciando",
-  "docker.state_running": "en ejecución",
+  "docker.state_running": "en marcha",
   "docker.state_stopped": "detenido",
   "docker.stats_error": "Error al obtener las estadísticas del contenedor",
   "docker.unknown_host": "Este host de Docker ya no está en tu lista, o está desactivado.",

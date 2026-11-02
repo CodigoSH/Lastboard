@@ -46,7 +46,7 @@ export function uptimeHtml(fmt: Fmt, sec: number): string {
 /** "6/9 running · 3 stopped · 2 warnings" — the line under the page's name. */
 export function summaryHtml(tt: FleetTotals, t: T, fmt: Fmt): string {
     const parts = [
-        `<span><i class="dot dot--ok"></i><b>${e(fmt.num(tt.running))}</b>/${e(fmt.num(tt.guests))} ${e(t('widget.proxmox.running_label').toLowerCase())}</span>`,
+        `<span><i class="dot dot--ok"></i><b>${e(fmt.num(tt.running))}</b>/${e(fmt.num(tt.guests))} ${e(t('infra.filter_up').toLowerCase())}</span>`,
         `<span>${e(t('infra.filter_off'))}: <b>${e(fmt.num(tt.stopped))}</b></span>`,
     ];
     if (tt.attention) parts.push(`<span><i class="dot dot--bad"></i>${e(t('infra.filter_warn'))}: <b>${e(fmt.num(tt.attention))}</b></span>`);
@@ -187,7 +187,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): st
             const up = (h.guests || []).filter(g => g.running).length;
             return `<article class="card unit"><div class="unit__h"><span class="dot ${h.error ? 'dot--bad' : 'dot--ok'}"></span><span class="unit__n">${e(h.name)}</span></div>
                 <div class="unit__sub"><span>${e(shape)}</span></div>
-                ${h.error ? '' : `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num((h.guests || []).length))} ${e(t('docker.state_running'))}</span></div>`}</article>`;
+                ${h.error ? '' : `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num((h.guests || []).length))} ${e(t('infra.filter_up').toLowerCase())}</span></div>`}</article>`;
         }).join('')}</div>`, fmt.num(o.hosts.length))
         : '';
 

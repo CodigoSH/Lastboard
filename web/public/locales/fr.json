@@ -109,7 +109,7 @@
   "docker.no_hosts_configured": "Aucun hôte Docker configuré",
   "docker.state_paused": "en pause",
   "docker.state_restarting": "redémarrage",
-  "docker.state_running": "en cours",
+  "docker.state_running": "en marche",
   "docker.state_stopped": "arrêté",
   "docker.stats_error": "Échec de la récupération des statistiques",
   "docker.unknown_host": "Cet hôte Docker n'est plus dans votre liste, ou il est désactivé.",

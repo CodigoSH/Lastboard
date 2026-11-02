@@ -81,7 +81,7 @@ export function healthChip(health: string | undefined, t: T): string {
 /** "3/5 running · 2 stopped · 1 warning" — the line under the page's name. */
 export function summaryHtml(tt: DockerTotals, t: T, fmt: Fmt): string {
     const parts = [
-        `<span><i class="dot dot--ok"></i><b>${e(fmt.num(tt.running))}</b>/${e(fmt.num(tt.total))} ${e(t('docker.state_running'))}</span>`,
+        `<span><i class="dot dot--ok"></i><b>${e(fmt.num(tt.running))}</b>/${e(fmt.num(tt.total))} ${e(t('infra.filter_up').toLowerCase())}</span>`,
         `<span>${e(t('infra.filter_off'))}: <b>${e(fmt.num(tt.stopped))}</b></span>`,
     ];
     if (tt.attention) parts.push(`<span><i class="dot dot--bad"></i>${e(t('infra.filter_warn'))}: <b>${e(fmt.num(tt.attention))}</b></span>`);
@@ -198,7 +198,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
             <span class="unit__tail"><span class="chip">${e(t(TYPE_KEYS[h.host.type] ?? 'docker.host_type'))}</span></span></div>
             <div class="unit__sub">${h.host.url ? tech(h.host.url) : ''}</div>
             ${h.error ? `<div class="unit__off">${e(t(h.error))}</div>` : h.loaded
-                ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('docker.state_running'))}</span><span>${use && use.cpu !== null && use.mem !== null ? `CPU ${e(fmt.pct(use.cpu))} · RAM ${e(fmt.pct(use.mem))}` : ''}</span></div>` : ''}</button>`;
+                ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('infra.filter_up').toLowerCase())}</span><span>${use && use.cpu !== null && use.mem !== null ? `CPU ${e(fmt.pct(use.cpu))} · RAM ${e(fmt.pct(use.mem))}` : ''}</span></div>` : ''}</button>`;
     }).join('');
     const hosts = `<div class="cards">${hostCards}</div>`;
 
