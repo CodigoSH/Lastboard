@@ -64,34 +64,57 @@ export const deviceName = (userAgent: string): string => {
     return i18n.t('sessions.device', { browser: b, os: OS_NAMES[os] });
 };
 
+const DIALOG_STYLE = 'background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;';
+
+/** One sign-in, on one line: the device and where it signs in from, when it was last used, and what can be done with it. */
 const sessionRowTemplate = (s: SessionRow) => {
     const seen = i18n.formatDateTime(s.last_seen, { dateStyle: 'medium', timeStyle: 'short' });
     return `
-            <div class="settings-content__action-row">
-                <div class="settings-content__action-info">
-                    <h3>${esc(deviceName(s.user_agent))}</h3>
-                    ${s.ip ? `<p>${esc(s.ip)}</p>` : ''}
-                    ${seen ? `<p>${esc(i18n.t('sessions.last_active', { date: seen }))}</p>` : ''}
+            <div class="sessions-row">
+                <div class="sessions-row__device">
+                    <b>${esc(deviceName(s.user_agent))}</b>
+                    ${s.ip ? `<span class="sessions-row__ip" dir="ltr">${esc(s.ip)}</span>` : ''}
                 </div>
+                <span class="sessions-row__seen" title="${esc(i18n.t('sessions.last_active', { date: seen }))}">${esc(seen)}</span>
                 ${s.current
                     ? `<span class="user-role-tag">${i18n.t('sessions.this_device')}</span>`
                     : `<app-button data-action="close-session" data-session-id="${s.id}">${i18n.t('sessions.close')}</app-button>`}
             </div>`;
 };
 
+/** What is inside the sessions dialog: the list, which scrolls, and the one action on the others. */
+export const sessionsListTemplate = (view: SessionsView) => view.status === 'error'
+    ? `<p class="settings-content__text-dim">${i18n.t('sessions.load_error')}</p>`
+    : view.status === 'ready' && view.items.length > 0
+        ? `<div class="sessions-list">${view.items.map(sessionRowTemplate).join('')}</div>
+            ${view.items.some(s => !s.current) ? `<div class="settings-content__form-actions">
+                <app-button data-action="close-other-sessions">${i18n.t('sessions.close_others')}</app-button>
+            </div>` : ''}`
+        : '';
+
+/** The card in My profile: how many sign-ins there are, and the way to the list. The list itself lives in a dialog, so a long one does not stretch the page. */
 export const sessionsCardTemplate = (view: SessionsView) => `
         <div class="bento-card" id="sessions-card">
             <h3 class="settings-content__title">${i18n.t('sessions.title')}</h3>
             ${view.status === 'error'
                 ? `<p class="settings-content__text-dim">${i18n.t('sessions.load_error')}</p>`
-                : view.status === 'ready' && view.items.length > 0
-                    ? `<div class="settings-content__action-group">${view.items.map(sessionRowTemplate).join('')}
-            </div>
-            ${view.items.some(s => !s.current) ? `<div class="settings-content__form-actions">
-                <app-button data-action="close-other-sessions">${i18n.t('sessions.close_others')}</app-button>
-            </div>` : ''}`
+                : view.status === 'ready'
+                    ? `<div class="sessions-summary">
+                <p class="settings-content__text-dim" id="sessions-count">${esc(i18n.t('sessions.count', { count: String(view.items.length) }))}</p>
+                <app-button data-action="open-sessions">${i18n.t('sessions.manage')}</app-button>
+            </div>`
                     : ''}
         </div>
+
+    <dialog id="sessions-modal" style="${DIALOG_STYLE} width: 720px; max-width: calc(100vw - 32px);">
+        <div class="modal-header">
+            <h3 class="modal-title">${i18n.t('sessions.title')}</h3>
+            <button class="modal-close" data-action="close-modal" data-modal="sessions-modal" aria-label="${i18n.t('general.close')}">
+                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        </div>
+        <div id="sessions-body">${sessionsListTemplate(view)}</div>
+    </dialog>
 `;
 
 

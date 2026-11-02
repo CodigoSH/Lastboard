@@ -1670,3 +1670,23 @@ input:checked+.slider:before {
 /* In a dialog the row is as wide as the dialog: its text takes what the switch leaves, instead of a fixed rail that squeezed it to half. */
 dialog .settings-content__action-row { grid-template-columns: minmax(0, 1fr) auto; }
 dialog .settings-content__action-info p { max-width: none; }
+
+/* Active sessions: a dialog with one line per sign-in, and a scroll when there are many. */
+.sessions-list { max-height: min(60vh, 420px); overflow-y: auto; overflow-x: hidden; margin-block: 4px 12px; border-block: 1px solid var(--border); }
+.sessions-row { display: flex; align-items: center; gap: 14px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+.sessions-row:last-child { border-bottom: 0; }
+.sessions-row__device { flex: 1 1 0; min-width: 0; display: flex; align-items: baseline; gap: 10px; }
+.sessions-row__device b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sessions-row__ip { font: 500 11.5px/1.3 var(--font-mono); color: var(--text-dim); white-space: nowrap; }
+.sessions-row__seen { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.sessions-row > app-button { flex: none; inline-size: 104px; }
+.sessions-row > .user-role-tag { flex: none; min-inline-size: 104px; white-space: nowrap; text-align: center; box-sizing: border-box; }
+@media (max-width: 560px) {
+    .sessions-row { flex-wrap: wrap; row-gap: 4px; }
+    .sessions-row__device { flex-basis: 100%; }
+    .sessions-row__seen { flex: 1 1 0; }
+}
+
+.sessions-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.sessions-summary p { margin: 0; }
+.sessions-summary app-button { flex: none; inline-size: 150px; }

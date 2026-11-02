@@ -650,6 +650,8 @@
   "sessions.close": "Κλείσιμο",
   "sessions.close_others": "Κλείσιμο όλων των άλλων συνεδριών",
   "sessions.close_others_confirm": "Όλα τα υπόλοιπα προγράμματα περιήγησης και οι συσκευές που είναι συνδεδεμένα σε αυτόν τον λογαριασμό θα αποσυνδεθούν. Αυτή η συνεδρία θα παραμείνει ενεργή.",
+  "sessions.manage": "Προβολή συνεδριών",
+  "sessions.count": "Συνδεδεμένες τώρα: {count}",
   "sessions.load_error": "Δεν ήταν δυνατή η φόρτωση των συνεδριών.",
   "sessions.device": "{browser} σε {os}",
   "sessions.unknown_browser": "Άγνωστο πρόγραμμα περιήγησης",

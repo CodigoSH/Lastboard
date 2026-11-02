@@ -650,6 +650,8 @@
   "sessions.close": "Sluiten",
   "sessions.close_others": "Alle andere sessies sluiten",
   "sessions.close_others_confirm": "Elke andere browser of ander apparaat dat bij dit account is aangemeld, wordt afgemeld. Dit apparaat blijft aangemeld.",
+  "sessions.manage": "Sessies bekijken",
+  "sessions.count": "Nu ingelogd: {count}",
   "sessions.load_error": "De sessies konden niet worden geladen.",
   "sessions.device": "{browser} op {os}",
   "sessions.unknown_browser": "Onbekende browser",

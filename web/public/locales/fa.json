@@ -650,6 +650,8 @@
   "sessions.close": "بستن",
   "sessions.close_others": "بستن همه نشست‌های دیگر",
   "sessions.close_others_confirm": "همه مرورگرها و دستگاه‌های دیگری که به این حساب وارد شده‌اند خارج می‌شوند. این نشست باز می‌ماند.",
+  "sessions.manage": "نمایش نشست‌ها",
+  "sessions.count": "اکنون وارد شده: {count}",
   "sessions.load_error": "بارگذاری نشست‌ها ممکن نبود.",
   "sessions.device": "{browser} روی {os}",
   "sessions.unknown_browser": "مرورگر ناشناس",

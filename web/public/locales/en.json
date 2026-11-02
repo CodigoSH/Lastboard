@@ -650,6 +650,8 @@
   "sessions.close": "Close",
   "sessions.close_others": "Close all other sessions",
   "sessions.close_others_confirm": "Every other browser or device signed in to this account will be signed out. This one stays signed in.",
+  "sessions.manage": "View sessions",
+  "sessions.count": "Signed in now: {count}",
   "sessions.load_error": "The sessions could not be loaded.",
   "sessions.device": "{browser} on {os}",
   "sessions.unknown_browser": "Unknown browser",

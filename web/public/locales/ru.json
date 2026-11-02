@@ -650,6 +650,8 @@
   "sessions.close": "Завершить",
   "sessions.close_others": "Завершить все остальные сеансы",
   "sessions.close_others_confirm": "Все остальные браузеры и устройства, где выполнен вход в эту учётную запись, будут отключены. Этот сеанс останется активным.",
+  "sessions.manage": "Показать сеансы",
+  "sessions.count": "Сейчас в системе: {count}",
   "sessions.load_error": "Не удалось загрузить сеансы.",
   "sessions.device": "{browser} на {os}",
   "sessions.unknown_browser": "Неизвестный браузер",

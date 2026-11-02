@@ -650,6 +650,8 @@
   "sessions.close": "বন্ধ করুন",
   "sessions.close_others": "অন্য সব সেশন বন্ধ করুন",
   "sessions.close_others_confirm": "এই অ্যাকাউন্টে সাইন ইন করা অন্য সব ব্রাউজার ও ডিভাইস সাইন আউট হয়ে যাবে। এই সেশনটি চালু থাকবে।",
+  "sessions.manage": "সেশন দেখুন",
+  "sessions.count": "এখন সাইন ইন: {count}",
   "sessions.load_error": "সেশনগুলো লোড করা যায়নি।",
   "sessions.device": "{os}-এ {browser}",
   "sessions.unknown_browser": "অজানা ব্রাউজার",

@@ -650,6 +650,8 @@
   "sessions.close": "إغلاق",
   "sessions.close_others": "إغلاق جميع الجلسات الأخرى",
   "sessions.close_others_confirm": "سيتم تسجيل الخروج من كل المتصفحات والأجهزة الأخرى المسجّلة الدخول إلى هذا الحساب. ستبقى هذه الجلسة مفتوحة.",
+  "sessions.manage": "عرض الجلسات",
+  "sessions.count": "مسجّل الدخول الآن: {count}",
   "sessions.load_error": "تعذّر تحميل الجلسات.",
   "sessions.device": "{browser} على {os}",
   "sessions.unknown_browser": "متصفح غير معروف",

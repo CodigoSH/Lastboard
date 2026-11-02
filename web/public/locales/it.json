@@ -650,6 +650,8 @@
   "sessions.close": "Chiudi",
   "sessions.close_others": "Chiudi tutte le altre sessioni",
   "sessions.close_others_confirm": "Tutti gli altri browser e dispositivi connessi a questo account verranno disconnessi. Questo resterà connesso.",
+  "sessions.manage": "Mostra le sessioni",
+  "sessions.count": "Connesse ora: {count}",
   "sessions.load_error": "Impossibile caricare le sessioni.",
   "sessions.device": "{browser} su {os}",
   "sessions.unknown_browser": "Browser sconosciuto",

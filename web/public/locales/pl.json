@@ -650,6 +650,8 @@
   "sessions.close": "Zamknij",
   "sessions.close_others": "Zamknij wszystkie pozostałe sesje",
   "sessions.close_others_confirm": "Wszystkie pozostałe przeglądarki i urządzenia zalogowane na to konto zostaną wylogowane. Ta sesja pozostanie aktywna.",
+  "sessions.manage": "Pokaż sesje",
+  "sessions.count": "Obecnie zalogowane: {count}",
   "sessions.load_error": "Nie udało się wczytać sesji.",
   "sessions.device": "{browser} na {os}",
   "sessions.unknown_browser": "Nieznana przeglądarka",

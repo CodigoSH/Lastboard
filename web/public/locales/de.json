@@ -650,6 +650,8 @@
   "sessions.close": "Schließen",
   "sessions.close_others": "Alle anderen Sitzungen schließen",
   "sessions.close_others_confirm": "Alle anderen Browser und Geräte, die bei diesem Konto angemeldet sind, werden abgemeldet. Diese Sitzung bleibt bestehen.",
+  "sessions.manage": "Sitzungen anzeigen",
+  "sessions.count": "Aktuell angemeldet: {count}",
   "sessions.load_error": "Die Sitzungen konnten nicht geladen werden.",
   "sessions.device": "{browser} auf {os}",
   "sessions.unknown_browser": "Unbekannter Browser",

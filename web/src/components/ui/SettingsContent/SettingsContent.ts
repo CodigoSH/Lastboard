@@ -9,7 +9,7 @@ import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
+import { accountTemplate, sessionsListTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
@@ -154,6 +154,10 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'update-username':
                     this.updateUsername((root.getElementById('username-input') as HTMLInputElement).value);
+                    break;
+                case 'open-sessions':
+                    (root.getElementById('sessions-modal') as HTMLDialogElement | null)?.showModal();
+                    this.fetchSessions();
                     break;
                 case 'close-session':
                     this.closeSession(Number(el.dataset.sessionId));
@@ -490,6 +494,15 @@ class SettingsContent extends HTMLElement {
             this.sessions = { status: 'ready', items: Array.isArray(items) ? items : [] };
         } catch {
             this.sessions = { status: 'error', items: [] };
+        }
+        // Under an open dialog only its list is written: a full render would close it.
+        const dialog = this.shadowRoot?.getElementById('sessions-modal') as HTMLDialogElement | null;
+        if (dialog?.open) {
+            const body = this.shadowRoot?.getElementById('sessions-body');
+            if (body) body.innerHTML = sessionsListTemplate(this.sessions);
+            const count = this.shadowRoot?.getElementById('sessions-count');
+            if (count) count.textContent = i18n.t('sessions.count', { count: String(this.sessions.items.length) });
+            return;
         }
         this.render();
     }

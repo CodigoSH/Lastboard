@@ -650,6 +650,8 @@
   "sessions.close": "Encerrar",
   "sessions.close_others": "Encerrar todas as outras sessões",
   "sessions.close_others_confirm": "Todos os outros navegadores e dispositivos com sessão iniciada nesta conta serão desconectados. Este continuará conectado.",
+  "sessions.manage": "Ver sessões",
+  "sessions.count": "Com sessão iniciada: {count}",
   "sessions.load_error": "Não foi possível carregar as sessões.",
   "sessions.device": "{browser} em {os}",
   "sessions.unknown_browser": "Navegador desconhecido",

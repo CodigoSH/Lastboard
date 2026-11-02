@@ -650,6 +650,8 @@
   "sessions.close": "بند کریں",
   "sessions.close_others": "باقی تمام سیشنز بند کریں",
   "sessions.close_others_confirm": "اس اکاؤنٹ میں سائن اِن باقی تمام براؤزرز اور ڈیوائسز سائن آؤٹ ہو جائیں گی۔ یہ سیشن کھلا رہے گا۔",
+  "sessions.manage": "سیشنز دیکھیں",
+  "sessions.count": "اس وقت لاگ ان: {count}",
   "sessions.load_error": "سیشنز لوڈ نہیں ہو سکے۔",
   "sessions.device": "{os} پر {browser}",
   "sessions.unknown_browser": "نامعلوم براؤزر",

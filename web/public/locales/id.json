@@ -650,6 +650,8 @@
   "sessions.close": "Tutup",
   "sessions.close_others": "Tutup semua sesi lainnya",
   "sessions.close_others_confirm": "Semua peramban dan perangkat lain yang masuk ke akun ini akan dikeluarkan. Sesi ini tetap masuk.",
+  "sessions.manage": "Lihat sesi",
+  "sessions.count": "Sedang masuk: {count}",
   "sessions.load_error": "Sesi tidak dapat dimuat.",
   "sessions.device": "{browser} di {os}",
   "sessions.unknown_browser": "Peramban tidak dikenal",

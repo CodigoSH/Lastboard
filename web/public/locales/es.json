@@ -650,6 +650,8 @@
   "sessions.close": "Cerrar",
   "sessions.close_others": "Cerrar todas las demás sesiones",
   "sessions.close_others_confirm": "Se cerrará la sesión en todos los demás navegadores y dispositivos de esta cuenta. Esta seguirá abierta.",
+  "sessions.manage": "Ver sesiones",
+  "sessions.count": "Con sesión iniciada: {count}",
   "sessions.load_error": "No se pudieron cargar las sesiones.",
   "sessions.device": "{browser} en {os}",
   "sessions.unknown_browser": "Navegador desconocido",
