@@ -321,6 +321,17 @@ describe('what a person reads about an outage', () => {
         const order = [...html.matchAll(/G\((2026-01-0\d)/g)].map(m => m[1].slice(-2));
         expect(order).toEqual(['02', '03', '01']);
     });
+    test("a service's own table has no service and no state column: a line still going says Down where its length would be", () => {
+        const o = [{ start: 'a', end: null, duration_sec: 0, status_code: 0 } as Outage, { start: 'b', end: 'c', duration_sec: 600, status_code: 0 } as Outage];
+        const html = outageTableHtml(o, false, t, fmt);
+        expect(html).not.toContain('col_service');
+        expect(html).not.toContain('dockerpage.state');
+        expect(html).not.toContain('monitorpage.resolved');
+        expect(html).toContain('[monitorpage.is_down]');
+        expect(html).toContain('>O(600)<');
+        const cells = (row: string) => (row.match(/<span class="cell"/g) || []).length;
+        expect(html.split('<button').slice(1).map(cells)).toEqual([3, 3]);
+    });
     test('the checks list does the same', () => {
         const checks = Array.from({ length: PANEL_LINES * 2 + 3 }, (_, i) => ({ checked_at: `t${i}`, up: true, latency_ms: 10, status_code: 200 }));
         const few = checksTabHtml(checks as never, 86400, t, fmt);

@@ -215,9 +215,13 @@ export function lowestBoxHtml(rows: ServiceRow[], t: T, fmt: Fmt): string {
     return boxHtml(t('monitorpage.lowest'), body, '30 d');
 }
 
-/** The head of an outage table: the panel's lines leave out the service, which is the panel's own. */
+/**
+ * The head of an outage table. A panel's lines are all one service's, so they
+ * leave out the service column — and the state one: a line still going says
+ * "Down" where its length would be, and one that is over says how long it was.
+ */
 export function outageHeadHtml(named: boolean, t: T): string {
-    return `<div class="tr tr--h" aria-hidden="true"><span></span>${named ? `<span>${e(t('monitorpage.col_service'))}</span>` : ''}<span>${e(t('monitorpage.col_cause'))}</span><span>${e(t('monitorpage.col_when'))}</span><span>${e(t('monitorpage.col_length'))}</span><span>${e(t('dockerpage.state'))}</span></div>`;
+    return `<div class="tr tr--h" aria-hidden="true"><span></span>${named ? `<span>${e(t('monitorpage.col_service'))}</span>` : ''}<span>${e(t('monitorpage.col_cause'))}</span><span>${e(t('monitorpage.col_when'))}</span><span>${e(t('monitorpage.col_length'))}</span>${named ? `<span>${e(t('dockerpage.state'))}</span>` : ''}</div>`;
 }
 
 /** One outage as a row: which service, why, since when, for how long, and whether it still is. */
@@ -229,8 +233,11 @@ export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: 
     const when = ago ? t('monitorpage.ago', { time: ago }) : t('monitorpage.just_now');
     const who = o.name ?? rows?.get(o.item_id ?? -1)?.name ?? '';
     const length = ongoing ? '—' : outageSpan(o.duration_sec, t, fmt);
-    const state = ongoing ? `<span class="chip chip--bad">${e(t('monitorpage.is_down'))}</span>` : `<span class="ok">${e(t('monitorpage.resolved'))}</span>`;
-    return `<button type="button" class="tr" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}><span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>${named ? `<span class="nm" title="${e(who)}">${e(who)}</span>` : ''}<span class="cell" title="${e(code || cause)}">${e(cause)}</span><span class="cell">${e(when)}</span><span class="cell">${e(length)}</span><span class="cell">${state}</span></button>`;
+    const down = `<span class="chip chip--bad">${e(t('monitorpage.is_down'))}</span>`;
+    const state = ongoing ? down : `<span class="ok">${e(t('monitorpage.resolved'))}</span>`;
+    return `<button type="button" class="tr" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}><span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>${named ? `<span class="nm" title="${e(who)}">${e(who)}</span>` : ''}<span class="cell" title="${e(code || cause)}">${e(cause)}</span><span class="cell">${e(when)}</span>${named
+        ? `<span class="cell">${e(length)}</span><span class="cell">${state}</span>`
+        : `<span class="cell">${ongoing ? down : e(length)}</span>`}</button>`;
 }
 
 /** Outages as a table with its head. `named` adds the service column, for lists that mix several. */
