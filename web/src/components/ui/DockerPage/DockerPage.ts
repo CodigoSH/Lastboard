@@ -18,7 +18,7 @@ import {
     type DockerDetail, type HostRows, type HostSize, type LogLine, type ContainerStats, type ContainerAction,
 } from '../../../services/dockerPage';
 import {
-    attentionList, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint, type LinkOf,
+    attentionList, byteUnit, topConsumers, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint, type LinkOf,
 } from '../../../services/dockerOverview';
 import {
     countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
@@ -960,6 +960,7 @@ class DockerPage extends HTMLElement {
             mem: hist.map(h => h.memUsed),
             chart,
             hostNames: names,
+            top: topConsumers(scope, stats),
             linkOf: this.linkOf,
             hostUse,
             capacity: this.capacity(scope),

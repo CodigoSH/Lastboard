@@ -1,7 +1,7 @@
 import { escapeHtml } from '../../../services/escape';
 import { containerName, type DockerContainer, type DockerHost } from '../../../services/dockerShared';
 import { stateLevel, stateKey, type ContainerStats, type DockerDetail, type HostRows, type LogLine } from '../../../services/dockerPage';
-import { attentionReason, type AttentionItem, type AttentionReason, type DockerTotals, type LinkOf, type ProjectRow } from '../../../services/dockerOverview';
+import { attentionReason, type TopConsumer, type AttentionItem, type AttentionReason, type DockerTotals, type LinkOf, type ProjectRow } from '../../../services/dockerOverview';
 import type { UnitGroup } from '../../../services/infraUnits';
 import { niceMax } from '../../../services/dockerOverview';
 import { barHtml, bookmarkChipHtml, boxHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
@@ -101,6 +101,8 @@ export interface OverviewData {
     /** The chart, already drawn, or '' while there is not enough history. */
     chart: string;
     hostNames: Record<string, string>;
+    /** The containers that use the most CPU, the heaviest first. */
+    top: TopConsumer[];
     /** The bookmark a container serves, by host and name. */
     linkOf: LinkOf;
     /** What each host's running containers use, as a share of the host; null where the host did not say how big it is. */
@@ -124,12 +126,24 @@ export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNam
     }).join('')}</div>`;
 }
 
+/** The card of the containers that use the most: name, CPU and memory, the heaviest first. */
+export function topUseHtml(top: TopConsumer[], showHost: boolean, hostNames: Record<string, string>, t: T, fmt: Fmt): string {
+    const rows = top.length
+        ? `<div class="top3">${top.map(c => {
+            const host = showHost ? ` <small>· ${e(hostNames[c.hostId] ?? '')}</small>` : '';
+            return `<div class="top3__r"><span class="top3__n">${e(c.name)}${host}</span><span>${e(fmt.pct(c.cpu))}</span><span>${e(fmt.bytes(c.mem))}</span></div>`;
+        }).join('')}</div>`
+        : `<div class="chart__empty">${e(t('dockerpage.collecting'))}</div>`;
+    return `<div class="card kpi">
+        <div class="kpi__top"><span class="lbl">${e(t('dockerpage.top_use'))}</span>${icon('cpu', 16)}</div>
+        ${rows}
+    </div>`;
+}
+
 export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     const tt = o.totals;
     const pctRunning = tt.total ? (tt.running / tt.total) * 100 : 0;
     const level: Level = tt.attention ? 'bad' : tt.stopped ? 'warn' : 'ok';
-    // Failing its own check or ended with an error is critical; restarting and paused are only a warning.
-    const critical = o.attention.filter(a => a.reason === 'unhealthy' || a.reason === 'failed' || a.reason === 'outage').length;
     // With the size of the hosts the CPU is a share of them; without it (an agent from before the call) it is read against the chart's own top.
     const cap = o.capacity;
     const cpuTop = niceMax(Math.max(tt.cores, ...o.cores));
@@ -160,14 +174,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
             bar: memBase > 0 ? memShare : undefined, spark: o.mem, sparkTone: meterLevel(memShare),
             sub: memBase > 0 ? [t('dockerpage.of_limit', { limit: fmt.bytes(memBase) }), fmt.pct(memShare)] : undefined,
         }),
-        kpiHtml({
-            label: t('dockerpage.attention'), icon: 'alert', value: fmt.num(o.attention.length),
-            sub: [t('dockerpage.attention_sub'), ''],
-            chips: [
-                { text: `${t('dockerpage.critical')}: ${fmt.num(critical)}`, tone: 'bad' },
-                { text: `${t('infra.filter_warn')}: ${fmt.num(o.attention.length - critical)}`, tone: 'warn' },
-            ],
-        }),
+        topUseHtml(o.top, o.hosts.length > 1, o.hostNames, t, fmt),
     ].join('');
 
     const chart = chartCardHtml(t('dockerpage.session_history'),

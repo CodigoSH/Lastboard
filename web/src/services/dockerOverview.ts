@@ -58,6 +58,27 @@ export function attentionList(all: HostRows[], linkOf: LinkOf = NO_LINK): Attent
     return out.sort((a, b) => order[a.reason] - order[b.reason] || a.name.localeCompare(b.name));
 }
 
+/** One running container, as the "highest use" card lists it. */
+export interface TopConsumer { hostId: string; name: string; cpu: number; mem: number }
+
+/**
+ * The running containers that use the most CPU, the heaviest first, as many as
+ * `limit`. Only those that reported stats count: a container with no reading is
+ * not "using nothing", it is unknown. Ties fall to the name so the order does
+ * not shuffle on every refresh.
+ */
+export function topConsumers(all: HostRows[], stats: Record<string, ContainerStats> = {}, limit = 3): TopConsumer[] {
+    const out: TopConsumer[] = [];
+    for (const h of all) {
+        for (const c of h.containers) {
+            const s = stats[c.ID];
+            if (!s || stateLevel(c.State || c.Status) !== 'up') continue;
+            out.push({ hostId: h.host.id, name: containerName(c), cpu: s.CPUPercent || 0, mem: s.MemUsed || 0 });
+        }
+    }
+    return out.sort((a, b) => b.cpu - a.cpu || b.mem - a.mem || a.name.localeCompare(b.name)).slice(0, limit);
+}
+
 /** The inventory units, one per container, over every host that answered. */
 export function dockerUnits(all: HostRows[], stats: Record<string, ContainerStats> = {}, linkOf: LinkOf = NO_LINK): InfraUnit[] {
     const units: InfraUnit[] = [];

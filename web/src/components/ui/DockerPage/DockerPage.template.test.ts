@@ -79,7 +79,7 @@ describe('what a container controls is escaped', () => {
     test('the overview: attention list, projects and hosts', () => {
         const rows: HostRows[] = [{ host: { ...host, name: evil }, loaded: true, containers: [ctr({ Name: '/' + evil, Health: 'unhealthy', Project: evil })] }, { host: { ...host, id: 'h2' }, loaded: true, containers: [] }];
         const html = overviewHtml({
-            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil }, linkOf: () => '', hostUse: {}, capacity: null,
+            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil }, top: [], linkOf: () => '', hostUse: {}, capacity: null,
         }, t, fmt);
         noMarkup(html, evil);
     });
@@ -193,7 +193,7 @@ describe('the face and the bookmark of a container', () => {
         const rows: HostRows[] = [{ host, loaded: true, containers: [stopped] }];
         const html = overviewHtml({
             totals: dockerTotals(rows, {}, () => 'Plex'), attention: attentionList(rows, () => 'Plex'), projects: [], hosts: rows,
-            cores: [], mem: [], chart: '', hostNames: {}, linkOf: () => 'Plex', hostUse: {}, capacity: null,
+            cores: [], mem: [], chart: '', hostNames: {}, top: [], linkOf: () => 'Plex', hostUse: {}, capacity: null,
         }, t, fmt);
         expect(html).toContain('attn__row');
         expect(html).toContain('proxmox.stopped_breaks');
@@ -253,7 +253,7 @@ describe('what a state looks like', () => {
 
 describe('the indicators against the real host', () => {
     const rows: HostRows[] = [{ host, loaded: true, containers: [ctr()] }];
-    const o = { totals: dockerTotals(rows, { abc: { CPUPercent: 200, MemPercent: 0, MemUsed: 4e9, MemLimit: 8e9 } }), attention: [], projects: [], hosts: rows, cores: [2], mem: [], chart: '', hostNames: {}, linkOf: () => '', hostUse: {} };
+    const o = { totals: dockerTotals(rows, { abc: { CPUPercent: 200, MemPercent: 0, MemUsed: 4e9, MemLimit: 8e9 } }), attention: [], projects: [], hosts: rows, cores: [2], mem: [], chart: '', hostNames: {}, top: [], linkOf: () => '', hostUse: {} };
     test('with the size of the host the CPU is a share of its cores, and says how many it has', () => {
         const html = overviewHtml({ ...o, capacity: { cores: 8, mem: 16e9 } }, t, fmt);
         expect(html).toContain('N(25)');

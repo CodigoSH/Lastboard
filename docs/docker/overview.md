@@ -121,7 +121,7 @@ Four indicators:
 - **Containers** — a ring with the share that is running, and how many are stopped or have warnings.
 - **CPU** — the CPU of the running containers added up, as a share of what the hosts have: `0.8 cores in use of 16` reads as 5 %. The host's own size comes from Docker (`/info`), through the Lastboard Agent from the release that added that call; an older agent says nothing, and then the figure is in cores in use with a bar read against the top of the chart — a relative scale, said as such on the card.
 - **Memory** — what the running containers use together, against the memory of the hosts (or, when a host did not say, against the largest limit any container reports, which on a host without limits is its memory).
-- **Projects** — how many Compose projects there are, and how many of each one's containers are up.
+- **Highest use** — the three running containers that use the most CPU, each with its CPU and its memory; with more than one host, the host's name follows the container's. A container that has not reported a reading yet is left out.
 
 Under them, a chart of the cores in use **since you opened the page** (hover it to read a value). Lastboard does not store this history: the browser keeps it while the browser tab stays open, and it starts again after a reload.
 

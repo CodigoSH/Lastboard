@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { attentionList, attentionReason, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory } from './dockerOverview';
+import { topConsumers, attentionList, attentionReason, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory } from './dockerOverview';
 import type { DockerContainer, DockerHost } from './dockerShared';
 import type { HostRows } from './dockerPage';
 
@@ -126,6 +126,29 @@ describe('a container a bookmark depends on', () => {
         expect(units.find(u => u.name === 'plex')?.attention).toBe(true);
         expect(units.find(u => u.name === 'plex')?.haystack).toContain('plex');
         expect(dockerUnits(rows).find(u => u.name === 'plex')?.attention).toBe(false);
+    });
+});
+
+describe('topConsumers', () => {
+    const run = [c('a'), c('b'), c('c'), c('d'), c('e', { State: 'exited', Status: 'exited' })];
+    const st = (cpu: number, mem = 0) => ({ CPUPercent: cpu, MemPercent: 0, MemUsed: mem, MemLimit: 0 });
+    const stats = { [run[0].ID]: st(5), [run[1].ID]: st(50), [run[2].ID]: st(20), [run[4].ID]: st(99) };
+
+    test('the heaviest first, as many as asked', () => {
+        expect(topConsumers(rows(run), stats, 2).map(t => t.name)).toEqual(['b', 'c']);
+    });
+    test('what did not report, and what is stopped, is not on the list', () => {
+        const names = topConsumers(rows(run), stats).map(t => t.name);
+        expect(names).toEqual(['b', 'c', 'a']);
+        expect(names).not.toContain('d');
+        expect(names).not.toContain('e');
+    });
+    test('equal use falls to the name, so the order is stable', () => {
+        const same = { [run[0].ID]: st(10), [run[1].ID]: st(10) };
+        expect(topConsumers(rows(run), same).map(t => t.name)).toEqual(['a', 'b']);
+    });
+    test('nothing reporting is an empty list', () => {
+        expect(topConsumers(rows(run), {})).toEqual([]);
     });
 });
 
