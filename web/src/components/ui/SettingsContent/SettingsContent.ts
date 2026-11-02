@@ -502,6 +502,8 @@ class SettingsContent extends HTMLElement {
             if (body) body.innerHTML = sessionsListTemplate(this.sessions);
             const count = this.shadowRoot?.getElementById('sessions-count');
             if (count) count.textContent = i18n.t('sessions.count', { count: String(this.sessions.items.length) });
+            const head = this.shadowRoot?.getElementById('sessions-modal-count');
+            if (head) head.textContent = String(this.sessions.items.length);
             return;
         }
         this.render();
