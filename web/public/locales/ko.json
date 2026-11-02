@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "컨테이너 선택",
   "dockerpage.project": "프로젝트",
   "dockerpage.projects": "프로젝트",
-  "dockerpage.reporting": "{count}개 보고 중",
+  "dockerpage.reporting": "보고 중: {count}",
   "dockerpage.session_history": "이 페이지를 연 이후",
   "dockerpage.tab_summary": "요약",
   "dockerpage.why_failed": "코드 {code}(으)로 종료됨",

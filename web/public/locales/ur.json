@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "کنٹینر منتخب کریں",
   "dockerpage.project": "پروجیکٹ",
   "dockerpage.projects": "پروجیکٹس",
-  "dockerpage.reporting": "{count} رپورٹ کر رہے ہیں",
+  "dockerpage.reporting": "رپورٹ کر رہے ہیں: {count}",
   "dockerpage.session_history": "اس صفحے کو کھولنے کے بعد سے",
   "dockerpage.tab_summary": "خلاصہ",
   "dockerpage.why_failed": "کوڈ {code} کے ساتھ ختم ہوا",

@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "یک کانتینر انتخاب کنید",
   "dockerpage.project": "پروژه",
   "dockerpage.projects": "پروژه‌ها",
-  "dockerpage.reporting": "{count} در حال گزارش",
+  "dockerpage.reporting": "در حال گزارش: {count}",
   "dockerpage.session_history": "از زمان باز کردن این صفحه",
   "dockerpage.tab_summary": "خلاصه",
   "dockerpage.why_failed": "با کد {code} پایان یافت",

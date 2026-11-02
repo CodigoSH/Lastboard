@@ -82,9 +82,9 @@ export function healthChip(health: string | undefined, t: T): string {
 export function summaryHtml(tt: DockerTotals, t: T, fmt: Fmt): string {
     const parts = [
         `<span><i class="dot dot--ok"></i><b>${e(fmt.num(tt.running))}</b>/${e(fmt.num(tt.total))} ${e(t('docker.state_running'))}</span>`,
-        `<span><b>${e(fmt.num(tt.stopped))}</b> ${e(t('docker.state_stopped'))}</span>`,
+        `<span>${e(t('infra.filter_off'))}: <b>${e(fmt.num(tt.stopped))}</b></span>`,
     ];
-    if (tt.attention) parts.push(`<span><i class="dot dot--bad"></i><b>${e(fmt.num(tt.attention))}</b> ${e(t('infra.filter_warn').toLowerCase())}</span>`);
+    if (tt.attention) parts.push(`<span><i class="dot dot--bad"></i>${e(t('infra.filter_warn'))}: <b>${e(fmt.num(tt.attention))}</b></span>`);
     return parts.join('');
 }
 
@@ -141,8 +141,8 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
             label: t('dockerpage.kpi_containers'), icon: 'box', value: fmt.num(tt.running), unit: `/ ${fmt.num(tt.total)}`,
             ring: { percent: pctRunning, level, label: `${fmt.num(Math.round(pctRunning))}%` },
             chips: [
-                { text: `${fmt.num(tt.stopped)} ${t('docker.state_stopped')}`, tone: '' },
-                ...(tt.attention ? [{ text: `${fmt.num(tt.attention)} ${t('infra.filter_warn').toLowerCase()}`, tone: 'bad' as const }] : []),
+                { text: `${t('infra.filter_off')}: ${fmt.num(tt.stopped)}`, tone: '' },
+                ...(tt.attention ? [{ text: `${t('infra.filter_warn')}: ${fmt.num(tt.attention)}`, tone: 'bad' as const }] : []),
             ],
         }),
         kpiHtml(cap ? {
@@ -160,11 +160,11 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
             sub: memBase > 0 ? [t('dockerpage.of_limit', { limit: fmt.bytes(memBase) }), fmt.pct(memShare)] : undefined,
         }),
         kpiHtml({
-            label: t('dockerpage.attention'), icon: 'alert', value: fmt.num(o.attention.length), unit: t('infra.filter_warn').toLowerCase(),
+            label: t('dockerpage.attention'), icon: 'alert', value: fmt.num(o.attention.length),
             sub: [t('dockerpage.attention_sub'), ''],
             chips: [
-                { text: `${fmt.num(critical)} ${t('dockerpage.critical')}`, tone: 'bad' },
-                { text: `${fmt.num(o.attention.length - critical)} ${t('infra.filter_warn').toLowerCase()}`, tone: 'warn' },
+                { text: `${t('dockerpage.critical')}: ${fmt.num(critical)}`, tone: 'bad' },
+                { text: `${t('infra.filter_warn')}: ${fmt.num(o.attention.length - critical)}`, tone: 'warn' },
             ],
         }),
     ].join('');

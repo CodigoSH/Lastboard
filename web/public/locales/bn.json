@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "একটি কনটেইনার বেছে নিন",
   "dockerpage.project": "প্রকল্প",
   "dockerpage.projects": "প্রকল্প",
-  "dockerpage.reporting": "{count}টি রিপোর্ট করছে",
+  "dockerpage.reporting": "রিপোর্ট করছে: {count}",
   "dockerpage.session_history": "এই পেজ খোলার পর থেকে",
   "dockerpage.tab_summary": "সারসংক্ষেপ",
   "dockerpage.why_failed": "কোড {code} দিয়ে শেষ হয়েছে",

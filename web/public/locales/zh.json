@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "选择容器",
   "dockerpage.project": "项目",
   "dockerpage.projects": "项目",
-  "dockerpage.reporting": "{count} 个在上报",
+  "dockerpage.reporting": "上报中：{count}",
   "dockerpage.session_history": "自打开此页面以来",
   "dockerpage.tab_summary": "概要",
   "dockerpage.why_failed": "以代码 {code} 退出",

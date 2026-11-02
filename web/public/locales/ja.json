@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "コンテナを選択",
   "dockerpage.project": "プロジェクト",
   "dockerpage.projects": "プロジェクト",
-  "dockerpage.reporting": "{count} 件が報告中",
+  "dockerpage.reporting": "報告中: {count}",
   "dockerpage.session_history": "このページを開いてから",
   "dockerpage.tab_summary": "概要",
   "dockerpage.why_failed": "コード {code} で終了",

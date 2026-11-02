@@ -47,9 +47,9 @@ export function uptimeHtml(fmt: Fmt, sec: number): string {
 export function summaryHtml(tt: FleetTotals, t: T, fmt: Fmt): string {
     const parts = [
         `<span><i class="dot dot--ok"></i><b>${e(fmt.num(tt.running))}</b>/${e(fmt.num(tt.guests))} ${e(t('widget.proxmox.running_label').toLowerCase())}</span>`,
-        `<span><b>${e(fmt.num(tt.stopped))}</b> ${e(t('docker.state_stopped'))}</span>`,
+        `<span>${e(t('infra.filter_off'))}: <b>${e(fmt.num(tt.stopped))}</b></span>`,
     ];
-    if (tt.attention) parts.push(`<span><i class="dot dot--bad"></i><b>${e(fmt.num(tt.attention))}</b> ${e(t('infra.filter_warn').toLowerCase())}</span>`);
+    if (tt.attention) parts.push(`<span><i class="dot dot--bad"></i>${e(t('infra.filter_warn'))}: <b>${e(fmt.num(tt.attention))}</b></span>`);
     return parts.join('');
 }
 
@@ -100,12 +100,20 @@ const DOT: Record<Level, string> = { ok: 'dot--ok', warn: 'dot--warn', bad: 'dot
 const meter = (label: string, percent: number, fmt: Fmt): string =>
     `<div class="mrow"><span>${e(label)}</span>${barHtml(percent)}<b>${e(fmt.pct(percent))}</b></div>`;
 
+const cap = (w: string): string => w.charAt(0).toUpperCase() + w.slice(1);
+
+/** "Cores: 8 · Threads: 16" — a label and its figure, so it reads the same for one as for many. */
+function coresThreads(cores: number, threads: number, t: T, fmt: Fmt): string {
+    const th = `${cap(t('proxmox.threads'))}: ${fmt.num(threads)}`;
+    return cores > 0 ? `${cap(t('proxmox.cores'))}: ${fmt.num(cores)} · ${th}` : th;
+}
+
 /** A node as a card: its name, what it is made of and its three loads. */
 export function nodeCardHtml(n: FleetNode, showHost: boolean, t: T, fmt: Fmt): string {
     // One line: what it is made of, and how long it has been on.
     const made = n.cores > 0
-        ? `${e(fmt.num(n.cores))} ${e(t('proxmox.cores').toLowerCase())} / ${e(fmt.num(n.threads))} ${e(t('proxmox.threads'))}`
-        : `${e(fmt.num(n.threads))} ${e(t('proxmox.threads'))}`;
+        ? `${e(coresThreads(n.cores, n.threads, t, fmt))}`
+        : `${e(coresThreads(0, n.threads, t, fmt))}`;
     return `<button type="button" class="card card--btn unit" data-go="node" data-host="${e(n.hostId)}" data-ref="${e(n.name)}">
         <div class="unit__h"><span class="dot ${DOT[nodeLevel(n)]}"></span><span class="unit__n">${e(n.name)}</span>${showHost ? `<span class="unit__tail"><span class="chip">${e(n.hostName)}</span></span>` : ''}</div>
         <div class="unit__sub unit__sub--split"><span>${made}</span><span class="fit" title="${e(t('proxmox.uptime'))}">${icon('clock', 12)}${uptimeHtml(fmt, n.uptime)}</span></div>
@@ -144,24 +152,24 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): st
             label: t('proxmox.machines'), icon: 'server', value: fmt.num(tt.running), unit: `/ ${fmt.num(tt.guests)}`,
             ring: { percent: runningPct, level: ringLevel, label: `${fmt.num(Math.round(runningPct))}%` },
             chips: [
-                { text: `● ${fmt.num(tt.running)} ${t('docker.state_running')}`, tone: 'ok' },
-                ...(tt.stopped ? [{ text: `${fmt.num(tt.stopped)} ${t('docker.state_stopped')}`, tone: (tt.outages ? 'bad' : 'warn') as 'bad' | 'warn' }] : []),
-                { text: `${fmt.num(tt.lxc)} LXC` }, { text: `${fmt.num(tt.vm)} VM` },
+                { text: `● ${t('infra.filter_up')}: ${fmt.num(tt.running)}`, tone: 'ok' },
+                ...(tt.stopped ? [{ text: `${t('infra.filter_off')}: ${fmt.num(tt.stopped)}`, tone: (tt.outages ? 'bad' : 'warn') as 'bad' | 'warn' }] : []),
+                { text: `LXC: ${fmt.num(tt.lxc)}` }, { text: `VM: ${fmt.num(tt.vm)}` },
             ],
         }),
         kpiHtml({
             label: t('widget.telemetry.cpu'), icon: 'cpu', value: fmt.num(Math.round(tt.cpu)), unit: '%', bar: tt.cpu, spark: o.cpuSpark, sparkTone: meterLevel(tt.cpu),
-            sub: [`${t('proxmox.nodes')}: ${fmt.num(tt.nodes)}`, tt.cores > 0 ? `${fmt.num(tt.cores)} ${t('proxmox.cores').toLowerCase()} / ${fmt.num(tt.threads)} ${t('proxmox.threads')}` : `${fmt.num(tt.threads)} ${t('proxmox.threads')}`],
+            sub: [`${t('proxmox.nodes')}: ${fmt.num(tt.nodes)}`, coresThreads(tt.cores, tt.threads, t, fmt)],
         }),
         kpiHtml({
             label: t('widget.telemetry.ram'), icon: 'mem', value: tt.memTotal ? fmt.bytes(tt.memUsed) : '—', unit: tt.memTotal ? `/ ${fmt.bytes(tt.memTotal)}` : undefined,
             bar: tt.memTotal ? memPct : undefined, spark: o.memSpark, sparkTone: meterLevel(memPct),
-            sub: tt.memTotal ? [`${fmt.pct(memPct)} ${t('proxmox.used').toLowerCase()}`, `${fmt.bytes(tt.memTotal - tt.memUsed)} ${t('widget.api.label.freespace').toLowerCase()}`] : undefined,
+            sub: tt.memTotal ? [`${fmt.pct(memPct)} ${t('proxmox.used').toLowerCase()}`, `${t('widget.api.label.freespace')}: ${fmt.bytes(tt.memTotal - tt.memUsed)}`] : undefined,
         }),
         kpiHtml({
             label: t('proxmox.storage'), icon: 'disk', value: worst ? fmt.num(Math.round(worst.percent)) : '—', unit: worst ? `% · ${worst.name}` : undefined,
             bar: worst ? worst.percent : undefined,
-            sub: worst ? [`${t('proxmox.storage')}: ${fmt.num(tt.storeCount)}`, `${fmt.bytes(tt.storeFree)} ${t('widget.api.label.freespace').toLowerCase()}`] : undefined,
+            sub: worst ? [`${t('proxmox.storage')}: ${fmt.num(tt.storeCount)}`, `${t('widget.api.label.freespace')}: ${fmt.bytes(tt.storeFree)}`] : undefined,
         }),
     ].join('');
 

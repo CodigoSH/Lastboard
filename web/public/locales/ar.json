@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "اختر حاوية",
   "dockerpage.project": "المشروع",
   "dockerpage.projects": "المشاريع",
-  "dockerpage.reporting": "{count} تُبلغ بقراءات",
+  "dockerpage.reporting": "تُبلغ بقراءات: {count}",
   "dockerpage.session_history": "منذ فتحت هذه الصفحة",
   "dockerpage.tab_summary": "ملخص",
   "dockerpage.why_failed": "انتهت بالرمز {code}",

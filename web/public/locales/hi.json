@@ -181,7 +181,7 @@
   "dockerpage.pick_container": "कंटेनर चुनें",
   "dockerpage.project": "प्रोजेक्ट",
   "dockerpage.projects": "प्रोजेक्ट",
-  "dockerpage.reporting": "{count} रिपोर्ट कर रहे हैं",
+  "dockerpage.reporting": "रिपोर्ट कर रहे हैं: {count}",
   "dockerpage.session_history": "इस पेज को खोलने के बाद से",
   "dockerpage.tab_summary": "सारांश",
   "dockerpage.why_failed": "कोड {code} के साथ बंद हुआ",
