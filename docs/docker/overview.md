@@ -127,7 +127,7 @@ Four indicators:
 
 Under them, a chart of the cores in use **since you opened the page** (hover it to read a value). Lastboard does not store this history: the browser keeps it while the browser tab stays open, and it starts again after a reload.
 
-**Needs attention** lists the containers that are failing their own health check, keep restarting, ended with a non-zero exit code, or are paused — the worst first. A container that was stopped on purpose (exit code 0) or has never run is not a warning — unless a bookmark depends on it (see below), in which case it is listed and the line says which service stops responding. Choosing one opens it. When there is nothing to list, the box says everything is running as it should. Below, one box lists the **Projects** with how many of each one's containers are up, and another the **Hosts**; a host that does not answer says why in its own line.
+**Needs attention** lists a host that does not answer, then the containers that are failing their own health check, keep restarting, ended with a non-zero exit code, are using 90% or more of their memory limit (the point where the bar on their card turns red) or are paused — the worst first. A container that was stopped on purpose (exit code 0) or has never run is not a warning — unless a bookmark depends on it (see below), in which case it is listed and the line says which service stops responding. Choosing one opens it. When there is nothing to list, the box says everything is running as it should. Below, one box lists the **Projects** with how many of each one's containers are up, and another the **Hosts**; a host that does not answer says why in its own line.
 
 ### Containers
 

@@ -107,8 +107,8 @@ Under them, a chart of the CPU over the last day (move the pointer over it to re
 - a hypervisor that did not answer;
 - a stopped machine that serves a bookmark of yours, which is an outage — your service is not answering — and is named: **This stops responding: Plex**;
 - a store at 90% or more (red from 95%);
-- a machine whose CPU is at 90% or more;
-- a node whose memory is at 85% or more.
+- a node with a meter at 90% or more — CPU, memory or disk, and the line says which — which is when its card turns red, or whose memory is at 85% or more, which is only a warning;
+- a running machine whose CPU or RAM is at 90% or more, which is when the bar on its card turns red; the line says the worse of the two.
 
 A machine somebody turned off, with no bookmark depending on it, is not an alarm: it is under **Stopped** in the Machines tab. Choosing an item opens it. When there is nothing to list the box says everything is running as it should.
 
