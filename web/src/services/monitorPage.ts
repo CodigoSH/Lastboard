@@ -290,6 +290,33 @@ export function outageInsights(list: Outage[]): OutageInsights {
     };
 }
 
+/** One service's outages, as the outages tab lists them: who, how many, for how long, since when, and whether it is down now. */
+export interface ServiceOutages {
+    id: number | undefined;
+    name: string;
+    count: number;
+    /** Down right now: one of its outages has not ended. */
+    ongoing: boolean;
+    downSec: number;
+    /** When the newest of them began. */
+    lastStart: string;
+}
+
+/** The outages gathered by service: the ones down now first, then the ones with most outages, then the longest down. */
+export function groupOutagesByService(list: Outage[]): ServiceOutages[] {
+    const by = new Map<string, ServiceOutages>();
+    for (const o of list) {
+        const key = o.item_id !== undefined ? `#${o.item_id}` : `n:${o.name ?? ''}`;
+        const g = by.get(key) ?? { id: o.item_id, name: o.name ?? '', count: 0, ongoing: false, downSec: 0, lastStart: o.start };
+        g.count++;
+        g.downSec += Math.max(0, o.duration_sec);
+        if (o.end === null) g.ongoing = true;
+        if (Date.parse(o.start) > Date.parse(g.lastStart)) g.lastStart = o.start;
+        by.set(key, g);
+    }
+    return [...by.values()].sort((a, b) => (b.ongoing ? 1 : 0) - (a.ongoing ? 1 : 0) || b.count - a.count || b.downSec - a.downSec || a.name.localeCompare(b.name));
+}
+
 export type OutageFilter = 'all' | 'ongoing' | 'recovered';
 export const isOutageFilter = (v: unknown): v is OutageFilter => v === 'all' || v === 'ongoing' || v === 'recovered';
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionCount, attentionList, outageInsights, bucketLatency, countByFilter, fillGaps, filterOutages, fleetTotals, groupRows, isSlow, lowestAvailability,
+    attentionCount, attentionList, groupOutagesByService, outageInsights, bucketLatency, countByFilter, fillGaps, filterOutages, fleetTotals, groupRows, isSlow, lowestAvailability,
     outageTotals, passes, readRow, sortOutages, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
 } from './monitorPage';
 
@@ -238,5 +238,19 @@ describe('outageInsights', () => {
     test('an outage still going can be the longest, and says so; none at all says nothing', () => {
         expect(outageInsights([o(1, 'A', 60), o(2, 'B', 5000, null)]).longest).toMatchObject({ name: 'B', ongoing: true });
         expect(outageInsights([])).toEqual({ affected: 0, most: null, longest: null });
+    });
+});
+
+describe('groupOutagesByService', () => {
+    const o = (item_id: number, name: string, start: string, duration_sec: number, end: string | null = 'x') => ({ item_id, name, start, end, duration_sec, status_code: 0 } as Outage);
+    test('one entry per service with its number of outages, its time down and when the newest began', () => {
+        const g = groupOutagesByService([o(1, 'A', '2026-01-01T00:00:00Z', 600), o(1, 'A', '2026-01-03T00:00:00Z', 300), o(2, 'B', '2026-01-02T00:00:00Z', 60)]);
+        expect(g.find(x => x.id === 1)).toEqual({ id: 1, name: 'A', count: 2, ongoing: false, downSec: 900, lastStart: '2026-01-03T00:00:00Z' });
+        expect(g.length).toBe(2);
+    });
+    test('the ones down now come first, then the ones with most outages, then the longest down', () => {
+        const g = groupOutagesByService([o(1, 'Many', 'a', 10), o(1, 'Many', 'b', 10), o(1, 'Many', 'c', 10), o(2, 'Down', 'd', 5, null), o(3, 'Long', 'e', 900), o(3, 'Long', 'f', 900), o(4, 'Short', 'g', 1), o(4, 'Short', 'h', 1)]);
+        expect(g.map(x => x.name)).toEqual(['Down', 'Many', 'Long', 'Short']);
+        expect(g[0].ongoing).toBe(true);
     });
 });

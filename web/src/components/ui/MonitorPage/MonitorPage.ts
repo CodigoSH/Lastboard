@@ -384,7 +384,12 @@ class MonitorPage extends HTMLElement {
 
         // A service: a card, a row, a line of attention or of outages.
         const unit = el.closest<HTMLElement>('[data-id]');
-        if (unit?.dataset.id && !unit.dataset.noopen) { this.closeModal(); this.choose(Number(unit.dataset.id)); }
+        if (unit?.dataset.id && !unit.dataset.noopen) {
+            this.closeModal();
+            this.choose(Number(unit.dataset.id));
+            // A service's card in the outages tab opens its panel on the outages, not on the summary.
+            if (unit.dataset.openTab === 'outages') this.setDrawerTab('outages');
+        }
     };
 
     // ── The chart's cursor ──
@@ -726,7 +731,7 @@ class MonitorPage extends HTMLElement {
         const window = rangeMs(this.outRange);
         // An outage shows in a range when it was still going on, or ended, inside it.
         const inRange = this.outages.filter(o => o.item_id !== undefined && mine.has(o.item_id) && (o.end === null || Date.parse(o.end) >= now - window));
-        return outagesTabHtml(inRange, filterOutages(inRange, this.outFilter), this.outRange, RANGES, this.outFilter, this.t, this.fmt, this.byId(), this.viewMode, (id) => { const r = id === undefined ? undefined : this.byId().get(id); return r ? this.faceOf(r) : ''; });
+        return outagesTabHtml(inRange, filterOutages(inRange, this.outFilter), this.outRange, RANGES, this.outFilter, this.t, this.fmt, this.viewMode, (id) => { const r = id === undefined ? undefined : this.byId().get(id); return r ? this.faceOf(r) : ''; });
     }
 
     private paintTools() {

@@ -43,7 +43,7 @@
 @media (max-width: 900px) { .inc-sum { grid-template-columns: 1fr; } }
 
 /* One check, in the panel: when, what it answered, how fast, and how it went. */
-.chk { display: grid; grid-template-columns: 82px 48px 72px minmax(0, 1fr); gap: 10px; padding: 7px 14px; border-block-start: 1px solid var(--card-border); font: 500 12px/1.4 var(--font-mono); }
+.chk { display: grid; grid-template-columns: 82px 72px minmax(0, 1fr); gap: 10px; padding: 7px 14px; border-block-start: 1px solid var(--card-border); font: 500 12px/1.4 var(--font-mono); }
 .chk:first-child { border-block-start: 0; }
 .chk .bad { color: var(--danger); }
 
@@ -88,11 +88,9 @@
     .tbl--out-p .tr > :nth-child(3) { grid-area: 2 / 2 / 3 / 4; }
 }
 
-/* The checks keep their columns, now named. On a phone a failed one puts its reason on a line of its own. */
+/* The checks keep their columns, now named: when, how fast, and how it went. */
 @media (max-width: 700px) {
-    .chk { grid-template-columns: 74px 38px minmax(0, 1fr) auto; column-gap: 8px; }
-    .chk > .bad:last-child { grid-column: 1 / -1; }
-    .chk--h { display: none; }
+    .chk { grid-template-columns: 74px 64px minmax(0, 1fr); column-gap: 8px; }
 }
 .chk--h { border-block-start: 0; padding-block: 8px; background: var(--surface-solid); font: 700 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
 
@@ -101,8 +99,26 @@
 .mdl__b .tbl, .mdl__b .tasks, .dr__b .tbl, .dr__b .tasks { overflow: clip; }
 .mdl__b .tr--h, .mdl__b .chk--h, .dr__b .tr--h, .dr__b .chk--h { position: sticky; inset-block-start: 0; z-index: 2; }
 
-/* An outage as a card: the same card as a service, with two facts where a service has its response. */
-.unit--out .unit__st { min-block-size: 38px; gap: 3px; }
+/* A service in the outages tab: its number of outages where the eye lands, and two facts under it. */
+.unit__st--out { min-block-size: 74px; gap: 3px; }
+.ocount { display: flex; align-items: baseline; gap: 8px; margin-block-end: 2px; }
+.ocount b { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.ocount span { font: 600 10.5px/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
 .orow { display: grid; grid-template-columns: minmax(54px, auto) minmax(0, 1fr); gap: 10px; font: 500 11.5px/1.4 var(--font-mono); }
 .orow span { color: var(--text-dim); }
 .orow b { font-weight: 600; text-align: end; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* The outages table by service: how many, how long, the last one and whether it is down now. */
+.tbl--svc .tr { grid-template-columns: 14px minmax(90px, 1fr) 100px 170px 150px 100px; text-align: start; }
+.tbl--svc .tr > :nth-child(3), .tbl--svc .tr > :nth-child(6), .tbl--svc .tr--h > :nth-child(3), .tbl--svc .tr--h > :nth-child(6) { display: block; }
+.tbl--svc .cell--n { color: var(--text-main); font-weight: 600; font-size: 13px; }
+@media (max-width: 700px) {
+    .tbl--svc .tr--h { display: none; }
+    .tbl--svc .tr { grid-template-columns: 14px minmax(0, 1fr) auto; row-gap: 3px; }
+    .tbl--svc .tr > .dot { grid-row: 1 / span 2; align-self: start; margin-block-start: 5px; }
+    .tbl--svc .tr > :nth-child(2) { grid-area: 1 / 2; }
+    .tbl--svc .tr > :nth-child(3) { grid-area: 1 / 3; justify-self: end; }
+    .tbl--svc .tr > :nth-child(4) { grid-area: 2 / 2; }
+    .tbl--svc .tr > :nth-child(5) { grid-area: 2 / 3; justify-self: end; }
+    .tbl--svc .tr > :nth-child(6) { display: none; }
+}
