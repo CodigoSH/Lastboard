@@ -199,7 +199,7 @@
   "dockerpage.live": "live",
   "dockerpage.mem_of_limit": "Geheugen (% van limiet)",
   "dockerpage.bar_scale": "balk tot {cores}",
-  "dockerpage.host_threads": "Processorthreads: {count}",
+  "dockerpage.host_threads": "Threads: {count}",
   "infra.tab_overview": "Overzicht",
   "infra.tab_summary": "Samenvatting",
   "infra.all_ok": "Alles werkt zoals het hoort.",

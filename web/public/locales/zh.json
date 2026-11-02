@@ -199,7 +199,7 @@
   "dockerpage.live": "实时",
   "dockerpage.mem_of_limit": "内存（占上限 %）",
   "dockerpage.bar_scale": "进度条上限 {cores}",
-  "dockerpage.host_threads": "处理器线程数：{count}",
+  "dockerpage.host_threads": "线程：{count}",
   "infra.tab_overview": "概览",
   "infra.tab_summary": "概要",
   "infra.all_ok": "一切运行正常。",

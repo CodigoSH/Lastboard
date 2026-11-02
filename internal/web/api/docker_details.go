@@ -451,8 +451,11 @@ func parseLogAfter(s string) (time.Time, bool) {
 // DockerHostSize is how big a Docker host is: what its containers' CPU and
 // memory are read against. Zero means the host did not say.
 type DockerHostSize struct {
-	Cores    int   `json:"cores"`
-	MemTotal int64 `json:"mem_total"`
+	// Cores is the processors the daemon counts: threads, on a host that has them.
+	Cores int `json:"cores"`
+	// PhysicalCores is the host's real cores, which only an agent that reads them can say; 0 otherwise.
+	PhysicalCores int   `json:"physical_cores,omitempty"`
+	MemTotal      int64 `json:"mem_total"`
 }
 
 // HostSize reads how many processors and how much memory the host at hostURL
@@ -472,8 +475,9 @@ func HostSize(hostURL string) (DockerHostSize, error) {
 		return DockerHostSize{}, readError(hostURL, "info", resp)
 	}
 	var raw struct {
-		NCPU     int   `json:"NCPU"`
-		MemTotal int64 `json:"MemTotal"`
+		NCPU          int   `json:"NCPU"`
+		MemTotal      int64 `json:"MemTotal"`
+		PhysicalCores int   `json:"PhysicalCores"`
 	}
 	if err := decodeLimited(resp.Body, dockerMaxAnswer, &raw); err != nil {
 		return DockerHostSize{}, fmt.Errorf("docker: decode info: %w", err)
@@ -481,5 +485,10 @@ func HostSize(hostURL string) (DockerHostSize, error) {
 	if raw.NCPU < 0 || raw.MemTotal < 0 {
 		return DockerHostSize{}, nil
 	}
-	return DockerHostSize{Cores: raw.NCPU, MemTotal: raw.MemTotal}, nil
+	// A count of cores above the count of threads is not a host that exists: it is left out.
+	physical := raw.PhysicalCores
+	if physical < 0 || physical > raw.NCPU {
+		physical = 0
+	}
+	return DockerHostSize{Cores: raw.NCPU, PhysicalCores: physical, MemTotal: raw.MemTotal}, nil
 }

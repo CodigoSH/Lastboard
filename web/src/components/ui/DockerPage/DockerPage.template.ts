@@ -108,7 +108,7 @@ export interface OverviewData {
     /** What each host's running containers use, as a share of the host; null where the host did not say how big it is. */
     hostUse: Record<string, { cpu: number | null; mem: number | null }>;
     /** What the hosts in view have, when every one of them said; null otherwise, and the figures are read against what was seen. */
-    capacity: { cores: number; mem: number } | null;
+    capacity: { cores: number; physical: number; mem: number } | null;
 }
 
 export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNames: Record<string, string>, t: T): string {
@@ -145,7 +145,7 @@ export function storageKpiHtml(disk: OverviewData['disk'], t: T, fmt: Fmt): stri
         label, icon: 'disk', value: fmt.bytes(d.total),
         bar: d.total > 0 ? share : undefined,
         sub: [`${t('dockerpage.reclaimable')}: ${fmt.bytes(d.reclaimable)}`, d.total > 0 ? fmt.pct(share) : ''],
-        chips: [{ text: t('general.show_more'), act: 'disk-more' }],
+        more: { text: t('general.show_more'), act: 'disk-more' },
     });
 }
 
@@ -154,6 +154,12 @@ export function diskModalHtml(d: DiskTotals, t: T, fmt: Fmt): string {
     const line = (label: string, n: number, strong = false) =>
         `<div class="tr"><span class="nm">${strong ? `<b>${e(label)}</b>` : e(label)}</span><span class="cell">${strong ? `<b>${e(fmt.bytes(n))}</b>` : e(fmt.bytes(n))}</span></div>`;
     return `<div class="tbl tbl--kv">${line(t('dockerpage.storage_images'), d.images)}${line(t('dockerpage.storage_volumes'), d.volumes)}${line(t('dockerpage.storage_cache'), d.cache)}${line(t('docker.containers'), d.containers)}${line(t('dockerpage.reclaimable'), d.reclaimable)}${line(t('proxmox.storage'), d.total, true)}</div>`;
+}
+
+/** "Cores: 14 · Threads: 20", or the threads alone where the hosts did not say their cores. */
+export function hostCores(cap: { cores: number; physical: number }, t: T, fmt: Fmt): string {
+    const threads = t('dockerpage.host_threads', { count: fmt.num(cap.cores) });
+    return cap.physical > 0 ? `${t('proxmox.cores')}: ${fmt.num(cap.physical)} · ${threads}` : threads;
 }
 
 export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
@@ -179,7 +185,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         kpiHtml(cap ? {
             label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.num(Math.round(cpuPct)), unit: '%',
             bar: cpuPct, spark: o.cores, sparkTone: meterLevel(cpuPct),
-            sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), t('dockerpage.host_threads', { count: fmt.num(cap.cores) })],
+            sub: [t('dockerpage.reporting', { count: fmt.num(tt.reporting) }), hostCores(cap, t, fmt)],
         } : {
             label: t('dockerpage.kpi_cpu'), icon: 'cpu', value: fmt.dec(tt.cores), unit: t('dockerpage.cores_in_use'),
             bar: cpuPct, spark: o.cores, sparkTone: meterLevel(cpuPct),

@@ -106,15 +106,14 @@ export interface KpiSpec {
     spark?: number[];
     /** The colour the line is drawn in: the level of the figure it ends on. */
     sparkTone?: Level;
-    /** A chip with `act` is a button that asks the page for something ("see more"). */
-    chips?: { text: string; tone?: 'ok' | 'warn' | 'bad' | ''; act?: string }[];
+    chips?: { text: string; tone?: 'ok' | 'warn' | 'bad' | '' }[];
+    /** A text link at the foot of the tile, on its end side, that asks the page for the rest ("see more"). */
+    more?: { text: string; act: string };
 }
 
 export function kpiHtml(k: KpiSpec): string {
     const chips = k.chips?.length
-        ? `<div class="kpi__chips">${k.chips.map(c => c.act
-            ? `<button type="button" class="chip chip--link" data-act="${e(c.act)}">${e(c.text)}</button>`
-            : `<span class="chip${c.tone ? ' chip--' + c.tone : ''}">${e(c.text)}</span>`).join('')}</div>`
+        ? `<div class="kpi__chips">${k.chips.map(c => `<span class="chip${c.tone ? ' chip--' + c.tone : ''}">${e(c.text)}</span>`).join('')}</div>`
         : '';
     return `<div class="card kpi">
         <div class="kpi__top"><span class="lbl">${e(k.label)}</span>${icon(k.icon, 16)}</div>
@@ -122,6 +121,7 @@ export function kpiHtml(k: KpiSpec): string {
         ${k.bar !== undefined ? barHtml(k.bar) : k.sub ? '<div class="bar bar--ghost" aria-hidden="true"></div>' : ''}
         ${k.sub ? `<div class="kpi__sub"><span>${e(k.sub[0])}</span><span>${e(k.sub[1])}</span></div>` : ''}
         ${chips}
+        ${k.more ? `<button type="button" class="kpi__more" data-act="${e(k.more.act)}">${e(k.more.text)}</button>` : ''}
     </div>`;
 }
 

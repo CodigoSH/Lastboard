@@ -199,7 +199,7 @@
   "dockerpage.live": "canlı",
   "dockerpage.mem_of_limit": "Bellek (limitin %’si)",
   "dockerpage.bar_scale": "çubuk {cores} değerine kadar",
-  "dockerpage.host_threads": "İşlemci iş parçacığı: {count}",
+  "dockerpage.host_threads": "İş parçacığı: {count}",
   "infra.tab_overview": "Genel bakış",
   "infra.tab_summary": "Özet",
   "infra.all_ok": "Her şey olması gerektiği gibi çalışıyor.",

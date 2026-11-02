@@ -199,7 +199,7 @@
   "dockerpage.live": "в реальном времени",
   "dockerpage.mem_of_limit": "Память (% от лимита)",
   "dockerpage.bar_scale": "шкала до {cores}",
-  "dockerpage.host_threads": "Потоков процессора: {count}",
+  "dockerpage.host_threads": "Потоков: {count}",
   "infra.tab_overview": "Обзор",
   "infra.tab_summary": "Сводка",
   "infra.all_ok": "Всё работает как положено.",

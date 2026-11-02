@@ -199,7 +199,7 @@
   "dockerpage.live": "مباشر",
   "dockerpage.mem_of_limit": "الذاكرة (٪ من الحد)",
   "dockerpage.bar_scale": "الشريط حتى {cores}",
-  "dockerpage.host_threads": "خيوط المعالج: {count}",
+  "dockerpage.host_threads": "خيوط: {count}",
   "infra.tab_overview": "نظرة عامة",
   "infra.tab_summary": "ملخص",
   "infra.all_ok": "كل شيء يعمل كما ينبغي.",

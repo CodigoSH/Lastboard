@@ -674,17 +674,19 @@ class DockerPage extends HTMLElement {
     }
 
     /** What the hosts in view have together, or null unless every one of them has said. */
-    private capacity(scope: HostRows[]): { cores: number; mem: number } | null {
+    private capacity(scope: HostRows[]): { cores: number; physical: number; mem: number } | null {
         const live = scope.filter(g => !g.error);
         if (!live.length) return null;
-        let cores = 0, mem = 0;
+        let cores = 0, physical = 0, mem = 0, allSaid = true;
         for (const g of live) {
             const s = this.sizes.get(g.host.id);
             if (!s) return null;
             cores += s.cores;
             mem += s.mem_total;
+            // The real cores are said only when every host in view said them: a sum with a hole in it is not a count.
+            if (s.physical_cores) physical += s.physical_cores; else allSaid = false;
         }
-        return { cores, mem };
+        return { cores, physical: allSaid ? physical : 0, mem };
     }
 
     private async loadStats() {

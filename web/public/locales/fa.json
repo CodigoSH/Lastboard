@@ -199,7 +199,7 @@
   "dockerpage.live": "زنده",
   "dockerpage.mem_of_limit": "حافظه (٪ از حد)",
   "dockerpage.bar_scale": "نوار تا {cores}",
-  "dockerpage.host_threads": "رشته‌های پردازنده: {count}",
+  "dockerpage.host_threads": "رشته: {count}",
   "infra.tab_overview": "نمای کلی",
   "infra.tab_summary": "خلاصه",
   "infra.all_ok": "همه‌چیز طبق انتظار کار می‌کند.",

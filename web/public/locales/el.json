@@ -199,7 +199,7 @@
   "dockerpage.live": "ζωντανά",
   "dockerpage.mem_of_limit": "Μνήμη (% του ορίου)",
   "dockerpage.bar_scale": "γραμμή έως {cores}",
-  "dockerpage.host_threads": "Νήματα επεξεργαστή: {count}",
+  "dockerpage.host_threads": "Νήματα: {count}",
   "infra.tab_overview": "Επισκόπηση",
   "infra.tab_summary": "Σύνοψη",
   "infra.all_ok": "Όλα λειτουργούν όπως πρέπει.",

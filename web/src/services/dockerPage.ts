@@ -144,7 +144,7 @@ export async function fetchStats(host: DockerHost, ids: string[]): Promise<Recor
 }
 
 /** How big a host is, what the CPU and memory of its containers are read against. Zeros: it did not say. */
-export interface HostSize { cores: number; mem_total: number }
+export interface HostSize { cores: number; physical_cores?: number; mem_total: number }
 
 export async function fetchHostSize(host: DockerHost): Promise<HostSize> {
     if (isDemoMode()) return { cores: 8, mem_total: 32 * 1024 ** 3 };

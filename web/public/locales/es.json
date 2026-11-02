@@ -199,7 +199,7 @@
   "dockerpage.live": "en vivo",
   "dockerpage.mem_of_limit": "Memoria (% del límite)",
   "dockerpage.bar_scale": "barra hasta {cores}",
-  "dockerpage.host_threads": "Hilos del procesador: {count}",
+  "dockerpage.host_threads": "Hilos: {count}",
   "infra.tab_overview": "Resumen",
   "infra.tab_summary": "Resumen",
   "infra.all_ok": "Todo funciona como debe.",

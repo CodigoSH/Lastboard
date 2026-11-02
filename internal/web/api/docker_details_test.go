@@ -244,6 +244,25 @@ func TestHostSizeReadsTheProcessorsAndTheMemory(t *testing.T) {
 	}
 }
 
+func TestHostSizeCarriesTheRealCoresOnlyWhenTheyAreSane(t *testing.T) {
+	for _, c := range []struct {
+		body string
+		want int
+	}{
+		{`{"NCPU": 20, "MemTotal": 1, "PhysicalCores": 14}`, 14},
+		{`{"NCPU": 20, "MemTotal": 1}`, 0},
+		{`{"NCPU": 4, "MemTotal": 1, "PhysicalCores": 9}`, 0},
+		{`{"NCPU": 4, "MemTotal": 1, "PhysicalCores": -2}`, 0},
+	} {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write([]byte(c.body)) }))
+		got, err := HostSize(srv.URL)
+		srv.Close()
+		if err != nil || got.PhysicalCores != c.want {
+			t.Errorf("%s: PhysicalCores = %d, %v; want %d", c.body, got.PhysicalCores, err, c.want)
+		}
+	}
+}
+
 func TestHostSizeFromAHostThatSaysNothingIsZero(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

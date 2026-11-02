@@ -199,7 +199,7 @@
   "dockerpage.live": "ライブ",
   "dockerpage.mem_of_limit": "メモリ（上限比 %）",
   "dockerpage.bar_scale": "バーは {cores} まで",
-  "dockerpage.host_threads": "プロセッサのスレッド数: {count}",
+  "dockerpage.host_threads": "スレッド: {count}",
   "infra.tab_overview": "概要",
   "infra.tab_summary": "概要",
   "infra.all_ok": "すべて正常に動作しています。",

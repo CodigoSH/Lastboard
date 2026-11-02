@@ -232,7 +232,8 @@ describe('the storage card', () => {
         const html = storageKpiHtml({ totals, state: 'ready' }, t, fmt);
         expect(html).toContain('data-act="disk-more"');
         for (const key of ['storage_images', 'storage_volumes', 'storage_cache']) expect(html).not.toContain(key);
-        expect(html.match(/class="chip/g)?.length).toBe(1);
+        expect(html).toContain('class="kpi__more"');
+        expect(html).not.toContain('class="chip');
         const win = diskModalHtml(totals, t, fmt);
         for (const key of ['storage_images', 'storage_volumes', 'storage_cache', 'dockerpage.reclaimable']) expect(win).toContain(key);
         expect(win).toContain('B(600)');
@@ -290,8 +291,17 @@ describe('what a state looks like', () => {
 describe('the indicators against the real host', () => {
     const rows: HostRows[] = [{ host, loaded: true, containers: [ctr()] }];
     const o = { totals: dockerTotals(rows, { abc: { CPUPercent: 200, MemPercent: 0, MemUsed: 4e9, MemLimit: 8e9 } }), attention: [], projects: [], hosts: rows, cores: [2], mem: [], chart: '', hostNames: {}, disk: { totals: { total: 0, reclaimable: 0, images: 0, containers: 0, volumes: 0, cache: 0, hosts: 0 }, state: 'measuring' as const }, linkOf: () => '', hostUse: {} };
+    test('when the hosts say their real cores the tile says cores and threads; otherwise the threads alone', () => {
+        const both = overviewHtml({ ...o, capacity: { cores: 20, physical: 14, mem: 16e9 } }, t, fmt);
+        expect(both).toContain('proxmox.cores');
+        expect(both).toContain('N(14)');
+        expect(both).toContain('host_threads:{&quot;count&quot;:&quot;N(20)&quot;}');
+        const alone = overviewHtml({ ...o, capacity: { cores: 20, physical: 0, mem: 16e9 } }, t, fmt);
+        expect(alone).not.toContain('proxmox.cores');
+        expect(alone).toContain('host_threads');
+    });
     test('with the size of the host the CPU is a share of its cores, and says how many it has', () => {
-        const html = overviewHtml({ ...o, capacity: { cores: 8, mem: 16e9 } }, t, fmt);
+        const html = overviewHtml({ ...o, capacity: { cores: 8, physical: 0, mem: 16e9 } }, t, fmt);
         expect(html).toContain('N(25)');
         expect(html).toContain('host_threads:{&quot;count&quot;:&quot;N(8)&quot;}');
         expect(html).toContain('&quot;limit&quot;:&quot;B(16000000000)&quot;');

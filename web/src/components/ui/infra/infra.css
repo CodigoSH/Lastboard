@@ -255,6 +255,8 @@ svg { display: block; flex: none; }
 .kpi__v { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
 .kpi__v small { font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--text-dim); margin-inline-start: 4px; }
 .kpi__sub { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1.3 var(--font-mono); color: var(--text-dim); }
+.kpi__more { align-self: flex-end; margin-block-start: auto; padding: 0; border: 0; background: none; color: var(--accent); font: 600 11px/1.3 var(--font-mono); letter-spacing: 0.04em; cursor: pointer; }
+.kpi__more:hover { text-decoration: underline; text-underline-offset: 3px; }
 .kpi__chips { display: flex; gap: 5px; flex-wrap: wrap; margin-block-start: auto; }
 .ring { position: relative; width: 58px; height: 58px; flex: none; }
 .ring svg { transform: rotate(-90deg); }

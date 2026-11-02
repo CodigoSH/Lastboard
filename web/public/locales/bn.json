@@ -199,7 +199,7 @@
   "dockerpage.live": "লাইভ",
   "dockerpage.mem_of_limit": "মেমরি (সীমার %)",
   "dockerpage.bar_scale": "বার {cores} পর্যন্ত",
-  "dockerpage.host_threads": "প্রসেসরের থ্রেড: {count}",
+  "dockerpage.host_threads": "থ্রেড: {count}",
   "infra.tab_overview": "সংক্ষিপ্ত বিবরণ",
   "infra.tab_summary": "সারসংক্ষেপ",
   "infra.all_ok": "সবকিছু ঠিকমতো চলছে।",
