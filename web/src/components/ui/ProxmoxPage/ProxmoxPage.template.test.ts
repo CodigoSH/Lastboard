@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
     attentionHtml, cardHtml, guestFooterHtml, guestHeadHtml, guestSummaryHtml, inventoryHtml, nodeCardHtml, overviewHtml, reasonText,
-    rowHtml, storageTabHtml, storeRowHtml, storeSummaryHtml, summaryHtml, type Fmt, type GuestDrawer, type GuestView, type T,
+    rowHtml, storageTabHtml, storeCardHtml, storeRowHtml, storeSummaryHtml, summaryHtml, type Fmt, type GuestDrawer, type GuestView, type T,
 } from './ProxmoxPage.template';
 import { boxHtml } from '../infra/infra.template';
 import { attentionList, fleetNodes, fleetStores, fleetTotals, type LinkOf } from '../../../services/proxmoxOverview';
@@ -126,5 +126,27 @@ describe('the overview', () => {
     test('the reason of an item names the number it is about', () => {
         const item = attentionList(hosts, noLinks)[0];
         expect(reasonText(item, t, fmt)).toContain('P(97)');
+    });
+});
+
+describe('the storage tab', () => {
+    const h = host({ stores: [store({ name: 'backups', percent: 97, used: 97, total: 100 }), store({ name: 'local', percent: 40 })] });
+    test('shows cards like the other tabs, or the rows, as the person chose, with the switch above them', () => {
+        const cards = storageTabHtml(fleetStores([h]), false, t, fmt);
+        expect(cards).toContain('data-view="cards"');
+        expect(cards).toContain('data-view="list"');
+        expect(cards.match(/unit--store/g)?.length).toBe(2);
+        expect(cards).not.toContain('task--store');
+        const rows = storageTabHtml(fleetStores([h]), false, t, fmt, 'list');
+        expect(rows.match(/task--store/g)?.length).toBe(2);
+        expect(rows).not.toContain('unit--store');
+    });
+    test('a card opens its store, says how full it is and how much is left, and what comes from the hypervisor is escaped', () => {
+        const evil = '<img src=x onerror=alert(1)>';
+        const html = storeCardHtml(fleetStores([host({ stores: [store({ name: evil, node: evil, percent: 97, used: 970, total: 1000 })] })])[0], true, t, fmt);
+        expect(html).toContain('data-go="store"');
+        expect(html).toContain('P(97)');
+        expect(html).toContain('B(30)');
+        expect(html).not.toContain(evil);
     });
 });

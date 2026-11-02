@@ -5,7 +5,7 @@ import type { UnitGroup } from '../../../services/infraUnits';
 import {
     guestRam, type AttentionItem, type FleetNode, type FleetStore, type FleetTotals, type AttentionReason,
 } from '../../../services/proxmoxOverview';
-import { barHtml, boxHtml, bookmarkChipHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
+import { barHtml, boxHtml, bookmarkChipHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, meterLevel, viewSegHtml, type Level, type T } from '../infra/infra.template';
 
 export { faceHtml };
 import { typeLabel, type Fmt as TaskFmt } from './ProxmoxTasks.template';
@@ -130,6 +130,15 @@ export function storeRowHtml(s: FleetStore, showHost: boolean, t: T, fmt: Fmt): 
         <span class="task__main"><b>${e(s.name)}</b><small>${e(s.kind)}${s.shared ? ' · ' + e(t('proxmoxpage.shared')) : ''}${showHost ? ' · ' + e(s.hostName) : ''}</small></span>
         <span class="task__bar">${barHtml(s.percent)}</span>
         <span class="task__r"><b>${e(fmt.pct(s.percent))}</b><br>${e(fmt.bytes(s.used))} / ${e(fmt.bytes(s.total))}</span>
+    </button>`;
+}
+
+/** A store as a card: how full it is as a bar, the figures under it, and where it lives. */
+export function storeCardHtml(s: FleetStore, showHost: boolean, t: T, fmt: Fmt): string {
+    return `<button type="button" class="card card--btn unit unit--store" data-go="store" data-host="${e(s.hostId)}" data-ref="${e(s.name)}" data-node="${e(s.node)}">
+        <div class="unit__h"><span class="dot ${DOT[meterLevel(s.percent)]}"></span><span class="unit__n" title="${e(s.name)}">${e(s.name)}</span><span class="unit__tail"><span class="chip">${e(s.kind)}</span></span></div>
+        <div class="unit__sub">${e(s.node)}${s.shared ? ` · ${e(t('proxmoxpage.shared'))}` : ''}${showHost ? ` · ${e(s.hostName)}` : ''}</div>
+        <div class="unit__m"><div class="mrow mrow--bare">${barHtml(s.percent)}<b>${e(fmt.pct(s.percent))}</b></div><div class="unit__sub unit__sub--split"><span>${e(fmt.bytes(s.used))} / ${e(fmt.bytes(s.total))}</span><span>${e(fmt.bytes(Math.max(0, s.total - s.used)))}</span></div></div>
     </button>`;
 }
 
@@ -279,12 +288,16 @@ export function hostErrorHtml(key: string, hostName: string, t: T): string {
 
 // ── Storage ────────────────────────────────────────────────────────────────
 
-export function storageTabHtml(stores: FleetStore[], showHost: boolean, t: T, fmt: Fmt): string {
+export function storageTabHtml(stores: FleetStore[], showHost: boolean, t: T, fmt: Fmt, view: 'cards' | 'list' = 'cards'): string {
     if (!stores.length) return emptyHtml(t('dockerpage.none'));
     const order = [...new Set(stores.map(s => s.hostId))];
-    return order.map(id => {
+    const tools = `<div class="tools"><span class="pspacer"></span>${viewSegHtml(view, t)}</div>`;
+    return tools + order.map(id => {
         const mine = stores.filter(s => s.hostId === id).sort((a, b) => b.percent - a.percent);
-        return boxHtml(mine[0].hostName, `<div class="card tasks">${mine.map(s => storeRowHtml(s, false, t, fmt)).join('')}</div>`, showHost ? fmt.num(mine.length) : '');
+        const body = view === 'cards'
+            ? `<div class="cards">${mine.map(s => storeCardHtml(s, false, t, fmt)).join('')}</div>`
+            : `<div class="card tasks">${mine.map(s => storeRowHtml(s, false, t, fmt)).join('')}</div>`;
+        return boxHtml(mine[0].hostName, body, showHost ? fmt.num(mine.length) : '');
     }).join('');
 }
 

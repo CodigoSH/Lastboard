@@ -218,8 +218,23 @@ describe('outages', () => {
         const html = outagesTabHtml(list, list, '30 d', RANGES, 'all', t, fmt, rows);
         expect(html).toContain('data-ofilter="ongoing"');
         expect(html).toContain('data-orange="7 d"');
-        expect(html).toContain('O(1800)');
+        // Three facts to act on: how many and how many services, who suffered most, the longest one.
+        expect(html).toContain('[monitorpage.out_affected]: N(2)');
+        expect(html).toContain('[monitorpage.out_most]');
+        expect(html).toContain('[monitorpage.out_longest]');
         expect(html).toContain('O(1200)');
+        expect(html).toContain('Plex');
+        expect(html).not.toContain('out_mean');
+    });
+    test('the summary of the tab names the service that suffered most, with its count and its time down', () => {
+        const many: Outage[] = [
+            { item_id: 1, name: 'Immich', start: 'a', end: 'b', duration_sec: 600, status_code: 0 },
+            { item_id: 1, name: 'Immich', start: 'c', end: 'd', duration_sec: 300, status_code: 0 },
+            { item_id: 2, name: 'Plex', start: 'e', end: 'f', duration_sec: 7200, status_code: 0 },
+        ];
+        const html = outagesTabHtml(many, many, '30 d', RANGES, 'all', t, fmt, new Map());
+        expect(html).toMatch(/out_most\]<\/span><b class="num" title="Immich">Immich<\/b><small>\[monitor.incidents\]: N\(2\) · \[monitorpage.out_downtime\]: O\(900\)/);
+        expect(html).toMatch(/out_longest\]<\/span><b class="num">S\(7200\)<\/b><small>Plex/);
     });
     test('with none, it says there were none and shows no zero-length mean', () => {
         const html = outagesTabHtml([], [], '24 h', RANGES, 'all', t, fmt, new Map());

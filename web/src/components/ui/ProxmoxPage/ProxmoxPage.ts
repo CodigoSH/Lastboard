@@ -11,6 +11,7 @@ import '../IconSelectionModal/IconSelectionModal';
 import '../Select/Select';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
+import { PageNav, type NavState } from '../../../services/pageNav';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
 import { byteUnit } from '../../../services/dockerOverview';
@@ -122,7 +123,10 @@ class ProxmoxPage extends HTMLElement {
     private latest: { tasks: PxTask[]; where: string } | null = null;
     private latestBusy = false;
 
-    private depth = 0;
+    /** The browser's history for this page: Back walks through its tabs and panel before it leaves. */
+    private readonly nav = new PageNav('proxmox');
+    /** True while the page is being put where the history says, so that does not make a step of its own. */
+    private applying = false;
     private charts = new Map<string, { spec: ChartSpec; at: number[] }>();
     private last: Written = blank();
     private bodyTab: Tab | '' = '';
@@ -130,7 +134,7 @@ class ProxmoxPage extends HTMLElement {
 
     private _unsubscribeI18n: (() => void) | undefined;
     private readonly _keydown: (e: KeyboardEvent) => void;
-    private readonly _popstate: () => void;
+    private readonly _popstate: (e: PopStateEvent) => void;
     private readonly _resize = () => { if (this.hasAttribute('open')) this.fitUptimes(); };
 
     private readonly t: T = (key, params) => i18n.t(key, params);
@@ -205,14 +209,13 @@ class ProxmoxPage extends HTMLElement {
             input?.select();
         };
 
-        // Back: the browser's button, the mouse's fourth button, or a swipe from the edge of a phone.
-        // Only ours while we have entries on the stack; at any other moment this is somebody else's navigation.
-        this._popstate = () => {
-            if (this.depth <= 0) return;
-            this.depth--;
-            if (!this.hasAttribute('open')) return;
-            if (this.depth > 0 && this.drawerOpen) { this.hideDrawer(); return; }
-            this.closeQuietly();
+        // Back and Forward — the browser's buttons, the mouse's, a swipe from the edge of a phone: the page shows
+        // what the entry it landed on says; before its first entry, it leaves.
+        this._popstate = (e: PopStateEvent) => {
+            const effect = this.nav.pop(e.state);
+            if (effect.kind === 'ignore' || !this.hasAttribute('open')) return;
+            if (effect.kind === 'leave') { this.closeQuietly(); return; }
+            this.applyNav(effect.state);
         };
     }
 
@@ -252,10 +255,10 @@ class ProxmoxPage extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
-        // A full-screen page is a place, so Back leaves it rather than leaving Lastboard. Pushed once per opening, never stacked.
-        if (this.depth === 0) { history.pushState({ lbProxmox: 'page' }, ''); this.depth = 1; }
         eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: true });
         this.drawerOpen = false;
+        // A full-screen page is a place: each step in it is a step of the browser's Back. Once per opening, never stacked.
+        this.nav.open(this.navState());
         this.loaded = false;
         this.curveAt = 0;
         this.paintAll(true);
@@ -273,12 +276,9 @@ class ProxmoxPage extends HTMLElement {
     }
 
     close() {
-        // Closing by the X or by Escape takes our entries off the stack with it. Zeroing first
-        // is what stops the popstate this causes from being read as the user going back.
-        const steps = this.depth;
-        this.depth = 0;
+        // Closing by the X or by Escape takes the page's entries off the history with it.
+        this.nav.close();
         this.closeQuietly();
-        if (steps > 0) history.go(-steps);
     }
 
     private stopTimers() {
@@ -296,10 +296,6 @@ class ProxmoxPage extends HTMLElement {
 
     private $(id: string): HTMLElement | null {
         return this.shadowRoot?.getElementById(id) ?? null;
-    }
-
-    private isNarrow(): boolean {
-        return window.innerWidth <= 640;
     }
 
     private scope(): PxHost[] {
@@ -407,7 +403,7 @@ class ProxmoxPage extends HTMLElement {
 
         const tab = el.closest<HTMLElement>('#tabs [data-tab]');
         // Going to another page puts the side panel away: it belongs to what was in front of it.
-        if (tab) { this.closeDrawer(); this.setTab(tab.dataset.tab as Tab); return; }
+        if (tab) { if (this.drawerOpen) this.hideDrawer(); this.setTab(tab.dataset.tab as Tab); return; }
         const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
         if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
 
@@ -430,6 +426,8 @@ class ProxmoxPage extends HTMLElement {
         if (view) {
             this.viewMode = view.dataset.view === 'list' ? 'list' : 'cards';
             writePref(VIEW_KEY, this.viewMode);
+            // The storage tab draws its own switch and list, from the same choice.
+            if (this.tab === 'storage') { this.last.body = ''; this.paintBody(); return; }
             this.paintTools();
             this.paintInventory();
             return;
@@ -544,7 +542,10 @@ class ProxmoxPage extends HTMLElement {
             this.drawerTasks.stop();
             this.drawerJournal.stop();
         }
+        // Opening an item is a step; choosing another while one is open is not.
+        const wasOpen = this.drawerOpen;
         this.showDrawer();
+        if (wasOpen) this.navReplace(); else this.navPush();
         this.paintAll();
         if (!same) void this.loadDetail();
     }
@@ -552,15 +553,41 @@ class ProxmoxPage extends HTMLElement {
     private showDrawer() {
         if (this.drawerOpen) return;
         this.drawerOpen = true;
-        // On a phone the drawer takes the screen, and Back returns to the page.
-        if (this.isNarrow()) { history.pushState({ lbProxmox: 'detail' }, ''); this.depth++; }
     }
 
-    /** Closes the drawer by the X, the scrim or Escape. On a phone it takes its history entry with it. */
+    /** Closes the drawer by the X, the scrim or Escape: it takes back the step that opened it, when there was one. */
     private closeDrawer() {
         if (!this.drawerOpen) return;
-        if (this.isNarrow() && this.depth > 1) { history.back(); return; }
+        if (this.nav.closePanel()) return;
         this.hideDrawer();
+    }
+
+    // ── The browser's history ──
+
+    /** What is on screen, as the history remembers it. */
+    private navState(): NavState {
+        const s = this.drawerOpen ? this.sel : null;
+        return { tab: this.tab, sel: s ? `${s.kind}|${s.hostId}|${s.ref}` : null };
+    }
+
+    private navPush() { if (!this.applying) this.nav.push(this.navState()); }
+
+    private navReplace() { if (!this.applying) this.nav.replace(this.navState()); }
+
+    /** Puts the page where an entry of the history says: its tab, and the machine, node or store open in the panel. */
+    private applyNav(s: NavState) {
+        this.applying = true;
+        try {
+            if (s.tab !== this.tab) this.setTab(s.tab as Tab);
+            const parts = s.sel?.split('|') ?? [];
+            if (parts.length >= 3 && (parts[0] === 'guest' || parts[0] === 'node' || parts[0] === 'store')) {
+                this.choose({ kind: parts[0], hostId: parts[1], ref: parts.slice(2).join('|') });
+            } else if (this.drawerOpen) {
+                this.hideDrawer();
+            }
+        } finally {
+            this.applying = false;
+        }
     }
 
     private hideDrawer() {
@@ -585,6 +612,7 @@ class ProxmoxPage extends HTMLElement {
     private setTab(tab: Tab) {
         if (tab === this.tab) return;
         this.tab = tab;
+        this.navPush();
         this.paintAll();
     }
 
@@ -617,7 +645,7 @@ class ProxmoxPage extends HTMLElement {
         // A machine that is gone is gone; one whose hypervisor did not answer is only out of sight.
         if (this.sel && !this.current()) {
             const h = this.hostOf(this.sel.hostId);
-            if (!h || !h.error) { this.sel = null; this.closeDrawer(); }
+            if (!h || !h.error) { this.sel = null; this.hideDrawer(); this.navReplace(); }
         }
         this.paintAll();
         void this.loadCurve();
@@ -893,7 +921,7 @@ class ProxmoxPage extends HTMLElement {
             this.paintTools();
             this.paintInventory();
         } else if (this.tab === 'storage') {
-            this.setBody(body, 'storage', storageTabHtml(fleetStores(this.scope()), this.hosts.length > 1, t, this.fmt));
+            this.setBody(body, 'storage', storageTabHtml(fleetStores(this.scope()), this.hosts.length > 1, t, this.fmt, this.viewMode));
         } else {
             const kind = this.tab;
             if (this.bodyTab !== kind) {

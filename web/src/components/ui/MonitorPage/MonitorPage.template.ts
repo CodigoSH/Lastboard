@@ -1,6 +1,6 @@
 import { escapeHtml } from '../../../services/escape';
 import {
-    outageTotals, sortOutages, stateOf,
+    outageInsights, outageTotals, sortOutages, stateOf,
     type AttentionItem, type Check, type FleetTotals, type Outage, type OutageFilter, type RangeLabel, type RowGroup, type ServiceRow, type ServiceState, type StateFilter,
 } from '../../../services/monitorPage';
 import { barHtml, boxHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, viewSegHtml, type Level, type T } from '../infra/infra.template';
@@ -373,10 +373,13 @@ export function stateChips(t: T): { id: StateFilter; label: string }[] {
 
 export function outagesTabHtml(list: Outage[], shown: Outage[], range: RangeLabel, ranges: readonly RangeLabel[], filter: OutageFilter, t: T, fmt: Fmt, rows: Map<number, ServiceRow>, view: 'cards' | 'list' = 'cards', faceOf: (itemId: number | undefined) => string = () => ''): string {
     const tot = outageTotals(list);
+    const ins = outageInsights(list);
+    const ago = ins.longest ? fmt.ago(ins.longest.start) : '';
+    // Three facts a person can act on: how bad it is, who suffers most, and the worst single one.
     const sum = `<div class="inc-sum">
-        <div class="card"><span class="lbl">${e(t('monitor.incidents'))} · ${e(range)}</span><b class="num">${e(fmt.num(tot.count))}</b><small>${e(t('monitorpage.ongoing'))}: ${e(fmt.num(tot.ongoing))}</small></div>
-        <div class="card"><span class="lbl">${e(t('monitorpage.out_downtime'))}</span><b class="num">${e(tot.downSec ? outageSpan(tot.downSec, t, fmt) : '—')}</b><small>${e(t('monitorpage.out_downtime_sub'))}</small></div>
-        <div class="card"><span class="lbl">${e(t('monitorpage.out_mean'))}</span><b class="num">${e(tot.meanRecoverySec === null ? '—' : outageSpan(tot.meanRecoverySec, t, fmt))}</b><small>${e(t('monitor.ev_recovered'))}: ${e(fmt.num(tot.recovered))}</small></div>
+        <div class="card"><span class="lbl">${e(t('monitor.incidents'))} · ${e(range)}</span><b class="num">${e(fmt.num(tot.count))}</b><small>${e(t('monitorpage.ongoing'))}: ${e(fmt.num(tot.ongoing))} · ${e(t('monitorpage.out_affected'))}: ${e(fmt.num(ins.affected))}</small></div>
+        <div class="card"><span class="lbl">${e(t('monitorpage.out_most'))}</span><b class="num" title="${e(ins.most?.name ?? '')}">${e(ins.most?.name || '—')}</b><small>${ins.most ? `${e(t('monitor.incidents'))}: ${e(fmt.num(ins.most.count))} · ${e(t('monitorpage.out_downtime'))}: ${e(outageSpan(ins.most.downSec, t, fmt))}` : '&nbsp;'}</small></div>
+        <div class="card"><span class="lbl">${e(t('monitorpage.out_longest'))}</span><b class="num">${e(ins.longest ? outageSpan(ins.longest.sec, t, fmt) : '—')}</b><small>${ins.longest ? `${e(ins.longest.name)}${ago ? ` · ${e(t('monitorpage.ago', { time: ago }))}` : ''}${ins.longest.ongoing ? ` · ${e(t('monitorpage.is_down'))}` : ''}` : '&nbsp;'}</small></div>
     </div>`;
     const chip = (id: OutageFilter, label: string, n: number) =>
         `<button type="button" class="fchip" data-ofilter="${id}" aria-pressed="${filter === id}">${e(label)} <span class="n">${e(fmt.num(n))}</span></button>`;

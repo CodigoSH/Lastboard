@@ -4,6 +4,7 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
+import { PageNav, type NavState } from '../../../services/pageNav';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
 import { fetchDockerSettings, hostsForWidget, saveDockerIcon } from '../../../services/dockerHosts';
@@ -130,7 +131,10 @@ class DockerPage extends HTMLElement {
     private busy = new Set<string>();
 
     /** History entries this page has put on the stack: the page, and a container on a phone. */
-    private depth = 0;
+    /** The browser's history for this page: Back walks through its tabs and panel before it leaves. */
+    private readonly nav = new PageNav('docker');
+    /** True while the page is being put where the history says, so that does not make a step of its own. */
+    private applying = false;
     private loading = false;
     private polling = false;
     private detailSeq = 0;
@@ -150,7 +154,7 @@ class DockerPage extends HTMLElement {
     private _listening = false;
     private _unsubscribeI18n: (() => void) | undefined;
     private readonly _keydown: (e: KeyboardEvent) => void;
-    private readonly _popstate: () => void;
+    private readonly _popstate: (e: PopStateEvent) => void;
     private readonly _visibility: () => void;
 
     /** The bookmark a container serves, as its label: declared in the bookmark itself, across every board. */
@@ -190,13 +194,12 @@ class DockerPage extends HTMLElement {
             input?.select();
         };
 
-        // Back: only ours while we have entries on the stack.
-        this._popstate = () => {
-            if (this.depth <= 0) return;
-            this.depth--;
-            if (!this.hasAttribute('open')) return;
-            if (this.depth > 0 && this.drawerOpen) { this.hideDrawer(); return; }
-            this.closeQuietly();
+        // Back and Forward: the page shows what the entry it landed on says; before its first entry, it leaves.
+        this._popstate = (e: PopStateEvent) => {
+            const effect = this.nav.pop(e.state);
+            if (effect.kind === 'ignore' || !this.hasAttribute('open')) return;
+            if (effect.kind === 'leave') { this.closeQuietly(); return; }
+            this.applyNav(effect.state);
         };
 
         // A tab that was hidden asks again as soon as it is shown, instead of waiting out the timer.
@@ -240,10 +243,10 @@ class DockerPage extends HTMLElement {
 
     open() {
         this.setAttribute('open', '');
-        // A full-screen page is a place: Back leaves it rather than leaving Lastboard.
-        if (this.depth === 0) { history.pushState({ lbDocker: 'page' }, ''); this.depth = 1; }
         eventBus.emit(EVENTS.DOCKER_PAGE_CHANGED, { open: true });
         this.drawerOpen = false;
+        // A full-screen page is a place: each step in it is a step of the browser's Back.
+        this.nav.open(this.navState());
         this.loaded = false;
         this.paintAll(true);
         void this.load(true);
@@ -262,12 +265,9 @@ class DockerPage extends HTMLElement {
     }
 
     close() {
-        // Closing by the X or by Escape takes our entries off the stack with it. Zeroing first
-        // is what stops the popstate this causes from being read as the user going back.
-        const steps = this.depth;
-        this.depth = 0;
+        // Closing by the X or by Escape takes the page's entries off the history with it.
+        this.nav.close();
         this.closeQuietly();
-        if (steps > 0) history.go(-steps);
     }
 
     private stopTimers() {
@@ -303,10 +303,6 @@ class DockerPage extends HTMLElement {
             month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3,
         }) : '';
     };
-
-    private isNarrow(): boolean {
-        return window.innerWidth <= 640;
-    }
 
     private mayControl(): boolean {
         const user = userStore.getUser();
@@ -413,7 +409,7 @@ class DockerPage extends HTMLElement {
 
         const tab = el.closest<HTMLElement>('#tabs [data-tab]');
         // Going to another page puts the side panel away: it belongs to what was in front of it.
-        if (tab) { this.closeDrawer(); this.setTab(tab.dataset.tab as Tab); return; }
+        if (tab) { if (this.drawerOpen) this.hideDrawer(); this.setTab(tab.dataset.tab as Tab); return; }
         const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
         if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
 
@@ -440,7 +436,7 @@ class DockerPage extends HTMLElement {
 
         // A project: the containers tab, narrowed to it. A host: everything is read for that host.
         const project = el.closest<HTMLElement>('[data-project]');
-        if (project) { this.query = project.dataset.project || ''; this.status = 'all'; this.tab = 'containers'; this.last.tools = ''; this.paintAll(); return; }
+        if (project) { this.query = project.dataset.project || ''; this.status = 'all'; this.tab = 'containers'; this.navPush(); this.last.tools = ''; this.paintAll(); return; }
         const hostcard = el.closest<HTMLElement>('[data-hostcard]');
         if (hostcard) { this.hostFilter = hostcard.dataset.hostcard || 'all'; this.paintAll(); return; }
 
@@ -520,7 +516,10 @@ class DockerPage extends HTMLElement {
             this.sel = { hostId, name };
             this.resetSelected();
         }
+        const wasOpen = this.drawerOpen;
         if (open) this.showDrawer();
+        // Opening a container is a step; choosing another while one is open is not.
+        if (open) { if (wasOpen) this.navReplace(); else this.navPush(); }
         this.paintAll();
         if (!same) {
             void this.loadDetail();
@@ -533,15 +532,40 @@ class DockerPage extends HTMLElement {
         if (this.drawerOpen) return;
         this.drawerOpen = true;
         this.drawerTab = 'summary';
-        // On a phone the drawer takes the screen, and Back returns to the page.
-        if (this.isNarrow()) { history.pushState({ lbDocker: 'detail' }, ''); this.depth++; }
     }
 
-    /** Closes the drawer by the X, the scrim or Escape. On a phone it takes its history entry with it. */
+    /** Closes the drawer by the X, the scrim or Escape: it takes back the step that opened it, when there was one. */
     private closeDrawer() {
         if (!this.drawerOpen) return;
-        if (this.isNarrow() && this.depth > 1) { history.back(); return; }
+        if (this.nav.closePanel()) return;
         this.hideDrawer();
+    }
+
+    // ── The browser's history ──
+
+    /** What is on screen, as the history remembers it. */
+    private navState(): NavState {
+        return { tab: this.tab, sel: this.drawerOpen && this.sel ? `${this.sel.hostId}/${this.sel.name}` : null };
+    }
+
+    private navPush() { if (!this.applying) this.nav.push(this.navState()); }
+
+    private navReplace() { if (!this.applying) this.nav.replace(this.navState()); }
+
+    /** Puts the page where an entry of the history says: its tab, and the container open in the panel, if any. */
+    private applyNav(s: NavState) {
+        this.applying = true;
+        try {
+            if (s.tab !== this.tab) this.setTab(s.tab as Tab);
+            if (s.sel) {
+                const at = s.sel.indexOf('/');
+                this.choose(s.sel.slice(0, at), s.sel.slice(at + 1), true);
+            } else if (this.drawerOpen) {
+                this.hideDrawer();
+            }
+        } finally {
+            this.applying = false;
+        }
     }
 
     private hideDrawer() {
@@ -569,6 +593,7 @@ class DockerPage extends HTMLElement {
     private setTab(tab: Tab) {
         if (tab === this.tab) return;
         this.tab = tab;
+        this.navPush();
         this.paintAll();
         if (tab === 'logs' && this.sel && !this.logsLoaded) void this.loadLogs(FIRST_TAIL);
         this.syncPolling();
@@ -620,7 +645,8 @@ class DockerPage extends HTMLElement {
             if (!g || (!g.error && g.loaded)) {
                 this.sel = null;
                 this.resetSelected();
-                this.closeDrawer();
+                this.hideDrawer();
+                this.navReplace();
                 this.syncPolling();
             }
         }

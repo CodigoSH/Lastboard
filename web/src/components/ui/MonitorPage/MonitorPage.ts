@@ -5,6 +5,7 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
+import { PageNav, type NavState } from '../../../services/pageNav';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import {
     attentionCount, attentionList, bucketLatency, countByFilter, filterOutages, fleetTotals, groupRows, isOutageFilter, isRange, isSortKey, isStateFilter,
@@ -91,7 +92,10 @@ class MonitorPage extends HTMLElement {
     private histSeq = 0;
 
     /** History entries this page has put on the stack: the page, and a service on a phone. */
-    private depth = 0;
+    /** The browser's history for this page: Back walks through its tabs and panel before it leaves. */
+    private readonly nav = new PageNav('monitor');
+    /** True while the page is being put where the history says, so that does not make a step of its own. */
+    private applying = false;
     private loading = false;
     private timer: ReturnType<typeof setInterval> | null = null;
     private charts = new Map<string, { spec: ChartSpec; at: number[] }>();
@@ -101,7 +105,7 @@ class MonitorPage extends HTMLElement {
     private _unsubscribeI18n: (() => void) | undefined;
     private _listening = false;
     private readonly _keydown: (e: KeyboardEvent) => void;
-    private readonly _popstate: () => void;
+    private readonly _popstate: (e: PopStateEvent) => void;
     private readonly _visibility: () => void;
 
     constructor() {
@@ -128,13 +132,12 @@ class MonitorPage extends HTMLElement {
             input?.select();
         };
 
-        // Back: only ours while we have entries on the stack.
-        this._popstate = () => {
-            if (this.depth <= 0) return;
-            this.depth--;
-            if (!this.hasAttribute('open')) return;
-            if (this.depth > 0 && this.drawerOpen) { this.hideDrawer(); return; }
-            this.closeQuietly();
+        // Back and Forward: the page shows what the entry it landed on says; before its first entry, it leaves.
+        this._popstate = (e: PopStateEvent) => {
+            const effect = this.nav.pop(e.state);
+            if (effect.kind === 'ignore' || !this.hasAttribute('open')) return;
+            if (effect.kind === 'leave') { this.closeQuietly(); return; }
+            this.applyNav(effect.state);
         };
 
         // A tab that was hidden asks again as soon as it is shown, instead of waiting out the timer.
@@ -175,8 +178,8 @@ class MonitorPage extends HTMLElement {
 
     async open() {
         this.setAttribute('open', '');
-        // A full-screen page is a place: Back leaves it rather than leaving Lastboard.
-        if (this.depth === 0) { history.pushState({ lbMonitor: 'page' }, ''); this.depth = 1; }
+        // A full-screen page is a place: each step in it is a step of the browser's Back.
+        this.nav.open(this.navState());
         document.body.style.overflow = 'hidden';
         // The top bar locks its other actions while the status page is up, the same way it does in edit mode.
         eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: true });
@@ -198,12 +201,9 @@ class MonitorPage extends HTMLElement {
     }
 
     close() {
-        // Closing by the X or by Escape takes our entries off the stack with it. Zeroing first
-        // is what stops the popstate this causes from being read as the user going back.
-        const steps = this.depth;
-        this.depth = 0;
+        // Closing by the X or by Escape takes the page's entries off the history with it.
+        this.nav.close();
         this.closeQuietly();
-        if (steps > 0) history.go(-steps);
     }
 
     private stopTimer() {
@@ -246,10 +246,6 @@ class MonitorPage extends HTMLElement {
             return Number.isFinite(at) ? i18n.formatDateTime(new Date(at), { timeStyle: 'medium' }) : '—';
         },
     };
-
-    private isNarrow(): boolean {
-        return window.innerWidth <= 640;
-    }
 
     private byId(): Map<number, ServiceRow> {
         return new Map(this.rows.map(r => [r.item_id, r]));
@@ -341,7 +337,7 @@ class MonitorPage extends HTMLElement {
 
         const tab = el.closest<HTMLElement>('#tabs [data-tab]');
         // Going to another page puts the side panel away: it belongs to what was in front of it.
-        if (tab) { this.closeDrawer(); this.setTab(tab.dataset.tab as Tab); return; }
+        if (tab) { if (this.drawerOpen) this.hideDrawer(); this.setTab(tab.dataset.tab as Tab); return; }
         const dtab = el.closest<HTMLElement>('#dr-tabs [data-tab]');
         if (dtab) { this.setDrawerTab(dtab.dataset.tab as DrawerTab); return; }
 
@@ -430,6 +426,7 @@ class MonitorPage extends HTMLElement {
     private setTab(tab: Tab) {
         if (tab === this.tab) return;
         this.tab = tab;
+        this.navPush();
         this.paintAll();
     }
 
@@ -437,7 +434,10 @@ class MonitorPage extends HTMLElement {
         const same = this.sel === id;
         this.sel = id;
         if (!same) this.histRange = '24 h';
+        // Opening a service is a step; choosing another while one is open is not.
+        const wasOpen = this.drawerOpen;
         this.showDrawer();
+        if (wasOpen) this.navReplace(); else this.navPush();
         this.paintAll();
         void this.loadHistory();
     }
@@ -446,15 +446,37 @@ class MonitorPage extends HTMLElement {
         if (this.drawerOpen) return;
         this.drawerOpen = true;
         this.drawerTab = 'summary';
-        // On a phone the drawer takes the screen, and Back returns to the page.
-        if (this.isNarrow()) { history.pushState({ lbMonitor: 'detail' }, ''); this.depth++; }
     }
 
-    /** Closes the drawer by the X, the scrim or Escape. On a phone it takes its history entry with it. */
+    /** Closes the drawer by the X, the scrim or Escape: it takes back the step that opened it, when there was one. */
     private closeDrawer() {
         if (!this.drawerOpen) return;
-        if (this.isNarrow() && this.depth > 1) { history.back(); return; }
+        if (this.nav.closePanel()) return;
         this.hideDrawer();
+    }
+
+    // ── The browser's history ──
+
+    /** What is on screen, as the history remembers it. */
+    private navState(): NavState {
+        return { tab: this.tab, sel: this.drawerOpen && this.sel !== null ? String(this.sel) : null };
+    }
+
+    private navPush() { if (!this.applying) this.nav.push(this.navState()); }
+
+    private navReplace() { if (!this.applying) this.nav.replace(this.navState()); }
+
+    /** Puts the page where an entry of the history says: its tab, and the service open in the panel, if any. */
+    private applyNav(s: NavState) {
+        this.applying = true;
+        try {
+            this.closeModal();
+            if (s.tab !== this.tab) this.setTab(s.tab as Tab);
+            if (s.sel !== null && Number.isFinite(Number(s.sel))) this.choose(Number(s.sel));
+            else if (this.drawerOpen) this.hideDrawer();
+        } finally {
+            this.applying = false;
+        }
     }
 
     private hideDrawer() {

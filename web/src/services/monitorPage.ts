@@ -261,6 +261,35 @@ export function outageTotals(list: Outage[]): OutageTotals {
     };
 }
 
+/** What a list of outages says beyond its count: how many services it touches, which one suffered most, and the longest one. */
+export interface OutageInsights {
+    /** How many different services had at least one outage. */
+    affected: number;
+    /** The service with the most outages (the one with more time down on a tie), with how many and for how long. */
+    most: { name: string; count: number; downSec: number } | null;
+    /** The longest single outage, still going or not. */
+    longest: { name: string; sec: number; start: string; ongoing: boolean } | null;
+}
+
+export function outageInsights(list: Outage[]): OutageInsights {
+    const by = new Map<string, { name: string; count: number; downSec: number }>();
+    let longest: Outage | null = null;
+    for (const o of list) {
+        const key = o.item_id !== undefined ? `#${o.item_id}` : `n:${o.name ?? ''}`;
+        const g = by.get(key) ?? { name: o.name ?? '', count: 0, downSec: 0 };
+        g.count++;
+        g.downSec += Math.max(0, o.duration_sec);
+        by.set(key, g);
+        if (!longest || o.duration_sec > longest.duration_sec) longest = o;
+    }
+    const most = [...by.values()].sort((a, b) => b.count - a.count || b.downSec - a.downSec || a.name.localeCompare(b.name))[0] ?? null;
+    return {
+        affected: by.size,
+        most,
+        longest: longest ? { name: longest.name ?? '', sec: Math.max(0, longest.duration_sec), start: longest.start, ongoing: longest.end === null } : null,
+    };
+}
+
 export type OutageFilter = 'all' | 'ongoing' | 'recovered';
 export const isOutageFilter = (v: unknown): v is OutageFilter => v === 'all' || v === 'ongoing' || v === 'recovered';
 

@@ -38,7 +38,7 @@
 /* The three figures on top of the outages tab. */
 .inc-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-block-end: 14px; }
 .inc-sum .card { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
-.inc-sum b { font-size: 24px; letter-spacing: -0.02em; }
+.inc-sum b { font-size: 24px; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .inc-sum small { font: 500 11px/1.4 var(--font-mono); color: var(--text-dim); }
 @media (max-width: 900px) { .inc-sum { grid-template-columns: 1fr; } }
 

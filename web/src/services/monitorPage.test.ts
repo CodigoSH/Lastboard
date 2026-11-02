@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionCount, attentionList, bucketLatency, countByFilter, fillGaps, filterOutages, fleetTotals, groupRows, isSlow, lowestAvailability,
+    attentionCount, attentionList, outageInsights, bucketLatency, countByFilter, fillGaps, filterOutages, fleetTotals, groupRows, isSlow, lowestAvailability,
     outageTotals, passes, readRow, sortOutages, sortRows, stateOf, trendSeries, type Outage, type ServiceRow,
 } from './monitorPage';
 
@@ -224,5 +224,19 @@ describe('a service that went down inside the day', () => {
         const l = attentionList([r({ item_id: 2, name: 'Flaky', uptime_pct: 95 }), slow], 'background');
         expect(l.map(a => a.kind)).toEqual(['slow', 'unstable']);
         expect(attentionCount(l)).toBe(2);
+    });
+});
+
+describe('outageInsights', () => {
+    const o = (item_id: number, name: string, duration_sec: number, end: string | null = 'x') => ({ item_id, name, start: 's', end, duration_sec, status_code: 0 } as Outage);
+    test('how many services, who suffered most (then who was down longest) and the longest outage', () => {
+        const i = outageInsights([o(1, 'A', 600), o(1, 'A', 300), o(2, 'B', 900), o(2, 'B', 100), o(3, 'C', 7000)]);
+        expect(i.affected).toBe(3);
+        expect(i.most).toEqual({ name: 'B', count: 2, downSec: 1000 });
+        expect(i.longest).toMatchObject({ name: 'C', sec: 7000, ongoing: false });
+    });
+    test('an outage still going can be the longest, and says so; none at all says nothing', () => {
+        expect(outageInsights([o(1, 'A', 60), o(2, 'B', 5000, null)]).longest).toMatchObject({ name: 'B', ongoing: true });
+        expect(outageInsights([])).toEqual({ affected: 0, most: null, longest: null });
     });
 });
