@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"sort"
 	"time"
@@ -26,9 +27,15 @@ type overviewWindow struct {
 }
 
 // OverviewWindows reads, for every monitored item of a user, the uptime over
-// seven and thirty days and the mean response of the last day. Three grouped
-// queries over the covering index: the database counts, no row comes back
-// except the totals.
+// seven and thirty days and the mean response of the last day.
+//
+// The uptimes are added up from the hourly counts the database keeps
+// (monitor_rollup) and not from the checks: a month of a service checked each
+// minute is 43,000 rows, and fifty of them are a pass over two million on every
+// refresh. The whole hours come from the counts; the part of an hour at the start
+// of the window, which a count cannot split, from the checks themselves, so the
+// figure is exact to the second. The latency is its own query over the last day,
+// a thirtieth of the checks. The database counts; no row comes back except totals.
 func (s *MonitorStore) OverviewWindows(userID int, now time.Time) (map[int]overviewWindow, error) {
 	out := map[int]overviewWindow{}
 	ensure := func(id int) overviewWindow {
@@ -39,24 +46,37 @@ func (s *MonitorStore) OverviewWindows(userID int, now time.Time) (map[int]overv
 		return w
 	}
 	uptime := func(window time.Duration, set func(*overviewWindow, float64)) error {
-		since := now.Add(-window).UTC().Format("2006-01-02 15:04:05")
+		since := now.Add(-window).UTC()
+		// The first whole hour inside the window: from it on, the counts say it all.
+		whole := since.Truncate(time.Hour)
+		if whole.Before(since) {
+			whole = whole.Add(time.Hour)
+		}
 		rows, err := s.DB.Query(
-			`SELECT c.item_id, COUNT(*), COALESCE(SUM(c.up), 0)
-			 FROM monitor_checks c JOIN items i ON i.id = c.item_id
-			 WHERE i.user_id = ? AND c.checked_at >= ?
-			 GROUP BY c.item_id`, userID, since)
+			`SELECT item_id, SUM(total), SUM(up) FROM (
+			     SELECT r.item_id AS item_id, r.total AS total, r.up AS up
+			       FROM monitor_rollup r JOIN items i ON i.id = r.item_id
+			      WHERE i.user_id = ? AND r.bucket >= ?
+			     UNION ALL
+			     SELECT c.item_id, 1, c.up
+			       FROM monitor_checks c JOIN items i ON i.id = c.item_id
+			      WHERE i.user_id = ? AND c.checked_at >= ? AND c.checked_at < ?
+			 ) GROUP BY item_id`,
+			userID, whole.Format("2006-01-02 15"),
+			userID, since.Format("2006-01-02 15:04:05"), whole.Format("2006-01-02 15:04:05"))
 		if err != nil {
 			return err
 		}
 		defer rows.Close()
 		for rows.Next() {
-			var id, total, up int
+			var id int
+			var total, up sql.NullInt64
 			if err := rows.Scan(&id, &total, &up); err != nil {
 				return err
 			}
 			w := ensure(id)
-			if total > 0 {
-				set(&w, float64(up)/float64(total)*100)
+			if total.Valid && total.Int64 > 0 {
+				set(&w, float64(up.Int64)/float64(total.Int64)*100)
 			}
 			out[id] = w
 		}
@@ -70,7 +90,7 @@ func (s *MonitorStore) OverviewWindows(userID int, now time.Time) (map[int]overv
 	}
 
 	since := now.Add(-24 * time.Hour).UTC().Format("2006-01-02 15:04:05")
-	rows, err := s.DB.Query(
+	lat, err := s.DB.Query(
 		`SELECT c.item_id, AVG(c.latency_ms)
 		 FROM monitor_checks c JOIN items i ON i.id = c.item_id
 		 WHERE i.user_id = ? AND c.checked_at >= ? AND c.up = 1 AND c.latency_ms IS NOT NULL
@@ -78,11 +98,11 @@ func (s *MonitorStore) OverviewWindows(userID int, now time.Time) (map[int]overv
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	for rows.Next() {
+	defer lat.Close()
+	for lat.Next() {
 		var id int
 		var avg sql.NullFloat64
-		if err := rows.Scan(&id, &avg); err != nil {
+		if err := lat.Scan(&id, &avg); err != nil {
 			return nil, err
 		}
 		w := ensure(id)
@@ -92,7 +112,7 @@ func (s *MonitorStore) OverviewWindows(userID int, now time.Time) (map[int]overv
 		}
 		out[id] = w
 	}
-	return out, rows.Err()
+	return out, lat.Err()
 }
 
 // trendPoints is how many buckets the fleet's chart is drawn in, whatever the range.
@@ -190,10 +210,150 @@ type serviceIncident struct {
 }
 
 // incidentsAcross lists every outage of every monitored service of a user that
-// shows in the window since..now, the most recent first. One pass over the
-// window in item order, handing each item's checks to the same summary one
-// service's history uses: the two cannot disagree.
+// shows in the window since..now, the most recent first. It reads only the failed
+// checks and the neighbours of each (see incidentsFromRuns); if that cannot be
+// asked it falls back to the full pass, which gives the same answer.
 func (h *MonitorHandler) incidentsAcross(ctx context.Context, userID int, since, now time.Time) ([]serviceIncident, error) {
+	out, err := h.incidentsFromRuns(ctx, userID, since, now)
+	if err != nil {
+		return h.incidentsAcrossScan(ctx, userID, since, now)
+	}
+	return out, nil
+}
+
+// timeOf reads a time the database handed back: a time when the column kept its
+// declared type, text when it came out of an aggregate.
+func timeOf(v any) (time.Time, bool) {
+	switch x := v.(type) {
+	case time.Time:
+		return x.UTC(), true
+	case string:
+		for _, layout := range []string{"2006-01-02 15:04:05", time.RFC3339Nano, "2006-01-02T15:04:05Z"} {
+			if t, err := time.ParseInLocation(layout, x, time.UTC); err == nil {
+				return t, true
+			}
+		}
+	}
+	return time.Time{}, false
+}
+
+// incidentsFromRuns finds the outages without reading the checks that passed.
+// An outage is a run of failed checks, so it begins at a failed check whose
+// previous check passed (or that has none), and ends at the first check that
+// passes after it. Those are two index seeks for each outage, and the failed
+// checks themselves come from a partial index of only them.
+//
+// The answer is the one the full pass gives, down to the cut ends: an outage that
+// was already under way when the window began is shown from its real start, with
+// the code the first failing check of the window got back.
+func (h *MonitorHandler) incidentsFromRuns(ctx context.Context, userID int, since, now time.Time) ([]serviceIncident, error) {
+	items, err := h.store.MonitoredItemsForUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	sinceStr := since.UTC().Format("2006-01-02 15:04:05")
+	out := []serviceIncident{}
+	add := func(it MonitoredItem, start time.Time, end *time.Time, code int) {
+		inc := incident{Start: start, End: end, StatusCode: code}
+		if end != nil {
+			inc.DurationSec = int(end.Sub(start).Seconds())
+		} else {
+			inc.DurationSec = int(now.Sub(start).Seconds())
+		}
+		out = append(out, serviceIncident{ItemID: it.ID, Name: it.Name, incident: inc})
+	}
+	for _, it := range items {
+		rows, err := h.DB.QueryContext(ctx,
+			`SELECT d.checked_at, d.status_code,
+			        (SELECT MIN(u.checked_at) FROM monitor_checks u INDEXED BY idx_monitor_checks_item_up
+			          WHERE u.item_id = d.item_id AND u.up = 1 AND u.checked_at > d.checked_at)
+			   FROM monitor_checks d INDEXED BY idx_monitor_checks_down
+			  WHERE d.item_id = ? AND d.up = 0 AND d.checked_at >= ?
+			    AND COALESCE((SELECT p.up FROM monitor_checks p INDEXED BY idx_monitor_checks_item_up
+			                   WHERE p.item_id = d.item_id AND p.checked_at < d.checked_at
+			                   ORDER BY p.checked_at DESC, p.id DESC LIMIT 1), 1) = 1
+			  ORDER BY d.checked_at`, it.ID, sinceStr)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			var at, endAt any
+			var code int
+			if err := rows.Scan(&at, &code, &endAt); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			start, ok := timeOf(at)
+			if !ok {
+				rows.Close()
+				return nil, errors.New("unreadable check time")
+			}
+			var end *time.Time
+			if endAt != nil {
+				e, ok := timeOf(endAt)
+				if !ok {
+					rows.Close()
+					return nil, errors.New("unreadable check time")
+				}
+				end = &e
+			}
+			add(it, start, end, code)
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		rows.Close()
+
+		// An outage already under way when the window began has its first failed
+		// check before the window, so the query above did not see it begin.
+		var firstAt any
+		var firstUp, firstCode int
+		err = h.DB.QueryRowContext(ctx,
+			`SELECT checked_at, up, status_code FROM monitor_checks INDEXED BY idx_monitor_checks_item_up
+			  WHERE item_id = ? AND checked_at >= ? ORDER BY checked_at, id LIMIT 1`, it.ID, sinceStr).Scan(&firstAt, &firstUp, &firstCode)
+		if err == sql.ErrNoRows || (err == nil && firstUp != 0) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		first, ok := timeOf(firstAt)
+		if !ok {
+			return nil, errors.New("unreadable check time")
+		}
+		start, carried, err := h.store.OutageStart(it.ID, first)
+		if err != nil {
+			return nil, err
+		}
+		if !carried {
+			continue
+		}
+		var endAt any
+		if err := h.DB.QueryRowContext(ctx,
+			`SELECT MIN(checked_at) FROM monitor_checks INDEXED BY idx_monitor_checks_item_up
+			  WHERE item_id = ? AND up = 1 AND checked_at > ?`, it.ID, first.Format("2006-01-02 15:04:05")).Scan(&endAt); err != nil {
+			return nil, err
+		}
+		var end *time.Time
+		if endAt != nil {
+			e, ok := timeOf(endAt)
+			if !ok {
+				return nil, errors.New("unreadable check time")
+			}
+			end = &e
+		}
+		add(it, start, end, firstCode)
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Start.After(out[j].Start) })
+	return out, nil
+}
+
+// incidentsAcrossScan is the same list read the slow way: one pass over every
+// check of the window in item order, handing each item's checks to the same
+// summary one service's history uses. It is what the quick way is held to, and
+// what answers if the quick one cannot be asked.
+func (h *MonitorHandler) incidentsAcrossScan(ctx context.Context, userID int, since, now time.Time) ([]serviceIncident, error) {
 	items, err := h.store.MonitoredItemsForUser(userID)
 	if err != nil {
 		return nil, err

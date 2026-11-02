@@ -458,3 +458,68 @@ func TestInitDBStampsTheSchemaVersion(t *testing.T) {
 		t.Errorf("user_version = %d, want %d", got, schemaVersion)
 	}
 }
+
+// A database from before the hourly counts has its checks and an empty rollup: the
+// first boot counts them once, and booting again changes nothing, so the counts
+// are never added twice.
+func TestTheHourlyCountsAreBackfilledOnceFromTheChecks(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "old.db")
+	first, err := InitDB(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := first.DB.Exec(`INSERT INTO users (id, username, password) VALUES (1, 'u', 'p')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := first.DB.Exec(`INSERT INTO items (id, user_id, type, x, y, w, h) VALUES (7, 1, 'bookmark', 0, 0, 1, 1)`); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		at string
+		up int
+	}{{"2026-11-01 10:05:00", 1}, {"2026-11-01 10:35:00", 0}, {"2026-11-01 10:55:00", 1}, {"2026-11-01 11:05:00", 1}} {
+		if _, err := first.DB.Exec(`INSERT INTO monitor_checks (item_id, checked_at, up, latency_ms, status_code) VALUES (7, ?, ?, 10, 200)`, c.at, c.up); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// What an older binary left: the checks, and nothing counted.
+	if _, err := first.DB.Exec(`DELETE FROM monitor_rollup`); err != nil {
+		t.Fatal(err)
+	}
+	first.Close()
+
+	read := func() map[string][2]int {
+		db, err := InitDB(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer db.Close()
+		rows, err := db.DB.Query(`SELECT bucket, total, up FROM monitor_rollup WHERE item_id = 7`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
+		out := map[string][2]int{}
+		for rows.Next() {
+			var b string
+			var total, up int
+			if err := rows.Scan(&b, &total, &up); err != nil {
+				t.Fatal(err)
+			}
+			out[b] = [2]int{total, up}
+		}
+		return out
+	}
+	want := map[string][2]int{"2026-11-01 10": {3, 2}, "2026-11-01 11": {1, 1}}
+	for boot := 1; boot <= 2; boot++ {
+		got := read()
+		if len(got) != len(want) {
+			t.Fatalf("boot %d: %v, want %v", boot, got, want)
+		}
+		for k, w := range want {
+			if got[k] != w {
+				t.Fatalf("boot %d: hour %s counted %v, want %v", boot, k, got[k], w)
+			}
+		}
+	}
+}
