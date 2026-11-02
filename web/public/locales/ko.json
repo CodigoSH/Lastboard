@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "실시간 상태만 보입니다. 기록은 저장되지 않고 알림도 전송되지 않습니다.",
   "monitorpage.att_slow": "{name}의 응답이 느립니다",
   "monitorpage.att_slow_sub": "{now} · 평소 {avg}",
+  "monitorpage.att_unstable": "{name} 최근 중단됨",
+  "monitorpage.att_unstable_sub": "24시간 동안 {avail} 가동",
   "monitorpage.board": "보드",
   "monitorpage.cause_none": "응답 없음",
   "monitorpage.cause_unavailable": "서비스를 사용할 수 없음",

@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "आप केवल लाइव स्थिति देखते हैं: कोई इतिहास नहीं रखा जाता और कोई अलर्ट नहीं भेजा जाता।",
   "monitorpage.att_slow": "{name} धीरे जवाब दे रहा है",
   "monitorpage.att_slow_sub": "{now} · सामान्यतः {avg}",
+  "monitorpage.att_unstable": "{name} हाल ही में बंद हुआ था",
+  "monitorpage.att_unstable_sub": "24 घंटों में {avail} उपलब्ध",
   "monitorpage.board": "बोर्ड",
   "monitorpage.cause_none": "कोई जवाब नहीं",
   "monitorpage.cause_unavailable": "सेवा उपलब्ध नहीं",

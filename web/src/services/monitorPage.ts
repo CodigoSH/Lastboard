@@ -140,7 +140,10 @@ export function fleetTotals(rows: ServiceRow[]): FleetTotals {
 
 // ── Attention ──────────────────────────────────────────────────────────────
 
-export type AttentionKind = 'off' | 'down' | 'slow' | 'none';
+export type AttentionKind = 'off' | 'down' | 'slow' | 'unstable' | 'none';
+
+/** A service that answers now but was down inside the last day: its 24-hour availability under this is a warning. */
+export const UNSTABLE_BELOW = 99;
 
 export interface AttentionItem {
     kind: AttentionKind;
@@ -149,7 +152,7 @@ export interface AttentionItem {
     name?: string;
 }
 
-const ATTENTION_RANK: Record<AttentionKind, number> = { down: 0, off: 1, slow: 2, none: 3 };
+const ATTENTION_RANK: Record<AttentionKind, number> = { down: 0, off: 1, slow: 2, unstable: 3, none: 4 };
 
 /**
  * What needs a look, the worst first: services that do not answer, then the
@@ -162,6 +165,8 @@ export function attentionList(rows: ServiceRow[], mode: string): AttentionItem[]
     for (const r of rows) {
         const s = stateOf(r);
         if (s === 'down' || s === 'slow' || s === 'none') out.push({ kind: s, id: r.item_id, name: r.name });
+        // It answers and is not slow, yet it failed inside the day: the outage is over, and still worth a look.
+        else if (r.uptime_pct >= 0 && r.uptime_pct < UNSTABLE_BELOW) out.push({ kind: 'unstable', id: r.item_id, name: r.name });
     }
     return out.sort((a, b) => ATTENTION_RANK[a.kind] - ATTENTION_RANK[b.kind] || (a.name ?? '').localeCompare(b.name ?? ''));
 }

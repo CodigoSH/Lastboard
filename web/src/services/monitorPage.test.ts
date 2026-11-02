@@ -211,3 +211,18 @@ describe('sortOutages', () => {
         expect(list).toEqual(copy);
     });
 });
+
+describe('a service that went down inside the day', () => {
+    const r = (over: Partial<Parameters<typeof readRow>[0]>) => readRow({ item_id: 1, name: 'Plex', status: 'up', uptime_pct: 100, latency_ms: 100, avg_ms_24h: 100, url: 'u', board: 'b', uptime_7d: 100, uptime_30d: 100, heartbeat: [], ...over } as never);
+    test('is listed when it answers now but its 24-hour availability is under 99 %, after the ones still in trouble', () => {
+        const rows = [r({ item_id: 1, name: 'Steady', uptime_pct: 100 }), r({ item_id: 2, name: 'Flaky', uptime_pct: 93.8 }), r({ item_id: 3, name: 'Edge', uptime_pct: 99 }),
+            r({ item_id: 4, name: 'Gone', status: 'down', latency_ms: null, uptime_pct: 80 }), r({ item_id: 5, name: 'New', status: 'none', uptime_pct: -1, latency_ms: null })];
+        expect(attentionList(rows, 'background').map(a => `${a.name}:${a.kind}`)).toEqual(['Gone:down', 'Flaky:unstable', 'New:none']);
+    });
+    test('it counts as a warning, and a slow one is listed once, as slow', () => {
+        const slow = r({ item_id: 6, name: 'Slow', uptime_pct: 90, latency_ms: 2000, avg_ms_24h: 100 });
+        const l = attentionList([r({ item_id: 2, name: 'Flaky', uptime_pct: 95 }), slow], 'background');
+        expect(l.map(a => a.kind)).toEqual(['slow', 'unstable']);
+        expect(attentionCount(l)).toBe(2);
+    });
+});

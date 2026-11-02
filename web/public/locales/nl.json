@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Je ziet alleen de live-status: er wordt geen geschiedenis bewaard en er worden geen meldingen verstuurd.",
   "monitorpage.att_slow": "{name} reageert traag",
   "monitorpage.att_slow_sub": "{now} · gewoonlijk {avg}",
+  "monitorpage.att_unstable": "{name} was onlangs onbereikbaar",
+  "monitorpage.att_unstable_sub": "{avail} beschikbaar in 24 uur",
   "monitorpage.board": "Bord",
   "monitorpage.cause_none": "Geen antwoord",
   "monitorpage.cause_unavailable": "Dienst niet beschikbaar",

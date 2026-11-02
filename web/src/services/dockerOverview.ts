@@ -9,7 +9,10 @@ import type { InfraUnit } from './infraUnits';
  */
 
 /** Why a container is on the attention list. */
-export type AttentionReason = 'unhealthy' | 'restarting' | 'failed' | 'outage' | 'paused';
+export type AttentionReason = 'unhealthy' | 'restarting' | 'failed' | 'outage' | 'paused' | 'memory' | 'host_down';
+
+/** A running container is listed from the point where its memory bar turns red: this share of its limit. */
+export const MEMORY_ATTENTION = 90;
 
 /** The label of the bookmark a container serves, or '' (see dockerLinks). */
 export type LinkOf = (hostId: string, name: string) => string;
@@ -21,6 +24,8 @@ export interface AttentionItem {
     name: string;
     reason: AttentionReason;
     exitCode?: number;
+    /** The share of its memory limit, for a container listed for using it. */
+    value?: number;
     /** The bookmark that goes down with it, when one is tied to it. */
     link?: string;
 }
@@ -32,27 +37,31 @@ export interface AttentionItem {
  * that is stopped while a bookmark depends on it: that service is down, however
  * on purpose the stop was.
  */
-export function attentionReason(c: DockerContainer, linked = false): AttentionReason | null {
+export function attentionReason(c: DockerContainer, linked = false, stats?: ContainerStats): AttentionReason | null {
     const state = (c.State || c.Status || '').toLowerCase();
     if (c.Health === 'unhealthy') return 'unhealthy';
     if (state === 'restarting') return 'restarting';
     if (state === 'paused') return 'paused';
     if (stateLevel(state) === 'off' && typeof c.ExitCode === 'number' && c.ExitCode !== 0) return 'failed';
     if (linked && stateLevel(state) === 'off') return 'outage';
+    if (stateLevel(state) === 'up' && stats && stats.MemPercent >= MEMORY_ATTENTION) return 'memory';
     return null;
 }
 
 /** The attention list across hosts, the worst first: failing checks, then restarts, then the rest. */
-export function attentionList(all: HostRows[], linkOf: LinkOf = NO_LINK): AttentionItem[] {
-    const order: Record<AttentionReason, number> = { unhealthy: 0, restarting: 1, failed: 2, outage: 3, paused: 4 };
+export function attentionList(all: HostRows[], linkOf: LinkOf = NO_LINK, stats: Record<string, ContainerStats> = {}): AttentionItem[] {
+    const order: Record<AttentionReason, number> = { host_down: 0, unhealthy: 1, restarting: 2, failed: 3, outage: 4, memory: 5, paused: 6 };
     const out: AttentionItem[] = [];
     for (const h of all) {
+        // A host that does not answer is the first thing to look at: everything on it is unknown.
+        if (h.error) out.push({ hostId: h.host.id, name: h.host.name, reason: 'host_down' });
         for (const c of h.containers) {
             const name = containerName(c);
             const link = linkOf(h.host.id, name);
-            const reason = attentionReason(c, !!link);
+            const s = stats[c.ID];
+            const reason = attentionReason(c, !!link, s);
             if (!reason) continue;
-            out.push({ hostId: h.host.id, name, reason, exitCode: c.ExitCode ?? undefined, ...(link ? { link } : {}) });
+            out.push({ hostId: h.host.id, name, reason, exitCode: c.ExitCode ?? undefined, ...(reason === 'memory' && s ? { value: s.MemPercent } : {}), ...(link ? { link } : {}) });
         }
     }
     return out.sort((a, b) => order[a.reason] - order[b.reason] || a.name.localeCompare(b.name));
@@ -98,7 +107,7 @@ export function dockerUnits(all: HostRows[], stats: Record<string, ContainerStat
                 id: `${h.host.id}/${name}`,
                 name,
                 level: stateLevel(c.State || c.Status),
-                attention: attentionReason(c, !!link) !== null,
+                attention: attentionReason(c, !!link, s) !== null,
                 group: c.Project || '',
                 haystack: `${name} ${c.Image || ''} ${c.Project || ''} ${(c.ID || '').slice(0, 12)} ${h.host.name} ${link}`.toLowerCase(),
                 cpu: s?.CPUPercent,
@@ -128,12 +137,13 @@ export function dockerTotals(all: HostRows[], stats: Record<string, ContainerSta
     const t: DockerTotals = { total: 0, running: 0, stopped: 0, attention: 0, projects: 0, cores: 0, memUsed: 0, memLimit: 0, reporting: 0 };
     const projects = new Set<string>();
     for (const h of all) {
+        if (h.error) t.attention++;
         for (const c of h.containers) {
             t.total++;
             if (stateLevel(c.State || c.Status) === 'up') t.running++; else t.stopped++;
-            if (attentionReason(c, !!linkOf(h.host.id, containerName(c)))) t.attention++;
-            if (c.Project) projects.add(`${h.host.id}/${c.Project}`);
             const s = stats[c.ID];
+            if (attentionReason(c, !!linkOf(h.host.id, containerName(c)), s)) t.attention++;
+            if (c.Project) projects.add(`${h.host.id}/${c.Project}`);
             if (s) {
                 t.reporting++;
                 t.cores += (s.CPUPercent || 0) / 100;

@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "ライブの状態だけが表示されます。履歴は保存されず、アラートも送信されません。",
   "monitorpage.att_slow": "{name} の応答が遅くなっています",
   "monitorpage.att_slow_sub": "{now} · 通常は {avg}",
+  "monitorpage.att_unstable": "{name} が最近停止しました",
+  "monitorpage.att_unstable_sub": "24 時間で {avail} 稼働",
   "monitorpage.board": "ボード",
   "monitorpage.cause_none": "応答なし",
   "monitorpage.cause_unavailable": "サービスを利用できません",

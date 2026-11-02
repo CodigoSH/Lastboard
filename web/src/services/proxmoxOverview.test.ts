@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionList, fleetStores, fleetTotals, guestUnits, unitId, uptimeParts, weightedCpu, weightedCurve, type LinkOf,
+    attentionList, fleetStores, guestRam, fleetTotals, guestUnits, unitId, uptimeParts, weightedCpu, weightedCurve, type LinkOf,
 } from './proxmoxOverview';
 import type { PxGuest, PxHost, PxNode, PxStore } from './proxmoxApi';
 
@@ -70,7 +70,7 @@ describe('fleetTotals', () => {
 });
 
 describe('attentionList', () => {
-    test('worst first: a host down, an outage, a nearly full store, then what is only hot', () => {
+    test('worst first: a host down, an outage, a nearly full store, a node, a hot machine, then what is only warm', () => {
         const hosts = [
             host({
                 nodes: [node({ mem: 91 })],
@@ -82,7 +82,7 @@ describe('attentionList', () => {
         const l = attentionList(hosts, linked(unitId('h1', 2)));
         expect(l.map(i => `${i.kind}:${i.reason}:${i.tone}`)).toEqual([
             'host:host_down:bad', 'guest:outage:bad', 'store:store_full:bad',
-            'guest:cpu:warn', 'store:store_full:warn', 'node:node_mem:warn',
+            'node:node_mem:bad', 'guest:cpu:bad', 'store:store_full:warn',
         ]);
         expect(l[1].link).toBe('bookmark-2');
         // Machine 3 was turned off and nothing depends on it: it is not an alarm.
@@ -91,6 +91,8 @@ describe('attentionList', () => {
     test('thresholds are inclusive and a stopped machine is never "hot"', () => {
         const h = host({ nodes: [node({ mem: 85 })], guests: [guest({ cpu: 90 }), guest({ vmid: 2, running: false, cpu: 99 })], stores: [store({ percent: 90 })] });
         expect(attentionList([h], noLinks).map(i => i.reason).sort()).toEqual(['cpu', 'node_mem', 'store_full']);
+        // A node's memory is only warm at 85 and red from 90; a machine is listed when it is red, which is at 90.
+        expect(attentionList([h], noLinks).find(i => i.reason === 'node_mem')?.tone).toBe('warn');
         const cool = host({ nodes: [node({ mem: 84.9 })], guests: [guest({ cpu: 89.9 })], stores: [store({ percent: 89.9 })] });
         expect(attentionList([cool], noLinks)).toEqual([]);
     });
@@ -141,5 +143,28 @@ describe('uptimeParts', () => {
     test('nonsense is nothing, not NaN', () => {
         expect(uptimeParts(NaN)).toEqual({ years: 0, months: 0, days: 0 });
         expect(uptimeParts(-5)).toEqual({ years: 0, months: 0, days: 0 });
+    });
+});
+
+describe('what a card paints red is what the list says', () => {
+    test("a machine's RAM is a share of what it is given, not its bytes", () => {
+        expect(guestRam(guest({ mem: 900, mem_total: 1000 }))).toBe(90);
+        expect(guestRam(guest({ mem: 5, mem_total: 0 }))).toBe(0);
+        const red = host({ guests: [guest({ vmid: 1, cpu: 5, mem: 950, mem_total: 1000 }), guest({ vmid: 2, cpu: 5, mem: 899, mem_total: 1000 })] });
+        const l = attentionList([red], noLinks);
+        expect(l.map(i => `${i.ref}:${i.reason}:${i.tone}`)).toEqual(['1:mem:bad']);
+        expect(l[0].value).toBe(95);
+    });
+    test('the worse of a machine\'s two meters is the reason, and a stopped one is never listed for them', () => {
+        const h = host({ guests: [guest({ vmid: 1, cpu: 99, mem: 920, mem_total: 1000 }), guest({ vmid: 2, running: false, cpu: 99, mem: 990, mem_total: 1000 })] });
+        expect(attentionList([h], noLinks).map(i => `${i.ref}:${i.reason}`)).toEqual(['1:cpu']);
+    });
+    test("a node is listed when any of its three meters is red, naming it", () => {
+        const l = attentionList([host({ nodes: [node({ cpu: 93, mem: 40, disk: 20 }), node({ name: 'b', cpu: 10, mem: 40, disk: 96 }), node({ name: 'c', cpu: 10, mem: 40, disk: 89 })] })], noLinks);
+        expect(l.map(i => `${i.ref}:${i.reason}:${i.tone}`)).toEqual(['pve1:node_cpu:bad', 'b:node_disk:bad']);
+    });
+    test('the machine unit carries the same flag the list does', () => {
+        const hosts = [host({ guests: [guest({ vmid: 1, mem: 950, mem_total: 1000 }), guest({ vmid: 2 })] })];
+        expect(guestUnits(hosts, noLinks).map(u => u.attention)).toEqual([true, false]);
     });
 });

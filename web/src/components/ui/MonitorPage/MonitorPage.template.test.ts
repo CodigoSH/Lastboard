@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageSpan, outageTableHtml, PANEL_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
+    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageCardHtml, outageSpan, outageTableHtml, PANEL_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
     monitoringKpi, outageRowHtml, outagesPanelHtml, outagesTabHtml, rowHtml, stateChips, summaryHtml, summaryTabHtml, type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import { attentionList, fleetTotals, groupRows, readRow, RANGES, type Outage, type ServiceRow } from '../../../services/monitorPage';
@@ -320,6 +320,40 @@ describe('what a person reads about an outage', () => {
         const html = outagesPanelHtml([mk('2026-01-01T00:00:00Z', 'x'), mk('2026-01-03T00:00:00Z', 'x'), mk('2026-01-02T00:00:00Z', null)], t, fmt);
         const order = [...html.matchAll(/G\((2026-01-0\d)/g)].map(m => m[1].slice(-2));
         expect(order).toEqual(['02', '03', '01']);
+    });
+    test('the outages tab shows cards like the other tabs, or the table, as the person chose', () => {
+        const rows = new Map([[1, row({ item_id: 1, name: 'Plex' })]]);
+        const list = [{ item_id: 1, name: 'Plex', start: 'a', end: null, duration_sec: 0, status_code: 0 } as Outage, { item_id: 1, name: 'Plex', start: 'b', end: 'c', duration_sec: 600, status_code: 503 } as Outage];
+        const cards = outagesTabHtml(list, list, '30 d', RANGES, 'all', t, fmt, rows);
+        expect(cards).toContain('class="cards"');
+        expect(cards.match(/unit--out/g)?.length).toBe(2);
+        expect(cards).not.toContain('tbl--out');
+        expect(cards).toContain('data-view="cards"');
+        expect(cards).toContain('data-view="list"');
+        const table = outagesTabHtml(list, list, '30 d', RANGES, 'all', t, fmt, rows, 'list');
+        expect(table).toContain('tbl--out');
+        expect(table).not.toContain('unit--out');
+        expect(table).toContain('aria-pressed="true"');
+    });
+    test('an outage card says who, why, since when, for how long, and whether it still is', () => {
+        const down = outageCardHtml({ item_id: 1, name: 'Plex', start: 'a', end: null, duration_sec: 0, status_code: 502 } as Outage, 'face.png', t, fmt);
+        expect(down).toContain('data-id="1"');
+        expect(down).toContain('is-off');
+        expect(down).toContain('[monitorpage.is_down]');
+        expect(down).toContain('[monitorpage.cause_unavailable]');
+        expect(down).toContain('title="HTTP 502"');
+        expect(down).toContain('face.png');
+        const over = outageCardHtml({ item_id: 1, name: 'Plex', start: 'a', end: 'b', duration_sec: 1848, status_code: 0 } as Outage, '', t, fmt);
+        expect(over).not.toContain('is-off');
+        expect(over).toContain('[monitorpage.resolved]');
+        expect(over).toContain('>O(1848)<');
+    });
+    test('the attention list says a service went down recently, with its 24-hour availability', () => {
+        const flaky = row({ item_id: 9, name: 'Flaky', uptime_pct: 93.8 });
+        const html = attentionHtml([{ kind: 'unstable', id: 9, name: 'Flaky' }], new Map([[9, flaky]]), t, fmt);
+        expect(html).toContain('[monitorpage.att_unstable:name=Flaky]');
+        expect(html).toContain('A(93.8)');
+        expect(html).toContain('dot--warn');
     });
     test("a service's own table has no service and no state column: a line still going says Down where its length would be", () => {
         const o = [{ start: 'a', end: null, duration_sec: 0, status_code: 0 } as Outage, { start: 'b', end: 'c', duration_sec: 600, status_code: 0 } as Outage];

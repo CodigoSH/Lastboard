@@ -101,12 +101,17 @@ export function fleetTotals(hosts: PxHost[], linkOf: LinkOf): FleetTotals {
 
 /** How hot a machine's CPU, a node's memory or a store's fill may get before it is listed. */
 export const CPU_ATTENTION = 90;
+/** A node's memory is worth a look from here, and is red from RED_ATTENTION: the point where its bar turns red. */
 export const MEM_ATTENTION = 85;
+export const RED_ATTENTION = 90;
 export const STORE_ATTENTION = 90;
 export const STORE_CRITICAL = 95;
 
+/** A machine's RAM as a share of what it is given: the bar on its card. `mem` itself is bytes. */
+export const guestRam = (g: Pick<PxGuest, 'mem' | 'mem_total'>): number => (g.mem_total > 0 ? (g.mem / g.mem_total) * 100 : 0);
+
 export type AttentionKind = 'host' | 'guest' | 'node' | 'store';
-export type AttentionReason = 'host_down' | 'outage' | 'cpu' | 'node_mem' | 'store_full';
+export type AttentionReason = 'host_down' | 'outage' | 'cpu' | 'mem' | 'node_cpu' | 'node_mem' | 'node_disk' | 'store_full';
 
 export interface AttentionItem {
     kind: AttentionKind;
@@ -137,8 +142,10 @@ export function attentionList(hosts: PxHost[], linkOf: LinkOf): AttentionItem[] 
     for (const g of fleetGuests(hosts, linkOf)) {
         if (!g.running && g.link) {
             out.push({ kind: 'guest', reason: 'outage', tone: 'bad', hostId: g.hostId, hostName: g.hostName, ref: String(g.vmid), title: g.name, value: 0, link: g.link });
-        } else if (g.running && g.cpu >= CPU_ATTENTION) {
-            out.push({ kind: 'guest', reason: 'cpu', tone: 'warn', hostId: g.hostId, hostName: g.hostName, ref: String(g.vmid), title: g.name, value: g.cpu });
+        } else if (g.running && Math.max(g.cpu, guestRam(g)) >= RED_ATTENTION) {
+            // What the machine's card paints red is what the list says: the worse of its two meters.
+            const ram = guestRam(g), mem = ram > g.cpu;
+            out.push({ kind: 'guest', reason: mem ? 'mem' : 'cpu', tone: 'bad', hostId: g.hostId, hostName: g.hostName, ref: String(g.vmid), title: g.name, value: mem ? ram : g.cpu });
         }
     }
     for (const s of fleetStores(hosts)) {
@@ -147,13 +154,20 @@ export function attentionList(hosts: PxHost[], linkOf: LinkOf): AttentionItem[] 
         }
     }
     for (const n of fleetNodes(hosts)) {
-        if (n.mem >= MEM_ATTENTION) {
+        // A node's card is red when any of its three meters is, so the list says which one.
+        const worst = ([['node_cpu', n.cpu], ['node_mem', n.mem], ['node_disk', n.disk]] as [AttentionReason, number][])
+            .reduce((a, b) => (b[1] > a[1] ? b : a));
+        if (worst[1] >= RED_ATTENTION) {
+            out.push({ kind: 'node', reason: worst[0], tone: 'bad', hostId: n.hostId, hostName: n.hostName, ref: n.name, title: n.name, value: worst[1] });
+        } else if (n.mem >= MEM_ATTENTION) {
             out.push({ kind: 'node', reason: 'node_mem', tone: 'warn', hostId: n.hostId, hostName: n.hostName, ref: n.name, title: n.name, value: n.mem });
         }
     }
+    // The worst first: by tone, then by what it is — a hypervisor that does not answer, a machine a bookmark
+    // depends on, a store out of room, a node, then a machine that is only hot. Array.sort is stable.
     const rank = { bad: 0, warn: 1 };
-    // Array.sort is stable: inside a tone the order above (hosts, machines, stores, nodes) is kept.
-    return out.sort((a, b) => rank[a.tone] - rank[b.tone]);
+    const kind: Record<AttentionReason, number> = { host_down: 0, outage: 1, store_full: 2, node_cpu: 3, node_mem: 3, node_disk: 3, cpu: 4, mem: 4 };
+    return out.sort((a, b) => rank[a.tone] - rank[b.tone] || kind[a.reason] - kind[b.reason]);
 }
 
 // ── The inventory ──────────────────────────────────────────────────────────
@@ -164,7 +178,7 @@ export function guestUnits(hosts: PxHost[], linkOf: LinkOf): InfraUnit[] {
         id: unitId(g.hostId, g.vmid),
         name: g.name || String(g.vmid),
         level: g.running ? 'up' : 'off',
-        attention: (!g.running && !!g.link) || (g.running && g.cpu >= CPU_ATTENTION),
+        attention: (!g.running && !!g.link) || (g.running && Math.max(g.cpu, guestRam(g)) >= RED_ATTENTION),
         group: g.node,
         haystack: `${g.name} ${g.vmid} ${g.node} ${g.hostName} ${g.link} ${g.kind === 'lxc' ? 'lxc' : 'vm'}`.toLowerCase(),
         cpu: g.running ? g.cpu : undefined,

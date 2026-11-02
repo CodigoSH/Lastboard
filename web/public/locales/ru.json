@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Вы видите только текущее состояние: история не сохраняется, оповещения не отправляются.",
   "monitorpage.att_slow": "{name} отвечает медленно",
   "monitorpage.att_slow_sub": "{now} · обычно {avg}",
+  "monitorpage.att_unstable": "{name} недавно не работал",
+  "monitorpage.att_unstable_sub": "Доступен {avail} за 24 часа",
   "monitorpage.board": "Доска",
   "monitorpage.cause_none": "Нет ответа",
   "monitorpage.cause_unavailable": "Сервис недоступен",

@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Só vê o estado em direto: não se guarda histórico nem se enviam alertas.",
   "monitorpage.att_slow": "{name} responde devagar",
   "monitorpage.att_slow_sub": "{now} · o normal são {avg}",
+  "monitorpage.att_unstable": "{name} esteve em baixo recentemente",
+  "monitorpage.att_unstable_sub": "Disponível {avail} em 24 horas",
   "monitorpage.board": "Painel",
   "monitorpage.cause_none": "Sem resposta",
   "monitorpage.cause_unavailable": "Serviço indisponível",

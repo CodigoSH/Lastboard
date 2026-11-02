@@ -100,3 +100,9 @@
    `clip`, not `hidden`: hidden would make the table the thing that scrolls, and a sticky head would stick to nothing. */
 .mdl__b .tbl, .mdl__b .tasks, .dr__b .tbl, .dr__b .tasks { overflow: clip; }
 .mdl__b .tr--h, .mdl__b .chk--h, .dr__b .tr--h, .dr__b .chk--h { position: sticky; inset-block-start: 0; z-index: 2; }
+
+/* An outage as a card: the same card as a service, with two facts where a service has its response. */
+.unit--out .unit__st { min-block-size: 38px; gap: 3px; }
+.orow { display: grid; grid-template-columns: minmax(54px, auto) minmax(0, 1fr); gap: 10px; font: 500 11.5px/1.4 var(--font-mono); }
+.orow span { color: var(--text-dim); }
+.orow b { font-weight: 600; text-align: end; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

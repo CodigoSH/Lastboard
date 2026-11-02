@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "You only see the live state: no history is kept and no alerts are sent.",
   "monitorpage.att_slow": "{name} is responding slowly",
   "monitorpage.att_slow_sub": "{now} · usually {avg}",
+  "monitorpage.att_unstable": "{name} went down recently",
+  "monitorpage.att_unstable_sub": "Available {avail} over 24 hours",
   "monitorpage.board": "Board",
   "monitorpage.cause_none": "No answer",
   "monitorpage.cause_unavailable": "Service unavailable",

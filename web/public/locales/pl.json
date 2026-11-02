@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Widzisz tylko stan na żywo: historia nie jest zapisywana i nie wysyła się alertów.",
   "monitorpage.att_slow": "{name} odpowiada wolno",
   "monitorpage.att_slow_sub": "{now} · zwykle {avg}",
+  "monitorpage.att_unstable": "{name} niedawno przestał działać",
+  "monitorpage.att_unstable_sub": "Dostępny {avail} w ciągu 24 godzin",
   "monitorpage.board": "Tablica",
   "monitorpage.cause_none": "Brak odpowiedzi",
   "monitorpage.cause_unavailable": "Usługa niedostępna",

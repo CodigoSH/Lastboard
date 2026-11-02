@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "آپ صرف موجودہ حالت دیکھتے ہیں: نہ تاریخ محفوظ ہوتی ہے نہ انتباہات بھیجے جاتے ہیں۔",
   "monitorpage.att_slow": "{name} سست جواب دے رہا ہے",
   "monitorpage.att_slow_sub": "{now} · عام طور پر {avg}",
+  "monitorpage.att_unstable": "{name} حال ہی میں بند ہوا تھا",
+  "monitorpage.att_unstable_sub": "24 گھنٹوں میں {avail} دستیاب",
   "monitorpage.board": "بورڈ",
   "monitorpage.cause_none": "کوئی جواب نہیں",
   "monitorpage.cause_unavailable": "سروس دستیاب نہیں",

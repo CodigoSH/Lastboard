@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Anda hanya melihat status langsung: riwayat tidak disimpan dan peringatan tidak dikirim.",
   "monitorpage.att_slow": "{name} merespons lambat",
   "monitorpage.att_slow_sub": "{now} · biasanya {avg}",
+  "monitorpage.att_unstable": "{name} baru saja mati",
+  "monitorpage.att_unstable_sub": "Tersedia {avail} dalam 24 jam",
   "monitorpage.board": "Papan",
   "monitorpage.cause_none": "Tidak ada respons",
   "monitorpage.cause_unavailable": "Layanan tidak tersedia",

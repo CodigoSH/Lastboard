@@ -3,7 +3,7 @@ import type { PxGuest, PxHost } from '../../../services/proxmoxApi';
 import type { PxTask } from '../../../services/proxmoxTasks';
 import type { UnitGroup } from '../../../services/infraUnits';
 import {
-    type AttentionItem, type FleetNode, type FleetStore, type FleetTotals, type AttentionReason,
+    guestRam, type AttentionItem, type FleetNode, type FleetStore, type FleetTotals, type AttentionReason,
 } from '../../../services/proxmoxOverview';
 import { barHtml, boxHtml, bookmarkChipHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
 
@@ -79,7 +79,10 @@ export function reasonText(a: AttentionItem, t: T, fmt: Fmt): string {
     switch (a.reason) {
         case 'outage': return `${t('proxmox.stopped_breaks')} ${a.link ?? ''}`.trim();
         case 'cpu': return `${t('widget.telemetry.cpu')} ${fmt.pct(a.value)}`;
+        case 'mem': return `${t('widget.telemetry.ram')} ${fmt.pct(a.value)}`;
+        case 'node_cpu': return `${t('widget.telemetry.cpu')} ${fmt.pct(a.value)}`;
         case 'node_mem': return `${t('widget.telemetry.ram')} ${fmt.pct(a.value)}`;
+        case 'node_disk': return `${t('widget.proxmox.disk')} ${fmt.pct(a.value)}`;
         case 'store_full': return `${t('proxmox.storage')} ${fmt.pct(a.value)}`;
         default: return t(REASON_KEYS[a.reason] ?? 'proxmox.connection_error');
     }
@@ -224,7 +227,7 @@ export function stateDot(tone: 'ok' | 'warn' | 'bad' | '', label: string): strin
 const kindText = (g: PxGuest): string => `${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`;
 const attrs = (v: GuestView): string => `data-host="${e(v.hostId)}" data-vmid="${v.guest.vmid}"`;
 const bookmarkChip = (v: GuestView): string => bookmarkChipHtml(v.link);
-const ramPct = (g: PxGuest): number => (g.mem_total > 0 ? (g.mem / g.mem_total) * 100 : 0);
+const ramPct = guestRam;
 
 export function cardHtml(v: GuestView, t: T, fmt: Fmt): string {
     const g = v.guest;

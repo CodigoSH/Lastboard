@@ -57,9 +57,13 @@ const REASON_KEYS: Record<AttentionReason, string> = {
     failed: 'dockerpage.why_failed',
     outage: 'docker.state_stopped',
     paused: 'dockerpage.why_paused',
+    memory: 'dockerpage.kpi_memory',
+    host_down: 'docker.connection_error',
 };
 
-export function reasonText(reason: AttentionReason, exitCode: number | undefined, t: T): string {
+export function reasonText(reason: AttentionReason, exitCode: number | undefined, t: T, value?: number): string {
+    // A container listed for its memory says how much of its limit it has used, the number its bar shows.
+    if (reason === 'memory') return `${t(REASON_KEYS[reason])} ${Math.round(value ?? 0)}%`;
     return t(REASON_KEYS[reason], { code: String(exitCode ?? '') });
 }
 
@@ -114,13 +118,13 @@ export interface OverviewData {
 export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNames: Record<string, string>, t: T): string {
     if (!items.length) return `<div class="allok">${icon('check', 22)}<span>${e(t('dockerpage.all_ok'))}</span></div>`;
     return `<div class="attn">${items.map(a => {
-        const tone = a.reason === 'unhealthy' || a.reason === 'failed' || a.reason === 'outage' ? 'bad' : 'warn';
+        const tone = a.reason === 'unhealthy' || a.reason === 'failed' || a.reason === 'outage' || a.reason === 'memory' || a.reason === 'host_down' ? 'bad' : 'warn';
         const host = showHost ? ` · ${e(hostNames[a.hostId] ?? '')}` : '';
         // A stopped container that a bookmark depends on says which service goes with it.
         const breaks = a.link && (a.reason === 'outage' || a.reason === 'failed') ? ` · ${e(t('proxmox.stopped_breaks'))} ${e(a.link)}` : '';
-        return `<button type="button" class="attn__row" data-host="${e(a.hostId)}" data-name="${e(a.name)}">
+        return `<button type="button" class="attn__row" data-host="${e(a.hostId)}" ${a.reason === 'host_down' ? `data-hostcard="${e(a.hostId)}"` : `data-name="${e(a.name)}"`}>
             <span class="dot dot--${tone}"></span>
-            <span class="attn__t"><b>${e(a.name)}</b><span>${e(reasonText(a.reason, a.exitCode, t))}${breaks}${host}</span></span>
+            <span class="attn__t"><b>${e(a.name)}</b><span>${e(reasonText(a.reason, a.exitCode, t, a.value))}${breaks}${a.reason === 'host_down' ? '' : host}</span></span>
             ${icon('chevR', 15)}
         </button>`;
     }).join('')}</div>`;

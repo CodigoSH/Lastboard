@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "আপনি শুধু বর্তমান অবস্থা দেখেন: কোনো ইতিহাস রাখা হয় না এবং কোনো সতর্কতা পাঠানো হয় না।",
   "monitorpage.att_slow": "{name} ধীরে সাড়া দিচ্ছে",
   "monitorpage.att_slow_sub": "{now} · সাধারণত {avg}",
+  "monitorpage.att_unstable": "{name} সম্প্রতি বন্ধ ছিল",
+  "monitorpage.att_unstable_sub": "২৪ ঘণ্টায় {avail} উপলব্ধ",
   "monitorpage.board": "বোর্ড",
   "monitorpage.cause_none": "সাড়া নেই",
   "monitorpage.cause_unavailable": "সেবা পাওয়া যাচ্ছে না",

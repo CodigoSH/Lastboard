@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Du siehst nur den Live-Zustand: Es wird kein Verlauf gespeichert und es werden keine Benachrichtigungen gesendet.",
   "monitorpage.att_slow": "{name} antwortet langsam",
   "monitorpage.att_slow_sub": "{now} · üblich sind {avg}",
+  "monitorpage.att_unstable": "{name} war kürzlich ausgefallen",
+  "monitorpage.att_unstable_sub": "{avail} verfügbar in 24 Stunden",
   "monitorpage.board": "Board",
   "monitorpage.cause_none": "Keine Antwort",
   "monitorpage.cause_unavailable": "Dienst nicht verfügbar",

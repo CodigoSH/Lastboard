@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Solo ves el estado en vivo: no se guarda historial ni se envían alertas.",
   "monitorpage.att_slow": "{name} responde con lentitud",
   "monitorpage.att_slow_sub": "{now} · lo normal son {avg}",
+  "monitorpage.att_unstable": "{name} se cayó hace poco",
+  "monitorpage.att_unstable_sub": "Disponible {avail} en 24 horas",
   "monitorpage.board": "Tablero",
   "monitorpage.cause_none": "Sin respuesta",
   "monitorpage.cause_unavailable": "Servicio no disponible",

@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "你只能看到实时状态：不保存历史，也不发送警报。",
   "monitorpage.att_slow": "{name} 响应缓慢",
   "monitorpage.att_slow_sub": "{now} · 通常为 {avg}",
+  "monitorpage.att_unstable": "{name} 最近宕机过",
+  "monitorpage.att_unstable_sub": "24 小时可用率 {avail}",
   "monitorpage.board": "看板",
   "monitorpage.cause_none": "无响应",
   "monitorpage.cause_unavailable": "服务不可用",

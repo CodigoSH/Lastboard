@@ -361,6 +361,8 @@ class MonitorPage extends HTMLElement {
         if (view) {
             this.viewMode = view.dataset.view === 'list' ? 'list' : 'cards';
             writePref(VIEW_KEY, this.viewMode);
+            // The outages tab draws its own tools and list, from the same choice.
+            if (this.tab === 'outages') { this.last.body = ''; this.paintBody(); return; }
             this.paintTools();
             this.paintInventory();
             return;
@@ -702,7 +704,7 @@ class MonitorPage extends HTMLElement {
         const window = rangeMs(this.outRange);
         // An outage shows in a range when it was still going on, or ended, inside it.
         const inRange = this.outages.filter(o => o.item_id !== undefined && mine.has(o.item_id) && (o.end === null || Date.parse(o.end) >= now - window));
-        return outagesTabHtml(inRange, filterOutages(inRange, this.outFilter), this.outRange, RANGES, this.outFilter, this.t, this.fmt, this.byId());
+        return outagesTabHtml(inRange, filterOutages(inRange, this.outFilter), this.outRange, RANGES, this.outFilter, this.t, this.fmt, this.byId(), this.viewMode, (id) => { const r = id === undefined ? undefined : this.byId().get(id); return r ? this.faceOf(r) : ''; });
     }
 
     private paintTools() {

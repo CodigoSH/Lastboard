@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Vedi solo lo stato in tempo reale: non si conserva alcuna cronologia e non si inviano avvisi.",
   "monitorpage.att_slow": "{name} risponde lentamente",
   "monitorpage.att_slow_sub": "{now} · di solito {avg}",
+  "monitorpage.att_unstable": "{name} è stato giù di recente",
+  "monitorpage.att_unstable_sub": "Disponibile {avail} in 24 ore",
   "monitorpage.board": "Bacheca",
   "monitorpage.cause_none": "Nessuna risposta",
   "monitorpage.cause_unavailable": "Servizio non disponibile",

@@ -44,6 +44,31 @@ describe('attentionList', () => {
     });
 });
 
+describe('what a card paints red is what the list says', () => {
+    const stat = (MemPercent: number) => ({ CPUPercent: 5, MemPercent, MemUsed: 1, MemLimit: 2 });
+    test('a running container at 90 % of its memory limit is listed, one below it is not', () => {
+        expect(attentionReason(c('a'), false, stat(90))).toBe('memory');
+        expect(attentionReason(c('a'), false, stat(89.9))).toBeNull();
+        // A stopped one has no meter to be red, whatever its last reading said.
+        expect(attentionReason(c('a', { State: 'exited', Status: 'stopped', ExitCode: 0 }), false, stat(99))).toBeNull();
+    });
+    test('the list carries the share, and the totals and the units count it as a warning', () => {
+        const all = rows([c('hot'), c('cool')]);
+        const stats = { [c('hot').ID]: stat(95), [c('cool').ID]: stat(30) };
+        const l = attentionList(all, undefined, stats);
+        expect(l.map(x => `${x.name}:${x.reason}:${x.value}`)).toEqual(['hot:memory:95']);
+        expect(dockerTotals(all, stats).attention).toBe(1);
+        expect(dockerUnits(all, stats).map(u => u.attention)).toEqual([true, false]);
+    });
+    test('a host that does not answer is the first thing on the list, and counts as a warning', () => {
+        const all: HostRows[] = [{ host, containers: [], loaded: true, error: 'docker.connection_error' }, ...rows([c('b', { Health: 'unhealthy' })])];
+        const l = attentionList(all);
+        expect(l.map(x => x.reason)).toEqual(['host_down', 'unhealthy']);
+        expect(l[0].name).toBe('nas');
+        expect(dockerTotals(all).attention).toBe(2);
+    });
+});
+
 describe('dockerUnits', () => {
     test('one per container, with project, state and readings', () => {
         const list = dockerUnits(rows([c('web', { Project: 'media', Health: 'unhealthy' }), c('db', { State: 'exited', Status: 'stopped' })]),

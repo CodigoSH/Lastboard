@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Vous ne voyez que l’état en direct : aucun historique n’est conservé et aucune alerte n’est envoyée.",
   "monitorpage.att_slow": "{name} répond lentement",
   "monitorpage.att_slow_sub": "{now} · d’habitude {avg}",
+  "monitorpage.att_unstable": "{name} est tombé récemment",
+  "monitorpage.att_unstable_sub": "Disponible {avail} sur 24 heures",
   "monitorpage.board": "Tableau",
   "monitorpage.cause_none": "Pas de réponse",
   "monitorpage.cause_unavailable": "Service indisponible",

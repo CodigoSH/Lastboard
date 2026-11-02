@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "ترى الحالة الحالية فقط: لا يُحفظ سجل ولا تُرسل تنبيهات.",
   "monitorpage.att_slow": "{name} يستجيب ببطء",
   "monitorpage.att_slow_sub": "{now} · المعتاد {avg}",
+  "monitorpage.att_unstable": "{name} توقف مؤخرًا",
+  "monitorpage.att_unstable_sub": "متاح بنسبة {avail} خلال 24 ساعة",
   "monitorpage.board": "اللوحة",
   "monitorpage.cause_none": "لا استجابة",
   "monitorpage.cause_unavailable": "الخدمة غير متاحة",

@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "فقط وضعیت زنده را می‌بینید: تاریخچه‌ای نگه داشته نمی‌شود و هشداری فرستاده نمی‌شود.",
   "monitorpage.att_slow": "{name} کند پاسخ می‌دهد",
   "monitorpage.att_slow_sub": "{now} · معمولاً {avg}",
+  "monitorpage.att_unstable": "{name} به تازگی از کار افتاده بود",
+  "monitorpage.att_unstable_sub": "در ۲۴ ساعت {avail} در دسترس",
   "monitorpage.board": "برد",
   "monitorpage.cause_none": "بدون پاسخ",
   "monitorpage.cause_unavailable": "سرویس در دسترس نیست",

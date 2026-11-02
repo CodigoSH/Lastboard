@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Yalnızca canlı durumu görürsünüz: geçmiş tutulmaz ve uyarı gönderilmez.",
   "monitorpage.att_slow": "{name} yavaş yanıt veriyor",
   "monitorpage.att_slow_sub": "{now} · normalde {avg}",
+  "monitorpage.att_unstable": "{name} yakın zamanda çöktü",
+  "monitorpage.att_unstable_sub": "24 saatte {avail} erişilebilir",
   "monitorpage.board": "Pano",
   "monitorpage.cause_none": "Yanıt yok",
   "monitorpage.cause_unavailable": "Hizmet kullanılamıyor",

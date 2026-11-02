@@ -240,6 +240,14 @@ const SORT_KEYS: [SortKey, string][] = [
     ['name', 'infra.sort_name'], ['state', 'infra.sort_state'], ['cpu', 'infra.sort_cpu'], ['mem', 'infra.sort_mem'],
 ];
 
+/** The two buttons that switch an inventory between cards and a list. */
+export function viewSegHtml(view: 'cards' | 'list', t: T): string {
+    return `<span class="seg" role="group" aria-label="${e(t('infra.view'))}">
+            <button type="button" data-view="cards" aria-pressed="${view === 'cards'}" title="${e(t('infra.view_cards'))}" aria-label="${e(t('infra.view_cards'))}">${icon('grid', 15)}</button>
+            <button type="button" data-view="list" aria-pressed="${view === 'list'}" title="${e(t('infra.view_list'))}" aria-label="${e(t('infra.view_list'))}">${icon('list', 15)}</button>
+        </span>`;
+}
+
 /** The options of the sort selector, in the shape the product's own select takes. */
 export function sortOptions(t: T): { value: string; label: string }[] {
     return SORT_KEYS.map(([value, key]) => ({ value, label: t(key) }));
@@ -255,10 +263,7 @@ export function toolbarHtml(o: ToolbarSpec, t: T, fmt: (n: number) => string): s
         <span class="pspacer"></span>
         <button type="button" class="fchip" id="inv-group" aria-pressed="${o.grouped}">${e(o.groupLabel)}</button>
         <app-select id="inv-sort" aria-label="${e(t('infra.sort'))}"></app-select>
-        <span class="seg" role="group" aria-label="${e(t('infra.view'))}">
-            <button type="button" data-view="cards" aria-pressed="${o.view === 'cards'}" title="${e(t('infra.view_cards'))}" aria-label="${e(t('infra.view_cards'))}">${icon('grid', 15)}</button>
-            <button type="button" data-view="list" aria-pressed="${o.view === 'list'}" title="${e(t('infra.view_list'))}" aria-label="${e(t('infra.view_list'))}">${icon('list', 15)}</button>
-        </span>
+        ${viewSegHtml(o.view, t)}
     </div>`;
 }
 

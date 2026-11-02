@@ -1016,7 +1016,7 @@ class DockerPage extends HTMLElement {
         for (const g of this.groups) names[g.host.id] = g.host.name;
         const html = overviewHtml({
             totals: dockerTotals(scope, stats, this.linkOf),
-            attention: attentionList(scope, this.linkOf),
+            attention: attentionList(scope, this.linkOf, stats),
             projects: projectRows(scope),
             hosts: scope,
             cores,

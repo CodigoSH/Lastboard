@@ -844,6 +844,8 @@
   "monitorpage.att_off_hint": "Βλέπετε μόνο την τρέχουσα κατάσταση: δεν κρατείται ιστορικό και δεν στέλνονται ειδοποιήσεις.",
   "monitorpage.att_slow": "Το {name} ανταποκρίνεται αργά",
   "monitorpage.att_slow_sub": "{now} · συνήθως {avg}",
+  "monitorpage.att_unstable": "Η υπηρεσία {name} έπεσε πρόσφατα",
+  "monitorpage.att_unstable_sub": "Διαθέσιμη {avail} σε 24 ώρες",
   "monitorpage.board": "Πίνακας",
   "monitorpage.cause_none": "Καμία απάντηση",
   "monitorpage.cause_unavailable": "Η υπηρεσία δεν είναι διαθέσιμη",
