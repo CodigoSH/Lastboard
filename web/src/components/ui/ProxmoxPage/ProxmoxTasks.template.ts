@@ -1,6 +1,6 @@
 import { escapeHtml } from '../../../services/escape';
-import { logLineLevel, taskLevel, taskStateKey, taskTypeKey, type PxTask } from '../../../services/proxmoxTasks';
-import { icon } from '../infra/infra.template';
+import { logLineLevel, taskLevel, taskStateKey, taskTypeKey, type PxTask, type TaskGroup } from '../../../services/proxmoxTasks';
+import { faceHtml, icon } from '../infra/infra.template';
 
 /**
  * The markup of the tasks and the system log, as pure functions.
@@ -74,4 +74,40 @@ export function logLineHtml(text: string): string {
 /** All the lines of a log. */
 export function logLinesHtml(lines: string[]): string {
     return lines.map(logLineHtml).join('');
+}
+
+/** A machine as the tasks tab names it: its words and its face. */
+export interface TaskGroupItem { group: TaskGroup; name: string; face: string }
+
+/** How many of a card's figures the table also has. */
+const lastOf = (g: TaskGroup, fmt: Fmt): string => fmt.time(g.last);
+
+/**
+ * A machine in the tasks tab: one card for all its tasks, with their number where the
+ * eye lands first. Choosing it opens the machine's panel on its Tasks tab, which is
+ * where each task is listed.
+ */
+export function taskGroupCardHtml(it: TaskGroupItem, t: T, fmt: Fmt, num: (n: number) => string): string {
+    const g = it.group;
+    return `<button type="button" class="card card--btn unit unit--tasks${g.level === 'bad' ? ' is-off' : ''}" data-tg="${e(g.id)}">
+        <div class="unit__h">${faceHtml(it.face)}<span class="unit__n" title="${e(it.name)}">${e(it.name) || '—'}</span><span class="unit__tail">${g.running ? `<span class="chip chip--warn">${e(t('proxmox.task_state_running'))}</span>` : ''}<span class="dot dot--${TONE[g.level]}${g.running ? ' dot--pulse' : ''}"></span></span></div>
+        <div class="unit__st unit__st--out"><div class="ocount"><b>${e(num(g.count))}</b><span>${e(t('proxmox.tasks'))}</span></div>
+            <div class="orow"><span>${e(t('proxmoxpage.tasks_failed'))}</span><b>${e(num(g.failed))}</b></div>
+            <div class="orow"><span>${e(t('monitorpage.out_last'))}</span><b>${e(lastOf(g, fmt))}</b></div></div>
+    </button>`;
+}
+
+/** The same, as a table: machine, how many tasks, how many failed, the last one, and whether one is running. */
+export function taskGroupTableHtml(items: TaskGroupItem[], t: T, fmt: Fmt, num: (n: number) => string): string {
+    const head = `<div class="tr tr--h" aria-hidden="true"><span></span><span>${e(t('proxmoxpage.tasks_machine'))}</span><span>${e(t('proxmox.tasks'))}</span><span>${e(t('proxmoxpage.tasks_failed'))}</span><span>${e(t('monitorpage.out_last'))}</span><span>${e(t('dockerpage.state'))}</span></div>`;
+    const rows = items.map(({ group: g, name }) => `<button type="button" class="tr" data-tg="${e(g.id)}"><span class="dot dot--${TONE[g.level]}${g.running ? ' dot--pulse' : ''}"></span><span class="nm" title="${e(name)}">${e(name)}</span><span class="cell cell--n">${e(num(g.count))}</span><span class="cell cell--n">${e(num(g.failed))}</span><span class="cell">${e(lastOf(g, fmt))}</span><span class="cell">${g.running ? `<span class="chip chip--warn">${e(t('proxmox.task_state_running'))}</span>` : '—'}</span></button>`).join('');
+    return `<div class="tbl tbl--tasks">${head}${rows}</div>`;
+}
+
+/** The tab's body: a card for each machine, or the table of them, or the empty state. */
+export function taskGroupsHtml(items: TaskGroupItem[], view: 'cards' | 'list', t: T, fmt: Fmt, num: (n: number) => string): string {
+    if (!items.length) return `<div class="empty">${e(t('proxmox.tasks_empty'))}</div>`;
+    return view === 'cards'
+        ? `<div class="cards">${items.map(it => taskGroupCardHtml(it, t, fmt, num)).join('')}</div>`
+        : taskGroupTableHtml(items, t, fmt, num);
 }

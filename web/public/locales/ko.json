@@ -205,6 +205,8 @@
   "infra.all_ok": "모든 것이 정상적으로 실행 중입니다.",
   "proxmoxpage.group_node": "노드별 그룹",
   "proxmoxpage.pick_node": "표시할 노드가 없습니다.",
+  "proxmoxpage.tasks_failed": "실패",
+  "proxmoxpage.tasks_machine": "머신",
   "proxmoxpage.latest_tasks": "최근 작업",
   "proxmoxpage.details": "상세",
   "proxmoxpage.shared": "공유",

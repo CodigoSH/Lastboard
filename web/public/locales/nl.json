@@ -205,6 +205,8 @@
   "infra.all_ok": "Alles werkt zoals het hoort.",
   "proxmoxpage.group_node": "Groeperen per node",
   "proxmoxpage.pick_node": "Geen node om te tonen.",
+  "proxmoxpage.tasks_failed": "Mislukt",
+  "proxmoxpage.tasks_machine": "Machine",
   "proxmoxpage.latest_tasks": "Laatste taken",
   "proxmoxpage.details": "Details",
   "proxmoxpage.shared": "gedeeld",

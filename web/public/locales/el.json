@@ -205,6 +205,8 @@
   "infra.all_ok": "Όλα λειτουργούν όπως πρέπει.",
   "proxmoxpage.group_node": "Ομαδοποίηση ανά κόμβο",
   "proxmoxpage.pick_node": "Δεν υπάρχει κόμβος για εμφάνιση.",
+  "proxmoxpage.tasks_failed": "Αποτυχίες",
+  "proxmoxpage.tasks_machine": "Μηχάνημα",
   "proxmoxpage.latest_tasks": "Πρόσφατες εργασίες",
   "proxmoxpage.details": "Λεπτομέρειες",
   "proxmoxpage.shared": "κοινόχρηστο",

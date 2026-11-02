@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { logLineLevel, shouldPollLog, taskErrorKey, taskLevel, taskLogText, taskSeconds, taskTypeKey } from './proxmoxTasks';
+import { groupTasksByMachine, logLineLevel, shouldPollLog, taskErrorKey, taskLevel, taskLogText, taskSeconds, taskTypeKey } from './proxmoxTasks';
 
 describe('taskTypeKey', () => {
     test('the qemu and container spellings of one action share a word', () => {
@@ -71,5 +71,27 @@ describe('logLineLevel', () => {
         expect(logLineLevel('INFO: previous ERROR cleared')).toBe('');
         expect(logLineLevel('ERRORS=0')).toBe('');
         expect(logLineLevel('')).toBe('');
+    });
+});
+
+describe('groupTasksByMachine', () => {
+    const mk = (id: string, state: 'running' | 'ok' | 'warning' | 'error', start: number) => ({ upid: `u${id}${start}`, type: 'vzdump', id, user: 'root@pam', state, start });
+    test('counts the tasks and the failures of each machine, and the start of the last', () => {
+        const g = groupTasksByMachine([mk('100', 'ok', 10), mk('100', 'error', 20), mk('100', 'ok', 30), mk('101', 'ok', 40)]);
+        const a = g.find(x => x.id === '100')!;
+        expect([a.count, a.failed, a.running, a.last]).toEqual([3, 1, 0, 30]);
+        expect(g.find(x => x.id === '101')!.count).toBe(1);
+    });
+    test('the dot is how the latest task went, and amber while one runs', () => {
+        expect(groupTasksByMachine([mk('1', 'error', 10), mk('1', 'ok', 20)])[0].level).toBe('up');
+        expect(groupTasksByMachine([mk('1', 'ok', 10), mk('1', 'error', 20)])[0].level).toBe('bad');
+        expect(groupTasksByMachine([mk('1', 'ok', 10), mk('1', 'running', 5)])[0].level).toBe('warn');
+    });
+    test('a machine with something running comes first, then the one with most tasks, then the latest', () => {
+        const g = groupTasksByMachine([mk('a', 'ok', 1), mk('a', 'ok', 2), mk('b', 'ok', 9), mk('c', 'running', 3), mk('d', 'ok', 8), mk('d', 'ok', 7)]);
+        expect(g.map(x => x.id)).toEqual(['c', 'd', 'a', 'b']);
+    });
+    test('what the node did on its own is the group with no machine', () => {
+        expect(groupTasksByMachine([mk('', 'ok', 1)])[0].id).toBe('');
     });
 });

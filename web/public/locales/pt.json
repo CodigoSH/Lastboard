@@ -205,6 +205,8 @@
   "infra.all_ok": "Tudo está a funcionar como deve.",
   "proxmoxpage.group_node": "Agrupar por nó",
   "proxmoxpage.pick_node": "Não há nenhum nó para mostrar.",
+  "proxmoxpage.tasks_failed": "Falhas",
+  "proxmoxpage.tasks_machine": "Máquina",
   "proxmoxpage.latest_tasks": "Últimas tarefas",
   "proxmoxpage.details": "Detalhes",
   "proxmoxpage.shared": "partilhado",

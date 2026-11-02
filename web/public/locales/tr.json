@@ -205,6 +205,8 @@
   "infra.all_ok": "Her şey olması gerektiği gibi çalışıyor.",
   "proxmoxpage.group_node": "Düğüme göre grupla",
   "proxmoxpage.pick_node": "Gösterilecek düğüm yok.",
+  "proxmoxpage.tasks_failed": "Başarısız",
+  "proxmoxpage.tasks_machine": "Makine",
   "proxmoxpage.latest_tasks": "Son görevler",
   "proxmoxpage.details": "Ayrıntılar",
   "proxmoxpage.shared": "paylaşımlı",

@@ -95,19 +95,9 @@
 .mdl__b .tbl, .mdl__b .tasks, .dr__b .tbl, .dr__b .tasks { overflow: clip; }
 .mdl__b .tr--h, .mdl__b .chk--h, .dr__b .tr--h, .dr__b .chk--h { position: sticky; inset-block-start: 0; z-index: 2; }
 
-/* A service in the outages tab: its number of outages where the eye lands, and two facts under it. */
-.unit__st--out { min-block-size: 74px; gap: 3px; }
-.ocount { display: flex; align-items: baseline; gap: 8px; margin-block-end: 2px; }
-.ocount b { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
-.ocount span { font: 600 10.5px/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
-.orow { display: grid; grid-template-columns: minmax(54px, auto) minmax(0, 1fr); gap: 10px; font: 500 11.5px/1.4 var(--font-mono); }
-.orow span { color: var(--text-dim); }
-.orow b { font-weight: 600; text-align: end; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
 /* The outages table by service: how many, how long, the last one and whether it is down now. */
 .tbl--svc .tr { grid-template-columns: 14px minmax(90px, 1fr) 100px 170px 150px 100px; text-align: start; }
 .tbl--svc .tr > :nth-child(3), .tbl--svc .tr > :nth-child(6), .tbl--svc .tr--h > :nth-child(3), .tbl--svc .tr--h > :nth-child(6) { display: block; }
-.tbl--svc .cell--n { color: var(--text-main); font-weight: 600; font-size: 13px; }
 @media (max-width: 700px) {
     .tbl--svc .tr--h { display: none; }
     .tbl--svc .tr { grid-template-columns: 14px minmax(0, 1fr) auto; row-gap: 3px; }

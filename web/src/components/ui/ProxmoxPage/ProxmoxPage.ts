@@ -25,14 +25,14 @@ import {
     type FleetNode, type FleetStore, type LinkOf,
 } from '../../../services/proxmoxOverview';
 import {
-    chartCardHtml, chartHtml, chartIndexAt, CHART_WIDTH, icon, sortOptions, tabsHtml, toolbarHtml, type ChartSpec,
+    chartCardHtml, chartHtml, chartIndexAt, CHART_WIDTH, icon, sortOptions, tabsHtml, toolbarHtml, viewSegHtml, type ChartSpec,
 } from '../infra/infra.template';
 import {
     guestFooterHtml, guestHeadHtml, guestSummaryHtml, hostErrorHtml, inventoryHtml, noMatchHtml, nodeHeadHtml, nodeSummaryHtml,
     overviewHtml, storageTabHtml, storeHeadHtml, storeSummaryHtml, summaryHtml, type Fmt, type GuestDrawer, type GuestView, type T,
 } from './ProxmoxPage.template';
 import type { Fmt as TaskFmt } from './ProxmoxTasks.template';
-import { JournalPanel, TaskPanel } from './ProxmoxPanels';
+import { JournalPanel, TaskGroups, TaskPanel, type TaskMachine } from './ProxmoxPanels';
 import infraCss from '../infra/infra.css' with { type: 'text' };
 import css from './ProxmoxPage.css' with { type: 'text' };
 
@@ -175,8 +175,9 @@ class ProxmoxPage extends HTMLElement {
         },
     };
 
-    private readonly pageTasks = new TaskPanel(this.t, this.tfmt);
-    private readonly drawerTasks = new TaskPanel(this.t, this.tfmt, true);
+    /** The page's Tasks tab: the node's tasks gathered by machine, each a card that opens the machine's panel on its tasks. */
+    private readonly pageTasks = new TaskGroups(this.t, this.tfmt, n => this.fmt.num(n), (host, node, id) => this.taskMachine(host, node, id), (host, node, id) => this.openTasksOf(host, node, id));
+    private readonly drawerTasks = new TaskPanel(this.t, this.tfmt);
     private readonly pageJournal = new JournalPanel(this.t);
     private readonly drawerJournal = new JournalPanel(this.t);
 
@@ -302,6 +303,21 @@ class ProxmoxPage extends HTMLElement {
 
     private scope(): PxHost[] {
         return this.hostFilter === 'all' ? this.hosts : this.hosts.filter(h => h.id === this.hostFilter);
+    }
+
+    /** What a card of the tasks tab calls a machine: its name and face, or the node itself for what the node did on its own. */
+    private taskMachine(hostId: string, node: string, id: string): TaskMachine {
+        const host = this.hostOf(hostId);
+        const g = host && id ? this.guestOf(hostId, Number(id)) : undefined;
+        if (host && g) return { name: g.name || id, face: this.faceOf(host, g) };
+        return { name: id || node, face: '' };
+    }
+
+    /** A card of the tasks tab was chosen: the machine's (or the node's) panel opens on its Tasks tab. */
+    private openTasksOf(hostId: string, node: string, id: string) {
+        if (id) { if (!this.guestOf(hostId, Number(id))) return; this.choose({ kind: 'guest', hostId, ref: id }); }
+        else this.choose({ kind: 'node', hostId, ref: node });
+        this.setDrawerTab('tasks');
     }
 
     private hostOf(id: string): PxHost | undefined {
@@ -430,6 +446,7 @@ class ProxmoxPage extends HTMLElement {
             writePref(VIEW_KEY, this.viewMode);
             // The storage tab draws its own switch and list, from the same choice.
             if (this.tab === 'storage') { this.last.body = ''; this.paintBody(); return; }
+            if (this.tab === 'tasks') { this.paintBody(); return; }
             this.paintTools();
             this.paintInventory();
             return;
@@ -1042,7 +1059,7 @@ class ProxmoxPage extends HTMLElement {
         const several = this.hosts.length > 1;
         const options = fleetNodes(this.scope()).map(n => ({ value: `${n.hostId}/${n.name}`, label: several ? `${n.hostName} · ${n.name}` : n.name }));
         const html = options.length
-            ? '<div class="tools"><app-select id="node-pick"></app-select></div>'
+            ? `<div class="tools"><app-select id="node-pick"></app-select>${kind === 'tasks' ? `<span class="pspacer"></span>${viewSegHtml(this.viewMode, this.t)}` : ''}</div>`
             : `<div class="empty">${escapeHtml(this.t('proxmoxpage.pick_node'))}</div>`;
         if (html !== this.last.pick) { this.last.pick = html; wrap.innerHTML = html; }
         const sel = wrap.querySelector<SelectEl>('#node-pick');
@@ -1052,7 +1069,7 @@ class ProxmoxPage extends HTMLElement {
         if (!picked) { panel.stop(); return; }
         const target = { host: picked.host.id, node: picked.node.name };
         // Another node was picked: show() sees a different scope and asks for the new one.
-        if (kind === 'tasks') this.pageTasks.show(target); else this.pageJournal.show(target);
+        if (kind === 'tasks') { this.pageTasks.setView(this.viewMode); this.pageTasks.show(target); } else this.pageJournal.show(target);
         if (panel.el.parentElement !== slot) slot.appendChild(panel.el);
     }
 

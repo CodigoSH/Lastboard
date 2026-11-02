@@ -205,6 +205,8 @@
   "infra.all_ok": "सब कुछ ठीक से चल रहा है।",
   "proxmoxpage.group_node": "नोड के अनुसार समूह",
   "proxmoxpage.pick_node": "दिखाने के लिए कोई नोड नहीं है।",
+  "proxmoxpage.tasks_failed": "विफल",
+  "proxmoxpage.tasks_machine": "मशीन",
   "proxmoxpage.latest_tasks": "हाल के कार्य",
   "proxmoxpage.details": "विवरण",
   "proxmoxpage.shared": "साझा",

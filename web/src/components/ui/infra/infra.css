@@ -653,3 +653,13 @@ button.task:hover { background: var(--surface-hover); }
 .more:hover { color: var(--text-main); border-color: rgba(var(--accent-rgb), 0.4); }
 .more .n { padding-inline-start: 8px; border-inline-start: 1px solid var(--card-border); color: var(--text-main); }
 .dr__b > .more { margin-block-start: 0; }
+
+/* A service in the outages tab: its number of outages where the eye lands, and two facts under it. */
+.unit__st--out { min-block-size: 74px; gap: 3px; }
+.ocount { display: flex; align-items: baseline; gap: 8px; margin-block-end: 2px; }
+.ocount b { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.ocount span { font: 600 10.5px/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.orow { display: grid; grid-template-columns: minmax(54px, auto) minmax(0, 1fr); gap: 10px; font: 500 11.5px/1.4 var(--font-mono); }
+.orow span { color: var(--text-dim); }
+.orow b { font-weight: 600; text-align: end; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tbl .cell--n { color: var(--text-main); font-weight: 600; font-size: 13px; }

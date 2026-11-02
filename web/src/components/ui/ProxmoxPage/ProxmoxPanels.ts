@@ -4,12 +4,12 @@ import { whenVisible } from '../../../services/whenVisible';
 import { copyText } from '../../../services/copyText';
 import { atBottom } from '../../../services/dockerPage';
 import {
-    NO_SYSLOG_KEY, shouldPollLog, taskErrorKey, taskLogText, taskSeconds, TASKS_MS, TASK_LOG_MS,
+    groupTasksByMachine, NO_SYSLOG_KEY, shouldPollLog, taskErrorKey, taskLogText, taskSeconds, TASKS_MS, TASK_LOG_MS,
     type PxTask, type PxTaskLog, type TaskScope,
 } from '../../../services/proxmoxTasks';
 import { fetchJournal, fetchTaskLog, fetchTasks } from '../../../services/proxmoxTasksApi';
 import { icon } from '../infra/infra.template';
-import { errorHtml, logLinesHtml, tasksListHtml, typeLabel, type Fmt, type T } from './ProxmoxTasks.template';
+import { errorHtml, logLinesHtml, taskGroupsHtml, tasksListHtml, typeLabel, type Fmt, type T } from './ProxmoxTasks.template';
 
 /**
  * The two readings of a node that run on their own clock: its tasks, with the
@@ -42,8 +42,7 @@ export class TaskPanel {
     private logSeq = 0;
     private logTimer: ReturnType<typeof setInterval> | null = null;
 
-    /** `limited`: the side panel lists a few and offers the rest in a window; the page's own tab, wide enough, lists them all. */
-    constructor(private readonly t: T, private readonly fmt: Fmt, private readonly limited = false) {
+    constructor(private readonly t: T, private readonly fmt: Fmt) {
         this.el = document.createElement('div');
         this.el.className = 'panel-tasks';
         this.el.addEventListener('click', (ev) => {
@@ -162,7 +161,7 @@ export class TaskPanel {
         let html: string;
         if (this.err) html = errorHtml(errorKey(this.err), t);
         else if (!this.loaded) html = `<div class="empty">${e(t('general.loading'))}</div>`;
-        else html = tasksListHtml(this.tasks, (k) => taskSeconds(k, now), t, this.fmt, !this.limited);
+        else html = tasksListHtml(this.tasks, (k) => taskSeconds(k, now), t, this.fmt);
         if (html === this.html) return;
         this.html = html;
         el.innerHTML = html;
@@ -259,6 +258,102 @@ export class TaskPanel {
         const lines = this.log?.lines;
         if (!lines?.length) return;
         if (await copyText(taskLogText(lines))) eventBus.emit(EVENTS.NOTIFY, { message: this.t('dockerpage.copied'), type: 'success' });
+    }
+}
+
+/** What the tasks tab needs to say about a machine: its name and its face. */
+export interface TaskMachine { name: string; face: string }
+
+/**
+ * The tasks of one node gathered by machine: a card for each, with how many it has.
+ * Choosing one hands it to the page, which opens that machine's panel on its tasks.
+ */
+export class TaskGroups {
+    readonly el: HTMLElement;
+    private scope: { host: string; node: string } | null = null;
+    private tasks: PxTask[] = [];
+    private loaded = false;
+    private err = '';
+    private html = '';
+    private seq = 0;
+    private view: 'cards' | 'list' = 'cards';
+    private timer: ReturnType<typeof setInterval> | null = null;
+
+    constructor(
+        private readonly t: T,
+        private readonly fmt: Fmt,
+        private readonly num: (n: number) => string,
+        private readonly describe: (host: string, node: string, id: string) => TaskMachine,
+        private readonly choose: (host: string, node: string, id: string) => void,
+    ) {
+        this.el = document.createElement('div');
+        this.el.className = 'panel-taskgroups';
+        this.el.addEventListener('click', (ev) => {
+            const g = (ev.target as HTMLElement).closest<HTMLElement>('[data-tg]');
+            if (g && this.scope) this.choose(this.scope.host, this.scope.node, g.dataset.tg || '');
+        });
+    }
+
+    show(scope: { host: string; node: string } | null) {
+        if (scope && this.scope && scope.host === this.scope.host && scope.node === this.scope.node) return;
+        this.stop();
+        if (!scope) return;
+        this.scope = scope;
+        this.timer = setInterval(whenVisible(() => { void this.load(); }), TASKS_MS);
+        void this.load();
+    }
+
+    stop() {
+        this.seq++;
+        if (this.timer) { clearInterval(this.timer); this.timer = null; }
+        this.scope = null;
+        this.tasks = [];
+        this.loaded = false;
+        this.err = '';
+        this.html = '';
+        this.el.innerHTML = '';
+    }
+
+    setView(view: 'cards' | 'list') {
+        if (view === this.view) return;
+        this.view = view;
+        this.paint();
+    }
+
+    /** The words are written again when the language changes. */
+    relabel() { this.html = ''; this.paint(); }
+
+    private async load() {
+        const scope = this.scope;
+        if (!scope) return;
+        const seq = ++this.seq;
+        try {
+            const tasks = await fetchTasks(scope);
+            if (seq !== this.seq) return;
+            this.tasks = tasks;
+            this.err = '';
+        } catch (err) {
+            if (seq !== this.seq) return;
+            this.err = taskErrorKey(err);
+        }
+        this.loaded = true;
+        this.paint();
+    }
+
+    private paint() {
+        const scope = this.scope;
+        if (!scope) return;
+        const t = this.t;
+        let html: string;
+        if (this.err) html = errorHtml(errorKey(this.err), t);
+        else if (!this.loaded) html = `<div class="empty">${e(t('general.loading'))}</div>`;
+        else {
+            const items = groupTasksByMachine(this.tasks).map(group => ({ group, ...this.describe(scope.host, scope.node, group.id) }));
+            html = taskGroupsHtml(items, this.view, t, this.fmt, this.num);
+        }
+        if (html === this.html) return;
+        this.html = html;
+        this.el.innerHTML = html;
     }
 }
 

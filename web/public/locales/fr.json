@@ -205,6 +205,8 @@
   "infra.all_ok": "Tout fonctionne comme prévu.",
   "proxmoxpage.group_node": "Grouper par nœud",
   "proxmoxpage.pick_node": "Aucun nœud à afficher.",
+  "proxmoxpage.tasks_failed": "Échecs",
+  "proxmoxpage.tasks_machine": "Machine",
   "proxmoxpage.latest_tasks": "Dernières tâches",
   "proxmoxpage.details": "Détails",
   "proxmoxpage.shared": "partagé",

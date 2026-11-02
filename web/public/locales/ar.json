@@ -205,6 +205,8 @@
   "infra.all_ok": "كل شيء يعمل كما ينبغي.",
   "proxmoxpage.group_node": "تجميع حسب العقدة",
   "proxmoxpage.pick_node": "لا توجد عقدة للعرض.",
+  "proxmoxpage.tasks_failed": "الإخفاقات",
+  "proxmoxpage.tasks_machine": "الجهاز",
   "proxmoxpage.latest_tasks": "آخر المهام",
   "proxmoxpage.details": "التفاصيل",
   "proxmoxpage.shared": "مشترك",

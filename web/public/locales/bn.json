@@ -205,6 +205,8 @@
   "infra.all_ok": "সবকিছু ঠিকমতো চলছে।",
   "proxmoxpage.group_node": "নোড অনুযায়ী গ্রুপ",
   "proxmoxpage.pick_node": "দেখানোর মতো কোনো নোড নেই।",
+  "proxmoxpage.tasks_failed": "ব্যর্থ",
+  "proxmoxpage.tasks_machine": "মেশিন",
   "proxmoxpage.latest_tasks": "সাম্প্রতিক টাস্ক",
   "proxmoxpage.details": "বিবরণ",
   "proxmoxpage.shared": "শেয়ার্ড",

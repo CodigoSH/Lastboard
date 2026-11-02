@@ -205,6 +205,8 @@
   "infra.all_ok": "سب کچھ ٹھیک چل رہا ہے۔",
   "proxmoxpage.group_node": "نوڈ کے لحاظ سے گروپ کریں",
   "proxmoxpage.pick_node": "دکھانے کے لیے کوئی نوڈ نہیں۔",
+  "proxmoxpage.tasks_failed": "ناکامیاں",
+  "proxmoxpage.tasks_machine": "مشین",
   "proxmoxpage.latest_tasks": "تازہ ترین ٹاسکس",
   "proxmoxpage.details": "تفصیل",
   "proxmoxpage.shared": "مشترکہ",

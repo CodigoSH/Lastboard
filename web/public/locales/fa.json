@@ -205,6 +205,8 @@
   "infra.all_ok": "همه‌چیز طبق انتظار کار می‌کند.",
   "proxmoxpage.group_node": "گروه‌بندی بر اساس نود",
   "proxmoxpage.pick_node": "نودی برای نمایش وجود ندارد.",
+  "proxmoxpage.tasks_failed": "ناموفق",
+  "proxmoxpage.tasks_machine": "ماشین",
   "proxmoxpage.latest_tasks": "آخرین وظایف",
   "proxmoxpage.details": "جزئیات",
   "proxmoxpage.shared": "مشترک",

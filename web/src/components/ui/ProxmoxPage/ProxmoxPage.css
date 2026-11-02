@@ -3,3 +3,18 @@
 
 @keyframes pulse { 50% { box-shadow: 0 0 0 5px transparent; } }
 .dot--pulse { animation: pulse 1.6s ease-in-out infinite; }
+
+/* The tasks tab by machine: how many tasks, how many failed, the last one and whether one runs. */
+.tbl--tasks .tr { grid-template-columns: 14px minmax(90px, 1fr) 90px 90px 170px 100px; text-align: start; }
+.tbl--tasks .tr > :nth-child(3), .tbl--tasks .tr > :nth-child(4), .tbl--tasks .tr > :nth-child(6),
+.tbl--tasks .tr--h > :nth-child(3), .tbl--tasks .tr--h > :nth-child(4), .tbl--tasks .tr--h > :nth-child(6) { display: block; }
+@media (max-width: 700px) {
+    .tbl--tasks .tr--h { display: none; }
+    .tbl--tasks .tr { grid-template-columns: 14px minmax(0, 1fr) auto; row-gap: 3px; }
+    .tbl--tasks .tr > .dot { grid-row: 1 / span 2; align-self: start; margin-block-start: 5px; }
+    .tbl--tasks .tr > :nth-child(2) { grid-area: 1 / 2; }
+    .tbl--tasks .tr > :nth-child(3) { grid-area: 1 / 3; justify-self: end; }
+    .tbl--tasks .tr > :nth-child(4), .tbl--tasks .tr > :nth-child(6) { display: none; }
+    .tbl--tasks .tr > :nth-child(5) { grid-area: 2 / 2; }
+}
+

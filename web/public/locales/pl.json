@@ -205,6 +205,8 @@
   "infra.all_ok": "Wszystko działa tak, jak powinno.",
   "proxmoxpage.group_node": "Grupuj według węzła",
   "proxmoxpage.pick_node": "Brak węzła do wyświetlenia.",
+  "proxmoxpage.tasks_failed": "Niepowodzenia",
+  "proxmoxpage.tasks_machine": "Maszyna",
   "proxmoxpage.latest_tasks": "Ostatnie zadania",
   "proxmoxpage.details": "Szczegóły",
   "proxmoxpage.shared": "współdzielony",

@@ -124,3 +124,35 @@ export function logLineLevel(text: string): 'err' | 'warn' | '' {
 
 /** The refusal that is not a failure: the token simply was not given the system log. */
 export const NO_SYSLOG_KEY = 'proxmox.no_syslog_permission';
+
+/** The tasks of one machine on a node (or the node's own, `id` empty), counted for the card that stands for them. */
+export interface TaskGroup {
+    /** The machine's number as Proxmox writes it in the task; '' for what the node did on its own. */
+    id: string;
+    count: number;
+    running: number;
+    failed: number;
+    /** Unix seconds of the latest task's start. */
+    last: number;
+    /** The dot: how the latest task went, or amber while one runs. */
+    level: 'up' | 'warn' | 'bad';
+}
+
+/**
+ * The tasks gathered by machine: how many each has, how many failed and when the
+ * last began. Those with something running come first, then the machine with most
+ * tasks, then the most recent.
+ */
+export function groupTasksByMachine(tasks: PxTask[]): TaskGroup[] {
+    const by = new Map<string, { g: TaskGroup; latest: PxTask }>();
+    for (const k of tasks) {
+        let e = by.get(k.id);
+        if (!e) { e = { g: { id: k.id, count: 0, running: 0, failed: 0, last: 0, level: 'up' }, latest: k }; by.set(k.id, e); }
+        e.g.count++;
+        if (k.state === 'running') e.g.running++;
+        if (k.state === 'error') e.g.failed++;
+        if (k.start >= e.g.last) { e.g.last = k.start; e.latest = k; }
+    }
+    const out = [...by.values()].map(({ g, latest }) => ({ ...g, level: g.running ? 'warn' as const : taskLevel(latest.state) }));
+    return out.sort((a, b) => (b.running > 0 ? 1 : 0) - (a.running > 0 ? 1 : 0) || b.count - a.count || b.last - a.last);
+}

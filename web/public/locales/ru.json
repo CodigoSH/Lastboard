@@ -205,6 +205,8 @@
   "infra.all_ok": "Всё работает как положено.",
   "proxmoxpage.group_node": "Группировать по узлам",
   "proxmoxpage.pick_node": "Нет узла для показа.",
+  "proxmoxpage.tasks_failed": "Сбои",
+  "proxmoxpage.tasks_machine": "Машина",
   "proxmoxpage.latest_tasks": "Последние задачи",
   "proxmoxpage.details": "Сведения",
   "proxmoxpage.shared": "общий",

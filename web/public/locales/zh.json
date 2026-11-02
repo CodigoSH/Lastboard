@@ -205,6 +205,8 @@
   "infra.all_ok": "一切运行正常。",
   "proxmoxpage.group_node": "按节点分组",
   "proxmoxpage.pick_node": "没有可显示的节点。",
+  "proxmoxpage.tasks_failed": "失败",
+  "proxmoxpage.tasks_machine": "机器",
   "proxmoxpage.latest_tasks": "最近的任务",
   "proxmoxpage.details": "详情",
   "proxmoxpage.shared": "共享",

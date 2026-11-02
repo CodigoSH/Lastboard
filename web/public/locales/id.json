@@ -205,6 +205,8 @@
   "infra.all_ok": "Semuanya berjalan sebagaimana mestinya.",
   "proxmoxpage.group_node": "Kelompokkan per node",
   "proxmoxpage.pick_node": "Tidak ada node untuk ditampilkan.",
+  "proxmoxpage.tasks_failed": "Gagal",
+  "proxmoxpage.tasks_machine": "Mesin",
   "proxmoxpage.latest_tasks": "Tugas terbaru",
   "proxmoxpage.details": "Detail",
   "proxmoxpage.shared": "bersama",

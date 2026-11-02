@@ -205,6 +205,8 @@
   "infra.all_ok": "すべて正常に動作しています。",
   "proxmoxpage.group_node": "ノードでグループ化",
   "proxmoxpage.pick_node": "表示するノードがありません。",
+  "proxmoxpage.tasks_failed": "失敗",
+  "proxmoxpage.tasks_machine": "マシン",
   "proxmoxpage.latest_tasks": "最近のタスク",
   "proxmoxpage.details": "詳細",
   "proxmoxpage.shared": "共有",

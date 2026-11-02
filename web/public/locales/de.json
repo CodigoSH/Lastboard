@@ -205,6 +205,8 @@
   "infra.all_ok": "Alles läuft wie vorgesehen.",
   "proxmoxpage.group_node": "Nach Node gruppieren",
   "proxmoxpage.pick_node": "Kein Node zum Anzeigen.",
+  "proxmoxpage.tasks_failed": "Fehlgeschlagen",
+  "proxmoxpage.tasks_machine": "Maschine",
   "proxmoxpage.latest_tasks": "Letzte Aufgaben",
   "proxmoxpage.details": "Details",
   "proxmoxpage.shared": "geteilt",
