@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    cardHtml, dotTone, drawerHeadHtml, envTabHtml, footerHtml, healthChip, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
+    cardHtml, storageKpiHtml, dotTone, drawerHeadHtml, envTabHtml, footerHtml, healthChip, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
     mountsTabHtml, overviewHtml, portText, reasonText, rowHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
 } from './DockerPage.template';
 import { attentionList, dockerTotals, projectRows } from '../../../services/dockerOverview';
@@ -79,7 +79,7 @@ describe('what a container controls is escaped', () => {
     test('the overview: attention list, projects and hosts', () => {
         const rows: HostRows[] = [{ host: { ...host, name: evil }, loaded: true, containers: [ctr({ Name: '/' + evil, Health: 'unhealthy', Project: evil })] }, { host: { ...host, id: 'h2' }, loaded: true, containers: [] }];
         const html = overviewHtml({
-            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil }, top: [], linkOf: () => '', hostUse: {}, capacity: null,
+            totals: dockerTotals(rows), attention: attentionList(rows), projects: projectRows(rows), hosts: rows, cores: [], mem: [], chart: '', hostNames: { h1: evil }, disk: { totals: { total: 0, reclaimable: 0, images: 0, containers: 0, volumes: 0, cache: 0, hosts: 0 }, state: 'measuring' as const }, linkOf: () => '', hostUse: {}, capacity: null,
         }, t, fmt);
         noMarkup(html, evil);
     });
@@ -193,7 +193,7 @@ describe('the face and the bookmark of a container', () => {
         const rows: HostRows[] = [{ host, loaded: true, containers: [stopped] }];
         const html = overviewHtml({
             totals: dockerTotals(rows, {}, () => 'Plex'), attention: attentionList(rows, () => 'Plex'), projects: [], hosts: rows,
-            cores: [], mem: [], chart: '', hostNames: {}, top: [], linkOf: () => 'Plex', hostUse: {}, capacity: null,
+            cores: [], mem: [], chart: '', hostNames: {}, disk: { totals: { total: 0, reclaimable: 0, images: 0, containers: 0, volumes: 0, cache: 0, hosts: 0 }, state: 'measuring' as const }, linkOf: () => 'Plex', hostUse: {}, capacity: null,
         }, t, fmt);
         expect(html).toContain('attn__row');
         expect(html).toContain('proxmox.stopped_breaks');
@@ -215,6 +215,34 @@ describe('the face and the bookmark of a container', () => {
         expect(html).toContain('role="alert"');
         expect(html).toContain('Plex');
         expect(summaryTabHtml(detail({ state: 'exited', status: 'stopped' }), stopped, undefined, '', t, fmt)).not.toContain('role="alert"');
+    });
+});
+
+describe('the storage card', () => {
+    const totals = { total: 1000, reclaimable: 250, images: 600, containers: 50, volumes: 300, cache: 50, hosts: 1 };
+
+    test('says what Docker holds, how much of it nothing uses, and of what', () => {
+        const html = storageKpiHtml({ totals, state: 'ready' }, t, fmt);
+        expect(html).toContain('B(1000)');
+        expect(html).toContain('dockerpage.reclaimable');
+        expect(html).toContain('B(250)');
+        expect(html).toContain('P(25)');
+        for (const key of ['storage_images', 'storage_volumes', 'storage_cache']) expect(html).toContain(key);
+        expect(html).toContain('B(600)');
+    });
+    test('while it is still being measured it does not pretend to know', () => {
+        const html = storageKpiHtml({ totals: { ...totals, total: 0, hosts: 0 }, state: 'measuring' }, t, fmt);
+        expect(html).toContain('storage_measuring');
+        expect(html).not.toContain('B(');
+    });
+    test('an agent that cannot say asks to be updated', () => {
+        const html = storageKpiHtml({ totals: { ...totals, total: 0, hosts: 0 }, state: 'unavailable' }, t, fmt);
+        expect(html).toContain('storage_old');
+    });
+    test('an empty Docker is zero, with no bar to read a share of nothing from', () => {
+        const html = storageKpiHtml({ totals: { ...totals, total: 0, reclaimable: 0 }, state: 'ready' }, t, fmt);
+        expect(html).toContain('B(0)');
+        expect(html).not.toContain('class="bar');
     });
 });
 
@@ -253,7 +281,7 @@ describe('what a state looks like', () => {
 
 describe('the indicators against the real host', () => {
     const rows: HostRows[] = [{ host, loaded: true, containers: [ctr()] }];
-    const o = { totals: dockerTotals(rows, { abc: { CPUPercent: 200, MemPercent: 0, MemUsed: 4e9, MemLimit: 8e9 } }), attention: [], projects: [], hosts: rows, cores: [2], mem: [], chart: '', hostNames: {}, top: [], linkOf: () => '', hostUse: {} };
+    const o = { totals: dockerTotals(rows, { abc: { CPUPercent: 200, MemPercent: 0, MemUsed: 4e9, MemLimit: 8e9 } }), attention: [], projects: [], hosts: rows, cores: [2], mem: [], chart: '', hostNames: {}, disk: { totals: { total: 0, reclaimable: 0, images: 0, containers: 0, volumes: 0, cache: 0, hosts: 0 }, state: 'measuring' as const }, linkOf: () => '', hostUse: {} };
     test('with the size of the host the CPU is a share of its cores, and says how many it has', () => {
         const html = overviewHtml({ ...o, capacity: { cores: 8, mem: 16e9 } }, t, fmt);
         expect(html).toContain('N(25)');

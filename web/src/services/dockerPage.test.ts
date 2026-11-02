@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
     atBottom, dockerErrorKey, findSelected, level, logDate, logsToText, matches, mergeLogLines, overflow, pageErrorKey,
-    DockerPageError, sortContainers, stateKey, stateLevel, tally, visibleGroups, MAX_LOG_LINES, type HostRows, type LogLine,
+    DockerPageError, readDiskUsage, sortContainers, stateKey, stateLevel, tally, visibleGroups, MAX_LOG_LINES, type HostRows, type LogLine,
 } from './dockerPage';
 import type { DockerContainer, DockerHost } from './dockerShared';
 
@@ -178,5 +178,27 @@ describe('findSelected', () => {
         expect(findSelected(all, null)).toBeNull();
         expect(findSelected(all, { hostId: 'b', name: 'web' })).toBeNull();
         expect(findSelected(all, { hostId: 'a', name: 'db' })).toBeNull();
+    });
+});
+
+describe('readDiskUsage', () => {
+    test('an agent that could not say gives no figures', () => {
+        const d = readDiskUsage({ available: false, total: 999 });
+        expect(d.available).toBe(false);
+        expect(d.total).toBe(0);
+        expect(readDiskUsage(null).available).toBe(false);
+        expect(readDiskUsage({}).available).toBe(false);
+    });
+    test('keeps what is a plain figure and zeroes what is not', () => {
+        const d = readDiskUsage({
+            available: true, total: 100, reclaimable: -5,
+            images: { count: 2, size: 60, reclaimable: 30 },
+            volumes: { count: 1, size: Number.NaN as number, reclaimable: 'x' as unknown as number },
+        });
+        expect(d.available).toBe(true);
+        expect([d.total, d.reclaimable]).toEqual([100, 0]);
+        expect(d.images).toEqual({ count: 2, size: 60, reclaimable: 30 });
+        expect(d.volumes).toEqual({ count: 1, size: 0, reclaimable: 0 });
+        expect(d.cache).toEqual({ count: 0, size: 0, reclaimable: 0 });
     });
 });

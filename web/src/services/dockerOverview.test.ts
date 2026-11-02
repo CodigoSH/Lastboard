@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { topConsumers, attentionList, attentionReason, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory } from './dockerOverview';
+import { diskTotals, attentionList, attentionReason, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory } from './dockerOverview';
 import type { DockerContainer, DockerHost } from './dockerShared';
 import type { HostRows } from './dockerPage';
 
@@ -129,26 +129,23 @@ describe('a container a bookmark depends on', () => {
     });
 });
 
-describe('topConsumers', () => {
-    const run = [c('a'), c('b'), c('c'), c('d'), c('e', { State: 'exited', Status: 'exited' })];
-    const st = (cpu: number, mem = 0) => ({ CPUPercent: cpu, MemPercent: 0, MemUsed: mem, MemLimit: 0 });
-    const stats = { [run[0].ID]: st(5), [run[1].ID]: st(50), [run[2].ID]: st(20), [run[4].ID]: st(99) };
+describe('diskTotals', () => {
+    const use = (size: number, reclaimable = 0) => ({ count: 1, size, reclaimable });
+    const host = (total: number, reclaimable: number) => ({
+        available: true, images: use(total / 2, reclaimable), containers: use(10), volumes: use(total / 4), cache: use(5), total, reclaimable,
+    });
+    const none = { available: false, images: use(0), containers: use(0), volumes: use(0), cache: use(0), total: 0, reclaimable: 0 };
 
-    test('the heaviest first, as many as asked', () => {
-        expect(topConsumers(rows(run), stats, 2).map(t => t.name)).toEqual(['b', 'c']);
+    test('adds up the hosts that reported', () => {
+        const t = diskTotals([host(1000, 200), host(500, 50)]);
+        expect([t.total, t.reclaimable, t.hosts]).toEqual([1500, 250, 2]);
+        expect([t.images, t.containers, t.volumes, t.cache]).toEqual([750, 20, 375, 10]);
     });
-    test('what did not report, and what is stopped, is not on the list', () => {
-        const names = topConsumers(rows(run), stats).map(t => t.name);
-        expect(names).toEqual(['b', 'c', 'a']);
-        expect(names).not.toContain('d');
-        expect(names).not.toContain('e');
-    });
-    test('equal use falls to the name, so the order is stable', () => {
-        const same = { [run[0].ID]: st(10), [run[1].ID]: st(10) };
-        expect(topConsumers(rows(run), same).map(t => t.name)).toEqual(['a', 'b']);
-    });
-    test('nothing reporting is an empty list', () => {
-        expect(topConsumers(rows(run), {})).toEqual([]);
+    test('a host that could not say is left out, not counted as empty', () => {
+        const t = diskTotals([host(1000, 200), none]);
+        expect([t.total, t.hosts]).toEqual([1000, 1]);
+        expect(diskTotals([none]).hosts).toBe(0);
+        expect(diskTotals([]).total).toBe(0);
     });
 });
 

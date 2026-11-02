@@ -1,5 +1,5 @@
 import { containerName, type DockerContainer, type DockerHost } from './dockerShared';
-import { stateLevel, type ContainerStats, type HostRows } from './dockerPage';
+import { stateLevel, type ContainerStats, type DiskUsage, type HostRows } from './dockerPage';
 import type { InfraUnit } from './infraUnits';
 
 /**
@@ -58,25 +58,32 @@ export function attentionList(all: HostRows[], linkOf: LinkOf = NO_LINK): Attent
     return out.sort((a, b) => order[a.reason] - order[b.reason] || a.name.localeCompare(b.name));
 }
 
-/** One running container, as the "highest use" card lists it. */
-export interface TopConsumer { hostId: string; name: string; cpu: number; mem: number }
+/** What Docker holds across the hosts that could say, and how many of them did. */
+export interface DiskTotals {
+    total: number;
+    reclaimable: number;
+    images: number;
+    containers: number;
+    volumes: number;
+    cache: number;
+    /** How many hosts the figures add up. */
+    hosts: number;
+}
 
-/**
- * The running containers that use the most CPU, the heaviest first, as many as
- * `limit`. Only those that reported stats count: a container with no reading is
- * not "using nothing", it is unknown. Ties fall to the name so the order does
- * not shuffle on every refresh.
- */
-export function topConsumers(all: HostRows[], stats: Record<string, ContainerStats> = {}, limit = 3): TopConsumer[] {
-    const out: TopConsumer[] = [];
-    for (const h of all) {
-        for (const c of h.containers) {
-            const s = stats[c.ID];
-            if (!s || stateLevel(c.State || c.Status) !== 'up') continue;
-            out.push({ hostId: h.host.id, name: containerName(c), cpu: s.CPUPercent || 0, mem: s.MemUsed || 0 });
-        }
+/** The sum over the hosts that reported; a host that could not is not "zero", it is left out. */
+export function diskTotals(list: DiskUsage[]): DiskTotals {
+    const t: DiskTotals = { total: 0, reclaimable: 0, images: 0, containers: 0, volumes: 0, cache: 0, hosts: 0 };
+    for (const d of list) {
+        if (!d.available) continue;
+        t.hosts++;
+        t.total += d.total;
+        t.reclaimable += d.reclaimable;
+        t.images += d.images.size;
+        t.containers += d.containers.size;
+        t.volumes += d.volumes.size;
+        t.cache += d.cache.size;
     }
-    return out.sort((a, b) => b.cpu - a.cpu || b.mem - a.mem || a.name.localeCompare(b.name)).slice(0, limit);
+    return t;
 }
 
 /** The inventory units, one per container, over every host that answered. */

@@ -1,7 +1,7 @@
 import { escapeHtml } from '../../../services/escape';
 import { containerName, type DockerContainer, type DockerHost } from '../../../services/dockerShared';
 import { stateLevel, stateKey, type ContainerStats, type DockerDetail, type HostRows, type LogLine } from '../../../services/dockerPage';
-import { attentionReason, type TopConsumer, type AttentionItem, type AttentionReason, type DockerTotals, type LinkOf, type ProjectRow } from '../../../services/dockerOverview';
+import { attentionReason, type DiskTotals, type AttentionItem, type AttentionReason, type DockerTotals, type LinkOf, type ProjectRow } from '../../../services/dockerOverview';
 import type { UnitGroup } from '../../../services/infraUnits';
 import { niceMax } from '../../../services/dockerOverview';
 import { barHtml, bookmarkChipHtml, boxHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
@@ -101,8 +101,8 @@ export interface OverviewData {
     /** The chart, already drawn, or '' while there is not enough history. */
     chart: string;
     hostNames: Record<string, string>;
-    /** The containers that use the most CPU, the heaviest first. */
-    top: TopConsumer[];
+    /** What Docker holds on disk across the hosts in view. `state` says whether that is still being measured or no host could say. */
+    disk: { totals: DiskTotals; state: 'ready' | 'measuring' | 'unavailable' };
     /** The bookmark a container serves, by host and name. */
     linkOf: LinkOf;
     /** What each host's running containers use, as a share of the host; null where the host did not say how big it is. */
@@ -126,18 +126,28 @@ export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNam
     }).join('')}</div>`;
 }
 
-/** The card of the containers that use the most: name, CPU and memory, the heaviest first. */
-export function topUseHtml(top: TopConsumer[], showHost: boolean, hostNames: Record<string, string>, t: T, fmt: Fmt): string {
-    const rows = top.length
-        ? `<div class="top3">${top.map(c => {
-            const host = showHost ? ` <small>· ${e(hostNames[c.hostId] ?? '')}</small>` : '';
-            return `<div class="top3__r"><span class="top3__n">${e(c.name)}${host}</span><span>${e(fmt.pct(c.cpu))}</span><span>${e(fmt.bytes(c.mem))}</span></div>`;
-        }).join('')}</div>`
-        : `<div class="chart__empty">${e(t('dockerpage.collecting'))}</div>`;
-    return `<div class="card kpi">
-        <div class="kpi__top"><span class="lbl">${e(t('dockerpage.top_use'))}</span>${icon('cpu', 16)}</div>
-        ${rows}
-    </div>`;
+/**
+ * The card of what Docker holds on disk. Docker cannot say how big the host's
+ * disk is, only what it keeps on it, so the bar is the share nothing uses any
+ * more: what a prune would give back.
+ */
+export function storageKpiHtml(disk: OverviewData['disk'], t: T, fmt: Fmt): string {
+    const label = t('proxmox.storage');
+    if (disk.state !== 'ready') {
+        return kpiHtml({
+            label, icon: 'disk', value: '—',
+            sub: [t(disk.state === 'measuring' ? 'dockerpage.storage_measuring' : 'dockerpage.storage_old'), ''],
+        });
+    }
+    const d = disk.totals;
+    const share = d.total > 0 ? (d.reclaimable / d.total) * 100 : 0;
+    const chip = (key: string, n: number) => ({ text: `${t(key)}: ${fmt.bytes(n)}` });
+    return kpiHtml({
+        label, icon: 'disk', value: fmt.bytes(d.total),
+        bar: d.total > 0 ? share : undefined,
+        sub: [`${t('dockerpage.reclaimable')}: ${fmt.bytes(d.reclaimable)}`, d.total > 0 ? fmt.pct(share) : ''],
+        chips: [chip('dockerpage.storage_images', d.images), chip('dockerpage.storage_volumes', d.volumes), chip('dockerpage.storage_cache', d.cache), chip('docker.containers', d.containers)],
+    });
 }
 
 export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
@@ -174,7 +184,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
             bar: memBase > 0 ? memShare : undefined, spark: o.mem, sparkTone: meterLevel(memShare),
             sub: memBase > 0 ? [t('dockerpage.of_limit', { limit: fmt.bytes(memBase) }), fmt.pct(memShare)] : undefined,
         }),
-        topUseHtml(o.top, o.hosts.length > 1, o.hostNames, t, fmt),
+        storageKpiHtml(o.disk, t, fmt),
     ].join('');
 
     const chart = chartCardHtml(t('dockerpage.session_history'),

@@ -153,6 +153,46 @@ export async function fetchHostSize(host: DockerHost): Promise<HostSize> {
     return { cores: Number.isFinite(cores) && cores > 0 ? cores : 0, mem_total: Number.isFinite(mem) && mem > 0 ? mem : 0 };
 }
 
+/** One kind of thing Docker keeps on disk. */
+export interface DiskUse { count: number; size: number; reclaimable: number }
+
+/**
+ * What Docker holds on a host, and how much of it nothing uses. `available` is
+ * false for an agent from before the call existed: no figures, and no error.
+ */
+export interface DiskUsage {
+    available: boolean;
+    images: DiskUse;
+    containers: DiskUse;
+    volumes: DiskUse;
+    cache: DiskUse;
+    total: number;
+    reclaimable: number;
+}
+
+const noUse = (): DiskUse => ({ count: 0, size: 0, reclaimable: 0 });
+const figure = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
+const useOf = (v: Partial<DiskUse> | undefined): DiskUse => ({ count: figure(v?.count), size: figure(v?.size), reclaimable: figure(v?.reclaimable) });
+
+/** What the server answered, cleaned: a figure that is not a plain non-negative number is zero. */
+export function readDiskUsage(raw: Partial<DiskUsage> | null | undefined): DiskUsage {
+    if (!raw || raw.available !== true) return { available: false, images: noUse(), containers: noUse(), volumes: noUse(), cache: noUse(), total: 0, reclaimable: 0 };
+    return {
+        available: true,
+        images: useOf(raw.images), containers: useOf(raw.containers), volumes: useOf(raw.volumes), cache: useOf(raw.cache),
+        total: figure(raw.total), reclaimable: figure(raw.reclaimable),
+    };
+}
+
+/** Asked for rarely: on a host with a lot of data the daemon takes seconds to measure it. */
+export async function fetchDiskUsage(host: DockerHost): Promise<DiskUsage> {
+    if (isDemoMode()) {
+        const G = 1024 ** 3;
+        return readDiskUsage({ available: true, images: { count: 14, size: 6.2 * G, reclaimable: 2.1 * G }, containers: { count: 6, size: 0.3 * G, reclaimable: 0.05 * G }, volumes: { count: 9, size: 3.4 * G, reclaimable: 0.6 * G }, cache: { count: 22, size: 1.1 * G, reclaimable: 1.1 * G }, total: 11 * G, reclaimable: 3.85 * G });
+    }
+    return readDiskUsage(await post<Partial<DiskUsage>>('/api/docker/disk-usage', { ...hostRef(host) }));
+}
+
 export type ContainerAction = 'start' | 'stop' | 'restart';
 
 export async function runAction(host: DockerHost, id: string, action: ContainerAction): Promise<void> {

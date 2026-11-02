@@ -13,12 +13,12 @@ import { resolveIconUrl } from '../../../services/iconUrl';
 import { materializeIcon } from '../../../services/iconStore';
 import { fetchContainers, hostErrorKey, containerName } from '../../../services/dockerShared';
 import {
-    fetchDetail, fetchHostSize, fetchLogs, fetchStats, runAction, pageErrorKey, findSelected,
+    fetchDetail, fetchDiskUsage, fetchHostSize, fetchLogs, fetchStats, runAction, pageErrorKey, findSelected,
     mergeLogLines, overflow, atBottom, logsToText, logDate, stateLevel, MAX_LOG_LINES,
-    type DockerDetail, type HostRows, type HostSize, type LogLine, type ContainerStats, type ContainerAction,
+    type DiskUsage, type DockerDetail, type HostRows, type HostSize, type LogLine, type ContainerStats, type ContainerAction,
 } from '../../../services/dockerPage';
 import {
-    attentionList, byteUnit, topConsumers, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint, type LinkOf,
+    attentionList, byteUnit, diskTotals, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint, type LinkOf,
 } from '../../../services/dockerOverview';
 import {
     countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
@@ -37,6 +37,8 @@ import css from './DockerPage.css' with { type: 'text' };
 /** How many hosts get a button each beside "All" before the header switches to a selector. */
 const MAX_HOST_BUTTONS = 2;
 const LIST_MS = 10000;
+/** How long what Docker holds on disk is trusted. */
+const DISK_MS = 300000;
 const LOG_MS = 3000;
 const FIRST_TAIL = 100;
 const MORE_TAIL = 1000;
@@ -59,6 +61,13 @@ function readFlag(key: string, fallback: boolean): boolean {
 function writeFlag(key: string, on: boolean): void {
     writePref(key, on ? '1' : '0');
 }
+
+/** What a host that could not say what it holds on disk is read as. */
+const blankDisk = (): DiskUsage => ({
+    available: false, total: 0, reclaimable: 0,
+    images: { count: 0, size: 0, reclaimable: 0 }, containers: { count: 0, size: 0, reclaimable: 0 },
+    volumes: { count: 0, size: 0, reclaimable: 0 }, cache: { count: 0, size: 0, reclaimable: 0 },
+});
 
 /** The product's select, as the page drives it. */
 type SelectEl = HTMLElement & { options: { value: string; label: string }[]; value: string };
@@ -88,6 +97,9 @@ class DockerPage extends HTMLElement {
     private stats = new Map<string, ContainerStats>();
     /** How big each host is, once it has said. Not kept for one that could not: it is asked again on the next opening. */
     private sizes = new Map<string, HostSize>();
+    /** What each host holds on disk, and when it was asked: the daemon takes a while to measure it, so it is not asked at every refresh. */
+    private disks = new Map<string, { at: number; usage: DiskUsage }>();
+    private diskAsking = false;
     /** The faces the account chose for containers, keyed host id + "/" + name. */
     private icons: Record<string, string> = {};
     private loaded = false;
@@ -597,8 +609,18 @@ class DockerPage extends HTMLElement {
         }
         this.paintAll();
         void this.loadSizes();
+        void this.loadDisks(fresh);
         await this.loadStats();
         if (this.current()) void this.loadDetail();
+    }
+
+    /** What the storage card says: the sum, or why there is none. */
+    private diskState(scope: HostRows[]): { totals: ReturnType<typeof diskTotals>; state: 'ready' | 'measuring' | 'unavailable' } {
+        const live = scope.filter(g => !g.error);
+        const known = live.map(g => this.disks.get(g.host.id)?.usage).filter((u): u is DiskUsage => !!u);
+        const totals = diskTotals(known);
+        if (totals.hosts > 0) return { totals, state: 'ready' };
+        return { totals, state: known.length < live.length ? 'measuring' : 'unavailable' };
     }
 
     /** Asks each host how big it is, once. Failing is not an error: the page then reads its figures without that scale. */
@@ -609,6 +631,28 @@ class DockerPage extends HTMLElement {
                 if (size.cores > 0 && size.mem_total > 0) this.sizes.set(g.host.id, size);
             } catch { /* an agent that cannot say, or a host that does not answer, has no scale */ }
         }));
+        if (this.hasAttribute('open') && this.tab === 'overview') this.paintBody();
+    }
+
+    /** Asks each host what it holds on disk, when it has not been asked lately. An agent that cannot say is remembered as such until the next round. */
+    private async loadDisks(force = false) {
+        if (this.diskAsking) return;
+        const now = Date.now();
+        const due = this.groups.filter(g => !g.error && (force || now - (this.disks.get(g.host.id)?.at ?? 0) > DISK_MS));
+        if (!due.length) return;
+        this.diskAsking = true;
+        try {
+            await Promise.all(due.map(async g => {
+                try {
+                    this.disks.set(g.host.id, { at: Date.now(), usage: await fetchDiskUsage(g.host) });
+                } catch {
+                    // A host that does not answer, or takes too long to measure, shows nothing this round; the list's own error says if it is down.
+                    this.disks.set(g.host.id, { at: Date.now(), usage: blankDisk() });
+                }
+            }));
+        } finally {
+            this.diskAsking = false;
+        }
         if (this.hasAttribute('open') && this.tab === 'overview') this.paintBody();
     }
 
@@ -960,7 +1004,7 @@ class DockerPage extends HTMLElement {
             mem: hist.map(h => h.memUsed),
             chart,
             hostNames: names,
-            top: topConsumers(scope, stats),
+            disk: this.diskState(scope),
             linkOf: this.linkOf,
             hostUse,
             capacity: this.capacity(scope),

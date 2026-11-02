@@ -620,12 +620,5 @@ button.task:hover { background: var(--surface-hover); }
     .task--store .task__bar { grid-column: 1 / -1; order: 3; }
 }
 
-/* The containers that use the most: a name, then its CPU and memory in two narrow columns. */
-.top3 { display: flex; flex-direction: column; gap: 9px; margin-block-start: 2px; }
-.top3__r { display: grid; grid-template-columns: minmax(0, 1fr) 58px 64px; gap: 8px; align-items: baseline; font: 500 11px/1.3 var(--font-mono); color: var(--text-dim); }
-.top3__r span:not(.top3__n) { text-align: end; color: var(--text-main); }
-.top3__n { font: 600 12.5px/1.3 var(--font-sans); color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.top3__n small { font: 500 11px/1 var(--font-mono); color: var(--text-dim); }
-
 /* The attention list shows up to nine rows (51px each and a 6px gap) and scrolls beyond that, so a long one never pushes the page down; the chart's card stretches to the box beside it. */
 .g-main > .box > .attn { max-height: 507px; overflow-y: auto; padding-inline-end: 2px; }
