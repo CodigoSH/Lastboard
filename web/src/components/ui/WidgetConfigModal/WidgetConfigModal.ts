@@ -629,6 +629,8 @@ class WidgetConfigModal extends HTMLElement {
             const refreshSel = this.shadowRoot?.getElementById('docker-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
             this.storeCommonFields(newContent, ['cpu', 'mem']);
+            // The line of totals under the name: on unless it was switched off.
+            if ((this.shadowRoot?.getElementById('docker-shownode') as HTMLInputElement | null)?.checked === false) newContent.showNode = false; else delete newContent.showNode;
 
             // Containers nobody has chosen: shown unless this is switched off. Only
             // the off state is stored, so content that never heard of it means on.
@@ -1241,7 +1243,9 @@ class WidgetConfigModal extends HTMLElement {
             : this.currentItem.content;
 
         const formData = this.renderDockerForm(content);
-        generalTab.innerHTML = formData.general;
+        // The tab is drawn again once the hosts have answered: it keeps the title field, and what was typed in it.
+        const typed = (this.shadowRoot.getElementById('widget-title') as HTMLInputElement | null)?.value;
+        generalTab.innerHTML = widgetTitleField(typed ?? this._titleForForm()) + formData.general;
         this.setupDockerEvents();
     }
 
@@ -1379,10 +1383,10 @@ class WidgetConfigModal extends HTMLElement {
                  blue one, beside five orange ones. -->
             <div class="field-group check-row">
                 <input type="checkbox" id="proxmox-shownode" ${showNode ? 'checked' : ''} />
-                <label for="proxmox-shownode">${i18n.t('widget.proxmox.show_node')}</label>
+                <label for="proxmox-shownode">${i18n.t('widget.show_node')}</label>
             </div>
             <div class="field-group">
-                <small>${i18n.t('widget.proxmox.show_node_desc')}</small>
+                <small>${i18n.t('widget.show_node_desc')}</small>
             </div>
             ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem', 'disk']), ['cpu', 'mem', 'disk'], k => i18n.t(k))}
             ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
@@ -1754,6 +1758,13 @@ class WidgetConfigModal extends HTMLElement {
         const generalTab = `
             ${body}
             ${showNewField}
+            <div class="field-group check-row">
+                <input type="checkbox" id="docker-shownode" ${content.showNode !== false ? 'checked' : ''} />
+                <label for="docker-shownode">${i18n.t('widget.show_node')}</label>
+            </div>
+            <div class="field-group">
+                <small>${i18n.t('widget.show_node_desc')}</small>
+            </div>
             ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem']), ['cpu', 'mem'], k => i18n.t(k))}
             ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">

@@ -6,7 +6,7 @@ const host = (id = 'h1', name = 'Home'): DockerHost => ({ id, name, type: 'local
 const ctr = (over: Partial<DockerContainer> & { Name: string }): DockerContainer => ({ ID: over.Name + 'id'.padEnd(12, '0'), Image: 'img:1', Status: 'running', State: 'running', Created: 0, Ports: [], ...over } as DockerContainer);
 const hostRows = (containers: DockerContainer[], over: Partial<WHost> = {}): WHost => ({ host: host(), containers, failed: false, everLoaded: true, ...over });
 const input = (hosts: WHost[], over: Partial<DockerWidgetInput> = {}): DockerWidgetInput => ({
-    hosts, stats: {}, sizes: {}, use: {}, settings: {}, metrics: { cpu: true, mem: true, disk: false }, showAll: true,
+    hosts, stats: {}, sizes: {}, use: {}, settings: {}, metrics: { cpu: true, mem: true, disk: false }, showAll: true, showSummary: true,
     faceOf: () => '', linkOf: () => '', t: k => `[${k}]`, num: n => String(n), ...over,
 });
 
@@ -38,6 +38,12 @@ describe('the Docker widget says', () => {
         expect(dockerShell(input([hostRows([c])])).summary).toEqual([]);
         const two = dockerShell(input([hostRows([c]), hostRows([ctr({ Name: '/b' })], { host: host('h2', 'Lab') })], { use: { h1: { cpu: 10, mem: 20 }, h2: { cpu: 60, mem: 5 } } }));
         expect(two.summary.map(m => m.text)).toEqual(['60%', '20%']);
+    });
+    test('the totals can be switched off while the rows keep their readings', () => {
+        const c = ctr({ Name: '/a' });
+        const spec = dockerShell(input([hostRows([c])], { showSummary: false, use: { h1: { cpu: 5, mem: 30 } }, stats: { [c.ID]: { CPUPercent: 1, MemPercent: 2, MemUsed: 0, MemLimit: 0 } } }));
+        expect(spec.summary).toEqual([]);
+        expect(spec.rows[0].metrics).toHaveLength(2);
     });
     test('what needs attention comes first until somebody arranges them', () => {
         const ok = ctr({ Name: '/a' });

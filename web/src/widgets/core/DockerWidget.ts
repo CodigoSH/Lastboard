@@ -42,6 +42,8 @@ interface DockerWidgetConfig {
     metrics?: Record<string, boolean>;
     /** Whether the foot leads to the page. On unless it is `false`. */
     showAll?: boolean;
+    /** Whether the line of totals under the name is drawn. On unless it is `false`. */
+    showNode?: boolean;
 }
 
 /** Matches the monitor widget's default, and its options in the config modal. */
@@ -191,7 +193,7 @@ class DockerWidget extends HTMLElement {
     /** What decides how the list is drawn: the settings a repaint has to follow. */
     private drawnConfig() {
         const c = this._config;
-        return { cfg: c.containerConfig, order: c.containerOrder, showNew: c.showNew !== false, metrics: this.metrics(), showAll: showsSeeAll(c.showAll) };
+        return { cfg: c.containerConfig, order: c.containerOrder, showNew: c.showNew !== false, metrics: this.metrics(), showAll: showsSeeAll(c.showAll), showNode: c.showNode !== false };
     }
 
     private metrics(): MetricFlags {
@@ -413,6 +415,7 @@ class DockerWidget extends HTMLElement {
             settings: this._config,
             metrics: this.metrics(),
             showAll: showsSeeAll(this._config.showAll),
+            showSummary: this._config.showNode !== false,
             // What its owner chose on the page, then what its bookmark wears.
             faceOf: (hostId: string, name: string) => {
                 const face = chosenDockerIcon(this._icons, hostId, name) || dockerLinkFor(hostId, name)?.icon || '';

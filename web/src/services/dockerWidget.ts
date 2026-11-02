@@ -34,6 +34,8 @@ export interface DockerWidgetInput {
     settings: ContainerSettings;
     metrics: MetricFlags;
     showAll: boolean;
+    /** Whether the line of totals under the name is drawn. */
+    showSummary: boolean;
     /** The icon address for a container, or ''. */
     faceOf: (hostId: string, name: string) => string;
     /** The bookmark a container serves, if any: a stopped one it depends on is an outage. */
@@ -128,7 +130,7 @@ export function dockerShell(i: DockerWidgetInput): ShellSpec {
         return v.length ? Math.max(...v) : null;
     };
     const summary: ShellMetric[] = [];
-    for (const m of on) {
+    for (const m of i.showSummary ? on : []) {
         const v = share(m);
         if (v !== null) summary.push({ label: i.t(LABEL[m]), text: `${Math.round(v)}%`, pct: clamp(v) });
     }
