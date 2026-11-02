@@ -17,7 +17,7 @@ import {
 import '../Select/Select';
 import {
     attentionHtml, chartCardForFleet, checksTabHtml, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, lowestBoxHtml,
-    noMatchHtml, outagesPanelHtml, outagesTabHtml, stateChips, summaryHtml, summaryTabHtml,
+    noMatchHtml, outageRowHtml, outagesPanelHtml, outagesTabHtml, stateChips, summaryHtml, summaryTabHtml,
     type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import infraCss from '../infra/infra.css' with { type: 'text' };
@@ -44,8 +44,8 @@ type DrawerTab = 'summary' | 'outages' | 'checks';
 /** What one service's history answers, as far as the panel reads it. */
 interface History { checks: Check[]; incidents: Outage[] }
 
-interface Written { head: string; tabs: string; body: string; list: string; tools: string; dhead: string; dtabs: string; dbody: string; dfoot: string }
-const blank = (): Written => ({ head: '', tabs: '', body: '', list: '', tools: '', dhead: '', dtabs: '', dbody: '', dfoot: '' });
+interface Written { head: string; tabs: string; body: string; list: string; tools: string; dhead: string; dtabs: string; dbody: string; dfoot: string; mdl: string }
+const blank = (): Written => ({ head: '', tabs: '', body: '', list: '', tools: '', dhead: '', dtabs: '', dbody: '', dfoot: '', mdl: '' });
 
 /** The top of a response chart's axis: a round figure above the readings with some room, never below 100 ms. */
 export function niceTop(highest: number): number {
@@ -113,6 +113,8 @@ class MonitorPage extends HTMLElement {
             if (!this.hasAttribute('open')) return;
             // A confirmation answers its own Escape; closing the page under it would be a second effect of one key.
             if (document.querySelector('confirmation-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
+            // The list window answers its own Escape.
+            if (this.modalKind) return;
             if (e.key === 'Escape') {
                 if (this.drawerOpen) this.closeDrawer(); else this.close();
                 return;
@@ -230,6 +232,7 @@ class MonitorPage extends HTMLElement {
             return i18n.formatNumber(Math.round(n), { style: 'unit', unit: 'millisecond', unitDisplay: 'short', maximumFractionDigits: 0 });
         },
         span: (sec) => i18n.formatDuration(sec),
+        one: (sec) => i18n.formatDuration(sec, 1),
         ago: (iso) => {
             const at = Date.parse(iso);
             return Number.isFinite(at) ? i18n.formatSpan(at) ?? '' : '';
@@ -289,8 +292,14 @@ class MonitorPage extends HTMLElement {
                 <div class="dr__h"><div id="dr-head"></div><div class="dr__tabs" id="dr-tabs" role="tablist"></div></div>
                 <div class="dr__b" id="dr-body"></div>
                 <div class="dr__f" id="dr-foot"></div>
-            </aside>`;
+            </aside>
+            <dialog class="mdl" id="mdl" aria-labelledby="mdl-t">
+                <div class="mdl__h"><h3 id="mdl-t"></h3><button type="button" class="ibtn" id="mdl-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button></div>
+                <div class="mdl__b" id="mdl-body"></div>
+            </dialog>`;
+        this.$('mdl')?.addEventListener('close', () => { this.modalKind = ''; this.last.mdl = ''; });
         this.last = blank();
+        this.modalKind = '';
         this.bodyTab = '';
         this.charts.clear();
     }
@@ -327,6 +336,7 @@ class MonitorPage extends HTMLElement {
         const el = e.target as HTMLElement;
         if (el.closest('#hp-close')) { this.close(); return; }
         if (el.closest('#hp-refresh')) { void this.load(true); return; }
+        if (el.closest('#mdl-close') || el.id === 'mdl') { this.closeModal(); return; }
         if (el.closest('#dr-close') || el.closest('#scrim')) { this.closeDrawer(); return; }
 
         const tab = el.closest<HTMLElement>('#tabs [data-tab]');
@@ -369,13 +379,14 @@ class MonitorPage extends HTMLElement {
         if (act === 'settings') { this.openSettings(); return; }
         if (act === 'visit') { const r = this.current(); if (r?.url) window.open(r.url, '_blank', 'noopener'); return; }
         if (act === 'clear') { this.confirmClear(); return; }
+        if (act === 'all-outages' || act === 'all-panel-outages' || act === 'all-checks') { this.openModal(act); return; }
 
         // Outside the panel, on bare page: it closes, as it does on a narrow window by its scrim.
         if (this.drawerOpen && el.closest('#body') && !el.closest('button, input, select, app-select, a, label, .unit, .tr, .task, .attn__row')) { this.closeDrawer(); return; }
 
         // A service: a card, a row, a line of attention or of outages.
         const unit = el.closest<HTMLElement>('[data-id]');
-        if (unit?.dataset.id && !unit.dataset.noopen) this.choose(Number(unit.dataset.id));
+        if (unit?.dataset.id && !unit.dataset.noopen) { this.closeModal(); this.choose(Number(unit.dataset.id)); }
     };
 
     // ── The chart's cursor ──
@@ -548,6 +559,7 @@ class MonitorPage extends HTMLElement {
         this.paintTabs();
         this.paintBody();
         this.paintDrawer();
+        this.paintModal();
         this.$('pg')?.classList.toggle('has-drawer', this.drawerOpen);
         this.$('scrim')?.classList.toggle('on', this.drawerOpen);
         this.$('drawer')?.classList.toggle('on', this.drawerOpen);
@@ -740,6 +752,53 @@ class MonitorPage extends HTMLElement {
         el.innerHTML = html;
         if (body) body.scrollTop = top;
         if (focus) el.querySelector<HTMLElement>(`[data-id="${focus}"]`)?.focus({ preventScroll: true });
+    }
+
+    // ── The window with every line ──
+
+    private modalKind: '' | 'all-outages' | 'all-panel-outages' | 'all-checks' = '';
+
+    private openModal(kind: 'all-outages' | 'all-panel-outages' | 'all-checks') {
+        this.modalKind = kind;
+        this.last.mdl = '';
+        this.paintModal();
+        const dlg = this.$('mdl') as HTMLDialogElement | null;
+        if (dlg && !dlg.open) dlg.showModal();
+    }
+
+    private closeModal() {
+        if (!this.modalKind) return;
+        this.modalKind = '';
+        (this.$('mdl') as HTMLDialogElement | null)?.close();
+    }
+
+    /** Fills the window from what the page already holds, so a refresh behind it keeps it current. */
+    private paintModal() {
+        const title = this.$('mdl-t'), body = this.$('mdl-body');
+        if (!title || !body || !this.modalKind) return;
+        const t = this.t, fmt = this.fmt;
+        let name = '', n = 0, html = '';
+        if (this.modalKind === 'all-outages') {
+            const mine = new Set(this.scope().map(r => r.item_id));
+            const list = this.outages.filter(o => o.item_id !== undefined && mine.has(o.item_id));
+            name = t('monitorpage.latest'); n = list.length;
+            html = `<div class="card tasks">${list.map(o => outageRowHtml(o, true, t, fmt)).join('')}</div>`;
+        } else {
+            const r = this.current();
+            const hist = r ? this.histories.get(`${r.item_id}:${this.histRange}`) : undefined;
+            const thirty = r ? this.histories.get(`${r.item_id}:30 d`) : undefined;
+            if (this.modalKind === 'all-panel-outages') {
+                const list = (thirty ?? hist)?.incidents ?? [];
+                name = `${r?.name ?? ''} · ${t('monitor.incidents')}`; n = list.length;
+                html = outagesPanelHtml(list, t, fmt, true);
+            } else {
+                const checks = hist?.checks ?? [];
+                name = `${r?.name ?? ''} · ${t('monitorpage.tab_checks')}`; n = checks.length;
+                html = checksTabHtml(checks, (this.setup?.retention_days ?? 30) * 86400, t, fmt, true);
+            }
+        }
+        title.innerHTML = `${escapeHtml(name)}<span class="mdl__n">${escapeHtml(fmt.num(n))}</span>`;
+        if (html !== this.last.mdl) { this.last.mdl = html; const top = body.scrollTop; body.innerHTML = html; body.scrollTop = top; }
     }
 
     // ── The drawer ──

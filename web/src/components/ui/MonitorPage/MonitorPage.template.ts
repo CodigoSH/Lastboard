@@ -25,6 +25,8 @@ export interface Fmt {
     ms: (n: number | null) => string;
     /** A length of time in words, in two units ("1 hour and 12 minutes"). */
     span: (sec: number) => string;
+    /** The same, in a single unit: "31 minutes", never "30 minutes and 48 seconds". */
+    one: (sec: number) => string;
     /** How long ago an instant was, in one unit; '' under a minute. */
     ago: (iso: string) => string;
     /** A moment, in the app's language. */
@@ -50,7 +52,22 @@ export function stateDot(tone: 'ok' | 'warn' | 'bad' | '', label: string): strin
 }
 
 /** What the last check got back, for a person: the HTTP code, or that nothing answered. */
-export const causeText = (code: number, t: T): string => (code > 0 ? `HTTP ${code}` : t('monitorpage.cause_none'));
+/** Why a check failed, in words: the code a person does not read ("502") becomes what it means. */
+export function causeText(code: number, t: T): string {
+    if (!(code > 0)) return t('monitorpage.cause_none');
+    if (code === 401 || code === 403) return t('monitorpage.cause_denied');
+    if (code === 404 || code === 410) return t('monitorpage.cause_missing');
+    if (code === 408 || code === 502 || code === 503 || code === 504) return t('monitorpage.cause_unavailable');
+    if (code >= 500) return t('monitorpage.cause_error');
+    return t('monitorpage.cause_other');
+}
+
+/** "HTTP 502" for a tooltip, where the technical reading belongs; '' when nothing answered. */
+export const causeCode = (code: number): string => (code > 0 ? `HTTP ${code}` : '');
+
+/** A length of time for outages: minutes at the least, and a single unit below an hour. */
+const minutesUp = (sec: number, fmt: Fmt): string => (sec < 3600 ? fmt.one(sec) : fmt.span(sec));
+export const outageSpan = (sec: number, t: T, fmt: Fmt): string => (sec < 60 ? t('monitorpage.under_minute') : minutesUp(sec, fmt));
 
 // ── The header ─────────────────────────────────────────────────────────────
 
@@ -131,7 +148,7 @@ export function monitoringKpi(setup: MonitoringSetup | null, t: T, fmt: Fmt): st
 export function downSince(r: ServiceRow, fmt: Fmt, nowMs = Date.now()): string {
     if (!r.down_since) return '';
     const sec = Math.max(0, (nowMs - Date.parse(r.down_since)) / 1000);
-    return sec >= 60 ? fmt.span(sec) : '';
+    return sec >= 60 ? minutesUp(sec, fmt) : '';
 }
 
 /** "Down for 28 minutes · HTTP 502". Under a minute it says so rather than "0 minutes". */
@@ -203,16 +220,24 @@ export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: 
     const when = ago ? t('monitorpage.ago', { time: ago }) : t('monitorpage.just_now');
     const who = named ? o.name ?? rows?.get(o.item_id ?? -1)?.name ?? '' : cause;
     const sub = named ? `${cause} · ${when}` : when;
+    const code = causeCode(o.status_code);
     const right = ongoing
         ? `<span class="chip chip--bad">${e(t('monitorpage.is_down'))}</span>`
-        : `${e(fmt.span(o.duration_sec))}<br><span class="ok">${e(t('monitor.ev_recovered'))}</span>`;
+        : `${e(t('monitorpage.was_down', { time: outageSpan(o.duration_sec, t, fmt) }))}<br><span class="ok">${e(t('monitorpage.working_again'))}</span>`;
     return `<button type="button" class="task out" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}><span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>
-        <span><b>${e(who)}</b><small>${e(sub)}</small></span><span class="task__r">${right}</span></button>`;
+        <span><b>${e(who)}</b><small${code ? ` title="${e(code)}"` : ''}>${e(sub)}</small></span><span class="task__r">${right}</span></button>`;
+}
+
+/** The "view all" button under a list that shows only the most relevant lines; nothing when they all fit. */
+export function moreHtml(act: string, shown: number, total: number, t: T, fmt: Fmt): string {
+    return total > shown
+        ? `<button type="button" class="more" data-act="${act}">${e(t('monitorpage.view_all'))}<span class="n">${e(fmt.num(total))}</span></button>`
+        : '';
 }
 
 export function latestOutagesBoxHtml(list: Outage[], t: T, fmt: Fmt, total: number): string {
     const body = list.length
-        ? `<div class="card tasks">${list.map(o => outageRowHtml(o, true, t, fmt)).join('')}</div>`
+        ? `<div class="card tasks">${list.map(o => outageRowHtml(o, true, t, fmt)).join('')}</div>${moreHtml('all-outages', list.length, total, t, fmt)}`
         : `<div class="card"><div class="chart__empty">${e(t('monitor.no_incidents'))}</div></div>`;
     return boxHtml(t('monitorpage.latest'), body, fmt.num(total));
 }
@@ -313,8 +338,8 @@ export function outagesTabHtml(list: Outage[], shown: Outage[], range: RangeLabe
     const tot = outageTotals(list);
     const sum = `<div class="inc-sum">
         <div class="card"><span class="lbl">${e(t('monitor.incidents'))} · ${e(range)}</span><b class="num">${e(fmt.num(tot.count))}</b><small>${e(t('monitorpage.ongoing'))}: ${e(fmt.num(tot.ongoing))}</small></div>
-        <div class="card"><span class="lbl">${e(t('monitorpage.out_downtime'))}</span><b class="num">${e(tot.downSec ? fmt.span(tot.downSec) : '—')}</b><small>${e(t('monitorpage.out_downtime_sub'))}</small></div>
-        <div class="card"><span class="lbl">${e(t('monitorpage.out_mean'))}</span><b class="num">${e(tot.meanRecoverySec === null ? '—' : fmt.span(tot.meanRecoverySec))}</b><small>${e(t('monitor.ev_recovered'))}: ${e(fmt.num(tot.recovered))}</small></div>
+        <div class="card"><span class="lbl">${e(t('monitorpage.out_downtime'))}</span><b class="num">${e(tot.downSec ? outageSpan(tot.downSec, t, fmt) : '—')}</b><small>${e(t('monitorpage.out_downtime_sub'))}</small></div>
+        <div class="card"><span class="lbl">${e(t('monitorpage.out_mean'))}</span><b class="num">${e(tot.meanRecoverySec === null ? '—' : outageSpan(tot.meanRecoverySec, t, fmt))}</b><small>${e(t('monitor.ev_recovered'))}: ${e(fmt.num(tot.recovered))}</small></div>
     </div>`;
     const chip = (id: OutageFilter, label: string, n: number) =>
         `<button type="button" class="fchip" data-ofilter="${id}" aria-pressed="${filter === id}">${e(label)} <span class="n">${e(fmt.num(n))}</span></button>`;
@@ -370,19 +395,25 @@ export function summaryTabHtml(d: SummaryData, t: T, fmt: Fmt): string {
         <div class="facts">${facts}</div>`;
 }
 
-export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt): string {
+/** How many lines the side panel shows before it offers the rest in a window of their own. */
+export const PANEL_LINES = 6;
+
+export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt, all = false): string {
+    const shown = all ? list : list.slice(0, PANEL_LINES);
     return list.length
-        ? `<div class="card tasks">${list.map(o => outageRowHtml({ ...o, item_id: undefined }, false, t, fmt)).join('')}</div>`
+        ? `<div class="card tasks">${shown.map(o => outageRowHtml({ ...o, item_id: undefined }, false, t, fmt)).join('')}</div>${all ? '' : moreHtml('all-panel-outages', shown.length, list.length, t, fmt)}`
         : emptyHtml(t('monitor.no_incidents'));
 }
 
-export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: Fmt): string {
-    const newest = [...checks].reverse().slice(0, 40);
+export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: Fmt, all = false): string {
+    const every = [...checks].reverse();
+    const newest = all ? every : every.slice(0, PANEL_LINES * 2);
     const lines = newest.map(c => c.up
         ? `<div class="chk"><span class="dim">${e(fmt.clock(c.checked_at))}</span><span>${e(c.status_code ? String(c.status_code) : '—')}</span><span>${e(fmt.ms(c.latency_ms))}</span><span class="dim">${e(t('monitorpage.check_ok'))}</span></div>`
         : `<div class="chk"><span class="dim">${e(fmt.clock(c.checked_at))}</span><span class="bad">${e(c.status_code ? String(c.status_code) : '—')}</span><span class="bad">—</span><span class="bad">${e(t('monitorpage.check_fail'))} · ${e(causeText(c.status_code, t))}</span></div>`).join('');
-    return `<div class="note note--calm">${e(t('monitorpage.checks_note', { time: fmt.span(retentionSec) }))}</div>
-        ${newest.length ? `<div class="card tasks">${lines}</div>` : emptyHtml(t('monitor.no_data_yet'))}`;
+    const note = `<div class="note note--calm">${e(t('monitorpage.checks_note', { time: fmt.span(retentionSec) }))}</div>`;
+    return `${all ? '' : note}
+        ${newest.length ? `<div class="card tasks">${lines}</div>${all ? '' : moreHtml('all-checks', newest.length, every.length, t, fmt)}` : emptyHtml(t('monitor.no_data_yet'))}`;
 }
 
 export function drawerFooterHtml(row: ServiceRow, t: T): string {

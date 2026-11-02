@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionHtml, cardHtml, checksTabHtml, downLine, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
+    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageSpan, PANEL_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
     monitoringKpi, outageRowHtml, outagesPanelHtml, outagesTabHtml, rowHtml, stateChips, summaryHtml, summaryTabHtml, type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import { attentionList, fleetTotals, groupRows, readRow, RANGES, type Outage, type ServiceRow } from '../../../services/monitorPage';
@@ -8,7 +8,7 @@ import { attentionList, fleetTotals, groupRows, readRow, RANGES, type Outage, ty
 const t: T = (key, params) => `[${key}${params ? ':' + Object.entries(params).map(([k, v]) => `${k}=${v}`).join(',') : ''}]`;
 const fmt: Fmt = {
     num: n => `N(${n})`, avail: (p, d) => (p < 0 ? '—' : `A(${p}${d !== undefined ? ',' + d : ''})`), ms: n => (n === null ? '—' : `M(${n})`),
-    span: s => `S(${s})`, ago: iso => (iso === 'now' ? '' : `G(${iso})`), date: iso => `D(${iso})`, clock: iso => `C(${iso})`,
+    span: s => `S(${s})`, one: s => `O(${s})`, ago: iso => (iso === 'now' ? '' : `G(${iso})`), date: iso => `D(${iso})`, clock: iso => `C(${iso})`,
 };
 const evil = '<img src=x onerror=alert(1)>';
 
@@ -103,8 +103,8 @@ describe('attention', () => {
         const r = row({ item_id: 7, name: 'Immich', status: 'down', latency_ms: null, status_code: 502, down_since: new Date(Date.now() - 28 * 60000).toISOString() });
         const html = attentionHtml(attentionList([r], 'background'), new Map([[7, r]]), t, fmt);
         expect(html).toContain('[monitorpage.att_down:name=Immich]');
-        expect(html).toContain('time=S(');
-        expect(html).toContain('cause=HTTP 502');
+        expect(html).toContain('time=O(');
+        expect(html).toContain('cause=[monitorpage.cause_unavailable]');
         expect(html).toContain('data-id="7"');
     });
     test('a connection that was refused is "no answer", not "HTTP 0"', () => {
@@ -199,8 +199,8 @@ describe('outages', () => {
     test('an ongoing one says so; a closed one says how long and that it recovered', () => {
         expect(outageRowHtml(list[0], true, t, fmt)).toContain('[monitorpage.is_down]');
         const closed = outageRowHtml(list[1], true, t, fmt);
-        expect(closed).toContain('S(1200)');
-        expect(closed).toContain('[monitor.ev_recovered]');
+        expect(closed).toContain('was_down:time=O(1200)');
+        expect(closed).toContain('[monitorpage.working_again]');
         expect(closed).toContain('[monitorpage.cause_none]');
     });
     test('one that began a moment ago does not say "ago" with nothing before it', () => {
@@ -211,8 +211,8 @@ describe('outages', () => {
         const html = outagesTabHtml(list, list, '30 d', RANGES, 'all', t, fmt, rows);
         expect(html).toContain('data-ofilter="ongoing"');
         expect(html).toContain('data-orange="7 d"');
-        expect(html).toContain('S(1800)');
-        expect(html).toContain('S(1200)');
+        expect(html).toContain('O(1800)');
+        expect(html).toContain('O(1200)');
     });
     test('with none, it says there were none and shows no zero-length mean', () => {
         const html = outagesTabHtml([], [], '24 h', RANGES, 'all', t, fmt, new Map());
@@ -250,11 +250,57 @@ describe('the panel', () => {
         ], 2592000, t, fmt);
         expect(html.indexOf('C(t2)')).toBeLessThan(html.indexOf('C(t1)'));
         expect(html).toContain('class="bad"');
-        expect(html).toContain('HTTP 502');
+        expect(html).toContain('cause_unavailable');
     });
     test('the footer: open the service (when it has an address) and clear its history', () => {
         expect(drawerFooterHtml(r, t)).toContain('data-act="visit"');
         expect(drawerFooterHtml(r, t)).toContain('data-act="clear"');
         expect(drawerFooterHtml({ ...r, url: '' }, t)).not.toContain('data-act="visit"');
+    });
+});
+
+describe('what a person reads about an outage', () => {
+    test('a status code becomes what it means; the code itself stays for a tooltip', () => {
+        const want: [number, string][] = [[0, 'cause_none'], [401, 'cause_denied'], [403, 'cause_denied'], [404, 'cause_missing'], [408, 'cause_unavailable'],
+            [502, 'cause_unavailable'], [503, 'cause_unavailable'], [504, 'cause_unavailable'], [500, 'cause_error'], [599, 'cause_error'], [418, 'cause_other'], [302, 'cause_other']];
+        for (const [code, key] of want) {
+            expect(causeText(code, t)).toBe(`[monitorpage.${key}]`);
+            expect(causeText(code, t)).not.toMatch(/\d{3}/);
+        }
+        expect(causeCode(502)).toBe('HTTP 502');
+        expect(causeCode(0)).toBe('');
+    });
+    test('a length of time is never seconds: under a minute says so, under an hour is one unit, then two', () => {
+        expect(outageSpan(20, t, fmt)).toBe('[monitorpage.under_minute]');
+        expect(outageSpan(1848, t, fmt)).toBe('O(1848)');
+        expect(outageSpan(3600, t, fmt)).toBe('S(3600)');
+    });
+    test('the words say how long it was down and that it works again, not "recovered"', () => {
+        const html = outageRowHtml({ item_id: 1, name: 'Plex', start: 'a', end: 'b', duration_sec: 1848, status_code: 502 } as Outage, true, t, fmt);
+        expect(html).toContain('[monitorpage.was_down:time=O(1848)]');
+        expect(html).toContain('[monitorpage.working_again]');
+        expect(html).not.toContain('monitor.ev_recovered');
+        expect(html).toContain('title="HTTP 502"');
+    });
+    test('the "view all" button appears only when there is more than what is shown', () => {
+        expect(moreHtml('all-x', 6, 6, t, fmt)).toBe('');
+        expect(moreHtml('all-x', 6, 67, t, fmt)).toContain('data-act="all-x"');
+        expect(moreHtml('all-x', 6, 67, t, fmt)).toContain('N(67)');
+    });
+    test('the side panel shows the first lines and offers the rest; the window shows them all', () => {
+        const list = Array.from({ length: PANEL_LINES + 5 }, (_, i) => ({ start: `s${i}`, end: `e${i}`, duration_sec: 600, status_code: 0 } as Outage));
+        const few = outagesPanelHtml(list, t, fmt);
+        expect(few.match(/class="task out"/g)?.length).toBe(PANEL_LINES);
+        expect(few).toContain('data-act="all-panel-outages"');
+        const every = outagesPanelHtml(list, t, fmt, true);
+        expect(every.match(/class="task out"/g)?.length).toBe(PANEL_LINES + 5);
+        expect(every).not.toContain('data-act=');
+    });
+    test('the checks list does the same', () => {
+        const checks = Array.from({ length: PANEL_LINES * 2 + 3 }, (_, i) => ({ checked_at: `t${i}`, up: true, latency_ms: 10, status_code: 200 }));
+        const few = checksTabHtml(checks as never, 86400, t, fmt);
+        expect(few.match(/class="chk"/g)?.length).toBe(PANEL_LINES * 2);
+        expect(few).toContain('data-act="all-checks"');
+        expect(checksTabHtml(checks as never, 86400, t, fmt, true).match(/class="chk"/g)?.length).toBe(PANEL_LINES * 2 + 3);
     });
 });
