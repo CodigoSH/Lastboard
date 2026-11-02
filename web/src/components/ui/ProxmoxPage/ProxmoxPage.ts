@@ -827,7 +827,7 @@ class ProxmoxPage extends HTMLElement {
         const host = head.querySelector<SelectEl>('#hp-host');
         if (host) {
             this.setSelect(host, [
-                { value: 'all', label: t('infra.all_hosts') },
+                { value: 'all', label: t('infra.filter_all') },
                 ...this.hosts.map(h => ({ value: h.id, label: h.name })),
             ], this.hostFilter, t('proxmox.hypervisors'));
         }

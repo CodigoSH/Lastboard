@@ -43,6 +43,11 @@ class AddBookmarkModal extends HTMLElement {
     private proxmox: { host: string; node: string; kind: string; vmid: number } | null = null;
     /** The container it serves: its host and its name, never its id, which changes when it is recreated. */
     private docker: { host: string; name: string } | null = null;
+    /** Which of the two the "runs on" field is showing; a service is linked to one or to none. */
+    private linkKind: 'none' | 'proxmox' | 'docker' = 'none';
+    /** Whether each integration answered, so its segment is offered. */
+    private pxReady = false;
+    private dkReady = false;
 
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -67,6 +72,15 @@ class AddBookmarkModal extends HTMLElement {
             if (target.closest('#modal-close')) {
                 e.preventDefault();
                 this.close();
+                return;
+            }
+
+            // Where the service runs: none, a Proxmox machine or a Docker container
+            const linkBtn = target.closest<HTMLElement>('[data-link]');
+            if (linkBtn) {
+                e.preventDefault();
+                this.linkKind = linkBtn.dataset.link === 'proxmox' ? 'proxmox' : linkBtn.dataset.link === 'docker' ? 'docker' : 'none';
+                this.syncLink();
                 return;
             }
 
@@ -188,9 +202,12 @@ class AddBookmarkModal extends HTMLElement {
             // The icon is downloaded here, once, so the board never asks a CDN
             // for it again; if that fails the original URL is kept and the
             // bookmark saves exactly as before.
+            // Only what was offered is read: a hypervisor or a Docker that did
+            // not answer must not wipe a link made earlier.
+            const shown = this.effectiveKind();
             const pxSel = this.shadowRoot?.getElementById('bookmark-proxmox') as (HTMLElement & { value: string }) | null;
-            if (pxSel) {
-                const v = pxSel.value;
+            if (pxSel && this.pxReady) {
+                const v = shown === 'proxmox' ? pxSel.value : '';
                 if (!v) {
                     this.proxmox = null;
                 } else {
@@ -198,11 +215,9 @@ class AddBookmarkModal extends HTMLElement {
                     this.proxmox = { host, node, kind, vmid: Number(vmid) };
                 }
             }
-
             const dkSel = this.shadowRoot?.getElementById('bookmark-docker') as (HTMLElement & { value: string }) | null;
-            // Only when the field was shown: a Docker that did not answer must not wipe a link made earlier.
-            if (dkSel && this.shadowRoot?.getElementById('docker-group')?.style.display !== 'none') {
-                const v = dkSel.value;
+            if (dkSel && this.dkReady) {
+                const v = shown === 'docker' ? dkSel.value : '';
                 const cut = v.indexOf('|');
                 this.docker = v && cut > 0 ? { host: v.slice(0, cut), name: v.slice(cut + 1) } : null;
             }
@@ -505,6 +520,7 @@ class AddBookmarkModal extends HTMLElement {
         root.addEventListener('submit', this.submitHandler);
         root.addEventListener('input', this.inputHandler);
 
+        this.pxReady = this.dkReady = false;
         this.fillProxmoxChoices();
         this.fillDockerChoices();
 
@@ -521,10 +537,9 @@ class AddBookmarkModal extends HTMLElement {
      * can be told which of their services went down with it.
      */
     private async fillProxmoxChoices() {
-        const group = this.shadowRoot?.getElementById('proxmox-group') as HTMLElement | null;
         const sel = this.shadowRoot?.getElementById('bookmark-proxmox') as
             (HTMLElement & { value: string; options: { value: string; label: string }[]; searchable: boolean }) | null;
-        if (!group || !sel) return;
+        if (!sel) return;
         // It stays hidden, as it starts, for an account without Proxmox.
         // Nor before the account is known: nothing is taken away without a user, and nothing is asked either.
         const who = userStore.getUser();
@@ -553,7 +568,7 @@ class AddBookmarkModal extends HTMLElement {
             // Searchable, because a real host has twenty-nine of these and the
             // one you want is the one you can already name.
             sel.searchable = guests.length > 8;
-            sel.options = [{ value: '', label: i18n.t('bookmark.backed_by_auto') }].concat(
+            sel.options = [{ value: '', label: i18n.t('bookmark.pick_machine') }].concat(
                 [...guests]
                     .sort((a, b) => a.vmid - b.vmid)
                     .map(g => ({
@@ -563,7 +578,8 @@ class AddBookmarkModal extends HTMLElement {
                     })),
             );
             sel.value = chosen;
-            group.style.display = '';
+            this.pxReady = true;
+            this.syncLink();
         } catch {
             /* No hypervisor, or not configured: the field simply never appears. */
         }
@@ -577,10 +593,9 @@ class AddBookmarkModal extends HTMLElement {
      * stopped container, and nobody can be told which service went down with it.
      */
     private async fillDockerChoices() {
-        const group = this.shadowRoot?.getElementById('docker-group') as HTMLElement | null;
         const sel = this.shadowRoot?.getElementById('bookmark-docker') as
             (HTMLElement & { value: string; options: { value: string; label: string }[]; searchable: boolean }) | null;
-        if (!group || !sel) return;
+        if (!sel) return;
         const who = userStore.getUser();
         if (!who || !accessAllows(who, 'docker_view')) return;
         try {
@@ -598,12 +613,41 @@ class AddBookmarkModal extends HTMLElement {
             })).sort((a, b) => a.label.localeCompare(b.label));
             if (!options.length) return;
             sel.searchable = options.length > 8;
-            sel.options = [{ value: '', label: i18n.t('bookmark.container_none') }].concat(options);
+            sel.options = [{ value: '', label: i18n.t('bookmark.pick_container') }].concat(options);
             sel.value = this.docker ? `${this.docker.host}|${this.docker.name}` : '';
-            group.style.display = '';
+            this.dkReady = true;
+            this.syncLink();
         } catch {
             /* No Docker, or not configured: the field simply never appears. */
         }
+    }
+
+    /** The segment in force: the one chosen, unless its integration is not there to be asked. */
+    private effectiveKind(): 'none' | 'proxmox' | 'docker' {
+        if (this.linkKind === 'proxmox' && this.pxReady) return 'proxmox';
+        if (this.linkKind === 'docker' && this.dkReady) return 'docker';
+        return 'none';
+    }
+
+    /** Shows the field once something can fill it, and only the list that belongs to the chosen segment. */
+    private syncLink() {
+        const root = this.shadowRoot;
+        const group = root?.getElementById('link-group') as HTMLElement | null;
+        if (!root || !group) return;
+        group.style.display = this.pxReady || this.dkReady ? '' : 'none';
+        const kind = this.effectiveKind();
+        root.querySelectorAll<HTMLElement>('#link-seg [data-link]').forEach(b => {
+            const k = b.dataset.link;
+            if (k === 'proxmox') b.style.display = this.pxReady ? '' : 'none';
+            if (k === 'docker') b.style.display = this.dkReady ? '' : 'none';
+            b.setAttribute('aria-pressed', String(k === kind));
+        });
+        const px = root.getElementById('bookmark-proxmox') as HTMLElement | null;
+        const dk = root.getElementById('bookmark-docker') as HTMLElement | null;
+        if (px) px.style.display = kind === 'proxmox' ? '' : 'none';
+        if (dk) dk.style.display = kind === 'docker' ? '' : 'none';
+        const hint = root.getElementById('link-hint');
+        if (hint) hint.textContent = i18n.t(`bookmark.runs_on_${kind}_hint`);
     }
 
     open() {
@@ -640,6 +684,7 @@ class AddBookmarkModal extends HTMLElement {
         this.docker = (content.docker && content.docker.host && content.docker.name)
             ? { host: String(content.docker.host), name: String(content.docker.name) }
             : null;
+        this.linkKind = this.proxmox ? 'proxmox' : this.docker ? 'docker' : 'none';
 
         // URL parsing
         let fullUrl = content.url || '';
@@ -685,6 +730,8 @@ class AddBookmarkModal extends HTMLElement {
         this.borderWidth = 1;
         this.currentItemId = null;
         this.docker = null;
+        this.proxmox = null;
+        this.linkKind = 'none';
     }
 }
 

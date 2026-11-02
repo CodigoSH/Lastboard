@@ -110,7 +110,7 @@ than naming none. A machine goes unmatched when its name does not resolve to **e
 bookmark — two bookmarks would fit, or none does (`23-jellyfin-musica` against a bookmark
 called *Jellyfin Music* is a different word in a different language).
 
-- If a bookmark does serve it, edit the bookmark and pick the machine under **Served by**. That
+- If a bookmark does serve it, edit the bookmark and under **Runs on**, choose **Proxmox** and pick the machine. That
   always wins over the guess.
 - If nothing will ever bookmark it — a CI runner, a tunnel, the container Lastboard itself runs
   on — open the machine and click its icon to

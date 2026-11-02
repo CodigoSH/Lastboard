@@ -177,24 +177,22 @@ export const template = ({
                         </div>
                     </div>
                     
-                    <!-- Which machine serves this, when there is a hypervisor to ask.
-                         Hidden until the integration answers: a board with no
-                         Proxmox must not grow a field about Proxmox. -->
-                    <div class="form-group" id="proxmox-group" style="margin-top: 12px; display: none;">
-                        <label for="bookmark-proxmox">${i18n.t('bookmark.backed_by')}</label>
+                    <!-- Where the service runs: one choice, then the list for it.
+                         Hidden until Proxmox or Docker answers, so a board with
+                         neither must not grow a field about them. -->
+                    <div class="form-group" id="link-group" style="margin-top: 12px; display: none;">
+                        <label id="link-label">${i18n.t('bookmark.runs_on')}</label>
+                        <span class="seg" id="link-seg" role="group" aria-labelledby="link-label">
+                            <button type="button" data-link="none" aria-pressed="true">${i18n.t('bookmark.container_none')}</button>
+                            <button type="button" data-link="proxmox" aria-pressed="false" style="display: none;">Proxmox</button>
+                            <button type="button" data-link="docker" aria-pressed="false" style="display: none;">Docker</button>
+                        </span>
                         <!-- The house dropdown, not the browser's: a bare
                              <select> is the one control in this modal that
                              arrived with the operating system's own styling. -->
-                        <app-select id="bookmark-proxmox"></app-select>
-                        <small class="field-hint">${i18n.t('bookmark.backed_by_hint')}</small>
-                    </div>
-
-                    <!-- Which container serves this, when there is a Docker to ask.
-                         Hidden until the integration answers, for the same reason. -->
-                    <div class="form-group" id="docker-group" style="margin-top: 12px; display: none;">
-                        <label for="bookmark-docker">${i18n.t('bookmark.container')}</label>
-                        <app-select id="bookmark-docker"></app-select>
-                        <small class="field-hint">${i18n.t('bookmark.container_hint')}</small>
+                        <app-select id="bookmark-proxmox" style="display: none;"></app-select>
+                        <app-select id="bookmark-docker" style="display: none;"></app-select>
+                        <small class="field-hint" id="link-hint">${i18n.t('bookmark.runs_on_none_hint')}</small>
                     </div>
 
                     <!-- Touch Visibility -->

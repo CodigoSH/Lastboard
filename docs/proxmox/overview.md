@@ -196,7 +196,7 @@ account that connects the same Proxmox picks its own.
 
 ### When the names don't agree
 
-Some pairs no rule should guess — a container called `23-jellyfin-musica` serving a bookmark called *Jellyfin Music*, or `90--haos` serving *Home Assistant*. For those, edit the bookmark and pick the machine under **Served by**:
+Some pairs no rule should guess — a container called `23-jellyfin-musica` serving a bookmark called *Jellyfin Music*, or `90--haos` serving *Home Assistant*. For those, edit the bookmark and under **Runs on**, choose **Proxmox** and pick the machine:
 
 ![Adding a bookmark](../assets/m-bookmark.png)
 

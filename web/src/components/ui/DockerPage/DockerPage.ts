@@ -826,7 +826,7 @@ class DockerPage extends HTMLElement {
         const host = head.querySelector<SelectEl>('#hp-host');
         if (host) {
             this.setSelect(host, [
-                { value: 'all', label: t('dockerpage.all_hosts') },
+                { value: 'all', label: t('infra.filter_all') },
                 ...this.groups.map(g => ({ value: g.host.id, label: g.host.name })),
             ], this.hostFilter, t('docker.hosts'));
         }

@@ -133,6 +133,14 @@ dialog[open] {
     flex-shrink: 0;
 }
 
+.field-hint { font-size: 12px; line-height: 1.5; color: var(--text-dim); }
+
+/* A segmented control whose segments are words. */
+.seg { display: inline-flex; align-self: flex-start; gap: 2px; padding: 2px; border: 1px solid var(--card-border); border-radius: 10px; background: var(--surface); }
+.seg button { height: 28px; padding: 0 12px; border-radius: 8px; font-size: 12px; white-space: nowrap; color: var(--text-dim); background: transparent; border: 0; cursor: pointer; font-family: inherit; }
+.seg button:hover { color: var(--text-main); }
+.seg button[aria-pressed="true"] { background: var(--surface-active); color: var(--text-main); }
+
 .form-group label {
     font-size: 12px;
     font-weight: 500;
