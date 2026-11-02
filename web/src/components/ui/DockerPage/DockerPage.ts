@@ -4,6 +4,7 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
+import { RefreshClock, savingData, whenRefreshing } from '../../../services/refreshClock';
 import { PageNav, type NavState } from '../../../services/pageNav';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
@@ -205,7 +206,7 @@ class DockerPage extends HTMLElement {
         // A tab that was hidden asks again as soon as it is shown, instead of waiting out the timer.
         this._visibility = () => {
             if (document.visibilityState !== 'visible' || !this.hasAttribute('open')) return;
-            void this.load();
+            if (!savingData()) void this.load();
             void this.pollLogs();
         };
     }
@@ -251,7 +252,9 @@ class DockerPage extends HTMLElement {
         this.paintAll(true);
         void this.load(true);
         if (this.listTimer) clearInterval(this.listTimer);
-        this.listTimer = setInterval(whenVisible(() => this.load()), LIST_MS);
+        this.listTimer = setInterval(whenRefreshing(() => this.load()), LIST_MS);
+        this.updated.reset();
+        this.updated.start();
         this.syncPolling();
     }
 
@@ -271,6 +274,7 @@ class DockerPage extends HTMLElement {
     }
 
     private stopTimers() {
+        this.updated.stop();
         if (this.listTimer) { clearInterval(this.listTimer); this.listTimer = null; }
         if (this.logTimer) { clearInterval(this.logTimer); this.logTimer = null; }
     }
@@ -282,6 +286,8 @@ class DockerPage extends HTMLElement {
     }
 
     private readonly t: T = (key, params) => i18n.t(key, params);
+    /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
+    private readonly updated = new RefreshClock(() => this.$('upd'), (key, params) => i18n.t(key, params), (from, now) => i18n.formatSpan(from, now));
 
     private readonly fmt: Fmt = {
         date: (iso) => {
@@ -337,7 +343,7 @@ class DockerPage extends HTMLElement {
             <style>${infraCss}${css}</style>
             <div class="pg" id="pg">
                 <header class="phead" id="phead"></header>
-                <nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.docker.name'))}"></nav>
+                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.docker.name'))}"></nav><span class="upd" id="upd" role="status"></span></div>
                 <div class="pbody" id="body"></div>
             </div>
             <div class="scrim" id="scrim"></div>
@@ -637,6 +643,7 @@ class DockerPage extends HTMLElement {
         }
         this.loading = false;
         this.loaded = true;
+        if (!this.fatal) this.updated.mark();
         if (!this.hasAttribute('open')) return;
 
         // A container that is gone is gone; one whose host did not answer is only out of sight.
@@ -667,14 +674,22 @@ class DockerPage extends HTMLElement {
     }
 
     /** Asks each host how big it is, once. Failing is not an error: the page then reads its figures without that scale. */
+    private sizesAsking = false;
+
     private async loadSizes() {
+        if (this.sizesAsking) return;
+        this.sizesAsking = true;
+        try { await this.readSizes(); } finally { this.sizesAsking = false; }
+        if (this.hasAttribute('open') && this.tab === 'overview') this.paintBody();
+    }
+
+    private async readSizes() {
         await Promise.all(this.groups.filter(g => !g.error && !this.sizes.has(g.host.id)).map(async g => {
             try {
                 const size = await fetchHostSize(g.host);
                 if (size.cores > 0 && size.mem_total > 0) this.sizes.set(g.host.id, size);
             } catch { /* an agent that cannot say, or a host that does not answer, has no scale */ }
         }));
-        if (this.hasAttribute('open') && this.tab === 'overview') this.paintBody();
     }
 
     /** Asks each host what it holds on disk, when it has not been asked lately. An agent that cannot say is remembered as such until the next round. */

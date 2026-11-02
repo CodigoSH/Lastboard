@@ -1,4 +1,5 @@
 import { apiService } from './apiService';
+import type { PxHostRef } from './proxmoxHosts';
 
 /**
  * Reading the hypervisors.
@@ -67,4 +68,15 @@ export function allGuests(hosts: PxHost[]): (PxGuest & { host: string; hostName:
         for (const g of h.guests || []) out.push({ ...g, host: h.id, hostName: h.name });
     }
     return out;
+}
+
+
+/**
+ * The hypervisors the account has switched on, without reading any of them: the page
+ * then asks each one for itself, together, and draws each as it answers, so one that
+ * is slow or down does not keep the others from showing.
+ */
+export async function loadProxmoxHostList(): Promise<PxHostRef[]> {
+    const out = await apiService.get<{ hosts?: { id: string; name: string; enabled: boolean }[] }>('/api/proxmox/settings');
+    return (out?.hosts ?? []).filter(h => h.enabled).map(h => ({ id: h.id, name: h.name }));
 }

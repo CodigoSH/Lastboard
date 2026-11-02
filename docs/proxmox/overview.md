@@ -91,7 +91,7 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 The Proxmox icon in the top bar opens it, and the **×** in its header closes it. The page also has an address of its own, `/?view=proxmox`, which opens it straight away — in a new tab, or from a bookmark — and **See all** on the [widget](../widgets/proxmox.md) opens it the same way without reloading the board. You still sign in first, and the request is taken out of the address once the page is open. While it is open the rest of the top bar is locked, the same way the status page behaves, and **Esc**, the **×** or the browser's Back button close it. Back walks through the page before it leaves it: each tab and each machine, node or store you opened is a step, so Back returns to the tab or the panel you came from, and one more leaves the page for your board.
 
-The header says how many machines are running, how many are stopped and how many have warnings. **With more than one hypervisor** connected there is a filter beside it: *All* and one button per hypervisor when there are two, a selector when there are more, so every figure on the page can be read for all of them at once or for one. A button asks for a fresh reading at once; otherwise everything refreshes every 15 seconds while the page is open and the browser tab is visible. The page has five tabs: **Overview**, **Machines**, **Storage**, **Tasks** and **System log**.
+The header says how many machines are running, how many are stopped and how many have warnings. **With more than one hypervisor** connected there is a filter beside it: *All* and one button per hypervisor when there are two, a selector when there are more, so every figure on the page can be read for all of them at once or for one. A button asks for a fresh reading at once; otherwise everything refreshes every 15 seconds while the page is open and the browser tab is visible. At the end of the bar under the header it says how old what is on screen is (*Updated 3 min ago*). If the browser asks to save data (Data Saver, or a connection marked as limited) the refresh that runs by itself pauses and the bar says so; the refresh button, and opening the page, still read. A refresh never starts while the one before is still on its way. Each hypervisor is read on its own and all of them together, and drawn as it answers: one that does not answer shows as unreachable when its time is up (six seconds) and does not keep the others from showing. The page has five tabs: **Overview**, **Machines**, **Storage**, **Tasks** and **System log**.
 
 ### Overview
 
@@ -226,9 +226,9 @@ Per hypervisor. The page reads every connected one at once, and the widget reads
 
 | When | Request |
 | :--- | :--- |
-| Page open or widget tick | `GET /cluster/resources` — one call for nodes, machines and storage |
-| Page open | `GET /nodes/{node}/status` — one per node, for load and cores |
-| Overview open | `GET .../rrddata` — one per node, for the CPU curve. Proxmox has no endpoint that returns history for more than one node, so these are spread out, and the curve is kept for five minutes |
+| Page open or widget tick | `GET /cluster/resources` — one call for nodes, machines and storage — and, together with it, `GET /access/permissions` (kept for five minutes) |
+| Page open | `GET /nodes/{node}/status` — one per node, all at once, for load and cores; a node that Proxmox lists as offline is not asked |
+| Overview open | `GET .../rrddata` — one per node, for the CPU curve, a few at a time. Lastboard names them all in one request of its own and the curve is kept for five minutes; the box of the latest tasks is asked for at most once a minute |
 | Opening a machine or a node | `GET .../rrddata` for that one, for the charts in its panel |
 | Pressing a button | `POST .../status/start` or `.../status/shutdown` |
 | Tasks open | `GET /nodes/{node}/tasks` every 15 seconds, and for an open log `GET .../tasks/{id}/log` and `.../status` every 3 seconds while the task runs |

@@ -119,6 +119,17 @@ class ApiService {
                     const { buildOverview } = await import('./demoProxmox');
                     return { hosts: [{ id: 'demo', name: 'Proxmox', ...buildOverview() }] } as any;
                 }
+                if (url.startsWith('/api/proxmox/curve')) {
+                    // The nodes the fleet's curve names, each with the demo's own history.
+                    const { buildSeries } = await import('./demoProxmox');
+                    const params = new URLSearchParams(url.split('?')[1] || '');
+                    const nodes = (params.get('nodes') || '').split(',').filter(Boolean).map(part => {
+                        const [host, node] = part.split('/');
+                        const s = buildSeries(params.get('range') || '24h') as { cpu: number[]; mem: number[] };
+                        return { host, node, cpu: s.cpu, mem: s.mem };
+                    });
+                    return { range: params.get('range') || '24h', nodes } as any;
+                }
                 if (url.startsWith('/api/proxmox/series')) {
                     const { buildSeries } = await import('./demoProxmox');
                     const params = new URLSearchParams(url.split('?')[1] || '');

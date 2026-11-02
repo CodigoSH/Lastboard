@@ -5,12 +5,13 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
 import { resolveIconUrl } from '../../../services/iconUrl';
-import { loadProxmox, chosenIcon, withIcon, type PxGuest, type PxHost } from '../../../services/proxmoxApi';
+import { loadProxmox, loadProxmoxHostList, chosenIcon, withIcon, type PxGuest, type PxHost } from '../../../services/proxmoxApi';
+import { curveQuery, hostError, mergeHosts, type PxHostRef } from '../../../services/proxmoxHosts';
 import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal';
 import '../Select/Select';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
-import { whenVisible } from '../../../services/whenVisible';
+import { RefreshClock, whenRefreshing } from '../../../services/refreshClock';
 import { PageNav, type NavState } from '../../../services/pageNav';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
@@ -47,6 +48,8 @@ const RANGES = [{ id: '1h', sec: 3600 }, { id: '24h', sec: 86400 }, { id: '7d', 
 type Range = typeof RANGES[number]['id'];
 /** How long a fleet curve is believed before it is asked again. */
 const CURVE_TTL_MS = 5 * 60e3;
+/** How long the overview's box of the latest tasks is kept before it is asked again. */
+const LATEST_TTL_MS = 60e3;
 
 function readPref(key: string): string | null {
     try { return localStorage.getItem(key); } catch { return null; }
@@ -122,6 +125,7 @@ class ProxmoxPage extends HTMLElement {
 
     private latest: { tasks: PxTask[]; where: string } | null = null;
     private latestBusy = false;
+    private latestAt = 0;
 
     /** The browser's history for this page: Back walks through its tabs and panel before it leaves. */
     private readonly nav = new PageNav('proxmox');
@@ -138,6 +142,8 @@ class ProxmoxPage extends HTMLElement {
     private readonly _resize = () => { if (this.hasAttribute('open')) this.fitUptimes(); };
 
     private readonly t: T = (key, params) => i18n.t(key, params);
+    /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
+    private readonly updated = new RefreshClock(() => this.$('upd'), (key, params) => i18n.t(key, params), (from, now) => i18n.formatSpan(from, now));
 
     private readonly tfmt: TaskFmt = {
         time: (sec) => i18n.formatDateTime(new Date(sec * 1000), { dateStyle: 'medium', timeStyle: 'short' }),
@@ -264,10 +270,13 @@ class ProxmoxPage extends HTMLElement {
         this.nav.open(this.navState());
         this.loaded = false;
         this.curveAt = 0;
+        this.latestAt = 0;
         this.paintAll(true);
         void this.load();
         if (this.timer) clearInterval(this.timer);
-        this.timer = setInterval(whenVisible(() => { void this.load(); }), POLL_MS);
+        this.timer = setInterval(whenRefreshing(() => { void this.load(); }), POLL_MS);
+        this.updated.reset();
+        this.updated.start();
     }
 
     private closeQuietly() {
@@ -285,6 +294,7 @@ class ProxmoxPage extends HTMLElement {
     }
 
     private stopTimers() {
+        this.updated.stop();
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
     }
 
@@ -372,7 +382,7 @@ class ProxmoxPage extends HTMLElement {
             <style>${infraCss}${css}</style>
             <div class="pg" id="pg">
                 <header class="phead" id="phead"></header>
-                <nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.proxmox.name'))}"></nav>
+                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.proxmox.name'))}"></nav><span class="upd" id="upd" role="status"></span></div>
                 <div class="pbody" id="body"></div>
             </div>
             <div class="scrim" id="scrim"></div>
@@ -643,19 +653,51 @@ class ProxmoxPage extends HTMLElement {
 
     // ── Data ──
 
+    /** The key a failed request is explained with. */
+    private static errorKey(e: unknown): string {
+        const key = typeof (e as { message?: unknown })?.message === 'string' ? (e as { message: string }).message.trim() : '';
+        return /^[a-z0-9_]+(\.[a-z0-9_]+)+$/.test(key) ? key : 'proxmox.connection_error';
+    }
+
+    /**
+     * Each hypervisor is asked for on its own and all of them together, and drawn as it
+     * answers: one that is slow, or down, shows as not answering when its time is up and
+     * does not keep the others from showing. What a host said last round stays on screen
+     * until it says something new.
+     */
     private async load() {
         if (this.loading) return;
         this.loading = true;
         this.paintHead();
         // The links come from every board, not the one behind this page, so a machine is flagged the same wherever the visitor was.
         loadProxmoxLinks().then(() => { if (this.hasAttribute('open')) this.paintAll(); }).catch(() => { });
+        let refs: PxHostRef[] = [];
         try {
-            this.hosts = await loadProxmox();
-            this.error = this.hosts.length ? '' : 'proxmox.not_configured';
-            if (this.hostFilter !== 'all' && !this.hosts.some(h => h.id === this.hostFilter)) this.hostFilter = 'all';
+            refs = await loadProxmoxHostList();
+            this.error = refs.length ? '' : 'proxmox.not_configured';
         } catch (e: unknown) {
-            const key = typeof (e as { message?: unknown })?.message === 'string' ? (e as { message: string }).message.trim() : '';
-            this.error = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/.test(key) ? key : 'proxmox.connection_error';
+            this.error = ProxmoxPage.errorKey(e);
+        }
+        if (this.error) {
+            if (this.error === 'proxmox.not_configured') this.hosts = [];
+        } else {
+            const held = this.hosts;
+            const fresh = new Map<string, PxHost>();
+            await Promise.all(refs.map(async ref => {
+                let host: PxHost;
+                try {
+                    host = (await loadProxmox(ref.id))[0] ?? hostError(ref, 'proxmox.connection_error');
+                } catch (e: unknown) {
+                    host = hostError(ref, ProxmoxPage.errorKey(e));
+                }
+                fresh.set(ref.id, host);
+                this.hosts = mergeHosts(refs, held, fresh);
+                this.loaded = true;
+                if (this.hasAttribute('open')) { this.paintAll(); void this.loadCurve(); void this.loadLatest(); }
+            }));
+            this.hosts = mergeHosts(refs, [], fresh);
+            if (this.hostFilter !== 'all' && !this.hosts.some(h => h.id === this.hostFilter)) this.hostFilter = 'all';
+            this.updated.mark();
         }
         this.loading = false;
         this.loaded = true;
@@ -672,31 +714,31 @@ class ProxmoxPage extends HTMLElement {
     }
 
     /**
-     * The fleet's CPU over the last day.
-     *
-     * One request per node, which is what the endpoint answers — it has no way to speak for more than one.
-     * Spaced out, not fired together: against many nodes a burst trips the server's own rate limit.
+     * The fleet's CPU over the last day, in one request that names every node: the server
+     * reads them together and leaves out the ones that do not answer.
      * Kept for a few minutes: the curve is a day long and does not move in fifteen seconds.
      */
     private async loadCurve() {
-        const key = `${this.hostFilter}|${this.range}`;
-        if (this.curveBusy || (this.curveKey === key && Date.now() - this.curveAt < CURVE_TTL_MS)) return;
+        const scopeKey = `${this.hostFilter}|${this.range}`;
         const nodes = fleetNodes(this.scope());
         if (!nodes.length) return;
+        // The nodes are part of the key: a host that answers late adds its own, and the curve is read again to include them.
+        const key = `${scopeKey}|${nodes.map(n => `${n.hostId}/${n.name}`).join(',')}`;
+        if (this.curveBusy || (this.curveKey === key && Date.now() - this.curveAt < CURVE_TTL_MS)) return;
         this.curveBusy = true;
         const cpu: { weight: number; values: number[] }[] = [];
         const mem: { weight: number; values: number[] }[] = [];
-        for (const n of nodes) {
-            if (!this.hasAttribute('open')) break;
-            try {
-                const s = await apiService.get<PxSeries>(`/api/proxmox/series?host=${encodeURIComponent(n.hostId)}&range=${this.range}&node=${encodeURIComponent(n.name)}`);
-                if (s?.cpu?.length) cpu.push({ weight: n.cores, values: s.cpu });
-                if (s?.mem?.length) mem.push({ weight: n.mem_total, values: s.mem });
-            } catch { /* a node that will not answer leaves the others alone */ }
-            await new Promise(r => setTimeout(r, 120));
-        }
+        try {
+            const out = await apiService.get<{ nodes?: { host: string; node: string; cpu: number[]; mem: number[] }[] }>(`/api/proxmox/curve?${curveQuery(this.range, nodes)}`);
+            for (const o of out?.nodes ?? []) {
+                const n = nodes.find(x => x.hostId === o.host && x.name === o.node);
+                if (!n) continue;
+                if (o.cpu?.length) cpu.push({ weight: n.cores, values: o.cpu });
+                if (o.mem?.length) mem.push({ weight: n.mem_total, values: o.mem });
+            }
+        } catch { /* a curve that will not come leaves the rest of the page alone */ }
         this.curveBusy = false;
-        if (`${this.hostFilter}|${this.range}` !== key || !this.hasAttribute('open')) return;
+        if (`${this.hostFilter}|${this.range}` !== scopeKey || !this.hasAttribute('open')) return;
         this.curve = weightedSeries(cpu);
         this.curveMem = weightedSeries(mem);
         this.curveKey = key;
@@ -708,10 +750,13 @@ class ProxmoxPage extends HTMLElement {
     private async loadLatest() {
         const n = fleetNodes(this.scope())[0];
         if (!n || this.latestBusy) return;
+        // The box is a glance at what was done lately: once a minute is as fresh as it needs to be, not every refresh.
+        if (this.latest?.where === n.name && Date.now() - this.latestAt < LATEST_TTL_MS) return;
         this.latestBusy = true;
         try {
             const tasks = await fetchTasks({ host: n.hostId, node: n.name });
             this.latest = { tasks, where: n.name };
+            this.latestAt = Date.now();
         } catch {
             // Tasks are optional: a token without the privilege simply has no box.
             this.latest = null;
@@ -958,7 +1003,7 @@ class ProxmoxPage extends HTMLElement {
         if (!ov) return;
         const scope = this.scope();
         this.charts.delete('fleet');
-        const haveCurve = this.curve.length >= 2 && this.curveKey === `${this.hostFilter}|${this.range}`;
+        const haveCurve = this.curve.length >= 2 && this.curveKey.startsWith(`${this.hostFilter}|${this.range}|`);
         let chart = '';
         if (haveCurve) {
             const spec = this.chartSpec(this.historySeries(this.curve, this.curveMem), 190);

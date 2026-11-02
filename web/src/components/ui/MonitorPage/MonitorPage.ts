@@ -4,7 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
-import { whenVisible } from '../../../services/whenVisible';
+import { RefreshClock, savingData, whenRefreshing } from '../../../services/refreshClock';
 import { PageNav, type NavState } from '../../../services/pageNav';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import {
@@ -160,7 +160,7 @@ class MonitorPage extends HTMLElement {
 
         // A tab that was hidden asks again as soon as it is shown, instead of waiting out the timer.
         this._visibility = () => {
-            if (document.visibilityState === 'visible' && this.hasAttribute('open')) void this.load();
+            if (document.visibilityState === 'visible' && this.hasAttribute('open') && !savingData()) void this.load();
         };
     }
 
@@ -207,7 +207,10 @@ class MonitorPage extends HTMLElement {
         this.paintAll(true);
         void this.load(false, true);
         this.stopTimer();
-        this.timer = setInterval(whenVisible(() => this.load()), REFRESH_MS);
+        this.timer = setInterval(whenRefreshing(() => this.load()), REFRESH_MS);
+        this.updated.reset();
+        if (this.loaded) this.updated.mark(this.rowsAt);
+        this.updated.start();
     }
 
     private closeQuietly() {
@@ -227,6 +230,7 @@ class MonitorPage extends HTMLElement {
 
     private stopTimer() {
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
+        this.updated.stop();
     }
 
     // ── Small helpers ──
@@ -236,6 +240,8 @@ class MonitorPage extends HTMLElement {
     }
 
     private readonly t: T = (key, params) => i18n.t(key, params);
+    /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
+    private readonly updated = new RefreshClock(() => this.$('upd'), (key, params) => i18n.t(key, params), (from, now) => i18n.formatSpan(from, now));
 
     private readonly fmt: Fmt = {
         num: (n) => i18n.formatNumber(n),
@@ -299,7 +305,7 @@ class MonitorPage extends HTMLElement {
             <style>${infraCss}${css}</style>
             <div class="pg" id="pg">
                 <header class="phead" id="phead"></header>
-                <nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('monitor.overview_title'))}"></nav>
+                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('monitor.overview_title'))}"></nav><span class="upd" id="upd" role="status"></span></div>
                 <div class="pbody" id="body"></div>
             </div>
             <div class="scrim" id="scrim"></div>
@@ -563,6 +569,7 @@ class MonitorPage extends HTMLElement {
             ]);
             this.rows = (Array.isArray(rows) ? rows : []).map(readRow);
             this.rowsAt = Date.now();
+            this.updated.mark(this.rowsAt);
             if (setup) this.setup = { ...setup, retention_days: setup.retention_days || 30 };
             this.failed = false;
             if (this.board !== 'all' && !this.boards().includes(this.board)) this.board = 'all';
@@ -585,22 +592,33 @@ class MonitorPage extends HTMLElement {
         if (this.drawerOpen) void this.loadHistory(fresh);
     }
 
+    /** What is already on its way is not asked again by the refresh that comes round before it has arrived. */
+    private trendBusy = false;
+    private outagesBusy = false;
+    private historyBusy = false;
+
     private async loadDayTrend() {
+        if (this.trendBusy) return;
+        this.trendBusy = true;
         try {
             const trend = await apiService.get<{ points: TrendPoint[] }>('/api/monitor/trend?range=24h');
             if (trend?.points) this.trends.set('24 h', trend.points);
         } catch { /* the chart says there is nothing to draw */ }
+        this.trendBusy = false;
         this.trendLoaded = true;
         if (this.hasAttribute('open') && this.tab === 'overview') { this.last.body = ''; this.paintBody(); }
     }
 
     private async loadOutages(sig: string) {
+        if (this.outagesBusy) return;
+        this.outagesBusy = true;
         try {
             const out = await apiService.get<{ incidents: Outage[] }>('/api/monitor/incidents?range=30d');
             this.outages = Array.isArray(out?.incidents) ? sortOutages(out.incidents) : [];
             this.outagesSig = sig;
             this.outagesAt = Date.now();
         } catch { /* what the page held stays, or the boxes say there is none */ }
+        this.outagesBusy = false;
         this.outagesLoaded = true;
         if (!this.hasAttribute('open')) return;
         this.last.body = '';
@@ -622,7 +640,8 @@ class MonitorPage extends HTMLElement {
         const r = this.current();
         if (!r) return;
         const key = `${r.item_id}:${this.histRange}`;
-        if (!force && this.histories.has(key) && !historyDue(this.histRange, Date.now() - (this.historyAt.get(key) ?? 0))) return;
+        if (!force && (this.historyBusy || (this.histories.has(key) && !historyDue(this.histRange, Date.now() - (this.historyAt.get(key) ?? 0))))) return;
+        this.historyBusy = true;
         const seq = ++this.histSeq;
         try {
             const out = await apiService.get<{ checks: Check[]; incidents: Outage[]; latency?: LatencyPoint[]; total?: number; lite?: boolean }>(
@@ -636,6 +655,7 @@ class MonitorPage extends HTMLElement {
             });
             this.historyAt.set(key, Date.now());
         } catch { /* the panel keeps what it had */ }
+        this.historyBusy = false;
         if (seq !== this.histSeq || !this.hasAttribute('open')) return;
         this.last.dbody = '';
         this.paintDrawer();
