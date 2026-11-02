@@ -5,9 +5,8 @@
  *   bun scripts/docs-shots.ts home p-*   # only the ones matching
  *   KEEP=1 bun scripts/docs-shots.ts     # leave the instance up to poke at it
  *
- * The two Docker shots need a Docker-compatible API to point at, named in
- * DOCKER_API; without it that widget is not seeded and those shots are skipped.
- * Podman serves one:  podman system service --time=0 tcp://127.0.0.1:2375 &
+ * Docker, Proxmox and the services the status page watches are invented: the
+ * rig serves them itself, so a run never touches anybody's real containers.
  *
  * Why this exists: the screenshots used to be taken by hand, one at a time,
  * over months. They ended up at sixteen different widths, all at 1x — a 313px
@@ -41,6 +40,10 @@ const APP = `http://localhost:${PORT}/`;
 const OUT_DIR = 'docs/assets';
 const PVE_PORT = Number(process.env.PVE_PORT || 8198);   // the stand-in hypervisor
 const PVE_PORT_2 = Number(process.env.PVE_PORT_2 || 8199); // a second one, so the summary exists
+const DOCKER_PORT = Number(process.env.DOCKER_PORT || 8210);   // the first invented Docker host
+const DOCKER_PORT_2 = Number(process.env.DOCKER_PORT_2 || 8211); // the second
+const SERVICES_PORT = Number(process.env.SERVICES_PORT || 8212); // the services the status page watches
+const DEAD_PORT = Number(process.env.DEAD_PORT || 8213);         // nothing listens here: the one service that is down
 const WORK = join(tmpdir(), 'lastboard-docs-shots');
 const BIN = './bin/lastboard';
 
@@ -99,6 +102,54 @@ const openSettings = (section: string) => `
   await sleep(700);
   ${DRAWER}.querySelector('.right-drawer__menu-item[data-section="${section}"]').click();
   await sleep(900);`;
+
+/**
+ * Waits, inside the page, for a condition — and says which one never came. A
+ * fixed sleep is a bet that the page is drawn by then; this is the page saying
+ * so. Not arriving is an error with a name, never a photograph of what was
+ * there instead.
+ */
+const until = (what: string, cond: string, ms = 90000) => `
+  { let ok = false;
+    for (let i = 0; i < ${Math.round(ms / 250)} && !ok; i++) { ok = !!(() => { ${cond} })(); if (!ok) await sleep(250); }
+    if (!ok) throw new Error('${what} never settled'); }`;
+
+/** The shadow root of one of the full-screen pages. */
+const PAGE = (tag: string) => `document.querySelector('${tag}').shadowRoot`;
+
+/** The four indicators drawn with figures, the chart drawn, and something to attend to — the overview, ready. */
+const overviewReady = (tag: string, needsAttention = true) => until(`the ${tag} overview`, `
+    const root = ${PAGE(tag)};
+    const kpis = [...root.querySelectorAll('.kpi__v')].map((e) => e.textContent.trim());
+    return kpis.length === 4 && kpis.every((k) => k && k !== '—')
+        && root.querySelector('.chart svg path') && ${needsAttention ? "root.querySelector('.attn__row')" : 'true'};`);
+
+/**
+ * The addresses of the stand-in services, dressed in the ones a household would
+ * have: they run on this machine, and a manual that prints 127.0.0.1 and a port
+ * teaches the wrong thing. Done on the text once the page is drawn, just before
+ * the picture, because the page prints the address it was given.
+ */
+const maskServices = (tag: string) => `
+  { const walker = document.createTreeWalker(${PAGE(tag)}, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        n.nodeValue = n.nodeValue.replace(/http:\\/\\/127\\.0\\.0\\.1:(\\d+)\\/?([a-z-]*)/g, (m, port, slug) => 'https://' + (port === '${DEAD_PORT}' ? 'immich' : slug) + '.home.lan');
+    } }`;
+
+/** A tab of a full-screen page, opened. */
+const openPageTab = (tag: string, tab: string) => `
+  { const t = ${PAGE(tag)}.querySelector('#tabs [data-tab="${tab}"]');
+    if (!t) throw new Error('no ${tab} tab on ${tag}');
+    t.click(); await sleep(900); }`;
+
+/** A card of the page whose text matches, clicked — the side panel opens on it. */
+const openCard = (tag: string, match: string, cardSel = '.unit') => `
+  { let hit = null;
+    for (let i = 0; i < 80 && !hit; i++) { hit = [...${PAGE(tag)}.querySelectorAll('${cardSel}')].find((c) => /${match}/i.test(c.textContent || '')); if (!hit) await sleep(250); }
+    if (!hit) throw new Error('no card for ${match} on ${tag}');
+    hit.click(); }
+  ${until('the side panel', `return ${PAGE(tag)}.getElementById('drawer')?.classList.contains('on');`, 20000)}
+  await sleep(1200);`;
 
 /**
  * The card on the board that holds a given widget, for framing one tile.
@@ -166,8 +217,11 @@ const SHOTS: Shot[] = [
     // lead image of the whole manual was publishing a tile sliced in half.
     {
         name: 'home', w: 1600, h: 1060, wait: 3000,
+        // The board's picture ends where its even rows end: the API tile hangs
+        // below them, on a row of its own, so its close-up exists without it
+        // spoiling the shape of the board the whole manual leads with.
         act: `const grid = document.querySelector('bookmark-grid').shadowRoot;
-              const cards = [...grid.querySelectorAll('.bookmark-grid__card')];
+              const cards = [...grid.querySelectorAll('.bookmark-grid__card')].filter((c) => !c.querySelector('widget-api'));
               const bottom = Math.max(...cards.map((c) => c.getBoundingClientRect().bottom));
               window.__gridBottom = Math.ceil(bottom + 20);`,
         fitHeight: true,
@@ -189,7 +243,7 @@ const SHOTS: Shot[] = [
             const sheet = ${DRAWER}.querySelector('settings-content').shadowRoot;
             const walker = document.createTreeWalker(sheet, NodeFilter.SHOW_TEXT);
             for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-                n.nodeValue = n.nodeValue.replace(/127\.0\.0\.1:\d+/g, '192.168.1.20:2375');
+                n.nodeValue = n.nodeValue.replace(/127\.0\.0\.1:(\d+)/g, (m, port) => port === '${DOCKER_PORT_2}' ? '203.0.113.10:2375' : '192.168.1.20:2375');
             }
             await sleep(200);` : ''),
         clip: `${DRAWER}.querySelector('.right-drawer__sheet')`,
@@ -265,72 +319,103 @@ const SHOTS: Shot[] = [
         clip: `document.querySelector('dashboard-manager-modal').shadowRoot.querySelector('.sheet')`,
     },
 
-    // ── Monitoring, end to end ──────────────────────────────────────────
+    // ── The three pages that watch your infrastructure ──────────────────
+    // They share one shell — header, tabs, four indicators, an inventory and a
+    // side panel — so each is photographed the same way: the overview, the
+    // inventory, and one item opened in the panel. The chart on an overview
+    // draws what the page has seen since it was opened, so each shot waits
+    // for it instead of guessing how long that takes.
     {
-        // Opens on a service that actually went down, so the outage table and
-        // the uptime figure have something in them.
-        name: 'monitor', w: 1600, h: 900, wait: 1600,
-        // Two things were wrong here and neither made a sound: the row class was
-        // `.mp__row` and the component writes `.mp-row`, so nothing was ever
-        // found; and `if (hit)` swallowed that, leaving the page on whichever
-        // service it selects by default — the one with a clean record and an
-        // empty outage table. It waits for the row now, and throws if it never
-        // comes.
+        // Ends under the projects, before the Hosts card: that card prints the
+        // address each host was added with, and these run on this machine.
+        // Given time for the chart to gather a line: it draws what happened
+        // since the page opened, one reading every ten seconds.
+        name: 'docker-overview', w: 1600, h: 900, wait: 800,
+        act: `${TOPBAR}.querySelector('#docker-toggle').click();
+              ${overviewReady('docker-page')}
+              await sleep(35000);`,
+    },
+    {
+        name: 'docker-containers', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#docker-toggle').click();
+              ${overviewReady('docker-page')}
+              ${openPageTab('docker-page', 'containers')}
+              ${until('the container cards', `return ${PAGE('docker-page')}.querySelectorAll('.unit').length === 11;`, 30000)}`,
+    },
+    {
+        // One container opened: its figures, its health, its image and ports, and the buttons.
+        name: 'docker-container', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#docker-toggle').click();
+              ${overviewReady('docker-page')}
+              ${openPageTab('docker-page', 'containers')}
+              ${until('the container cards', `return ${PAGE('docker-page')}.querySelectorAll('.unit').length === 11;`, 30000)}
+              ${openCard('docker-page', 'jellyfin')}`,
+    },
+    {
+        name: 'proxmox-overview', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click();
+              ${overviewReady('proxmox-page', false)}`,
+    },
+    {
+        name: 'proxmox-machines', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click();
+              ${overviewReady('proxmox-page', false)}
+              ${openPageTab('proxmox-page', 'machines')}
+              ${until('the machine cards', `return ${PAGE('proxmox-page')}.querySelectorAll('.unit').length > 8;`, 30000)}`,
+    },
+    {
+        // Opens on the one machine that is stopped, because that is what this
+        // page does that the Proxmox console does not: it names the service
+        // that went down with its container.
+        name: 'proxmox-machine', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click();
+              ${overviewReady('proxmox-page', false)}
+              ${openPageTab('proxmox-page', 'machines')}
+              ${until('the machine cards', `return ${PAGE('proxmox-page')}.querySelectorAll('.unit').length > 8;`, 30000)}
+              ${openCard('proxmox-page', 'plex')}`,
+    },
+    {
+        name: 'monitor-overview', w: 1600, h: 1000, wait: 800,
         act: `${TOPBAR}.querySelector('#monitor-toggle').click();
-              const page = document.querySelector('monitor-page').shadowRoot;
-              let hit = null;
-              for (let i = 0; i < 40 && !hit; i++) {
-                  hit = [...page.querySelectorAll('.mp-row')].find((r) => /Nextcloud/.test(r.textContent || ''));
-                  if (!hit) await sleep(250);
-              }
-              if (!hit) throw new Error('no Nextcloud row on the status page');
-              hit.click(); await sleep(1600);`,
+              ${overviewReady('monitor-page')}`,
+    },
+    {
+        name: 'monitor-services', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#monitor-toggle').click();
+              ${overviewReady('monitor-page')}
+              ${openPageTab('monitor-page', 'services')}
+              ${until('the service cards', `return ${PAGE('monitor-page')}.querySelectorAll('.unit').length >= 9;`, 30000)}
+              ${maskServices('monitor-page')}`,
+    },
+    {
+        // The service that went down more than once, opened: its availability
+        // over a day, a week and a month, and the chart of how it answered.
+        name: 'monitor-service', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#monitor-toggle').click();
+              ${overviewReady('monitor-page')}
+              ${openPageTab('monitor-page', 'services')}
+              ${until('the service cards', `return ${PAGE('monitor-page')}.querySelectorAll('.unit').length >= 9;`, 30000)}
+              ${openCard('monitor-page', 'nextcloud')}
+              ${until('the response chart', `return ${PAGE('monitor-page')}.querySelector('#dr-body .chart svg path');`, 30000)}
+              ${maskServices('monitor-page')}`,
+    },
+    {
+        name: 'monitor-outages', w: 1600, h: 1000, wait: 800,
+        act: `${TOPBAR}.querySelector('#monitor-toggle').click();
+              ${overviewReady('monitor-page')}
+              ${openPageTab('monitor-page', 'outages')}
+              ${until('the outage rows', `return ${PAGE('monitor-page')}.querySelectorAll('.tbl--out .tr:not(.tr--h)').length > 4;`, 30000)}`,
+    },
+    {
+        // The dialog the profile's "active sessions" card opens.
+        name: 'p-sessions', w: 1500, h: 950, pad: 0, wait: 900,
+        act: openSettings('account') + `
+              ${until('the sessions button', `return ${DRAWER}.querySelector('settings-content')?.shadowRoot?.querySelector('[data-action="open-sessions"]');`, 20000)}
+              ${DRAWER}.querySelector('settings-content').shadowRoot.querySelector('[data-action="open-sessions"]').click();
+              await sleep(1200);`,
+        clip: `${DRAWER}.querySelector('settings-content').shadowRoot.getElementById('sessions-modal')`,
     },
 
-    // ── Proxmox, against the stand-in hypervisor ────────────────────────
-    {
-        // The screen this cycle was built around, and it only exists with more
-        // than one hypervisor — which is why the rig serves two. Photographed
-        // at rest: the tiles on top, the three cards below them closed, which
-        // is what someone opening the page actually sees.
-        // 780, measured on the rendered page rather than guessed: the three
-        // cards close at 712 and a shot of 1000 left a third of the frame as
-        // empty board, which reads as a page that failed to load.
-        name: 'proxmox-summary', w: 1600, h: 780, wait: 4500,
-        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2600);
-              const page = document.querySelector('proxmox-page').shadowRoot;
-              if (!page.querySelector('.hv')) throw new Error('no hypervisor tiles — did the second stand-in start?');`,
-    },
-    {
-        // Opens on the one machine that is stopped, because that is the thing
-        // this page does that the Proxmox console does not: it names the
-        // service that went down with its container.
-        // 900 tall, measured rather than guessed: the grid ends there at this
-        // width now that a stopped machine sorts to the front and every tile
-        // carries a trend line. At 790 the last row was sliced in half; at
-        // 1000 a third of the window was empty board.
-        name: 'proxmox', w: 1600, h: 900, wait: 4000,
-        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2400);
-              const page = document.querySelector('proxmox-page').shadowRoot;
-              const tile = [...page.querySelectorAll('.hv')].find((t) => /Proxmox/.test(t.textContent || ''));
-              if (!tile) throw new Error('no hypervisor tile to enter');
-              tile.click(); await sleep(2200);`,
-    },
-    {
-        // The sheet of the one stopped machine, which is where the page makes
-        // its case: it names the service that went down with the container.
-        name: 'proxmox-machine', w: 1600, h: 1000, pad: 0, wait: 1200,
-        act: `${TOPBAR}.querySelector('#proxmox-toggle').click(); await sleep(2400);
-              const page = document.querySelector('proxmox-page').shadowRoot;
-              const tile = [...page.querySelectorAll('.hv')].find((t) => /Proxmox/.test(t.textContent || ''));
-              if (!tile) throw new Error('no hypervisor tile to enter');
-              tile.click(); await sleep(2200);
-              const tiles = [...page.querySelectorAll('.tile')];
-              const hit = tiles.find((t) => /plex/i.test(t.textContent || ''));
-              if (!hit) throw new Error('no plex tile on the page — was the fake host seeded?');
-              hit.click(); await sleep(1600);`,
-        clip: `document.querySelector('proxmox-page').shadowRoot.querySelector('dialog')`,
-    },
     // Taller than the rest: this tile sits on the seventh row, and a widget
     // below the fold is never mounted, so the wait would find nothing to wait
     // for and the close-up would catch a tile that had not loaded.
@@ -342,7 +427,7 @@ const SHOTS: Shot[] = [
         name: 'edit-mode', w: 1600, h: 1060, wait: 700, fitHeight: true,
         act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(700);
               const grid = document.querySelector('bookmark-grid').shadowRoot;
-              const cards = [...grid.querySelectorAll('.bookmark-grid__card')];
+              const cards = [...grid.querySelectorAll('.bookmark-grid__card')].filter((c) => !c.querySelector('widget-api'));
               window.__gridBottom = Math.ceil(Math.max(...cards.map((c) => c.getBoundingClientRect().bottom)) + 20);`,
     },
     {
@@ -535,6 +620,9 @@ function startFakeProxmox(port: number, resources: any[]): { close: () => void }
         cpu: stopped && i > 26 ? 0 : Math.max(0, base + Math.sin(i / 7) * base * 0.4) / 100,
         mem: stopped && i > 26 ? 0 : 2.1e9 + Math.sin(i / 11) * 2e8,
         maxmem: 4294967296,
+        // A node reports these instead of mem/maxmem.
+        memused: 21e9 + Math.sin(i / 11) * 2e9,
+        memtotal: 32 * 2 ** 30,
     }));
 
     // What each node has been doing. A UPID is "UPID:<node>:<pid>:<pstart>:
@@ -645,6 +733,153 @@ function startFakeProxmox(port: number, resources: any[]): { close: () => void }
     return { close: () => server.close() };
 }
 
+
+// ── Invented Docker hosts ───────────────────────────────────────────────────
+
+interface FakeContainer {
+    name: string; image: string; running: boolean; up: string; ports?: number[]; cpu: number; memMiB: number;
+    project?: string; health?: 'healthy' | 'unhealthy'; exit?: number;
+}
+interface FakeDockerHost {
+    name: string; cpus: number; memGiB: number; disk: { images: number; volumes: number; cache: number };
+    containers: FakeContainer[];
+}
+
+const GiB = 1024 ** 3, MiB = 1024 ** 2;
+
+/**
+ * Two Docker hosts made up for the pictures. Like the hypervisors, they are
+ * invented: pointing the rig at somebody's real daemon would publish the names
+ * of what their household runs. Every container here is something a person with
+ * a home server might run, and the two that need attention are there because
+ * the page's overview is built around the list of what needs it.
+ */
+const DOCKER_HOSTS: FakeDockerHost[] = [
+    {
+        name: 'Home server', cpus: 8, memGiB: 16,
+        disk: { images: 11.4 * GiB, volumes: 7.6 * GiB, cache: 2.1 * GiB },
+        containers: [
+            { name: 'jellyfin', image: 'jellyfin/jellyfin:10.10', running: true, up: 'Up 12 days (healthy)', health: 'healthy', ports: [8096], cpu: 51, memMiB: 812, project: 'media' },
+            { name: 'immich-server', image: 'ghcr.io/immich-app/immich-server:release', running: true, up: 'Up 12 days (healthy)', health: 'healthy', ports: [2283], cpu: 34, memMiB: 1240, project: 'immich' },
+            { name: 'immich-postgres', image: 'postgres:16-alpine', running: true, up: 'Up 12 days (healthy)', health: 'healthy', cpu: 9, memMiB: 214, project: 'immich' },
+            { name: 'immich-redis', image: 'redis:7-alpine', running: true, up: 'Up 12 days', cpu: 3, memMiB: 24, project: 'immich' },
+            { name: 'vaultwarden', image: 'vaultwarden/server:1.32', running: true, up: 'Up 12 days (healthy)', health: 'healthy', ports: [8222], cpu: 2, memMiB: 38 },
+            { name: 'syncthing', image: 'syncthing/syncthing:1.29', running: true, up: 'Up 4 days', ports: [8384], cpu: 19, memMiB: 96 },
+            { name: 'paperless-worker', image: 'ghcr.io/paperless-ngx/paperless-ngx:2.13', running: false, up: 'Exited (137) 2 hours ago', exit: 137, cpu: 0, memMiB: 0, project: 'paperless' },
+            { name: 'nextcloud', image: 'nextcloud:30-apache', running: false, up: 'Exited (0) 3 days ago', exit: 0, cpu: 0, memMiB: 0 },
+        ],
+    },
+    {
+        name: 'Cloud VPS', cpus: 4, memGiB: 4,
+        disk: { images: 2.3 * GiB, volumes: 0.9 * GiB, cache: 0.4 * GiB },
+        containers: [
+            { name: 'caddy', image: 'caddy:2-alpine', running: true, up: 'Up 31 days', ports: [443], cpu: 6, memMiB: 42 },
+            { name: 'uptime-kuma', image: 'louislam/uptime-kuma:1', running: true, up: 'Up 31 days (healthy)', health: 'healthy', ports: [3001], cpu: 27, memMiB: 148 },
+            { name: 'freshrss', image: 'freshrss/freshrss:1.25', running: true, up: 'Up 9 days (unhealthy)', health: 'unhealthy', ports: [8080], cpu: 4, memMiB: 61 },
+        ],
+    },
+];
+
+/** A reading that moves a little with the clock, so the page's history is a line and not a ruler. */
+const wobble = (base: number, seed: string) => base * (1 + 0.22 * Math.sin(Date.now() / 7000 + seed.length));
+
+/** The part of the Docker Engine API the page reads, answering for one invented host. */
+function startFakeDocker(port: number, host: FakeDockerHost): { close: () => void } {
+    const key = (c: FakeContainer) => new Bun.CryptoHasher('sha256').update(`${host.name}/${c.name}`).digest('hex');
+    const byId = (id: string) => host.containers.find((c) => key(c).startsWith(id));
+    const started = (c: FakeContainer) => new Date(Date.now() - parseInt(c.up.match(/\d+/)?.[0] || '1', 10) * 86400_000).toISOString();
+    const server = createServer((req, res) => {
+        const url = new URL(req.url || '/', 'http://x');
+        // The client may ask for a versioned path, as Docker clients do.
+        const path = url.pathname.replace(/^\/v[0-9.]+/, '');
+        const json = (body: unknown, status = 200) => { res.statusCode = status; res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(body)); };
+        if (req.method === 'GET' && path === '/containers/json') {
+            return json(host.containers.map((c, i) => ({
+                Id: key(c), Names: [`/${c.name}`], Image: c.image, State: c.running ? 'running' : 'exited', Status: c.up,
+                Created: 1756000000 + i * 3600,
+                Ports: (c.ports || []).map((p) => ({ IP: '0.0.0.0', PrivatePort: p, PublicPort: p, Type: 'tcp' })),
+                Labels: c.project ? { 'com.docker.compose.project': c.project } : {},
+            })));
+        }
+        if (req.method === 'GET' && path === '/info') {
+            return json({ ID: 'invented', Name: host.name, NCPU: host.cpus, MemTotal: Math.round(host.memGiB * GiB) });
+        }
+        if (req.method === 'GET' && path === '/system/df') {
+            const n = host.containers.length;
+            return json({
+                LayersSize: Math.round(host.disk.images),
+                Images: Array.from({ length: n }, (_, i) => ({ Size: Math.round(host.disk.images / n), SharedSize: 0, Containers: i % 4 === 3 ? 0 : 1 })),
+                Containers: host.containers.map((c) => ({ SizeRw: c.running ? 0 : 60 * MiB, State: c.running ? 'running' : 'exited' })),
+                Volumes: [{ UsageData: { Size: Math.round(host.disk.volumes * 0.8), RefCount: 1 } }, { UsageData: { Size: Math.round(host.disk.volumes * 0.2), RefCount: 0 } }],
+                BuildCache: [{ Size: Math.round(host.disk.cache), InUse: false }],
+            });
+        }
+        const stats = path.match(/^\/containers\/([^/]+)\/stats$/);
+        if (req.method === 'GET' && stats) {
+            const c = byId(stats[1]);
+            if (!c) return json({ message: 'No such container' }, 404);
+            const system = 1_000_000_000;
+            return json({
+                cpu_stats: { cpu_usage: { total_usage: 5_000_000_000 + Math.round(wobble(c.cpu, c.name) / 100 * system) }, system_cpu_usage: 90_000_000_000 + system * host.cpus, online_cpus: host.cpus },
+                precpu_stats: { cpu_usage: { total_usage: 5_000_000_000 }, system_cpu_usage: 90_000_000_000 },
+                memory_stats: { usage: Math.round(wobble(c.memMiB, c.name + 'm') * MiB), limit: Math.round(host.memGiB * GiB) },
+            });
+        }
+        const one = path.match(/^\/containers\/([^/]+)\/json$/);
+        if (req.method === 'GET' && one) {
+            const c = byId(one[1]);
+            if (!c) return json({ message: 'No such container' }, 404);
+            const volume = `${c.name}-data`;
+            return json({
+                Id: key(c), Name: `/${c.name}`, Created: started(c),
+                State: { Status: c.running ? 'running' : 'exited', ExitCode: c.exit ?? 0, StartedAt: started(c), FinishedAt: c.running ? '0001-01-01T00:00:00Z' : new Date(Date.now() - 7200_000).toISOString(), ...(c.health ? { Health: { Status: c.health } } : {}) },
+                RestartCount: 0, Config: { Image: c.image, Env: ['TZ=Europe/Lisbon', 'PUID=1000'], Tty: true },
+                HostConfig: { RestartPolicy: { Name: 'unless-stopped' } },
+                Mounts: c.name === 'jellyfin'
+                    ? [{ Type: 'bind', Source: '/srv/media', Destination: '/media', RW: false }, { Type: 'volume', Name: 'jellyfin-config', Source: '/var/lib/docker/volumes/jellyfin-config/_data', Destination: '/config', RW: true }]
+                    : [{ Type: 'volume', Name: volume, Source: `/var/lib/docker/volumes/${volume}/_data`, Destination: '/data', RW: true }],
+                NetworkSettings: {
+                    Ports: Object.fromEntries((c.ports || []).map((p) => [`${p}/tcp`, [{ HostIp: '0.0.0.0', HostPort: String(p) }]])),
+                    Networks: { [c.project ? `${c.project}_default` : 'bridge']: { IPAddress: '172.18.0.' + (2 + host.containers.indexOf(c)) } },
+                },
+            });
+        }
+        const logs = path.match(/^\/containers\/([^/]+)\/logs$/);
+        if (req.method === 'GET' && logs) {
+            const c = byId(logs[1]);
+            if (!c) return json({ message: 'No such container' }, 404);
+            const lines = ['starting up', `listening on :${(c.ports || [8080])[0]}`, 'loaded configuration from /config', 'database is ready',
+                'GET /health 200 2ms', 'GET /api/status 200 4ms', 'GET /health 200 1ms',
+                ...(c.health === 'unhealthy' ? ['health check failed: connection refused', 'health check failed: connection refused'] : ['GET /health 200 2ms']),
+                ...(c.exit === 137 ? ['worker killed: out of memory'] : [])];
+            res.setHeader('content-type', 'text/plain');
+            return void res.end(lines.map((l, i) => `${new Date(Date.now() - (lines.length - i) * 20_000).toISOString()} ${l}`).join('\n') + '\n');
+        }
+        if (req.method === 'POST' && /^\/containers\/[^/]+\/(start|stop|restart)$/.test(path)) { res.statusCode = 204; return void res.end(); }
+        json({ message: 'page not found' }, 404);
+    });
+    server.listen(port, '127.0.0.1');
+    return { close: () => server.close() };
+}
+
+/**
+ * The services the status page watches, answering like their real selves would:
+ * each its own pace, one of them slow. Without them every probe would fail on a
+ * name that does not resolve, and the page would be photographed with a dozen
+ * red rows.
+ */
+function startFakeServices(port: number): { close: () => void } {
+    const pace: Record<string, number> = { nextcloud: 1150, plex: 210, jellyfin: 120, vaultwarden: 40, paperless: 65, 'home-assistant': 180, 'pi-hole': 18, 'uptime-kuma': 90, grafana: 75, proxmox: 55 };
+    const server = createServer(async (req, res) => {
+        const slug = (req.url || '/').split('/')[1] || '';
+        await sleep((pace[slug] ?? 60) * (0.85 + Math.random() * 0.3));
+        res.statusCode = 200;
+        res.end('ok');
+    });
+    server.listen(port, '127.0.0.1');
+    return { close: () => server.close() };
+}
+
 /**
  * Gives the throwaway instance the few things the starter board cannot have on
  * its own: services with a status indicator, a plausible day of uptime history
@@ -706,7 +941,7 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     // wrote back content without the dot and un-monitored four of the six
     // services. The status page was photographed with two rows in it and the
     // failure looked like a product with nothing to show.
-    const watched = ['Plex', 'Jellyfin', 'Nextcloud', 'Immich', 'Proxmox', 'Grafana'];
+    const watched = ['Plex', 'Jellyfin', 'Nextcloud', 'Immich', 'Vaultwarden', 'Paperless', 'Home Assistant', 'Pi-hole', 'Uptime Kuma', 'Proxmox', 'Grafana'];
     const backing: Record<string, { kind: string; vmid: number }> = {
         Plex: { kind: 'lxc', vmid: 106 },
         Jellyfin: { kind: 'lxc', vmid: 100 },
@@ -720,13 +955,19 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     };
     const rows = db.query(`SELECT id, content FROM items WHERE type = 'bookmark'`).all() as { id: number; content: string }[];
     const monitored: number[] = [];
+    const labelOf = new Map<number, string>();
     for (const row of rows) {
         const c = JSON.parse(row.content || '{}');
         let touched = false;
         if (watched.includes(c.label)) {
             c.statusCheck = true;
             c.statusPos = 'top-right';
+            // Each is probed at a stand-in that answers; Immich is the one left
+            // pointing at a port where nothing listens, so it is down for real.
+            const slug = String(c.label).toLowerCase().replace(/\s+/g, '-');
+            c.url = c.label === 'Immich' ? `http://127.0.0.1:${DEAD_PORT}/` : `http://127.0.0.1:${SERVICES_PORT}/${slug}`;
             monitored.push(row.id);
+            labelOf.set(row.id, c.label);
             touched = true;
         }
         // Which bookmark each machine serves. Without it the Proxmox page draws
@@ -740,21 +981,36 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         if (touched) db.run(`UPDATE items SET content = ? WHERE id = ?`, [JSON.stringify(c), row.id]);
     }
 
-    // A day of checks, every five minutes, with two services having had a rough
-    // patch — one long outage and one blip.
+    // Thirty days of checks, every five minutes: the status page reads a day, a
+    // week and a month, and its outage list is only worth photographing if
+    // there are outages in it. Each service has its own rough patches, written
+    // as [steps ago it began, steps it lasted, what it answered] — 0 is no
+    // answer at all, and a number is the code that came back. Immich is down
+    // now: its last stretch has no end, which is what the page draws in red.
+    const STEP = 5 * 60 * 1000, DAYS = 30;
+    const patches: Record<string, [number, number, number][]> = {
+        Nextcloud: [[78, 18, 0], [2330, 31, 503], [5260, 12, 0], [8030, 40, 503]],
+        Plex: [[154, 4, 0], [4104, 6, 502]],
+        Immich: [[8, 9, 0], [3040, 8, 0], [6512, 20, 502]],
+        Paperless: [[1210, 9, 502], [7090, 11, 503]],
+        Grafana: [[24, 3, 0]],
+        'Home Assistant': [[5800, 7, 0]],
+    };
     const now = Date.now();
     const insert = db.prepare(
         `INSERT INTO monitor_checks (item_id, checked_at, up, latency_ms, status_code) VALUES (?, ?, ?, ?, ?)`);
+    db.run('BEGIN');
     monitored.forEach((itemId, index) => {
-        const base = 40 + index * 18;
-        for (let i = 288; i >= 0; i--) {
-            const at = new Date(now - i * 5 * 60 * 1000);
-            const outage = (index === 2 && i > 60 && i < 78) || (index === 4 && i > 150 && i < 154);
-            const latency = Math.round(base + Math.sin(i / 9) * 12 + Math.random() * 14);
-            insert.run(itemId, at.toISOString().replace('T', ' ').slice(0, 19), outage ? 0 : 1,
-                outage ? null : latency, outage ? 0 : 200);
+        const label = labelOf.get(itemId) || '';
+        const base = 40 + index * 14 + (label === 'Nextcloud' ? 700 : 0);
+        for (let i = DAYS * 288; i >= 0; i--) {
+            const at = new Date(now - i * STEP);
+            const patch = (patches[label] || []).find(([ago, len]) => i <= ago && i > ago - len);
+            const latency = Math.round(base + Math.sin(i / 9) * base * 0.15 + Math.random() * base * 0.2);
+            insert.run(itemId, at.toISOString().replace('T', ' ').slice(0, 19), patch ? 0 : 1, patch ? null : latency, patch ? patch[2] : 200);
         }
     });
+    db.run('COMMIT');
 
     // The two widgets that need all of the above to be worth photographing.
     const dashboardId = (db.query(`SELECT dashboard_id FROM items WHERE dashboard_id IS NOT NULL LIMIT 1`).get() as any)?.dashboard_id ?? null;
@@ -762,6 +1018,10 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         db.run(`INSERT INTO items (user_id, type, x, y, w, h, content, dashboard_id) VALUES (1, 'widget', ?, ?, ?, ?, ?, ?)`,
             [x, y, w, h, JSON.stringify(content), dashboardId]);
 
+    // Three tiles of one size share the fifth row — monitoring, Proxmox and
+    // Docker, four columns each — so the board the manual leads with ends in a
+    // full rectangle. The API tile sits under them, on a row the pictures of the
+    // board stop above.
     addWidget(1, 5, 4, 2, { widgetId: 'monitor', items: [], refreshSec: 60, title: 'Service status' });
 
     // Proxmox, pointed at the stand-in. The token is nonsense and says so: it
@@ -786,57 +1046,28 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
         }],
     });
 
-    // Row seven: row five is already full (monitoring, API, Docker), and two
-    // tiles sharing a cell is not a layout, it is a bug in a photograph.
-    // Beside its neighbours, not on a row of its own. Row five ran monitor
-    // (1-4) and the Forgejo figures (5-7) and stopped there, so columns 8-12
-    // sat empty while Proxmox sat alone on row seven with the same gap beside
-    // it. At five columns by two rows it closes both, and the board ends in a
-    // full rectangle rather than a lone tile under a hole.
-    addWidget(8, 5, 5, 2, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: 'Hypervisors' });
+    addWidget(5, 5, 4, 2, { widgetId: 'proxmox', refreshSec: 30, showNode: true, title: 'Hypervisors' });
 
-    // The Docker widget, pointed at whatever Docker-compatible API is listening
-    // on DOCKER_API (Podman serves one too). Without it the widget is left out
-    // rather than photographed empty — an empty widget teaches nothing, and a
-    // screenshot of someone's real containers is not ours to publish.
-    if (process.env.DOCKER_API) {
-        // Given as host:port. A `tcp://` prefix — the form DOCKER_HOST uses, and
-        // the obvious thing to paste for a host type the UI calls "TCP" — is
-        // stripped here because the server does not accept it: it prepends
-        // http:// to anything unrecognised and ends up dialling
-        // `http://tcp://127.0.0.1:2375`, which fails after a four-second
-        // timeout. That is what put "Could not connect to Docker host" across
-        // the main board, and it is a product bug, not a rig one.
-        const dockerHost = process.env.DOCKER_API.replace(/^tcp:\/\//, '');
-        // Row seven now: Proxmox took columns 8-12 of row five, and two tiles
-        // sharing a cell is not a layout, it is a bug in a photograph.
-        // The hosts belong to the account, as Proxmox's hypervisors do, and the
-        // widget shows all of them. The second is an agent with a token saved and
-        // switched off: it is there for the photograph of its form, with dots in
-        // the token box, and switched off it asks nothing of an address that does
-        // not exist.
-        const savedHosts = await api('/docker/settings', {
-            hosts: [
-                { name: 'Home server', type: 'tcp', url: dockerHost, enabled: true },
-                { name: 'NAS', type: 'agent', url: '192.168.1.30:9876', token: 'a-token-nobody-will-read', enabled: false },
-            ],
-        });
-        if (!savedHosts.ok) throw new Error('could not save the Docker hosts: ' + savedHosts.status);
-        addWidget(1, 7, 5, 2, { widgetId: 'docker', title: 'Containers' });
-        // Warm the proxy before anything is photographed. The first call to a
-        // just-started Podman service takes several seconds to come back, which
-        // is longer than any shot waits — the main board was photographed with
-        // "Could not connect to Docker host" across its Docker tile, while the
-        // tile's own close-up, taken minutes later, was fine.
-        const listed = await (await fetch(`${APP}api/docker/settings`, {
-            headers: { Cookie: `session_token=${token}; csrf_token=${csrf}` },
-        })).json() as { hosts: { id: string; type: string }[] };
-        const home = listed.hosts.find((h) => h.type === 'tcp');
-        const warm = Date.now();
-        await api('/docker/containers', { host_id: home?.id }).catch(() => { });
-        console.log(`  docker proxy warmed in ${Date.now() - warm}ms`);
-    }
-    addWidget(5, 5, 3, 2, {
+    // The Docker widget and page, pointed at the two invented hosts. A third,
+    // an agent with a token saved and switched off, is there for the photograph
+    // of its form, with dots in the token box: switched off, it asks nothing of
+    // an address that does not exist.
+    const savedHosts = await api('/docker/settings', {
+        hosts: [
+            { name: 'Home server', type: 'tcp', url: `127.0.0.1:${DOCKER_PORT}`, enabled: true },
+            { name: 'Cloud VPS', type: 'tcp', url: `127.0.0.1:${DOCKER_PORT_2}`, enabled: true },
+            { name: 'NAS', type: 'agent', url: '192.168.1.30:2375', token: 'a-token-nobody-will-read', enabled: false },
+        ],
+    });
+    if (!savedHosts.ok) throw new Error('could not save the Docker hosts: ' + savedHosts.status);
+    addWidget(9, 5, 4, 2, { widgetId: 'docker', title: 'Containers' });
+    // Warm the connections before anything is photographed: the first call to a
+    // just-started service is slower than any shot waits.
+    const listed = await (await fetch(`${APP}api/docker/settings`, {
+        headers: { Cookie: `session_token=${token}; csrf_token=${csrf}` },
+    })).json() as { hosts: { id: string; type: string }[] };
+    for (const h of listed.hosts.filter((x) => x.type === 'tcp')) await api('/docker/containers', { host_id: h.id }).catch(() => { });
+    addWidget(1, 8, 4, 2, {
         widgetId: 'api',
         // The latest release: a version and the size of its Linux download. It was
         // stars, forks and issues, which the forge no longer shows publicly, so the
@@ -967,19 +1198,7 @@ async function main() {
     const only = process.argv.slice(2);
     const wanted = SHOTS.filter((s) => !only.length || only.some((p) => new RegExp('^' + p.replace(/\*/g, '.*') + '$').test(s.name)));
 
-    // The header promises the Docker shots are "skipped" without a Docker API
-    // to point at, and they were not: the widget went unseeded and the two
-    // shots then failed with a stack trace, which on an otherwise clean run
-    // reads like something broke. Leave them out instead, and say so once.
-    const wantedShots = process.env.DOCKER_API
-        ? wanted
-        : wanted.filter((s) => {
-            const isDocker = ['w-docker', 'w-p-docker', 'w-p-docker-host', 'p-docker'].includes(s.name);
-            return !isDocker;
-        });
-    if (!process.env.DOCKER_API && wanted.length !== wantedShots.length) {
-        console.log('· no DOCKER_API — leaving the Docker shots as they are');
-    }
+    const wantedShots = wanted;
     if (!wanted.length) {
         console.error('Nothing matched. Known shots:\n  ' + SHOTS.map((s) => s.name).join('\n  '));
         process.exit(1);
@@ -1032,7 +1251,10 @@ async function main() {
     // is the screen this cycle was built around.
     const pve = startFakeProxmox(PVE_PORT, PVE_SINGLE);
     const pve2 = startFakeProxmox(PVE_PORT_2, PVE_CLUSTER);
-    closers.push(() => { pve.close(); pve2.close(); });
+    const dockerA = startFakeDocker(DOCKER_PORT, DOCKER_HOSTS[0]);
+    const dockerB = startFakeDocker(DOCKER_PORT_2, DOCKER_HOSTS[1]);
+    const services = startFakeServices(SERVICES_PORT);
+    closers.push(() => { pve.close(); pve2.close(); dockerA.close(); dockerB.close(); services.close(); });
 
     // The browser comes up first: the Setup Wizard only exists until an account
     // is created, so anything photographing it has to run before that call.
@@ -1079,7 +1301,7 @@ async function main() {
     // KEEP leaves the instance up to poke at; without the stand-in hypervisor
     // behind it the Proxmox page is just an error message, which is no use for
     // the very thing KEEP exists for.
-    if (!process.env.KEEP) { pve.close(); pve2.close(); }
+    if (!process.env.KEEP) { pve.close(); pve2.close(); dockerA.close(); dockerB.close(); services.close(); }
     await finish();
 }
 

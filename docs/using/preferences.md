@@ -20,6 +20,8 @@ Manage your personal profile and security.
 - **Passkeys** — sign in with your fingerprint, face or screen lock instead of your password. **Add a passkey** asks your device to make one (a phone, a laptop with a fingerprint reader, a security key, or a password manager that keeps passkeys); from then on, **Use a passkey** on the sign-in page needs nothing typed, and no two-step code. Each one is listed with when it was added and last used, and **Remove** deletes it. The password keeps working. Passkeys need Lastboard to be opened over **https with its name** (or as `localhost`): browsers do not offer them on `http://` to another machine or on an IP address, and the card says so.
 - **Active sessions** — the card says how many sign-ins your account has, and **View sessions** opens them in a window: one line for each browser or device, with the browser and system, the address it came from and when it was last used (a long list scrolls). A green dot marks a session used in the last five minutes — the browser is open and talking to the server — and a grey one a session that has been quiet longer. This one is marked **This device**. **Close** signs another one out and **Close all other sessions** signs out every one but this; both ask first, so a stray click does not sign anyone out. Signing out with **Logout** ends this session on the server too, so a copy of its cookie stops working.
 
+![The active sessions in their own window: a table with the device, the address and when each was last used, and a green dot for the ones in use](../assets/p-sessions.png)
+
 ## Look & Feel
 
 Everything that changes how the dashboard looks.

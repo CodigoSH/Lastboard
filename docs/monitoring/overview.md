@@ -2,7 +2,7 @@
 
 Lastboard can watch your services, record their status over time, and alert you when something goes down. It turns the up/down dot on a bookmark into a full uptime history with latency charts, outage logs, and notifications.
 
-![Service status](../assets/monitor.png)
+![The service status page: four indicators, the response of every service, what needs attention and the latest outages](../assets/monitor-overview.png)
 
 ## What Gets Monitored
 
@@ -19,7 +19,7 @@ Open **Settings → Monitoring**. Monitoring is **yours**: the **24/7 monitoring
 - **Off** *(default)* — while Lastboard is open, your browser asks the server to check each service. You get live up/down indicators, but **nothing is recorded**: no history and no alerts.
 - **On** — the server probes every monitored service on the check interval, even when nobody has Lastboard open. This records a continuous history and is what enables alerts.
 
-From this section you can also open the status page (**View status**) and clear all recorded history (**Clear data**).
+From this section you can also clear all recorded history (**Clear data**). The status page opens from the status icon in the top bar, which appears once 24/7 monitoring is on.
 
 ### Check interval
 
@@ -35,7 +35,7 @@ Recorded checks are kept for **30 days**; older data is pruned automatically eac
 
 **Back leaves the page, not Lastboard.** The browser's button, the mouse's fourth button and a swipe from the edge of a phone all close the status page and return you to your board; closing it with the ✕ or with Escape takes its history step with it, so nothing is left behind to press.
 
-The **Service status** page is built from the same pieces as the [Docker](../docker/overview.md) and [Proxmox](../proxmox/overview.md) pages — the same header, tabs, indicators, cards and side panel — because they are views of one product. With 24/7 monitoring on, open it from the **status icon in the top bar**. It is always reachable from **Settings → Monitoring → View status**. With more than one board holding monitored services, a selector beside the header limits the page to one of them. The page refreshes every thirty seconds while it is open and visible, and the button beside the ✕ asks for a reading at once.
+The **Service status** page is built from the same pieces as the [Docker](../docker/overview.md) and [Proxmox](../proxmox/overview.md) pages — the same header, tabs, indicators, cards and side panel — because they are views of one product. With 24/7 monitoring on, open it from the **status icon in the top bar**. With more than one board holding monitored services, a selector beside the header limits the page to one of them. The page refreshes every thirty seconds while it is open and visible, and the button beside the ✕ asks for a reading at once.
 
 It has three tabs: **Overview**, **Services** and **Outages**.
 
@@ -48,17 +48,25 @@ Four indicators:
 - **Response** — the mean of what the answering services take right now, their own 24-hour mean, and the slowest.
 - **Monitoring** — whether anything is being recorded at all. With 24/7 on it says so, how often services are checked, how long the history is kept, how many failures in a row trigger an alert and where alerts go; with it off it says the page is live only, with no history and no alerts. **Settings** opens the section.
 
-Under them, a chart of the response of every service together — the mean and the slowest — for 24 hours, 7 days or 30 days (hover it to read a value), and **Needs attention**: the services that do not answer, since when and what they got back (an HTTP code, or "no answer"), the slow ones, a note about services never checked yet and, with 24/7 off, that nothing is being recorded. It shows nine lines and scrolls beyond them. Below, **Lowest availability** (30 days) and **Latest outages**.
+Under them, a chart of the response of every service together — the mean and the slowest — for 24 hours, 7 days or 30 days (hover it to read a value), and **Needs attention**: the services that do not answer, since when and what they got back (an HTTP code, or "no answer"), the slow ones, a note about services never checked yet and, with 24/7 off, that nothing is being recorded. It shows nine lines and scrolls beyond them. Below, **Lowest availability** (30 days) and **Latest outages**, with **View all** when there are more than the six it lists: it opens every outage in a window of its own, the most pressing first.
 
 ### Services
 
+![Every monitored service as a card: its icon, address, availability, response and the last checks](../assets/monitor-services.png)
+
 Every monitored service as cards or as a list. A card has the service's icon, its address, its availability over 24 hours, its response and the last thirty checks as a heartbeat strip; the dot in the corner is its state. **Search** filters by name, address or board (**Ctrl+K** or **/** puts the cursor in it from anywhere on the page). The chips — *All*, *Running*, *Down*, *No data* — show how many each would list; services can be grouped by board and sorted by state, name, availability or response. The view, the sort and the grouping are remembered in this browser.
 
-Choosing a service opens a **side panel** with three tabs: **Summary** (availability over 24 hours, 7 days and 30 days, the response chart for the range you pick, the heartbeat and the facts: last check, HTTP code, response, 24-hour mean, check interval and alert threshold), **Outages** (that service's, over the 30 days kept) and **Checks** (the latest ones, newest first, with what each got back). The panel's footer opens the service and **clears its history** after asking.
+![A service opened in its side panel: availability over a day, a week and a month, and its response chart](../assets/monitor-service.png)
+
+Choosing a service opens a **side panel** with three tabs: **Summary** (availability over 24 hours, 7 days and 30 days, the response chart for the range you pick, the heartbeat and the facts: last check, HTTP code, response, 24-hour mean, check interval and alert threshold), **Outages** (that service's, over the 30 days kept: the six most pressing, and **View all** for the rest) and **Checks** (the latest ones, newest first, with what each got back, and **View all** for every one still kept). The panel's footer opens the service and **clears its history** after asking.
 
 ### Outages
 
-How many outages there were in the range, the time without service all of them add up to, and the mean time to recover, then every outage of every service with the range and the *Ongoing* / *Recovered* chips. **An outage keeps its own start and length whatever range you pick**: one that began before the range still shows when it really began and how long it really lasted — as far back as the 30 days of history kept. Durations are written in words, in your own language, with that language's plural rules.
+How many outages there were in the range, the time without service all of them add up to, and the mean time to recover, then every outage of every service with the range and the *Ongoing* / *Recovered* chips.
+
+![The outages tab: how many, how long and the table of every outage](../assets/monitor-outages.png)
+
+Each line is a table row with its columns named — **Service**, **Cause**, **When**, **Length** and **State** — and the ones still down come first, then the newest. The cause is said in words (*Service unavailable*, *No answer*, *Access denied*…) and the HTTP code it comes from is in the tooltip; the length is in minutes at the least, never seconds, and an outage that is over says **Resolved**. In a service's own panel, where every line is that service's, there is no **Service** column and no **State** one: a line says the cause, when and how long, and one still going says **Down** where its length would be. On a phone each line is shown on two or three lines, without the column heads. **An outage keeps its own start and length whatever range you pick**: one that began before the range still shows when it really began and how long it really lasted — as far back as the 30 days of history kept. Durations are written in words, in your own language, with that language's plural rules.
 
 To keep the same information on the dashboard itself, without opening the page, add the [Monitoring widget](../widgets/monitoring.md).
 

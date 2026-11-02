@@ -84,7 +84,8 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **Check interval** of 1, 5, 10 or 30 minutes.
 - **History kept for 30 days**, pruned daily.
 - **A status page** listing every monitored service with its state, a strip of recent checks and
-  its 24-hour uptime, searchable, opened from the top bar.
+  its 24-hour uptime, searchable, opened from the top bar once 24/7 monitoring is on; a tab with every
+  outage of every service lists what was down, why, when and for how long.
 - **Per-service detail** over 24 hours, 7 days or 30 days: uptime percentages, current and
   average response time, a latency chart with a hover crosshair, a heartbeat strip, and a table
   of outages with duration and whether the service recovered.

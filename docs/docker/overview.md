@@ -112,6 +112,8 @@ Hosts used to be set up inside each widget. The first time the new version start
 
 The widget is a list you glance at. For the whole picture — what is running, what needs a look, and one container in detail — open the **Docker page**: the Docker icon in the top bar, beside the Proxmox one. It is there for an account that may look at Docker and has at least one host that is switched on and that it can use; with none, there is no icon. While the page is open the rest of the top bar is locked and the same icon (or **Esc**, or the browser's Back button) closes it, as with the Proxmox and status pages.
 
+![The Docker page's overview of two hosts: four indicators, the chart since the page was opened, what needs attention and the Compose projects](../assets/docker-overview.png)
+
 The header says how many containers are running, how many are stopped and how many have warnings. With more than one host there is a selector beside it to look at all of them or at one; a button asks for a fresh reading at once. Everything refreshes every ten seconds while the page is open and the browser tab is visible. The page has three tabs: **Overview**, **Containers** and **Logs**.
 
 ### Overview
@@ -119,15 +121,17 @@ The header says how many containers are running, how many are stopped and how ma
 Four indicators:
 
 - **Containers** — a ring with the share that is running, and how many are stopped or have warnings.
-- **CPU** — the CPU of the running containers added up, as a share of what the hosts have: `0.8 cores in use of 16` reads as 5 %. The host's own size comes from Docker (`/info`), through the Lastboard Agent from the release that added that call; an older agent says nothing, and then the figure is in cores in use with a bar read against the top of the chart — a relative scale, said as such on the card.
+- **CPU** — the CPU of the running containers added up, as a share of what the hosts have: `0.8 cores in use of 16` reads as 5 %. The host's own size comes from Docker (`/info`), through the Lastboard Agent from the release that added that call; an older agent says nothing, and then the figure is in cores in use with a bar read against the top of the chart — a relative scale, said as such on the card. Under the bar the card says how many containers reported and the host's **threads** — and, from Lastboard Agent v1.4.0, its real **cores** as well (*Cores: 14 · Threads: 20*), which the agent reads from the host's own processor list. The cores are said only when every host in view says them, and are left out where the kernel does not list them.
 - **Memory** — what the running containers use together, against the memory of the hosts (or, when a host did not say, against the largest limit any container reports, which on a host without limits is its memory).
-- **Storage** — what Docker keeps on disk across the hosts in view: its images (each shared layer counted once), what the containers wrote, its volumes and its build cache, with what nothing uses any more as **Reclaimable** — unused images, stopped containers' writes, volumes no container refers to and cache not in use, which is what a prune would give back. Docker cannot say how big the host's disk is, so there is no "free" figure and the bar is the reclaimable share. The daemon takes a while to measure this on a host with a lot of data, so the page asks every five minutes (and when you press refresh) instead of every ten seconds. It needs a Lastboard Agent with the disk call; with an older one the card says to update it, and a host that does not answer is left out of the sum.
+- **Storage** — what Docker keeps on disk across the hosts in view: its images (each shared layer counted once), what the containers wrote, its volumes and its build cache, with what nothing uses any more as **Reclaimable** — unused images, stopped containers' writes, volumes no container refers to and cache not in use, which is what a prune would give back. Docker cannot say how big the host's disk is, so there is no "free" figure and the bar is the reclaimable share. The daemon takes a while to measure this on a host with a lot of data, so the page asks every five minutes (and when you press refresh) instead of every ten seconds. It needs a Lastboard Agent with the disk call; with an older one the card says to update it, and a host that does not answer is left out of the sum. **Show more** under the card opens a window with each item on its own line — images, volumes, build cache, containers, what is reclaimable and the total.
 
 Under them, a chart of the cores in use **since you opened the page** (hover it to read a value). Lastboard does not store this history: the browser keeps it while the browser tab stays open, and it starts again after a reload.
 
 **Needs attention** lists the containers that are failing their own health check, keep restarting, ended with a non-zero exit code, or are paused — the worst first. A container that was stopped on purpose (exit code 0) or has never run is not a warning — unless a bookmark depends on it (see below), in which case it is listed and the line says which service stops responding. Choosing one opens it. When there is nothing to list, the box says everything is running as it should. Below, one box lists the **Projects** with how many of each one's containers are up, and another the **Hosts**; a host that does not answer says why in its own line.
 
 ### Containers
+
+![The containers of both hosts as cards, with search, filters, grouping and sorting](../assets/docker-containers.png)
 
 Every container of every host that is on, as cards or as a list (the two buttons at the end of the toolbar). Cards show state, CPU and memory for the running ones; the health chip appears only for an image that defines a health check, and a stopped container says how it ended.
 
@@ -142,6 +146,8 @@ A container can have a **face** and a **bookmark**:
 
 - **Face** — the round-cornered icon at the start of its name. Choose one from the panel by pressing the icon beside the container's name (**Choose an icon**); **Remove icon** in the panel's footer goes back to the default. The icon is downloaded and kept by Lastboard like a bookmark's, and the choice belongs to your account. Without a chosen face, the container wears the icon of the bookmark that serves it, if there is one.
 - **Bookmark** — in the bookmark's editor, **Runs on → Docker** (shown only when a Docker host answers) says which container runs the service. The card and the panel then show the bookmark's name in an orange pill, the panel gets **Open bookmark**, and if the container stops, the page says so: *This stops responding: Plex*. Unlike the Proxmox integration there is no matching by name — the link is only what you set. A container is identified by its host and its **name**, never its id, so updating or recreating it keeps both the face and the bookmark; renaming it loses them.
+
+![A container opened in its side panel: its CPU and memory, health, image and published ports, and the buttons that restart or stop it](../assets/docker-container.png)
 
 The panel has four tabs:
 

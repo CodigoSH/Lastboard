@@ -2,7 +2,7 @@
 
 Lastboard can read your Proxmox VE host and show it beside the services it runs: the nodes and their load, how full each storage is, and every virtual machine and container — with the bookmark each one serves.
 
-![The Proxmox page](../assets/proxmox.png)
+![The Proxmox page: four indicators, the history of the cluster, what needs attention, the nodes, the stores and the latest tasks](../assets/proxmox-overview.png)
 
 That last part is the point. Your Proxmox console at `:8006` already administers the cluster, and it does it better. What it cannot tell you is that *Plex* stopped answering because container 106 is down, because it has never heard of your bookmarks. This page can.
 
@@ -95,8 +95,6 @@ The header says how many machines are running, how many are stopped and how many
 
 ### Overview
 
-![The Proxmox overview](../assets/proxmox-summary.png)
-
 Four indicators:
 
 - **Machines** — a ring with the share that is running, and chips for how many are containers (`LXC`), how many are virtual machines (`VM`) and how many are stopped.
@@ -126,6 +124,8 @@ Two figures are weighted rather than averaged, and deliberately: a node of 8 cor
 
 ### Machines
 
+![The machines as cards, each with the bookmark it serves](../assets/proxmox-machines.png)
+
 One card per virtual machine or container (or a list, with the two buttons at the end of the toolbar). A card carries the icon of the bookmark it serves — the one chosen for it if there is one, then the bookmark's (matched by name, or told to it — see below) — its name, its type and VMID, its node, the bookmark it serves as a chip, and CPU and memory. A stopped machine is dimmed and says so; if a bookmark of yours runs on it, it says which service it takes with it and its dot is red. Templates are left out: they cannot run, so they have no state to show.
 
 - **Search** filters by name, VMID, node, hypervisor or bookmark. **Ctrl+K** (**Cmd+K** on macOS) puts the cursor in it from anywhere on the page.
@@ -141,7 +141,7 @@ Every store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`,
 
 Choosing a machine, a node or a store opens it in a **side panel**. On a wide window it pushes the page aside so the list stays in view; on a narrower one it covers the page, and **Esc**, the **×** or the browser's Back button closes it. On a phone it takes the screen and Back returns to the page.
 
-![A stopped machine](../assets/proxmox-machine.png)
+![A machine in the side panel: its CPU, memory and uptime, the bookmark it serves, and what the page says when it is stopped](../assets/proxmox-machine.png)
 
 **A machine** has two tabs. **Summary** shows its state, CPU, memory and uptime, the bookmark it serves, its CPU over the last day, and the sentence this page exists for when it is stopped. **Tasks** lists what the hypervisor has done to it. At the foot: **Start** or **Shut down** (when the token allows it), **Open bookmark**, and **Remove icon**. Click its icon to [choose one](#machines-that-will-never-have-a-bookmark).
 
