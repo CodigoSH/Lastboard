@@ -404,7 +404,7 @@ const SHOTS: Shot[] = [
         act: `${TOPBAR}.querySelector('#monitor-toggle').click();
               ${overviewReady('monitor-page')}
               ${openPageTab('monitor-page', 'outages')}
-              ${until('the outage cards', `return ${PAGE('monitor-page')}.querySelectorAll('.unit--out').length > 4;`, 30000)}`,
+              ${until('the service cards', `return ${PAGE('monitor-page')}.querySelectorAll('.unit--svcout').length > 4;`, 30000)}`,
     },
     {
         // The dialog the profile's "active sessions" card opens.
