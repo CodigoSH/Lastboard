@@ -647,6 +647,7 @@
   "settings.change_password": "Change password",
   "sessions.title": "Active sessions",
   "sessions.this_device": "This device",
+  "sessions.online": "Connected now",
   "sessions.close": "Close",
   "sessions.close_others": "Close all other sessions",
   "sessions.close_others_confirm": "Every other browser or device signed in to this account will be signed out. This one stays signed in.",

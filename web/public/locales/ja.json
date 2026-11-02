@@ -647,6 +647,7 @@
   "settings.change_password": "パスワードを変更",
   "sessions.title": "アクティブなセッション",
   "sessions.this_device": "このデバイス",
+  "sessions.online": "現在接続中",
   "sessions.close": "閉じる",
   "sessions.close_others": "他のすべてのセッションを閉じる",
   "sessions.close_others_confirm": "このアカウントにサインインしている他のすべてのブラウザとデバイスがサインアウトされます。このセッションはそのまま残ります。",

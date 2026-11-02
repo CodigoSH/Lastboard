@@ -647,6 +647,7 @@
   "settings.change_password": "Şifreyi değiştir",
   "sessions.title": "Etkin oturumlar",
   "sessions.this_device": "Bu cihaz",
+  "sessions.online": "Şu an bağlı",
   "sessions.close": "Kapat",
   "sessions.close_others": "Diğer tüm oturumları kapat",
   "sessions.close_others_confirm": "Bu hesapta oturum açmış diğer tüm tarayıcıların ve cihazların oturumu kapatılacak. Bu oturum açık kalacak.",

@@ -647,6 +647,7 @@
   "settings.change_password": "Изменить пароль",
   "sessions.title": "Активные сеансы",
   "sessions.this_device": "Это устройство",
+  "sessions.online": "Подключён сейчас",
   "sessions.close": "Завершить",
   "sessions.close_others": "Завершить все остальные сеансы",
   "sessions.close_others_confirm": "Все остальные браузеры и устройства, где выполнен вход в эту учётную запись, будут отключены. Этот сеанс останется активным.",

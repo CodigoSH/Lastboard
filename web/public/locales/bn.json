@@ -647,6 +647,7 @@
   "settings.change_password": "পাসওয়ার্ড পরিবর্তন করুন",
   "sessions.title": "সক্রিয় সেশন",
   "sessions.this_device": "এই ডিভাইস",
+  "sessions.online": "এখন সংযুক্ত",
   "sessions.close": "বন্ধ করুন",
   "sessions.close_others": "অন্য সব সেশন বন্ধ করুন",
   "sessions.close_others_confirm": "এই অ্যাকাউন্টে সাইন ইন করা অন্য সব ব্রাউজার ও ডিভাইস সাইন আউট হয়ে যাবে। এই সেশনটি চালু থাকবে।",

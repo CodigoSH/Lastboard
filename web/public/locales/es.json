@@ -647,6 +647,7 @@
   "settings.change_password": "Cambiar contraseña",
   "sessions.title": "Sesiones activas",
   "sessions.this_device": "Este dispositivo",
+  "sessions.online": "Conectada ahora",
   "sessions.close": "Cerrar",
   "sessions.close_others": "Cerrar todas las demás sesiones",
   "sessions.close_others_confirm": "Se cerrará la sesión en todos los demás navegadores y dispositivos de esta cuenta. Esta seguirá abierta.",

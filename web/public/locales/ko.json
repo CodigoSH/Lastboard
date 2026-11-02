@@ -647,6 +647,7 @@
   "settings.change_password": "비밀번호 변경",
   "sessions.title": "활성 세션",
   "sessions.this_device": "이 기기",
+  "sessions.online": "현재 연결됨",
   "sessions.close": "닫기",
   "sessions.close_others": "다른 모든 세션 닫기",
   "sessions.close_others_confirm": "이 계정에 로그인된 다른 모든 브라우저와 기기가 로그아웃됩니다. 이 세션은 유지됩니다.",

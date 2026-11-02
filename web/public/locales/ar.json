@@ -647,6 +647,7 @@
   "settings.change_password": "تغيير كلمة المرور",
   "sessions.title": "الجلسات النشطة",
   "sessions.this_device": "هذا الجهاز",
+  "sessions.online": "متصلة الآن",
   "sessions.close": "إغلاق",
   "sessions.close_others": "إغلاق جميع الجلسات الأخرى",
   "sessions.close_others_confirm": "سيتم تسجيل الخروج من كل المتصفحات والأجهزة الأخرى المسجّلة الدخول إلى هذا الحساب. ستبقى هذه الجلسة مفتوحة.",

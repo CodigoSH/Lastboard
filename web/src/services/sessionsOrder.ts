@@ -6,3 +6,17 @@
 export function sessionsInOrder<T extends { current: boolean }>(items: T[]): T[] {
     return [...items.filter(s => s.current), ...items.filter(s => !s.current)];
 }
+
+/**
+ * How long after its last request a session still counts as connected. The
+ * server writes a session's last-seen time at most once a minute, so anything
+ * shorter than a few of those would flicker; five minutes still reads as "now".
+ */
+export const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+
+/** Whether a session was seen within the window. The one this page runs in always is. */
+export function sessionIsOnline(session: { current: boolean; last_seen: string }, now = Date.now()): boolean {
+    if (session.current) return true;
+    const seen = Date.parse(session.last_seen);
+    return Number.isFinite(seen) && now - seen >= 0 && now - seen <= ONLINE_WINDOW_MS;
+}

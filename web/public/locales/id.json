@@ -647,6 +647,7 @@
   "settings.change_password": "Ubah kata sandi",
   "sessions.title": "Sesi aktif",
   "sessions.this_device": "Perangkat ini",
+  "sessions.online": "Terhubung sekarang",
   "sessions.close": "Tutup",
   "sessions.close_others": "Tutup semua sesi lainnya",
   "sessions.close_others_confirm": "Semua peramban dan perangkat lain yang masuk ke akun ini akan dikeluarkan. Sesi ini tetap masuk.",

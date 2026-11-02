@@ -1,4 +1,4 @@
-import { sessionsInOrder } from '../../../services/sessionsOrder';
+import { sessionIsOnline, sessionsInOrder } from '../../../services/sessionsOrder';
 import { agentIsOld } from '../../../services/dockerShared';
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
@@ -72,7 +72,9 @@ const sessionRowTemplate = (s: SessionRow) => {
     const seen = i18n.formatDateTime(s.last_seen, { dateStyle: 'medium', timeStyle: 'short' });
     return `
             <div class="sessions-row${s.current ? ' is-current' : ''}">
-                <b class="sessions-row__device">${esc(deviceName(s.user_agent))}</b>
+                <span class="sessions-row__who">${sessionIsOnline(s)
+                    ? `<i class="sessions-dot sessions-dot--on" role="img" title="${esc(i18n.t('sessions.online'))}" aria-label="${esc(i18n.t('sessions.online'))}"></i>`
+                    : '<i class="sessions-dot" aria-hidden="true"></i>'}<b class="sessions-row__device">${esc(deviceName(s.user_agent))}</b></span>
                 <span class="sessions-row__ip" dir="ltr">${esc(s.ip || '—')}</span>
                 <span class="sessions-row__seen">${esc(seen)}</span>
                 <span class="sessions-row__act">${s.current

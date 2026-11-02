@@ -647,6 +647,7 @@
   "settings.change_password": "تغییر رمز عبور",
   "sessions.title": "نشست‌های فعال",
   "sessions.this_device": "این دستگاه",
+  "sessions.online": "اکنون متصل",
   "sessions.close": "بستن",
   "sessions.close_others": "بستن همه نشست‌های دیگر",
   "sessions.close_others_confirm": "همه مرورگرها و دستگاه‌های دیگری که به این حساب وارد شده‌اند خارج می‌شوند. این نشست باز می‌ماند.",

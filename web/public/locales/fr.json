@@ -647,6 +647,7 @@
   "settings.change_password": "Changer le mot de passe",
   "sessions.title": "Sessions actives",
   "sessions.this_device": "Cet appareil",
+  "sessions.online": "Connectée maintenant",
   "sessions.close": "Fermer",
   "sessions.close_others": "Fermer toutes les autres sessions",
   "sessions.close_others_confirm": "Tous les autres navigateurs et appareils connectés à ce compte seront déconnectés. Celui-ci reste connecté.",

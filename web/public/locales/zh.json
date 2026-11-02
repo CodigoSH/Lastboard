@@ -647,6 +647,7 @@
   "settings.change_password": "修改密码",
   "sessions.title": "活动会话",
   "sessions.this_device": "此设备",
+  "sessions.online": "当前在线",
   "sessions.close": "关闭",
   "sessions.close_others": "关闭所有其他会话",
   "sessions.close_others_confirm": "此账户上登录的所有其他浏览器和设备都将被退出登录。当前会话保持登录。",

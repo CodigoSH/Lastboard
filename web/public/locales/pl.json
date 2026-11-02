@@ -647,6 +647,7 @@
   "settings.change_password": "Zmień hasło",
   "sessions.title": "Aktywne sesje",
   "sessions.this_device": "To urządzenie",
+  "sessions.online": "Połączona teraz",
   "sessions.close": "Zamknij",
   "sessions.close_others": "Zamknij wszystkie pozostałe sesje",
   "sessions.close_others_confirm": "Wszystkie pozostałe przeglądarki i urządzenia zalogowane na to konto zostaną wylogowane. Ta sesja pozostanie aktywna.",
