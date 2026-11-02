@@ -467,7 +467,7 @@ func TestTheSystemThemeScriptShipsOnlyWhenNeededAndEarlyEnough(t *testing.T) {
 // good for — and a note edited on another device then arrives late.
 func TestNothingUnderAPIMayBeCached(t *testing.T) {
 	server := newTestServer(t, true)
-	for _, path := range []string{"/api/dashboard", "/api/dashboards", "/api/me", "/api/monitor/overview", "/api/docker/containers"} {
+	for _, path := range []string{"/api/dashboard", "/api/dashboards", "/api/me", "/api/monitor/overview", "/api/monitor/checks?item_id=1", "/api/docker/containers"} {
 		rec := httptest.NewRecorder()
 		server.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
 		if cc := rec.Header().Get("Cache-Control"); cc != "no-store" {

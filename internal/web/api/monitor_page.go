@@ -251,101 +251,127 @@ func (h *MonitorHandler) incidentsFromRuns(ctx context.Context, userID int, sinc
 	if err != nil {
 		return nil, err
 	}
-	sinceStr := since.UTC().Format("2006-01-02 15:04:05")
 	out := []serviceIncident{}
-	add := func(it MonitoredItem, start time.Time, end *time.Time, code int) {
+	for _, it := range items {
+		incs, err := h.outagesOfItem(ctx, it.ID, since, now)
+		if err != nil {
+			return nil, err
+		}
+		for _, inc := range incs {
+			out = append(out, serviceIncident{ItemID: it.ID, Name: it.Name, incident: inc})
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Start.After(out[j].Start) })
+	return out, nil
+}
+
+// outagesOfItem is the outages of one service that show in the window, oldest
+// first, found the quick way (see incidentsFromRuns). One service's history asks
+// for it too, so the page's list and the panel's cannot disagree.
+//
+// Checks are ordered by moment and then by id, so two of one service in the same
+// second still have an order. The comparisons say it as a range on the moment and
+// a NOT for the tie: written with an OR the same question reads the whole month
+// of the service and takes eighty times longer.
+func (h *MonitorHandler) outagesOfItem(ctx context.Context, itemID int, since, now time.Time) ([]incident, error) {
+	sinceStr := since.UTC().Format("2006-01-02 15:04:05")
+	out := []incident{}
+	add := func(start time.Time, end *time.Time, code int) {
 		inc := incident{Start: start, End: end, StatusCode: code}
 		if end != nil {
 			inc.DurationSec = int(end.Sub(start).Seconds())
 		} else {
 			inc.DurationSec = int(now.Sub(start).Seconds())
 		}
-		out = append(out, serviceIncident{ItemID: it.ID, Name: it.Name, incident: inc})
+		out = append(out, inc)
 	}
-	for _, it := range items {
-		rows, err := h.DB.QueryContext(ctx,
-			`SELECT d.checked_at, d.status_code,
-			        (SELECT MIN(u.checked_at) FROM monitor_checks u INDEXED BY idx_monitor_checks_item_up
-			          WHERE u.item_id = d.item_id AND u.up = 1 AND u.checked_at > d.checked_at)
-			   FROM monitor_checks d INDEXED BY idx_monitor_checks_down
-			  WHERE d.item_id = ? AND d.up = 0 AND d.checked_at >= ?
-			    AND COALESCE((SELECT p.up FROM monitor_checks p INDEXED BY idx_monitor_checks_item_up
-			                   WHERE p.item_id = d.item_id AND p.checked_at < d.checked_at
-			                   ORDER BY p.checked_at DESC, p.id DESC LIMIT 1), 1) = 1
-			  ORDER BY d.checked_at`, it.ID, sinceStr)
-		if err != nil {
-			return nil, err
-		}
-		for rows.Next() {
-			var at, endAt any
-			var code int
-			if err := rows.Scan(&at, &code, &endAt); err != nil {
-				rows.Close()
-				return nil, err
-			}
-			start, ok := timeOf(at)
-			if !ok {
-				rows.Close()
-				return nil, errors.New("unreadable check time")
-			}
-			var end *time.Time
-			if endAt != nil {
-				e, ok := timeOf(endAt)
-				if !ok {
-					rows.Close()
-					return nil, errors.New("unreadable check time")
-				}
-				end = &e
-			}
-			add(it, start, end, code)
-		}
-		if err := rows.Err(); err != nil {
+	rows, err := h.DB.QueryContext(ctx,
+		`SELECT d.checked_at, d.status_code,
+		        (SELECT MIN(u.checked_at) FROM monitor_checks u INDEXED BY idx_monitor_checks_item_up
+		          WHERE u.item_id = d.item_id AND u.up = 1
+		            AND u.checked_at >= d.checked_at AND NOT (u.checked_at = d.checked_at AND u.id <= d.id))
+		   FROM monitor_checks d INDEXED BY idx_monitor_checks_down
+		  WHERE d.item_id = ? AND d.up = 0 AND d.checked_at >= ?
+		    AND COALESCE((SELECT p.up FROM monitor_checks p INDEXED BY idx_monitor_checks_item_up
+		                   WHERE p.item_id = d.item_id AND p.checked_at <= d.checked_at
+		                     AND NOT (p.checked_at = d.checked_at AND p.id >= d.id)
+		                   ORDER BY p.checked_at DESC, p.id DESC LIMIT 1), 1) = 1
+		  ORDER BY d.checked_at`, itemID, sinceStr)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var at, endAt any
+		var code int
+		if err := rows.Scan(&at, &code, &endAt); err != nil {
 			rows.Close()
 			return nil, err
 		}
-		rows.Close()
-
-		// An outage already under way when the window began has its first failed
-		// check before the window, so the query above did not see it begin.
-		var firstAt any
-		var firstUp, firstCode int
-		err = h.DB.QueryRowContext(ctx,
-			`SELECT checked_at, up, status_code FROM monitor_checks INDEXED BY idx_monitor_checks_item_up
-			  WHERE item_id = ? AND checked_at >= ? ORDER BY checked_at, id LIMIT 1`, it.ID, sinceStr).Scan(&firstAt, &firstUp, &firstCode)
-		if err == sql.ErrNoRows || (err == nil && firstUp != 0) {
-			continue
-		}
-		if err != nil {
-			return nil, err
-		}
-		first, ok := timeOf(firstAt)
+		start, ok := timeOf(at)
 		if !ok {
+			rows.Close()
 			return nil, errors.New("unreadable check time")
-		}
-		start, carried, err := h.store.OutageStart(it.ID, first)
-		if err != nil {
-			return nil, err
-		}
-		if !carried {
-			continue
-		}
-		var endAt any
-		if err := h.DB.QueryRowContext(ctx,
-			`SELECT MIN(checked_at) FROM monitor_checks INDEXED BY idx_monitor_checks_item_up
-			  WHERE item_id = ? AND up = 1 AND checked_at > ?`, it.ID, first.Format("2006-01-02 15:04:05")).Scan(&endAt); err != nil {
-			return nil, err
 		}
 		var end *time.Time
 		if endAt != nil {
 			e, ok := timeOf(endAt)
 			if !ok {
+				rows.Close()
 				return nil, errors.New("unreadable check time")
 			}
 			end = &e
 		}
-		add(it, start, end, firstCode)
+		add(start, end, code)
 	}
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Start.After(out[j].Start) })
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
+
+	// An outage already under way when the window began has its first failed
+	// check before the window, so the query above did not see it begin.
+	var firstAt any
+	var firstUp, firstCode int
+	var firstID int64
+	err = h.DB.QueryRowContext(ctx,
+		`SELECT checked_at, up, status_code, id FROM monitor_checks INDEXED BY idx_monitor_checks_item_up
+		  WHERE item_id = ? AND checked_at >= ? ORDER BY checked_at, id LIMIT 1`, itemID, sinceStr).Scan(&firstAt, &firstUp, &firstCode, &firstID)
+	if err == sql.ErrNoRows || (err == nil && firstUp != 0) {
+		return out, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	first, ok := timeOf(firstAt)
+	if !ok {
+		return nil, errors.New("unreadable check time")
+	}
+	start, carried, err := h.store.OutageStart(itemID, first)
+	if err != nil {
+		return nil, err
+	}
+	if !carried {
+		return out, nil
+	}
+	var endAt any
+	if err := h.DB.QueryRowContext(ctx,
+		`SELECT MIN(checked_at) FROM monitor_checks INDEXED BY idx_monitor_checks_item_up
+		  WHERE item_id = ? AND up = 1 AND checked_at >= ? AND NOT (checked_at = ? AND id <= ?)`,
+		itemID, first.Format("2006-01-02 15:04:05"), first.Format("2006-01-02 15:04:05"), firstID).Scan(&endAt); err != nil {
+		return nil, err
+	}
+	var end *time.Time
+	if endAt != nil {
+		e, ok := timeOf(endAt)
+		if !ok {
+			return nil, errors.New("unreadable check time")
+		}
+		end = &e
+	}
+	// The outage that was under way is the oldest of the window.
+	add(start, end, firstCode)
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Start.Before(out[j].Start) })
 	return out, nil
 }
 

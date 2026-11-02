@@ -72,6 +72,8 @@ func TestAMemberIsRefusedWhatItWasNotGiven(t *testing.T) {
 		{http.MethodPost, "/api/widget/api-fetch", `{"url":"http://example.com"}`},
 		{http.MethodPost, "/api/dashboard/health/batch", `{"urls":["http://example.com"]}`},
 		{http.MethodGet, "/api/monitor/overview", ``},
+		{http.MethodGet, "/api/monitor/checks?item_id=1", ``},
+		{http.MethodGet, "/api/monitor/history?item_id=1&lite=1", ``},
 		{http.MethodGet, "/api/proxmox/overview", ``},
 		{http.MethodGet, "/api/proxmox/tasks?node=kprox", ``},
 		{http.MethodGet, "/api/proxmox/task-log?node=kprox&upid=x", ``},
@@ -308,5 +310,40 @@ func TestLabels(t *testing.T) {
 	}
 	if _, l := meOf(t, member); len([]rune(l)) != 24 {
 		t.Errorf("a 30-character label kept %d characters, want 24", len([]rune(l)))
+	}
+}
+
+// A service's checks, whole or by pages, are its owner's: another account that can
+// watch the monitor is told there is no such service, as it is for the history.
+func TestAnotherAccountsChecksAreNotReadable(t *testing.T) {
+	srv := newTestServer(t, true)
+	owner := asMember(t, srv, "owner", access.Homelab())
+	other := asMember(t, srv, "other", access.Homelab())
+	var ownerID int
+	if err := srv.DB.QueryRow("SELECT id FROM users WHERE username = 'owner'").Scan(&ownerID); err != nil {
+		t.Fatal(err)
+	}
+	res, err := srv.DB.Exec(`INSERT INTO items (user_id, type, x, y, w, h) VALUES (?, 'bookmark', 0, 0, 1, 1)`, ownerID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, _ := res.LastInsertId()
+	if _, err := srv.DB.Exec(`INSERT INTO monitor_checks (item_id, up, latency_ms, status_code) VALUES (?, 1, 12, 200)`, id); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{
+		fmt.Sprintf("/api/monitor/checks?item_id=%d", id),
+		fmt.Sprintf("/api/monitor/history?item_id=%d&lite=1", id),
+	} {
+		if w := other(http.MethodGet, path, ""); w.Code != http.StatusNotFound {
+			t.Errorf("another account: GET %s = %d, want 404", path, w.Code)
+		}
+		w := owner(http.MethodGet, path, "")
+		if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), `"checks"`) {
+			t.Errorf("the owner: GET %s = %d %s", path, w.Code, w.Body.String())
+		}
+	}
+	if w := owner(http.MethodGet, fmt.Sprintf("/api/monitor/checks?item_id=%d&before=nonsense", id), ""); w.Code != http.StatusBadRequest {
+		t.Errorf("a cursor that is not one = %d, want 400", w.Code)
 	}
 }

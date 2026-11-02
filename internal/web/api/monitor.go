@@ -349,6 +349,11 @@ type historyResponse struct {
 	Incidents []incident        `json:"incidents"`
 	Heartbeat []heartbeatBucket `json:"heartbeat"`
 	Stats     MonitorStats      `json:"stats"`
+
+	// Only with ?lite=1: the chart already folded into points, and a mark that the
+	// checks are the newest few and not all of them (see monitor_history.go).
+	Latency []latencyPoint `json:"latency,omitempty"`
+	Lite    bool           `json:"lite,omitempty"`
 }
 
 // bucketBeats folds a window of checks into exactly n buckets spanning
@@ -509,6 +514,10 @@ func (h *MonitorHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	label, since := rangeSince(r.URL.Query().Get("range"), now)
+	if r.URL.Query().Get("lite") == "1" {
+		h.historyLite(w, r, itemID, label, since, now)
+		return
+	}
 	checks, err := h.store.History(itemID, since)
 	if err != nil {
 		http.Error(w, "general.internal_error", http.StatusInternalServerError)

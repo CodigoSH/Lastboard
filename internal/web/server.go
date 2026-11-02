@@ -443,6 +443,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/import/parse", protect(need(access.BoardTransfer, impExpHandler.ImportParse)))
 	s.Router.Handle("GET /api/monitor/history", middleware.GzipJSON(protect(need(access.WatchMonitor, monitorHandler.GetHistory))))
 	s.Router.Handle("DELETE /api/monitor/history", protect(need(access.WatchMonitor, monitorHandler.ClearHistory)))
+	s.Router.Handle("GET /api/monitor/checks", middleware.GzipJSON(protect(need(access.WatchMonitor, monitorHandler.GetChecks))))
 	s.Router.Handle("GET /api/monitor/overview", middleware.GzipJSON(protect(need(access.WatchMonitor, monitorHandler.GetOverview))))
 	s.Router.Handle("GET /api/monitor/trend", middleware.GzipJSON(protect(need(access.WatchMonitor, monitorHandler.GetTrend))))
 	s.Router.Handle("GET /api/monitor/incidents", middleware.GzipJSON(protect(need(access.WatchMonitor, monitorHandler.GetIncidents))))
