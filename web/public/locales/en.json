@@ -650,6 +650,7 @@
   "sessions.close": "Close",
   "sessions.close_others": "Close all other sessions",
   "sessions.close_others_confirm": "Every other browser or device signed in to this account will be signed out. This one stays signed in.",
+  "sessions.close_one_confirm": "{device} ({address}) will be signed out of this account. It can sign in again with the password.",
   "sessions.manage": "View sessions",
   "sessions.count": "Signed in now: {count}",
   "sessions.col_device": "Device",

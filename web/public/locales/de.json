@@ -650,6 +650,7 @@
   "sessions.close": "Schließen",
   "sessions.close_others": "Alle anderen Sitzungen schließen",
   "sessions.close_others_confirm": "Alle anderen Browser und Geräte, die bei diesem Konto angemeldet sind, werden abgemeldet. Diese Sitzung bleibt bestehen.",
+  "sessions.close_one_confirm": "{device} ({address}) wird von diesem Konto abgemeldet. Mit dem Passwort kann es sich wieder anmelden.",
   "sessions.manage": "Sitzungen anzeigen",
   "sessions.count": "Aktuell angemeldet: {count}",
   "sessions.col_device": "Gerät",

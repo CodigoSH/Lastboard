@@ -650,6 +650,7 @@
   "sessions.close": "إغلاق",
   "sessions.close_others": "إغلاق جميع الجلسات الأخرى",
   "sessions.close_others_confirm": "سيتم تسجيل الخروج من كل المتصفحات والأجهزة الأخرى المسجّلة الدخول إلى هذا الحساب. ستبقى هذه الجلسة مفتوحة.",
+  "sessions.close_one_confirm": "سيتم تسجيل خروج {device} ({address}) من هذا الحساب. يمكنه تسجيل الدخول مجددًا بكلمة المرور.",
   "sessions.manage": "عرض الجلسات",
   "sessions.count": "مسجّل الدخول الآن: {count}",
   "sessions.col_device": "الجهاز",

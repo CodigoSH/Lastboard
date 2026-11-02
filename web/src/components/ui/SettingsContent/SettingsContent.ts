@@ -9,7 +9,7 @@ import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, sessionsListTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
+import { accountTemplate, deviceName, sessionsListTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
@@ -160,7 +160,7 @@ class SettingsContent extends HTMLElement {
                     this.fetchSessions();
                     break;
                 case 'close-session':
-                    this.closeSession(Number(el.dataset.sessionId));
+                    this.confirmCloseSession(Number(el.dataset.sessionId));
                     break;
                 case 'close-other-sessions':
                     this.closeOtherSessions();
@@ -569,6 +569,18 @@ class SettingsContent extends HTMLElement {
                 }
                 this.fetchPasskeys();
             },
+        });
+    }
+
+    /** Asks first: a click on the wrong line must not sign somebody out. */
+    async confirmCloseSession(id: number) {
+        const row = this.sessions.items.find(x => x.id === id);
+        if (!row) return;
+        const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+            title: i18n.t('sessions.close'),
+            message: i18n.t('sessions.close_one_confirm', { device: deviceName(row.user_agent), address: row.ip || '—' }),
+            onConfirm: () => this.closeSession(id),
         });
     }
 

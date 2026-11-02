@@ -650,6 +650,7 @@
   "sessions.close": "Cerrar",
   "sessions.close_others": "Cerrar todas las demás sesiones",
   "sessions.close_others_confirm": "Se cerrará la sesión en todos los demás navegadores y dispositivos de esta cuenta. Esta seguirá abierta.",
+  "sessions.close_one_confirm": "{device} ({address}) se desconectará de esta cuenta. Podrá volver a entrar con la contraseña.",
   "sessions.manage": "Ver sesiones",
   "sessions.count": "Con sesión iniciada: {count}",
   "sessions.col_device": "Dispositivo",

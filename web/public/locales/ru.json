@@ -650,6 +650,7 @@
   "sessions.close": "Завершить",
   "sessions.close_others": "Завершить все остальные сеансы",
   "sessions.close_others_confirm": "Все остальные браузеры и устройства, где выполнен вход в эту учётную запись, будут отключены. Этот сеанс останется активным.",
+  "sessions.close_one_confirm": "{device} ({address}) будет выведено из этой учётной записи. Войти снова можно будет по паролю.",
   "sessions.manage": "Показать сеансы",
   "sessions.count": "Сейчас в системе: {count}",
   "sessions.col_device": "Устройство",

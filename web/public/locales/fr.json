@@ -650,6 +650,7 @@
   "sessions.close": "Fermer",
   "sessions.close_others": "Fermer toutes les autres sessions",
   "sessions.close_others_confirm": "Tous les autres navigateurs et appareils connectés à ce compte seront déconnectés. Celui-ci reste connecté.",
+  "sessions.close_one_confirm": "{device} ({address}) sera déconnecté de ce compte. Il pourra se reconnecter avec le mot de passe.",
   "sessions.manage": "Voir les sessions",
   "sessions.count": "Actuellement connectées : {count}",
   "sessions.col_device": "Appareil",

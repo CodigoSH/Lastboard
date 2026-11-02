@@ -650,6 +650,7 @@
   "sessions.close": "بند کریں",
   "sessions.close_others": "باقی تمام سیشنز بند کریں",
   "sessions.close_others_confirm": "اس اکاؤنٹ میں سائن اِن باقی تمام براؤزرز اور ڈیوائسز سائن آؤٹ ہو جائیں گی۔ یہ سیشن کھلا رہے گا۔",
+  "sessions.close_one_confirm": "{device} ({address}) اس اکاؤنٹ سے لاگ آؤٹ ہو جائے گا۔ وہ پاس ورڈ سے دوبارہ لاگ ان کر سکتا ہے۔",
   "sessions.manage": "سیشنز دیکھیں",
   "sessions.count": "اس وقت لاگ ان: {count}",
   "sessions.col_device": "ڈیوائس",

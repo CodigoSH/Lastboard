@@ -1685,7 +1685,7 @@ dialog .settings-content__action-info p { max-width: none; }
 .sessions-row__act { display: flex; justify-content: flex-end; }
 .sessions-row__act app-button { inline-size: 100%; }
 .sessions-row__act .user-role-tag { inline-size: 100%; white-space: nowrap; text-align: center; box-sizing: border-box; }
-.sessions-foot { display: flex; justify-content: flex-end; margin-block-start: 6px; }
+.sessions-foot { display: flex; justify-content: flex-end; margin-block-start: 6px; padding-block-start: 16px; border-block-start: 1px solid var(--border); }
 .sessions-foot app-button { inline-size: auto; min-inline-size: 220px; }
 @media (max-width: 640px) {
     .sessions-head { display: none; }

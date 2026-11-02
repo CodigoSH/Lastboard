@@ -650,6 +650,7 @@
   "sessions.close": "Kapat",
   "sessions.close_others": "Diğer tüm oturumları kapat",
   "sessions.close_others_confirm": "Bu hesapta oturum açmış diğer tüm tarayıcıların ve cihazların oturumu kapatılacak. Bu oturum açık kalacak.",
+  "sessions.close_one_confirm": "{device} ({address}) bu hesaptan çıkış yapacak. Parolayla yeniden giriş yapabilir.",
   "sessions.manage": "Oturumları görüntüle",
   "sessions.count": "Şu an oturum açık: {count}",
   "sessions.col_device": "Cihaz",

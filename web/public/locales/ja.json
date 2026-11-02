@@ -650,6 +650,7 @@
   "sessions.close": "閉じる",
   "sessions.close_others": "他のすべてのセッションを閉じる",
   "sessions.close_others_confirm": "このアカウントにサインインしている他のすべてのブラウザとデバイスがサインアウトされます。このセッションはそのまま残ります。",
+  "sessions.close_one_confirm": "{device}（{address}）はこのアカウントからログアウトされます。パスワードで再度ログインできます。",
   "sessions.manage": "セッションを表示",
   "sessions.count": "現在ログイン中: {count}",
   "sessions.col_device": "デバイス",

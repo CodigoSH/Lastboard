@@ -650,6 +650,7 @@
   "sessions.close": "关闭",
   "sessions.close_others": "关闭所有其他会话",
   "sessions.close_others_confirm": "此账户上登录的所有其他浏览器和设备都将被退出登录。当前会话保持登录。",
+  "sessions.close_one_confirm": "{device}（{address}）将退出此账户。之后仍可用密码重新登录。",
   "sessions.manage": "查看会话",
   "sessions.count": "当前已登录：{count}",
   "sessions.col_device": "设备",

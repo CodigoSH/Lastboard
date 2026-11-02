@@ -650,6 +650,7 @@
   "sessions.close": "Tutup",
   "sessions.close_others": "Tutup semua sesi lainnya",
   "sessions.close_others_confirm": "Semua peramban dan perangkat lain yang masuk ke akun ini akan dikeluarkan. Sesi ini tetap masuk.",
+  "sessions.close_one_confirm": "{device} ({address}) akan dikeluarkan dari akun ini. Perangkat itu dapat masuk lagi dengan kata sandi.",
   "sessions.manage": "Lihat sesi",
   "sessions.count": "Sedang masuk: {count}",
   "sessions.col_device": "Perangkat",

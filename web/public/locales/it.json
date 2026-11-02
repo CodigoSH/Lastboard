@@ -650,6 +650,7 @@
   "sessions.close": "Chiudi",
   "sessions.close_others": "Chiudi tutte le altre sessioni",
   "sessions.close_others_confirm": "Tutti gli altri browser e dispositivi connessi a questo account verranno disconnessi. Questo resterà connesso.",
+  "sessions.close_one_confirm": "{device} ({address}) verrà disconnesso da questo account. Potrà accedere di nuovo con la password.",
   "sessions.manage": "Mostra le sessioni",
   "sessions.count": "Connesse ora: {count}",
   "sessions.col_device": "Dispositivo",

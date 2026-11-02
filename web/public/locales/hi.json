@@ -650,6 +650,7 @@
   "sessions.close": "बंद करें",
   "sessions.close_others": "अन्य सभी सत्र बंद करें",
   "sessions.close_others_confirm": "इस खाते में साइन इन किए हुए अन्य सभी ब्राउज़र और डिवाइस साइन आउट हो जाएंगे। यह सत्र चालू रहेगा।",
+  "sessions.close_one_confirm": "{device} ({address}) इस खाते से साइन आउट हो जाएगा। वह पासवर्ड से फिर साइन इन कर सकता है।",
   "sessions.manage": "सत्र देखें",
   "sessions.count": "अभी साइन इन: {count}",
   "sessions.col_device": "डिवाइस",

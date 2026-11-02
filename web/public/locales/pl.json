@@ -650,6 +650,7 @@
   "sessions.close": "Zamknij",
   "sessions.close_others": "Zamknij wszystkie pozostałe sesje",
   "sessions.close_others_confirm": "Wszystkie pozostałe przeglądarki i urządzenia zalogowane na to konto zostaną wylogowane. Ta sesja pozostanie aktywna.",
+  "sessions.close_one_confirm": "{device} ({address}) zostanie wylogowane z tego konta. Zalogowanie się ponownie będzie możliwe hasłem.",
   "sessions.manage": "Pokaż sesje",
   "sessions.count": "Obecnie zalogowane: {count}",
   "sessions.col_device": "Urządzenie",

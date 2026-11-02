@@ -650,6 +650,7 @@
   "sessions.close": "Sluiten",
   "sessions.close_others": "Alle andere sessies sluiten",
   "sessions.close_others_confirm": "Elke andere browser of ander apparaat dat bij dit account is aangemeld, wordt afgemeld. Dit apparaat blijft aangemeld.",
+  "sessions.close_one_confirm": "{device} ({address}) wordt afgemeld bij dit account. Met het wachtwoord kan het opnieuw inloggen.",
   "sessions.manage": "Sessies bekijken",
   "sessions.count": "Nu ingelogd: {count}",
   "sessions.col_device": "Apparaat",
