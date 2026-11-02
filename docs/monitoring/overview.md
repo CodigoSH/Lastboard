@@ -33,7 +33,7 @@ Recorded checks are kept for **30 days**; older data is pruned automatically eac
 
 ## The Status Page
 
-**Back leaves the page, not Lastboard.** The browser's button, the mouse's fourth button and a swipe from the edge of a phone all close the status page and return you to your board; closing it with the ✕ or with Escape takes its history step with it, so nothing is left behind to press.
+**Back walks through the page before it leaves it.** Each tab you went to and each service you opened is a step of the browser's history, so Back — the browser's button, the mouse's fourth button, a swipe from the edge of a phone — returns to the tab or the panel you came from, and Forward goes the way you came; only one more Back leaves the status page for your board. Closing the panel with its ✕ takes its step back; closing the page with the ✕ or with Escape takes all of them, so nothing is left behind to press. The [Docker](../docker/overview.md) and [Proxmox](../proxmox/overview.md) pages walk the same way.
 
 The **Service status** page is built from the same pieces as the [Docker](../docker/overview.md) and [Proxmox](../proxmox/overview.md) pages — the same header, tabs, indicators, cards and side panel — because they are views of one product. With 24/7 monitoring on, open it from the **status icon in the top bar**. With more than one board holding monitored services, a selector beside the header limits the page to one of them. The page refreshes every thirty seconds while it is open and visible, and the button beside the ✕ asks for a reading at once.
 
@@ -62,7 +62,7 @@ Choosing a service opens a **side panel** with three tabs: **Summary** (availabi
 
 ### Outages
 
-How many outages there were in the range, the time without service all of them add up to, and the mean time to recover, then every outage of every service with the range and the *Ongoing* / *Recovered* chips.
+Three figures to act on: how many outages there were in the range, how many are still going and how many services they touched; **the service that suffered most**, with how many outages and how long it was down; and **the longest outage**, with its service and when it began. Then every outage of every service with the range and the *Ongoing* / *Recovered* chips.
 
 ![The outages tab: how many, how long and the table of every outage](../assets/monitor-outages.png)
 

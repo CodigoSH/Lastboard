@@ -89,7 +89,7 @@ Removing one asks first. Its machines lose the icons you chose for them, which i
 
 ## The page
 
-The Proxmox icon in the top bar opens it, and the **×** in its header closes it. The page also has an address of its own, `/?view=proxmox`, which opens it straight away — in a new tab, or from a bookmark — and **See all** on the [widget](../widgets/proxmox.md) opens it the same way without reloading the board. You still sign in first, and the request is taken out of the address once the page is open. While it is open the rest of the top bar is locked, the same way the status page behaves, and **Esc**, the **×** or the browser's Back button close it.
+The Proxmox icon in the top bar opens it, and the **×** in its header closes it. The page also has an address of its own, `/?view=proxmox`, which opens it straight away — in a new tab, or from a bookmark — and **See all** on the [widget](../widgets/proxmox.md) opens it the same way without reloading the board. You still sign in first, and the request is taken out of the address once the page is open. While it is open the rest of the top bar is locked, the same way the status page behaves, and **Esc**, the **×** or the browser's Back button close it. Back walks through the page before it leaves it: each tab and each machine, node or store you opened is a step, so Back returns to the tab or the panel you came from, and one more leaves the page for your board.
 
 The header says how many machines are running, how many are stopped and how many have warnings. **With more than one hypervisor** connected there is a filter beside it: *All* and one button per hypervisor when there are two, a selector when there are more, so every figure on the page can be read for all of them at once or for one. A button asks for a fresh reading at once; otherwise everything refreshes every 15 seconds while the page is open and the browser tab is visible. The page has five tabs: **Overview**, **Machines**, **Storage**, **Tasks** and **System log**.
 
@@ -135,7 +135,7 @@ One card per virtual machine or container (or a list, with the two buttons at th
 
 ### Storage
 
-Every store, fullest first: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Choosing one opens its figures.
+Every store, fullest first, as cards or as a list — the two buttons at the top, remembered in this browser together with the choice for the machines: how full it is, used and total, the kind (`ZFSPOOL`, `LVMTHIN`, `PBS`, `DIR`) and which node it belongs to. Choosing one opens its figures.
 
 ## The side panel
 

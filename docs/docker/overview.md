@@ -110,7 +110,7 @@ Hosts used to be set up inside each widget. The first time the new version start
 
 ## The Docker page
 
-The widget is a list you glance at. For the whole picture — what is running, what needs a look, and one container in detail — open the **Docker page**: the Docker icon in the top bar, beside the Proxmox one. It is there for an account that may look at Docker and has at least one host that is switched on and that it can use; with none, there is no icon. While the page is open the rest of the top bar is locked and the same icon (or **Esc**, or the browser's Back button) closes it, as with the Proxmox and status pages.
+The widget is a list you glance at. For the whole picture — what is running, what needs a look, and one container in detail — open the **Docker page**: the Docker icon in the top bar, beside the Proxmox one. It is there for an account that may look at Docker and has at least one host that is switched on and that it can use; with none, there is no icon. While the page is open the rest of the top bar is locked and the same icon (or **Esc**, or the browser's Back button) closes it, as with the Proxmox and status pages. Back walks through the page before it leaves it: each tab and each container you opened is a step, so Back returns to the tab or the panel you came from, and one more leaves the page for your board.
 
 ![The Docker page's overview of two hosts: four indicators, the chart since the page was opened, what needs attention and the Compose projects](../assets/docker-overview.png)
 
@@ -140,7 +140,7 @@ Every container of every host that is on, as cards or as a list (the two buttons
 - **Group by project** gathers the containers of each Compose project under its name; the ones started outside Compose go last.
 - **Sort by** name, state, CPU or memory. The view, the sort and the grouping are remembered in this browser.
 
-Choosing a container opens it in a **side panel**. On a wide window the panel pushes the page aside so the list stays in view; on a narrower one it covers the page, and **Esc**, the **×** or the browser's Back button closes it. On a phone it takes the screen.
+Choosing a container opens it in a **side panel**. On a wide window the panel pushes the page aside so the list stays in view; on a narrower one it covers the page, and **Esc**, the **×** or the browser's Back button closes it (the panel is a step of its own, so Back from a container returns to the list). On a phone it takes the screen.
 
 A container can have a **face** and a **bookmark**:
 
