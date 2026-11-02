@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageSpan, PANEL_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
+    attentionHtml, cardHtml, causeCode, causeText, checksTabHtml, downLine, moreHtml, outageSpan, outageTableHtml, PANEL_LINES, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, listHeadHtml,
     monitoringKpi, outageRowHtml, outagesPanelHtml, outagesTabHtml, rowHtml, stateChips, summaryHtml, summaryTabHtml, type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import { attentionList, fleetTotals, groupRows, readRow, RANGES, type Outage, type ServiceRow } from '../../../services/monitorPage';
@@ -80,9 +80,16 @@ describe('the four indicators', () => {
         expect(k).toContain('[monitorpage.alerts:method=ntfy]');
         expect(k).toContain('data-act="settings"');
     });
-    test('alerts switched off or with no channel say off, not a method that does not exist', () => {
-        expect(monitoringKpi(setup({ alerts_enabled: false }), t, fmt)).toContain('[monitorpage.alerts:method=[monitorpage.off]]');
-        expect(monitoringKpi(setup({ notify_type: 'none' }), t, fmt)).toContain('[monitorpage.alerts:method=[monitorpage.off]]');
+    test('alerts and their threshold are not mentioned until the person turns alerts on', () => {
+        for (const k of [monitoringKpi(setup({ alerts_enabled: false }), t, fmt), monitoringKpi(setup({ alerts_enabled: false, notify_type: 'ntfy' }), t, fmt), monitoringKpi(setup({ mode: 'tab' }), t, fmt)]) {
+            expect(k).not.toContain('monitorpage.alerts');
+            expect(k).not.toContain('monitorpage.threshold');
+            expect(k).not.toContain('monitorpage.off');
+            expect(k).toContain('data-act="settings"');
+        }
+        const on = monitoringKpi(setup({ alerts_enabled: true, notify_type: 'ntfy', fail_threshold: 3 }), t, fmt);
+        expect(on).toContain('[monitorpage.alerts:method=');
+        expect(on).toContain('[monitorpage.threshold]: N(3)');
     });
     test('monitoring off: the page says it is live only, and offers the way to turn it on', () => {
         const k = monitoringKpi(setup({ mode: 'tab' }), t, fmt);
@@ -199,8 +206,8 @@ describe('outages', () => {
     test('an ongoing one says so; a closed one says how long and that it recovered', () => {
         expect(outageRowHtml(list[0], true, t, fmt)).toContain('[monitorpage.is_down]');
         const closed = outageRowHtml(list[1], true, t, fmt);
-        expect(closed).toContain('was_down:time=O(1200)');
-        expect(closed).toContain('[monitorpage.working_again]');
+        expect(closed).toContain('O(1200)');
+        expect(closed).toContain('[monitorpage.resolved]');
         expect(closed).toContain('[monitorpage.cause_none]');
     });
     test('one that began a moment ago does not say "ago" with nothing before it', () => {
@@ -275,12 +282,24 @@ describe('what a person reads about an outage', () => {
         expect(outageSpan(1848, t, fmt)).toBe('O(1848)');
         expect(outageSpan(3600, t, fmt)).toBe('S(3600)');
     });
-    test('the words say how long it was down and that it works again, not "recovered"', () => {
+    test('a row is short: the length alone, the state in one word, the code in a tooltip', () => {
         const html = outageRowHtml({ item_id: 1, name: 'Plex', start: 'a', end: 'b', duration_sec: 1848, status_code: 502 } as Outage, true, t, fmt);
-        expect(html).toContain('[monitorpage.was_down:time=O(1848)]');
-        expect(html).toContain('[monitorpage.working_again]');
+        expect(html).toContain('>O(1848)<');
+        expect(html).toContain('[monitorpage.resolved]');
         expect(html).not.toContain('monitor.ev_recovered');
         expect(html).toContain('title="HTTP 502"');
+    });
+    test('every table of outages and of checks names its columns', () => {
+        const o = [{ item_id: 1, name: 'Plex', start: 'a', end: 'b', duration_sec: 600, status_code: 0 } as Outage];
+        const named = outageTableHtml(o, true, t, fmt);
+        for (const k of ['col_service', 'col_cause', 'col_when', 'col_length']) expect(named).toContain(`[monitorpage.${k}]`);
+        expect(named).toContain('[dockerpage.state]');
+        const panel = outageTableHtml(o, false, t, fmt);
+        expect(panel).not.toContain('col_service');
+        expect(panel).toContain('[monitorpage.col_length]');
+        expect(outagesPanelHtml(o, t, fmt)).toContain('tr--h');
+        const c = checksTabHtml([{ checked_at: 't', up: true, latency_ms: 1, status_code: 200 }] as never, 86400, t, fmt);
+        for (const k of ['col_time', 'col_code', 'col_result']) expect(c).toContain(`[monitorpage.${k}]`);
     });
     test('the "view all" button appears only when there is more than what is shown', () => {
         expect(moreHtml('all-x', 6, 6, t, fmt)).toBe('');
@@ -290,10 +309,10 @@ describe('what a person reads about an outage', () => {
     test('the side panel shows the first lines and offers the rest; the window shows them all', () => {
         const list = Array.from({ length: PANEL_LINES + 5 }, (_, i) => ({ start: `s${i}`, end: `e${i}`, duration_sec: 600, status_code: 0 } as Outage));
         const few = outagesPanelHtml(list, t, fmt);
-        expect(few.match(/class="task out"/g)?.length).toBe(PANEL_LINES);
+        expect(few.match(/class="tr" data-noopen/g)?.length).toBe(PANEL_LINES);
         expect(few).toContain('data-act="all-panel-outages"');
         const every = outagesPanelHtml(list, t, fmt, true);
-        expect(every.match(/class="task out"/g)?.length).toBe(PANEL_LINES + 5);
+        expect(every.match(/class="tr" data-noopen/g)?.length).toBe(PANEL_LINES + 5);
         expect(every).not.toContain('data-act=');
     });
     test('the checks list does the same', () => {

@@ -68,3 +68,18 @@
 .mdl__n { margin-inline-start: 10px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px; font: 600 11px/1.6 var(--font-mono); color: var(--text-dim); }
 .mdl__b { flex: 1; min-block-size: 0; overflow-y: auto; padding: 0 18px 18px; display: flex; flex-direction: column; gap: 12px; }
 .mdl__b > * { flex-shrink: 0; }
+
+/* Outages as a table: service, cause, when, how long, and whether it still is. */
+.tbl--out .tr { grid-template-columns: 14px minmax(90px, 1fr) minmax(0, 1.3fr) 92px 84px 74px; text-align: start; }
+.tbl--out-p .tr { grid-template-columns: 14px minmax(0, 1fr) 88px 78px 70px; }
+.tbl--out .tr > .cell { white-space: nowrap; }
+/* The shell hides two columns of its own tables on a narrow page; these columns are all needed. */
+.tbl--out .tr > :nth-child(3), .tbl--out .tr > :nth-child(6), .tbl--out .tr--h > :nth-child(3), .tbl--out .tr--h > :nth-child(6) { display: block; }
+.tbl--out .ok { color: var(--ok); font-weight: 600; }
+@media (max-width: 700px) {
+    .tbl--out:not(.tbl--out-p) .tr { grid-template-columns: 14px minmax(0, 1fr) 84px 74px 70px; }
+    .tbl--out:not(.tbl--out-p) .tr > :nth-child(3), .tbl--out:not(.tbl--out-p) .tr--h > :nth-child(3) { display: none; }
+}
+
+/* The checks keep their columns, now named. */
+.chk--h { border-block-start: 0; padding-block: 8px; background: var(--surface-solid); font: 700 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }

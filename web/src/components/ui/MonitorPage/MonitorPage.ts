@@ -17,7 +17,7 @@ import {
 import '../Select/Select';
 import {
     attentionHtml, chartCardForFleet, checksTabHtml, drawerFooterHtml, drawerHeadHtml, inventoryHtml, kpisHtml, latestOutagesBoxHtml, lowestBoxHtml,
-    noMatchHtml, outageRowHtml, outagesPanelHtml, outagesTabHtml, stateChips, summaryHtml, summaryTabHtml,
+    noMatchHtml, outageTableHtml, outagesPanelHtml, outagesTabHtml, stateChips, summaryHtml, summaryTabHtml,
     type Fmt, type MonitoringSetup, type ServiceView, type T,
 } from './MonitorPage.template';
 import infraCss from '../infra/infra.css' with { type: 'text' };
@@ -782,7 +782,7 @@ class MonitorPage extends HTMLElement {
             const mine = new Set(this.scope().map(r => r.item_id));
             const list = this.outages.filter(o => o.item_id !== undefined && mine.has(o.item_id));
             name = t('monitorpage.latest'); n = list.length;
-            html = `<div class="card tasks">${list.map(o => outageRowHtml(o, true, t, fmt)).join('')}</div>`;
+            html = outageTableHtml(list, true, t, fmt);
         } else {
             const r = this.current();
             const hist = r ? this.histories.get(`${r.item_id}:${this.histRange}`) : undefined;

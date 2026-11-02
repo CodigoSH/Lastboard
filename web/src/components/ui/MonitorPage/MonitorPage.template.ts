@@ -127,19 +127,22 @@ export function kpisHtml(tt: FleetTotals, setup: MonitoringSetup | null, sparks:
 export function monitoringKpi(setup: MonitoringSetup | null, t: T, fmt: Fmt): string {
     const label = t('widget.monitor.name');
     if (!setup) return kpiHtml({ label, icon: 'gear', value: '—' });
-    const alerts = setup.alerts_enabled && NOTIFY_NAMES[setup.notify_type] ? NOTIFY_NAMES[setup.notify_type] : t('monitorpage.off');
-    const chips: { text: string; tone: Tone }[] = setup.mode === 'background'
-        ? [{ text: `● ${t('monitorpage.on')}`, tone: 'ok' }, { text: t('monitorpage.alerts', { method: alerts }), tone: '' }]
-        : [{ text: t('monitorpage.alerts', { method: t('monitorpage.off') }), tone: 'warn' }];
+    // Alerts and their threshold are said only once the person has turned alerts on: until then they are not part of the picture.
+    const alertsOn = setup.mode === 'background' && setup.alerts_enabled;
+    const method = NOTIFY_NAMES[setup.notify_type] ?? t('monitorpage.on');
+    const chips: { text: string; tone: Tone }[] = setup.mode === 'background' ? [{ text: `● ${t('monitorpage.on')}`, tone: 'ok' }] : [];
+    if (alertsOn) chips.push({ text: t('monitorpage.alerts', { method }), tone: '' });
     const kpi = setup.mode === 'background'
         ? kpiHtml({
             label, icon: 'gear', value: '24/7', unit: t('monitorpage.every', { time: fmt.span(setup.interval_sec) }),
-            sub: [t('monitorpage.kept', { time: fmt.span(setup.retention_days * 86400) }), `${t('monitorpage.threshold')}: ${fmt.num(setup.fail_threshold)}`], chips,
+            sub: [t('monitorpage.kept', { time: fmt.span(setup.retention_days * 86400) }), alertsOn ? `${t('monitorpage.threshold')}: ${fmt.num(setup.fail_threshold)}` : ''], chips,
         })
         : kpiHtml({ label, icon: 'gear', value: t('monitorpage.live'), unit: t('monitorpage.no_history'), sub: [t('monitorpage.live_only'), ''], chips });
     // The way to the settings sits with the chips, inside the same card.
     const settings = `<button type="button" class="chip chip--link" data-act="settings">${icon('gear', 11)}<span class="chip__t">${e(t('monitorpage.settings'))}</span></button>`;
-    return kpi.replace(/(<div class="kpi__chips">[\s\S]*?)(<\/div>\s*<\/div>\s*)$/, `$1${settings}$2`);
+    return chips.length
+        ? kpi.replace(/(<div class="kpi__chips">[\s\S]*?)(<\/div>\s*<\/div>\s*)$/, `$1${settings}$2`)
+        : kpi.replace(/(\s*<\/div>\s*)$/, `<div class="kpi__chips">${settings}</div>$1`);
 }
 
 // ── Attention ──────────────────────────────────────────────────────────────
@@ -212,20 +215,27 @@ export function lowestBoxHtml(rows: ServiceRow[], t: T, fmt: Fmt): string {
     return boxHtml(t('monitorpage.lowest'), body, '30 d');
 }
 
-/** One outage as a line: what happened, to which service, since when, and for how long. */
+/** The head of an outage table: the panel's lines leave out the service, which is the panel's own. */
+export function outageHeadHtml(named: boolean, t: T): string {
+    return `<div class="tr tr--h" aria-hidden="true"><span></span>${named ? `<span>${e(t('monitorpage.col_service'))}</span>` : ''}<span>${e(t('monitorpage.col_cause'))}</span><span>${e(t('monitorpage.col_when'))}</span><span>${e(t('monitorpage.col_length'))}</span><span>${e(t('dockerpage.state'))}</span></div>`;
+}
+
+/** One outage as a row: which service, why, since when, for how long, and whether it still is. */
 export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: Map<number, ServiceRow>): string {
     const ongoing = o.end === null;
     const cause = causeText(o.status_code, t);
+    const code = causeCode(o.status_code);
     const ago = fmt.ago(o.start);
     const when = ago ? t('monitorpage.ago', { time: ago }) : t('monitorpage.just_now');
-    const who = named ? o.name ?? rows?.get(o.item_id ?? -1)?.name ?? '' : cause;
-    const sub = named ? `${cause} · ${when}` : when;
-    const code = causeCode(o.status_code);
-    const right = ongoing
-        ? `<span class="chip chip--bad">${e(t('monitorpage.is_down'))}</span>`
-        : `${e(t('monitorpage.was_down', { time: outageSpan(o.duration_sec, t, fmt) }))}<br><span class="ok">${e(t('monitorpage.working_again'))}</span>`;
-    return `<button type="button" class="task out" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}><span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>
-        <span><b>${e(who)}</b><small${code ? ` title="${e(code)}"` : ''}>${e(sub)}</small></span><span class="task__r">${right}</span></button>`;
+    const who = o.name ?? rows?.get(o.item_id ?? -1)?.name ?? '';
+    const length = ongoing ? '—' : outageSpan(o.duration_sec, t, fmt);
+    const state = ongoing ? `<span class="chip chip--bad">${e(t('monitorpage.is_down'))}</span>` : `<span class="ok">${e(t('monitorpage.resolved'))}</span>`;
+    return `<button type="button" class="tr" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}><span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>${named ? `<span class="nm" title="${e(who)}">${e(who)}</span>` : ''}<span class="cell" title="${e(code || cause)}">${e(cause)}</span><span class="cell">${e(when)}</span><span class="cell">${e(length)}</span><span class="cell">${state}</span></button>`;
+}
+
+/** Outages as a table with its head. `named` adds the service column, for lists that mix several. */
+export function outageTableHtml(list: Outage[], named: boolean, t: T, fmt: Fmt, rows?: Map<number, ServiceRow>): string {
+    return `<div class="tbl tbl--out${named ? '' : ' tbl--out-p'}">${outageHeadHtml(named, t)}${list.map(o => outageRowHtml(o, named, t, fmt, rows)).join('')}</div>`;
 }
 
 /** The "view all" button under a list that shows only the most relevant lines; nothing when they all fit. */
@@ -237,7 +247,7 @@ export function moreHtml(act: string, shown: number, total: number, t: T, fmt: F
 
 export function latestOutagesBoxHtml(list: Outage[], t: T, fmt: Fmt, total: number): string {
     const body = list.length
-        ? `<div class="card tasks">${list.map(o => outageRowHtml(o, true, t, fmt)).join('')}</div>${moreHtml('all-outages', list.length, total, t, fmt)}`
+        ? `${outageTableHtml(list, true, t, fmt)}${moreHtml('all-outages', list.length, total, t, fmt)}`
         : `<div class="card"><div class="chart__empty">${e(t('monitor.no_incidents'))}</div></div>`;
     return boxHtml(t('monitorpage.latest'), body, fmt.num(total));
 }
@@ -345,7 +355,7 @@ export function outagesTabHtml(list: Outage[], shown: Outage[], range: RangeLabe
         `<button type="button" class="fchip" data-ofilter="${id}" aria-pressed="${filter === id}">${e(label)} <span class="n">${e(fmt.num(n))}</span></button>`;
     const tools = `<div class="tools">${chip('all', t('infra.filter_all'), tot.count)}${chip('ongoing', t('monitorpage.ongoing'), tot.ongoing)}${chip('recovered', t('monitor.ev_recovered'), tot.recovered)}<span class="pspacer"></span>${rangeSegHtml('orange', range, ranges)}</div>`;
     const body = shown.length
-        ? `<div class="card tasks">${shown.map(o => outageRowHtml(o, true, t, fmt, rows)).join('')}</div>`
+        ? outageTableHtml(shown, true, t, fmt, rows)
         : emptyHtml(t('monitor.no_incidents'));
     return `${sum}${tools}${boxHtml(t('monitor.incidents'), body, fmt.num(shown.length))}`;
 }
@@ -387,7 +397,7 @@ export function summaryTabHtml(d: SummaryData, t: T, fmt: Fmt): string {
         fact(t('monitor.current'), e(fmt.ms(r.latency_ms))),
         fact(t('monitor.avg_24h'), e(fmt.ms(r.avg_ms_24h))),
         d.setup ? fact(t('monitorpage.f_interval'), e(t('monitorpage.every', { time: fmt.span(d.setup.interval_sec) }))) : '',
-        d.setup ? fact(t('monitorpage.threshold'), e(fmt.num(d.setup.fail_threshold))) : '',
+        d.setup?.alerts_enabled && d.setup.mode === 'background' ? fact(t('monitorpage.threshold'), e(fmt.num(d.setup.fail_threshold))) : '',
     ].join('');
     return `<div class="live3">${live('24 h', r.uptime_pct)}${live('7 d', r.uptime_7d)}${live('30 d', r.uptime_30d)}</div>
         ${chart}
@@ -401,19 +411,20 @@ export const PANEL_LINES = 6;
 export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt, all = false): string {
     const shown = all ? list : list.slice(0, PANEL_LINES);
     return list.length
-        ? `<div class="card tasks">${shown.map(o => outageRowHtml({ ...o, item_id: undefined }, false, t, fmt)).join('')}</div>${all ? '' : moreHtml('all-panel-outages', shown.length, list.length, t, fmt)}`
+        ? `${outageTableHtml(shown.map(o => ({ ...o, item_id: undefined })), false, t, fmt)}${all ? '' : moreHtml('all-panel-outages', shown.length, list.length, t, fmt)}`
         : emptyHtml(t('monitor.no_incidents'));
 }
 
 export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: Fmt, all = false): string {
     const every = [...checks].reverse();
     const newest = all ? every : every.slice(0, PANEL_LINES * 2);
+    const head = `<div class="chk chk--h" aria-hidden="true"><span>${e(t('monitorpage.col_time'))}</span><span>${e(t('monitorpage.col_code'))}</span><span>${e(t('monitor.response'))}</span><span>${e(t('monitorpage.col_result'))}</span></div>`;
     const lines = newest.map(c => c.up
         ? `<div class="chk"><span class="dim">${e(fmt.clock(c.checked_at))}</span><span>${e(c.status_code ? String(c.status_code) : '—')}</span><span>${e(fmt.ms(c.latency_ms))}</span><span class="dim">${e(t('monitorpage.check_ok'))}</span></div>`
         : `<div class="chk"><span class="dim">${e(fmt.clock(c.checked_at))}</span><span class="bad">${e(c.status_code ? String(c.status_code) : '—')}</span><span class="bad">—</span><span class="bad">${e(t('monitorpage.check_fail'))} · ${e(causeText(c.status_code, t))}</span></div>`).join('');
     const note = `<div class="note note--calm">${e(t('monitorpage.checks_note', { time: fmt.span(retentionSec) }))}</div>`;
     return `${all ? '' : note}
-        ${newest.length ? `<div class="card tasks">${lines}</div>${all ? '' : moreHtml('all-checks', newest.length, every.length, t, fmt)}` : emptyHtml(t('monitor.no_data_yet'))}`;
+        ${newest.length ? `<div class="card tasks">${head}${lines}</div>${all ? '' : moreHtml('all-checks', newest.length, every.length, t, fmt)}` : emptyHtml(t('monitor.no_data_yet'))}`;
 }
 
 export function drawerFooterHtml(row: ServiceRow, t: T): string {
