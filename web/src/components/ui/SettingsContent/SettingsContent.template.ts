@@ -568,12 +568,6 @@ export const monitoringTemplate = (monitoring: {
             <div class="settings-content__action-group settings-content__action-group--actions">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i18n.t('monitor.overview_title')}</h3>
-                    </div>
-                    <app-button variant="primary" data-action="open-monitor-overview">${i18n.t('monitor.view_overview')}</app-button>
-                </div>
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
                         <h3>${i18n.t('monitor.clear_all')}</h3>
                         <p>${i18n.t('settings.monitoring_clear_desc')}</p>
                     </div>
@@ -596,6 +590,13 @@ export const monitoringTemplate = (monitoring: {
                         <span class="slider"></span>
                     </label>
                 </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${i18n.t('settings.fail_threshold')}</h3>
+                        <p>${i18n.t('settings.fail_threshold_desc')}</p>
+                    </div>
+                    <app-select id="fail-threshold" value="${monitoring.fail_threshold}"></app-select>
+                </div>
                 ${monitoring.alerts_enabled ? `
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
@@ -613,13 +614,6 @@ export const monitoringTemplate = (monitoring: {
                     <label class="settings-content__label">${i18n.t('settings.notify_token')}</label>
                     <input type="password" id="notify-token" class="settings-content__input" data-change="notify-token" value="${monitoring.notify_has_token ? SECRET_MASK : ''}" spellcheck="false" autocomplete="new-password" placeholder="" />
                     <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${monitoring.notify_has_token ? i18n.t('settings.notify_token_saved') : i18n.t('settings.notify_token_desc')}</p>
-                </div>
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.fail_threshold')}</h3>
-                        <p>${i18n.t('settings.fail_threshold_desc')}</p>
-                    </div>
-                    <app-select id="fail-threshold" value="${monitoring.fail_threshold}"></app-select>
                 </div>
                 ` : ''}
                 ` : ''}

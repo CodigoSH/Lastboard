@@ -197,7 +197,7 @@ describe('outages', () => {
         { item_id: 2, name: 'Plex', start: 'b', end: 'c', duration_sec: 1200, status_code: 0 },
     ];
     test('an ongoing one says so; a closed one says how long and that it recovered', () => {
-        expect(outageRowHtml(list[0], true, t, fmt)).toContain('[monitorpage.ongoing]');
+        expect(outageRowHtml(list[0], true, t, fmt)).toContain('[monitorpage.is_down]');
         const closed = outageRowHtml(list[1], true, t, fmt);
         expect(closed).toContain('S(1200)');
         expect(closed).toContain('[monitor.ev_recovered]');

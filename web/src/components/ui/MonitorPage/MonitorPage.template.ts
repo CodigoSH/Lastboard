@@ -204,7 +204,7 @@ export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: 
     const who = named ? o.name ?? rows?.get(o.item_id ?? -1)?.name ?? '' : cause;
     const sub = named ? `${cause} · ${when}` : when;
     const right = ongoing
-        ? `<span class="chip chip--bad">${e(t('monitorpage.ongoing'))}</span>`
+        ? `<span class="chip chip--bad">${e(t('monitorpage.is_down'))}</span>`
         : `${e(fmt.span(o.duration_sec))}<br><span class="ok">${e(t('monitor.ev_recovered'))}</span>`;
     return `<button type="button" class="task out" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}><span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>
         <span><b>${e(who)}</b><small>${e(sub)}</small></span><span class="task__r">${right}</span></button>`;
