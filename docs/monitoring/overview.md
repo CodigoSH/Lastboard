@@ -35,25 +35,32 @@ Recorded checks are kept for **30 days**; older data is pruned automatically eac
 
 **Back leaves the page, not Lastboard.** The browser's button, the mouse's fourth button and a swipe from the edge of a phone all close the status page and return you to your board; closing it with the ✕ or with Escape takes its history step with it, so nothing is left behind to press.
 
-The **Service status** page lists every monitored service in one place, each with its current state, a recent-checks strip and its 24-hour uptime. It is built from the same pieces as the [Proxmox](../proxmox/overview.md) page — the same header, the same section labels, the same cards — because they are two views of one product. With 24/7 monitoring on, open it from the **status icon in the top bar**. It is always reachable from **Settings → Monitoring → View status**. Use the search box to filter by name.
+The **Service status** page is built from the same pieces as the [Docker](../docker/overview.md) and [Proxmox](../proxmox/overview.md) pages — the same header, tabs, indicators, cards and side panel — because they are views of one product. With 24/7 monitoring on, open it from the **status icon in the top bar**. It is always reachable from **Settings → Monitoring → View status**. With more than one board holding monitored services, a selector beside the header limits the page to one of them. The page refreshes every thirty seconds while it is open and visible, and the button beside the ✕ asks for a reading at once.
 
-Click any service to open its detail view. You can also click the **status indicator on a bookmark tile** to jump straight to that service's history.
+It has three tabs: **Overview**, **Services** and **Outages**.
+
+### Overview
+
+Four indicators:
+
+- **Services** — a ring with how many are running, and one chip per kind: *Running*, *Down*, *Slow* and *No data*. A service is **slow** when it answers but takes more than two and a half times its own 24-hour mean, and at least 300 ms more; one that has never been checked is *no data*.
+- **Availability · 24 h** — the mean of the services that have data, with the 7-day and 30-day figures under it and the last day drawn beside it.
+- **Response** — the mean of what the answering services take right now, their own 24-hour mean, and the slowest.
+- **Monitoring** — whether anything is being recorded at all. With 24/7 on it says so, how often services are checked, how long the history is kept, how many failures in a row trigger an alert and where alerts go; with it off it says the page is live only, with no history and no alerts. **Settings** opens the section.
+
+Under them, a chart of the response of every service together — the mean and the slowest — for 24 hours, 7 days or 30 days (hover it to read a value), and **Needs attention**: the services that do not answer, since when and what they got back (an HTTP code, or "no answer"), the slow ones, a note about services never checked yet and, with 24/7 off, that nothing is being recorded. It shows nine lines and scrolls beyond them. Below, **Lowest availability** (30 days) and **Latest outages**.
+
+### Services
+
+Every monitored service as cards or as a list. A card has the service's icon, its address, its availability over 24 hours, its response and the last thirty checks as a heartbeat strip; the dot in the corner is its state. **Search** filters by name, address or board (**Ctrl+K** or **/** puts the cursor in it from anywhere on the page). The chips — *All*, *Running*, *Down*, *No data* — show how many each would list; services can be grouped by board and sorted by state, name, availability or response. The view, the sort and the grouping are remembered in this browser.
+
+Choosing a service opens a **side panel** with three tabs: **Summary** (availability over 24 hours, 7 days and 30 days, the response chart for the range you pick, the heartbeat and the facts: last check, HTTP code, response, 24-hour mean, check interval and alert threshold), **Outages** (that service's, over the 30 days kept) and **Checks** (the latest ones, newest first, with what each got back). The panel's footer opens the service and **clears its history** after asking.
+
+### Outages
+
+How many outages there were in the range, the time without service all of them add up to, and the mean time to recover, then every outage of every service with the range and the *Ongoing* / *Recovered* chips. **An outage keeps its own start and length whatever range you pick**: one that began before the range still shows when it really began and how long it really lasted — as far back as the 30 days of history kept. Durations are written in words, in your own language, with that language's plural rules.
 
 To keep the same information on the dashboard itself, without opening the page, add the [Monitoring widget](../widgets/monitoring.md).
-
-## Service Detail
-
-Selecting a service (right-hand panel above) shows its history for a chosen time range (**24 hours, 7 days, or 30 days**):
-
-| Element | Meaning |
-| :--- | :--- |
-| **Uptime** | Percentage of successful checks — shown for 24h, 7d, and 30d. |
-| **Response** | Response time, both **current** and the **24-hour average**. |
-| **Latency chart** | Response time plotted across the range, with a hover crosshair. |
-| **Recent checks** | A heartbeat strip of the most recent probes (green = up, red = down). Hover a bar for its timestamp and status. |
-| **Outages** | A table of down periods: status, date & time, duration, and whether the service recovered. **An outage keeps its own start and length whatever range you pick**: one that began before the range still shows when it really began and how long it really lasted, not the moment the range happens to cut it — as far back as the 30 days of history kept. Durations are written in words and in two units, so nothing needs dividing: *1 day and 1 hour*, *9 days and 15 hours*, *45 seconds* — in your own language, with that language's plural rules. A clean figure stays clean: *2 days*, never *2 days and 0 hours*. |
-
-Use **Refresh** to re-poll immediately; the view also refreshes itself while open.
 
 ## Clearing History
 

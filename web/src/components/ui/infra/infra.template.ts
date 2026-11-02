@@ -1,5 +1,5 @@
 import { escapeHtml } from '../../../services/escape';
-import type { StatusFilter, SortKey, UnitCounts } from '../../../services/infraUnits';
+import type { StatusFilter, SortKey } from '../../../services/infraUnits';
 
 /**
  * The pieces the infrastructure pages are drawn from, as pure functions: the
@@ -39,6 +39,9 @@ const ICONS = {
     disk: '<rect x="3" y="13" width="18" height="6" rx="1.5"/><path d="M3 13l2-8h14l2 8M7 16h.01M11 16h2"/>',
     bookmark: '<path d="M6 4h12v17l-6-4-6 4V4z"/>',
     pen: '<path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/>',
+    activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
     link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
 } as const;
 
@@ -213,9 +216,12 @@ export function chartHtml(id: string, spec: ChartSpec): string {
 
 export interface ToolbarSpec {
     query: string;
-    status: StatusFilter;
-    counts: UnitCounts;
-    sort: SortKey;
+    status: string;
+    counts: Record<string, number>;
+    /** The state chips, when the page's own are not the running / stopped / warnings of a machine. Their labels arrive translated. */
+    chips?: { id: string; label: string }[];
+    /** Kept for the callers that hold it; the selector is given its value by the page. */
+    sort?: string;
     grouped: boolean;
     view: 'cards' | 'list';
     searchLabel: string;
@@ -237,8 +243,9 @@ export function sortOptions(t: T): { value: string; label: string }[] {
 }
 
 export function toolbarHtml(o: ToolbarSpec, t: T, fmt: (n: number) => string): string {
-    const chips = FILTER_KEYS.map(([id, key]) =>
-        `<button type="button" class="fchip" data-filter="${id}" aria-pressed="${o.status === id}">${e(t(key))} <span class="n">${e(fmt(o.counts[id]))}</span></button>`).join('');
+    const list = o.chips ?? FILTER_KEYS.map(([id, key]) => ({ id: id as string, label: t(key) }));
+    const chips = list.map(({ id, label }) =>
+        `<button type="button" class="fchip" data-filter="${id}" aria-pressed="${o.status === id}">${e(label)} <span class="n">${e(fmt(o.counts[id] ?? 0))}</span></button>`).join('');
     return `<div class="tools">
         <label class="search">${icon('search', 14)}<input id="inv-q" type="search" value="${e(o.query)}" placeholder="${e(o.searchLabel)}" aria-label="${e(o.searchLabel)}" autocomplete="off"><kbd>${e(o.shortcut)}</kbd></label>
         ${chips}
