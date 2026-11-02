@@ -38,6 +38,7 @@ A dialog opens with two tabs, **General** and **Customization**.
 | **URL** | The destination address. A **protocol** dropdown lets you choose `https://` or `http://`. |
 | **Status Position** | Set it to a corner and Lastboard periodically checks whether the URL is reachable, showing an up/down indicator there. Pick **Top Left**, **Top Right**, **Bottom Left**, **Bottom Right**, or **Off**. |
 | **Served by** | Only when a [Proxmox](../proxmox/overview.md) host is connected: which machine runs this service. Left on **Automatic (by name)**, Lastboard matches the bookmark to a machine called the same thing; pick one by hand when the names differ. |
+| **Container** | Only when a [Docker](../docker/overview.md) host is connected: which container runs this service. Left on **None**, nothing is linked; pick one and the Docker page shows this bookmark on that container and says it *stops responding* when the container stops. |
 | **Touch Devices** | Controls whether the bookmark appears on touch devices. See [Mobile Visibility and Ordering](#mobile-visibility-and-ordering) below. |
 
 ## Customization Options

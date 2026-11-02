@@ -27,6 +27,8 @@ export interface DockerSettings {
     /** The administrator may use every kind of host; a member only agents. */
     admin: boolean;
     hosts: AccountDockerHost[];
+    /** The faces the account chose for containers, keyed host id + "/" + name. */
+    icons?: Record<string, string>;
 }
 
 /**

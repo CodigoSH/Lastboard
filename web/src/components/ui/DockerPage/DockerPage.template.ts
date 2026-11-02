@@ -1,10 +1,10 @@
 import { escapeHtml } from '../../../services/escape';
 import { containerName, type DockerContainer, type DockerHost } from '../../../services/dockerShared';
 import { stateLevel, stateKey, type ContainerStats, type DockerDetail, type HostRows, type LogLine } from '../../../services/dockerPage';
-import { attentionReason, type AttentionItem, type AttentionReason, type DockerTotals, type ProjectRow } from '../../../services/dockerOverview';
+import { attentionReason, type AttentionItem, type AttentionReason, type DockerTotals, type LinkOf, type ProjectRow } from '../../../services/dockerOverview';
 import type { UnitGroup } from '../../../services/infraUnits';
 import { niceMax } from '../../../services/dockerOverview';
-import { barHtml, boxHtml, chartCardHtml, emptyHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
+import { barHtml, bookmarkChipHtml, boxHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
 
 export type { T };
 
@@ -39,15 +39,15 @@ const tech = (v: string, cls = ''): string => `<span class="tech${cls ? ' ' + cl
 // ── What a container's state looks like ────────────────────────────────────
 
 /** The dot a container wears: green running, amber when it needs a look, red when it is failing, grey when stopped. */
-export function dotTone(c: DockerContainer): 'ok' | 'warn' | 'bad' | '' {
-    const reason = attentionReason(c);
-    if (reason === 'unhealthy' || reason === 'failed') return 'bad';
+export function dotTone(c: DockerContainer, linked = false): 'ok' | 'warn' | 'bad' | '' {
+    const reason = attentionReason(c, linked);
+    if (reason === 'unhealthy' || reason === 'failed' || reason === 'outage') return 'bad';
     if (reason === 'restarting' || reason === 'paused') return 'warn';
     return stateLevel(c.State || c.Status) === 'up' ? 'ok' : '';
 }
 
-const dotHtml = (c: DockerContainer): string => {
-    const tone = dotTone(c);
+const dotHtml = (c: DockerContainer, linked = false): string => {
+    const tone = dotTone(c, linked);
     return `<span class="dot${tone ? ' dot--' + tone : ''}"></span>`;
 };
 
@@ -55,6 +55,7 @@ const REASON_KEYS: Record<AttentionReason, string> = {
     unhealthy: 'dockerpage.why_unhealthy',
     restarting: 'dockerpage.why_restarting',
     failed: 'dockerpage.why_failed',
+    outage: 'docker.state_stopped',
     paused: 'dockerpage.why_paused',
 };
 
@@ -100,6 +101,8 @@ export interface OverviewData {
     /** The chart, already drawn, or '' while there is not enough history. */
     chart: string;
     hostNames: Record<string, string>;
+    /** The bookmark a container serves, by host and name. */
+    linkOf: LinkOf;
     /** What each host's running containers use, as a share of the host; null where the host did not say how big it is. */
     hostUse: Record<string, { cpu: number | null; mem: number | null }>;
     /** What the hosts in view have, when every one of them said; null otherwise, and the figures are read against what was seen. */
@@ -109,11 +112,13 @@ export interface OverviewData {
 export function attentionHtml(items: AttentionItem[], showHost: boolean, hostNames: Record<string, string>, t: T): string {
     if (!items.length) return `<div class="allok">${icon('check', 22)}<span>${e(t('dockerpage.all_ok'))}</span></div>`;
     return `<div class="attn">${items.map(a => {
-        const tone = a.reason === 'unhealthy' || a.reason === 'failed' ? 'bad' : 'warn';
+        const tone = a.reason === 'unhealthy' || a.reason === 'failed' || a.reason === 'outage' ? 'bad' : 'warn';
         const host = showHost ? ` · ${e(hostNames[a.hostId] ?? '')}` : '';
+        // A stopped container that a bookmark depends on says which service goes with it.
+        const breaks = a.link && (a.reason === 'outage' || a.reason === 'failed') ? ` · ${e(t('proxmox.stopped_breaks'))} ${e(a.link)}` : '';
         return `<button type="button" class="attn__row" data-host="${e(a.hostId)}" data-name="${e(a.name)}">
             <span class="dot dot--${tone}"></span>
-            <span class="attn__t"><b>${e(a.name)}</b><span>${e(reasonText(a.reason, a.exitCode, t))}${host}</span></span>
+            <span class="attn__t"><b>${e(a.name)}</b><span>${e(reasonText(a.reason, a.exitCode, t))}${breaks}${host}</span></span>
             ${icon('chevR', 15)}
         </button>`;
     }).join('')}</div>`;
@@ -124,7 +129,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     const pctRunning = tt.total ? (tt.running / tt.total) * 100 : 0;
     const level: Level = tt.attention ? 'bad' : tt.stopped ? 'warn' : 'ok';
     // Failing its own check or ended with an error is critical; restarting and paused are only a warning.
-    const critical = o.attention.filter(a => a.reason === 'unhealthy' || a.reason === 'failed').length;
+    const critical = o.attention.filter(a => a.reason === 'unhealthy' || a.reason === 'failed' || a.reason === 'outage').length;
     // With the size of the hosts the CPU is a share of them; without it (an agent from before the call) it is read against the chart's own top.
     const cap = o.capacity;
     const cpuTop = niceMax(Math.max(tt.cores, ...o.cores));
@@ -176,11 +181,11 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
     // A project as a card: how its containers are doing, each one named in the colour of its own state.
     const projectCards = o.projects.map(p => {
         const mine = o.hosts.filter(h => h.host.id === p.host.id).flatMap(h => h.containers.filter(c => c.Project === p.name));
-        const tones = mine.map(dotTone);
+        const tones = mine.map(c => dotTone(c, !!o.linkOf(p.host.id, containerName(c))));
         const tone = tones.includes('bad') ? 'bad' : tones.includes('warn') ? 'warn' : 'ok';
         return `<button type="button" class="card card--btn unit" data-project="${e(p.name)}"${showHost ? ` title="${e(p.host.name)}"` : ''}><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(p.name)}</span>
             <span class="unit__tail"><span class="chip">${e(fmt.num(p.running))}/${e(fmt.num(p.total))}</span></span></div>
-            <div class="unit__sub">${mine.map(c => { const k = dotTone(c); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></button>`;
+            <div class="unit__sub">${mine.map(c => { const k = dotTone(c, !!o.linkOf(p.host.id, containerName(c))); return `<span class="chip${k ? ' chip--' + k : ''}">${e(containerName(c))}</span>`; }).join('')}</div></button>`;
     }).join('');
     const projects = o.projects.length ? `<div class="cards">${projectCards}</div>` : `<div class="card"><div class="chart__empty">${e(t('dockerpage.no_projects'))}</div></div>`;
 
@@ -212,6 +217,10 @@ export interface UnitView {
     showHost: boolean;
     container: DockerContainer;
     stats?: ContainerStats;
+    /** The label of the bookmark it serves, or ''. */
+    link: string;
+    /** The face's address, already resolved; '' for none. */
+    face: string;
     selected: boolean;
 }
 
@@ -219,9 +228,11 @@ function meterRow(label: string, percent: number, value: string): string {
     return `<div class="mrow"><span>${e(label)}</span>${barHtml(percent)}<b>${e(value)}</b></div>`;
 }
 
-function stoppedLine(c: DockerContainer, t: T, fmt: Fmt): string {
+function stoppedLine(c: DockerContainer, link: string, t: T, fmt: Fmt): string {
     const state = c.State || c.Status;
-    return e(t(stateKey(state))) + (typeof c.ExitCode === 'number' && c.ExitCode !== 0 ? ` · ${e(t('dockerpage.exit_code'))} ${e(fmt.num(c.ExitCode))}` : '');
+    return e(t(stateKey(state)))
+        + (typeof c.ExitCode === 'number' && c.ExitCode !== 0 ? ` · ${e(t('dockerpage.exit_code'))} ${e(fmt.num(c.ExitCode))}` : '')
+        + (link ? ` · ${e(t('proxmox.stopped_breaks'))} ${e(link)}` : '');
 }
 
 const dataAttrs = (v: UnitView): string => `data-host="${e(v.hostId)}" data-name="${e(containerName(v.container))}"`;
@@ -234,9 +245,9 @@ export function cardHtml(v: UnitView, t: T, fmt: Fmt): string {
         ? `<div class="unit__m">${s
             ? meterRow('CPU', Math.min(100, s.CPUPercent), fmt.pct(s.CPUPercent)) + meterRow('RAM', s.MemPercent, fmt.bytes(s.MemUsed))
             : meterRow('CPU', 0, '—') + meterRow('RAM', 0, '—')}</div>`
-        : `<div class="unit__off">${stoppedLine(c, t, fmt)}</div>`;
+        : `<div class="unit__off">${stoppedLine(c, v.link, t, fmt)}</div>`;
     return `<button type="button" class="card card--btn unit${up ? '' : ' is-off'}${v.selected ? ' is-sel' : ''}" ${dataAttrs(v)}>
-        <div class="unit__h">${dotHtml(c)}<span class="unit__n">${e(containerName(c)) || '—'}</span><span class="unit__tail">${healthChip(c.Health, t)}</span></div>
+        <div class="unit__h">${faceHtml(v.face)}<span class="unit__n">${e(containerName(c)) || '—'}</span><span class="unit__tail">${healthChip(c.Health, t)}${bookmarkChipHtml(v.link)}${dotHtml(c, !!v.link)}</span></div>
         <div class="unit__sub">${tech(c.Image || '—')}${v.showHost ? `<span>· ${e(v.hostName)}</span>` : ''}</div>
         ${meters}
     </button>`;
@@ -250,7 +261,7 @@ export function rowHtml(v: UnitView, t: T, fmt: Fmt): string {
     const cpu = up && s ? fmt.pct(s.CPUPercent) : '—';
     const mem = up && s ? fmt.bytes(s.MemUsed) : '—';
     return `<button type="button" class="tr${up ? '' : ' is-off'}${v.selected ? ' is-sel' : ''}" ${dataAttrs(v)}>
-        ${dotHtml(c)}<span class="nm">${e(containerName(c)) || '—'}${v.showHost ? ` <span class="dim">· ${e(v.hostName)}</span>` : ''}</span>
+        ${dotHtml(c, !!v.link)}<span class="nm">${faceHtml(v.face)} ${e(containerName(c)) || '—'}${v.showHost ? ` <span class="dim">· ${e(v.hostName)}</span>` : ''}</span>
         <span class="cell tech" dir="ltr">${e(c.Image || '—')}</span>${state}<span class="cell">${e(cpu)}</span><span class="cell">${e(mem)}</span>
     </button>`;
 }
@@ -288,6 +299,8 @@ export interface DrawerHeadData {
     host: DockerHost;
     container: DockerContainer;
     showHost: boolean;
+    link: string;
+    face: string;
 }
 
 /** Name and the chips under it. */
@@ -295,28 +308,38 @@ export function drawerHeadHtml(d: DrawerHeadData, t: T): string {
     const c = d.container;
     const state = c.State || c.Status;
     const label = t(stateKey(state));
-    return `<div class="dr__t"><h2 title="${e(containerName(c))}">${e(containerName(c)) || '—'}</h2>
+    const tone = dotTone(c, !!d.link);
+    return `<div class="dr__t">
+            <button type="button" class="face face--edit" data-icon="1" title="${e(t('proxmox.icon_set'))}" aria-label="${e(t('proxmox.icon_set'))}">${d.face ? `<img src="${e(d.face)}" alt="">` : FACE_NONE}<span class="face__pen">${icon('pen', 11)}</span></button>
+            <h2 title="${e(containerName(c))}">${e(containerName(c)) || '—'}</h2>${bookmarkChipHtml(d.link)}
             <button type="button" class="ibtn" id="dr-close" aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
-        <div class="dr__chips"><span class="dot state-dot${dotTone(c) ? ' dot--' + dotTone(c) : ''}" role="img" tabindex="0" title="${e(label)}" aria-label="${e(label)}"></span>${healthChip(c.Health, t)}${d.showHost ? `<span class="chip">${e(d.host.name)}</span>` : ''}${c.Project ? `<span class="chip">${tech(c.Project)}</span>` : ''}</div>`;
+        <div class="dr__chips"><span class="dot state-dot${tone ? ' dot--' + tone : ''}" role="img" tabindex="0" title="${e(label)}" aria-label="${e(label)}"></span>${healthChip(c.Health, t)}${d.showHost ? `<span class="chip">${e(d.host.name)}</span>` : ''}${c.Project ? `<span class="chip">${tech(c.Project)}</span>` : ''}</div>`;
 }
 
 export interface FooterData {
     container: DockerContainer;
     canControl: boolean;
     busy: boolean;
+    bookmarkUrl: string;
+    hasChosenIcon: boolean;
 }
 
 /** The actions: start for what is stopped, restart and stop for what runs. Nothing without the permission. */
 export function footerHtml(d: FooterData, t: T): string {
-    if (!d.canControl) return '';
     const running = stateLevel(d.container.State || d.container.Status) !== 'off';
     // The agent that serves this very page must not be stopped from it.
     const isAgent = containerName(d.container) === 'lastboard-agent';
     const btn = (action: string, ic: 'play' | 'rotate' | 'stop', label: string, off = false, bad = false) =>
         `<button type="button" class="act${bad ? ' act--bad' : ''}" data-action="${action}" title="${e(label)}"${d.busy || off ? ' disabled' : ''}>${d.busy ? icon('refresh', 15, 'spin') : icon(ic, 15)}<span>${e(label)}</span></button>`;
-    return running
-        ? btn('restart', 'rotate', t('docker.action_restart')) + btn('stop', 'stop', isAgent ? t('docker.action_stop_disabled') : t('docker.action_stop'), isAgent, true)
-        : btn('start', 'play', t('docker.action_start'));
+    const side = (attr: string, label: string, ic: 'link' | 'x') =>
+        `<button type="button" class="act" ${attr}>${icon(ic, 15)}<span>${e(label)}</span></button>`;
+    const control = !d.canControl ? ''
+        : running
+            ? btn('restart', 'rotate', t('docker.action_restart')) + btn('stop', 'stop', isAgent ? t('docker.action_stop_disabled') : t('docker.action_stop'), isAgent, true)
+            : btn('start', 'play', t('docker.action_start'));
+    return control
+        + (d.bookmarkUrl ? side(`data-open="${e(d.bookmarkUrl)}"`, t('proxmox.open_bookmark'), 'link') : '')
+        + (d.hasChosenIcon ? side('data-icon-clear="1"', t('proxmox.icon_clear'), 'x') : '');
 }
 
 const fact = (k: string, v: string, wide = false): string =>
@@ -332,8 +355,11 @@ export function portText(p: { container: string; host_ip: string; host_port: str
 const none = (t: T): string => `<div class="chart__empty">${e(t('dockerpage.none'))}</div>`;
 
 /** The summary tab: live readings, the facts, then the ports. */
-export function summaryTabHtml(d: DockerDetail, c: DockerContainer, stats: ContainerStats | undefined, t: T, fmt: Fmt): string {
+export function summaryTabHtml(d: DockerDetail, c: DockerContainer, stats: ContainerStats | undefined, link: string, t: T, fmt: Fmt): string {
     const running = stateLevel(d.state) !== 'off';
+    const warn = !running && link
+        ? `<div class="err" role="alert">${icon('alert', 18)}<span><b>${e(t('proxmox.stopped_title'))}</b> · ${e(t('proxmox.stopped_breaks'))} <em>${e(link)}</em></span></div>`
+        : '';
     const date = (iso?: string) => (iso ? e(fmt.date(iso)) : '—');
     const live = running && stats
         ? `<div class="live3">
@@ -354,11 +380,12 @@ export function summaryTabHtml(d: DockerDetail, c: DockerContainer, stats: Conta
         d.tty ? fact(t('dockerpage.terminal'), e(t('dockerpage.yes'))) : '',
         fact(t('dockerpage.image'), tech(d.image), true),
         c.Project ? fact(t('dockerpage.project'), tech(c.Project), true) : '',
+        link ? fact(t('proxmox.bookmark'), e(link), true) : '',
     ].join('');
     const ports = d.ports.length
         ? `<ul class="list">${d.ports.map(p => `<li>${tech(portText(p))}</li>`).join('')}</ul>`
         : none(t);
-    return `${live}<div class="facts">${facts}</div>${boxHtml(t('dockerpage.ports'), ports)}`;
+    return `${warn}${live}<div class="facts">${facts}</div>${boxHtml(t('dockerpage.ports'), ports)}`;
 }
 
 /** The environment tab: the names, never the values. */

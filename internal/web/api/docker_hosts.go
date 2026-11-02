@@ -185,6 +185,8 @@ type dockerSettings struct {
 	// Admin says which kinds the form may offer: a member only the agent.
 	Admin bool                 `json:"admin"`
 	Hosts []dockerSettingsHost `json:"hosts"`
+	// Icons are the faces this account gave its containers, keyed "host/name".
+	Icons map[string]string `json:"icons"`
 }
 
 type dockerSettingsHost struct {
@@ -204,7 +206,7 @@ type dockerSettingsHost struct {
 // GetSettings answers with this account's hosts.
 func (h *DockerHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	s := h.forAccount(r)
-	out := dockerSettings{Admin: s.admin, Hosts: []dockerSettingsHost{}}
+	out := dockerSettings{Admin: s.admin, Hosts: []dockerSettingsHost{}, Icons: s.icons()}
 	for _, e := range s.hosts() {
 		usable := s.usable(e)
 		if e.Enabled && usable {
@@ -308,5 +310,6 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
+	s.pruneIcons(list)
 	w.WriteHeader(http.StatusNoContent)
 }

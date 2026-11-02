@@ -251,3 +251,19 @@ export function toolbarHtml(o: ToolbarSpec, t: T, fmt: (n: number) => string): s
         </span>
     </div>`;
 }
+
+export const FACE_NONE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
+
+/** A machine's or container's face: the icon somebody chose, or the one the bookmark wears, or the board's own. */
+export function faceHtml(url: string, cls = 'face'): string {
+    return url
+        ? `<span class="${cls}"><img src="${e(url)}" alt="" loading="lazy"></span>`
+        : `<span class="${cls} ${cls}--none">${FACE_NONE}</span>`;
+}
+
+/** The orange pill that names the bookmark a machine or container serves; nothing without one. */
+export function bookmarkChipHtml(label: string): string {
+    return label
+        ? `<span class="chip chip--link" title="${escapeHtml(label)}">${icon('bookmark', 11)}<span class="chip__t">${escapeHtml(label)}</span></span>`
+        : '';
+}

@@ -5,7 +5,9 @@ import type { UnitGroup } from '../../../services/infraUnits';
 import {
     type AttentionItem, type FleetNode, type FleetStore, type FleetTotals, type AttentionReason,
 } from '../../../services/proxmoxOverview';
-import { barHtml, boxHtml, chartCardHtml, emptyHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
+import { barHtml, boxHtml, bookmarkChipHtml, chartCardHtml, emptyHtml, FACE_NONE, faceHtml, icon, kpiHtml, meterLevel, type Level, type T } from '../infra/infra.template';
+
+export { faceHtml };
 import { typeLabel, type Fmt as TaskFmt } from './ProxmoxTasks.template';
 
 export type { T };
@@ -37,15 +39,6 @@ const tech = (v: string): string => `<span class="tech" dir="ltr">${e(v)}</span>
 export function uptimeHtml(fmt: Fmt, sec: number): string {
     const u = fmt.uptime(sec);
     return `<span data-uptime-long="${e(u.long)}" data-uptime-short="${e(u.short)}">${e(u.long)}</span>`;
-}
-
-const FACE_NONE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
-
-/** A machine's face: the icon somebody chose, or the one the bookmark wears, or the board's own. */
-export function faceHtml(url: string, cls = 'face'): string {
-    return url
-        ? `<span class="${cls}"><img src="${e(url)}" alt="" loading="lazy"></span>`
-        : `<span class="${cls} ${cls}--none">${FACE_NONE}</span>`;
 }
 
 // ── The header ─────────────────────────────────────────────────────────────
@@ -222,7 +215,7 @@ export function stateDot(tone: 'ok' | 'warn' | 'bad' | '', label: string): strin
 
 const kindText = (g: PxGuest): string => `${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`;
 const attrs = (v: GuestView): string => `data-host="${e(v.hostId)}" data-vmid="${v.guest.vmid}"`;
-const bookmarkChip = (v: GuestView): string => v.link ? `<span class="chip chip--link" title="${e(v.link)}">${icon('bookmark', 11)}<span class="chip__t">${e(v.link)}</span></span>` : '';
+const bookmarkChip = (v: GuestView): string => bookmarkChipHtml(v.link);
 const ramPct = (g: PxGuest): number => (g.mem_total > 0 ? (g.mem / g.mem_total) * 100 : 0);
 
 export function cardHtml(v: GuestView, t: T, fmt: Fmt): string {
@@ -233,7 +226,7 @@ export function cardHtml(v: GuestView, t: T, fmt: Fmt): string {
             <div class="mrow"><span>RAM</span>${barHtml(ramPct(g))}<b>${e(fmt.bytes(g.mem))}</b></div></div>`
         : `<div class="unit__off">${e(t('docker.state_stopped'))}${v.link ? ` · ${e(t('proxmox.stopped_breaks'))} ${e(v.link)}` : ''}</div>`;
     return `<button type="button" class="card card--btn unit${g.running ? '' : ' is-off'}${v.selected ? ' is-sel' : ''}" ${attrs(v)}>
-        <div class="unit__h">${dotOf(v)}${faceHtml(v.face)}<span class="unit__n">${e(g.name) || '—'}</span><span class="unit__tail">${bookmarkChip(v)}</span></div>
+        <div class="unit__h">${faceHtml(v.face)}<span class="unit__n">${e(g.name) || '—'}</span><span class="unit__tail">${bookmarkChip(v)}${dotOf(v)}</span></div>
         <div class="unit__sub">${tech(kindText(g))}<span>· ${e(g.node)}</span>${v.showHost ? `<span>· ${e(v.hostName)}</span>` : ''}</div>
         ${meters}
     </button>`;

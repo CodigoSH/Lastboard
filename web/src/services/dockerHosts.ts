@@ -16,6 +16,7 @@ export * from './dockerHostList';
 const DEMO_SETTINGS: DockerSettings = {
     enabled: true,
     admin: true,
+    icons: {},
     hosts: [{ id: 'demo', name: 'Demo Server', type: 'local', url: '', enabled: true, has_token: false, usable: true }],
 };
 
@@ -35,6 +36,7 @@ export function fetchDockerSettings(fresh = false): Promise<DockerSettings> {
         enabled: !!s.enabled,
         admin: !!s.admin,
         hosts: Array.isArray(s.hosts) ? s.hosts : [],
+        icons: s.icons && typeof s.icons === 'object' ? s.icons : {},
     }));
     cached = { at: Date.now(), value };
     value.catch(() => { if (cached?.value === value) cached = null; });
@@ -47,4 +49,14 @@ export async function saveDockerSettings(hosts: DockerHostEdit[]): Promise<Docke
     const next = await fetchDockerSettings(true);
     eventBus.emit(EVENTS.DOCKER_CHANGED, { enabled: next.enabled });
     return next;
+}
+
+/**
+ * Stores, or with an empty icon clears, the face of one container. Demo mode has
+ * no server to keep it, so the choice is only acknowledged.
+ */
+export async function saveDockerIcon(hostId: string, name: string, icon: string): Promise<void> {
+    if (isDemoMode()) return;
+    await apiService.post('/api/docker/icon', { host_id: hostId, name, icon });
+    forgetDockerSettings();
 }

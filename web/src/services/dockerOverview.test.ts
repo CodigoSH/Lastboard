@@ -103,6 +103,32 @@ describe('pushHistory', () => {
     });
 });
 
+describe('a container a bookmark depends on', () => {
+    const host: DockerHost = { id: 'h1', name: 'box', type: 'agent' };
+    const off = { ID: 'a', Name: '/plex', Image: 'x', Status: 'exited', State: 'exited', Created: 0, Ports: [], ExitCode: 0 } as DockerContainer;
+    const up = { ...off, ID: 'b', Name: '/db', Status: 'running', State: 'running' } as DockerContainer;
+    const rows: HostRows[] = [{ host, loaded: true, containers: [off, up] }];
+    const linkOf = (h: string, n: string) => (h === 'h1' && n === 'plex' ? 'Plex' : '');
+
+    test('stopped on purpose is a warning only when something depends on it', () => {
+        expect(attentionReason(off)).toBeNull();
+        expect(attentionReason(off, true)).toBe('outage');
+        expect(attentionReason(up, true)).toBeNull();
+    });
+    test('the list says which service goes with it', () => {
+        expect(attentionList(rows)).toEqual([]);
+        expect(attentionList(rows, linkOf)).toEqual([{ hostId: 'h1', name: 'plex', reason: 'outage', exitCode: 0, link: 'Plex' }]);
+    });
+    test('it counts, filters and is found by the bookmark name', () => {
+        expect(dockerTotals(rows, {}, linkOf).attention).toBe(1);
+        expect(dockerTotals(rows).attention).toBe(0);
+        const units = dockerUnits(rows, {}, linkOf);
+        expect(units.find(u => u.name === 'plex')?.attention).toBe(true);
+        expect(units.find(u => u.name === 'plex')?.haystack).toContain('plex');
+        expect(dockerUnits(rows).find(u => u.name === 'plex')?.attention).toBe(false);
+    });
+});
+
 describe('byteUnit', () => {
     test('steps of 1024 up to the largest unit it fills', () => {
         expect(byteUnit(0)).toEqual({ value: 0, unit: 'byte' });

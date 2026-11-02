@@ -189,6 +189,14 @@ export const template = ({
                         <small class="field-hint">${i18n.t('bookmark.backed_by_hint')}</small>
                     </div>
 
+                    <!-- Which container serves this, when there is a Docker to ask.
+                         Hidden until the integration answers, for the same reason. -->
+                    <div class="form-group" id="docker-group" style="margin-top: 12px; display: none;">
+                        <label for="bookmark-docker">${i18n.t('bookmark.container')}</label>
+                        <app-select id="bookmark-docker"></app-select>
+                        <small class="field-hint">${i18n.t('bookmark.container_hint')}</small>
+                    </div>
+
                     <!-- Touch Visibility -->
                     <div class="form-group" style="margin-top: 12px;">
                         <div class="input-group">

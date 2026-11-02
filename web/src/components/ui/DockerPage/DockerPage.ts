@@ -6,7 +6,11 @@ import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
 import { userStore } from '../../../store/userStore';
 import { accessAllows } from '../../../services/access';
-import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHosts';
+import { fetchDockerSettings, hostsForWidget, saveDockerIcon } from '../../../services/dockerHosts';
+import { chosenDockerIcon, withDockerIcon } from '../../../services/dockerIcons';
+import { dockerLinkFor, loadDockerLinks } from '../../../services/dockerLinks';
+import { resolveIconUrl } from '../../../services/iconUrl';
+import { materializeIcon } from '../../../services/iconStore';
 import { fetchContainers, hostErrorKey, containerName } from '../../../services/dockerShared';
 import {
     fetchDetail, fetchHostSize, fetchLogs, fetchStats, runAction, pageErrorKey, findSelected,
@@ -14,7 +18,7 @@ import {
     type DockerDetail, type HostRows, type HostSize, type LogLine, type ContainerStats, type ContainerAction,
 } from '../../../services/dockerPage';
 import {
-    attentionList, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint,
+    attentionList, byteUnit, dockerTotals, dockerUnits, niceMax, projectRows, pushHistory, type HistoryPoint, type LinkOf,
 } from '../../../services/dockerOverview';
 import {
     countUnits, groupUnits, isSortKey, isStatusFilter, passes, sortUnits, type SortKey, type StatusFilter,
@@ -84,6 +88,8 @@ class DockerPage extends HTMLElement {
     private stats = new Map<string, ContainerStats>();
     /** How big each host is, once it has said. Not kept for one that could not: it is asked again on the next opening. */
     private sizes = new Map<string, HostSize>();
+    /** The faces the account chose for containers, keyed host id + "/" + name. */
+    private icons: Record<string, string> = {};
     private loaded = false;
     private fatal = '';
     private noHosts = false;
@@ -135,6 +141,18 @@ class DockerPage extends HTMLElement {
     private readonly _popstate: () => void;
     private readonly _visibility: () => void;
 
+    /** The bookmark a container serves, as its label: declared in the bookmark itself, across every board. */
+    private readonly linkOf: LinkOf = (hostId, name) => {
+        const l = dockerLinkFor(hostId, name);
+        return l ? (l.label || l.url || name) : '';
+    };
+
+    /** The face of a container: what its owner chose, then what its bookmark wears. */
+    private faceOf(hostId: string, name: string): string {
+        const face = chosenDockerIcon(this.icons, hostId, name) || dockerLinkFor(hostId, name)?.icon || '';
+        return face ? resolveIconUrl(face) : '';
+    }
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -144,6 +162,7 @@ class DockerPage extends HTMLElement {
             if (!this.hasAttribute('open')) return;
             // A confirmation answers its own Escape; closing the page under it would be a second effect of one key.
             if (document.querySelector('confirmation-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
+            if (document.querySelector('icon-selection-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
             if (e.key === 'Escape') {
                 if (this.drawerOpen) this.closeDrawer(); else this.close();
                 return;
@@ -403,6 +422,11 @@ class DockerPage extends HTMLElement {
         const unit = el.closest<HTMLElement>('.unit, .tr:not(.tr--h), .attn__row');
         if (unit?.dataset.name) { this.choose(unit.dataset.host || '', unit.dataset.name || '', true); return; }
 
+        const open = el.closest<HTMLElement>('[data-open]');
+        if (open?.dataset.open) { window.open(open.dataset.open, '_blank', 'noopener'); return; }
+        if (el.closest('[data-icon-clear]')) { void this.setIcon(''); return; }
+        if (el.closest('[data-icon]')) { void this.chooseIcon(); return; }
+
         const act = el.closest<HTMLButtonElement>('.act[data-action]');
         if (act && !act.disabled) { this.act(act.dataset.action as ContainerAction); return; }
 
@@ -536,7 +560,10 @@ class DockerPage extends HTMLElement {
         this.loading = true;
         this.paintHead();
         try {
+            // The links come from every board, not the one behind this page, so a container is flagged the same wherever the visitor was.
+            loadDockerLinks().then(() => { if (this.hasAttribute('open')) this.paintAll(); }).catch(() => { });
             const settings = await fetchDockerSettings(fresh);
+            this.icons = settings.icons ?? {};
             const hosts = hostsForWidget(settings.hosts);
             this.noHosts = hosts.length === 0;
             this.fatal = '';
@@ -613,7 +640,7 @@ class DockerPage extends HTMLElement {
             } catch { /* no number is better than a wrong one */ }
         }));
         if (!this.hasAttribute('open')) return;
-        const tt = dockerTotals(this.groups, this.statsObject());
+        const tt = dockerTotals(this.groups, this.statsObject(), this.linkOf);
         if (tt.total > 0) sessionHistory = pushHistory(sessionHistory, { t: Date.now(), cores: tt.cores, memUsed: tt.memUsed, running: tt.running });
         this.paintAll();
     }
@@ -774,7 +801,7 @@ class DockerPage extends HTMLElement {
         if (!head) return;
         const t = this.t;
         const ready = this.loaded && !this.fatal && !this.noHosts;
-        const summary = ready ? summaryHtml(dockerTotals(this.scope(), this.statsObject()), t, this.fmt) : '';
+        const summary = ready ? summaryHtml(dockerTotals(this.scope(), this.statsObject(), this.linkOf), t, this.fmt) : '';
         // Up to two hosts are buttons beside "All", as in the design; more than that would not fit a header, so it is a selector.
         const few = this.groups.length > 1 && this.groups.length <= MAX_HOST_BUTTONS;
         const pressed = (id: string) => `aria-pressed="${this.hostFilter === id}"`;
@@ -821,7 +848,7 @@ class DockerPage extends HTMLElement {
         const t = this.t;
         const html = tabsHtml([
             { id: 'overview', label: t('dockerpage.tab_overview') },
-            { id: 'containers', label: t('docker.containers'), count: this.loaded && !this.fatal && !this.noHosts ? dockerTotals(this.scope()).total : undefined },
+            { id: 'containers', label: t('docker.containers'), count: this.loaded && !this.fatal && !this.noHosts ? dockerTotals(this.scope(), {}, this.linkOf).total : undefined },
             { id: 'logs', label: t('dockerpage.tab_logs') },
         ], this.tab, n => this.fmt.num(n));
         if (html === this.last.tabs) return;
@@ -925,14 +952,15 @@ class DockerPage extends HTMLElement {
         const names: Record<string, string> = {};
         for (const g of this.groups) names[g.host.id] = g.host.name;
         const html = overviewHtml({
-            totals: dockerTotals(scope, stats),
-            attention: attentionList(scope),
+            totals: dockerTotals(scope, stats, this.linkOf),
+            attention: attentionList(scope, this.linkOf),
             projects: projectRows(scope),
             hosts: scope,
             cores,
             mem: hist.map(h => h.memUsed),
             chart,
             hostNames: names,
+            linkOf: this.linkOf,
             hostUse,
             capacity: this.capacity(scope),
         }, this.t, this.fmt);
@@ -951,7 +979,7 @@ class DockerPage extends HTMLElement {
     private paintTools() {
         const el = this.$('inv-tools');
         if (!el) return;
-        const counts = countUnits(dockerUnits(this.scope(), this.statsObject()));
+        const counts = countUnits(dockerUnits(this.scope(), this.statsObject(), this.linkOf));
         const html = toolbarHtml({
             query: this.query, status: this.status, counts: { all: 0, up: 0, off: 0, warn: 0 }, sort: this.sort,
             grouped: this.grouped, view: this.viewMode, searchLabel: this.t('docker.search_containers'), groupLabel: this.t('dockerpage.group_project'),
@@ -980,13 +1008,14 @@ class DockerPage extends HTMLElement {
 
         errs.innerHTML = scope.filter(g => g.error).map(g => hostErrorHtml(g.error!, g.host.name, t)).join('');
 
-        const all = dockerUnits(scope, this.statsObject());
+        const all = dockerUnits(scope, this.statsObject(), this.linkOf);
         const views = new Map<string, UnitView>();
         for (const g of scope) {
             for (const c of g.containers) {
                 const name = containerName(c);
                 views.set(`${g.host.id}/${name}`, {
                     hostId: g.host.id, hostName: g.host.name, showHost: several, container: c, stats: this.stats.get(c.ID),
+                    link: this.linkOf(g.host.id, name), face: this.faceOf(g.host.id, name),
                     selected: !!this.sel && this.sel.hostId === g.host.id && this.sel.name === name,
                 });
             }
@@ -1035,6 +1064,42 @@ class DockerPage extends HTMLElement {
 
     // ── The drawer ──
 
+    /**
+     * Opens the icon picker for the container in the panel.
+     *
+     * The icon is downloaded once, here, exactly as a bookmark's is: the board
+     * never asks a CDN what it is drawing, and this must not become the one
+     * place that does.
+     */
+    private async chooseIcon() {
+        if (!this.current()) return;
+        let modal = document.querySelector('icon-selection-modal') as (HTMLElement & { open: () => Promise<string | null> }) | null;
+        if (!modal) {
+            modal = document.createElement('icon-selection-modal') as HTMLElement & { open: () => Promise<string | null> };
+            document.body.appendChild(modal);
+        }
+        const picked = await modal.open();
+        if (picked === null) return;
+        await this.setIcon(picked ? await materializeIcon(resolveIconUrl(picked)) : '');
+    }
+
+    /** Writes the choice, or clears it, and redraws what shows it. */
+    private async setIcon(iconName: string) {
+        const cur = this.current();
+        if (!cur) return;
+        const name = containerName(cur.container);
+        try {
+            await saveDockerIcon(cur.host.id, name, iconName);
+        } catch {
+            if (window.notifier) window.notifier.show(i18n.t('settings.save_error'), 'error');
+            return;
+        }
+        this.icons = withDockerIcon(this.icons, cur.host.id, name, iconName);
+        this.last.dhead = this.last.dfoot = this.last.dbody = '';
+        this.last.list = '';
+        this.paintAll();
+    }
+
     private paintDrawer() {
         const head = this.$('dr-head');
         const tabs = this.$('dr-tabs');
@@ -1046,7 +1111,9 @@ class DockerPage extends HTMLElement {
         const t = this.t;
         const c = cur.container;
 
-        const hHtml = drawerHeadHtml({ host: cur.host, container: c, showHost: this.groups.length > 1 }, t);
+        const name = containerName(c);
+        const link = this.linkOf(cur.host.id, name);
+        const hHtml = drawerHeadHtml({ host: cur.host, container: c, showHost: this.groups.length > 1, link, face: this.faceOf(cur.host.id, name) }, t);
         if (hHtml !== this.last.dhead) { this.last.dhead = hHtml; head.innerHTML = hHtml; }
 
         const tHtml = tabsHtml([
@@ -1057,7 +1124,10 @@ class DockerPage extends HTMLElement {
         ], this.drawerTab, n => this.fmt.num(n));
         if (tHtml !== this.last.dtabs) { this.last.dtabs = tHtml; tabs.innerHTML = tHtml; }
 
-        const fHtml = footerHtml({ container: c, canControl: this.mayControl(), busy: this.busy.has(c.ID) }, t);
+        const fHtml = footerHtml({
+            container: c, canControl: this.mayControl(), busy: this.busy.has(c.ID),
+            bookmarkUrl: dockerLinkFor(cur.host.id, name)?.url ?? '', hasChosenIcon: !!chosenDockerIcon(this.icons, cur.host.id, name),
+        }, t);
         if (fHtml !== this.last.dfoot) { this.last.dfoot = fHtml; foot.innerHTML = fHtml; }
         foot.hidden = !fHtml;
 
@@ -1067,7 +1137,7 @@ class DockerPage extends HTMLElement {
             bHtml = this.detailErr
                 ? hostErrorHtml(this.detailErr, cur.host.name, t)
                 : `<div class="empty">${escapeHtml(t('general.loading'))}</div>`;
-        } else if (this.drawerTab === 'summary') bHtml = summaryTabHtml(this.detail, c, this.stats.get(c.ID), t, this.fmt);
+        } else if (this.drawerTab === 'summary') bHtml = summaryTabHtml(this.detail, c, this.stats.get(c.ID), link, t, this.fmt);
         else if (this.drawerTab === 'env') bHtml = envTabHtml(this.detail, t);
         else bHtml = mountsTabHtml(this.detail, t);
 

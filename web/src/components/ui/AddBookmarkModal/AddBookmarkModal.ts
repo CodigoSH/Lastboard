@@ -3,6 +3,8 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
 import { loadProxmox, allGuests } from '../../../services/proxmoxApi';
+import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHosts';
+import { fetchContainers, containerName } from '../../../services/dockerShared';
 import { safeImageSrc } from '../../../services/escape';
 import { iconForEdit, resolveIconUrl } from '../../../services/iconUrl';
 import { apiService } from '../../../services/apiService';
@@ -39,6 +41,8 @@ class AddBookmarkModal extends HTMLElement {
     /** The machine that serves this bookmark, if its owner said so. */
     /** The machine this bookmark is served by, and on which hypervisor. */
     private proxmox: { host: string; node: string; kind: string; vmid: number } | null = null;
+    /** The container it serves: its host and its name, never its id, which changes when it is recreated. */
+    private docker: { host: string; name: string } | null = null;
 
     private _unsubscribeI18n: (() => void) | undefined;
 
@@ -195,12 +199,22 @@ class AddBookmarkModal extends HTMLElement {
                 }
             }
 
+            const dkSel = this.shadowRoot?.getElementById('bookmark-docker') as (HTMLElement & { value: string }) | null;
+            // Only when the field was shown: a Docker that did not answer must not wipe a link made earlier.
+            if (dkSel && this.shadowRoot?.getElementById('docker-group')?.style.display !== 'none') {
+                const v = dkSel.value;
+                const cut = v.indexOf('|');
+                this.docker = v && cut > 0 ? { host: v.slice(0, cut), name: v.slice(cut + 1) } : null;
+            }
+
             const iconUrl = await materializeIcon(resolveIconUrl(this.selectedIconName));
 
             // The machine↔bookmark index is cached across boards; a bookmark
             // that just changed hands has to rebuild it.
             const { clearProxmoxLinks } = await import('../../../services/proxmoxLinks');
             clearProxmoxLinks();
+            const { clearDockerLinks } = await import('../../../services/dockerLinks');
+            clearDockerLinks();
 
             const content = JSON.stringify({
                 label: this.bookmarkTitle,
@@ -212,6 +226,7 @@ class AddBookmarkModal extends HTMLElement {
                 // Only written when there is one, so a board without Proxmox
                 // keeps exactly the content it had before this existed.
                 ...(this.proxmox ? { proxmox: this.proxmox } : {}),
+                ...(this.docker ? { docker: this.docker } : {}),
                 statusPos: this.checkStatus ? this.statusPosition : 'off',
                 visibleTouch: this.visibleTouch,
                 openInNewTab: true,
@@ -491,6 +506,7 @@ class AddBookmarkModal extends HTMLElement {
         root.addEventListener('input', this.inputHandler);
 
         this.fillProxmoxChoices();
+        this.fillDockerChoices();
 
         // Restore open state
         if (wasOpen) this.dialog?.showModal();
@@ -553,6 +569,43 @@ class AddBookmarkModal extends HTMLElement {
         }
     }
 
+    /**
+     * Fills the "container" list from the Docker hosts, and leaves the field
+     * hidden when there is nothing to fill it with.
+     *
+     * Same reason as the machine list: without it a stopped container is just a
+     * stopped container, and nobody can be told which service went down with it.
+     */
+    private async fillDockerChoices() {
+        const group = this.shadowRoot?.getElementById('docker-group') as HTMLElement | null;
+        const sel = this.shadowRoot?.getElementById('bookmark-docker') as
+            (HTMLElement & { value: string; options: { value: string; label: string }[]; searchable: boolean }) | null;
+        if (!group || !sel) return;
+        const who = userStore.getUser();
+        if (!who || !accessAllows(who, 'docker_view')) return;
+        try {
+            const settings = await fetchDockerSettings();
+            const hosts = hostsForWidget(settings.hosts);
+            if (!hosts.length) return;
+            // A host that does not answer only leaves its own containers out.
+            const lists = await Promise.all(hosts.map(async h => {
+                try { return { host: h, containers: await fetchContainers(h) }; } catch { return { host: h, containers: [] }; }
+            }));
+            const several = hosts.length > 1;
+            const options = lists.flatMap(l => l.containers.map(c => {
+                const name = containerName(c);
+                return { value: `${l.host.id}|${name}`, label: name + (several ? ` · ${l.host.name}` : '') };
+            })).sort((a, b) => a.label.localeCompare(b.label));
+            if (!options.length) return;
+            sel.searchable = options.length > 8;
+            sel.options = [{ value: '', label: i18n.t('bookmark.container_none') }].concat(options);
+            sel.value = this.docker ? `${this.docker.host}|${this.docker.name}` : '';
+            group.style.display = '';
+        } catch {
+            /* No Docker, or not configured: the field simply never appears. */
+        }
+    }
+
     open() {
         this.resetState();
         this.isEditMode = false;
@@ -583,6 +636,9 @@ class AddBookmarkModal extends HTMLElement {
                 kind: content.proxmox.kind || 'lxc',
                 vmid: Number(content.proxmox.vmid),
             }
+            : null;
+        this.docker = (content.docker && content.docker.host && content.docker.name)
+            ? { host: String(content.docker.host), name: String(content.docker.name) }
             : null;
 
         // URL parsing
@@ -628,6 +684,7 @@ class AddBookmarkModal extends HTMLElement {
         this.visibleTouch = true;
         this.borderWidth = 1;
         this.currentItemId = null;
+        this.docker = null;
     }
 }
 
