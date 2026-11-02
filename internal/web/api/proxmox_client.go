@@ -14,6 +14,7 @@
 package api
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -23,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -101,8 +103,15 @@ func proxmoxTransport(skipVerify bool) *http.Transport {
 // token is right and lacks a privilege — and collapsing both into "could not
 // parse JSON" is how a probe stops being able to explain itself.
 func proxmoxDo(cfg proxmoxConfig, method, path string, out any) error {
+	return proxmoxDoCtx(context.Background(), cfg, method, path, out)
+}
+
+// proxmoxDoCtx is proxmoxDo that gives up when its context does: a host that does
+// not answer costs the time its caller was willing to give it, not the full ten
+// seconds of the client.
+func proxmoxDoCtx(ctx context.Context, cfg proxmoxConfig, method, path string, out any) error {
 	base := strings.TrimRight(cfg.URL, "/")
-	req, err := http.NewRequest(method, base+"/api2/json"+path, nil)
+	req, err := http.NewRequestWithContext(ctx, method, base+"/api2/json"+path, nil)
 	if err != nil {
 		return fmt.Errorf("proxmox.invalid_url")
 	}
@@ -308,11 +317,51 @@ type proxmoxCaps struct {
 // fetchCaps reads /access/permissions and looks at what the token holds on the
 // root path, which is where a sane setup grants it.
 func fetchCaps(cfg proxmoxConfig) (proxmoxCaps, error) {
+	return fetchCapsCtx(context.Background(), cfg)
+}
+
+func fetchCapsCtx(ctx context.Context, cfg proxmoxConfig) (proxmoxCaps, error) {
 	var perms map[string]map[string]int
-	if err := proxmoxDo(cfg, http.MethodGet, "/access/permissions", &perms); err != nil {
+	if err := proxmoxDoCtx(ctx, cfg, http.MethodGet, "/access/permissions", &perms); err != nil {
 		return proxmoxCaps{}, err
 	}
 	return capsFrom(perms), nil
+}
+
+// What a token may do changes when someone changes it on the hypervisor, which is
+// rare, and the page asks at every refresh: the answer is kept for a few minutes.
+// The buttons that act (power) still ask afresh.
+const proxmoxCapsTTL = 5 * time.Minute
+
+type cachedCapsEntry struct {
+	caps proxmoxCaps
+	at   time.Time
+}
+
+var (
+	proxmoxCapsMu    sync.Mutex
+	proxmoxCapsCache = map[string]cachedCapsEntry{}
+)
+
+func cachedCaps(ctx context.Context, cfg proxmoxConfig) (proxmoxCaps, error) {
+	key := cfg.URL + "|" + cfg.TokenID
+	proxmoxCapsMu.Lock()
+	if e, ok := proxmoxCapsCache[key]; ok && time.Since(e.at) < proxmoxCapsTTL {
+		proxmoxCapsMu.Unlock()
+		return e.caps, nil
+	}
+	proxmoxCapsMu.Unlock()
+	caps, err := fetchCapsCtx(ctx, cfg)
+	if err != nil {
+		return caps, err
+	}
+	proxmoxCapsMu.Lock()
+	if len(proxmoxCapsCache) >= 64 {
+		proxmoxCapsCache = map[string]cachedCapsEntry{}
+	}
+	proxmoxCapsCache[key] = cachedCapsEntry{caps: caps, at: time.Now()}
+	proxmoxCapsMu.Unlock()
+	return caps, nil
 }
 
 // capsFrom is the decision, separated so it can be tested without a host.

@@ -149,6 +149,7 @@ func setupProxmoxServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("GET /api/proxmox/settings", protect(http.HandlerFunc(px.GetSettings)))
 	mux.Handle("POST /api/proxmox/settings", protect(http.HandlerFunc(px.UpdateSettings)))
 	mux.Handle("GET /api/proxmox/overview", protect(http.HandlerFunc(px.GetOverview)))
+	mux.Handle("GET /api/proxmox/curve", protect(http.HandlerFunc(px.GetCurve)))
 	mux.Handle("POST /api/proxmox/power", protect(http.HandlerFunc(px.Power)))
 	mux.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(px.SetIcon)))
 	mux.Handle("GET /api/proxmox/tasks", protect(http.HandlerFunc(px.GetTasks)))

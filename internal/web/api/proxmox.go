@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
@@ -512,7 +513,11 @@ func (h *ProxmoxHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			out.Hosts[i] = h.overviewOf(e, icons)
+			// A host gives its answer within the time it is given or is reported as not answering:
+			// the others are never kept waiting for it.
+			ctx, cancel := context.WithTimeout(r.Context(), proxmoxHostBudget)
+			defer cancel()
+			out.Hosts[i] = h.overviewOf(ctx, e, icons)
 		}()
 	}
 	wg.Wait()
@@ -522,12 +527,23 @@ func (h *ProxmoxHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 // overviewOf reads one host. An error is carried inside the answer rather than
 // returned: with several connected, one that is down or mistyped must not take
 // the others with it — the summary exists precisely to show which is which.
-func (h *ProxmoxHandler) overviewOf(e proxmoxHost, icons map[string]string) proxmoxHostOverview {
+func (h *ProxmoxHandler) overviewOf(ctx context.Context, e proxmoxHost, icons map[string]string) proxmoxHostOverview {
 	cfg := configOf(e)
 	res := proxmoxHostOverview{ID: e.ID, Name: e.Name}
 
+	// What the token may do is asked while the resources are, and kept for a few minutes.
+	type capsAnswer struct {
+		caps proxmoxCaps
+		err  error
+	}
+	capsC := make(chan capsAnswer, 1)
+	go func() {
+		c, err := cachedCaps(ctx, cfg)
+		capsC <- capsAnswer{c, err}
+	}()
+
 	var rows []pxResource
-	if err := proxmoxDo(cfg, http.MethodGet, "/cluster/resources", &rows); err != nil {
+	if err := proxmoxDoCtx(ctx, cfg, http.MethodGet, "/cluster/resources", &rows); err != nil {
 		res.Error = err.Error()
 		res.Nodes = []proxmoxNode{}
 		res.Guests = []proxmoxGuest{}
@@ -543,8 +559,8 @@ func (h *ProxmoxHandler) overviewOf(e proxmoxHost, icons map[string]string) prox
 	}
 	// Capabilities decide whether the interface offers the power buttons at
 	// all. A failure here is not fatal: the page still reads.
-	if caps, err := fetchCaps(cfg); err == nil {
-		out.Caps = caps
+	if a := <-capsC; a.err == nil {
+		out.Caps = a.caps
 	}
 
 	for _, row := range rows {
@@ -597,6 +613,10 @@ func (h *ProxmoxHandler) overviewOf(e proxmoxHost, icons map[string]string) prox
 	// common homelab case and the header must not call it a cluster.
 	out.Cluster = len(out.Nodes) > 1
 
+	// The nodes are asked for their own status together, each within a short time, and
+	// one the hypervisor already says is offline is not asked at all: it could only
+	// answer with its timeout, and a cluster's page waited for it.
+	var wg sync.WaitGroup
 	for i := range out.Nodes {
 		name := out.Nodes[i].Name
 		for _, g := range out.Guests {
@@ -604,19 +624,38 @@ func (h *ProxmoxHandler) overviewOf(e proxmoxHost, icons map[string]string) prox
 				out.Nodes[i].Guests++
 			}
 		}
-		var st pxNodeStatus
-		if err := proxmoxDo(cfg, http.MethodGet, "/nodes/"+name+"/status", &st); err == nil {
-			out.Nodes[i].Cores = st.CPUInfo.Cores
-			out.Nodes[i].LoadAvg = st.LoadAvg
-			if st.Uptime > 0 {
-				out.Nodes[i].Uptime = st.Uptime
-			}
+		if out.Nodes[i].Status == "offline" {
+			continue
 		}
+		wg.Add(1)
+		go func(i int, name string) {
+			defer wg.Done()
+			sctx, cancel := context.WithTimeout(ctx, proxmoxNodeBudget)
+			defer cancel()
+			var st pxNodeStatus
+			if err := proxmoxDoCtx(sctx, cfg, http.MethodGet, "/nodes/"+name+"/status", &st); err == nil {
+				out.Nodes[i].Cores = st.CPUInfo.Cores
+				out.Nodes[i].LoadAvg = st.LoadAvg
+				if st.Uptime > 0 {
+					out.Nodes[i].Uptime = st.Uptime
+				}
+			}
+		}(i, name)
 	}
+	wg.Wait()
 
 	res.proxmoxOverview = out
 	return res
 }
+
+// proxmoxHostBudget is how long one hypervisor is given to give its overview, and
+// proxmoxNodeBudget how long one node of it is given for its own status. A host
+// behind a VPN that has dropped answers nothing; without a limit of its own it held
+// the whole page for the client's ten seconds, at every refresh.
+var (
+	proxmoxHostBudget = 6 * time.Second
+	proxmoxNodeBudget = 3 * time.Second
+)
 
 /* ---------------------------------------------------------------------------
  * Series
@@ -675,12 +714,25 @@ func (h *ProxmoxHandler) GetSeries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cpu := make([]float64, 0, len(points))
-	mem := make([]float64, 0, len(points))
+	cpu, mem := seriesOf(points, guest)
+
+	writeJSON(w, proxmoxSeries{
+		Range:  q.Get("range"),
+		CPU:    downsample(cpu, proxmoxSeriesPoints),
+		Mem:    downsample(mem, proxmoxSeriesPoints),
+		Points: min(len(cpu), proxmoxSeriesPoints),
+		Raw:    len(points),
+	})
+}
+
+// seriesOf turns what Proxmox keeps (fractions of CPU, bytes of memory) into the two
+// percentage lines a chart draws. A node reports memused/memtotal and a guest
+// mem/maxmem; both come out as the same percentage so one chart draws either.
+func seriesOf(points []pxPoint, guest bool) (cpu, mem []float64) {
+	cpu = make([]float64, 0, len(points))
+	mem = make([]float64, 0, len(points))
 	for _, p := range points {
 		cpu = append(cpu, percent(p.CPU))
-		// A node reports memused/memtotal; a guest reports mem/maxmem. Both are
-		// turned into the same percentage so one chart draws either.
 		used, total := p.MemUsed, p.MemTotal
 		if guest {
 			used, total = p.Mem, p.MaxMem
@@ -691,14 +743,89 @@ func (h *ProxmoxHandler) GetSeries(w http.ResponseWriter, r *http.Request) {
 			mem = append(mem, 0)
 		}
 	}
+	return cpu, mem
+}
 
-	writeJSON(w, proxmoxSeries{
-		Range:  q.Get("range"),
-		CPU:    downsample(cpu, proxmoxSeriesPoints),
-		Mem:    downsample(mem, proxmoxSeriesPoints),
-		Points: min(len(cpu), proxmoxSeriesPoints),
-		Raw:    len(points),
-	})
+// proxmoxCurveNodes bounds how many nodes one request of the fleet's curve names, and
+// proxmoxCurveParallel how many are read at once.
+const (
+	proxmoxCurveNodes    = 64
+	proxmoxCurveParallel = 6
+)
+
+type proxmoxCurveNode struct {
+	Host string    `json:"host"`
+	Node string    `json:"node"`
+	CPU  []float64 `json:"cpu"`
+	Mem  []float64 `json:"mem"`
+}
+
+// GetCurve answers with the history of several nodes in one go, for the fleet's
+// curve on the overview: GET /api/proxmox/curve?range=24h&nodes=host/node,host/node.
+//
+// The page asked for a node at a time, a pause between them so that a burst did
+// not trip the rate limit, and the curve appeared after the sum of them all. Here
+// the nodes are read together, a few at a time, each within the time a node is
+// given; one that does not answer is left out and the others still come.
+func (h *ProxmoxHandler) GetCurve(w http.ResponseWriter, r *http.Request) {
+	u := h.forUser(r)
+	q := r.URL.Query()
+	frame, ok := proxmoxTimeframe(q.Get("range"))
+	if !ok {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+	type want struct {
+		cfg        proxmoxConfig
+		host, node string
+	}
+	var wanted []want
+	for _, part := range strings.Split(q.Get("nodes"), ",") {
+		host, node, ok := strings.Cut(strings.TrimSpace(part), "/")
+		if !ok || node == "" || strings.ContainsAny(node, "/?#") {
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
+			return
+		}
+		e, ok := u.hostFor(host)
+		if !ok {
+			http.Error(w, "proxmox.not_configured", http.StatusPreconditionFailed)
+			return
+		}
+		wanted = append(wanted, want{cfg: configOf(e), host: e.ID, node: node})
+	}
+	if len(wanted) == 0 || len(wanted) > proxmoxCurveNodes {
+		http.Error(w, "general.invalid_input", http.StatusBadRequest)
+		return
+	}
+
+	out := make([]*proxmoxCurveNode, len(wanted))
+	gate := make(chan struct{}, proxmoxCurveParallel)
+	var wg sync.WaitGroup
+	for i, n := range wanted {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			gate <- struct{}{}
+			defer func() { <-gate }()
+			ctx, cancel := context.WithTimeout(r.Context(), proxmoxHostBudget)
+			defer cancel()
+			var points []pxPoint
+			if err := proxmoxDoCtx(ctx, n.cfg, http.MethodGet, "/nodes/"+n.node+"/rrddata?timeframe="+frame+"&cf=AVERAGE", &points); err != nil {
+				return
+			}
+			cpu, mem := seriesOf(points, false)
+			out[i] = &proxmoxCurveNode{Host: n.host, Node: n.node, CPU: downsample(cpu, proxmoxSeriesPoints), Mem: downsample(mem, proxmoxSeriesPoints)}
+		}()
+	}
+	wg.Wait()
+
+	nodes := make([]proxmoxCurveNode, 0, len(out))
+	for _, n := range out {
+		if n != nil {
+			nodes = append(nodes, *n)
+		}
+	}
+	writeJSON(w, map[string]any{"range": q.Get("range"), "nodes": nodes})
 }
 
 /* ---------------------------------------------------------------------------
