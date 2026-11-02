@@ -715,7 +715,24 @@ class DockerPage extends HTMLElement {
         return { cores, physical: allSaid ? physical : 0, mem };
     }
 
+    /** Whether a round of readings is on its way: the refresh does not start another on top of it. */
+    private statsAsking = false;
+
     private async loadStats() {
+        if (this.statsAsking) return;
+        this.statsAsking = true;
+        try {
+            await this.readStats();
+        } finally {
+            this.statsAsking = false;
+        }
+        if (!this.hasAttribute('open')) return;
+        const tt = dockerTotals(this.groups, this.statsObject(), this.linkOf);
+        if (tt.total > 0) sessionHistory = pushHistory(sessionHistory, { t: Date.now(), cores: tt.cores, memUsed: tt.memUsed, running: tt.running });
+        this.paintAll();
+    }
+
+    private async readStats() {
         await Promise.all(this.groups.map(async g => {
             const ids = g.containers.filter(c => stateLevel(c.State || c.Status) === 'up').map(c => c.ID);
             // What is no longer running has no reading; keeping the old one would show it as alive.
@@ -728,10 +745,6 @@ class DockerPage extends HTMLElement {
                 }
             } catch { /* no number is better than a wrong one */ }
         }));
-        if (!this.hasAttribute('open')) return;
-        const tt = dockerTotals(this.groups, this.statsObject(), this.linkOf);
-        if (tt.total > 0) sessionHistory = pushHistory(sessionHistory, { t: Date.now(), cores: tt.cores, memUsed: tt.memUsed, running: tt.running });
-        this.paintAll();
     }
 
     private async loadDetail() {
