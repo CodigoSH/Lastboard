@@ -348,16 +348,16 @@ func (s *Server) routes() {
 	// Docker API
 	dockerHandler := api.NewDockerHandler(s.DB)
 	// The account's own list of hosts, as Proxmox keeps its hypervisors.
-	s.Router.Handle("GET /api/docker/settings", protect(need(access.DockerView, dockerHandler.GetSettings)))
+	s.Router.Handle("GET /api/docker/settings", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.GetSettings))))
 	s.Router.Handle("POST /api/docker/settings", protect(need(access.DockerView, dockerHandler.UpdateSettings)))
-	s.Router.Handle("POST /api/docker/containers", protect(need(access.DockerView, dockerHandler.ListContainersFor)))
-	s.Router.Handle("POST /api/docker/stats", protect(need(access.DockerView, dockerHandler.StatsFor)))
+	s.Router.Handle("POST /api/docker/containers", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.ListContainersFor))))
+	s.Router.Handle("POST /api/docker/stats", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.StatsFor))))
 	s.Router.Handle("POST /api/docker/agent-version", protect(need(access.DockerView, dockerHandler.AgentVersionFor)))
-	s.Router.Handle("POST /api/docker/detail", protect(need(access.DockerView, dockerHandler.Detail)))
-	s.Router.Handle("POST /api/docker/host-size", protect(need(access.DockerView, dockerHandler.HostSize)))
-	s.Router.Handle("POST /api/docker/disk-usage", protect(need(access.DockerView, dockerHandler.DiskUsage)))
+	s.Router.Handle("POST /api/docker/detail", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.Detail))))
+	s.Router.Handle("POST /api/docker/host-size", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.HostSize))))
+	s.Router.Handle("POST /api/docker/disk-usage", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.DiskUsage))))
 	s.Router.Handle("POST /api/docker/icon", protect(need(access.DockerView, dockerHandler.SetIcon)))
-	s.Router.Handle("POST /api/docker/logs", protect(need(access.DockerView, dockerHandler.Logs)))
+	s.Router.Handle("POST /api/docker/logs", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.Logs))))
 	s.Router.Handle("POST /api/docker/action", protect(need(access.DockerControl, dockerHandler.Action)))
 
 	// User API
