@@ -430,7 +430,7 @@ func TestAContainerIDStaysOneSegmentOfThePath(t *testing.T) {
 	if _, err := GetContainersStats(srv.URL, []string{"x/../y?"}); err != nil {
 		t.Fatalf("stats: %v", err)
 	}
-	if want := "/containers/x%2F..%2Fy%3F/stats?stream=false"; gotURI != want {
+	if want := "/containers/x%2F..%2Fy%3F/stats?stream=false&one-shot=true"; gotURI != want {
 		t.Fatalf("stats asked the daemon for %q, want %q", gotURI, want)
 	}
 

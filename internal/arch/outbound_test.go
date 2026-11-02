@@ -52,6 +52,7 @@ var mayReachTheNetwork = map[string]string{
 
 	// The user's own Docker daemon, over a unix socket or their own host.
 	"internal/web/api/docker_client.go": "the Docker widget, against the user's own daemon",
+	"internal/web/api/docker_stats.go":  "the readings of CPU and memory of the containers, against the user's own daemon",
 
 	// The one that fetches from a third party, and the one the CDN promise is
 	// about: it runs once, when somebody picks an icon, and never again while a
