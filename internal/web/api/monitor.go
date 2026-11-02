@@ -69,6 +69,11 @@ type MonitoredItem struct {
 	UserID int
 	Name   string
 	URL    string
+	// Board is the name of the dashboard the bookmark is on, and Icon what its
+	// tile wears (an address or an icon name). The status page shows both; the
+	// scheduler ignores them.
+	Board string
+	Icon  string
 }
 
 // MonitoredItemsForUser lists one account's bookmarks that have statusCheck
@@ -80,10 +85,12 @@ func (s *MonitorStore) MonitoredItemsForUser(userID int) ([]MonitoredItem, error
 }
 
 func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
-	query := `SELECT id, user_id, content FROM items WHERE type = 'bookmark' AND content IS NOT NULL`
+	query := `SELECT i.id, i.user_id, i.content, COALESCE(d.name, '')
+		FROM items i LEFT JOIN dashboards d ON d.id = i.dashboard_id
+		WHERE i.type = 'bookmark' AND i.content IS NOT NULL`
 	args := []any{}
 	if userID > 0 {
-		query += ` AND user_id = ?`
+		query += ` AND i.user_id = ?`
 		args = append(args, userID)
 	}
 	rows, err := s.DB.Query(query, args...)
@@ -96,7 +103,8 @@ func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
 	for rows.Next() {
 		var id, owner int
 		var content sql.NullString
-		if err := rows.Scan(&id, &owner, &content); err != nil {
+		var board string
+		if err := rows.Scan(&id, &owner, &content, &board); err != nil {
 			return nil, err
 		}
 		if !content.Valid {
@@ -106,9 +114,15 @@ func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
 			StatusCheck bool   `json:"statusCheck"`
 			URL         string `json:"url"`
 			Label       string `json:"label"`
+			Icon        string `json:"icon"`
+			IconName    string `json:"iconName"`
 		}
 		if json.Unmarshal([]byte(content.String), &c) == nil && c.StatusCheck && c.URL != "" {
-			out = append(out, MonitoredItem{ID: id, UserID: owner, Name: c.Label, URL: c.URL})
+			icon := c.Icon
+			if icon == "" {
+				icon = c.IconName
+			}
+			out = append(out, MonitoredItem{ID: id, UserID: owner, Name: c.Label, URL: c.URL, Board: board, Icon: icon})
 		}
 	}
 	return out, rows.Err()
@@ -141,6 +155,7 @@ type monitorSettings struct {
 	NotifyHasToken   bool   `json:"notify_has_token"`
 	ClearNotifyToken bool   `json:"clear_notify_token,omitempty"` // write-only: remove the saved token
 	FailThreshold    int    `json:"fail_threshold"`               // consecutive fails before a down alert
+	RetentionDays    int    `json:"retention_days"`               // how long the history is kept; read-only
 }
 
 // resolveNotifyToken is the token a save leaves behind. Nothing typed keeps the
@@ -187,6 +202,7 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 		AlertsEnabled: h.getSetting(uid, keyMonAlerts) == "1",
 		NotifyType:    notifyType,
 		FailThreshold: threshold,
+		RetentionDays: monitorRetentionDays,
 		// It is the account's own channel, so it may read where it goes; the
 		// token it may only learn exists.
 		NotifyURL:      h.getSetting(uid, keyMonURL),
@@ -311,6 +327,9 @@ type incident struct {
 	Start       time.Time  `json:"start"`
 	End         *time.Time `json:"end"`
 	DurationSec int        `json:"duration_sec"`
+	// StatusCode is what the first failing check got back: the HTTP code, or 0
+	// when nothing answered. It is why the service went down, in one number.
+	StatusCode int `json:"status_code"`
 }
 
 // heartbeatBucket is one recent check in the heartbeat strip: green up / red
@@ -418,6 +437,7 @@ func summarizeHistory(checks []MonitorCheck, now time.Time) (uptimePct float64, 
 	}
 	up := 0
 	var start *time.Time
+	startCode := 0
 	for _, c := range checks {
 		if c.Up {
 			up++
@@ -426,18 +446,21 @@ func summarizeHistory(checks []MonitorCheck, now time.Time) (uptimePct float64, 
 				incidents = append(incidents, incident{
 					Start: *start, End: &end,
 					DurationSec: int(end.Sub(*start).Seconds()),
+					StatusCode:  startCode,
 				})
 				start = nil
 			}
 		} else if start == nil {
 			s := c.CheckedAt
 			start = &s
+			startCode = c.StatusCode
 		}
 	}
 	if start != nil { // still down at the end of the window
 		incidents = append(incidents, incident{
 			Start: *start, End: nil,
 			DurationSec: int(now.Sub(*start).Seconds()),
+			StatusCode:  startCode,
 		})
 	}
 	return float64(up) / float64(len(checks)) * 100, incidents
@@ -527,6 +550,18 @@ type overviewRow struct {
 	UptimePct float64           `json:"uptime_pct"`
 	LatencyMs *int              `json:"latency_ms"`
 	Heartbeat []heartbeatBucket `json:"heartbeat"`
+
+	// What the status page adds to the row. All of it is additive: a browser
+	// that has not reloaded reads the six fields above and ignores these.
+	URL        string     `json:"url"`
+	Board      string     `json:"board"`
+	Icon       string     `json:"icon"`
+	StatusCode int        `json:"status_code"` // the last check's answer; 0 when nothing answered
+	CheckedAt  *time.Time `json:"checked_at"`  // when it was last checked
+	DownSince  *time.Time `json:"down_since"`  // when the outage in course began; null while it answers
+	Uptime7d   float64    `json:"uptime_7d"`   // -1 without data
+	Uptime30d  float64    `json:"uptime_30d"`  // -1 without data
+	AvgMs24h   *int       `json:"avg_ms_24h"`  // null without a successful check
 }
 
 // GetOverview returns a 24h status summary for every monitored bookmark the user
@@ -549,6 +584,12 @@ func (h *MonitorHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	windows, err := h.store.OverviewWindows(userID, now)
+	if err != nil {
+		http.Error(w, "general.internal_error", http.StatusInternalServerError)
+		return
+	}
+
 	rows := make([]overviewRow, 0, len(items))
 	for _, it := range items {
 		// A service with no checks in the window keeps the "never measured"
@@ -559,6 +600,11 @@ func (h *MonitorHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 			Status:    "none",
 			UptimePct: -1,
 			Heartbeat: []heartbeatBucket{},
+			URL:       it.URL,
+			Board:     it.Board,
+			Icon:      it.Icon,
+			Uptime7d:  -1,
+			Uptime30d: -1,
 		}
 		if st, ok := stats[it.ID]; ok && st.Total > 0 {
 			row.UptimePct = float64(st.Up) / float64(st.Total) * 100
@@ -567,8 +613,23 @@ func (h *MonitorHandler) GetOverview(w http.ResponseWriter, r *http.Request) {
 				row.Status = "up"
 			}
 			row.LatencyMs = st.LastLatency
+			row.StatusCode = st.LastCode
+			if !st.LastAt.IsZero() {
+				at := st.LastAt
+				row.CheckedAt = &at
+			}
 			if st.Beats != nil {
 				row.Heartbeat = st.Beats
+			}
+		}
+		if w, ok := windows[it.ID]; ok {
+			row.Uptime7d, row.Uptime30d, row.AvgMs24h = w.Uptime7d, w.Uptime30d, w.AvgMs24h
+		}
+		if row.Status == "down" {
+			// An outage's own start, however long ago: the same figure the
+			// service's detail gives, not the moment the 24 hours cut it.
+			if at, ok, err := h.store.OutageStart(it.ID, now.Add(time.Minute)); err == nil && ok {
+				row.DownSince = &at
 			}
 		}
 		rows = append(rows, row)
@@ -783,6 +844,8 @@ type overviewStat struct {
 	Up          int
 	LastUp      bool
 	LastLatency *int
+	LastCode    int
+	LastAt      time.Time
 	Beats       []heartbeatBucket // oldest first, at most overviewBeats
 }
 
@@ -847,8 +910,24 @@ func (s *MonitorStore) OverviewStats(userID int, since time.Time) (map[int]*over
 		st.Beats = beats
 		st.LastUp = lastUp
 		st.LastLatency = lastLatency
+		if len(beats) > 0 {
+			st.LastAt = beats[len(beats)-1].At
+		}
+		st.LastCode = s.lastCode(itemID)
 	}
 	return stats, nil
+}
+
+// lastCode is the answer the most recent check of an item got: its HTTP code, or
+// 0 when nothing answered or there is none.
+func (s *MonitorStore) lastCode(itemID int) int {
+	var code int
+	if err := s.DB.QueryRow(
+		`SELECT status_code FROM monitor_checks WHERE item_id = ? ORDER BY checked_at DESC, id DESC LIMIT 1`, itemID,
+	).Scan(&code); err != nil {
+		return 0
+	}
+	return code
 }
 
 // recentBeats returns the newest overviewBeats checks of one item, oldest first,

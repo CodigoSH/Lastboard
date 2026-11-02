@@ -444,6 +444,8 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/monitor/history", protect(need(access.WatchMonitor, monitorHandler.GetHistory)))
 	s.Router.Handle("DELETE /api/monitor/history", protect(need(access.WatchMonitor, monitorHandler.ClearHistory)))
 	s.Router.Handle("GET /api/monitor/overview", protect(need(access.WatchMonitor, monitorHandler.GetOverview)))
+	s.Router.Handle("GET /api/monitor/trend", protect(need(access.WatchMonitor, monitorHandler.GetTrend)))
+	s.Router.Handle("GET /api/monitor/incidents", protect(need(access.WatchMonitor, monitorHandler.GetIncidents)))
 
 	// WebSocket Endpoint
 	s.Router.Handle("/ws", protect(need(access.ServerTelemetry, s.WSHub.HandleWebSocket)))
