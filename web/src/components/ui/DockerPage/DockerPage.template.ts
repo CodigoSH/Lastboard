@@ -141,13 +141,19 @@ export function storageKpiHtml(disk: OverviewData['disk'], t: T, fmt: Fmt): stri
     }
     const d = disk.totals;
     const share = d.total > 0 ? (d.reclaimable / d.total) * 100 : 0;
-    const chip = (key: string, n: number) => ({ text: `${t(key)}: ${fmt.bytes(n)}` });
     return kpiHtml({
         label, icon: 'disk', value: fmt.bytes(d.total),
         bar: d.total > 0 ? share : undefined,
         sub: [`${t('dockerpage.reclaimable')}: ${fmt.bytes(d.reclaimable)}`, d.total > 0 ? fmt.pct(share) : ''],
-        chips: [chip('dockerpage.storage_images', d.images), chip('dockerpage.storage_volumes', d.volumes), chip('dockerpage.storage_cache', d.cache), chip('docker.containers', d.containers)],
+        chips: [{ text: t('general.show_more'), act: 'disk-more' }],
     });
+}
+
+/** What Docker holds on disk, item by item: the rest of the storage tile, in a window of its own. */
+export function diskModalHtml(d: DiskTotals, t: T, fmt: Fmt): string {
+    const line = (label: string, n: number, strong = false) =>
+        `<div class="tr"><span class="nm">${strong ? `<b>${e(label)}</b>` : e(label)}</span><span class="cell">${strong ? `<b>${e(fmt.bytes(n))}</b>` : e(fmt.bytes(n))}</span></div>`;
+    return `<div class="tbl tbl--kv">${line(t('dockerpage.storage_images'), d.images)}${line(t('dockerpage.storage_volumes'), d.volumes)}${line(t('dockerpage.storage_cache'), d.cache)}${line(t('docker.containers'), d.containers)}${line(t('dockerpage.reclaimable'), d.reclaimable)}${line(t('proxmox.storage'), d.total, true)}</div>`;
 }
 
 export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {

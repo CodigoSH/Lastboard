@@ -59,15 +59,7 @@
 .more .n { padding-inline-start: 8px; border-inline-start: 1px solid var(--card-border); color: var(--text-main); }
 .dr__b > .more { margin-block-start: 0; }
 
-/* The window with every line: the page's own look, a list that scrolls inside it. */
-.mdl { inline-size: 720px; max-inline-size: calc(100vw - 32px); max-block-size: min(80vh, 760px); padding: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-bg, var(--panel)); color: var(--text-main); overflow: hidden; }
-.mdl[open] { display: flex; flex-direction: column; }
-.mdl::backdrop { background: var(--overlay-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); }
-.mdl__h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; }
-.mdl__h h3 { margin: 0; font: 600 13px/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mdl__n { margin-inline-start: 10px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px; font: 600 11px/1.6 var(--font-mono); color: var(--text-dim); }
-.mdl__b { flex: 1; min-block-size: 0; overflow-y: auto; padding: 0 18px 18px; display: flex; flex-direction: column; gap: 12px; }
-.mdl__b > * { flex-shrink: 0; }
+
 
 /* Outages as a table: service, cause, when, how long, and whether it still is. */
 .tbl--out .tr { grid-template-columns: 14px minmax(90px, 1fr) minmax(0, 1.3fr) 92px 84px 74px; text-align: start; }

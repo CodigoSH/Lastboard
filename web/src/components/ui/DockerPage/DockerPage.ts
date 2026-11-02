@@ -29,7 +29,7 @@ import {
 import '../Select/Select';
 import {
     drawerHeadHtml, envTabHtml, footerHtml, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
-    mountsTabHtml, noMatchHtml, overviewHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
+    diskModalHtml, mountsTabHtml, noMatchHtml, overviewHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
 } from './DockerPage.template';
 import infraCss from '../infra/infra.css' with { type: 'text' };
 import css from './DockerPage.css' with { type: 'text' };
@@ -175,6 +175,8 @@ class DockerPage extends HTMLElement {
             // A confirmation answers its own Escape; closing the page under it would be a second effect of one key.
             if (document.querySelector('confirmation-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
             if (document.querySelector('icon-selection-modal')?.shadowRoot?.querySelector('dialog[open]')) return;
+            // The window answers its own Escape.
+            if ((this.$('mdl') as HTMLDialogElement | null)?.open) return;
             if (e.key === 'Escape') {
                 if (this.drawerOpen) this.closeDrawer(); else this.close();
                 return;
@@ -347,7 +349,11 @@ class DockerPage extends HTMLElement {
                 <div class="dr__h"><div id="dr-head"></div><div class="dr__tabs" id="dr-tabs" role="tablist"></div></div>
                 <div class="dr__b" id="dr-body"></div>
                 <div class="dr__f" id="dr-foot"></div>
-            </aside>`;
+            </aside>
+            <dialog class="mdl mdl--sm" id="mdl" aria-labelledby="mdl-t">
+                <div class="mdl__h"><h3 id="mdl-t">${escapeHtml(t('proxmox.storage'))}</h3><button type="button" class="ibtn" id="mdl-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button></div>
+                <div class="mdl__b" id="mdl-body"></div>
+            </dialog>`;
         const tmp = document.createElement('div');
         tmp.innerHTML = logViewerHtml(t, i18n.formatNumber(MORE_TAIL));
         this.viewer = tmp.firstElementChild as HTMLElement;
@@ -388,10 +394,21 @@ class DockerPage extends HTMLElement {
         return !!this.shadowRoot?.querySelector('app-select[open]');
     }
 
+    /** The rest of what Docker holds on disk, from the same reading the tile is drawn from. */
+    private openDisk() {
+        const disk = this.diskState(this.scope());
+        const body = this.$('mdl-body'), dlg = this.$('mdl') as HTMLDialogElement | null;
+        if (!body || !dlg || disk.state !== 'ready') return;
+        body.innerHTML = diskModalHtml(disk.totals, this.t, this.fmt);
+        if (!dlg.open) dlg.showModal();
+    }
+
     private readonly onClick = (e: Event) => {
         const el = e.target as HTMLElement;
         if (el.closest('#hp-close')) { this.close(); return; }
         if (el.closest('#hp-refresh')) { void this.load(true); return; }
+        if (el.closest('#mdl-close') || el.id === 'mdl') { (this.$('mdl') as HTMLDialogElement | null)?.close(); return; }
+        if (el.closest('[data-act="disk-more"]')) { this.openDisk(); return; }
         if (el.closest('#dr-close') || el.closest('#scrim')) { this.closeDrawer(); return; }
 
         const tab = el.closest<HTMLElement>('#tabs [data-tab]');

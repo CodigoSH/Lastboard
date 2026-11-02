@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    cardHtml, storageKpiHtml, dotTone, drawerHeadHtml, envTabHtml, footerHtml, healthChip, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
+    cardHtml, diskModalHtml, storageKpiHtml, dotTone, drawerHeadHtml, envTabHtml, footerHtml, healthChip, hostErrorHtml, inventoryHtml, logLineHtml, logViewerHtml,
     mountsTabHtml, overviewHtml, portText, reasonText, rowHtml, summaryHtml, summaryTabHtml, type Fmt, type T, type UnitView,
 } from './DockerPage.template';
 import { attentionList, dockerTotals, projectRows } from '../../../services/dockerOverview';
@@ -227,8 +227,16 @@ describe('the storage card', () => {
         expect(html).toContain('dockerpage.reclaimable');
         expect(html).toContain('B(250)');
         expect(html).toContain('P(25)');
-        for (const key of ['storage_images', 'storage_volumes', 'storage_cache']) expect(html).toContain(key);
-        expect(html).toContain('B(600)');
+    });
+    test('the tile keeps one chip, "see more", and the items live in the window', () => {
+        const html = storageKpiHtml({ totals, state: 'ready' }, t, fmt);
+        expect(html).toContain('data-act="disk-more"');
+        for (const key of ['storage_images', 'storage_volumes', 'storage_cache']) expect(html).not.toContain(key);
+        expect(html.match(/class="chip/g)?.length).toBe(1);
+        const win = diskModalHtml(totals, t, fmt);
+        for (const key of ['storage_images', 'storage_volumes', 'storage_cache', 'dockerpage.reclaimable']) expect(win).toContain(key);
+        expect(win).toContain('B(600)');
+        expect(win).toContain('B(1000)');
     });
     test('while it is still being measured it does not pretend to know', () => {
         const html = storageKpiHtml({ totals: { ...totals, total: 0, hosts: 0 }, state: 'measuring' }, t, fmt);
