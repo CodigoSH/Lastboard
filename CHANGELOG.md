@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-11-03
+
+### Fixed
+- Clicking the status dot of a bookmark opened an older, plainer panel that was not the one on the Monitoring page. It now opens the same side panel as choosing the service there — summary, outages and checks — over the board, and closes by its cross, by clicking outside it, with Escape or with Back.
+
+### Changed
+- The older panel and the component it hosted are gone, along with the texts only they used. Nothing else changes.
+
 ## [1.10.0] - 2026-11-03
 
 1.10 gives Docker, Proxmox and Monitoring a page each, built on one shell and read the same way; makes sign-in stronger and lets the administrator decide what each account may use. Nothing needs doing on upgrade: your sessions, boards, widgets and hosts carry over, and what an account could reach before it still can.
