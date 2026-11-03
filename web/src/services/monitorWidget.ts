@@ -35,6 +35,8 @@ export interface MonitorShellInput {
     /** By the service's id, which survives the bookmark being renamed. */
     itemConfig: Record<string, ItemCfg>;
     showAll: boolean;
+    /** Whether the line of totals under the name is drawn. */
+    showSummary: boolean;
     resolveIcon: (icon: string) => string;
     t: (key: string) => string;
     num: (n: number) => string;
@@ -99,8 +101,8 @@ export function monitorShell(i: MonitorShellInput): ShellSpec {
     const avgUp = measured.length ? measured.reduce((a, r) => a + r.uptime_pct, 0) / measured.length : null;
     const lat = shown.filter(r => r.status !== 'none' && r.latency_ms != null).map(r => r.latency_ms as number);
     const summary: ShellMetric[] = [];
-    if (avgUp !== null) summary.push({ label: i.t('monitor.uptime'), text: `${Math.round(avgUp)}%`, pct: avgUp, tone: uptimeTone(avgUp) });
-    if (lat.length) summary.push({ label: i.t('monitor.response'), text: `${i.num(Math.round(lat.reduce((a, b) => a + b, 0) / lat.length))} ms` });
+    if (i.showSummary && avgUp !== null) summary.push({ label: i.t('monitor.uptime'), text: `${Math.round(avgUp)}%`, pct: avgUp, tone: uptimeTone(avgUp) });
+    if (i.showSummary && lat.length) summary.push({ label: i.t('monitor.response'), text: `${i.num(Math.round(lat.reduce((a, b) => a + b, 0) / lat.length))} ms` });
 
     const up = shown.filter(r => r.status === 'up').length;
     return {

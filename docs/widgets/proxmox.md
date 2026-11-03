@@ -46,7 +46,7 @@ A real host has more machines than a tile has room — measured on one with twen
 | Machines | All | Which machines are on the tile, in what order, and what each is called there. See [below](#choosing-and-arranging-the-machines) |
 | Show new machines automatically | On | Whether a machine that appears after you saved is shown straight away |
 | Show node health | On | The line under the title with the CPU, memory and disk of the busiest node |
-| Readings shown | All three | CPU, RAM and disk, each on its own. A reading you turn off disappears from the line under the title and from every row |
+| Readings shown | All three | CPU, RAM and disk, each on its own. A reading you turn off disappears from the line under the title and from every row. Offered only while **Show node health** is on |
 | Show the link to the page | On | The link in the foot, and the foot with it. Clicking a row still opens the page |
 | Refresh | 30s | How often the widget asks the server for fresh data |
 

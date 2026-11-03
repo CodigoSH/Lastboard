@@ -39,6 +39,7 @@ Leaving them all ticked is not the same as ticking them one by one: the widget s
 | --- | --- | --- |
 | Title | None | A name shown on the tile's top border. Leave it empty for none. A widget that had no title keeps the name it showed: "Monitoring", or its name in your language |
 | Services to show | All | Which monitored services appear in the widget, in what order, and with what icon |
+| Show node health | On | The line under the title with the average uptime and response of the services shown |
 | Show the link to the page | On | The link in the foot, and the foot with it. Clicking a row still opens the status page |
 | Refresh | 1 min | How often the widget asks the server for fresh data |
 

@@ -12,13 +12,14 @@ type T = (key: string) => string;
 const LABELS: Record<Metric, string> = { cpu: 'widget.telemetry.cpu', mem: 'widget.telemetry.ram', disk: 'widget.proxmox.disk' };
 
 
-export function metricsFieldHtml(flags: MetricFlags, allowed: readonly Metric[], t: T): string {
+/** `hidden` while the line of totals is off: the readings are shown under it and in the rows, and the group goes with the switch that governs it. */
+export function metricsFieldHtml(flags: MetricFlags, allowed: readonly Metric[], t: T, hidden = false): string {
     const boxes = allowed.map(m => `
         <div class="field-group check-row">
             <input type="checkbox" id="wm-${m}" data-metric="${m}" ${flags[m] ? 'checked' : ''} />
             <label for="wm-${m}">${esc(t(LABELS[m]))}</label>
         </div>`).join('');
-    return `<div class="field-group" id="w-metrics">
+    return `<div class="field-group" id="w-metrics"${hidden ? ' hidden' : ''}>
         <label>${esc(t('widget.shown_readings'))}</label>
         ${boxes}
         <small>${esc(t('widget.shown_readings_desc'))}</small>

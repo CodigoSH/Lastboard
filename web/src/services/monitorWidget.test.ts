@@ -3,7 +3,7 @@ import { beatsHtml, BEATS, monitorShell, readItemConfig, type MonitorShellInput,
 
 const row = (over: Partial<WRow> = {}): WRow => ({ item_id: 1, name: 'Plex', status: 'up', uptime_pct: 99.9, latency_ms: 42, heartbeat: [], icon: 'plex', ...over });
 const input = (rows: WRow[], over: Partial<MonitorShellInput> = {}): MonitorShellInput => ({
-    rows, items: [], itemOrder: [], itemConfig: {}, showAll: true, resolveIcon: i => `/icons/${i}`, t: k => `[${k}]`, num: n => String(n), time: s => s, ...over,
+    rows, items: [], itemOrder: [], itemConfig: {}, showAll: true, showSummary: true, resolveIcon: i => `/icons/${i}`, t: k => `[${k}]`, num: n => String(n), time: s => s, ...over,
 });
 
 describe('the Monitoring widget says', () => {
@@ -42,6 +42,11 @@ describe('the Monitoring widget says', () => {
         const spec = monitorShell(input([row({ item_id: 1 }), row({ item_id: 2, status: 'down', uptime_pct: 50 })], { items: [1, 2] }));
         expect(spec.foot).toBe('[status.online]: 1/2');
         expect(spec.summary.map(m => m.label)).toEqual(['[monitor.uptime]', '[monitor.response]']);
+    });
+    test('the totals can be switched off while the rows stay', () => {
+        const spec = monitorShell(input([row()], { showSummary: false }));
+        expect(spec.summary).toEqual([]);
+        expect(spec.rows).toHaveLength(1);
     });
     test('services that are gone, or none at all, are said in words', () => {
         expect(monitorShell(input([row()], { items: [99] })).state).toBe('[monitor.no_services_selected]');

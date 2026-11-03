@@ -18,12 +18,14 @@ interface MonitorConfig {
     itemConfig: Record<string, ItemCfg>;
     /** Whether the foot leads to the page. */
     showAll: boolean;
+    /** Whether the line of totals under the name is drawn. */
+    showNode: boolean;
     refreshSec: number;
     /** Header text. Empty falls back to the widget's own name. */
     title: string;
 }
 
-const DEFAULT_CONFIG: MonitorConfig = { items: [], itemOrder: [], itemConfig: {}, showAll: true, refreshSec: 60, title: '' };
+const DEFAULT_CONFIG: MonitorConfig = { items: [], itemOrder: [], itemConfig: {}, showAll: true, showNode: true, refreshSec: 60, title: '' };
 
 const ids = (v: unknown): number[] => (Array.isArray(v) ? v.filter((n): n is number => typeof n === 'number') : []);
 
@@ -33,6 +35,7 @@ function parseConfig(data: any): MonitorConfig {
         itemOrder: ids(data.itemOrder),
         itemConfig: readItemConfig(data.itemConfig),
         showAll: showsSeeAll(data.showAll),
+        showNode: data.showNode !== false,
         refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
         title: typeof data.title === 'string' ? data.title : '',
     };
@@ -160,6 +163,7 @@ class MonitorWidget extends HTMLElement {
             itemOrder: this._config.itemOrder,
             itemConfig: this._config.itemConfig,
             showAll: this._config.showAll,
+            showSummary: this._config.showNode,
             resolveIcon: resolveIconUrl,
             t,
             num: n => i18n.formatNumber(n),

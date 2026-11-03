@@ -1214,6 +1214,8 @@ dialog[open] {
     gap: 16px;
 }
 
+#w-metrics[hidden] { display: none; }
+
 .remote-fields[hidden] {
     display: none;
 }

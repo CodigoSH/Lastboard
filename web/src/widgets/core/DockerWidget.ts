@@ -120,10 +120,10 @@ class DockerWidget extends HTMLElement {
                     const idsChanged = JSON.stringify(upcomingIds) !== JSON.stringify(this._config.hostIds ?? []);
 
                     if (idsChanged || this._config.widgetId !== 'docker') {
-                        this._config = { ...this._config, ...d, hostIds: upcomingIds };
+                        this._config = { ...d, widgetId: 'docker', hostIds: upcomingIds };
                         this.loadContainers();
                     } else {
-                        this._config = { ...this._config, ...d, hostIds: upcomingIds };
+                        this._config = { ...d, widgetId: 'docker', hostIds: upcomingIds };
                     }
                 }
             } catch (_) { }
@@ -150,7 +150,7 @@ class DockerWidget extends HTMLElement {
                             const hostsChanged = JSON.stringify(incomingIds) !== JSON.stringify(this._config.hostIds ?? []);
 
                             if (hostsChanged) {
-                                this._config = { ...this._config, ...c, hostIds: incomingIds };
+                                this._config = { ...c, widgetId: 'docker', hostIds: incomingIds };
                                 this.loadContainers();
                                 this.restartListTimer();
                             } else {
@@ -158,7 +158,7 @@ class DockerWidget extends HTMLElement {
                                 // order and interval all land here.
                                 const intervalChanged = Number(c.refreshSec) !== Number(this._config.refreshSec);
                                 const before = JSON.stringify(this.drawnConfig());
-                                this._config = { ...this._config, ...c, hostIds: incomingIds };
+                                this._config = { ...c, widgetId: 'docker', hostIds: incomingIds };
                                 if (JSON.stringify(this.drawnConfig()) !== before) {
                                     this.refreshBody();
                                     // A reading just turned on needs its numbers.

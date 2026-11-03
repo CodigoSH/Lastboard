@@ -47,7 +47,8 @@ Hosts that don't answer say so in their own section, and their containers keep w
 
 ### Readings and the link to the page
 
-- **Readings shown**: CPU and RAM, each on its own. A reading you turn off disappears from the line under the title and from every row, and when both are off the widget stops asking the hosts for them.
+- **Show node health**: the line of totals under the title. Turn it off and the readings below are not offered; the rows keep showing what you had chosen.
+- **Readings shown**: CPU and RAM, each on its own, offered only while the line of totals is on. A reading you turn off disappears from the line under the title and from every row, and when both are off the widget stops asking the hosts for them.
 - **Show the link to the page**: turn it off to hide the foot, the count with it. Clicking a row still opens the page.
 
 ### When a host stops answering

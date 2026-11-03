@@ -75,6 +75,13 @@ class WidgetConfigModal extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         adoptSharedStyles(this.shadowRoot);
         setupPasswordToggles(this.shadowRoot!);
+        // The readings are offered only while the line of totals is on: one switch governs the group.
+        this.shadowRoot!.addEventListener('change', (e) => {
+            const box = e.target as HTMLInputElement;
+            if (!/^(proxmox|docker|monitor)-shownode$/.test(box?.id || '')) return;
+            const group = this.shadowRoot!.getElementById('w-metrics');
+            if (group) group.hidden = !box.checked;
+        });
     }
 
     connectedCallback() {
@@ -618,6 +625,8 @@ class WidgetConfigModal extends HTMLElement {
             });
             if (Object.keys(itemConfig).length) newContent.itemConfig = itemConfig; else delete newContent.itemConfig;
             this.storeCommonFields(newContent, []);
+            // The line of totals under the name: on unless it was switched off.
+            if ((this.shadowRoot?.getElementById('monitor-shownode') as HTMLInputElement | null)?.checked === false) newContent.showNode = false; else delete newContent.showNode;
 
             const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
             newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
@@ -1384,7 +1393,7 @@ class WidgetConfigModal extends HTMLElement {
             <div class="field-group">
                 <small>${i18n.t('widget.show_node_desc')}</small>
             </div>
-            ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem', 'disk']), ['cpu', 'mem', 'disk'], k => i18n.t(k))}
+            ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem', 'disk']), ['cpu', 'mem', 'disk'], k => i18n.t(k), !showNode)}
             ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>
@@ -1551,6 +1560,13 @@ class WidgetConfigModal extends HTMLElement {
                     <p class="monitor-services__state">${i18n.t('general.loading')}</p>
                 </div>
                 <small>${i18n.t('monitor.select_services_desc')}</small>
+            </div>
+            <div class="field-group check-row">
+                <input type="checkbox" id="monitor-shownode" ${content.showNode !== false ? 'checked' : ''} />
+                <label for="monitor-shownode">${i18n.t('widget.show_node')}</label>
+            </div>
+            <div class="field-group">
+                <small>${i18n.t('widget.show_node_desc')}</small>
             </div>
             ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">
@@ -1761,7 +1777,7 @@ class WidgetConfigModal extends HTMLElement {
             <div class="field-group">
                 <small>${i18n.t('widget.show_node_desc')}</small>
             </div>
-            ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem']), ['cpu', 'mem'], k => i18n.t(k))}
+            ${metricsFieldHtml(readMetrics(content.metrics, ['cpu', 'mem']), ['cpu', 'mem'], k => i18n.t(k), content.showNode === false)}
             ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">
                 <label>${i18n.t('widget.api.refresh_label')}</label>
