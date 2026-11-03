@@ -947,9 +947,13 @@ class DockerPage extends HTMLElement {
 
     private paintAll(force = false) {
         if (force) { this.last = blank(); this.bodyTab = ''; }
-        this.paintHead();
-        this.paintTabs();
-        this.paintBody();
+        // Opened for its panel alone, the page behind it is not shown: it is not drawn, which also keeps its repaints from
+        // undoing what the panel registered (the cursor of its chart).
+        if (!this.panelOnly) {
+            this.paintHead();
+            this.paintTabs();
+            this.paintBody();
+        }
         this.paintDrawer();
         this.$('pg')?.classList.toggle('has-drawer', this.drawerOpen);
         this.$('scrim')?.classList.toggle('on', this.drawerOpen);
@@ -1018,6 +1022,7 @@ class DockerPage extends HTMLElement {
 
     /** The body: what the chosen tab shows. Each tab owns regions of its own, written only when they change. */
     private paintBody() {
+        if (this.panelOnly) return;
         const body = this.$('body');
         if (!body || this.selectOpen()) return;
         const t = this.t;
