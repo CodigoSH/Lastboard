@@ -162,7 +162,6 @@
   "infra.view": "العرض",
   "infra.view_cards": "بطاقات",
   "infra.view_list": "قائمة",
-  "infra.refresh_paused": "تم إيقاف التحديث التلقائي: وضع توفير البيانات مفعّل",
   "dockerpage.all_ok": "كل شيء يعمل كما ينبغي.",
   "dockerpage.attention": "يحتاج إلى انتباه",
   "dockerpage.reclaimable": "قابل للاسترداد",

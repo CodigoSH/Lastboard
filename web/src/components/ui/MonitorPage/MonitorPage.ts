@@ -4,7 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
-import { PauseNotice, savingData, whenRefreshing } from '../../../services/refreshClock';
+import { savingData, whenRefreshing } from '../../../services/refreshClock';
 import { targetTab, type PageTarget } from '../../../services/pageTarget';
 import { heldReading } from '../../../services/infraReadings';
 import { fetchMonitorOverview } from '../../../services/monitorOverview';
@@ -227,7 +227,6 @@ class MonitorPage extends HTMLElement {
         void this.load(false, true);
         this.stopTimer();
         this.timer = setInterval(whenRefreshing(() => this.load()), REFRESH_MS);
-        this.pauseNotice.start();
         if (target?.sel && Number.isFinite(Number(target.sel))) this.choose(Number(target.sel));
     }
 
@@ -252,7 +251,6 @@ class MonitorPage extends HTMLElement {
 
     private stopTimer() {
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
-        this.pauseNotice.stop();
     }
 
     // ── Small helpers ──
@@ -263,7 +261,6 @@ class MonitorPage extends HTMLElement {
 
     private readonly t: T = (key, params) => i18n.t(key, params);
     /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
-    private readonly pauseNotice = new PauseNotice(() => this.$('upd'), (key, params) => i18n.t(key, params));
 
     private readonly fmt: Fmt = {
         num: (n) => i18n.formatNumber(n),
@@ -333,7 +330,7 @@ class MonitorPage extends HTMLElement {
             <style>${infraCss}${css}</style>
             <div class="pg" id="pg">
                 <header class="phead" id="phead"></header>
-                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('monitor.overview_title'))}"></nav><span class="upd" id="upd" role="status"></span></div>
+                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('monitor.overview_title'))}"></nav></div>
                 <div class="pbody" id="body"></div>
             </div>
             <div class="scrim" id="scrim"></div>

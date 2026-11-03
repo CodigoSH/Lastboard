@@ -162,7 +162,6 @@
   "infra.view": "视图",
   "infra.view_cards": "卡片",
   "infra.view_list": "列表",
-  "infra.refresh_paused": "自动刷新已暂停：已开启流量节省模式",
   "dockerpage.all_ok": "一切运行正常。",
   "dockerpage.attention": "需要关注",
   "dockerpage.reclaimable": "可回收",

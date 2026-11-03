@@ -162,7 +162,6 @@
   "infra.view": "Affichage",
   "infra.view_cards": "Cartes",
   "infra.view_list": "Liste",
-  "infra.refresh_paused": "Actualisation automatique en pause : économiseur de données activé",
   "dockerpage.all_ok": "Tout fonctionne comme prévu.",
   "dockerpage.attention": "À surveiller",
   "dockerpage.reclaimable": "Récupérable",

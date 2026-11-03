@@ -11,7 +11,7 @@ import { materializeIcon } from '../../../services/iconStore';
 import '../IconSelectionModal/IconSelectionModal';
 import '../Select/Select';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
-import { PauseNotice, whenRefreshing } from '../../../services/refreshClock';
+import { whenRefreshing } from '../../../services/refreshClock';
 import { targetTab, type PageTarget } from '../../../services/pageTarget';
 import { heldReading, holdReading } from '../../../services/infraReadings';
 import { PageNav, type NavState } from '../../../services/pageNav';
@@ -148,7 +148,6 @@ class ProxmoxPage extends HTMLElement {
 
     private readonly t: T = (key, params) => i18n.t(key, params);
     /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
-    private readonly pauseNotice = new PauseNotice(() => this.$('upd'), (key, params) => i18n.t(key, params));
 
     private readonly tfmt: TaskFmt = {
         time: (sec) => i18n.formatDateTime(new Date(sec * 1000), { dateStyle: 'medium', timeStyle: 'short' }),
@@ -288,7 +287,6 @@ class ProxmoxPage extends HTMLElement {
         void this.load();
         if (this.timer) clearInterval(this.timer);
         this.timer = setInterval(whenRefreshing(() => { void this.load(); }), POLL_MS);
-        this.pauseNotice.start();
         const parts = target?.sel?.split('|') ?? [];
         if (parts.length >= 3 && (parts[0] === 'guest' || parts[0] === 'node' || parts[0] === 'store')) {
             this.choose({ kind: parts[0], hostId: parts[1], ref: parts.slice(2).join('|') });
@@ -312,7 +310,6 @@ class ProxmoxPage extends HTMLElement {
     }
 
     private stopTimers() {
-        this.pauseNotice.stop();
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
     }
 
@@ -400,7 +397,7 @@ class ProxmoxPage extends HTMLElement {
             <style>${infraCss}${css}</style>
             <div class="pg" id="pg">
                 <header class="phead" id="phead"></header>
-                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.proxmox.name'))}"></nav><span class="upd" id="upd" role="status"></span></div>
+                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.proxmox.name'))}"></nav></div>
                 <div class="pbody" id="body"></div>
             </div>
             <div class="scrim" id="scrim"></div>

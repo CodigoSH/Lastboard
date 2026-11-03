@@ -162,7 +162,6 @@
   "infra.view": "Προβολή",
   "infra.view_cards": "Κάρτες",
   "infra.view_list": "Λίστα",
-  "infra.refresh_paused": "Η αυτόματη ανανέωση είναι σε παύση: ο περιορισμός δεδομένων είναι ενεργός",
   "dockerpage.all_ok": "Όλα λειτουργούν όπως πρέπει.",
   "dockerpage.attention": "Χρειάζεται προσοχή",
   "dockerpage.reclaimable": "Ανακτήσιμο",

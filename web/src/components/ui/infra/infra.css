@@ -677,13 +677,6 @@ button.task:hover { background: var(--surface-hover); }
 .orow b { font-weight: 600; text-align: end; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tbl .cell--n { color: var(--text-main); font-weight: 600; font-size: 13px; }
 
-/* The bar under the header: the tabs, and at its end how old what is on screen is. */
+/* The bar under the header: the tabs. */
 .tabsbar { display: flex; align-items: center; flex-shrink: 0; background: var(--panel); border-block-end: 1px solid var(--card-border); }
 .tabsbar .tabs { flex: 1 1 auto; min-inline-size: 0; border-block-end: 0; }
-.upd { flex: none; padding-inline: 8px 16px; font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.04em; color: var(--text-dim); white-space: nowrap; }
-.upd:empty { display: none; }
-.upd--paused { color: var(--warn); }
-@media (max-width: 640px) {
-    .tabsbar { flex-wrap: wrap; }
-    .upd { flex: 1 0 100%; padding: 0 16px 8px; text-align: end; white-space: normal; }
-}

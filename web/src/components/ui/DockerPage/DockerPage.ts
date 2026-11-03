@@ -4,7 +4,7 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
-import { PauseNotice, savingData, whenRefreshing } from '../../../services/refreshClock';
+import { savingData, whenRefreshing } from '../../../services/refreshClock';
 import { targetTab, type PageTarget } from '../../../services/pageTarget';
 import { heldReading } from '../../../services/infraReadings';
 import { PageNav, type NavState } from '../../../services/pageNav';
@@ -268,7 +268,6 @@ class DockerPage extends HTMLElement {
         this.seedFromTile();
         if (this.listTimer) clearInterval(this.listTimer);
         this.listTimer = setInterval(whenRefreshing(() => this.load()), LIST_MS);
-        this.pauseNotice.start();
         this.syncPolling();
         // The panel opens at once, before the reading: it names the container and fills in when the answer comes.
         const at = target?.sel ? target.sel.indexOf('/') : -1;
@@ -312,7 +311,6 @@ class DockerPage extends HTMLElement {
     }
 
     private stopTimers() {
-        this.pauseNotice.stop();
         if (this.listTimer) { clearInterval(this.listTimer); this.listTimer = null; }
         if (this.logTimer) { clearInterval(this.logTimer); this.logTimer = null; }
     }
@@ -325,7 +323,6 @@ class DockerPage extends HTMLElement {
 
     private readonly t: T = (key, params) => i18n.t(key, params);
     /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
-    private readonly pauseNotice = new PauseNotice(() => this.$('upd'), (key, params) => i18n.t(key, params));
 
     private readonly fmt: Fmt = {
         date: (iso) => {
@@ -381,7 +378,7 @@ class DockerPage extends HTMLElement {
             <style>${infraCss}${css}</style>
             <div class="pg" id="pg">
                 <header class="phead" id="phead"></header>
-                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.docker.name'))}"></nav><span class="upd" id="upd" role="status"></span></div>
+                <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="${escapeHtml(t('widget.docker.name'))}"></nav></div>
                 <div class="pbody" id="body"></div>
             </div>
             <div class="scrim" id="scrim"></div>

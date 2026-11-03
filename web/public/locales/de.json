@@ -162,7 +162,6 @@
   "infra.view": "Ansicht",
   "infra.view_cards": "Karten",
   "infra.view_list": "Liste",
-  "infra.refresh_paused": "Automatische Aktualisierung pausiert: Datensparmodus ist an",
   "dockerpage.all_ok": "Alles läuft wie vorgesehen.",
   "dockerpage.attention": "Braucht Aufmerksamkeit",
   "dockerpage.reclaimable": "Freigebbar",

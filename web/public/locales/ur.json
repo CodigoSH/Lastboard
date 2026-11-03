@@ -162,7 +162,6 @@
   "infra.view": "منظر",
   "infra.view_cards": "کارڈز",
   "infra.view_list": "فہرست",
-  "infra.refresh_paused": "خودکار تازہ کاری رکی ہوئی ہے: ڈیٹا سیور آن ہے",
   "dockerpage.all_ok": "سب کچھ ٹھیک چل رہا ہے۔",
   "dockerpage.attention": "توجہ درکار ہے",
   "dockerpage.reclaimable": "واپس لیا جا سکتا ہے",
