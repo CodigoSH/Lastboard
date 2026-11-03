@@ -4,7 +4,7 @@ import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { whenVisible } from '../../../services/whenVisible';
-import { RefreshClock, savingData, whenRefreshing } from '../../../services/refreshClock';
+import { PauseNotice, savingData, whenRefreshing } from '../../../services/refreshClock';
 import { targetTab, type PageTarget } from '../../../services/pageTarget';
 import { heldReading } from '../../../services/infraReadings';
 import { PageNav, type NavState } from '../../../services/pageNav';
@@ -268,8 +268,7 @@ class DockerPage extends HTMLElement {
         this.seedFromTile();
         if (this.listTimer) clearInterval(this.listTimer);
         this.listTimer = setInterval(whenRefreshing(() => this.load()), LIST_MS);
-        this.updated.reset();
-        this.updated.start();
+        this.pauseNotice.start();
         this.syncPolling();
         // The panel opens at once, before the reading: it names the container and fills in when the answer comes.
         const at = target?.sel ? target.sel.indexOf('/') : -1;
@@ -291,7 +290,6 @@ class DockerPage extends HTMLElement {
             this.groups = hosts.map(h => byId.get(h.id)!);
             this.icons = settings.icons ?? {};
             this.loaded = true;
-            this.updated.mark(held.at);
             this.paintAll();
         }).catch(() => { });
     }
@@ -314,7 +312,7 @@ class DockerPage extends HTMLElement {
     }
 
     private stopTimers() {
-        this.updated.stop();
+        this.pauseNotice.stop();
         if (this.listTimer) { clearInterval(this.listTimer); this.listTimer = null; }
         if (this.logTimer) { clearInterval(this.logTimer); this.logTimer = null; }
     }
@@ -327,7 +325,7 @@ class DockerPage extends HTMLElement {
 
     private readonly t: T = (key, params) => i18n.t(key, params);
     /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
-    private readonly updated = new RefreshClock(() => this.$('upd'), (key, params) => i18n.t(key, params), (from, now) => i18n.formatSpan(from, now));
+    private readonly pauseNotice = new PauseNotice(() => this.$('upd'), (key, params) => i18n.t(key, params));
 
     private readonly fmt: Fmt = {
         date: (iso) => {
@@ -686,7 +684,6 @@ class DockerPage extends HTMLElement {
         }
         this.loading = false;
         this.loaded = true;
-        if (!this.fatal) this.updated.mark();
         if (!this.hasAttribute('open')) return;
 
         // A container that is gone is gone; one whose host did not answer is only out of sight.

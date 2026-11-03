@@ -162,8 +162,6 @@
   "infra.view": "表示",
   "infra.view_cards": "カード",
   "infra.view_list": "リスト",
-  "infra.updated": "{time}前に更新",
-  "infra.updated_now": "たった今更新",
   "infra.refresh_paused": "自動更新を一時停止中：データセーバーが有効です",
   "dockerpage.all_ok": "すべて正常に動作しています。",
   "dockerpage.attention": "要確認",

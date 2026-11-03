@@ -162,8 +162,6 @@
   "infra.view": "Affichage",
   "infra.view_cards": "Cartes",
   "infra.view_list": "Liste",
-  "infra.updated": "Mis à jour il y a {time}",
-  "infra.updated_now": "Mis à jour à l’instant",
   "infra.refresh_paused": "Actualisation automatique en pause : économiseur de données activé",
   "dockerpage.all_ok": "Tout fonctionne comme prévu.",
   "dockerpage.attention": "À surveiller",

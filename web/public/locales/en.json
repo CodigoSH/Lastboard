@@ -162,8 +162,6 @@
   "infra.view": "View",
   "infra.view_cards": "Cards",
   "infra.view_list": "List",
-  "infra.updated": "Updated {time} ago",
-  "infra.updated_now": "Updated just now",
   "infra.refresh_paused": "Auto-refresh paused: data saver is on",
   "dockerpage.all_ok": "Everything is running as it should.",
   "dockerpage.attention": "Needs attention",

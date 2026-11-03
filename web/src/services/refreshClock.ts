@@ -1,11 +1,9 @@
 /**
- * When a full-screen page last had its data, said where the person looks for it, and
- * the pause of its own refresh while the browser asks to save data.
+ * The pause of a full-screen page's own refresh while the browser asks to save data, said
+ * where the person looks for it.
  *
- * The pages refresh on their own, and a page that has been open an hour on a phone
- * whose signal dropped looks exactly like one that has been reading all along: the
- * label under the header says how old what is on screen is, and a refresh that is not
- * running says so.
+ * The pages refresh on their own, and a refresh that is not running looks exactly like one
+ * that is: the label under the header says so while the pause lasts, and says nothing otherwise.
  */
 
 type Connection = { connection?: { saveData?: boolean; addEventListener?: (type: string, fn: () => void) => void; removeEventListener?: (type: string, fn: () => void) => void } };
@@ -36,66 +34,37 @@ export const whenRefreshing = (
 
 type T = (key: string, params?: Record<string, string>) => string;
 
-/** How a span since `fromMs` is named, or null under a minute (i18n.formatSpan). */
-export type SpanOf = (fromMs: number, nowMs: number) => string | null;
-
-/**
- * "Updated 3 min ago", "Updated just now", or nothing before the first reading; with
- * the refresh paused by the data saver, that is said after it.
- */
-export function updatedLabel(at: number, now: number, saving: boolean, t: T, spanOf: SpanOf): string {
-    if (!at) return saving ? t('infra.refresh_paused') : '';
-    const span = spanOf(at, now);
-    const age = span === null ? t('infra.updated_now') : t('infra.updated', { time: span });
-    return saving ? `${age} · ${t('infra.refresh_paused')}` : age;
+/** What the label says: that the refresh is paused while the browser asks to save data, and nothing otherwise. */
+export function pausedLabel(saving: boolean, t: T): string {
+    return saving ? t('infra.refresh_paused') : '';
 }
 
-/** How often the words are written again; a minute is the finest thing they say. */
-export const CLOCK_MS = 15000;
-
-/** The label of one page: it knows when the last reading arrived and writes it where the page keeps it. */
-export class RefreshClock {
-    private at = 0;
-    private timer: ReturnType<typeof setInterval> | null = null;
+/** The label of one page: it follows the browser's data saver and writes where the page keeps it. */
+export class PauseNotice {
     private stopListening: (() => void) | null = null;
 
     constructor(
         private readonly slot: () => HTMLElement | null,
         private readonly t: T,
-        private readonly spanOf: SpanOf,
     ) { }
 
-    /** A reading arrived (or, opening again, the one the page already held). */
-    mark(at = Date.now()): void {
-        this.at = at;
-        this.paint();
-    }
-
-    /** Starts keeping the words current while the page is open. */
+    /** Starts following the data saver while the page is open. */
     start(): void {
         this.stop();
-        this.timer = setInterval(() => this.paint(), CLOCK_MS);
         this.stopListening = onSavingDataChange(() => this.paint());
         this.paint();
     }
 
     stop(): void {
-        if (this.timer) { clearInterval(this.timer); this.timer = null; }
         this.stopListening?.();
         this.stopListening = null;
-    }
-
-    /** Forgets the last reading, for a page opened afresh. */
-    reset(): void {
-        this.at = 0;
-        this.paint();
     }
 
     paint(): void {
         const el = this.slot();
         if (!el) return;
         const saving = savingData();
-        const text = updatedLabel(this.at, Date.now(), saving, this.t, this.spanOf);
+        const text = pausedLabel(saving, this.t);
         if (el.textContent !== text) el.textContent = text;
         el.classList.toggle('upd--paused', saving);
     }

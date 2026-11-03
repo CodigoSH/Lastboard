@@ -162,8 +162,6 @@
   "infra.view": "Вид",
   "infra.view_cards": "Карточки",
   "infra.view_list": "Список",
-  "infra.updated": "Обновлено {time} назад",
-  "infra.updated_now": "Обновлено только что",
   "infra.refresh_paused": "Автообновление приостановлено: включена экономия трафика",
   "dockerpage.all_ok": "Всё работает как положено.",
   "dockerpage.attention": "Требует внимания",

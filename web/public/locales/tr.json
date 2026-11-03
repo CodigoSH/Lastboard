@@ -162,8 +162,6 @@
   "infra.view": "Görünüm",
   "infra.view_cards": "Kartlar",
   "infra.view_list": "Liste",
-  "infra.updated": "{time} önce güncellendi",
-  "infra.updated_now": "Az önce güncellendi",
   "infra.refresh_paused": "Otomatik yenileme duraklatıldı: veri tasarrufu açık",
   "dockerpage.all_ok": "Her şey olması gerektiği gibi çalışıyor.",
   "dockerpage.attention": "Dikkat gerektiriyor",

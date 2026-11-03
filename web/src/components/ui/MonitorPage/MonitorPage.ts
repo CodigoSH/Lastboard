@@ -4,7 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
-import { RefreshClock, savingData, whenRefreshing } from '../../../services/refreshClock';
+import { PauseNotice, savingData, whenRefreshing } from '../../../services/refreshClock';
 import { targetTab, type PageTarget } from '../../../services/pageTarget';
 import { heldReading } from '../../../services/infraReadings';
 import { fetchMonitorOverview } from '../../../services/monitorOverview';
@@ -227,9 +227,7 @@ class MonitorPage extends HTMLElement {
         void this.load(false, true);
         this.stopTimer();
         this.timer = setInterval(whenRefreshing(() => this.load()), REFRESH_MS);
-        this.updated.reset();
-        if (this.loaded) this.updated.mark(this.rowsAt);
-        this.updated.start();
+        this.pauseNotice.start();
         if (target?.sel && Number.isFinite(Number(target.sel))) this.choose(Number(target.sel));
     }
 
@@ -254,7 +252,7 @@ class MonitorPage extends HTMLElement {
 
     private stopTimer() {
         if (this.timer) { clearInterval(this.timer); this.timer = null; }
-        this.updated.stop();
+        this.pauseNotice.stop();
     }
 
     // ── Small helpers ──
@@ -265,7 +263,7 @@ class MonitorPage extends HTMLElement {
 
     private readonly t: T = (key, params) => i18n.t(key, params);
     /** When the last reading arrived, said under the header; and the refresh's pause while the browser asks to save data. */
-    private readonly updated = new RefreshClock(() => this.$('upd'), (key, params) => i18n.t(key, params), (from, now) => i18n.formatSpan(from, now));
+    private readonly pauseNotice = new PauseNotice(() => this.$('upd'), (key, params) => i18n.t(key, params));
 
     private readonly fmt: Fmt = {
         num: (n) => i18n.formatNumber(n),
@@ -602,7 +600,6 @@ class MonitorPage extends HTMLElement {
             ]);
             this.rows = (Array.isArray(rows) ? rows : []).map(readRow);
             this.rowsAt = Date.now();
-            this.updated.mark(this.rowsAt);
             if (setup) this.setup = { ...setup, retention_days: setup.retention_days || 30 };
             this.failed = false;
             if (this.board !== 'all' && !this.boards().includes(this.board)) this.board = 'all';

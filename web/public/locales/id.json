@@ -162,8 +162,6 @@
   "infra.view": "Tampilan",
   "infra.view_cards": "Kartu",
   "infra.view_list": "Daftar",
-  "infra.updated": "Diperbarui {time} lalu",
-  "infra.updated_now": "Baru saja diperbarui",
   "infra.refresh_paused": "Penyegaran otomatis dijeda: penghemat data aktif",
   "dockerpage.all_ok": "Semuanya berjalan sebagaimana mestinya.",
   "dockerpage.attention": "Perlu perhatian",
