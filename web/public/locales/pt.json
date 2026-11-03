@@ -815,6 +815,8 @@
   "monitor.services": "Serviços",
   "widget.monitor.name": "Monitoramento",
   "widget.monitor.description": "Estado, disponibilidade e histórico dos serviços que você monitora",
+  "widget.monitor.show_summary": "Mostrar disponibilidade e resposta",
+  "widget.monitor.show_summary_desc": "Sob o nome: a disponibilidade média das últimas 24 horas dos serviços mostrados e o seu tempo de resposta médio.",
   "monitor.select_services": "Serviços a mostrar",
   "monitor.select_services_desc": "Deixe todos marcados para mostrar qualquer serviço monitorado, inclusive os que adicionar depois.",
   "monitor.no_services_selected": "Os serviços escolhidos já não estão sendo monitorados.",

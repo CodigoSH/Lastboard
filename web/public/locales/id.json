@@ -815,6 +815,8 @@
   "monitor.services": "Layanan",
   "widget.monitor.name": "Pemantauan",
   "widget.monitor.description": "Status, waktu aktif, dan riwayat layanan yang Anda pantau",
+  "widget.monitor.show_summary": "Tampilkan ketersediaan dan respons",
+  "widget.monitor.show_summary_desc": "Di bawah nama: rata-rata ketersediaan 24 jam terakhir dari layanan yang ditampilkan dan rata-rata waktu responsnya.",
   "monitor.select_services": "Layanan yang ditampilkan",
   "monitor.select_services_desc": "Biarkan semuanya tercentang untuk menampilkan setiap layanan yang dipantau, termasuk yang Anda tambahkan nanti.",
   "monitor.no_services_selected": "Layanan yang dipilih sudah tidak dipantau.",

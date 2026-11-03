@@ -109,6 +109,8 @@ class MonitorPage extends HTMLElement {
 
     private sel: number | null = null;
     private drawerOpen = false;
+    /** Open for its side panel alone, over the board: the page itself is not shown and the top bar stays free. */
+    private panelOnly = false;
     private drawerTab: DrawerTab = 'summary';
     private histRange: RangeLabel = '24 h';
     private histSeq = 0;
@@ -201,13 +203,17 @@ class MonitorPage extends HTMLElement {
     /** Opens the page, at a tab and with a service in the panel when the caller says so; `sel` is the service's id. */
     async open(target?: PageTarget) {
         this.setAttribute('open', '');
+        this.panelOnly = !!target?.panel && !!target.sel;
+        this.toggleAttribute('panel-only', this.panelOnly);
         const asked = targetTab(target, TABS);
-        if (asked) this.tab = asked;
+        if (asked && !this.panelOnly) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back.
         this.nav.open(this.navState());
-        document.body.style.overflow = 'hidden';
         // The top bar locks its other actions while the status page is up, the same way it does in edit mode.
-        eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: true });
+        if (!this.panelOnly) {
+            document.body.style.overflow = 'hidden';
+            eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: true });
+        }
         this.drawerOpen = false;
         // What the page held when it was last open is shown at once, if it is recent, while the new reading is on its way.
         // What the page held when it was last open, or what a tile on the board last read, whichever is newer.
@@ -229,8 +235,12 @@ class MonitorPage extends HTMLElement {
 
     private closeQuietly() {
         this.removeAttribute('open');
-        document.body.style.overflow = '';
-        eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: false });
+        if (!this.panelOnly) {
+            document.body.style.overflow = '';
+            eventBus.emit(EVENTS.MONITOR_OVERVIEW_CHANGED, { open: false });
+        }
+        this.panelOnly = false;
+        this.removeAttribute('panel-only');
         this.stopTimer();
         // Nothing the page asked for is still wanted: a late answer must not paint a closed page.
         this.histSeq++;
@@ -513,7 +523,8 @@ class MonitorPage extends HTMLElement {
         return { tab: this.tab, sel: this.drawerOpen && this.sel !== null ? String(this.sel) : null };
     }
 
-    private navPush() { if (!this.applying) this.nav.push(this.navState()); }
+    // Over the board there is one entry, the panel's: choosing replaces it instead of adding a step.
+    private navPush() { if (this.applying) return; if (this.panelOnly) this.nav.replace(this.navState()); else this.nav.push(this.navState()); }
 
     private navReplace() { if (!this.applying) this.nav.replace(this.navState()); }
 
@@ -531,6 +542,8 @@ class MonitorPage extends HTMLElement {
     }
 
     private hideDrawer() {
+        // The panel was all there was: closing it closes what it was opened over.
+        if (this.panelOnly) { this.close(); return; }
         this.drawerOpen = false;
         this.paintAll();
     }

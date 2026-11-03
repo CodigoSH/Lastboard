@@ -815,6 +815,8 @@
   "monitor.services": "Diensten",
   "widget.monitor.name": "Monitoring",
   "widget.monitor.description": "Status, beschikbaarheid en verloop van de diensten die je bewaakt",
+  "widget.monitor.show_summary": "Beschikbaarheid en reactietijd tonen",
+  "widget.monitor.show_summary_desc": "Onder de naam: de gemiddelde beschikbaarheid over de laatste 24 uur van de getoonde diensten en hun gemiddelde reactietijd.",
   "monitor.select_services": "Te tonen diensten",
   "monitor.select_services_desc": "Laat ze allemaal aangevinkt om elke bewaakte dienst te tonen, ook die je later toevoegt.",
   "monitor.no_services_selected": "De gekozen diensten worden niet meer bewaakt.",

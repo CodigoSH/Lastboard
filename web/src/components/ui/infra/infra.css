@@ -164,6 +164,10 @@ svg { display: block; flex: none; }
     padding: 8px 20px 70px;
     /* No transition on the padding the panel takes: animating it re-flows the grid at every frame, and the cards hop from column to column. */
 }
+/* Opened for its panel alone, from a tile of the board: the page is not shown, the panel sits over the board and the board is dimmed behind it. */
+:host([panel-only]) .pg { display: none; }
+:host([panel-only]) .scrim.on { opacity: 1; pointer-events: auto; }
+
 /* Wide enough, the drawer pushes the page instead of covering it. */
 @media (min-width: 1380px) { .pg.has-drawer .pbody { padding-inline-end: 548px; } }
 

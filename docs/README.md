@@ -62,9 +62,9 @@ also has a **Personalize** tab with a border colour and border width, on top of 
 | **[Weather](widgets/weather.md)** | Current conditions and an optional multi-day forecast from Open-Meteo. No API key | Coordinates, forecast days |
 | **[Notepad](widgets/notepad.md)** | A rich-text scratchpad with a toolbar: headings, colours, lists, checklists, links, images | None — you write in it |
 | **[Markdown](widgets/markdown.md)** | A Markdown block rendered on the board, with a source/preview toggle | None — you write in it |
-| **[Monitoring](widgets/monitoring.md)** | Your monitored services on a tile: icon, heartbeat, latency, 24-hour uptime; a click opens the status page at that service | Which services, their names and icons, link to the page, refresh |
-| **[Docker](widgets/docker.md)** | Containers from one or many hosts, with live CPU/RAM; a click opens the Docker page at that container | Hosts, which containers and their names, readings, link to the page, refresh |
-| **[Proxmox](widgets/proxmox.md)** | The busiest node's health and the machines that need attention; a click opens the Proxmox page at that machine | Title, which machines, node health, readings, link to the page, refresh |
+| **[Monitoring](widgets/monitoring.md)** | Your monitored services on a tile: icon, heartbeat, latency, 24-hour uptime; a click opens that service's panel over the board | Which services and their order, summary line, link to the page, refresh |
+| **[Docker](widgets/docker.md)** | Containers from one or many hosts, with live CPU/RAM; a click opens that container's panel over the board | Hosts, which containers and their names, readings, link to the page, refresh |
+| **[Proxmox](widgets/proxmox.md)** | The busiest node's health and the machines that need attention; a click opens that machine's panel over the board | Title, which machines, node health, readings, link to the page, refresh |
 | **[API](widgets/api.md)** | Any JSON endpoint as a tile — as big metric numbers or as a scrolling list | Preset or fully manual |
 
 The **API widget** is the escape hatch: **16 guided presets** (AdGuard Home, Paperless-ngx,

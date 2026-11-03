@@ -815,6 +815,8 @@
   "monitor.services": "服务",
   "widget.monitor.name": "监控",
   "widget.monitor.description": "所监控服务的状态、在线率与心跳记录",
+  "widget.monitor.show_summary": "显示可用性和响应",
+  "widget.monitor.show_summary_desc": "在名称下方显示所列服务过去 24 小时的平均可用性和平均响应时间。",
   "monitor.select_services": "要显示的服务",
   "monitor.select_services_desc": "全部勾选可显示所有受监控的服务，包括之后新增的。",
   "monitor.no_services_selected": "所选服务已不再受监控。",

@@ -210,7 +210,7 @@ class DockerWidget extends HTMLElement {
             return;
         }
         const row = target.closest('[data-sel]') as HTMLElement | null;
-        if (row) eventBus.emit(EVENTS.SHOW_DOCKER_PAGE, { tab: 'containers', sel: row.dataset.sel || undefined });
+        if (row) eventBus.emit(EVENTS.SHOW_DOCKER_PAGE, { tab: 'containers', sel: row.dataset.sel || undefined, panel: !!row.dataset.sel });
     };
 
     // ── List refresh ─────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import { eventBus, EVENTS } from '../../services/EventBus';
 import { adoptSharedStyles } from '../../services/sharedStyles';
 import { resolveIconUrl } from '../../services/iconUrl';
 import { whenVisible } from '../../services/whenVisible';
-import { monitorShell, readItemConfig, type ItemCfg, type WRow } from '../../services/monitorWidget';
+import { monitorShell, type WRow } from '../../services/monitorWidget';
 import { showsSeeAll } from '../shell/metrics';
 import { SHELL_CSS, shellHtml } from '../shell/shell';
 
@@ -14,8 +14,6 @@ interface MonitorConfig {
     items: number[];
     /** The services in the order they were arranged in. One it does not name comes after. */
     itemOrder: number[];
-    /** A name and an icon of this widget's own for a service, by its id. */
-    itemConfig: Record<string, ItemCfg>;
     /** Whether the foot leads to the page. */
     showAll: boolean;
     /** Whether the line of totals under the name is drawn. */
@@ -25,7 +23,7 @@ interface MonitorConfig {
     title: string;
 }
 
-const DEFAULT_CONFIG: MonitorConfig = { items: [], itemOrder: [], itemConfig: {}, showAll: true, showNode: true, refreshSec: 60, title: '' };
+const DEFAULT_CONFIG: MonitorConfig = { items: [], itemOrder: [], showAll: true, showNode: true, refreshSec: 60, title: '' };
 
 const ids = (v: unknown): number[] => (Array.isArray(v) ? v.filter((n): n is number => typeof n === 'number') : []);
 
@@ -33,7 +31,6 @@ function parseConfig(data: any): MonitorConfig {
     return {
         items: ids(data.items),
         itemOrder: ids(data.itemOrder),
-        itemConfig: readItemConfig(data.itemConfig),
         showAll: showsSeeAll(data.showAll),
         showNode: data.showNode !== false,
         refreshSec: Number(data.refreshSec) > 0 ? Number(data.refreshSec) : DEFAULT_CONFIG.refreshSec,
@@ -149,7 +146,7 @@ class MonitorWidget extends HTMLElement {
             return;
         }
         const row = target.closest('[data-sel]') as HTMLElement | null;
-        if (row) eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW, { tab: 'services', sel: row.dataset.sel });
+        if (row) eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW, { tab: 'services', sel: row.dataset.sel, panel: true });
     };
 
     // ── Render ──
@@ -161,7 +158,6 @@ class MonitorWidget extends HTMLElement {
             rows: this.rows,
             items: this._config.items,
             itemOrder: this._config.itemOrder,
-            itemConfig: this._config.itemConfig,
             showAll: this._config.showAll,
             showSummary: this._config.showNode,
             resolveIcon: resolveIconUrl,

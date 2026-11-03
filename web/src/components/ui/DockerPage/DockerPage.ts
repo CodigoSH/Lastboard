@@ -121,6 +121,8 @@ class DockerPage extends HTMLElement {
 
     private sel: { hostId: string; name: string } | null = null;
     private drawerOpen = false;
+    /** Open for its side panel alone, over the board: the page itself is not shown and the top bar stays free. */
+    private panelOnly = false;
     private drawerTab: DrawerTab = 'summary';
     private detail: DockerDetail | null = null;
     private detailErr = '';
@@ -251,11 +253,13 @@ class DockerPage extends HTMLElement {
      */
     open(target?: PageTarget) {
         this.setAttribute('open', '');
-        eventBus.emit(EVENTS.DOCKER_PAGE_CHANGED, { open: true });
+        this.panelOnly = !!target?.panel && !!target.sel;
+        this.toggleAttribute('panel-only', this.panelOnly);
+        if (!this.panelOnly) eventBus.emit(EVENTS.DOCKER_PAGE_CHANGED, { open: true });
         this.drawerOpen = false;
         // The first entry of the page already says which tab it opened on, so Back from the panel lands there.
         const asked = targetTab(target, TABS);
-        if (asked) this.tab = asked;
+        if (asked && !this.panelOnly) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back.
         this.nav.open(this.navState());
         this.loaded = false;
@@ -294,7 +298,9 @@ class DockerPage extends HTMLElement {
 
     private closeQuietly() {
         this.removeAttribute('open');
-        eventBus.emit(EVENTS.DOCKER_PAGE_CHANGED, { open: false });
+        if (!this.panelOnly) eventBus.emit(EVENTS.DOCKER_PAGE_CHANGED, { open: false });
+        this.panelOnly = false;
+        this.removeAttribute('panel-only');
         this.stopTimers();
         // Nothing the page asked for is still wanted: a late answer must not paint a closed page.
         this.detailSeq++;
@@ -588,7 +594,8 @@ class DockerPage extends HTMLElement {
         return { tab: this.tab, sel: this.drawerOpen && this.sel ? `${this.sel.hostId}/${this.sel.name}` : null };
     }
 
-    private navPush() { if (!this.applying) this.nav.push(this.navState()); }
+    // Over the board there is one entry, the panel's: choosing replaces it instead of adding a step.
+    private navPush() { if (this.applying) return; if (this.panelOnly) this.nav.replace(this.navState()); else this.nav.push(this.navState()); }
 
     private navReplace() { if (!this.applying) this.nav.replace(this.navState()); }
 
@@ -609,6 +616,8 @@ class DockerPage extends HTMLElement {
     }
 
     private hideDrawer() {
+        // The panel was all there was: closing it closes what it was opened over.
+        if (this.panelOnly) { this.close(); return; }
         this.drawerOpen = false;
         this.paintAll();
         this.syncPolling();

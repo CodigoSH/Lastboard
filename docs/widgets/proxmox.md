@@ -30,7 +30,7 @@ The widget only reads. Starting and shutting a machine down is done on the page,
 
 ## Opening the page
 
-Click a row and the Proxmox page opens on the **Machines** tab with that machine in its side panel, where its tasks and its start and shut down buttons are. **See all** opens the same tab without choosing one. The browser's Back button closes the panel first and then the page, so you land back on the board. The page also has its own address, `/?view=proxmox`, to open it in a new tab or keep it as a bookmark.
+Click a row and that machine's side panel opens over your board, where its tasks and its start and shut down buttons are; the board stays where it is. Close it with the **×**, by clicking outside it, with **Esc** or with the browser's Back button. **See all** opens the Proxmox page on the **Machines** tab. The page also has its own address, `/?view=proxmox`, to open it in a new tab or keep it as a bookmark.
 
 ## Why it is a list you scroll
 

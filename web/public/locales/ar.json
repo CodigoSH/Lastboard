@@ -815,6 +815,8 @@
   "monitor.services": "الخدمات",
   "widget.monitor.name": "المراقبة",
   "widget.monitor.description": "حالة الخدمات التي تراقبها ونسبة تشغيلها وسجلّها",
+  "widget.monitor.show_summary": "إظهار التوفر والاستجابة",
+  "widget.monitor.show_summary_desc": "تحت الاسم: متوسط توفر الخدمات المعروضة خلال آخر 24 ساعة ومتوسط زمن استجابتها.",
   "monitor.select_services": "الخدمات المعروضة",
   "monitor.select_services_desc": "اترك الجميع محدّدًا لعرض كل خدمة مراقَبة، بما فيها ما تضيفه لاحقًا.",
   "monitor.no_services_selected": "الخدمات المختارة لم تعد مراقَبة.",

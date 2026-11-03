@@ -815,6 +815,8 @@
   "monitor.services": "خدمات",
   "widget.monitor.name": "نگرانی",
   "widget.monitor.description": "جن سروسز کی آپ نگرانی کرتے ہیں اُن کی حالت، اپ ٹائم اور تاریخ",
+  "widget.monitor.show_summary": "دستیابی اور جواب دکھائیں",
+  "widget.monitor.show_summary_desc": "نام کے نیچے: دکھائی گئی سروسز کی پچھلے 24 گھنٹوں کی اوسط دستیابی اور ان کا اوسط جوابی وقت۔",
   "monitor.select_services": "دکھانے کے لیے سروسز",
   "monitor.select_services_desc": "سب پر نشان لگا رہنے دیں تاکہ ہر زیرِ نگرانی سروس نظر آئے، بعد میں شامل کی گئی بھی۔",
   "monitor.no_services_selected": "منتخب سروسز کی نگرانی اب نہیں ہو رہی۔",

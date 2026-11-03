@@ -815,6 +815,8 @@
   "monitor.services": "Usługi",
   "widget.monitor.name": "Monitorowanie",
   "widget.monitor.description": "Stan, dostępność i historia monitorowanych usług",
+  "widget.monitor.show_summary": "Pokaż dostępność i czas odpowiedzi",
+  "widget.monitor.show_summary_desc": "Pod nazwą: średnia dostępność pokazanych usług z ostatnich 24 godzin i ich średni czas odpowiedzi.",
   "monitor.select_services": "Usługi do pokazania",
   "monitor.select_services_desc": "Zostaw wszystkie zaznaczone, aby pokazywać każdą monitorowaną usługę, także te dodane później.",
   "monitor.no_services_selected": "Wybrane usługi nie są już monitorowane.",

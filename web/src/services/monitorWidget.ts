@@ -19,21 +19,10 @@ export interface WRow {
     icon?: string;
 }
 
-/**
- * What is set on one service in this widget: only an icon. A service is a bookmark, and its name is the bookmark's,
- * so it is changed there; a name saved by an earlier beta is read and ignored.
- */
-export interface ItemCfg {
-    /** An icon to show instead of the bookmark's: an address or the name of one. */
-    icon?: string;
-}
-
 export interface MonitorShellInput {
     rows: WRow[];
     items: number[];
     itemOrder: number[];
-    /** By the service's id, which survives the bookmark being renamed. */
-    itemConfig: Record<string, ItemCfg>;
     showAll: boolean;
     /** Whether the line of totals under the name is drawn. */
     showSummary: boolean;
@@ -49,20 +38,6 @@ export const BEATS = 30;
 
 const uptimeTone = (pct: number): Tone => (pct >= 99 ? 'ok' : pct >= 95 ? 'warn' : 'bad');
 
-/** What is stored for a service, read back tolerantly: anything that is not an icon is not there. */
-export function readItemConfig(raw: unknown): Record<string, ItemCfg> {
-    const out: Record<string, ItemCfg> = {};
-    if (!raw || typeof raw !== 'object') return out;
-    for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
-        if (!v || typeof v !== 'object') continue;
-        const e = v as Record<string, unknown>;
-        const entry: ItemCfg = {};
-        if (typeof e.icon === 'string' && e.icon.trim()) entry.icon = e.icon.trim();
-        if (entry.icon) out[id] = entry;
-    }
-    return out;
-}
-
 /** The strip of the last readings, padded on the left so every row ends at "now". */
 export function beatsHtml(row: WRow, i: Pick<MonitorShellInput, 't' | 'time'>): string {
     const beats = (row.heartbeat || []).slice(-BEATS);
@@ -72,8 +47,7 @@ export function beatsHtml(row: WRow, i: Pick<MonitorShellInput, 't' | 'time'>): 
 }
 
 function rowOf(r: WRow, i: MonitorShellInput): ShellRow {
-    const cfg = i.itemConfig[String(r.item_id)] ?? {};
-    const icon = cfg.icon || r.icon || '';
+    const icon = r.icon || '';
     const readings: ShellMetric[] = [];
     if (r.status !== 'none') {
         // The unit says what each figure is ("ms", "%"); a label beside every row would be what overflows a narrow tile.

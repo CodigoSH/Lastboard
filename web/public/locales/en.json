@@ -815,6 +815,8 @@
   "monitor.services": "Services",
   "widget.monitor.name": "Monitoring",
   "widget.monitor.description": "Status, uptime and heartbeat of the services you monitor",
+  "widget.monitor.show_summary": "Show availability and response",
+  "widget.monitor.show_summary_desc": "Under the name: the average availability over the last 24 hours of the services shown, and their average response time.",
   "monitor.select_services": "Services to show",
   "monitor.select_services_desc": "Leave them all ticked to show every monitored service, including ones you add later.",
   "monitor.no_services_selected": "The chosen services are no longer being monitored.",

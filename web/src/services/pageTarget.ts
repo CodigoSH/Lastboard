@@ -6,6 +6,8 @@
 export interface PageTarget {
     tab?: string;
     sel?: string;
+    /** Open only the side panel of `sel`, over the board, and not the page behind it. */
+    panel?: boolean;
 }
 
 /** The tab a target names, if the page has such a tab; otherwise nothing, and the page opens where it always does. */

@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { beatsHtml, BEATS, monitorShell, readItemConfig, type MonitorShellInput, type WRow } from './monitorWidget';
+import { beatsHtml, BEATS, monitorShell, type MonitorShellInput, type WRow } from './monitorWidget';
 
 const row = (over: Partial<WRow> = {}): WRow => ({ item_id: 1, name: 'Plex', status: 'up', uptime_pct: 99.9, latency_ms: 42, heartbeat: [], icon: 'plex', ...over });
 const input = (rows: WRow[], over: Partial<MonitorShellInput> = {}): MonitorShellInput => ({
-    rows, items: [], itemOrder: [], itemConfig: {}, showAll: true, showSummary: true, resolveIcon: i => `/icons/${i}`, t: k => `[${k}]`, num: n => String(n), time: s => s, ...over,
+    rows, items: [], itemOrder: [], showAll: true, showSummary: true, resolveIcon: i => `/icons/${i}`, t: k => `[${k}]`, num: n => String(n), time: s => s, ...over,
 });
 
 describe('the Monitoring widget says', () => {
@@ -16,12 +16,11 @@ describe('the Monitoring widget says', () => {
         expect(r.extra).toContain('sh-beats');
         expect(r.tone).toBe('ok');
     });
-    test('the icon set here wins over the bookmark\'s, by the service\'s id; the name is always the bookmark\'s', () => {
-        const spec = monitorShell(input([row()], { itemConfig: { '1': { icon: 'film' } } }));
-        expect(spec.rows[0].face).toBe('/icons/film');
+    test('the name and the icon are the bookmark\'s', () => {
+        const spec = monitorShell(input([row({ name: 'Plex', icon: 'plex' })]));
         expect(spec.rows[0].name).toBe('Plex');
-        const other = monitorShell(input([row({ item_id: 2 })], { itemConfig: { '1': { icon: 'film' } } }));
-        expect(other.rows[0].face).toBe('/icons/plex');
+        expect(spec.rows[0].face).toBe('/icons/plex');
+        expect(monitorShell(input([row({ icon: '' })])).rows[0].face).toBe('');
     });
     test('a service that is down is red, one never checked is grey and has no readings', () => {
         const spec = monitorShell(input([row({ item_id: 1, status: 'down' }), row({ item_id: 2, status: 'none', uptime_pct: -1, latency_ms: null })]));
@@ -70,13 +69,5 @@ describe('the strip of readings', () => {
     test('a time that is markup does not reach the page as markup', () => {
         const html = beatsHtml(row({ heartbeat: [{ status: 'up', at: '"><script>' }] }), { t, time });
         expect(html).not.toContain('<script>');
-    });
-});
-
-describe('what is stored for a service', () => {
-    test('reads only icons: a name saved by an earlier beta is dropped, and so is an entry that says nothing', () => {
-        expect(readItemConfig({ '1': { label: ' Movies ', icon: 'film' }, '2': { label: 'Only a name' }, '3': 'x', '4': { icon: 5 } })).toEqual({ '1': { icon: 'film' } });
-        expect(readItemConfig(undefined)).toEqual({});
-        expect(readItemConfig('garbage')).toEqual({});
     });
 });

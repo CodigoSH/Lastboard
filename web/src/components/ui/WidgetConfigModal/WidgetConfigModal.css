@@ -1000,17 +1000,6 @@ dialog[open] {
     cursor: pointer;
 }
 
-/* The icon of a service in the list: a button that opens the picker. */
-.mon-face {
-    width: 28px; height: 28px; flex: none; display: grid; place-items: center; padding: 0;
-    border-radius: 7px; border: 1px solid var(--card-border); background: var(--surface-solid); cursor: pointer; overflow: hidden;
-}
-.mon-face:hover { border-color: rgba(var(--accent-rgb), 0.5); }
-.mon-face img { width: 100%; height: 100%; object-fit: contain; }
-.mon-face svg { width: 14px; height: 14px; fill: var(--text-dim); opacity: 0.6; }
-.monitor-service-name { flex: 1; min-width: 0; padding: 4px 8px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.monitor-service-item .monitor-service-row { flex: 0 0 auto; padding-inline-end: 2px; }
-
 /* ── Docker: per-container settings ──────────────────────────────────────────
    Same box as the monitor service list, with two extra controls per row: the
    icon and the display name. Grouped by host because the list can span

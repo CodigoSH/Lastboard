@@ -815,6 +815,8 @@
   "monitor.services": "Hizmetler",
   "widget.monitor.name": "İzleme",
   "widget.monitor.description": "İzlediğin servislerin durumu, çalışma süresi ve geçmişi",
+  "widget.monitor.show_summary": "Erişilebilirliği ve yanıtı göster",
+  "widget.monitor.show_summary_desc": "Adın altında: gösterilen hizmetlerin son 24 saatteki ortalama erişilebilirliği ve ortalama yanıt süresi.",
   "monitor.select_services": "Gösterilecek servisler",
   "monitor.select_services_desc": "İzlenen her servisi göstermek için hepsini işaretli bırak; sonradan ekleyeceklerin de görünür.",
   "monitor.no_services_selected": "Seçilen servisler artık izlenmiyor.",

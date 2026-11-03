@@ -23,10 +23,6 @@ import { DEFAULT_TELEMETRY_INTERVAL, TELEMETRY_INTERVALS, telemetryInterval } fr
 import { loadProxmox, type PxHost } from '../../../services/proxmoxApi';
 import { metricsFieldHtml, readCommonFields, seeAllFieldHtml } from '../../../widgets/shell/configFields';
 import { readMetrics, showsSeeAll, type Metric } from '../../../widgets/shell/metrics';
-import { SHELL_FALLBACK } from '../../../widgets/shell/shell';
-import { readItemConfig } from '../../../services/monitorWidget';
-import { resolveIconUrl } from '../../../services/iconUrl';
-import { materializeIcon } from '../../../services/iconStore';
 import { arrangedIds, guestKey, inGuestOrder, isGuestShown, settleGuestOrder, settleGuests, type GuestRow } from '../../../services/proxmoxGuests';
 import { listWidgetSecrets, saveWidgetSecrets } from '../../../services/widgetSecrets';
 import { secretsPatch, SECRET_MASK } from '../../../services/secretField';
@@ -614,16 +610,8 @@ class WidgetConfigModal extends HTMLElement {
                 .map(row => parseInt(row.dataset.id || '0', 10)).filter(id => id > 0);
             if (arranged.length) newContent.itemOrder = mergeOrder(arranged, newContent.itemOrder);
 
-            // An icon of this widget's own for a service, by its id. Only what was set is kept; a
-            // service this screen did not list (the list did not load) keeps what it had.
-            const itemConfig: Record<string, { icon?: string }> = { ...(newContent.itemConfig || {}) };
-            this.shadowRoot?.querySelectorAll<HTMLElement>('.monitor-service-item').forEach(row => {
-                const id = row.dataset.id;
-                if (!id) return;
-                const icon = row.dataset.icon || '';
-                if (icon) itemConfig[id] = { icon }; else delete itemConfig[id];
-            });
-            if (Object.keys(itemConfig).length) newContent.itemConfig = itemConfig; else delete newContent.itemConfig;
+            // An earlier beta kept an icon and a name per service here; neither is set from this screen any more.
+            delete newContent.itemConfig;
             this.storeCommonFields(newContent, []);
             // The line of totals under the name: on unless it was switched off.
             if ((this.shadowRoot?.getElementById('monitor-shownode') as HTMLInputElement | null)?.checked === false) newContent.showNode = false; else delete newContent.showNode;
@@ -1563,10 +1551,10 @@ class WidgetConfigModal extends HTMLElement {
             </div>
             <div class="field-group check-row">
                 <input type="checkbox" id="monitor-shownode" ${content.showNode !== false ? 'checked' : ''} />
-                <label for="monitor-shownode">${i18n.t('widget.show_node')}</label>
+                <label for="monitor-shownode">${i18n.t('widget.monitor.show_summary')}</label>
             </div>
             <div class="field-group">
-                <small>${i18n.t('widget.show_node_desc')}</small>
+                <small>${i18n.t('widget.monitor.show_summary_desc')}</small>
             </div>
             ${seeAllFieldHtml(showsSeeAll(content.showAll), k => i18n.t(k))}
             <div class="field-group row-aligned">
@@ -1610,44 +1598,18 @@ class WidgetConfigModal extends HTMLElement {
         const selected: number[] = Array.isArray(content.items) ? content.items : [];
         const all = selected.length === 0;
 
-        const cfgOf = readItemConfig(content.itemConfig);
-        box.innerHTML = arrangeBy(rows, r => r.item_id, Array.isArray(content.itemOrder) ? content.itemOrder : undefined).map(r => {
-            const own = cfgOf[String(r.item_id)] ?? {};
-            const face = own.icon || r.icon || '';
-            return `
-            <div class="monitor-service-item" data-id="${r.item_id}" data-icon="${esc(own.icon || '')}" data-default-icon="${esc(r.icon || '')}">
+        box.innerHTML = arrangeBy(rows, r => r.item_id, Array.isArray(content.itemOrder) ? content.itemOrder : undefined).map(r => `
+            <div class="monitor-service-item" data-id="${r.item_id}">
                 <span class="row-grip" role="button" tabindex="0"
                       aria-label="${esc(i18n.t('widget.drag_to_arrange'))}" title="${esc(i18n.t('widget.drag_to_arrange'))}">${DRAG_HANDLE}</span>
                 <label class="monitor-service-row">
                     <input type="checkbox" class="monitor-service" data-id="${r.item_id}"
                            ${all || selected.includes(r.item_id) ? 'checked' : ''} />
+                    <span>${esc(r.name) || '—'}</span>
                 </label>
-                <button type="button" class="mon-face" data-pick-icon title="${esc(i18n.t('proxmox.icon_set'))}" aria-label="${esc(i18n.t('proxmox.icon_set'))}">${face ? `<img src="${esc(resolveIconUrl(face))}" alt="">` : SHELL_FALLBACK}</button>
-                <span class="monitor-service-name">${esc(r.name) || '—'}</span>
-            </div>`;
-        }).join('');
+            </div>
+        `).join('');
         bindRowReorder(box, this.shadowRoot!, { row: '.monitor-service-item', handle: '.row-grip' });
-        box.addEventListener('click', e => { void this.pickMonitorIcon(e); });
-    }
-
-    /** Opens the icon picker for one service of the list; an empty answer goes back to the bookmark's own icon. */
-    private async pickMonitorIcon(e: Event) {
-        const btn = (e.target as HTMLElement).closest('[data-pick-icon]') as HTMLElement | null;
-        const row = btn?.closest('.monitor-service-item') as HTMLElement | null;
-        if (!btn || !row) return;
-        e.preventDefault();
-        let modal = document.querySelector('icon-selection-modal') as (HTMLElement & { open: () => Promise<string | null> }) | null;
-        if (!modal) {
-            modal = document.createElement('icon-selection-modal') as HTMLElement & { open: () => Promise<string | null> };
-            document.body.appendChild(modal);
-        }
-        const picked = await modal.open();
-        if (picked === null) return;
-        // Downloaded once, here, as a bookmark's is: the board never asks a CDN what it is drawing.
-        const icon = picked ? await materializeIcon(resolveIconUrl(picked)) : '';
-        row.dataset.icon = icon;
-        const shown = icon || row.dataset.defaultIcon || '';
-        btn.innerHTML = shown ? `<img src="${esc(resolveIconUrl(shown))}" alt="">` : SHELL_FALLBACK;
     }
 
     /** Past this many hosts, scanning the list is slower than typing a name. */

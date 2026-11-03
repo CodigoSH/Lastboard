@@ -109,6 +109,8 @@ class ProxmoxPage extends HTMLElement {
 
     private sel: Sel | null = null;
     private drawerOpen = false;
+    /** Open for its side panel alone, over the board: the page itself is not shown and the top bar stays free. */
+    private panelOnly = false;
     private drawerTab: DrawerTab = 'summary';
     private busy = new Set<string>();
 
@@ -268,10 +270,12 @@ class ProxmoxPage extends HTMLElement {
     /** Opens the page, at a tab and with an item in the panel when the caller says so; `sel` is written as the history writes it. */
     open(target?: PageTarget) {
         this.setAttribute('open', '');
-        eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: true });
+        this.panelOnly = !!target?.panel && !!target.sel;
+        this.toggleAttribute('panel-only', this.panelOnly);
+        if (!this.panelOnly) eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: true });
         this.drawerOpen = false;
         const asked = targetTab(target, TABS);
-        if (asked) this.tab = asked;
+        if (asked && !this.panelOnly) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back. Once per opening, never stacked.
         this.nav.open(this.navState());
         // What a tile of the board last read is what the page opens on, until its own answer arrives.
@@ -295,7 +299,9 @@ class ProxmoxPage extends HTMLElement {
 
     private closeQuietly() {
         this.removeAttribute('open');
-        eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: false });
+        if (!this.panelOnly) eventBus.emit(EVENTS.PROXMOX_PAGE_CHANGED, { open: false });
+        this.panelOnly = false;
+        this.removeAttribute('panel-only');
         this.stopTimers();
         this.stopPanels();
         this.detailSeq++;
@@ -613,7 +619,8 @@ class ProxmoxPage extends HTMLElement {
         return { tab: this.tab, sel: s ? `${s.kind}|${s.hostId}|${s.ref}` : null };
     }
 
-    private navPush() { if (!this.applying) this.nav.push(this.navState()); }
+    // Over the board there is one entry, the panel's: choosing replaces it instead of adding a step.
+    private navPush() { if (this.applying) return; if (this.panelOnly) this.nav.replace(this.navState()); else this.nav.push(this.navState()); }
 
     private navReplace() { if (!this.applying) this.nav.replace(this.navState()); }
 
@@ -634,6 +641,8 @@ class ProxmoxPage extends HTMLElement {
     }
 
     private hideDrawer() {
+        // The panel was all there was: closing it closes what it was opened over.
+        if (this.panelOnly) { this.close(); return; }
         this.drawerOpen = false;
         this.drawerTasks.stop();
         this.drawerJournal.stop();

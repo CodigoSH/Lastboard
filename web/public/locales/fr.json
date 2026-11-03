@@ -815,6 +815,8 @@
   "monitor.services": "Services",
   "widget.monitor.name": "Supervision",
   "widget.monitor.description": "État, disponibilité et historique des services que tu surveilles",
+  "widget.monitor.show_summary": "Afficher disponibilité et temps de réponse",
+  "widget.monitor.show_summary_desc": "Sous le nom : la disponibilité moyenne des services affichés sur les dernières 24 heures et leur temps de réponse moyen.",
   "monitor.select_services": "Services à afficher",
   "monitor.select_services_desc": "Laisse tout coché pour afficher chaque service surveillé, y compris ceux que tu ajouteras plus tard.",
   "monitor.no_services_selected": "Les services choisis ne sont plus surveillés.",

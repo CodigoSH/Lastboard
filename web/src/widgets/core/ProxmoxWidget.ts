@@ -182,7 +182,7 @@ class ProxmoxWidget extends HTMLElement {
             return;
         }
         const row = target.closest('[data-sel]') as HTMLElement | null;
-        if (row) eventBus.emit(EVENTS.SHOW_PROXMOX_PAGE, { tab: 'machines', sel: row.dataset.sel });
+        if (row) eventBus.emit(EVENTS.SHOW_PROXMOX_PAGE, { tab: 'machines', sel: row.dataset.sel, panel: true });
     };
 
     // ── Markup ──

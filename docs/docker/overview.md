@@ -177,4 +177,4 @@ Details and logs of a container on an agent host need **Lastboard Agent v1.3.0 o
 
 ## Starting and stopping
 
-Containers can be started, stopped or restarted from the foot of a container's panel on the Docker page by an account allowed to control Docker: the administrator on any of its hosts, a member on its own agents. The [widget](../widgets/docker.md) only reads: a click on one of its rows opens the page at that container. An account that may only look at Docker sees the same containers and their state, without the controls. An agent only accepts the calls it allows, so what it lets through still applies.
+Containers can be started, stopped or restarted from the foot of a container's panel on the Docker page by an account allowed to control Docker: the administrator on any of its hosts, a member on its own agents. The [widget](../widgets/docker.md) only reads: a click on one of its rows opens that container's panel over the board, with the same buttons. An account that may only look at Docker sees the same containers and their state, without the controls. An agent only accepts the calls it allows, so what it lets through still applies.

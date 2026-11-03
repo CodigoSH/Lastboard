@@ -22,7 +22,7 @@ Rows are coloured by what needs saying: a container that fails its health check,
 
 ### Opening the page
 
-Click a row and the Docker page opens on the **Containers** tab with that container in its side panel. **See all** opens the same tab without choosing one. The browser's Back button closes the panel first and then the page, so you land back on the board.
+Click a row and that container's side panel opens over your board, with its details, logs and — for an account allowed to — the start, restart and stop buttons; the board stays where it is. Close it with the **×**, by clicking outside it, with **Esc** or with the browser's Back button. **See all** opens the Docker page on the **Containers** tab.
 
 ![Docker widget configuration](../assets/w-p-docker.png)
 

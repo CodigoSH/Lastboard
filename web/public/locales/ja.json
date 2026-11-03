@@ -815,6 +815,8 @@
   "monitor.services": "サービス",
   "widget.monitor.name": "監視",
   "widget.monitor.description": "監視中サービスの状態・稼働率・履歴",
+  "widget.monitor.show_summary": "稼働率と応答を表示",
+  "widget.monitor.show_summary_desc": "名前の下に、表示中のサービスの過去24時間の平均稼働率と平均応答時間を表示します。",
   "monitor.select_services": "表示するサービス",
   "monitor.select_services_desc": "すべてチェックしたままにすると、あとから追加したものも含め監視中のすべてのサービスを表示します。",
   "monitor.no_services_selected": "選択したサービスは監視されなくなりました。",

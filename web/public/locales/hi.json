@@ -815,6 +815,8 @@
   "monitor.services": "सेवाएँ",
   "widget.monitor.name": "निगरानी",
   "widget.monitor.description": "आपकी निगरानी वाली सेवाओं की स्थिति, अपटाइम और इतिहास",
+  "widget.monitor.show_summary": "उपलब्धता और प्रतिक्रिया दिखाएँ",
+  "widget.monitor.show_summary_desc": "नाम के नीचे: दिखाई गई सेवाओं की पिछले 24 घंटों की औसत उपलब्धता और उनका औसत प्रतिक्रिया समय।",
   "monitor.select_services": "दिखाने के लिए सेवाएँ",
   "monitor.select_services_desc": "सभी चुनी रहने दें ताकि हर निगरानी वाली सेवा दिखे, बाद में जोड़ी गई भी।",
   "monitor.no_services_selected": "चुनी गई सेवाओं की निगरानी अब नहीं हो रही है।",

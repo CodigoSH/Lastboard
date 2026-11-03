@@ -815,6 +815,8 @@
   "monitor.services": "سرویس‌ها",
   "widget.monitor.name": "پایش",
   "widget.monitor.description": "وضعیت، در دسترس‌بودن و تاریخچهٔ سرویس‌هایی که پایش می‌کنید",
+  "widget.monitor.show_summary": "نمایش دسترس‌پذیری و پاسخ",
+  "widget.monitor.show_summary_desc": "زیر نام: میانگین دسترس‌پذیری ۲۴ ساعت گذشته‌ی سرویس‌های نمایش‌داده‌شده و میانگین زمان پاسخ آن‌ها.",
   "monitor.select_services": "سرویس‌های نمایش‌داده‌شده",
   "monitor.select_services_desc": "همه را تیک‌خورده بگذارید تا هر سرویس پایش‌شده نمایش داده شود، حتی مواردی که بعداً اضافه می‌کنید.",
   "monitor.no_services_selected": "سرویس‌های انتخاب‌شده دیگر پایش نمی‌شوند.",

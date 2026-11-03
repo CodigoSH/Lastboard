@@ -815,6 +815,8 @@
   "monitor.services": "সার্ভিস",
   "widget.monitor.name": "পর্যবেক্ষণ",
   "widget.monitor.description": "আপনি যেসব সার্ভিস পর্যবেক্ষণ করেন তাদের অবস্থা, আপটাইম ও ইতিহাস",
+  "widget.monitor.show_summary": "উপলব্ধতা ও সাড়া দেখান",
+  "widget.monitor.show_summary_desc": "নামের নিচে: দেখানো সেবাগুলোর গত ২৪ ঘণ্টার গড় উপলব্ধতা এবং তাদের গড় সাড়া দেওয়ার সময়।",
   "monitor.select_services": "যেসব সার্ভিস দেখাবে",
   "monitor.select_services_desc": "সবগুলো টিক দেওয়া রাখুন যাতে পর্যবেক্ষণ করা সব সার্ভিস দেখা যায়, পরে যোগ করা গুলোও।",
   "monitor.no_services_selected": "নির্বাচিত সার্ভিসগুলো আর পর্যবেক্ষণ করা হচ্ছে না।",
