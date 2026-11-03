@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.2] - 2026-11-03
+
+### Fixed
+- The response chart in the panel that opens from a bookmark's status dot showed no tooltip when the pointer passed over it, unlike the same panel on the Monitoring page. It does now.
+- A page opened only for its side panel from a tile or a status dot no longer redraws the page behind it, which also saves the work.
+
 ## [1.10.1] - 2026-11-03
 
 ### Fixed
