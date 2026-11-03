@@ -477,14 +477,9 @@ class BookmarkGrid extends HTMLElement {
             const card = statusDot.closest('[data-id]') as HTMLElement | null;
             const id = parseInt(card?.dataset.id || '0');
             if (id) {
-                const item = this.allItems.find(b => b.id === id);
-                let name = '';
-                try {
-                    const c = typeof item?.content === 'string' ? JSON.parse(item.content) : item?.content;
-                    name = c?.label || '';
-                } catch { /* ignore */ }
+                // The same panel as choosing the service on the status page, opened over the board.
                 const { eventBus, EVENTS } = await import('../../../services/EventBus');
-                eventBus.emit(EVENTS.SHOW_MONITOR_HISTORY, { itemId: id, name });
+                eventBus.emit(EVENTS.SHOW_MONITOR_OVERVIEW, { tab: 'services', sel: String(id), panel: true });
             }
             return;
         }
