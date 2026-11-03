@@ -14,7 +14,7 @@ Connecting a host, the Lastboard Agent, who can use which kind of host and the D
 
 - **Under the title**, a line with the load of your hosts: the share of CPU and memory that the running containers use of what the host has. With several hosts it speaks for the busiest one. It appears once a host has said how big it is.
 - **A row for each container**: its icon, its name, the image it runs (and the host, when there is more than one), and its CPU and memory with a bar each. A container that is stopped says so instead of showing readings.
-- **A foot** that counts how many are running and, unless you turn it off, leads to the page.
+- **A foot** that counts how many are running and leads to the page. Turn the link off and the foot goes with it.
 
 The icon is the one you chose for the container on the Docker page, or else the icon of the bookmark that serves it. A container with neither wears the board's own default.
 
@@ -48,7 +48,7 @@ Hosts that don't answer say so in their own section, and their containers keep w
 ### Readings and the link to the page
 
 - **Readings shown**: CPU and RAM, each on its own. A reading you turn off disappears from the line under the title and from every row, and when both are off the widget stops asking the hosts for them.
-- **Show the link to the page**: turn it off to hide the link in the foot. Clicking a row still opens the page.
+- **Show the link to the page**: turn it off to hide the foot, the count with it. Clicking a row still opens the page.
 
 ### When a host stops answering
 

@@ -16,12 +16,12 @@ describe('the Monitoring widget says', () => {
         expect(r.extra).toContain('sh-beats');
         expect(r.tone).toBe('ok');
     });
-    test('the name and the icon set here win over the bookmark\'s, by the service\'s id', () => {
-        const spec = monitorShell(input([row()], { itemConfig: { '1': { label: 'Movies', icon: 'film' } } }));
-        expect(spec.rows[0].name).toBe('Movies');
+    test('the icon set here wins over the bookmark\'s, by the service\'s id; the name is always the bookmark\'s', () => {
+        const spec = monitorShell(input([row()], { itemConfig: { '1': { icon: 'film' } } }));
         expect(spec.rows[0].face).toBe('/icons/film');
-        const other = monitorShell(input([row({ item_id: 2 })], { itemConfig: { '1': { label: 'Movies' } } }));
-        expect(other.rows[0].name).toBe('Plex');
+        expect(spec.rows[0].name).toBe('Plex');
+        const other = monitorShell(input([row({ item_id: 2 })], { itemConfig: { '1': { icon: 'film' } } }));
+        expect(other.rows[0].face).toBe('/icons/plex');
     });
     test('a service that is down is red, one never checked is grey and has no readings', () => {
         const spec = monitorShell(input([row({ item_id: 1, status: 'down' }), row({ item_id: 2, status: 'none', uptime_pct: -1, latency_ms: null })]));
@@ -69,8 +69,8 @@ describe('the strip of readings', () => {
 });
 
 describe('what is stored for a service', () => {
-    test('reads only names and icons, and nothing for an entry that says neither', () => {
-        expect(readItemConfig({ '1': { label: ' Movies ', icon: 'film' }, '2': { label: '' }, '3': 'x', '4': { icon: 5 } })).toEqual({ '1': { label: 'Movies', icon: 'film' } });
+    test('reads only icons: a name saved by an earlier beta is dropped, and so is an entry that says nothing', () => {
+        expect(readItemConfig({ '1': { label: ' Movies ', icon: 'film' }, '2': { label: 'Only a name' }, '3': 'x', '4': { icon: 5 } })).toEqual({ '1': { icon: 'film' } });
         expect(readItemConfig(undefined)).toEqual({});
         expect(readItemConfig('garbage')).toEqual({});
     });

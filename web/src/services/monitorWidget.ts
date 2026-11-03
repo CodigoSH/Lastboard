@@ -19,10 +19,11 @@ export interface WRow {
     icon?: string;
 }
 
-/** What is set on one service in this widget. */
+/**
+ * What is set on one service in this widget: only an icon. A service is a bookmark, and its name is the bookmark's,
+ * so it is changed there; a name saved by an earlier beta is read and ignored.
+ */
 export interface ItemCfg {
-    /** A name to show instead of the bookmark's. */
-    label?: string;
     /** An icon to show instead of the bookmark's: an address or the name of one. */
     icon?: string;
 }
@@ -46,7 +47,7 @@ export const BEATS = 30;
 
 const uptimeTone = (pct: number): Tone => (pct >= 99 ? 'ok' : pct >= 95 ? 'warn' : 'bad');
 
-/** What is stored for a service, read back tolerantly: anything that is not a name or an icon is not there. */
+/** What is stored for a service, read back tolerantly: anything that is not an icon is not there. */
 export function readItemConfig(raw: unknown): Record<string, ItemCfg> {
     const out: Record<string, ItemCfg> = {};
     if (!raw || typeof raw !== 'object') return out;
@@ -54,9 +55,8 @@ export function readItemConfig(raw: unknown): Record<string, ItemCfg> {
         if (!v || typeof v !== 'object') continue;
         const e = v as Record<string, unknown>;
         const entry: ItemCfg = {};
-        if (typeof e.label === 'string' && e.label.trim()) entry.label = e.label.trim();
         if (typeof e.icon === 'string' && e.icon.trim()) entry.icon = e.icon.trim();
-        if (entry.label || entry.icon) out[id] = entry;
+        if (entry.icon) out[id] = entry;
     }
     return out;
 }
@@ -81,7 +81,7 @@ function rowOf(r: WRow, i: MonitorShellInput): ShellRow {
     return {
         sel: String(r.item_id),
         face: icon ? i.resolveIcon(icon) : '',
-        name: cfg.label || r.name,
+        name: r.name,
         tone: r.status === 'down' ? 'bad' : r.status === 'up' ? 'ok' : 'off',
         metrics: readings,
         extra: beatsHtml(r, i),

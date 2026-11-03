@@ -38,9 +38,13 @@ describe('the body of an infrastructure widget', () => {
         const spec = { summary: [{ label: 'CPU', text: '5%', pct: 5 }], rows: [row()], foot: 'Running: 1/1' };
         const without = shellHtml(spec);
         expect(without).toContain('sh-sum');
-        expect(without).toContain('Running: 1/1');
+        // The foot exists for the link: without it there is no bar, and no count either.
+        expect(without).not.toContain('sh-foot');
+        expect(without).not.toContain('Running: 1/1');
         expect(without).not.toContain('data-act="all"');
-        expect(shellHtml({ ...spec, seeAll: 'See all' })).toContain('data-act="all"');
+        const withLink = shellHtml({ ...spec, seeAll: 'See all' });
+        expect(withLink).toContain('data-act="all"');
+        expect(withLink).toContain('Running: 1/1');
         expect(shellHtml({ ...spec, summary: [] })).not.toContain('sh-sum');
     });
     test('a state replaces the whole body', () => {

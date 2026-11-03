@@ -20,7 +20,7 @@ A running machine has a green icon frame, a stopped one is grey. A machine that 
 
 A virtual machine reports the size of its disk only when it runs the guest agent; one that does not say has no disk figure rather than a zero. Containers always report it.
 
-The foot counts how many are running — *Running: 23/26* — and, unless you turn it off, links to the full [Proxmox page](../proxmox/overview.md).
+The foot counts how many are running — *Running: 23/26* — and links to the full [Proxmox page](../proxmox/overview.md). Turn the link off and the foot goes with it.
 
 > **Requires a connection.** The widget reads whatever hosts are configured in **Settings → Proxmox**; without one it says so. See [Proxmox](../proxmox/overview.md) for the token and the four commands that create it.
 
@@ -47,7 +47,7 @@ A real host has more machines than a tile has room — measured on one with twen
 | Show new machines automatically | On | Whether a machine that appears after you saved is shown straight away |
 | Show node health | On | The line under the title with the CPU, memory and disk of the busiest node |
 | Readings shown | All three | CPU, RAM and disk, each on its own. A reading you turn off disappears from the line under the title and from every row |
-| Show the link to the page | On | The link in the foot. Clicking a row still opens the page |
+| Show the link to the page | On | The link in the foot, and the foot with it. Clicking a row still opens the page |
 | Refresh | 30s | How often the widget asks the server for fresh data |
 
 ## Choosing and arranging the machines

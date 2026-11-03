@@ -607,18 +607,14 @@ class WidgetConfigModal extends HTMLElement {
                 .map(row => parseInt(row.dataset.id || '0', 10)).filter(id => id > 0);
             if (arranged.length) newContent.itemOrder = mergeOrder(arranged, newContent.itemOrder);
 
-            // A name and an icon of this widget's own for a service, by its id. Only what was set is kept; a
+            // An icon of this widget's own for a service, by its id. Only what was set is kept; a
             // service this screen did not list (the list did not load) keeps what it had.
-            const itemConfig: Record<string, { label?: string; icon?: string }> = { ...(newContent.itemConfig || {}) };
+            const itemConfig: Record<string, { icon?: string }> = { ...(newContent.itemConfig || {}) };
             this.shadowRoot?.querySelectorAll<HTMLElement>('.monitor-service-item').forEach(row => {
                 const id = row.dataset.id;
                 if (!id) return;
-                const label = row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '';
                 const icon = row.dataset.icon || '';
-                const entry: { label?: string; icon?: string } = {};
-                if (label) entry.label = label;
-                if (icon) entry.icon = icon;
-                if (entry.label || entry.icon) itemConfig[id] = entry; else delete itemConfig[id];
+                if (icon) itemConfig[id] = { icon }; else delete itemConfig[id];
             });
             if (Object.keys(itemConfig).length) newContent.itemConfig = itemConfig; else delete newContent.itemConfig;
             this.storeCommonFields(newContent, []);
@@ -1611,7 +1607,7 @@ class WidgetConfigModal extends HTMLElement {
                            ${all || selected.includes(r.item_id) ? 'checked' : ''} />
                 </label>
                 <button type="button" class="mon-face" data-pick-icon title="${esc(i18n.t('proxmox.icon_set'))}" aria-label="${esc(i18n.t('proxmox.icon_set'))}">${face ? `<img src="${esc(resolveIconUrl(face))}" alt="">` : SHELL_FALLBACK}</button>
-                <input type="text" class="docker-label" value="${esc(own.label || '')}" placeholder="${esc(r.name)}" />
+                <span class="monitor-service-name">${esc(r.name) || '—'}</span>
             </div>`;
         }).join('');
         bindRowReorder(box, this.shadowRoot!, { row: '.monitor-service-item', handle: '.row-grip' });

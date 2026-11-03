@@ -81,7 +81,9 @@ export function shellHtml(s: ShellSpec): string {
     if (s.state !== undefined) return `<div class="sh-state">${e(s.state)}</div>`;
     const summary = s.summary.length ? `<div class="sh-sum">${s.summary.map(m => metricHtml(m, true)).join('')}</div>` : '';
     const link = s.seeAll ? `<button type="button" class="sh-more" data-act="all">${e(s.seeAll)} →</button>` : '';
-    return `${summary}<div class="sh-rows">${s.rows.map(rowHtml).join('')}</div><div class="sh-foot"><span>${e(s.foot)}</span>${link}</div>`;
+    // The foot exists for the link: without it there is no bar, and the count goes with it.
+    const foot = s.seeAll ? `<div class="sh-foot"><span>${e(s.foot)}</span>${link}</div>` : '';
+    return `${summary}<div class="sh-rows">${s.rows.map(rowHtml).join('')}</div>${foot}`;
 }
 
 /** The look of it. Every colour is the theme's; every edge is logical, so the right-to-left languages mirror on their own. */
