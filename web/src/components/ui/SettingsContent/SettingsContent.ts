@@ -21,6 +21,7 @@ import '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
 import { SECRET_MASK, secretChange } from '../../../services/secretField';
+import { ALERT_TEXT_KEYS } from './alertTexts';
 import { loadPush, enablePush, disablePush, removePushDevice, pushIdle, type PushView } from '../../../services/pushClient';
 import { proxmoxPayload } from './proxmoxPayload';
 import {
@@ -55,6 +56,8 @@ class SettingsContent extends HTMLElement {
         notify_type: string; notify_url: string; notify_has_token: boolean; fail_threshold: number;
         // Write-only: sent when typed or removed, never received.
         notify_token?: string; clear_notify_token?: boolean;
+        // The wording this account chose for its alerts; empty is the translated default.
+        text_down_title?: string; text_down_body?: string; text_up_title?: string; text_up_body?: string;
     } = { mode: 'tab', interval_sec: 300, alerts_enabled: false, notify_type: 'none', notify_url: '', notify_has_token: false, fail_threshold: 1 };
     /**
      * Whether the values above came from the server. The object starts as a
@@ -233,6 +236,9 @@ class SettingsContent extends HTMLElement {
                 case 'test-notify':
                     this.testNotify();
                     break;
+                case 'alert-texts-reset':
+                    this.saveMonitoring({ text_down_title: '', text_down_body: '', text_up_title: '', text_up_body: '' });
+                    break;
                 case 'push-enable':
                     this.changePush(() => enablePush(deviceName(navigator.userAgent)));
                     break;
@@ -359,6 +365,12 @@ class SettingsContent extends HTMLElement {
                 case 'notify-url':
                     this.saveMonitoring({ notify_url: (el as HTMLInputElement).value.trim() });
                     break;
+                case 'alert-text': {
+                    // Only the four known fields, whatever the markup says.
+                    const key = (el as HTMLElement).dataset.textKey;
+                    if (key && ALERT_TEXT_KEYS.includes(key)) this.saveMonitoring({ [key]: (el as HTMLInputElement).value });
+                    break;
+                }
                 case 'notify-token': {
                     // The box shows dots when one is saved: what happened to them decides.
                     const change = secretChange((el as HTMLInputElement).value, this.monitoring.notify_has_token);

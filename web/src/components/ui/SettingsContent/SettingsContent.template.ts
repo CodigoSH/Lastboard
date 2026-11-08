@@ -4,6 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 import { SECRET_MASK } from '../../../services/secretField';
 import type { PushView } from '../../../services/pushClient';
+import { ALERT_TEXT_FIELDS, ALERT_MARKERS } from './alertTexts';
 import type { AccountDockerHost } from '../../../services/dockerHostList';
 import { roleOrLabel } from '../../../services/accountAccess';
 import { userDialogTemplate, MAX_LABEL } from './userDialog.template';
@@ -520,6 +521,24 @@ export const usersTemplate = (users: any[]) => `
  * thing.
  */
 /**
+ * The wording of the alerts: four texts an account may write for itself. Empty means the translated
+ * default, which the field shows as its placeholder so there is always something to start from.
+ */
+const alertTextsTemplate = (monitoring: Record<string, unknown>) => `
+                <div class="settings-content__form-group" style="margin-top: 14px;">
+                    <label class="settings-content__label">${esc(i18n.t('settings.alert_texts'))}</label>
+                    <p class="settings-content__text-dim" style="font-size: 12px; margin: 0 0 10px 0;">${esc(i18n.t('settings.alert_texts_desc'))}</p>
+                    ${ALERT_TEXT_FIELDS.map(f => `
+                    <label class="settings-content__label" style="font-size: 12px; margin-top: 8px;">${esc(i18n.t(f.label))}</label>
+                    <input type="text" class="settings-content__input" data-change="alert-text" data-text-key="${f.key}" maxlength="200" value="${esc(String(monitoring[f.key] ?? ''))}" placeholder="${esc(i18n.t(f.fallback))}" spellcheck="false" />`).join('')}
+                    <p class="settings-content__text-dim" style="font-size: 11px; margin: 8px 0 0 0;">${esc(i18n.t('settings.alert_texts_markers'))} ${ALERT_MARKERS.map(m => `<code>{${m}}</code>`).join(' ')}</p>
+                </div>
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info"></div>
+                    <app-button variant="ghost" data-action="alert-texts-reset">${esc(i18n.t('settings.alert_texts_reset'))}</app-button>
+                </div>`;
+
+/**
  * The Push channel: which devices of this account get an alert as a notification, and whether this
  * browser is one of them. Nothing is asked of the browser until the button is pressed.
  *
@@ -540,7 +559,7 @@ const pushTemplate = (push: PushView | undefined) => {
                     <div class="settings-content__action-info">
                         <h3>${esc(here ? i18n.t('push.this_device_on') : i18n.t('push.this_device_off'))}</h3>
                     </div>
-                    <app-button variant="${here ? 'secondary' : 'primary'}" data-action="${here ? 'push-disable' : 'push-enable'}" ${p.busy ? 'disabled' : ''}>${esc(here ? i18n.t('push.disable') : i18n.t('push.enable'))}</app-button>
+                    <app-button variant="${here ? 'ghost' : 'primary'}" data-action="${here ? 'push-disable' : 'push-enable'}" ${p.busy ? 'disabled' : ''}>${esc(here ? i18n.t('push.disable') : i18n.t('push.enable'))}</app-button>
                 </div>`;
     const rows = p.devices.map(d => {
         const delivered = d.last_ok_at ? i18n.t('push.last_delivered', { date: i18n.formatDateTime(d.last_ok_at, { dateStyle: 'medium', timeStyle: 'short' }) }) : i18n.t('push.never_delivered');
@@ -660,6 +679,7 @@ export const monitoringTemplate = (monitoring: {
                     </div>
                     <app-select id="fail-threshold" value="${monitoring.fail_threshold}"></app-select>
                 </div>
+                ${alertTextsTemplate(monitoring)}
                 ` : ''}
                 ` : ''}
             </div>
