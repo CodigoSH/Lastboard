@@ -88,9 +88,9 @@ When **24/7 monitoring** is on, Lastboard can send an alert when a service goes 
 | Setting | Description |
 | :--- | :--- |
 | **Alerts** | Turns notifications on. Everything below only appears once it is on. |
-| **Notification method** | **None**, **ntfy**, **Gotify**, or **Webhook**. |
-| **URL** | The ntfy topic URL, the Gotify server URL, or your webhook endpoint. |
-| **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. Once saved it is never shown: the field holds dots, so you can tell one is there, and has no reveal option. Type a new token to replace it; empty the field to remove it. |
+| **Notification method** | **None**, **ntfy**, **Gotify**, **Webhook**, or **Push notifications**. |
+| **URL** | The ntfy topic URL, the Gotify server URL, or your webhook endpoint. Not used by Push notifications. |
+| **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. Once saved it is never shown: the field holds dots, so you can tell one is there, and has no reveal option. Type a new token to replace it; empty the field to remove it. Not used by Push notifications. |
 | **Fail threshold** | How many **consecutive** failed checks trigger a down alert: **1, 2, 3, or 5**. A higher value avoids alerts on brief blips. |
 
 Use **Send test** to fire a test notification with the current settings and confirm delivery before relying on it.
@@ -109,5 +109,31 @@ Use **Send test** to fire a test notification with the current settings and conf
   }
   ```
   If a token is set, it is sent as an `Authorization: Bearer …` header.
+- **Push notifications** — a notification on the phones, tablets and computers you turn it on for, even when Lastboard is closed. An outage stays on the screen until you dismiss it; a recovery replaces the outage it ends. See below.
+
+### Push notifications
+
+Push notifications reach a device while no Lastboard tab is open, which none of the other methods do on their own: ntfy and Gotify need their own app, and a webhook needs something on the other end. It is **off until you choose it**, and nothing is asked of your browser until you press the button.
+
+1. In **Settings → Monitoring**, turn on **24/7 monitoring** and **Alerts**, and choose **Push notifications** as the method.
+2. On each device you want alerted, open Lastboard, go to the same place and press **Enable**. The browser asks permission to show notifications; allow it. This has to be done on the device itself, from a tap, because a browser will not let a page grant that for another.
+3. Press **Send test**. A notification should arrive on every device you enabled.
+
+Your enabled devices are listed under **Your devices** with the last time something was delivered to each. **Remove** takes one off the list, and **Disable** on the current device also tells the browser to let go of it. Each account has its own devices: alerts for the services on your boards go to your devices, and nobody else can see or remove them. An account can have up to 20.
+
+**Where it works**
+
+| Device | What it needs |
+| :--- | :--- |
+| Android — Chrome, Edge, Firefox, Samsung Internet | Nothing more. Installing Lastboard as an app is optional. |
+| Windows, macOS, Linux — Chrome, Edge, Firefox | Nothing more, but the browser has to be running (minimised, or in the tray, is fine). |
+| macOS — Safari | macOS 13 or later. |
+| **iPhone and iPad** | iOS or iPadOS 16.4 or later, and Lastboard **added to the Home Screen** (Share → Add to Home Screen) and opened from there. In a Safari tab the browser offers no push at all, so the page says to install first. |
+
+Two requirements apply everywhere. The page must be served over **HTTPS** (or be `localhost`): browsers do not allow notifications, or the service worker that receives them, on a plain `http://` address. And the device needs internet access to its browser maker's push service even if Lastboard itself is only on your network.
+
+**How it gets there, and what that means for privacy.** Lastboard does not deliver these itself. When a browser subscribes, its maker's push service (Google for Chrome, Chromium-based browsers and Android; Apple for Safari and the iPhone and iPad Home Screen apps; Mozilla for Firefox; Microsoft for Edge) gives it an address, and Lastboard sends each notification there. The message is **encrypted for that one browser** ([RFC 8291](https://www.rfc-editor.org/rfc/rfc8291)) and signed by your instance ([VAPID, RFC 8292](https://www.rfc-editor.org/rfc/rfc8292)), so the push service carries it without being able to read it. What it can see is that your instance notified a device, and when. If that is more than you want to share, use ntfy or Gotify instead, which you can host yourself. Lastboard only ever sends to addresses on those push services' own domains. See [Security](../security/overview.md#push-notifications).
+
+Subscriptions are stored on the server, in your database, and stay out of backups and exports: restoring onto another instance means each device presses **Enable** again. The method itself (Push notifications) is part of a backup, so a restored instance keeps asking for it.
 
 > Alerts are driven by the server-side scheduler, so they require **24/7 monitoring**. With it off, nothing is running to notice an outage.

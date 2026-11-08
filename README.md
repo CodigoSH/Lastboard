@@ -96,7 +96,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Check interval** of 1, 5, 10 or 30 minutes, with **30 days of history**, pruned daily.
 - **A searchable status page** (in 24/7 mode) with every service's state, a strip of recent checks and its 24-hour, 7-day and 30-day uptime, and a tab with every outage — what was down, why, when and for how long.
 - **Per-service detail** over 24 hours, 7 days or 30 days: uptime percentages, current and average response time, a latency chart with a hover crosshair, a heartbeat strip, and an outage table with durations and recoveries.
-- **Alerts down and up** via **ntfy**, **Gotify** or a **webhook**, with a failure threshold (1, 2, 3 or 5 consecutive failures) so a blip doesn't wake you, and a *Send test* button to prove delivery before you rely on it.
+- **Alerts down and up** via **ntfy**, **Gotify**, a **webhook** or **push notifications** to your phone and computers even with Lastboard closed (they go through your browser maker's push service, end-to-end encrypted, and only if you turn them on), with a failure threshold (1, 2, 3 or 5 consecutive failures) so a blip doesn't wake you, and a *Send test* button to prove delivery before you rely on it.
 - **Private services just work** — the probe runs from your server, so `10.x`, `192.168.x`, `.local` and self-signed certificates need no extra configuration.
 
 ### Docker

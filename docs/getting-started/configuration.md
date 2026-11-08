@@ -13,6 +13,7 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 | `TZ` | `UTC` | Timezone for the application (e.g., `America/New_York`). |
 | `LOG_FORMAT` | `text` | Log output format. Use `json` for structured logging. |
 | `DEMO_ONLY` | `false` | Set to `true` to run purely in a frontend-only demo mode (no auth, no persistence). Responses also carry `X-Robots-Tag: noindex, nofollow`, so a public demo stays out of search results. |
+| `PUSH_SUBJECT` | `https://git.codigosh.com/CodigoSH/Lastboard` | Who a browser maker's push service may contact about this server, as an `https:` or `mailto:` address. It is sent, signed, with every push notification, and only matters if you use the **Push notifications** alert method. See [Push notifications](../security/overview.md#push-notifications). |
 | `TRUST_PROXY` | `false` | Enable reading the real client IP from `X-Forwarded-For`. Set to `true` if behind a proxy. |
 | `TRUST_PROXY_HOPS` | `1` | How many proxies sit in front of Lastboard. Only change it if a request passes through more than one before reaching the app. |
 | `AUTH_PROXY_HEADER` | — | Sign in through a proxy that already signed the person in (Authelia, Authentik, oauth2-proxy…): the header that carries the user name, such as `Remote-User`. Off unless set together with `AUTH_PROXY_TRUSTED`. See [Signing in through a proxy](#signing-in-through-a-proxy). |

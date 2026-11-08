@@ -89,8 +89,8 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **Per-service detail** over 24 hours, 7 days or 30 days: uptime percentages, current and
   average response time, a latency chart with a hover crosshair, a heartbeat strip, and a table
   of outages with duration and whether the service recovered.
-- **Alerts on the way down and on the way back up**, via **ntfy**, **Gotify** or a **webhook**,
-  with a configurable failure threshold (1, 2, 3 or 5 consecutive failures) so a blip does not
+- **Alerts on the way down and on the way back up**, via **ntfy**, **Gotify**, a **webhook** or
+  **push notifications** to your devices even with Lastboard closed, with a configurable failure threshold (1, 2, 3 or 5 consecutive failures) so a blip does not
   wake you, and a *Send test* button to prove delivery before you rely on it.
 - **Private services just work** — the probe runs from your server, so `10.x`, `192.168.x` and
   `.local` addresses and self-signed certificates need no extra configuration.

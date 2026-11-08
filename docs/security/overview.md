@@ -191,6 +191,44 @@ See [Headers](headers.md) for HSTS in detail.
   sanitizer with an explicit allow-list of tags and attributes before it touches the DOM. No
   third-party sanitization library is involved.
 
+## Push notifications
+
+Push notifications are an alert method like ntfy or a webhook, with one difference that matters for
+privacy: **the message goes through a company you did not choose.** It is **off until an account
+turns it on**, and Lastboard asks a browser for nothing before that. To reach a browser whose page
+is closed, the notification is sent to the push service of the browser's maker — Google for Chrome,
+other Chromium browsers and Android, Apple for Safari and for the iPhone and iPad Home Screen,
+Mozilla for Firefox, Microsoft for Edge — which holds it until the device collects it.
+
+- **What the push service can read: nothing of the message.** Each notification is encrypted for the
+  one browser it is for ([RFC 8291](https://www.rfc-editor.org/rfc/rfc8291), `aes128gcm`), with keys
+  that never leave that browser and your server. **What it can see** is that your instance sent a
+  message to that device, when, and roughly how long it was; and, as the sender, your server's IP
+  address and the name your instance gives itself (below).
+- **What the message says** is the name of the service and a short status line, such as "My NAS
+  is down". No credentials, addresses or tokens are in it. If that wording is too revealing for
+  you to have on a lock screen, use a method you host yourself.
+- **Your instance signs what it sends** ([VAPID, RFC 8292](https://www.rfc-editor.org/rfc/rfc8292)),
+  so a subscription only accepts messages from the server that made it. The key pair is generated
+  the first time it is needed and kept in your database; the private half is never sent to a
+  browser and is **not part of a backup**. The signature names a contact, which by default is this
+  project's address; set `PUSH_SUBJECT` to an `https:` or `mailto:` address of your own to replace
+  it. Push services use it to get in touch with the operator of a server that misbehaves.
+- **The addresses come from browsers, so they are not trusted.** A subscription is only accepted,
+  and only ever sent to, when it is an `https` address on a push service's own domain
+  (`fcm.googleapis.com`, `*.push.services.mozilla.com`, `*.push.apple.com`,
+  `*.notify.windows.com`), on the usual port and with no credentials in it. Without that rule a
+  subscription would be a way to make the server request any address. A redirect is followed only
+  within the same origin, since the request carries a signed token meant for that one service, and
+  the connection uses the same guard as every other outbound request.
+- **Subscriptions are the account's own.** The list a page receives holds a name and a date, never
+  the address or keys; another account cannot list or remove them; an account is limited to 20.
+  A subscription the push service reports as gone is forgotten on the next send. They are not
+  included in backups or exports.
+
+If you would rather nothing about your alerts passes through a third party, do not enable it: ntfy
+and Gotify can both run on your own network, and the other alert methods are unchanged.
+
 ## The Proxmox token
 
 The Proxmox integration authenticates with **API tokens, never passwords**, and a token secret
