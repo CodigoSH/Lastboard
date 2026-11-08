@@ -57,7 +57,8 @@ jobs:
       # The Go build cache and the module cache, so the dependency graph (SQLite alone is most
       # of it) is compiled once and not on every push. The key is the Go version plus go.sum and
       # has no commit in it on purpose: a hit restores and uploads nothing, and the entry is only
-      # written again when a dependency or the toolchain changes. Our own packages recompile
+      # written again when a dependency or the toolchain changes (the restore key then starts
+      # from the previous entry, so only what changed is compiled). Our own packages recompile
       # either way, because Go keys them by content.
       - name: Locate the Go caches
         id: gocache
