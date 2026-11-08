@@ -160,9 +160,11 @@ bootstrap(async () => {
     // the Proxmox tile's "see all" is, so it also works from a new tab). The
     // request is taken out of the address first: left there, a reload would open
     // the page again and closing it would still leave the bar saying it was open.
-    if (viewFromSearch(window.location.search) === 'proxmox') {
+    // "/?view=monitor" is where a tap on an alert notification lands.
+    const asked = viewFromSearch(window.location.search);
+    if (asked) {
         history.replaceState(history.state, '', withoutView(window.location.pathname, window.location.search, window.location.hash));
-        (proxmoxPage as any).open();
+        ((asked === 'monitor' ? monitorPage : proxmoxPage) as any).open();
     }
 
     // Lives outside the settings panel so an update keeps running (and keeps

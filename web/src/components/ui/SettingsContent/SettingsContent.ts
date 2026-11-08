@@ -21,6 +21,7 @@ import '../Select/Select';
 import '../ColorPicker/ColorPicker';
 import '../IconSelectionModal/IconSelectionModal';
 import { SECRET_MASK, secretChange } from '../../../services/secretField';
+import { loadPush, enablePush, disablePush, removePushDevice, pushIdle, type PushView } from '../../../services/pushClient';
 import { proxmoxPayload } from './proxmoxPayload';
 import {
     DEFAULT_PROFILE, PROFILES, createBody, grantsFrom, profileOf, setBool, setLevel, updateBody,
@@ -65,6 +66,8 @@ class SettingsContent extends HTMLElement {
      */
     private monitoringLoaded = false;
     private monitoringFailed = false;
+    /** The account's push devices and whether this browser can be one. Loaded only when the alert channel is Push. */
+    private push: PushView = pushIdle;
     /**
      * Bumped on every save so a slower GET that started earlier cannot land
      * afterwards and paint the state the user just changed.
@@ -229,6 +232,15 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'test-notify':
                     this.testNotify();
+                    break;
+                case 'push-enable':
+                    this.changePush(() => enablePush(deviceName(navigator.userAgent)));
+                    break;
+                case 'push-disable':
+                    this.changePush(() => disablePush(this.push.thisDevice));
+                    break;
+                case 'push-remove':
+                    this.changePush(() => removePushDevice(Number(el.dataset.pushId)));
                     break;
                 case 'export-native':
                     importService.exportNative();
@@ -827,12 +839,42 @@ class SettingsContent extends HTMLElement {
             this.monitoring = loaded;
             this.monitoringLoaded = true;
             this.render();
+            if (loaded.notify_type === 'push') this.fetchPush();
         } catch (e) {
             console.error("Failed to fetch monitoring settings", e);
             if (seq !== this.monitoringSeq) return;
             this.monitoringFailed = true;
             this.render();
         }
+    }
+
+    async fetchPush() {
+        try {
+            this.push = await loadPush();
+        } catch (e) {
+            console.error('Failed to load push devices', e);
+        }
+        this.render();
+    }
+
+    /**
+     * Runs one change to this account's push devices and redraws. The browser's own refusal (the person
+     * said no to the permission prompt) and a server's are told apart, because only the first is
+     * something the person can fix, and only in the browser.
+     */
+    async changePush(change: () => Promise<void>) {
+        if (this.push.busy) return;
+        this.push = { ...this.push, busy: true };
+        this.render();
+        try {
+            await change();
+        } catch (e) {
+            const denied = e instanceof Error && e.message === 'push.permission_denied';
+            if (window.notifier) window.notifier.show(i18n.t(denied ? 'push.permission_denied' : 'push.failed'), 'error');
+        }
+        await this.fetchPush();
+        this.push = { ...this.push, busy: false };
+        this.render();
     }
 
     // Global (system-wide) setting, so it goes through the monitor endpoint
@@ -1672,7 +1714,7 @@ class SettingsContent extends HTMLElement {
             // pointing there lands on the section that absorbed it.
             case 'monitoring':
             case 'notifications':
-                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed, accessAllows(userStore.getUser(), 'watch_alerts'));
+                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed, accessAllows(userStore.getUser(), 'watch_alerts'), this.push);
 
             case 'docker':
                 return dockerTemplate(this.docker, this.dockerLoaded, this.dockerFailed, this.dockerStatus);
@@ -1999,9 +2041,12 @@ class SettingsContent extends HTMLElement {
                 { value: 'ntfy', label: 'ntfy' },
                 { value: 'gotify', label: 'Gotify' },
                 { value: 'webhook', label: i18n.t('settings.notify_webhook') },
+                { value: 'push', label: i18n.t('settings.notify_push') },
             ];
-            notifyTypeSelect.addEventListener('change', (e: CustomEvent) => {
-                this.saveMonitoring({ notify_type: e.detail });
+            notifyTypeSelect.addEventListener('change', async (e: CustomEvent) => {
+                const type = e.detail;
+                await this.saveMonitoring({ notify_type: type });
+                if (type === 'push') this.fetchPush();
             });
         }
 

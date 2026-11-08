@@ -3,6 +3,7 @@ import { agentIsOld } from '../../../services/dockerShared';
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 import { SECRET_MASK } from '../../../services/secretField';
+import type { PushView } from '../../../services/pushClient';
 import type { AccountDockerHost } from '../../../services/dockerHostList';
 import { roleOrLabel } from '../../../services/accountAccess';
 import { userDialogTemplate, MAX_LABEL } from './userDialog.template';
@@ -518,10 +519,53 @@ export const usersTemplate = (users: any[]) => `
  * button that deletes your history should not look like the same kind of
  * thing.
  */
+/**
+ * The Push channel: which devices of this account get an alert as a notification, and whether this
+ * browser is one of them. Nothing is asked of the browser until the button is pressed.
+ *
+ * The privacy note is always shown here, ahead of the button: a notification goes through the
+ * maker's push service (Google, Apple, Mozilla or Microsoft), which cannot read it but learns that a
+ * device was notified. Saying so after the fact would not be saying it.
+ */
+const pushTemplate = (push: PushView | undefined) => {
+    const p = push ?? { support: 'unsupported' as const, devices: [], thisDevice: null, busy: false };
+    const here = p.thisDevice !== null;
+    const note = (text: string) => `<p class="settings-content__text-dim" style="font-size: 12px; margin: 8px 0 0 0;">${esc(text)}</p>`;
+    let control: string;
+    if (p.support === 'needs-install') control = note(i18n.t('push.needs_install'));
+    else if (p.support === 'unsupported') control = note(i18n.t('push.unsupported'));
+    else if (p.support === 'denied' && !here) control = note(i18n.t('push.denied'));
+    else control = `
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${esc(here ? i18n.t('push.this_device_on') : i18n.t('push.this_device_off'))}</h3>
+                    </div>
+                    <app-button variant="${here ? 'secondary' : 'primary'}" data-action="${here ? 'push-disable' : 'push-enable'}" ${p.busy ? 'disabled' : ''}>${esc(here ? i18n.t('push.disable') : i18n.t('push.enable'))}</app-button>
+                </div>`;
+    const rows = p.devices.map(d => {
+        const delivered = d.last_ok_at ? i18n.t('push.last_delivered', { date: i18n.formatDateTime(d.last_ok_at, { dateStyle: 'medium', timeStyle: 'short' }) }) : i18n.t('push.never_delivered');
+        return `
+                <div class="settings-content__action-row">
+                    <div class="settings-content__action-info">
+                        <h3>${esc(d.label)}${d.id === p.thisDevice ? ` · ${esc(i18n.t('push.this_device'))}` : ''}</h3>
+                        <p>${esc(delivered)}</p>
+                    </div>
+                    <app-button variant="danger" data-action="push-remove" data-push-id="${d.id}" ${p.busy ? 'disabled' : ''}>${esc(i18n.t('action.remove'))}</app-button>
+                </div>`;
+    }).join('');
+    return `
+                <div class="settings-content__form-group">
+                    <p class="settings-content__text-dim" style="font-size: 12px; margin: 0;">${esc(i18n.t('push.desc'))}</p>
+                    ${note(i18n.t('push.privacy'))}
+                </div>
+                ${control}
+                ${rows ? `<div class="settings-content__form-group"><label class="settings-content__label">${esc(i18n.t('push.devices'))}</label></div>${rows}` : ''}`;
+};
+
 export const monitoringTemplate = (monitoring: {
     mode: string; interval_sec: number; alerts_enabled: boolean;
     notify_type: string; notify_url: string; notify_has_token: boolean; fail_threshold: number;
-}, loaded: boolean, failed: boolean, mayAlert = true) => {
+}, loaded: boolean, failed: boolean, mayAlert = true, push?: PushView) => {
     // Until the server has answered there is nothing true to draw. The switches
     // used to be painted from the placeholder, so this section claimed 24/7 and
     // alerts were off before it knew — and a switch flipped in that window saved
@@ -598,6 +642,7 @@ export const monitoringTemplate = (monitoring: {
                     <app-select id="notify-type" value="${esc(monitoring.notify_type)}"></app-select>
                 </div>
                 ${monitoring.notify_type && monitoring.notify_type !== 'none' ? `
+                ${monitoring.notify_type === 'push' ? pushTemplate(push) : `
                 <div class="settings-content__form-group">
                     <label class="settings-content__label">${i18n.t('settings.notify_url')}</label>
                     <input type="text" id="notify-url" class="settings-content__input" data-change="notify-url" value="${esc(monitoring.notify_url)}" spellcheck="false" placeholder="${monitoring.notify_type === 'ntfy' ? 'https://ntfy.sh/mi-tema' : monitoring.notify_type === 'gotify' ? 'https://gotify.midominio.com' : 'https://…'}" />
@@ -607,7 +652,7 @@ export const monitoringTemplate = (monitoring: {
                     <label class="settings-content__label">${i18n.t('settings.notify_token')}</label>
                     <input type="password" id="notify-token" class="settings-content__input" data-change="notify-token" value="${monitoring.notify_has_token ? SECRET_MASK : ''}" spellcheck="false" autocomplete="new-password" placeholder="" />
                     <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${monitoring.notify_has_token ? i18n.t('settings.notify_token_saved') : i18n.t('settings.notify_token_desc')}</p>
-                </div>
+                </div>`}
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.fail_threshold')}</h3>

@@ -5,7 +5,7 @@
  * answer is a name from a closed list, never the raw parameter: an address is typed
  * by anybody and must not choose what the app opens beyond what it knows how to.
  */
-const VIEWS = ['proxmox'] as const;
+const VIEWS = ['proxmox', 'monitor'] as const;
 export type StartupView = typeof VIEWS[number];
 
 export function viewFromSearch(search: string): StartupView | null {

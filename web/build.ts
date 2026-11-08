@@ -61,8 +61,22 @@ const resultLogin = await build({
     define,
 });
 
-if (result.success && resultSetup.success && resultLogin.success) {
-    console.log("📂 Output: web/dist/bundle.js, web/dist/setup.js & web/dist/login.js");
+// The service worker for Web Push. It is served from the root (/sw.js) because a worker's scope is
+// the directory it is served from, and this one has to cover the whole site. Its name has no
+// stamp: a browser looks for a new worker by fetching this very URL, comparing the bytes and
+// bypassing its HTTP cache for it, so a changing name would only hide an update from it.
+const resultWorker = await build({
+    entrypoints: ["./web/src/sw.ts"],
+    outdir: "./web/dist",
+    minify: true,
+    sourcemap: "none",
+    target: "browser",
+    naming: "sw.js",
+    define,
+});
+
+if (result.success && resultSetup.success && resultLogin.success && resultWorker.success) {
+    console.log("📂 Output: web/dist/bundle.js, web/dist/setup.js, web/dist/login.js & web/dist/sw.js");
 
     try {
         // Copy Locales

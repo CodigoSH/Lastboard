@@ -6,6 +6,11 @@ describe('viewFromSearch', () => {
         expect(viewFromSearch('?view=proxmox')).toBe('proxmox');
     });
 
+    // Where a tap on an alert notification lands.
+    it('knows the status page', () => {
+        expect(viewFromSearch('?view=monitor')).toBe('monitor');
+    });
+
     it('finds it among other parameters', () => {
         expect(viewFromSearch('?a=1&view=proxmox&b=2')).toBe('proxmox');
     });
