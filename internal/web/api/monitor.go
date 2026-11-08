@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/alerttext"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"log/slog"
 	"net"
@@ -134,6 +135,9 @@ func (s *MonitorStore) monitoredItems(userID int) ([]MonitoredItem, error) {
 type MonitorHandler struct {
 	DB    *sql.DB
 	store *MonitorStore
+
+	// Texts are the translations an alert is written from. Nil reads as English.
+	Texts *alerttext.Catalog
 }
 
 // NewMonitorHandler builds the monitoring settings handler.
@@ -156,6 +160,28 @@ type monitorSettings struct {
 	ClearNotifyToken bool   `json:"clear_notify_token,omitempty"` // write-only: remove the saved token
 	FailThreshold    int    `json:"fail_threshold"`               // consecutive fails before a down alert
 	RetentionDays    int    `json:"retention_days"`               // how long the history is kept; read-only
+
+	// The wording this account chose for its alerts. A pointer so that "not sent" keeps what is
+	// saved (a page that has not reloaded since these existed sends the whole form without them)
+	// and "" clears the text, which brings back the translated default.
+	TextDownTitle *string `json:"text_down_title,omitempty"`
+	TextDownBody  *string `json:"text_down_body,omitempty"`
+	TextUpTitle   *string `json:"text_up_title,omitempty"`
+	TextUpBody    *string `json:"text_up_body,omitempty"`
+}
+
+// alertTextFields pairs each of the four texts with the setting that holds it.
+func (s *monitorSettings) alertTextFields() []struct {
+	key string
+	val **string
+} {
+	return []struct {
+		key string
+		val **string
+	}{
+		{keyMonTextDownTitle, &s.TextDownTitle}, {keyMonTextDownBody, &s.TextDownBody},
+		{keyMonTextUpTitle, &s.TextUpTitle}, {keyMonTextUpBody, &s.TextUpBody},
+	}
 }
 
 // resolveNotifyToken is the token a save leaves behind. Nothing typed keeps the
@@ -208,6 +234,10 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 		NotifyURL:      h.getSetting(uid, keyMonURL),
 		NotifyHasToken: h.getSetting(uid, keyMonToken) != "",
 	}
+	for _, f := range settings.alertTextFields() {
+		v := h.getSetting(uid, f.key)
+		*f.val = &v
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(settings)
@@ -218,7 +248,7 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 // often, and where its alerts go.
 func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserIDFromContext(r)
-	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
+	r.Body = http.MaxBytesReader(w, r.Body, 12*1024)
 	var s monitorSettings
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
@@ -250,7 +280,7 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, s.ClearNotifyToken)
-	if err := NewUserSettings(h.DB).SetMany(uid, map[string]string{
+	values := map[string]string{
 		keyMonMode:      s.Mode,
 		keyMonInterval:  strconv.Itoa(s.IntervalSec),
 		keyMonAlerts:    boolTo01(s.AlertsEnabled),
@@ -258,13 +288,24 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		keyMonURL:       s.NotifyURL,
 		keyMonToken:     token,
 		keyMonThreshold: strconv.Itoa(s.FailThreshold),
-	}); err != nil {
+	}
+	// Only the texts that were sent are written, cleaned; the others keep what they had.
+	for _, f := range s.alertTextFields() {
+		if *f.val != nil {
+			values[f.key] = alerttext.Clean(**f.val)
+		}
+	}
+	if err := NewUserSettings(h.DB).SetMany(uid, values); err != nil {
 		slog.Error("monitor: persisting settings failed", "error", err)
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
 	// What goes back is what is saved, without the credential.
 	s.NotifyToken, s.ClearNotifyToken, s.NotifyHasToken = "", false, token != ""
+	for _, f := range s.alertTextFields() {
+		v := h.getSetting(uid, f.key)
+		*f.val = &v
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(s)
@@ -303,7 +344,8 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 	}
 	// A test sent without a token uses the saved one: the page never has it.
 	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, false)
-	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: token}
+	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: token,
+		Lang: userLanguage(h.DB, uid), Texts: alertTemplates(h.DB, uid), Catalog: h.Texts}
 	if s.NotifyType == "push" {
 		// Its destination is the account's own browsers, so there is nothing typed to test.
 		cfg.UserID, cfg.Push = uid, NewPushSender(h.DB)
@@ -317,7 +359,7 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
-	if err := sendNotification(r.Context(), cfg, "Lastboard", "Test notification", true); err != nil {
+	if err := sendNotice(r.Context(), cfg, cfg.testNotice()); err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}

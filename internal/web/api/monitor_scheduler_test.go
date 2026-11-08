@@ -268,10 +268,10 @@ func TestAlertsGoToTheChannelOfTheAccountThatOwnsTheBookmark(t *testing.T) {
 	}
 	mu.Lock()
 	defer mu.Unlock()
-	if len(got["a"]) != 1 || got["a"][0] != "svc-of-a" {
+	if len(got["a"]) != 1 || got["a"][0] != "svc-of-a is back up" {
 		t.Errorf("account a's channel got %v, want its own recovery and nothing of b's", got["a"])
 	}
-	if len(got["b"]) != 1 || got["b"][0] != "svc-of-b" {
+	if len(got["b"]) != 1 || got["b"][0] != "svc-of-b is back up" {
 		t.Errorf("account b's channel got %v, want its own recovery", got["b"])
 	}
 }

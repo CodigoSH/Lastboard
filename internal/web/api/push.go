@@ -13,6 +13,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/alerttext"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/webpush"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
@@ -22,6 +23,9 @@ import (
 type PushHandler struct {
 	DB     *sql.DB
 	Sender *PushSender
+
+	// Texts are the translations a notification is written from. Nil reads as English.
+	Texts *alerttext.Catalog
 }
 
 func NewPushHandler(db *sql.DB) *PushHandler {
@@ -199,7 +203,9 @@ func (h *PushHandler) Delete(w http.ResponseWriter, r *http.Request) {
 // relying on it.
 func (h *PushHandler) Test(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserIDFromContext(r)
-	res, err := h.Sender.SendToUser(r.Context(), uid, PushMessage{Title: "Lastboard", Body: "Test notification", Tag: "lastboard-test", Up: true})
+	cfg := notifyConfig{Lang: userLanguage(h.DB, uid), Texts: alertTemplates(h.DB, uid), Catalog: h.Texts}
+	n := cfg.testNotice()
+	res, err := h.Sender.SendToUser(r.Context(), uid, PushMessage{Title: n.Title, Body: n.Body, Tag: "lastboard-test", Up: true})
 	switch {
 	case errors.Is(err, ErrNoPushDevices):
 		http.Error(w, "push.no_devices", http.StatusBadRequest)

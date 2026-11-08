@@ -219,6 +219,11 @@ var userSettingKeys = map[string]bool{
 	keyMonType:      false,
 	keyMonURL:       false,
 	keyMonToken:     false,
+
+	keyMonTextDownTitle: false,
+	keyMonTextDownBody:  false,
+	keyMonTextUpTitle:   false,
+	keyMonTextUpBody:    false,
 }
 
 // backupSettingKeys is the whole list of server-wide settings rows a backup carries

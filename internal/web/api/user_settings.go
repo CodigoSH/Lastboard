@@ -56,6 +56,12 @@ const (
 	keyMonType      = "monitoring_notify_type"
 	keyMonURL       = "monitoring_notify_url"
 	keyMonToken     = "monitoring_notify_token"
+
+	// The wording an account chose for its alerts; empty means the translated default.
+	keyMonTextDownTitle = "monitoring_text_down_title"
+	keyMonTextDownBody  = "monitoring_text_down_body"
+	keyMonTextUpTitle   = "monitoring_text_up_title"
+	keyMonTextUpBody    = "monitoring_text_up_body"
 )
 
 var monitoringChannelKeys = []string{keyMonAlerts, keyMonType, keyMonURL, keyMonToken}

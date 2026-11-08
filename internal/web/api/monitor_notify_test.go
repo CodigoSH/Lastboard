@@ -61,7 +61,7 @@ func TestSendNtfyOutage(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "ntfy", URL: srv.URL, Token: "tok123"}
 
-	if err := sendNtfy(context.Background(), cfg, "Radarr", "Service is down", false); err != nil {
+	if err := sendNtfy(context.Background(), cfg, Notice{Service: "Radarr", Title: "Radarr", Body: "Service is down"}); err != nil {
 		t.Fatalf("sendNtfy: %v", err)
 	}
 	if got.method != http.MethodPost {
@@ -89,7 +89,7 @@ func TestSendNtfyRecovery(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "ntfy", URL: srv.URL}
 
-	if err := sendNtfy(context.Background(), cfg, "Radarr", "Service recovered", true); err != nil {
+	if err := sendNtfy(context.Background(), cfg, Notice{Service: "Radarr", Title: "Radarr", Body: "Service recovered", Up: true}); err != nil {
 		t.Fatalf("sendNtfy: %v", err)
 	}
 	if got.header.Get("Tags") != "white_check_mark" {
@@ -111,7 +111,7 @@ func TestSendGotify(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "gotify", URL: srv.URL + "/", Token: "abc"}
 
-	if err := sendGotify(context.Background(), cfg, "Sonarr", "Service is down"); err != nil {
+	if err := sendGotify(context.Background(), cfg, Notice{Service: "Sonarr", Title: "Sonarr", Body: "Service is down"}); err != nil {
 		t.Fatalf("sendGotify: %v", err)
 	}
 	if got.path != "/message" {
@@ -139,7 +139,7 @@ func TestSendGotifyWithoutToken(t *testing.T) {
 	srv, got := notifyServer(t, http.StatusOK)
 	cfg := notifyConfig{Type: "gotify", URL: srv.URL}
 
-	if err := sendGotify(context.Background(), cfg, "Sonarr", "down"); err != nil {
+	if err := sendGotify(context.Background(), cfg, Notice{Service: "Sonarr", Title: "Sonarr", Body: "down"}); err != nil {
 		t.Fatalf("sendGotify: %v", err)
 	}
 	if got.query != "" {
@@ -160,7 +160,7 @@ func TestSendWebhookStatusField(t *testing.T) {
 		srv, got := notifyServer(t, http.StatusOK)
 		cfg := notifyConfig{Type: "webhook", URL: srv.URL, Token: "s3cret"}
 
-		if err := sendWebhook(context.Background(), cfg, "Plex", "msg", tc.up); err != nil {
+		if err := sendWebhook(context.Background(), cfg, Notice{Service: "Plex", Title: "Plex", Body: "msg", Up: tc.up}); err != nil {
 			t.Fatalf("sendWebhook: %v", err)
 		}
 		var payload map[string]any

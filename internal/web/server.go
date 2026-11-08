@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/alerttext"
 	htmltemplate "html/template"
 	"io/fs"
 	"log/slog"
@@ -88,7 +89,7 @@ func (s *Server) StartBackground(ctx context.Context, wg *sync.WaitGroup) {
 		"update check":    func() { api.NewUpdateHandler(s.DB).CheckForUpdatesBackground(ctx, s.WSHub) },
 		// Idle unless monitoring_mode is "background"; then it records status
 		// history 24/7 on its own interval.
-		"monitor scheduler": func() { api.NewMonitorScheduler(s.DB).Run(ctx) },
+		"monitor scheduler": func() { api.NewMonitorScheduler(s.DB).WithCatalog(alerttext.New(s.assets)).Run(ctx) },
 	}
 
 	for name, task := range tasks {
@@ -433,7 +434,9 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/system/update/perform", protect(need(access.Admin, updateHandler.PerformUpdate)))
 
 	// Monitoring settings API
+	alertTexts := alerttext.New(s.assets)
 	monitorHandler := api.NewMonitorHandler(s.DB)
+	monitorHandler.Texts = alertTexts
 	s.Router.Handle("GET /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.GetSettings)))
 	s.Router.Handle("POST /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.UpdateSettings)))
 	s.Router.Handle("POST /api/monitor/test", protect(need(access.WatchAlerts, monitorHandler.TestNotify)))
@@ -441,6 +444,7 @@ func (s *Server) routes() {
 	// The browsers an account asked to be told, by a notification, when a service of its falls over.
 	// Alerts are what they carry, so they are asked for with the permission alerts are.
 	pushHandler := api.NewPushHandler(s.DB)
+	pushHandler.Texts = alertTexts
 	s.Router.Handle("GET /api/push/key", protect(need(access.WatchAlerts, pushHandler.Key)))
 	s.Router.Handle("GET /api/push/subscriptions", protect(need(access.WatchAlerts, pushHandler.List)))
 	s.Router.Handle("POST /api/push/subscriptions", protect(need(access.WatchAlerts, pushHandler.Subscribe)))

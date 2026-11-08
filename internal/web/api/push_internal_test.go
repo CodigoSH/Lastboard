@@ -12,11 +12,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/webpush"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 )
 
 // ── Which addresses are ever sent to ─────────────────────────────────────────
@@ -372,7 +374,15 @@ func TestTheInstanceMakesItsSigningKeysOnceAndKeepsThem(t *testing.T) {
 }
 
 func TestRequestsAskingAtTheSameTimeEndUpWithOneKeyPair(t *testing.T) {
-	db, _ := setupTestDB(t)
+	// A file and not ":memory:": every new connection of the pool would get an empty database of its
+	// own, and the requests would fail for a reason that has nothing to do with the keys.
+	file := filepath.Join(t.TempDir(), "keys.db")
+	handle, err := database.InitDB(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { handle.Close() })
+	db := handle.DB
 	var wg sync.WaitGroup
 	pubs := make(chan string, 8)
 	for i := 0; i < 8; i++ {

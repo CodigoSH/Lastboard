@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/alerttext"
 	"log/slog"
 	"strconv"
 	"sync"
@@ -34,6 +35,15 @@ type MonitorScheduler struct {
 
 	// push tells an account's browsers, for the ones whose alerts go there.
 	push *PushSender
+
+	// texts are the translations alerts are written from. Without them everything is in English.
+	texts *alerttext.Catalog
+}
+
+// WithCatalog gives the scheduler the translations alerts are written from.
+func (m *MonitorScheduler) WithCatalog(c *alerttext.Catalog) *MonitorScheduler {
+	m.texts = c
+	return m
 }
 
 // itemAlert tracks a monitor's alerting state between cycles: consecutive
@@ -42,6 +52,9 @@ type itemAlert struct {
 	user  int // the account that owns the bookmark, so one account's cycle only prunes its own
 	fails int
 	down  bool
+	// since is when the outage began, so the recovery can say how long it lasted. Zero when it is
+	// not known: a service that was already down when the server started.
+	since time.Time
 }
 
 // NewMonitorScheduler builds a scheduler over the given database handle.
@@ -215,7 +228,7 @@ func (m *MonitorScheduler) probe(ctx context.Context, items []MonitoredItem, ale
 			if err := m.store.Record(it.ID, up, latency, code); err != nil {
 				slog.Error("monitor: recording check failed", "item", it.ID, "error", err)
 			}
-			m.evalAlert(ctx, it, up, cfgs[it.UserID])
+			m.evalAlertCode(ctx, it, up, code, cfgs[it.UserID])
 		}(it)
 	}
 	wg.Wait()
@@ -235,6 +248,9 @@ func (m *MonitorScheduler) notifyCfg(userID int) notifyConfig {
 		FailThreshold: th,
 		UserID:        userID,
 		Push:          m.push,
+		Lang:          userLanguage(m.store.DB, userID),
+		Texts:         alertTemplates(m.store.DB, userID),
+		Catalog:       m.texts,
 	}
 }
 
@@ -263,6 +279,11 @@ func (m *MonitorScheduler) forgetStaleAlerts(userID int, items []MonitoredItem) 
 // down↔up transition. The first observation of an item seeds state silently so
 // a restart never re-alerts for services that were already down.
 func (m *MonitorScheduler) evalAlert(ctx context.Context, it MonitoredItem, up bool, cfg notifyConfig) {
+	m.evalAlertCode(ctx, it, up, 0, cfg)
+}
+
+// evalAlertCode is evalAlert knowing what the check got back, which an outage alert reports.
+func (m *MonitorScheduler) evalAlertCode(ctx context.Context, it MonitoredItem, up bool, code int, cfg notifyConfig) {
 	m.alertMu.Lock()
 	st := m.alertState[it.ID]
 	if st == nil {
@@ -277,19 +298,27 @@ func (m *MonitorScheduler) evalAlert(ctx context.Context, it MonitoredItem, up b
 
 	var recovered bool
 	var fire bool
+	var fails int
+	var downFor time.Duration
 	if up {
 		st.fails = 0
 		if st.down {
 			st.down = false
 			fire, recovered = true, true
+			if !st.since.IsZero() {
+				downFor = time.Since(st.since)
+			}
+			st.since = time.Time{}
 		}
 	} else {
 		st.fails++
 		if !st.down && st.fails >= cfg.FailThreshold {
 			st.down = true
+			st.since = time.Now()
 			fire = true
 		}
 	}
+	fails = st.fails
 	m.alertMu.Unlock()
 
 	if !fire || !cfg.active() {
@@ -299,12 +328,12 @@ func (m *MonitorScheduler) evalAlert(ctx context.Context, it MonitoredItem, up b
 	if name == "" {
 		name = it.URL
 	}
-	msg := "Service is down"
+	notice := cfg.outageNotice(name, fails, code)
 	if recovered {
-		msg = "Service recovered"
+		notice = cfg.recoveryNotice(name, downFor)
 	}
 	go func() {
-		if err := sendNotification(ctx, cfg, name, msg, recovered); err != nil {
+		if err := sendNotice(ctx, cfg, notice); err != nil {
 			slog.Error("monitor: alert failed", "item", it.ID, "error", err)
 		}
 	}()
