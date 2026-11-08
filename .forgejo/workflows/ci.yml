@@ -45,9 +45,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # No cache: its key is written with a capital "Linux" when it is saved and a lower
+      # case "linux" when it is looked for, so what one run saves the next never finds. Every
+      # run paid about a minute to restore an old copy and nearly two to upload a new one.
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
+          cache: false
 
       - uses: oven-sh/setup-bun@v2
         with:
