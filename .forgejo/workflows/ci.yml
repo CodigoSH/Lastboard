@@ -45,13 +45,34 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # No cache: its key is written with a capital "Linux" when it is saved and a lower
-      # case "linux" when it is looked for, so what one run saves the next never finds. Every
-      # run paid about a minute to restore an old copy and nearly two to upload a new one.
+      # setup-go's own cache stays off: its key is written with a capital "Linux" when it is
+      # saved and a lower case "linux" when it is looked for, so what one run saves the next
+      # never finds. The cache below has a key written here, in full.
       - uses: actions/setup-go@v7
+        id: setup-go
         with:
           go-version: '1.27.3'
           cache: false
+
+      # The Go build cache and the module cache, so the dependency graph (SQLite alone is most
+      # of it) is compiled once and not on every push. The key is the Go version plus go.sum and
+      # has no commit in it on purpose: a hit restores and uploads nothing, and the entry is only
+      # written again when a dependency or the toolchain changes. Our own packages recompile
+      # either way, because Go keys them by content.
+      - name: Locate the Go caches
+        id: gocache
+        run: |
+          echo "build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+          echo "mod=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6.1.0
+        with:
+          path: |
+            ${{ steps.gocache.outputs.build }}
+            ${{ steps.gocache.outputs.mod }}
+          key: go-${{ steps.setup-go.outputs.go-version }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            go-${{ steps.setup-go.outputs.go-version }}-
 
       - uses: oven-sh/setup-bun@v2
         with:
