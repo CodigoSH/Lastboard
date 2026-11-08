@@ -97,19 +97,35 @@ Use **Send test** to fire a test notification with the current settings and conf
 
 ### What each method sends
 
-- **ntfy** — a message to your topic, titled with the service name. Outages use a high priority and an alarm tag; recoveries use a normal priority and a check-mark tag.
+- **ntfy** — a message to your topic, with the title and text of the alert (see [Language and wording](#language-and-wording-of-alerts)). Outages use a high priority and an alarm tag; recoveries use a normal priority and a check-mark tag. A title that is not plain ASCII, such as a Japanese one, is sent as an RFC 2047 word, which ntfy decodes.
 - **Gotify** — a titled message posted to your Gotify server (`/message`), with the app token sent in the `X-Gotify-Key` header so it never appears in a URL or in the logs of anything between Lastboard and Gotify.
 - **Webhook** — a JSON payload to your endpoint:
   ```json
   {
     "service": "My Service",
     "status": "down",
-    "message": "…",
+    "title": "My Service is down",
+    "message": "No response · Failed checks in a row: 2",
     "timestamp": "2026-01-01T12:00:00Z"
   }
   ```
-  If a token is set, it is sent as an `Authorization: Bearer …` header.
+  `service`, `status` (`down` or `up`) and `timestamp` are the fields to build on: they do not change with the language. `title` and `message` are text for people, written in the language of the account and, if it wrote its own, in its wording. If a token is set, it is sent as an `Authorization: Bearer …` header.
 - **Push notifications** — a notification on the phones, tablets and computers you turn it on for, even when Lastboard is closed. An outage stays on the screen until you dismiss it; a recovery replaces the outage it ends. See below.
+
+### Language and wording of alerts
+
+Every method says the same thing, and says it in **the language of the account that owns the service** (the one it chose under **Personalization → Language**), in all twenty languages Lastboard speaks. An outage names what failed and why — "No response", or the HTTP status the check got back — and how many checks in a row failed; a recovery says how long the service was down. After a restart Lastboard does not know when an outage began, so a recovery of a service that was already down then only says that it responds again.
+
+You can write the wording yourself. Under **Alert messages**, in the same card as the failure threshold, there is a box for the title and the text of an outage and of a recovery. Each one that you leave empty keeps the translated default, which the box shows as its placeholder, and **Use the default texts** empties all four. What you write is used as you write it, in whatever language you choose, with these markers filled in:
+
+| Marker | Replaced by |
+| :--- | :--- |
+| `{service}` | The name of the service. |
+| `{count}` | How many checks in a row failed (outage). |
+| `{reason}` | "No response" or the HTTP status the check got back (outage). |
+| `{duration}` | How long the service was down (recovery). |
+
+A text is at most 200 characters, and a marker that is not in the table stays as you wrote it. **Send test** uses your wording, in your language, with the word "Test" in front so it cannot be taken for a real outage. Each account has its own, and they are part of a backup.
 
 ### Push notifications
 
