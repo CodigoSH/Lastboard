@@ -177,8 +177,14 @@ else
         die "staticcheck failed. Run 'go run honnef.co/go/tools/cmd/staticcheck@$STATICCHECK_VERSION ./...' to see why."
     echo "   ✅ staticcheck"
 
-    go test ./... >/dev/null || die "Go tests failed. Run 'go test ./...' to see why."
-    echo "   ✅ go test"
+    # With the race detector, which the CI no longer runs on every push because it is half
+    # of its time. It needs cgo, so a C compiler on this machine; it takes a couple of
+    # minutes. -count=1 because the architecture rules read the repository from disk and
+    # Go's test cache does not track that, so a cached pass could hide a change.
+    command -v gcc >/dev/null || die "The race detector needs a C compiler (gcc) on this machine."
+    CGO_ENABLED=1 go test -count=1 -race -timeout 20m ./... >/dev/null || \
+        die "Go tests failed. Run 'CGO_ENABLED=1 go test -count=1 -race ./...' to see why."
+    echo "   ✅ go test -race"
 
     # Random order, like the CI: a test that leans on the order files run in passes here and fails there.
     bun test --randomize >/dev/null 2>&1 || die "Frontend tests failed. Run 'bun test --randomize' to see why."
