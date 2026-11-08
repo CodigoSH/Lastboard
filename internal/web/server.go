@@ -438,6 +438,15 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.UpdateSettings)))
 	s.Router.Handle("POST /api/monitor/test", protect(need(access.WatchAlerts, monitorHandler.TestNotify)))
 
+	// The browsers an account asked to be told, by a notification, when a service of its falls over.
+	// Alerts are what they carry, so they are asked for with the permission alerts are.
+	pushHandler := api.NewPushHandler(s.DB)
+	s.Router.Handle("GET /api/push/key", protect(need(access.WatchAlerts, pushHandler.Key)))
+	s.Router.Handle("GET /api/push/subscriptions", protect(need(access.WatchAlerts, pushHandler.List)))
+	s.Router.Handle("POST /api/push/subscriptions", protect(need(access.WatchAlerts, pushHandler.Subscribe)))
+	s.Router.Handle("DELETE /api/push/subscriptions/{id}", protect(need(access.WatchAlerts, pushHandler.Delete)))
+	s.Router.Handle("POST /api/push/test", protect(need(access.WatchAlerts, pushHandler.Test)))
+
 	// Import / export API
 	impExpHandler := api.NewImportExportHandler(s.DB)
 	s.Router.Handle("GET /api/export/native", protect(need(access.BoardTransfer, impExpHandler.ExportNative)))

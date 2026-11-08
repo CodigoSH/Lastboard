@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 	"net/http"
@@ -29,13 +30,22 @@ var notifyClient = &http.Client{
 // notifyConfig is one account's alerting channel, from its own settings.
 type notifyConfig struct {
 	Enabled       bool
-	Type          string // ntfy | gotify | webhook | none
+	Type          string // ntfy | gotify | webhook | push | none
 	URL           string
 	Token         string
 	FailThreshold int
+
+	// UserID and Push are what the "push" type needs and the others do not: whose browsers to tell,
+	// and the means to tell them. A channel that goes to a URL has neither.
+	UserID int
+	Push   *PushSender
 }
 
 func (c notifyConfig) active() bool {
+	if c.Type == "push" {
+		// Its destination is the account's subscribed browsers, not an address.
+		return c.Enabled && c.Push != nil && c.UserID > 0
+	}
 	return c.Enabled && c.Type != "" && c.Type != "none" && c.URL != ""
 }
 
@@ -49,9 +59,29 @@ func sendNotification(ctx context.Context, cfg notifyConfig, service, message st
 		return sendGotify(ctx, cfg, service, message)
 	case "webhook":
 		return sendWebhook(ctx, cfg, service, message, up)
+	case "push":
+		return sendPush(ctx, cfg, service, message, up)
 	default:
 		return fmt.Errorf("unknown notify type %q", cfg.Type)
 	}
+}
+
+// sendPush tells the account's subscribed browsers. A tag per service makes a recovery replace the
+// notification of the outage it ends; the tap opens the status page.
+func sendPush(ctx context.Context, cfg notifyConfig, service, message string, up bool) error {
+	if cfg.Push == nil {
+		return errors.New("push is not available")
+	}
+	res, err := cfg.Push.SendToUser(ctx, cfg.UserID, PushMessage{
+		Title: service, Body: message, Tag: "service:" + service, URL: "/?view=monitor", Up: up,
+	})
+	if err != nil {
+		return err
+	}
+	if res.Sent == 0 {
+		return fmt.Errorf("push: no device could be told (%d failed, %d forgotten)", res.Failed, res.Removed)
+	}
+	return nil
 }
 
 func sendNtfy(ctx context.Context, cfg notifyConfig, service, message string, up bool) error {

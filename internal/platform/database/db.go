@@ -504,6 +504,12 @@ func migrateSchema(db *sql.DB) error {
 		return fmt.Errorf("migration 14 failed: %w", err)
 	}
 
+	// Migration 15: the browsers an account asked to be told, by a notification, when a service
+	// of its falls over. See push.go.
+	if err = migratePush(db); err != nil {
+		return fmt.Errorf("migration 15 failed: %w", err)
+	}
+
 	// Migration 2: users from versions without multi-dashboard support have items
 	// with dashboard_id IS NULL. Create a default dashboard for each affected user
 	// and assign those items to it so they continue to work without any manual action.

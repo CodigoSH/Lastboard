@@ -43,6 +43,12 @@ var mayReachTheNetwork = map[string]string{
 	// the administrator's own ntfy, gotify or webhook.
 	"internal/web/api/monitor_notify.go": "outage alerts to the administrator's own channel",
 
+	// The one that reaches a party the operator did not type in: the push service a browser was
+	// handed (Google's, Apple's, Mozilla's, Microsoft's), and only when an account chose Web Push for
+	// its alerts. The message travels encrypted for that browser; the service still learns that a
+	// device was told something. docs/security/overview.md says so.
+	"internal/web/api/push_send.go": "Web Push to the browsers an account subscribed, through their makers' push services",
+
 	// A widget the user configured, fetching the URL the user gave it.
 	"internal/web/api/widget.go": "the API widget, against the endpoint its owner configured",
 	// Server Health reading another machine: the Glances, Netdata or JSON

@@ -31,6 +31,9 @@ type MonitorScheduler struct {
 	// itemsFor lists one account's bookmarks that have a status check. It is a
 	// field so a test can see which accounts are read.
 	itemsFor func(userID int) ([]MonitoredItem, error)
+
+	// push tells an account's browsers, for the ones whose alerts go there.
+	push *PushSender
 }
 
 // itemAlert tracks a monitor's alerting state between cycles: consecutive
@@ -44,7 +47,7 @@ type itemAlert struct {
 // NewMonitorScheduler builds a scheduler over the given database handle.
 func NewMonitorScheduler(db *sql.DB) *MonitorScheduler {
 	store := NewMonitorStore(db)
-	return &MonitorScheduler{store: store, alertState: map[int]*itemAlert{}, itemsFor: store.MonitoredItemsForUser}
+	return &MonitorScheduler{store: store, alertState: map[int]*itemAlert{}, itemsFor: store.MonitoredItemsForUser, push: NewPushSender(db)}
 }
 
 // Run launches the probe loop and the daily prune. It is meant to be started in
@@ -230,6 +233,8 @@ func (m *MonitorScheduler) notifyCfg(userID int) notifyConfig {
 		URL:           m.setting(userID, keyMonURL),
 		Token:         m.setting(userID, keyMonToken),
 		FailThreshold: th,
+		UserID:        userID,
+		Push:          m.push,
 	}
 }
 

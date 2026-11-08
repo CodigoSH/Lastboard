@@ -145,7 +145,7 @@ type monitorSettings struct {
 	Mode          string `json:"mode"`         // off | tab | background
 	IntervalSec   int    `json:"interval_sec"` // probe cadence for background mode
 	AlertsEnabled bool   `json:"alerts_enabled"`
-	NotifyType    string `json:"notify_type"` // none | ntfy | gotify | webhook
+	NotifyType    string `json:"notify_type"` // none | ntfy | gotify | webhook | push
 	NotifyURL     string `json:"notify_url"`
 	// NotifyToken is write-only: it arrives when the admin types one and is never
 	// sent back. The page learns that one is saved from NotifyHasToken, as the
@@ -231,7 +231,7 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	switch s.NotifyType {
-	case "", "none", "ntfy", "gotify", "webhook":
+	case "", "none", "ntfy", "gotify", "webhook", "push":
 	default:
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
@@ -304,6 +304,11 @@ func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
 	// A test sent without a token uses the saved one: the page never has it.
 	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, false)
 	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: token}
+	if s.NotifyType == "push" {
+		// Its destination is the account's own browsers, so there is nothing typed to test.
+		cfg.UserID, cfg.Push = uid, NewPushSender(h.DB)
+		cfg.URL, cfg.Token = "", ""
+	}
 	if badNotifyURL(s.NotifyURL) {
 		http.Error(w, "error.invalid_url", http.StatusBadRequest)
 		return
