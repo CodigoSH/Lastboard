@@ -89,9 +89,11 @@ class DashboardSwitcher extends HTMLElement {
                 const id = item.dataset.id;
                 
                 if (id && !action) {
+                    // Whatever was on top of the board closes first. It goes out on the window and before the
+                    // switch: switching redraws the bar, and an event sent afterwards from this switcher, by then
+                    // no longer on the page, reaches nobody.
+                    window.dispatchEvent(new CustomEvent('dashboard-picked'));
                     dashboardStore.switchDashboard(Number(id));
-                    // Whatever was on top of the board closes: the bar listens for this.
-                    this.dispatchEvent(new CustomEvent('dashboard-picked', { bubbles: true, composed: true }));
                 }
                 
                 this.state.dropdownActive = false;
