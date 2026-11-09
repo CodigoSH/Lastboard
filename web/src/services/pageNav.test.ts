@@ -73,6 +73,36 @@ describe('the history of a full-screen page', () => {
         expect(h.at()).toBe(0);
         expect(nav.pop(h.state())).toEqual({ kind: 'ignore' });
     });
+    test('closing says how many entries it took off, and nothing when there were none', () => {
+        const h = fakeHistory(), nav = new PageNav('docker', h);
+        expect(nav.close()).toBe(0);
+        nav.open(ov);
+        nav.push({ tab: 'containers', sel: null });
+        expect(nav.close()).toBe(2);
+        expect(nav.close()).toBe(0);
+    });
+    test('Forward after closing by the X brings the page back at the step it was left on', () => {
+        const h = fakeHistory(), nav = new PageNav('docker', h);
+        nav.open(ov);
+        nav.push({ tab: 'containers', sel: 'a/b' });
+        nav.close();
+        expect(h.at()).toBe(0);
+        h.go(1);
+        expect(nav.pop(h.state())).toEqual({ kind: 'show', state: ov });
+        h.go(1);
+        expect(nav.pop(h.state())).toEqual({ kind: 'show', state: { tab: 'containers', sel: 'a/b' } });
+        // and Back out of it still leaves
+        h.go(-2);
+        expect(nav.pop(h.state())).toEqual({ kind: 'leave' });
+    });
+    test('Forward after leaving with Back brings the page back too', () => {
+        const h = fakeHistory(), nav = new PageNav('docker', h);
+        nav.open(ov);
+        h.back();
+        expect(nav.pop(h.state())).toEqual({ kind: 'leave' });
+        h.go(1);
+        expect(nav.pop(h.state())).toEqual({ kind: 'show', state: ov });
+    });
     test("another page's entries are not this page's: landing on one leaves", () => {
         const h = fakeHistory(), nav = new PageNav('docker', h);
         nav.open(ov);

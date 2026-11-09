@@ -9,6 +9,7 @@ import { targetTab, type PageTarget } from '../../../services/pageTarget';
 import { heldReading } from '../../../services/infraReadings';
 import { fetchMonitorOverview } from '../../../services/monitorOverview';
 import { PageNav, type NavState } from '../../../services/pageNav';
+import { dashboardStore } from '../../../store/dashboardStore';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import {
     attentionCount, attentionList, bucketLatency, countByFilter, filterOutages, fleetTotals, groupRows, isOutageFilter, isRange, isSortKey, isStateFilter,
@@ -159,7 +160,15 @@ class MonitorPage extends HTMLElement {
         // Back and Forward: the page shows what the entry it landed on says; before its first entry, it leaves.
         this._popstate = (e: PopStateEvent) => {
             const effect = this.nav.pop(e.state);
-            if (effect.kind === 'ignore' || !this.hasAttribute('open')) return;
+            if (effect.kind === 'ignore') return;
+            if (!this.hasAttribute('open')) {
+                // Forward onto an entry of this page, which is closed: it comes back at that step. While the board is
+                // being edited nothing takes the screen from it, and the entry is let go.
+                if (effect.kind !== 'show') return;
+                if (dashboardStore.getState().isEditing) { this.nav.forget(); return; }
+                void this.open({ tab: effect.state.tab, sel: effect.state.sel ?? undefined });
+                return;
+            }
             if (effect.kind === 'leave') { this.closeQuietly(); return; }
             this.applyNav(effect.state);
         };
@@ -243,10 +252,11 @@ class MonitorPage extends HTMLElement {
         this.histSeq++;
     }
 
-    close() {
-        // Closing by the X or by Escape takes the page's entries off the history with it.
-        this.nav.close();
+    close(): number {
+        // Closing by the X or by Escape takes the page's entries off the history with it; how many is handed back.
+        const steps = this.nav.close();
         this.closeQuietly();
+        return steps;
     }
 
     private stopTimer() {

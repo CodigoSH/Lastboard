@@ -80,23 +80,35 @@ export class PageNav {
         return true;
     }
 
-    /** The page closes, by its own button: every entry it made goes, and the popstate that causes is not a Back. */
-    close(): void {
+    /**
+     * The page closes, by its own button: every entry it made goes, and the popstate that causes is not a Back.
+     * Returns how many entries that took off, so whoever opens the next thing can wait for the browser to get there.
+     */
+    close(): number {
         const steps = this.depth;
         this.depth = 0;
         this.current = null;
         if (steps > 0) this.h.go(-steps);
+        return steps;
+    }
+
+    /** The page stays shut although the browser landed on one of its entries: it keeps no steps, and does not touch the history. */
+    forget(): void {
+        this.depth = 0;
+        this.current = null;
     }
 
     /** The browser moved through the history. `state` is the entry it landed on. */
     pop(state: unknown): NavEffect {
-        if (this.depth === 0) return { kind: 'ignore' };
         const e = state as Partial<Entry> | null;
         if (e && e.lbPage === this.key && typeof e.i === 'number' && typeof e.tab === 'string') {
+            // Also when the page is closed: Forward onto an entry it left behind brings it back at that step, instead
+            // of leaving a Forward button that is lit and does nothing.
             this.depth = e.i;
             this.current = { tab: e.tab, sel: typeof e.sel === 'string' ? e.sel : null };
             return { kind: 'show', state: this.current };
         }
+        if (this.depth === 0) return { kind: 'ignore' };
         // Landed on something that is not ours: the person went back out of the page.
         this.depth = 0;
         this.current = null;
