@@ -90,6 +90,8 @@ class DashboardSwitcher extends HTMLElement {
                 
                 if (id && !action) {
                     dashboardStore.switchDashboard(Number(id));
+                    // Whatever was on top of the board closes: the bar listens for this.
+                    this.dispatchEvent(new CustomEvent('dashboard-picked', { bubbles: true, composed: true }));
                 }
                 
                 this.state.dropdownActive = false;

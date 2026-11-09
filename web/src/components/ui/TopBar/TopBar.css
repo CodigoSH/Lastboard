@@ -136,6 +136,22 @@
     border-radius: 4px;
 }
 
+/* Between the board's own controls and what takes the screen from it. */
+.top-bar__sep {
+    width: 1px;
+    height: 18px;
+    margin-inline: 4px;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+/* On a phone the icons already fill the bar to its edge; the line would push the last one off it. */
+@media (max-width: 480px) {
+    .top-bar__sep {
+        display: none;
+    }
+}
+
 .top-bar__toggle--disabled {
     opacity: 0.3 !important;
     pointer-events: none !important;

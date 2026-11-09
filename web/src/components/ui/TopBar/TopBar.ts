@@ -265,19 +265,15 @@ class TopBar extends HTMLElement {
         this.shadowRoot!.addEventListener('click', (e: Event) => {
             const target = e.target as HTMLElement;
 
-            // While an exclusive mode is up, only the toggle that closes it
-            // answers — the status page wins over the drawer because it is the
-            // one opened last (from inside the drawer's own settings). The
-            // greyed-out controls are inert in CSS too; this keeps them inert
-            // for clicks that never went through the pointer.
-            const exclusiveToggle = this.state.dockerOpen ? '#docker-toggle'
-                : this.state.proxmoxOpen ? '#proxmox-toggle'
-                : this.state.monitorOpen ? '#monitor-toggle'
-                    : this.state.drawerOpen ? '#drawer-toggle'
-                        : null;
-            if (exclusiveToggle && !target.closest(exclusiveToggle)) {
-                return;
-            }
+            // Edit mode owns the board, so the icons that put something on top of it stay shut until it is
+            // done. Under a page or the drawer the board's own controls do nothing, except the pencil: it
+            // brings the board back, which is what pressing it means. The greyed-out controls are inert in
+            // CSS too; this keeps them inert for clicks that never went through the pointer.
+            const st = this.state;
+            const surfaceOpen = !!(st.drawerOpen || st.monitorOpen || st.proxmoxOpen || st.dockerOpen);
+            const surfaceIcon = target.closest('#monitor-toggle, #proxmox-toggle, #docker-toggle, #drawer-toggle') as HTMLElement | null;
+            if (st.editMode && surfaceIcon) return;
+            if (surfaceOpen && !surfaceIcon && !target.closest('#edit-toggle')) return;
 
             // Clicking inside the search input must not bubble to the window
             // handler that closes the search (replaces the old inline onclick).
@@ -325,6 +321,10 @@ class TopBar extends HTMLElement {
 
             const editToggle = target.closest('#edit-toggle');
             if (editToggle) {
+                // Whatever is on top of the board goes first, so editing starts on a board that can be seen.
+                if (surfaceOpen) {
+                    this.dispatchEvent(new CustomEvent('surface-close', { bubbles: true, composed: true }));
+                }
                 if (this.state.isTouchDevice) {
                     // On mobile: open reorder sheet directly — no edit-mode grid confusion
                     const modal = document.createElement('mobile-reorder-modal');
@@ -376,36 +376,13 @@ class TopBar extends HTMLElement {
                 return;
             }
 
-            const proxmoxBtn = target.closest('#proxmox-toggle');
-            if (proxmoxBtn) {
-                eventBus.emit(this.state.proxmoxOpen
-                    ? EVENTS.HIDE_PROXMOX_PAGE
-                    : EVENTS.SHOW_PROXMOX_PAGE);
-                return;
-            }
-
-            const dockerBtn = target.closest('#docker-toggle');
-            if (dockerBtn) {
-                eventBus.emit(this.state.dockerOpen
-                    ? EVENTS.HIDE_DOCKER_PAGE
-                    : EVENTS.SHOW_DOCKER_PAGE);
-                return;
-            }
-
-            const monitorBtn = target.closest('#monitor-toggle');
-            if (monitorBtn) {
-                e.stopPropagation();
-                eventBus.emit(this.state.monitorOpen
-                    ? EVENTS.HIDE_MONITOR_OVERVIEW
-                    : EVENTS.SHOW_MONITOR_OVERVIEW);
-                return;
-            }
-
-            const drawerToggle = target.closest('#drawer-toggle');
-            if (drawerToggle) {
-                const action = this.state.drawerOpen ? 'close' : 'open';
-                this.dispatchEvent(new CustomEvent('drawer-toggle', {
-                    detail: { action },
+            // One icon per thing that takes the screen: the page or drawer is opened, replaced by another, or
+            // closed by the same icon, and index.ts decides which (services/surfaces.ts).
+            if (surfaceIcon) {
+                if (surfaceIcon.id === 'monitor-toggle') e.stopPropagation();
+                const name = surfaceIcon.id.replace('-toggle', '');
+                this.dispatchEvent(new CustomEvent('surface-toggle', {
+                    detail: { name },
                     bubbles: true,
                     composed: true
                 }));

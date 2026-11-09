@@ -5,17 +5,14 @@ export const EVENTS = {
     SHOW_WIDGET_CONFIG: 'lastboard:show-widget-config',
     SHOW_MOVE_DASHBOARD: 'lastboard:show-move-dashboard',
     SHOW_MONITOR_OVERVIEW: 'lastboard:show-monitor-overview',
-    HIDE_MONITOR_OVERVIEW: 'lastboard:hide-monitor-overview',
     /** Fired by the status page itself whenever it opens or closes ({ open }). */
     MONITOR_OVERVIEW_CHANGED: 'lastboard:monitor-overview-changed',
     SHOW_PROXMOX_PAGE: 'lastboard:show-proxmox-page',
-    HIDE_PROXMOX_PAGE: 'lastboard:hide-proxmox-page',
     /** Fired by the Proxmox page itself whenever it opens or closes ({ open }). */
     PROXMOX_PAGE_CHANGED: 'lastboard:proxmox-page-changed',
     /** The integration was turned on or off in settings ({ enabled }). */
     PROXMOX_CHANGED: 'lastboard:proxmox-changed',
     SHOW_DOCKER_PAGE: 'lastboard:show-docker-page',
-    HIDE_DOCKER_PAGE: 'lastboard:hide-docker-page',
     /** Fired by the Docker page itself whenever it opens or closes ({ open }). */
     DOCKER_PAGE_CHANGED: 'lastboard:docker-page-changed',
     /** The account's Docker hosts were saved in settings. */

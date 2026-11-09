@@ -10,8 +10,11 @@ export const template = ({ dashboards, currentDashboardId, dropdownActive, canMa
     canManage?: boolean
 }): string => {
     const resolveName = (name: string) => escapeHtml(i18n.t(name));
+    // The icon says nothing about which board is up, so its tooltip does.
+    const current = dashboards.find(d => d.id === currentDashboardId);
+    const label = current ? `${i18n.t('topbar.dashboard_switcher')}: ${resolveName(current.name)}` : i18n.t('topbar.dashboard_switcher');
     return `
-        <button class="switcher-trigger ${dropdownActive ? 'active' : ''}" title="${i18n.t('topbar.dashboard_switcher')}">
+        <button class="switcher-trigger ${dropdownActive ? 'active' : ''}" title="${label}" aria-label="${label}">
             <svg class="switcher-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <polygon points="12 2 2 7 12 12 22 7 12 2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <polyline points="2 12 12 17 22 12" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>

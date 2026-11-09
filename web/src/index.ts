@@ -176,6 +176,8 @@ bootstrap(async () => {
 // 2. Handle Component Events (TopBar)
 import { eventBus, EVENTS } from './services/EventBus';
 import { viewFromSearch, withoutView } from './services/startupView';
+import { Surfaces, nextPopstate } from './services/surfaces';
+import { PageNav } from './services/pageNav';
 
 // Centralized Event Listeners
 eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: CustomEvent) => {
@@ -234,20 +236,10 @@ eventBus.on(EVENTS.SHOW_MONITOR_OVERVIEW, (e: CustomEvent) => {
     if (page) page.open(e.detail);
 });
 
-eventBus.on(EVENTS.HIDE_MONITOR_OVERVIEW, () => {
-    const page = document.querySelector('monitor-page') as any;
-    if (page) page.close();
-});
-
 eventBus.on(EVENTS.SHOW_PROXMOX_PAGE, (e: CustomEvent) => {
     const page = document.querySelector('proxmox-page') as any;
     // A tile of the board may ask for a tab and an item: { tab, sel }.
     if (page) page.open(e.detail);
-});
-
-eventBus.on(EVENTS.HIDE_PROXMOX_PAGE, () => {
-    const page = document.querySelector('proxmox-page') as any;
-    if (page) page.close();
 });
 
 eventBus.on(EVENTS.SHOW_DOCKER_PAGE, (e: CustomEvent) => {
@@ -256,10 +248,25 @@ eventBus.on(EVENTS.SHOW_DOCKER_PAGE, (e: CustomEvent) => {
     if (page) page.open(e.detail);
 });
 
-eventBus.on(EVENTS.HIDE_DOCKER_PAGE, () => {
-    const page = document.querySelector('docker-page') as any;
-    if (page) page.close();
-});
+// What takes the screen from the board — the three pages and the settings drawer — one at a time. The
+// icons of the bar move between them; services/surfaces.ts says why a switch waits for the browser.
+const pageOf = (tag: string) => document.querySelector(tag) as any;
+const drawerNav = new PageNav('drawer');
+const surfaces = new Surfaces({
+    monitor: { open: () => { void pageOf('monitor-page')?.open(); }, close: () => pageOf('monitor-page')?.close() ?? 0 },
+    proxmox: { open: () => { pageOf('proxmox-page')?.open(); }, close: () => pageOf('proxmox-page')?.close() ?? 0 },
+    docker: { open: () => { pageOf('docker-page')?.open(); }, close: () => pageOf('docker-page')?.close() ?? 0 },
+    drawer: {
+        open: () => drawer.open(),
+        // The drawer's entry goes with it; how many is handed back, like the pages do.
+        close: () => { const steps = drawerNav.close(); drawer.close(); return steps; },
+    },
+}, nextPopstate);
+
+// Each page says when it opens or closes, whoever asked: its own X, Escape, the browser's Back.
+eventBus.on(EVENTS.MONITOR_OVERVIEW_CHANGED, (e: CustomEvent) => surfaces.note('monitor', !!e.detail?.open));
+eventBus.on(EVENTS.PROXMOX_PAGE_CHANGED, (e: CustomEvent) => surfaces.note('proxmox', !!e.detail?.open));
+eventBus.on(EVENTS.DOCKER_PAGE_CHANGED, (e: CustomEvent) => surfaces.note('docker', !!e.detail?.open));
 
 eventBus.on(EVENTS.SHOW_WIDGET_CONFIG, (e: CustomEvent) => {
     const { item, type } = e.detail;
@@ -284,15 +291,8 @@ eventBus.on(EVENTS.NOTIFY, (e: CustomEvent) => {
 });
 
 if (topbar) {
-    topbar.addEventListener('drawer-toggle', (e: CustomEvent) => {
-        if (e.detail.action === 'open') {
-            drawer.open();
-            topbar.setState({ drawerOpen: true });
-        } else {
-            drawer.close();
-            topbar.setState({ drawerOpen: false });
-        }
-    });
+    topbar.addEventListener('surface-toggle', (e: CustomEvent) => { void surfaces.toggle(e.detail.name); });
+    topbar.addEventListener('surface-close', () => surfaces.closeActive());
 
     topbar.addEventListener('edit-mode-change', (e: CustomEvent) => {
         const isActive = e.detail.active;
@@ -396,9 +396,28 @@ window.addEventListener('widget-selected', async (e: Event) => {
     }
 });
 
+// The drawer is a place of the browser's history too: opening it is a step, and Back closes it.
+window.addEventListener('drawer-open', () => {
+    surfaces.note('drawer', true);
+    drawerNav.open({ tab: 'drawer', sel: null });
+    if (topbar) topbar.setState({ drawerOpen: true });
+});
 window.addEventListener('drawer-close', () => {
+    surfaces.note('drawer', false);
+    drawerNav.close();
     if (topbar) topbar.setState({ drawerOpen: false });
 });
+window.addEventListener('popstate', (e: PopStateEvent) => {
+    const effect = drawerNav.pop(e.state);
+    if (effect.kind === 'ignore') return;
+    if (effect.kind === 'leave') { drawer.close(); return; }
+    // Forward onto the drawer's entry: it opens again, unless the board is being edited.
+    if (drawer.isOpen) return;
+    if (dashboardStore.getState().isEditing) drawerNav.forget(); else drawer.open();
+});
+
+// Choosing another board from the bar brings the board back: what was on top of it has nothing to do with the new one.
+window.addEventListener('dashboard-picked', () => surfaces.closeActive());
 
 // Close menu on click outside (for add-menu, search is handled by topbar)
 window.addEventListener('click', (e: Event) => {
