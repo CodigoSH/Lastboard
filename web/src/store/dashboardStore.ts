@@ -4,7 +4,7 @@ import { Dashboard, GridItem } from '../types';
 
 type Listener = (state: DashboardState) => void;
 
-interface DashboardState {
+export interface DashboardState {
     isEditing: boolean;
     selectMode: boolean;
     selectedIds: number[];

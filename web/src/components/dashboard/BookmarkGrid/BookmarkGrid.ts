@@ -1,6 +1,6 @@
 import { template, WIDGET_TAGS } from './BookmarkGrid.template';
 import { GridItem } from '../../../types';
-import { dashboardStore } from '../../../store/dashboardStore';
+import { dashboardStore, type DashboardState } from '../../../store/dashboardStore';
 import { collisionService } from '../../../services/collisionService';
 import { statusService } from '../../../services/StatusService';
 import { i18n } from '../../../services/i18n';
@@ -8,6 +8,7 @@ import { apiService } from '../../../services/apiService';
 import { accessAllows } from '../../../services/access';
 import { userStore } from '../../../store/userStore';
 import { showStatusTip, updateStatusTip, hideStatusTip } from './statusTooltip';
+import { diffItems } from './itemDiff';
 // Widgets
 import '../../../widgets/core/ClockWidget';
 import '../../../widgets/core/NotepadWidget';
@@ -203,101 +204,7 @@ class BookmarkGrid extends HTMLElement {
         });
         this._resizeObserver.observe(this);
 
-        this._unsubscribe = dashboardStore.subscribe((state) => {
-            // ... (existing subscribe logic) ...
-            let shouldRerender = false;
-
-            if (this.isEditing !== state.isEditing) {
-                this.isEditing = state.isEditing;
-                shouldRerender = true;
-            }
-
-            if (this._selectMode !== state.selectMode) {
-                this._selectMode = state.selectMode;
-                shouldRerender = true;
-            }
-
-            const selKey = (state.selectedIds || []).join(',');
-            if (selKey !== this._selKey) {
-                this._selKey = selKey;
-                this._selectedIds = new Set(state.selectedIds || []);
-                shouldRerender = true;
-            }
-
-            if (this.isLoading !== state.loading) {
-                this.isLoading = state.loading;
-                shouldRerender = true;
-            }
-
-            if (this.searchQuery !== state.searchQuery) {
-                this.searchQuery = state.searchQuery;
-                shouldRerender = true;
-            }
-
-            const newAllItems = Array.isArray(state.items) ? state.items : [];
-
-            // SURGICAL DIFFING LOGIC for PING UPDATES
-            // We want to avoid wiping the DOM if ONLY the 'status' property changed (e.g., from Ping system)
-            let structuralChange = false;
-            let statusOnlyChange = false;
-
-            if (this.allItems.length !== newAllItems.length) {
-                structuralChange = true;
-            } else {
-                for (let i = 0; i < newAllItems.length; i++) {
-                    const oldItem = this.allItems[i];
-                    const newItem = newAllItems[i];
-
-                    if (oldItem.id !== newItem.id ||
-                        oldItem.x !== newItem.x ||
-                        oldItem.y !== newItem.y ||
-                        oldItem.w !== newItem.w ||
-                        oldItem.h !== newItem.h ||
-                        oldItem.parent_id !== newItem.parent_id ||
-                        oldItem.content !== newItem.content ||
-                        oldItem.mobile_order !== newItem.mobile_order) {
-                        structuralChange = true;
-                        break;
-                    }
-
-                    if (oldItem.status !== newItem.status) {
-                        statusOnlyChange = true;
-                    }
-                }
-            }
-
-            // Motion: flag freshly-created items to materialize once — but only for
-            // small in-place additions, never a dashboard switch or initial load.
-            const dashChanged = this._lastDashId !== (state.currentDashboardId ?? null);
-            const initialLoad = this.allItems.length === 0 && newAllItems.length > 0;
-            this._lastDashId = state.currentDashboardId ?? null;
-            if ((dashChanged || initialLoad) && newAllItems.length > 0) {
-                // Dashboard opened or switched: play a staggered entrance for the
-                // whole board instead of per-item pops.
-                this._entranceQueued = true;
-                this._materializeIds.clear();
-            } else if (structuralChange && this.allItems.length > 0) {
-                const oldIds = new Set(this.allItems.map(i => i.id));
-                const added = newAllItems.filter(i => !oldIds.has(i.id));
-                if (added.length > 0 && added.length <= 3) {
-                    for (const it of added) this._materializeIds.add(it.id);
-                }
-            }
-
-            if (structuralChange || shouldRerender) {
-                // Hard layout change: Re-render everything
-                this.allItems = newAllItems;
-                this.isLoading = state.loading;
-                this.applyFilters();
-                this.render();
-            } else if (statusOnlyChange) {
-                // Soft status change: Only update the CSS classes of existing elements
-                this.updateStatusIndicators(this.allItems, newAllItems);
-                this.allItems = newAllItems; // Keep reference updated
-                this.applyFilters(); // Apply filters without forcing a full DOM re-render
-            }
-
-        });
+        this._unsubscribe = dashboardStore.subscribe((state) => this.onStoreChange(state));
 
         this.setupDragListeners();
         this.setupResizeListeners();
@@ -306,18 +213,86 @@ class BookmarkGrid extends HTMLElement {
         statusService.start();
         this._unsubscribeI18n = i18n.subscribe(() => this.render());
 
-        // FIX: Subscribe to UserStore to react to Grid Column changes
-        // ResizeObserver doesn't fire when CSS variables change, so we need to
-        // manually trigger metric updates when preferences change.
-        import('../../../store/userStore').then(({ userStore }) => {
-            this._unsubscribeUser = userStore.subscribe(() => {
-                // Wait for the DOM to update styles from UserStore application
-                requestAnimationFrame(() => {
-                    this.updateGridMetrics();
-                    this.render(); // Re-render to apply new grid positions/sizes if logic depends on cols
-                });
+        // The ResizeObserver does not fire when a CSS variable changes, so a change of preferences
+        // (the number of columns) has to ask for the metrics itself.
+        this._unsubscribeUser = userStore.subscribe(() => {
+            // Wait for the DOM to take the styles the store applies
+            requestAnimationFrame(() => {
+                this.updateGridMetrics();
+                this.render(); // Re-render to apply new grid positions/sizes if logic depends on cols
             });
         });
+    }
+
+    /**
+     * The store changed: redraw what that calls for. Most changes touch one thing — editing, selecting, loading,
+     * searching — and a status that flips alone only repaints its dot.
+     */
+    private onStoreChange(state: DashboardState) {
+        let shouldRerender = false;
+
+        if (this.isEditing !== state.isEditing) {
+            this.isEditing = state.isEditing;
+            shouldRerender = true;
+        }
+
+        if (this._selectMode !== state.selectMode) {
+            this._selectMode = state.selectMode;
+            shouldRerender = true;
+        }
+
+        const selKey = (state.selectedIds || []).join(',');
+        if (selKey !== this._selKey) {
+            this._selKey = selKey;
+            this._selectedIds = new Set(state.selectedIds || []);
+            shouldRerender = true;
+        }
+
+        if (this.isLoading !== state.loading) {
+            this.isLoading = state.loading;
+            shouldRerender = true;
+        }
+
+        if (this.searchQuery !== state.searchQuery) {
+            this.searchQuery = state.searchQuery;
+            shouldRerender = true;
+        }
+
+        const newAllItems = Array.isArray(state.items) ? state.items : [];
+
+        // A status that flips alone (the ping system) must not wipe the DOM: see itemDiff.
+        const { structural: structuralChange, statusOnly: statusOnlyChange } = diffItems(this.allItems, newAllItems);
+
+        // Motion: flag freshly-created items to materialize once — but only for
+        // small in-place additions, never a dashboard switch or initial load.
+        const dashChanged = this._lastDashId !== (state.currentDashboardId ?? null);
+        const initialLoad = this.allItems.length === 0 && newAllItems.length > 0;
+        this._lastDashId = state.currentDashboardId ?? null;
+        if ((dashChanged || initialLoad) && newAllItems.length > 0) {
+            // Dashboard opened or switched: play a staggered entrance for the
+            // whole board instead of per-item pops.
+            this._entranceQueued = true;
+            this._materializeIds.clear();
+        } else if (structuralChange && this.allItems.length > 0) {
+            const oldIds = new Set(this.allItems.map(i => i.id));
+            const added = newAllItems.filter(i => !oldIds.has(i.id));
+            if (added.length > 0 && added.length <= 3) {
+                for (const it of added) this._materializeIds.add(it.id);
+            }
+        }
+
+        if (structuralChange || shouldRerender) {
+            // Hard layout change: Re-render everything
+            this.allItems = newAllItems;
+            this.isLoading = state.loading;
+            this.applyFilters();
+            this.render();
+        } else if (statusOnlyChange) {
+            // Soft status change: Only update the CSS classes of existing elements
+            this.updateStatusIndicators(this.allItems, newAllItems);
+            this.allItems = newAllItems; // Keep reference updated
+            this.applyFilters(); // Apply filters without forcing a full DOM re-render
+        }
     }
 
     private updateStatusIndicators(oldItems: any[], newItems: any[]) {
