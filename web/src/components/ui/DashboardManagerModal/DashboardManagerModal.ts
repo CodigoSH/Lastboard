@@ -5,6 +5,7 @@ import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { Dashboard } from '../../../types';
 import { dashboardManagerTemplate } from './DashboardManagerModal.template';
 import { createFocusTrap, FocusTrap } from '../../../services/focusTrap';
+import { bindTouchReorder } from '../../../services/touchReorder';
 import { canDeleteDashboard, syncOrder } from './dashboardOrder';
 import { deleteDashboard, renameDashboard } from './dashboardActions';
 import css from './DashboardManagerModal.css' with { type: 'text' };
@@ -164,86 +165,17 @@ export class DashboardManagerModal extends HTMLElement {
     }
 
     private _bindTouchDrag(list: HTMLElement, signal: AbortSignal) {
-        let touchSrcIndex = -1;
-        let ghost: HTMLElement | null = null;
-        let startY = 0;
-        let listTopAtStart = 0;
-        interface CachedItem { el: HTMLElement; midY: number; }
-        let cachedItems: CachedItem[] = [];
-
-        list.addEventListener('touchstart', (e) => {
-            const handle = (e.target as HTMLElement).closest('.drag-handle');
-            if (!handle) return;
-            const el = handle.closest('[data-index]') as HTMLElement | null;
-            if (!el) return;
-            e.preventDefault();
-            touchSrcIndex = parseInt(el.dataset.index!);
-            startY = e.touches[0].clientY;
-
-            listTopAtStart = list.getBoundingClientRect().top;
-            cachedItems = Array.from(list.querySelectorAll<HTMLElement>('.item')).map(item => ({
-                el: item,
-                midY: item.offsetTop + item.offsetHeight / 2
-            }));
-
-            const rect = el.getBoundingClientRect();
-            ghost = el.cloneNode(true) as HTMLElement;
-            ghost.style.cssText = `
-                position: fixed; left: ${rect.left}px; top: ${rect.top}px;
-                width: ${rect.width}px; opacity: 0.85;
-                background: var(--panel, #1a1a2e); border-radius: 8px;
-                z-index: 99999; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-                transition: none;
-            `;
-            this.shadowRoot!.appendChild(ghost);
-            el.classList.add('dragging');
-        }, { passive: false, signal });
-
-        list.addEventListener('touchmove', (e) => {
-            if (touchSrcIndex === -1 || !ghost) return;
-            e.preventDefault();
-
-            const touchY = e.touches[0].clientY;
-            ghost.style.transform = `translateY(${touchY - startY}px)`;
-
-            list.querySelectorAll('.item').forEach(el => el.classList.remove('drag-over'));
-
-            const relY = touchY - listTopAtStart + list.scrollTop;
-            let closestEl: HTMLElement | null = null;
-            let closestDist = Infinity;
-            cachedItems.forEach(({ el, midY }) => {
-                const dist = Math.abs(relY - midY);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closestEl = el;
-                }
-            });
-            if (closestEl) (closestEl as HTMLElement).classList.add('drag-over');
-        }, { passive: false, signal });
-
-        list.addEventListener('touchend', () => {
-            if (touchSrcIndex === -1) return;
-
-            if (ghost) { ghost.remove(); ghost = null; }
-
-            const overEl = list.querySelector<HTMLElement>('.item.drag-over');
-            list.querySelectorAll('.item').forEach(i => {
-                i.classList.remove('drag-over');
-                i.classList.remove('dragging');
-            });
-
-            if (overEl) {
-                const destIndex = parseInt(overEl.dataset.index!);
-                if (touchSrcIndex !== destIndex) {
-                    const moved = this._dashboards.splice(touchSrcIndex, 1)[0];
-                    this._dashboards.splice(destIndex, 0, moved);
-                    list.innerHTML = this._dashboards.map((d, i) => this._renderItem(d, i)).join('');
-                    this._bindDrag();
-                }
-            }
-
-            touchSrcIndex = -1;
-        }, { signal });
+        bindTouchReorder(list, {
+            rows: '.item',
+            host: this.shadowRoot!,
+            signal,
+            onMove: (from, to) => {
+                const moved = this._dashboards.splice(from, 1)[0];
+                this._dashboards.splice(to, 0, moved);
+                list.innerHTML = this._dashboards.map((d, i) => this._renderItem(d, i)).join('');
+                this._bindDrag();
+            },
+        });
     }
 
     private async _save() {
