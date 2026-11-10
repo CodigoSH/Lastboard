@@ -16,6 +16,14 @@ import '../ColorPicker/ColorPicker';
 import '../Select/Select';
 import css from './AddBookmarkModal.css' with { type: 'text' };
 
+/** Each button that opens a dropdown, and the menu it opens. */
+const DROPDOWNS: [button: string, menu: string][] = [
+    ['#label-pos-btn', 'label-pos-menu'],
+    ['#status-pos-btn', 'status-pos-menu'],
+    ['#touch-pos-btn', 'touch-pos-menu'],
+    ['#protocol-btn', 'protocol-menu'],
+];
+
 const premiumColors = [
     '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
     '#ec4899', '#64748b', '#f8fafc', '#1e293b', '#333333'
@@ -105,18 +113,10 @@ class AddBookmarkModal extends HTMLElement {
             }
 
             // Dropdown Toggles with Smart Positioning
-            if (target.closest('#label-pos-btn')) {
+            const opener = DROPDOWNS.find(([button]) => target.closest(button));
+            if (opener) {
                 e.preventDefault(); e.stopPropagation();
-                this.toggleDropdown('label-pos-menu', target.closest('#label-pos-btn') as HTMLElement);
-            } else if (target.closest('#status-pos-btn')) {
-                e.preventDefault(); e.stopPropagation();
-                this.toggleDropdown('status-pos-menu', target.closest('#status-pos-btn') as HTMLElement);
-            } else if (target.closest('#touch-pos-btn')) {
-                e.preventDefault(); e.stopPropagation();
-                this.toggleDropdown('touch-pos-menu', target.closest('#touch-pos-btn') as HTMLElement);
-            } else if (target.closest('#protocol-btn')) {
-                e.preventDefault(); e.stopPropagation();
-                this.toggleDropdown('protocol-menu', target.closest('#protocol-btn') as HTMLElement);
+                this.toggleDropdown(opener[1], target.closest(opener[0]) as HTMLElement);
             } else {
                 this.closeAllDropdowns();
             }
@@ -175,14 +175,11 @@ class AddBookmarkModal extends HTMLElement {
             if (target.id === 'bookmark-label') this.bookmarkTitle = target.value;
             if (target.id === 'bookmark-url') {
                 const value = target.value;
-                if (value.startsWith('https://')) {
-                    this.protocol = 'https://';
-                    this.url = value.substring(8);
-                    target.value = this.url;
-                    this.updateTriggers();
-                } else if (value.startsWith('http://')) {
-                    this.protocol = 'http://';
-                    this.url = value.substring(7);
+                // A pasted address brings its own protocol: it goes to the protocol button and out of the field.
+                const scheme = /^https?:\/\//.exec(value)?.[0];
+                if (scheme) {
+                    this.protocol = scheme;
+                    this.url = value.slice(scheme.length);
                     target.value = this.url;
                     this.updateTriggers();
                 } else {
