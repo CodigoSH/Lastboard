@@ -409,6 +409,10 @@ class WidgetConfigModal extends HTMLElement {
         });
     }
 
+    /**
+     * Saving reads the open tab's fields into the widget's content, one reader per widget, and writes it
+     * once. A reader that cannot finish — a secret that would not save — says so, and nothing is written.
+     */
     private async save() {
         if (!this.currentItem) return;
 
@@ -419,290 +423,30 @@ class WidgetConfigModal extends HTMLElement {
 
         const widgetId = oldContent.widgetId;
         let newContent = { ...oldContent };
+        // Only Server Health changes the size of its tile with what it shows.
+        let size: { w: number; h: number } | null = null;
 
-        if (widgetId === 'clock') {
-            const cityInput = this.shadowRoot?.getElementById('clock-city') as HTMLInputElement;
-            const h12Input = this.shadowRoot?.getElementById('clock-12h') as HTMLInputElement;
-            const dateInput = this.shadowRoot?.getElementById('clock-date') as HTMLInputElement;
-            const cityDisplayInput = this.shadowRoot?.getElementById('clock-show-city') as HTMLInputElement;
-            const saveBtn = this.shadowRoot?.getElementById('save-btn') as any;
-
-            const city = cityInput?.value || '';
-
-            // Show loading state
-            if (saveBtn) {
-                saveBtn.disabled = true;
-                saveBtn.textContent = i18n.t('general.loading');
-            }
-
-            const timezone = await clockTimezone({
-                city,
-                previousCity: oldContent.city,
-                previousTimezone: oldContent.timezone,
-                picked: this._clockPickedTimezone,
-                language: i18n.getLocale().code,
-            });
-
-            newContent.city = city;
-            newContent.timezone = timezone;
-            newContent.hour12 = h12Input?.checked || false;
-            newContent.showDate = dateInput?.checked || false;
-            newContent.showCity = cityDisplayInput?.checked ?? true;
-            newContent.showSeconds = (this.shadowRoot?.getElementById('clock-seconds') as HTMLInputElement)?.checked ?? true;
-
-            this._clockPickedTimezone = null;
-
-            // Restore button state
-            if (saveBtn) {
-                saveBtn.disabled = false;
-                saveBtn.textContent = i18n.t('general.save');
-            }
-        } else if (widgetId === 'weather') {
-            const cityInput = this.shadowRoot?.getElementById('weather-city') as HTMLInputElement;
-            const latInput = this.shadowRoot?.getElementById('weather-lat') as HTMLInputElement;
-            const lonInput = this.shadowRoot?.getElementById('weather-lon') as HTMLInputElement;
-            const forecastInput = this.shadowRoot?.getElementById('weather-forecast') as HTMLInputElement;
-            const daysInput = this.shadowRoot?.getElementById('weather-days') as HTMLInputElement;
-
-            newContent.city = cityInput?.value || '';
-            newContent.latitude = parseFloat(latInput?.value) || 0;
-            newContent.longitude = parseFloat(lonInput?.value) || 0;
-            newContent.showForecast = forecastInput?.checked || false;
-            newContent.forecastDays = parseInt(daysInput?.value) || 5;
-            delete newContent.unit;
         // Notepad and Markdown are written in the widget itself, not here: their
         // settings form only points at the Personalize tab. Saving used to read
         // a `#notepad-text` / `#markdown-text` field that this form has never
         // rendered, so `textInput` was always null and the fallback wrote an
         // empty string over the note. Changing a border colour erased what you
         // had written. The text is already in `newContent` — leave it there.
+        if (widgetId === 'clock') {
+            await this.readClock(newContent, oldContent);
+        } else if (widgetId === 'weather') {
+            this.readWeather(newContent);
         } else if (widgetId === 'api') {
-            const val = (id: string) => (this.shadowRoot?.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)?.value ?? '';
-            const presetId = val('api-preset');
-
-            if (presetId) {
-                // Guided preset: compose the whole config from base URL + key.
-                const preset = getPreset(presetId);
-                const base = val('api-baseurl').trim();
-                // The key is never in the content: what the box holds is only
-                // whether there is one, and the server fills the templates in.
-                const hasKey = val('api-key') !== '';
-                const extra = val('api-extra').trim();
-                if (preset) {
-                    const cfg = preset.build(base, hasKey, extra);
-                    newContent.preset = presetId;
-                    newContent.baseUrl = base;
-                    delete newContent.apiKey;
-                    delete newContent.secret_headers;
-                    newContent.apiExtra = extra;
-                    newContent.url = cfg.url;
-                    newContent.method = cfg.method || 'GET';
-                    newContent.headers = cfg.headers || {};
-                    newContent.arrayPath = cfg.arrayPath || '';
-                    // Presets that point at an array are list widgets; state it
-                    // rather than leaving the widget to infer it.
-                    newContent.viewMode = cfg.arrayPath ? 'list' : 'metrics';
-                    newContent.mappings = cfg.mappings || [];
-                    newContent.refreshSec = cfg.refreshSec || 60;
-                }
-            } else {
-                // Advanced (manual). Names stay in the widget; values are secrets.
-                const mappings: { label: string; path: string; format?: string }[] = [];
-                val('api-fields').split('\n').forEach(line => {
-                    if (!line.trim()) return;
-                    const eq = line.indexOf('=');
-                    if (eq < 0) return;
-                    const label = line.slice(0, eq).trim();
-                    let rest = line.slice(eq + 1).trim();
-                    let format: string | undefined;
-                    const pipe = rest.lastIndexOf('|');
-                    if (pipe >= 0) {
-                        format = rest.slice(pipe + 1).trim().toLowerCase() || undefined;
-                        rest = rest.slice(0, pipe).trim();
-                    }
-                    if (rest) mappings.push({ label, path: rest, format });
-                });
-                newContent.preset = '';
-                newContent.url = val('api-url').trim();
-                newContent.method = val('api-method') || 'GET';
-                delete newContent.headers;
-                delete newContent.apiKey;
-                newContent.viewMode = val('api-view') === 'list' ? 'list' : 'metrics';
-                // Only meaningful in list view; clearing it keeps the saved config
-                // honest about what the widget will render.
-                newContent.arrayPath = newContent.viewMode === 'list' ? val('api-array').trim() : '';
-                newContent.mappings = mappings;
-                newContent.refreshSec = parseInt(val('api-refresh')) || 60;
-            }
-
-            const root = this.shadowRoot!;
-            const keyBox = root.getElementById('api-key') as HTMLInputElement | null;
-            const plan = planApiSecrets({
-                preset: !!presetId,
-                rows: Array.from(root.querySelectorAll<HTMLElement>('.header-row')).map(row => {
-                    const name = (row.querySelector('.api-header-name') as HTMLInputElement).value.trim();
-                    const box = row.querySelector('.api-header-value') as HTMLInputElement;
-                    // Dots only mean "saved" for the name they were saved under.
-                    return { name, raw: box.value, saved: box.dataset.saved === '1' && box.dataset.name === name };
-                }).filter(r => r.name === '' || HEADER_NAME.test(r.name)),
-                keyRaw: keyBox?.value ?? '',
-                keySaved: keyBox?.dataset.saved === '1',
-                previousHeaderNames: this._savedHeaderNames(),
-                hadKey: keyBox?.dataset.saved === '1',
-            });
-            if (plan.headerNames.length) newContent.secret_headers = plan.headerNames;
-            else delete newContent.secret_headers;
-            if (plan.patch) {
-                try {
-                    await saveWidgetSecrets(this.currentItem.id, plan.patch);
-                } catch {
-                    return;
-                }
-            }
+            if (!await this.readApi(newContent)) return;
         } else if (widgetId === 'proxmox') {
-            const refreshSel = this.shadowRoot?.getElementById('proxmox-refresh') as HTMLSelectElement | null;
-            newContent.refreshSec = parseInt(refreshSel?.value || '') || 30;
-
-            const nodeToggle = this.shadowRoot?.getElementById('proxmox-shownode') as HTMLInputElement | null;
-            newContent.showNode = nodeToggle ? nodeToggle.checked : true;
-            this.storeCommonFields(newContent, ['cpu', 'mem', 'disk']);
-
-            // Machines nobody has chosen: shown unless this is switched off. Only the
-            // off state is stored, so content that never heard of it means on.
-            const showNew = (this.shadowRoot?.getElementById('proxmox-show-new') as HTMLInputElement | null)?.checked ?? true;
-            if (showNew) delete newContent.showNew; else newContent.showNew = false;
-
-            const rows: GuestRow[] = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.px-machine-row') || [])
-                .filter(row => row.dataset.key)
-                .map(row => ({
-                    key: row.dataset.key!,
-                    visible: row.querySelector<HTMLInputElement>('.px-machine')?.checked ?? true,
-                    label: row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '',
-                }));
-            const cfg = settleGuests(newContent.guestConfig, rows, showNew);
-            if (Object.keys(cfg).length) newContent.guestConfig = cfg; else delete newContent.guestConfig;
-
-            // The order each hypervisor's machines were arranged in is the order of its rows.
-            const shown: Record<string, string[]> = {};
-            this.shadowRoot?.querySelectorAll<HTMLElement>('.px-host-group').forEach(group => {
-                if (!group.dataset.hostId) return;
-                const ids = Array.from(group.querySelectorAll<HTMLElement>('.px-machine-row'))
-                    .map(row => row.dataset.id || '').filter(Boolean);
-                shown[group.dataset.hostId] = arrangedIds(
-                    ids, (group.dataset.natural || '').split(',').filter(Boolean), newContent.guestOrder?.[group.dataset.hostId]);
-            });
-            const order = settleGuestOrder(newContent.guestOrder, shown);
-            if (order) newContent.guestOrder = order; else delete newContent.guestOrder;
+            this.readProxmox(newContent);
         } else if (widgetId === 'monitor') {
-            // An empty selection means "every monitored service", which is also
-            // what a fresh widget starts with — so it keeps working when the
-            // user adds services later without reopening this screen.
-            const checked = Array.from(
-                this.shadowRoot?.querySelectorAll<HTMLInputElement>('.monitor-service:checked') || []
-            ).map(cb => parseInt(cb.dataset.id || '0', 10)).filter(id => id > 0);
-            const total = this.shadowRoot?.querySelectorAll('.monitor-service').length || 0;
-            newContent.items = (checked.length === total) ? [] : checked;
-
-            // The arrangement is kept apart from the selection, so arranging
-            // "everything" does not turn it into a list that stops taking new
-            // services. A list that did not load has no rows and leaves it as it was.
-            const arranged = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.monitor-service-item') || [])
-                .map(row => parseInt(row.dataset.id || '0', 10)).filter(id => id > 0);
-            if (arranged.length) newContent.itemOrder = mergeOrder(arranged, newContent.itemOrder);
-
-            // An earlier beta kept an icon and a name per service here; neither is set from this screen any more.
-            delete newContent.itemConfig;
-            this.storeCommonFields(newContent, []);
-            // The line of totals under the name: on unless it was switched off.
-            if ((this.shadowRoot?.getElementById('monitor-shownode') as HTMLInputElement | null)?.checked === false) newContent.showNode = false; else delete newContent.showNode;
-
-            const refreshSel = this.shadowRoot?.getElementById('monitor-refresh') as HTMLSelectElement | null;
-            newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
+            this.readMonitor(newContent);
         } else if (widgetId === 'docker') {
-            const refreshSel = this.shadowRoot?.getElementById('docker-refresh') as HTMLSelectElement | null;
-            newContent.refreshSec = parseInt(refreshSel?.value || '') || 60;
-            this.storeCommonFields(newContent, ['cpu', 'mem']);
-            // The line of totals under the name: on unless it was switched off.
-            if ((this.shadowRoot?.getElementById('docker-shownode') as HTMLInputElement | null)?.checked === false) newContent.showNode = false; else delete newContent.showNode;
-
-            // Containers nobody has chosen: shown unless this is switched off. Only
-            // the off state is stored, so content that never heard of it means on.
-            const showNew = (this.shadowRoot?.getElementById('docker-show-new') as HTMLInputElement | null)?.checked ?? true;
-            if (showNew) delete newContent.showNew; else newContent.showNew = false;
-
-            const rows: ContainerRow[] = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-container-row') || [])
-                .filter(row => row.dataset.key)
-                .map(row => ({
-                    key: row.dataset.key!,
-                    sid: row.dataset.sid || '',
-                    visible: row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true,
-                    label: row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '',
-                }));
-            const cfg = settleRows(newContent.containerConfig, rows, showNew);
-
-            // The order each host's containers were arranged in is the order of its rows.
-            const shown: Record<string, string[]> = {};
-            this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-host-group').forEach(group => {
-                if (!group.dataset.hostId) return;
-                shown[group.dataset.hostId] = Array.from(group.querySelectorAll<HTMLElement>('.docker-container-row'))
-                    .map(row => row.dataset.name || '').filter(Boolean);
-            });
-            const order = settleOrder(newContent.containerOrder, shown);
-            if (order) newContent.containerOrder = order; else delete newContent.containerOrder;
-
-            newContent.containerConfig = cfg;
-
-            // Hosts are the account's. The widget keeps only which of them it
-            // shows, and nothing at all when it shows every one — so a host
-            // added later appears here too.
-            delete newContent.hosts;
-            if (this._dockerAccountLoaded) {
-                const ids = hostIdsToStore(this._dockerAccount, [...this._dockerTicked]);
-                if (ids) newContent.hostIds = ids; else delete newContent.hostIds;
-            }
+            this.readDocker(newContent);
         } else if (widgetId === 'telemetry') {
-            for (const k of ['source', 'url', 'username', 'header_name', 'cpu_path', 'ram_path', 'ram_used_path', 'ram_total_path', 'temp_path', 'link']) delete newContent[k];
-            Object.assign(newContent, this.shadowRoot ? readSourceSettings(this.shadowRoot) : {});
-            const patch = this.shadowRoot ? secretsPatch(secretChanges(this.shadowRoot)) : null;
-            if (patch) {
-                try {
-                    await saveWidgetSecrets(this.currentItem!.id, patch);
-                } catch {
-                    const result = this.shadowRoot?.getElementById('tel-test-result');
-                    if (result) result.textContent = i18n.t('general.error');
-                    return;
-                }
-            }
-            const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
-            newContent.interval = intervalInput ? telemetryInterval(intervalInput.value) : DEFAULT_TELEMETRY_INTERVAL;
-
-            // Collect selected metrics (guarantee at least one)
-            const allKeys = ['cpu', 'ram', 'temp'];
-            const selected = allKeys.filter(k =>
-                (this.shadowRoot?.getElementById(`metric-${k}`) as HTMLInputElement)?.checked
-            );
-            newContent.metrics = selected.length > 0 ? selected : allKeys;
-
-            // Auto-resize grid cell based on metric count
-            const sizeMap: Record<number, { w: number; h: number }> = {
-                1: { w: 1, h: 1 },
-                2: { w: 2, h: 1 },
-                3: { w: 3, h: 1 }
-            };
-            const newSize = sizeMap[newContent.metrics.length] ?? { w: 3, h: 1 };
-
-            // Persist appearance + content, then resize
-            newContent.borderColor = this._selectedColor;
-            newContent.borderWidth = this._selectedBorderWidth;
-            this._writeTitle(newContent);
-            await dashboardStore.updateItem({
-                id: this.currentItem!.id,
-                content: JSON.stringify(newContent),
-                w: newSize.w,
-                h: newSize.h
-            });
-            this.close();
-            return; // Skip the generic updateItem below
+            size = await this.readTelemetry(newContent);
+            if (!size) return;
         }
 
         if (this.currentItem.type === 'section') {
@@ -720,10 +464,303 @@ class WidgetConfigModal extends HTMLElement {
         // Optimistic / Store update
         await dashboardStore.updateItem({
             id: this.currentItem.id,
-            content: JSON.stringify(newContent)
+            content: JSON.stringify(newContent),
+            ...(size ?? {}),
         });
 
         this.close();
+    }
+
+    /** The shown/hidden switch for what nobody has chosen. Only the off state is stored, so content that never heard of it means on. */
+    private storeShowNew(content: Record<string, any>, id: string): boolean {
+        const showNew = (this.shadowRoot?.getElementById(id) as HTMLInputElement | null)?.checked ?? true;
+        if (showNew) delete content.showNew; else content.showNew = false;
+        return showNew;
+    }
+
+    /** The line of totals under the name: on unless it was switched off. */
+    private storeShowTotals(content: Record<string, any>, id: string): void {
+        if ((this.shadowRoot?.getElementById(id) as HTMLInputElement | null)?.checked === false) content.showNode = false;
+        else delete content.showNode;
+    }
+
+    private refreshSeconds(id: string, fallback: number): number {
+        const select = this.shadowRoot?.getElementById(id) as HTMLSelectElement | null;
+        return parseInt(select?.value || '') || fallback;
+    }
+
+    private async readClock(newContent: Record<string, any>, oldContent: Record<string, any>): Promise<void> {
+        const cityInput = this.shadowRoot?.getElementById('clock-city') as HTMLInputElement;
+        const h12Input = this.shadowRoot?.getElementById('clock-12h') as HTMLInputElement;
+        const dateInput = this.shadowRoot?.getElementById('clock-date') as HTMLInputElement;
+        const cityDisplayInput = this.shadowRoot?.getElementById('clock-show-city') as HTMLInputElement;
+        const saveBtn = this.shadowRoot?.getElementById('save-btn') as any;
+
+        const city = cityInput?.value || '';
+
+        // Show loading state
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = i18n.t('general.loading');
+        }
+
+        const timezone = await clockTimezone({
+            city,
+            previousCity: oldContent.city,
+            previousTimezone: oldContent.timezone,
+            picked: this._clockPickedTimezone,
+            language: i18n.getLocale().code,
+        });
+
+        newContent.city = city;
+        newContent.timezone = timezone;
+        newContent.hour12 = h12Input?.checked || false;
+        newContent.showDate = dateInput?.checked || false;
+        newContent.showCity = cityDisplayInput?.checked ?? true;
+        newContent.showSeconds = (this.shadowRoot?.getElementById('clock-seconds') as HTMLInputElement)?.checked ?? true;
+
+        this._clockPickedTimezone = null;
+
+        // Restore button state
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = i18n.t('general.save');
+        }
+    }
+
+    private readWeather(newContent: Record<string, any>): void {
+        const cityInput = this.shadowRoot?.getElementById('weather-city') as HTMLInputElement;
+        const latInput = this.shadowRoot?.getElementById('weather-lat') as HTMLInputElement;
+        const lonInput = this.shadowRoot?.getElementById('weather-lon') as HTMLInputElement;
+        const forecastInput = this.shadowRoot?.getElementById('weather-forecast') as HTMLInputElement;
+        const daysInput = this.shadowRoot?.getElementById('weather-days') as HTMLInputElement;
+
+        newContent.city = cityInput?.value || '';
+        newContent.latitude = parseFloat(latInput?.value) || 0;
+        newContent.longitude = parseFloat(lonInput?.value) || 0;
+        newContent.showForecast = forecastInput?.checked || false;
+        newContent.forecastDays = parseInt(daysInput?.value) || 5;
+        delete newContent.unit;
+    }
+
+    /** False when a secret would not save: the form stays open and nothing is written. */
+    private async readApi(newContent: Record<string, any>): Promise<boolean> {
+        const val = (id: string) => (this.shadowRoot?.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)?.value ?? '';
+        const presetId = val('api-preset');
+
+        if (presetId) {
+            // Guided preset: compose the whole config from base URL + key.
+            const preset = getPreset(presetId);
+            const base = val('api-baseurl').trim();
+            // The key is never in the content: what the box holds is only
+            // whether there is one, and the server fills the templates in.
+            const hasKey = val('api-key') !== '';
+            const extra = val('api-extra').trim();
+            if (preset) {
+                const cfg = preset.build(base, hasKey, extra);
+                newContent.preset = presetId;
+                newContent.baseUrl = base;
+                delete newContent.apiKey;
+                delete newContent.secret_headers;
+                newContent.apiExtra = extra;
+                newContent.url = cfg.url;
+                newContent.method = cfg.method || 'GET';
+                newContent.headers = cfg.headers || {};
+                newContent.arrayPath = cfg.arrayPath || '';
+                // Presets that point at an array are list widgets; state it
+                // rather than leaving the widget to infer it.
+                newContent.viewMode = cfg.arrayPath ? 'list' : 'metrics';
+                newContent.mappings = cfg.mappings || [];
+                newContent.refreshSec = cfg.refreshSec || 60;
+            }
+        } else {
+            // Advanced (manual). Names stay in the widget; values are secrets.
+            const mappings: { label: string; path: string; format?: string }[] = [];
+            val('api-fields').split('\n').forEach(line => {
+                if (!line.trim()) return;
+                const eq = line.indexOf('=');
+                if (eq < 0) return;
+                const label = line.slice(0, eq).trim();
+                let rest = line.slice(eq + 1).trim();
+                let format: string | undefined;
+                const pipe = rest.lastIndexOf('|');
+                if (pipe >= 0) {
+                    format = rest.slice(pipe + 1).trim().toLowerCase() || undefined;
+                    rest = rest.slice(0, pipe).trim();
+                }
+                if (rest) mappings.push({ label, path: rest, format });
+            });
+            newContent.preset = '';
+            newContent.url = val('api-url').trim();
+            newContent.method = val('api-method') || 'GET';
+            delete newContent.headers;
+            delete newContent.apiKey;
+            newContent.viewMode = val('api-view') === 'list' ? 'list' : 'metrics';
+            // Only meaningful in list view; clearing it keeps the saved config
+            // honest about what the widget will render.
+            newContent.arrayPath = newContent.viewMode === 'list' ? val('api-array').trim() : '';
+            newContent.mappings = mappings;
+            newContent.refreshSec = parseInt(val('api-refresh')) || 60;
+        }
+
+        const root = this.shadowRoot!;
+        const keyBox = root.getElementById('api-key') as HTMLInputElement | null;
+        const plan = planApiSecrets({
+            preset: !!presetId,
+            rows: Array.from(root.querySelectorAll<HTMLElement>('.header-row')).map(row => {
+                const name = (row.querySelector('.api-header-name') as HTMLInputElement).value.trim();
+                const box = row.querySelector('.api-header-value') as HTMLInputElement;
+                // Dots only mean "saved" for the name they were saved under.
+                return { name, raw: box.value, saved: box.dataset.saved === '1' && box.dataset.name === name };
+            }).filter(r => r.name === '' || HEADER_NAME.test(r.name)),
+            keyRaw: keyBox?.value ?? '',
+            keySaved: keyBox?.dataset.saved === '1',
+            previousHeaderNames: this._savedHeaderNames(),
+            hadKey: keyBox?.dataset.saved === '1',
+        });
+        if (plan.headerNames.length) newContent.secret_headers = plan.headerNames;
+        else delete newContent.secret_headers;
+        if (plan.patch) {
+            try {
+                await saveWidgetSecrets(this.currentItem!.id, plan.patch);
+            } catch {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private readProxmox(newContent: Record<string, any>): void {
+        newContent.refreshSec = this.refreshSeconds('proxmox-refresh', 30);
+
+        const nodeToggle = this.shadowRoot?.getElementById('proxmox-shownode') as HTMLInputElement | null;
+        newContent.showNode = nodeToggle ? nodeToggle.checked : true;
+        this.storeCommonFields(newContent, ['cpu', 'mem', 'disk']);
+
+        // Machines nobody has chosen: shown unless this is switched off.
+        const showNew = this.storeShowNew(newContent, 'proxmox-show-new');
+
+        const rows: GuestRow[] = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.px-machine-row') || [])
+            .filter(row => row.dataset.key)
+            .map(row => ({
+                key: row.dataset.key!,
+                visible: row.querySelector<HTMLInputElement>('.px-machine')?.checked ?? true,
+                label: row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '',
+            }));
+        const cfg = settleGuests(newContent.guestConfig, rows, showNew);
+        if (Object.keys(cfg).length) newContent.guestConfig = cfg; else delete newContent.guestConfig;
+
+        // The order each hypervisor's machines were arranged in is the order of its rows.
+        const shown: Record<string, string[]> = {};
+        this.shadowRoot?.querySelectorAll<HTMLElement>('.px-host-group').forEach(group => {
+            if (!group.dataset.hostId) return;
+            const ids = Array.from(group.querySelectorAll<HTMLElement>('.px-machine-row'))
+                .map(row => row.dataset.id || '').filter(Boolean);
+            shown[group.dataset.hostId] = arrangedIds(
+                ids, (group.dataset.natural || '').split(',').filter(Boolean), newContent.guestOrder?.[group.dataset.hostId]);
+        });
+        const order = settleGuestOrder(newContent.guestOrder, shown);
+        if (order) newContent.guestOrder = order; else delete newContent.guestOrder;
+    }
+
+    private readMonitor(newContent: Record<string, any>): void {
+        // An empty selection means "every monitored service", which is also
+        // what a fresh widget starts with — so it keeps working when the
+        // user adds services later without reopening this screen.
+        const checked = Array.from(
+            this.shadowRoot?.querySelectorAll<HTMLInputElement>('.monitor-service:checked') || []
+        ).map(cb => parseInt(cb.dataset.id || '0', 10)).filter(id => id > 0);
+        const total = this.shadowRoot?.querySelectorAll('.monitor-service').length || 0;
+        newContent.items = (checked.length === total) ? [] : checked;
+
+        // The arrangement is kept apart from the selection, so arranging
+        // "everything" does not turn it into a list that stops taking new
+        // services. A list that did not load has no rows and leaves it as it was.
+        const arranged = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.monitor-service-item') || [])
+            .map(row => parseInt(row.dataset.id || '0', 10)).filter(id => id > 0);
+        if (arranged.length) newContent.itemOrder = mergeOrder(arranged, newContent.itemOrder);
+
+        // An earlier beta kept an icon and a name per service here; neither is set from this screen any more.
+        delete newContent.itemConfig;
+        this.storeCommonFields(newContent, []);
+        this.storeShowTotals(newContent, 'monitor-shownode');
+
+        newContent.refreshSec = this.refreshSeconds('monitor-refresh', 60);
+    }
+
+    private readDocker(newContent: Record<string, any>): void {
+        newContent.refreshSec = this.refreshSeconds('docker-refresh', 60);
+        this.storeCommonFields(newContent, ['cpu', 'mem']);
+        this.storeShowTotals(newContent, 'docker-shownode');
+
+        // Containers nobody has chosen: shown unless this is switched off.
+        const showNew = this.storeShowNew(newContent, 'docker-show-new');
+
+        const rows: ContainerRow[] = Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-container-row') || [])
+            .filter(row => row.dataset.key)
+            .map(row => ({
+                key: row.dataset.key!,
+                sid: row.dataset.sid || '',
+                visible: row.querySelector<HTMLInputElement>('.docker-container')?.checked ?? true,
+                label: row.querySelector<HTMLInputElement>('.docker-label')?.value.trim() || '',
+            }));
+        const cfg = settleRows(newContent.containerConfig, rows, showNew);
+
+        // The order each host's containers were arranged in is the order of its rows.
+        const shown: Record<string, string[]> = {};
+        this.shadowRoot?.querySelectorAll<HTMLElement>('.docker-host-group').forEach(group => {
+            if (!group.dataset.hostId) return;
+            shown[group.dataset.hostId] = Array.from(group.querySelectorAll<HTMLElement>('.docker-container-row'))
+                .map(row => row.dataset.name || '').filter(Boolean);
+        });
+        const order = settleOrder(newContent.containerOrder, shown);
+        if (order) newContent.containerOrder = order; else delete newContent.containerOrder;
+
+        newContent.containerConfig = cfg;
+
+        // Hosts are the account's. The widget keeps only which of them it
+        // shows, and nothing at all when it shows every one — so a host
+        // added later appears here too.
+        delete newContent.hosts;
+        if (this._dockerAccountLoaded) {
+            const ids = hostIdsToStore(this._dockerAccount, [...this._dockerTicked]);
+            if (ids) newContent.hostIds = ids; else delete newContent.hostIds;
+        }
+    }
+
+    /** The tile's new size, or null when a secret would not save and nothing is to be written. */
+    private async readTelemetry(newContent: Record<string, any>): Promise<{ w: number; h: number } | null> {
+        for (const k of ['source', 'url', 'username', 'header_name', 'cpu_path', 'ram_path', 'ram_used_path', 'ram_total_path', 'temp_path', 'link']) delete newContent[k];
+        Object.assign(newContent, this.shadowRoot ? readSourceSettings(this.shadowRoot) : {});
+        const patch = this.shadowRoot ? secretsPatch(secretChanges(this.shadowRoot)) : null;
+        if (patch) {
+            try {
+                await saveWidgetSecrets(this.currentItem!.id, patch);
+            } catch {
+                const result = this.shadowRoot?.getElementById('tel-test-result');
+                if (result) result.textContent = i18n.t('general.error');
+                return null;
+            }
+        }
+        const intervalInput = this.shadowRoot?.getElementById('telemetry-interval') as HTMLSelectElement;
+        newContent.interval = intervalInput ? telemetryInterval(intervalInput.value) : DEFAULT_TELEMETRY_INTERVAL;
+
+        // Collect selected metrics (guarantee at least one)
+        const allKeys = ['cpu', 'ram', 'temp'];
+        const selected = allKeys.filter(k =>
+            (this.shadowRoot?.getElementById(`metric-${k}`) as HTMLInputElement)?.checked
+        );
+        newContent.metrics = selected.length > 0 ? selected : allKeys;
+
+        // Auto-resize grid cell based on metric count
+        const sizeMap: Record<number, { w: number; h: number }> = {
+            1: { w: 1, h: 1 },
+            2: { w: 2, h: 1 },
+            3: { w: 3, h: 1 }
+        };
+        const newSize = sizeMap[newContent.metrics.length] ?? { w: 3, h: 1 };
+
+        return newSize;
     }
 
     /** A widget offers a title; a section has its own field and nothing else does. */
