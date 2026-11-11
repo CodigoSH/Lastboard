@@ -20,7 +20,7 @@ RUN bun web/build.ts
 # ==========================================
 # Stage 2: Backend Build (Go)
 # ==========================================
-FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine AS backend-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.4-alpine AS backend-builder
 WORKDIR /app
 
 # Install build dependencies
