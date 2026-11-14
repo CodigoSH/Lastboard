@@ -234,7 +234,10 @@ export function outageHeadHtml(named: boolean, t: T): string {
     return `<div class="tr tr--h" aria-hidden="true"><span></span>${named ? `<span>${e(t('monitorpage.col_service'))}</span>` : ''}<span>${e(t('monitorpage.col_cause'))}</span><span>${e(t('monitorpage.col_when'))}</span><span>${e(t('monitorpage.col_length'))}</span>${named ? `<span>${e(t('dockerpage.state'))}</span>` : ''}</div>`;
 }
 
-/** One outage as a row: which service, why, since when, for how long, and whether it still is. */
+/**
+ * One outage as a row: which service, why, since when, for how long, and whether it still is.
+ * "When" reads as how long ago, which is what a person wants at a glance; the exact moment is its tooltip.
+ */
 export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: Map<number, ServiceRow>, faceOf?: FaceOf): string {
     const ongoing = o.end === null;
     const cause = causeText(o.status_code, t);
@@ -247,7 +250,7 @@ export function outageRowHtml(o: Outage, named: boolean, t: T, fmt: Fmt, rows?: 
     const state = ongoing ? down : `<span class="ok">${e(t('monitorpage.resolved'))}</span>`;
     // In a list that mixes services the icon says which one; the state is already in the last column.
     const lead = named && faceOf ? faceHtml(faceOf(o.item_id)) : `<span class="dot dot--${ongoing ? 'bad dot--run' : 'ok'}"></span>`;
-    return `<button type="button" class="tr${named && faceOf && ongoing ? ' tr--on' : ''}" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}>${lead}${named ? `<span class="nm" title="${e(who)}">${e(who)}</span>` : ''}<span class="cell" title="${e(code || cause)}">${e(cause)}</span><span class="cell">${e(when)}</span>${named
+    return `<button type="button" class="tr${named && faceOf && ongoing ? ' tr--on' : ''}" ${o.item_id ? `data-id="${o.item_id}"` : 'data-noopen="1"'}>${lead}${named ? `<span class="nm" title="${e(who)}">${e(who)}</span>` : ''}<span class="cell" title="${e(code || cause)}">${e(cause)}</span><span class="cell" title="${e(fmt.date(o.start))}">${e(when)}</span>${named
         ? `<span class="cell">${e(length)}</span><span class="cell">${state}</span>`
         : `<span class="cell">${ongoing ? down : e(length)}</span>`}</button>`;
 }

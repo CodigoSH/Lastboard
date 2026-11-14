@@ -236,6 +236,13 @@ describe('outages', () => {
         expect(closed).toContain('[monitorpage.resolved]');
         expect(closed).toContain('[monitorpage.cause_none]');
     });
+    test('"when" reads as how long ago, and the exact moment it began is its tooltip', () => {
+        expect(outageRowHtml(list[1], true, t, fmt)).toContain('<span class="cell" title="D(b)">[monitorpage.ago:time=G(b)]</span>');
+        // A line with no service column (the side panel's) says it the same way.
+        expect(outageRowHtml(list[0], false, t, fmt)).toContain('title="D(a)"');
+        // Even one that began a moment ago: there is still a moment to name.
+        expect(outageRowHtml({ ...list[0], start: 'now' }, true, t, fmt)).toContain('<span class="cell" title="D(now)">[monitorpage.just_now]</span>');
+    });
     test('one that began a moment ago does not say "ago" with nothing before it', () => {
         expect(outageRowHtml({ ...list[0], start: 'now' }, true, t, fmt)).toContain('[monitorpage.just_now]');
     });
