@@ -2,6 +2,8 @@ import { userStore } from './store/userStore';
 import { dashboardStore } from './store/dashboardStore';
 import { ThemeService, asThemeChoice } from './services/ThemeService';
 import { i18n } from './services/i18n';
+import { resyncPush } from './services/pushClient';
+import { deviceName } from './components/ui/SettingsContent/SettingsContent.template';
 
 // Import components to register them
 import './components/ui/Paper/Paper';
@@ -166,6 +168,10 @@ bootstrap(async () => {
         history.replaceState(history.state, '', withoutView(window.location.pathname, window.location.search, window.location.hash));
         ((asked === 'monitor' ? monitorPage : proxmoxPage) as any).open();
     }
+
+    // A browser that took part in push and has since dropped off the server's list is put back; a failure here
+    // is not worth telling anyone, the same check runs the next time the app opens.
+    resyncPush(deviceName(navigator.userAgent)).catch(() => { /* retried on the next open */ });
 
     // Lives outside the settings panel so an update keeps running (and keeps
     // being visible) no matter what happens to the drawer behind it.

@@ -152,4 +152,6 @@ Two requirements apply everywhere. The page must be served over **HTTPS** (or be
 
 Subscriptions are stored on the server, in your database, and stay out of backups and exports: restoring onto another instance means each device presses **Enable** again. The method itself (Push notifications) is part of a backup, so a restored instance keeps asking for it.
 
+A device that dropped off the list — the push service reported it gone — is added back the next time Lastboard opens on it, as long as that browser still holds its subscription and the permission. The same applies to a device you remove from another one's list: it stops receiving until it opens Lastboard again, and to switch it off for good, turn push off on that device itself.
+
 > Alerts are driven by the server-side scheduler, so they require **24/7 monitoring**. With it off, nothing is running to notice an outage.

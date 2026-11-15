@@ -9,13 +9,16 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/webpush"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
@@ -470,5 +473,35 @@ func TestAnAlertThroughPushThatReachedNoDeviceIsAnError(t *testing.T) {
 	}
 	if err := sendNotification(context.Background(), notifyConfig{Type: "push"}, "Plex", "x", false); err == nil {
 		t.Fatal("push with no sender was reported as sent")
+	}
+}
+
+// A slow push service must not hold back the others: the devices of one account are sent to together,
+// so the time is that of the slowest, not the sum. Five devices that each take 300 ms would be 1.5 s one
+// after another.
+func TestTheDevicesOfOneAccountAreSentToTogether(t *testing.T) {
+	var served atomic.Int32
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.Copy(io.Discard, r.Body)
+		time.Sleep(300 * time.Millisecond)
+		served.Add(1)
+		w.WriteHeader(http.StatusCreated)
+	}))
+	t.Cleanup(srv.Close)
+	s, owner := senderTo(t, &fakePushService{Server: srv})
+	for i := 0; i < 5; i++ {
+		subscribe(t, s, owner, fmt.Sprintf("%s/device-%d", srv.URL, i), newBrowser(t))
+	}
+	start := time.Now()
+	res, err := s.SendToUser(context.Background(), owner, PushMessage{Title: "a", Body: "b"})
+	took := time.Since(start)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Sent != 5 || served.Load() != 5 {
+		t.Fatalf("sent %d, served %d; want 5 and 5", res.Sent, served.Load())
+	}
+	if took > 1000*time.Millisecond {
+		t.Errorf("five devices at 300 ms took %v: they were sent to one after another", took)
 	}
 }

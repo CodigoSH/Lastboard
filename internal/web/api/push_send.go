@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -234,8 +235,20 @@ func (s *PushSender) SendToUser(ctx context.Context, userID int, m PushMessage) 
 		return res, err
 	}
 
-	for _, sub := range subs {
-		switch s.sendOne(ctx, sub, payload, priv, m.Up) {
+	// All devices at once: they are different push services and each answer can take the full timeout,
+	// so one slow device must not hold back the alert on the others. At most maxPushDevices of them.
+	outcomes := make([]pushOutcome, len(subs))
+	var wg sync.WaitGroup
+	for i, sub := range subs {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			outcomes[i] = s.sendOne(ctx, sub, payload, priv, m.Up)
+		}()
+	}
+	wg.Wait()
+	for _, o := range outcomes {
+		switch o {
 		case pushSent:
 			res.Sent++
 		case pushGone:
