@@ -291,7 +291,7 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 /* The preview: the board's own section — a box with its name on the border — and a tile for each bookmark that will be in it. */
 .preview { min-inline-size: 0; display: flex; flex-wrap: wrap; align-items: stretch; align-content: stretch; gap: 12px; padding-block-start: 8px; }
 .preview__box {
-    position: relative; display: block; min-inline-size: 0; max-inline-size: 100%; padding: 16px 10px 8px;
+    position: relative; display: block; flex: 1 1 160px; min-inline-size: 0; max-inline-size: 100%; padding: 16px 10px 8px;
     background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--radius);
 }
 .preview__title {
