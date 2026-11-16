@@ -139,7 +139,7 @@ describe('where it goes', () => {
         expect(plan.sections.map(s => [s.title, s.items.length])).toEqual([['media', 5], ['Home', 1]]);
         expect(plan.sections[0].w).toBe(4);
         expect(plan.sections[0].h).toBe(2); // five bookmarks, four to a row
-        expect(plan.sections[0].items[4]).toMatchObject({ title: 'e', x: 1, y: 2 });
+        expect(plan.sections[0].items[4]).toMatchObject({ title: 'e', x: 1, y: 2, ref: 4 });
     });
     test('nothing selected plans nothing', () => {
         expect(planServices([], 'host', 'Home', 12).sections).toEqual([]);

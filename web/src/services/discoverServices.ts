@@ -1,5 +1,5 @@
 import { containerName, type DockerContainer, type DockerHost } from './dockerShared';
-import { planImport, type PlanDashboard } from './importPlan';
+import { planImport, type PlanItem, type PlanSection } from './importPlan';
 
 /**
  * What a host's containers could become on the board: one proposal each, for a
@@ -206,15 +206,20 @@ export interface NewService {
     url: string;
 }
 
+/** A bookmark of the plan, with the index of the service it came from. */
+export type PlannedService = PlanItem & { x: number; y: number; ref: number };
+export interface ServicesPlan { name: string; sections: (Omit<PlanSection, 'items'> & { items: PlannedService[] })[] }
+
 /** One section per title, with the bookmarks laid out inside it the way an import lays them out. */
-export function planServices(services: NewService[], groupBy: GroupBy, hostName: string, cols: number): PlanDashboard {
+export function planServices(services: NewService[], groupBy: GroupBy, hostName: string, cols: number): ServicesPlan {
     const size = new Map<string, number>();
     for (const s of services) if (s.proposal.project) size.set(s.proposal.project, (size.get(s.proposal.project) ?? 0) + 1);
-    const items = services.map(s => ({
+    const items = services.map((s, ref) => ({
         title: s.name,
         url: s.url,
         group: sectionTitleFor(s.proposal, groupBy, hostName, size),
+        ref,
     }));
     const [plan] = planImport([{ name: hostName, items }], cols, hostName);
-    return plan ?? { name: hostName, sections: [] };
+    return (plan ?? { name: hostName, sections: [] }) as ServicesPlan;
 }
