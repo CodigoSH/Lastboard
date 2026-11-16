@@ -9,6 +9,7 @@ import { safeImageSrc } from '../../../services/escape';
 import { iconForEdit, resolveIconUrl } from '../../../services/iconUrl';
 import { apiService } from '../../../services/apiService';
 import { materializeIcon } from '../../../services/iconStore';
+import { bookmarkContent } from '../../../services/bookmarkContent';
 import { accessAllows } from '../../../services/access';
 import { userStore } from '../../../store/userStore';
 import '../IconSelectionModal/IconSelectionModal'; // Import the new modal
@@ -228,23 +229,21 @@ class AddBookmarkModal extends HTMLElement {
             const { clearDockerLinks } = await import('../../../services/dockerLinks');
             clearDockerLinks();
 
-            const content = JSON.stringify({
+            // Written by the same function the service detector uses, so a
+            // bookmark made there is the one this editor would have made.
+            const content = bookmarkContent({
                 label: this.bookmarkTitle,
                 url: this.protocol + this.url.replace(/^https?:\/\//, ''),
-                description: '',
                 icon: iconUrl,
                 iconName: this.selectedIconName,
                 statusCheck: this.checkStatus,
-                // Only written when there is one, so a board without Proxmox
-                // keeps exactly the content it had before this existed.
-                ...(this.proxmox ? { proxmox: this.proxmox } : {}),
-                ...(this.docker ? { docker: this.docker } : {}),
-                statusPos: this.checkStatus ? this.statusPosition : 'off',
+                proxmox: this.proxmox,
+                docker: this.docker,
+                statusPos: this.statusPosition,
                 visibleTouch: this.visibleTouch,
-                openInNewTab: true,
                 labelPos: this.labelPosition,
-                borderColor: this.color,
-                borderWidth: this.borderWidth
+                color: this.color,
+                borderWidth: this.borderWidth,
             });
 
             try {
