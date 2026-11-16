@@ -363,8 +363,8 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .controls { grid-template-columns: 1fr 1fr; padding: 12px 18px 0; gap: 10px; }
     .controls > label.field { grid-column: 1 / -1; }
     .tools { padding: 12px 18px 0; gap: 8px; }
-    .tools__group { flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-    .tools__group::-webkit-scrollbar { display: none; }
+    /* Wrapped, not scrolled: a label cut at the edge looks like a mistake, not like something to swipe. */
+    .tools__group { flex: 1 1 100%; }
     .tool { block-size: 32px; padding: 0 10px; font-size: 10.5px; flex: none; }
     .head__hint { font-size: 12px; padding: 6px 8px; }
     /* The preview is for the room a desktop has; here the list has it. */
