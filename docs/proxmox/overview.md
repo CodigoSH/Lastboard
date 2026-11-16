@@ -143,7 +143,7 @@ One row for each machine, with its name and its address to change. Machines that
 - **The address** is the one the machine reports: a container's own network interface, or, for a virtual machine, what its **QEMU guest agent** says. Of those it takes the first private IPv4 address, skipping loopback, link-local (169.254), the 100.64/10 range, and the interfaces of Docker, Tailscale, CNI and Flannel. Lastboard proposes `http://` and the address: the port is yours to add.
 - **A machine with no address** — a virtual machine without the agent installed or running, a token that may not read it (see the optional privilege above), or a machine that is off — is proposed at **its console in Proxmox's own interface**, which is a fine bookmark too. A machine that is off starts unticked.
 - **Sections:** one for the hypervisor, named after it. A section that already has that name takes the new bookmarks into its free cells, and grows only when nothing is below it; if it cannot, a new one is made.
-- Each bookmark is tied to its machine, shows the machine's state as the others do, and carries the icon you chose for the machine or, when your account may look icons up, the library's. **Undo** removes what that run created, and nothing else.
+- Each bookmark is tied to its machine, so the machine's card and panel show it, and its status is checked when your account may. It carries the icon you chose for the machine or, when your account may look icons up, the library's. **Undo** removes what that run created, and nothing else.
 
 ### Storage
 
