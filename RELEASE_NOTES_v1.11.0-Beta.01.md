@@ -1,6 +1,6 @@
 **Add a host's services to the board**
 
-This is a beta of 1.11.0. The stable channel is not offered it.
+This is a beta of 1.11.0, offered only to installations on the beta channel.
 
 ### Added
 - **Add a host's services to the board.** The **bookmark** button in the header of the Docker and Proxmox pages opens a window that lists what the host's containers or machines could become, one row each, with a name, an address, an icon and a section you can change. Tick what you want and add it; **Undo** removes exactly what that run created. The same window opens by itself when you add a Docker host or a hypervisor that answers and has something to offer. It needs permission to edit the board.
