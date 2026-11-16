@@ -9,7 +9,7 @@ import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHos
 import { fetchContainers, hostAddress, hostErrorKey, type DockerHost } from '../../../services/dockerShared';
 import { loadDockerLinks, clearDockerLinks, dockerLinkKey } from '../../../services/dockerLinks';
 import { loadProxmox, chosenIcon as machineIcon } from '../../../services/proxmoxApi';
-import { loadProxmoxLinks, linkFor as machineLink, clearProxmoxLinks } from '../../../services/proxmoxLinks';
+import { loadProxmoxLinks, linkFor as machineLink, bookmarkNamed, clearProxmoxLinks } from '../../../services/proxmoxLinks';
 import { fetchAddresses, fetchProxmoxHosts, type ProxmoxHostRef } from '../../../services/proxmoxAddresses';
 import { buildIconIndex } from '../../../services/importIcons';
 import { materializeIcon } from '../../../services/iconStore';
@@ -150,12 +150,15 @@ class DetectServicesModal extends HTMLElement {
             fetchDockerSettings(),
             fetchContainers(host),
             loadDockerLinks().catch(() => new Map()),
+            loadProxmoxLinks().catch(() => null), // the boards' bookmarks, read once for both kinds
         ]);
         await this.loadIconIndex();
         this.view.address = hostAddress(host, location.hostname);
         return discoverDocker(containers, {
             host,
-            linkedLabel: name => links.get(dockerLinkKey(host.id, name))?.label ?? '',
+            // A container tied to a bookmark by hand, or else one the bookmark's name says it is:
+            // a board made before this page existed is full of them, and a second one is a duplicate.
+            linkedLabel: name => links.get(dockerLinkKey(host.id, name))?.label ?? bookmarkNamed(name)?.label ?? '',
             chosenIcon: name => settings.icons?.[`${host.id}/${name}`] ?? '',
         });
     }

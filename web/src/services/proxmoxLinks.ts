@@ -157,6 +157,15 @@ export function linkFor(guest: { vmid: number; node: string; name: string; host?
     return guessByName(cache.byName, guest.name);
 }
 
+/**
+ * The bookmark a name says it is, for anything that is not a machine of ours
+ * (a container, say): the same match as above, on the name alone, and nothing
+ * when two bookmarks would fit or the index is not built yet.
+ */
+export function bookmarkNamed(name: string): PxLink | null {
+    return cache ? guessByName(cache.byName, name) : null;
+}
+
 /** Called when a bookmark changes, so the next reader rebuilds the index. */
 export function clearProxmoxLinks(): void {
     cache = null;
