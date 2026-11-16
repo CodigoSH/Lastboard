@@ -126,18 +126,13 @@ describe('a hypervisor\'s window', () => {
 });
 
 describe('the result', () => {
-    test('says what was added, what was not, and offers to undo only what can be', () => {
-        const html = resultHtml({ created: 5, failed: 1, notFit: 2, undoable: 5, undone: null }, t);
+    test('says what was added and what was not', () => {
+        const html = resultHtml({ created: 5, failed: 1, notFit: 2 }, t);
         expect(html).toContain('detect.added:{&quot;count&quot;:&quot;5&quot;}');
         expect(html).toContain('detect.failed:{&quot;count&quot;:&quot;1&quot;}');
         expect(html).toContain('detect.limit:{&quot;count&quot;:&quot;2&quot;}');
-        expect(html).toContain('id="dt-undo"');
-        expect(resultHtml({ created: 0, failed: 0, notFit: 0, undoable: 0, undone: null }, t)).not.toContain('dt-undo');
-    });
-    test('after an undo it says how many were removed and offers nothing more', () => {
-        const html = resultHtml({ created: 0, failed: 0, notFit: 0, undoable: 0, undone: 4 }, t);
-        expect(html).toContain('detect.undone:{&quot;count&quot;:&quot;4&quot;}');
         expect(html).not.toContain('dt-undo');
+        expect(resultHtml({ created: 3, failed: 0, notFit: 0 }, t)).not.toContain('class="bad"');
     });
 });
 

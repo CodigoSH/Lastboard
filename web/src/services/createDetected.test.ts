@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { createDetected, ITEM_LIMIT, undoCreated, type ItemApi, type NewBookmark } from './createDetected';
+import { createDetected, ITEM_LIMIT, type ItemApi, type NewBookmark } from './createDetected';
 import type { BoardItem, SectionToPlace } from './placeServices';
 
 /** A server that numbers what it creates, and can be told to refuse. */
@@ -15,7 +15,6 @@ function fakeApi(refuse: (body: Record<string, unknown>, nth: number) => string 
             return { id: next++ };
         },
         async updateItem(body) { calls.push({ op: 'update', id: body.id, h: body.h }); return {}; },
-        async deleteItem(id) { calls.push({ op: 'delete', id }); return {}; },
     };
     return { api, calls };
 }
@@ -36,7 +35,6 @@ describe('creating', () => {
         expect(calls[0].body).toMatchObject({ dashboard_id: 3, type: 'section', content: '{"title":"Home"}' });
         expect(calls[1].body).toMatchObject({ dashboard_id: 3, parent_id: 100, type: 'bookmark', x: 1, y: 1, w: 1, h: 1 });
         expect(calls[2].body).toMatchObject({ parent_id: 100, x: 2, y: 1 });
-        expect(r.log).toEqual({ sectionIds: [100], bookmarkIds: [101, 102], grown: [] });
     });
     test('a failure on one bookmark does not stop the others, and is counted', async () => {
         const { api } = fakeApi((body, nth) => (body.type === 'bookmark' && nth === 3 ? 'error.invalid' : null));
@@ -58,10 +56,9 @@ describe('creating', () => {
         const full = Array.from({ length: 4 }, (_, k): BoardItem => ({ id: 10 + k, type: 'bookmark', x: 1 + k, y: 1, w: 1, h: 1, parent_id: 7, content: '{}' }));
         const board: BoardItem[] = [{ id: 7, type: 'section', x: 1, y: 1, w: 4, h: 1, parent_id: null, content: '{"title":"Home"}' }, ...full];
         const { api, calls } = fakeApi();
-        const r = await run([section('home', 1)], api, board);
+        await run([section('home', 1)], api, board);
         expect(calls[0]).toEqual({ op: 'update', id: 7, h: 2 });
         expect(calls[1].body).toMatchObject({ parent_id: 7, x: 1, y: 2 });
-        expect(r.log).toEqual({ sectionIds: [], bookmarkIds: [100], grown: [{ id: 7, oldH: 1 }] });
     });
     test('the requests go through the retry for a server that is asked too fast', async () => {
         const { api } = fakeApi();
@@ -71,26 +68,5 @@ describe('creating', () => {
             retry: async run => { retried++; return run(); },
         });
         expect(retried).toBe(2); // the section and its bookmark
-    });
-});
-
-describe('undoing', () => {
-    test('takes back the bookmarks, then the sections, then the rows added to a section that was there', async () => {
-        const { api, calls } = fakeApi();
-        const removed = await undoCreated({ sectionIds: [100], bookmarkIds: [101, 102], grown: [{ id: 7, oldH: 2 }] }, { api, retry: noRetry });
-        expect(removed).toBe(2);
-        expect(calls).toEqual([
-            { op: 'delete', id: 101 }, { op: 'delete', id: 102 }, { op: 'delete', id: 100 }, { op: 'update', id: 7, h: 2 },
-        ]);
-    });
-    test('one that is already gone is no reason to stop', async () => {
-        const calls: number[] = [];
-        const api: ItemApi = {
-            createItem: async () => ({ id: 0 }), updateItem: async () => ({}),
-            async deleteItem(id) { calls.push(id); if (id === 101) throw new Error('error.not_found'); return {}; },
-        };
-        const removed = await undoCreated({ sectionIds: [100], bookmarkIds: [101, 102], grown: [] }, { api, retry: noRetry });
-        expect(calls).toEqual([101, 102, 100]);
-        expect(removed).toBe(1);
     });
 });

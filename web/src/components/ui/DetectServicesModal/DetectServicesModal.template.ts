@@ -48,9 +48,6 @@ export interface ResultView {
     created: number;
     failed: number;
     notFit: number;
-    /** What Undo would take back; 0 hides the button. */
-    undoable: number;
-    undone: number | null;
 }
 
 export interface WindowView {
@@ -239,15 +236,10 @@ export function sectionStatusHtml(st: SectionStatus, t: T): string {
 }
 
 export function resultHtml(r: ResultView, t: T): string {
-    const lines: string[] = [];
-    if (r.undone != null) lines.push(`<span>${e(t('detect.undone', { count: String(r.undone) }))}</span>`);
-    else {
-        lines.push(`<span>${e(t('detect.added', { count: String(r.created) }))}</span>`);
-        if (r.failed) lines.push(`<span class="bad">${e(t('detect.failed', { count: String(r.failed) }))}</span>`);
-        if (r.notFit) lines.push(`<span class="bad">${e(t('detect.limit', { count: String(r.notFit) }))}</span>`);
-    }
-    const undo = r.undone == null && r.undoable > 0 ? `<button type="button" class="link" id="dt-undo">${e(t('detect.undo'))}</button>` : '';
-    return `<div class="result" role="status">${lines.join('')}${undo}</div>`;
+    const lines = [`<span>${e(t('detect.added', { count: String(r.created) }))}</span>`];
+    if (r.failed) lines.push(`<span class="bad">${e(t('detect.failed', { count: String(r.failed) }))}</span>`);
+    if (r.notFit) lines.push(`<span class="bad">${e(t('detect.limit', { count: String(r.notFit) }))}</span>`);
+    return `<div class="result" role="status">${lines.join('')}</div>`;
 }
 
 /** The product and the host, unless the host is already named after the product. */

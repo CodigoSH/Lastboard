@@ -28,7 +28,7 @@ import {
     candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices, sectionTitleFor,
     type Discovery, type NewService, type ServiceProposal,
 } from '../../../services/discoverServices';
-import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
+import { createDetected, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
 import { safeImageSrc } from '../../../services/escape';
 import { addressLineHtml, detectHtml, headHtml, listHtml, sectionStatus, sectionStatusHtml, healthText, previewHtml, sectionPlaceholder, type PreviewSection, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
@@ -63,13 +63,13 @@ const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
 class DetectServicesModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
     private view: WindowView = this.blankView();
+    private asking = false;
     private source: Source = 'docker';
     private dockerHosts: DockerHost[] = [];
     private pxHosts: ProxmoxHostRef[] = [];
     private host: { id: string; name: string } | undefined;
     private rows = new Map<string, RowState>();
     private iconIndex = new Map<string, string>();
-    private lastRun: CreateLog | null = null;
     private loadToken = 0;
     /** Which of the addresses proposed answered, by address: what was asked, not what is now in a box. */
     private health = new Map<string, 'up' | 'down'>();
@@ -98,7 +98,6 @@ class DetectServicesModal extends HTMLElement {
         this.source = opts.source ?? 'docker';
         this.view = this.blankView();
         this.view.source = this.source;
-        this.lastRun = null;
         this.paint();
         if (!opts.quiet) this.dialog?.showModal();
 
@@ -545,7 +544,6 @@ class DetectServicesModal extends HTMLElement {
         else if (id === 'dt-only-up') this.tickOnlyAnswering();
         else if (id === 'dt-addr-change' || id === 'dt-addr-done') this.editAddress(id === 'dt-addr-change');
         else if (id === 'dt-create') void this.create();
-        else if (id === 'dt-undo') void this.undo();
     }
 
     private onInput(e: Event): void {
@@ -661,6 +659,11 @@ class DetectServicesModal extends HTMLElement {
         const picked = this.ticked();
         if (picked.length === 0) return;
         if (picked.some(r => !r.url.trim())) { this.message(t('detect.need_url')); return; }
+        if (this.asking) return;
+        this.asking = true;
+        const sure = await this.confirmAdd(picked.length);
+        this.asking = false;
+        if (!sure) return;
 
         this.view.busy = true;
         this.refreshCount();
@@ -730,14 +733,18 @@ class DetectServicesModal extends HTMLElement {
         } catch { /* the board could not be read: the new section goes where the corner is free */ }
 
         const result = await createDetected({ boardId, gridCols, sections, board: Array.isArray(board) ? board : [] });
-        this.lastRun = result.log;
         this.view.busy = false;
         this.forgetLinks();
         if (open) await dashboardStore.fetchItems();
         this.announce();
+        // All of it went in: nothing is left to read or decide here, so the window closes and a toast says how many.
+        if (result.created > 0 && result.failed === 0 && result.notFit === 0) {
+            this.dialog?.close();
+            (window as unknown as { notifier?: { show: (m: string) => void } }).notifier?.show(t('detect.added', { count: String(result.created) }));
+            return;
+        }
         await this.loadHost(host.id, {
             created: result.created, failed: result.failed, notFit: result.notFit,
-            undoable: result.log.bookmarkIds.length, undone: null,
         });
     }
 
@@ -747,21 +754,18 @@ class DetectServicesModal extends HTMLElement {
         clearProxmoxLinks();
     }
 
+    /** Asks before anything is made: how many, in which section and on which board. */
+    private async confirmAdd(count: number): Promise<boolean> {
+        const modal = document.querySelector('confirmation-modal') as { confirm(title: string, message: string): Promise<boolean> } | null;
+        if (!modal) return true;
+        const board = this.view.boards.find(b => b.id === this.view.boardId)?.name ?? dashboardStore.getState().dashboards?.find(d => d.id === dashboardStore.getState().currentDashboardId)?.name ?? '';
+        const section = this.view.sectionName.trim() || sectionPlaceholder(this.view, t);
+        return modal.confirm(t('detect.confirm_title'), t('detect.confirm_message', { count: String(count), section, board }));
+    }
+
     /** The pages count what is left to add; they read it again. */
     private announce(): void {
         document.dispatchEvent(new CustomEvent('services-detected'));
-    }
-
-    private async undo(): Promise<void> {
-        const run = this.lastRun;
-        const host = this.host;
-        if (!run || !host) return;
-        this.lastRun = null;
-        const removed = await undoCreated(run);
-        this.forgetLinks();
-        if (this.view.boardId === dashboardStore.getState().currentDashboardId) await dashboardStore.fetchItems();
-        this.announce();
-        await this.loadHost(host.id, { created: 0, failed: 0, notFit: 0, undoable: 0, undone: removed });
     }
 }
 
