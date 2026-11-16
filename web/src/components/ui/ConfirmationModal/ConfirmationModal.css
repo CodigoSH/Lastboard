@@ -84,3 +84,64 @@ dialog[open] {
     gap: 12px;
     justify-content: flex-end;
 }
+
+/* The optional switch: the message above says what it changes while it is on. */
+.modal-message:has(+ .modal-switch) {
+    margin-bottom: 16px;
+}
+
+.modal-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 28px 0;
+    font-size: 13.5px;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.modal-switch input {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    inline-size: 34px;
+    block-size: 20px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    position: relative;
+    cursor: inherit;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.modal-switch input::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 2px;
+    inline-size: 14px;
+    block-size: 14px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.modal-switch input:checked {
+    background: rgba(var(--accent-rgb), 0.18);
+    border-color: var(--accent);
+}
+
+.modal-switch input:checked::after {
+    background: var(--accent);
+    transform: translateX(14px);
+}
+
+[dir="rtl"] .modal-switch input:checked::after {
+    transform: translateX(-14px);
+}
+
+.modal-switch input:focus-visible {
+    outline: 2px solid rgba(var(--accent-rgb), 0.5);
+    outline-offset: 2px;
+}

@@ -49,6 +49,8 @@
   "bookmark.border_width": "بارڈر کی چوڑائی",
   "bookmark.delete_confirm_message": "کیا آپ کو یقین ہے؟ یہ ہمیشہ کے لیے حذف ہو جائے گا۔",
   "bookmark.delete_section_message": "کیا آپ کو یقین ہے؟ سیکشن اور اس کے اندر موجود ہر چیز ہمیشہ کے لیے حذف ہو جائے گی۔",
+  "bookmark.delete_section_only": "صرف سیکشن",
+  "bookmark.delete_section_only_message": "صرف سیکشن حذف ہوگا۔ اس کے اندر کی چیزیں بورڈ پر اسی جگہ رہیں گی، بغیر سیکشن کے۔",
   "bookmark.hidden": "خفیہ",
   "bookmark.icon": "آئیکن",
   "bookmark.label": "عنوان",

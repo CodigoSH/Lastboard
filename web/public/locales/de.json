@@ -49,6 +49,8 @@
   "bookmark.border_width": "Rahmenbreite",
   "bookmark.delete_confirm_message": "Bist du sicher? Es wird endgültig gelöscht.",
   "bookmark.delete_section_message": "Bist du sicher? Der Abschnitt und alles darin wird endgültig gelöscht.",
+  "bookmark.delete_section_only": "Nur der Abschnitt",
+  "bookmark.delete_section_only_message": "Nur der Abschnitt wird gelöscht. Was darin ist, bleibt an seinem Platz auf dem Board, ohne Abschnitt.",
   "bookmark.hidden": "Versteckt",
   "bookmark.icon": "Symbol",
   "bookmark.label": "Titel",

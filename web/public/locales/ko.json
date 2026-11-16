@@ -49,6 +49,8 @@
   "bookmark.border_width": "테두리 두께",
   "bookmark.delete_confirm_message": "확실합니까? 영구적으로 삭제됩니다.",
   "bookmark.delete_section_message": "확실합니까? 섹션과 그 안의 모든 항목이 영구적으로 삭제됩니다.",
+  "bookmark.delete_section_only": "섹션만",
+  "bookmark.delete_section_only_message": "섹션만 삭제됩니다. 안에 있던 항목은 보드의 같은 자리에 섹션 없이 남습니다.",
   "bookmark.hidden": "숨김",
   "bookmark.icon": "아이콘",
   "bookmark.label": "제목",

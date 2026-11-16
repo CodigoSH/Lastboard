@@ -128,9 +128,14 @@ class DemoService {
         return item;
     }
 
-    async deleteItem(id: number): Promise<void> {
+    async deleteItem(id: number, opts: { keepChildren?: boolean } = {}): Promise<void> {
         await this.simulateDelay();
-        const items = this.getItems().filter(i => i.id !== id);
+        const all = this.getItems();
+        const section = all.find(i => i.id === id);
+        const items = all.filter(i => i.id !== id && (opts.keepChildren || i.parent_id !== id)).map(i => {
+            if (!(opts.keepChildren && section && i.parent_id === id)) return i;
+            return { ...i, parent_id: undefined, x: section.x + i.x - 1, y: section.y + i.y - 1 };
+        });
         this.saveItems(items);
     }
 

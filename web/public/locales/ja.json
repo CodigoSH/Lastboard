@@ -49,6 +49,8 @@
   "bookmark.border_width": "枠線の太さ",
   "bookmark.delete_confirm_message": "本当によろしいですか？完全に削除されます。",
   "bookmark.delete_section_message": "本当によろしいですか？セクションとその中のすべてが完全に削除されます。",
+  "bookmark.delete_section_only": "セクションのみ",
+  "bookmark.delete_section_only_message": "セクションだけが削除されます。中のものはボード上のその場所に残り、セクションなしになります。",
   "bookmark.hidden": "非表示",
   "bookmark.icon": "アイコン",
   "bookmark.label": "タイトル",

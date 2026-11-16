@@ -49,6 +49,8 @@
   "bookmark.border_width": "Szerokość obramowania",
   "bookmark.delete_confirm_message": "Czy jesteś pewien? Zostanie trwale usunięte.",
   "bookmark.delete_section_message": "Czy jesteś pewien? Sekcja i wszystko, co zawiera, zostanie trwale usunięte.",
+  "bookmark.delete_section_only": "Tylko sekcja",
+  "bookmark.delete_section_only_message": "Zostanie usunięta tylko sekcja. To, co zawiera, zostaje na tablicy w tym samym miejscu, bez sekcji.",
   "bookmark.hidden": "Ukryty",
   "bookmark.icon": "Ikona",
   "bookmark.label": "Tytył",

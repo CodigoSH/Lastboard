@@ -49,6 +49,8 @@
   "bookmark.border_width": "सीमा की चौड़ाई",
   "bookmark.delete_confirm_message": "क्या आप सुनिश्चित हैं? यह हमेशा के लिए हटा दिया जाएगा।",
   "bookmark.delete_section_message": "क्या आप सुनिश्चित हैं? अनुभाग और उसके अंदर की हर चीज़ हमेशा के लिए हटा दी जाएगी।",
+  "bookmark.delete_section_only": "केवल अनुभाग",
+  "bookmark.delete_section_only_message": "केवल अनुभाग हटाया जाएगा। उसके अंदर की चीज़ें बोर्ड पर वहीं रहेंगी जहाँ हैं, बिना अनुभाग के।",
   "bookmark.hidden": "छिपा हुआ",
   "bookmark.icon": "आइकन",
   "bookmark.label": "शीर्षक",

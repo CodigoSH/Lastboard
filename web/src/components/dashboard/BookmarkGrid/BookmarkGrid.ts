@@ -531,19 +531,23 @@ class BookmarkGrid extends HTMLElement {
             ? i18n.t('type.section')
             : (item.type === 'widget' ? i18n.t('type.widget') : i18n.t('type.bookmark'));
         const { eventBus, EVENTS } = await import('../../../services/EventBus');
+        // A section with something inside also offers to go alone, leaving what is inside on the board.
+        const hasInside = item.type === 'section' && this.allItems.some(b => b.parent_id === id);
         eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
             title: `${i18n.t('general.delete')} ${typeLabel}`,
-            // A section takes what is inside it: it says so when there is something inside.
-            message: i18n.t(item.type === 'section' && this.allItems.some(b => b.parent_id === id) ? 'bookmark.delete_section_message' : 'bookmark.delete_confirm_message'),
-            onConfirm: () => { this._dissolveThenDelete(id); }
+            message: i18n.t(hasInside ? 'bookmark.delete_section_message' : 'bookmark.delete_confirm_message'),
+            toggle: hasInside ? { label: i18n.t('bookmark.delete_section_only'), messageOn: i18n.t('bookmark.delete_section_only_message') } : undefined,
+            onConfirm: (onlySection?: boolean) => { this._dissolveThenDelete(id, !!onlySection); }
         });
     }
 
     // Dissolve a card (fade + slight scale-down) before removing it, so deletion
     // reads as a deliberate exit rather than a snap. Falls back to an instant
     // delete under reduced-motion or if WAAPI is unavailable.
-    private _dissolveThenDelete(id: number) {
-        const del = () => dashboardStore.deleteItem(id);
+    private _dissolveThenDelete(id: number, keepChildren = false) {
+        const del = () => dashboardStore.deleteItem(id, { keepChildren });
+        // Only the section goes: fading its card would fade what stays inside it too.
+        if (keepChildren) { del(); return; }
         // The easing strings in this file stay spelled out: element.animate()
         // takes a plain string and cannot read the --ease-* custom properties the
         // stylesheets use. Same curves, different API.

@@ -49,6 +49,8 @@
   "bookmark.border_width": "Πλάτος περιγράμματος",
   "bookmark.delete_confirm_message": "Είστε σίγουροι; Θα διαγραφεί οριστικά.",
   "bookmark.delete_section_message": "Είστε σίγουροι; Η ενότητα και ό,τι περιέχει θα διαγραφούν οριστικά.",
+  "bookmark.delete_section_only": "Μόνο η ενότητα",
+  "bookmark.delete_section_only_message": "Θα διαγραφεί μόνο η ενότητα. Ό,τι περιέχει μένει στον πίνακα εκεί που είναι, χωρίς ενότητα.",
   "bookmark.hidden": "Κρυφό",
   "bookmark.icon": "Εικονίδιο",
   "bookmark.label": "Τίτλος",

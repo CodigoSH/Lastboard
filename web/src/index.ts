@@ -197,8 +197,14 @@ import { PageNav } from './services/pageNav';
 
 // Centralized Event Listeners
 eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: CustomEvent) => {
-    const { title, message, onConfirm } = e.detail;
+    const { title, message, toggle, onConfirm } = e.detail;
     if (confirmationModal) {
+        // With a toggle, the callback is told whether it was on.
+        if (toggle) {
+            const answer = await confirmationModal.confirmWithToggle(title, message, toggle);
+            if (answer.confirmed && onConfirm) onConfirm(answer.on);
+            return;
+        }
         const confirmed = await confirmationModal.confirm(title, message);
         if (confirmed && onConfirm) {
             onConfirm();

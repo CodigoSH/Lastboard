@@ -49,6 +49,8 @@
   "bookmark.border_width": "Border Width",
   "bookmark.delete_confirm_message": "Are you sure? It'll be gone for good.",
   "bookmark.delete_section_message": "Are you sure? The section and everything inside it will be gone for good.",
+  "bookmark.delete_section_only": "Only the section",
+  "bookmark.delete_section_only_message": "Only the section will be removed. What is inside stays on the board where it is, without a section.",
   "bookmark.hidden": "Hidden",
   "bookmark.icon": "Icon",
   "bookmark.label": "Title",

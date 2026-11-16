@@ -49,6 +49,8 @@
   "bookmark.border_width": "সীমানা প্রস্থ",
   "bookmark.delete_confirm_message": "আপনি কি নিশ্চিত? এটি চিরতরে মুছে যাবে।",
   "bookmark.delete_section_message": "আপনি কি নিশ্চিত? বিভাগটি এবং এর ভেতরের সবকিছু চিরতরে মুছে যাবে।",
+  "bookmark.delete_section_only": "শুধু বিভাগ",
+  "bookmark.delete_section_only_message": "শুধু বিভাগটি মুছে যাবে। ভেতরের জিনিসগুলো বোর্ডে যেখানে আছে সেখানেই থাকবে, কোনো বিভাগ ছাড়া।",
   "bookmark.hidden": "লুকানো",
   "bookmark.icon": "আইকন",
   "bookmark.label": "শিরোনাম",

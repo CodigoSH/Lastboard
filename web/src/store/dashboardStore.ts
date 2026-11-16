@@ -723,11 +723,16 @@ class DashboardStore {
 
 
 
-    async deleteItem(id: number) {
+    /**
+     * Removes an item. A section takes what is inside it with it, unless `keepChildren`: then only the section
+     * goes and its bookmarks stay on the board where they are drawn, without a section (a child's place is
+     * relative to its section, so it takes the section's own place plus that offset).
+     */
+    async deleteItem(id: number, opts: { keepChildren?: boolean } = {}) {
         // --- DEMO MODE ---
         if (this.isDemo()) {
-            this.state.items = this.state.items.filter(item => item.id !== id && item.parent_id !== id);
-            await demoService.deleteItem(id);
+            this.state.items = this.releasedOrRemoved(id, !!opts.keepChildren);
+            await demoService.deleteItem(id, opts);
             this.notify();
             return;
         }
@@ -747,16 +752,18 @@ class DashboardStore {
             // A section owns what is inside it and the server removes those with it, so they leave
             // this list too; left here they would still be counted, searched and checked until a reload.
             const inside = this.state.items.filter(item => item.parent_id === id);
-            this.state.items = this.state.items.filter(item => item.id !== id && item.parent_id !== id);
+            this.state.items = this.releasedOrRemoved(id, !!opts.keepChildren);
             this.saveToLocalStorage();
             this.notify();
 
             // Sync with backend
             try {
-                await dashboardService.deleteItem(id);
+                await dashboardService.deleteItem(id, opts);
             } catch (apiError) {
                 // Rollback on failure
                 console.error('[DashboardStore] Failed to delete item, rolling back', apiError);
+                const released = new Set(inside.map(item => item.id));
+                this.state.items = this.state.items.filter(item => !released.has(item.id));
                 this.state.items.push(deletedItem, ...inside);
                 this.saveToLocalStorage();
                 this.notify();
@@ -764,6 +771,16 @@ class DashboardStore {
         } catch (error) {
             console.error('[DashboardStore] Error deleting item', error);
         }
+    }
+
+    /** The list without `id`, and without what is inside it, or with that put on the board at the cells it was drawn on. */
+    private releasedOrRemoved(id: number, keepChildren: boolean) {
+        const section = this.state.items.find(item => item.id === id);
+        return this.state.items
+            .filter(item => item.id !== id && (keepChildren || item.parent_id !== id))
+            .map(item => (keepChildren && section && item.parent_id === id)
+                ? { ...item, parent_id: undefined, x: section.x + item.x - 1, y: section.y + item.y - 1 }
+                : item);
     }
 
     getState() {

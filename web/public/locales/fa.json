@@ -49,6 +49,8 @@
   "bookmark.border_width": "عرض حاشیه",
   "bookmark.delete_confirm_message": "آیا مطمئن هستید؟ برای همیشه حذف خواهد شد.",
   "bookmark.delete_section_message": "آیا مطمئن هستید؟ بخش و هر چیزی که درون آن است برای همیشه حذف خواهد شد.",
+  "bookmark.delete_section_only": "فقط بخش",
+  "bookmark.delete_section_only_message": "فقط بخش حذف می‌شود. آنچه درون آن است همان‌جا روی برد می‌ماند، بدون بخش.",
   "bookmark.hidden": "مخفی",
   "bookmark.icon": "نماد",
   "bookmark.label": "عنوان",

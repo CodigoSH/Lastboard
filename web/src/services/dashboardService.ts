@@ -55,8 +55,9 @@ export const dashboardService = {
         return apiService.patch<MessageResponse>(`/api/dashboard/item/${id}/move`, payload);
     },
 
-    async deleteItem(id: number): Promise<MessageResponse> {
-        return apiService.delete<MessageResponse>(`/api/dashboard/item/${id}`);
+    /** `keepChildren`: a section goes alone and what was inside stays on the board, without a section. */
+    async deleteItem(id: number, opts: { keepChildren?: boolean } = {}): Promise<MessageResponse> {
+        return apiService.delete<MessageResponse>(`/api/dashboard/item/${id}${opts.keepChildren ? '?keep_children=1' : ''}`);
     },
 
     async checkHealth(url: string): Promise<{ status: string }> {

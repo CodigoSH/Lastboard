@@ -49,6 +49,8 @@
   "bookmark.border_width": "Espessura da borda",
   "bookmark.delete_confirm_message": "Tem certeza? Será eliminado para sempre.",
   "bookmark.delete_section_message": "Tem certeza? A seção e tudo o que há dentro dela serão eliminados para sempre.",
+  "bookmark.delete_section_only": "Somente a seção",
+  "bookmark.delete_section_only_message": "Somente a seção será eliminada. O que há dentro permanece no painel onde está, sem seção.",
   "bookmark.hidden": "Oculto",
   "bookmark.icon": "Ícone",
   "bookmark.label": "Título",

@@ -81,6 +81,8 @@ A **Section** is a container that groups related bookmarks together under a titl
 
 > Bookmarks and sections can also be **moved to another dashboard** — individually or in bulk. See [Dashboards](../using/dashboards.md#moving-items-between-dashboards).
 
+**Deleting a section** deletes what is inside it too, and the confirmation says so. To remove the section and keep what is inside, turn on **Only the section** in that confirmation: what is inside stays on the board in the cells where it was drawn, no longer in a section. The switch only appears when the section has something inside.
+
 ## Reordering & Search
 
 - **Drag to reorder**: In Edit Mode, drag any bookmark (or section) to reposition it on the grid. The layout is saved automatically.

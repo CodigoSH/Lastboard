@@ -49,6 +49,8 @@
   "bookmark.border_width": "Spessore del bordo",
   "bookmark.delete_confirm_message": "Sei sicuro? Sarà eliminato per sempre.",
   "bookmark.delete_section_message": "Sei sicuro? La sezione e tutto ciò che contiene saranno eliminati per sempre.",
+  "bookmark.delete_section_only": "Solo la sezione",
+  "bookmark.delete_section_only_message": "Verrà eliminata solo la sezione. Ciò che contiene resta sulla bacheca dov'è, senza sezione.",
   "bookmark.hidden": "Nascosto",
   "bookmark.icon": "Icona",
   "bookmark.label": "Titolo",

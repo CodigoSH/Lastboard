@@ -49,6 +49,8 @@
   "bookmark.border_width": "边框宽度",
   "bookmark.delete_confirm_message": "你确定吗？它将被永久删除。",
   "bookmark.delete_section_message": "你确定吗？该部分及其中的所有内容都将被永久删除。",
+  "bookmark.delete_section_only": "仅删除该部分",
+  "bookmark.delete_section_only_message": "只会删除该部分。其中的内容会保留在看板上原来的位置，不再属于任何部分。",
   "bookmark.hidden": "隐藏",
   "bookmark.icon": "图标",
   "bookmark.label": "标题",

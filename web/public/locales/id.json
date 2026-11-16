@@ -49,6 +49,8 @@
   "bookmark.border_width": "Lebar bingkai",
   "bookmark.delete_confirm_message": "Apakah Anda yakin? Ini akan dihapus selamanya.",
   "bookmark.delete_section_message": "Apakah Anda yakin? Bagian ini beserta semua isinya akan dihapus selamanya.",
+  "bookmark.delete_section_only": "Hanya bagiannya",
+  "bookmark.delete_section_only_message": "Hanya bagian yang akan dihapus. Isinya tetap di papan pada tempatnya, tanpa bagian.",
   "bookmark.hidden": "Tersembunyi",
   "bookmark.icon": "Ikon",
   "bookmark.label": "Judul",

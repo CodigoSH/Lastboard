@@ -49,6 +49,8 @@
   "bookmark.border_width": "Breedte van de rand",
   "bookmark.delete_confirm_message": "Weet je het zeker? Het wordt permanent verwijderd.",
   "bookmark.delete_section_message": "Weet je het zeker? De sectie en alles erin wordt permanent verwijderd.",
+  "bookmark.delete_section_only": "Alleen de sectie",
+  "bookmark.delete_section_only_message": "Alleen de sectie wordt verwijderd. Wat erin zit, blijft op het bord op dezelfde plek, zonder sectie.",
   "bookmark.hidden": "Verborgen",
   "bookmark.icon": "Pictogram",
   "bookmark.label": "Titel",
