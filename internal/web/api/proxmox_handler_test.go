@@ -99,6 +99,13 @@ func newFakeProxmox(t *testing.T) *fakeProxmox {
 			w.Write([]byte(`{"data":[{"n":1,"t":"INFO: starting new backup job"},{"n":2,"t":"INFO: \u001b[1mcreating\u001b[0m archive\r"},{"n":3,"t":"TASK OK"}]}`))
 		case strings.HasPrefix(r.URL.Path, "/api2/json/nodes/kprox/tasks/") && strings.HasSuffix(r.URL.Path, "/status"):
 			w.Write([]byte(`{"data":{"status":"running"}}`))
+		case r.URL.Path == "/api2/json/nodes/kprox/lxc/106/interfaces":
+			w.Write([]byte(`{"data":[{"name":"lo","hwaddr":"00:00:00:00:00:00","inet":"127.0.0.1/8"},{"name":"eth0","hwaddr":"bc:24:11:00:00:01","inet":"192.168.1.106/24","inet6":"fe80::be24:11ff:fe00:1/64"}]}`))
+		case r.URL.Path == "/api2/json/nodes/kprox/qemu/107/agent/network-get-interfaces":
+			w.Write([]byte(`{"data":{"result":[{"name":"lo","ip-addresses":[{"ip-address":"127.0.0.1","ip-address-type":"ipv4","prefix":8}]},{"name":"docker0","ip-addresses":[{"ip-address":"172.17.0.1","ip-address-type":"ipv4","prefix":16}]},{"name":"ens18","ip-addresses":[{"ip-address":"fe80::1","ip-address-type":"ipv6","prefix":64},{"ip-address":"10.0.0.107","ip-address-type":"ipv4","prefix":24}]}]}}`))
+		case r.URL.Path == "/api2/json/nodes/kprox/qemu/108/agent/network-get-interfaces":
+			// A guest whose agent is not running: Proxmox answers an error.
+			w.WriteHeader(http.StatusInternalServerError)
 		case strings.HasSuffix(r.URL.Path, "/status"):
 			w.Write([]byte(`{"data":{"uptime":7200,"loadavg":["0.50","0.40","0.30"],"cpuinfo":{"cores":8}}}`))
 		default:
@@ -151,6 +158,7 @@ func setupProxmoxServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("GET /api/proxmox/overview", protect(http.HandlerFunc(px.GetOverview)))
 	mux.Handle("GET /api/proxmox/curve", protect(http.HandlerFunc(px.GetCurve)))
 	mux.Handle("POST /api/proxmox/power", protect(http.HandlerFunc(px.Power)))
+	mux.Handle("POST /api/proxmox/addresses", protect(http.HandlerFunc(px.Addresses)))
 	mux.Handle("POST /api/proxmox/icon", protect(http.HandlerFunc(px.SetIcon)))
 	mux.Handle("GET /api/proxmox/tasks", protect(http.HandlerFunc(px.GetTasks)))
 	mux.Handle("GET /api/proxmox/task-log", protect(http.HandlerFunc(px.GetTaskLog)))
@@ -1145,5 +1153,106 @@ func TestTheNodeJournalNamesTheMissingPrivilege(t *testing.T) {
 	}
 	if resp, _ := pxGet(t, server.URL, "/api/proxmox/journal?node=kprox&lines=0", s); resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("lines=0 = %d, want 400", resp.StatusCode)
+	}
+}
+
+func pxAddresses(t *testing.T, serverURL string, s *userSession, body string) (int, map[string]string) {
+	t.Helper()
+	req, _ := http.NewRequest("POST", serverURL+"/api/proxmox/addresses", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("addresses: %v", err)
+	}
+	defer resp.Body.Close()
+	var out struct {
+		Addresses map[string]string `json:"addresses"`
+	}
+	json.NewDecoder(resp.Body).Decode(&out)
+	return resp.StatusCode, out.Addresses
+}
+
+func TestAddressesAreReadPerMachineAndALostOneCostsNothing(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	admin := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	code, got := pxAddresses(t, server.URL, admin, `{"guests":[
+		{"node":"kprox","kind":"lxc","vmid":106},
+		{"node":"kprox","kind":"qemu","vmid":107},
+		{"node":"kprox","kind":"qemu","vmid":108},
+		{"node":"kprox","kind":"lxc","vmid":999}]}`)
+	if code != http.StatusOK {
+		t.Fatalf("status %d", code)
+	}
+	// 108 has no guest agent running and 999 has no interfaces: they are simply not in the answer.
+	want := map[string]string{"kprox|106": "192.168.1.106", "kprox|107": "10.0.0.107"}
+	if len(got) != len(want) || got["kprox|106"] != want["kprox|106"] || got["kprox|107"] != want["kprox|107"] {
+		t.Errorf("addresses = %v, want %v", got, want)
+	}
+	for _, p := range []string{
+		"GET /api2/json/nodes/kprox/lxc/106/interfaces",
+		"GET /api2/json/nodes/kprox/qemu/107/agent/network-get-interfaces",
+	} {
+		if !fake.asked(p) {
+			t.Errorf("the host was never asked %s", p)
+		}
+	}
+}
+
+func TestAddressesRefusesWhatIsNotAMachineBeforeTheHostSeesIt(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	admin := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	for name, body := range map[string]string{
+		"a kind that is not offered": `{"guests":[{"node":"kprox","kind":"vm","vmid":106}]}`,
+		"a node with a slash in it":  `{"guests":[{"node":"a/b","kind":"lxc","vmid":106}]}`,
+		"a machine number that is 0": `{"guests":[{"node":"kprox","kind":"lxc","vmid":0}]}`,
+		"a body that is not JSON":    `nope`,
+		"one bad machine among good": `{"guests":[{"node":"kprox","kind":"lxc","vmid":106},{"node":"kprox","kind":"x","vmid":1}]}`,
+	} {
+		if code, _ := pxAddresses(t, server.URL, admin, body); code != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", name, code)
+		}
+	}
+	if fake.asked("GET /api2/json/nodes/kprox/lxc/106/interfaces") {
+		t.Error("a refused request still reached the hypervisor")
+	}
+}
+
+func TestAddressesAreBoundedAndBelongToTheAccount(t *testing.T) {
+	adminFake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	createUser(t, db.DB, "other", "password", "user")
+	admin := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+adminFake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	// Too many machines at once is refused, not served slowly.
+	var many []string
+	for i := 1; i <= 301; i++ {
+		many = append(many, fmt.Sprintf(`{"node":"kprox","kind":"lxc","vmid":%d}`, i))
+	}
+	if code, _ := pxAddresses(t, server.URL, admin, `{"guests":[`+strings.Join(many, ",")+`]}`); code != http.StatusBadRequest {
+		t.Errorf("301 machines answered %d, want 400", code)
+	}
+
+	// Another account has no hypervisor of its own, and naming the admin's does not lend it.
+	other := doLogin(t, server.URL, "other", "password")
+	code, _ := pxAddresses(t, server.URL, other, `{"host":"`+pxHostID(t, server.URL, admin)+`","guests":[{"node":"kprox","kind":"lxc","vmid":106}]}`)
+	if code != http.StatusPreconditionFailed {
+		t.Errorf("another account naming the admin's host got %d, want 412", code)
+	}
+	if adminFake.asked("GET /api2/json/nodes/kprox/lxc/106/interfaces") {
+		t.Error("the admin's hypervisor was asked on another account's behalf")
 	}
 }

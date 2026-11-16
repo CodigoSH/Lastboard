@@ -351,6 +351,7 @@ func (s *Server) routes() {
 	s.Router.Handle("GET /api/proxmox/task-log", middleware.GzipJSON(protect(need(access.ProxmoxView, proxmoxHandler.GetTaskLog))))
 	s.Router.Handle("GET /api/proxmox/journal", middleware.GzipJSON(protect(need(access.ProxmoxView, proxmoxHandler.GetNodeJournal))))
 	s.Router.Handle("POST /api/proxmox/power", protect(need(access.ProxmoxControl, proxmoxHandler.Power)))
+	s.Router.Handle("POST /api/proxmox/addresses", protect(need(access.ProxmoxView, proxmoxHandler.Addresses)))
 	s.Router.Handle("POST /api/proxmox/icon", protect(need(access.ProxmoxView, proxmoxHandler.SetIcon)))
 
 	// Docker API
