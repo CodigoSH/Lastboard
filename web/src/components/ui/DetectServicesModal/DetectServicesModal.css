@@ -274,9 +274,12 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 /* The two things that say where it goes, one to a line with their names beside them. */
 .where__fields { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 12px; }
 .where__label { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
-.where__control { min-inline-size: 0; }
+.where__control { position: relative; min-inline-size: 0; }
 .where__control input { font-weight: 600; }
-.where__fields .status { grid-column: 2; margin-block-start: -2px; justify-content: flex-start; text-align: start; }
+/* Whether the title is taken on the board is said inside the box of the title itself, at its end, and room is kept for it there. */
+.where__control .status { position: absolute; inset-block: 0; inset-inline-end: 10px; align-items: center; pointer-events: none; white-space: nowrap; font-size: 11px; }
+.where__control:has(.status:not(:empty)) input { padding-inline-end: 112px; }
+.where__control:has(.status--mixed:not(:empty)) input { padding-inline-end: 170px; }
 /* Whether the title is taken on the board: said once, on the line of the field it is about. */
 .status { display: inline-flex; align-items: center; gap: 6px; min-inline-size: 0; font: 600 11.5px/1.2 var(--font-sans, inherit); letter-spacing: 0; text-transform: none; text-align: end; color: var(--text-dim); }
 .status:empty { display: none; }

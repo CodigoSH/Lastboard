@@ -260,6 +260,8 @@ describe('where it goes', () => {
         expect(sectionStatusHtml({ kind: 'mixed', existing: 1, created: 2 }, t)).toContain('{&quot;existing&quot;:&quot;1&quot;,&quot;created&quot;:&quot;2&quot;}');
         const html = detectHtml(view({ preview: [{ title: 'Lab', tiles: [] }], boardSections: ['lab'] }), t);
         expect(html).toMatch(/id="dt-section-status" role="status">.*detect\.section_exists/);
+        // It is inside the box of the title, after the field.
+        expect(html).toMatch(/<input type="text" id="dt-section"[^>]*><span class="status status--exists"/);
         expect(html).not.toContain('class="existing"');
     });
 });

@@ -303,8 +303,7 @@ export function detectHtml(v: WindowView, t: T): string {
                 ${v.state === 'ready' ? `<div class="where__fields">
                     ${boardPick}
                     <label class="where__label" for="dt-section">${e(t('detect.section'))}</label>
-                    <div class="where__control"><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></div>
-                    <span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span>
+                    <div class="where__control"><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"><span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span></div>
                 </div>` : ''}
                 <div class="footer__actions">
                     ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}
