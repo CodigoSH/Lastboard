@@ -604,3 +604,48 @@ func TestListContainers_CarriesWhereAPortIsPublishedAndHowTheNetworkIs(t *testin
 		t.Errorf("a proxy rule leaked into UrlHint: %q", containers[0].UrlHint)
 	}
 }
+
+func TestLabelHint(t *testing.T) {
+	cases := []struct {
+		name   string
+		labels map[string]string
+		what   string
+		want   string
+	}{
+		{"nothing", nil, "name", ""},
+		{"ours", map[string]string{"lastboard.name": "Plex"}, "name", "Plex"},
+		{"homepage's", map[string]string{"homepage.name": "Plex"}, "name", "Plex"},
+		{"ours wins over homepage's", map[string]string{"homepage.name": "A", "lastboard.name": "B"}, "name", "B"},
+		{"blank is not a value, so the next one is read", map[string]string{"lastboard.name": "  ", "homepage.name": "A"}, "name", "A"},
+		{"trimmed", map[string]string{"lastboard.group": "  Media  "}, "group", "Media"},
+		{"what is asked for", map[string]string{"lastboard.name": "N", "lastboard.icon": "plex"}, "icon", "plex"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := labelHint(tc.labels, tc.what, 60); got != tc.want {
+				t.Errorf("labelHint(%v, %q) = %q, want %q", tc.labels, tc.what, got, tc.want)
+			}
+		})
+	}
+	long := strings.Repeat("ぜ", 100)
+	if got := labelHint(map[string]string{"lastboard.name": long}, "name", 60); len([]rune(got)) != 60 {
+		t.Errorf("a long label was cut to %d characters, want 60 (counted as characters, not bytes)", len([]rune(got)))
+	}
+}
+
+func TestListContainers_CarriesWhatTheContainerSaysAboutItself(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[{"Id":"aaa","Names":["/jelly"],"Image":"jellyfin","State":"running","Created":1,"Ports":[],
+			"Labels":{"lastboard.name":"Jellyfin","homepage.icon":"jellyfin","lastboard.group":"Media","traefik.enable":"true"}}]`))
+	}))
+	defer srv.Close()
+	containers, err := ListContainers(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := containers[0]
+	if c.HintName != "Jellyfin" || c.HintIcon != "jellyfin" || c.HintGroup != "Media" {
+		t.Errorf("hints = %q, %q, %q", c.HintName, c.HintIcon, c.HintGroup)
+	}
+}

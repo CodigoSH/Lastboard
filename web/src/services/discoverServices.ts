@@ -2,6 +2,7 @@ import { containerName, type DockerContainer, type DockerHost } from './dockerSh
 import { planImport, type PlanItem, type PlanSection } from './importPlan';
 import type { PxGuest } from './proxmoxApi';
 import { iconKey } from './proxmoxIcons';
+import { isIconName } from './importIcons';
 
 /**
  * What a host's containers could become on the board: one proposal each, for a
@@ -50,6 +51,10 @@ export interface ServiceProposal {
     chosenIcon: string;
     /** Names to look up in the icon library, best guess first. */
     iconNames: string[];
+    /** An icon the container named by address, to be stored like any other. */
+    labelIcon: string;
+    /** The section the container says it belongs in, or ''. It wins over how the window groups. */
+    group: string;
     /** The bookmark that already serves it, if one does. */
     linkedTo: string;
     note: ProposalNote;
@@ -155,10 +160,12 @@ function candidatesOf(c: DockerContainer): Candidate[] {
     return out;
 }
 
-/** Names to look up in the icon library: the image's, then the service's. */
+/** Names to look up in the icon library: what the container says, then the image's, then the service's. */
 export function iconNamesFor(c: DockerContainer): string[] {
     const names: string[] = [];
     const add = (n: string) => { if (n && !names.includes(n)) names.push(n); };
+    const hint = (c.HintIcon || '').trim();
+    if (hint && isIconName(hint)) add(hint.toLowerCase());
     const base = imageBase(c.Image);
     add(base);
     add(base.replace(/-(server|app|web|ce|core)$/, ''));
@@ -197,11 +204,13 @@ export function discoverDocker(containers: DockerContainer[], input: DiscoverInp
             hostId,
             containerName: name,
             link: { docker: { host: hostId, name } },
-            name: prettyName(serviceName(c)) || name,
+            name: (c.HintName || '').trim() || prettyName(serviceName(c)) || name,
             candidates,
             project: c.Project || '',
             chosenIcon: input.chosenIcon(name),
             iconNames: iconNamesFor(c),
+            labelIcon: /^https?:\/\//i.test((c.HintIcon || '').trim()) ? (c.HintIcon || '').trim() : '',
+            group: (c.HintGroup || '').trim(),
             linkedTo,
             note,
             selected: running && candidates.length > 0 && !linkedTo,
@@ -217,6 +226,8 @@ export type GroupBy = 'host' | 'project';
  * group worth a section of its own: it joins the host's.
  */
 export function sectionTitleFor(p: ServiceProposal, groupBy: GroupBy, hostName: string, projectSize: Map<string, number>): string {
+    // What the container says about where it belongs is its author's word: it wins however the window groups.
+    if (p.group) return p.group;
     if (groupBy === 'project' && p.project && (projectSize.get(p.project) ?? 0) > 1) return p.project;
     return hostName;
 }
@@ -300,6 +311,8 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
             project: '',
             chosenIcon: input.chosenIcon(g),
             iconNames: [g.name.toLowerCase()],
+            labelIcon: '',
+            group: '',
             linkedTo,
             note: !g.running ? 'stopped' : ip ? '' : 'no_ip',
             selected: g.running && !!ip && !linkedTo,

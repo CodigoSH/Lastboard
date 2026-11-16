@@ -190,7 +190,7 @@ class DetectServicesModal extends HTMLElement {
             const urls = p.candidates.map(c => candidateUrl(c, this.view.address));
             const lib = pickIconName(p.iconNames, this.iconIndex);
             const libUrl = lib ? this.iconIndex.get(lib) ?? this.iconIndex.get(lib.replace(/_/g, '-')) ?? '' : '';
-            return [p.key, { proposal: p, checked: p.selected, name: p.name, url: urls[0] ?? '', edited: false, iconUrl: p.chosenIcon || libUrl }];
+            return [p.key, { proposal: p, checked: p.selected, name: p.name, url: urls[0] ?? '', edited: false, iconUrl: p.chosenIcon || p.labelIcon || libUrl }];
         }));
         this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
     }
@@ -366,6 +366,9 @@ class DetectServicesModal extends HTMLElement {
             const row = picked[i];
             let icon = row.proposal.chosenIcon;
             let iconName: string | null = null;
+            if (!icon && row.proposal.labelIcon && withIcons) {
+                icon = await retryOnRateLimit(() => materializeIcon(row.proposal.labelIcon));
+            }
             if (!icon && withIcons) {
                 const lib = pickIconName(row.proposal.iconNames, this.iconIndex);
                 if (lib) {

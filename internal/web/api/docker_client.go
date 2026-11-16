@@ -99,6 +99,13 @@ type DockerContainer struct {
 	// NetworkMode is how the container is attached to the network: "host"
 	// means it publishes no ports at all, because it shares the machine's own.
 	NetworkMode string
+	// HintName, HintIcon and HintGroup are what the container says about itself for a
+	// dashboard (`lastboard.*`, then `homepage.*`): the name to show, an icon
+	// (a library name or an address) and the section it belongs in. Empty when it
+	// says nothing. They only suggest: a person looks them over before anything is made.
+	HintName  string
+	HintIcon  string
+	HintGroup string
 	// ProxyUrl is the address a reverse proxy serves it on, read from its
 	// Traefik or Caddy labels. It is separate from UrlHint on purpose: a label
 	// written for a dashboard is the author's word, this is a guess at where a
@@ -332,6 +339,28 @@ func urlFromLabels(labels map[string]string) string {
 	return ""
 }
 
+const (
+	maxHintNameLen = 60
+	maxHintIconLen = 512
+)
+
+// labelHint reads one thing a container says about itself: `lastboard.<what>`
+// first, so an instance can override a label written for someone else's
+// dashboard, then `homepage.<what>`. It is cut to a length a card can show.
+func labelHint(labels map[string]string, what string, max int) string {
+	for _, prefix := range []string{"lastboard.", "homepage."} {
+		v := strings.TrimSpace(labels[prefix+what])
+		if v == "" {
+			continue
+		}
+		if r := []rune(v); len(r) > max {
+			v = string(r[:max])
+		}
+		return v
+	}
+	return ""
+}
+
 // projectLabel is what Compose, and Podman's compose, stamp on every container
 // they start. It is the only label besides the two URL ones that is carried.
 const projectLabel = "com.docker.compose.project"
@@ -471,6 +500,9 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 
 			NetworkMode: c.HostConfig.NetworkMode,
 			ProxyUrl:    proxyUrlFromLabels(c.Labels),
+			HintName:    labelHint(c.Labels, "name", maxHintNameLen),
+			HintIcon:    labelHint(c.Labels, "icon", maxHintIconLen),
+			HintGroup:   labelHint(c.Labels, "group", maxProjectLen),
 		})
 	}
 	return containers, nil

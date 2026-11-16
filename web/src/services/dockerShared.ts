@@ -51,6 +51,10 @@ export interface DockerContainer {
     NetworkMode?: string;
     /** Where a Traefik or Caddy label says a proxy serves it. */
     ProxyUrl?: string;
+    /** What the container says about itself for a dashboard: a name, an icon (library name or address) and a section. */
+    HintName?: string;
+    HintIcon?: string;
+    HintGroup?: string;
 }
 
 /**

@@ -211,3 +211,26 @@ describe('Proxmox', () => {
         expect(d.proposals.map(p => [p.key, p.candidates[0].url])).toEqual([['p1|a|100', 'http://10.0.0.1'], ['p1|b|100', 'http://10.0.0.2']]);
     });
 });
+
+describe('what a container says about itself', () => {
+    test('its name, its section and its icon win over what is deduced', () => {
+        const { proposals } = discoverDocker([ctr({ Name: '/jf', Image: 'jellyfin/jellyfin', HintName: 'Our Jellyfin', HintGroup: 'Media', HintIcon: 'emby' })], input());
+        expect(proposals[0]).toMatchObject({ name: 'Our Jellyfin', group: 'Media' });
+        expect(proposals[0].iconNames[0]).toBe('emby');
+    });
+    test('an icon given as an address is kept as one, not looked up as a name', () => {
+        const { proposals } = discoverDocker([ctr({ HintIcon: 'https://example.com/i.png' })], input());
+        expect(proposals[0].labelIcon).toBe('https://example.com/i.png');
+        expect(proposals[0].iconNames).not.toContain('https://example.com/i.png');
+    });
+    test('a label that is blank says nothing', () => {
+        const { proposals } = discoverDocker([ctr({ HintName: '   ', HintGroup: ' ', HintIcon: '' })], input());
+        expect(proposals[0]).toMatchObject({ name: 'Plex', group: '', labelIcon: '' });
+    });
+    test('the section it names is used however the window groups', () => {
+        const p = discoverDocker([ctr({ HintGroup: 'Media', Project: 'stack' })], input()).proposals[0];
+        const size = new Map([['stack', 3]]);
+        expect(sectionTitleFor(p, 'host', 'Home', size)).toBe('Media');
+        expect(sectionTitleFor(p, 'project', 'Home', size)).toBe('Media');
+    });
+});
