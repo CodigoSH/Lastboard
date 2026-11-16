@@ -122,8 +122,20 @@ phone with no session.
 > themselves — Brave and Firefox on Android — place a shortcut instead, and their launcher
 > stamps their own badge on the icon. That is the browser, not Lastboard.
 
-There is no service worker, so an installed Lastboard is a window onto your server, not an
-offline copy: it needs to reach the server the same way the browser tab does.
+> **A login in front of Lastboard stops it too.** If a reverse proxy or a tunnel asks for its own
+> sign-in before the page, the browser cannot read the manifest or the icons — it fetches them
+> without that sign-in — and offers no install. Lastboard has its own login; leave the one in
+> front off for it.
+
+**The app is named after your panel.** It takes the name you gave it in **Preferences →
+Personalization**, the one in the top bar, so two servers installed on one phone are not both
+"Lastboard". Install it signed in: from the login page, with no session yet, it is called
+"Lastboard". An app installed before you renamed the panel keeps its old name until the
+browser checks it again, or until you install it once more.
+
+The service worker is only there for push notifications and keeps no copy of the app, so an
+installed Lastboard is a window onto your server, not an offline copy: it needs to reach the
+server the same way the browser tab does.
 
 ## Reverse Proxy Setup
 

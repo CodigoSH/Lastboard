@@ -189,6 +189,12 @@ func (s *Server) routes() {
 			s.serveLoginPage(w, r)
 			return
 		}
+		// Public too: it is fetched from the login page. It names the
+		// account's panel when there is a session.
+		if path == "/manifest.json" {
+			s.serveManifest(w, r)
+			return
+		}
 		// 2. Try to serve static file (Public)
 		// If it's a file that exists in assets, serve it.
 		// Avoid serving raw template files as static assets.
