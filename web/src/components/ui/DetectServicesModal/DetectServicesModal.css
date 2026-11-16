@@ -67,16 +67,6 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
     stroke: var(--text-dim); fill: none; stroke-width: 2; stroke-linecap: round; pointer-events: none;
 }
 .search input { padding-inline-start: 38px; }
-.link {
-    block-size: 36px; padding: 0 12px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
-    color: var(--text-dim); background: transparent; border: 1px solid var(--card-border); border-radius: 10px; transition: all 0.2s;
-}
-.link:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.06); }
-.count {
-    padding: 7px 11px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.04em; color: var(--text-dim); white-space: nowrap;
-    border: 1px solid var(--card-border); border-radius: 999px;
-}
-.count b { color: var(--text-main); font-weight: 700; }
 
 /* ── The services, in the house's own box: a frame whose name is a pill on its border ── */
 .frame {
@@ -95,19 +85,44 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 .frame:hover .frame__title { border-color: rgba(var(--accent-rgb), 0.3); }
 
 .list {
-    flex: 1 1 auto; overflow-y: auto; min-block-size: 0; display: flex; flex-direction: column; gap: 3px; padding: 16px 8px 10px;
+    flex: 1 1 auto; overflow-y: auto; min-block-size: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 8px 10px;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 16px), transparent 100%);
     mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 16px), transparent 100%);
 }
 
+/* ── Groups: what there is to do, what is already done, what was set aside ── */
+.group { display: flex; flex-direction: column; gap: 3px; flex: none; }
+.group[hidden] { display: none; }
+.group__head {
+    display: flex; align-items: center; gap: 8px; padding: 0 12px 4px; min-block-size: 24px; text-align: start;
+    font: 700 10.5px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
+}
+.group__title { flex: 1 1 auto; }
+button.group__head { background: none; border: 0; cursor: pointer; inline-size: 100%; }
+button.group__head:hover { color: var(--text-main); }
+.group__chevron { inline-size: 12px; block-size: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; flex: none; }
+button.group__head[aria-expanded="true"] .group__chevron { transform: rotate(90deg); }
+button.group__head .group__title { flex: 0 1 auto; }
+.group__tools { display: inline-flex; gap: 4px; }
+.tool {
+    padding: 4px 8px; font: 600 10.5px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+    color: var(--text-dim); background: transparent; border: 1px solid transparent; border-radius: 8px; transition: all 0.2s;
+}
+.tool:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.35); background: rgba(var(--accent-rgb), 0.06); }
+.group__hint { margin: 0 12px 6px; padding: 8px 12px; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); border-inline-start: 2px solid var(--warning-color); background: rgba(var(--warning-rgb), 0.06); border-radius: 0 8px 8px 0; }
+.group__hint[hidden], .group__rows[hidden] { display: none; }
+.group__empty { margin: 0; padding: 14px 12px; font-size: 13px; color: var(--text-dim); }
+.group__rows { display: flex; flex-direction: column; gap: 3px; }
+
 /* A row is not a card inside the frame's card: it is a line of the list that lights up when it is touched or chosen,
    as the status page lights the row it has open — the accent on the whole border and a wash behind it. */
 .row {
-    position: relative; overflow: hidden; flex: none; display: grid; grid-template-columns: auto 40px minmax(0, 1fr) minmax(0, 340px);
+    position: relative; overflow: hidden; flex: none; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto;
     align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid transparent; border-radius: 12px;
     transition: border-color 0.2s, background-color 0.2s;
     animation: rowIn 0.35s ease-out backwards;
 }
+.row--add { grid-template-columns: auto 40px minmax(0, 1fr) auto; }
 .row > * { position: relative; }
 /* The card's own signature: an accent glow from the corner, there on touch and on choice. */
 .row::before {
@@ -117,20 +132,22 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 .row[hidden] { display: none; }
 .row:hover { border-color: rgba(var(--accent-rgb), 0.28); background-color: rgba(var(--accent-rgb), 0.04); }
 .row:hover::before { opacity: 0.1; }
-.row:has(.pick:checked) { border-color: rgba(var(--accent-rgb), 0.5); background-color: rgba(var(--accent-rgb), 0.07); }
-.row:has(.pick:checked)::before { opacity: 0.08; }
-.row.is-linked { opacity: 0.78; }
-.row.is-linked .face img { filter: grayscale(0.7); }
+/* Chosen: the filled box says it first; the row only leans toward the accent, so a list with most of it chosen is not a wall of colour. */
+.row:has(.pick:checked) { border-color: rgba(var(--accent-rgb), 0.3); background-color: rgba(var(--accent-rgb), 0.035); }
+.row:has(.pick:checked)::before { opacity: 0.05; }
+.row:has(.pick:checked):hover { border-color: rgba(var(--accent-rgb), 0.45); }
+.row--linked, .row--ignored { opacity: 0.82; }
+.row--linked .face img, .row--ignored .face img { filter: grayscale(0.7); }
+.row--linked:hover, .row--ignored:hover { opacity: 1; }
 /* Coming in from above: a push down would bring a scrollbar out of the list while it plays. `backwards`, not `both`: an animation
    that keeps its end state makes every row a stacking layer of its own, and a menu opened in one would sit under the rows after it. */
 @keyframes rowIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-.row:nth-child(2) { animation-delay: 30ms; }
-.row:nth-child(3) { animation-delay: 60ms; }
-.row:nth-child(4) { animation-delay: 90ms; }
-.row:nth-child(5) { animation-delay: 120ms; }
-.row:nth-child(6) { animation-delay: 150ms; }
-.row:nth-child(7) { animation-delay: 180ms; }
-.row:nth-child(n+8) { animation-delay: 210ms; }
+.group--add .row:nth-child(2) { animation-delay: 30ms; }
+.group--add .row:nth-child(3) { animation-delay: 60ms; }
+.group--add .row:nth-child(4) { animation-delay: 90ms; }
+.group--add .row:nth-child(5) { animation-delay: 120ms; }
+.group--add .row:nth-child(6) { animation-delay: 150ms; }
+.group--add .row:nth-child(n+7) { animation-delay: 180ms; }
 @media (prefers-reduced-motion: reduce) { .row, dialog.dialog-base { animation: none; } }
 
 .pick {
@@ -152,8 +169,9 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
     border-radius: 12px; background: var(--surface-solid); border: 1px solid var(--border); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
     color: var(--text-dim); transition: transform 0.3s var(--ease-bounce), border-color 0.2s;
 }
-.row:hover .face { transform: rotate(-5deg); }
-.face:hover, .face:focus-visible { border-color: rgba(var(--accent-rgb), 0.55); outline: none; }
+.face--still { cursor: default; }
+.row--add:hover .face { transform: rotate(-5deg); }
+button.face:hover, button.face:focus-visible { border-color: rgba(var(--accent-rgb), 0.55); outline: none; }
 .face img { inline-size: 100%; block-size: 100%; object-fit: contain; padding: 8px; box-sizing: border-box; }
 /* No icon yet: the first letter of the name, as a bookmark shows one. */
 .face__letter { font: 700 16px/1 var(--font-mono); text-transform: uppercase; }
@@ -162,18 +180,14 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
     position: absolute; inset: 0; margin: auto; inline-size: 16px; block-size: 16px; stroke: #fff; fill: none; stroke-width: 2; stroke-linejoin: round;
     opacity: 0; transition: opacity 0.2s; pointer-events: none;
 }
-.face:hover::before, .face:focus-visible::before { content: ''; position: absolute; inset: 0; background: rgba(var(--accent-rgb), 0.85); }
-.face:hover .face__edit, .face:focus-visible .face__edit { opacity: 1; }
+button.face:hover::before, button.face:focus-visible::before { content: ''; position: absolute; inset: 0; background: rgba(var(--accent-rgb), 0.85); }
+button.face:hover .face__edit, button.face:focus-visible .face__edit { opacity: 1; }
 
-/* Who it is: the name over the pills that say what is known of it. */
-.row__id { display: flex; flex-direction: column; gap: 3px; min-inline-size: 0; }
-/* The name reads as a title until it is touched, and lines up with the pills below it. */
-.row input[type="text"].name {
-    block-size: 24px; padding: 0 6px; margin-inline: -6px; inline-size: calc(100% + 6px);
-    font-weight: 600; font-size: 14.5px; background-color: transparent; border-color: transparent;
-}
-.row:hover input[type="text"].name, .row input[type="text"].name:focus { border-color: var(--input-border); background-color: var(--input-bg); }
-.row__meta { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; min-block-size: 20px; min-inline-size: 0; }
+/* Who it is: the name, and under it what is known of it, in words. */
+.row__body { display: flex; flex-direction: column; gap: 3px; min-inline-size: 0; }
+.row__title, .row__sub { display: flex; align-items: center; gap: 8px; min-inline-size: 0; }
+.row__name { font-weight: 600; font-size: 14.5px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row__addr { font: 12.5px/1.3 var(--font-mono); color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
 
 /* The pills: the board's own, in mono small capitals. */
 .chip, .row__health {
@@ -186,32 +200,28 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 .row__health::before { content: ''; inline-size: 6px; block-size: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .row__health[data-h="up"] { color: var(--success-color); border-color: rgba(var(--success-rgb), 0.4); background: rgba(var(--success-rgb), 0.1); }
 .row__health[data-h="down"] { color: var(--warning-color); border-color: rgba(var(--warning-rgb), 0.4); background: rgba(var(--warning-rgb), 0.1); }
+.row__health[data-h=""] { display: none; }
 .chip--linked { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.09); }
 
-/* Where it goes: the address, and beside it the menu of the other ways to reach it. */
+/* What can be done with it is said with words, and only when the row is touched or focused. */
+.row__actions { display: flex; align-items: center; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+.row:hover .row__actions, .row:focus-within .row__actions, .row.is-editing .row__actions { opacity: 1; }
+.act {
+    padding: 6px 10px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+    color: var(--text-dim); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius); transition: all 0.2s;
+}
+.act:hover, .act:focus-visible { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.08); outline: none; }
+@media (hover: none) { .row__actions { opacity: 1; } }
+
+/* Its fields, folded away until it is edited. */
+.row__edit {
+    grid-column: 2 / -1; display: grid; grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.6fr) auto; align-items: end; gap: 10px; padding-block: 6px 2px;
+}
+.row__edit[hidden] { display: none; }
+.row__edit .field > span { font: 600 10px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
 .row__url { display: flex; gap: 8px; min-inline-size: 0; }
 .row__url .addr { flex: 1 1 0; font-family: var(--font-mono); font-size: 12.5px; }
 app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --select-font-size: 0; }
-
-/* Ignore: an eye with a bar across it says "do not show me this"; pressed, the bar goes and it says "show it again". */
-.ignore {
-    flex: none; inline-size: 36px; block-size: 36px; display: grid; place-items: center; padding: 0; cursor: pointer;
-    color: var(--text-dim); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius);
-    opacity: 0.6; transition: opacity 0.2s, color 0.2s, border-color 0.2s, background-color 0.2s;
-}
-.ignore svg { inline-size: 16px; block-size: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.row:hover .ignore, .ignore:focus-visible { opacity: 1; }
-.ignore:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); }
-.ignore:focus-visible { outline: none; border-color: var(--accent); }
-.ignore[aria-pressed="true"] { opacity: 1; color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background-color: rgba(var(--accent-rgb), 0.08); }
-.ignore[aria-pressed="true"] .ignore__bar { display: none; }
-
-/* What is ignored is out of the list until it is asked for, and then it is told apart from the rest. */
-.list.hide-ignored .row.is-ignored { display: none; }
-.row.is-ignored { opacity: 0.62; }
-.row.is-ignored .face img { filter: grayscale(0.8); }
-.chip[hidden], .link[hidden] { display: none; }
-.link--toggle[aria-pressed="true"] { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); }
 
 /* ── States ───────────────────────────────────────────────────────────────── */
 .state, .hint { margin: 0; padding: 16px 28px; color: var(--text-dim); font-size: 13.5px; }
@@ -233,9 +243,16 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     border-block-start: 1px solid var(--border); background: var(--paper-bg);
 }
 .footer .field { flex: 0 1 220px; }
+/* Where it goes, in words, above the controls that send it there. */
+.dest { flex: 1 1 100%; margin: 0; font-size: 13px; color: var(--text-dim); min-block-size: 18px; }
+.dest:empty::before { content: '\00a0'; }
 .result { flex: 1 1 200px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; min-block-size: 38px; color: var(--text-dim); }
 .result .bad { color: var(--danger-color); }
-.result .link { block-size: 30px; padding: 0 10px; }
+.link {
+    block-size: 30px; padding: 0 10px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+    color: var(--text-dim); background: transparent; border: 1px solid var(--card-border); border-radius: 10px; transition: all 0.2s;
+}
+.link:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.06); }
 .btn {
     block-size: 38px; padding: 0 20px; font: 600 12.5px/1 var(--font-sans, inherit); letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; white-space: nowrap;
     color: var(--text-main); background: transparent; border: 1px solid var(--border); border-radius: var(--radius); transition: all 0.2s;
@@ -247,10 +264,9 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn:disabled:hover { background: transparent; }
 
-/* ── A phone: the address goes under the name, and the tile goes ──────────── */
+/* ── A phone: the actions are always there, the address folds under the name, and the tile goes ── */
 @media (max-width: 760px) {
-    .row { grid-template-columns: auto 40px minmax(0, 1fr); row-gap: 8px; }
-    .row__url { grid-column: 2 / -1; }
+    .row__edit { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
     dialog.dialog-base { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); border-radius: 18px; }
@@ -261,14 +277,15 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .controls { grid-template-columns: 1fr 1fr; padding: 12px 18px 0; gap: 10px; }
     .controls > label.field { grid-column: 1 / -1; }
     .tools { padding: 12px 18px 0; gap: 8px; }
-    .search { flex: 1 1 100%; }
-    .link { padding: 0 10px; font-size: 10.5px; }
-    .count { margin-inline-start: auto; }
     .frame { margin: 18px 12px 0; }
     .state, .hint { padding-inline: 18px; }
-    .row { grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 8px 10px; }
+    .row, .row--add { grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 8px 10px; }
+    .row:not(.row--add) { grid-template-columns: minmax(0, 1fr); }
     .face-cell { display: none; }
-    .row__url { grid-column: 2; }
+    /* The address keeps its whole line; the answer goes under it. */
+    .row__sub { flex-wrap: wrap; }
+    .row__actions { grid-column: 1 / -1; opacity: 1; flex-wrap: wrap; }
+    .row__edit { grid-column: 1 / -1; }
     .footer { padding: 12px 18px 16px; gap: 10px; align-items: stretch; }
     .footer .field { flex: 1 1 100%; }
     .result { flex: 1 1 100%; min-block-size: 0; }

@@ -23,9 +23,12 @@ export interface RowView {
     iconUrl: string;
     /** Whether the address in the box answered when it was asked, or '' when it was not asked. */
     health: 'up' | 'down' | '';
-    /** The person chose to ignore it. */
-    ignored: boolean;
+    /** Where it is listed: to add, already on the board, or ignored. */
+    group: RowGroup;
 }
+
+/** The three places a service can be: what there is to do, what is already done, and what the person set aside. */
+export type RowGroup = 'add' | 'linked' | 'ignored';
 
 /** The words for a probe's answer; '' for none. */
 export const healthText = (h: RowView['health'], t: T): string =>
@@ -64,8 +67,10 @@ export interface WindowView {
     busy: boolean;
     /** Why the host could not be read, already worded; '' when it could. */
     error: string;
-    /** The ignored ones are listed too, when the person asked to see them. */
-    showIgnored: boolean;
+    /** Which of the two folded groups are unfolded. */
+    open: { linked: boolean; ignored: boolean };
+    /** The sections the ticked ones would land in, by title; none when nothing is ticked. */
+    sections: string[];
 }
 
 const noteText = (n: ProposalNote, t: T): string =>
@@ -89,33 +94,94 @@ export function selectHtml(id: string, options: SelectChoice[], value: string, l
     return `<app-select${id ? ` id="${e(id)}"` : ''}${cls ? ` class="${e(cls)}"` : ''} value="${e(value)}" aria-label="${e(label)}"${menuMin ? ` menu-min-width="${menuMin}"` : ''} data-options="${e(JSON.stringify(options))}"></app-select>`;
 }
 
-export function rowHtml(r: RowView, t: T): string {
-    const faceInner = r.iconUrl
+const faceButton = (r: RowView, t: T): string => {
+    const inner = r.iconUrl
         ? `<img src="${e(safeImageSrc(r.iconUrl))}" alt="" loading="lazy">`
         : `<span class="face__letter" aria-hidden="true">${e(initialOf(r.name))}</span>`;
-    // The tile is the button that opens the icon search, as a bookmark's icon is in its own window.
-    const face = `<span class="face-cell"><button type="button" class="face" aria-label="${e(t('detect.choose_icon'))}" title="${e(t('detect.choose_icon'))}">${faceInner}<svg class="face__edit" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg></button></span>`;
+    // On a row to add, the tile is the button that opens the icon search, as a bookmark's icon is in its own window.
+    return r.group === 'add'
+        ? `<span class="face-cell"><button type="button" class="face" aria-label="${e(t('detect.choose_icon'))}" title="${e(t('detect.choose_icon'))}">${inner}<svg class="face__edit" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg></button></span>`
+        : `<span class="face-cell"><span class="face face--still">${inner}</span></span>`;
+};
+
+const act = (cls: string, label: string): string => `<button type="button" class="act act--${cls}">${e(label)}</button>`;
+
+/**
+ * One service. What it shows depends on what there is to do with it: a row to add can be ticked and edited and
+ * ignored; one that is already on the board only says so, and can be added anyway; one that is ignored can be
+ * taken back. The inputs of a row to add are folded away until it is edited, because nearly nobody edits.
+ */
+export function rowHtml(r: RowView, t: T): string {
+    const head = `<div class="row row--${r.group}" data-key="${e(r.key)}" data-group="${r.group}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">`;
+    const note = noteText(r.note, t) ? `<span class="chip">${e(noteText(r.note, t))}</span>` : '';
+    if (r.group === 'linked') {
+        return `${head}
+        ${faceButton(r, t)}
+        <div class="row__body"><div class="row__title"><span class="row__name">${e(r.name)}</span></div><div class="row__sub"><span class="chip chip--linked">${e(t('detect.already', { name: r.linkedTo }))}</span></div></div>
+        <div class="row__actions">${act('anyway', t('detect.add_anyway'))}</div>
+    </div>`;
+    }
+    if (r.group === 'ignored') {
+        return `${head}
+        ${faceButton(r, t)}
+        <div class="row__body"><div class="row__title"><span class="row__name">${e(r.name)}</span></div><div class="row__sub"><span class="row__addr">${e(r.url)}</span></div></div>
+        <div class="row__actions">${act('unignore', t('detect.unignore'))}</div>
+    </div>`;
+    }
     const choose = r.candidates.length > 1
         ? selectHtml('', r.candidates.map(c => ({ value: c, label: c })), r.url, t('detect.url'), 'alt', 460)
         : '';
-    // The pills say what is known about it: whether its address answers, then what else there is to say. The first is
-    // always in place (empty until it is known), so the line keeps its height and the rows keep one rhythm.
-    const chips = [
-        `<span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>`,
-        noteText(r.note, t) ? `<span class="chip">${e(noteText(r.note, t))}</span>` : '',
-        r.linkedTo ? `<span class="chip chip--linked">${e(t('detect.already', { name: r.linkedTo }))}</span>` : '',
-        `<span class="chip chip--ignored"${r.ignored ? '' : ' hidden'}>${e(t('detect.ignored'))}</span>`,
-    ].join('');
-    const ignore = `<button type="button" class="ignore" aria-label="${e(r.ignored ? t('detect.unignore') : t('detect.ignore'))}" title="${e(r.ignored ? t('detect.unignore') : t('detect.ignore'))}" aria-pressed="${r.ignored}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"></path><circle cx="12" cy="12" r="2.6"></circle><path class="ignore__bar" d="M4 4l16 16"></path></svg></button>`;
-    return `<div class="row${r.linkedTo ? ' is-linked' : ''}${r.ignored ? ' is-ignored' : ''}" data-key="${e(r.key)}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">
+    // What is known of it is said in words: whether its address answers, and what else there is to say.
+    const sub = `<span class="row__addr">${e(r.url)}</span><span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>${note}`;
+    return `${head}
         <input type="checkbox" class="pick" aria-label="${e(r.name)}"${r.checked ? ' checked' : ''}>
-        ${face}
-        <div class="row__id">
-            <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
-            <div class="row__meta">${chips}</div>
+        ${faceButton(r, t)}
+        <div class="row__body">
+            <div class="row__title"><span class="row__name">${e(r.name)}</span></div>
+            <div class="row__sub">${sub}</div>
         </div>
-        <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off">${ignore}</div>
+        <div class="row__actions">${act('edit', t('detect.edit'))}${act('ignore', t('detect.ignore'))}</div>
+        <div class="row__edit" hidden>
+            <label class="field"><span>${e(t('detect.name'))}</span><input type="text" class="name" value="${e(r.name)}" maxlength="80"></label>
+            <div class="field"><span>${e(t('detect.url'))}</span><div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div></div>
+            ${act('done', t('detect.done'))}
+        </div>
     </div>`;
+}
+
+const CHEVRON = '<svg class="group__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>';
+
+/** A group of the list. The one to add is always open and carries the ticking; the other two fold. */
+export function groupHtml(group: RowGroup, rows: RowView[], v: Pick<WindowView, 'open'>, t: T): string {
+    if (group !== 'add' && rows.length === 0) return '';
+    const title = e(t(`detect.group_${group === 'add' ? 'new' : group}`, { count: String(rows.length) }));
+    if (group === 'add') {
+        const down = rows.some(r => r.health === 'down');
+        return `<section class="group group--add" data-group="add">
+            <div class="group__head"><span class="group__title">${title}</span><span class="group__tools"><button type="button" class="tool" id="dt-all">${e(t('detect.all'))}</button><button type="button" class="tool" id="dt-none">${e(t('detect.none'))}</button></span></div>
+            <p class="group__hint" id="dt-hint-down"${down ? '' : ' hidden'}>${e(t('detect.hint_down'))}</p>
+            <div class="group__rows">${rows.length ? rows.map(r => rowHtml(r, t)).join('') : `<p class="group__empty">${e(t('detect.nothing_new'))}</p>`}</div>
+        </section>`;
+    }
+    const open = v.open[group];
+    return `<section class="group group--${group}" data-group="${group}">
+            <button type="button" class="group__head group__head--fold" data-fold="${group}" aria-expanded="${open}">${CHEVRON}<span class="group__title">${title}</span></button>
+            <div class="group__rows"${open ? '' : ' hidden'}>${rows.map(r => rowHtml(r, t)).join('')}</div>
+        </section>`;
+}
+
+/** The list: what there is to add, then what is already on the board, then what was set aside. */
+export function listHtml(v: Pick<WindowView, 'rows' | 'open'>, t: T): string {
+    return (['add', 'linked', 'ignored'] as const).map(g => groupHtml(g, v.rows.filter(r => r.group === g), v, t)).join('');
+}
+
+/** Where what is ticked will land, said in words, or nothing while nothing is ticked. */
+export function destinationText(v: Pick<WindowView, 'boards' | 'boardId' | 'sections'>, t: T): string {
+    if (v.sections.length === 0) return '';
+    const board = v.boards.find(b => b.id === v.boardId)?.name ?? '';
+    if (v.sections.length === 1) return t('detect.destination', { board, section: v.sections[0] });
+    const shown = v.sections.slice(0, 3).join(', ') + (v.sections.length > 3 ? '…' : '');
+    return t('detect.destination_many', { board, sections: shown });
 }
 
 export function resultHtml(r: ResultView, t: T): string {
@@ -136,21 +202,6 @@ export function eyebrowText(source: Source, host: string, t: T): string {
     return host.toLowerCase().includes(product.toLowerCase()) ? host : `${product} · ${host}`;
 }
 
-/** How many of the listed ones the person ignores. */
-export const ignoredCount = (v: Pick<WindowView, 'rows'>): number => v.rows.filter(r => r.ignored).length;
-
-/** How many rows are on show: the ignored ones are not, unless the person asked for them. */
-export const listedTotal = (v: Pick<WindowView, 'rows' | 'showIgnored'>): number => (v.showIgnored ? v.rows.length : v.rows.length - ignoredCount(v));
-
-/** The words of the button that shows or hides the ignored ones. */
-export const ignoredToggleText = (shown: boolean, count: number, t: T): string =>
-    t(shown ? 'detect.hide_ignored' : 'detect.show_ignored', { count: String(count) });
-
-/** How many are ticked of how many there are: the figures are the same in every language. */
-export function countHtml(selected: number, total: number): string {
-    return `<b>${selected}</b> / ${total}`;
-}
-
 export function detectHtml(v: WindowView, t: T): string {
     const hostPick = v.hosts.length > 1
         ? `<div class="field"><span>${e(t('detect.host'))}</span>${selectHtml('dt-host', v.hosts.map(h => ({ value: h.id, label: h.name })), v.hostId, t('detect.host'))}</div>`
@@ -166,12 +217,8 @@ export function detectHtml(v: WindowView, t: T): string {
     else {
         body = `<div class="tools">
                 <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" id="dt-search" placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}"></label>
-                <button type="button" class="link" id="dt-all">${e(t('detect.all'))}</button>
-                <button type="button" class="link" id="dt-none">${e(t('detect.none'))}</button>
-                <button type="button" class="link link--toggle" id="dt-ignored" aria-pressed="${v.showIgnored}"${ignoredCount(v) ? '' : ' hidden'}>${e(ignoredToggleText(v.showIgnored, ignoredCount(v), t))}</button>
-                <span class="count" id="dt-count">${countHtml(v.selected, listedTotal(v))}</span>
             </div>
-            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="list${v.showIgnored ? '' : ' hide-ignored'}" id="dt-list">${v.rows.map(r => rowHtml(r, t)).join('')}</div></div>
+            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="list" id="dt-list">${listHtml(v, t)}</div></div>
             ${v.withoutAddress ? `<p class="hint">${e(t('detect.hidden', { count: String(v.withoutAddress) }))}</p>` : ''}`;
     }
 
@@ -191,6 +238,7 @@ export function detectHtml(v: WindowView, t: T): string {
         </div>` : hostPick ? `<div class="controls">${hostPick}</div>` : ''}
         ${body}
         <div class="footer">
+            ${v.state === 'ready' ? `<p class="dest" id="dt-dest">${e(destinationText(v, t))}</p>` : ''}
             ${boardPick}
             ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}
             <button type="button" class="btn" id="dt-cancel">${e(t('general.close'))}</button>

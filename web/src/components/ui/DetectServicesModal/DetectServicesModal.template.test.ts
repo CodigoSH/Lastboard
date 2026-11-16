@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'bun:test';
-import { countHtml, detectHtml, eyebrowText, ignoredCount, initialOf, listedTotal, resultHtml, rowHtml, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
+import { destinationText, detectHtml, eyebrowText, groupHtml, initialOf, listHtml, resultHtml, rowHtml, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
 
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
 const evil = '<img src=x onerror=alert(1)>';
 
 const row = (o: Partial<RowView> = {}): RowView => ({
-    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', health: '', ignored: false, ...o,
+    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', health: '', group: 'add', ...o,
 });
 const view = (o: Partial<WindowView> = {}): WindowView => ({
     source: 'docker', state: 'ready', hostName: 'Home', hosts: [{ id: 'h1', name: 'Home' }], hostId: 'h1', address: 'nas', groupBy: 'host', rows: [row()],
-    withoutAddress: 0, boards: [{ id: 1, name: 'Main' }], boardId: 1, canPickBoard: false, selected: 1, result: null, busy: false, error: '', showIgnored: false, ...o,
+    withoutAddress: 0, boards: [{ id: 1, name: 'Main' }], boardId: 1, canPickBoard: false, selected: 1, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sections: [], ...o,
 });
 
 describe('what a container says is escaped', () => {
@@ -20,6 +20,9 @@ describe('what a container says is escaped', () => {
         expect(html).not.toContain('<img src=x');
         expect(html).not.toContain('onerror="alert(1)"');
         expect(html).toContain('&lt;img src=x');
+        const linked = rowHtml(row({ group: 'linked', name: evil, linkedTo: evil, iconUrl: `x" onerror="alert(1)` }), t);
+        expect(linked).not.toContain('<img src=x');
+        expect(linked).not.toContain('onerror="alert(1)"');
     });
     test('in the whole window: the host\'s name and the error', () => {
         const html = detectHtml(view({ hostName: evil, hosts: [{ id: 'a', name: evil }, { id: 'b', name: 'B' }], state: 'empty', error: evil }), t);
@@ -39,8 +42,8 @@ describe('a row', () => {
     test('says why it is as it is', () => {
         expect(rowHtml(row({ note: 'host_network' }), t)).toContain('[detect.note_host_network]');
         expect(rowHtml(row({ note: 'stopped' }), t)).toContain('[detect.note_stopped]');
-        const linked = rowHtml(row({ linkedTo: 'My Plex' }), t);
-        expect(linked).toContain('is-linked');
+        const linked = rowHtml(row({ group: 'linked', linkedTo: 'My Plex' }), t);
+        expect(linked).toContain('row--linked');
         expect(linked).toContain('&quot;name&quot;:&quot;My Plex&quot;');
     });
     test('can be found by its name', () => {
@@ -126,45 +129,81 @@ describe('whether the address answers', () => {
     });
 });
 
-describe('ignoring a service', () => {
-    const en = (k: string) => k;
-    test('every row has the button, and says which way it works', () => {
-        expect(rowHtml(row(), en)).toContain('class="ignore" aria-label="detect.ignore"');
-        expect(rowHtml(row(), en)).toContain('aria-pressed="false"');
-        const ignored = rowHtml(row({ ignored: true }), en);
-        expect(ignored).toContain('aria-label="detect.unignore"');
-        expect(ignored).toContain('aria-pressed="true"');
+describe('groups: what there is to add, what is already done, what was set aside', () => {
+    const rows = [row({ key: 'a' }), row({ key: 'b', group: 'linked', linkedTo: 'X', checked: false }), row({ key: 'c', group: 'ignored', checked: false }), row({ key: 'd', group: 'ignored', checked: false })];
+    test('three groups in that order, each with how many it holds', () => {
+        const html = listHtml({ rows, open: { linked: false, ignored: false } }, t);
+        expect(html.indexOf('group--add')).toBeLessThan(html.indexOf('group--linked'));
+        expect(html.indexOf('group--linked')).toBeLessThan(html.indexOf('group--ignored'));
+        expect(html).toContain('[detect.group_new:{&quot;count&quot;:&quot;1&quot;}]');
+        expect(html).toContain('[detect.group_linked:{&quot;count&quot;:&quot;1&quot;}]');
+        expect(html).toContain('[detect.group_ignored:{&quot;count&quot;:&quot;2&quot;}]');
     });
-    test('an ignored row says so with a pill, and the pill is there but hidden on the others so it can be switched in place', () => {
-        expect(rowHtml(row({ ignored: true }), en)).toContain('chip chip--ignored">detect.ignored<');
-        expect(rowHtml(row({ ignored: true }), en)).toContain('is-ignored');
-        expect(rowHtml(row(), en)).toContain('chip chip--ignored" hidden>');
-        expect(rowHtml(row(), en)).not.toContain('is-ignored');
+    test('the two that fold are folded until opened, and a group with nothing in it is not there', () => {
+        const closed = listHtml({ rows, open: { linked: false, ignored: false } }, t);
+        expect(closed).toMatch(/data-fold="linked" aria-expanded="false"/);
+        expect(closed).toMatch(/<div class="group__rows" hidden>/);
+        const opened = listHtml({ rows, open: { linked: true, ignored: true } }, t);
+        expect(opened).toMatch(/data-fold="linked" aria-expanded="true"/);
+        expect(listHtml({ rows: [row()], open: { linked: false, ignored: false } }, t)).not.toContain('group--linked');
+        expect(listHtml({ rows: [row()], open: { linked: false, ignored: false } }, t)).not.toContain('group--ignored');
     });
-    test('the ignored ones are hidden unless asked for, and the button that asks says how many there are', () => {
-        const rows = [row(), row({ key: 'h1/b', ignored: true }), row({ key: 'h1/c', ignored: true })];
-        const hidden = detectHtml(view({ rows }), en);
-        expect(hidden).toContain('class="list hide-ignored" id="dt-list"');
-        expect(hidden).toMatch(/id="dt-ignored" aria-pressed="false">\[?detect\.show_ignored/);
-        expect(hidden).not.toMatch(/id="dt-ignored"[^>]* hidden/);
-        const shown = detectHtml(view({ rows, showIgnored: true }), en);
-        expect(shown).toContain('class="list" id="dt-list"');
-        expect(shown).toContain('detect.hide_ignored');
+    test('the group to add carries the ticking, and says so when there is nothing in it', () => {
+        const html = listHtml({ rows, open: { linked: false, ignored: false } }, t);
+        expect(html).toContain('id="dt-all"');
+        expect(html).toContain('id="dt-none"');
+        expect(groupHtml('add', [], { open: { linked: false, ignored: false } }, t)).toContain('[detect.nothing_new]');
     });
-    test('with nothing ignored the button is not there to press', () => {
-        expect(detectHtml(view(), en)).toMatch(/id="dt-ignored"[^>]* hidden/);
+    test('a row to add can be ticked, edited and ignored; the others only say what they are and offer one way out', () => {
+        const add = rowHtml(row(), t);
+        expect(add).toContain('class="pick"');
+        expect(add).toContain('act--edit');
+        expect(add).toContain('act--ignore');
+        const linked = rowHtml(row({ group: 'linked', linkedTo: 'X' }), t);
+        expect(linked).toContain('act--anyway');
+        expect(linked).not.toContain('class="pick"');
+        expect(linked).not.toContain('class="addr"');
+        const ignored = rowHtml(row({ group: 'ignored' }), t);
+        expect(ignored).toContain('act--unignore');
+        expect(ignored).not.toContain('class="pick"');
     });
-    test('the count says how many are on show, not how many exist', () => {
-        const rows = [row(), row({ key: 'h1/b', ignored: true })];
-        expect(detectHtml(view({ rows, selected: 1 }), en)).toContain('<b>1</b> / 1<');
-        expect(detectHtml(view({ rows, selected: 1, showIgnored: true }), en)).toContain('<b>1</b> / 2<');
-        expect(ignoredCount({ rows })).toBe(1);
-        expect(listedTotal({ rows, showIgnored: false })).toBe(1);
+    test('the actions say their word; none is an icon alone', () => {
+        const html = rowHtml(row(), t);
+        expect(html).toContain('act--edit">[detect.edit]<');
+        expect(html).toContain('act--ignore">[detect.ignore]<');
     });
-    test('leaving a row unticked says nothing about it: no pill, no ignored state', () => {
-        const html = rowHtml(row({ checked: false }), en);
-        expect(html).not.toContain('is-ignored');
-        expect(html).toContain('chip--ignored" hidden');
+    test('the fields of a row to add are folded away until it is edited', () => {
+        const html = rowHtml(row(), t);
+        expect(html).toMatch(/<div class="row__edit" hidden>/);
+        expect(html).toContain('class="row__name">Plex<');
+        expect(html).toContain('class="row__addr">http://nas:32400<');
+    });
+});
+
+describe('what "not answering" means, said once and where it matters', () => {
+    test('the explanation is there while a row to add does not answer, and only then', () => {
+        const down = groupHtml('add', [row({ health: 'down' })], { open: { linked: false, ignored: false } }, t);
+        expect(down).toMatch(/id="dt-hint-down">\[detect\.hint_down\]/);
+        const up = groupHtml('add', [row({ health: 'up' })], { open: { linked: false, ignored: false } }, t);
+        expect(up).toMatch(/id="dt-hint-down" hidden>/);
+    });
+    test('a row that is not in the group to add does not call for it', () => {
+        const html = groupHtml('add', [row({ health: 'up' })], { open: { linked: false, ignored: false } }, t);
+        expect(html).toMatch(/dt-hint-down" hidden/);
+    });
+});
+
+describe('where it goes', () => {
+    const base = { boards: [{ id: 1, name: 'Main' }, { id: 2, name: 'Lab' }], boardId: 2 };
+    test('one section is named, several are listed, and nothing ticked says nothing', () => {
+        expect(destinationText({ ...base, sections: [] }, t)).toBe('');
+        expect(destinationText({ ...base, sections: ['Podman'] }, t)).toBe('[detect.destination:{"board":"Lab","section":"Podman"}]');
+        expect(destinationText({ ...base, sections: ['A', 'B'] }, t)).toBe('[detect.destination_many:{"board":"Lab","sections":"A, B"}]');
+        expect(destinationText({ ...base, sections: ['A', 'B', 'C', 'D'] }, t)).toContain('"sections":"A, B, C…"');
+    });
+    test('the footer carries it, only while there is a list to send', () => {
+        expect(detectHtml(view({ sections: ['Home'] }), t)).toContain('id="dt-dest">[detect.destination');
+        expect(detectHtml(view({ state: 'empty' }), t)).not.toContain('id="dt-dest"');
     });
 });
 
@@ -189,14 +228,9 @@ describe('how the window reads', () => {
         expect(eyebrowText('proxmox', 'Proxmox', t)).toBe('Proxmox');
         expect(eyebrowText('proxmox', 'my proxmox lab', t)).toBe('my proxmox lab');
     });
-    test('how many are ticked of how many are listed', () => {
-        expect(countHtml(3, 12)).toBe('<b>3</b> / 12');
-        expect(detectHtml(view({ selected: 2, rows: [row(), row({ key: 'h1/b' })] }), (k) => k)).toContain('id="dt-count"><b>2</b> / 2<');
-    });
     test('notes are chips, and a bookmark already serving it says so in the accent one', () => {
-        const html = rowHtml(row({ linkedTo: 'My Plex', note: 'stopped' }), (k) => k);
-        expect(html).toContain('class="chip chip--linked"');
-        expect(html).toContain('<span class="chip">detect.note_stopped</span>');
+        expect(rowHtml(row({ note: 'stopped' }), (k) => k)).toContain('<span class="chip">detect.note_stopped</span>');
+        expect(rowHtml(row({ group: 'linked', linkedTo: 'My Plex' }), (k) => k)).toContain('class="chip chip--linked"');
     });
     test('the loading state draws placeholders, and still says what it waits for', () => {
         const html = detectHtml(view({ state: 'loading', hostName: 'Home' }), (k) => k);
@@ -226,12 +260,10 @@ describe("the product's own dropdowns and the icon button", () => {
         expect(rowHtml(row(), (k) => k)).toContain('<button type="button" class="face" aria-label="detect.choose_icon"');
         expect(rowHtml(row(), (k) => k)).not.toContain('app-select');
     });
-    test('every row has its line of pills, with the answer first, so the rows keep one height', () => {
-        const plain = rowHtml(row(), (k) => k);
-        expect(plain).toContain('<div class="row__meta"><span class="row__health"');
-        expect(plain).not.toContain('class="chip chip--linked"');
-        const linked = rowHtml(row({ linkedTo: 'X', health: 'up' }), (k) => k);
-        expect(linked.indexOf('row__health')).toBeLessThan(linked.indexOf('chip chip--linked'));
+    test('a row to add says in words whether its address answers, right under its name', () => {
+        const html = rowHtml(row({ health: 'up' }), (k) => k);
+        expect(html.indexOf('row__name')).toBeLessThan(html.indexOf('row__health'));
+        expect(html).toContain('data-h="up">detect.reachable<');
     });
     test('the list sits in a frame whose name is on its border', () => {
         const html = detectHtml(view({ hostName: 'Home' }), (k) => k);

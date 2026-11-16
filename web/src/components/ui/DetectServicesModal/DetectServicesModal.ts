@@ -23,13 +23,13 @@ import { bookmarkContent } from '../../../services/bookmarkContent';
 import { probeAddresses } from '../../../services/probeAddresses';
 import { dismissKey, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
 import {
-    candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices,
+    candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices, sectionTitleFor,
     type Discovery, type GroupBy, type NewService, type ServiceProposal,
 } from '../../../services/discoverServices';
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
 import { safeImageSrc } from '../../../services/escape';
-import { countHtml, detectHtml, ignoredToggleText, listedTotal, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
+import { destinationText, detectHtml, listHtml, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -44,6 +44,8 @@ interface RowState {
     iconUrl: string;
     /** The person chose to ignore it: it is not proposed, and it is not counted as left to add. */
     ignored: boolean;
+    /** The person asked to add it although a bookmark seems to serve it already. */
+    forced: boolean;
     /** What the person chose in the icon search for this row, as the picker returned it; '' when they did not. */
     pickedIcon: string;
     /** Which of its addresses the menu has chosen. */
@@ -69,6 +71,8 @@ class DetectServicesModal extends HTMLElement {
     private loadToken = 0;
     /** Which of the addresses proposed answered, by address: what was asked, not what is now in a box. */
     private health = new Map<string, 'up' | 'down'>();
+    /** The rows whose fields are unfolded, so a redraw of the list does not fold them. */
+    private editing = new Set<string>();
 
     constructor() {
         super();
@@ -79,7 +83,7 @@ class DetectServicesModal extends HTMLElement {
     private blankView(): WindowView {
         return {
             source: 'docker', state: 'loading', hostName: '', hosts: [], hostId: '', address: '', groupBy: 'host', rows: [], withoutAddress: 0,
-            boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '', showIgnored: false,
+            boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sections: [],
         };
     }
 
@@ -208,6 +212,7 @@ class DetectServicesModal extends HTMLElement {
     /** Makes the proposals the rows of the window. */
     private adopt(found: Discovery, dismissed: Set<string>): void {
         this.view.withoutAddress = found.withoutAddress;
+        this.editing = new Set();
         this.rows = new Map(found.proposals.map(p => {
             const urls = p.candidates.map(c => candidateUrl(c, this.view.address));
             const lib = pickIconName(p.iconNames, this.iconIndex);
@@ -215,7 +220,7 @@ class DetectServicesModal extends HTMLElement {
             const left = dismissed.has(dismissKey(p.link));
             return [p.key, {
                 proposal: p, checked: p.selected && !left, name: p.name, url: urls[0] ?? '', edited: false,
-                iconUrl: p.chosenIcon || p.labelIcon || libUrl, ignored: left, pickedIcon: '', choice: 0,
+                iconUrl: p.chosenIcon || p.labelIcon || libUrl, ignored: left, forced: false, pickedIcon: '', choice: 0,
             }];
         }));
         this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
@@ -245,6 +250,9 @@ class DetectServicesModal extends HTMLElement {
             box.textContent = healthText(h, t);
             box.title = healthText(h, t);
         }
+        // The line that says what "not answering" means is there while any row to add does not answer.
+        const hint = this.$('dt-hint-down');
+        if (hint) hint.hidden = ![...this.rows.values()].some(r => this.groupOf(r) === 'add' && this.health.get(r.url) === 'down');
     }
 
     // ── Drawing ──────────────────────────────────────────────────────────────
@@ -260,20 +268,39 @@ class DetectServicesModal extends HTMLElement {
             linkedTo: r.proposal.linkedTo,
             iconUrl: r.iconUrl,
             health: this.health.get(r.url) ?? '',
-            ignored: r.ignored,
+            group: this.groupOf(r),
         }));
     }
 
+    /** Where a row is listed: ignored by the person, or already served by a bookmark, or there to be added. */
+    private groupOf(r: RowState): 'add' | 'linked' | 'ignored' {
+        return r.ignored ? 'ignored' : r.proposal.linkedTo && !r.forced ? 'linked' : 'add';
+    }
+
+    /** What is ticked, among the rows there are to add. */
+    private ticked(): RowState[] {
+        return [...this.rows.values()].filter(r => r.checked && this.groupOf(r) === 'add');
+    }
+
     private selectedCount(): number {
-        let n = 0;
-        for (const r of this.rows.values()) if (r.checked) n++;
-        return n;
+        return this.ticked().length;
+    }
+
+    /** The titles of the sections what is ticked would land in, as the plan will make them. */
+    private destinationSections(): string[] {
+        const ticked = this.ticked();
+        if (ticked.length === 0 || !this.host) return [];
+        const size = new Map<string, number>();
+        for (const r of ticked) if (r.proposal.project) size.set(r.proposal.project, (size.get(r.proposal.project) ?? 0) + 1);
+        const by = this.source === 'docker' ? this.view.groupBy : 'host';
+        return [...new Set(ticked.map(r => sectionTitleFor(r.proposal, by, this.host!.name, size)))];
     }
 
     private paint(): void {
         if (!this.shadowRoot) return;
         this.view.rows = this.rowViews();
         this.view.selected = this.selectedCount();
+        this.view.sections = this.destinationSections();
         if (!this.dialog) {
             this.shadowRoot.innerHTML = `<style>${css}</style><dialog class="dialog-base" id="modal" aria-labelledby="dt-title"><div id="content"></div></dialog>`;
             this.dialog = this.shadowRoot.getElementById('modal') as HTMLDialogElement;
@@ -308,50 +335,61 @@ class DetectServicesModal extends HTMLElement {
         const n = this.selectedCount();
         btn.textContent = t('detect.create', { count: String(n) });
         btn.disabled = this.view.busy || n === 0;
-        const count = this.$<HTMLElement>('dt-count');
-        if (count) count.innerHTML = countHtml(n, listedTotal({ rows: this.rowViews(), showIgnored: this.view.showIgnored }));
-        this.refreshIgnoredToggle();
+        this.view.sections = this.destinationSections();
+        const dest = this.$('dt-dest');
+        if (dest) dest.textContent = destinationText(this.view, t);
     }
 
-    /** The button that shows the ignored ones says how many there are, and is not there when there are none. */
-    private refreshIgnoredToggle(): void {
-        const btn = this.$<HTMLButtonElement>('dt-ignored');
-        if (!btn) return;
-        const n = [...this.rows.values()].filter(r => r.ignored).length;
-        btn.hidden = n === 0;
-        btn.textContent = ignoredToggleText(this.view.showIgnored, n, t);
-        btn.setAttribute('aria-pressed', String(this.view.showIgnored));
-    }
-
-    private toggleShowIgnored(): void {
-        this.view.showIgnored = !this.view.showIgnored;
-        this.$('dt-list')?.classList.toggle('hide-ignored', !this.view.showIgnored);
+    /** Draws the list again, as groups, keeping where it was scrolled, what is searched and which rows are unfolded. */
+    private renderList(): void {
+        const list = this.$('dt-list');
+        if (!list) return;
+        const top = list.scrollTop;
+        this.view.rows = this.rowViews();
+        list.innerHTML = listHtml(this.view, t);
+        this.wireSelects();
+        for (const key of this.editing) {
+            const el = [...list.querySelectorAll<HTMLElement>('.row--add')].find(r => r.dataset.key === key);
+            if (el) this.setEditing(el, true);
+        }
+        this.filter(this.$<HTMLInputElement>('dt-search')?.value ?? '');
+        this.showHealth();
+        list.scrollTop = top;
         this.refreshCount();
+    }
+
+    private setEditing(el: HTMLElement, on: boolean): void {
+        el.classList.toggle('is-editing', on);
+        const panel = el.querySelector<HTMLElement>('.row__edit');
+        if (panel) panel.hidden = !on;
+        if (on) this.editing.add(el.dataset.key ?? ''); else this.editing.delete(el.dataset.key ?? '');
     }
 
     /**
      * Ignoring is a choice made on a row, and it is kept at once: the service stops being proposed and stops being counted as
-     * left to add. An ignored row that is ticked is unticked, since what is ignored is not added. Undoing it is the same button.
+     * left to add. What is ignored is not added, so it is unticked; it goes to its own group, where the same row takes it back.
      */
-    private toggleIgnore(row: { el: HTMLElement; state: RowState }): void {
+    private setIgnored(row: { el: HTMLElement; state: RowState }, on: boolean): void {
         const state = row.state;
-        state.ignored = !state.ignored;
-        if (state.ignored) state.checked = false;
+        state.ignored = on;
+        if (on) { state.checked = false; this.editing.delete(row.el.dataset.key ?? ''); }
         const key = dismissKey(state.proposal.link);
-        void saveDismissals(state.ignored ? { add: [key], remove: [] } : { add: [], remove: [key] }).then(() => this.announce());
-        row.el.classList.toggle('is-ignored', state.ignored);
-        const pick = row.el.querySelector<HTMLInputElement>('.pick');
-        if (pick) pick.checked = state.checked;
-        const pill = row.el.querySelector<HTMLElement>('.chip--ignored');
-        if (pill) pill.hidden = !state.ignored;
-        const btn = row.el.querySelector<HTMLElement>('.ignore');
-        if (btn) {
-            const word = state.ignored ? t('detect.unignore') : t('detect.ignore');
-            btn.title = word;
-            btn.setAttribute('aria-label', word);
-            btn.setAttribute('aria-pressed', String(state.ignored));
-        }
-        this.refreshCount();
+        void saveDismissals(on ? { add: [key], remove: [] } : { add: [], remove: [key] }).then(() => this.announce());
+        this.renderList();
+    }
+
+    /** A service that seems to be on the board already can be added anyway, since a name that matches is only a guess. */
+    private addAnyway(row: { el: HTMLElement; state: RowState }): void {
+        row.state.forced = true;
+        row.state.checked = true;
+        this.renderList();
+    }
+
+    private foldGroup(group: 'linked' | 'ignored'): void {
+        this.view.open[group] = !this.view.open[group];
+        this.filter(this.$<HTMLInputElement>('dt-search')?.value ?? '');
+        const head = this.shadowRoot?.querySelector<HTMLElement>(`[data-fold="${group}"]`);
+        head?.setAttribute('aria-expanded', String(this.view.open[group]));
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
@@ -384,14 +422,25 @@ class DetectServicesModal extends HTMLElement {
 
     private onClick(e: MouseEvent): void {
         if (this.dialog && isBackdropClick(this.dialog, e)) { this.dialog.close(); return; }
-        const ignore = (e.target as HTMLElement).closest('.ignore');
-        if (ignore) { const row = this.rowOf(ignore); if (row) this.toggleIgnore(row); return; }
-        const face = (e.target as HTMLElement).closest('.face');
-        if (face) { const row = this.rowOf(face); if (row) void this.chooseIcon(row); return; }
-        const id = (e.target as HTMLElement).closest('button')?.id;
+        const target = e.target as HTMLElement;
+        const button = target.closest<HTMLElement>('button');
+        const fold = target.closest<HTMLElement>('[data-fold]');
+        if (fold) { this.foldGroup(fold.dataset.fold as 'linked' | 'ignored'); return; }
+        const row = this.rowOf(target);
+        if (row && button?.classList.contains('act')) {
+            const kind = [...button.classList].find(c => c.startsWith('act--'))?.slice(5);
+            if (kind === 'edit') this.setEditing(row.el, !row.el.classList.contains('is-editing'));
+            else if (kind === 'done') this.setEditing(row.el, false);
+            else if (kind === 'ignore') this.setIgnored(row, true);
+            else if (kind === 'unignore') this.setIgnored(row, false);
+            else if (kind === 'anyway') this.addAnyway(row);
+            return;
+        }
+        const face = target.closest('.face');
+        if (face && row && row.el.classList.contains('row--add')) { void this.chooseIcon(row); return; }
+        const id = button?.id;
         if (id === 'dt-close' || id === 'dt-cancel') this.dialog?.close();
         else if (id === 'dt-all' || id === 'dt-none') this.tickVisible(id === 'dt-all');
-        else if (id === 'dt-ignored') this.toggleShowIgnored();
         else if (id === 'dt-create') void this.create();
         else if (id === 'dt-undo') void this.undo();
     }
@@ -402,14 +451,23 @@ class DetectServicesModal extends HTMLElement {
         if (target.id === 'dt-address') { this.view.address = target.value.trim(); this.rewriteAddresses(); return; }
         const row = this.rowOf(target);
         if (!row) return;
-        if (target.classList.contains('name')) row.state.name = target.value;
-        else if (target.classList.contains('addr')) { row.state.url = target.value; row.state.edited = true; this.showHealth(); }
+        if (target.classList.contains('name')) {
+            row.state.name = target.value;
+            const shown = row.el.querySelector<HTMLElement>('.row__name');
+            if (shown) shown.textContent = target.value;
+        } else if (target.classList.contains('addr')) {
+            row.state.url = target.value;
+            row.state.edited = true;
+            const shown = row.el.querySelector<HTMLElement>('.row__addr');
+            if (shown) shown.textContent = target.value;
+            this.showHealth();
+        }
     }
 
     private onChange(e: Event): void {
         const target = e.target as HTMLInputElement | AppSelect;
-        if (target.id === 'dt-group') { this.view.groupBy = target.value as GroupBy; return; }
-        if (target.id === 'dt-board') { this.view.boardId = Number(target.value); return; }
+        if (target.id === 'dt-group') { this.view.groupBy = target.value as GroupBy; this.refreshCount(); return; }
+        if (target.id === 'dt-board') { this.view.boardId = Number(target.value); this.refreshCount(); return; }
         if (target.id === 'dt-host') { void this.loadHost(target.value, null); return; }
         const row = this.rowOf(target);
         if (!row) return;
@@ -423,19 +481,28 @@ class DetectServicesModal extends HTMLElement {
             row.state.edited = false;
             const addr = row.el.querySelector<HTMLInputElement>('.addr');
             if (addr) addr.value = target.value;
+            const shown = row.el.querySelector<HTMLElement>('.row__addr');
+            if (shown) shown.textContent = target.value;
             this.showHealth();
         }
     }
 
+    /** Narrows the list to what the search matches; a folded group opens while there is a search, and a group with nothing left is not shown. */
     private filter(query: string): void {
         const q = query.trim().toLowerCase();
-        this.shadowRoot?.querySelectorAll<HTMLElement>('.row').forEach(r => { r.hidden = !!q && !(r.dataset.search ?? '').includes(q); });
+        for (const r of this.shadowRoot?.querySelectorAll<HTMLElement>('.row') ?? []) r.hidden = !!q && !(r.dataset.search ?? '').includes(q);
+        for (const g of this.shadowRoot?.querySelectorAll<HTMLElement>('.group') ?? []) {
+            const rows = g.querySelector<HTMLElement>('.group__rows');
+            const name = g.dataset.group as 'add' | 'linked' | 'ignored';
+            if (rows && name !== 'add') rows.hidden = !(this.view.open[name] || !!q);
+            if (name !== 'add') g.hidden = !!q && ![...g.querySelectorAll<HTMLElement>('.row')].some(r => !r.hidden);
+        }
     }
 
     private tickVisible(on: boolean): void {
-        this.shadowRoot?.querySelectorAll<HTMLElement>('.row').forEach(r => {
-            // What is hidden by the search, and what the person ignores, is not theirs to tick with the rest.
-            if (r.hidden || r.classList.contains('is-ignored')) return;
+        this.shadowRoot?.querySelectorAll<HTMLElement>('.row--add').forEach(r => {
+            // What the search hides is not theirs to tick with the rest.
+            if (r.hidden) return;
             const state = this.rows.get(r.dataset.key ?? '');
             const box = r.querySelector<HTMLInputElement>('.pick');
             if (state && box) { state.checked = on; box.checked = on; }
@@ -461,6 +528,8 @@ class DetectServicesModal extends HTMLElement {
                 state.url = urls[index] ?? urls[0];
                 const addr = r.querySelector<HTMLInputElement>('.addr');
                 if (addr) addr.value = state.url;
+                const shown = r.querySelector<HTMLElement>('.row__addr');
+                if (shown) shown.textContent = state.url;
             }
         });
         this.showHealth();
@@ -471,7 +540,7 @@ class DetectServicesModal extends HTMLElement {
     private async create(): Promise<void> {
         const host = this.host;
         if (!host || this.view.busy) return;
-        const picked = [...this.rows.values()].filter(r => r.checked);
+        const picked = this.ticked();
         if (picked.length === 0) return;
         if (picked.some(r => !r.url.trim())) { this.message(t('detect.need_url')); return; }
 
