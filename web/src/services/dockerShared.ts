@@ -27,6 +27,8 @@ export interface DockerPort {
     PublicPort: number;
     PrivatePort: number;
     Type: string;
+    /** The address the port is published on; "127.0.0.1" means this machine alone. */
+    IP?: string;
 }
 
 export interface DockerContainer {
@@ -45,6 +47,10 @@ export interface DockerContainer {
     ExitCode?: number | null;
     /** The Compose project that started it, if any. */
     Project?: string;
+    /** "host" when it shares the machine's network and so publishes no ports. */
+    NetworkMode?: string;
+    /** Where a Traefik or Caddy label says a proxy serves it. */
+    ProxyUrl?: string;
 }
 
 /**

@@ -1,0 +1,147 @@
+import { describe, expect, test } from 'bun:test';
+import {
+    candidateUrl, discoverDocker, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
+    sectionTitleFor, serviceName, usablePorts, type DiscoverInput, type ServiceProposal,
+} from './discoverServices';
+import type { DockerContainer, DockerHost } from './dockerShared';
+
+const host: DockerHost = { id: 'h1', name: 'Home', type: 'tcp', url: 'tcp://nas.lan:2375' };
+const ctr = (o: Partial<DockerContainer> = {}): DockerContainer => ({
+    ID: 'abc', Name: '/plex', Image: 'plexinc/pms-docker:latest', Status: 'running', State: 'running', Created: 1,
+    Ports: [{ PublicPort: 32400, PrivatePort: 32400, Type: 'tcp', IP: '0.0.0.0' }], ...o,
+});
+const input = (o: Partial<DiscoverInput> = {}): DiscoverInput => ({ host, linkedLabel: () => '', chosenIcon: () => '', ...o });
+
+describe('names', () => {
+    test('an image is reduced to what it is called', () => {
+        expect(imageBase('lscr.io/linuxserver/jellyfin:10.9')).toBe('jellyfin');
+        expect(imageBase('ghcr.io/immich-app/immich-server@sha256:abc')).toBe('immich-server');
+        expect(imageBase('Redis')).toBe('redis');
+        expect(imageBase('')).toBe('');
+    });
+    test('Compose is taken off a service, and a hand-given name is left alone', () => {
+        expect(serviceName(ctr({ Name: '/media-plex-1', Project: 'media' }))).toBe('plex');
+        expect(serviceName(ctr({ Name: '/media_plex_2', Project: 'media' }))).toBe('plex');
+        expect(serviceName(ctr({ Name: '/pihole-2' }))).toBe('pihole-2');
+    });
+    test('a name is made readable', () => {
+        expect(prettyName('home-assistant')).toBe('Home Assistant');
+        expect(prettyName('uptime_kuma')).toBe('Uptime Kuma');
+        expect(prettyName('')).toBe('');
+    });
+    test('the icon names come from the image first, then the service', () => {
+        expect(iconNamesFor(ctr({ Image: 'ghcr.io/immich-app/immich-server:release', Name: '/photos' }))).toEqual(['immich-server', 'immich', 'photos']);
+    });
+    test('only a name the library has is picked', () => {
+        const index = new Map([['plex', 'u'], ['immich', 'u']]);
+        expect(pickIconName(['immich-server', 'immich'], index)).toBe('immich');
+        expect(pickIconName(['nothing-like-it'], index)).toBe('');
+    });
+});
+
+describe('ports', () => {
+    test('only TCP ports a browser elsewhere could reach, once each, lowest first', () => {
+        const c = ctr({
+            Ports: [
+                { PublicPort: 8080, PrivatePort: 80, Type: 'tcp', IP: '0.0.0.0' },
+                { PublicPort: 8080, PrivatePort: 80, Type: 'tcp', IP: '::' }, // the same port on IPv6
+                { PublicPort: 53, PrivatePort: 53, Type: 'udp', IP: '0.0.0.0' },
+                { PublicPort: 9000, PrivatePort: 9000, Type: 'tcp', IP: '127.0.0.1' },
+                { PublicPort: 9001, PrivatePort: 9001, Type: 'tcp', IP: '::1' },
+                { PublicPort: 0, PrivatePort: 22, Type: 'tcp' },
+                { PublicPort: 3000, PrivatePort: 3000, Type: 'tcp' }, // an older agent says no address: it counts
+            ],
+        });
+        expect(usablePorts(c)).toEqual([3000, 8080]);
+    });
+    test('the address is built from the host, TLS ports get https and the default port is left out', () => {
+        expect(candidateUrl({ source: 'port', port: 8080, scheme: 'http' }, 'nas.lan')).toBe('http://nas.lan:8080');
+        expect(candidateUrl({ source: 'port', port: 443, scheme: 'https' }, 'nas.lan')).toBe('https://nas.lan');
+        expect(candidateUrl({ source: 'port', port: 80, scheme: 'http' }, 'nas.lan')).toBe('http://nas.lan');
+        expect(candidateUrl({ source: 'port', port: 8006, scheme: 'https' }, '10.0.0.5')).toBe('https://10.0.0.5:8006');
+        expect(candidateUrl({ source: 'label', url: 'https://plex.home' }, 'nas.lan')).toBe('https://plex.home');
+    });
+});
+
+describe('what is proposed', () => {
+    test('a label comes first, then the proxy, then the ports', () => {
+        const { proposals } = discoverDocker([ctr({ UrlHint: 'https://plex.home', ProxyUrl: 'https://plex.example.com' })], input());
+        expect(proposals[0].candidates.map(c => c.source)).toEqual(['label', 'proxy', 'port']);
+    });
+    test('a port that is nearly always TLS is proposed over https, the rest over http', () => {
+        const c = ctr({ Ports: [
+            { PublicPort: 8006, PrivatePort: 8006, Type: 'tcp', IP: '0.0.0.0' },
+            { PublicPort: 8080, PrivatePort: 80, Type: 'tcp', IP: '0.0.0.0' },
+        ] });
+        const ports = discoverDocker([c], input()).proposals[0].candidates;
+        expect(ports.map(x => [x.port, x.scheme])).toEqual([[8006, 'https'], [8080, 'http']]);
+    });
+    test('a proxy address equal to the label is not offered twice', () => {
+        const { proposals } = discoverDocker([ctr({ UrlHint: 'https://p.home', ProxyUrl: 'https://p.home' })], input());
+        expect(proposals[0].candidates.map(c => c.source)).toEqual(['label', 'port']);
+    });
+    test('a running container with an address starts ticked, and carries its link and name', () => {
+        const { proposals } = discoverDocker([ctr()], input());
+        expect(proposals[0]).toMatchObject({ key: 'h1/plex', hostId: 'h1', containerName: 'plex', name: 'Plex', selected: true, note: '' });
+    });
+    test('one on the host network publishes nothing: it is offered, unticked, with its reason', () => {
+        const { proposals } = discoverDocker([ctr({ Ports: [], NetworkMode: 'host' })], input());
+        expect(proposals[0]).toMatchObject({ note: 'host_network', selected: false });
+        expect(proposals[0].candidates).toEqual([]);
+    });
+    test('one with nothing to open is not listed, and is counted', () => {
+        const d = discoverDocker([ctr({ Name: '/redis', Ports: [] }), ctr()], input());
+        expect(d.proposals.length).toBe(1);
+        expect(d.withoutAddress).toBe(1);
+    });
+    test('Lastboard and its agent are left out, and not counted', () => {
+        const d = discoverDocker([
+            ctr({ Name: '/lastboard', Image: 'git.codigosh.com/codigosh/lastboard:latest' }),
+            ctr({ Name: '/agent', Image: 'git.codigosh.com/codigosh/lastboard-agent:1.5.0' }),
+        ], input());
+        expect(d.proposals.length).toBe(0);
+        expect(d.withoutAddress).toBe(0);
+        expect(isOwnContainer(ctr({ Image: 'plexinc/pms-docker' }))).toBe(false);
+    });
+    test('one a bookmark already serves says which, and starts unticked', () => {
+        const { proposals } = discoverDocker([ctr()], input({ linkedLabel: n => (n === 'plex' ? 'My Plex' : '') }));
+        expect(proposals[0]).toMatchObject({ linkedTo: 'My Plex', selected: false });
+    });
+    test('a stopped container is offered, unticked', () => {
+        const { proposals } = discoverDocker([ctr({ Status: 'exited', State: 'exited' })], input());
+        expect(proposals[0]).toMatchObject({ note: 'stopped', selected: false });
+    });
+    test('the icon the person chose travels with it', () => {
+        const { proposals } = discoverDocker([ctr()], input({ chosenIcon: n => (n === 'plex' ? '/api/icons/abc' : '') }));
+        expect(proposals[0].chosenIcon).toBe('/api/icons/abc');
+    });
+    test('what a container says is kept as plain text, never as markup', () => {
+        const evil = '<img src=x onerror=alert(1)>';
+        const { proposals } = discoverDocker([ctr({ Name: `/${evil}` })], input());
+        expect(proposals[0].containerName).toBe(evil); // the template escapes it; here it is only a string
+    });
+});
+
+describe('where it goes', () => {
+    const p = (name: string, project = ''): ServiceProposal => discoverDocker([ctr({ Name: `/${name}`, Project: project })], input()).proposals[0];
+    test('by host, every service is in the host\'s section', () => {
+        expect(sectionTitleFor(p('a', 'media'), 'host', 'Home', new Map([['media', 3]]))).toBe('Home');
+    });
+    test('by project, a project of several has its own section and one of a single service joins the host\'s', () => {
+        const size = new Map([['media', 2], ['solo', 1]]);
+        expect(sectionTitleFor(p('a', 'media'), 'project', 'Home', size)).toBe('media');
+        expect(sectionTitleFor(p('b', 'solo'), 'project', 'Home', size)).toBe('Home');
+        expect(sectionTitleFor(p('c'), 'project', 'Home', size)).toBe('Home');
+    });
+    test('the sections and their bookmarks are laid out the way an import lays them out', () => {
+        const svc = (n: string, project: string) => ({ proposal: p(n, project), name: n, url: `http://h/${n}` });
+        const plan = planServices([svc('a', 'media'), svc('b', 'media'), svc('c', 'media'), svc('d', 'media'), svc('e', 'media'), svc('x', '')], 'project', 'Home', 12);
+        expect(plan.sections.map(s => [s.title, s.items.length])).toEqual([['media', 5], ['Home', 1]]);
+        expect(plan.sections[0].w).toBe(4);
+        expect(plan.sections[0].h).toBe(2); // five bookmarks, four to a row
+        expect(plan.sections[0].items[4]).toMatchObject({ title: 'e', x: 1, y: 2 });
+    });
+    test('nothing selected plans nothing', () => {
+        expect(planServices([], 'host', 'Home', 12).sections).toEqual([]);
+    });
+});
