@@ -51,7 +51,8 @@ they would be on a public service.
   a count of its own for codes. The authenticator secret
   is kept in the database like every other secret (and travels in the backup); recovery codes are
   kept only as hashes. A member who loses the phone and the codes is helped by the administrator;
-  the administrator's own way back is `lastboard 2fa reset <username>` on the machine itself.
+  the administrator's own way back is `lastboard 2fa reset <username>` on the machine itself. A forgotten password has the same way
+  back, `lastboard password reset <username>`, which asks for the new password on the terminal and ends the account's sessions.
 - **Passkeys** (optional, per account) sign in without a password: the device asks for its
   fingerprint, face or screen lock and signs a one-time challenge (WebAuthn; ES256 and Ed25519
   keys, checked with the Go standard library). The server keeps only each passkey's **public

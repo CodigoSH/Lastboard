@@ -29,6 +29,23 @@ See [Configuration → TRUST_PROXY](../getting-started/configuration.md#trust_pr
 
 The same lockout that guards the sign-in page guards every place that asks for your password again — changing it, deleting an account, resetting the system. It counts **per account**: after 5 wrong passwords within a minute, that account waits 5 minutes before it accepts another try, whatever it types. A right password clears the count. Nobody else's account is affected.
 
+## I forgot my password
+
+- **A member** asks the administrator, who opens the account in **Settings → Users**, chooses **Edit** and types a new password. It ends the account's open sessions.
+- **The administrator** — or anybody, if the administrator cannot help — runs a command on the machine Lastboard runs on, as the same user the server runs as, so the database keeps its owner. It asks for the new password on the terminal, twice, without showing it:
+
+  ```bash
+  # Docker — the -it is needed: the command asks you a question
+  docker exec -it lastboard /app/lastboard password reset <username>
+
+  # Installed with install.sh (systemd)
+  sudo -u lastboard env DB_FILE=/var/lib/lastboard/lastboard.db lastboard password reset <username>
+  ```
+
+  It sets the new password, ends every session the account had and clears that account's own "too many attempts" wait; the server can stay running. It changes nothing else: if that account also lost its phone and its codes, run `2fa reset` below as well. The password is typed on the terminal and never given on the command line, so it stays out of the shell's history. Having a shell on the machine is what proves you may do it, so there is no way to do this from the browser — and no e-mail link either: Lastboard has no way to send e-mail.
+
+  If the sign-in page itself says too many attempts, that wait is the address's and ends by itself in a few minutes.
+
 ## I lost the phone with my sign-in codes
 
 Sign in with one of your **recovery codes** instead: on the code step, choose **Use a recovery code** and type one of the ten you saved when you turned two-step sign-in on. Each one works once. Once in, open **My Profile → Two-step sign-in** and either turn it off and on again with your new phone, or get **New recovery codes**.

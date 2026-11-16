@@ -179,6 +179,8 @@ func usage() {
   lastboard                         start the server
   lastboard -version                print the version and exit
   lastboard 2fa reset <username>    take the second step of signing in off an account
+  lastboard password reset <username>
+                                    set a new password for an account (asked for on the terminal)
 
 The commands use the same database as the server (DB_FILE), and run as the same
 user (PUID/PGID), so run them where the server runs: inside its container, or as
@@ -198,6 +200,9 @@ func runCommand(db *database.DB, args []string) int {
 		}
 		fmt.Printf("Two-step sign-in is off for %s. They sign in with their password and can turn it on again in My Profile.\n", args[2])
 		return 0
+	case len(args) == 3 && args[0] == "password" && args[1] == "reset":
+		// The way back for a forgotten password, the administrator's above all.
+		return resetPassword(context.Background(), db, args[2], console{fd: int(os.Stdin.Fd())}, os.Stdout, os.Stderr)
 	}
 	usage()
 	return 2
