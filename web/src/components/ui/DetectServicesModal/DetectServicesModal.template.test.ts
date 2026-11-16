@@ -62,7 +62,12 @@ describe('the window', () => {
         expect(one).not.toContain('id="dt-host"');
         expect(one).not.toContain('id="dt-board"');
         const many = detectHtml(view({ hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], canPickBoard: true, boards: [{ id: 1, name: 'M' }, { id: 2, name: 'N' }] }), t);
-        expect(many).toContain('id="dt-host"');
+        // A few hosts are pills, the active one marked; many fall back to the dropdown.
+        expect(many).toContain('data-host="a"');
+        expect(many).not.toContain('id="dt-host"');
+        expect(detectHtml(view({ hostId: 'b', hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }), t)).toContain('data-host="b" aria-checked="true"');
+        const lots = Array.from({ length: 6 }, (_, i) => ({ id: 'h' + i, name: 'H' + i }));
+        expect(detectHtml(view({ hosts: lots }), t)).toContain('id="dt-host"');
         expect(many).toContain('id="dt-board"');
         expect(detectHtml(view({ canPickBoard: true, boards: [{ id: 1, name: 'M' }] }), t)).not.toContain('id="dt-board"');
         // An account that may not choose is not offered the choice, however many boards there are.
@@ -319,7 +324,7 @@ describe("the product's own dropdowns and the icon button", () => {
     test('no native select is left in the window', () => {
         const html = detectHtml(view({ boards: [{ id: 1, name: 'M' }, { id: 2, name: 'N' }], canPickBoard: true, hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], rows: [row({ candidates: ['http://a', 'http://b'] })] }), (k) => k);
         expect(html).not.toContain('<select');
-        expect(html).toContain('id="dt-host"');
+        expect(html).toContain('class="hostchip"');
         expect(html).toContain('id="dt-board"');
         expect(html).toContain('class="alt"');
         expect(html).toContain('menu-min-width="460"');

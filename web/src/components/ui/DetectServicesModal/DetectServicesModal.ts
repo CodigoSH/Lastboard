@@ -525,6 +525,8 @@ class DetectServicesModal extends HTMLElement {
         if (this.dialog && isBackdropClick(this.dialog, e)) { this.dialog.close(); return; }
         const target = e.target as HTMLElement;
         const button = target.closest<HTMLElement>('button');
+        const chip = target.closest<HTMLElement>('.hostchip');
+        if (chip?.dataset.host) { if (chip.dataset.host !== this.view.hostId) void this.loadHost(chip.dataset.host, null); return; }
         const fold = target.closest<HTMLElement>('[data-fold]');
         if (fold) { this.foldGroup(fold.dataset.fold as 'linked' | 'ignored'); return; }
         const row = this.rowOf(target);

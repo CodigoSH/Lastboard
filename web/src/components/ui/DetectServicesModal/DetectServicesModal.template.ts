@@ -273,9 +273,11 @@ export function sectionPlaceholder(v: Pick<WindowView, 'autoSections'>, t: T): s
 }
 
 export function detectHtml(v: WindowView, t: T): string {
-    const hostPick = v.hosts.length > 1
-        ? `<div class="field"><span>${e(t('detect.host'))}</span>${selectHtml('dt-host', v.hosts.map(h => ({ value: h.id, label: h.name })), v.hostId, t('detect.host'))}</div>`
-        : '';
+    // A few hosts read best as a row of pills, the active one lit; many fall back to the dropdown.
+    const hostPick = v.hosts.length < 2 ? ''
+        : v.hosts.length <= 5
+            ? `<div class="hosts" role="radiogroup" aria-label="${e(t('detect.host'))}">${v.hosts.map(h => `<button type="button" class="hostchip" role="radio" data-host="${e(h.id)}" aria-checked="${h.id === v.hostId}">${e(h.name)}</button>`).join('')}</div>`
+            : `<div class="field"><span>${e(t('detect.host'))}</span>${selectHtml('dt-host', v.hosts.map(h => ({ value: h.id, label: h.name })), v.hostId, t('detect.host'))}</div>`;
     const boardPick = v.canPickBoard && v.boards.length > 1
         ? `<span class="where__label">${e(t('detect.board'))}</span><div class="where__control">${selectHtml('dt-board', v.boards.map(b => ({ value: String(b.id), label: b.name })), String(v.boardId ?? ''), t('detect.board'))}</div>`
         : '';
