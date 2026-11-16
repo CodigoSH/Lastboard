@@ -77,7 +77,7 @@ Nothing to do: when Lastboard starts it brings in any icon that is still fetched
 
 ## Sections
 
-A **Section** is a container that groups related bookmarks together under a title. Create one from the **Add** menu, then drag bookmarks into it to nest them. Sections keep large dashboards organized and can be resized like any other item.
+A **Section** is a container that groups related bookmarks, and widgets, together under a title. Create one from the **Add** menu, then drag bookmarks or widgets into it to nest them. Sections keep large dashboards organized and can be resized like any other item.
 
 > Bookmarks and sections can also be **moved to another dashboard** — individually or in bulk. See [Dashboards](../using/dashboards.md#moving-items-between-dashboards).
 
