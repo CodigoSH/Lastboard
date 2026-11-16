@@ -163,17 +163,20 @@ bootstrap(async () => {
     const proxmoxPage = document.createElement('proxmox-page');
     document.body.appendChild(proxmoxPage);
 
-    document.body.appendChild(document.createElement('docker-page'));
+    const dockerPage = document.createElement('docker-page');
+    document.body.appendChild(dockerPage);
 
-    // An address can ask for a full-screen page ("/?view=proxmox", which is what
-    // the Proxmox tile's "see all" is, so it also works from a new tab). The
-    // request is taken out of the address first: left there, a reload would open
-    // the page again and closing it would still leave the bar saying it was open.
-    // "/?view=monitor" is where a tap on an alert notification lands.
-    const asked = viewFromSearch(window.location.search);
-    if (asked) {
-        history.replaceState(history.state, '', withoutView(window.location.pathname, window.location.search, window.location.hash));
-        ((asked === 'monitor' ? monitorPage : proxmoxPage) as any).open();
+    // The address says what is on screen ("/?view=docker&tab=logs"), so a reload, a link, a new tab and
+    // the Proxmox tile's "see all" all land where it says; "/?view=monitor" is where a tap on an alert
+    // notification lands. The board goes under it first, as if the page had been opened from the bar: the
+    // page then puts its own entry on top, and Back and the X end where they do after any other opening.
+    // The entry that was loaded is replaced, so nothing a reload left in it can open anything later.
+    const asked = navFromSearch(window.location.search);
+    if (asked.view) {
+        history.replaceState(null, '', boardAddress(window.location.pathname, window.location.search, window.location.hash));
+        const target = { tab: asked.tab ?? undefined, sel: asked.sel ?? undefined };
+        if (asked.view === 'settings') drawer.open();
+        else ((asked.view === 'monitor' ? monitorPage : asked.view === 'proxmox' ? proxmoxPage : dockerPage) as any).open(target);
     }
 
     // A browser that took part in push and has since dropped off the server's list is put back; a failure here
@@ -188,7 +191,7 @@ bootstrap(async () => {
 
 // 2. Handle Component Events (TopBar)
 import { eventBus, EVENTS } from './services/EventBus';
-import { viewFromSearch, withoutView } from './services/startupView';
+import { navFromSearch, boardAddress } from './services/startupView';
 import { Surfaces, nextPopstate } from './services/surfaces';
 import { PageNav } from './services/pageNav';
 
@@ -264,7 +267,8 @@ eventBus.on(EVENTS.SHOW_DOCKER_PAGE, (e: CustomEvent) => {
 // What takes the screen from the board — the three pages and the settings drawer — one at a time. The
 // icons of the bar move between them; services/surfaces.ts says why a switch waits for the browser.
 const pageOf = (tag: string) => document.querySelector(tag) as any;
-const drawerNav = new PageNav('drawer');
+// "settings" is the name the address gives it (?view=settings).
+const drawerNav = new PageNav('settings');
 const surfaces = new Surfaces({
     monitor: { open: () => { void pageOf('monitor-page')?.open(); }, close: () => pageOf('monitor-page')?.close() ?? 0 },
     proxmox: { open: () => { pageOf('proxmox-page')?.open(); }, close: () => pageOf('proxmox-page')?.close() ?? 0 },
@@ -412,7 +416,7 @@ window.addEventListener('widget-selected', async (e: Event) => {
 // The drawer is a place of the browser's history too: opening it is a step, and Back closes it.
 window.addEventListener('drawer-open', () => {
     surfaces.note('drawer', true);
-    drawerNav.open({ tab: 'drawer', sel: null });
+    drawerNav.open({ tab: '', sel: null });
     if (topbar) topbar.setState({ drawerOpen: true });
 });
 window.addEventListener('drawer-close', () => {

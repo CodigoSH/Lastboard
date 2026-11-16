@@ -137,7 +137,7 @@ class ProxmoxPage extends HTMLElement {
     private latestAt = 0;
 
     /** The browser's history for this page: Back walks through its tabs and panel before it leaves. */
-    private readonly nav = new PageNav('proxmox');
+    private readonly nav = new PageNav('proxmox', history, TABS);
     /** True while the page is being put where the history says, so that does not make a step of its own. */
     private applying = false;
     private charts = new Map<string, { spec: ChartSpec; at: number[] }>();
@@ -293,7 +293,7 @@ class ProxmoxPage extends HTMLElement {
         const asked = targetTab(target, TABS);
         if (asked && !this.panelOnly) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back. Once per opening, never stacked.
-        this.nav.open(this.navState());
+        this.nav.open(this.navState(), this.panelOnly);
         // What a tile of the board last read is what the page opens on, until its own answer arrives.
         const fromTile = heldReading<PxHost[]>('proxmox');
         if (fromTile) this.hosts = fromTile.value;

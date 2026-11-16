@@ -145,7 +145,7 @@ class DockerPage extends HTMLElement {
 
     /** History entries this page has put on the stack: the page, and a container on a phone. */
     /** The browser's history for this page: Back walks through its tabs and panel before it leaves. */
-    private readonly nav = new PageNav('docker');
+    private readonly nav = new PageNav('docker', history, TABS);
     /** True while the page is being put where the history says, so that does not make a step of its own. */
     private applying = false;
     private loading = false;
@@ -281,7 +281,7 @@ class DockerPage extends HTMLElement {
         const asked = targetTab(target, TABS);
         if (asked && !this.panelOnly) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back.
-        this.nav.open(this.navState());
+        this.nav.open(this.navState(), this.panelOnly);
         this.loaded = false;
         this.paintAll(true);
         void this.load(true);

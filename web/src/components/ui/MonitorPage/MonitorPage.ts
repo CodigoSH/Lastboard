@@ -118,7 +118,7 @@ class MonitorPage extends HTMLElement {
 
     /** History entries this page has put on the stack: the page, and a service on a phone. */
     /** The browser's history for this page: Back walks through its tabs and panel before it leaves. */
-    private readonly nav = new PageNav('monitor');
+    private readonly nav = new PageNav('monitor', history, TABS);
     /** True while the page is being put where the history says, so that does not make a step of its own. */
     private applying = false;
     private loading = false;
@@ -217,7 +217,7 @@ class MonitorPage extends HTMLElement {
         const asked = targetTab(target, TABS);
         if (asked && !this.panelOnly) this.tab = asked;
         // A full-screen page is a place: each step in it is a step of the browser's Back.
-        this.nav.open(this.navState());
+        this.nav.open(this.navState(), this.panelOnly);
         // The top bar locks its other actions while the status page is up, the same way it does in edit mode.
         if (!this.panelOnly) {
             document.body.style.overflow = 'hidden';
