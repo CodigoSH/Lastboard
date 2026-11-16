@@ -169,6 +169,23 @@ The last 100 lines when you open it, with **Load more lines** to read the last 1
 - **Copy** puts the lines you see on the clipboard as plain text, with the times if they are showing.
 - The page keeps at most 2,000 lines; when more arrive, the oldest are dropped. If the log was larger than Lastboard reads at once, or a line was very long, a note says part of it was cut.
 
+### Adding the services of a host to the board
+
+Rather than making one bookmark for each container by hand, ask Lastboard to propose them: the **bookmark** button in the Docker page's header, or the window that opens by itself when you add a host that answers and has something to offer. It needs permission to edit the board.
+
+The window lists what the host's containers could become, one row each. Everything that does not already have a bookmark is ticked; change what you like before you add them.
+
+- **The address of each row** is the one the container names itself (`lastboard.url`, or `homepage.href`), then the one a reverse proxy puts it on (a Traefik router rule or a `caddy` label), then its published ports, lowest first. When there are several, a selector offers them; you can also type your own. A port is proposed over **https** when either end of it is a TLS port (443, 8443, 9443, 8006 or 10443).
+- **The host's address** at the top is what the port-based addresses are built on. It starts as the host part of the host's URL (for a socket on this machine, the one you opened Lastboard by) and, when you change it, rewrites every address you have not typed by hand.
+- **The name** is the container's, made readable (`home-assistant` becomes *Home Assistant*, and Compose's project and number are taken off). Both name and address are boxes: they are suggestions, never links nobody has looked at.
+- **The icon** is the one you already chose for the container; otherwise the library's, by the image and the service name, when your account may look icons up on the Internet; otherwise the default. Icons are stored on this server, like any bookmark's.
+- **Sections:** one for the host, or one per Compose project (a project with a single service joins the host's). A section that already has the host's name takes the new bookmarks into its free cells, and grows only when nothing is below it; if it cannot, a new one is made. New sections go where the board is free.
+- **Left out of the list:** Lastboard's own containers and its agent, and the containers with nothing to open — no published port (or one bound to the machine alone), no label and not on the host's network. The window says how many. A container on the host's network publishes nothing, so it is offered **unticked** and you type its address.
+- **Already bookmarked** containers (a bookmark's **Runs on → Docker** names them) are shown dimmed and unticked.
+- **Which board:** the one you have open; an account that may use several boards can choose another in the window.
+
+Each bookmark is made as the bookmark editor would make it, tied to its container (so the card and panel show it) and with its status checked when your account may. If the account reaches its limit of items, the window stops, says how many were left out, and keeps what it made. **Undo** removes what that run created — the bookmarks, the sections it made, and the rows it added to one that was there — and nothing else.
+
 ### Permissions and agents
 
 Seeing the page and its logs needs permission to **view** Docker. **Start**, **Restart** and **Stop** at the foot of the panel need permission to **control** it; an account without it sees no buttons. Restart and stop ask for confirmation first, and Stop is switched off for the Lastboard Agent's own container.
