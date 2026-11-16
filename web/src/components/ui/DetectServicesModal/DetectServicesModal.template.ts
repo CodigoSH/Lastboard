@@ -273,22 +273,23 @@ export function sectionPlaceholder(v: Pick<WindowView, 'autoSections'>, t: T): s
 }
 
 export function detectHtml(v: WindowView, t: T): string {
-    // A few hosts read best as a row of pills, the active one lit; many fall back to the dropdown.
-    const hostPick = v.hosts.length < 2 ? ''
-        : v.hosts.length <= 5
-            ? `<div class="hosts" role="radiogroup" aria-label="${e(t('detect.host'))}">${v.hosts.map(h => `<button type="button" class="hostchip" role="radio" data-host="${e(h.id)}" aria-checked="${h.id === v.hostId}">${e(h.name)}</button>`).join('')}</div>`
-            : `<div class="field"><span>${e(t('detect.host'))}</span>${selectHtml('dt-host', v.hosts.map(h => ({ value: h.id, label: h.name })), v.hostId, t('detect.host'))}</div>`;
+    // With several hosts of the kind, a dropdown among the tools; with one there is nothing to choose.
+    const hostPick = v.hosts.length > 1
+        ? `<div class="tools__host">${selectHtml('dt-host', v.hosts.map(h => ({ value: h.id, label: h.name })), v.hostId, t('detect.host'))}</div>`
+        : '';
     const boardPick = v.canPickBoard && v.boards.length > 1
         ? `<span class="where__label">${e(t('detect.board'))}</span><div class="where__control">${selectHtml('dt-board', v.boards.map(b => ({ value: String(b.id), label: b.name })), String(v.boardId ?? ''), t('detect.board'))}</div>`
         : '';
 
     let body: string;
+    const hostOnly = hostPick ? `<div class="tools">${hostPick}</div>` : '';
     if (v.state === 'loading') body = `<div class="frame"><div class="list list--skeleton" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div><p class="state" role="status">${e(t('detect.loading', { host: v.hostName }))}</p>`;
     else if (v.state === 'nohost') body = `<p class="state">${e(t(v.source === 'proxmox' ? 'detect.no_hypervisor' : 'detect.no_host'))}</p>`;
     else if (v.state === 'empty') body = `<p class="state">${e(v.error || t('detect.empty'))}</p>`;
     else {
         body = `<div class="tools">
                 <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" id="dt-search" placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}"></label>
+                ${hostPick}
                 <span class="tools__group">
                     <button type="button" class="tool" id="dt-only-up"${v.rows.some(r => r.group === 'add' && r.health === 'up') && v.rows.some(r => r.group === 'add' && r.health === 'down') ? '' : ' hidden'}>${e(t('detect.only_up'))}</button>
                     <button type="button" class="tool" id="dt-all">${e(t('detect.all'))}</button>
@@ -303,7 +304,7 @@ export function detectHtml(v: WindowView, t: T): string {
             <div class="title-group"><h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
             <button type="button" class="close-btn" id="dt-close" aria-label="${e(t('general.close'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
-        ${hostPick ? `<div class="controls">${hostPick}</div>` : ''}
+        ${v.state === 'ready' ? '' : hostOnly}
         ${body}
         <div class="footer${v.state === 'ready' ? ' footer--ready' : ''}">
             ${v.state === 'ready' ? `<div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>` : ''}

@@ -62,16 +62,20 @@ describe('the window', () => {
         expect(one).not.toContain('id="dt-host"');
         expect(one).not.toContain('id="dt-board"');
         const many = detectHtml(view({ hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], canPickBoard: true, boards: [{ id: 1, name: 'M' }, { id: 2, name: 'N' }] }), t);
-        // A few hosts are pills, the active one marked; many fall back to the dropdown.
-        expect(many).toContain('data-host="a"');
-        expect(many).not.toContain('id="dt-host"');
-        expect(detectHtml(view({ hostId: 'b', hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }), t)).toContain('data-host="b" aria-checked="true"');
-        const lots = Array.from({ length: 6 }, (_, i) => ({ id: 'h' + i, name: 'H' + i }));
-        expect(detectHtml(view({ hosts: lots }), t)).toContain('id="dt-host"');
+        expect(many).toContain('id="dt-host"');
         expect(many).toContain('id="dt-board"');
         expect(detectHtml(view({ canPickBoard: true, boards: [{ id: 1, name: 'M' }] }), t)).not.toContain('id="dt-board"');
         // An account that may not choose is not offered the choice, however many boards there are.
         expect(detectHtml(view({ canPickBoard: false, boards: [{ id: 1, name: 'M' }, { id: 2, name: 'N' }] }), t)).not.toContain('id="dt-board"');
+    });
+    test('the host dropdown sits between the search and the buttons, and stays while loading or after a failure', () => {
+        const hosts = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
+        const ready = detectHtml(view({ hosts }), t);
+        expect(ready.indexOf('id="dt-search"')).toBeLessThan(ready.indexOf('id="dt-host"'));
+        expect(ready.indexOf('id="dt-host"')).toBeLessThan(ready.indexOf('id="dt-all"'));
+        // A host that is loading or has nothing must not trap the person on it.
+        for (const state of ['loading', 'empty'] as const) expect(detectHtml(view({ hosts, state }), t)).toContain('id="dt-host"');
+        expect(detectHtml(view({ state: 'empty' }), t)).not.toContain('id="dt-host"');
     });
     test('the button is off with nothing ticked, or while it works', () => {
         expect(detectHtml(view({ selected: 0 }), t)).toMatch(/id="dt-create" disabled/);
@@ -324,7 +328,7 @@ describe("the product's own dropdowns and the icon button", () => {
     test('no native select is left in the window', () => {
         const html = detectHtml(view({ boards: [{ id: 1, name: 'M' }, { id: 2, name: 'N' }], canPickBoard: true, hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], rows: [row({ candidates: ['http://a', 'http://b'] })] }), (k) => k);
         expect(html).not.toContain('<select');
-        expect(html).toContain('class="hostchip"');
+        expect(html).toContain('id="dt-host"');
         expect(html).toContain('id="dt-board"');
         expect(html).toContain('class="alt"');
         expect(html).toContain('menu-min-width="460"');
@@ -346,12 +350,13 @@ describe("the product's own dropdowns and the icon button", () => {
 });
 
 describe('what a Docker window no longer asks for up front', () => {
-    test('the top of the window holds only the host, and only when there are several', () => {
+    test('nothing above the tools is asked up front, and the host only when there are several', () => {
         const one = detectHtml(view(), t);
         expect(one).not.toContain('class="controls"');
+        expect(one).not.toContain('id="dt-host"');
         expect(one).not.toContain('id="dt-address"');
         expect(one).not.toContain('id="dt-group"');
-        expect(detectHtml(view({ hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }), t)).toContain('class="controls"');
+        expect(detectHtml(view({ hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }), t)).toContain('class="tools__host"');
     });
     test('the address the ports are built on is a line of the head, with a button to change it', () => {
         const line = addressLineHtml({ address: '10.0.0.2', addressEditing: false }, t);

@@ -45,16 +45,6 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); }
 }
 
 /* ── Fields: the same inputs and the same dropdowns wherever they are ─────── */
-.controls { padding: 12px 28px 0; }
-.controls .field { inline-size: min(280px, 100%); }
-.hosts { display: flex; flex-wrap: wrap; gap: 8px; }
-.hostchip {
-    block-size: 32px; padding: 0 14px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
-    color: var(--text-dim); background: transparent; border: 1px solid var(--card-border); border-radius: 999px; transition: all 0.2s;
-}
-.hostchip:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.06); }
-.hostchip[aria-checked="true"] { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.55); background: rgba(var(--accent-rgb), 0.12); cursor: default; }
-.hostchip:focus-visible { outline: 2px solid rgba(var(--accent-rgb), 0.6); outline-offset: 2px; }
 .field { display: flex; flex-direction: column; gap: 5px; min-inline-size: 0; }
 .field > span { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
 /* The product's own dropdown, sized to sit on a line with the inputs. */
@@ -76,6 +66,8 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
     stroke: var(--text-dim); fill: none; stroke-width: 2; stroke-linecap: round; pointer-events: none;
 }
 .search input { padding-inline-start: 38px; }
+.tools__host { flex: 0 0 190px; min-inline-size: 0; }
+.tools__host app-select { inline-size: 100%; }
 .tools__group { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .tool {
     block-size: 36px; padding: 0 12px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
@@ -368,11 +360,10 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .title-group h3 { font-size: 20px; }
     /* Room for the list matters more than the sentence under the title on a phone. */
     .title-group p { display: none; }
-    .controls { padding: 12px 18px 0; }
-    .controls .field { inline-size: 100%; }
     .tools { padding: 12px 18px 0; gap: 8px; }
     /* Wrapped, not scrolled: a label cut at the edge looks like a mistake, not like something to swipe. */
     .tools__group { flex: 1 1 100%; }
+    .tools__host { flex: 1 1 100%; }
     .tool { block-size: 32px; padding: 0 10px; font-size: 10.5px; flex: none; }
     .head__hint { font-size: 12px; padding: 6px 8px; }
     /* The preview is for the room a desktop has; here the list has it. */
