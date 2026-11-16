@@ -23,6 +23,7 @@ import './components/ui/DashboardManagerModal/DashboardManagerModal';
 import './components/ui/WidgetConfigModal/WidgetConfigModal';
 import './components/ui/ConfirmationModal/ConfirmationModal';
 import './components/ui/MoveToDashboardModal/MoveToDashboardModal';
+import './components/ui/DetectServicesModal/DetectServicesModal';
 import './components/ui/MonitorPage/MonitorPage';
 import './components/ui/ProxmoxPage/ProxmoxPage';
 import './components/ui/DockerPage/DockerPage';
@@ -149,6 +150,12 @@ bootstrap(async () => {
 
     moveModal = document.createElement('move-to-dashboard-modal');
     document.body.appendChild(moveModal);
+
+    // A page asks for the service detector with an event; the window is one
+    // element for the whole app, like the other modals.
+    const detectModal = document.createElement('detect-services-modal') as HTMLElement & { open(o?: { hostId?: string }): void };
+    document.body.appendChild(detectModal);
+    document.addEventListener('detect-services', (e) => detectModal.open((e as CustomEvent<{ hostId?: string }>).detail));
 
     const monitorPage = document.createElement('monitor-page');
     document.body.appendChild(monitorPage);
