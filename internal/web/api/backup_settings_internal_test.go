@@ -58,7 +58,7 @@ func TestBackupIsNewer(t *testing.T) {
 // The faces an account gave its containers are its own work, and a restore that
 // forgot them would send every one back to the default icon.
 func TestWhatAnAccountChoosesForItsHostsTravelsInTheBackup(t *testing.T) {
-	for _, k := range []string{dockerHostsKey, dockerIconsKey, proxmoxHostsKey, proxmoxIconsKey} {
+	for _, k := range []string{dockerHostsKey, dockerIconsKey, proxmoxHostsKey, proxmoxIconsKey, detectDismissedKey} {
 		if isJSON, ok := userSettingKeys[k]; !ok || !isJSON {
 			t.Errorf("%s is not carried by the backup as JSON", k)
 		}

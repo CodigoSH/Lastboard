@@ -286,6 +286,11 @@ func (h *ProxmoxHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
+	kept := map[string]bool{}
+	for _, h := range list {
+		kept[h.ID] = true
+	}
+	pruneDismissed(NewUserSettings(u.DB), u.uid, "p:", kept)
 	w.WriteHeader(http.StatusNoContent)
 }
 

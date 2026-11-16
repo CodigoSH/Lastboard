@@ -354,6 +354,11 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/proxmox/addresses", protect(need(access.ProxmoxView, proxmoxHandler.Addresses)))
 	s.Router.Handle("POST /api/proxmox/icon", protect(need(access.ProxmoxView, proxmoxHandler.SetIcon)))
 
+	// What an account chose not to add to its board from a host.
+	detectHandler := api.NewDetectHandler(api.NewUserSettings(s.DB))
+	s.Router.Handle("GET /api/detect/dismissed", protect(need(access.BoardEdit, detectHandler.Get)))
+	s.Router.Handle("POST /api/detect/dismissed", protect(need(access.BoardEdit, detectHandler.Change)))
+
 	// Docker API
 	dockerHandler := api.NewDockerHandler(s.DB)
 	// The account's own list of hosts, as Proxmox keeps its hypervisors.

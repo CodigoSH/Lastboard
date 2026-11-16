@@ -311,5 +311,10 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.pruneIcons(list)
+	kept := map[string]bool{}
+	for _, h := range list {
+		kept[h.ID] = true
+	}
+	pruneDismissed(NewUserSettings(s.DB), s.uid, "d:", kept)
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -208,10 +208,11 @@ type BackupUserSetting struct {
 // userSettingKeys is every user_settings key a backup carries and a restore
 // accepts, and whether its value is JSON.
 var userSettingKeys = map[string]bool{
-	proxmoxHostsKey: true,
-	proxmoxIconsKey: true,
-	dockerHostsKey:  true,
-	dockerIconsKey:  true,
+	proxmoxHostsKey:    true,
+	proxmoxIconsKey:    true,
+	dockerHostsKey:     true,
+	dockerIconsKey:     true,
+	detectDismissedKey: true,
 
 	keyMonMode:      false,
 	keyMonInterval:  false,
