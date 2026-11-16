@@ -1047,7 +1047,7 @@ class SettingsContent extends HTMLElement {
             // A hypervisor that has just been added is the moment somebody wants its machines on the board:
             // the window opens by itself, and only if there turns out to be something to offer.
             const added = newProxmoxHostIds(before, this.proxmox.hosts);
-            if (added.length) document.dispatchEvent(new CustomEvent('detect-services', { detail: { source: 'proxmox', hostId: added[0], quiet: true } }));
+            if (added.length) document.dispatchEvent(new CustomEvent('detect-services', { detail: { source: 'proxmox', hostId: added[0], hostIds: added, quiet: true } }));
             this.render();
             const { eventBus: bus, EVENTS: E } = await import('../../../services/EventBus');
             bus.emit(E.PROXMOX_CHANGED, { enabled: this.proxmox.enabled });

@@ -171,7 +171,7 @@ The last 100 lines when you open it, with **Load more lines** to read the last 1
 
 ### Adding the services of a host to the board
 
-Rather than making one bookmark for each container by hand, ask Lastboard to propose them: the **bookmark** button in the Docker page's header, or the window that opens by itself when you add a host that answers and has something to offer. It needs permission to edit the board.
+Rather than making one bookmark for each container by hand, ask Lastboard to propose them: the **bookmark** button in the Docker page's header, or the window that opens by itself when you add a host that answers and has something to offer. If you add several at once it opens once, for the first that has something to add; the others are in the window's list of hosts. It needs permission to edit the board.
 
 The window sorts what the host's containers could become into three groups (**Ctrl+K** or **Cmd+K** goes to its search). **To add** is open and is where you work: one row each, with its checkbox, its icon, its name, its address and whether that address answers, and everything in it is ticked to start with. **Already on your board** (what a bookmark already serves) and **Ignored** (what you set aside) are folded, since there is nothing to do with them; press their title to see them. **Tick all** and **Untick all**, beside the search, act on the group to add, and **Only those that answer** (when some do and some do not) ticks just the ones that answer. The head of the group stays in place while the rows scroll, with how many there are and a bar of how many are ticked. At the foot, one sentence says where what is ticked will go: *Goes to “Main”, in the section “Podman”*.
 

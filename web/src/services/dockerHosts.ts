@@ -54,7 +54,7 @@ export async function saveDockerSettings(hosts: DockerHostEdit[]): Promise<Docke
     // the window opens by itself, and only if there turns out to be something to offer.
     const added = newUsableHostIds(before, next.hosts);
     if (added.length && typeof document !== 'undefined') {
-        document.dispatchEvent(new CustomEvent('detect-services', { detail: { hostId: added[0], quiet: true } }));
+        document.dispatchEvent(new CustomEvent('detect-services', { detail: { hostId: added[0], hostIds: added, quiet: true } }));
     }
     return next;
 }

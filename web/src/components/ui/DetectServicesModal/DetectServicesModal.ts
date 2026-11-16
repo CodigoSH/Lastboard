@@ -21,6 +21,7 @@ import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
 import { bookmarkContent } from '../../../services/bookmarkContent';
 import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
+import { firstWithNews } from '../../../services/firstWithNews';
 import { probeAddresses } from '../../../services/probeAddresses';
 import { dismissKey, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
 import {
@@ -92,7 +93,7 @@ class DetectServicesModal extends HTMLElement {
      * Shows the window for one host, or the first one the account has. `quiet`
      * is for when nobody asked: it appears only if there is something to offer.
      */
-    async open(opts: { source?: Source; hostId?: string; quiet?: boolean } = {}): Promise<void> {
+    async open(opts: { source?: Source; hostId?: string; hostIds?: string[]; quiet?: boolean } = {}): Promise<void> {
         if (!accessAllows(userStore.getUser(), 'board_edit')) return;
         this.source = opts.source ?? 'docker';
         this.view = this.blankView();
@@ -124,12 +125,23 @@ class DetectServicesModal extends HTMLElement {
             this.paint();
             return;
         }
+        if (opts.quiet) {
+            // Nobody asked for it: it appears for the first of the new hosts that has something to add — a host whose services all
+            // have a bookmark already, or are ignored, has nothing to say — and the others are one click away in its list of hosts.
+            const ids = (opts.hostIds?.length ? opts.hostIds : [opts.hostId ?? this.view.hosts[0].id]).filter(id => this.view.hosts.some(h => h.id === id));
+            const found = await firstWithNews(ids, async id => {
+                await this.loadHost(id, null);
+                return this.view.state === 'ready' && this.hasSomethingToAdd();
+            });
+            if (found && !this.dialog?.open) this.dialog?.showModal();
+            return;
+        }
         const first = this.view.hosts.find(h => h.id === opts.hostId) ?? this.view.hosts[0];
         await this.loadHost(first.id, null);
-        // Nobody asked for it, so it appears only when there is something to add: a host whose services all have a bookmark
-        // already, or are ignored, has nothing to say.
-        const somethingToAdd = [...this.rows.values()].some(r => this.groupOf(r) === 'add');
-        if (opts.quiet && this.view.state === 'ready' && somethingToAdd && !this.dialog?.open) this.dialog?.showModal();
+    }
+
+    private hasSomethingToAdd(): boolean {
+        return [...this.rows.values()].some(r => this.groupOf(r) === 'add');
     }
 
     private async loadHost(hostId: string, result: WindowView['result']): Promise<void> {
