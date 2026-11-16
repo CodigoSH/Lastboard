@@ -48,6 +48,7 @@
   "bookmark.border_color": "Χρώμα περιγράμματος",
   "bookmark.border_width": "Πλάτος περιγράμματος",
   "bookmark.delete_confirm_message": "Είστε σίγουροι; Θα διαγραφεί οριστικά.",
+  "bookmark.delete_section_message": "Είστε σίγουροι; Η ενότητα και ό,τι περιέχει θα διαγραφούν οριστικά.",
   "bookmark.hidden": "Κρυφό",
   "bookmark.icon": "Εικονίδιο",
   "bookmark.label": "Τίτλος",

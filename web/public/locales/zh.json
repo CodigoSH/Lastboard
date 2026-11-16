@@ -48,6 +48,7 @@
   "bookmark.border_color": "边框颜色",
   "bookmark.border_width": "边框宽度",
   "bookmark.delete_confirm_message": "你确定吗？它将被永久删除。",
+  "bookmark.delete_section_message": "你确定吗？该部分及其中的所有内容都将被永久删除。",
   "bookmark.hidden": "隐藏",
   "bookmark.icon": "图标",
   "bookmark.label": "标题",

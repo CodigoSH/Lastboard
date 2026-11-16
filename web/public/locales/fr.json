@@ -48,6 +48,7 @@
   "bookmark.border_color": "Couleur de la bordure",
   "bookmark.border_width": "Épaisseur de la bordure",
   "bookmark.delete_confirm_message": "Êtes-vous sûr ? Ce sera supprimé définitivement.",
+  "bookmark.delete_section_message": "Êtes-vous sûr ? La section et tout son contenu seront supprimés définitivement.",
   "bookmark.hidden": "Masqué",
   "bookmark.icon": "Icône",
   "bookmark.label": "Titre",

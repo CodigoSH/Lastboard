@@ -48,6 +48,7 @@
   "bookmark.border_color": "Border Color",
   "bookmark.border_width": "Border Width",
   "bookmark.delete_confirm_message": "Are you sure? It'll be gone for good.",
+  "bookmark.delete_section_message": "Are you sure? The section and everything inside it will be gone for good.",
   "bookmark.hidden": "Hidden",
   "bookmark.icon": "Icon",
   "bookmark.label": "Title",

@@ -48,6 +48,7 @@
   "bookmark.border_color": "رنگ حاشیه",
   "bookmark.border_width": "عرض حاشیه",
   "bookmark.delete_confirm_message": "آیا مطمئن هستید؟ برای همیشه حذف خواهد شد.",
+  "bookmark.delete_section_message": "آیا مطمئن هستید؟ بخش و هر چیزی که درون آن است برای همیشه حذف خواهد شد.",
   "bookmark.hidden": "مخفی",
   "bookmark.icon": "نماد",
   "bookmark.label": "عنوان",

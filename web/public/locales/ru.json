@@ -48,6 +48,7 @@
   "bookmark.border_color": "Цвет границы",
   "bookmark.border_width": "Толщина границы",
   "bookmark.delete_confirm_message": "Вы уверены? Это будет удалено навсегда.",
+  "bookmark.delete_section_message": "Вы уверены? Раздел и всё, что в нём находится, будет удалено навсегда.",
   "bookmark.hidden": "Скрыто",
   "bookmark.icon": "Иконка",
   "bookmark.label": "Название",

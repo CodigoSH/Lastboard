@@ -48,6 +48,7 @@
   "bookmark.border_color": "لون الحدود",
   "bookmark.border_width": "عرض الحدود",
   "bookmark.delete_confirm_message": "هل أنت متأكد؟ سيتم حذفه نهائيًا.",
+  "bookmark.delete_section_message": "هل أنت متأكد؟ سيتم حذف القسم وكل ما بداخله نهائيًا.",
   "bookmark.hidden": "مخفي",
   "bookmark.icon": "أيقونة",
   "bookmark.label": "العنوان",

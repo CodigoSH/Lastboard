@@ -48,6 +48,7 @@
   "bookmark.border_color": "Kolor obramowania",
   "bookmark.border_width": "Szerokość obramowania",
   "bookmark.delete_confirm_message": "Czy jesteś pewien? Zostanie trwale usunięte.",
+  "bookmark.delete_section_message": "Czy jesteś pewien? Sekcja i wszystko, co zawiera, zostanie trwale usunięte.",
   "bookmark.hidden": "Ukryty",
   "bookmark.icon": "Ikona",
   "bookmark.label": "Tytył",

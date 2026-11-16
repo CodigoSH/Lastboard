@@ -48,6 +48,7 @@
   "bookmark.border_color": "Colore del bordo",
   "bookmark.border_width": "Spessore del bordo",
   "bookmark.delete_confirm_message": "Sei sicuro? Sarà eliminato per sempre.",
+  "bookmark.delete_section_message": "Sei sicuro? La sezione e tutto ciò che contiene saranno eliminati per sempre.",
   "bookmark.hidden": "Nascosto",
   "bookmark.icon": "Icona",
   "bookmark.label": "Titolo",

@@ -48,6 +48,7 @@
   "bookmark.border_color": "枠線の色",
   "bookmark.border_width": "枠線の太さ",
   "bookmark.delete_confirm_message": "本当によろしいですか？完全に削除されます。",
+  "bookmark.delete_section_message": "本当によろしいですか？セクションとその中のすべてが完全に削除されます。",
   "bookmark.hidden": "非表示",
   "bookmark.icon": "アイコン",
   "bookmark.label": "タイトル",

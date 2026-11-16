@@ -48,6 +48,7 @@
   "bookmark.border_color": "Rahmenfarbe",
   "bookmark.border_width": "Rahmenbreite",
   "bookmark.delete_confirm_message": "Bist du sicher? Es wird endgültig gelöscht.",
+  "bookmark.delete_section_message": "Bist du sicher? Der Abschnitt und alles darin wird endgültig gelöscht.",
   "bookmark.hidden": "Versteckt",
   "bookmark.icon": "Symbol",
   "bookmark.label": "Titel",

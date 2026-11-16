@@ -48,6 +48,7 @@
   "bookmark.border_color": "بارڈر کا رنگ",
   "bookmark.border_width": "بارڈر کی چوڑائی",
   "bookmark.delete_confirm_message": "کیا آپ کو یقین ہے؟ یہ ہمیشہ کے لیے حذف ہو جائے گا۔",
+  "bookmark.delete_section_message": "کیا آپ کو یقین ہے؟ سیکشن اور اس کے اندر موجود ہر چیز ہمیشہ کے لیے حذف ہو جائے گی۔",
   "bookmark.hidden": "خفیہ",
   "bookmark.icon": "آئیکن",
   "bookmark.label": "عنوان",

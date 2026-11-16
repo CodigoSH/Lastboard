@@ -48,6 +48,7 @@
   "bookmark.border_color": "Kenarlık rengi",
   "bookmark.border_width": "Kenarlık genişliği",
   "bookmark.delete_confirm_message": "Emin misiniz? Kalıcı olarak silinecek.",
+  "bookmark.delete_section_message": "Emin misiniz? Bölüm ve içindeki her şey kalıcı olarak silinecek.",
   "bookmark.hidden": "Gizli",
   "bookmark.icon": "Simge",
   "bookmark.label": "Başlık",

@@ -533,7 +533,8 @@ class BookmarkGrid extends HTMLElement {
         const { eventBus, EVENTS } = await import('../../../services/EventBus');
         eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
             title: `${i18n.t('general.delete')} ${typeLabel}`,
-            message: i18n.t('bookmark.delete_confirm_message'),
+            // A section takes what is inside it: it says so when there is something inside.
+            message: i18n.t(item.type === 'section' && this.allItems.some(b => b.parent_id === id) ? 'bookmark.delete_section_message' : 'bookmark.delete_confirm_message'),
             onConfirm: () => { this._dissolveThenDelete(id); }
         });
     }
