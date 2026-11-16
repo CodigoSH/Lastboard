@@ -146,9 +146,9 @@ describe('how the window reads', () => {
         expect(rowHtml(row({ iconUrl: '', name: evil }), (k) => k)).not.toContain('<img src=x');
     });
     test('the window says which host it is listing, under the right product', () => {
-        expect(detectHtml(view({ source: 'docker', hostName: 'Podman' }), (k) => k)).toContain('eyebrow">widget.docker.name · Podman<');
-        expect(detectHtml(view({ source: 'proxmox', hostName: 'Home' }), (k) => k)).toContain('eyebrow">widget.proxmox.name · Home<');
-        expect(detectHtml(view({ hostName: '' }), (k) => k)).not.toContain('eyebrow');
+        expect(detectHtml(view({ source: 'docker', hostName: 'Podman' }), (k) => k)).toContain('frame__title">widget.docker.name · Podman<');
+        expect(detectHtml(view({ source: 'proxmox', hostName: 'Home' }), (k) => k)).toContain('frame__title">widget.proxmox.name · Home<');
+        expect(detectHtml(view({ hostName: '' }), (k) => k)).not.toContain('frame__title');
     });
     test('a host named after the product is not said twice', () => {
         const t = (k: string) => (k === 'widget.docker.name' ? 'Docker' : 'Proxmox');
@@ -193,8 +193,16 @@ describe("the product's own dropdowns and the icon button", () => {
         expect(rowHtml(row(), (k) => k)).toContain('<button type="button" class="face" aria-label="detect.choose_icon"');
         expect(rowHtml(row(), (k) => k)).not.toContain('app-select');
     });
-    test('a row with nothing to say about itself has no line of notes', () => {
-        expect(rowHtml(row(), (k) => k)).not.toContain('row__meta');
-        expect(rowHtml(row({ linkedTo: 'X' }), (k) => k)).toContain('row__meta');
+    test('every row has its line of pills, with the answer first, so the rows keep one height', () => {
+        const plain = rowHtml(row(), (k) => k);
+        expect(plain).toContain('<div class="row__meta"><span class="row__health"');
+        expect(plain).not.toContain('class="chip');
+        const linked = rowHtml(row({ linkedTo: 'X', health: 'up' }), (k) => k);
+        expect(linked.indexOf('row__health')).toBeLessThan(linked.indexOf('chip chip--linked'));
+    });
+    test('the list sits in a frame whose name is on its border', () => {
+        const html = detectHtml(view({ hostName: 'Home' }), (k) => k);
+        expect(html).toContain('<div class="frame"><span class="frame__title">');
+        expect(html).toContain('id="dt-list"');
     });
 });

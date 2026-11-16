@@ -92,11 +92,14 @@ export function rowHtml(r: RowView, t: T): string {
         ? `<img src="${e(safeImageSrc(r.iconUrl))}" alt="" loading="lazy">`
         : `<span class="face__letter" aria-hidden="true">${e(initialOf(r.name))}</span>`;
     // The tile is the button that opens the icon search, as a bookmark's icon is in its own window.
-    const face = `<span class="face-cell"><button type="button" class="face" aria-label="${e(t('detect.choose_icon'))}" title="${e(t('detect.choose_icon'))}">${faceInner}<svg class="face__edit" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg></button><span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span></span>`;
+    const face = `<span class="face-cell"><button type="button" class="face" aria-label="${e(t('detect.choose_icon'))}" title="${e(t('detect.choose_icon'))}">${faceInner}<svg class="face__edit" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg></button></span>`;
     const choose = r.candidates.length > 1
         ? selectHtml('', r.candidates.map(c => ({ value: c, label: c })), r.url, t('detect.url'), 'alt', 460)
         : '';
+    // The pills say what is known about it: whether its address answers, then what else there is to say. The first is
+    // always in place (empty until it is known), so the line keeps its height and the rows keep one rhythm.
     const chips = [
+        `<span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>`,
         noteText(r.note, t) ? `<span class="chip">${e(noteText(r.note, t))}</span>` : '',
         r.linkedTo ? `<span class="chip chip--linked">${e(t('detect.already', { name: r.linkedTo }))}</span>` : '',
         r.dismissed && !r.linkedTo ? `<span class="chip">${e(t('detect.dismissed'))}</span>` : '',
@@ -104,13 +107,11 @@ export function rowHtml(r: RowView, t: T): string {
     return `<div class="row${r.linkedTo ? ' is-linked' : ''}" data-key="${e(r.key)}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">
         <input type="checkbox" class="pick" aria-label="${e(r.name)}"${r.checked ? ' checked' : ''}>
         ${face}
-        <div class="row__main">
-            <div class="row__fields">
-                <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
-                <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div>
-            </div>
-            ${chips ? `<div class="row__meta">${chips}</div>` : ''}
+        <div class="row__id">
+            <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
+            <div class="row__meta">${chips}</div>
         </div>
+        <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div>
     </div>`;
 }
 
@@ -146,7 +147,7 @@ export function detectHtml(v: WindowView, t: T): string {
         : '';
 
     let body: string;
-    if (v.state === 'loading') body = `<div class="list list--skeleton" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div><p class="state" role="status">${e(t('detect.loading', { host: v.hostName }))}</p>`;
+    if (v.state === 'loading') body = `<div class="frame"><div class="list list--skeleton" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div><p class="state" role="status">${e(t('detect.loading', { host: v.hostName }))}</p>`;
     else if (v.state === 'nohost') body = `<p class="state">${e(t(v.source === 'proxmox' ? 'detect.no_hypervisor' : 'detect.no_host'))}</p>`;
     else if (v.state === 'empty') body = `<p class="state">${e(v.error || t('detect.empty'))}</p>`;
     else {
@@ -156,7 +157,7 @@ export function detectHtml(v: WindowView, t: T): string {
                 <button type="button" class="link" id="dt-none">${e(t('detect.none'))}</button>
                 <span class="count" id="dt-count">${countHtml(v.selected, v.rows.length)}</span>
             </div>
-            <div class="list" id="dt-list">${v.rows.map(r => rowHtml(r, t)).join('')}</div>
+            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="list" id="dt-list">${v.rows.map(r => rowHtml(r, t)).join('')}</div></div>
             ${v.withoutAddress ? `<p class="hint">${e(t('detect.hidden', { count: String(v.withoutAddress) }))}</p>` : ''}`;
     }
 
@@ -166,9 +167,8 @@ export function detectHtml(v: WindowView, t: T): string {
         ? `<label class="field"><span>${e(t('detect.address'))}</span><input type="text" id="dt-address" value="${e(v.address)}" spellcheck="false" autocomplete="off"></label>
             <div class="field"><span>${e(t('detect.group'))}</span>${selectHtml('dt-group', [{ value: 'host', label: t('detect.group_host') }, { value: 'project', label: t('detect.group_project') }], v.groupBy, t('detect.group'))}</div>`
         : '';
-    const eyebrow = v.hostName ? `<span class="eyebrow">${e(eyebrowText(v.source, v.hostName, t))}</span>` : '';
     return `<div class="header">
-            <div class="title-group">${eyebrow}<h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
+            <div class="title-group"><h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
             <button type="button" class="close-btn" id="dt-close" aria-label="${e(t('general.close'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
         ${showControls ? `<div class="controls">

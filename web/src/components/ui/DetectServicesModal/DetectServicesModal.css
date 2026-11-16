@@ -8,7 +8,7 @@ dialog.dialog-base {
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 0;
-    width: min(880px, calc(100vw - 32px));
+    width: min(900px, calc(100vw - 32px));
     max-width: none;
     max-height: min(88vh, 860px);
     overflow: hidden;
@@ -27,11 +27,7 @@ dialog.dialog-base[open] { display: flex; flex-direction: column; }
 dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
-.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 28px 4px; }
-.eyebrow {
-    display: block; margin-block-end: 6px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--accent);
-}
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 28px 4px; }
 .title-group h3 {
     margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em;
     background: linear-gradient(135deg, var(--text-main) 0%, var(--text-dim) 100%);
@@ -48,12 +44,12 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); }
     background: rgba(var(--accent-rgb), 0.1); transform: rotate(90deg); color: var(--accent); border-color: rgba(var(--accent-rgb), 0.3); outline: none;
 }
 
-/* ── Fields: the same inputs and the same selects wherever they are ───────── */
-.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 10px 28px 0; }
+/* ── Fields: the same inputs and the same dropdowns wherever they are ─────── */
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 12px 28px 0; }
 .field { display: flex; flex-direction: column; gap: 5px; min-inline-size: 0; }
+.field > span { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
 /* The product's own dropdown, sized to sit on a line with the inputs. */
 app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size: 13.5px; }
-.field > span { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
 .field input, .search input, .row input[type="text"] {
     inline-size: 100%; min-inline-size: 0; box-sizing: border-box; block-size: 36px; padding: 0 12px; font: inherit; font-size: 13.5px;
     color: var(--input-text, var(--text-main)); background-color: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius);
@@ -62,8 +58,9 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 .field input:focus, .search input:focus, .row input:focus {
     border-color: var(--input-focus-border, var(--accent)); box-shadow: var(--input-focus-shadow, none);
 }
+
 /* ── Search and selection ─────────────────────────────────────────────────── */
-.tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 28px 8px; }
+.tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 14px 28px 0; }
 .search { position: relative; flex: 1 1 220px; display: block; }
 .search svg {
     position: absolute; inset-inline-start: 13px; inset-block-start: 50%; transform: translateY(-50%); inline-size: 15px; block-size: 15px;
@@ -81,24 +78,48 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 }
 .count b { color: var(--text-main); font-weight: 700; }
 
-/* ── The services: one card each, the board's own card recipe ─────────────── */
-.list {
-    flex: 1 1 auto; overflow-y: auto; min-block-size: 96px; display: flex; flex-direction: column; gap: 7px; padding: 4px 28px 14px;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 8px, #000 calc(100% - 18px), transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0, #000 8px, #000 calc(100% - 18px), transparent 100%);
+/* ── The services, in the house's own box: a frame whose name is a pill on its border ── */
+.frame {
+    position: relative; flex: 1 1 auto; min-block-size: 96px; display: flex; flex-direction: column; margin: 20px 28px 0;
+    background: var(--surface); border: 1px solid var(--card-border); border-radius: 14px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
+.frame:hover { border-color: rgba(var(--accent-rgb), 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
+.frame__title {
+    position: absolute; inset-block-start: 0; inset-inline-start: 14px; transform: translateY(calc(-50% - 1px)); z-index: 2;
+    max-inline-size: calc(100% - 28px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box;
+    padding: 2px 8px; line-height: 1.4; font: 700 0.65rem/1.4 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
+    background: var(--surface-solid); border: 1px solid var(--card-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.3s ease, color 0.3s ease;
+}
+.frame:hover .frame__title { border-color: rgba(var(--accent-rgb), 0.3); }
+
+.list {
+    flex: 1 1 auto; overflow-y: auto; min-block-size: 0; display: flex; flex-direction: column; gap: 3px; padding: 16px 8px 10px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 16px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 16px), transparent 100%);
+}
+
+/* A row is not a card inside the frame's card: it is a line of the list that lights up when it is touched or chosen,
+   as the status page lights the row it has open — the accent on the whole border and a wash behind it. */
 .row {
-    display: grid; grid-template-columns: auto 40px minmax(0, 1fr); align-items: center; gap: 12px; padding: 9px 12px; flex: none;
-    background: var(--card-bg-inactive); border: 1px solid var(--border); border-radius: 14px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden; flex: none; display: grid; grid-template-columns: auto 40px minmax(0, 1fr) minmax(0, 340px);
+    align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid transparent; border-radius: 12px;
+    transition: border-color 0.2s, background-color 0.2s;
     animation: rowIn 0.35s ease-out backwards;
 }
+.row > * { position: relative; }
+/* The card's own signature: an accent glow from the corner, there on touch and on choice. */
+.row::before {
+    content: ''; position: absolute; inset: 0; background: radial-gradient(circle at top right, var(--accent), transparent 70%);
+    opacity: 0; transition: opacity 0.4s; pointer-events: none;
+}
 .row[hidden] { display: none; }
-.row:hover { border-color: rgba(var(--accent-rgb), 0.35); }
-/* Chosen, as the status page marks the row it has open: the accent on the whole border and a wash behind. */
-.row:has(.pick:checked) { border-color: rgba(var(--accent-rgb), 0.55); background: rgba(var(--accent-rgb), 0.06); }
-.row.is-linked { opacity: 0.72; }
+.row:hover { border-color: rgba(var(--accent-rgb), 0.28); background-color: rgba(var(--accent-rgb), 0.04); }
+.row:hover::before { opacity: 0.1; }
+.row:has(.pick:checked) { border-color: rgba(var(--accent-rgb), 0.5); background-color: rgba(var(--accent-rgb), 0.07); }
+.row:has(.pick:checked)::before { opacity: 0.08; }
+.row.is-linked { opacity: 0.78; }
 .row.is-linked .face img { filter: grayscale(0.7); }
 /* Coming in from above: a push down would bring a scrollbar out of the list while it plays. `backwards`, not `both`: an animation
    that keeps its end state makes every row a stacking layer of its own, and a menu opened in one would sit under the rows after it. */
@@ -124,13 +145,14 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 }
 .pick:focus-visible { outline: 2px solid rgba(var(--accent-rgb), 0.5); outline-offset: 2px; }
 
-.face-cell { position: relative; display: block; inline-size: 40px; block-size: 40px; }
+/* The icon tile: the add-widget window's, in small — its own box, an inset shadow, a tilt when touched. */
+.face-cell { display: block; inline-size: 40px; block-size: 40px; }
 .face {
     position: relative; inline-size: 40px; block-size: 40px; display: grid; place-items: center; overflow: hidden; padding: 0; cursor: pointer;
     border-radius: 12px; background: var(--surface-solid); border: 1px solid var(--border); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
     color: var(--text-dim); transition: transform 0.3s var(--ease-bounce), border-color 0.2s;
 }
-.row:hover .face { transform: rotate(-4deg); }
+.row:hover .face { transform: rotate(-5deg); }
 .face:hover, .face:focus-visible { border-color: rgba(var(--accent-rgb), 0.55); outline: none; }
 .face img { inline-size: 100%; block-size: 100%; object-fit: contain; padding: 8px; box-sizing: border-box; }
 /* No icon yet: the first letter of the name, as a bookmark shows one. */
@@ -143,42 +165,43 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 .face:hover::before, .face:focus-visible::before { content: ''; position: absolute; inset: 0; background: rgba(var(--accent-rgb), 0.85); }
 .face:hover .face__edit, .face:focus-visible .face__edit { opacity: 1; }
 
-/* Whether the address answers: the board's own status dot, on the corner of the tile. The words are its tooltip. */
-.row__health {
-    position: absolute; inset-inline-end: -3px; inset-block-end: -3px; inline-size: 11px; block-size: 11px; border-radius: 50%; font-size: 0; overflow: hidden;
-    border: 2px solid var(--paper-bg); background: transparent;
+/* Who it is: the name over the pills that say what is known of it. */
+.row__id { display: flex; flex-direction: column; gap: 3px; min-inline-size: 0; }
+/* The name reads as a title until it is touched, and lines up with the pills below it. */
+.row input[type="text"].name {
+    block-size: 24px; padding: 0 6px; margin-inline: -6px; inline-size: calc(100% + 6px);
+    font-weight: 600; font-size: 14.5px; background-color: transparent; border-color: transparent;
 }
-.row__health:empty, .row__health[data-h=""] { display: none; }
-.row__health[data-h="up"] { background: var(--success-color); }
-.row__health[data-h="down"] { background: var(--warning-color); }
-
-.row__main { display: flex; flex-direction: column; min-inline-size: 0; }
-.row__fields { display: grid; grid-template-columns: minmax(130px, 0.8fr) minmax(0, 1.5fr); gap: 10px; align-items: center; }
-/* The name reads as a title until it is touched. */
-.row input[type="text"].name { font-weight: 600; font-size: 14.5px; background-color: transparent; border-color: transparent; }
 .row:hover input[type="text"].name, .row input[type="text"].name:focus { border-color: var(--input-border); background-color: var(--input-bg); }
-.row__url { display: flex; gap: 8px; min-inline-size: 0; }
-.row__url .addr { flex: 1 1 0; font-family: var(--font-mono); font-size: 12.5px; }
-/* The other ways to reach it are a menu on a button beside the address (the box shows the one in use). */
-app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --select-font-size: 0; }
+.row__meta { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; min-block-size: 20px; min-inline-size: 0; }
 
-.row__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-block-start: 7px; }
-.chip {
-    display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px;
-    font: 600 10.5px/1.3 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase;
+/* The pills: the board's own, in mono small capitals. */
+.chip, .row__health {
+    display: inline-flex; align-items: center; gap: 6px; block-size: 20px; padding: 0 9px; border-radius: 999px; box-sizing: border-box;
+    font: 700 10px/1 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; flex: none;
     color: var(--text-dim); background: transparent; border: 1px solid var(--card-border);
 }
-.chip--linked { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.08); }
+.chip { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 18px; }
+.row__health:empty { display: none; }
+.row__health::before { content: ''; inline-size: 6px; block-size: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.row__health[data-h="up"] { color: var(--success-color); border-color: rgba(var(--success-rgb), 0.4); background: rgba(var(--success-rgb), 0.1); }
+.row__health[data-h="down"] { color: var(--warning-color); border-color: rgba(var(--warning-rgb), 0.4); background: rgba(var(--warning-rgb), 0.1); }
+.chip--linked { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.09); }
+
+/* Where it goes: the address, and beside it the menu of the other ways to reach it. */
+.row__url { display: flex; gap: 8px; min-inline-size: 0; }
+.row__url .addr { flex: 1 1 0; font-family: var(--font-mono); font-size: 12.5px; }
+app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --select-font-size: 0; }
 
 /* ── States ───────────────────────────────────────────────────────────────── */
 .state, .hint { margin: 0; padding: 16px 28px; color: var(--text-dim); font-size: 13.5px; }
-.hint { padding-block: 0 14px; font-size: 12.5px; }
+.hint { padding-block: 10px 0; font-size: 12.5px; }
 .state { text-align: center; }
-.state:not([role="status"]) { margin: 8px 32px 24px; padding: 28px 20px; border: 1px dashed var(--border); border-radius: 16px; }
-.list--skeleton { gap: 10px; }
+.state:not([role="status"]) { margin: 8px 28px 24px; padding: 28px 20px; border: 1px dashed var(--border); border-radius: 16px; }
+.list--skeleton { gap: 6px; }
 .sk {
-    block-size: 56px; flex: none; border-radius: 16px; border: 1px solid var(--border);
-    background: linear-gradient(100deg, var(--card-bg-inactive) 30%, rgba(var(--accent-rgb), 0.07) 50%, var(--card-bg-inactive) 70%) 0 0 / 220% 100%;
+    block-size: 54px; flex: none; border-radius: 12px; border: 1px solid var(--border);
+    background: linear-gradient(100deg, transparent 30%, rgba(var(--accent-rgb), 0.07) 50%, transparent 70%) 0 0 / 220% 100%;
     animation: shimmer 1.4s linear infinite;
 }
 @keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
@@ -186,7 +209,7 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .footer {
-    display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; padding: 12px 28px 16px;
+    display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-block-start: 16px; padding: 14px 28px 18px;
     border-block-start: 1px solid var(--border); background: var(--paper-bg);
 }
 .footer .field { flex: 0 1 220px; }
@@ -204,22 +227,28 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn:disabled:hover { background: transparent; }
 
+/* ── A phone: the address goes under the name, and the tile goes ──────────── */
+@media (max-width: 760px) {
+    .row { grid-template-columns: auto 40px minmax(0, 1fr); row-gap: 8px; }
+    .row__url { grid-column: 2 / -1; }
+}
 @media (max-width: 640px) {
     dialog.dialog-base { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); border-radius: 18px; }
     .header { padding: 18px 18px 2px; gap: 10px; }
     .title-group h3 { font-size: 20px; }
     .title-group p { font-size: 13px; }
-    .controls { padding: 12px 18px 0; gap: 10px; }
-    .tools { padding: 12px 18px 8px; gap: 8px; }
+    /* Two to a line, with the address — the long one — across both. */
+    .controls { grid-template-columns: 1fr 1fr; padding: 12px 18px 0; gap: 10px; }
+    .controls > label.field { grid-column: 1 / -1; }
+    .tools { padding: 12px 18px 0; gap: 8px; }
     .search { flex: 1 1 100%; }
     .link { padding: 0 10px; font-size: 10.5px; }
     .count { margin-inline-start: auto; }
-    .list { padding: 4px 12px 14px; }
+    .frame { margin: 18px 12px 0; }
     .state, .hint { padding-inline: 18px; }
-    .row { grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 10px 12px; }
+    .row { grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 8px 10px; }
     .face-cell { display: none; }
-    .row__fields { grid-template-columns: 1fr; gap: 8px; }
-    .row__url { flex-direction: row; }
+    .row__url { grid-column: 2; }
     .footer { padding: 12px 18px 16px; gap: 10px; align-items: stretch; }
     .footer .field { flex: 1 1 100%; }
     .result { flex: 1 1 100%; min-block-size: 0; }
