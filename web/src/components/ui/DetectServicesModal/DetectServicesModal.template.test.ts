@@ -218,13 +218,13 @@ describe('where it goes', () => {
         expect(html).toContain('class="preview__title" title="My lab">My lab<');
         expect(detectHtml(view({ state: 'empty' }), t)).not.toContain('id="dt-section"');
     });
-    test('the preview shows a box for each section with its tiles, a letter where there is no icon, and how many more', () => {
+    test('the preview shows a box for each section with its tiles (nine at most), a letter where there is no icon, and how many more', () => {
         const tiles = Array.from({ length: 17 }, (_, i) => ({ name: `s${i}`, iconUrl: i === 0 ? '/api/icons/x' : '' }));
         const html = previewHtml([{ title: 'A', tiles }, { title: 'B', tiles: [{ name: 'p', iconUrl: '' }] }], t);
         expect(html.match(/preview__box/g)?.length).toBe(2);
         expect(html).toContain('<img src="/api/icons/x"');
         expect(html).toContain('tile__letter">S<');
-        expect(html).toContain('tile--more">+3<');
+        expect(html).toContain('tile--more">+8<');
         expect(previewHtml([], t)).toContain('[detect.preview_none]');
     });
     test('what is typed in a name or a title is escaped in the preview', () => {

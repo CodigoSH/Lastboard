@@ -187,7 +187,7 @@ export function listHtml(v: Pick<WindowView, 'rows' | 'open'>, t: T): string {
     return (['add', 'linked', 'ignored'] as const).map(g => groupHtml(g, v.rows.filter(r => r.group === g), v, t)).join('');
 }
 
-const MAX_TILES = 14;
+const MAX_TILES = 9;
 
 /** What is about to be added, as the board will show it: a box for each section with its title on the border and a tile for each bookmark. */
 export function previewHtml(sections: PreviewSection[], t: T): string {
@@ -303,8 +303,8 @@ export function detectHtml(v: WindowView, t: T): string {
                     ${boardPick}
                     <label class="field field--section"><span class="field__top"><span>${e(t('detect.section'))}</span><span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span></span><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></label>
                 </div>
-            </div>
-            <div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>` : ''}
+                <div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>
+            </div>` : ''}
             <div class="footer__actions">
                 ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}
                 <button type="button" class="btn" id="dt-cancel">${e(t('general.close'))}</button>

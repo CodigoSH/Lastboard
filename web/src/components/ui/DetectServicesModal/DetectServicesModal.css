@@ -231,7 +231,8 @@ button.face:hover .face__edit, button.face:focus-visible .face__edit { opacity: 
 
 /* What can be done with it is said with words, and only when the row is touched or focused. */
 .row__actions { display: flex; align-items: center; gap: 4px; opacity: 0; transition: opacity 0.2s; }
-.row:hover .row__actions, .row:focus-within .row__actions, .row.is-editing .row__actions { opacity: 1; }
+/* Shown when the row is touched or edited, or reached with the keyboard — not just because a click left focus on its box. */
+.row:hover .row__actions, .row:has(:focus-visible) .row__actions, .row.is-editing .row__actions { opacity: 1; }
 .act {
     padding: 6px 10px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
     color: var(--text-dim); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius); transition: all 0.2s;
@@ -268,12 +269,13 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 20px; margin-block-start: 14px; padding: 12px 28px 16px;
     border-block-start: 1px solid var(--border); background: var(--paper-bg);
 }
-.footer__where { flex: 1 1 100%; min-inline-size: 0; display: flex; flex-direction: column; gap: 8px; }
-.where__fields { display: grid; grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr); gap: 12px; }
-.where__fields:has(> .field--section:only-child) { grid-template-columns: minmax(0, 1fr); }
+.footer__where { flex: 1 1 100%; min-inline-size: 0; display: flex; align-items: flex-end; gap: 16px; }
+.where__fields { flex: none; display: flex; gap: 12px; }
+.where__fields .field { inline-size: 200px; }
+.where__fields .field--section { inline-size: 250px; }
 .footer .field { flex: none; }
 .field--section input { font-weight: 600; }
-.field__top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-inline-size: 0; }
+.field__top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; min-inline-size: 0; }
 .field__top > span:first-child { flex: none; }
 /* Whether the title is taken on the board: said once, on the line of the field it is about. */
 .status { display: inline-flex; align-items: center; gap: 6px; min-inline-size: 0; font: 600 11.5px/1.2 var(--font-sans, inherit); letter-spacing: 0; text-transform: none; text-align: end; color: var(--text-dim); }
@@ -284,7 +286,7 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 .status--mixed { color: var(--warning-color); }
 
 /* The preview: the board's own section — a box with its name on the border — and a tile for each bookmark that will be in it. */
-.preview { flex: 1 1 260px; min-inline-size: 0; display: flex; flex-wrap: wrap; gap: 12px; padding-block-start: 8px; align-self: flex-end; }
+.preview { flex: 1 1 0; min-inline-size: 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding-block-start: 8px; }
 .preview__box {
     position: relative; display: block; min-inline-size: 0; max-inline-size: 100%; padding: 12px 8px 6px;
     background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--radius);
@@ -359,7 +361,9 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .row__actions { grid-column: 1 / -1; opacity: 1; flex-wrap: wrap; }
     .row__edit { grid-column: 1 / -1; }
     .footer { padding: 12px 18px 16px; gap: 10px; align-items: stretch; }
-    .where__fields { grid-template-columns: 1fr; }
+    .footer__where { flex-direction: column; align-items: stretch; gap: 10px; }
+    .where__fields { flex-direction: column; }
+    .where__fields .field, .where__fields .field--section { inline-size: auto; }
     .footer__actions { margin-inline-start: 0; flex: 1 1 100%; }
     .result { flex: 1 1 100%; min-block-size: 0; }
     /* The × in the corner is the way out here: the footer keeps the one thing that does something. */
