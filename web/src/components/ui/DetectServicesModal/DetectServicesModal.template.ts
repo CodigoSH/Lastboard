@@ -72,6 +72,10 @@ export interface WindowView {
     busy: boolean;
     /** Why the host could not be read, already worded; '' when it could. */
     error: string;
+    /** There are Compose projects with several services, so one section for each is a choice worth offering. */
+    hasProjects: boolean;
+    /** The address of the host is being edited, in the head of the frame. */
+    addressEditing: boolean;
     /** Which of the two folded groups are unfolded. */
     open: { linked: boolean; ignored: boolean };
     /** The title the person gave the section, or '' to let the window choose. */
@@ -252,6 +256,17 @@ export function eyebrowText(source: Source, host: string, t: T): string {
     return host.toLowerCase().includes(product.toLowerCase()) ? host : `${product} · ${host}`;
 }
 
+/**
+ * The address the port-based addresses are built on, said in a line of the head and edited there: it comes filled in, and
+ * is a thing to change only when the host is reached by another name than the one Lastboard knows it by.
+ */
+export function addressLineHtml(v: Pick<WindowView, 'address' | 'addressEditing'>, t: T): string {
+    if (v.addressEditing) {
+        return `<label class="addr__edit"><span>${e(t('detect.address'))}</span><input type="text" id="dt-address" value="${e(v.address)}" spellcheck="false" autocomplete="off"></label><button type="button" class="tool" id="dt-addr-done">${e(t('detect.done'))}</button>`;
+    }
+    return `<span class="addr__text">${e(t('detect.address_based', { address: v.address }))}</span><button type="button" class="tool tool--text" id="dt-addr-change">${e(t('detect.address_change'))}</button>`;
+}
+
 /** What the section field shows while nothing has been typed: the title the window would choose, or that there are several. */
 export function sectionPlaceholder(v: Pick<WindowView, 'autoSections'>, t: T): string {
     return v.autoSections.length === 1 ? v.autoSections[0] : v.autoSections.length > 1 ? t('detect.section_several') : '';
@@ -278,24 +293,15 @@ export function detectHtml(v: WindowView, t: T): string {
                     <button type="button" class="tool" id="dt-none">${e(t('detect.none'))}</button>
                 </span>
             </div>
-            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="frame__head" id="dt-head">${headHtml(v.rows, t)}</div><div class="list" id="dt-list">${listHtml(v, t)}</div></div>
+            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="frame__head"><div id="dt-head">${headHtml(v.rows, t)}</div>${v.source === 'docker' ? `<div class="head__addr" id="dt-addr">${addressLineHtml(v, t)}</div>` : ''}</div><div class="list" id="dt-list">${listHtml(v, t)}</div></div>
             ${v.withoutAddress ? `<p class="hint">${e(t('detect.hidden', { count: String(v.withoutAddress) }))}</p>` : ''}`;
     }
 
-    const showControls = v.state === 'ready' || v.state === 'done';
-    // A machine has an address of its own; only a Docker host has one that its ports are built on.
-    const dockerControls = v.source === 'docker'
-        ? `<label class="field"><span>${e(t('detect.address'))}</span><input type="text" id="dt-address" value="${e(v.address)}" spellcheck="false" autocomplete="off"></label>
-            <div class="field"><span>${e(t('detect.group'))}</span>${selectHtml('dt-group', [{ value: 'host', label: t('detect.group_host') }, { value: 'project', label: t('detect.group_project') }], v.groupBy, t('detect.group'))}</div>`
-        : '';
     return `<div class="header">
             <div class="title-group"><h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
             <button type="button" class="close-btn" id="dt-close" aria-label="${e(t('general.close'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
-        ${showControls ? `<div class="controls">
-            ${hostPick}
-            ${dockerControls}
-        </div>` : hostPick ? `<div class="controls">${hostPick}</div>` : ''}
+        ${hostPick ? `<div class="controls">${hostPick}</div>` : ''}
         ${body}
         <div class="footer${v.state === 'ready' ? ' footer--ready' : ''}">
             ${v.state === 'ready' ? `<div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>` : ''}
@@ -304,6 +310,7 @@ export function detectHtml(v: WindowView, t: T): string {
                     ${boardPick}
                     <label class="where__label" for="dt-section">${e(t('detect.section'))}</label>
                     <div class="where__control"><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"><span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span></div>
+                    ${v.source === 'docker' && v.hasProjects ? `<label class="where__switch"><input type="checkbox" id="dt-by-project"${v.groupBy === 'project' ? ' checked' : ''}${v.sectionName.trim() ? ' disabled' : ''}><span>${e(t('detect.group_project'))}</span></label>` : ''}
                 </div>` : ''}
                 <div class="footer__actions">
                     ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}

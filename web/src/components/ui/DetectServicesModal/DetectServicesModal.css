@@ -118,6 +118,15 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
     background: rgba(var(--warning-rgb), 0.07); border: 1px solid rgba(var(--warning-rgb), 0.25); border-radius: 10px;
 }
 .head__hint[hidden] { display: none; }
+/* The address the ports are built on: a line of the head, quiet until it is to be changed. */
+.head__addr { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-block-start: 8px; font-size: 12px; color: var(--text-dim); }
+.head__addr:empty { display: none; }
+.addr__text { min-inline-size: 0; overflow-wrap: anywhere; }
+.addr__edit { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 220px; min-inline-size: 0; }
+.addr__edit > span { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; flex: none; }
+.addr__edit input { block-size: 30px !important; }
+.tool--text { block-size: 24px; padding: 0 8px; border-color: transparent; color: var(--accent); }
+.head__addr .tool { block-size: 28px; }
 .head__hint svg { flex: none; inline-size: 15px; block-size: 15px; margin-block-start: 1px; stroke: var(--warning-color); fill: none; stroke-width: 2; stroke-linecap: round; }
 
 /* ── Groups: what there is to do, what is already done, what was set aside ── */
@@ -276,6 +285,14 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 .where__label { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
 .where__control { position: relative; min-inline-size: 0; }
 .where__control input { font-weight: 600; }
+/* One section for each Compose project, a choice that only exists where there are projects. */
+.where__switch { grid-column: 2; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-dim); cursor: pointer; }
+.where__switch:has(input:disabled) { opacity: 0.5; cursor: default; }
+.where__switch input { appearance: none; -webkit-appearance: none; inline-size: 30px; block-size: 18px; margin: 0; border-radius: 999px; background: var(--input-bg); border: 1px solid var(--input-border); position: relative; cursor: inherit; transition: background-color 0.2s, border-color 0.2s; }
+.where__switch input::after { content: ''; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 12px; block-size: 12px; border-radius: 50%; background: var(--text-dim); transition: transform 0.2s, background-color 0.2s; }
+.where__switch input:checked { background: rgba(var(--accent-rgb), 0.18); border-color: var(--accent); }
+.where__switch input:checked::after { background: var(--accent); transform: translateX(12px); }
+.where__switch input:focus-visible { outline: 2px solid rgba(var(--accent-rgb), 0.5); outline-offset: 2px; }
 /* Whether the title is taken on the board is said inside the box of the title itself, at its end, and room is kept for it there. */
 .where__control .status { position: absolute; inset-block: 0; inset-inline-end: 10px; align-items: center; pointer-events: none; white-space: nowrap; font-size: 11px; }
 .where__control:has(.status:not(:empty)) input { padding-inline-end: 112px; }

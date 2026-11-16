@@ -26,12 +26,12 @@ import { probeAddresses } from '../../../services/probeAddresses';
 import { dismissKey, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
 import {
     candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices, sectionTitleFor,
-    type Discovery, type GroupBy, type NewService, type ServiceProposal,
+    type Discovery, type NewService, type ServiceProposal,
 } from '../../../services/discoverServices';
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
 import { safeImageSrc } from '../../../services/escape';
-import { detectHtml, headHtml, listHtml, sectionStatus, sectionStatusHtml, healthText, previewHtml, sectionPlaceholder, type PreviewSection, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
+import { addressLineHtml, detectHtml, headHtml, listHtml, sectionStatus, sectionStatusHtml, healthText, previewHtml, sectionPlaceholder, type PreviewSection, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -85,7 +85,7 @@ class DetectServicesModal extends HTMLElement {
     private blankView(): WindowView {
         return {
             source: 'docker', state: 'loading', hostName: '', hosts: [], hostId: '', address: '', groupBy: 'host', rows: [], withoutAddress: 0,
-            boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sectionName: '', autoSections: [], preview: [], boardSections: [],
+            hasProjects: false, addressEditing: false, boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sectionName: '', autoSections: [], preview: [], boardSections: [],
         };
     }
 
@@ -138,6 +138,14 @@ class DetectServicesModal extends HTMLElement {
         }
         const first = this.view.hosts.find(h => h.id === opts.hostId) ?? this.view.hosts[0];
         await this.loadHost(first.id, null);
+    }
+
+    /** Opens or closes the field of the host's address, which lives in a line of the head and is not drawn again with the rest of it. */
+    private editAddress(on: boolean): void {
+        this.view.addressEditing = on;
+        const line = this.$('dt-addr');
+        if (line) line.innerHTML = addressLineHtml(this.view, t);
+        if (on) this.$<HTMLInputElement>('dt-address')?.focus();
     }
 
     private hasSomethingToAdd(): boolean {
@@ -229,6 +237,10 @@ class DetectServicesModal extends HTMLElement {
     /** Makes the proposals the rows of the window. */
     private adopt(found: Discovery, dismissed: Set<string>): void {
         this.view.withoutAddress = found.withoutAddress;
+        const sizes = new Map<string, number>();
+        for (const p of found.proposals) if (p.project) sizes.set(p.project, (sizes.get(p.project) ?? 0) + 1);
+        this.view.hasProjects = [...sizes.values()].some(n => n > 1);
+        this.view.addressEditing = false;
         this.editing = new Set();
         this.rows = new Map(found.proposals.map(p => {
             const urls = p.candidates.map(c => candidateUrl(c, this.view.address));
@@ -421,6 +433,9 @@ class DetectServicesModal extends HTMLElement {
             status.className = `status status--${st.kind}`;
             status.innerHTML = sectionStatusHtml(st, t);
         }
+        // A title the person typed takes everything, so the choice of one section for each project is off while there is one.
+        const byProject = this.$<HTMLInputElement>('dt-by-project');
+        if (byProject) byProject.disabled = !!this.view.sectionName.trim();
         // The head of the frame says how many are ticked.
         const head = this.$('dt-head');
         if (head) head.innerHTML = headHtml(this.rowViews(), t);
@@ -528,6 +543,7 @@ class DetectServicesModal extends HTMLElement {
         if (id === 'dt-close' || id === 'dt-cancel') this.dialog?.close();
         else if (id === 'dt-all' || id === 'dt-none') this.tickVisible(id === 'dt-all');
         else if (id === 'dt-only-up') this.tickOnlyAnswering();
+        else if (id === 'dt-addr-change' || id === 'dt-addr-done') this.editAddress(id === 'dt-addr-change');
         else if (id === 'dt-create') void this.create();
         else if (id === 'dt-undo') void this.undo();
     }
@@ -554,7 +570,7 @@ class DetectServicesModal extends HTMLElement {
 
     private onChange(e: Event): void {
         const target = e.target as HTMLInputElement | AppSelect;
-        if (target.id === 'dt-group') { this.view.groupBy = target.value as GroupBy; this.refreshCount(); return; }
+        if (target.id === 'dt-by-project') { this.view.groupBy = (target as HTMLInputElement).checked ? 'project' : 'host'; this.refreshCount(); return; }
         if (target.id === 'dt-board') { this.view.boardId = Number(target.value); void this.loadBoardSections(); this.refreshCount(); return; }
         if (target.id === 'dt-host') { void this.loadHost(target.value, null); return; }
         const row = this.rowOf(target);

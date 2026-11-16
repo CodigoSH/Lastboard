@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { detectHtml, eyebrowText, groupHtml, headHtml, initialOf, listHtml, previewHtml, resultHtml, rowHtml, sectionPlaceholder, sectionStatus, sectionStatusHtml, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
+import { addressLineHtml, detectHtml, eyebrowText, groupHtml, headHtml, initialOf, listHtml, previewHtml, resultHtml, rowHtml, sectionPlaceholder, sectionStatus, sectionStatusHtml, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
 
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
 const evil = '<img src=x onerror=alert(1)>';
@@ -9,7 +9,7 @@ const row = (o: Partial<RowView> = {}): RowView => ({
 });
 const view = (o: Partial<WindowView> = {}): WindowView => ({
     source: 'docker', state: 'ready', hostName: 'Home', hosts: [{ id: 'h1', name: 'Home' }], hostId: 'h1', address: 'nas', groupBy: 'host', rows: [row()],
-    withoutAddress: 0, boards: [{ id: 1, name: 'Main' }], boardId: 1, canPickBoard: false, selected: 1, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sectionName: '', autoSections: [], preview: [], boardSections: [], ...o,
+    withoutAddress: 0, boards: [{ id: 1, name: 'Main' }], boardId: 1, canPickBoard: false, selected: 1, result: null, busy: false, error: '', hasProjects: false, addressEditing: false, open: { linked: false, ignored: false }, sectionName: '', autoSections: [], preview: [], boardSections: [], ...o,
 });
 
 describe('what a container says is escaped', () => {
@@ -55,8 +55,6 @@ describe('the window', () => {
     test('lists the rows, with its controls and the count on the button', () => {
         const html = detectHtml(view({ selected: 3 }), t);
         expect(html).toContain('id="dt-list"');
-        expect(html).toContain('id="dt-address"');
-        expect(html).toContain('id="dt-group"');
         expect(html).toContain('&quot;count&quot;:&quot;3&quot;');
     });
     test('offers the host only when there are several, and the board only to one who may choose', () => {
@@ -90,12 +88,12 @@ describe('the window', () => {
 });
 
 describe('a hypervisor\'s window', () => {
-    test('has no address or sections to choose: a machine has an address of its own', () => {
-        const html = detectHtml(view({ source: 'proxmox' }), t);
-        expect(html).not.toContain('id="dt-address"');
-        expect(html).not.toContain('id="dt-group"');
+    test('has no host address line and no switch for projects: a machine has an address of its own', () => {
+        const html = detectHtml(view({ source: 'proxmox', hasProjects: true }), t);
+        expect(html).not.toContain('id="dt-addr"');
+        expect(html).not.toContain('id="dt-by-project"');
         expect(html).toContain('id="dt-list"');
-        expect(detectHtml(view(), t)).toContain('id="dt-address"');
+        expect(detectHtml(view(), t)).toContain('id="dt-addr"');
     });
     test('says it has no hypervisor, and why a machine opens its console', () => {
         expect(detectHtml(view({ source: 'proxmox', state: 'nohost' }), t)).toContain('[detect.no_hypervisor]');
@@ -323,7 +321,6 @@ describe("the product's own dropdowns and the icon button", () => {
         expect(html).not.toContain('<select');
         expect(html).toContain('id="dt-host"');
         expect(html).toContain('id="dt-board"');
-        expect(html).toContain('id="dt-group"');
         expect(html).toContain('class="alt"');
         expect(html).toContain('menu-min-width="460"');
     });
@@ -340,5 +337,34 @@ describe("the product's own dropdowns and the icon button", () => {
         const html = detectHtml(view({ hostName: 'Home' }), (k) => k);
         expect(html).toContain('<div class="frame"><span class="frame__title">');
         expect(html).toContain('id="dt-list"');
+    });
+});
+
+describe('what a Docker window no longer asks for up front', () => {
+    test('the top of the window holds only the host, and only when there are several', () => {
+        const one = detectHtml(view(), t);
+        expect(one).not.toContain('class="controls"');
+        expect(one).not.toContain('id="dt-address"');
+        expect(one).not.toContain('id="dt-group"');
+        expect(detectHtml(view({ hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }), t)).toContain('class="controls"');
+    });
+    test('the address the ports are built on is a line of the head, with a button to change it', () => {
+        const line = addressLineHtml({ address: '10.0.0.2', addressEditing: false }, t);
+        expect(line).toContain('[detect.address_based:{&quot;address&quot;:&quot;10.0.0.2&quot;}]');
+        expect(line).toContain('id="dt-addr-change"');
+        expect(line).not.toContain('id="dt-address"');
+    });
+    test('while it is changed the line is its field and a button to leave it, and what is in it is escaped', () => {
+        const line = addressLineHtml({ address: evil, addressEditing: true }, t);
+        expect(line).toContain('id="dt-address"');
+        expect(line).toContain('id="dt-addr-done"');
+        expect(line).not.toContain('<img src=x');
+    });
+    test('one section for each project is a switch under the section field, only where there are projects, and off while a title is typed', () => {
+        expect(detectHtml(view(), t)).not.toContain('id="dt-by-project"');
+        const on = detectHtml(view({ hasProjects: true, groupBy: 'project' }), t);
+        expect(on).toMatch(/id="dt-by-project" checked>/);
+        expect(on).toContain('[detect.group_project]');
+        expect(detectHtml(view({ hasProjects: true, sectionName: 'Lab' }), t)).toMatch(/id="dt-by-project" disabled>/);
     });
 });
