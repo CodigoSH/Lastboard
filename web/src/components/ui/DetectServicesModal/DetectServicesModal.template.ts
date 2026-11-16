@@ -297,20 +297,20 @@ export function detectHtml(v: WindowView, t: T): string {
             ${dockerControls}
         </div>` : hostPick ? `<div class="controls">${hostPick}</div>` : ''}
         ${body}
-        <div class="footer">
-            ${v.state === 'ready' ? `<div class="footer__where">
-                <div class="where__fields">
+        <div class="footer${v.state === 'ready' ? ' footer--ready' : ''}">
+            ${v.state === 'ready' ? `<div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>` : ''}
+            <div class="footer__side">
+                ${v.state === 'ready' ? `<div class="where__fields">
                     ${boardPick}
                     <label class="where__label" for="dt-section">${e(t('detect.section'))}</label>
                     <div class="where__control"><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></div>
                     <span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span>
+                </div>` : ''}
+                <div class="footer__actions">
+                    ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}
+                    <button type="button" class="btn" id="dt-cancel">${e(t('general.close'))}</button>
+                    ${v.state === 'ready' ? `<button type="button" class="btn btn--primary" id="dt-create"${v.busy || v.selected === 0 ? ' disabled' : ''}>${e(t('detect.create', { count: String(v.selected) }))}</button>` : ''}
                 </div>
-                <div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>
-            </div>` : ''}
-            <div class="footer__actions">
-                ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}
-                <button type="button" class="btn" id="dt-cancel">${e(t('general.close'))}</button>
-                ${v.state === 'ready' ? `<button type="button" class="btn btn--primary" id="dt-create"${v.busy || v.selected === 0 ? ' disabled' : ''}>${e(t('detect.create', { count: String(v.selected) }))}</button>` : ''}
             </div>
         </div>`;
 }

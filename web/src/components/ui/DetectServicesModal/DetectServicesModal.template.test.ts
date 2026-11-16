@@ -211,6 +211,18 @@ describe('where it goes', () => {
         expect(sectionPlaceholder({ autoSections: ['Podman'] }, t)).toBe('Podman');
         expect(sectionPlaceholder({ autoSections: ['A', 'B'] }, t)).toBe('[detect.section_several]');
     });
+    test('the footer has the preview on the left and, on the right, the board, the section and the buttons', () => {
+        const html = detectHtml(view(), t);
+        const at = (needle: string) => html.indexOf(needle);
+        expect(at('id="dt-preview"')).toBeLessThan(at('class="footer__side"'));
+        expect(at('class="footer__side"')).toBeLessThan(at('id="dt-section"'));
+        expect(at('id="dt-section"')).toBeLessThan(at('id="dt-cancel"'));
+        expect(at('id="dt-cancel"')).toBeLessThan(at('id="dt-create"'));
+        expect(html).toContain('class="footer footer--ready"');
+        const empty = detectHtml(view({ state: 'empty' }), t);
+        expect(empty).not.toContain('footer--ready');
+        expect(empty).toContain('id="dt-cancel"');
+    });
     test('the footer has the field, filled with what the person typed, and the preview', () => {
         const html = detectHtml(view({ sectionName: 'My lab', autoSections: ['Home'], preview: [{ title: 'My lab', tiles: [{ name: 'Plex', iconUrl: '' }] }] }), t);
         expect(html).toContain('id="dt-section" value="My lab" placeholder="Home"');

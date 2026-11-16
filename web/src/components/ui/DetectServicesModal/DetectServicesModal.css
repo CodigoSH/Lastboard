@@ -264,19 +264,19 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 @keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
 @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
 
-/* ── Footer: where it goes, shown as the board will show it, and the action ── */
+/* ── Footer: on the left what is about to be added, as the board will show it; on the right where it goes, and the action ── */
 .footer {
-    display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 20px; margin-block-start: 14px; padding: 12px 28px 16px;
+    display: flex; justify-content: flex-end; gap: 16px 24px; margin-block-start: 14px; padding: 12px 28px 16px;
     border-block-start: 1px solid var(--border); background: var(--paper-bg);
 }
-.footer__where { flex: 1 1 100%; min-inline-size: 0; display: flex; align-items: flex-end; gap: 16px; }
-.footer__where { align-items: stretch; }
-/* On the left, the two things that say where it goes, one to a line with their names beside them; the preview takes the rest. */
-.where__fields { flex: none; inline-size: 340px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 12px; align-content: start; }
+.footer--ready { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; }
+.footer__side { min-inline-size: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; }
+/* The two things that say where it goes, one to a line with their names beside them. */
+.where__fields { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 12px; }
 .where__label { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
 .where__control { min-inline-size: 0; }
-.where__fields .status { grid-column: 2; margin-block-start: -2px; justify-content: flex-start; text-align: start; }
 .where__control input { font-weight: 600; }
+.where__fields .status { grid-column: 2; margin-block-start: -2px; justify-content: flex-start; text-align: start; }
 /* Whether the title is taken on the board: said once, on the line of the field it is about. */
 .status { display: inline-flex; align-items: center; gap: 6px; min-inline-size: 0; font: 600 11.5px/1.2 var(--font-sans, inherit); letter-spacing: 0; text-transform: none; text-align: end; color: var(--text-dim); }
 .status:empty { display: none; }
@@ -286,7 +286,7 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 .status--mixed { color: var(--warning-color); }
 
 /* The preview: the board's own section — a box with its name on the border — and a tile for each bookmark that will be in it. */
-.preview { flex: 1 1 0; min-inline-size: 0; display: flex; flex-wrap: wrap; align-items: stretch; align-content: stretch; gap: 12px; padding-block-start: 8px; }
+.preview { min-inline-size: 0; display: flex; flex-wrap: wrap; align-items: stretch; align-content: stretch; gap: 12px; padding-block-start: 8px; }
 .preview__box {
     position: relative; display: block; min-inline-size: 0; max-inline-size: 100%; padding: 16px 10px 8px;
     background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--radius);
@@ -309,7 +309,7 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 @media (prefers-reduced-motion: reduce) { .tile { animation: none; } }
 .preview__none { margin: 0; align-self: center; font-size: 12.5px; color: var(--text-dim); }
 
-.footer__actions { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; margin-inline-start: auto; }
+.footer__actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
 .result { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; min-block-size: 38px; color: var(--text-dim); }
 .result:empty { display: none; }
 .result .bad { color: var(--danger-color); }
@@ -361,10 +361,10 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .row__actions { grid-column: 1 / -1; opacity: 1; flex-wrap: wrap; }
     .row__edit { grid-column: 1 / -1; }
     .footer { padding: 12px 18px 16px; gap: 10px; align-items: stretch; }
-    .footer__where { flex-direction: column; align-items: stretch; gap: 10px; }
-    .where__fields { inline-size: auto; grid-template-columns: 1fr; gap: 6px; }
+    .footer--ready { grid-template-columns: minmax(0, 1fr); }
+    .where__fields { grid-template-columns: 1fr; gap: 6px; }
     .where__fields .status { grid-column: 1; }
-    .footer__actions { margin-inline-start: 0; flex: 1 1 100%; }
+    .footer__actions { flex: 1 1 100%; }
     .result { flex: 1 1 100%; min-block-size: 0; }
     /* The × in the corner is the way out here: the footer keeps the one thing that does something. */
     .footer #dt-cancel { display: none; }
