@@ -1,6 +1,7 @@
 import { csrfToken } from './csrf';
 import { isDirectIconUrl } from './iconUrl';
 import { accessAllows } from './access';
+import { isOwnIcon } from './ownIcons';
 import { userStore } from '../store/userStore';
 
 /**
@@ -19,7 +20,8 @@ import { userStore } from '../store/userStore';
 
 /** Icons already served from here need no round trip. */
 function isLocal(source: string): boolean {
-    return source.startsWith('/api/icons/');
+    // Stored here, or one of the marks this server ships itself: neither has anything to fetch.
+    return source.startsWith('/api/icons/') || isOwnIcon(source);
 }
 
 /**

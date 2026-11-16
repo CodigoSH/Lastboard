@@ -13,6 +13,7 @@ import { loadProxmoxLinks, linkFor as machineLink, bookmarkNamed, clearProxmoxLi
 import { fetchAddresses, fetchProxmoxHosts, type ProxmoxHostRef } from '../../../services/proxmoxAddresses';
 import { buildIconIndex } from '../../../services/importIcons';
 import { materializeIcon } from '../../../services/iconStore';
+import { isOwnIcon, ownIcons } from '../../../services/ownIcons';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
 import { bookmarkContent } from '../../../services/bookmarkContent';
@@ -145,7 +146,8 @@ class DetectServicesModal extends HTMLElement {
 
     /** The icon library, when the account may look icons up: it names the icons that are proposed. */
     private async loadIconIndex(): Promise<void> {
-        if (!accessAllows(userStore.getUser(), 'icons_internet')) return;
+        // Without the permission only our own marks are known: they are served from here.
+        if (!accessAllows(userStore.getUser(), 'icons_internet')) { this.iconIndex = buildIconIndex(ownIcons()); return; }
         try {
             const { iconService } = await import('../../../services/iconService');
             await iconService.loadIcons();
@@ -416,11 +418,16 @@ class DetectServicesModal extends HTMLElement {
             if (!icon && row.proposal.labelIcon && withIcons) {
                 icon = await retryOnRateLimit(() => materializeIcon(row.proposal.labelIcon));
             }
-            if (!icon && withIcons) {
+            if (!icon) {
                 const lib = pickIconName(row.proposal.iconNames, this.iconIndex);
                 if (lib) {
-                    iconName = lib;
-                    icon = await retryOnRateLimit(() => materializeIcon(resolveIconUrl(lib)));
+                    // The address the library the name came from gives it, as the picker would store it.
+                    const libUrl = this.iconIndex.get(lib) ?? this.iconIndex.get(lib.replace(/_/g, '-')) ?? resolveIconUrl(lib);
+                    // A library's icon is fetched by the server, which takes the permission; our own marks are already here.
+                    if (withIcons || isOwnIcon(libUrl)) {
+                        iconName = libUrl;
+                        icon = await retryOnRateLimit(() => materializeIcon(libUrl));
+                    }
                 }
             }
             const link = row.proposal.link;

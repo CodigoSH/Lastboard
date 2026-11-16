@@ -51,6 +51,8 @@ The **Customization** tab controls the tile's appearance:
 
 **Icon** opens a search across several icon sets at once, grouped by provider. Pick one, upload your own image, or paste a direct URL.
 
+The first group, **CodigoSH**, holds the marks of Lastboard, LastHelp, the Lastboard Agent and CodigoSH itself, which no public icon set has. They come with Lastboard, so they are offered even with no internet and to an account that may not look icons up, and they are not copied into your database: your board names them by address (`/images/brand/…`), and they are always there.
+
 ![The icon picker](../assets/m-icons.png)
 
 ## Where icons are stored

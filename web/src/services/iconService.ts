@@ -5,6 +5,7 @@
  */
 
 import { searchIcons as searchIconsPure } from './iconSearch';
+import { ownIcons } from './ownIcons';
 
 export interface IconInfo {
     name: string;
@@ -136,7 +137,8 @@ class IconService {
                 this.fallback = true;
             }
 
-            this.icons = allIcons;
+            // Our own marks go first, whatever the libraries answered: no library has them.
+            this.icons = [...ownIcons(), ...allIcons];
             this.loaded = true;
             this.loading = false;
             return this.icons;
@@ -144,7 +146,7 @@ class IconService {
         } catch (error) {
             console.error('[IconService] Global failure loading icons:', error);
             this.loading = false;
-            this.icons = this.getFallbackIcons();
+            this.icons = [...ownIcons(), ...this.getFallbackIcons()];
             this.fallback = true;
             this.loaded = true;
             return this.icons;
