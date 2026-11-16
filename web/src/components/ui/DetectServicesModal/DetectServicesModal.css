@@ -193,6 +193,26 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 .row__url .addr { flex: 1 1 0; font-family: var(--font-mono); font-size: 12.5px; }
 app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --select-font-size: 0; }
 
+/* Ignore: an eye with a bar across it says "do not show me this"; pressed, the bar goes and it says "show it again". */
+.ignore {
+    flex: none; inline-size: 36px; block-size: 36px; display: grid; place-items: center; padding: 0; cursor: pointer;
+    color: var(--text-dim); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius);
+    opacity: 0.6; transition: opacity 0.2s, color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+.ignore svg { inline-size: 16px; block-size: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.row:hover .ignore, .ignore:focus-visible { opacity: 1; }
+.ignore:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); }
+.ignore:focus-visible { outline: none; border-color: var(--accent); }
+.ignore[aria-pressed="true"] { opacity: 1; color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background-color: rgba(var(--accent-rgb), 0.08); }
+.ignore[aria-pressed="true"] .ignore__bar { display: none; }
+
+/* What is ignored is out of the list until it is asked for, and then it is told apart from the rest. */
+.list.hide-ignored .row.is-ignored { display: none; }
+.row.is-ignored { opacity: 0.62; }
+.row.is-ignored .face img { filter: grayscale(0.8); }
+.chip[hidden], .link[hidden] { display: none; }
+.link--toggle[aria-pressed="true"] { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); }
+
 /* ── States ───────────────────────────────────────────────────────────────── */
 .state, .hint { margin: 0; padding: 16px 28px; color: var(--text-dim); font-size: 13.5px; }
 .hint { padding-block: 10px 0; font-size: 12.5px; }

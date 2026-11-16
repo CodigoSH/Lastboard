@@ -23,8 +23,8 @@ export interface RowView {
     iconUrl: string;
     /** Whether the address in the box answered when it was asked, or '' when it was not asked. */
     health: 'up' | 'down' | '';
-    /** Left out on purpose the last time. */
-    dismissed: boolean;
+    /** The person chose to ignore it. */
+    ignored: boolean;
 }
 
 /** The words for a probe's answer; '' for none. */
@@ -64,6 +64,8 @@ export interface WindowView {
     busy: boolean;
     /** Why the host could not be read, already worded; '' when it could. */
     error: string;
+    /** The ignored ones are listed too, when the person asked to see them. */
+    showIgnored: boolean;
 }
 
 const noteText = (n: ProposalNote, t: T): string =>
@@ -102,16 +104,17 @@ export function rowHtml(r: RowView, t: T): string {
         `<span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>`,
         noteText(r.note, t) ? `<span class="chip">${e(noteText(r.note, t))}</span>` : '',
         r.linkedTo ? `<span class="chip chip--linked">${e(t('detect.already', { name: r.linkedTo }))}</span>` : '',
-        r.dismissed && !r.linkedTo ? `<span class="chip">${e(t('detect.dismissed'))}</span>` : '',
+        `<span class="chip chip--ignored"${r.ignored ? '' : ' hidden'}>${e(t('detect.ignored'))}</span>`,
     ].join('');
-    return `<div class="row${r.linkedTo ? ' is-linked' : ''}" data-key="${e(r.key)}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">
+    const ignore = `<button type="button" class="ignore" aria-label="${e(r.ignored ? t('detect.unignore') : t('detect.ignore'))}" title="${e(r.ignored ? t('detect.unignore') : t('detect.ignore'))}" aria-pressed="${r.ignored}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"></path><circle cx="12" cy="12" r="2.6"></circle><path class="ignore__bar" d="M4 4l16 16"></path></svg></button>`;
+    return `<div class="row${r.linkedTo ? ' is-linked' : ''}${r.ignored ? ' is-ignored' : ''}" data-key="${e(r.key)}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">
         <input type="checkbox" class="pick" aria-label="${e(r.name)}"${r.checked ? ' checked' : ''}>
         ${face}
         <div class="row__id">
             <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
             <div class="row__meta">${chips}</div>
         </div>
-        <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div>
+        <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off">${ignore}</div>
     </div>`;
 }
 
@@ -132,6 +135,16 @@ export function eyebrowText(source: Source, host: string, t: T): string {
     const product = t(source === 'proxmox' ? 'widget.proxmox.name' : 'widget.docker.name');
     return host.toLowerCase().includes(product.toLowerCase()) ? host : `${product} · ${host}`;
 }
+
+/** How many of the listed ones the person ignores. */
+export const ignoredCount = (v: Pick<WindowView, 'rows'>): number => v.rows.filter(r => r.ignored).length;
+
+/** How many rows are on show: the ignored ones are not, unless the person asked for them. */
+export const listedTotal = (v: Pick<WindowView, 'rows' | 'showIgnored'>): number => (v.showIgnored ? v.rows.length : v.rows.length - ignoredCount(v));
+
+/** The words of the button that shows or hides the ignored ones. */
+export const ignoredToggleText = (shown: boolean, count: number, t: T): string =>
+    t(shown ? 'detect.hide_ignored' : 'detect.show_ignored', { count: String(count) });
 
 /** How many are ticked of how many there are: the figures are the same in every language. */
 export function countHtml(selected: number, total: number): string {
@@ -155,9 +168,10 @@ export function detectHtml(v: WindowView, t: T): string {
                 <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" id="dt-search" placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}"></label>
                 <button type="button" class="link" id="dt-all">${e(t('detect.all'))}</button>
                 <button type="button" class="link" id="dt-none">${e(t('detect.none'))}</button>
-                <span class="count" id="dt-count">${countHtml(v.selected, v.rows.length)}</span>
+                <button type="button" class="link link--toggle" id="dt-ignored" aria-pressed="${v.showIgnored}"${ignoredCount(v) ? '' : ' hidden'}>${e(ignoredToggleText(v.showIgnored, ignoredCount(v), t))}</button>
+                <span class="count" id="dt-count">${countHtml(v.selected, listedTotal(v))}</span>
             </div>
-            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="list" id="dt-list">${v.rows.map(r => rowHtml(r, t)).join('')}</div></div>
+            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="list${v.showIgnored ? '' : ' hide-ignored'}" id="dt-list">${v.rows.map(r => rowHtml(r, t)).join('')}</div></div>
             ${v.withoutAddress ? `<p class="hint">${e(t('detect.hidden', { count: String(v.withoutAddress) }))}</p>` : ''}`;
     }
 

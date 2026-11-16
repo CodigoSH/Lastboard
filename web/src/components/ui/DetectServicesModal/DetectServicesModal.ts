@@ -21,7 +21,7 @@ import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
 import { bookmarkContent } from '../../../services/bookmarkContent';
 import { probeAddresses } from '../../../services/probeAddresses';
-import { dismissKey, dismissalChanges, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
+import { dismissKey, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
 import {
     candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices,
     type Discovery, type GroupBy, type NewService, type ServiceProposal,
@@ -29,7 +29,7 @@ import {
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
 import { safeImageSrc } from '../../../services/escape';
-import { countHtml, detectHtml, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
+import { countHtml, detectHtml, ignoredToggleText, listedTotal, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -42,10 +42,8 @@ interface RowState {
     /** True once the person typed in the address box: a new host address no longer rewrites it. */
     edited: boolean;
     iconUrl: string;
-    /** An earlier window left it out on purpose, so it starts unticked. */
-    dismissed: boolean;
-    /** It was proposed ticked. */
-    proposedTicked: boolean;
+    /** The person chose to ignore it: it is not proposed, and it is not counted as left to add. */
+    ignored: boolean;
     /** What the person chose in the icon search for this row, as the picker returned it; '' when they did not. */
     pickedIcon: string;
     /** Which of its addresses the menu has chosen. */
@@ -81,7 +79,7 @@ class DetectServicesModal extends HTMLElement {
     private blankView(): WindowView {
         return {
             source: 'docker', state: 'loading', hostName: '', hosts: [], hostId: '', address: '', groupBy: 'host', rows: [], withoutAddress: 0,
-            boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '',
+            boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '', showIgnored: false,
         };
     }
 
@@ -217,7 +215,7 @@ class DetectServicesModal extends HTMLElement {
             const left = dismissed.has(dismissKey(p.link));
             return [p.key, {
                 proposal: p, checked: p.selected && !left, name: p.name, url: urls[0] ?? '', edited: false,
-                iconUrl: p.chosenIcon || p.labelIcon || libUrl, dismissed: left, proposedTicked: p.selected && !left, pickedIcon: '', choice: 0,
+                iconUrl: p.chosenIcon || p.labelIcon || libUrl, ignored: left, pickedIcon: '', choice: 0,
             }];
         }));
         this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
@@ -262,7 +260,7 @@ class DetectServicesModal extends HTMLElement {
             linkedTo: r.proposal.linkedTo,
             iconUrl: r.iconUrl,
             health: this.health.get(r.url) ?? '',
-            dismissed: r.dismissed,
+            ignored: r.ignored,
         }));
     }
 
@@ -311,7 +309,49 @@ class DetectServicesModal extends HTMLElement {
         btn.textContent = t('detect.create', { count: String(n) });
         btn.disabled = this.view.busy || n === 0;
         const count = this.$<HTMLElement>('dt-count');
-        if (count) count.innerHTML = countHtml(n, this.rows.size);
+        if (count) count.innerHTML = countHtml(n, listedTotal({ rows: this.rowViews(), showIgnored: this.view.showIgnored }));
+        this.refreshIgnoredToggle();
+    }
+
+    /** The button that shows the ignored ones says how many there are, and is not there when there are none. */
+    private refreshIgnoredToggle(): void {
+        const btn = this.$<HTMLButtonElement>('dt-ignored');
+        if (!btn) return;
+        const n = [...this.rows.values()].filter(r => r.ignored).length;
+        btn.hidden = n === 0;
+        btn.textContent = ignoredToggleText(this.view.showIgnored, n, t);
+        btn.setAttribute('aria-pressed', String(this.view.showIgnored));
+    }
+
+    private toggleShowIgnored(): void {
+        this.view.showIgnored = !this.view.showIgnored;
+        this.$('dt-list')?.classList.toggle('hide-ignored', !this.view.showIgnored);
+        this.refreshCount();
+    }
+
+    /**
+     * Ignoring is a choice made on a row, and it is kept at once: the service stops being proposed and stops being counted as
+     * left to add. An ignored row that is ticked is unticked, since what is ignored is not added. Undoing it is the same button.
+     */
+    private toggleIgnore(row: { el: HTMLElement; state: RowState }): void {
+        const state = row.state;
+        state.ignored = !state.ignored;
+        if (state.ignored) state.checked = false;
+        const key = dismissKey(state.proposal.link);
+        void saveDismissals(state.ignored ? { add: [key], remove: [] } : { add: [], remove: [key] }).then(() => this.announce());
+        row.el.classList.toggle('is-ignored', state.ignored);
+        const pick = row.el.querySelector<HTMLInputElement>('.pick');
+        if (pick) pick.checked = state.checked;
+        const pill = row.el.querySelector<HTMLElement>('.chip--ignored');
+        if (pill) pill.hidden = !state.ignored;
+        const btn = row.el.querySelector<HTMLElement>('.ignore');
+        if (btn) {
+            const word = state.ignored ? t('detect.unignore') : t('detect.ignore');
+            btn.title = word;
+            btn.setAttribute('aria-label', word);
+            btn.setAttribute('aria-pressed', String(state.ignored));
+        }
+        this.refreshCount();
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
@@ -344,11 +384,14 @@ class DetectServicesModal extends HTMLElement {
 
     private onClick(e: MouseEvent): void {
         if (this.dialog && isBackdropClick(this.dialog, e)) { this.dialog.close(); return; }
+        const ignore = (e.target as HTMLElement).closest('.ignore');
+        if (ignore) { const row = this.rowOf(ignore); if (row) this.toggleIgnore(row); return; }
         const face = (e.target as HTMLElement).closest('.face');
         if (face) { const row = this.rowOf(face); if (row) void this.chooseIcon(row); return; }
         const id = (e.target as HTMLElement).closest('button')?.id;
         if (id === 'dt-close' || id === 'dt-cancel') this.dialog?.close();
         else if (id === 'dt-all' || id === 'dt-none') this.tickVisible(id === 'dt-all');
+        else if (id === 'dt-ignored') this.toggleShowIgnored();
         else if (id === 'dt-create') void this.create();
         else if (id === 'dt-undo') void this.undo();
     }
@@ -391,7 +434,8 @@ class DetectServicesModal extends HTMLElement {
 
     private tickVisible(on: boolean): void {
         this.shadowRoot?.querySelectorAll<HTMLElement>('.row').forEach(r => {
-            if (r.hidden) return;
+            // What is hidden by the search, and what the person ignores, is not theirs to tick with the rest.
+            if (r.hidden || r.classList.contains('is-ignored')) return;
             const state = this.rows.get(r.dataset.key ?? '');
             const box = r.querySelector<HTMLInputElement>('.pick');
             if (state && box) { state.checked = on; box.checked = on; }
@@ -503,12 +547,6 @@ class DetectServicesModal extends HTMLElement {
         this.view.busy = false;
         this.forgetLinks();
         if (open) await dashboardStore.fetchItems();
-        // What was proposed ticked and has been left out is remembered, so it comes back unticked.
-        if (result.created > 0) {
-            await saveDismissals(dismissalChanges([...this.rows.values()].map(r => ({
-                key: dismissKey(r.proposal.link), proposedTicked: r.proposedTicked, dismissed: r.dismissed, checked: r.checked,
-            }))));
-        }
         this.announce();
         await this.loadHost(host.id, {
             created: result.created, failed: result.failed, notFit: result.notFit,

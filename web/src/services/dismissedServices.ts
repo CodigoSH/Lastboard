@@ -1,8 +1,9 @@
 import type { ServiceLink } from './discoverServices';
 
 /**
- * What an account chose not to add to its board from a host, remembered so the
- * window proposes it unticked the next time instead of afresh.
+ * What an account chose to ignore: services of a host it never wants proposed. It is the person's own
+ * choice, made on a row and nowhere else — leaving a row unticked is not one — and it is kept so the
+ * window does not propose it again and the pages do not count it as left to add.
  */
 
 /** How a service is filed: its kind, its host and its own name, as the server expects. */
@@ -12,32 +13,7 @@ export function dismissKey(link: ServiceLink): string {
         : `p:${link.proxmox.host}/${link.proxmox.node}|${link.proxmox.vmid}`;
 }
 
-export interface RowFacts {
-    key: string;
-    /** It was proposed ticked: nothing had dismissed it and no bookmark served it. */
-    proposedTicked: boolean;
-    /** It was dismissed when the window opened. */
-    dismissed: boolean;
-    /** What the person left it as. */
-    checked: boolean;
-}
-
-/**
- * What the window changes about the list when it adds: a service that was
- * proposed ticked and has been left unticked is dismissed, and one that was
- * dismissed and has been ticked is not any more.
- */
-export function dismissalChanges(rows: RowFacts[]): { add: string[]; remove: string[] } {
-    const add: string[] = [];
-    const remove: string[] = [];
-    for (const r of rows) {
-        if (r.proposedTicked && !r.checked) add.push(r.key);
-        else if (r.dismissed && r.checked) remove.push(r.key);
-    }
-    return { add, remove };
-}
-
-/** How many proposals are still worth telling the person about: no bookmark serves them and they were not left out. */
+/** How many proposals are still worth telling the person about: no bookmark serves them and they were not ignored. */
 export function countPending(proposals: { link: ServiceLink; linkedTo: string }[], dismissed: Set<string>): number {
     let n = 0;
     for (const p of proposals) if (!p.linkedTo && !dismissed.has(dismissKey(p.link))) n++;
@@ -57,8 +33,8 @@ export async function fetchDismissed(): Promise<Set<string>> {
     }
 }
 
-/** Tells the server what changed. Remembering is a courtesy: a failure is not the person's problem. */
+/** Tells the server what changed. A failure leaves it as it was: it will be proposed again, which is the safe side. */
 export async function saveDismissals(changes: { add: string[]; remove: string[] }): Promise<void> {
     if (changes.add.length === 0 && changes.remove.length === 0) return;
-    try { await (await api()).post('/api/detect/dismissed', changes); } catch { /* it will be proposed ticked again */ }
+    try { await (await api()).post('/api/detect/dismissed', changes); } catch { /* it stays as it was */ }
 }
