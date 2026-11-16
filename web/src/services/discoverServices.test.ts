@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    candidateUrl, discoverDocker, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
+    candidateUrl, consoleUrl, discoverDocker, discoverProxmox, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
     sectionTitleFor, serviceName, usablePorts, type DiscoverInput, type ServiceProposal,
 } from './discoverServices';
 import type { DockerContainer, DockerHost } from './dockerShared';
+import type { PxGuest } from './proxmoxApi';
 
 const host: DockerHost = { id: 'h1', name: 'Home', type: 'tcp', url: 'tcp://nas.lan:2375' };
 const ctr = (o: Partial<DockerContainer> = {}): DockerContainer => ({
@@ -151,5 +152,62 @@ describe('where it goes', () => {
     });
     test('nothing selected plans nothing', () => {
         expect(planServices([], 'host', 'Home', 12).sections).toEqual([]);
+    });
+});
+
+describe('what a container will say it serves', () => {
+    test('is its host and its name, never its id', () => {
+        const { proposals } = discoverDocker([ctr()], input());
+        expect(proposals[0].link).toEqual({ docker: { host: 'h1', name: 'plex' } });
+    });
+});
+
+describe('Proxmox', () => {
+    const guest = (o: Partial<PxGuest> = {}): PxGuest => ({
+        vmid: 106, name: 'plex-media', kind: 'lxc', node: 'pve', running: true, cpu: 0, mem: 0, mem_total: 0, uptime: 0, ...o,
+    });
+    const pinput = (o: Partial<Parameters<typeof discoverProxmox>[0]> = {}) => ({
+        host: { id: 'p1', name: 'Home PVE' }, consoleBase: 'https://pve.lan:8006', guests: [guest()],
+        addresses: { 'pve|106': '192.168.1.106' }, linkedLabel: () => '', chosenIcon: () => '', ...o,
+    });
+
+    test('where a machine opens in the hypervisor, and nowhere when the address is not known', () => {
+        expect(consoleUrl('https://pve.lan:8006', 'lxc', 106)).toBe('https://pve.lan:8006/#v1:0:=lxc%2F106');
+        expect(consoleUrl('https://pve.lan:8006/', 'qemu', 200)).toBe('https://pve.lan:8006/#v1:0:=qemu%2F200');
+        expect(consoleUrl('', 'lxc', 1)).toBe('');
+    });
+    test('a running machine with an address is proposed at it, then at its console, and starts ticked', () => {
+        const { proposals } = discoverProxmox(pinput());
+        expect(proposals[0]).toMatchObject({ key: 'p1|pve|106', name: 'Plex Media', note: '', selected: true });
+        expect(proposals[0].candidates).toEqual([
+            { source: 'ip', url: 'http://192.168.1.106' },
+            { source: 'console', url: 'https://pve.lan:8006/#v1:0:=lxc%2F106' },
+        ]);
+        expect(proposals[0].link).toEqual({ proxmox: { host: 'p1', node: 'pve', kind: 'lxc', vmid: 106 } });
+    });
+    test('one without an address opens its console, says so, and starts unticked', () => {
+        const { proposals } = discoverProxmox(pinput({ addresses: {} }));
+        expect(proposals[0].candidates.map(c => c.source)).toEqual(['console']);
+        expect(proposals[0]).toMatchObject({ note: 'no_ip', selected: false });
+    });
+    test('one that is off is offered unticked, with its console', () => {
+        const { proposals } = discoverProxmox(pinput({ guests: [guest({ running: false })], addresses: {} }));
+        expect(proposals[0]).toMatchObject({ note: 'stopped', selected: false });
+        expect(proposals[0].candidates.map(c => c.source)).toEqual(['console']);
+    });
+    test('with no address and no console to offer, a machine is counted and not listed', () => {
+        const d = discoverProxmox(pinput({ consoleBase: '', addresses: {} }));
+        expect(d.proposals).toEqual([]);
+        expect(d.withoutAddress).toBe(1);
+    });
+    test('one a bookmark already serves says which, and the icon the person chose travels with it', () => {
+        const { proposals } = discoverProxmox(pinput({ linkedLabel: () => 'My Plex', chosenIcon: () => '/api/icons/x' }));
+        expect(proposals[0]).toMatchObject({ linkedTo: 'My Plex', selected: false, chosenIcon: '/api/icons/x' });
+    });
+    test('the same vmid on two nodes are two machines', () => {
+        const d = discoverProxmox(pinput({
+            guests: [guest({ node: 'a', vmid: 100 }), guest({ node: 'b', vmid: 100 })], addresses: { 'a|100': '10.0.0.1', 'b|100': '10.0.0.2' },
+        }));
+        expect(d.proposals.map(p => [p.key, p.candidates[0].url])).toEqual([['p1|a|100', 'http://10.0.0.1'], ['p1|b|100', 'http://10.0.0.2']]);
     });
 });

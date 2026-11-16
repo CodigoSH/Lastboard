@@ -1,5 +1,6 @@
 import { containerName, type DockerContainer, type DockerHost } from './dockerShared';
 import { planImport, type PlanItem, type PlanSection } from './importPlan';
+import type { PxGuest } from './proxmoxApi';
 
 /**
  * What a host's containers could become on the board: one proposal each, for a
@@ -11,24 +12,34 @@ import { planImport, type PlanItem, type PlanSection } from './importPlan';
  * the template's job, and the values here are never trusted as markup.
  */
 
-/** A way to reach a container: an address it named, a proxy's, or a port it publishes. */
+/**
+ * A way to reach a service: an address a container named, a proxy's, a port it
+ * publishes, the address a machine reports, or its console on the hypervisor.
+ */
 export interface Candidate {
-    source: 'label' | 'proxy' | 'port';
-    /** The address, for `label` and `proxy`. */
+    source: 'label' | 'proxy' | 'port' | 'ip' | 'console';
+    /** The address, for everything but `port`. */
     url?: string;
     /** The published port and the scheme it is most likely served on, for `port`. */
     port?: number;
     scheme?: 'http' | 'https';
 }
 
-export type ProposalNote = '' | 'host_network' | 'stopped';
+export type ProposalNote = '' | 'host_network' | 'stopped' | 'no_ip';
+
+/** What a bookmark keeps to say which container or machine it serves. */
+export type ServiceLink =
+    | { docker: { host: string; name: string } }
+    | { proxmox: { host: string; node: string; kind: string; vmid: number } };
 
 export interface ServiceProposal {
     /** `host/name`, the key a container's own icon and bookmark link are filed under. */
     key: string;
     hostId: string;
-    /** The container's name, as the link a bookmark keeps. */
+    /** The container's name, or the machine's. */
     containerName: string;
+    /** What the bookmark will say it serves. */
+    link: ServiceLink;
     name: string;
     /** In the order they are offered; the first is the proposal. */
     candidates: Candidate[];
@@ -184,6 +195,7 @@ export function discoverDocker(containers: DockerContainer[], input: DiscoverInp
             key: `${hostId}/${name}`,
             hostId,
             containerName: name,
+            link: { docker: { host: hostId, name } },
             name: prettyName(serviceName(c)) || name,
             candidates,
             project: c.Project || '',
@@ -230,4 +242,62 @@ export function planServices(services: NewService[], groupBy: GroupBy, hostName:
     }));
     const [plan] = planImport([{ name: hostName, items }], cols, hostName);
     return (plan ?? { name: hostName, sections: [] }) as ServicesPlan;
+}
+
+// ── Proxmox ──────────────────────────────────────────────────────────────────
+
+export interface ProxmoxDiscoverInput {
+    host: { id: string; name: string };
+    /** The hypervisor's own web address, `https://pve.lan:8006`, for the console; '' when unknown. */
+    consoleBase: string;
+    guests: PxGuest[];
+    /** The address each machine reports, keyed `node|vmid`; a machine that reports none is not in it. */
+    addresses: Record<string, string>;
+    /** The label of the bookmark a machine is already tied to, or ''. */
+    linkedLabel: (g: PxGuest) => string;
+    /** The address of the icon the person chose for a machine, or ''. */
+    chosenIcon: (g: PxGuest) => string;
+}
+
+/** Where a machine opens in the hypervisor's own interface. */
+export function consoleUrl(base: string, kind: 'lxc' | 'qemu', vmid: number): string {
+    return base ? `${base.replace(/\/+$/, '')}/#v1:0:=${kind}%2F${vmid}` : '';
+}
+
+/**
+ * What a hypervisor's machines could become on the board. A machine with an
+ * address is proposed at it (`http://` and the address: the port is the person's
+ * to add); one without — off, or a virtual machine with no guest agent — opens
+ * its console on the hypervisor, and a machine that is off starts unticked.
+ */
+export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
+    const proposals: ServiceProposal[] = [];
+    let withoutAddress = 0;
+    const { host } = input;
+
+    for (const g of input.guests) {
+        const ip = input.addresses[`${g.node}|${g.vmid}`] ?? '';
+        const candidates: Candidate[] = [];
+        if (ip) candidates.push({ source: 'ip', url: `http://${ip}` });
+        const console = consoleUrl(input.consoleBase, g.kind, g.vmid);
+        if (console) candidates.push({ source: 'console', url: console });
+        if (candidates.length === 0) { withoutAddress++; continue; }
+
+        const linkedTo = input.linkedLabel(g);
+        proposals.push({
+            key: `${host.id}|${g.node}|${g.vmid}`,
+            hostId: host.id,
+            containerName: g.name,
+            link: { proxmox: { host: host.id, node: g.node, kind: g.kind, vmid: g.vmid } },
+            name: prettyName(g.name) || g.name,
+            candidates,
+            project: '',
+            chosenIcon: input.chosenIcon(g),
+            iconNames: [g.name.toLowerCase()],
+            linkedTo,
+            note: !g.running ? 'stopped' : ip ? '' : 'no_ip',
+            selected: g.running && !!ip && !linkedTo,
+        });
+    }
+    return { proposals, withoutAddress };
 }
