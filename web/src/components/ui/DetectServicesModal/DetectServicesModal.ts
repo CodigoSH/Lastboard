@@ -126,7 +126,10 @@ class DetectServicesModal extends HTMLElement {
         }
         const first = this.view.hosts.find(h => h.id === opts.hostId) ?? this.view.hosts[0];
         await this.loadHost(first.id, null);
-        if (opts.quiet && this.view.state === 'ready' && !this.dialog?.open) this.dialog?.showModal();
+        // Nobody asked for it, so it appears only when there is something to add: a host whose services all have a bookmark
+        // already, or are ignored, has nothing to say.
+        const somethingToAdd = [...this.rows.values()].some(r => this.groupOf(r) === 'add');
+        if (opts.quiet && this.view.state === 'ready' && somethingToAdd && !this.dialog?.open) this.dialog?.showModal();
     }
 
     private async loadHost(hostId: string, result: WindowView['result']): Promise<void> {
