@@ -516,6 +516,8 @@ func TestDeleteItem_OnlyTheSectionKeepsItsChildrenWhereTheyAre(t *testing.T) {
 	a := insert("bookmark", section, 1, 1, 1, 1)
 	b := insert("bookmark", section, 2, 1, 1, 1)
 	c := insert("bookmark", section, 1, 2, 1, 1)
+	// A widget can sit in a section too, and keeps its own size.
+	wdg := insert("widget", section, 3, 1, 2, 2)
 	other := insert("section", nil, 9, 4, 4, 2)
 	kept := insert("bookmark", other, 1, 1, 1, 1)
 
@@ -535,8 +537,8 @@ func TestDeleteItem_OnlyTheSectionKeepsItsChildrenWhereTheyAre(t *testing.T) {
 	del("bob", section)
 	var still int
 	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id=? OR parent_id=?", section, section).Scan(&still)
-	if still != 4 {
-		t.Fatalf("another account changed the section: %d of 4 remain", still)
+	if still != 5 {
+		t.Fatalf("another account changed the section: %d of 5 remain", still)
 	}
 
 	if code := del("alice", section); code != http.StatusOK {
@@ -547,7 +549,7 @@ func TestDeleteItem_OnlyTheSectionKeepsItsChildrenWhereTheyAre(t *testing.T) {
 	if gone != 0 {
 		t.Error("the section is still there")
 	}
-	want := map[int64][2]int{a: {3, 4}, b: {4, 4}, c: {3, 5}}
+	want := map[int64][2]int{a: {3, 4}, b: {4, 4}, c: {3, 5}, wdg: {5, 4}}
 	for id, xy := range want {
 		var parent sql.NullInt64
 		var x, y int
@@ -557,6 +559,11 @@ func TestDeleteItem_OnlyTheSectionKeepsItsChildrenWhereTheyAre(t *testing.T) {
 		if parent.Valid || x != xy[0] || y != xy[1] {
 			t.Errorf("bookmark %d: parent=%v at (%d,%d), want no parent at (%d,%d)", id, parent, x, y, xy[0], xy[1])
 		}
+	}
+	var ww, wh int
+	db.DB.QueryRow("SELECT w, h FROM items WHERE id=?", wdg).Scan(&ww, &wh)
+	if ww != 2 || wh != 2 {
+		t.Errorf("the widget lost its size: %dx%d, want 2x2", ww, wh)
 	}
 	// What was in another section is not touched.
 	var parent sql.NullInt64
