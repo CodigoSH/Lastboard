@@ -153,9 +153,9 @@ bootstrap(async () => {
 
     // A page asks for the service detector with an event; the window is one
     // element for the whole app, like the other modals.
-    const detectModal = document.createElement('detect-services-modal') as HTMLElement & { open(o?: { hostId?: string }): void };
+    const detectModal = document.createElement('detect-services-modal') as HTMLElement & { open(o?: { hostId?: string; quiet?: boolean }): void };
     document.body.appendChild(detectModal);
-    document.addEventListener('detect-services', (e) => detectModal.open((e as CustomEvent<{ hostId?: string }>).detail));
+    document.addEventListener('detect-services', (e) => detectModal.open((e as CustomEvent<{ hostId?: string; quiet?: boolean }>).detail));
 
     const monitorPage = document.createElement('monitor-page');
     document.body.appendChild(monitorPage);

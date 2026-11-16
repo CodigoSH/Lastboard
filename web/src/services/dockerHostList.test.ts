@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { dockerSettingsPayload, hostIdsToStore, hostsForWidget, type AccountDockerHost } from './dockerHostList';
+import { dockerSettingsPayload, hostIdsToStore, hostsForWidget, newUsableHostIds, type AccountDockerHost } from './dockerHostList';
 
 const host = (over: Partial<AccountDockerHost> = {}): AccountDockerHost => ({
     id: 'a', name: 'A', type: 'agent', url: 'nas:9091', enabled: true, has_token: true, usable: true, ...over,
@@ -54,5 +54,22 @@ describe('dockerSettingsPayload', () => {
         const out = dockerSettingsPayload([{ ...host({ type: 'local', url: 'x' }), tokenBox: 'zzz' }]).hosts[0];
         expect(out.token).toBeUndefined();
         expect(out.url).toBe('');
+    });
+});
+
+describe('newUsableHostIds', () => {
+    const h = (id: string, o: Partial<AccountDockerHost> = {}): AccountDockerHost =>
+        ({ id, name: id, type: 'tcp', url: 'tcp://x:2375', enabled: true, has_token: false, usable: true, ...o });
+    test('a host that was not there before is new', () => {
+        expect(newUsableHostIds([h('a')], [h('a'), h('b')])).toEqual(['b']);
+    });
+    test('a host that was only edited is not', () => {
+        expect(newUsableHostIds([h('a')], [h('a', { name: 'Renamed' })])).toEqual([]);
+    });
+    test('one that is switched off, or that this account cannot reach, is not offered', () => {
+        expect(newUsableHostIds([], [h('a', { enabled: false }), h('b', { usable: false }), h('c')])).toEqual(['c']);
+    });
+    test('the first save of an account with hosts counts them all as new', () => {
+        expect(newUsableHostIds([], [h('a'), h('b')])).toEqual(['a', 'b']);
     });
 });

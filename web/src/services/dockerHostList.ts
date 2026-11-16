@@ -42,6 +42,16 @@ export function hostsForWidget(all: AccountDockerHost[], hostIds?: string[]): Do
         .map(h => ({ id: h.id, name: h.name, type: h.type, url: h.url }));
 }
 
+/**
+ * The hosts a save has just added that a window can look at: on and usable, and
+ * not among the ones there were before. A host that was only renamed, or switched
+ * on again, is not new.
+ */
+export function newUsableHostIds(before: AccountDockerHost[], after: AccountDockerHost[]): string[] {
+    const known = new Set(before.map(h => h.id));
+    return after.filter(h => h.enabled && h.usable && !known.has(h.id)).map(h => h.id);
+}
+
 /** What `hostIds` should hold once the ticked hosts are known: nothing when they are all ticked. */
 export function hostIdsToStore(all: AccountDockerHost[], ticked: string[]): string[] | undefined {
     const pickable = all.filter(h => h.enabled && h.usable).map(h => h.id);

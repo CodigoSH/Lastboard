@@ -62,12 +62,16 @@ class DetectServicesModal extends HTMLElement {
         };
     }
 
-    /** Shows the window for one host, or the first one the account has. */
-    async open(opts: { hostId?: string } = {}): Promise<void> {
+    /**
+     * Shows the window for one host, or the first one the account has. `quiet`
+     * is for when nobody asked: it appears only if there is something to offer.
+     */
+    async open(opts: { hostId?: string; quiet?: boolean } = {}): Promise<void> {
+        if (!accessAllows(userStore.getUser(), 'board_edit')) return;
         this.view = this.blankView();
         this.lastRun = null;
         this.paint();
-        this.dialog?.showModal();
+        if (!opts.quiet) this.dialog?.showModal();
 
         const state = dashboardStore.getState();
         const user = userStore.getUser();
@@ -88,6 +92,7 @@ class DetectServicesModal extends HTMLElement {
             return;
         }
         await this.loadHost(this.hosts.find(h => h.id === opts.hostId) ?? this.hosts[0], null);
+        if (opts.quiet && this.view.state === 'ready' && !this.dialog?.open) this.dialog?.showModal();
     }
 
     private async loadHost(host: DockerHost, result: WindowView['result']): Promise<void> {
