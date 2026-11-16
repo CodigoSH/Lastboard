@@ -23,7 +23,7 @@ import '../IconSelectionModal/IconSelectionModal';
 import { SECRET_MASK, secretChange } from '../../../services/secretField';
 import { ALERT_TEXT_KEYS } from './alertTexts';
 import { loadPush, enablePush, disablePush, removePushDevice, pushIdle, type PushView } from '../../../services/pushClient';
-import { proxmoxPayload } from './proxmoxPayload';
+import { newProxmoxHostIds, proxmoxPayload } from './proxmoxPayload';
 import {
     DEFAULT_PROFILE, PROFILES, createBody, grantsFrom, profileOf, setBool, setLevel, updateBody,
     type BoolKey, type Grants, type LevelKey, type ProfileName,
@@ -1039,10 +1039,15 @@ class SettingsContent extends HTMLElement {
      */
     private async putProxmoxHosts(hosts: (PxSettingsHost & { secret?: string; clear_secret?: boolean })[]): Promise<boolean> {
         try {
+            const before = this.proxmox.hosts;
             await apiService.post('/api/proxmox/settings', proxmoxPayload(hosts));
             // Re-read: the server prefixes a bare address with https://, mints
             // the ids, and is the only one that knows a secret is now stored.
             this.proxmox = await apiService.get<typeof this.proxmox>('/api/proxmox/settings');
+            // A hypervisor that has just been added is the moment somebody wants its machines on the board:
+            // the window opens by itself, and only if there turns out to be something to offer.
+            const added = newProxmoxHostIds(before, this.proxmox.hosts);
+            if (added.length) document.dispatchEvent(new CustomEvent('detect-services', { detail: { source: 'proxmox', hostId: added[0], quiet: true } }));
             this.render();
             const { eventBus: bus, EVENTS: E } = await import('../../../services/EventBus');
             bus.emit(E.PROXMOX_CHANGED, { enabled: this.proxmox.enabled });

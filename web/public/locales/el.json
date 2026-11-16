@@ -192,6 +192,8 @@
   "detect.undo": "Αναίρεση",
   "detect.undone": "Αφαιρέθηκαν: {count}",
   "detect.need_url": "Δώστε μια διεύθυνση σε κάθε επιλεγμένη υπηρεσία",
+  "detect.note_no_ip": "Δεν βρέθηκε διεύθυνση: ανοίγει την κονσόλα της",
+  "detect.no_hypervisor": "Δεν έχει ρυθμιστεί κανένας υπερεπόπτης",
   "detect.host": "Host",
   "infra.refresh": "Ανανέωση",
   "infra.sort": "Ταξινόμηση κατά",

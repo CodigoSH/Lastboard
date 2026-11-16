@@ -452,6 +452,14 @@ class ProxmoxPage extends HTMLElement {
         const el = e.target as HTMLElement;
         if (el.closest('#hp-close')) { this.close(); return; }
         if (el.closest('#hp-refresh')) { void this.load(); return; }
+        if (el.closest('#hp-detect')) {
+            // The window belongs to the app, not to this page: it is asked for with an event.
+            this.dispatchEvent(new CustomEvent('detect-services', {
+                bubbles: true, composed: true,
+                detail: { source: 'proxmox', hostId: this.hostFilter !== 'all' ? this.hostFilter : undefined },
+            }));
+            return;
+        }
         if (el.closest('#dr-close') || el.closest('#scrim')) { this.closeDrawer(); return; }
 
         const tab = el.closest<HTMLElement>('#tabs [data-tab]');
@@ -940,6 +948,7 @@ class ProxmoxPage extends HTMLElement {
             <div class="psum">${summary}</div>
             <span class="pspacer"></span>
             ${hosts}
+            ${accessAllows(userStore.getUser(), 'board_edit') ? `<button type="button" class="ibtn" id="hp-detect" aria-label="${escapeHtml(t('detect.open'))}" title="${escapeHtml(t('detect.open'))}">${icon('bookmark', 16)}</button>` : ''}
             <button type="button" class="ibtn" id="hp-refresh" aria-label="${escapeHtml(t('infra.refresh'))}" title="${escapeHtml(t('infra.refresh'))}">${icon('refresh', 16)}</button>
             <button type="button" class="ibtn" id="hp-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button>`;
         if (html !== this.last.head) {

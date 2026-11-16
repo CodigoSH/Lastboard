@@ -192,6 +192,8 @@
   "detect.undo": "撤销",
   "detect.undone": "已移除：{count}",
   "detect.need_url": "请为每个勾选的服务填写地址",
+  "detect.note_no_ip": "未找到地址：将打开其控制台",
+  "detect.no_hypervisor": "尚未设置虚拟化主机",
   "detect.host": "主机",
   "infra.refresh": "刷新",
   "infra.sort": "排序方式",

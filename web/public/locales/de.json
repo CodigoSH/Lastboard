@@ -192,6 +192,8 @@
   "detect.undo": "Rückgängig",
   "detect.undone": "Entfernt: {count}",
   "detect.need_url": "Gib jedem ausgewählten Dienst eine Adresse",
+  "detect.note_no_ip": "Keine Adresse gefunden: öffnet die Konsole",
+  "detect.no_hypervisor": "Es ist kein Hypervisor eingerichtet",
   "detect.host": "Host",
   "infra.refresh": "Aktualisieren",
   "infra.sort": "Sortieren nach",

@@ -192,6 +192,8 @@
   "detect.undo": "تراجع",
   "detect.undone": "تمت الإزالة: {count}",
   "detect.need_url": "أعطِ عنواناً لكل خدمة محددة",
+  "detect.note_no_ip": "لم يُعثر على عنوان: يفتح وحدة التحكم الخاصة بها",
+  "detect.no_hypervisor": "لم يُعدّ أي مشرف افتراضي",
   "detect.host": "المضيف",
   "infra.refresh": "تحديث",
   "infra.sort": "ترتيب حسب",

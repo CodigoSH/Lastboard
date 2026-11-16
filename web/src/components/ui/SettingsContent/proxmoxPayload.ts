@@ -25,3 +25,16 @@ export function proxmoxPayload(hosts: PayloadHost[]) {
         })),
     };
 }
+
+/**
+ * The hypervisors a save has just added that a window can look at: on, with a
+ * secret stored, and not among the ones there were before. One that was only
+ * edited is not new.
+ */
+export function newProxmoxHostIds(
+    before: { id: string }[],
+    after: { id: string; enabled: boolean; has_secret: boolean }[],
+): string[] {
+    const known = new Set(before.map(h => h.id));
+    return after.filter(h => h.enabled && h.has_secret && !known.has(h.id)).map(h => h.id);
+}

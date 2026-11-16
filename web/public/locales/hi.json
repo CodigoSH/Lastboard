@@ -192,6 +192,8 @@
   "detect.undo": "पूर्ववत करें",
   "detect.undone": "हटाए गए: {count}",
   "detect.need_url": "चुनी हुई हर सेवा को एक पता दें",
+  "detect.note_no_ip": "पता नहीं मिला: उसका कंसोल खुलेगा",
+  "detect.no_hypervisor": "कोई हाइपरवाइज़र सेट नहीं है",
   "detect.host": "होस्ट",
   "infra.refresh": "रीफ़्रेश करें",
   "infra.sort": "क्रमबद्ध करें",

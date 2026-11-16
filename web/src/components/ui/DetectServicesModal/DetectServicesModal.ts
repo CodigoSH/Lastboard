@@ -8,17 +8,21 @@ import { apiService } from '../../../services/apiService';
 import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHosts';
 import { fetchContainers, hostAddress, hostErrorKey, type DockerHost } from '../../../services/dockerShared';
 import { loadDockerLinks, clearDockerLinks, dockerLinkKey } from '../../../services/dockerLinks';
+import { loadProxmox, chosenIcon as machineIcon } from '../../../services/proxmoxApi';
+import { loadProxmoxLinks, linkFor as machineLink, clearProxmoxLinks } from '../../../services/proxmoxLinks';
+import { fetchAddresses, fetchProxmoxHosts, type ProxmoxHostRef } from '../../../services/proxmoxAddresses';
 import { buildIconIndex } from '../../../services/importIcons';
 import { materializeIcon } from '../../../services/iconStore';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
 import { bookmarkContent } from '../../../services/bookmarkContent';
 import {
-    candidateUrl, discoverDocker, pickIconName, planServices, type GroupBy, type NewService, type ServiceProposal,
+    candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices,
+    type Discovery, type GroupBy, type NewService, type ServiceProposal,
 } from '../../../services/discoverServices';
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
-import { detectHtml, type RowView, type WindowView } from './DetectServicesModal.template';
+import { detectHtml, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -36,14 +40,16 @@ interface RowState {
 const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
 
 /**
- * "Detect services": lists what a Docker host's containers could become on the
- * board, and creates the ones the person ticks. Opened with `open()`.
+ * "Detect services": lists what a host's containers, or a hypervisor's machines,
+ * could become on the board, and creates the ones the person ticks. Opened with `open()`.
  */
 class DetectServicesModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
     private view: WindowView = this.blankView();
-    private hosts: DockerHost[] = [];
-    private host: DockerHost | undefined;
+    private source: Source = 'docker';
+    private dockerHosts: DockerHost[] = [];
+    private pxHosts: ProxmoxHostRef[] = [];
+    private host: { id: string; name: string } | undefined;
     private rows = new Map<string, RowState>();
     private iconIndex = new Map<string, string>();
     private lastRun: CreateLog | null = null;
@@ -57,7 +63,7 @@ class DetectServicesModal extends HTMLElement {
 
     private blankView(): WindowView {
         return {
-            state: 'loading', hostName: '', hosts: [], hostId: '', address: '', groupBy: 'host', rows: [], withoutAddress: 0,
+            source: 'docker', state: 'loading', hostName: '', hosts: [], hostId: '', address: '', groupBy: 'host', rows: [], withoutAddress: 0,
             boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '',
         };
     }
@@ -66,9 +72,11 @@ class DetectServicesModal extends HTMLElement {
      * Shows the window for one host, or the first one the account has. `quiet`
      * is for when nobody asked: it appears only if there is something to offer.
      */
-    async open(opts: { hostId?: string; quiet?: boolean } = {}): Promise<void> {
+    async open(opts: { source?: Source; hostId?: string; quiet?: boolean } = {}): Promise<void> {
         if (!accessAllows(userStore.getUser(), 'board_edit')) return;
+        this.source = opts.source ?? 'docker';
         this.view = this.blankView();
+        this.view.source = this.source;
         this.lastRun = null;
         this.paint();
         if (!opts.quiet) this.dialog?.showModal();
@@ -80,69 +88,111 @@ class DetectServicesModal extends HTMLElement {
         this.view.canPickBoard = accessAllows(user, 'board_multiple');
 
         try {
-            const settings = await fetchDockerSettings(true);
-            this.hosts = hostsForWidget(settings.hosts);
+            if (this.source === 'docker') {
+                this.dockerHosts = hostsForWidget((await fetchDockerSettings(true)).hosts);
+                this.view.hosts = this.dockerHosts.map(h => ({ id: h.id, name: h.name }));
+            } else {
+                this.pxHosts = await fetchProxmoxHosts();
+                this.view.hosts = this.pxHosts.map(h => ({ id: h.id, name: h.name }));
+            }
         } catch {
-            this.hosts = [];
+            this.view.hosts = [];
         }
-        this.view.hosts = this.hosts.map(h => ({ id: h.id, name: h.name }));
-        if (this.hosts.length === 0) {
+        if (this.view.hosts.length === 0) {
             this.view.state = 'nohost';
             this.paint();
             return;
         }
-        await this.loadHost(this.hosts.find(h => h.id === opts.hostId) ?? this.hosts[0], null);
+        const first = this.view.hosts.find(h => h.id === opts.hostId) ?? this.view.hosts[0];
+        await this.loadHost(first.id, null);
         if (opts.quiet && this.view.state === 'ready' && !this.dialog?.open) this.dialog?.showModal();
     }
 
-    private async loadHost(host: DockerHost, result: WindowView['result']): Promise<void> {
+    private async loadHost(hostId: string, result: WindowView['result']): Promise<void> {
         const token = ++this.loadToken;
-        this.host = host;
-        this.view.hostId = host.id;
-        this.view.hostName = host.name;
+        const ref = this.view.hosts.find(h => h.id === hostId);
+        if (!ref) return;
+        this.host = ref;
+        this.view.hostId = ref.id;
+        this.view.hostName = ref.name;
         this.view.state = 'loading';
         this.view.error = '';
         this.view.result = result;
         this.paint();
 
-        const user = userStore.getUser();
         try {
-            const [settings, containers, links] = await Promise.all([
-                fetchDockerSettings(),
-                fetchContainers(host),
-                loadDockerLinks().catch(() => new Map()),
-            ]);
+            const found = this.source === 'docker' ? await this.readDocker(hostId) : await this.readProxmox(hostId);
             if (token !== this.loadToken) return;
-
-            if (accessAllows(user, 'icons_internet')) {
-                try {
-                    const { iconService } = await import('../../../services/iconService');
-                    await iconService.loadIcons();
-                    this.iconIndex = buildIconIndex(iconService.allIcons());
-                } catch { /* no library, no suggestions: the default icon is used */ }
-            }
-
-            const found = discoverDocker(containers, {
-                host,
-                linkedLabel: name => links.get(dockerLinkKey(host.id, name))?.label ?? '',
-                chosenIcon: name => settings.icons?.[`${host.id}/${name}`] ?? '',
-            });
-            this.view.address = hostAddress(host, location.hostname);
-            this.view.withoutAddress = found.withoutAddress;
-            this.rows = new Map(found.proposals.map(p => {
-                const urls = p.candidates.map(c => candidateUrl(c, this.view.address));
-                const lib = pickIconName(p.iconNames, this.iconIndex);
-                const libUrl = lib ? this.iconIndex.get(lib) ?? this.iconIndex.get(lib.replace(/_/g, '-')) ?? '' : '';
-                return [p.key, { proposal: p, checked: p.selected, name: p.name, url: urls[0] ?? '', edited: false, iconUrl: p.chosenIcon || libUrl }];
-            }));
-            this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
+            if (found) this.adopt(found);
         } catch (err) {
             if (token !== this.loadToken) return;
             this.rows = new Map();
             this.view.state = 'empty';
-            this.view.error = t(hostErrorKey(err));
+            this.view.error = this.source === 'docker' ? t(hostErrorKey(err)) : t('proxmox.connection_error');
         }
         this.paint();
+    }
+
+    /** The icon library, when the account may look icons up: it names the icons that are proposed. */
+    private async loadIconIndex(): Promise<void> {
+        if (!accessAllows(userStore.getUser(), 'icons_internet')) return;
+        try {
+            const { iconService } = await import('../../../services/iconService');
+            await iconService.loadIcons();
+            this.iconIndex = buildIconIndex(iconService.allIcons());
+        } catch { /* no library, no suggestions: the default icon is used */ }
+    }
+
+    private async readDocker(hostId: string): Promise<Discovery | null> {
+        const host = this.dockerHosts.find(h => h.id === hostId);
+        if (!host) return null;
+        const [settings, containers, links] = await Promise.all([
+            fetchDockerSettings(),
+            fetchContainers(host),
+            loadDockerLinks().catch(() => new Map()),
+        ]);
+        await this.loadIconIndex();
+        this.view.address = hostAddress(host, location.hostname);
+        return discoverDocker(containers, {
+            host,
+            linkedLabel: name => links.get(dockerLinkKey(host.id, name))?.label ?? '',
+            chosenIcon: name => settings.icons?.[`${host.id}/${name}`] ?? '',
+        });
+    }
+
+    private async readProxmox(hostId: string): Promise<Discovery | null> {
+        const ref = this.pxHosts.find(h => h.id === hostId);
+        if (!ref) return null;
+        const [[px]] = await Promise.all([loadProxmox(hostId), loadProxmoxLinks()]);
+        if (!px || px.error) {
+            this.rows = new Map();
+            this.view.state = 'empty';
+            this.view.error = px?.error ? (px.error.startsWith('proxmox.') ? t(px.error) : px.error) : t('proxmox.connection_error');
+            return null;
+        }
+        const running = px.guests.filter(g => g.running).map(g => ({ node: g.node, kind: g.kind, vmid: g.vmid }));
+        const [addresses] = await Promise.all([fetchAddresses(hostId, running), this.loadIconIndex()]);
+        this.view.address = '';
+        return discoverProxmox({
+            host: { id: ref.id, name: ref.name },
+            consoleBase: ref.url,
+            guests: px.guests,
+            addresses,
+            linkedLabel: g => machineLink({ vmid: g.vmid, node: g.node, name: g.name, host: ref.id })?.label ?? '',
+            chosenIcon: g => machineIcon(px, g.node, g.vmid),
+        });
+    }
+
+    /** Makes the proposals the rows of the window. */
+    private adopt(found: Discovery): void {
+        this.view.withoutAddress = found.withoutAddress;
+        this.rows = new Map(found.proposals.map(p => {
+            const urls = p.candidates.map(c => candidateUrl(c, this.view.address));
+            const lib = pickIconName(p.iconNames, this.iconIndex);
+            const libUrl = lib ? this.iconIndex.get(lib) ?? this.iconIndex.get(lib.replace(/_/g, '-')) ?? '' : '';
+            return [p.key, { proposal: p, checked: p.selected, name: p.name, url: urls[0] ?? '', edited: false, iconUrl: p.chosenIcon || libUrl }];
+        }));
+        this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
     }
 
     // ── Drawing ──────────────────────────────────────────────────────────────
@@ -228,11 +278,7 @@ class DetectServicesModal extends HTMLElement {
         const target = e.target as HTMLInputElement | HTMLSelectElement;
         if (target.id === 'dt-group') { this.view.groupBy = target.value as GroupBy; return; }
         if (target.id === 'dt-board') { this.view.boardId = Number(target.value); return; }
-        if (target.id === 'dt-host') {
-            const host = this.hosts.find(h => h.id === target.value);
-            if (host) void this.loadHost(host, null);
-            return;
-        }
+        if (target.id === 'dt-host') { void this.loadHost(target.value, null); return; }
         const row = this.rowOf(target);
         if (!row) return;
         if (target.classList.contains('pick')) {
@@ -311,7 +357,8 @@ class DetectServicesModal extends HTMLElement {
 
         const state = dashboardStore.getState();
         const gridCols = state.gridColumns || 12;
-        const plan = planServices(services, this.view.groupBy, host.name, gridCols);
+        // A hypervisor's machines go in the hypervisor's section; Compose's projects are Docker's.
+        const plan = planServices(services, this.source === 'docker' ? this.view.groupBy : 'host', host.name, gridCols);
 
         const contents: string[] = [];
         for (let i = 0; i < services.length; i++) {
@@ -326,9 +373,11 @@ class DetectServicesModal extends HTMLElement {
                     icon = await retryOnRateLimit(() => materializeIcon(resolveIconUrl(lib)));
                 }
             }
+            const link = row.proposal.link;
             contents.push(bookmarkContent({
                 label: s.name, url: s.url, icon, iconName, statusCheck: check,
-                docker: { host: host.id, name: row.proposal.containerName },
+                docker: 'docker' in link ? link.docker : null,
+                proxmox: 'proxmox' in link ? link.proxmox : null,
             }));
         }
         const sections: SectionToPlace<NewBookmark>[] = plan.sections.map(sec => ({
@@ -349,12 +398,18 @@ class DetectServicesModal extends HTMLElement {
         const result = await createDetected({ boardId, gridCols, sections, board: Array.isArray(board) ? board : [] });
         this.lastRun = result.log;
         this.view.busy = false;
-        clearDockerLinks();
+        this.forgetLinks();
         if (open) await dashboardStore.fetchItems();
-        await this.loadHost(host, {
+        await this.loadHost(host.id, {
             created: result.created, failed: result.failed, notFit: result.notFit,
             undoable: result.log.bookmarkIds.length, undone: null,
         });
+    }
+
+    /** The two indexes of what each bookmark serves are rebuilt by whoever reads them next. */
+    private forgetLinks(): void {
+        clearDockerLinks();
+        clearProxmoxLinks();
     }
 
     private async undo(): Promise<void> {
@@ -363,9 +418,9 @@ class DetectServicesModal extends HTMLElement {
         if (!run || !host) return;
         this.lastRun = null;
         const removed = await undoCreated(run);
-        clearDockerLinks();
+        this.forgetLinks();
         if (this.view.boardId === dashboardStore.getState().currentDashboardId) await dashboardStore.fetchItems();
-        await this.loadHost(host, { created: 0, failed: 0, notFit: 0, undoable: 0, undone: removed });
+        await this.loadHost(host.id, { created: 0, failed: 0, notFit: 0, undoable: 0, undone: removed });
     }
 }
 

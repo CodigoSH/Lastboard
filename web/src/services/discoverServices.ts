@@ -1,6 +1,7 @@
 import { containerName, type DockerContainer, type DockerHost } from './dockerShared';
 import { planImport, type PlanItem, type PlanSection } from './importPlan';
 import type { PxGuest } from './proxmoxApi';
+import { iconKey } from './proxmoxIcons';
 
 /**
  * What a host's containers could become on the board: one proposal each, for a
@@ -259,6 +260,11 @@ export interface ProxmoxDiscoverInput {
     chosenIcon: (g: PxGuest) => string;
 }
 
+/** How the server keys the address it reports for a machine. */
+export function addressKey(node: string, vmid: number): string {
+    return `${node}|${vmid}`;
+}
+
 /** Where a machine opens in the hypervisor's own interface. */
 export function consoleUrl(base: string, kind: 'lxc' | 'qemu', vmid: number): string {
     return base ? `${base.replace(/\/+$/, '')}/#v1:0:=${kind}%2F${vmid}` : '';
@@ -276,7 +282,7 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
     const { host } = input;
 
     for (const g of input.guests) {
-        const ip = input.addresses[`${g.node}|${g.vmid}`] ?? '';
+        const ip = input.addresses[addressKey(g.node, g.vmid)] ?? '';
         const candidates: Candidate[] = [];
         if (ip) candidates.push({ source: 'ip', url: `http://${ip}` });
         const console = consoleUrl(input.consoleBase, g.kind, g.vmid);
@@ -285,7 +291,7 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
 
         const linkedTo = input.linkedLabel(g);
         proposals.push({
-            key: `${host.id}|${g.node}|${g.vmid}`,
+            key: iconKey(host.id, g.node, g.vmid),
             hostId: host.id,
             containerName: g.name,
             link: { proxmox: { host: host.id, node: g.node, kind: g.kind, vmid: g.vmid } },

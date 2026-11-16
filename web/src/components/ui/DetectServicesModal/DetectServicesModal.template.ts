@@ -25,6 +25,9 @@ export interface RowView {
 
 export type WindowState = 'loading' | 'ready' | 'empty' | 'nohost' | 'done';
 
+/** What the window is listing the services of. */
+export type Source = 'docker' | 'proxmox';
+
 export interface ResultView {
     created: number;
     failed: number;
@@ -35,6 +38,7 @@ export interface ResultView {
 }
 
 export interface WindowView {
+    source: Source;
     state: WindowState;
     hostName: string;
     hosts: { id: string; name: string }[];
@@ -55,7 +59,9 @@ export interface WindowView {
 }
 
 const noteText = (n: ProposalNote, t: T): string =>
-    n === 'host_network' ? t('detect.note_host_network') : n === 'stopped' ? t('detect.note_stopped') : '';
+    n === 'host_network' ? t('detect.note_host_network')
+        : n === 'stopped' ? t('detect.note_stopped')
+            : n === 'no_ip' ? t('detect.note_no_ip') : '';
 
 export function rowHtml(r: RowView, t: T): string {
     const face = r.iconUrl
@@ -98,7 +104,7 @@ export function detectHtml(v: WindowView, t: T): string {
 
     let body: string;
     if (v.state === 'loading') body = `<p class="state">${e(t('detect.loading', { host: v.hostName }))}</p>`;
-    else if (v.state === 'nohost') body = `<p class="state">${e(t('detect.no_host'))}</p>`;
+    else if (v.state === 'nohost') body = `<p class="state">${e(t(v.source === 'proxmox' ? 'detect.no_hypervisor' : 'detect.no_host'))}</p>`;
     else if (v.state === 'empty') body = `<p class="state">${e(v.error || t('detect.empty'))}</p>`;
     else {
         body = `<div class="tools">
@@ -111,17 +117,21 @@ export function detectHtml(v: WindowView, t: T): string {
     }
 
     const showControls = v.state === 'ready' || v.state === 'done';
+    // A machine has an address of its own; only a Docker host has one that its ports are built on.
+    const dockerControls = v.source === 'docker'
+        ? `<label class="field"><span>${e(t('detect.address'))}</span><input type="text" id="dt-address" value="${e(v.address)}" spellcheck="false" autocomplete="off"></label>
+            <label class="field"><span>${e(t('detect.group'))}</span><select id="dt-group">
+                <option value="host"${v.groupBy === 'host' ? ' selected' : ''}>${e(t('detect.group_host'))}</option>
+                <option value="project"${v.groupBy === 'project' ? ' selected' : ''}>${e(t('detect.group_project'))}</option>
+            </select></label>`
+        : '';
     return `<div class="header">
             <div class="title-group"><h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
             <button type="button" class="close-btn" id="dt-close" aria-label="${e(t('general.close'))}">&times;</button>
         </div>
         ${showControls ? `<div class="controls">
             ${hostPick}
-            <label class="field"><span>${e(t('detect.address'))}</span><input type="text" id="dt-address" value="${e(v.address)}" spellcheck="false" autocomplete="off"></label>
-            <label class="field"><span>${e(t('detect.group'))}</span><select id="dt-group">
-                <option value="host"${v.groupBy === 'host' ? ' selected' : ''}>${e(t('detect.group_host'))}</option>
-                <option value="project"${v.groupBy === 'project' ? ' selected' : ''}>${e(t('detect.group_project'))}</option>
-            </select></label>
+            ${dockerControls}
         </div>` : hostPick ? `<div class="controls">${hostPick}</div>` : ''}
         ${body}
         <div class="footer">

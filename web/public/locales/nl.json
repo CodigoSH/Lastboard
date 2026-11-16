@@ -192,6 +192,8 @@
   "detect.undo": "Ongedaan maken",
   "detect.undone": "Verwijderd: {count}",
   "detect.need_url": "Geef elke aangevinkte dienst een adres",
+  "detect.note_no_ip": "Geen adres gevonden: opent de console",
+  "detect.no_hypervisor": "Er is geen hypervisor ingesteld",
   "detect.host": "Host",
   "infra.refresh": "Vernieuwen",
   "infra.sort": "Sorteren op",

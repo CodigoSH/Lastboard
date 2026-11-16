@@ -192,6 +192,8 @@
   "detect.undo": "واپس کریں",
   "detect.undone": "ہٹایا گیا: {count}",
   "detect.need_url": "ہر منتخب سروس کو ایک پتہ دیں",
+  "detect.note_no_ip": "پتہ نہیں ملا: اس کا کنسول کھلے گا",
+  "detect.no_hypervisor": "کوئی ہائپر وائزر ترتیب نہیں دیا گیا",
   "detect.host": "ہوسٹ",
   "infra.refresh": "تازہ کریں",
   "infra.sort": "ترتیب بلحاظ",

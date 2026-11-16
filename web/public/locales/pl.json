@@ -192,6 +192,8 @@
   "detect.undo": "Cofnij",
   "detect.undone": "Usunięto: {count}",
   "detect.need_url": "Podaj adres każdej zaznaczonej usłudze",
+  "detect.note_no_ip": "Nie znaleziono adresu: otwiera konsolę",
+  "detect.no_hypervisor": "Nie skonfigurowano żadnego hipernadzorcy",
   "detect.host": "Host",
   "infra.refresh": "Odśwież",
   "infra.sort": "Sortuj według",

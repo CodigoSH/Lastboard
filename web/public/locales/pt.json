@@ -192,6 +192,8 @@
   "detect.undo": "Desfazer",
   "detect.undone": "Removidos: {count}",
   "detect.need_url": "Dê um endereço a cada serviço marcado",
+  "detect.note_no_ip": "Nenhum endereço encontrado: abre o console",
+  "detect.no_hypervisor": "Nenhum hypervisor configurado",
   "detect.host": "Host",
   "infra.refresh": "Atualizar",
   "infra.sort": "Ordenar por",

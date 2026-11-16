@@ -192,6 +192,8 @@
   "detect.undo": "واگرد",
   "detect.undone": "حذف شد: {count}",
   "detect.need_url": "برای هر سرویس انتخاب‌شده یک نشانی بنویسید",
+  "detect.note_no_ip": "نشانی پیدا نشد: کنسول آن باز می‌شود",
+  "detect.no_hypervisor": "هیچ هایپروایزری تنظیم نشده است",
   "detect.host": "میزبان",
   "infra.refresh": "به‌روزرسانی",
   "infra.sort": "مرتب‌سازی بر اساس",

@@ -8,7 +8,7 @@ const row = (o: Partial<RowView> = {}): RowView => ({
     key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', ...o,
 });
 const view = (o: Partial<WindowView> = {}): WindowView => ({
-    state: 'ready', hostName: 'Home', hosts: [{ id: 'h1', name: 'Home' }], hostId: 'h1', address: 'nas', groupBy: 'host', rows: [row()],
+    source: 'docker', state: 'ready', hostName: 'Home', hosts: [{ id: 'h1', name: 'Home' }], hostId: 'h1', address: 'nas', groupBy: 'host', rows: [row()],
     withoutAddress: 0, boards: [{ id: 1, name: 'Main' }], boardId: 1, canPickBoard: false, selected: 1, result: null, busy: false, error: '', ...o,
 });
 
@@ -83,6 +83,21 @@ describe('the window', () => {
         expect(empty).toContain('[detect.empty]');
         expect(empty).not.toContain('id="dt-create"');
         expect(detectHtml(view({ state: 'empty', error: 'down' }), t)).toContain('down');
+    });
+});
+
+describe('a hypervisor\'s window', () => {
+    test('has no address or sections to choose: a machine has an address of its own', () => {
+        const html = detectHtml(view({ source: 'proxmox' }), t);
+        expect(html).not.toContain('id="dt-address"');
+        expect(html).not.toContain('id="dt-group"');
+        expect(html).toContain('id="dt-list"');
+        expect(detectHtml(view(), t)).toContain('id="dt-address"');
+    });
+    test('says it has no hypervisor, and why a machine opens its console', () => {
+        expect(detectHtml(view({ source: 'proxmox', state: 'nohost' }), t)).toContain('[detect.no_hypervisor]');
+        expect(detectHtml(view({ source: 'docker', state: 'nohost' }), t)).toContain('[detect.no_host]');
+        expect(rowHtml(row({ note: 'no_ip' }), t)).toContain('[detect.note_no_ip]');
     });
 });
 

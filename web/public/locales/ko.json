@@ -192,6 +192,8 @@
   "detect.undo": "실행 취소",
   "detect.undone": "제거됨: {count}",
   "detect.need_url": "선택한 각 서비스에 주소를 입력하세요",
+  "detect.note_no_ip": "주소를 찾지 못함: 콘솔을 엽니다",
+  "detect.no_hypervisor": "설정된 하이퍼바이저가 없습니다",
   "detect.host": "호스트",
   "infra.refresh": "새로고침",
   "infra.sort": "정렬 기준",

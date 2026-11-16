@@ -192,6 +192,8 @@
   "detect.undo": "ফিরিয়ে আনুন",
   "detect.undone": "সরানো হয়েছে: {count}",
   "detect.need_url": "নির্বাচিত প্রতিটি পরিষেবাকে একটি ঠিকানা দিন",
+  "detect.note_no_ip": "ঠিকানা পাওয়া যায়নি: এর কনসোল খুলবে",
+  "detect.no_hypervisor": "কোনো হাইপারভাইজার সেট করা নেই",
   "detect.host": "হোস্ট",
   "infra.refresh": "রিফ্রেশ",
   "infra.sort": "সাজান",

@@ -192,6 +192,8 @@
   "detect.undo": "Deshacer",
   "detect.undone": "Quitados: {count}",
   "detect.need_url": "Pon una dirección a cada servicio marcado",
+  "detect.note_no_ip": "Sin dirección: abre su consola",
+  "detect.no_hypervisor": "No hay ningún hipervisor configurado",
   "detect.host": "Host",
   "infra.refresh": "Actualizar",
   "infra.sort": "Ordenar por",

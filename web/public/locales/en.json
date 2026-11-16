@@ -192,6 +192,8 @@
   "detect.undo": "Undo",
   "detect.undone": "Removed: {count}",
   "detect.need_url": "Give an address to every service you tick",
+  "detect.note_no_ip": "No address found: opens its console",
+  "detect.no_hypervisor": "No hypervisor is set up",
   "detect.host": "Host",
   "infra.refresh": "Refresh",
   "infra.sort": "Sort by",

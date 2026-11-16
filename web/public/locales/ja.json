@@ -192,6 +192,8 @@
   "detect.undo": "元に戻す",
   "detect.undone": "削除しました: {count}",
   "detect.need_url": "選択した各サービスにアドレスを入力してください",
+  "detect.note_no_ip": "アドレスが見つかりません: コンソールを開きます",
+  "detect.no_hypervisor": "ハイパーバイザーが設定されていません",
   "detect.host": "ホスト",
   "infra.refresh": "更新",
   "infra.sort": "並べ替え",

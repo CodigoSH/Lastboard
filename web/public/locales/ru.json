@@ -192,6 +192,8 @@
   "detect.undo": "Отменить",
   "detect.undone": "Удалено: {count}",
   "detect.need_url": "Укажите адрес для каждого отмеченного сервиса",
+  "detect.note_no_ip": "Адрес не найден: откроется консоль",
+  "detect.no_hypervisor": "Не настроен ни один гипервизор",
   "detect.host": "Хост",
   "infra.refresh": "Обновить",
   "infra.sort": "Сортировка",

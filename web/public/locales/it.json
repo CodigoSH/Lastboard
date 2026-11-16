@@ -192,6 +192,8 @@
   "detect.undo": "Annulla",
   "detect.undone": "Rimossi: {count}",
   "detect.need_url": "Dai un indirizzo a ogni servizio selezionato",
+  "detect.note_no_ip": "Nessun indirizzo trovato: apre la sua console",
+  "detect.no_hypervisor": "Nessun hypervisor configurato",
   "detect.host": "Host",
   "infra.refresh": "Aggiorna",
   "infra.sort": "Ordina per",

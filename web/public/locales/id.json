@@ -192,6 +192,8 @@
   "detect.undo": "Urungkan",
   "detect.undone": "Dihapus: {count}",
   "detect.need_url": "Beri alamat untuk setiap layanan yang dicentang",
+  "detect.note_no_ip": "Alamat tidak ditemukan: membuka konsolnya",
+  "detect.no_hypervisor": "Belum ada hypervisor yang diatur",
   "detect.host": "Host",
   "infra.refresh": "Segarkan",
   "infra.sort": "Urutkan",

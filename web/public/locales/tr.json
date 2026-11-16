@@ -192,6 +192,8 @@
   "detect.undo": "Geri al",
   "detect.undone": "Kaldırıldı: {count}",
   "detect.need_url": "İşaretlediğiniz her hizmete bir adres verin",
+  "detect.note_no_ip": "Adres bulunamadı: konsolunu açar",
+  "detect.no_hypervisor": "Hiçbir hipervizör ayarlanmadı",
   "detect.host": "Ana makine",
   "infra.refresh": "Yenile",
   "infra.sort": "Sırala",

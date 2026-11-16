@@ -192,6 +192,8 @@
   "detect.undo": "Annuler",
   "detect.undone": "Retirés : {count}",
   "detect.need_url": "Donnez une adresse à chaque service coché",
+  "detect.note_no_ip": "Aucune adresse trouvée : ouvre sa console",
+  "detect.no_hypervisor": "Aucun hyperviseur n'est configuré",
   "detect.host": "Hôte",
   "infra.refresh": "Actualiser",
   "infra.sort": "Trier par",
