@@ -187,7 +187,7 @@ export function listHtml(v: Pick<WindowView, 'rows' | 'open'>, t: T): string {
     return (['add', 'linked', 'ignored'] as const).map(g => groupHtml(g, v.rows.filter(r => r.group === g), v, t)).join('');
 }
 
-const MAX_TILES = 9;
+const MAX_TILES = 18;
 
 /** What is about to be added, as the board will show it: a box for each section with its title on the border and a tile for each bookmark. */
 export function previewHtml(sections: PreviewSection[], t: T): string {
@@ -262,7 +262,7 @@ export function detectHtml(v: WindowView, t: T): string {
         ? `<div class="field"><span>${e(t('detect.host'))}</span>${selectHtml('dt-host', v.hosts.map(h => ({ value: h.id, label: h.name })), v.hostId, t('detect.host'))}</div>`
         : '';
     const boardPick = v.canPickBoard && v.boards.length > 1
-        ? `<div class="field"><span>${e(t('detect.board'))}</span>${selectHtml('dt-board', v.boards.map(b => ({ value: String(b.id), label: b.name })), String(v.boardId ?? ''), t('detect.board'))}</div>`
+        ? `<span class="where__label">${e(t('detect.board'))}</span><div class="where__control">${selectHtml('dt-board', v.boards.map(b => ({ value: String(b.id), label: b.name })), String(v.boardId ?? ''), t('detect.board'))}</div>`
         : '';
 
     let body: string;
@@ -301,7 +301,9 @@ export function detectHtml(v: WindowView, t: T): string {
             ${v.state === 'ready' ? `<div class="footer__where">
                 <div class="where__fields">
                     ${boardPick}
-                    <label class="field field--section"><span class="field__top"><span>${e(t('detect.section'))}</span><span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span></span><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></label>
+                    <label class="where__label" for="dt-section">${e(t('detect.section'))}</label>
+                    <div class="where__control"><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></div>
+                    <span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span>
                 </div>
                 <div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>
             </div>` : ''}

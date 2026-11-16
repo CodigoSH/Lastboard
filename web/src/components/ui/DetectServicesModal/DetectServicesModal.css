@@ -50,12 +50,12 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); }
 .field > span { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
 /* The product's own dropdown, sized to sit on a line with the inputs. */
 app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size: 13.5px; }
-.field input, .search input, .row input[type="text"] {
+.field input, .search input, .where__control input, .row input[type="text"] {
     inline-size: 100%; min-inline-size: 0; box-sizing: border-box; block-size: 36px; padding: 0 12px; font: inherit; font-size: 13.5px;
     color: var(--input-text, var(--text-main)); background-color: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius);
     outline: none; transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
-.field input:focus, .search input:focus, .row input:focus {
+.field input:focus, .search input:focus, .where__control input:focus, .row input:focus {
     border-color: var(--input-focus-border, var(--accent)); box-shadow: var(--input-focus-shadow, none);
 }
 
@@ -270,13 +270,13 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     border-block-start: 1px solid var(--border); background: var(--paper-bg);
 }
 .footer__where { flex: 1 1 100%; min-inline-size: 0; display: flex; align-items: flex-end; gap: 16px; }
-.where__fields { flex: none; display: flex; gap: 12px; }
-.where__fields .field { inline-size: 200px; }
-.where__fields .field--section { inline-size: 250px; }
-.footer .field { flex: none; }
-.field--section input { font-weight: 600; }
-.field__top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; min-inline-size: 0; }
-.field__top > span:first-child { flex: none; }
+.footer__where { align-items: stretch; }
+/* On the left, the two things that say where it goes, one to a line with their names beside them; the preview takes the rest. */
+.where__fields { flex: none; inline-size: 340px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 12px; align-content: start; }
+.where__label { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
+.where__control { min-inline-size: 0; }
+.where__fields .status { grid-column: 2; margin-block-start: -2px; justify-content: flex-start; text-align: start; }
+.where__control input { font-weight: 600; }
 /* Whether the title is taken on the board: said once, on the line of the field it is about. */
 .status { display: inline-flex; align-items: center; gap: 6px; min-inline-size: 0; font: 600 11.5px/1.2 var(--font-sans, inherit); letter-spacing: 0; text-transform: none; text-align: end; color: var(--text-dim); }
 .status:empty { display: none; }
@@ -286,9 +286,9 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 .status--mixed { color: var(--warning-color); }
 
 /* The preview: the board's own section — a box with its name on the border — and a tile for each bookmark that will be in it. */
-.preview { flex: 1 1 0; min-inline-size: 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding-block-start: 8px; }
+.preview { flex: 1 1 0; min-inline-size: 0; display: flex; flex-wrap: wrap; align-items: stretch; align-content: stretch; gap: 12px; padding-block-start: 8px; }
 .preview__box {
-    position: relative; display: block; min-inline-size: 0; max-inline-size: 100%; padding: 12px 8px 6px;
+    position: relative; display: block; min-inline-size: 0; max-inline-size: 100%; padding: 16px 10px 8px;
     background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--radius);
 }
 .preview__title {
@@ -296,14 +296,14 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 1px 8px; font: 700 0.62rem/1.4 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--text-dim); background: var(--surface-solid); border: 1px solid var(--card-border); border-radius: 12px;
 }
-.preview__tiles { display: flex; flex-wrap: wrap; gap: 5px; }
+.preview__tiles { display: flex; flex-wrap: wrap; gap: 6px; }
 .tile {
-    inline-size: 26px; block-size: 26px; display: grid; place-items: center; overflow: hidden; flex: none;
-    border-radius: 7px; background: var(--surface-solid); border: 1px solid var(--border); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    inline-size: 34px; block-size: 34px; display: grid; place-items: center; overflow: hidden; flex: none;
+    border-radius: 10px; background: var(--surface-solid); border: 1px solid var(--border); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
     animation: tileIn 0.25s var(--ease-bounce) backwards;
 }
-.tile img { inline-size: 100%; block-size: 100%; object-fit: contain; padding: 4px; box-sizing: border-box; }
-.tile__letter { font: 700 11px/1 var(--font-mono); color: var(--text-dim); text-transform: uppercase; }
+.tile img { inline-size: 100%; block-size: 100%; object-fit: contain; padding: 6px; box-sizing: border-box; }
+.tile__letter { font: 700 13px/1 var(--font-mono); color: var(--text-dim); text-transform: uppercase; }
 .tile--more { font: 700 10px/1 var(--font-mono); color: var(--text-dim); inline-size: auto; padding-inline: 8px; animation: none; }
 @keyframes tileIn { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .tile { animation: none; } }
@@ -362,8 +362,8 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .row__edit { grid-column: 1 / -1; }
     .footer { padding: 12px 18px 16px; gap: 10px; align-items: stretch; }
     .footer__where { flex-direction: column; align-items: stretch; gap: 10px; }
-    .where__fields { flex-direction: column; }
-    .where__fields .field, .where__fields .field--section { inline-size: auto; }
+    .where__fields { inline-size: auto; grid-template-columns: 1fr; gap: 6px; }
+    .where__fields .status { grid-column: 1; }
     .footer__actions { margin-inline-start: 0; flex: 1 1 100%; }
     .result { flex: 1 1 100%; min-block-size: 0; }
     /* The × in the corner is the way out here: the footer keeps the one thing that does something. */
