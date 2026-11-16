@@ -170,10 +170,8 @@ export function groupHtml(group: RowGroup, rows: RowView[], v: Pick<WindowView, 
     if (group !== 'add' && rows.length === 0) return '';
     const title = e(t(`detect.group_${group === 'add' ? 'new' : group}`, { count: String(rows.length) }));
     if (group === 'add') {
-        const down = rows.some(r => r.health === 'down');
+        // Its title, its count and the explanation of what "not answering" means are the fixed head of the frame (see headHtml).
         return `<section class="group group--add" data-group="add">
-            <div class="group__head"><span class="group__title">${title}</span><span class="group__tools"><button type="button" class="tool" id="dt-only-up"${rows.some(r => r.health === 'up') && rows.some(r => r.health === 'down') ? '' : ' hidden'}>${e(t('detect.only_up'))}</button><button type="button" class="tool" id="dt-all">${e(t('detect.all'))}</button><button type="button" class="tool" id="dt-none">${e(t('detect.none'))}</button></span></div>
-            <p class="group__hint" id="dt-hint-down"${down ? '' : ' hidden'}>${e(t('detect.hint_down'))}</p>
             <div class="group__rows">${rows.length ? rows.map(r => rowHtml(r, t)).join('') : `<p class="group__empty">${e(t('detect.nothing_new'))}</p>`}</div>
         </section>`;
     }
@@ -201,11 +199,39 @@ export function previewHtml(sections: PreviewSection[], t: T): string {
     }).join('') || `<p class="preview__none">${e(t('detect.preview_none'))}</p>`;
 }
 
-/** The sections the chosen board has already, as pills that fill the section field with their title. */
-export function existingSectionsHtml(titles: string[], current: string, t: T): string {
-    if (titles.length === 0) return '';
-    const pills = titles.slice(0, 8).map(x => `<button type="button" class="pill-btn" data-section="${e(x)}" aria-pressed="${x.trim().toLowerCase() === current.trim().toLowerCase()}">${e(x)}</button>`).join('');
-    return `<div class="existing"><span class="existing__label">${e(t('detect.section_existing'))}</span>${pills}</div>`;
+/**
+ * The head of the frame, which stays where it is while the rows go by: what the list is, how many there are, how many
+ * are ticked, and — only while some row does not answer — what that means.
+ */
+export function headHtml(rows: RowView[], t: T): string {
+    const add = rows.filter(r => r.group === 'add');
+    const ticked = add.filter(r => r.checked).length;
+    const down = add.some(r => r.health === 'down');
+    return `<div class="head__line">
+            <span class="head__title">${e(t('detect.group_new_title'))}</span><span class="head__count">${add.length}</span>
+            <span class="head__sel" id="dt-sel" title="${ticked} / ${add.length}"><b>${ticked}</b> / ${add.length}<i class="head__bar"><i style="inline-size:${add.length ? Math.round((ticked / add.length) * 100) : 0}%"></i></i></span>
+        </div>
+        <p class="head__hint" id="dt-hint-down"${down ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><span>${e(t('detect.hint_down'))}</span></p>`;
+}
+
+/** Whether the section the person is about to name — or the ones the window would make — are on the chosen board already. */
+export interface SectionStatus { kind: 'none' | 'exists' | 'free' | 'mixed'; existing: number; created: number }
+
+export function sectionStatus(v: Pick<WindowView, 'preview' | 'boardSections'>): SectionStatus {
+    if (v.preview.length === 0) return { kind: 'none', existing: 0, created: 0 };
+    const have = new Set(v.boardSections.map(x => x.trim().toLowerCase()));
+    const existing = v.preview.filter(p => have.has(p.title.trim().toLowerCase())).length;
+    const created = v.preview.length - existing;
+    return { kind: created === 0 ? 'exists' : existing === 0 ? 'free' : 'mixed', existing, created };
+}
+
+/** The line beside the field's name that says whether the title is taken on the board: no section is made twice by accident. */
+export function sectionStatusHtml(st: SectionStatus, t: T): string {
+    if (st.kind === 'none') return '';
+    const text = st.kind === 'exists' ? t('detect.section_exists')
+        : st.kind === 'free' ? t('detect.section_free')
+            : t('detect.section_mixed', { existing: String(st.existing), created: String(st.created) });
+    return `<span class="status__dot" aria-hidden="true"></span>${e(text)}`;
 }
 
 export function resultHtml(r: ResultView, t: T): string {
@@ -246,8 +272,13 @@ export function detectHtml(v: WindowView, t: T): string {
     else {
         body = `<div class="tools">
                 <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" id="dt-search" placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}"></label>
+                <span class="tools__group">
+                    <button type="button" class="tool" id="dt-only-up"${v.rows.some(r => r.group === 'add' && r.health === 'up') && v.rows.some(r => r.group === 'add' && r.health === 'down') ? '' : ' hidden'}>${e(t('detect.only_up'))}</button>
+                    <button type="button" class="tool" id="dt-all">${e(t('detect.all'))}</button>
+                    <button type="button" class="tool" id="dt-none">${e(t('detect.none'))}</button>
+                </span>
             </div>
-            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="list" id="dt-list">${listHtml(v, t)}</div></div>
+            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="frame__head" id="dt-head">${headHtml(v.rows, t)}</div><div class="list" id="dt-list">${listHtml(v, t)}</div></div>
             ${v.withoutAddress ? `<p class="hint">${e(t('detect.hidden', { count: String(v.withoutAddress) }))}</p>` : ''}`;
     }
 
@@ -270,9 +301,8 @@ export function detectHtml(v: WindowView, t: T): string {
             ${v.state === 'ready' ? `<div class="footer__where">
                 <div class="where__fields">
                     ${boardPick}
-                    <label class="field field--section"><span>${e(t('detect.section'))}</span><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></label>
+                    <label class="field field--section"><span class="field__top"><span>${e(t('detect.section'))}</span><span class="status status--${sectionStatus(v).kind}" id="dt-section-status" role="status">${sectionStatusHtml(sectionStatus(v), t)}</span></span><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></label>
                 </div>
-                <div id="dt-existing">${existingSectionsHtml(v.boardSections, v.sectionName || (v.autoSections.length === 1 ? v.autoSections[0] : ''), t)}</div>
             </div>
             <div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>` : ''}
             <div class="footer__actions">

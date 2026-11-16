@@ -30,7 +30,7 @@ import {
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
 import { safeImageSrc } from '../../../services/escape';
-import { detectHtml, existingSectionsHtml, listHtml, healthText, previewHtml, sectionPlaceholder, type PreviewSection, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
+import { detectHtml, headHtml, listHtml, sectionStatus, sectionStatusHtml, healthText, previewHtml, sectionPlaceholder, type PreviewSection, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -399,8 +399,16 @@ class DetectServicesModal extends HTMLElement {
         if (preview) preview.innerHTML = previewHtml(this.view.preview, t);
         const field = this.$<HTMLInputElement>('dt-section');
         if (field) field.placeholder = sectionPlaceholder(this.view, t);
-        const existing = this.$('dt-existing');
-        if (existing) existing.innerHTML = existingSectionsHtml(this.view.boardSections, this.view.sectionName || (laid.auto.length === 1 ? laid.auto[0] : ''), t);
+        // Whether the title is taken on the board, so no section is made twice by accident.
+        const status = this.$('dt-section-status');
+        if (status) {
+            const st = sectionStatus(this.view);
+            status.className = `status status--${st.kind}`;
+            status.innerHTML = sectionStatusHtml(st, t);
+        }
+        // The head of the frame says how many are ticked.
+        const head = this.$('dt-head');
+        if (head) head.innerHTML = headHtml(this.rowViews(), t);
     }
 
     /** Draws the list again, as groups, keeping where it was scrolled, what is searched and which rows are unfolded. */
@@ -487,8 +495,6 @@ class DetectServicesModal extends HTMLElement {
         if (this.dialog && isBackdropClick(this.dialog, e)) { this.dialog.close(); return; }
         const target = e.target as HTMLElement;
         const button = target.closest<HTMLElement>('button');
-        const pill = target.closest<HTMLElement>('[data-section]');
-        if (pill) { this.view.sectionName = pill.dataset.section ?? ''; const f = this.$<HTMLInputElement>('dt-section'); if (f) f.value = this.view.sectionName; this.refreshCount(); return; }
         const fold = target.closest<HTMLElement>('[data-fold]');
         if (fold) { this.foldGroup(fold.dataset.fold as 'linked' | 'ignored'); return; }
         const row = this.rowOf(target);

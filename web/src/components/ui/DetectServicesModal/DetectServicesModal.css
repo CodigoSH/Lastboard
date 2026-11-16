@@ -60,13 +60,20 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 }
 
 /* ── Search and selection ─────────────────────────────────────────────────── */
-.tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 14px 28px 0; }
-.search { position: relative; flex: 1 1 220px; display: block; }
+.tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 14px 28px 0; }
+.search { position: relative; flex: 1 1 240px; display: block; }
 .search svg {
     position: absolute; inset-inline-start: 13px; inset-block-start: 50%; transform: translateY(-50%); inline-size: 15px; block-size: 15px;
     stroke: var(--text-dim); fill: none; stroke-width: 2; stroke-linecap: round; pointer-events: none;
 }
 .search input { padding-inline-start: 38px; }
+.tools__group { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.tool {
+    block-size: 36px; padding: 0 12px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+    color: var(--text-dim); background: transparent; border: 1px solid var(--card-border); border-radius: 10px; transition: all 0.2s;
+}
+.tool:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.06); }
+.tool[hidden] { display: none; }
 
 /* ── The services, in the house's own box: a frame whose name is a pill on its border ── */
 .frame {
@@ -85,10 +92,33 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
 .frame:hover .frame__title { border-color: rgba(var(--accent-rgb), 0.3); }
 
 .list {
-    flex: 1 1 auto; overflow-y: auto; min-block-size: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 8px 10px;
+    flex: 1 1 auto; overflow-y: auto; min-block-size: 0; display: flex; flex-direction: column; gap: 14px; padding: 12px 8px 10px;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 16px), transparent 100%);
     mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 16px), transparent 100%);
 }
+
+/* The head of the frame stays where it is while the rows go by. */
+.frame__head {
+    flex: none; padding: 16px 20px 10px; border-block-end: 1px solid var(--card-border);
+    background: linear-gradient(to bottom, rgba(var(--accent-rgb), 0.045), transparent);
+    border-start-start-radius: 13px; border-start-end-radius: 13px;
+}
+.head__line { display: flex; align-items: center; gap: 10px; }
+.head__title { font: 700 11px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-main); }
+.head__count {
+    min-inline-size: 22px; padding: 3px 7px; text-align: center; font: 700 10.5px/1 var(--font-mono); color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.1); border: 1px solid rgba(var(--accent-rgb), 0.3); border-radius: 999px;
+}
+.head__sel { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 10px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.04em; color: var(--text-dim); }
+.head__sel b { color: var(--text-main); font-weight: 700; }
+.head__bar { display: block; inline-size: 72px; block-size: 4px; border-radius: 999px; background: var(--card-border); overflow: hidden; }
+.head__bar > i { display: block; block-size: 100%; background: var(--accent); border-radius: 999px; transition: inline-size 0.3s ease; }
+.head__hint {
+    display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; padding: 7px 10px; font-size: 12.5px; line-height: 1.45; color: var(--text-dim);
+    background: rgba(var(--warning-rgb), 0.07); border: 1px solid rgba(var(--warning-rgb), 0.25); border-radius: 10px;
+}
+.head__hint[hidden] { display: none; }
+.head__hint svg { flex: none; inline-size: 15px; block-size: 15px; margin-block-start: 1px; stroke: var(--warning-color); fill: none; stroke-width: 2; stroke-linecap: round; }
 
 /* ── Groups: what there is to do, what is already done, what was set aside ── */
 .group { display: flex; flex-direction: column; gap: 3px; flex: none; }
@@ -103,14 +133,8 @@ button.group__head:hover { color: var(--text-main); }
 .group__chevron { inline-size: 12px; block-size: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; flex: none; }
 button.group__head[aria-expanded="true"] .group__chevron { transform: rotate(90deg); }
 button.group__head .group__title { flex: 0 1 auto; }
-.group__tools { display: inline-flex; gap: 4px; }
-.tool {
-    padding: 4px 8px; font: 600 10.5px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
-    color: var(--text-dim); background: transparent; border: 1px solid transparent; border-radius: 8px; transition: all 0.2s;
-}
-.tool:hover { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.35); background: rgba(var(--accent-rgb), 0.06); }
-.group__hint { margin: 0 12px 6px; padding: 8px 12px; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); border-inline-start: 2px solid var(--warning-color); background: rgba(var(--warning-rgb), 0.06); border-radius: 0 8px 8px 0; }
-.group__hint[hidden], .group__rows[hidden] { display: none; }
+
+.group__rows[hidden] { display: none; }
 .group__empty { margin: 0; padding: 14px 12px; font-size: 13px; color: var(--text-dim); }
 .group__rows { display: flex; flex-direction: column; gap: 3px; }
 
@@ -199,7 +223,6 @@ button.face:hover .face__edit, button.face:focus-visible .face__edit { opacity: 
 }
 .chip { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 100%; display: block; line-height: 18px; overflow-wrap: anywhere; white-space: normal; block-size: auto; min-block-size: 20px; padding-block: 1px; }
 .row__health:empty { display: none; }
-.tool[hidden] { display: none; }
 .row__health::before { content: ''; inline-size: 6px; block-size: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .row__health[data-h="up"] { color: var(--success-color); border-color: rgba(var(--success-rgb), 0.4); background: rgba(var(--success-rgb), 0.1); }
 .row__health[data-h="down"] { color: var(--warning-color); border-color: rgba(var(--warning-rgb), 0.4); background: rgba(var(--warning-rgb), 0.1); }
@@ -246,22 +269,19 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     border-block-start: 1px solid var(--border); background: var(--paper-bg);
 }
 .footer__where { flex: 1 1 100%; min-inline-size: 0; display: flex; flex-direction: column; gap: 8px; }
-.where__fields { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: 12px; }
+.where__fields { display: grid; grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr); gap: 12px; }
 .where__fields:has(> .field--section:only-child) { grid-template-columns: minmax(0, 1fr); }
 .footer .field { flex: none; }
 .field--section input { font-weight: 600; }
-.existing {
-    display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-}
-.existing::-webkit-scrollbar { display: none; }
-.existing:empty { display: none; }
-.existing__label { font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-inline-end: 2px; flex: none; }
-.pill-btn {
-    padding: 3px 10px; font: 700 10px/1.4 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; max-inline-size: 180px;
-    flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); background: transparent; border: 1px solid var(--card-border); border-radius: 999px; transition: all 0.2s;
-}
-.pill-btn:hover, .pill-btn[aria-pressed="true"] { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.08); }
+.field__top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-inline-size: 0; }
+.field__top > span:first-child { flex: none; }
+/* Whether the title is taken on the board: said once, on the line of the field it is about. */
+.status { display: inline-flex; align-items: center; gap: 6px; min-inline-size: 0; font: 600 11.5px/1.2 var(--font-sans, inherit); letter-spacing: 0; text-transform: none; text-align: end; color: var(--text-dim); }
+.status:empty { display: none; }
+.status__dot { flex: none; inline-size: 7px; block-size: 7px; border-radius: 50%; background: currentColor; }
+.status--exists { color: var(--accent); }
+.status--free { color: var(--success-color); }
+.status--mixed { color: var(--warning-color); }
 
 /* The preview: the board's own section — a box with its name on the border — and a tile for each bookmark that will be in it. */
 .preview { flex: 1 1 260px; min-inline-size: 0; display: flex; flex-wrap: wrap; gap: 12px; padding-block-start: 8px; align-self: flex-end; }
@@ -315,11 +335,20 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     dialog.dialog-base { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); border-radius: 18px; }
     .header { padding: 18px 18px 2px; gap: 10px; }
     .title-group h3 { font-size: 20px; }
-    .title-group p { font-size: 13px; }
+    /* Room for the list matters more than the sentence under the title on a phone. */
+    .title-group p { display: none; }
     /* Two to a line, with the address — the long one — across both. */
     .controls { grid-template-columns: 1fr 1fr; padding: 12px 18px 0; gap: 10px; }
     .controls > label.field { grid-column: 1 / -1; }
     .tools { padding: 12px 18px 0; gap: 8px; }
+    .tools__group { flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .tools__group::-webkit-scrollbar { display: none; }
+    .tool { block-size: 32px; padding: 0 10px; font-size: 10.5px; flex: none; }
+    .head__hint { font-size: 12px; padding: 6px 8px; }
+    /* The preview is for the room a desktop has; here the list has it. */
+    .preview { display: none; }
+    .list { min-block-size: 150px; }    .frame__head { padding: 14px 14px 8px; }
+    .head__bar { inline-size: 48px; }
     .frame { margin: 18px 12px 0; }
     .state, .hint { padding-inline: 18px; }
     .row, .row--add { grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 8px 10px; }
@@ -337,4 +366,11 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .footer #dt-cancel { display: none; }
     .footer .btn--primary { flex: 1 1 0; padding: 0 12px; }
     .preview { gap: 12px; }
+}
+
+/* A short window cannot give everything its room: the body scrolls, and the list keeps a height worth having. */
+@media (max-height: 640px) {
+    #content { overflow-y: auto; }
+    .frame { flex: none; }
+    .list { overflow: visible; -webkit-mask-image: none; mask-image: none; }
 }

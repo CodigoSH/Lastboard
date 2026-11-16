@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { detectHtml, existingSectionsHtml, eyebrowText, groupHtml, initialOf, listHtml, previewHtml, resultHtml, rowHtml, sectionPlaceholder, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
+import { detectHtml, eyebrowText, groupHtml, headHtml, initialOf, listHtml, previewHtml, resultHtml, rowHtml, sectionPlaceholder, sectionStatus, sectionStatusHtml, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
 
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
 const evil = '<img src=x onerror=alert(1)>';
@@ -135,7 +135,7 @@ describe('groups: what there is to add, what is already done, what was set aside
         const html = listHtml({ rows, open: { linked: false, ignored: false } }, t);
         expect(html.indexOf('group--add')).toBeLessThan(html.indexOf('group--linked'));
         expect(html.indexOf('group--linked')).toBeLessThan(html.indexOf('group--ignored'));
-        expect(html).toContain('[detect.group_new:{&quot;count&quot;:&quot;1&quot;}]');
+        expect(html).toContain('group--add');
         expect(html).toContain('[detect.group_linked:{&quot;count&quot;:&quot;1&quot;}]');
         expect(html).toContain('[detect.group_ignored:{&quot;count&quot;:&quot;2&quot;}]');
     });
@@ -148,10 +148,10 @@ describe('groups: what there is to add, what is already done, what was set aside
         expect(listHtml({ rows: [row()], open: { linked: false, ignored: false } }, t)).not.toContain('group--linked');
         expect(listHtml({ rows: [row()], open: { linked: false, ignored: false } }, t)).not.toContain('group--ignored');
     });
-    test('the group to add carries the ticking, and says so when there is nothing in it', () => {
+    test('the group to add has only its rows, and says so when there is nothing in it; its head is the frame\'s', () => {
         const html = listHtml({ rows, open: { linked: false, ignored: false } }, t);
-        expect(html).toContain('id="dt-all"');
-        expect(html).toContain('id="dt-none"');
+        expect(html).not.toContain('id="dt-all"');
+        expect(html).not.toContain('dt-hint-down');
         expect(groupHtml('add', [], { open: { linked: false, ignored: false } }, t)).toContain('[detect.nothing_new]');
     });
     test('a row to add can be ticked, edited and ignored; the others only say what they are and offer one way out', () => {
@@ -180,16 +180,28 @@ describe('groups: what there is to add, what is already done, what was set aside
     });
 });
 
-describe('what "not answering" means, said once and where it matters', () => {
-    test('the explanation is there while a row to add does not answer, and only then', () => {
-        const down = groupHtml('add', [row({ health: 'down' })], { open: { linked: false, ignored: false } }, t);
-        expect(down).toMatch(/id="dt-hint-down">\[detect\.hint_down\]/);
-        const up = groupHtml('add', [row({ health: 'up' })], { open: { linked: false, ignored: false } }, t);
-        expect(up).toMatch(/id="dt-hint-down" hidden>/);
+describe('the head of the frame', () => {
+    test('says what the list is, how many there are, and how many are ticked, with a bar for it', () => {
+        const html = headHtml([row({ key: 'a' }), row({ key: 'b', checked: false }), row({ key: 'c', checked: false }), row({ key: 'd', group: 'linked', linkedTo: 'X' })], t);
+        expect(html).toContain('head__title">[detect.group_new_title]<');
+        expect(html).toContain('head__count">3<');
+        expect(html).toContain('<b>1</b> / 3');
+        expect(html).toContain('inline-size:33%');
     });
-    test('a row that is not in the group to add does not call for it', () => {
-        const html = groupHtml('add', [row({ health: 'up' })], { open: { linked: false, ignored: false } }, t);
-        expect(html).toMatch(/dt-hint-down" hidden/);
+    test('an empty list has an empty bar, not a broken one', () => {
+        expect(headHtml([], t)).toContain('inline-size:0%');
+    });
+    test('the explanation of "not answering" is there while a row to add does not answer, and only then', () => {
+        expect(headHtml([row({ health: 'down' })], t)).toMatch(/id="dt-hint-down"><svg/);
+        expect(headHtml([row({ health: 'up' })], t)).toMatch(/id="dt-hint-down" hidden>/);
+        expect(headHtml([row({ group: 'linked', health: 'down' })], t)).toMatch(/id="dt-hint-down" hidden>/);
+    });
+    test('it sits in the frame above the list, and the ticking is beside the search', () => {
+        const html = detectHtml(view(), t);
+        expect(html.indexOf('id="dt-head"')).toBeLessThan(html.indexOf('id="dt-list"'));
+        expect(html.indexOf('id="dt-search"')).toBeLessThan(html.indexOf('id="dt-all"'));
+        expect(html.indexOf('id="dt-all"')).toBeLessThan(html.indexOf('id="dt-head"'));
+        expect(html).toContain('id="dt-none"');
     });
 });
 
@@ -219,12 +231,24 @@ describe('where it goes', () => {
         const html = previewHtml([{ title: evil, tiles: [{ name: evil, iconUrl: '' }] }], t);
         expect(html).not.toContain('<img src=x');
     });
-    test('the sections the board has are offered as pills, the one in use marked, and nothing is said when there are none', () => {
-        const html = existingSectionsHtml(['Media', 'Lab'], 'lab', t);
-        expect(html).toContain('data-section="Media" aria-pressed="false"');
-        expect(html).toContain('data-section="Lab" aria-pressed="true"');
-        expect(existingSectionsHtml([], '', t)).toBe('');
-        expect(existingSectionsHtml([evil], '', t)).not.toContain('<img src=x');
+    test('the field says whether the title is taken on the board: free, there already, or a mix', () => {
+        const have = ['Media', 'Lab'];
+        const sec = (...titles: string[]) => titles.map(title => ({ title, tiles: [] }));
+        expect(sectionStatus({ preview: [], boardSections: have }).kind).toBe('none');
+        expect(sectionStatus({ preview: sec('lab'), boardSections: have }).kind).toBe('exists');
+        expect(sectionStatus({ preview: sec(' LAB '), boardSections: have }).kind).toBe('exists');
+        expect(sectionStatus({ preview: sec('New'), boardSections: have }).kind).toBe('free');
+        expect(sectionStatus({ preview: sec('Media', 'New', 'Other'), boardSections: have })).toEqual({ kind: 'mixed', existing: 1, created: 2 });
+        expect(sectionStatus({ preview: sec('X'), boardSections: [] }).kind).toBe('free');
+    });
+    test('it says so in words, on the line of the field, and nothing while nothing is ticked', () => {
+        expect(sectionStatusHtml({ kind: 'none', existing: 0, created: 0 }, t)).toBe('');
+        expect(sectionStatusHtml({ kind: 'exists', existing: 1, created: 0 }, t)).toContain('[detect.section_exists]');
+        expect(sectionStatusHtml({ kind: 'free', existing: 0, created: 1 }, t)).toContain('[detect.section_free]');
+        expect(sectionStatusHtml({ kind: 'mixed', existing: 1, created: 2 }, t)).toContain('{&quot;existing&quot;:&quot;1&quot;,&quot;created&quot;:&quot;2&quot;}');
+        const html = detectHtml(view({ preview: [{ title: 'Lab', tiles: [] }], boardSections: ['lab'] }), t);
+        expect(html).toMatch(/id="dt-section-status" role="status">.*detect\.section_exists/);
+        expect(html).not.toContain('class="existing"');
     });
 });
 
@@ -235,8 +259,8 @@ describe('a console is not read as an address', () => {
         expect(rowHtml(row(), t)).not.toContain('row__addr--console');
     });
     test('the only-answering button is there to be shown, and hidden until some answer and some do not', () => {
-        expect(groupHtml('add', [row({ health: 'up' }), row({ key: 'b', health: 'down' })], { open: { linked: false, ignored: false } }, t)).toMatch(/id="dt-only-up">/);
-        expect(groupHtml('add', [row({ health: 'up' })], { open: { linked: false, ignored: false } }, t)).toMatch(/id="dt-only-up" hidden>/);
+        expect(detectHtml(view({ rows: [row({ health: 'up' }), row({ key: 'b', health: 'down' })] }), t)).toMatch(/id="dt-only-up">/);
+        expect(detectHtml(view({ rows: [row({ health: 'up' })] }), t)).toMatch(/id="dt-only-up" hidden>/);
     });
 });
 
