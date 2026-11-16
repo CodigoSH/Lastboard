@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { countHtml, detectHtml, eyebrowText, initialOf, resultHtml, rowHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
+import { countHtml, detectHtml, eyebrowText, initialOf, resultHtml, rowHtml, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
 
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
 const evil = '<img src=x onerror=alert(1)>';
@@ -142,7 +142,7 @@ describe('how the window reads', () => {
         expect(initialOf('12')).toBe('');
         expect(initialOf('')).toBe('');
         expect(initialOf('émile')).toBe('É');
-        expect(rowHtml(row({ iconUrl: '', name: '05 Bookorbit' }), (k) => k)).toContain('face--none" aria-hidden="true">B<');
+        expect(rowHtml(row({ iconUrl: '', name: '05 Bookorbit' }), (k) => k)).toContain('class="face__letter" aria-hidden="true">B<');
         expect(rowHtml(row({ iconUrl: '', name: evil }), (k) => k)).not.toContain('<img src=x');
     });
     test('the window says which host it is listing, under the right product', () => {
@@ -169,5 +169,32 @@ describe('how the window reads', () => {
         const html = detectHtml(view({ state: 'loading', hostName: 'Home' }), (k) => k);
         expect(html).toContain('list--skeleton');
         expect(html).toContain('detect.loading');
+    });
+});
+
+describe("the product's own dropdowns and the icon button", () => {
+    test('a dropdown carries its options as data and its value, escaped', () => {
+        const html = selectHtml('dt-board', [{ value: '1', label: 'Main' }, { value: '2', label: evil }], '2', 'Board');
+        expect(html).toContain('<app-select id="dt-board"');
+        expect(html).toContain('value="2"');
+        expect(html).toContain('data-options="[{&quot;value&quot;:&quot;1&quot;');
+        expect(html).not.toContain('<img src=x');
+    });
+    test('no native select is left in the window', () => {
+        const html = detectHtml(view({ boards: [{ id: 1, name: 'M' }, { id: 2, name: 'N' }], canPickBoard: true, hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], rows: [row({ candidates: ['http://a', 'http://b'] })] }), (k) => k);
+        expect(html).not.toContain('<select');
+        expect(html).toContain('id="dt-host"');
+        expect(html).toContain('id="dt-board"');
+        expect(html).toContain('id="dt-group"');
+        expect(html).toContain('class="alt"');
+        expect(html).toContain('menu-min-width="460"');
+    });
+    test("the row's tile is a button that opens the icon search, and a row with one address has no menu", () => {
+        expect(rowHtml(row(), (k) => k)).toContain('<button type="button" class="face" aria-label="detect.choose_icon"');
+        expect(rowHtml(row(), (k) => k)).not.toContain('app-select');
+    });
+    test('a row with nothing to say about itself has no line of notes', () => {
+        expect(rowHtml(row(), (k) => k)).not.toContain('row__meta');
+        expect(rowHtml(row({ linkedTo: 'X' }), (k) => k)).toContain('row__meta');
     });
 });

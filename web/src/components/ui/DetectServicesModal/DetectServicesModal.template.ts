@@ -77,12 +77,24 @@ export function initialOf(name: string): string {
     return first.toUpperCase();
 }
 
+export interface SelectChoice { value: string; label: string }
+
+/**
+ * The product's own dropdown (`app-select`). Its options travel as data and are given to the element
+ * after the markup is written, because an element takes its options as a property, not as markup.
+ */
+export function selectHtml(id: string, options: SelectChoice[], value: string, label: string, cls = '', menuMin = 0): string {
+    return `<app-select${id ? ` id="${e(id)}"` : ''}${cls ? ` class="${e(cls)}"` : ''} value="${e(value)}" aria-label="${e(label)}"${menuMin ? ` menu-min-width="${menuMin}"` : ''} data-options="${e(JSON.stringify(options))}"></app-select>`;
+}
+
 export function rowHtml(r: RowView, t: T): string {
-    const face = r.iconUrl
-        ? `<span class="face"><img src="${e(safeImageSrc(r.iconUrl))}" alt="" loading="lazy"></span>`
-        : `<span class="face face--none" aria-hidden="true">${e(initialOf(r.name))}</span>`;
+    const faceInner = r.iconUrl
+        ? `<img src="${e(safeImageSrc(r.iconUrl))}" alt="" loading="lazy">`
+        : `<span class="face__letter" aria-hidden="true">${e(initialOf(r.name))}</span>`;
+    // The tile is the button that opens the icon search, as a bookmark's icon is in its own window.
+    const face = `<span class="face-cell"><button type="button" class="face" aria-label="${e(t('detect.choose_icon'))}" title="${e(t('detect.choose_icon'))}">${faceInner}<svg class="face__edit" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg></button><span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span></span>`;
     const choose = r.candidates.length > 1
-        ? `<select class="alt" aria-label="${e(t('detect.url'))}">${r.candidates.map(c => `<option value="${e(c)}"${c === r.url ? ' selected' : ''}>${e(c)}</option>`).join('')}</select>`
+        ? selectHtml('', r.candidates.map(c => ({ value: c, label: c })), r.url, t('detect.url'), 'alt', 460)
         : '';
     const chips = [
         noteText(r.note, t) ? `<span class="chip">${e(noteText(r.note, t))}</span>` : '',
@@ -97,7 +109,7 @@ export function rowHtml(r: RowView, t: T): string {
                 <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
                 <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div>
             </div>
-            <div class="row__meta"><span class="row__health" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>${chips}</div>
+            ${chips ? `<div class="row__meta">${chips}</div>` : ''}
         </div>
     </div>`;
 }
@@ -127,10 +139,10 @@ export function countHtml(selected: number, total: number): string {
 
 export function detectHtml(v: WindowView, t: T): string {
     const hostPick = v.hosts.length > 1
-        ? `<label class="field"><span>${e(t('detect.host'))}</span><select id="dt-host">${v.hosts.map(h => `<option value="${e(h.id)}"${h.id === v.hostId ? ' selected' : ''}>${e(h.name)}</option>`).join('')}</select></label>`
+        ? `<div class="field"><span>${e(t('detect.host'))}</span>${selectHtml('dt-host', v.hosts.map(h => ({ value: h.id, label: h.name })), v.hostId, t('detect.host'))}</div>`
         : '';
     const boardPick = v.canPickBoard && v.boards.length > 1
-        ? `<label class="field"><span>${e(t('detect.board'))}</span><select id="dt-board">${v.boards.map(b => `<option value="${b.id}"${b.id === v.boardId ? ' selected' : ''}>${e(b.name)}</option>`).join('')}</select></label>`
+        ? `<div class="field"><span>${e(t('detect.board'))}</span>${selectHtml('dt-board', v.boards.map(b => ({ value: String(b.id), label: b.name })), String(v.boardId ?? ''), t('detect.board'))}</div>`
         : '';
 
     let body: string;
@@ -152,10 +164,7 @@ export function detectHtml(v: WindowView, t: T): string {
     // A machine has an address of its own; only a Docker host has one that its ports are built on.
     const dockerControls = v.source === 'docker'
         ? `<label class="field"><span>${e(t('detect.address'))}</span><input type="text" id="dt-address" value="${e(v.address)}" spellcheck="false" autocomplete="off"></label>
-            <label class="field"><span>${e(t('detect.group'))}</span><select id="dt-group">
-                <option value="host"${v.groupBy === 'host' ? ' selected' : ''}>${e(t('detect.group_host'))}</option>
-                <option value="project"${v.groupBy === 'project' ? ' selected' : ''}>${e(t('detect.group_project'))}</option>
-            </select></label>`
+            <div class="field"><span>${e(t('detect.group'))}</span>${selectHtml('dt-group', [{ value: 'host', label: t('detect.group_host') }, { value: 'project', label: t('detect.group_project') }], v.groupBy, t('detect.group'))}</div>`
         : '';
     const eyebrow = v.hostName ? `<span class="eyebrow">${e(eyebrowText(v.source, v.hostName, t))}</span>` : '';
     return `<div class="header">

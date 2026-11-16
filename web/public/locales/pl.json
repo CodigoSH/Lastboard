@@ -180,6 +180,7 @@
   "detect.note_host_network": "W sieci hosta: wpisz jego adres",
   "detect.note_stopped": "Zatrzymany",
   "detect.already": "Ma już zakładkę: {name}",
+  "detect.choose_icon": "Wybierz ikonę",
   "detect.pending": "Usługi bez zakładki: {count}",
   "detect.dismissed": "Pominięto poprzednio",
   "detect.reachable": "Odpowiada",

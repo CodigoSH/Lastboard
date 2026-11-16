@@ -180,6 +180,7 @@
   "detect.note_host_network": "Im Netzwerk des Hosts: Adresse eintragen",
   "detect.note_stopped": "Gestoppt",
   "detect.already": "Schon ein Lesezeichen: {name}",
+  "detect.choose_icon": "Symbol wählen",
   "detect.pending": "Dienste ohne Lesezeichen: {count}",
   "detect.dismissed": "Beim letzten Mal ausgelassen",
   "detect.reachable": "Antwortet",

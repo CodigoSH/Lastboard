@@ -180,6 +180,7 @@
   "detect.note_host_network": "On the host's network: type its address",
   "detect.note_stopped": "Stopped",
   "detect.already": "Already a bookmark: {name}",
+  "detect.choose_icon": "Choose an icon",
   "detect.pending": "Services without a bookmark: {count}",
   "detect.dismissed": "Left out last time",
   "detect.reachable": "Responds",

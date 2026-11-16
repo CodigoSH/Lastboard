@@ -13,6 +13,9 @@ import { loadProxmoxLinks, linkFor as machineLink, bookmarkNamed, clearProxmoxLi
 import { fetchAddresses, fetchProxmoxHosts, type ProxmoxHostRef } from '../../../services/proxmoxAddresses';
 import { buildIconIndex } from '../../../services/importIcons';
 import { materializeIcon } from '../../../services/iconStore';
+import '../Select/Select';
+import '../IconSelectionModal/IconSelectionModal';
+import type { AppSelect } from '../Select/Select';
 import { isOwnIcon, ownIcons } from '../../../services/ownIcons';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
@@ -25,6 +28,7 @@ import {
 } from '../../../services/discoverServices';
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
+import { safeImageSrc } from '../../../services/escape';
 import { countHtml, detectHtml, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
@@ -42,6 +46,10 @@ interface RowState {
     dismissed: boolean;
     /** It was proposed ticked. */
     proposedTicked: boolean;
+    /** What the person chose in the icon search for this row, as the picker returned it; '' when they did not. */
+    pickedIcon: string;
+    /** Which of its addresses the menu has chosen. */
+    choice: number;
 }
 
 const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
@@ -209,7 +217,7 @@ class DetectServicesModal extends HTMLElement {
             const left = dismissed.has(dismissKey(p.link));
             return [p.key, {
                 proposal: p, checked: p.selected && !left, name: p.name, url: urls[0] ?? '', edited: false,
-                iconUrl: p.chosenIcon || p.labelIcon || libUrl, dismissed: left, proposedTicked: p.selected && !left,
+                iconUrl: p.chosenIcon || p.labelIcon || libUrl, dismissed: left, proposedTicked: p.selected && !left, pickedIcon: '', choice: 0,
             }];
         }));
         this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
@@ -237,6 +245,7 @@ class DetectServicesModal extends HTMLElement {
             const h = this.health.get(state.url) ?? '';
             box.dataset.h = h;
             box.textContent = healthText(h, t);
+            box.title = healthText(h, t);
         }
     }
 
@@ -275,6 +284,15 @@ class DetectServicesModal extends HTMLElement {
             this.dialog.addEventListener('change', e => this.onChange(e));
         }
         this.shadowRoot.getElementById('content')!.innerHTML = detectHtml(this.view, t);
+        this.wireSelects();
+    }
+
+    /** An `app-select` takes its options as a property: they travel in the markup as data and are handed over here. */
+    private wireSelects(): void {
+        for (const el of this.shadowRoot?.querySelectorAll<AppSelect>('app-select') ?? []) {
+            try { el.options = JSON.parse(el.dataset.options ?? '[]'); } catch { el.options = []; }
+            el.value = el.getAttribute('value') ?? '';
+        }
     }
 
     private $<T extends HTMLElement>(id: string): T | null {
@@ -298,6 +316,26 @@ class DetectServicesModal extends HTMLElement {
 
     // ── Events ───────────────────────────────────────────────────────────────
 
+    /** The icon search of the product, as the bookmark window and the pages use it. A choice is the row's until the window closes. */
+    private async chooseIcon(row: { el: HTMLElement; state: RowState }): Promise<void> {
+        let modal = document.querySelector('icon-selection-modal') as (HTMLElement & { open: () => Promise<string | null> }) | null;
+        if (!modal) {
+            modal = document.createElement('icon-selection-modal') as HTMLElement & { open: () => Promise<string | null> };
+            document.body.appendChild(modal);
+        }
+        const picked = await modal.open();
+        if (!picked) return;
+        row.state.pickedIcon = picked;
+        row.state.iconUrl = resolveIconUrl(picked);
+        const face = row.el.querySelector<HTMLElement>('.face');
+        if (!face) return;
+        face.querySelector('img, .face__letter')?.remove();
+        const img = document.createElement('img');
+        img.alt = '';
+        img.src = safeImageSrc(row.state.iconUrl);
+        face.prepend(img);
+    }
+
     private rowOf(target: EventTarget | null): { el: HTMLElement; state: RowState } | null {
         const el = (target as HTMLElement | null)?.closest<HTMLElement>('.row');
         const state = el ? this.rows.get(el.dataset.key ?? '') : undefined;
@@ -306,6 +344,8 @@ class DetectServicesModal extends HTMLElement {
 
     private onClick(e: MouseEvent): void {
         if (this.dialog && isBackdropClick(this.dialog, e)) { this.dialog.close(); return; }
+        const face = (e.target as HTMLElement).closest('.face');
+        if (face) { const row = this.rowOf(face); if (row) void this.chooseIcon(row); return; }
         const id = (e.target as HTMLElement).closest('button')?.id;
         if (id === 'dt-close' || id === 'dt-cancel') this.dialog?.close();
         else if (id === 'dt-all' || id === 'dt-none') this.tickVisible(id === 'dt-all');
@@ -324,7 +364,7 @@ class DetectServicesModal extends HTMLElement {
     }
 
     private onChange(e: Event): void {
-        const target = e.target as HTMLInputElement | HTMLSelectElement;
+        const target = e.target as HTMLInputElement | AppSelect;
         if (target.id === 'dt-group') { this.view.groupBy = target.value as GroupBy; return; }
         if (target.id === 'dt-board') { this.view.boardId = Number(target.value); return; }
         if (target.id === 'dt-host') { void this.loadHost(target.value, null); return; }
@@ -334,6 +374,8 @@ class DetectServicesModal extends HTMLElement {
             row.state.checked = (target as HTMLInputElement).checked;
             this.refreshCount();
         } else if (target.classList.contains('alt')) {
+            const urls = row.state.proposal.candidates.map(c => candidateUrl(c, this.view.address));
+            row.state.choice = Math.max(0, urls.indexOf(target.value));
             row.state.url = target.value;
             row.state.edited = false;
             const addr = row.el.querySelector<HTMLInputElement>('.addr');
@@ -363,19 +405,15 @@ class DetectServicesModal extends HTMLElement {
             const state = this.rows.get(r.dataset.key ?? '');
             if (!state) return;
             const urls = state.proposal.candidates.map(c => candidateUrl(c, this.view.address));
-            const alt = r.querySelector<HTMLSelectElement>('.alt');
+            const alt = r.querySelector<AppSelect>('.alt');
+            // The menu keeps the choice by its place in the list, as the addresses behind it change.
+            const index = Math.min(state.choice, Math.max(0, urls.length - 1));
             if (alt) {
-                const chosen = alt.selectedIndex;
-                alt.replaceChildren(...urls.map(u => {
-                    const o = document.createElement('option');
-                    o.value = u;
-                    o.textContent = u;
-                    return o;
-                }));
-                alt.selectedIndex = Math.max(0, Math.min(chosen, urls.length - 1));
+                alt.dataset.options = JSON.stringify(urls.map(u => ({ value: u, label: u })));
+                alt.options = urls.map(u => ({ value: u, label: u }));
+                alt.value = urls[index] ?? '';
             }
             if (!state.edited && urls.length) {
-                const index = alt ? alt.selectedIndex : 0;
                 state.url = urls[index] ?? urls[0];
                 const addr = r.querySelector<HTMLInputElement>('.addr');
                 if (addr) addr.value = state.url;
@@ -417,6 +455,12 @@ class DetectServicesModal extends HTMLElement {
             const row = picked[i];
             let icon = row.proposal.chosenIcon;
             let iconName: string | null = null;
+            // What the person picked in the icon search wins over everything that was proposed.
+            if (row.pickedIcon) {
+                const url = resolveIconUrl(row.pickedIcon);
+                icon = await retryOnRateLimit(() => materializeIcon(url));
+                iconName = url;
+            }
             if (!icon && row.proposal.labelIcon && withIcons) {
                 icon = await retryOnRateLimit(() => materializeIcon(row.proposal.labelIcon));
             }

@@ -180,6 +180,7 @@
   "detect.note_host_network": "在主机的网络中：请输入其地址",
   "detect.note_stopped": "已停止",
   "detect.already": "已有书签：{name}",
+  "detect.choose_icon": "选择图标",
   "detect.pending": "没有书签的服务：{count}",
   "detect.dismissed": "上次已排除",
   "detect.reachable": "有响应",

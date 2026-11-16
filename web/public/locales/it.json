@@ -180,6 +180,7 @@
   "detect.note_host_network": "Sulla rete dell'host: scrivi il suo indirizzo",
   "detect.note_stopped": "Fermo",
   "detect.already": "Ha già un segnalibro: {name}",
+  "detect.choose_icon": "Scegli un'icona",
   "detect.pending": "Servizi senza segnalibro: {count}",
   "detect.dismissed": "Escluso la volta scorsa",
   "detect.reachable": "Risponde",

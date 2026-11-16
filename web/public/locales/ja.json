@@ -180,6 +180,7 @@
   "detect.note_host_network": "ホストのネットワーク上: アドレスを入力してください",
   "detect.note_stopped": "停止中",
   "detect.already": "すでにブックマークあり: {name}",
+  "detect.choose_icon": "アイコンを選ぶ",
   "detect.pending": "ブックマークのないサービス: {count}",
   "detect.dismissed": "前回は除外しました",
   "detect.reachable": "応答あり",

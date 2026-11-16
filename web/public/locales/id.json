@@ -180,6 +180,7 @@
   "detect.note_host_network": "Di jaringan host: ketik alamatnya",
   "detect.note_stopped": "Berhenti",
   "detect.already": "Sudah punya markah: {name}",
+  "detect.choose_icon": "Pilih ikon",
   "detect.pending": "Layanan tanpa markah: {count}",
   "detect.dismissed": "Dilewati sebelumnya",
   "detect.reachable": "Merespons",

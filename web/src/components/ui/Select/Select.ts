@@ -116,11 +116,20 @@ export class AppSelect extends HTMLElement {
         const origin = probe.getBoundingClientRect();
         probe.remove();
 
+        // A trigger that is only a button (`menu-min-width`) opens a list wider than itself: it starts where the
+        // trigger does and runs on, unless that would leave the dialog, and then it is pulled back inside.
+        const menuMin = Number(this.getAttribute('menu-min-width')) || 0;
+        const width = Math.max(anchor.width, menuMin);
+        const limitRight = bounds ? Math.min(bounds.right, window.innerWidth) : window.innerWidth;
+        const limitLeft = bounds ? Math.max(bounds.left, 0) : 0;
+        const left = width > anchor.width
+            ? Math.max(limitLeft + 8, Math.min(anchor.left, limitRight - 8 - width))
+            : anchor.left;
         this.dropdownEl.style.top = `${wantTop - origin.top}px`;
-        this.dropdownEl.style.left = `${anchor.left - origin.left}px`;
+        this.dropdownEl.style.left = `${left - origin.left}px`;
         // With right:auto the box would shrink to its content, so match the
         // trigger explicitly (the stylesheet's left/right pair did this before).
-        this.dropdownEl.style.width = `${anchor.width}px`;
+        this.dropdownEl.style.width = `${width}px`;
     }
 
     private ensureGlobalStyles() {
