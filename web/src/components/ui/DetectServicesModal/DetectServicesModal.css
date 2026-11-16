@@ -1,12 +1,24 @@
 :host { display: contents; }
 
-dialog {
-    inline-size: min(760px, calc(100vw - 32px));
-    max-block-size: min(86vh, 820px);
+/* Out-specifies .dialog-base from styles/shared.css, which is narrower and has no background. */
+dialog.dialog-base {
+    background: var(--paper-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 20px;
     padding: 0;
+    width: min(760px, calc(100vw - 32px));
+    max-width: none;
+    max-height: min(86vh, 820px);
     overflow: hidden;
+    backdrop-filter: var(--modal-blur);
+    -webkit-backdrop-filter: var(--modal-blur);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 }
-dialog[open] { display: flex; flex-direction: column; }
+dialog.dialog-base[open] { display: flex; flex-direction: column; }
+/* The window's content sits in one wrapper: it is the column, so the list can scroll and the footer stays in view. */
+#content { display: flex; flex-direction: column; flex: 1; min-block-size: 0; }
+dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); }
 
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 24px 12px; }
 .title-group h3 { margin: 0 0 4px; font-size: 18px; }
@@ -35,7 +47,7 @@ dialog[open] { display: flex; flex-direction: column; }
 }
 .link:hover { text-decoration: underline; }
 
-.list { flex: 1; overflow-y: auto; padding: 0 24px; min-block-size: 80px; }
+.list { flex: 1 1 auto; overflow-y: auto; padding: 0 24px; min-block-size: 80px; }
 .row {
     display: grid; grid-template-columns: auto 28px 1fr; align-items: start; gap: 10px; padding: 10px 0;
     border-block-start: 1px solid var(--card-border);

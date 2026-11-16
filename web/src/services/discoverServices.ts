@@ -106,16 +106,23 @@ export function prettyName(name: string): string {
         .join(' ');
 }
 
-/** The published TCP ports a browser elsewhere could reach, once each, lowest first. */
-export function usablePorts(c: DockerContainer): number[] {
-    const seen = new Set<number>();
+/** A published port and the one it reaches inside the container. */
+interface PortEntry { port: number; inside: number }
+
+function portEntries(c: DockerContainer): PortEntry[] {
+    const seen = new Map<number, PortEntry>();
     for (const p of c.Ports || []) {
         if (!p || p.PublicPort <= 0) continue;
         if (p.Type && p.Type.toLowerCase() !== 'tcp') continue;
         if (p.IP && LOOPBACK.test(p.IP)) continue;
-        seen.add(p.PublicPort);
+        if (!seen.has(p.PublicPort)) seen.set(p.PublicPort, { port: p.PublicPort, inside: p.PrivatePort });
     }
-    return [...seen].sort((a, b) => a - b);
+    return [...seen.values()].sort((a, b) => a.port - b.port);
+}
+
+/** The published TCP ports a browser elsewhere could reach, once each, lowest first. */
+export function usablePorts(c: DockerContainer): number[] {
+    return portEntries(c).map(e => e.port);
 }
 
 export function candidateUrl(c: Candidate, address: string): string {
@@ -129,8 +136,9 @@ function candidatesOf(c: DockerContainer): Candidate[] {
     const out: Candidate[] = [];
     if (c.UrlHint) out.push({ source: 'label', url: c.UrlHint });
     if (c.ProxyUrl && c.ProxyUrl !== c.UrlHint) out.push({ source: 'proxy', url: c.ProxyUrl });
-    for (const port of usablePorts(c)) {
-        out.push({ source: 'port', port, scheme: HTTPS_PORTS.includes(port) ? 'https' : 'http' });
+    for (const { port, inside } of portEntries(c)) {
+        // Served over TLS when either end is a TLS port: 443 inside, published as 8444 outside, is still https.
+        out.push({ source: 'port', port, scheme: HTTPS_PORTS.includes(port) || HTTPS_PORTS.includes(inside) ? 'https' : 'http' });
     }
     return out;
 }

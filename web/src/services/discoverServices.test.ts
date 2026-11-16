@@ -76,6 +76,14 @@ describe('what is proposed', () => {
         const ports = discoverDocker([c], input()).proposals[0].candidates;
         expect(ports.map(x => [x.port, x.scheme])).toEqual([[8006, 'https'], [8080, 'http']]);
     });
+    test('a port published elsewhere but served on a TLS port inside is proposed over https', () => {
+        const c = ctr({ Ports: [
+            { PublicPort: 18443, PrivatePort: 443, Type: 'tcp', IP: '0.0.0.0' },
+            { PublicPort: 18080, PrivatePort: 80, Type: 'tcp', IP: '0.0.0.0' },
+        ] });
+        const ports = discoverDocker([c], input()).proposals[0].candidates;
+        expect(ports.map(x => [x.port, x.scheme])).toEqual([[18080, 'http'], [18443, 'https']]);
+    });
     test('a proxy address equal to the label is not offered twice', () => {
         const { proposals } = discoverDocker([ctr({ UrlHint: 'https://p.home', ProxyUrl: 'https://p.home' })], input());
         expect(proposals[0].candidates.map(c => c.source)).toEqual(['label', 'port']);
