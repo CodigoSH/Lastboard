@@ -418,7 +418,7 @@ export const personalizationTemplate = (prefs: Prefs) => `
                     <input type="text"
                            id="project-name-input"
                            class="settings-content__input"
-                           value="${prefs.project_name || 'Lastboard'}"
+                           value="${esc(prefs.project_name || 'Lastboard')}"
                            placeholder="${i18n.t('app.title')}"
                            data-change="project-name">
                 </div>
